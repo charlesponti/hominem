@@ -62,7 +62,9 @@ export type DeleteListInviteParams = z.infer<typeof deleteListInviteSchema>;
  */
 export async function getListInvites(
   listId: string,
-): Promise<(ListInviteOutput & { list: ListOutput | null; user_invitedUserId: UserOutput | null })[]> {
+): Promise<
+  (ListInviteOutput & { list: ListOutput | null; user_invitedUserId: UserOutput | null })[]
+> {
   try {
     return await db.query.listInvite.findMany({
       where: eq(listInvite.listId, listId),

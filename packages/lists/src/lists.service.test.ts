@@ -75,7 +75,12 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
     const sendInviteEmailMock = vi.mocked(sendInviteEmail);
     const baseUrl = 'https://app.example.com';
 
-    const invite = await sendListInvite({ listId: inviteListId, invitedUserEmail: invitedEmail, invitingUserId: ownerId, baseUrl });
+    const invite = await sendListInvite({
+      listId: inviteListId,
+      invitedUserEmail: invitedEmail,
+      invitingUserId: ownerId,
+      baseUrl,
+    });
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
@@ -126,16 +131,22 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
     }
 
     // Accept the invite to mark it as accepted
-    const accepted = await acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: invite.token });
+    const accepted = await acceptListInvite({
+      listId: inviteListId,
+      acceptingUserId: inviteeUserId,
+      token: invite.token,
+    });
     if ('error' in accepted) {
       expect.fail(`Expected invite to be accepted, got error ${accepted.error}`);
     }
 
-    await expect(deleteListInvite({
-      listId: inviteListId,
-      invitedUserEmail: invitedEmail,
-      userId: ownerId,
-    })).rejects.toThrow('Invite has already been accepted and cannot be deleted');
+    await expect(
+      deleteListInvite({
+        listId: inviteListId,
+        invitedUserEmail: invitedEmail,
+        userId: ownerId,
+      }),
+    ).rejects.toThrow('Invite has already been accepted and cannot be deleted');
   });
 
   it('getUserLists should return lists shared with user (metadata only)', async () => {
@@ -197,7 +208,11 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
-    const accepted = await acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: invite.token });
+    const accepted = await acceptListInvite({
+      listId: inviteListId,
+      acceptingUserId: inviteeUserId,
+      token: invite.token,
+    });
 
     expect(accepted.id).toBe(inviteListId);
 
@@ -230,7 +245,11 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
-    const response = await acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: invite.token });
+    const response = await acceptListInvite({
+      listId: inviteListId,
+      acceptingUserId: inviteeUserId,
+      token: invite.token,
+    });
 
     expect(response.id).toBe(inviteListId);
 
@@ -251,7 +270,13 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
-    await expect(acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: 'invalid-token' })).rejects.toThrow('Invite not found');
+    await expect(
+      acceptListInvite({
+        listId: inviteListId,
+        acceptingUserId: inviteeUserId,
+        token: 'invalid-token',
+      }),
+    ).rejects.toThrow('Invite not found');
   });
 
   it('rejects double acceptance with the same token', async () => {
@@ -265,9 +290,19 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
-    const first = await acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: invite.token });
+    const first = await acceptListInvite({
+      listId: inviteListId,
+      acceptingUserId: inviteeUserId,
+      token: invite.token,
+    });
 
-    await expect(acceptListInvite({ listId: inviteListId, acceptingUserId: inviteeUserId, token: invite.token })).rejects.toThrow('Invite already accepted');
+    await expect(
+      acceptListInvite({
+        listId: inviteListId,
+        acceptingUserId: inviteeUserId,
+        token: invite.token,
+      }),
+    ).rejects.toThrow('Invite already accepted');
   });
 
   it('decline requires the correct token', async () => {
@@ -297,11 +332,18 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
   });
 
   it('prevents accepting an invite to a list you own', async () => {
-    const invite = await sendListInvite({ listId, invitedUserEmail: invitedEmail, invitingUserId: ownerId, baseUrl: 'https://app.example.com' });
+    const invite = await sendListInvite({
+      listId,
+      invitedUserEmail: invitedEmail,
+      invitingUserId: ownerId,
+      baseUrl: 'https://app.example.com',
+    });
     if ('error' in invite) {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
-    await expect(acceptListInvite({ listId, acceptingUserId: ownerId, token: invite.token })).rejects.toThrow('Cannot accept an invite to a list you own');
+    await expect(
+      acceptListInvite({ listId, acceptingUserId: ownerId, token: invite.token }),
+    ).rejects.toThrow('Cannot accept an invite to a list you own');
   });
 });

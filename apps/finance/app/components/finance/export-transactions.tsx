@@ -21,19 +21,17 @@ export function ExportTransactions() {
     const headers = ['Date', 'Description', 'Amount', 'Category', 'Type', 'Account'];
     const csvRows = [
       headers.join(','),
-      ...transactions.map(
-        (tx) => {
-          const account = accountsMap.get(tx.accountId);
-          return [
-            tx.date,
-            `"${tx.description?.replace(/"/g, '""') || ''}"`,
-            String(tx.amount),
-            tx.category || 'Other',
-            tx.type || 'expense',
-            account?.name || 'Unknown',
-          ].join(',');
-        },
-      ),
+      ...transactions.map((tx) => {
+        const account = accountsMap.get(tx.accountId);
+        return [
+          tx.date,
+          `"${tx.description?.replace(/"/g, '""') || ''}"`,
+          String(tx.amount),
+          tx.category || 'Other',
+          tx.type || 'expense',
+          account?.name || 'Unknown',
+        ].join(',');
+      }),
     ];
 
     const csvContent = csvRows.join('\n');

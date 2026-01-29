@@ -7,10 +7,9 @@ import {
   deleteAccount,
   listAccountsWithPlaidInfo,
   listPlaidConnectionsForUser,
-  listInstitutionConnections,
   getAccountsForInstitution,
 } from '@hominem/finance-services';
-import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
+import { NotFoundError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -71,13 +70,6 @@ function serializeTransaction(t: any): TransactionData {
     updatedAt: typeof t.updatedAt === 'string' ? t.updatedAt : t.updatedAt.toISOString(),
     amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount?.toString() || '0'),
   };
-}
-
-function throwServiceError(err: any): never {
-  if (isServiceError(err)) {
-    throw err;
-  }
-  throw err;
 }
 
 /**

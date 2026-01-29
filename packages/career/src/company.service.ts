@@ -1,5 +1,6 @@
-import { db } from '@hominem/db';
 import type { CompanyOutput, CompanyInput } from '@hominem/db/schema';
+
+import { db } from '@hominem/db';
 import { companies } from '@hominem/db/schema';
 import { eq, type SQL } from 'drizzle-orm';
 

@@ -2,8 +2,9 @@ import { getPlaidItemByUserAndItemId, updatePlaidItemStatusById } from '@hominem
 import { success, error } from '@hominem/services';
 import { Hono } from 'hono';
 
-import { plaidClient } from '../../../lib/plaid';
 import type { AppEnv } from '../../../server';
+
+import { plaidClient } from '../../../lib/plaid';
 
 export const financePlaidDisconnectRoutes = new Hono<AppEnv>();
 

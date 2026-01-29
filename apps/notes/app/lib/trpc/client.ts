@@ -1,4 +1,5 @@
 import type { AppType } from '@hominem/hono-rpc';
+
 import { hc } from 'hono/client';
 
 /**

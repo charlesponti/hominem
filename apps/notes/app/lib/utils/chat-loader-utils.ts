@@ -1,5 +1,6 @@
-import type { createServerTRPCClient } from '~/lib/trpc/server';
 import type { ChatsListOutput, ChatsCreateOutput } from '@hominem/hono-rpc/types';
+
+import type { createServerTRPCClient } from '~/lib/trpc/server';
 
 import { ChatCreationError } from './errors';
 

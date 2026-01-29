@@ -1,9 +1,5 @@
 import { db } from '@hominem/db';
-import {
-  bookmark,
-  type BookmarkInput,
-  type BookmarkOutput,
-} from '@hominem/db/schema';
+import { bookmark, type BookmarkInput, type BookmarkOutput } from '@hominem/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 
 export type { BookmarkInput as BookmarkInsert, BookmarkOutput as BookmarkSelect };

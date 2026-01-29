@@ -50,7 +50,7 @@ export default function PlacesNearby({
     isLoading,
     error,
   } = useNearbyPlaces(location.latitude, location.longitude, radiusMeters);
-  
+
   const places = placesResult ?? [];
   const title = <h2 className="heading-2">Nearby</h2>;
   const radiusKm = (radiusMeters ?? 5000) / 1000;

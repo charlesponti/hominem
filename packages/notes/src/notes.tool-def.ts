@@ -1,3 +1,4 @@
+import { NoteContentTypeSchema } from '@hominem/db/schema';
 import { toolDefinition } from '@tanstack/ai';
 import { z } from 'zod';
 
@@ -7,7 +8,6 @@ import {
   ListNotesOutputSchema,
   notesService,
 } from './notes.service';
-import { NoteContentTypeSchema } from '@hominem/db/schema';
 
 // Define output schema for a single note
 const NoteOutputSchema = z.object({

@@ -7,10 +7,7 @@ import { useHonoMutation } from '@hominem/hono-client/react';
  * Delete user account
  */
 export const useDeleteAccount = (options?: any) =>
-  useHonoMutation<UserDeleteAccountOutput, {}>(
-    async (client: HonoClient) => {
-      const res = await client.api.user['delete-account'].$post({ json: {} });
-      return (await res.json()) as unknown as UserDeleteAccountOutput;
-    },
-    options,
-  );
+  useHonoMutation<UserDeleteAccountOutput, {}>(async (client: HonoClient) => {
+    const res = await client.api.user['delete-account'].$post({ json: {} });
+    return (await res.json()) as unknown as UserDeleteAccountOutput;
+  }, options);

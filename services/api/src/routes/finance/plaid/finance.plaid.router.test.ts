@@ -1,8 +1,8 @@
 import { cleanupFinanceTestData, seedFinanceTestData } from '@hominem/db/test/utils';
-import crypto from 'node:crypto';
-import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
+import crypto from 'node:crypto';
+import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   assertErrorResponse,
@@ -87,20 +87,17 @@ const plaidErrorHandlers = {
     );
   }),
 
-  itemPublicTokenExchangeError: http.post(
-    `${PLAID_BASE_URL}/item/public_token/exchange`,
-    () => {
-      return HttpResponse.json(
-        {
-          error_type: 'INVALID_REQUEST',
-          error_code: 'INVALID_REQUEST',
-          error_message: 'Invalid request',
-          display_message: 'Invalid request',
-        },
-        { status: 400 },
-      );
-    },
-  ),
+  itemPublicTokenExchangeError: http.post(`${PLAID_BASE_URL}/item/public_token/exchange`, () => {
+    return HttpResponse.json(
+      {
+        error_type: 'INVALID_REQUEST',
+        error_code: 'INVALID_REQUEST',
+        error_message: 'Invalid request',
+        display_message: 'Invalid request',
+      },
+      { status: 400 },
+    );
+  }),
 };
 
 // Mock BullMQ Queue

@@ -8,7 +8,6 @@ import {
   type PlaceOutput,
   place,
 } from '@hominem/db/schema';
-
 import { googlePlaces } from '@hominem/services/google-places';
 import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/google';
 import { normalizePhotoReference, sanitizeStoredPhotos } from '@hominem/utils/images';

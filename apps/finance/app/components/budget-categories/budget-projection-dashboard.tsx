@@ -32,7 +32,8 @@ export function BudgetProjectionDashboard() {
     categories
       .filter((cat: any) => cat.type === 'income')
       .reduce(
-        (sum: number, cat: any) => sum + Number.parseFloat(String(cat.averageMonthlyExpense || '0')),
+        (sum: number, cat: any) =>
+          sum + Number.parseFloat(String(cat.averageMonthlyExpense || '0')),
         0,
       ) || 0;
 

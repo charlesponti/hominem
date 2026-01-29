@@ -41,7 +41,7 @@ export const typingMindBase = {
     },
     customModels: [],
   },
-}
+};
 
 export const validTypingMindInput = {
   data: {
@@ -128,4 +128,4 @@ export const validTypingMindInput = {
     },
     customModels: [],
   },
-}
+};

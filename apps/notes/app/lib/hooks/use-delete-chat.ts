@@ -1,7 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query';
 import type { HonoClient } from '@hominem/hono-client';
-import { useHonoMutation } from '@hominem/hono-client/react';
 import type { ChatsDeleteOutput } from '@hominem/hono-rpc/types';
+
+import { useHonoMutation } from '@hominem/hono-client/react';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Query keys
 const QUERY_KEYS = {
@@ -15,7 +16,7 @@ const QUERY_KEYS = {
  */
 export function useDeleteChat(userId: string) {
   const queryClient = useQueryClient();
-  
+
   const deleteChatMutation = useHonoMutation<ChatsDeleteOutput, { chatId: string }>(
     async (client: HonoClient, variables: { chatId: string }) => {
       const res = await client.api.chats[':id'].$delete({ param: { id: variables.chatId } });
@@ -27,7 +28,7 @@ export function useDeleteChat(userId: string) {
         queryClient.invalidateQueries({ queryKey: ['chats'] });
         queryClient.removeQueries({ queryKey: ['chats', variables.chatId] });
       },
-    }
+    },
   );
 
   return {

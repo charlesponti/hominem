@@ -49,7 +49,7 @@ export function InlineCreateForm({
   const createItem = useCreateNote();
   const updateItem = useUpdateNote();
   const [error, setError] = useState<Error | null>(null);
-  
+
   const [inputMode, setInputMode] = useState<InputMode>(defaultInputMode);
   const [inputValue, setInputValue] = useState(itemToEdit?.content || '');
   const [inputTitle, setInputTitle] = useState(itemToEdit?.title || '');
@@ -156,7 +156,7 @@ export function InlineCreateForm({
     } else {
       const additionalData: Partial<NotesCreateInput> = {};
       const itemType = isTaskMode ? 'task' : 'note';
-      
+
       if (isTaskMode) {
         additionalData.taskMetadata = {
           status: 'todo',

@@ -1,8 +1,14 @@
 // Re-export commonly used types - available from pre-computed types
 export type {
-  ContactSelect,
+  ContactOutput,
   ContactInput,
+  ContactSelect,
+  Goal,
   GoalOutput,
+  GoalInput,
+  GoalSelect,
+  GoalMilestone,
+  GoalStatus,
   PlaceOutput,
   PlaceInput,
   PossessionOutput,
@@ -19,6 +25,10 @@ export type {
   ContentType,
   SEOMetadata,
   SocialMediaMetadata,
+  ContentStrategiesOutput,
+  ContentStrategiesInput,
+  ContentStrategiesSelect,
+  ContentStrategiesInsert,
 } from '@hominem/db/schema';
 
 export type {
@@ -37,17 +47,40 @@ export type {
   TaskStatus,
 } from '@hominem/db/schema';
 
-export type { UserOutput, UserInput, UserSelect, AccountOutput, AccountInput } from '@hominem/db/schema';
+export type {
+  ChatMessageOutput,
+  ChatMessageInput,
+  ChatMessageSelect,
+  ChatMessageToolCall,
+  ChatOutput,
+  ChatInput,
+  ChatSelect,
+} from '@hominem/db/schema';
 
-// TODO: The following types need .types.ts files to be created:
-// - Activity, Artist, Category, Chat, ChatMessageFile, ChatMessageSelect
-// - Company, JobApplication, JobApplicationInsert
-// - ContentStrategiesInsert, ContentStrategiesSelect
-// - GoalMilestone, GoalStatus
-// - Item, ItemInsert
-// - ListInsert, ListInviteSelect, ListSelect
-// - AllContentType, BaseContentType, ContentTag, PublishingContentType
+export type {
+  UserOutput,
+  UserInput,
+  UserSelect,
+  AccountOutput,
+  AccountInput,
+} from '@hominem/db/schema';
 
+export type {
+  ActivityOutput as Activity,
+  ActivityInput as ActivityInsert,
+  CategoryOutput as Category,
+  CategoryInput as CategoryInsert,
+  DocumentOutput as Document,
+  DocumentInput as DocumentInsert,
+  SkillOutput as Skill,
+  SkillInput as SkillInsert,
+  UserSkillOutput,
+  UserSkillInput,
+  JobSkillOutput,
+  JobSkillInput,
+} from '@hominem/db/schema';
+
+// BullMQ types
 import type { Queue } from 'bullmq';
 
 /**

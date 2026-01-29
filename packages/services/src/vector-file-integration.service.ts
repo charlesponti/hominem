@@ -21,7 +21,7 @@ export async function indexProcessedFile(
       fileType: processedFile.type,
       mimetype: processedFile.mimetype,
       fileSize: processedFile.size,
-      ...(processedFile.metadata || {}),
+      ...processedFile.metadata,
     };
 
     if (content.length > 1000) {

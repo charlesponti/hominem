@@ -41,43 +41,42 @@ export function useCreateInstitution() {
 
 // Hook for getting accounts grouped by institution
 export function useAccountsByInstitution() {
-  const query = useHonoQuery<AccountsWithPlaidOutput>(['finance', 'accounts', 'with-plaid'], async (client) => {
-    const res = await client.api.finance.accounts['with-plaid'].$post({ json: {} });
-    return res.json() as unknown as Promise<AccountsWithPlaidOutput>;
-  });
+  const query = useHonoQuery<AccountsWithPlaidOutput>(
+    ['finance', 'accounts', 'with-plaid'],
+    async (client) => {
+      const res = await client.api.finance.accounts['with-plaid'].$post({ json: {} });
+      return res.json() as unknown as Promise<AccountsWithPlaidOutput>;
+    },
+  );
 
   const accounts = Array.isArray(query.data) ? query.data : [];
 
-  const accountsByInstitution = accounts.reduce<Record<
-    string,
-    {
-      institutionId: string;
-      institutionName: string;
-      institutionLogo: string | null;
-      accounts: typeof accounts;
-    }
-  >>(
-    (
-      acc,
-      account,
-    ) => {
-      const institutionId = account.institutionId || 'unlinked';
-      const institutionName = account.institutionName || 'Unlinked Accounts';
-
-      if (!acc[institutionId]) {
-        acc[institutionId] = {
-          institutionId,
-          institutionName,
-          institutionLogo: account.institutionLogo ?? null,
-          accounts: [],
-        };
+  const accountsByInstitution = accounts.reduce<
+    Record<
+      string,
+      {
+        institutionId: string;
+        institutionName: string;
+        institutionLogo: string | null;
+        accounts: typeof accounts;
       }
+    >
+  >((acc, account) => {
+    const institutionId = account.institutionId || 'unlinked';
+    const institutionName = account.institutionName || 'Unlinked Accounts';
 
-      acc[institutionId].accounts.push(account);
-      return acc;
-    },
-    {},
-  );
+    if (!acc[institutionId]) {
+      acc[institutionId] = {
+        institutionId,
+        institutionName,
+        institutionLogo: account.institutionLogo ?? null,
+        accounts: [],
+      };
+    }
+
+    acc[institutionId].accounts.push(account);
+    return acc;
+  }, {});
 
   return {
     accountsByInstitution,

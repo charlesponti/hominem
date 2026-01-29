@@ -108,9 +108,9 @@ export default function VisitsPage() {
             ? 'No visits recorded yet. Start logging your visits to places!'
             : 'No visits match your filters.'}
         </div>
-       ) : (
-         <div className="space-y-4">
-           {filteredVisits.map((visit: any) => (
+      ) : (
+        <div className="space-y-4">
+          {filteredVisits.map((visit: any) => (
             <div key={visit.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex items-start gap-4">
                 {visit.place?.imageUrl && (

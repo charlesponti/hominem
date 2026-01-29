@@ -1,13 +1,14 @@
 import type { HonoClient } from '@hominem/hono-client';
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
-import type { 
+import type {
   TwitterAccountsListOutput,
   TwitterAuthorizeOutput,
   TwitterDisconnectOutput,
   TwitterPostOutput,
   TwitterSyncOutput,
-  TwitterPostInput
+  TwitterPostInput,
 } from '@hominem/hono-rpc/types';
+
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
 /**
  * Hook to get connected Twitter accounts
@@ -21,7 +22,7 @@ export function useTwitterAccounts() {
     },
     {
       staleTime: 1000 * 60 * 5, // 5 minutes
-    }
+    },
   );
 
   const data = query.data;
@@ -49,7 +50,7 @@ export function useTwitterConnect() {
         // Redirect to Twitter authorization
         window.location.href = result.authUrl;
       },
-    }
+    },
   );
 
   return {
@@ -68,7 +69,7 @@ export function useTwitterDisconnect() {
   const disconnectMutation = useHonoMutation<TwitterDisconnectOutput, { accountId: string }>(
     async (client: HonoClient, variables: { accountId: string }) => {
       const res = await client.api.twitter.accounts[':accountId'].$delete({
-        param: { accountId: variables.accountId }
+        param: { accountId: variables.accountId },
       });
       return res.json() as Promise<TwitterDisconnectOutput>;
     },
@@ -76,7 +77,7 @@ export function useTwitterDisconnect() {
       onSuccess: () => {
         utils.invalidate(['twitter', 'accounts']);
       },
-    }
+    },
   );
 
   return {
@@ -104,7 +105,7 @@ export function useTwitterPost() {
         // Optionally invalidate accounts query to refresh any status
         utils.invalidate(['twitter', 'accounts']);
       },
-    }
+    },
   );
 
   return {
@@ -131,7 +132,7 @@ export function useTwitterSync() {
         // Invalidate content queries to show new synced tweets
         utils.invalidate(['content-strategies', 'list']);
       },
-    }
+    },
   );
 
   return {

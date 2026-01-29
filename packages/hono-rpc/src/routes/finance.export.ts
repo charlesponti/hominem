@@ -1,4 +1,3 @@
-import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -20,7 +19,7 @@ export const exportRoutes = new Hono<AppContext>()
     accounts: z.array(z.string()).optional(),
     categories: z.array(z.string()).optional(),
   })), async (c) => {
-    const input = c.req.valid('json') as any;
+    const input = c.req.valid('json');
 
     // TODO: Implement actual export logic from services
     if (input.format === 'csv') {
@@ -53,7 +52,7 @@ export const exportRoutes = new Hono<AppContext>()
     startDate: z.string().optional(),
     endDate: z.string().optional(),
   })), async (c) => {
-    const input = c.req.valid('json') as any;
+    const input = c.req.valid('json');
 
     // TODO: Implement actual summary export logic
     return c.json<ExportSummaryOutput>(

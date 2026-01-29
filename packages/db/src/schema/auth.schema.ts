@@ -95,3 +95,56 @@ export const tokenRelations = relations(token, ({ one }) => ({
     references: [users.id],
   }),
 }))
+
+export interface VerificationToken {
+  identifier: string;
+  token: string;
+  expires: string;
+}
+
+export interface VerificationTokenInsert {
+  identifier: string;
+  token: string;
+  expires: string;
+}
+
+export interface Token {
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  type: 'EMAIL' | 'API';
+  emailToken: string | null;
+  valid: boolean;
+  expiration: string;
+  userId: string;
+  accessToken: string | null;
+  refreshToken: string | null;
+}
+
+export interface TokenInsert {
+  id?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  type: 'EMAIL' | 'API';
+  emailToken?: string | null;
+  valid?: boolean;
+  expiration: string;
+  userId: string;
+  accessToken?: string | null;
+  refreshToken?: string | null;
+}
+
+export interface Session {
+  id: string;
+  sessionToken: string;
+  userId: string;
+  expires: string;
+}
+
+export interface SessionInsert {
+  id: string;
+  sessionToken: string;
+  userId: string;
+  expires: string;
+}
+

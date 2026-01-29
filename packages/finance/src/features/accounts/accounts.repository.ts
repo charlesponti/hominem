@@ -1,6 +1,11 @@
+import type {
+  FinanceAccountOutput,
+  FinanceAccountInput,
+  FinanceTransactionOutput,
+} from '@hominem/db/schema';
+
 import { db } from '@hominem/db';
 import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/db/schema/finance';
-import type { FinanceAccountOutput, FinanceAccountInput, FinanceTransactionOutput } from '@hominem/db/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
 

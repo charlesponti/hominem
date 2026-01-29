@@ -4,8 +4,9 @@ import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { verifyPlaidWebhookSignature } from '../../../lib/plaid';
 import type { AppEnv } from '../../../server';
+
+import { verifyPlaidWebhookSignature } from '../../../lib/plaid';
 
 const webhookSchema = z.object({
   webhook_type: z.string(),

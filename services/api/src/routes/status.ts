@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { health } from '@hominem/db/schema';
+import { health } from '@hominem/db/schema/health';
 import { success, error } from '@hominem/services';
 import { Hono } from 'hono';
 

@@ -35,7 +35,9 @@ export default function BudgetCategoriesSetup() {
 
     try {
       const categoriesToCreate = Array.from(selectedCategories).map((categoryName) => {
-        const transactionCategory = transactionCategories?.find((tc: any) => (tc.name || tc.category) === categoryName);
+        const transactionCategory = transactionCategories?.find(
+          (tc: any) => (tc.name || tc.category) === categoryName,
+        );
         return {
           name: categoryName,
           type: 'expense' as const,
@@ -63,7 +65,9 @@ export default function BudgetCategoriesSetup() {
   };
 
   const handleSelectAll = () => {
-    setSelectedCategories(new Set(transactionCategories?.map((tc: any) => tc.name || tc.category) || []));
+    setSelectedCategories(
+      new Set(transactionCategories?.map((tc: any) => tc.name || tc.category) || []),
+    );
   };
 
   const handleDeselectAll = () => {
@@ -133,23 +137,31 @@ export default function BudgetCategoriesSetup() {
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
-                  onClick={() => toggleTransactionCategory(transactionCategory.name || transactionCategory.category)}
+                  onClick={() =>
+                    toggleTransactionCategory(
+                      transactionCategory.name || transactionCategory.category,
+                    )
+                  }
                   type="button"
                 >
                   <div className="flex items-center gap-3">
                     <div
                       className={`size-4 rounded border-2 flex items-center justify-center ${
-                        selectedCategories.has(transactionCategory.name || transactionCategory.category)
+                        selectedCategories.has(
+                          transactionCategory.name || transactionCategory.category,
+                        )
                           ? 'bg-blue-500 border-blue-500'
                           : 'border-gray-300'
                       }`}
                     >
-                      {selectedCategories.has(transactionCategory.name || transactionCategory.category) && (
-                        <Check className="size-3 text-white" />
-                      )}
+                      {selectedCategories.has(
+                        transactionCategory.name || transactionCategory.category,
+                      ) && <Check className="size-3 text-white" />}
                     </div>
                     <div>
-                      <div className="font-medium">{transactionCategory.name || transactionCategory.category}</div>
+                      <div className="font-medium">
+                        {transactionCategory.name || transactionCategory.category}
+                      </div>
                       <div className="text-sm text-gray-500">
                         {transactionCategory.transactionCount} transactions • Avg: $
                         {Math.abs(transactionCategory.averageAmount).toFixed(2)}/month

@@ -184,7 +184,10 @@ export class ChatService {
   /**
    * Update chat title based on conversation content
    */
-  async updateChatTitleFromConversation(chatId: string, messages: ChatMessageOutput[]): Promise<ChatOutput | null> {
+  async updateChatTitleFromConversation(
+    chatId: string,
+    messages: ChatMessageOutput[],
+  ): Promise<ChatOutput | null> {
     try {
       // Only update if there are a few messages and the title is still default
       const currentChat = await db

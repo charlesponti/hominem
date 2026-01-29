@@ -280,7 +280,7 @@ export const useMyVisits = (
   options?: HonoQueryOptions<PlaceGetMyVisitsOutput>,
 ) =>
   useHonoQuery<PlaceGetMyVisitsOutput>(
-    queryKeys.places.myVisits(input) ,
+    queryKeys.places.myVisits(input),
     async (client: HonoClient) => {
       const res = await client.api.places['my-visits'].$post({ json: input || {} });
       return res.json();

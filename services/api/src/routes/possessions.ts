@@ -1,3 +1,5 @@
+import type { PossessionOutput } from '@hominem/db/schema';
+
 import {
   createPossession,
   deletePossession,
@@ -10,14 +12,13 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import crypto from 'node:crypto';
 import { z } from 'zod';
-import type { Possession } from '@hominem/db/schema';
 
 import type { AppEnv } from '../server';
 
 export const possessionsRoutes = new Hono<AppEnv>();
 
 // Serialize possession Date objects to ISO strings
-function serializePossession(possession: Possession) {
+function serializePossession(possession: PossessionOutput) {
   return {
     ...possession,
     dateAcquired: possession.dateAcquired.toISOString(),

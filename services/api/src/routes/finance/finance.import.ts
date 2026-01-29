@@ -8,8 +8,9 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { handleFileUploadBuffer } from '../../middleware/file-upload';
 import type { AppEnv } from '../../server';
+
+import { handleFileUploadBuffer } from '../../middleware/file-upload';
 
 export const financeImportRoutes = new Hono<AppEnv>();
 
@@ -64,7 +65,11 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
         success({
           jobId: existingJob.id,
           fileName: existingJob.data.fileName,
-          status: existingJob.finishedOn ? 'done' : existingJob.failedReason ? 'error' : 'processing',
+          status: existingJob.finishedOn
+            ? 'done'
+            : existingJob.failedReason
+              ? 'error'
+              : 'processing',
           message: 'File is already being processed',
         }),
         200,

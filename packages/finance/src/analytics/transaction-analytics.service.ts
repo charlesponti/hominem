@@ -239,7 +239,10 @@ export type MonthlyStatsOutput = {
   }>;
 };
 
-export async function getMonthlyStats(params: { month: string; userId: string }): Promise<MonthlyStatsOutput> {
+export async function getMonthlyStats(params: {
+  month: string;
+  userId: string;
+}): Promise<MonthlyStatsOutput> {
   const { month, userId } = params;
   const startDate = new Date(`${month}-01T00:00:00.000Z`);
   const endDate = new Date(startDate);

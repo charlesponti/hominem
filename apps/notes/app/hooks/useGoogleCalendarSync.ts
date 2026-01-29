@@ -1,10 +1,11 @@
 import type { HonoClient } from '@hominem/hono-client';
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
-import type { 
-  EventsGoogleSyncOutput, 
-  EventsGoogleSyncInput, 
-  EventsSyncStatusOutput 
+import type {
+  EventsGoogleSyncOutput,
+  EventsGoogleSyncInput,
+  EventsSyncStatusOutput,
 } from '@hominem/hono-rpc/types';
+
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
 interface SyncOptions {
   calendarId?: string;
@@ -25,7 +26,7 @@ export function useGoogleCalendarSync() {
         utils.invalidate(['events', 'list']); // Assuming this key matches use-events
         utils.invalidate(['events', 'sync', 'status']);
       },
-    }
+    },
   );
 
   const statusQuery = useHonoQuery<EventsSyncStatusOutput>(
@@ -33,7 +34,7 @@ export function useGoogleCalendarSync() {
     async (client: HonoClient) => {
       const res = await client.api.events.sync.status.$get();
       return res.json() as Promise<EventsSyncStatusOutput>;
-    }
+    },
   );
 
   const sync = async (options: SyncOptions) => {

@@ -20,19 +20,16 @@ import { queryKeys } from '~/lib/query-keys';
  * Get received invites
  */
 export const useReceivedInvites = (token?: string) =>
-  useHonoQuery<InvitesGetReceivedOutput>(
-    queryKeys.invites.received(token) ,
-    async (client) => {
-      const res = await client.api.invites.received.$post({ json: { token } });
-      return res.json() as Promise<InvitesGetReceivedOutput>;
-    },
-  );
+  useHonoQuery<InvitesGetReceivedOutput>(queryKeys.invites.received(token), async (client) => {
+    const res = await client.api.invites.received.$post({ json: { token } });
+    return res.json() as Promise<InvitesGetReceivedOutput>;
+  });
 
 /**
  * Get sent invites
  */
 export const useSentInvites = () =>
-  useHonoQuery<InvitesGetSentOutput>(queryKeys.invites.sent() , async (client) => {
+  useHonoQuery<InvitesGetSentOutput>(queryKeys.invites.sent(), async (client) => {
     const res = await client.api.invites.sent.$post({ json: {} });
     return res.json() as Promise<InvitesGetSentOutput>;
   });

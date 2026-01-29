@@ -1,6 +1,7 @@
-import { z } from 'zod';
 import type { NoteOutput, NoteInput, NoteSyncItem } from '@hominem/db/schema';
+
 import { NoteContentTypeSchema, TaskMetadataSchema } from '@hominem/db/schema';
+import { z } from 'zod';
 
 const noteTagSchema = z.object({ value: z.string() });
 const noteTagsSchema = z.array(noteTagSchema);
@@ -21,9 +22,7 @@ export type UpdateNoteInput = z.infer<typeof UpdateNoteZodSchema>;
 export const CreateNoteInputSchema = z.object({
   title: z.string().describe('The title of the note'),
   content: z.string().describe('The content/body of the note'),
-  tags: noteTagsSchema
-    .optional()
-    .describe('Tags to categorize the note'),
+  tags: noteTagsSchema.optional().describe('Tags to categorize the note'),
   type: NoteContentTypeSchema.optional().describe('Type of note'),
 });
 
@@ -37,15 +36,17 @@ export const ListNotesInputSchema = z.object({
 });
 
 export const ListNotesOutputSchema = z.object({
-  notes: z.array(z.object({
-    id: z.string(),
-    title: z.string().nullable(),
-    content: z.string(),
-    type: NoteContentTypeSchema,
-    tags: noteTagsSchema.nullable(),
-    createdAt: z.string(),
-    updatedAt: z.string(),
-  })),
+  notes: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string().nullable(),
+      content: z.string(),
+      type: NoteContentTypeSchema,
+      tags: noteTagsSchema.nullable(),
+      createdAt: z.string(),
+      updatedAt: z.string(),
+    }),
+  ),
   total: z.number(),
 });
 

@@ -76,7 +76,7 @@ export async function action({ request }: Route.ActionArgs) {
     date: typeof date === 'string' ? date : undefined,
     type: typeof type === 'string' ? type : undefined,
     tags: typeof tags === 'string' ? tags.split(',').map((t) => t.trim()) : undefined,
-    people: people.length > 0 ? people.map(p => String(p)) : undefined,
+    people: people.length > 0 ? people.map((p) => String(p)) : undefined,
   };
 
   if (eventData.date) {
@@ -86,14 +86,14 @@ export async function action({ request }: Route.ActionArgs) {
   const { session } = await getServerSession(request);
   const client = createServerHonoClient(session?.access_token);
 
-   const res = await client.api.events.$post({ json: eventData });
-   const result = await res.json();
+  const res = await client.api.events.$post({ json: eventData });
+  const result = await res.json();
 
-   if (!result.id) {
-     throw new Error('Failed to create event');
-   }
+  if (!result.id) {
+    throw new Error('Failed to create event');
+  }
 
-   return { success: true, event: result };
+  return { success: true, event: result };
 }
 
 type EventFilters = {
@@ -167,18 +167,18 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
     }
   }, [sortOptions]); // Only depend on sortOptions to avoid loops
 
-   const eventsData = loaderData.events;
+  const eventsData = loaderData.events;
 
-    const activities: Activity[] = useMemo(() => {
-      return (eventsData as EventData[]).map((event) => ({
-        id: event.id,
-        date: event.date,
-        title: event.title,
-        description: event.description ?? undefined,
-        people: (event.people as any) || [],
-        tags: event.tags || [],
-      }));
-    }, [eventsData]);
+  const activities: Activity[] = useMemo(() => {
+    return (eventsData as EventData[]).map((event) => ({
+      id: event.id,
+      date: event.date,
+      title: event.title,
+      description: event.description ?? undefined,
+      people: (event.people as any) || [],
+      tags: event.tags || [],
+    }));
+  }, [eventsData]);
 
   const people: Person[] = useMemo(() => loaderData.people ?? [], [loaderData.people]);
 

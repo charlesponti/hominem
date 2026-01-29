@@ -1,4 +1,4 @@
-import { text, uuid, numeric, boolean, timestamp, jsonb, pgEnum, index } from 'drizzle-orm/pg-core';
+import { text, uuid, numeric, boolean, timestamp, jsonb } from 'drizzle-orm/pg-core';
 import * as z from 'zod';
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];

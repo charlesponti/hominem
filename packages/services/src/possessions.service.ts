@@ -1,9 +1,5 @@
 import { db } from '@hominem/db';
-import {
-  possessions,
-  type PossessionInput,
-  type PossessionOutput,
-} from '@hominem/db/schema';
+import { possessions, type PossessionInput, type PossessionOutput } from '@hominem/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
 
 type CreatePossessionInput = Omit<PossessionInput, 'createdAt' | 'updatedAt'> & {

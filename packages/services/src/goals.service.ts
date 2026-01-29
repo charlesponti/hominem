@@ -1,9 +1,5 @@
 import { db } from '@hominem/db';
-import {
-  goals,
-  type GoalInput,
-  type GoalOutput,
-} from '@hominem/db/schema';
+import { goals, type GoalInput, type GoalOutput } from '@hominem/db/schema';
 import { and, asc, desc, eq, ilike, ne } from 'drizzle-orm';
 
 export async function listGoals(params: {

@@ -1,5 +1,4 @@
 import { getAllInstitutions, createInstitution } from '@hominem/finance-services';
-import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -28,7 +27,7 @@ export const institutionsRoutes = new Hono<AppContext>()
     primaryColor: z.string().optional(),
     country: z.string().optional(),
   })), async (c) => {
-    const input = c.req.valid('json') as any;
+    const input = c.req.valid('json');
 
     const result = await createInstitution(input);
     return c.json<InstitutionCreateOutput>(result as any, 201);

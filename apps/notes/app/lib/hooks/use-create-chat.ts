@@ -1,7 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query';
 import type { HonoClient } from '@hominem/hono-client';
-import { useHonoMutation } from '@hominem/hono-client/react';
 import type { ChatsCreateInput, ChatsCreateOutput } from '@hominem/hono-rpc/types';
+
+import { useHonoMutation } from '@hominem/hono-client/react';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Query keys
 const QUERY_KEYS = {
@@ -14,7 +15,7 @@ const QUERY_KEYS = {
  */
 export function useCreateChat(userId: string) {
   const queryClient = useQueryClient();
-  
+
   const createChatMutation = useHonoMutation<ChatsCreateOutput, ChatsCreateInput>(
     async (client: HonoClient, variables: ChatsCreateInput) => {
       const res = await client.api.chats.$post({ json: variables });
@@ -25,7 +26,7 @@ export function useCreateChat(userId: string) {
         // Invalidate chats list. Assuming standard Hono Query key structure or manual keys used elsewhere.
         queryClient.invalidateQueries({ queryKey: ['chats'] });
       },
-    }
+    },
   );
 
   return {

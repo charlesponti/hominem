@@ -1,13 +1,13 @@
+import type { HonoClient } from '@hominem/hono-client';
+import type { ChatsListOutput } from '@hominem/hono-rpc/types';
+
+import { useHonoQuery } from '@hominem/hono-client/react';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/input';
 import { formatChatDate } from '@hominem/utils/dates';
 import { MessageSquare, Search, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router';
-
-import type { HonoClient } from '@hominem/hono-client';
-import { useHonoQuery } from '@hominem/hono-client/react';
-import type { ChatsListOutput } from '@hominem/hono-rpc/types';
 
 import { useDeleteChat } from '~/lib/hooks/use-delete-chat';
 
@@ -33,7 +33,7 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
       enabled: !!userId && userId !== 'anonymous',
       staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
-    }
+    },
   );
 
   const { deleteChat } = useDeleteChat(userId);

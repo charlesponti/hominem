@@ -46,6 +46,7 @@ export type ContentStrategiesInput = ContentStrategiesInsert;
 
 // Legacy aliases
 export type ContentStrategiesSelect = ContentStrategies;
+export type { ContentStrategiesInsert };
 
 // ============================================
 // REPOSITORY / DOMAIN TYPES

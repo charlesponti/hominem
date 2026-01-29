@@ -1,9 +1,10 @@
-import type { AppEnv } from '../../server';
 import { createAccount, getAccountByProviderAccountId, updateAccount } from '@hominem/auth/server';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { randomUUID } from 'node:crypto';
 import z from 'zod';
+
+import type { AppEnv } from '../../server';
 
 import { env } from '../../env';
 import {

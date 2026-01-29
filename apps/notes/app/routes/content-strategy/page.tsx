@@ -1,4 +1,5 @@
 import type { ContentStrategy } from '@hominem/db/schema';
+
 import { useToast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
@@ -327,11 +328,13 @@ ${strategy.monetizationIdeas?.map((idea) => `- ${idea}`).join('\n') || '- No mon
         targetAudience: strategy.targetAudience,
         platforms: selectedPlatforms,
         keyInsights: strategy.keyInsights || [],
-        contentPlan: strategy.contentPlan ? {
-          blog: strategy.contentPlan.blog,
-          socialMedia: strategy.contentPlan.socialMedia,
-          visualContent: strategy.contentPlan.visualContent,
-        } : undefined,
+        contentPlan: strategy.contentPlan
+          ? {
+              blog: strategy.contentPlan.blog,
+              socialMedia: strategy.contentPlan.socialMedia,
+              visualContent: strategy.contentPlan.visualContent,
+            }
+          : undefined,
         monetization: strategy.monetizationIdeas || [],
         competitiveAnalysis: strategy.competitiveAnalysis
           ? {

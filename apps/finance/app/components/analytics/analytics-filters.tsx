@@ -1,3 +1,5 @@
+import type { AccountData } from '@hominem/hono-rpc/types/finance.types';
+
 import { Button } from '@hominem/ui/button';
 import { DatePicker } from '@hominem/ui/components/date-picker';
 import { Badge } from '@hominem/ui/components/ui/badge';
@@ -14,8 +16,6 @@ import { CategorySelect } from '~/components/category-select';
 import { GroupBySelect } from '~/components/group-by-select';
 import { useFinanceCategories } from '~/lib/hooks/use-analytics';
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data';
-
-import type { AccountData } from '@hominem/hono-rpc/types/finance.types';
 
 type AccountsData = AccountData[];
 

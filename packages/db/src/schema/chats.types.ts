@@ -53,6 +53,10 @@ export {
 // ============================================
 
 export type {
+  ChatMessageReasoning,
+  ChatMessageToolCall,
+  ChatMessageFile,
+  ChatMessageRole,
   ChatMessageReasoning as ChatMessageReasoningType,
   ChatMessageToolCall as ChatMessageToolCallType,
   ChatMessageFile as ChatMessageFileType,

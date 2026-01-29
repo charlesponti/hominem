@@ -6,7 +6,6 @@ import { CalendarCheck, Edit, Trash2 } from 'lucide-react';
 
 import type { Goal } from '~/lib/trpc/notes-types';
 
-
 import { PriorityBadge } from './priority-badge';
 import { StatusBadge } from './status-badge';
 

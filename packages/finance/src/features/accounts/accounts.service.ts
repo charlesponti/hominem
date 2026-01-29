@@ -22,7 +22,9 @@ export async function createAccount(input: CreateAccountInput): Promise<FinanceA
   return AccountsRepository.create(input);
 }
 
-export async function createManyAccounts(inputs: CreateAccountInput[]): Promise<FinanceAccountOutput[]> {
+export async function createManyAccounts(
+  inputs: CreateAccountInput[],
+): Promise<FinanceAccountOutput[]> {
   return AccountsRepository.createMany(inputs);
 }
 
@@ -30,7 +32,10 @@ export async function listAccounts(userId: string): Promise<FinanceAccountOutput
   return AccountsRepository.list(userId);
 }
 
-export async function getAccountById(id: string, userId: string): Promise<FinanceAccountOutput | null> {
+export async function getAccountById(
+  id: string,
+  userId: string,
+): Promise<FinanceAccountOutput | null> {
   return AccountsRepository.getById(id, userId);
 }
 
@@ -72,16 +77,19 @@ export async function getAndCreateAccountsInBulk(
       `[AccountsService.getAndCreateAccountsInBulk]: Creating ${missingNames.length} missing accounts`,
     );
 
-     const newAccounts = await AccountsRepository.createMany(
-       missingNames.map((name) => ({
-         name,
-         type: 'checking' as const, // Default type
-         balance: '0',
-         isoCurrencyCode: 'USD',
-         userId,
-         meta: null,
-       } as CreateAccountInput)),
-     );
+    const newAccounts = await AccountsRepository.createMany(
+      missingNames.map(
+        (name) =>
+          ({
+            name,
+            type: 'checking' as const, // Default type
+            balance: '0',
+            isoCurrencyCode: 'USD',
+            userId,
+            meta: null,
+          }) as CreateAccountInput,
+      ),
+    );
 
     for (const newAccount of newAccounts) {
       accountsMap.set(newAccount.name, newAccount);

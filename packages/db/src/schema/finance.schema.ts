@@ -5,7 +5,6 @@ import * as z from 'zod';
 import {
   type Json,
   type TransactionLocation,
-  TransactionLocationSchema,
   createdAtColumn,
   updatedAtColumn,
   requiredTextColumn,

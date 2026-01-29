@@ -41,10 +41,10 @@ import type { ErrorCode } from './errors';
  * ```
  */
 export interface ApiErrorResponse {
-  error: string;  // Lowercase error code (e.g., 'not_found', 'validation_error')
-  code: ErrorCode;  // Original error code enum for client-side handling
-  message: string;  // Human-readable error message
-  details?: Record<string, unknown>;  // Additional error context
+  error: string; // Lowercase error code (e.g., 'not_found', 'validation_error')
+  code: ErrorCode; // Original error code enum for client-side handling
+  message: string; // Human-readable error message
+  details?: Record<string, unknown>; // Additional error context
 }
 
 /**

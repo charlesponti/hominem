@@ -85,7 +85,7 @@ const createPlacesClient = () => {
   return google.places({
     version: 'v1',
     auth: getGoogleApiKey(),
-  })
+  });
 };
 
 // Field names without prefix (for PlaceOutput Details API - single place response)

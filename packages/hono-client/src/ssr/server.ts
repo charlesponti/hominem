@@ -2,6 +2,9 @@ import type { AppType } from '@hominem/hono-rpc';
 
 import { hc } from 'hono/client';
 
+export type HonoClient = ReturnType<typeof hc<AppType>>;
+export type HonoApi = HonoClient['api'];
+
 /**
  * Create a server-side caller for use in Remix loaders
  * Makes internal HTTP calls to Hono API with auth forwarding
@@ -16,7 +19,7 @@ import { hc } from 'hono/client';
  *   return json(data);
  * }
  */
-export function createServerCaller(request: Request) {
+export function createServerCaller(request: Request): HonoApi {
   const authToken = request.headers.get('Authorization');
   const apiUrl =
     process.env.INTERNAL_API_URL || process.env.VITE_PUBLIC_API_URL || 'http://localhost:3000';
@@ -27,7 +30,7 @@ export function createServerCaller(request: Request) {
       'x-forwarded-for': request.headers.get('x-forwarded-for') || '',
       'user-agent': request.headers.get('user-agent') || '',
     },
-  });
+  }) as HonoClient;
 
   return client.api;
 }
@@ -40,7 +43,7 @@ export function createServerCaller(request: Request) {
  * const token = await getTokenFromSession(request);
  * const api = createServerCallerWithToken(token);
  */
-export function createServerCallerWithToken(token: string | null) {
+export function createServerCallerWithToken(token: string | null): HonoApi {
   const apiUrl =
     process.env.INTERNAL_API_URL || process.env.VITE_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -48,7 +51,7 @@ export function createServerCallerWithToken(token: string | null) {
     headers: {
       ...(token && { Authorization: `Bearer ${token}` }),
     },
-  });
+  }) as HonoClient;
 
   return client.api;
 }

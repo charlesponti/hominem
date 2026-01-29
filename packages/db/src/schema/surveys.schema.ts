@@ -56,3 +56,45 @@ export const surveyVotesRelations = relations(surveyVotes, ({ one }) => ({
     references: [surveyOptions.id],
   }),
 }))
+
+export interface Survey {
+  id: string;
+  name: string;
+  description: string | null;
+  userId: string;
+}
+
+export interface SurveyInsert {
+  id?: string;
+  name: string;
+  description?: string | null;
+  userId: string;
+}
+
+export interface SurveyOption {
+  id: string;
+  title: string;
+  description: string | null;
+  surveyId: string;
+}
+
+export interface SurveyOptionInsert {
+  id?: string;
+  title: string;
+  description?: string | null;
+  surveyId: string;
+}
+
+export interface SurveyVote {
+  id: string;
+  optionId: string;
+  surveyId: string;
+  userId: string;
+}
+
+export interface SurveyVoteInsert {
+  id?: string;
+  optionId: string;
+  surveyId: string;
+  userId: string;
+}

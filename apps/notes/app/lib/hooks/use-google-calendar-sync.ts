@@ -1,4 +1,8 @@
-import type { EventsGoogleCalendarsOutput, EventsGoogleSyncOutput, EventsGoogleSyncInput } from '@hominem/hono-rpc/types';
+import type {
+  EventsGoogleCalendarsOutput,
+  EventsGoogleSyncOutput,
+  EventsGoogleSyncInput,
+} from '@hominem/hono-rpc/types';
 
 import { useHonoMutation, useHonoClient, useHonoUtils } from '@hominem/hono-client/react';
 import { useCallback, useState } from 'react';

@@ -1,19 +1,18 @@
+import type { HonoClient } from '@hominem/hono-client';
+import type {
+  ChatsGetMessagesOutput,
+  MessagesDeleteOutput,
+  MessagesUpdateOutput,
+} from '@hominem/hono-rpc/types';
 import type React from 'react';
 
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/components/ui/input';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, X } from 'lucide-react';
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
 import { useMatches } from 'react-router';
-
-import type { HonoClient } from '@hominem/hono-client';
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
-import type { 
-  ChatsGetMessagesOutput,
-  MessagesDeleteOutput,
-  MessagesUpdateOutput,
-} from '@hominem/hono-rpc/types';
 
 import type { ExtendedMessage } from '~/lib/types/chat-message';
 
@@ -49,7 +48,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       async (client: HonoClient) => {
         const res = await client.api.chats[':id'].messages.$get({
           param: { id: chatId },
-          query: { limit: '50' }
+          query: { limit: '50' },
         });
         return res.json() as Promise<ChatsGetMessagesOutput>;
       },
@@ -57,7 +56,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         enabled: !!chatId,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
-      }
+      },
     );
 
     const messages = Array.isArray(messagesQuery.data) ? messagesQuery.data : [];
@@ -65,11 +64,11 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
     const messagesError = messagesQuery.error;
 
     const utils = useHonoUtils();
-    
+
     const deleteMessageMutation = useHonoMutation<MessagesDeleteOutput, { messageId: string }>(
       async (client: HonoClient, variables: { messageId: string }) => {
         const res = await client.api.messages[':messageId'].$delete({
-          param: { messageId: variables.messageId }
+          param: { messageId: variables.messageId },
         });
         return res.json() as Promise<MessagesDeleteOutput>;
       },
@@ -79,7 +78,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           // Note: we need to match the query key structure
           utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
         },
-      }
+      },
     );
 
     const sendMessage = useSendMessage({ chatId, userId });
@@ -163,11 +162,14 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       [deleteMessageMutation],
     );
 
-    const updateMessageMutation = useHonoMutation<MessagesUpdateOutput, { messageId: string, content: string }>(
-      async (client: HonoClient, variables: { messageId: string, content: string }) => {
+    const updateMessageMutation = useHonoMutation<
+      MessagesUpdateOutput,
+      { messageId: string; content: string }
+    >(
+      async (client: HonoClient, variables: { messageId: string; content: string }) => {
         const res = await client.api.messages[':messageId'].$patch({
           param: { messageId: variables.messageId },
-          json: { content: variables.content }
+          json: { content: variables.content },
         });
         return res.json() as Promise<MessagesUpdateOutput>;
       },
@@ -175,7 +177,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         onSuccess: () => {
           utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
         },
-      }
+      },
     );
 
     const handleRegenerate = useCallback(
@@ -280,7 +282,9 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           {displayError && (
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
               <div className="text-sm font-medium text-destructive mb-1">Chat Error</div>
-              <div className="text-xs text-destructive/80">{displayError instanceof Error ? displayError.message : String(displayError)}</div>
+              <div className="text-xs text-destructive/80">
+                {displayError instanceof Error ? displayError.message : String(displayError)}
+              </div>
             </div>
           )}
 

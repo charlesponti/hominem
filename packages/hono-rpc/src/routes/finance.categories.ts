@@ -1,5 +1,4 @@
 import { getSpendingCategories } from '@hominem/finance-services';
-import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';

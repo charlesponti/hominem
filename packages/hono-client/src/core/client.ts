@@ -36,7 +36,7 @@ export class HonoClient {
           }
 
           return response;
-        } catch (error) {
+        } catch (error: unknown) {
           if (config.onError && error instanceof Error) {
             config.onError(error);
           }
@@ -47,6 +47,6 @@ export class HonoClient {
   }
 
   get api() {
-    return this.client.api;
+    return (this.client as any).api;
   }
 }

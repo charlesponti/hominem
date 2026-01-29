@@ -1,6 +1,7 @@
+import type { FinancialInstitutionOutput, FinancialInstitutionInput } from '@hominem/db/schema';
+
 import { db } from '@hominem/db';
 import { financialInstitutions } from '@hominem/db/schema/finance';
-import type { FinancialInstitutionOutput, FinancialInstitutionInput } from '@hominem/db/schema';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -23,19 +24,19 @@ export const InstitutionsRepository = {
   },
 
   async create(input: FinancialInstitutionInput): Promise<FinancialInstitutionOutput> {
-     const [created] = await db
-       .insert(financialInstitutions)
-       .values({
-         id: input.id,
-         name: input.name,
-         url: input.url || null,
-         logo: input.logo || null,
-         primaryColor: input.primaryColor || null,
-         country: input.country || null,
-         createdAt: new Date(),
-         updatedAt: new Date(),
-       } as FinancialInstitutionInput)
-       .returning();
+    const [created] = await db
+      .insert(financialInstitutions)
+      .values({
+        id: input.id,
+        name: input.name,
+        url: input.url || null,
+        logo: input.logo || null,
+        primaryColor: input.primaryColor || null,
+        country: input.country || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as FinancialInstitutionInput)
+      .returning();
 
     if (!created) {
       throw new Error(`Failed to create institution: ${input.name}`);

@@ -16,7 +16,7 @@ import { queryKeys } from '~/lib/query-keys';
  * Get all trips
  */
 export const useTrips = () =>
-  useHonoQuery<TripsGetAllOutput>(queryKeys.trips.all() , async (client: HonoClient) => {
+  useHonoQuery<TripsGetAllOutput>(queryKeys.trips.all(), async (client: HonoClient) => {
     const res = await client.api.trips.list.$post({ json: {} });
     return res.json() as Promise<TripsGetAllOutput>;
   });

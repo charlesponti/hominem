@@ -69,7 +69,7 @@ export class PlaidService {
     await db.insert(financeAccounts).values({
       id: newAccountId,
       ...accountData,
-       type: accountData.type as AccountType,
+      type: accountData.type as AccountType,
       balance: accountData.balance.toFixed(2),
       limit: accountData.limit?.toExponential(2),
       interestRate: null,

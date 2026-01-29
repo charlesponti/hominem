@@ -13,10 +13,6 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
   // Auth context available via useSupabaseAuthContext
   // API client available via honoClient from @/lib/trpc/client
-  
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
+
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

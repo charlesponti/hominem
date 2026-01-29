@@ -69,9 +69,6 @@ export const command = new Command('convert-typingmind-to-bolt')
           const systemInstruction =
             systemMessage && typeof systemMessage.content === 'string' ? systemMessage.content : '';
 
-          // Convert chat params
-          const _chatParams = chat.chatParams || {};
-
           return {
             contextSince: -978307200, // Default value from Bolt sample
             messages,

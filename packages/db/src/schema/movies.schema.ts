@@ -53,3 +53,39 @@ export const movieViewingsRelations = relations(movieViewings, ({ one }) => ({
 export const movieRelations = relations(movie, ({ many }) => ({
   movieViewings: many(movieViewings),
 }))
+
+export interface Movie {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  director: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MovieInsert {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  director?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface MovieViewing {
+  id: string;
+  movieId: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MovieViewingInsert {
+  id: string;
+  movieId: string;
+  userId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

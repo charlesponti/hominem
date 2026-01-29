@@ -5,7 +5,6 @@ import {
   calculateTransactions,
   getMonthlyStats,
 } from '@hominem/finance-services';
-import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -38,7 +37,7 @@ export const analyzeRoutes = new Hono<AppContext>()
     includeStats: z.boolean().optional().default(false),
     compareToPrevious: z.boolean().optional().default(false),
   })), async (c) => {
-    const input = c.req.valid('json') as any;
+    const input = c.req.valid('json');
     const userId = c.get('userId')!;
 
     const result = await generateTimeSeriesData({
@@ -57,7 +56,7 @@ export const analyzeRoutes = new Hono<AppContext>()
     category: z.string().optional(),
     limit: z.number().optional().default(5),
   })), async (c) => {
-    const input = c.req.valid('json') as any;
+    const input = c.req.valid('json');
     const userId = c.get('userId')!;
 
     const result = await getTopMerchants(userId, input);
@@ -71,7 +70,7 @@ export const analyzeRoutes = new Hono<AppContext>()
     category: z.string().optional(),
     limit: z.coerce.number().optional(),
   })), async (c) => {
-    const input = c.req.valid('json') as any;
+    const input = c.req.valid('json');
     const userId = c.get('userId')!;
 
     const result = await getCategoryBreakdown(userId, input);
@@ -88,7 +87,7 @@ export const analyzeRoutes = new Hono<AppContext>()
     calculationType: z.enum(['sum', 'average', 'count', 'stats']).optional(),
     descriptionLike: z.string().optional(),
   })), async (c) => {
-    const input = c.req.valid('json') as any;
+    const input = c.req.valid('json');
     const userId = c.get('userId')!;
 
     const result = await calculateTransactions({
@@ -103,7 +102,7 @@ export const analyzeRoutes = new Hono<AppContext>()
   .post('/monthly-stats', zValidator('json', z.object({
     month: z.string().regex(/^\d{4}-\d{2}$/, 'Month must be in YYYY-MM format'),
   })), async (c) => {
-    const input = c.req.valid('json') as any;
+    const input = c.req.valid('json');
     const userId = c.get('userId')!;
 
     const result = await getMonthlyStats({

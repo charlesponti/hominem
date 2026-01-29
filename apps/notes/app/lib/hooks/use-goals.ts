@@ -9,6 +9,7 @@ import type {
   GoalDeleteOutput,
   GoalListQuery,
 } from '@hominem/hono-rpc/types';
+
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
 /**

@@ -23,7 +23,7 @@ const PlaceLists = ({ place }: Props) => {
     resolvedPlaceId || undefined,
     googleMapsId || undefined,
   );
-  
+
   const listsContainingPlace = listsResult ?? [];
 
   if (!isAuthenticated) {

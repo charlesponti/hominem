@@ -50,8 +50,8 @@ export class JobStatusService {
       ) {
         // Since we know this is a transaction job from the type check, it's safe to use these specific types
         const mergedStats = {
-          ...(current.stats || {}),
-          ...(update.stats || {}),
+          ...current.stats,
+          ...update.stats,
         };
         // Assign merged stats back to the updated object
         updated.stats = mergedStats;

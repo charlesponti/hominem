@@ -1,9 +1,9 @@
+import type { HonoClient } from '@hominem/hono-client';
+import type { TweetGenerateInput, TweetGenerateOutput } from '@hominem/hono-rpc/types';
+
+import { useHonoMutation } from '@hominem/hono-client/react';
 import { useToast } from '@hominem/ui';
 import { useState } from 'react';
-
-import type { HonoClient } from '@hominem/hono-client';
-import { useHonoMutation } from '@hominem/hono-client/react';
-import type { TweetGenerateInput, TweetGenerateOutput } from '@hominem/hono-rpc/types';
 
 export function useGenerateTweet() {
   const [generatedTweet, setGeneratedTweet] = useState('');
@@ -26,7 +26,7 @@ export function useGenerateTweet() {
           variant: 'destructive',
         });
       },
-    }
+    },
   );
 
   const generateTweet = (params: TweetGenerateInput) => {

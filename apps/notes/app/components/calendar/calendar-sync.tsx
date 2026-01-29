@@ -221,9 +221,7 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
                   </span>
                 </div>
                 {syncResult && !syncError ? (
-                  <p className="text-green-700 mt-1">
-                    {syncResult.message}
-                  </p>
+                  <p className="text-green-700 mt-1">{syncResult.message}</p>
                 ) : (
                   <p className="text-red-700 mt-1">{syncError}</p>
                 )}

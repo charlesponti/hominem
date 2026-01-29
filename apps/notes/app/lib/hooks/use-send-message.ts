@@ -29,10 +29,9 @@ export function useSendMessage({ chatId, userId }: { chatId: string; userId?: st
     const oldData = utils.getData<ChatsGetMessagesOutput>(key);
     if (!oldData) return;
 
-    utils.setData<ChatsGetMessagesOutput>(key,
-      oldData.map((msg) =>
-        msg.id === messageId ? { ...msg, isStreaming: false } : msg,
-      ),
+    utils.setData<ChatsGetMessagesOutput>(
+      key,
+      oldData.map((msg) => (msg.id === messageId ? { ...msg, isStreaming: false } : msg)),
     );
   };
 

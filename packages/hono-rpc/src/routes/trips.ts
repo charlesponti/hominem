@@ -4,7 +4,7 @@ import {
   getAllTrips,
   getTripById,
 } from '@hominem/places-services';
-import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
+import { NotFoundError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 

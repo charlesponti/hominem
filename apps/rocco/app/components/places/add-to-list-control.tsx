@@ -19,7 +19,9 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
   const isUuid = z.uuid().safeParse(placeId).success;
 
   // Fetch place details
-  const { data: placeDetailsResult } = usePlaceById(isAuthenticated && isUuid ? placeId : undefined);
+  const { data: placeDetailsResult } = usePlaceById(
+    isAuthenticated && isUuid ? placeId : undefined,
+  );
 
   const { data: placeDetailsByGoogleIdResult } = usePlaceByGoogleId(
     isAuthenticated && !isUuid ? placeId : undefined,

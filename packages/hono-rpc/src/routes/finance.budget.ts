@@ -121,7 +121,7 @@ export const budgetRoutes = new Hono<AppContext>()
       }),
     ),
     async (c) => {
-      const input = c.req.valid('json') as any;
+      const input = c.req.valid('json');
       const userId = c.get('userId')!;
 
       const existingCategory = await checkBudgetCategoryNameExists(input.name, userId);
@@ -153,7 +153,7 @@ export const budgetRoutes = new Hono<AppContext>()
       }),
     ),
     async (c) => {
-      const input = c.req.valid('json') as any;
+      const input = c.req.valid('json');
       const userId = c.get('userId')!;
       const { id, ...updateData } = input;
 
@@ -266,7 +266,7 @@ export const budgetRoutes = new Hono<AppContext>()
         .optional(),
     ),
     async (c) => {
-      const input = c.req.valid('json') as any;
+      const input = c.req.valid('json');
       const userId = c.get('userId')!;
 
       // If manual data is provided, use it directly
@@ -384,7 +384,7 @@ export const budgetRoutes = new Hono<AppContext>()
       }),
     ),
     async (c) => {
-      const input = c.req.valid('json') as any;
+      const input = c.req.valid('json');
       const userId = c.get('userId')!;
 
       const result = await bulkCreateBudgetCategoriesFromTransactions(userId, input.categories);

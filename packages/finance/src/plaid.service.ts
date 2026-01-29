@@ -1,6 +1,12 @@
+import type {
+  PlaidItemOutput,
+  PlaidItemInput,
+  FinancialInstitutionOutput,
+  FinancialInstitutionInput,
+} from '@hominem/db/schema';
+
 import { db } from '@hominem/db';
 import { financialInstitutions, plaidItems } from '@hominem/db/schema/finance';
-import type { PlaidItemOutput, PlaidItemInput, FinancialInstitutionOutput, FinancialInstitutionInput } from '@hominem/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
@@ -15,7 +21,10 @@ export async function getPlaidItemByUserAndItemId(
   );
 }
 
-export async function getPlaidItemById(id: string, userId: string): Promise<PlaidItemOutput | null> {
+export async function getPlaidItemById(
+  id: string,
+  userId: string,
+): Promise<PlaidItemOutput | null> {
   return (
     (await db.query.plaidItems.findFirst({
       where: and(eq(plaidItems.id, id), eq(plaidItems.userId, userId)),

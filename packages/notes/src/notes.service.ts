@@ -1,15 +1,18 @@
-import { db } from '@hominem/db';
 import type { NoteOutput, NoteInput, NoteSyncItem } from '@hominem/db/schema';
-import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm';
+
+import { db } from '@hominem/db';
 // Direct table import for DB operations
 import { notes } from '@hominem/db/schema/notes';
+import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm';
+
+import type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput } from './types';
+
 import {
   CreateNoteInputSchema,
   ListNotesInputSchema,
   ListNotesOutputSchema,
   UpdateNoteZodSchema,
 } from './types';
-import type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput } from './types';
 
 export class NotFoundError extends Error {
   constructor(message: string) {
@@ -280,7 +283,18 @@ export class NotesService {
   }
 }
 
-export { CreateNoteInputSchema, ListNotesInputSchema, ListNotesOutputSchema, UpdateNoteZodSchema } from './types';
-export type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput, NoteSyncItem } from './types';
+export {
+  CreateNoteInputSchema,
+  ListNotesInputSchema,
+  ListNotesOutputSchema,
+  UpdateNoteZodSchema,
+} from './types';
+export type {
+  CreateNoteInput,
+  ListNotesInput,
+  ListNotesOutput,
+  UpdateNoteInput,
+  NoteSyncItem,
+} from './types';
 
 export const notesService = new NotesService();

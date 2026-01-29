@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 
 import type { AppEnv } from '../../../server';
+
 import { financePlaidCreateLinkTokenRoutes } from './finance.plaid.create-link-token';
 import { financePlaidDisconnectRoutes } from './finance.plaid.disconnect';
 import { financePlaidExchangeTokenRoutes } from './finance.plaid.exchange-token';
