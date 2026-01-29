@@ -34,6 +34,9 @@ services:
       POSTGRES_DB: hominem
     volumes:
       - hominem-db:/var/lib/postgresql/data
+      # Mount an empty directory over the init scripts so local/dev startup
+      # doesn't run extension bootstrap scripts. Use migrations to manage extensions.
+      - ./docker/no-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -52,6 +55,8 @@ services:
       POSTGRES_DB: hominem-test
     volumes:
       - hominem-test-db:/var/lib/postgresql/data
+      # Prevent init scripts from running in CI/local test DB
+      - ./docker/no-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
