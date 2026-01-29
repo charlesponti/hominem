@@ -1,5 +1,3 @@
-hominem/docs/typescript-performance-optimization-guide.md
-
 # TypeScript and tsserver Performance Optimization Guide
 
 ## Overview
