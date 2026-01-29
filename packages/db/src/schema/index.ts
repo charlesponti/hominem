@@ -37,6 +37,7 @@ export * from './music.types';
 export * from './vector-documents.types';
 export * from './career.types';
 export * from './company.types';
+export * from './chats.types';
 
 // Shared utilities
 export type { Json } from './shared.schema';
