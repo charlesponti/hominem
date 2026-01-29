@@ -2,32 +2,31 @@
 applyTo: '**'
 ---
 
-# Performance-First Development
+# Performance-First (Concise)
 
-Maintain a high-velocity development cycle by optimizing for build speed, type-checking performance, and minimal runtime overhead.
+Goal: Build fast local iteration, fast type-checks, and efficient production runtime with minimal cognitive overhead.
 
-### 1. Minimal Dependency Graph
-- **Tactical Goal:** Prevent transitive dependency bloat.
-- **Action:** Use `import type` for all type-only dependencies to avoid loading heavy module code during type checking.
-- **Audit:** Before adding a new package, evaluate its impact on the monorepo's instantiation count. Prefer local utilities over heavy third-party libraries for simple tasks.
+Core Principles
 
-### 2. Type Instantiation Management
-- **Tactical Goal:** Keep `tsc` execution under 1 second per package.
-- **Action:** Avoid deep recursive types, huge conditional unions, and circular Type references.
-- **Optimization:** Flatten complex `Pick<Omit<Partial<...>>>` chains into named helper types to break expensive inference chains.
+- Keep type-checks cheap: prefer `import type` for type-only imports; avoid deep recursive and highly generic types that cause expensive inference.
+- Keep builds lean: prefer simple dependency graphs, avoid large transitive dependencies for small features, and respect the internal packages pattern.
+- Make runtime efficient: cache where appropriate, aggregate heavy work server-side, and prefer indexed DB queries and pagination for large result sets.
 
-### 3. Build & Runtime Efficiency
-- **Tactical Goal:** Fast local iteration and lean production artifacts.
-- **Action:** Respect the `Internal Packages` pattern (no path mappings). Leverage Bun's native workspace resolution.
-- **Constraint:** Ensure `skipLibCheck: true` and `incremental: true` are configured in all package `tsconfig.json` files to maximize compiler speed.
+Practical Rules
 
-### 4. Database Optimization
-- **Tactical Goal:** Efficient query execution and clear data contracts.
-- **Action:** Use Drizzle's `$inferSelect` selectively. Prefer explicit interface definitions for joined or complex query results to avoid expensive generic inference.
- 
-## Quick Checks & Tools
+- Use `import type` when only types are needed.
+- Limit complex generic chains — extract into named helper types when necessary.
+- Configure `tsconfig` for fast dev: `skipLibCheck: true`, `incremental: true`.
+- Measure, don’t guess: add lightweight telemetry and run `bun --typecheck`, `bun run analyze:type-perf`, and Lighthouse checks in CI.
 
-- Use Bun's native typechecker during development: `bun --typecheck` for fast feedback.
-- Run `bun run analyze:type-perf` to locate high type-instantiation files.
-- Count `import type` adoption with: `rg "import type" -n packages | wc -l`.
-- Run `bun run type-audit` or `bun run analyze:type-perf` as part of CI to catch regressions.
+Database & Caching
+
+- Aggregate and page on the server; avoid large initial payloads.
+- Use Redis/HTTP caches for expensive responses and set clear TTLs and invalidation rules.
+
+CI & Checks
+
+- Run `bun run format`, `bun run lint --parallel`, `bun run test`, and `bun run typecheck` in CI.
+- Add a perf audit to PR checklist if the change touches critical paths (DB queries, high-frequency endpoints, rendering hot paths).
+
+Keep it simple: if guidance is longer than one screen, move examples to `docs/` and keep this file a short checklist.
