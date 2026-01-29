@@ -14,3 +14,9 @@ export type GoalInput = GoalInsert;
 
 // Legacy aliases
 export type GoalSelect = Goal;
+
+// ============================================
+// RE-EXPORT DRIZZLE TABLES
+// ============================================
+
+export { goals } from './goals.schema';

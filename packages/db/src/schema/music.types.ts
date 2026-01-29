@@ -19,3 +19,12 @@ export type ArtistOutput = Artist;
 
 /** Artist insert input (for creating artists) */
 export type ArtistInput = ArtistInsert;
+
+// ============================================
+// RE-EXPORT DRIZZLE TABLES
+// ============================================
+
+export {
+  artists,
+  userArtists,
+} from './music.schema';

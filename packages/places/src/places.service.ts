@@ -1,11 +1,11 @@
 import { db } from '@hominem/db';
 import {
-  type Item as ItemSelect,
+  type ItemOutput,
   item,
-  type ListSelect,
+  type ListOutput,
   list,
   type PlaceInput,
-  type PlaceOutput as PlaceSelect,
+  type PlaceOutput,
   place,
 } from '@hominem/db/schema';
 
@@ -22,7 +22,7 @@ export type ListSummary = { id: string; name: string };
  * Computes imageUrl from place database values.
  * Returns imageUrl if set, otherwise falls back to first photo.
  */
-export function getPlaceImageUrl(place: Pick<PlaceSelect, 'imageUrl' | 'photos'>): string | null {
+export function getPlaceImageUrl(place: Pick<PlaceOutput, 'imageUrl' | 'photos'>): string | null {
   return place.imageUrl ?? place.photos?.[0] ?? null;
 }
 
@@ -33,7 +33,7 @@ function toLocationTuple(latitude?: number | null, longitude?: number | null): [
 }
 
 function extractListSummaries(
-  records: Array<{ list: Pick<ListSelect, 'id' | 'name'> | null }>,
+  records: Array<{ list: Pick<ListOutput, 'id' | 'name'> | null }>,
 ): ListSummary[] {
   return records
     .map((record) => record.list)
@@ -57,7 +57,7 @@ const placeUpdateSet = {
   updatedAt: new Date().toISOString(),
 };
 
-function updateCacheForPlace(result: PlaceSelect): void {
+function updateCacheForPlace(result: PlaceOutput): void {
   placeCache.delete(`place:id:${result.id}`);
   placeCache.delete(`place:googleMapsId:${result.googleMapsId}`);
   placeCache.set(`place:id:${result.id}`, result, placeCache.TTL_SHORT_MS);
@@ -113,27 +113,27 @@ export async function getPlacePhotoById(id: string): Promise<string | undefined>
     .then((results) => results[0]?.photos?.[0]);
 }
 
-export async function getPlaceById(id: string): Promise<PlaceSelect | undefined> {
+export async function getPlaceById(id: string): Promise<PlaceOutput | undefined> {
   const cacheKey = `place:id:${id}`;
   const cached = placeCache.get(cacheKey);
   if (cached) {
-    return cached as PlaceSelect;
+    return cached as PlaceOutput;
   }
 
   const result = await db.query.place.findFirst({ where: eq(place.id, id) });
   if (result) {
     placeCache.set(cacheKey, result, placeCache.TTL_SHORT_MS);
   }
-  return result as unknown as PlaceSelect | undefined;
+  return result as unknown as PlaceOutput | undefined;
 }
 
 export async function getPlaceByGoogleMapsId(
   googleMapsId: string,
-): Promise<PlaceSelect | undefined> {
+): Promise<PlaceOutput | undefined> {
   const cacheKey = `place:googleMapsId:${googleMapsId}`;
   const cached = placeCache.get(cacheKey);
   if (cached) {
-    return cached as PlaceSelect;
+    return cached as PlaceOutput;
   }
 
   const result = await db.query.place.findFirst({
@@ -142,17 +142,17 @@ export async function getPlaceByGoogleMapsId(
   if (result) {
     placeCache.set(cacheKey, result, placeCache.TTL_SHORT_MS);
   }
-  return result as unknown as PlaceSelect | undefined;
+  return result as unknown as PlaceOutput | undefined;
 }
 
-export async function getPlacesByIds(ids: string[]): Promise<PlaceSelect[]> {
+export async function getPlacesByIds(ids: string[]): Promise<PlaceOutput[]> {
   if (ids.length === 0) {
     return [];
   }
   return db.query.place.findMany({ where: inArray(place.id, ids) });
 }
 
-export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise<PlaceSelect[]> {
+export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise<PlaceOutput[]> {
   if (googleMapsIds.length === 0) {
     return [];
   }
@@ -201,7 +201,7 @@ export async function processPlacePhotos(
   return processedPhotos;
 }
 
-export async function upsertPlace({ data }: { data: PlaceInput }): Promise<PlaceSelect> {
+export async function upsertPlace({ data }: { data: PlaceInput }): Promise<PlaceOutput> {
   const insertValues = await preparePlaceInsertData(data);
 
   const [result] = await db
@@ -226,7 +226,7 @@ export async function createOrUpdatePlace(
   id: string,
   updates: Partial<
     Pick<
-      PlaceSelect,
+      PlaceOutput,
       | 'name'
       | 'description'
       | 'address'
@@ -241,7 +241,7 @@ export async function createOrUpdatePlace(
       | 'photos'
     >
   > & { location?: [number, number] },
-): Promise<PlaceSelect | undefined> {
+): Promise<PlaceOutput | undefined> {
   const [updated] = await db
     .update(place)
     .set({
@@ -568,7 +568,7 @@ export async function getNearbyPlacesFromLists(params: {
 
 export async function getItemsForPlace(
   placeId: string,
-): Promise<Array<ItemSelect & { list: Pick<ListSelect, 'id' | 'name'> | null }>> {
+): Promise<Array<ItemOutput & { list: Pick<ListOutput, 'id' | 'name'> | null }>> {
   return db.query.item.findMany({
     where: and(eq(item.itemId, placeId), eq(item.itemType, 'PLACE')),
     with: {
@@ -589,7 +589,7 @@ export async function updatePlacePhotos(placeId: string, photos: string[]): Prom
     .where(eq(place.id, placeId));
 }
 
-export async function listPlacesMissingPhotos(): Promise<PlaceSelect[]> {
+export async function listPlacesMissingPhotos(): Promise<PlaceOutput[]> {
   return db.query.place.findMany({
     where: and(isNotNull(place.googleMapsId), isNull(place.photos)),
   });
@@ -643,4 +643,4 @@ export async function refreshAllPlaces() {
   return { updatedCount, errors };
 }
 
-export type { PlaceSelect as PlaceOutput, PlaceInput };
+export type { PlaceOutput, PlaceInput };

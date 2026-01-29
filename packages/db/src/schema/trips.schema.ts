@@ -14,6 +14,26 @@ export const trips = pgTable('trips', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
+export interface Trip {
+  id: string;
+  name: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface TripInsert {
+  id?: string;
+  name: string;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  userId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export const tripsRelations = relations(trips, ({ one }) => ({
   user: one(users, {
     fields: [trips.userId],

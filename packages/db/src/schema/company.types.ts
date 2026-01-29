@@ -16,3 +16,9 @@ import type { Company, CompanyInsert } from './company.schema';
 
 export type CompanyOutput = Company;
 export type CompanyInput = CompanyInsert;
+
+// ============================================
+// RE-EXPORT DRIZZLE TABLES (needed for db.query)
+// ============================================
+
+export { companies } from './company.schema';

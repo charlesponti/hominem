@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { type ItemOutput as ItemSelect, item, list, place, userLists, users } from '@hominem/db/schema';
+import { type ItemOutput, item, list, place, userLists, users } from '@hominem/db/schema';
 import { getHominemPhotoURL } from '@hominem/utils/images';
 import { logger } from '@hominem/utils/logger';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
@@ -289,7 +289,7 @@ export async function removeItemFromList(params: {
   return deletedItem.length > 0;
 }
 
-export async function getItemsByListId(listId: string): Promise<ItemSelect[]> {
+export async function getItemsByListId(listId: string): Promise<ItemOutput[]> {
   return db.query.item.findMany({
     where: eq(item.listId, listId),
     orderBy: [desc(item.createdAt)],

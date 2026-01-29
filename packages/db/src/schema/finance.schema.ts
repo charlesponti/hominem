@@ -55,6 +55,8 @@ export const accountTypeEnum = pgEnum('account_type', [
 
 export const AccountTypeEnum = z.enum(accountTypeEnum.enumValues as [string, ...string[]]);
 
+export type AccountType = (typeof accountTypeEnum.enumValues)[number];
+
 export const institutionStatusEnum = pgEnum('institution_status', [
   'active',
   'error',

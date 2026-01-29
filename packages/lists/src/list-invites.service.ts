@@ -1,8 +1,8 @@
 import { db, takeUniqueOrThrow } from '@hominem/db';
 import {
-  type ListInviteSelect,
-  type ListSelect,
-  type UserSelect,
+  type ListInviteOutput,
+  type ListOutput,
+  type UserOutput,
   list,
   listInvite,
   userLists,
@@ -62,7 +62,7 @@ export type DeleteListInviteParams = z.infer<typeof deleteListInviteSchema>;
  */
 export async function getListInvites(
   listId: string,
-): Promise<(ListInviteSelect & { list: ListSelect | null; user_invitedUserId: UserSelect | null })[]> {
+): Promise<(ListInviteOutput & { list: ListOutput | null; user_invitedUserId: UserOutput | null })[]> {
   try {
     return await db.query.listInvite.findMany({
       where: eq(listInvite.listId, listId),
@@ -86,7 +86,7 @@ export async function getListInvites(
 export async function getInvitesForUser(
   userId: string,
   normalizedEmail?: string | null,
-): Promise<(ListInviteSelect & { list: ListSelect | null })[]> {
+): Promise<(ListInviteOutput & { list: ListOutput | null })[]> {
   const ownershipClause = normalizedEmail
     ? or(eq(listInvite.invitedUserId, userId), eq(listInvite.invitedUserEmail, normalizedEmail))
     : eq(listInvite.invitedUserId, userId);
@@ -103,7 +103,7 @@ export async function getInvitesForUser(
  */
 export async function getInviteByToken(
   token: string,
-): Promise<ListInviteSelect & { list: ListSelect | null }> {
+): Promise<ListInviteOutput & { list: ListOutput | null }> {
   const invite = await db.query.listInvite.findFirst({
     where: eq(listInvite.token, token),
     with: { list: true },
@@ -123,7 +123,7 @@ export async function getInviteByToken(
 export async function getInviteByListAndToken(params: {
   listId: string;
   token: string;
-}): Promise<ListInviteSelect> {
+}): Promise<ListInviteOutput> {
   const { listId, token } = params;
 
   const invite = await db.query.listInvite.findFirst({
@@ -158,7 +158,7 @@ export async function deleteInviteByListAndToken(params: {
  */
 export async function getOutboundInvites(
   userId: string,
-): Promise<(ListInviteSelect & { list: ListSelect; user_invitedUserId: UserSelect | null })[]> {
+): Promise<(ListInviteOutput & { list: ListOutput; user_invitedUserId: UserOutput | null })[]> {
   return db.query.listInvite.findMany({
     where: eq(listInvite.userId, userId),
     with: {
@@ -178,7 +178,7 @@ export async function getOutboundInvites(
  * @throws ConflictError if invite already exists for this email
  * @throws InternalError if database operation fails
  */
-export async function sendListInvite(params: SendListInviteParams): Promise<ListInviteSelect> {
+export async function sendListInvite(params: SendListInviteParams): Promise<ListInviteOutput> {
   const { listId, invitedUserEmail, invitingUserId, baseUrl } = params;
 
   const normalizedInvitedEmail = invitedUserEmail.toLowerCase();
@@ -274,7 +274,7 @@ export async function sendListInvite(params: SendListInviteParams): Promise<List
  * @throws ValidationError if invite was already accepted or conditions not met
  * @throws InternalError if database operation fails
  */
-export async function acceptListInvite(params: AcceptListInviteParams): Promise<ListSelect> {
+export async function acceptListInvite(params: AcceptListInviteParams): Promise<ListOutput> {
   const { listId, acceptingUserId, token } = params;
 
   const invite = await db.query.listInvite.findFirst({

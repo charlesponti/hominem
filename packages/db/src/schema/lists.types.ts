@@ -12,14 +12,30 @@ import type {
   ListInsert,
   ListInvite,
   ListInviteInsert,
+  UserLists,
+  UserListsInsert,
 } from './lists.schema';
-import type { Item, ItemInsert } from './items.schema';
 
 export type ListOutput = List;
+export type ListSelect = List;
 export type ListInput = ListInsert;
 
 export type ListInviteOutput = ListInvite;
+export type ListInviteSelect = ListInvite;
 export type ListInviteInput = ListInviteInsert;
 
-export type ItemOutput = Item;
-export type ItemInput = ItemInsert;
+export type UserListsOutput = UserLists;
+export type UserListsInput = UserListsInsert;
+
+// ============================================
+// RE-EXPORT DRIZZLE TABLES (needed for db.query)
+// ============================================
+
+export {
+  list,
+  listRelations,
+  userLists,
+  userListsRelations,
+  listInvite,
+  listInviteRelations,
+} from './lists.schema';

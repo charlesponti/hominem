@@ -22,3 +22,12 @@ export type BookmarkInput = BookmarkInsert;
 
 // Legacy aliases
 export type BookmarkSelect = Bookmark;
+
+// ============================================
+// RE-EXPORT DRIZZLE TABLES / RELATIONS
+// ============================================
+
+export {
+  bookmark,
+  bookmarkRelations,
+} from './bookmarks.schema';

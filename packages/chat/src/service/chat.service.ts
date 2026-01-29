@@ -1,5 +1,5 @@
 import { db, takeUniqueOrThrow } from '@hominem/db';
-import { type Chat, type ChatMessageSelect, chat, chatMessage } from '@hominem/db/schema';
+import { type ChatOutput, type ChatMessageOutput, chat, chatMessage } from '@hominem/db/schema';
 import { logger } from '@hominem/utils/logger';
 import { and, desc, eq } from 'drizzle-orm';
 
@@ -38,7 +38,7 @@ export class ChatError extends Error {
 }
 
 export class ChatService {
-  async createChat(params: CreateChatParams): Promise<Chat> {
+  async createChat(params: CreateChatParams): Promise<ChatOutput> {
     try {
       const chatId = crypto.randomUUID();
       const now = new Date().toISOString();
@@ -61,7 +61,7 @@ export class ChatService {
     }
   }
 
-  async getChatById(chatId: string, userId: string): Promise<Chat | null> {
+  async getChatById(chatId: string, userId: string): Promise<ChatOutput | null> {
     try {
       const [chatData] = await db
         .select()
@@ -86,7 +86,7 @@ export class ChatService {
     userId: string,
     chatId?: string,
     onChatDoesNotExist?: (chatId: string) => Promise<void>,
-  ): Promise<Chat> {
+  ): Promise<ChatOutput> {
     try {
       if (chatId) {
         const existingChat = await db
@@ -128,7 +128,7 @@ export class ChatService {
   /**
    * Get all chats for a user
    */
-  async getUserChats(userId: string, limit = 50): Promise<Chat[]> {
+  async getUserChats(userId: string, limit = 50): Promise<ChatOutput[]> {
     try {
       const chats = await db
         .select()
@@ -147,7 +147,7 @@ export class ChatService {
   /**
    * Update chat title
    */
-  async updateChatTitle(chatId: string, title: string, userId?: string): Promise<Chat> {
+  async updateChatTitle(chatId: string, title: string, userId?: string): Promise<ChatOutput> {
     try {
       // Get chat to validate ownership if userId is provided
       if (userId) {
@@ -184,7 +184,7 @@ export class ChatService {
   /**
    * Update chat title based on conversation content
    */
-  async updateChatTitleFromConversation(chatId: string, messages: ChatMessageSelect[]): Promise<Chat | null> {
+  async updateChatTitleFromConversation(chatId: string, messages: ChatMessageOutput[]): Promise<ChatOutput | null> {
     try {
       // Only update if there are a few messages and the title is still default
       const currentChat = await db
@@ -254,7 +254,7 @@ export class ChatService {
   /**
    * Search chats by title or content
    */
-  async searchChats(params: SearchChatsParams): Promise<Chat[]> {
+  async searchChats(params: SearchChatsParams): Promise<ChatOutput[]> {
     try {
       const chats = await db
         .select()

@@ -22,3 +22,9 @@ export type PossessionInput = PossessionInsert;
 
 // Legacy aliases
 export type PossessionSelect = Possession;
+
+// ============================================
+// RE-EXPORT DRIZZLE TABLES
+// ============================================
+
+export { possessions } from './possessions.schema';

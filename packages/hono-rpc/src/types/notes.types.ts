@@ -104,6 +104,7 @@ export type NotesListOutput = { notes: Note[] };
 // ============================================================================
 
 export type NotesGetOutput = Note;
+export type NoteOutput = Note;
 
 // ============================================================================
 // CREATE NOTE

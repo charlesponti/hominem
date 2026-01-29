@@ -1,7 +1,6 @@
 import { db } from '@hominem/db';
-import type { JobOutput, JobInput, CompanyOutput } from '@hominem/db/schema';
-import { jobs } from '@hominem/db/schema/career';
-import { companies } from '@hominem/db/schema/company';
+import type { JobOutput, JobInput } from '@hominem/db/schema';
+import { jobs, companies } from '@hominem/db/schema';
 import { eq, type SQL } from 'drizzle-orm';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 

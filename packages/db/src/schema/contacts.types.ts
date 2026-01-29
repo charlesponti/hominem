@@ -14,3 +14,9 @@ export type ContactInput = ContactInsert;
 
 // Legacy aliases
 export type ContactSelect = Contact;
+
+// ============================================
+// RE-EXPORTS (drizzle helpers)
+// ============================================
+
+export { contacts } from './contacts.schema';

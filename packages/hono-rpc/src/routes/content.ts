@@ -1,4 +1,4 @@
-import { PublishingContentTypeSchema } from '@hominem/db/schema';
+import { PublishingContentTypeSchema, AllContentTypeSchema } from '@hominem/db/schema';
 import { ContentService } from '@hominem/notes-services';
 import { error, success } from '@hominem/services';
 import { Hono } from 'hono';

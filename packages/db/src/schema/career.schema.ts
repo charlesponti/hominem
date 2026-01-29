@@ -9,6 +9,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core'
+import { relations } from 'drizzle-orm'
 import { companies } from './company.schema'
 import { users } from './users.schema'
 
@@ -322,3 +323,49 @@ export interface WorkExperienceInsert {
   updatedAt?: Date;
 }
 export type NewWorkExperience = WorkExperienceInsert;
+
+// ============================================
+// RELATIONS
+// ============================================
+
+export const jobsRelations = relations(jobs, ({ one, many }) => ({
+  company: one(companies, {
+    fields: [jobs.companyId],
+    references: [companies.id],
+  }),
+  jobApplications: many(job_applications),
+}))
+
+export const job_applicationsRelations = relations(job_applications, ({ one, many }) => ({
+  job: one(jobs, {
+    fields: [job_applications.jobId],
+    references: [jobs.id],
+  }),
+  company: one(companies, {
+    fields: [job_applications.companyId],
+    references: [companies.id],
+  }),
+  user: one(users, {
+    fields: [job_applications.userId],
+    references: [users.id],
+  }),
+  applicationStages: many(application_stages),
+}))
+
+export const application_stagesRelations = relations(application_stages, ({ one }) => ({
+  jobApplication: one(job_applications, {
+    fields: [application_stages.jobApplicationId],
+    references: [job_applications.id],
+  }),
+}))
+
+export const work_experiencesRelations = relations(work_experiences, ({ one }) => ({
+  user: one(users, {
+    fields: [work_experiences.userId],
+    references: [users.id],
+  }),
+  company: one(companies, {
+    fields: [work_experiences.companyId],
+    references: [companies.id],
+  }),
+}))

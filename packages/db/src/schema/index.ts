@@ -27,6 +27,7 @@ export * from './places.types';
 export * from './events.types';
 export * from './calendar.types';
 export * from './lists.types';
+export * from './items.types';
 export * from './contacts.types';
 export * from './users.types';
 export * from './tags.types';
@@ -38,6 +39,7 @@ export * from './vector-documents.types';
 export * from './career.types';
 export * from './company.types';
 export * from './chats.types';
+export * from './travel.types';
 
 // Shared utilities
 export type { Json } from './shared.schema';

@@ -1,4 +1,4 @@
-import { insertTransactionSchema } from '@hominem/db/schema';
+import { TransactionInsertSchema } from '@hominem/db/schema';
 import {
   queryTransactions,
   createTransaction,
@@ -64,13 +64,13 @@ export const transactionsRoutes = new Hono<AppContext>()
     );
   })
 
-  // POST /create - Create new transaction
-  .post(
-    '/create',
-    zValidator('json', insertTransactionSchema.omit({ userId: true })),
-    async (c) => {
-      const input = c.req.valid('json') as any;
-      const userId = c.get('userId')!;
+   // POST /create - Create new transaction
+   .post(
+     '/create',
+     zValidator('json', TransactionInsertSchema.omit({ userId: true })),
+     async (c) => {
+       const input = c.req.valid('json') as any;
+       const userId = c.get('userId')!;
 
       // Validate account if provided
       if (input.accountId) {

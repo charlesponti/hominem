@@ -22,3 +22,9 @@ export type VectorDocumentInput = NewVectorDocument;
 
 // Legacy aliases
 export type VectorDocumentSelect = VectorDocument;
+
+// ============================================
+// RE-EXPORT DRIZZLE TABLES
+// ============================================
+
+export { vectorDocuments } from './vector-documents.schema';

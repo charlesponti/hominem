@@ -14,3 +14,9 @@ export type TagInput = TagInsert;
 
 // Legacy aliases
 export type TagSelect = Tag;
+
+// ============================================
+// RE-EXPORT DRIZZLE TABLES
+// ============================================
+
+export { tags } from './tags.schema';

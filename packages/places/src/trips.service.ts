@@ -1,9 +1,24 @@
 import { db } from '@hominem/db';
-import { item, place, tripItems, trips } from '@hominem/db/schema';
+import {
+  type ItemOutput,
+  type PlaceOutput,
+  type TripItemOutput,
+  type TripOutput,
+  item,
+  place,
+  tripItems,
+  trips,
+} from '@hominem/db/schema';
 import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { logger } from '@hominem/utils/logger';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
+
+type TripItemWithPlace = {
+  trip_items: TripItemOutput;
+  item: ItemOutput;
+  place: PlaceOutput;
+};
 
 // ============================================================================
 // Validation Schemas
@@ -64,7 +79,7 @@ export type AddItemToTripInput = z.infer<typeof addItemToTripSchema>;
  * @throws ValidationError if input is invalid
  * @throws InternalError if database operation fails
  */
-export async function createTrip(input: CreateTripInput) {
+export async function createTrip(input: CreateTripInput): Promise<TripOutput> {
   try {
     const validated = createTripSchema.parse(input);
 
@@ -116,7 +131,7 @@ export async function createTrip(input: CreateTripInput) {
  * @returns Array of trips
  * @throws ValidationError if input is invalid
  */
-export async function getAllTrips(input: GetAllTripsInput) {
+export async function getAllTrips(input: GetAllTripsInput): Promise<TripOutput[]> {
   const validated = getAllTripsSchema.parse(input);
   return db.select().from(trips).where(eq(trips.userId, validated.userId));
 }
@@ -129,7 +144,9 @@ export async function getAllTrips(input: GetAllTripsInput) {
  * @throws NotFoundError if trip is not found
  * @throws ValidationError if input is invalid
  */
-export async function getTripById(input: GetTripByIdInput) {
+export async function getTripById(
+  input: GetTripByIdInput,
+): Promise<TripOutput & { items: TripItemWithPlace[] }> {
   const validated = getTripByIdSchema.parse(input);
 
   const trip = await db.query.trips.findFirst({
@@ -140,13 +157,13 @@ export async function getTripById(input: GetTripByIdInput) {
     throw new NotFoundError('Trip', { tripId: validated.tripId });
   }
 
-  const items = await db
+  const items = (await db
     .select()
     .from(tripItems)
     .where(eq(tripItems.tripId, validated.tripId))
     .innerJoin(item, eq(tripItems.itemId, item.id))
     .innerJoin(place, eq(item.itemId, place.id))
-    .orderBy(tripItems.day, tripItems.order);
+    .orderBy(tripItems.day, tripItems.order)) as TripItemWithPlace[];
 
   return { ...trip, items };
 }
@@ -159,7 +176,7 @@ export async function getTripById(input: GetTripByIdInput) {
  * @throws ValidationError if input is invalid
  * @throws InternalError if database operation fails
  */
-export async function addItemToTrip(input: AddItemToTripInput) {
+export async function addItemToTrip(input: AddItemToTripInput): Promise<TripItemOutput> {
   try {
     const validated = addItemToTripSchema.parse(input);
 

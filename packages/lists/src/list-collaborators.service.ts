@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { list, listInvite, type UserListsSelect, userLists } from '@hominem/db/schema';
+import { list, listInvite, type UserListsOutput, userLists } from '@hominem/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
 
 export async function isUserMemberOfList(listId: string, userId: string): Promise<boolean> {
@@ -9,7 +9,7 @@ export async function isUserMemberOfList(listId: string, userId: string): Promis
   return Boolean(membership);
 }
 
-export async function getUserListLinks(listIds: string[]): Promise<UserListsSelect[]> {
+export async function getUserListLinks(listIds: string[]): Promise<UserListsOutput[]> {
   return db.query.userLists.findMany({
     where: inArray(userLists.listId, listIds),
   });

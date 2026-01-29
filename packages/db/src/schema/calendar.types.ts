@@ -28,3 +28,16 @@ export type CalendarEventSelect = CalendarEvent;
 // ============================================
 
 export type { EventSourceEnum };
+
+// ============================================
+// RE-EXPORT DRIZZLE TABLES / ENUMS
+// ============================================
+
+export {
+  events,
+  eventsTags,
+  eventsUsers,
+  eventsTransactions,
+  eventTypeEnum,
+  eventSourceEnum,
+} from './calendar.schema';

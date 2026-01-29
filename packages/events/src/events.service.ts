@@ -2,11 +2,12 @@ import { db } from '@hominem/db';
 import {
   type EventOutput,
   type EventInput,
-  contacts,
   type EventTypeEnum,
+  eventTypeEnum,
   events,
   eventsTags,
   eventsUsers,
+  contacts,
   place,
   tags,
 } from '@hominem/db/schema';

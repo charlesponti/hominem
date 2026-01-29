@@ -1,4 +1,4 @@
-import type { FinanceTransaction } from '@hominem/db/schema';
+import type { FinanceTransactionOutput, TransactionType } from '@hominem/db/schema';
 import type { Job } from 'bullmq';
 
 import { logger } from '@hominem/utils/logger';
@@ -136,7 +136,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
 
           // Insert new transaction
           await plaidService.insertTransaction({
-            type: determineTransactionType(transaction.amount) as FinanceTransaction['type'],
+            type: determineTransactionType(transaction.amount) as TransactionType,
             amount: Math.abs(transaction.amount).toFixed(2),
             date: new Date(transaction.date),
             description: transaction.name,
@@ -183,9 +183,9 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             }
 
             // Insert the transaction
-            await plaidService.insertTransaction({
-              type: determineTransactionType(transaction.amount) as FinanceTransaction['type'],
-              amount: Math.abs(transaction.amount).toFixed(2),
+             await plaidService.insertTransaction({
+               type: determineTransactionType(transaction.amount) as TransactionType,
+               amount: Math.abs(transaction.amount).toFixed(2),
               date: new Date(transaction.date),
               description: transaction.name,
               merchantName: transaction.merchant_name || null,
@@ -206,11 +206,11 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
               plaidTransactionId: transaction.transaction_id,
               userId,
             });
-          } else {
-            // Update the existing transaction
-            await plaidService.updateTransaction(existingTransaction.id, {
-              type: determineTransactionType(transaction.amount) as FinanceTransaction['type'],
-              amount: Math.abs(transaction.amount).toFixed(2),
+           } else {
+             // Update the existing transaction
+             await plaidService.updateTransaction(existingTransaction.id, {
+               type: determineTransactionType(transaction.amount) as TransactionType,
+               amount: Math.abs(transaction.amount).toFixed(2),
               date: new Date(transaction.date),
               description: transaction.name,
               merchantName: transaction.merchant_name || null,

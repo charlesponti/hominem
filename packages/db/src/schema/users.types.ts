@@ -8,6 +8,7 @@
  */
 
 import type { User, UserInsert, Account, AccountInsert } from './users.schema';
+import { account, users } from './users.schema';
 
 export type UserOutput = User;
 export type UserInput = UserInsert;
@@ -18,3 +19,8 @@ export type AccountInput = AccountInsert;
 
 // Legacy aliases
 export type UserSelect = User;
+
+export {
+  users,
+  account,
+} from './users.schema';

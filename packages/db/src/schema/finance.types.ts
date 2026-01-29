@@ -26,6 +26,7 @@ import {
   TransactionTypeEnum,
   AccountTypeEnum,
   type TransactionType,
+  type AccountType,
   type BudgetCategoryType,
   TransactionTypes,
   financeAccounts,
@@ -88,7 +89,7 @@ export type BudgetGoalSelect = BudgetGoal;
 // ============================================
 
 export { TransactionTypeEnum, AccountTypeEnum, TransactionTypes };
-export type { TransactionType, BudgetCategoryType };
+export type { TransactionType, AccountType, BudgetCategoryType };
 
 // ============================================
 // RE-EXPORT DRIZZLE TABLES (needed for db.query)

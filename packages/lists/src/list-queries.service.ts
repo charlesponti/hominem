@@ -1,5 +1,12 @@
 import { db } from '@hominem/db';
-import { item, type ListSelect, list, place, userLists, users } from '@hominem/db/schema';
+import {
+  item,
+  list,
+  place,
+  userLists,
+  users,
+  type ListOutput as DbListOutput,
+} from '@hominem/db/schema';
 import { logger } from '@hominem/utils/logger';
 import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
 
@@ -48,7 +55,7 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
     const results = (await query.orderBy(desc(list.createdAt))) as SharedListDbResultBase[];
 
     return results.map((item) => {
-      const listPart = {
+      const listPart: DbListOutput = {
         id: item.id,
         name: item.name,
         description: item.description,
@@ -67,7 +74,7 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
         : null;
 
       const listItem: ListWithSpreadOwner = {
-        ...(listPart as ListSelect),
+        ...listPart,
         owner: ownerPart,
       };
 
@@ -131,7 +138,7 @@ export async function getUserListsWithItemCount(
     const results = await query.orderBy(desc(list.createdAt));
 
     return results.map((item) => {
-      const listPart = {
+      const listPart: DbListOutput = {
         id: item.id,
         name: item.name,
         description: item.description,
@@ -150,7 +157,7 @@ export async function getUserListsWithItemCount(
         : null;
 
       const listItem: ListWithSpreadOwner = {
-        ...(listPart as ListSelect),
+        ...listPart,
         owner: ownerPart,
       };
 
@@ -210,7 +217,7 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
     const queryResults = (await query.orderBy(desc(list.createdAt))) as OwnedListDbResultBase[];
 
     return queryResults.map((dbItem) => {
-      const listPart = {
+      const listPart: DbListOutput = {
         id: dbItem.id,
         name: dbItem.name,
         description: dbItem.description,
@@ -228,7 +235,7 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
         : null;
 
       const listItem: ListWithSpreadOwner = {
-        ...(listPart as ListSelect),
+        ...listPart,
         owner: ownerPart,
       };
 
@@ -323,7 +330,7 @@ export async function getOwnedListsWithItemCount(
         : null;
 
       const listItem: ListWithSpreadOwner = {
-        ...(listPart as ListSelect),
+        ...listPart,
         owner: ownerPart,
       };
 
@@ -428,7 +435,7 @@ export async function getAllUserListsWithPlaces(userId: string): Promise<{
         : null;
 
       const listData: ListWithSpreadOwner = {
-        ...(listPart as ListSelect),
+        ...listPart,
         owner: ownerPart,
       };
 
@@ -506,7 +513,7 @@ export async function getListById(id: string, userId?: string | null) {
       : null;
 
     const listDataForFormat: ListWithSpreadOwner = {
-      ...(listPart as ListSelect),
+      ...listPart,
       owner: ownerPart,
     };
 
@@ -570,7 +577,7 @@ export async function getListById(id: string, userId?: string | null) {
 export async function getListOwnedByUser(
   listId: string,
   userId: string,
-): Promise<ListSelect | undefined> {
+): Promise<DbListOutput | undefined> {
   return db.query.list.findFirst({ where: and(eq(list.id, listId), eq(list.userId, userId)) });
 }
 

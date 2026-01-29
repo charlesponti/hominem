@@ -1,7 +1,7 @@
 import { db } from '@hominem/db';
 import {
-  type ChatMessageInsert,
-  type ChatMessageSelect,
+  type ChatMessageInput,
+  type ChatMessageOutput,
   chat,
   chatMessage,
 } from '@hominem/db/schema';
@@ -11,10 +11,10 @@ import { and, desc, eq, gt } from 'drizzle-orm';
 import { ChatError } from './chat.service';
 
 export type CreateMessageParams = {
-  chatId: ChatMessageSelect['chatId'];
-  userId: ChatMessageSelect['userId'];
-  role: ChatMessageSelect['role'];
-  content: ChatMessageSelect['content'];
+  chatId: ChatMessageOutput['chatId'];
+  userId: ChatMessageOutput['userId'];
+  role: ChatMessageOutput['role'];
+  content: ChatMessageOutput['content'];
   files?: Array<{
     type: 'image' | 'file';
     filename?: string;
@@ -22,7 +22,7 @@ export type CreateMessageParams = {
     size?: number;
     [key: string]: unknown;
   }>;
-  toolCalls?: ChatMessageSelect['toolCalls'];
+  toolCalls?: ChatMessageOutput['toolCalls'];
   reasoning?: string;
   parentMessageId?: string | null;
 };
@@ -34,7 +34,7 @@ export interface ChatMessagesOptions {
 }
 
 export class MessageService {
-  async addMessage(params: CreateMessageParams): Promise<ChatMessageSelect | null> {
+  async addMessage(params: CreateMessageParams): Promise<ChatMessageOutput | null> {
     try {
       const messageId = crypto.randomUUID();
 
@@ -75,7 +75,7 @@ export class MessageService {
   async getChatMessages(
     chatId: string,
     options: ChatMessagesOptions = { limit: 10, offset: 0, orderBy: 'asc' },
-  ): Promise<ChatMessageSelect[]> {
+  ): Promise<ChatMessageOutput[]> {
     try {
       const query = db
         .select()
@@ -96,7 +96,7 @@ export class MessageService {
   /**
    * Get a specific message by ID
    */
-  async getMessageById(messageId: string, userId: string): Promise<ChatMessageSelect | null> {
+  async getMessageById(messageId: string, userId: string): Promise<ChatMessageOutput | null> {
     try {
       const whereClause = and(eq(chatMessage.id, messageId), eq(chatMessage.userId, userId));
       const [message] = await db.select().from(chatMessage).where(whereClause).limit(1);
@@ -122,8 +122,8 @@ export class MessageService {
   }: {
     messageId: string;
     content: string;
-    toolCalls?: ChatMessageInsert['toolCalls'];
-  }): Promise<ChatMessageSelect | null> {
+    toolCalls?: ChatMessageInput['toolCalls'];
+  }): Promise<ChatMessageOutput | null> {
     try {
       const [updatedMessage] = await db
         .update(chatMessage)

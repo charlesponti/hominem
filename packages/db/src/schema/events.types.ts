@@ -7,7 +7,13 @@
  * Rule: Import from this file, not from calendar.schema.ts
  */
 
-import type { CalendarEvent, CalendarEventInsert } from './calendar.schema';
+import type { CalendarEvent, CalendarEventInsert, EventTypeEnum } from './calendar.schema';
 
 export type EventOutput = CalendarEvent;
 export type EventInput = CalendarEventInsert;
+
+// Re-export enum types for convenience
+export type { EventTypeEnum };
+
+// Re-export enum instances
+export { eventTypeEnum } from './calendar.schema';

@@ -1,6 +1,10 @@
 import { db } from '@hominem/db';
-import type { ContentStrategiesInput, ContentStrategiesOutput, ContentStrategy } from '@hominem/db/schema';
-import { contentStrategies } from '@hominem/db/schema/content';
+import {
+  contentStrategies,
+  type ContentStrategiesInput,
+  type ContentStrategiesOutput,
+  type ContentStrategy,
+} from '@hominem/db/schema';
 import { and, eq } from 'drizzle-orm';
 
 export class ContentStrategiesService {

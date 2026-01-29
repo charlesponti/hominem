@@ -1,9 +1,11 @@
 import { db } from '@hominem/db';
 import {
-  type FinanceAccountInsert,
-  type FinanceTransaction,
-  type PlaidItem,
+  type FinanceAccountInput,
+  type FinanceTransactionOutput,
+  type PlaidItemOutput,
   type TransactionLocation,
+  type AccountType,
+  type TransactionType,
   financeAccounts,
   plaidItems,
   transactions,
@@ -67,7 +69,7 @@ export class PlaidService {
     await db.insert(financeAccounts).values({
       id: newAccountId,
       ...accountData,
-      type: accountData.type as FinanceAccountInsert['type'],
+       type: accountData.type as AccountType,
       balance: accountData.balance.toFixed(2),
       limit: accountData.limit?.toExponential(2),
       interestRate: null,
@@ -97,7 +99,7 @@ export class PlaidService {
    * Insert a new transaction
    */
   async insertTransaction(transactionData: {
-    type: FinanceTransaction['type'];
+    type: TransactionType;
     amount: string;
     date: Date;
     description: string;
@@ -138,7 +140,7 @@ export class PlaidService {
   async updateTransaction(
     transactionId: string,
     updateData: {
-      type: FinanceTransaction['type'];
+      type: TransactionType;
       amount: string;
       date: Date;
       description: string;
@@ -186,7 +188,7 @@ export class PlaidService {
    */
   async updatePlaidItemSyncStatus(
     itemId: string,
-    status: PlaidItem['status'],
+    status: PlaidItemOutput['status'],
     error?: string | null,
   ) {
     await db

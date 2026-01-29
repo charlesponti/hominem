@@ -8,6 +8,10 @@
  */
 
 import type { Place, PlaceInsert } from './places.schema';
+import {
+  place,
+  placeRelations,
+} from './places.schema';
 
 // ============================================
 // PLACE TYPES
@@ -15,3 +19,13 @@ import type { Place, PlaceInsert } from './places.schema';
 
 export type PlaceOutput = Place;
 export type PlaceInput = PlaceInsert;
+export type PlaceSelect = Place;
+
+// ============================================
+// RE-EXPORT DRIZZLE TABLES (needed for db.query)
+// ============================================
+
+export {
+  place,
+  placeRelations,
+} from './places.schema';

@@ -15,6 +15,22 @@ export const tripItems = pgTable('trip_items', {
   order: integer('order').default(0).notNull(),
 })
 
+export interface TripItem {
+  id: string;
+  tripId: string;
+  itemId: string;
+  day: number;
+  order: number;
+}
+
+export interface TripItemInsert {
+  id?: string;
+  tripId: string;
+  itemId: string;
+  day?: number;
+  order?: number;
+}
+
 export const tripItemsRelations = relations(tripItems, ({ one }) => ({
   trip: one(trips, {
     fields: [tripItems.tripId],

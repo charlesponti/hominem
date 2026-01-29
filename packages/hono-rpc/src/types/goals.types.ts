@@ -89,3 +89,4 @@ export type GoalCreateOutput = Goal;
 export type GoalUpdateOutput = Goal;
 export type GoalDeleteOutput = Goal;
 export type GoalArchiveOutput = Goal;
+export type GoalOutput = Goal;

@@ -29,10 +29,6 @@ export type ChatOutput = Chat;
 export type ChatInput = ChatInsert;
 export type ChatSelect = Chat;
 
-// Legacy type aliases for backwards compatibility
-export type { Chat };
-export type { ChatInsert };
-
 // ============================================
 // CHAT MESSAGE TYPES
 // ============================================
@@ -40,10 +36,6 @@ export type { ChatInsert };
 export type ChatMessageOutput = ChatMessage;
 export type ChatMessageInput = ChatMessageInsert;
 export type ChatMessageSelect = ChatMessage;
-
-// Legacy type aliases for backwards compatibility
-export type { ChatMessage };
-export type { ChatMessageInsert };
 
 // ============================================
 // RE-EXPORT DRIZZLE TABLES (needed for db.query)

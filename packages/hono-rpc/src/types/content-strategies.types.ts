@@ -9,19 +9,19 @@
  */
 
 import { z } from 'zod';
-import type { ContentStrategy, ContentStrategiesSelect } from '@hominem/services';
+import type { ContentStrategy, ContentStrategiesOutput } from '@hominem/db/schema';
 
 // ============================================================================
 // LIST CONTENT STRATEGIES
 // ============================================================================
 
-export type ContentStrategiesListOutput = ContentStrategiesSelect[];
+export type ContentStrategiesListOutput = ContentStrategiesOutput[];
 
 // ============================================================================
 // GET CONTENT STRATEGY
 // ============================================================================
 
-export type ContentStrategiesGetOutput = ContentStrategiesSelect;
+export type ContentStrategiesGetOutput = ContentStrategiesOutput;
 
 // ============================================================================
 // CREATE CONTENT STRATEGY
@@ -34,7 +34,7 @@ export const contentStrategiesCreateSchema = z.object({
 });
 
 export type ContentStrategiesCreateInput = z.infer<typeof contentStrategiesCreateSchema>;
-export type ContentStrategiesCreateOutput = ContentStrategiesSelect;
+export type ContentStrategiesCreateOutput = ContentStrategiesOutput;
 
 // ============================================================================
 // UPDATE CONTENT STRATEGY
@@ -47,7 +47,7 @@ export const contentStrategiesUpdateSchema = z.object({
 });
 
 export type ContentStrategiesUpdateInput = z.infer<typeof contentStrategiesUpdateSchema>;
-export type ContentStrategiesUpdateOutput = ContentStrategiesSelect;
+export type ContentStrategiesUpdateOutput = ContentStrategiesOutput;
 
 // ============================================================================
 // DELETE CONTENT STRATEGY

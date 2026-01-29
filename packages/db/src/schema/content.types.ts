@@ -21,6 +21,12 @@ import {
   type SocialMediaMetadata,
   type SEOMetadata,
 } from './content.schema';
+import {
+  PublishingContentTypeSchema,
+  AllContentTypeSchema,
+  type PublishingContentType,
+  type AllContentType,
+} from './shared.schema';
 
 // ============================================
 // PRIMARY OUTPUT TYPES (computed once)
@@ -59,6 +65,8 @@ export {
   ContentStatusSchema,
   SocialMediaMetadataSchema,
   SEOMetadataSchema,
+  PublishingContentTypeSchema,
+  AllContentTypeSchema,
 };
 
 export type {
@@ -67,4 +75,17 @@ export type {
   ContentStatus,
   SocialMediaMetadata,
   SEOMetadata,
+  PublishingContentType,
+  AllContentType,
 };
+
+// ============================================
+// RE-EXPORT DRIZZLE TABLES / RELATIONS
+// ============================================
+
+export {
+  content,
+  contentRelations,
+  contentStrategies,
+  contentStrategiesRelations,
+} from './content.schema';
