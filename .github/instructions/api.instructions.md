@@ -4,7 +4,7 @@ applyTo: 'apps/api/**'
 
 # API Development Guidelines
 
-This file contains *app-specific* notes for the API app. Repository-wide canonical guidance lives in the files below — please follow them instead of duplicating rules or examples here.
+This file contains _app-specific_ notes for the API app. Repository-wide canonical guidance lives in the files below — please follow them instead of duplicating rules or examples here.
 
 **Canonical sources (authoritative):**
 

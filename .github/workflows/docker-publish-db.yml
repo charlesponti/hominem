@@ -1,8 +1,5 @@
 name: docker-publish-db
 
-description: |
-  Build and publish the pontistudios-postgres database image to GHCR.
-
 on:
   workflow_dispatch:
   push:

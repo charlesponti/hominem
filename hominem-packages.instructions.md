@@ -1,3 +1,7 @@
+---
+applyTo: 'packages/**'
+---
+
 # Hominem Packages
 
 This directory contains shared packages used throughout the monorepo. These packages export their raw source files directly, and the apps handle the building and bundling process.
@@ -27,7 +31,7 @@ Packages use subpath exports to provide a clean API surface:
 ```json
 "exports": {
   ".": "./src/index.ts",
-  "./feature": "./src/feature/index.ts" 
+  "./feature": "./src/feature/index.ts"
 }
 ```
 
