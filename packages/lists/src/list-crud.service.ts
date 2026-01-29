@@ -4,12 +4,12 @@ import { logger } from '@hominem/utils/logger';
 import { and, eq } from 'drizzle-orm';
 import crypto from 'node:crypto';
 
-import type { List, ListPlace, ListUser, ListWithSpreadOwner } from './types';
+import type { ListOutput, ListPlace, ListUser, ListWithSpreadOwner } from './types';
 
 import { getListById } from './list-queries.service';
 
 /**
- * Format a list with places to match the List interface
+ * Format a list with places to match the ListOutput interface
  */
 export function formatList(
   listData: ListWithSpreadOwner,
@@ -17,7 +17,7 @@ export function formatList(
   isOwn: boolean,
   hasAccess?: boolean,
   collaborators?: ListUser[],
-): List {
+): ListOutput {
   return {
     id: listData.id,
     name: listData.name,
@@ -46,7 +46,7 @@ export function formatList(
  * @param userId - The ID of the user creating the list
  * @returns The created list object or null if creation failed
  */
-export async function createList(name: string, userId: string): Promise<List | null> {
+export async function createList(name: string, userId: string): Promise<ListOutput | null> {
   try {
     const start = Date.now();
     logger.info('[lists.service] createList start', { start, name, userId });

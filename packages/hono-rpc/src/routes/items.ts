@@ -54,7 +54,7 @@ export const itemsRoutes = new Hono<AppContext>()
     });
 
     if (!removed) {
-      throw new NotFoundError('Item not found in this list');
+      throw new NotFoundError('ItemOutput not found in this list');
     }
 
     return c.json<ItemsRemoveFromListOutput>({ success: true }, 200);

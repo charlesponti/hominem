@@ -1,8 +1,9 @@
-import { relations, sql } from 'drizzle-orm'
-import { boolean, index, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import * as z from 'zod'
-import { type AllContentType, AllContentTypeSchema, type ContentTag } from './shared.schema'
-import { users } from './users.schema'
+import { relations, sql } from 'drizzle-orm';
+import { boolean, index, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
+
+import { type AllContentType, AllContentTypeSchema, type ContentTag } from './shared.schema';
+import { users } from './users.schema';
 
 export const notes = pgTable(
   'notes',
@@ -30,42 +31,42 @@ export const notes = pgTable(
         setweight(to_tsvector('english', coalesce(${table.title}, '')), 'A') ||
         setweight(to_tsvector('english', ${table.content}), 'B') ||
         setweight(to_tsvector('english', coalesce(${sql`${table.tags}::text`}, '')), 'C')
-      )`
+      )`,
     ),
-  ]
-)
+  ],
+);
 
 export const notesRelations = relations(notes, ({ one }) => ({
   user: one(users, {
     fields: [notes.userId],
     references: [users.id],
   }),
-}))
+}));
 
 export type NoteMention = {
-  id: string
-  name: string
-}
+  id: string;
+  name: string;
+};
 
 /**
  * ContentType defines the type of personal notes for specialized behavior
  * These can include both base types and publishing types
  */
-export const NoteContentTypeSchema = AllContentTypeSchema
+export const NoteContentTypeSchema = AllContentTypeSchema;
 
-export type NoteContentType = AllContentType
+export type NoteContentType = AllContentType;
 
 /**
  * Task status schema for task-type content
  */
-export const TaskStatusSchema = z.enum(['todo', 'in-progress', 'done', 'archived'])
-export type TaskStatus = z.infer<typeof TaskStatusSchema>
+export const TaskStatusSchema = z.enum(['todo', 'in-progress', 'done', 'archived']);
+export type TaskStatus = z.infer<typeof TaskStatusSchema>;
 
 /**
  * Priority levels for tasks
  */
-export const PrioritySchema = z.enum(['low', 'medium', 'high', 'urgent'])
-export type Priority = z.infer<typeof PrioritySchema>
+export const PrioritySchema = z.enum(['low', 'medium', 'high', 'urgent']);
+export type Priority = z.infer<typeof PrioritySchema>;
 
 /**
  * Task metadata for task-type content (now includes time tracking fields)
@@ -78,9 +79,9 @@ export const TaskMetadataSchema = z.object({
   firstStartTime: z.string().optional(), // ISO string of when timer was first started
   endTime: z.string().optional(), // ISO string of when timer was last stopped
   duration: z.number().optional(),
-})
+});
 
-export type TaskMetadata = z.infer<typeof TaskMetadataSchema>
+export type TaskMetadata = z.infer<typeof TaskMetadataSchema>;
 
 /**
  * Tweet metadata for tweet-type content
@@ -102,9 +103,9 @@ export const TweetMetadataSchema = z.object({
   threadPosition: z.number().optional(), // Position in a thread (1-based)
   threadId: z.string().optional(), // ID of the first tweet in a thread
   inReplyTo: z.string().optional(), // Tweet ID this is replying to
-})
+});
 
-export type TweetMetadata = z.infer<typeof TweetMetadataSchema>
+export type TweetMetadata = z.infer<typeof TweetMetadataSchema>;
 
 export interface Note {
   id: string;
@@ -121,7 +122,7 @@ export interface Note {
   createdAt: string;
   updatedAt: string;
 }
-export type NoteSelect = Note;
+
 export interface NoteInsert {
   id?: string;
   type?: AllContentType;

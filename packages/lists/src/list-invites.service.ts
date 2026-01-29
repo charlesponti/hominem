@@ -172,7 +172,7 @@ export async function getOutboundInvites(
  * Sends a new list invite to a user email
  *
  * @param params - Parameters including listId, invitedUserEmail, invitingUserId, baseUrl
- * @returns The created ListInvite
+ * @returns The created ListInviteOutput
  * @throws ValidationError if email format is invalid
  * @throws NotFoundError if list does not exist
  * @throws ConflictError if invite already exists for this email
@@ -189,7 +189,7 @@ export async function sendListInvite(params: SendListInviteParams): Promise<List
   });
 
   if (!listRecord) {
-    throw new NotFoundError('List', { listId });
+    throw new NotFoundError('ListOutput', { listId });
   }
 
   // Check if invite already exists
@@ -297,7 +297,7 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
   });
 
   if (!listRecord) {
-    throw new NotFoundError('List', { listId: invite.listId });
+    throw new NotFoundError('ListOutput', { listId: invite.listId });
   }
 
   if (listRecord.userId === acceptingUserId) {
@@ -340,7 +340,7 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
       });
 
       if (!l) {
-        throw new InternalError('List not found after accepting invite');
+        throw new InternalError('ListOutput not found after accepting invite');
       }
 
       return l;
@@ -379,7 +379,7 @@ export async function deleteListInvite(params: DeleteListInviteParams): Promise<
   });
 
   if (!listRecord) {
-    throw new NotFoundError('List', { listId });
+    throw new NotFoundError('ListOutput', { listId });
   }
 
   const invite = await db.query.listInvite.findFirst({

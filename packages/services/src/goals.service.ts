@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { type GoalInsert, type GoalSelect, goals } from '@hominem/db/schema';
+import { type GoalInput, type GoalSelect, goals } from '@hominem/db/schema';
 import { and, asc, desc, eq, ilike, ne } from 'drizzle-orm';
 
 export async function listGoals(params: {
@@ -38,7 +38,7 @@ export async function getGoal(id: string, userId: string): Promise<GoalSelect | 
   return goal ?? null;
 }
 
-export async function createGoal(data: Omit<GoalInsert, 'id'>): Promise<GoalSelect> {
+export async function createGoal(data: Omit<GoalInput, 'id'>): Promise<GoalSelect> {
   const [goal] = await db.insert(goals).values(data).returning();
   return goal;
 }
@@ -46,7 +46,7 @@ export async function createGoal(data: Omit<GoalInsert, 'id'>): Promise<GoalSele
 export async function updateGoal(
   id: string,
   userId: string,
-  data: Partial<Omit<GoalInsert, 'id' | 'userId'>>,
+  data: Partial<Omit<GoalInput, 'id' | 'userId'>>,
 ): Promise<GoalSelect | null> {
   const [goal] = await db
     .update(goals)

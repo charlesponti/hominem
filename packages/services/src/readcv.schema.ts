@@ -60,7 +60,7 @@ const TeamSchema = z.object({
   logo_url: z.string().url().describe("The URL of the team's logo."),
 });
 
-// Contact schema
+// ContactOutput schema
 const ContactSchema = z.object({
   email: z.array(z.email()).describe('An array of email addresses.'),
 });
@@ -87,7 +87,7 @@ export const ReadCVProfileSchema = z.object({
   awards: z.array(AwardSchema).optional().describe('An array of awards the person has received.'),
   education: z.array(EducationSchema).optional().describe("An array of the person's education."),
   teams: z.array(TeamSchema).optional().describe('An array of teams the person is a member of.'),
-  contact: ContactSchema.optional().describe('Contact information for the person.'),
+  contact: ContactSchema.optional().describe('ContactOutput information for the person.'),
 });
 
 export type ReadCVProfile = z.infer<typeof ReadCVProfileSchema>;

@@ -1,13 +1,15 @@
 import { db } from '@hominem/db';
-import {
-  type Note,
-  NoteContentTypeSchema,
-  type NoteInsert,
-  notes,
-  TaskMetadataSchema,
-} from '@hominem/db/schema';
+import type { NoteOutput, NoteInput, NoteSyncItem } from '@hominem/db/schema';
 import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm';
-import { z } from 'zod';
+// Direct table import for DB operations
+import { notes } from '@hominem/db/schema/notes';
+import {
+  CreateNoteInputSchema,
+  ListNotesInputSchema,
+  ListNotesOutputSchema,
+  UpdateNoteZodSchema,
+} from './types';
+import type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput } from './types';
 
 export class NotFoundError extends Error {
   constructor(message: string) {
@@ -23,77 +25,14 @@ export class ForbiddenError extends Error {
   }
 }
 
-const UpdateNoteZodSchema = z.object({
-  id: z.uuid(),
-  userId: z.uuid(),
-  type: NoteContentTypeSchema.optional(),
-  title: z.string().nullish(),
-  content: z.string().optional(),
-  tags: z.array(z.object({ value: z.string() })).nullish(),
-  taskMetadata: TaskMetadataSchema.optional().nullish(),
-  analysis: z.any().optional().nullish(),
-});
-export type UpdateNoteInput = z.infer<typeof UpdateNoteZodSchema>;
-
-/**
- * - `createdAt` and `updatedAt` they are not included for new items.
- * - `id` is optional as it might be a new item.
- * - `synced` is omitted as server handles it.
- */
-type SyncClientItem = Omit<Note, 'id' | 'synced' | 'createdAt' | 'updatedAt' | 'timeTracking'> & {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-// Export Zod schemas and types for notes so other packages can consume them
-export const CreateNoteInputSchema = z.object({
-  title: z.string().describe('The title of the note'),
-  content: z.string().describe('The content/body of the note'),
-  tags: z
-    .array(z.object({ value: z.string() }))
-    .optional()
-    .describe('Tags to categorize the note'),
-  type: NoteContentTypeSchema.optional().describe('Type of note'),
-});
-
-export const NoteOutputSchema = z.object({
-  id: z.string(),
-  title: z.string().nullable(),
-  content: z.string(),
-  type: NoteContentTypeSchema,
-  tags: z.array(z.object({ value: z.string() })).nullable(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-export const ListNotesInputSchema = z.object({
-  limit: z.number().optional().describe('Maximum number of notes to return'),
-  offset: z.number().optional().describe('Pagination offset'),
-  query: z.string().optional().describe('Full-text search query'),
-  types: z.array(NoteContentTypeSchema).optional().describe('Filter by note types'),
-  tags: z.array(z.string()).optional().describe('Filter by tags'),
-  since: z.string().optional().describe('Filter notes updated after this date (ISO 8601)'),
-});
-
-export const ListNotesOutputSchema = z.object({
-  notes: z.array(NoteOutputSchema),
-  total: z.number(),
-});
-
-export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>;
-export type NoteOutput = z.infer<typeof NoteOutputSchema>;
-export type ListNotesInput = z.infer<typeof ListNotesInputSchema>;
-export type ListNotesOutput = z.infer<typeof ListNotesOutputSchema>;
-
 export class NotesService {
-  async create(input: NoteInsert): Promise<Note> {
+  async create(input: NoteInput): Promise<NoteOutput> {
     if (!input.userId) {
       throw new ForbiddenError('Not authorized to create note');
     }
 
     const [result] = await db.insert(notes).values(input).returning();
-    return result as Note;
+    return result as NoteOutput;
   }
 
   /**
@@ -110,7 +49,7 @@ export class NotesService {
       limit?: number;
       offset?: number;
     },
-  ): Promise<{ notes: Note[]; total: number }> {
+  ): Promise<{ notes: NoteOutput[]; total: number }> {
     if (!userId) {
       throw new ForbiddenError('Not authorized to query notes');
     }
@@ -120,7 +59,7 @@ export class NotesService {
     // Type filtering
     if (filters?.types && filters.types.length > 0) {
       const typeFilters: SQLWrapper[] = filters.types.map((type) =>
-        eq(notes.type, type as Note['type']),
+        eq(notes.type, type as NoteOutput['type']),
       );
       conditions.push(or(...typeFilters) as SQLWrapper);
     }
@@ -197,12 +136,12 @@ export class NotesService {
     const results = await orderedQuery;
 
     return {
-      notes: results as Note[],
+      notes: results as NoteOutput[],
       total,
     };
   }
 
-  async getById(id: string, userId: string): Promise<Note> {
+  async getById(id: string, userId: string): Promise<NoteOutput> {
     if (!userId) {
       throw new ForbiddenError('Not authorized to retrieve note');
     }
@@ -212,12 +151,12 @@ export class NotesService {
       .where(and(eq(notes.id, id), eq(notes.userId, userId)))
       .limit(1);
     if (!item) {
-      throw new NotFoundError('Note not found');
+      throw new NotFoundError('NoteOutput not found');
     }
-    return item as Note;
+    return item as NoteOutput;
   }
 
-  async update(input: UpdateNoteInput): Promise<Note> {
+  async update(input: UpdateNoteInput): Promise<NoteOutput> {
     const validatedInput = UpdateNoteZodSchema.parse(input);
 
     const updateData: Partial<typeof notes.$inferInsert> = {};
@@ -253,12 +192,12 @@ export class NotesService {
       .where(and(eq(notes.id, validatedInput.id), eq(notes.userId, validatedInput.userId)))
       .returning();
     if (!item) {
-      throw new NotFoundError('Note not found or not authorized to update');
+      throw new NotFoundError('NoteOutput not found or not authorized to update');
     }
-    return item as Note;
+    return item as NoteOutput;
   }
 
-  async delete(id: string, userId: string): Promise<Note> {
+  async delete(id: string, userId: string): Promise<NoteOutput> {
     if (!userId) {
       throw new ForbiddenError('Not authorized to delete note');
     }
@@ -267,12 +206,12 @@ export class NotesService {
       .where(and(eq(notes.id, id), eq(notes.userId, userId)))
       .returning();
     if (!item) {
-      throw new NotFoundError('Note not found or not authorized to delete');
+      throw new NotFoundError('NoteOutput not found or not authorized to delete');
     }
-    return item as Note;
+    return item as NoteOutput;
   }
 
-  async sync(itemsToSync: SyncClientItem[], userId: string) {
+  async sync(itemsToSync: NoteSyncItem[], userId: string) {
     if (!userId) {
       throw new ForbiddenError('Not authorized to sync notes');
     }
@@ -281,7 +220,7 @@ export class NotesService {
       created: 0,
       updated: 0,
       failed: 0,
-      items: [] as { id: string; updatedAt: string; type: Note['type'] }[],
+      items: [] as { id: string; updatedAt: string; type: NoteOutput['type'] }[],
     };
 
     for (const item of itemsToSync) {
@@ -340,5 +279,8 @@ export class NotesService {
     return results;
   }
 }
+
+export { CreateNoteInputSchema, ListNotesInputSchema, ListNotesOutputSchema, UpdateNoteZodSchema } from './types';
+export type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput, NoteSyncItem } from './types';
 
 export const notesService = new NotesService();

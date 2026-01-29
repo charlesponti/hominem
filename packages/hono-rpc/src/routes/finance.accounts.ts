@@ -86,7 +86,7 @@ function throwServiceError(err: any): never {
 export const accountsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
 
-  // POST /list - List accounts
+  // POST /list - ListOutput accounts
   .post('/list', zValidator('json', accountListSchema), async (c) => {
     const userId = c.get('userId')!;
     const accounts = await listAccounts(userId);

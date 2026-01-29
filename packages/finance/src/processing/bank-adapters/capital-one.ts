@@ -1,5 +1,5 @@
 import {
-  type FinanceTransactionInsert,
+  type FinanceTransactionInput,
   type TransactionType,
   TransactionTypes,
 } from '@hominem/db/schema';
@@ -34,7 +34,7 @@ export function convertCapitalOneTransaction(
   t: CapitalOneTransaction,
   accountId: string,
   userId: string,
-): FinanceTransactionInsert {
+): FinanceTransactionInput {
   return {
     id: crypto.randomUUID(),
     type: getCapitalOneTransactionType(t['Transaction Type']),

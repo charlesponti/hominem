@@ -1,16 +1,16 @@
 import type {
-  FinanceAccount,
-  FinanceAccountInsert,
-  FinanceTransaction,
-  FinanceTransactionInsert,
+  FinanceAccountOutput,
+  FinanceAccountInput,
+  FinanceTransactionOutput,
+  FinanceTransactionInput,
   TransactionType,
 } from '@hominem/db/schema';
 
 export type {
-  FinanceAccount,
-  FinanceAccountInsert,
-  FinanceTransaction as Transaction,
-  FinanceTransactionInsert as TransactionInsert,
+  FinanceAccountOutput,
+  FinanceAccountInput,
+  FinanceTransactionOutput as Transaction,
+  FinanceTransactionInput as TransactionInsert,
   TransactionType,
 };
 
@@ -39,7 +39,7 @@ export type TopMerchant = {
  */
 export interface TransactionResult {
   action?: 'created' | 'updated' | 'skipped' | 'merged' | 'invalid';
-  transaction?: FinanceTransaction;
+  transaction?: FinanceTransactionOutput;
   message?: string;
   error?: Error;
 }

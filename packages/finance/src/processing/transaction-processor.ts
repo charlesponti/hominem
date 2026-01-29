@@ -1,4 +1,4 @@
-import type { FinanceTransaction, FinanceTransactionInsert } from '@hominem/db/schema';
+import type { FinanceTransactionOutput, FinanceTransactionInput } from '@hominem/db/schema';
 
 import crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';
@@ -38,9 +38,9 @@ export const progressEmitter = new EventEmitter();
  * bulk operations.
  */
 export async function processTransactionsInBulk(
-  transactions: FinanceTransactionInsert[],
+  transactions: FinanceTransactionInput[],
 ): Promise<
-  Array<{ action: 'created' | 'updated' | 'skipped'; transaction: FinanceTransactionInsert }>
+  Array<{ action: 'created' | 'updated' | 'skipped'; transaction: FinanceTransactionInput }>
 > {
   if (transactions.length === 0) {
     return [];
@@ -54,7 +54,7 @@ export async function processTransactionsInBulk(
       type: t.type,
       accountMask: t.accountMask,
     })),
-  )) as FinanceTransaction[];
+  )) as FinanceTransactionOutput[];
 
   const existingTxMap = new Map(
     existingTransactions.map((t) => {
@@ -63,10 +63,10 @@ export async function processTransactionsInBulk(
     }),
   );
 
-  const transactionsToCreate: FinanceTransactionInsert[] = [];
+  const transactionsToCreate: FinanceTransactionInput[] = [];
   const transactionsToUpdate: Array<{
-    newTx: FinanceTransactionInsert;
-    existingTx: FinanceTransaction;
+    newTx: FinanceTransactionInput;
+    existingTx: FinanceTransactionOutput;
   }> = [];
 
   for (const tx of transactions) {
@@ -81,7 +81,7 @@ export async function processTransactionsInBulk(
 
   const results: Array<{
     action: 'created' | 'updated' | 'skipped';
-    transaction: FinanceTransactionInsert;
+    transaction: FinanceTransactionInput;
   }> = [];
 
   // 2. Bulk insert new transactions

@@ -1,4 +1,4 @@
-import { NoteContentTypeSchema, type NoteInsert, TaskMetadataSchema, AllContentTypeSchema, type AllContentType } from '@hominem/db/schema';
+import { NoteContentTypeSchema, type NoteInput, TaskMetadataSchema, AllContentTypeSchema, type AllContentType } from '@hominem/db/schema';
 import { NotesService } from '@hominem/notes-services';
 import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
@@ -12,7 +12,7 @@ import type {
   NotesUpdateOutput,
   NotesDeleteOutput,
   NotesSyncOutput,
-  Note,
+  NoteOutput,
 } from '../types/notes.types';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
@@ -22,7 +22,7 @@ const notesService = new NotesService();
 /**
  * Serialization Helpers
  */
-function serializeNote(n: any): Note {
+function serializeNote(n: any): NoteOutput {
   return {
     id: n.id,
     userId: n.userId,
@@ -96,7 +96,7 @@ const notesListQuerySchema = z.object({
 
 export const notesRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
-  // List notes
+  // ListOutput notes
   .get('/', zValidator('query', notesListQuerySchema), async (c) => {
     const userId = c.get('userId')!;
     const queryParams = c.req.valid('query');
@@ -156,7 +156,7 @@ export const notesRoutes = new Hono<AppContext>()
 
     const note = await notesService.getById(id, userId);
     if (!note) {
-      throw new NotFoundError('Note not found');
+      throw new NotFoundError('NoteOutput not found');
     }
     return c.json<NotesGetOutput>(serializeNote(note));
   })
@@ -166,7 +166,7 @@ export const notesRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const data = c.req.valid('json');
 
-    const noteData: NoteInsert = {
+    const noteData: NoteInput = {
       ...data,
       userId,
       tags: data.tags || [],

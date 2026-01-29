@@ -53,7 +53,7 @@ function serializeBudgetCategory(cat: any): BudgetCategoryData {
 export const budgetRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
 
-  // POST /categories/list - List categories
+  // POST /categories/list - ListOutput categories
   .post('/categories/list', async (c) => {
     const userId = c.get('userId')!;
 
@@ -61,7 +61,7 @@ export const budgetRoutes = new Hono<AppContext>()
     return c.json<BudgetCategoriesListOutput>(result.map(serializeBudgetCategory), 200);
   })
 
-  // POST /categories/list-with-spending - List with spending
+  // POST /categories/list-with-spending - ListOutput with spending
   .post(
     '/categories/list-with-spending',
     zValidator('json', z.object({ monthYear: z.string() })),

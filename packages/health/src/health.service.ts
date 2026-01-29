@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { health } from '@hominem/db/schema';
+import { health } from '@hominem/db/schema/health';
 import { and, eq, gte, lte } from 'drizzle-orm';
 
 export type HealthRecord = typeof health.$inferSelect;

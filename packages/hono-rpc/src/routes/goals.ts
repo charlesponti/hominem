@@ -23,11 +23,11 @@ import {
   type GoalUpdateOutput,
   type GoalArchiveOutput,
   type GoalDeleteOutput,
-  type Goal,
+  type GoalOutput,
 } from '../types/goals.types';
 
 export const goalsRoutes = new Hono<AppContext>()
-  // List goals
+  // ListOutput goals
   .get('/', authMiddleware, zValidator('query', GoalListQuerySchema), async (c) => {
     const userId = c.get('userId')!;
     const query = c.req.valid('query');
@@ -42,7 +42,7 @@ export const goalsRoutes = new Hono<AppContext>()
       sortBy,
       category,
     });
-    return c.json<GoalListOutput>(goals as Goal[]);
+    return c.json<GoalListOutput>(goals as GoalOutput[]);
   })
 
   // Get goal by ID
@@ -52,9 +52,9 @@ export const goalsRoutes = new Hono<AppContext>()
 
     const goal = await getGoal(id, userId);
     if (!goal) {
-      throw new NotFoundError('Goal not found');
+      throw new NotFoundError('GoalOutput not found');
     }
-    return c.json<GoalGetOutput>(goal as Goal);
+    return c.json<GoalGetOutput>(goal as GoalOutput);
   })
 
   // Create goal
@@ -63,7 +63,7 @@ export const goalsRoutes = new Hono<AppContext>()
     const data = c.req.valid('json');
 
     const goal = await createGoal({ ...data, userId });
-    return c.json<GoalCreateOutput>(goal as Goal, 201);
+    return c.json<GoalCreateOutput>(goal as GoalOutput, 201);
   })
 
   // Update goal
@@ -74,9 +74,9 @@ export const goalsRoutes = new Hono<AppContext>()
 
     const goal = await updateGoal(id, userId, data);
     if (!goal) {
-      throw new NotFoundError('Goal not found');
+      throw new NotFoundError('GoalOutput not found');
     }
-    return c.json<GoalUpdateOutput>(goal as Goal);
+    return c.json<GoalUpdateOutput>(goal as GoalOutput);
   })
 
   // Archive goal
@@ -86,9 +86,9 @@ export const goalsRoutes = new Hono<AppContext>()
 
     const goal = await archiveGoal(id, userId);
     if (!goal) {
-      throw new NotFoundError('Goal not found');
+      throw new NotFoundError('GoalOutput not found');
     }
-    return c.json<GoalArchiveOutput>(goal as Goal);
+    return c.json<GoalArchiveOutput>(goal as GoalOutput);
   })
 
   // Delete goal
@@ -98,7 +98,7 @@ export const goalsRoutes = new Hono<AppContext>()
 
     const goal = await deleteGoal(id, userId);
     if (!goal) {
-      throw new NotFoundError('Goal not found');
+      throw new NotFoundError('GoalOutput not found');
     }
-    return c.json<GoalDeleteOutput>(goal as Goal);
+    return c.json<GoalDeleteOutput>(goal as GoalOutput);
   });

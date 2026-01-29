@@ -1,4 +1,4 @@
-import type { FinanceTransaction } from '@hominem/db/schema';
+import type { FinanceTransactionOutput } from '@hominem/db/schema';
 
 import type { CategoryAggregate } from '../finance.types';
 
@@ -43,7 +43,7 @@ export function formatCurrency(value: number): string {
 /**
  * Aggregate transactions by category (in-memory processing)
  */
-export function aggregateByCategory(transactions: FinanceTransaction[]): CategoryAggregate[] {
+export function aggregateByCategory(transactions: FinanceTransactionOutput[]): CategoryAggregate[] {
   return Object.entries(
     transactions.reduce<Record<string, { totalAmount: number; count: number }>>((acc, tx) => {
       const category = tx.category || 'Other';
@@ -65,7 +65,7 @@ export function aggregateByCategory(transactions: FinanceTransaction[]): Categor
 /**
  * Aggregate transactions by month (in-memory processing)
  */
-export function aggregateByMonth(transactions: FinanceTransaction[]) {
+export function aggregateByMonth(transactions: FinanceTransactionOutput[]) {
   return Object.entries(
     transactions.reduce<Record<string, { totalAmount: number; count: number }>>((acc, tx) => {
       const month = tx.date.toISOString().substring(0, 7);
@@ -87,7 +87,7 @@ export function aggregateByMonth(transactions: FinanceTransaction[]) {
 /**
  * Aggregate transactions by account (in-memory processing)
  */
-export function aggregateByAccount(transactions: FinanceTransaction[]) {
+export function aggregateByAccount(transactions: FinanceTransactionOutput[]) {
   return Object.entries(
     transactions.reduce<Record<string, { totalAmount: number; count: number }>>((acc, tx) => {
       const accountId = tx.accountId;
@@ -109,7 +109,7 @@ export function aggregateByAccount(transactions: FinanceTransaction[]) {
 /**
  * Calculate basic statistics for a set of transactions
  */
-export function calculateTransactionStats(transactions: FinanceTransaction[]) {
+export function calculateTransactionStats(transactions: FinanceTransactionOutput[]) {
   if (transactions.length === 0) {
     return {
       count: 0,
@@ -171,10 +171,10 @@ export function calculateTrend(current: number, previous: number) {
  * Group transactions by date range
  */
 export function groupTransactionsByDateRange(
-  transactions: FinanceTransaction[],
+  transactions: FinanceTransactionOutput[],
   range: 'day' | 'week' | 'month' | 'quarter' | 'year',
 ) {
-  const grouped = transactions.reduce<Record<string, FinanceTransaction[]>>((acc, tx) => {
+  const grouped = transactions.reduce<Record<string, FinanceTransactionOutput[]>>((acc, tx) => {
     let key: string;
 
     switch (range) {

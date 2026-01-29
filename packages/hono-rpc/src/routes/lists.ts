@@ -56,7 +56,7 @@ import {
 // ============================================================================
 
 export const listsRoutes = new Hono<AppContext>()
-  // List all user's lists with places
+  // ListOutput all user's lists with places
   .post('/list', authMiddleware, zValidator('json', listGetAllSchema), async (c) => {
     const userId = c.get('userId')!;
 
@@ -75,7 +75,7 @@ export const listsRoutes = new Hono<AppContext>()
     const list = await getListById(input.id, userId);
 
     if (!list) {
-      throw new NotFoundError('List not found');
+      throw new NotFoundError('ListOutput not found');
     }
 
     return c.json<ListGetByIdOutput>(list as any, 200);

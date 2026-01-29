@@ -43,7 +43,7 @@ function serializePerson(person: ContactSelect): Person {
 // ============================================================================
 
 export const peopleRoutes = new Hono<AppContext>()
-  // List all people
+  // ListOutput all people
   .post('/list', authMiddleware, async (c) => {
     const userId = c.get('userId')!;
 

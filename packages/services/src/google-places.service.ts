@@ -88,7 +88,7 @@ const createPlacesClient = () => {
   })
 };
 
-// Field names without prefix (for Place Details API - single place response)
+// Field names without prefix (for PlaceOutput Details API - single place response)
 const FIELDS = {
   id: 'id',
   displayName: 'displayName',
@@ -188,7 +188,7 @@ const getDetails = async ({
 
   const data = response.data;
   if (!data) {
-    throw new Error(`Place ${placeId} not found`);
+    throw new Error(`PlaceOutput ${placeId} not found`);
   }
 
   await writeCache(cacheKey, data);

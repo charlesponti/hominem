@@ -7,15 +7,15 @@ export type {
   ChatMessageSelect,
   Company,
   ContactSelect,
-  ContactInsert,
-  Goal,
+  ContactInput,
+  GoalOutput,
   JobApplication,
   JobApplicationInsert,
-  Place,
-  PlaceInsert,
+  PlaceOutput,
+  PlaceInput,
   Possession,
   PossessionInsert,
-  Tag,
+  TagOutput,
 } from '@hominem/db/schema';
 export type {
   Content,
@@ -29,18 +29,18 @@ export type {
   SocialMediaMetadata,
 } from '@hominem/db/schema';
 export type {
-  BudgetCategory,
+  BudgetCategoryOutput,
   FinanceAccount,
   FinanceTransaction as Transaction,
-  FinancialInstitution,
+  FinancialInstitutionOutput,
 } from '@hominem/db/schema';
 export type { GoalMilestone, GoalStatus } from '@hominem/db/schema';
 export type { Item, ItemInsert } from '@hominem/db/schema';
 export type { ListInsert, ListInviteSelect, ListSelect } from '@hominem/db/schema';
 export type {
-  Note,
+  NoteOutput,
   NoteContentType,
-  NoteInsert,
+  NoteInput,
   Priority,
   TaskMetadata,
   TaskStatus,

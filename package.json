@@ -28,6 +28,7 @@
     "build": "turbo run build",
     "check": "turbo run check",
     "clean": "turbo run clean",
+    "type:audit": "bun scripts/type-inference-audit.ts",
     "db:migrate": "turbo run db:migrate",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",

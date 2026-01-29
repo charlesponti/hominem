@@ -39,7 +39,7 @@ export async function removeUserFromList({
 
     if (!listRecord) {
       return {
-        error: 'List not found or you do not own this list.',
+        error: 'ListOutput not found or you do not own this list.',
         status: 403,
       };
     }

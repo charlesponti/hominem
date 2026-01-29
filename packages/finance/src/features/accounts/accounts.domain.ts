@@ -11,7 +11,7 @@ export const FinanceAccountSchema = DbFinanceAccountSchema.extend({
   isoCurrencyCode: z.string().nullable().default('USD'),
 });
 
-export type FinanceAccount = z.infer<typeof FinanceAccountSchema>;
+export type FinanceAccountOutput = z.infer<typeof FinanceAccountSchema>;
 
 /**
  * Input schema for creating a new account

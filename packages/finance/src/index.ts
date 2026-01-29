@@ -34,7 +34,7 @@ export {
   BalanceSummarySchema,
   PlaidConnectionSchema,
   InstitutionConnectionSchema,
-  type FinanceAccount,
+  type FinanceAccountOutput,
   type CreateAccountInput,
   type UpdateAccountInput,
   type AccountWithPlaidInfo,

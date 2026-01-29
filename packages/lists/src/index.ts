@@ -40,6 +40,6 @@ export {
   getUserLists,
   getUserListsWithItemCount,
 } from './list-queries.service';
-export type { List, ListPlace, ListUser, ListWithSpreadOwner } from './types';
+export type { ListOutput, ListPlace, ListUser, ListWithSpreadOwner } from './types';
 // Re-export types from database for convenience
-export type { ListSelect as ListRecord, ListInviteSelect as ListInvite } from '@hominem/db/schema';
+export type { ListSelect as ListRecord, ListInviteSelect as ListInviteOutput } from '@hominem/db/schema';

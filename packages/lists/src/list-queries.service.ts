@@ -3,7 +3,7 @@ import { item, type ListSelect, list, place, userLists, users } from '@hominem/d
 import { logger } from '@hominem/utils/logger';
 import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
 
-import type { List, ListUser, ListWithSpreadOwner } from './types';
+import type { ListOutput, ListUser, ListWithSpreadOwner } from './types';
 
 import { formatList } from './list-crud.service';
 import { getListPlaces, getListPlacesMap } from './list-items.service';
@@ -349,8 +349,8 @@ export async function getOwnedListsWithItemCount(
  * @returns Object containing ownedListsWithPlaces and sharedListsWithPlaces
  */
 export async function getAllUserListsWithPlaces(userId: string): Promise<{
-  ownedListsWithPlaces: List[];
-  sharedListsWithPlaces: List[];
+  ownedListsWithPlaces: ListOutput[];
+  sharedListsWithPlaces: ListOutput[];
 }> {
   try {
     // Single query to get all lists the user has access to (owned OR shared)
@@ -405,8 +405,8 @@ export async function getAllUserListsWithPlaces(userId: string): Promise<{
     const listIds = Array.from(uniqueLists.keys());
     const placesMap = await getListPlacesMap(listIds);
 
-    const ownedLists: List[] = [];
-    const sharedLists: List[] = [];
+    const ownedLists: ListOutput[] = [];
+    const sharedLists: ListOutput[] = [];
 
     for (const dbItem of uniqueLists.values()) {
       const listPart = {

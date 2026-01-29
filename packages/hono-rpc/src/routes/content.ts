@@ -52,7 +52,7 @@ const updateContentSchema = z.object({
 });
 
 export const contentRoutes = new Hono<AppContext>()
-  // List content
+  // ListOutput content
   .get('/', authMiddleware, async (c) => {
     try {
       const userId = c.get('userId')!;

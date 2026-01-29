@@ -1,15 +1,14 @@
 import { db } from '@hominem/db';
-import {
-  type FinanceTransaction,
-  type FinanceTransactionInsert,
-  type TransactionType,
-  financeAccounts,
-  transactions,
-  FinanceAccountSchema,
-  TransactionSchema,
-  TransactionInsertSchema,
-  type TransactionLocation,
+import type {
+  FinanceTransactionOutput,
+  FinanceTransactionInput,
+  FinanceAccountOutput,
+  TransactionType,
+  TransactionCreatePayload,
+  TransactionUpdatePayload,
 } from '@hominem/db/schema';
+import { financeAccounts, transactions } from '@hominem/db/schema/finance';
+import { TransactionSchema, TransactionInsertSchema, type TransactionLocation } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
 import { and, asc, desc, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm';
 import { type PgColumn } from 'drizzle-orm/pg-core';
@@ -229,7 +228,7 @@ export function findExistingTransaction(tx: {
   accountMask?: string | null;
   amount: string;
   type: string;
-}): Promise<FinanceTransaction | undefined>;
+}): Promise<FinanceTransactionOutput | undefined>;
 export function findExistingTransaction(
   txs: Array<{
     date: Date;
@@ -237,7 +236,7 @@ export function findExistingTransaction(
     amount: string;
     type: string;
   }>,
-): Promise<FinanceTransaction[]>;
+): Promise<FinanceTransactionOutput[]>;
 export async function findExistingTransaction(
   txOrTxs:
     | {
@@ -252,7 +251,7 @@ export async function findExistingTransaction(
         amount: string;
         type: string;
       }>,
-): Promise<FinanceTransaction | FinanceTransaction[] | undefined> {
+): Promise<FinanceTransactionOutput | FinanceTransactionOutput[] | undefined> {
   if (Array.isArray(txOrTxs)) {
     if (txOrTxs.length === 0) {
       return [];
@@ -261,22 +260,22 @@ export async function findExistingTransaction(
       and(
         eq(transactions.date, tx.date),
         eq(transactions.amount, tx.amount),
-        eq(transactions.type, tx.type as FinanceTransaction['type']),
+        eq(transactions.type, tx.type as FinanceTransactionOutput['type']),
         tx.accountMask ? eq(transactions.accountMask, tx.accountMask) : undefined,
       ),
     );
     return db.query.transactions.findMany({
       where: sql.join(conditions, sql` OR `),
-    }) as unknown as Promise<FinanceTransaction[]>;
+    }) as unknown as Promise<FinanceTransactionOutput[]>;
   }
   return db.query.transactions.findFirst({
     where: and(
       eq(transactions.date, txOrTxs.date),
       eq(transactions.amount, txOrTxs.amount),
-      eq(transactions.type, txOrTxs.type as FinanceTransaction['type']),
+      eq(transactions.type, txOrTxs.type as FinanceTransactionOutput['type']),
       txOrTxs.accountMask ? eq(transactions.accountMask, txOrTxs.accountMask) : undefined,
     ),
-  }) as Promise<FinanceTransaction | undefined>;
+  }) as Promise<FinanceTransactionOutput | undefined>;
 }
 
 export const createTransactionInputSchema = TransactionInsertSchema.pick({
@@ -293,14 +292,14 @@ export const createTransactionOutputSchema = TransactionSchema;
 export async function createTransaction(
   input: z.infer<typeof createTransactionInputSchema> & { userId?: string },
   userId?: string,
-): Promise<FinanceTransaction> {
+): Promise<FinanceTransactionOutput> {
   const [result] = await createTransactions(
     [
       {
         ...input,
         type: input.type as TransactionType | undefined,
         date: input.date ? new Date(input.date) : new Date(),
-      } as Partial<FinanceTransactionInsert>,
+      } as Partial<FinanceTransactionInput>,
     ],
     userId,
   );
@@ -314,14 +313,14 @@ export async function createTransaction(
  * Create multiple transactions in a single batch.
  */
 export async function createTransactions(
-  inputs: Array<Partial<FinanceTransactionInsert> & { userId?: string }>,
+  inputs: Array<Partial<FinanceTransactionInput> & { userId?: string }>,
   userId?: string,
-): Promise<FinanceTransaction[]> {
+): Promise<FinanceTransactionOutput[]> {
   if (inputs.length === 0) {
     return [];
   }
 
-  const transactionData: FinanceTransactionInsert[] = inputs.map((input) => {
+  const transactionData: FinanceTransactionInput[] = inputs.map((input) => {
     const effectiveUserId = userId ?? input.userId;
     if (!effectiveUserId) {
       throw new Error('User ID is required to create a transaction.');
@@ -340,12 +339,12 @@ export async function createTransactions(
       category: rest.category ?? '',
       userId: effectiveUserId,
       location: rest.location as TransactionLocation,
-    } as FinanceTransactionInsert;
+    } as FinanceTransactionInput;
   });
 
   try {
     const result = await db.insert(transactions).values(transactionData).returning();
-    return result as FinanceTransaction[];
+    return result as FinanceTransactionOutput[];
   } catch (error: unknown) {
     logger.error(`Error bulk inserting transactions`, error as Error);
     throw new Error(
@@ -355,10 +354,10 @@ export async function createTransactions(
 }
 
 export async function updateTransactionIfNeeded(
-  tx: FinanceTransactionInsert,
-  existingTx: FinanceTransaction,
+  tx: FinanceTransactionInput,
+  existingTx: FinanceTransactionOutput,
 ): Promise<boolean> {
-  const updates: Partial<FinanceTransactionInsert> = {};
+  const updates: Partial<FinanceTransactionInput> = {};
 
   // Only update empty or null fields if the new transaction has data
   if ((!existingTx.category || existingTx.category === '') && tx.category) {
@@ -394,9 +393,9 @@ export async function updateTransactionIfNeeded(
 export async function updateTransaction(
   input: z.infer<typeof updateTransactionInputSchema>,
   userId: string,
-): Promise<FinanceTransaction> {
+): Promise<FinanceTransactionOutput> {
   try {
-    const updates: Partial<FinanceTransactionInsert> = {};
+    const updates: Partial<FinanceTransactionInput> = {};
     if (input.amount !== undefined) updates.amount = input.amount.toString();
     if (input.description !== undefined) updates.description = input.description;
     if (input.category !== undefined) updates.category = input.category;

@@ -5,7 +5,7 @@ import { Hono } from 'hono';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 export const filesRoutes = new Hono<AppContext>()
-  // List user files
+  // ListOutput user files
   .get('/', authMiddleware, async (c) => {
     try {
       const userId = c.get('userId')!;

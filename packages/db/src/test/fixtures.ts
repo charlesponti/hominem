@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import { eq, or } from 'drizzle-orm'
 import { db } from '@hominem/db'
-import { users } from '@hominem/db/schema'
+import { users } from '../schema/users.schema'
 
 export const createTestUser = async (overrides: Partial<typeof users.$inferInsert> = {}) => {
   // If id is provided but supabaseId is not, use id as supabaseId

@@ -1,4 +1,4 @@
-import type { FinanceTransactionInsert } from '@hominem/db/schema';
+import type { FinanceTransactionInput } from '@hominem/db/schema';
 
 import { logger } from '@hominem/utils/logger';
 import { parse } from 'csv-parse';
@@ -13,7 +13,7 @@ import {
 } from './bank-adapters';
 import { processTransactionsInBulk } from './transaction-processor';
 
-export type ParsedTransactions = [string, Omit<FinanceTransactionInsert, 'accountId'>][];
+export type ParsedTransactions = [string, Omit<FinanceTransactionInput, 'accountId'>][];
 
 class CsvParseError {
   readonly _tag = 'CsvParseError';
@@ -124,7 +124,7 @@ export function processTransactionsFromCSVBuffer({
       ),
     );
 
-    const transactionsToProcess: FinanceTransactionInsert[] = parsedTransactions
+    const transactionsToProcess: FinanceTransactionInput[] = parsedTransactions
       .flat()
       .map(([accountName, transactionData]) => {
         const account = accountsMap.get(accountName);

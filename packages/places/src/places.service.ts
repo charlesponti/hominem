@@ -4,8 +4,8 @@ import {
   item,
   type ListSelect,
   list,
-  type PlaceInsert,
-  type Place as PlaceSelect,
+  type PlaceInput,
+  type PlaceOutput as PlaceSelect,
   place,
 } from '@hominem/db/schema';
 
@@ -64,7 +64,7 @@ function updateCacheForPlace(result: PlaceSelect): void {
   placeCache.set(`place:googleMapsId:${result.googleMapsId}`, result);
 }
 
-export async function preparePlaceInsertData(data: PlaceInsert): Promise<{
+export async function preparePlaceInsertData(data: PlaceInput): Promise<{
   id: string;
   googleMapsId: string;
   name: string;
@@ -201,7 +201,7 @@ export async function processPlacePhotos(
   return processedPhotos;
 }
 
-export async function upsertPlace({ data }: { data: PlaceInsert }): Promise<PlaceSelect> {
+export async function upsertPlace({ data }: { data: PlaceInput }): Promise<PlaceSelect> {
   const insertValues = await preparePlaceInsertData(data);
 
   const [result] = await db
@@ -330,8 +330,8 @@ export async function updatePlacePhotosFromGoogle(
     return false;
   }
 
-  // Build a PlaceInsert object using existing fields and fetched photo names
-  const placeData: PlaceInsert = {
+  // Build a PlaceInput object using existing fields and fetched photo names
+  const placeData: PlaceInput = {
     googleMapsId: existing.googleMapsId,
     name: existing.name,
     address: existing.address ?? null,
@@ -361,7 +361,7 @@ export async function deletePlaceById(id: string): Promise<boolean> {
   return result.length > 0;
 }
 
-export async function addPlaceToLists(userId: string, listIds: string[], placeData: PlaceInsert) {
+export async function addPlaceToLists(userId: string, listIds: string[], placeData: PlaceInput) {
   return db.transaction(async (tx) => {
     const placeRecord = await upsertPlace({ data: placeData });
 
@@ -449,7 +449,7 @@ export async function removePlaceFromList(params: {
   });
 
   if (!placeToDelete) {
-    throw new Error('Place not found in database.');
+    throw new Error('PlaceOutput not found in database.');
   }
 
   const deletedItems = await db
@@ -609,7 +609,7 @@ export async function refreshAllPlaces() {
       });
 
       if (!googleData) {
-        errors.push(`Place ${placeRecord.id} not found on Google Maps`);
+        errors.push(`PlaceOutput ${placeRecord.id} not found on Google Maps`);
         continue;
       }
 
@@ -643,4 +643,4 @@ export async function refreshAllPlaces() {
   return { updatedCount, errors };
 }
 
-export type { PlaceSelect as Place, PlaceInsert };
+export type { PlaceSelect as PlaceOutput, PlaceInput };

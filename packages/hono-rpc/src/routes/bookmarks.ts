@@ -67,7 +67,7 @@ const updateBookmarkSchema = z.object({
 });
 
 export const bookmarksRoutes = new Hono<AppContext>()
-  // List bookmarks
+  // ListOutput bookmarks
   .get('/', authMiddleware, async (c) => {
     try {
       const userId = c.get('userId')!;

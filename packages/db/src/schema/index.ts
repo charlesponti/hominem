@@ -1,30 +1,35 @@
-export * from './activity.schema';
-export * from './auth.schema';
-export * from './bookmarks.schema';
-export * from './calendar.schema';
-export * from './career.schema';
-export * from './categories.schema';
-export * from './chats.schema';
-export * from './company.schema';
-export * from './contacts.schema';
-export * from './content.schema';
-export * from './documents.schema';
-export * from './finance.schema';
-export * from './goals.schema';
-export * from './health.schema';
-export * from './items.schema';
-export * from './lists.schema';
-export * from './movies.schema';
-export * from './music.schema';
-export * from './notes.schema';
-export * from './places.schema';
-export * from './possessions.schema';
-export * from './shared.schema';
+/**
+ * Hominem Database Schema Types
+ *
+ * ARCHITECTURE PRINCIPLE: "Compute Once"
+ *
+ * This index exports only pre-computed types from .types.ts files.
+ * Raw Drizzle table definitions are NOT exported here to prevent
+ * expensive re-instantiation of complex generic types.
+ *
+ * RULE: Import types from this file. If you need raw Drizzle tables,
+ * import directly from the .schema.ts file in your repository layer.
+ *
+ * Example:
+ *   // ✅ GOOD: Import stable pre-computed types
+ *   import type { NoteOutput, NoteInput } from '@hominem/db/schema';
+ *
+ *   // ❌ BAD: Imports expensive-to-infer raw Drizzle types
+ *   import { notes } from '@hominem/db/schema';
+ *   import type { Note, NoteInsert } from '@hominem/db/schema';
+ */
+
+// Export computed types from domain .types.ts files
+export * from './notes.types';
+export * from './content.types';
+export * from './finance.types';
+export * from './places.types';
+export * from './events.types';
+export * from './lists.types';
+export * from './contacts.types';
+export * from './users.types';
+export * from './tags.types';
+export * from './goals.types';
+
+// Shared utilities
 export type { Json } from './shared.schema';
-export * from './surveys.schema';
-export * from './tags.schema';
-export * from './travel.schema';
-export * from './trip_items.schema';
-export * from './trips.schema';
-export * from './users.schema';
-export * from './vector-documents.schema';

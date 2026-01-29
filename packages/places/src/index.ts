@@ -11,4 +11,4 @@ export * from './place-images.service';
 export * from '@hominem/services/google-places';
 
 // Re-export core types from the database schema for convenience
-export type { Place, PlaceInsert } from '@hominem/db/schema';
+export type { PlaceOutput, PlaceInput } from '@hominem/db/schema';

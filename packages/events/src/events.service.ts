@@ -1,7 +1,7 @@
 import { db } from '@hominem/db';
 import {
-  type CalendarEvent,
-  type CalendarEventInsert,
+  type EventOutput,
+  type EventInput,
   contacts,
   type EventTypeEnum,
   events,
@@ -31,7 +31,7 @@ export interface EventFilters {
   sortBy?: 'date-asc' | 'date-desc' | 'summary';
 }
 
-export interface EventWithTagsAndPeople extends CalendarEvent {
+export interface EventWithTagsAndPeople extends EventOutput {
   tags: Array<{ id: string; name: string; color: string | null; description: string | null }>;
   people: Array<{ id: string; firstName: string; lastName: string | null }>;
 };
@@ -134,7 +134,7 @@ export async function getEvents(filters: EventFilters = {}): Promise<EventWithTa
 }
 
 export async function createEvent(
-  event: Omit<CalendarEventInsert, 'id'> & {
+  event: Omit<EventInput, 'id'> & {
     tags?: string[];
     people?: string[];
   },

@@ -13,7 +13,7 @@ import { type InstitutionsListOutput, type InstitutionCreateOutput } from '../ty
 export const institutionsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
 
-  // POST /list - List institutions
+  // POST /list - ListOutput institutions
   .post('/list', async (c) => {
     const result = await getAllInstitutions();
     return c.json<InstitutionsListOutput>(result as any, 200);

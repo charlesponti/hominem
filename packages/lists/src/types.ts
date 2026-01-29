@@ -12,7 +12,7 @@ export interface ListWithSpreadOwner extends ListSelect {
   itemCount?: number;
 }
 
-export interface List {
+export interface ListOutput {
   id: string;
   name: string;
   description: string;

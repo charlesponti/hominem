@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { type Item as ItemSelect, item, list, place, userLists, users } from '@hominem/db/schema';
+import { type ItemOutput as ItemSelect, item, list, place, userLists, users } from '@hominem/db/schema';
 import { getHominemPhotoURL } from '@hominem/utils/images';
 import { logger } from '@hominem/utils/logger';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
@@ -243,7 +243,7 @@ export async function addItemToList(params: {
 
   const listItem = await getListOwnedByUser(listId, userId);
   if (!listItem) {
-    throw new Error("List not found or you don't have permission to add items to it");
+    throw new Error("ListOutput not found or you don't have permission to add items to it");
   }
 
   const existingItem = await db.query.item.findFirst({
@@ -251,7 +251,7 @@ export async function addItemToList(params: {
   });
 
   if (existingItem) {
-    throw new Error('Item is already in this list');
+    throw new Error('ItemOutput is already in this list');
   }
 
   const [newItem] = await db
@@ -278,7 +278,7 @@ export async function removeItemFromList(params: {
 
   const listItem = await getListOwnedByUser(listId, userId);
   if (!listItem) {
-    throw new Error("List not found or you don't have permission to remove items from it");
+    throw new Error("ListOutput not found or you don't have permission to remove items from it");
   }
 
   const deletedItem = await db

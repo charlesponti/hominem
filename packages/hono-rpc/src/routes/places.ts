@@ -17,7 +17,7 @@ import {
   googlePlaces,
   isGooglePhotosUrl,
   removePlaceFromList,
-  type PlaceInsert,
+  type PlaceInput,
 } from '@hominem/places-services';
 import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { sanitizeStoredPhotos } from '@hominem/utils/images';
@@ -132,7 +132,7 @@ export const placesRoutes = new Hono<AppContext>()
 
       const { listIds, ...placeInput } = input;
 
-      // Fetch Google Place details if needed
+      // Fetch Google PlaceOutput details if needed
       let fetchedPhotos: string[] | null = null;
       let fetchedImageUrl: string | null = null;
       let fetchedRating: number | null = null;
@@ -176,7 +176,7 @@ export const placesRoutes = new Hono<AppContext>()
         }
       }
 
-      const placeData: PlaceInsert = {
+      const placeData: PlaceInput = {
         googleMapsId: placeInput.googleMapsId,
         name: placeInput.name,
         address: placeInput.address ?? fetchedAddress ?? null,

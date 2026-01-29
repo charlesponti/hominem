@@ -58,7 +58,7 @@ function serializeEvent(e: any): EventJson {
 }
 
 export const eventsRoutes = new Hono<AppContext>()
-  // List events
+  // ListOutput events
   .get('/', publicMiddleware, async (c) => {
     const query = c.req.query();
     const tagNames = query.tagNames?.split(',');

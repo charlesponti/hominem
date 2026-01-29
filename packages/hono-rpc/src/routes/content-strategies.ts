@@ -22,7 +22,7 @@ import {
 
 export const contentStrategiesRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
-  // List content strategies
+  // ListOutput content strategies
   .get('/', async (c) => {
     try {
       const userId = c.get('userId')!;

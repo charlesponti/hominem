@@ -3,9 +3,9 @@ import {
   financeAccounts,
   financialInstitutions,
   plaidItems,
-  type FinanceAccount,
-  type FinanceAccountInsert,
-  type FinanceTransaction,
+  type FinanceAccountOutput,
+  type FinanceAccountInput,
+  type FinanceTransactionOutput,
 } from '@hominem/db/finance';
 import { and, eq, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
@@ -24,23 +24,23 @@ import type {
  * Always returns Domain models, hiding DB internal types.
  */
 export const AccountsRepository = {
-  async create(input: CreateAccountInput): Promise<FinanceAccount> {
+  async create(input: CreateAccountInput): Promise<FinanceAccountOutput> {
     const [created] = await db
       .insert(financeAccounts)
       .values({
         id: input.id ?? crypto.randomUUID(),
         ...input,
-      } as FinanceAccountInsert)
+      } as FinanceAccountInput)
       .returning();
 
     if (!created) {
       throw new Error(`Failed to create account: ${input.name}`);
     }
 
-    return created as FinanceAccount;
+    return created as FinanceAccountOutput;
   },
 
-  async createMany(inputs: CreateAccountInput[]): Promise<FinanceAccount[]> {
+  async createMany(inputs: CreateAccountInput[]): Promise<FinanceAccountOutput[]> {
     if (inputs.length === 0) return [];
 
     const data = inputs.map((input) => ({
@@ -50,34 +50,34 @@ export const AccountsRepository = {
 
     const result = await db
       .insert(financeAccounts)
-      .values(data as FinanceAccountInsert[])
+      .values(data as FinanceAccountInput[])
       .returning();
 
-    return result as FinanceAccount[];
+    return result as FinanceAccountOutput[];
   },
 
-  async list(userId: string): Promise<FinanceAccount[]> {
+  async list(userId: string): Promise<FinanceAccountOutput[]> {
     return (await db.query.financeAccounts.findMany({
       where: eq(financeAccounts.userId, userId),
       orderBy: (accounts) => accounts.name,
-    })) as FinanceAccount[];
+    })) as FinanceAccountOutput[];
   },
 
-  async getById(id: string, userId: string): Promise<FinanceAccount | null> {
+  async getById(id: string, userId: string): Promise<FinanceAccountOutput | null> {
     const result = await db.query.financeAccounts.findFirst({
       where: and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)),
     });
-    return (result as FinanceAccount) ?? null;
+    return (result as FinanceAccountOutput) ?? null;
   },
 
   async update(
     id: string,
     userId: string,
     updates: Partial<CreateAccountInput>,
-  ): Promise<FinanceAccount> {
+  ): Promise<FinanceAccountOutput> {
     const [updated] = await db
       .update(financeAccounts)
-      .set(updates as Partial<FinanceAccountInsert>)
+      .set(updates as Partial<FinanceAccountInput>)
       .where(and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)))
       .returning();
 
@@ -85,7 +85,7 @@ export const AccountsRepository = {
       throw new Error(`Account not found or not updated: ${id}`);
     }
 
-    return updated as FinanceAccount;
+    return updated as FinanceAccountOutput;
   },
 
   async delete(id: string, userId: string): Promise<void> {
@@ -94,11 +94,11 @@ export const AccountsRepository = {
       .where(and(eq(financeAccounts.id, id), eq(financeAccounts.userId, userId)));
   },
 
-  async findByNameForUser(userId: string, name: string): Promise<FinanceAccount | null> {
+  async findByNameForUser(userId: string, name: string): Promise<FinanceAccountOutput | null> {
     const result = await db.query.financeAccounts.findFirst({
       where: and(eq(financeAccounts.userId, userId), eq(financeAccounts.name, name)),
     });
-    return (result as FinanceAccount) ?? null;
+    return (result as FinanceAccountOutput) ?? null;
   },
 
   async getWithPlaidInfo(accountId: string, userId: string): Promise<AccountWithPlaidInfo | null> {
@@ -184,7 +184,7 @@ export const AccountsRepository = {
   async listWithRecentTransactions(
     userId: string,
     transactionLimit = 5,
-  ): Promise<Array<FinanceAccount & { transactions: FinanceTransaction[] }>> {
+  ): Promise<Array<FinanceAccountOutput & { transactions: FinanceTransactionOutput[] }>> {
     const query = sql`
       WITH ranked_transactions AS (
         SELECT
@@ -235,13 +235,13 @@ export const AccountsRepository = {
       ORDER BY fa.name;
     `;
     const result = (await db.execute(query)) as unknown as Array<
-      Record<string, unknown> & { transactions: FinanceTransaction[] }
+      Record<string, unknown> & { transactions: FinanceTransactionOutput[] }
     >;
 
     return result.map((account) => ({
       ...account,
       transactions: account.transactions || [],
-    })) as Array<FinanceAccount & { transactions: FinanceTransaction[] }>;
+    })) as Array<FinanceAccountOutput & { transactions: FinanceTransactionOutput[] }>;
   },
 
   async getBalanceSummary(userId: string): Promise<BalanceSummary> {

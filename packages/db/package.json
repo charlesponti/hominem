@@ -6,7 +6,14 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema/index.ts",
-    "./finance": "./src/schema/finance.schema.ts",
+    "./schema/notes": "./src/schema/notes.schema.ts",
+    "./schema/content": "./src/schema/content.schema.ts",
+    "./schema/finance": "./src/schema/finance.schema.ts",
+    "./schema/places": "./src/schema/places.schema.ts",
+    "./schema/users": "./src/schema/users.schema.ts",
+    "./schema/events": "./src/schema/calendar.schema.ts",
+    "./schema/lists": "./src/schema/lists.schema.ts",
+    "./schema/health": "./src/schema/health.schema.ts",
     "./test/fixtures": "./src/test/fixtures.ts",
     "./test/utils": "./src/test/utils.ts"
   },

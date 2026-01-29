@@ -1,18 +1,19 @@
 import { db } from '@hominem/db';
-import { type Content, type ContentInsert, content } from '@hominem/db/schema';
+import type { ContentOutput, ContentInput } from '@hominem/db/schema';
+import { content } from '@hominem/db/schema/content';
 import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm';
 
 // Import shared error classes from notes service
 import { ForbiddenError, NotFoundError } from './notes.service';
 
 export class ContentService {
-  async create(input: ContentInsert): Promise<Content> {
+  async create(input: ContentInput): Promise<ContentOutput> {
     if (!input.userId) {
       throw new ForbiddenError('Not authorized to create content');
     }
 
     const now = new Date().toISOString();
-    const contentData: ContentInsert = {
+    const contentData: ContentInput = {
       ...input,
       tags: input.tags === null ? [] : input.tags || [],
       socialMediaMetadata:
@@ -26,19 +27,19 @@ export class ContentService {
     if (!item) {
       throw new Error('Failed to create content: No content returned from database');
     }
-    return item as Content;
+    return item as ContentOutput;
   }
 
   async list(
     userId: string,
     filters?: {
-      types?: Content['type'][];
-      status?: Content['status'][];
+      types?: ContentOutput['type'][];
+      status?: ContentOutput['status'][];
       query?: string;
       tags?: string[];
       since?: string;
     },
-  ): Promise<Content[]> {
+  ): Promise<ContentOutput[]> {
     if (!userId) {
       throw new ForbiddenError('Not authorized to list content');
     }
@@ -111,10 +112,10 @@ export class ContentService {
     }
 
     const result = await orderedQuery;
-    return result as Content[];
+    return result as ContentOutput[];
   }
 
-  async getById(id: string, userId: string): Promise<Content> {
+  async getById(id: string, userId: string): Promise<ContentOutput> {
     if (!userId) {
       throw new ForbiddenError('Not authorized to retrieve content');
     }
@@ -128,10 +129,10 @@ export class ContentService {
     if (!item) {
       throw new NotFoundError('Content not found');
     }
-    return item as Content;
+    return item as ContentOutput;
   }
 
-  async update(input: Partial<Content> & { id: string; userId: string }) {
+  async update(input: Partial<ContentOutput> & { id: string; userId: string }) {
     const updateData = {
       ...input,
       tags: input.tags === null ? [] : input.tags || [],
@@ -165,7 +166,7 @@ export class ContentService {
       scheduledFor?: string;
       socialMediaMetadata?: unknown;
     },
-  ): Promise<Content> {
+  ): Promise<ContentOutput> {
     const updateData: Partial<typeof content.$inferInsert> = {
       status: 'published',
       publishedAt: new Date().toISOString(),
@@ -191,10 +192,10 @@ export class ContentService {
     if (!item) {
       throw new NotFoundError('Content not found or not authorized to publish');
     }
-    return item as Content;
+    return item as ContentOutput;
   }
 
-  async archive(id: string, userId: string): Promise<Content> {
+  async archive(id: string, userId: string): Promise<ContentOutput> {
     const [item] = await db
       .update(content)
       .set({
@@ -207,6 +208,6 @@ export class ContentService {
     if (!item) {
       throw new NotFoundError('Content not found or not authorized to archive');
     }
-    return item as Content;
+    return item as ContentOutput;
   }
 }

@@ -11,7 +11,7 @@ import { type CategoriesListOutput } from '../types/finance.types';
 export const categoriesRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
 
-  // POST /list - List categories
+  // POST /list - ListOutput categories
   .post('/list', async (c) => {
     const userId = c.get('userId')!;
 

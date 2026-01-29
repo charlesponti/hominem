@@ -1,4 +1,4 @@
-import { AccountTypeEnum, type FinanceTransaction } from '@hominem/db/schema';
+import { AccountTypeEnum, type FinanceTransactionOutput } from '@hominem/db/schema';
 import { logger } from '@hominem/utils/logger';
 import { z } from 'zod';
 
@@ -6,7 +6,7 @@ import type {
   AccountWithPlaidInfo,
   BalanceSummary,
   CreateAccountInput,
-  FinanceAccount,
+  FinanceAccountOutput,
   InstitutionConnection,
   PlaidConnection,
 } from './accounts.domain';
@@ -18,26 +18,26 @@ import { AccountsRepository } from './accounts.repository';
  * Service for Accounts
  * Orchestrates business logic and repository calls.
  */
-export async function createAccount(input: CreateAccountInput): Promise<FinanceAccount> {
+export async function createAccount(input: CreateAccountInput): Promise<FinanceAccountOutput> {
   return AccountsRepository.create(input);
 }
 
-export async function createManyAccounts(inputs: CreateAccountInput[]): Promise<FinanceAccount[]> {
+export async function createManyAccounts(inputs: CreateAccountInput[]): Promise<FinanceAccountOutput[]> {
   return AccountsRepository.createMany(inputs);
 }
 
-export async function listAccounts(userId: string): Promise<FinanceAccount[]> {
+export async function listAccounts(userId: string): Promise<FinanceAccountOutput[]> {
   return AccountsRepository.list(userId);
 }
 
-export async function getAccountById(id: string, userId: string): Promise<FinanceAccount | null> {
+export async function getAccountById(id: string, userId: string): Promise<FinanceAccountOutput | null> {
   return AccountsRepository.getById(id, userId);
 }
 
 export async function findAccountByNameForUser(
   userId: string,
   name: string,
-): Promise<FinanceAccount | null> {
+): Promise<FinanceAccountOutput | null> {
   return AccountsRepository.findByNameForUser(userId, name);
 }
 
@@ -45,7 +45,7 @@ export async function updateAccount(
   id: string,
   userId: string,
   updates: Partial<CreateAccountInput>,
-): Promise<FinanceAccount> {
+): Promise<FinanceAccountOutput> {
   logger.debug(`[AccountsService.updateAccount]: Updating account ${id}`);
   return AccountsRepository.update(id, userId, updates);
 }
@@ -61,7 +61,7 @@ export async function deleteAccount(id: string, userId: string): Promise<void> {
 export async function getAndCreateAccountsInBulk(
   accountNames: string[],
   userId: string,
-): Promise<Map<string, FinanceAccount>> {
+): Promise<Map<string, FinanceAccountOutput>> {
   const existingAccounts = await AccountsRepository.list(userId);
   const accountsMap = new Map(existingAccounts.map((acc) => [acc.name, acc]));
 
@@ -97,7 +97,7 @@ export async function getBalanceSummary(userId: string): Promise<BalanceSummary>
 export async function listAccountsWithRecentTransactions(
   userId: string,
   limit = 5,
-): Promise<Array<FinanceAccount & { transactions: FinanceTransaction[] }>> {
+): Promise<Array<FinanceAccountOutput & { transactions: FinanceTransactionOutput[] }>> {
   return AccountsRepository.listWithRecentTransactions(userId, limit);
 }
 
@@ -156,7 +156,7 @@ export async function validateAccountNameUnique(
 export async function validateAccountExists(
   accountId: string,
   userId: string,
-): Promise<FinanceAccount> {
+): Promise<FinanceAccountOutput> {
   const account = await getAccountById(accountId, userId);
 
   if (!account) {
@@ -180,7 +180,7 @@ export async function linkAccountToInstitution(
   userId: string,
   institutionId: string,
   plaidItemId?: string,
-): Promise<FinanceAccount> {
+): Promise<FinanceAccountOutput> {
   // Validate account exists and belongs to user
   await validateAccountExists(accountId, userId);
 
@@ -219,7 +219,7 @@ export async function linkAccountToInstitution(
 export async function unlinkAccountFromInstitution(
   accountId: string,
   userId: string,
-): Promise<FinanceAccount> {
+): Promise<FinanceAccountOutput> {
   // Validate account exists and belongs to user
   await validateAccountExists(accountId, userId);
 

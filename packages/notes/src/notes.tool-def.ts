@@ -5,9 +5,20 @@ import {
   CreateNoteInputSchema,
   ListNotesInputSchema,
   ListNotesOutputSchema,
-  NoteOutputSchema,
   notesService,
 } from './notes.service';
+import { NoteContentTypeSchema } from '@hominem/db/schema';
+
+// Define output schema for a single note
+const NoteOutputSchema = z.object({
+  id: z.string(),
+  title: z.string().nullable(),
+  content: z.string(),
+  type: NoteContentTypeSchema,
+  tags: z.array(z.object({ value: z.string() })).nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
 
 export const createNoteDef = toolDefinition({
   name: 'create_note',
