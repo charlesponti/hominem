@@ -98,5 +98,3 @@ Key rules:
 ---
 
 > Implementation note: Prefer reusing shared helpers and tokens from `@hominem/ui` and `@hominem/utils`. When in doubt, consult `react.instructions.md` and the design system docs.
-
-

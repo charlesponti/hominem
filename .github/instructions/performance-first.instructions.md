@@ -2,22 +2,22 @@
 applyTo: '**'
 ---
 
-# Performance-First (Concise)
+# Performance-First (Checklist)
 
-Goal: Build fast local iteration, fast type-checks, and efficient production runtime with minimal cognitive overhead.
+**Goal:** Fast local iteration, cheap type checks, and efficient production runtime.
 
-Core Principles
+Core rules
 
-- Keep type-checks cheap: prefer `import type` for type-only imports; avoid deep recursive and highly generic types that cause expensive inference.
-- Keep builds lean: prefer simple dependency graphs, avoid large transitive dependencies for small features, and respect the internal packages pattern.
-- Make runtime efficient: cache where appropriate, aggregate heavy work server-side, and prefer indexed DB queries and pagination for large result sets.
+- Prefer `import type` and extract complex generic chains into named helper types to keep type-checks fast.
+- Keep dependency graphs small; prefer focused packages over heavy transitive libraries.
+- Measure: include quick type-perf checks and lightweight benchmarks (e.g., `bun --typecheck`, `bun run analyze:type-perf`) and surface results in CI.
+- Runtime efficiency: cache strategically, paginate large requests, index frequently-read columns, and offload expensive work to background processes.
 
-Practical Rules
+Quick checklist
 
-- Use `import type` when only types are needed.
-- Limit complex generic chains — extract into named helper types when necessary.
-- Configure `tsconfig` for fast dev: `skipLibCheck: true`, `incremental: true`.
-- Measure, don’t guess: add lightweight telemetry and run `bun --typecheck`, `bun run analyze:type-perf`, and Lighthouse checks in CI.
+- Run `bun --typecheck` and `bun run analyze:type-perf` locally and in CI for PRs touching critical paths. ✅
+- Add a short perf note to PRs that change DB queries, render hot paths or background jobs. ✅
+- Prefer measurement and lightweight benchmarks over speculative micro-optimizations. ✅
 
 Database & Caching
 
