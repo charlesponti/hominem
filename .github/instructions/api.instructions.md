@@ -222,55 +222,11 @@ export const createUser = publicProcedure
 - Sanitize HTML content
 - Validate file uploads
 - Check for SQL injection attempts (Drizzle prevents this, but validate input)
+## Input Validation & Response Patterns (canonical)
 
-## Response Patterns
+This file provides app-specific examples. For authoritative, repo-wide rules on input validation, Zod schema placement, and the `ApiResult` response envelope (including `success()`/`error()` helpers and error mapping), see `.github/instructions/api-contracts.instructions.md`.
 
-### Consistent Response Structure
-
-```typescript
-// Success
-return { data: user };
-
-// With metadata
-return {
-  data: users,
-  meta: {
-    total: count,
-    page: input.page,
-    pageSize: input.pageSize,
-  },
-};
-```
-
-### Pagination
-
-```typescript
-export const listUsers = publicProcedure
-  .input(
-    z.object({
-      page: z.number().int().min(1).default(1),
-      pageSize: z.number().int().min(1).max(100).default(20),
-    }),
-  )
-  .query(async ({ input, ctx }) => {
-    const offset = (input.page - 1) * input.pageSize;
-
-    const [users, [{ count }]] = await Promise.all([
-      ctx.db.select().from(usersTable).limit(input.pageSize).offset(offset),
-      ctx.db.select({ count: sql<number>`count(*)` }).from(usersTable),
-    ]);
-
-    return {
-      data: users,
-      meta: {
-        total: count,
-        page: input.page,
-        pageSize: input.pageSize,
-        totalPages: Math.ceil(count / input.pageSize),
-      },
-    };
-  });
-```
+Use that document as the canonical source and follow its migration checklist when updating services or HTTP handlers.
 
 ## Performance & Optimization
 

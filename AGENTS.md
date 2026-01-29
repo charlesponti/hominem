@@ -305,7 +305,73 @@ Husky hooks run on commit. Ensure:
 For specialized guidelines, refer to:
 
 - `.github/instructions/principles.instructions.md` - Universal coding principles
+ - `.github/instructions/principles.instructions.md` - Deprecated pointer to `AGENTS.md` (do not edit; update AGENTS.md instead)
 - `.github/instructions/react.instructions.md` - React component guidelines
 - `.github/instructions/api.instructions.md` - API development patterns
 - `.github/instructions/database.instructions.md` - Database best practices
 - `.github/copilot-instructions.md` - Full Copilot guidelines
+
+## Universal Coding Principles (consolidated)
+
+The following consolidated coding principles were moved here from `.github/instructions/principles.instructions.md` and `.github/copilot-instructions.md`. This is the canonical place for engineering rules, style, and testing expectations.
+
+Package References
+
+- Authentication: `@hominem/auth`
+- Data models and services: `@hominem/db`
+- Utility functions: `@hominem/utils`
+- UI components: `@hominem/ui`
+
+Code Style & Formatting (Biome)
+
+- Indentation: 2 spaces
+- Semicolons: None (except where required by syntax)
+- Quotes: Single quotes for code, double quotes for JSX
+- Naming:
+  - Variables/Functions: `camelCase`
+  - Components: `PascalCase`
+  - Booleans: Auxiliary verbs (e.g., `isLoading`, `hasError`)
+- Syntax Preferences:
+  - Use `===` for strict equality
+  - Use template literals over string concatenation
+  - Use `for (const x of arr)` instead of `.forEach()`
+  - Use `Number.parseFloat()`/`Number.parseInt()` over global functions
+  - Place `else` on same line: `} else {`
+  - Always use braces for multi-line `if` blocks
+
+TypeScript Standards
+
+- No `any` Type: Never use `any`. Prefer specific types.
+- Type Imports: import types separately using `import type { ... }`
+- Type Definitions: prefer interfaces for object shapes and type aliases for unions/primitives
+- Utility Types: prefer `Pick`, `Omit`, `Partial` and `Record` where appropriate
+
+Error Handling
+
+- Handle errors early with guard clauses; put the happy path last
+- Avoid else blocks when early returns suffice
+- Always handle async errors with try/catch or `.catch()`
+- User-facing errors: provide clear messages, never leak internal errors, log with context
+
+Testing (Vitest)
+
+- Run tests with `bun run test` (or turbo-driven scripts in monorepo)
+- Focus tests on critical business logic, security boundaries, and API contracts
+- Use React Testing Library for UI tests and query by role when possible
+- Mock external dependencies in unit tests; use real DB in integration tests
+
+Input Validation & Security
+
+- Validate all external inputs with Zod
+- Sanitize user-generated content, especially HTML
+- Use parameterized queries (Drizzle handles this)
+- Verify authentication/authorization before sensitive operations
+- Validate file uploads (type, size, content)
+
+Developer Workflow Notes
+
+- Use Turbo from the monorepo root; do not `cd` into packages for script runs
+- Husky pre-commit hooks run lint/typecheck; ensure lint + typecheck pass locally
+- Prefer `bun --typecheck` for fast local type feedback
+
+If you previously referenced `.github/instructions/principles.instructions.md` or `.github/copilot-instructions.md`, treat this file as the single source of truth for engineering principles going forward.

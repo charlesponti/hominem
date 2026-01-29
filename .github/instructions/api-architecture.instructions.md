@@ -14,7 +14,7 @@ Establish type-safe, performant communication between services and applications 
 ### 2. Standardized REST Boundaries
 - **Tactical Goal:** Predictable HTTP semantic handling.
 - **Action:** Use Hono for routing and standard HTTP status codes for error states (400, 401, 403, 404, 409, 500).
-- **Format:** Return direct JSON payloads for success. Use the `success()` and `error()` helpers from `@hominem/services` to ensure consistent response envelopes.
+- **Format:** For canonical response envelopes and error mapping, see `.github/instructions/api-contracts.instructions.md`. At the route layer, return direct JSON payloads on success and map service errors to the appropriate HTTP status codes.
 - **Serialization:** Explicitly handle `Date` serialization (to ISO strings) at the route layer to prevent hydration mismatches.
 
 ### 3. Service Layer Separation

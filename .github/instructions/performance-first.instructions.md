@@ -24,3 +24,10 @@ Maintain a high-velocity development cycle by optimizing for build speed, type-c
 ### 4. Database Optimization
 - **Tactical Goal:** Efficient query execution and clear data contracts.
 - **Action:** Use Drizzle's `$inferSelect` selectively. Prefer explicit interface definitions for joined or complex query results to avoid expensive generic inference.
+ 
+## Quick Checks & Tools
+
+- Use Bun's native typechecker during development: `bun --typecheck` for fast feedback.
+- Run `bun run analyze:type-perf` to locate high type-instantiation files.
+- Count `import type` adoption with: `rg "import type" -n packages | wc -l`.
+- Run `bun run type-audit` or `bun run analyze:type-perf` as part of CI to catch regressions.
