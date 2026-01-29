@@ -28,7 +28,7 @@
     "build": "turbo run build",
     "check": "turbo run check",
     "clean": "turbo run clean",
-    "type:audit": "bun scripts/type-inference-audit.ts",
+    "type:audit": "bun run scripts/type-performance.ts audit",
     "db:migrate": "turbo run db:migrate",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
@@ -41,8 +41,8 @@
     "test": "turbo run test",
     "test:type-perf": "attest precache && bun test \"**/*.type-perf.test.ts\"",
     "test:type-perf:update": "attest precache && bun test \"**/*.type-perf.test.ts\" --update-snapshots",
-    "analyze:type-perf": "bun run scripts/analyze-type-performance.ts",
-    "type-audit": "bun run scripts/find-slow-types.ts",
+    "analyze:type-perf": "bun run scripts/type-performance.ts analyze",
+    "type-audit": "bun run scripts/type-performance.ts run-all",
     "typecheck": "turbo run typecheck"
   },
   "dependencies": {
