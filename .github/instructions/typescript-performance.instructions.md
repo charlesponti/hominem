@@ -2,10 +2,6 @@
 applyTo: '**'
 ---
 
----
-applyTo: '**'
----
-
 # TypeScript Performance (Deprecated)
 
 This file is deprecated. Canonical TypeScript and performance guidance lives in `performance-first.instructions.md`.

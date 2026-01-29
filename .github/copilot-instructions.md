@@ -4,7 +4,7 @@ Hominem is a monorepo full-stack application with local-first architecture.
 
 For detailed coding guidelines, see specialized instruction files in `.github/instructions/`:
 
-- **All files:** [principles.instructions.md](instructions/principles.instructions.md)
+- **All files:** `AGENTS.md` is the canonical source for universal engineering rules. See `AGENTS.md` and per-area instruction files in `.github/instructions/` for specifics.
 - **React components:** [react.instructions.md](instructions/react.instructions.md)
 - **API development:** [api.instructions.md](instructions/api.instructions.md)
 - **Database code:** [database.instructions.md](instructions/database.instructions.md)

@@ -1,16 +1,3 @@
 # @hominem/auth
 
-Unified authentication package for Hominem applications.
-
-## Installation
-
-```bash
-bun add @hominem/auth
-```
-
-## Usage
-
-```typescript
-import { createAuthClient } from '@hominem/auth'
-import { authMiddleware } from '@hominem/auth/server'
-```
+> NOTE: This README has moved to `docs/packages/auth.md` as part of doc consolidation. Please edit `docs/packages/auth.md` instead of this file.

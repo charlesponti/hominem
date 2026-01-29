@@ -197,31 +197,8 @@ try {
 
 ### Zod Schemas
 
-```typescript
-// Define reusable schemas
-const createUserSchema = z.object({
-  email: z.email(),
-  name: z.string().min(1).max(100),
-  password: z.string().min(8),
-});
+**Canonical guidance for input validation and ApiResult envelopes:** `.github/instructions/api-contracts.instructions.md`
 
-const updateUserSchema = createUserSchema.partial();
-
-// Use in procedures
-export const createUser = publicProcedure
-  .input(createUserSchema)
-  .mutation(async ({ input, ctx }) => {
-    // input is fully typed and validated
-    return ctx.db.insert(users).values(input).returning();
-  });
-```
-
-### Input Sanitization
-
-- Validate all inputs with Zod
-- Sanitize HTML content
-- Validate file uploads
-- Check for SQL injection attempts (Drizzle prevents this, but validate input)
 ## Input Validation & Response Patterns (canonical)
 
 This file provides app-specific examples. For authoritative, repo-wide rules on input validation, Zod schema placement, and the `ApiResult` response envelope (including `success()`/`error()` helpers and error mapping), see `.github/instructions/api-contracts.instructions.md`.
@@ -253,9 +230,7 @@ Use that document as the canonical source and follow its migration checklist whe
 
 ### Input Validation
 
-- Validate ALL inputs with Zod
-- Sanitize user-generated content
-- Validate file types and sizes
+**Canonical guidance for input validation and ApiResult envelopes:** `.github/instructions/api-contracts.instructions.md`
 
 ### Authentication & Authorization
 

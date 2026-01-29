@@ -96,8 +96,8 @@ export function calculateRunway(input: RunwayCalculationInput): RunwayCalculatio
 
   // Simulation loop
   for (let i = 0; i < maxIterations; i++) {
-    const currentDate = new Date(today);
-    currentDate.setMonth(today.getMonth() + i);
+    // Use the first day of the target month to avoid month overflow (e.g., Jan 31 + 1 month => Mar)
+    const currentDate = new Date(today.getFullYear(), today.getMonth() + i, 1);
 
     const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}`;
     const monthLabel = currentDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });

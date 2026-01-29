@@ -188,7 +188,7 @@ const getDetails = async ({
 
   const data = response.data;
   if (!data) {
-    throw new Error(`PlaceOutput ${placeId} not found`);
+    throw new Error(`Place ${placeId} not found`);
   }
 
   await writeCache(cacheKey, data);
