@@ -8,7 +8,7 @@
  * Rule: Import from this file, not from content.schema.ts
  */
 
-import type { Content, ContentInsert } from './content.schema';
+import type { Content, ContentInsert, ContentStrategies, ContentStrategiesInsert } from './content.schema';
 import {
   ContentStrategySchema,
   ContentTypeSchema,
@@ -31,6 +31,15 @@ export type ContentOutput = Content;
 
 /** Content insert input (for creating content) */
 export type ContentInput = ContentInsert;
+
+/** ContentStrategies as retrieved from database */
+export type ContentStrategiesOutput = ContentStrategies;
+
+/** ContentStrategies insert input (for creating content strategies) */
+export type ContentStrategiesInput = ContentStrategiesInsert;
+
+// Legacy aliases
+export type ContentStrategiesSelect = ContentStrategies;
 
 // ============================================
 // REPOSITORY / DOMAIN TYPES

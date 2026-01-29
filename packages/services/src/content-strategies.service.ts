@@ -1,23 +1,19 @@
 import { db } from '@hominem/db';
-import {
-  contentStrategies,
-  type ContentStrategiesInsert,
-  type ContentStrategiesSelect,
-  type ContentStrategy,
-} from '@hominem/db/schema';
+import type { ContentStrategiesInput, ContentStrategiesOutput, ContentStrategy } from '@hominem/db/schema';
+import { contentStrategies } from '@hominem/db/schema/content';
 import { and, eq } from 'drizzle-orm';
 
 export class ContentStrategiesService {
-  async create(data: ContentStrategiesInsert) {
+  async create(data: ContentStrategiesInput) {
     const [result] = await db.insert(contentStrategies).values(data).returning();
     return result;
   }
 
-  async getByUserId(userId: string): Promise<ContentStrategiesSelect[]> {
+  async getByUserId(userId: string): Promise<ContentStrategiesOutput[]> {
     return db.select().from(contentStrategies).where(eq(contentStrategies.userId, userId));
   }
 
-  async getById(id: string, userId: string): Promise<ContentStrategiesSelect | undefined> {
+  async getById(id: string, userId: string): Promise<ContentStrategiesOutput | undefined> {
     const [result] = await db
       .select()
       .from(contentStrategies)
@@ -34,7 +30,7 @@ export class ContentStrategiesService {
       description?: string;
       strategy?: ContentStrategy;
     },
-  ): Promise<ContentStrategiesSelect | undefined> {
+  ): Promise<ContentStrategiesOutput | undefined> {
     const [result] = await db
       .update(contentStrategies)
       .set({

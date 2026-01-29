@@ -1,14 +1,15 @@
 import { db } from '@hominem/db';
-import { type Company, companies, type NewCompany } from '@hominem/db/schema';
+import type { CompanyOutput, CompanyInput } from '@hominem/db/schema';
+import { companies } from '@hominem/db/schema/company';
 import { eq, type SQL } from 'drizzle-orm';
 
 export class CompanyService {
-  async create(data: Omit<NewCompany, 'id' | 'version' | 'createdAt' | 'updatedAt'>) {
+  async create(data: Omit<CompanyInput, 'id' | 'version' | 'createdAt' | 'updatedAt'>) {
     const [result] = await db.insert(companies).values(data).returning();
     return result;
   }
 
-  async update(id: string, data: Partial<NewCompany>) {
+  async update(id: string, data: Partial<CompanyInput>) {
     const [result] = await db
       .update(companies)
       .set({
@@ -25,7 +26,7 @@ export class CompanyService {
     return company;
   }
 
-  async findMany(query: SQL<Company>) {
+  async findMany(query: SQL<CompanyOutput>) {
     return await db.select().from(companies).where(query);
   }
 

@@ -1,10 +1,6 @@
 import { db } from '@hominem/db';
-import {
-  type CalendarEventInsert,
-  type CalendarEventSelect,
-  type EventSourceEnum,
-  events,
-} from '@hominem/db/schema';
+import type { CalendarEventInput, CalendarEventOutput, EventSourceEnum } from '@hominem/db/schema';
+import { events } from '@hominem/db/schema/events';
 import { logger } from '@hominem/utils/logger';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { type calendar_v3, google, Auth } from 'googleapis';
@@ -41,7 +37,7 @@ export function convertGoogleCalendarEvent(
   googleEvent: GoogleCalendarEvent,
   calendarId: string,
   userId: string,
-): CalendarEventInsert {
+): CalendarEventInput {
   if (!googleEvent.id) {
     throw new Error('Google Calendar event must have an id');
   }
@@ -134,7 +130,7 @@ export class GoogleCalendarService {
       });
 
       // Get existing synced events from our database for this calendar
-      const existingEvents: CalendarEventSelect[] = await db
+      const existingEvents: CalendarEventOutput[] = await db
         .select()
         .from(events)
         .where(
@@ -147,7 +143,7 @@ export class GoogleCalendarService {
 
       const existingEventsByExternalId = new Map(existingEvents.map((e) => [e.externalId, e]));
       const googleEventIds = new Set<string>();
-      const eventsToUpsert: CalendarEventInsert[] = [];
+      const eventsToUpsert: CalendarEventInput[] = [];
 
       // Process each Google Calendar event
       for (const googleEvent of googleEvents) {
@@ -258,7 +254,7 @@ export class GoogleCalendarService {
    */
   async pushEventToGoogle(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const eventData: CalendarEventSelect[] = await db
+      const eventData: CalendarEventOutput[] = await db
         .select()
         .from(events)
         .where(eq(events.id, eventId))
@@ -389,7 +385,7 @@ export class GoogleCalendarService {
    * Get sync status for user
    */
   async getSyncStatus(): Promise<GoogleCalendarSyncStatus> {
-    const syncedEvents: CalendarEventSelect[] = await db
+    const syncedEvents: CalendarEventOutput[] = await db
       .select()
       .from(events)
       .where(and(eq(events.userId, this.userId), eq(events.source, 'google_calendar')))

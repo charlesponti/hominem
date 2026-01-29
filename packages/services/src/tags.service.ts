@@ -1,5 +1,7 @@
 import { db } from '@hominem/db';
-import { eventsTags, tags, type TagSelect } from '@hominem/db/schema';
+import type { TagOutput } from '@hominem/db/schema';
+import { tags } from '@hominem/db/schema/tags';
+import { eventsTags } from '@hominem/db/schema/events';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
@@ -104,23 +106,23 @@ export async function syncTagsForEvent(eventId: string, tagIds: string[]) {
   return [];
 }
 
-export async function getTags(): Promise<TagSelect[]> {
+export async function getTags(): Promise<TagOutput[]> {
   return db.select().from(tags).orderBy(asc(tags.name));
 }
 
-export async function getTagById(id: string): Promise<TagSelect | null> {
+export async function getTagById(id: string): Promise<TagOutput | null> {
   const result = await db.select().from(tags).where(eq(tags.id, id)).limit(1);
 
   return result.length > 0 ? result[0] : null;
 }
 
-export async function getTagByName(name: string): Promise<TagSelect | null> {
+export async function getTagByName(name: string): Promise<TagOutput | null> {
   const result = await db.select().from(tags).where(eq(tags.name, name)).limit(1);
 
   return result.length > 0 ? result[0] : null;
 }
 
-export async function createTag(tag: TagInput): Promise<TagSelect> {
+export async function createTag(tag: TagInput): Promise<TagOutput> {
   const { randomUUID } = await import('node:crypto');
   const result = await db
     .insert(tags)
@@ -135,7 +137,7 @@ export async function createTag(tag: TagInput): Promise<TagSelect> {
   return result[0];
 }
 
-export async function updateTag(id: string, tag: TagInput): Promise<TagSelect | null> {
+export async function updateTag(id: string, tag: TagInput): Promise<TagOutput | null> {
   const updateData: Record<string, unknown> = {};
 
   if (tag.name !== undefined) {
@@ -161,7 +163,7 @@ export async function deleteTag(id: string): Promise<boolean> {
   return result.length > 0;
 }
 
-export async function findOrCreateTagsByNames(tagNames: string[]): Promise<TagSelect[]> {
+export async function findOrCreateTagsByNames(tagNames: string[]): Promise<TagOutput[]> {
   if (tagNames.length === 0) {
     return [];
   }

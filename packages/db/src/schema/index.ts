@@ -25,6 +25,7 @@ export * from './content.types';
 export * from './finance.types';
 export * from './places.types';
 export * from './events.types';
+export * from './calendar.types';
 export * from './lists.types';
 export * from './contacts.types';
 export * from './users.types';
@@ -32,6 +33,10 @@ export * from './tags.types';
 export * from './goals.types';
 export * from './bookmarks.types';
 export * from './possessions.types';
+export * from './music.types';
+export * from './vector-documents.types';
+export * from './career.types';
+export * from './company.types';
 
 // Shared utilities
 export type { Json } from './shared.schema';

@@ -1,8 +1,5 @@
-import {
-  type NewVectorDocument,
-  type VectorDocumentSelect,
-  vectorDocuments,
-} from '@hominem/db/schema';
+import type { VectorDocumentInput, VectorDocumentOutput } from '@hominem/db/schema';
+import { vectorDocuments } from '@hominem/db/schema/vector-documents';
 import { splitMarkdown } from '@hominem/utils/markdown';
 import csv from 'csv-parser';
 import { and, desc, eq, sql } from 'drizzle-orm';
@@ -23,7 +20,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
   return response.data[0]?.embedding ?? [];
 }
 
-export async function upsertVectorDocuments(documents: NewVectorDocument[]): Promise<void> {
+export async function upsertVectorDocuments(documents: VectorDocumentInput[]): Promise<void> {
   if (documents.length === 0) {
     return;
   }
@@ -140,7 +137,7 @@ export namespace VectorService {
 
       const embeddings = await Promise.all(documents.map((doc) => generateEmbedding(doc.content)));
 
-      const insertData: NewVectorDocument[] = documents.map((doc, index) => ({
+      const insertData: VectorDocumentInput[] = documents.map((doc, index) => ({
         id: doc.id,
         content: doc.content,
         metadata: doc.metadata,
@@ -207,7 +204,7 @@ export namespace VectorService {
       const batch = splitDocuments.slice(i, i + batchSize);
       const embeddings = await Promise.all(batch.map((doc) => generateEmbedding(doc.pageContent)));
 
-      const documents: NewVectorDocument[] = batch.map((doc, index) => ({
+      const documents: VectorDocumentInput[] = batch.map((doc, index) => ({
         id: randomUUID(),
         content: doc.pageContent,
         metadata: JSON.stringify({ ...doc.metadata, ...metadata }),
@@ -278,7 +275,7 @@ export namespace VectorService {
     userId: string,
     limit = 50,
     offset = 0,
-  ): Promise<VectorDocumentSelect[]> {
+  ): Promise<VectorDocumentOutput[]> {
     const { db } = await import('@hominem/db');
     const results = await db
       .select()

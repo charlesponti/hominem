@@ -16,8 +16,13 @@
     "./schema/tags": "./src/schema/tags.schema.ts",
     "./schema/users": "./src/schema/users.schema.ts",
     "./schema/events": "./src/schema/calendar.schema.ts",
+    "./schema/calendar": "./src/schema/calendar.schema.ts",
     "./schema/lists": "./src/schema/lists.schema.ts",
     "./schema/possessions": "./src/schema/possessions.schema.ts",
+    "./schema/music": "./src/schema/music.schema.ts",
+    "./schema/vector-documents": "./src/schema/vector-documents.schema.ts",
+    "./schema/career": "./src/schema/career.schema.ts",
+    "./schema/company": "./src/schema/company.schema.ts",
     "./schema/health": "./src/schema/health.schema.ts",
     "./test/fixtures": "./src/test/fixtures.ts",
     "./test/utils": "./src/test/utils.ts"
