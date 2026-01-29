@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { budgetCategories, transactions } from '@hominem/db/schema';
+import { budgetCategories, transactions } from '@hominem/db/schema/finance';
 import { and, eq, gte, lte, sql } from 'drizzle-orm';
 
 import type {

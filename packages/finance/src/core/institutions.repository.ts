@@ -1,9 +1,6 @@
 import { db } from '@hominem/db';
-import {
-  financialInstitutions,
-  type FinancialInstitution,
-  type FinancialInstitutionInsert,
-} from '@hominem/db/schema';
+import { financialInstitutions } from '@hominem/db/schema/finance';
+import type { FinancialInstitutionOutput, FinancialInstitutionInput } from '@hominem/db/schema';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -12,38 +9,38 @@ import { eq } from 'drizzle-orm';
  * Always returns Domain models, hiding DB internal types.
  */
 export const InstitutionsRepository = {
-  async getById(institutionId: string): Promise<FinancialInstitution | null> {
+  async getById(institutionId: string): Promise<FinancialInstitutionOutput | null> {
     const result = await db.query.financialInstitutions.findFirst({
       where: eq(financialInstitutions.id, institutionId),
     });
-    return (result as FinancialInstitution) ?? null;
+    return (result as FinancialInstitutionOutput) ?? null;
   },
 
-  async list(): Promise<FinancialInstitution[]> {
+  async list(): Promise<FinancialInstitutionOutput[]> {
     return (await db.query.financialInstitutions.findMany({
       orderBy: (institutions) => institutions.name,
-    })) as FinancialInstitution[];
+    })) as FinancialInstitutionOutput[];
   },
 
-  async create(input: FinancialInstitutionInsert): Promise<FinancialInstitution> {
-    const [created] = await db
-      .insert(financialInstitutions)
-      .values({
-        id: input.id,
-        name: input.name,
-        url: input.url || null,
-        logo: input.logo || null,
-        primaryColor: input.primaryColor || null,
-        country: input.country || null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as FinancialInstitutionInsert)
-      .returning();
+  async create(input: FinancialInstitutionInput): Promise<FinancialInstitutionOutput> {
+     const [created] = await db
+       .insert(financialInstitutions)
+       .values({
+         id: input.id,
+         name: input.name,
+         url: input.url || null,
+         logo: input.logo || null,
+         primaryColor: input.primaryColor || null,
+         country: input.country || null,
+         createdAt: new Date(),
+         updatedAt: new Date(),
+       } as FinancialInstitutionInput)
+       .returning();
 
     if (!created) {
       throw new Error(`Failed to create institution: ${input.name}`);
     }
 
-    return created as FinancialInstitution;
+    return created as FinancialInstitutionOutput;
   },
 };

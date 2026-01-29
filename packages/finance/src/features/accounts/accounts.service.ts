@@ -72,15 +72,16 @@ export async function getAndCreateAccountsInBulk(
       `[AccountsService.getAndCreateAccountsInBulk]: Creating ${missingNames.length} missing accounts`,
     );
 
-    const newAccounts = await AccountsRepository.createMany(
-      missingNames.map((name) => ({
-        name,
-        type: 'checking' as z.infer<typeof AccountTypeEnum>, // Default type
-        balance: '0',
-        isoCurrencyCode: 'USD',
-        userId,
-      })),
-    );
+     const newAccounts = await AccountsRepository.createMany(
+       missingNames.map((name) => ({
+         name,
+         type: 'checking' as const, // Default type
+         balance: '0',
+         isoCurrencyCode: 'USD',
+         userId,
+         meta: null,
+       } as CreateAccountInput)),
+     );
 
     for (const newAccount of newAccounts) {
       accountsMap.set(newAccount.name, newAccount);

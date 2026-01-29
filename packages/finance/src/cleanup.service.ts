@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { budgetGoals, financeAccounts, plaidItems, transactions } from '@hominem/db/schema';
+import { budgetGoals, financeAccounts, plaidItems, transactions } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
 import { eq } from 'drizzle-orm';
 

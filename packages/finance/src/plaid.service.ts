@@ -1,17 +1,13 @@
 import { db } from '@hominem/db';
-import {
-  financialInstitutions,
-  type PlaidItem,
-  type PlaidItemInsert,
-  plaidItems,
-} from '@hominem/db/schema';
+import { financialInstitutions, plaidItems } from '@hominem/db/schema/finance';
+import type { PlaidItemOutput, PlaidItemInput, FinancialInstitutionOutput, FinancialInstitutionInput } from '@hominem/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
 export async function getPlaidItemByUserAndItemId(
   userId: string,
   itemId: string,
-): Promise<PlaidItem | null> {
+): Promise<PlaidItemOutput | null> {
   return (
     (await db.query.plaidItems.findFirst({
       where: and(eq(plaidItems.userId, userId), eq(plaidItems.itemId, itemId)),
@@ -19,7 +15,7 @@ export async function getPlaidItemByUserAndItemId(
   );
 }
 
-export async function getPlaidItemById(id: string, userId: string): Promise<PlaidItem | null> {
+export async function getPlaidItemById(id: string, userId: string): Promise<PlaidItemOutput | null> {
   return (
     (await db.query.plaidItems.findFirst({
       where: and(eq(plaidItems.id, id), eq(plaidItems.userId, userId)),
@@ -27,7 +23,7 @@ export async function getPlaidItemById(id: string, userId: string): Promise<Plai
   );
 }
 
-export async function getPlaidItemByItemId(itemId: string): Promise<PlaidItem | null> {
+export async function getPlaidItemByItemId(itemId: string): Promise<PlaidItemOutput | null> {
   return (
     (await db.query.plaidItems.findFirst({
       where: eq(plaidItems.itemId, itemId),
@@ -62,9 +58,9 @@ export async function upsertPlaidItem(params: {
   itemId: string;
   accessToken: string;
   institutionId: string;
-  status?: PlaidItem['status'];
+  status?: PlaidItemOutput['status'];
   lastSyncedAt?: Date | null;
-}): Promise<PlaidItem> {
+}): Promise<PlaidItemOutput> {
   const {
     userId,
     itemId,
@@ -112,7 +108,7 @@ export async function upsertPlaidItem(params: {
 
 export async function updatePlaidItemStatusByItemId(
   itemId: string,
-  updates: Partial<Pick<PlaidItemInsert, 'status' | 'error' | 'updatedAt' | 'lastSyncedAt'>>,
+  updates: Partial<Pick<PlaidItemInput, 'status' | 'error' | 'updatedAt' | 'lastSyncedAt'>>,
 ) {
   await db
     .update(plaidItems)
@@ -125,7 +121,7 @@ export async function updatePlaidItemStatusByItemId(
 
 export async function updatePlaidItemStatusById(
   id: string,
-  updates: Partial<Pick<PlaidItemInsert, 'status' | 'error' | 'updatedAt' | 'lastSyncedAt'>>,
+  updates: Partial<Pick<PlaidItemInput, 'status' | 'error' | 'updatedAt' | 'lastSyncedAt'>>,
 ) {
   await db
     .update(plaidItems)

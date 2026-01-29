@@ -6,9 +6,9 @@ import type {
   TransactionType,
   TransactionCreatePayload,
   TransactionUpdatePayload,
+  TransactionLocation,
 } from '@hominem/db/schema';
-import { financeAccounts, transactions } from '@hominem/db/schema/finance';
-import { TransactionSchema, TransactionInsertSchema, type TransactionLocation } from '@hominem/db/schema/finance';
+import { financeAccounts, transactions, FinanceTransactionSchema, TransactionInsertSchema, FinanceAccountSchema, TransactionLocationSchema } from '@hominem/db/schema';
 import { logger } from '@hominem/utils/logger';
 import { and, asc, desc, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm';
 import { type PgColumn } from 'drizzle-orm/pg-core';
@@ -25,7 +25,7 @@ export const getTransactionsInputSchema = z.object({
   limit: z.number().optional().describe('Max results to return'),
 });
 
-const transactionWithAccountSchema = TransactionSchema.pick({
+const transactionWithAccountSchema = FinanceTransactionSchema.pick({
   id: true,
   date: true,
   description: true,
@@ -58,7 +58,7 @@ export const updateTransactionInputSchema = z
     }).partial().shape,
   );
 
-export const updateTransactionOutputSchema = TransactionSchema;
+export const updateTransactionOutputSchema = FinanceTransactionSchema;
 
 export const deleteTransactionInputSchema = z.object({
   transactionId: z.string().describe('The transaction ID'),
@@ -288,7 +288,7 @@ export const createTransactionInputSchema = TransactionInsertSchema.pick({
   date: z.date().optional().describe('Transaction date'),
 });
 
-export const createTransactionOutputSchema = TransactionSchema;
+export const createTransactionOutputSchema = FinanceTransactionSchema;
 export async function createTransaction(
   input: z.infer<typeof createTransactionInputSchema> & { userId?: string },
   userId?: string,

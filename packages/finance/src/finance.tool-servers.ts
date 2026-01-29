@@ -68,19 +68,20 @@ export const createFinanceAccountDef = toolDefinition({
 });
 
 export const createFinanceAccountServer =
-  (userId: string) =>
-  async (
-    input: z.infer<typeof createFinanceAccountInputSchema>,
-  ): Promise<Awaited<ReturnType<typeof AccountsService.createAccount>>> => {
-    const payload: CreateAccountInput = {
-      name: input.name,
-      type: input.type,
-      balance: input.balance !== undefined ? input.balance.toString() : '0',
-      isoCurrencyCode: input.currency ?? 'USD',
-      userId,
-    };
-    return AccountsService.createAccount(payload);
-  };
+   (userId: string) =>
+   async (
+     input: z.infer<typeof createFinanceAccountInputSchema>,
+   ): Promise<Awaited<ReturnType<typeof AccountsService.createAccount>>> => {
+     const payload: CreateAccountInput = {
+       name: input.name,
+       type: input.type as CreateAccountInput['type'],
+       balance: input.balance !== undefined ? input.balance.toString() : '0',
+       isoCurrencyCode: input.currency ?? 'USD',
+       userId,
+       meta: null,
+     };
+     return AccountsService.createAccount(payload);
+   };
 
 export const getFinanceAccountsDef = toolDefinition({
   name: 'get_finance_accounts',
@@ -110,17 +111,18 @@ export const updateFinanceAccountDef = toolDefinition({
 });
 
 export const updateFinanceAccountServer =
-  (userId: string) => async (input: z.infer<typeof updateFinanceAccountInputSchema>) => {
-    const { accountId, balance, currency, ...updates } = input;
-    const payload: UpdateAccountInput = {
-      ...updates,
-      isoCurrencyCode: currency,
-    };
-    if (balance !== undefined) {
-      payload.balance = balance.toString();
-    }
-    return AccountsService.updateAccount(accountId, userId, payload);
-  };
+   (userId: string) => async (input: z.infer<typeof updateFinanceAccountInputSchema>) => {
+     const { accountId, balance, currency, type, name } = input;
+     const payload: UpdateAccountInput = {
+       ...(name !== undefined && { name }),
+       ...(type !== undefined && { type: type as UpdateAccountInput['type'] }),
+       ...(currency !== undefined && { isoCurrencyCode: currency }),
+     };
+     if (balance !== undefined) {
+       payload.balance = balance.toString();
+     }
+     return AccountsService.updateAccount(accountId, userId, payload);
+   };
 
 export const deleteFinanceAccountDef = toolDefinition({
   name: 'delete_finance_account',
