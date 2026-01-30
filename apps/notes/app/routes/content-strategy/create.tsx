@@ -1,4 +1,4 @@
-import type { ContentStrategy } from '@hominem/db/schema';
+import type { ContentStrategy } from '@hominem/db/types/content';
 
 import { useToast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';

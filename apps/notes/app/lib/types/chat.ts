@@ -1,10 +1,8 @@
-import type { ChatMessageToolCall } from '@hominem/db/schema';
-// Shared chat types for both client and server
+import type { ChatMessageToolCall } from '@hominem/db/types/chats';
 import type { ChatMessageSelect } from '@hominem/services/types';
 
 import type { ProcessedFile } from './upload';
 
-// Re-export ProcessedFile for convenience
 export type { ProcessedFile } from './upload';
 
 // Define ChatMessage as ChatMessageSelect for convenience

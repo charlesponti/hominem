@@ -1,10 +1,6 @@
 import { db } from '@hominem/db';
-import {
-  type ChatMessageInput,
-  type ChatMessageOutput,
-  chat,
-  chatMessage,
-} from '@hominem/db/schema';
+import { chat, chatMessage } from '@hominem/db/types/chats'
+import type { ChatMessageInput, ChatMessageOutput } from '@hominem/db/types/chats'
 import { logger } from '@hominem/utils/logger';
 import { and, desc, eq, gt } from 'drizzle-orm';
 

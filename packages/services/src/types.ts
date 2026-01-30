@@ -3,20 +3,35 @@ export type {
   ContactOutput,
   ContactInput,
   ContactSelect,
+} from '@hominem/db/types/contacts';
+
+export type {
   Goal,
   GoalOutput,
   GoalInput,
   GoalSelect,
   GoalMilestone,
   GoalStatus,
+} from '@hominem/db/types/goals';
+
+export type {
   PlaceOutput,
   PlaceInput,
+} from '@hominem/db/types/places';
+
+export type {
   PossessionOutput,
   PossessionInput,
+} from '@hominem/db/types/possessions';
+
+export type {
   TagOutput,
+} from '@hominem/db/types/tags';
+
+export type {
   BookmarkOutput,
   BookmarkInput,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/bookmarks';
 
 export type {
   ContentOutput,
@@ -29,14 +44,14 @@ export type {
   ContentStrategiesInput,
   ContentStrategiesSelect,
   ContentStrategiesInsert,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/content';
 
 export type {
   BudgetCategoryOutput,
   FinanceAccountOutput,
   FinanceTransactionOutput as Transaction,
   FinancialInstitutionOutput,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/finance';
 
 export type {
   NoteOutput,
@@ -45,7 +60,7 @@ export type {
   Priority,
   TaskMetadata,
   TaskStatus,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/notes';
 
 export type {
   ChatMessageOutput,
@@ -55,7 +70,7 @@ export type {
   ChatOutput,
   ChatInput,
   ChatSelect,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/chats';
 
 export type {
   UserOutput,
@@ -63,22 +78,31 @@ export type {
   UserSelect,
   AccountOutput,
   AccountInput,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/users';
 
 export type {
   ActivityOutput as Activity,
   ActivityInput as ActivityInsert,
+} from '@hominem/db/types/activity';
+
+export type {
   CategoryOutput as Category,
   CategoryInput as CategoryInsert,
+} from '@hominem/db/types/categories';
+
+export type {
   DocumentOutput as Document,
   DocumentInput as DocumentInsert,
+} from '@hominem/db/types/documents';
+
+export type {
   SkillOutput as Skill,
   SkillInput as SkillInsert,
   UserSkillOutput,
   UserSkillInput,
   JobSkillOutput,
   JobSkillInput,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/skills';
 
 // BullMQ types
 import type { Queue } from 'bullmq';

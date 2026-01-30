@@ -1,4 +1,4 @@
-import type { PlaceOutput } from '@hominem/db/schema';
+import type { PlaceOutput } from '@hominem/db/types/places';
 import type { HTMLAttributes } from 'react';
 
 type WrapProps = HTMLAttributes<HTMLParagraphElement>;

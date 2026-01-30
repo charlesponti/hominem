@@ -246,18 +246,18 @@ Final typecheck + tests + metrics comparison
 
 ### Batch 5: Travel, Lists & Places (lists, items, travel, places, trips, trip_items)
 
-- [ ] 5.1 Create trips.types.ts
+- [x] 5.1 Create trips.types.ts
   - **What**: Create `packages/db/src/schema/trips.types.ts` with `TripOutput`, `TripInput` exports
   - **Files**: Create `packages/db/src/schema/trips.types.ts`
   - **Content**: Export types based on `trips.schema.ts` table definitions
   - **Verify**: File exists with type exports
 
-- [ ] 5.2 Create trip_items.types.ts
+- [x] 5.2 Create trip_items.types.ts
   - **What**: Create `packages/db/src/schema/trip_items.types.ts` with `TripItemOutput`, `TripItemInput` exports
   - **Files**: Create `packages/db/src/schema/trip_items.types.ts`
   - **Verify**: File exists with type exports
 
-- [ ] 5.3 Update packages/lists/src services
+- [x] 5.3 Update packages/lists/src services
   - **What**: Replace barrel imports with specific paths
   - **Files affected**:
     - `packages/lists/src/index.ts`
@@ -270,7 +270,7 @@ Final typecheck + tests + metrics comparison
   - **Pattern**: `import type { ListOutput } from '@hominem/db/types/lists'` and `import { list } from '@hominem/db/schema/lists'`
   - **Verify**: `bun run typecheck` passes
 
-- [ ] 5.4 Update packages/places/src services
+- [x] 5.4 Update packages/places/src services
   - **What**: Replace barrel imports with specific paths
   - **Files affected**:
     - `packages/places/src/index.ts`
@@ -278,12 +278,12 @@ Final typecheck + tests + metrics comparison
     - `packages/places/src/trips.service.ts`
   - **Verify**: `bun run typecheck` passes
 
-- [ ] 5.5 Type-audit after Batch 5
+- [x] 5.5 Type-audit after Batch 5
   - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-5.json`
 
 ### Batch 6: Finance (finance institutions, accounts, transactions, budgets)
 
-- [ ] 6.1 Update packages/finance/src services
+- [x] 6.1 Update packages/finance/src services
   - **What**: Replace barrel imports with specific paths
   - **Files affected**:
     - `packages/finance/src/core/institutions.repository.ts`
@@ -299,7 +299,7 @@ Final typecheck + tests + metrics comparison
   - **Note**: Watch for `drizzle-zod` schemas like `TransactionInsertSchema` - keep in `.schema.ts` or re-export from `.types.ts`
   - **Verify**: `bun run typecheck` passes
 
-- [ ] 6.2 Update services/workers and services/api
+- [x] 6.2 Update services/workers and services/api
   - **What**: Replace barrel imports in Plaid processor files
   - **Files**:
     - `services/workers/src/plaid-sync.processor.ts`
@@ -307,51 +307,51 @@ Final typecheck + tests + metrics comparison
     - `services/api/src/routes/possessions.ts`
   - **Verify**: `bun run typecheck` passes
 
-- [ ] 6.3 Update packages/hono-rpc/src/routes
+- [x] 6.3 Update packages/hono-rpc/src/routes
   - **What**: Update finance routes
   - **Files**: `packages/hono-rpc/src/routes/finance.*.ts`
   - **Verify**: `bun run typecheck` passes
 
-- [ ] 6.4 Type-audit after Batch 6
+- [x] 6.4 Type-audit after Batch 6
   - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-6.json`
 
 ### Batch 7: Calendar & Events (calendar, events + relations)
 
-- [ ] 7.1 Update packages/events/src services
+- [x] 7.1 Update packages/events/src services
   - **What**: Replace barrel imports with specific paths for calendar/events
   - **Files affected**:
     - `packages/events/src/events.service.ts`
   - **Pattern**: `import type { EventOutput, EventTypeEnum } from '@hominem/db/types/events'` and `import { events, eventTypeEnum } from '@hominem/db/schema/calendar'`
-  - **Verify**: `bun run typecheck` passes
+  - **Verify**: `bun run typecheck` passes ✅ (22.7s, 41/41 packages)
 
-- [ ] 7.2 Update packages/hono-rpc/src/routes
+- [x] 7.2 Update packages/hono-rpc/src/routes
   - **What**: Update events routes
-  - **Files**: Already partially done (events.ts)
-  - **Verify**: `bun run typecheck` passes
+  - **Files**: `packages/hono-rpc/src/routes/events.ts`
+  - **Verify**: `bun run typecheck` passes ✅
 
-- [ ] 7.3 Update packages/services/src
+- [x] 7.3 Update packages/services/src
   - **What**: Update google-calendar.service.ts
   - **Files**: `packages/services/src/google-calendar.service.ts`
-  - **Verify**: `bun run typecheck` passes
+  - **Verify**: `bun run typecheck` passes ✅ (37.3s, 41/41 packages)
 
-- [ ] 7.4 Type-audit after Batch 7
-  - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-7.json`
+- [x] 7.4 Type-audit after Batch 7
+  - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-7.json` ✅
 
 ### Batch 8: Assets (possessions)
 
-- [ ] 8.1 Update packages/services/src
-  - **What**: Replace barrel imports in possessions.service.ts
-  - **Files**: `packages/services/src/possessions.service.ts`
-  - **Pattern**: `import type { PossessionOutput } from '@hominem/db/types/possessions'` and `import { possessions } from '@hominem/db/schema/possessions'`
-  - **Verify**: `bun run typecheck` passes
+- [x] 8.1 Update packages/services/src
+  - **What**: Replace barrel imports in possessions.service.ts ✅
+  - **Files**: `packages/services/src/possessions.service.ts` ✅
+  - **Pattern**: `import type { PossessionOutput } from '@hominem/db/types/possessions'` and `import { possessions } from '@hominem/db/schema/possessions'` ✅
+  - **Verify**: `bun run typecheck` passes ✅
 
-- [ ] 8.2 Update services/api
-  - **What**: Update routes/possessions.ts
-  - **Files**: `services/api/src/routes/possessions.ts`
-  - **Verify**: `bun run typecheck` passes
+- [x] 8.2 Update services/api
+  - **What**: Update routes/possessions.ts ✅
+  - **Files**: `services/api/src/routes/possessions.ts` ✅
+  - **Verify**: `bun run typecheck` passes ✅
 
-- [ ] 8.3 Type-audit after Batch 8
-  - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-8.json`
+- [x] 8.3 Type-audit after Batch 8
+  - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-8.json` ✅
 
 ### Batch 9: Lifestyle (goals, activity, health)
 
@@ -372,14 +372,14 @@ Final typecheck + tests + metrics comparison
 
 ### Batch 10: Media (music, movies)
 
-- [ ] 10.1 Update packages/services/src
-  - **What**: Replace barrel imports in music, movies services
-  - **Files**: `packages/services/src/spotify.service.ts`
-  - **Pattern**: `import type { MusicOutput } from '@hominem/db/types/music'`
-  - **Verify**: `bun run typecheck` passes
+- [x] 10.1 Update packages/services/src
+  - **What**: Replace barrel imports in music, movies services ✅
+  - **Files**: `packages/services/src/spotify.service.ts` ✅
+  - **Pattern**: `import type { MusicOutput } from '@hominem/db/types/music'` ✅
+  - **Verify**: `bun run typecheck` passes ✅
 
-- [ ] 10.2 Type-audit after Batch 10
-  - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-10.json`
+- [x] 10.2 Type-audit after Batch 10
+  - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-10.json` ✅
 
 ### Batch 11: Chat (chats, chat_message)
 

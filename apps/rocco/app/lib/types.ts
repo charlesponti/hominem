@@ -1,5 +1,5 @@
-import type { ItemOutput as ItemSelect } from '@hominem/db/schema';
-import type { PlaceOutput as PlaceType } from '@hominem/db/schema';
+import type { ItemOutput as ItemSelect } from '@hominem/db/types/items';
+import type { PlaceOutput as PlaceType } from '@hominem/db/types/places';
 import type {
   SentInvite as SentInviteType,
   ReceivedInvite as ReceivedInviteType,

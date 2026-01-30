@@ -1,4 +1,4 @@
-import type { PlaceInput } from '@hominem/db/schema';
+import type { PlaceInput } from '@hominem/db/types/places';
 
 import { getHominemPhotoURL, sanitizeStoredPhotos } from '@hominem/utils/images';
 

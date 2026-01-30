@@ -1,4 +1,4 @@
-import type { place } from '@hominem/db/schema'
+import type { place } from '@hominem/db/types/places'
 
 const ADDRESS = '123 Main St, Anytown, USA'
 const NAME = 'Really Cool Place'

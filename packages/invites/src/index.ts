@@ -1,4 +1,5 @@
-import type { ListInviteSelect as ListInvite, ListSelect, UserSelect } from '@hominem/db/schema';
+import type { ListInviteSelect as ListInvite, ListSelect } from '@hominem/db/types/lists';
+import type { UserSelect } from '@hominem/db/types/users';
 
 import { getInvitesForUser, getListInvites } from '@hominem/lists-services';
 
