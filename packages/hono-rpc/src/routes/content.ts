@@ -1,6 +1,6 @@
 import { PublishingContentTypeSchema, AllContentTypeSchema } from '@hominem/db/schema';
 import { ContentService } from '@hominem/notes-services';
-import { error, success } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
@@ -71,13 +71,10 @@ export const contentRoutes = new Hono<AppContext>()
         since: query.since,
       });
 
-      return c.json(success({ content }));
+      return c.json({ content });
     } catch (err) {
       console.error('[content.list] error:', err);
-      return c.json(
-        error('INTERNAL_ERROR', `Failed to fetch content: ${err instanceof Error ? err.message : String(err)}`),
-        500,
-      );
+      throw new InternalError(`Failed to fetch content: ${err instanceof Error ? err.message : String(err)}`);
     }
   })
 
@@ -90,16 +87,13 @@ export const contentRoutes = new Hono<AppContext>()
       const contentService = new ContentService();
       const content = await contentService.getById(id, userId);
 
-      return c.json(success({ content }));
+      return c.json({ content });
     } catch (err) {
       if (err instanceof Error && err.message === 'Content not found') {
-        return c.json(error('NOT_FOUND', 'Content not found'), 404);
+        throw new NotFoundError('Content');
       }
       console.error('[content.getById] error:', err);
-      return c.json(
-        error('INTERNAL_ERROR', `Failed to fetch content: ${err instanceof Error ? err.message : String(err)}`),
-        500,
-      );
+      throw new InternalError(`Failed to fetch content: ${err instanceof Error ? err.message : String(err)}`);
     }
   })
 
@@ -111,7 +105,7 @@ export const contentRoutes = new Hono<AppContext>()
       const parsed = createContentSchema.safeParse(body);
 
       if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
+        throw new ValidationError(parsed.error.issues[0].message);
       }
 
       const contentService = new ContentService();
@@ -120,13 +114,10 @@ export const contentRoutes = new Hono<AppContext>()
         userId,
       });
 
-      return c.json(success({ content: newContent }), 201);
+      return c.json({ content: newContent }, 201);
     } catch (err) {
       console.error('[content.create] error:', err);
-      return c.json(
-        error('INTERNAL_ERROR', `Failed to create content: ${err instanceof Error ? err.message : String(err)}`),
-        500,
-      );
+      throw new InternalError(`Failed to create content: ${err instanceof Error ? err.message : String(err)}`);
     }
   })
 
@@ -139,7 +130,7 @@ export const contentRoutes = new Hono<AppContext>()
       const parsed = updateContentSchema.safeParse(body);
 
       if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
+        throw new ValidationError(parsed.error.issues[0].message);
       }
 
       const contentService = new ContentService();
@@ -149,16 +140,13 @@ export const contentRoutes = new Hono<AppContext>()
         ...parsed.data,
       });
 
-      return c.json(success({ content: updatedContent }));
+      return c.json({ content: updatedContent });
     } catch (err) {
       if (err instanceof Error && err.message === 'Content not found or not authorized to update') {
-        return c.json(error('NOT_FOUND', 'Content not found'), 404);
+        throw new NotFoundError('Content');
       }
       console.error('[content.update] error:', err);
-      return c.json(
-        error('INTERNAL_ERROR', `Failed to update content: ${err instanceof Error ? err.message : String(err)}`),
-        500,
-      );
+      throw new InternalError(`Failed to update content: ${err instanceof Error ? err.message : String(err)}`);
     }
   })
 
@@ -171,15 +159,12 @@ export const contentRoutes = new Hono<AppContext>()
       const contentService = new ContentService();
       await contentService.delete(id, userId);
 
-      return c.json(success({ success: true, message: 'Content deleted successfully' }));
+      return c.json({ success: true, message: 'Content deleted successfully' });
     } catch (err) {
       if (err instanceof Error && err.message === 'Content not found') {
-        return c.json(error('NOT_FOUND', 'Content not found'), 404);
+        throw new NotFoundError('Content');
       }
       console.error('[content.delete] error:', err);
-      return c.json(
-        error('INTERNAL_ERROR', `Failed to delete content: ${err instanceof Error ? err.message : String(err)}`),
-        500,
-      );
+      throw new InternalError(`Failed to delete content: ${err instanceof Error ? err.message : String(err)}`);
     }
   });

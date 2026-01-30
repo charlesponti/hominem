@@ -1,5 +1,5 @@
 import { calculateRunway, runwayCalculationSchema } from '@hominem/finance-services';
-import { error, success, isServiceError } from '@hominem/services';
+import { isServiceError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
@@ -22,7 +22,7 @@ export const runwayRoutes = new Hono<AppContext>()
       const result = calculateRunway(input);
 
       return c.json(
-        success({
+        {
           runwayMonths: result.runwayMonths,
           runwayEndDate: result.runwayEndDate,
           isRunwayDangerous: result.isRunwayDangerous,
@@ -30,14 +30,14 @@ export const runwayRoutes = new Hono<AppContext>()
           projectionData: result.projectionData,
           months: result.runwayMonths,
           years: result.runwayMonths / 12,
-        }),
+        },
         200,
       );
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json(error(err.code, err.message), err.statusCode as any);
+        throw err;
       }
       console.error('Runway calculation error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to calculate runway'), 500);
+      throw new InternalError('Failed to calculate runway');
     }
   });

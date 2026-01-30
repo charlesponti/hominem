@@ -3,8 +3,10 @@ import {
   deleteBookmarkForUser,
   listBookmarksByUser,
   updateBookmarkForUser,
+  NotFoundError,
+  ValidationError,
+  InternalError,
 } from '@hominem/services';
-import { error, success } from '@hominem/services';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
@@ -72,10 +74,10 @@ export const bookmarksRoutes = new Hono<AppContext>()
     try {
       const userId = c.get('userId')!;
       const bookmarks = await listBookmarksByUser(userId);
-      return c.json(success(bookmarks));
+      return c.json(bookmarks);
     } catch (err) {
       console.error('[bookmarks.list] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to list bookmarks'), 500);
+      throw new InternalError('Failed to list bookmarks');
     }
   })
 
@@ -87,7 +89,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
       const parsed = createBookmarkSchema.safeParse(body);
 
       if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
+        throw new ValidationError(parsed.error.issues[0].message);
       }
 
       const { url } = parsed.data;
@@ -120,10 +122,10 @@ export const bookmarksRoutes = new Hono<AppContext>()
       }
 
       const bookmark = await createBookmarkForUser(userId, converted);
-      return c.json(success(bookmark), 201);
+      return c.json(bookmark, 201);
     } catch (err) {
       console.error('[bookmarks.create] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to create bookmark'), 500);
+      throw new InternalError('Failed to create bookmark');
     }
   })
 
@@ -136,7 +138,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
       const parsed = updateBookmarkSchema.safeParse(body);
 
       if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
+        throw new ValidationError(parsed.error.issues[0].message);
       }
 
       const { url } = parsed.data;
@@ -170,13 +172,13 @@ export const bookmarksRoutes = new Hono<AppContext>()
       const updatedBookmark = await updateBookmarkForUser(id, userId, converted);
 
       if (!updatedBookmark) {
-        return c.json(error('NOT_FOUND', 'Bookmark not found or not owned by user'), 404);
+        throw new NotFoundError('Bookmark not found or not owned by user');
       }
 
-      return c.json(success(updatedBookmark));
+      return c.json(updatedBookmark);
     } catch (err) {
       console.error('[bookmarks.update] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to update bookmark'), 500);
+      throw new InternalError('Failed to update bookmark');
     }
   })
 
@@ -187,9 +189,9 @@ export const bookmarksRoutes = new Hono<AppContext>()
       const id = c.req.param('id');
 
       const deleted = await deleteBookmarkForUser(id, userId);
-      return c.json(success({ success: deleted }));
+      return c.json({ success: deleted });
     } catch (err) {
       console.error('[bookmarks.delete] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to delete bookmark'), 500);
+      throw new InternalError('Failed to delete bookmark');
     }
   });

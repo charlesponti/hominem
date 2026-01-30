@@ -1,5 +1,5 @@
 import { deleteAllFinanceData } from '@hominem/finance-services';
-import { error, success, isServiceError } from '@hominem/services';
+import { isServiceError, InternalError } from '@hominem/services';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
@@ -19,17 +19,17 @@ export const dataRoutes = new Hono<AppContext>()
       await deleteAllFinanceData(userId);
 
       return c.json<DataDeleteAllOutput>(
-        success({
+        {
           success: true,
           message: 'All finance data deleted',
-        }),
+        },
         200,
       );
     } catch (err) {
       if (isServiceError(err)) {
-        return c.json<DataDeleteAllOutput>(error(err.code, err.message), err.statusCode as any);
+        throw err;
       }
       console.error('Error deleting finance data:', err);
-      return c.json<DataDeleteAllOutput>(error('INTERNAL_ERROR', 'Failed to delete finance data'), 500);
+      throw new InternalError('Failed to delete finance data');
     }
   });

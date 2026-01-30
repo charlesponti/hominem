@@ -1,4 +1,4 @@
-import { error, success } from '@hominem/services';
+import { InternalError, UnavailableError } from '@hominem/services';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
@@ -6,10 +6,7 @@ import { authMiddleware, type AppContext } from '../middleware/auth';
 /**
  * User Routes
  *
- * Handles user account operations using the ApiResult pattern:
- * - Services throw typed errors
- * - HTTP endpoints catch errors and return ApiResult
- * - Clients receive discriminated union with `success` field
+ * Handles user account operations.
  */
 
 // ============================================================================
@@ -25,16 +22,9 @@ export const userRoutes = new Hono<AppContext>()
       // TODO: Implement account deletion logic
       console.warn('[user.delete-account] Not yet implemented');
 
-      const result: {
-        success: boolean;
-        message: string;
-      } = {
-        success: false,
-        message: 'Account deletion is not yet implemented',
-      };
-      return c.json(error('UNAVAILABLE', 'Account deletion is not yet implemented'), 503);
+      throw new UnavailableError('Account deletion is not yet implemented');
     } catch (err) {
       console.error('[user.delete-account] unexpected error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to delete account'), 500);
+      throw new InternalError('Failed to delete account');
     }
   });

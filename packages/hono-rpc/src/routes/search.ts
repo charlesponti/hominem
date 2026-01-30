@@ -1,4 +1,4 @@
-import { error, success } from '@hominem/services';
+import { ValidationError, InternalError } from '@hominem/services';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
@@ -124,27 +124,25 @@ export const searchRoutes = new Hono<AppContext>()
       const parsed = searchSchema.safeParse(body);
 
       if (!parsed.success) {
-        return c.json(error('VALIDATION_ERROR', parsed.error.issues[0].message), 400);
+        throw new ValidationError(parsed.error.issues[0].message);
       }
 
       const { query, maxResults } = parsed.data;
 
       if (!query || typeof query !== 'string') {
-        return c.json(error('VALIDATION_ERROR', 'Search query is required'), 400);
+        throw new ValidationError('Search query is required');
       }
 
       const searchResults = await performWebSearch(query, maxResults);
 
-      return c.json(
-        success({
-          success: true,
-          query,
-          results: searchResults,
-          summary: generateSearchSummary(searchResults),
-        } as SearchResponse),
-      );
+      return c.json({
+        success: true,
+        query,
+        results: searchResults,
+        summary: generateSearchSummary(searchResults),
+      } as SearchResponse);
     } catch (err) {
       console.error('[search] error:', err);
-      return c.json(error('INTERNAL_ERROR', err instanceof Error ? err.message : 'Search failed'), 500);
+      throw new InternalError(err instanceof Error ? err.message : 'Search failed');
     }
   });

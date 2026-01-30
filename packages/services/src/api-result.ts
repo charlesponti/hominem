@@ -99,6 +99,17 @@ export interface ApiError {
  */
 export type ApiResult<T> = ApiSuccess<T> | ApiError;
 
+
+
+
+
+/**
+ * Type for extracting the success data type from an ApiResult
+ *
+ * @example
+ * type GetUserResult = ApiResult<User>
+ * type UserData = ExtractApiData<GetUserResult> // User
+ */
 /**
  * Create a successful API result
  *

@@ -1,7 +1,6 @@
 import { google } from '@ai-sdk/google';
 import { ContentStrategySchema } from '@hominem/db/schema';
-import { ContentStrategiesService, content_generator } from '@hominem/services';
-import { error } from '@hominem/services';
+import { ContentStrategiesService, content_generator, NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
@@ -32,10 +31,7 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
       return c.json<ContentStrategiesListOutput>(strategies);
     } catch (err) {
       console.error('[contentStrategies.list] error:', err);
-      return c.json(
-        error('INTERNAL_ERROR', `Failed to get content strategies: ${err instanceof Error ? err.message : String(err)}`),
-        500,
-      );
+      throw new InternalError(`Failed to get content strategies: ${err instanceof Error ? err.message : String(err)}`);
     }
   })
 
@@ -49,16 +45,13 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
       const strategy = await contentStrategiesService.getById(id, userId);
 
       if (!strategy) {
-        return c.json(error('NOT_FOUND', 'Content strategy not found'), 404);
+        throw new NotFoundError('Content strategy');
       }
 
       return c.json<ContentStrategiesGetOutput>(strategy);
     } catch (err) {
       console.error('[contentStrategies.getById] error:', err);
-      return c.json(
-        error('INTERNAL_ERROR', `Failed to get content strategy: ${err instanceof Error ? err.message : String(err)}`),
-        500,
-      );
+      throw new InternalError(`Failed to get content strategy: ${err instanceof Error ? err.message : String(err)}`);
     }
   })
 
@@ -79,10 +72,7 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
       return c.json<ContentStrategiesCreateOutput>(result, 201);
     } catch (err) {
       console.error('[contentStrategies.create] error:', err);
-      return c.json(
-        error('INTERNAL_ERROR', `Failed to create content strategy: ${err instanceof Error ? err.message : String(err)}`),
-        500,
-      );
+      throw new InternalError(`Failed to create content strategy: ${err instanceof Error ? err.message : String(err)}`);
     }
   })
 
@@ -101,16 +91,13 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
       });
 
       if (!result) {
-        return c.json(error('NOT_FOUND', 'Content strategy not found'), 404);
+        throw new NotFoundError('Content strategy');
       }
 
       return c.json<ContentStrategiesUpdateOutput>(result);
     } catch (err) {
       console.error('[contentStrategies.update] error:', err);
-      return c.json(
-        error('INTERNAL_ERROR', `Failed to update content strategy: ${err instanceof Error ? err.message : String(err)}`),
-        500,
-      );
+      throw new InternalError(`Failed to update content strategy: ${err instanceof Error ? err.message : String(err)}`);
     }
   })
 
@@ -124,16 +111,13 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
       const deleted = await contentStrategiesService.delete(id, userId);
 
       if (!deleted) {
-        return c.json(error('NOT_FOUND', 'Content strategy not found'), 404);
+        throw new NotFoundError('Content strategy');
       }
 
       return c.json<ContentStrategiesDeleteOutput>(undefined as any, 200);
     } catch (err) {
       console.error('[contentStrategies.delete] error:', err);
-      return c.json(
-        error('INTERNAL_ERROR', `Failed to delete content strategy: ${err instanceof Error ? err.message : String(err)}`),
-        500,
-      );
+      throw new InternalError(`Failed to delete content strategy: ${err instanceof Error ? err.message : String(err)}`);
     }
   })
 
@@ -178,12 +162,12 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
         'Content strategy generation did not produce the expected tool call output.',
         result,
       );
-      return c.json(error('INTERNAL_ERROR', 'Failed to extract content strategy from AI response'), 500);
+      throw new InternalError('Failed to extract content strategy from AI response');
     } catch (err) {
       if (err instanceof z.ZodError) {
-        return c.json(error('VALIDATION_ERROR', `Invalid input: ${err.issues.map((i) => i.message).join(', ')}`), 400);
+        throw new ValidationError(`Invalid input: ${err.issues.map((i) => i.message).join(', ')}`);
       }
       console.error('[contentStrategies.generate] error:', err);
-      return c.json(error('INTERNAL_ERROR', 'Failed to generate content strategy'), 500);
+      throw new InternalError('Failed to generate content strategy');
     }
   });
