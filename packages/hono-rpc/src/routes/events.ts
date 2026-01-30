@@ -1,4 +1,4 @@
-import type { EventTypeEnum } from '@hominem/db/schema';
+import type { EventTypeEnum } from '@hominem/db/types/events';
 
 import {
   createEvent,
