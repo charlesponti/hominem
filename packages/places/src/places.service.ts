@@ -1,13 +1,10 @@
 import { db } from '@hominem/db';
-import {
-  type ItemOutput,
-  item,
-  type ListOutput,
-  list,
-  type PlaceInput,
-  type PlaceOutput,
-  place,
-} from '@hominem/db/schema';
+import { item } from '@hominem/db/schema/items';
+import { list } from '@hominem/db/schema/lists';
+import { place } from '@hominem/db/schema/places';
+import type { ItemOutput } from '@hominem/db/types/items';
+import type { ListOutput } from '@hominem/db/types/lists';
+import type { PlaceInput, PlaceOutput } from '@hominem/db/types/places';
 import { googlePlaces } from '@hominem/services/google-places';
 import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/google';
 import { normalizePhotoReference, sanitizeStoredPhotos } from '@hominem/utils/images';

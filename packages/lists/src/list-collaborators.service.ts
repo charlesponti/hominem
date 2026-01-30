@@ -1,5 +1,7 @@
 import { db } from '@hominem/db';
-import { list, listInvite, type UserListsOutput, userLists } from '@hominem/db/schema';
+import { list } from '@hominem/db/schema/lists';
+import { listInvite, userLists } from '@hominem/db/schema/lists';
+import type { UserListsOutput } from '@hominem/db/types/lists';
 import { and, eq, inArray } from 'drizzle-orm';
 
 export async function isUserMemberOfList(listId: string, userId: string): Promise<boolean> {

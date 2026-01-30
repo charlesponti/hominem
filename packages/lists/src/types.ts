@@ -1,4 +1,4 @@
-import type { ListOutput as DbListOutput } from '@hominem/db/schema';
+import type { ListOutput as DbListOutput } from '@hominem/db/types/lists';
 
 export interface ListUser {
   id?: string;

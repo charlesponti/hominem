@@ -1,4 +1,4 @@
-import type { PlaceInsert } from '@hominem/db/schema';
+import type { PlaceInsert } from '@hominem/db/types/places';
 
 import { googlePlaces } from '@hominem/services/google-places';
 import { describe, expect, it, vi } from 'vitest';

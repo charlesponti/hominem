@@ -1,5 +1,9 @@
 import { db } from '@hominem/db';
-import { type ItemOutput, item, list, place, userLists, users } from '@hominem/db/schema';
+import { item } from '@hominem/db/schema/items';
+import { list, userLists } from '@hominem/db/schema/lists';
+import { place } from '@hominem/db/schema/places';
+import { users } from '@hominem/db/schema/users';
+import type { ItemOutput } from '@hominem/db/types/items';
 import { getHominemPhotoURL } from '@hominem/utils/images';
 import { logger } from '@hominem/utils/logger';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';

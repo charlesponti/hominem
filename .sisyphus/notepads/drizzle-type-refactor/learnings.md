@@ -58,3 +58,58 @@ Complete list of files still using '@hominem/db/schema' barrel import:
 6. Trip_items (after trips+items)
 7. Calendar (after places+tags+contacts+finance+users)
 
+
+## Batch 5: Travel, Lists & Places (COMPLETE)
+
+### Files Migrated (18 total)
+
+**packages/lists/src/** (9 files):
+1. ✅ index.ts - re-exports only (no barrel imports)
+2. ✅ types.ts - `import type { ListOutput as DbListOutput } from '@hominem/db/types/lists'`
+3. ✅ list-crud.service.ts - `import { list } from '@hominem/db/schema/lists'`
+4. ✅ list-queries.service.ts - split barrel into: items, lists, places, users
+5. ✅ list-items.service.ts - split barrel into: items, lists, places, users
+6. ✅ list-collaborators.service.ts - `import { list, listInvite, userLists } from '@hominem/db/schema/lists'`
+7. ✅ list-invites.service.ts - split barrel into: lists, users; separate type imports
+8. ✅ tools.ts - AI tool definitions (no barrel imports)
+9. ✅ lists.service.test.ts - split into items, lists, users
+
+**packages/places/src/** (9 files):
+1. ✅ index.ts - re-export PlaceOutput, PlaceInput from `@hominem/db/types/places`
+2. ✅ places.service.ts - split barrel into: items, lists, places; separate type imports
+3. ✅ trips.service.ts - split into: trips, trip_items (separate modules!); types separate
+4. ✅ flights.service.ts - no barrel imports (Zod schemas only)
+5. ✅ place-cache.ts - no barrel imports (pure utility class)
+6. ✅ place-images.service.ts - no barrel imports (image processing)
+7. ✅ flights.tool-def.ts - tool definition (no barrel imports)
+8. ✅ places.service.test.ts - `import type { PlaceInsert } from '@hominem/db/types/places'`
+9. ✅ place-images.service.test.ts - no barrel imports
+
+### Key Patterns Applied
+
+1. **Type imports always separate**: `import type { ... } from '@hominem/db/types/{domain}'`
+2. **Runtime values split by domain**: `import { table } from '@hominem/db/schema/{domain}'`
+3. **Cross-domain imports work fine**: When tables have relationships (list→item→place, trips→items, etc.)
+4. **Trip-related issue discovered**: 
+   - `tripItems` table is in SEPARATE schema file `trip_items.schema.ts` (not `trips.schema.ts`)
+   - Types are in `trip_items.types.ts` (not `trips.types.ts`)
+   - This is correct design: junction tables get their own module
+5. **Users always comes from users schema**: Never mixed with lists/items/places
+
+### Critical Learning
+
+**Junction Tables & Split Modules:**
+- trip_items is a junction table connecting trips and items
+- It has its OWN schema file and types file
+- This pattern should be followed: `trip_items` imports → `@hominem/db/schema/trip_items`, `@hominem/db/types/trip_items`
+- Not co-located with either parent table
+
+### Final Verification
+```bash
+bun run typecheck
+# Result: 41/41 packages pass ✅
+# Time: 30.605s
+# Cache hits: 27 cached items
+```
+
+Zero TypeScript errors after migration.

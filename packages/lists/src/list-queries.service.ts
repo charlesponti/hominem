@@ -1,12 +1,10 @@
 import { db } from '@hominem/db';
-import {
-  item,
-  list,
-  place,
-  userLists,
-  users,
-  type ListOutput as DbListOutput,
-} from '@hominem/db/schema';
+import { item } from '@hominem/db/schema/items';
+import { list } from '@hominem/db/schema/lists';
+import { place } from '@hominem/db/schema/places';
+import { userLists } from '@hominem/db/schema/lists';
+import { users } from '@hominem/db/schema/users';
+import type { ListOutput as DbListOutput } from '@hominem/db/types/lists';
 import { logger } from '@hominem/utils/logger';
 import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
 

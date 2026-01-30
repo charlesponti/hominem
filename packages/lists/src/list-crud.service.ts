@@ -1,5 +1,5 @@
 import { db, takeUniqueOrThrow } from '@hominem/db';
-import { list } from '@hominem/db/schema';
+import { list } from '@hominem/db/schema/lists';
 import { logger } from '@hominem/utils/logger';
 import { and, eq } from 'drizzle-orm';
 import crypto from 'node:crypto';
