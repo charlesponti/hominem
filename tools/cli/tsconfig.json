@@ -12,6 +12,10 @@
     "tsBuildInfoFile": "../../.cache/tool-cli.tsbuildinfo"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "references": [
+    { "path": "../../packages/hono-rpc" },
+    { "path": "../../packages/hono-client" }
+  ],
   "exclude": [
     "node_modules",
     "dist",

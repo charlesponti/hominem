@@ -1,4 +1,4 @@
-import type { NoteOutput, NoteInput, NoteSyncItem } from '@hominem/db/schema';
+import type { NoteInput, NoteSyncItem } from '@hominem/db/schema';
 
 import { NoteContentTypeSchema, TaskMetadataSchema } from '@hominem/db/schema';
 import { z } from 'zod';
@@ -54,10 +54,8 @@ export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>;
 export type ListNotesInput = z.infer<typeof ListNotesInputSchema>;
 export type ListNotesOutput = z.infer<typeof ListNotesOutputSchema>;
 
-/** Legacy API response type - maps to NoteSyncItem from db/schema */
-export type SyncClientItem = NoteSyncItem;
-
 export type CreateNotePayload = NoteInput;
 
-// Re-export NoteSyncItem for backwards compatibility
-export type { NoteSyncItem };
+// Export `NoteSyncItem` from the DB schema for package consumers who need the
+// sync item shape. This is intentional and canonical for `@hominem/notes`.
+export type { NoteSyncItem } from '@hominem/db/schema';

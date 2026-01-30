@@ -1,4 +1,5 @@
 import type { AppType } from '@hominem/hono-rpc';
+import type { HonoClientType } from '@hominem/hono-rpc/client';
 
 import { hc } from 'hono/client';
 
@@ -8,8 +9,11 @@ export interface ClientConfig {
   onError?: (error: Error) => void;
 }
 
+// Full `HonoClient` class used by the application. Wraps `hc<AppType>` and handles
+// auth/fetch behavior (used by hooks and components). Distinct from the lightweight
+// SSR `HonoClient` type defined in `packages/hono-client/src/ssr/server.ts`.
 export class HonoClient {
-  private client: ReturnType<typeof hc<AppType>>;
+  private client: HonoClientInstance;
 
   constructor(config: ClientConfig) {
     this.client = hc<AppType>(config.baseUrl, {
@@ -50,3 +54,6 @@ export class HonoClient {
     return (this.client as any).api;
   }
 }
+
+// Re-export the client type from hono-rpc/client (computed at source to avoid type depth limits)
+export type HonoClientInstance = HonoClientType;

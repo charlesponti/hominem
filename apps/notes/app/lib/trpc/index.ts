@@ -1,2 +1,2 @@
-export { trpc } from './client';
+export { honoClient } from './client';
 export { TRPCProvider } from './provider';

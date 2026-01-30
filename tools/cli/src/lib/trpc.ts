@@ -4,7 +4,9 @@ import { hc } from 'hono/client';
 
 import { getValidAccessToken } from '../utils/auth-utils';
 
-const client: ReturnType<typeof hc<AppType>> = hc('http://localhost:4040', {
+// Create the typed client directly using hc<AppType>
+// Type is inferred directly from hc<AppType> without cross-package imports
+export const trpc = hc<AppType>('http://localhost:4040', {
   fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
     const token = await getValidAccessToken();
     if (!token) {
@@ -33,13 +35,7 @@ const client: ReturnType<typeof hc<AppType>> = hc('http://localhost:4040', {
       throw error;
     }
   },
-}) as any;
+});
 
-export const trpc = {
-  get api() {
-    return (client as any).api;
-  },
-};
-
-// For backwards compatibility
-export { trpc as client };
+// Legacy alias
+export const honoClient = trpc;

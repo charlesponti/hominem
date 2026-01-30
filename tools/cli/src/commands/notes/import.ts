@@ -7,7 +7,7 @@ import path from 'node:path';
 import process from 'node:process';
 import readline from 'node:readline';
 
-import { trpc } from '../../lib/trpc';
+import { honoClient as trpc } from '../../lib/trpc';
 
 interface NoteData {
   type: 'note' | 'task' | 'timer' | 'journal' | 'document';
@@ -79,7 +79,7 @@ export const importCommand = new Command('import')
             };
 
             try {
-              const res = await trpc.api.notes.$post({ json: noteData });
+              const res = await (trpc as any).api.notes.$post({ json: noteData });
               const result = await res.json();
               if (result?.id) {
                 consola.success(`Created note: ${result.title || 'Untitled'}`);
@@ -114,7 +114,7 @@ export const importCommand = new Command('import')
             };
 
             try {
-              const res = await trpc.api.notes.$post({ json: noteData });
+              const res = await (trpc as any).api.notes.$post({ json: noteData });
               const _result = await res.json();
               if (_result?.id) {
                 consola.success(`Created ${isTask ? 'task' : 'note'}: ${line.substring(0, 50)}...`);
@@ -152,7 +152,7 @@ export const importCommand = new Command('import')
                 };
 
                 try {
-                  const res = await trpc.api.notes.$post({ json: headingNoteData });
+                  const res = await (trpc as any).api.notes.$post({ json: headingNoteData });
                   const _result = await res.json();
                   if (_result?.id) {
                     consola.success(`Created heading note: ${currentHeading}`);
@@ -193,7 +193,7 @@ export const importCommand = new Command('import')
                 };
 
                 try {
-                  const res = await trpc.api.notes.$post({ json: noteData });
+                  const res = await (trpc as any).api.notes.$post({ json: noteData });
                   const _result = await res.json();
                   if (_result?.id) {
                     consola.success(`Created paragraph note: ${trimmed.substring(0, 50)}...`);

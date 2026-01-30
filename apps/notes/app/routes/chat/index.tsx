@@ -1,7 +1,7 @@
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
 import { getServerSession } from '~/lib/auth.server';
-import { createServerTRPCClient } from '~/lib/trpc/server';
+import { createServerHonoClient } from '~/lib/trpc/server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user, session, headers } = await getServerSession(request);
@@ -9,7 +9,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return redirect('/', { headers });
   }
 
-  const trpcClient = createServerTRPCClient(session.access_token);
+  const trpcClient = createServerHonoClient(session.access_token);
 
   const res = await trpcClient.api.chats.$get({ query: { limit: '1' } });
   const result = await res.json();

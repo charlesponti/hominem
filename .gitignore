@@ -52,7 +52,6 @@ bun-debug.log*
 .cache/
 
 # TypeScript
-.type-traces
 .type-analysis
 
 # @ark/attest snapshots (commit these to track type performance over time)

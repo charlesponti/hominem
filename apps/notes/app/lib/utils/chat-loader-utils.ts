@@ -1,16 +1,13 @@
 import type { ChatsListOutput, ChatsCreateOutput } from '@hominem/hono-rpc/types';
-
-import type { createServerTRPCClient } from '~/lib/trpc/server';
+import type { HonoClientType } from '@hominem/hono-rpc/client';
 
 import { ChatCreationError } from './errors';
-
-type TRPCClient = ReturnType<typeof createServerTRPCClient>;
 
 /**
  * Gets the first existing chat or creates a new one
  * Returns the chat ID
  */
-export async function getOrCreateChat(trpcClient: TRPCClient): Promise<{ chatId: string }> {
+export async function getOrCreateChat(trpcClient: HonoClientType): Promise<{ chatId: string }> {
   const res = await trpcClient.api.chats.$get();
   const result = (await res.json()) as ChatsListOutput;
 

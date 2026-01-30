@@ -9,7 +9,6 @@ import { hc } from 'hono/client';
 const client = hc<AppType>(import.meta.env.VITE_API_URL || 'http://localhost:4040');
 
 export const honoClient = client;
-export const trpc = client; // Backwards compatibility alias
 
 // Export types from the client
 export type APIClient = typeof client;

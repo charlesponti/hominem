@@ -516,7 +516,7 @@ async function main() {
   }
 
   if (cmd === 'audit') {
-    const TRACE_DIR = join(ROOT, '.type-inference-audit-traces');
+    const TRACE_DIR = join(ROOT, '.type-analysis');
     if (existsSync(TRACE_DIR)) rmSync(TRACE_DIR, { recursive: true });
     mkdirSync(TRACE_DIR, { recursive: true });
 
