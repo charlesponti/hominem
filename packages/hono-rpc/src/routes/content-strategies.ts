@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google';
-import { ContentStrategySchema } from '@hominem/db/schema';
+import { ContentStrategySchema } from '@hominem/db/schema/content';
 import { ContentStrategiesService, content_generator, NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { generateText } from 'ai';

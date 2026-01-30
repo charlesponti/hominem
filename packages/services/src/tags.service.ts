@@ -1,5 +1,7 @@
 import { db } from '@hominem/db';
-import { eventsTags, tags, type TagOutput } from '@hominem/db/schema';
+import { eventsTags } from '@hominem/db/schema/calendar';
+import { tags } from '@hominem/db/schema/tags';
+import type { TagOutput } from '@hominem/db/types/tags';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 

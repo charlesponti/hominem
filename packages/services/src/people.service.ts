@@ -1,5 +1,7 @@
 import { db } from '@hominem/db';
-import { contacts, eventsUsers, type ContactOutput } from '@hominem/db/schema';
+import { eventsUsers } from '@hominem/db/schema/calendar';
+import { contacts } from '@hominem/db/schema/contacts';
+import type { ContactOutput } from '@hominem/db/types/contacts';
 import { asc, eq, inArray } from 'drizzle-orm';
 
 export type { ContactOutput };
