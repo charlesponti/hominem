@@ -1,6 +1,6 @@
 import { List } from '@hominem/ui/list';
 
-import { useLists } from '~/lib/hono';
+import { useLists } from '~/lib/hooks/use-lists';
 
 import ListForm from './list-form';
 import { ListRow } from './list-row';

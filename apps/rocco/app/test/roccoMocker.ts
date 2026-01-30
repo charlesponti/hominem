@@ -6,13 +6,15 @@ import type { MockMutationResult } from '~/test/utils';
 import {
   useLists,
   useListById,
+  useUpdateList,
+} from '~/lib/hooks/use-lists';
+import {
   useNearbyPlaces,
   usePlacesAutocomplete,
   usePlaceById,
-  useDeleteAccount,
-  useUpdateList,
   useAddPlaceToLists,
-} from '~/lib/hono';
+} from '~/lib/hooks/use-places';
+import { useDeleteAccount } from '~/lib/hooks/use-user';
 
 export class RoccoMocker {
   mockListsGetAll(data: List[] | undefined, isLoading = false, error: Error | null = null) {

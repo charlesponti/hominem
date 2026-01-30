@@ -7,6 +7,8 @@ import {
   type QueryKey,
 } from '@tanstack/react-query';
 
+import type { HonoClient } from '../core/client';
+
 import { useHonoClient } from './context';
 
 export interface HonoQueryOptions<TData> extends Omit<
@@ -38,7 +40,7 @@ export interface HonoMutationOptions<TData, TVariables> extends Omit<
  */
 export function useHonoQuery<TData>(
   queryKey: QueryKey,
-  queryFn: (client: ReturnType<typeof useHonoClient>) => Promise<TData>,
+  queryFn: (client: HonoClient) => Promise<TData>,
   options?: HonoQueryOptions<TData>,
 ) {
   const client = useHonoClient();
@@ -71,7 +73,7 @@ export function useHonoQuery<TData>(
  * );
  */
 export function useHonoMutation<TData, TVariables = void>(
-  mutationFn: (client: ReturnType<typeof useHonoClient>, variables: TVariables) => Promise<TData>,
+  mutationFn: (client: HonoClient, variables: TVariables) => Promise<TData>,
   options?: HonoMutationOptions<TData, TVariables>,
 ) {
   const client = useHonoClient();

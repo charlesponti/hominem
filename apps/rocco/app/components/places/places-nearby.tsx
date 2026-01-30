@@ -4,7 +4,7 @@ import { MapPin } from 'lucide-react';
 import { href } from 'react-router';
 
 import { useGeolocation } from '~/hooks/useGeolocation';
-import { useNearbyPlaces } from '~/lib/hono';
+import { useNearbyPlaces } from '~/lib/hooks/use-places';
 
 import PlaceRow from './place-row';
 

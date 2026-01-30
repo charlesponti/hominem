@@ -19,7 +19,7 @@ import {
 import { Check, Loader2, Plus, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
-import { usePeople, useCreatePerson } from '~/lib/hono';
+import { usePeople, useCreatePerson } from '~/lib/hooks/use-people';
 import { cn } from '~/lib/utils';
 
 interface Person {

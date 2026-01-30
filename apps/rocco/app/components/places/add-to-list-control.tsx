@@ -5,7 +5,7 @@ import { ListPlus } from 'lucide-react';
 import { useState, lazy, Suspense } from 'react';
 import z from 'zod';
 
-import { usePlaceById, usePlaceByGoogleId } from '~/lib/hono';
+import { usePlaceById, usePlaceByGoogleId } from '~/lib/hooks/use-places';
 
 const AddToListDrawerContent = lazy(() => import('./add-to-list-drawer-content'));
 

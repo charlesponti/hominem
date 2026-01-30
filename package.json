@@ -28,7 +28,6 @@
     "build": "turbo run build",
     "check": "turbo run check",
     "clean": "turbo run clean",
-    "type:audit": "bun run scripts/type-performance.ts audit",
     "db:migrate": "turbo run db:migrate",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
@@ -39,9 +38,9 @@
     "start:dev": "bun apps/api/src/index.ts",
     "start:prod": "bun apps/api/src/index.ts",
     "test": "turbo run test",
-    "bench:type-perf": "bun run scripts/type-performance.ts run-all",
-    "analyze:type-perf": "bun run scripts/type-performance.ts analyze",
     "type-audit": "bun run scripts/type-performance.ts run-all",
+    "type-perf:analyze": "bun run scripts/type-performance.ts analyze",
+    "type-perf:audit": "bun run scripts/type-performance.ts audit",
     "typecheck": "turbo run typecheck"
   },
   "dependencies": {
@@ -57,6 +56,7 @@
     "@types/node": "^22.15.2",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "@vitest/coverage-v8": "latest",
     "drizzle-kit": "^0.31.4",
     "ink": "^6.6.0",
     "lefthook": "^2.0.2",
@@ -66,8 +66,7 @@
     "turbo": "^2.7.4",
     "typescript": "5.9.3",
     "vite-tsconfig-paths": "6.0.3",
-    "vitest": "4.0.16",
-    "@vitest/coverage-v8": "latest"
+    "vitest": "4.0.16"
   },
   "overrides": {
     "@hono/zod-validator": "0.7.6",

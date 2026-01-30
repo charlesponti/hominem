@@ -6,7 +6,7 @@ import { type SyntheticEvent, useCallback, useId, useState } from 'react';
 
 import type { SentInvite } from '~/lib/types';
 
-import { useCreateInvite } from '~/lib/hono';
+import { useCreateInvite } from '~/lib/hooks/use-invites';
 
 type SentInviteFormProps = {
   listId: string;

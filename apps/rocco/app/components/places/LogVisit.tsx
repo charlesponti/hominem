@@ -5,7 +5,8 @@ import { Textarea } from '@hominem/ui/textarea';
 import { useEffect, useState } from 'react';
 import { useRevalidator } from 'react-router';
 
-import { useLogVisit, useUpdateVisit, useHonoUtils } from '~/lib/hono';
+import { useLogPlaceVisit, useUpdatePlaceVisit } from '~/lib/hooks/use-places';
+import { useHonoUtils } from '@hominem/hono-client/react';
 
 import { PeopleMultiSelect } from './PeopleMultiSelect';
 
@@ -80,11 +81,11 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
     onSuccess?.();
   };
 
-  const logVisitMutation = useLogVisit({
+  const logVisitMutation = useLogPlaceVisit({
     onSuccess: handleSuccess,
   });
 
-  const updateVisitMutation = useUpdateVisit({
+  const updateVisitMutation = useUpdatePlaceVisit({
     onSuccess: handleSuccess,
   });
 

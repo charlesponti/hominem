@@ -16,7 +16,7 @@ import UserAvatar from '~/components/user-avatar';
 import { MapInteractionProvider } from '~/contexts/map-interaction-context';
 import { useGeolocation } from '~/hooks/useGeolocation';
 import { requireAuth } from '~/lib/guards';
-import { useListById } from '~/lib/hono';
+import { useListById } from '~/lib/hooks/use-lists';
 
 import type { Route } from './+types/lists.$id';
 

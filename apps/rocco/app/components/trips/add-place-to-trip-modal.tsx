@@ -9,7 +9,8 @@ import {
 import { useRevalidator } from 'react-router';
 
 import { useModal } from '~/hooks/useModal';
-import { useLists, useAddItemToTrip } from '~/lib/hono';
+import { useLists } from '~/lib/hooks/use-lists';
+import { useAddItemToTrip } from '~/lib/hooks/use-trips';
 
 export function AddPlaceToTripModal({ tripId }: { tripId: string }) {
   const { isOpen, open, close } = useModal();

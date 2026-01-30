@@ -143,6 +143,30 @@ function createUseMutationQuery<TData = unknown>(): UseMutationFn<TData> {
   return vi.fn<() => MockMutationResult<TData>>(() => defaultResult);
 }
 
+// Mock individual hook modules (required for vi.mocked() to work in roccoMocker)
+vi.mock('~/lib/hooks/use-lists', () => ({
+  useLists: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useListById: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  useCreateList: vi.fn(() => createUseMutationQuery()),
+  useUpdateList: vi.fn(() => createUseMutationQuery()),
+  useDeleteList: vi.fn(() => createUseMutationQuery()),
+  useListsContainingPlace: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+}));
+
+vi.mock('~/lib/hooks/use-places', () => ({
+  usePlaces: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  usePlaceById: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  usePlaceByGoogleId: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  usePlacesAutocomplete: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useNearbyPlaces: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useAddPlaceToLists: vi.fn(() => createUseMutationQuery()),
+  useRemovePlaceFromList: vi.fn(() => createUseMutationQuery()),
+}));
+
+vi.mock('~/lib/hooks/use-user', () => ({
+  useDeleteAccount: vi.fn(() => createUseMutationQuery()),
+}));
+
 // Mock Hono hooks
 vi.mock('~/lib/hono', () => ({
   useLists: vi.fn(() => ({ data: [], isLoading: false, error: null })),

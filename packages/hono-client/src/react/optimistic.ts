@@ -1,16 +1,6 @@
-import { useMutation, useQueryClient, type UseMutationOptions } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useHonoClient } from './context';
-
-export interface OptimisticUpdateConfig<TData, TVariables, TContext = unknown> {
-  queryKey: unknown[];
-  updateFn: (oldData: TData | undefined, variables: TVariables) => TData;
-  mutationFn: (client: ReturnType<typeof useHonoClient>, variables: TVariables) => Promise<TData>;
-  onSuccess?: (data: TData, variables: TVariables, context: TContext) => void;
-  onError?: (error: Error, variables: TVariables, context: TContext | undefined) => void;
-  successMessage?: string;
-  errorMessage?: string;
-}
 
 /**
  * Hook for mutations with optimistic updates

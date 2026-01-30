@@ -25,17 +25,17 @@ export {
   useUpdatePlaceVisit,
   useDeletePlaceVisit,
   usePlaceVisitStats,
-} from '~/lib/hono';
+} from './hooks/use-places';
 
-export { useRemoveItemFromList } from '~/lib/hono';
+export { useRemoveItemFromList } from './hooks/use-items';
 
 // Aliases for backward compatibility
-export { useAddPlaceToLists as useAddPlaceToList } from '~/lib/hono';
-export { useRemovePlaceFromList as useRemoveListItem } from '~/lib/hono';
-export { useLogPlaceVisit as useLogVisit } from '~/lib/hono';
-export { useUpdatePlaceVisit as useUpdateVisit } from '~/lib/hono';
-export { useDeletePlaceVisit as useDeleteVisit } from '~/lib/hono';
-export { usePlaceVisitStats as useVisitStats } from '~/lib/hono';
+export { useAddPlaceToLists as useAddPlaceToList } from './hooks/use-places';
+export { useRemovePlaceFromList as useRemoveListItem } from './hooks/use-places';
+export { useLogPlaceVisit as useLogVisit } from './hooks/use-places';
+export { useUpdatePlaceVisit as useUpdateVisit } from './hooks/use-places';
+export { useDeletePlaceVisit as useDeleteVisit } from './hooks/use-places';
+export { usePlaceVisitStats as useVisitStats } from './hooks/use-places';
 
 export async function createPlaceFromPrediction(prediction: GooglePlacePrediction): Promise<Place> {
   /**

@@ -12,7 +12,13 @@ import {
   getTransactionCategoriesAnalysis,
   bulkCreateBudgetCategoriesFromTransactions,
 } from '@hominem/finance-services';
-import { NotFoundError, ValidationError, ConflictError, InternalError, isServiceError } from '@hominem/services';
+import {
+  NotFoundError,
+  ValidationError,
+  ConflictError,
+  InternalError,
+  isServiceError,
+} from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -82,8 +88,7 @@ export const budgetRoutes = new Hono<AppContext>()
           actualSpending: item.actualSpending,
           percentageSpent: item.percentageSpent,
           budgetAmount: item.budgetAmount,
-          allocationPercentage:
-            totalBudgeted > 0 ? (item.budgetAmount / totalBudgeted) * 100 : 0,
+          allocationPercentage: totalBudgeted > 0 ? (item.budgetAmount / totalBudgeted) * 100 : 0,
           variance: item.variance,
           remaining: item.remaining,
           color: item.color || '#000000',
@@ -315,10 +320,7 @@ export const budgetRoutes = new Hono<AppContext>()
 
       const income = userCategories
         .filter((cat) => cat.type === 'income')
-        .reduce(
-          (sum: number, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'),
-          0,
-        );
+        .reduce((sum: number, cat) => sum + Number.parseFloat(cat.averageMonthlyExpense || '0'), 0);
 
       const expenses = userCategories
         .filter((cat) => cat.type === 'expense')

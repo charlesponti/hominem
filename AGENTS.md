@@ -304,6 +304,8 @@ Husky hooks run on commit. Ensure:
 
 For specialized guidelines, refer to:
 
+- `.github/skills/type-audit/SKILL.md` - Use `/type-audit` to diagnose TypeScript performance issues.
+- `.github/skills/ready-for-prod/SKILL.md` - Use `/ready-for-prod` for a final security, performance, and simplicity check.
 - `.github/instructions/principles.instructions.md` - Universal coding principles
  - `.github/instructions/principles.instructions.md` - Deprecated pointer to `AGENTS.md` (do not edit; update AGENTS.md instead)
 - `.github/instructions/react.instructions.md` - React component guidelines
@@ -311,9 +313,8 @@ For specialized guidelines, refer to:
 - `.github/instructions/database.instructions.md` - Database best practices
 - `.github/copilot-instructions.md` - Full Copilot guidelines
 
-## Universal Coding Principles (consolidated)
+## Universal Coding Principles
 
-The following consolidated coding principles were moved here from `.github/instructions/principles.instructions.md` and `.github/copilot-instructions.md`. This is the canonical place for engineering rules, style, and testing expectations.
 
 Package References
 

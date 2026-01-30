@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
 
 import { requireAuth } from '~/lib/guards';
-import { useDeleteAccount } from '~/lib/hono';
+import { useDeleteAccount } from '~/lib/hooks/use-user';
 
 import type { Route } from './+types/account';
 

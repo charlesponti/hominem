@@ -3,7 +3,7 @@ import {
   type VectorDocumentInput,
   type VectorDocumentOutput,
 } from '@hominem/db/schema';
-import { splitMarkdown } from '@hominem/utils/markdown';
+import { splitMarkdown, type Document } from '@hominem/utils/markdown';
 import csv from 'csv-parser';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
@@ -205,9 +205,9 @@ export namespace VectorService {
 
     for (let i = 0; i < splitDocuments.length; i += batchSize) {
       const batch = splitDocuments.slice(i, i + batchSize);
-      const embeddings = await Promise.all(batch.map((doc) => generateEmbedding(doc.pageContent)));
+      const embeddings = await Promise.all(batch.map((doc: Document) => generateEmbedding(doc.pageContent)));
 
-      const documents: VectorDocumentInput[] = batch.map((doc, index) => ({
+      const documents: VectorDocumentInput[] = batch.map((doc: Document, index: number) => ({
         id: randomUUID(),
         content: doc.pageContent,
         metadata: JSON.stringify({ ...doc.metadata, ...metadata }),

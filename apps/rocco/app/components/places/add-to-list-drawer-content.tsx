@@ -12,7 +12,7 @@ import { Check, Loader2, Plus } from 'lucide-react';
 import { useMemo, useState, useCallback } from 'react';
 import { useRevalidator } from 'react-router';
 
-import { useLists, useCreateList } from '~/lib/hono';
+import { useLists, useCreateList } from '~/lib/hooks/use-lists';
 import { useAddPlaceToList, useRemoveListItem } from '~/lib/places';
 import { cn } from '~/lib/utils';
 

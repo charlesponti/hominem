@@ -5,7 +5,7 @@ import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
-import { useMyVisits } from '~/lib/hono';
+import { useMyVisits } from '~/lib/hooks/use-places';
 import { buildImageUrl } from '~/lib/utils';
 
 export default function VisitsPage() {

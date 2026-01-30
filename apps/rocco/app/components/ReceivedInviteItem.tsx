@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 
 import type { ReceivedInvite } from '~/lib/types';
 
-import { useAcceptInvite } from '~/lib/hono';
+import { useAcceptInvite } from '~/lib/hooks/use-invites';
 
 type ReceivedInviteItemProps =
   | {

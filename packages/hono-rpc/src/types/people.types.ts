@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { EmptyInput, JsonSerialized } from './utils';
+
+import type { EmptyInput } from './utils';
 
 // ============================================================================
 // Data Types
@@ -7,9 +8,9 @@ import type { EmptyInput, JsonSerialized } from './utils';
 
 /**
  * Person represents a contact from the database
- * Uses JsonSerialized to handle Date serialization automatically
+ * Dates are serialized as ISO strings (createdAt/updatedAt)
  */
-export type Person = JsonSerialized<{
+export type Person = {
   id: string;
   userId: string;
   firstName: string;
@@ -19,9 +20,9 @@ export type Person = JsonSerialized<{
   linkedinUrl: string | null;
   title: string | null;
   notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}>;
+  createdAt: string;
+  updatedAt: string;
+};
 
 // ============================================================================
 // LIST PEOPLE

@@ -1,4 +1,4 @@
-import { usePlacesAutocomplete } from '~/lib/hono';
+import { usePlacesAutocomplete } from '../lib/hooks/use-places';
 
 export type { GooglePlacePrediction } from '~/lib/types';
 

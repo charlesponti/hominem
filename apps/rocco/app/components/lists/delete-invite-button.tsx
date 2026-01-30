@@ -12,7 +12,7 @@ import { Trash2 } from 'lucide-react';
 import { useCallback } from 'react';
 
 import { useModal } from '~/hooks/useModal';
-import { useDeleteInvite } from '~/lib/hono';
+import { useDeleteInvite } from '~/lib/hooks/use-invites';
 
 type DeleteInviteButtonProps = {
   listId: string;

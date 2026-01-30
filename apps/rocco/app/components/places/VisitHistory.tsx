@@ -4,7 +4,8 @@ import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { Edit2, Star, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
-import { useDeleteVisit, useHonoUtils, usePlaceVisits } from '~/lib/hono';
+import { useDeletePlaceVisit, usePlaceVisits } from '~/lib/hooks/use-places';
+import { useHonoUtils } from '@hominem/hono-client/react';
 
 import { LogVisit } from './LogVisit';
 
@@ -54,7 +55,7 @@ const itemVariants: Variants = {
 
 function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: VisitItemProps) {
   const utils = useHonoUtils();
-  const deleteVisit = useDeleteVisit();
+  const deleteVisit = useDeletePlaceVisit();
 
   const handleDelete = useCallback(async () => {
     if (confirm('Are you sure you want to delete this visit?')) {

@@ -2,7 +2,7 @@ import { Button } from '@hominem/ui/button';
 import { useState } from 'react';
 import { redirect } from 'react-router';
 
-import { useRefreshGooglePlaces } from '~/lib/hono';
+import { useRefreshGooglePlaces } from '~/lib/hooks/use-admin';
 
 import type { Route } from './+types/admin';
 

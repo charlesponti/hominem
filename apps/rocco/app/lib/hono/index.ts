@@ -4,6 +4,14 @@
  * Re-exports Hono client utilities for use throughout the app
  */
 
+/**
+ * Hono RPC Client Setup for Rocco App
+ *
+ * This file exports the HonoProvider and Hono client utilities.
+ * For hooks, import directly from ~/lib/hooks/ or use the convenience
+ * re-exports in ~/lib/lists.ts, ~/lib/places.ts, etc.
+ */
+
 export { HonoProvider } from './provider';
 export {
   useHonoClient,
@@ -13,22 +21,6 @@ export {
 } from '@hominem/hono-client/react';
 
 export { queryKeys } from '../query-keys';
-
-// Re-export all hooks
-export * from '../hooks/use-lists';
-export * from '../hooks/use-places';
-export * from '../hooks/use-invites';
-export * from '../hooks/use-items';
-export * from '../hooks/use-trips';
-export * from '../hooks/use-people';
-export * from '../hooks/use-user';
-export * from '../hooks/use-admin';
-
-// Backward compatibility aliases for visit hooks
-export { useLogPlaceVisit as useLogVisit } from '../hooks/use-places';
-export { useUpdatePlaceVisit as useUpdateVisit } from '../hooks/use-places';
-export { useDeletePlaceVisit as useDeleteVisit } from '../hooks/use-places';
-export { usePlaceVisitStats as useVisitStats } from '../hooks/use-places';
 
 // Re-export types
 export type * from '@hominem/hono-rpc/types';

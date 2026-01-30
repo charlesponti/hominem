@@ -7,7 +7,7 @@ import type { PlaceWithLists } from '~/lib/types';
 
 import { ListRow } from '~/components/lists/list-row';
 import AddPlaceToList from '~/components/places/add-to-list-control';
-import { useListsContainingPlace } from '~/lib/hono';
+import { useListsContainingPlace } from '~/lib/hooks/use-lists';
 
 type Props = {
   place: PlaceWithLists;

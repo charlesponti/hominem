@@ -4,7 +4,7 @@ import { redirect } from 'react-router';
 
 import ErrorBoundary from '~/components/ErrorBoundary';
 import { getAuthState } from '~/lib/auth.server';
-import { useSentInvites } from '~/lib/hono';
+import { useSentInvites } from '~/lib/hooks/use-invites';
 
 import type { Route } from './+types/lists.$id.invites.sent';
 

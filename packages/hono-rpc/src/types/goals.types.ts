@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import type { JsonSerialized } from './utils';
 
 // ============================================================================
 // Data Types - Schemas and Types
@@ -22,9 +21,9 @@ export type GoalMilestone = z.infer<typeof GoalMilestoneSchema>;
 
 /**
  * Goal represents a goal from the database
- * Uses JsonSerialized to handle timestamp serialization
+ * Dates and timestamps are represented as ISO strings
  */
-export type Goal = JsonSerialized<{
+export type Goal = {
   id: string;
   userId: string;
   title: string;
@@ -37,7 +36,7 @@ export type Goal = JsonSerialized<{
   dueDate: string | null;
   createdAt: string;
   updatedAt: string;
-}>;
+};
 
 // ============================================================================
 // Input Schemas
