@@ -1,4 +1,4 @@
-import type { UserSelect } from '@hominem/db/schema'
+import type { UserSelect } from '@hominem/db/types/users'
 import type { AuthAppMetadata, AuthUserMetadata, HominemUser, SupabaseAuthUser } from './types'
 
 function extractName(userMetadata: AuthUserMetadata) {
