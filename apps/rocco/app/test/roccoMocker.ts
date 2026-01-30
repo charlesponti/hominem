@@ -3,11 +3,7 @@ import { vi } from 'vitest';
 import type { List, Place } from '~/lib/types';
 import type { MockMutationResult } from '~/test/utils';
 
-import {
-  useLists,
-  useListById,
-  useUpdateList,
-} from '~/lib/hooks/use-lists';
+import { useLists, useListById, useUpdateList } from '~/lib/hooks/use-lists';
 import {
   useNearbyPlaces,
   usePlacesAutocomplete,

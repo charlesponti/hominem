@@ -1,13 +1,15 @@
 import { z } from 'zod';
 
-export const MetadataSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  author: z.string().optional(),
-  date: z.string().optional(),
-  category: z.string().optional(),
-}).passthrough();
+export const MetadataSchema = z
+  .object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    tags: z.array(z.string()).optional(),
+    author: z.string().optional(),
+    date: z.string().optional(),
+    category: z.string().optional(),
+  })
+  .passthrough();
 
 export type Metadata = z.infer<typeof MetadataSchema>;
 

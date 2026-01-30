@@ -1,3 +1,4 @@
+import { useHonoUtils } from '@hominem/hono-client/react';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/input';
 import { Label } from '@hominem/ui/label';
@@ -6,7 +7,6 @@ import { useEffect, useState } from 'react';
 import { useRevalidator } from 'react-router';
 
 import { useLogPlaceVisit, useUpdatePlaceVisit } from '~/lib/hooks/use-places';
-import { useHonoUtils } from '@hominem/hono-client/react';
 
 import { PeopleMultiSelect } from './PeopleMultiSelect';
 

@@ -205,7 +205,9 @@ export namespace VectorService {
 
     for (let i = 0; i < splitDocuments.length; i += batchSize) {
       const batch = splitDocuments.slice(i, i + batchSize);
-      const embeddings = await Promise.all(batch.map((doc: Document) => generateEmbedding(doc.pageContent)));
+      const embeddings = await Promise.all(
+        batch.map((doc: Document) => generateEmbedding(doc.pageContent)),
+      );
 
       const documents: VectorDocumentInput[] = batch.map((doc: Document, index: number) => ({
         id: randomUUID(),

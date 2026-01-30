@@ -9,8 +9,6 @@ import {
   useApiTestLifecycle,
 } from '@/test/api-test-utils';
 
-
-
 // Mock BullMQ Queue
 const { mockQueueAdd, mockQueueClose } = vi.hoisted(() => {
   const mockQueueAdd = vi.fn();
@@ -77,8 +75,6 @@ describe('Plaid Router', () => {
   let testUserId: string;
   let testAccountId: string;
   let testInstitutionId: string;
-
-
 
   // Ensure each test has fresh, isolated data
   beforeAll(async () => {

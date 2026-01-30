@@ -1,3 +1,4 @@
+import { useHonoUtils } from '@hominem/hono-client/react';
 import { Button } from '@hominem/ui/button';
 import { List } from '@hominem/ui/list';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
@@ -5,7 +6,6 @@ import { Edit2, Star, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import { useDeletePlaceVisit, usePlaceVisits } from '~/lib/hooks/use-places';
-import { useHonoUtils } from '@hominem/hono-client/react';
 
 import { LogVisit } from './LogVisit';
 

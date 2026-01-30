@@ -56,7 +56,7 @@ export class MarkdownProcessor {
     let metadata: Metadata = {};
     let processableContent = content;
 
-    const yamlNode = ast.children.find((node) => node.type === 'yaml');
+    const yamlNode = ast.children.find((node: any) => node.type === 'yaml');
     if (yamlNode && 'value' in yamlNode) {
       try {
         const frontmatter = parseYaml(yamlNode.value as string);
@@ -92,7 +92,7 @@ export class MarkdownProcessor {
       .use(remarkFrontmatter, ['yaml'])
       .parse(processableContent);
 
-    const headingNode = ast.children.find((node) => node.type === 'heading');
+    const headingNode = ast.children.find((node: any) => node.type === 'heading');
     const heading = headingNode
       ? toString(headingNode)
       : filename.replace('.md', '').split('_').join(' ');
