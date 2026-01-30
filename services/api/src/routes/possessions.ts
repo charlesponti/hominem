@@ -1,4 +1,4 @@
-import type { PossessionOutput } from '@hominem/db/schema';
+import type { PossessionOutput } from '@hominem/db/types/possessions';
 
 import {
   createPossession,
