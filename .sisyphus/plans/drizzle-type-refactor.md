@@ -193,12 +193,13 @@ Final typecheck + tests + metrics comparison
 
 ### Batch 3: Career & Networking (career, interviews, skills, networking_events)
 
-- [ ] 3.1 Create career.types.ts if missing
+- [x] 3.1 Create career.types.ts if missing
   - **What**: Ensure `CareerOutput`, `CareerInput`, `JobOutput`, `JobInput` types are exported
   - **Files**: Check if `packages/db/src/schema/career.types.ts` exists; create if needed
   - **Verify**: File exists with type exports
+  - **Completed**: Already exists, company types exported separately in company.types.ts
 
-- [ ] 3.2 Update packages/career/src services
+- [x] 3.2 Update packages/career/src services
   - **What**: Replace barrel imports with specific paths
   - **Files affected**:
     - `packages/career/src/company.service.ts`
@@ -206,14 +207,17 @@ Final typecheck + tests + metrics comparison
     - `packages/career/src/job-application.service.ts`
   - **Pattern**: `import type { CompanyOutput } from '@hominem/db/types/career'` and `import { companies } from '@hominem/db/schema/career'`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: Commit 6c0c5c29
 
-- [ ] 3.3 Update packages/hono-rpc/src/routes
+- [x] 3.3 Update packages/hono-rpc/src/routes
   - **What**: Update routes/events.ts for event types if career-related
   - **Files**: `packages/hono-rpc/src/routes/events.ts`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: No changes needed - events.ts doesn't use career types
 
-- [ ] 3.4 Type-audit after Batch 3
+- [x] 3.4 Type-audit after Batch 3
   - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-3.json`
+  - **Completed**: Commit 6c0c5c29 - Total typecheck: 9.2s (41/41 packages pass)
 
 ### Batch 4: Content & Knowledge (notes, content, documents, vector-documents, bookmarks, surveys)
 

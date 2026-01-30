@@ -1,4 +1,4 @@
-import { PublishingContentTypeSchema, AllContentTypeSchema } from '@hominem/db/schema';
+import { PublishingContentTypeSchema, AllContentTypeSchema } from '@hominem/db/schema/shared';
 import { ContentService } from '@hominem/notes-services';
 import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { Hono } from 'hono';

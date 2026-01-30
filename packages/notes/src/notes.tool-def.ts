@@ -1,4 +1,4 @@
-import { NoteContentTypeSchema } from '@hominem/db/schema';
+import { NoteContentTypeSchema } from '@hominem/db/schema/notes';
 import { toolDefinition } from '@tanstack/ai';
 import { z } from 'zod';
 

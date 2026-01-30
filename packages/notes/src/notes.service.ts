@@ -1,4 +1,4 @@
-import type { NoteOutput, NoteInput, NoteSyncItem } from '@hominem/db/schema';
+import type { NoteOutput, NoteInput, NoteSyncItem } from '@hominem/db/types/notes';
 
 import { db } from '@hominem/db';
 // Direct table import for DB operations

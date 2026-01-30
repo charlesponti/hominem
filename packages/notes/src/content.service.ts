@@ -1,4 +1,4 @@
-import type { ContentOutput, ContentInput } from '@hominem/db/schema';
+import type { ContentOutput, ContentInput } from '@hominem/db/types/content';
 
 import { db } from '@hominem/db';
 import { content } from '@hominem/db/schema/content';

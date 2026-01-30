@@ -1,4 +1,6 @@
-import { NoteContentTypeSchema, type NoteInput, TaskMetadataSchema, AllContentTypeSchema, type AllContentType } from '@hominem/db/schema';
+import { NoteContentTypeSchema, TaskMetadataSchema } from '@hominem/db/schema/notes';
+import { AllContentTypeSchema, type AllContentType } from '@hominem/db/schema/shared';
+import type { NoteInput } from '@hominem/db/types/notes';
 import { NotesService } from '@hominem/notes-services';
 import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';

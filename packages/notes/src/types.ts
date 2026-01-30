@@ -1,6 +1,6 @@
-import type { NoteInput, NoteSyncItem } from '@hominem/db/schema';
+import type { NoteInput, NoteSyncItem } from '@hominem/db/types/notes';
 
-import { NoteContentTypeSchema, TaskMetadataSchema } from '@hominem/db/schema';
+import { NoteContentTypeSchema, TaskMetadataSchema } from '@hominem/db/schema/notes';
 import { z } from 'zod';
 
 const noteTagSchema = z.object({ value: z.string() });
@@ -58,4 +58,4 @@ export type CreateNotePayload = NoteInput;
 
 // Export `NoteSyncItem` from the DB schema for package consumers who need the
 // sync item shape. This is intentional and canonical for `@hominem/notes`.
-export type { NoteSyncItem } from '@hominem/db/schema';
+export type { NoteSyncItem } from '@hominem/db/types/notes';
