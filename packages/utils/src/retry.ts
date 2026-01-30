@@ -66,7 +66,11 @@ export const retryWithBackoff = async <T>(
         log.warn(`Retrying operation, attempts remaining: ${retries}, delay: ${delay}ms`);
       }
       await new Promise((resolve) => setTimeout(resolve, delay));
-      return retryWithBackoff(operation, { retries: retries - 1, delay: options.delay, enableLogging });
+      return retryWithBackoff(operation, {
+        retries: retries - 1,
+        delay: options.delay,
+        enableLogging,
+      });
     }
     throw error;
   }

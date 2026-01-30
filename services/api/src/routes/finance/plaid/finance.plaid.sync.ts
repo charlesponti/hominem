@@ -1,5 +1,10 @@
 import { getPlaidItemByUserAndItemId } from '@hominem/finance-services';
-import { UnauthorizedError, NotFoundError, ValidationError, InternalError } from '@hominem/services';
+import {
+  UnauthorizedError,
+  NotFoundError,
+  ValidationError,
+  InternalError,
+} from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { Hono } from 'hono';
 

@@ -99,10 +99,6 @@ export interface ApiError {
  */
 export type ApiResult<T> = ApiSuccess<T> | ApiError;
 
-
-
-
-
 /**
  * Type for extracting the success data type from an ApiResult
  *

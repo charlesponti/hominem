@@ -1,7 +1,12 @@
 import type { ImportTransactionsQueuePayload } from '@hominem/jobs-services';
 import type { Job } from 'bullmq';
 
-import { UnauthorizedError, ValidationError, NotFoundError, InternalError } from '@hominem/services';
+import {
+  UnauthorizedError,
+  ValidationError,
+  NotFoundError,
+  InternalError,
+} from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { csvStorageService } from '@hominem/utils/supabase';
 import { zValidator } from '@hono/zod-validator';
@@ -64,11 +69,7 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
       return c.json({
         jobId: existingJob.id,
         fileName: existingJob.data.fileName,
-        status: existingJob.finishedOn
-          ? 'done'
-          : existingJob.failedReason
-            ? 'error'
-            : 'processing',
+        status: existingJob.finishedOn ? 'done' : existingJob.failedReason ? 'error' : 'processing',
         message: 'File is already being processed',
       });
     }
@@ -96,11 +97,14 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
       },
     );
 
-    return c.json({
-      jobId: job.id,
-      fileName: uploadedFile.filename,
-      status: 'queued',
-    }, 201);
+    return c.json(
+      {
+        jobId: job.id,
+        fileName: uploadedFile.filename,
+        status: 'queued',
+      },
+      201,
+    );
   } catch (err) {
     if (err instanceof Error) {
       console.error(`Import error: ${err.message}`);

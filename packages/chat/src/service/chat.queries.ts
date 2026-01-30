@@ -1,6 +1,7 @@
 import { db, takeUniqueOrThrow } from '@hominem/db';
 import { chat, chatMessage, type ChatOutput } from '@hominem/db/schema';
 import { and, desc, eq } from 'drizzle-orm';
+
 import type { CreateChatParams } from './chat.types';
 
 export async function createChatQuery(params: CreateChatParams): Promise<ChatOutput> {

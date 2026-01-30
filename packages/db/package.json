@@ -33,6 +33,10 @@
     "./schema/skills": "./src/schema/skills.schema.ts",
     "./schema/surveys": "./src/schema/surveys.schema.ts",
     "./schema/auth": "./src/schema/auth.schema.ts",
+    "./schema/chats": "./src/schema/chats.schema.ts",
+    "./schema/items": "./src/schema/items.schema.ts",
+    "./schema/trips": "./src/schema/trips.schema.ts",
+    "./schema/trip_items": "./src/schema/trip_items.schema.ts",
     "./test/fixtures": "./src/test/fixtures.ts",
     "./test/utils": "./src/test/utils.ts"
   },

@@ -1,7 +1,7 @@
+import type { HonoClientInstance } from '@hominem/hono-client';
 import type { AppType } from '@hominem/hono-rpc';
 
 import { hc } from 'hono/client';
-import type { HonoClientInstance } from '@hominem/hono-client';
 
 /**
  * Create a server-side Hono client with optional authentication

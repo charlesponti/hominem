@@ -1,5 +1,5 @@
-import type { ChatsListOutput, ChatsCreateOutput } from '@hominem/hono-rpc/types';
 import type { HonoClientType } from '@hominem/hono-rpc/client';
+import type { ChatsListOutput, ChatsCreateOutput } from '@hominem/hono-rpc/types';
 
 import { ChatCreationError } from './errors';
 

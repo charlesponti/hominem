@@ -1,4 +1,9 @@
-import { ValidationError, ForbiddenError, UnavailableError, InternalError } from '@hominem/services';
+import {
+  ValidationError,
+  ForbiddenError,
+  UnavailableError,
+  InternalError,
+} from '@hominem/services';
 import { isValidGoogleHost } from '@hominem/utils/google';
 import { Hono } from 'hono';
 
