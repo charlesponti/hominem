@@ -6,10 +6,13 @@
  * - Explicit (not inferred from code)
  * - Computed once, referenced everywhere
  * - Safe to import directly by apps and clients
+ *
+ * Import directly from specific type paths to avoid barrel imports.
  */
 
+import type { ContentStrategy, ContentStrategiesOutput } from '@hominem/db/types/content';
+
 import { z } from 'zod';
-import type { ContentStrategy, ContentStrategiesOutput } from '@hominem/db/schema';
 
 // ============================================================================
 // LIST CONTENT STRATEGIES

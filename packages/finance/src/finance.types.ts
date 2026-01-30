@@ -1,10 +1,16 @@
+/**
+ * Finance Service Types
+ *
+ * Import directly from specific type paths to avoid barrel imports.
+ */
+
 import type {
   FinanceAccountOutput,
   FinanceAccountInput,
   FinanceTransactionOutput,
   FinanceTransactionInput,
   TransactionType,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/finance';
 
 export type {
   FinanceAccountOutput,

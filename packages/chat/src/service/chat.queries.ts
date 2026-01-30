@@ -1,5 +1,7 @@
+import type { ChatOutput } from '@hominem/db/types/chats';
+
 import { db, takeUniqueOrThrow } from '@hominem/db';
-import { chat, chatMessage, type ChatOutput } from '@hominem/db/schema';
+import { chat, chatMessage } from '@hominem/db/schema/chats';
 import { and, desc, eq } from 'drizzle-orm';
 
 import type { CreateChatParams } from './chat.types';
@@ -8,7 +10,7 @@ export async function createChatQuery(params: CreateChatParams): Promise<ChatOut
   const chatId = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  const [newChat]: ChatOutput[] = await db
+  const [newChat] = await db
     .insert(chat)
     .values({
       id: chatId,
@@ -19,17 +21,17 @@ export async function createChatQuery(params: CreateChatParams): Promise<ChatOut
     })
     .returning();
 
-  return newChat;
+  return newChat as ChatOutput;
 }
 
 export async function getChatByIdQuery(chatId: string, userId: string): Promise<ChatOutput | null> {
-  const [chatData]: (ChatOutput | undefined)[] = await db
+  const [chatData] = await db
     .select()
     .from(chat)
     .where(and(eq(chat.id, chatId), eq(chat.userId, userId)))
     .limit(1);
 
-  return chatData;
+  return chatData ?? null;
 }
 
 export async function getOrCreateActiveChatQuery(
@@ -37,7 +39,7 @@ export async function getOrCreateActiveChatQuery(
   chatId?: string,
 ): Promise<ChatOutput> {
   if (chatId) {
-    const existingChat: ChatOutput | null = await db
+    const existingChat = await db
       .select()
       .from(chat)
       .where(eq(chat.id, chatId))
@@ -46,11 +48,11 @@ export async function getOrCreateActiveChatQuery(
       .catch(() => null);
 
     if (existingChat) {
-      return existingChat;
+      return existingChat as ChatOutput;
     }
   }
 
-  const newChat: ChatOutput = await db
+  const newChat = await db
     .insert(chat)
     .values({
       id: crypto.randomUUID(),
@@ -60,25 +62,25 @@ export async function getOrCreateActiveChatQuery(
     .returning()
     .then(takeUniqueOrThrow);
 
-  return newChat;
+  return newChat as ChatOutput;
 }
 
 export async function getUserChatsQuery(userId: string, limit = 50): Promise<ChatOutput[]> {
-  const chats: ChatOutput[] = await db
+  const chats = await db
     .select()
     .from(chat)
     .where(eq(chat.userId, userId))
     .orderBy(desc(chat.updatedAt))
     .limit(limit);
 
-  return chats;
+  return chats as ChatOutput[];
 }
 
 export async function updateChatTitleQuery(
   chatId: string,
   title: string,
-): Promise<ChatOutput | undefined> {
-  const [updatedChat]: (ChatOutput | undefined)[] = await db
+): Promise<ChatOutput | null> {
+  const [updatedChat] = await db
     .update(chat)
     .set({
       title: title,
@@ -87,7 +89,7 @@ export async function updateChatTitleQuery(
     .where(eq(chat.id, chatId))
     .returning();
 
-  return updatedChat;
+  return updatedChat ?? null;
 }
 
 export async function deleteChatQuery(chatId: string): Promise<void> {

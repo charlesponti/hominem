@@ -1,4 +1,15 @@
-import type { ChatOutput, ChatMessageOutput } from '@hominem/db/schema';
+/**
+ * Chat Service Types
+ *
+ * These types are imported directly from @hominem/db/types/chats
+ * to minimize transitive imports and avoid pulling in the entire schema barrel.
+ *
+ * RULE: Always import DB types from specific paths, not from the barrel.
+ * Import type { ChatOutput } from '@hominem/db/types/chats'
+ * NOT from '@hominem/db/schema'
+ */
+
+import type { ChatOutput, ChatMessageOutput } from '@hominem/db/types/chats';
 
 export interface CreateChatParams {
   title: string;
