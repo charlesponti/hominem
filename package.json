@@ -39,8 +39,7 @@
     "start:dev": "bun apps/api/src/index.ts",
     "start:prod": "bun apps/api/src/index.ts",
     "test": "turbo run test",
-    "test:type-perf": "attest precache && bun test \"**/*.type-perf.test.ts\"",
-    "test:type-perf:update": "attest precache && bun test \"**/*.type-perf.test.ts\" --update-snapshots",
+    "bench:type-perf": "bun run scripts/type-performance.ts run-all",
     "analyze:type-perf": "bun run scripts/type-performance.ts analyze",
     "type-audit": "bun run scripts/type-performance.ts run-all",
     "typecheck": "turbo run typecheck"
