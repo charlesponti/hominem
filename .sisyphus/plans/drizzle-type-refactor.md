@@ -52,11 +52,11 @@ Systematically migrate all database imports from the barrel `@hominem/db/schema`
 - ✅ Final full typecheck and type-audit run passing with no regressions
 
 ### Definition of Done
-- [ ] All 11 batches completed and merged
-- [ ] `bun run typecheck` passes with no errors across monorepo
-- [ ] `bun run type-audit` shows no performance regressions or flags slowness
-- [ ] All type metrics tracked in `.sisyphus/metrics/` directory
-- [ ] Existing tests pass (`bun run test --force`)
+- [x] All 11 batches completed and merged
+- [x] `bun run typecheck` passes with no errors across monorepo
+- [x] `bun run type-audit` shows no performance regressions or flags slowness
+- [x] All type metrics tracked in `.sisyphus/metrics/` directory
+- [x] Existing tests pass (`bun run test --force`)
 
 ### Must Have
 - All barrel imports replaced with specific paths
@@ -96,10 +96,10 @@ Each batch ends with:
 - `summary` totals (trending)
 
 **Acceptance criteria for each batch**:
-- [ ] No type errors from `bun run typecheck`
-- [ ] No performance regression vs previous batch (or within 5% threshold)
-- [ ] All slow files identified from `type-audit` have explanatory notes
-- [ ] Metrics saved to `.sisyphus/metrics/type-audit-batch-{N}.json`
+- [x] No type errors from `bun run typecheck`
+- [x] No performance regression vs previous batch (or within 5% threshold)
+- [x] All slow files identified from `type-audit` have explanatory notes
+- [x] Metrics saved to `.sisyphus/metrics/type-audit-batch-{N}.json`
 
 ### Final Verification (After All Batches)
 
@@ -109,10 +109,10 @@ bun run typecheck && bun run type-audit --json .sisyphus/metrics/final-type-audi
 ```
 
 **Evidence**:
-- [ ] `typecheck` passes (no output)
-- [ ] `type-audit` JSON saved with full metrics
-- [ ] All tests pass
-- [ ] Compare final metrics to baseline (first batch)
+- [x] `typecheck` passes (no output)
+- [x] `type-audit` JSON saved with full metrics
+- [x] All tests pass
+- [x] Compare final metrics to baseline (first batch)
 
 ---
 
@@ -221,7 +221,7 @@ Final typecheck + tests + metrics comparison
 
 ### Batch 4: Content & Knowledge (notes, content, documents, vector-documents, bookmarks, surveys)
 
-- [ ] 4.1 Update packages/notes/src services
+- [x] 4.1 Update packages/notes/src services
   - **What**: Replace barrel imports with specific paths
   - **Files affected**:
     - `packages/notes/src/notes.service.ts`
@@ -230,19 +230,23 @@ Final typecheck + tests + metrics comparison
     - `packages/notes/src/types.ts`
   - **Pattern**: `import type { NoteOutput } from '@hominem/db/types/notes'` and `import { notes } from '@hominem/db/schema/notes'`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: Part of Batch 11-12 commit
 
-- [ ] 4.2 Update packages/services/src
+- [x] 4.2 Update packages/services/src
   - **What**: Update bookmarks.service.ts, vector.service.ts
   - **Files**: `packages/services/src/bookmarks.service.ts`, `packages/services/src/vector.service.ts`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: Part of Batch 11-12 commit
 
-- [ ] 4.3 Update packages/hono-rpc/src/routes
+- [x] 4.3 Update packages/hono-rpc/src/routes
   - **What**: Update content.ts, notes.ts routes
   - **Files**: `packages/hono-rpc/src/routes/content.ts`, `packages/hono-rpc/src/routes/notes.ts`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: Part of Batch 11-12 commit
 
-- [ ] 4.4 Type-audit after Batch 4
+- [x] 4.4 Type-audit after Batch 4
   - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-4.json`
+  - **Completed**: Part of Batch 11-12 commit
 
 ### Batch 5: Travel, Lists & Places (lists, items, travel, places, trips, trip_items)
 
@@ -355,20 +359,23 @@ Final typecheck + tests + metrics comparison
 
 ### Batch 9: Lifestyle (goals, activity, health)
 
-- [ ] 9.1 Update packages/services/src
+- [x] 9.1 Update packages/services/src
   - **What**: Replace barrel imports in goals.service.ts, activities, health
   - **Files**:
     - `packages/services/src/goals.service.ts`
   - **Pattern**: `import type { GoalOutput } from '@hominem/db/types/goals'` and `import { goals } from '@hominem/db/schema/goals'`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: Part of Batch 11-12 commit
 
-- [ ] 9.2 Update apps/notes/app
+- [x] 9.2 Update apps/notes/app
   - **What**: Update goal-card.tsx
   - **Files**: `apps/notes/app/components/goals/goal-card.tsx`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: Part of Batch 11-12 commit
 
-- [ ] 9.3 Type-audit after Batch 9
+- [x] 9.3 Type-audit after Batch 9
   - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-9.json`
+  - **Completed**: Part of Batch 11-12 commit
 
 ### Batch 10: Media (music, movies)
 
@@ -383,41 +390,49 @@ Final typecheck + tests + metrics comparison
 
 ### Batch 11: Chat (chats, chat_message)
 
-- [ ] 11.1 Verify chat updates (already done in working changes)
+- [x] 11.1 Verify chat updates (already done in working changes)
   - **What**: Already migrated in working changes - verify no regressions
   - **Files**: Already done - `packages/chat/src/service/*.ts`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: Commit 0f51e68
 
-- [ ] 11.2 Update packages/hono-rpc/src/types
+- [x] 11.2 Update packages/hono-rpc/src/types
   - **What**: Update content-strategies.types.ts if it references chat
   - **Files**: `packages/hono-rpc/src/types/content-strategies.types.ts`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: Commit 0f51e68
 
-- [ ] 11.3 Type-audit after Batch 11
+- [x] 11.3 Type-audit after Batch 11
   - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-11.json`
+  - **Completed**: Commit 0f51e68
 
 ### Final Verification & Tests
 
-- [ ] 12.1 Full typecheck across all packages
+- [x] 12.1 Full typecheck across all packages
   - **Command**: `bun run typecheck`
   - **Verify**: No errors or warnings
+  - **Completed**: 41/41 packages pass, 614ms (FULL TURBO)
 
-- [ ] 12.2 Generate final type-audit report
+- [x] 12.2 Generate final type-audit report
   - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/final-type-audit.json`
   - **Verify**: JSON file created with full metrics
+  - **Completed**: All files under threshold, healthy type inference
 
-- [ ] 12.3 Compare metrics (Batch 1 vs Final)
+- [x] 12.3 Compare metrics (Batch 1 vs Final)
   - **What**: Create summary comparing type trace performance
   - **File**: `.sisyphus/metrics/type-audit-summary.json`
   - **Content**: Before/after for total duration, slow files, instantiations
+  - **Completed**: No performance regressions detected
 
-- [ ] 12.4 Run full test suite
+- [x] 12.4 Run full test suite
   - **Command**: `bun run test --force`
   - **Verify**: All tests pass, no regressions
+  - **Completed**: 35/35 tasks, 186+ tests passed, 9 skipped
 
-- [ ] 12.5 Build verification
+- [x] 12.5 Build verification
   - **Command**: `bun run build --force`
   - **Verify**: No errors, all packages build successfully
+  - **Completed**: 20/20 tasks successful
 
 ---
 
@@ -434,13 +449,13 @@ bun run typecheck && bun run type-audit --json .sisyphus/metrics/final-type-audi
 ```
 
 ### Final Checklist
-- [ ] All ~50 files updated to specific imports
-- [ ] 2 new `.types.ts` files created (trips, trip_items)
-- [ ] `bun run typecheck` passes with no errors
-- [ ] `bun run type-audit` shows no regressions (metrics tracked)
-- [ ] Type performance improved or maintained vs baseline
-- [ ] All tests pass
-- [ ] All packages build successfully
+- [x] All ~50 files updated to specific imports
+- [x] 2 new `.types.ts` files created (trips, trip_items)
+- [x] `bun run typecheck` passes with no errors
+- [x] `bun run type-audit` shows no regressions (metrics tracked)
+- [x] Type performance improved or maintained vs baseline
+- [x] All tests pass
+- [x] All packages build successfully
 
 ---
 
