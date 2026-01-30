@@ -1,4 +1,4 @@
-import { FinanceAccountSchema, AccountTypeEnum } from '@hominem/db/schema';
+import { FinanceAccountSchema, AccountTypeEnum } from '@hominem/db/types/finance';
 import { z } from 'zod';
 
 // Generic success response schema

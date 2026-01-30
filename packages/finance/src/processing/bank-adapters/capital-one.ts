@@ -2,7 +2,7 @@ import {
   type FinanceTransactionInput,
   type TransactionType,
   TransactionTypes,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/finance';
 import crypto from 'node:crypto';
 
 export interface CapitalOneTransaction {

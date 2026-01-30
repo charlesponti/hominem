@@ -1,5 +1,6 @@
 import { db } from '@hominem/db';
-import { budgetCategories, users } from '@hominem/db/schema/finance';
+import { budgetCategories } from '@hominem/db/schema/finance';
+import { users } from '@hominem/db/schema/users';
 import { createTestUser } from '@hominem/db/test/fixtures';
 import { eq, or } from 'drizzle-orm';
 import crypto from 'node:crypto';

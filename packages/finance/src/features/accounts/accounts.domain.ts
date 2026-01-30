@@ -1,7 +1,7 @@
 import {
   FinanceAccountSchema as DbFinanceAccountSchema,
   FinanceAccountInsertSchema as DbFinanceAccountInsertSchema,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/finance';
 import { z } from 'zod';
 
 /**

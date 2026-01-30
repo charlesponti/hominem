@@ -1,4 +1,4 @@
-import type { FinanceTransactionOutput, TransactionType } from '@hominem/db/schema';
+import type { FinanceTransactionOutput, TransactionType } from '@hominem/db/types/finance';
 import type { Job } from 'bullmq';
 
 import { logger } from '@hominem/utils/logger';

@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { plaidItems } from '@hominem/db/schema';
+import { plaidItems } from '@hominem/db/schema/finance';
 import {
   ensureInstitutionExists,
   getPlaidItemById,

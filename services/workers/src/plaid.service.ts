@@ -9,7 +9,7 @@ import {
   financeAccounts,
   plaidItems,
   transactions,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/finance';
 import { logger } from '@hominem/utils/logger';
 import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';

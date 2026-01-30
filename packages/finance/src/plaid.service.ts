@@ -3,7 +3,7 @@ import type {
   PlaidItemInput,
   FinancialInstitutionOutput,
   FinancialInstitutionInput,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/finance';
 
 import { db } from '@hominem/db';
 import { financialInstitutions, plaidItems } from '@hominem/db/schema/finance';

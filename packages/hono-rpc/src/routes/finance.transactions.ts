@@ -1,4 +1,4 @@
-import { TransactionInsertSchema } from '@hominem/db/schema';
+import { TransactionInsertSchema } from '@hominem/db/types/finance';
 import {
   queryTransactions,
   createTransaction,

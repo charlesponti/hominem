@@ -1,4 +1,4 @@
-import type { FinanceTransactionOutput, FinanceTransactionInput } from '@hominem/db/schema';
+import type { FinanceTransactionOutput, FinanceTransactionInput } from '@hominem/db/types/finance';
 
 import crypto from 'node:crypto';
 import { EventEmitter } from 'node:events';

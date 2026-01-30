@@ -6,7 +6,7 @@ import type {
   TransactionCreatePayload,
   TransactionUpdatePayload,
   TransactionLocation,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/finance';
 
 import { db } from '@hominem/db';
 import {
@@ -16,7 +16,7 @@ import {
   TransactionInsertSchema,
   FinanceAccountSchema,
   TransactionLocationSchema,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/finance';
 import { logger } from '@hominem/utils/logger';
 import { and, asc, desc, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm';
 import { type PgColumn } from 'drizzle-orm/pg-core';

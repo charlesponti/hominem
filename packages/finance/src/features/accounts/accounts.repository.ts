@@ -2,7 +2,7 @@ import type {
   FinanceAccountOutput,
   FinanceAccountInput,
   FinanceTransactionOutput,
-} from '@hominem/db/schema';
+} from '@hominem/db/types/finance';
 
 import { db } from '@hominem/db';
 import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/db/schema/finance';

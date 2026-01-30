@@ -1,4 +1,5 @@
-import { AccountTypeEnum, type FinanceTransactionOutput } from '@hominem/db/schema';
+import { AccountTypeEnum } from '@hominem/db/schema/finance';
+import type { FinanceTransactionOutput } from '@hominem/db/types/finance';
 import { logger } from '@hominem/utils/logger';
 import { z } from 'zod';
 
