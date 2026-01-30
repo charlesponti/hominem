@@ -149,40 +149,47 @@ Final typecheck + tests + metrics comparison
 
 ### Batch 1: Core Identity/Auth/Shared
 
-- [ ] 1.1 Update packages/db/package.json exports
+- [x] 1.1 Update packages/db/package.json exports
   - **What**: Finalize wildcard exports (partially done in working changes)
   - **Files**: `packages/db/package.json`
   - **Expected**: Exports include `./schema/*` → `./src/schema/*.schema.ts`, `./types/*` → `./src/schema/*.types.ts`
   - **Verification**: `jq '.exports' packages/db/package.json` shows wildcard patterns
+  - **Completed**: Commit 9bf8ce19
 
-- [ ] 1.2 Update packages/auth/src/user.ts
+- [x] 1.2 Update packages/auth/src/user.ts
   - **What**: Change `import type { UserSelect } from '@hominem/db/schema'` to `import type { UserSelect } from '@hominem/db/types/users'`
   - **Files**: `packages/auth/src/user.ts`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: Commit 9bf8ce19
 
-- [ ] 1.3 Type-audit after Batch 1
+- [x] 1.3 Type-audit after Batch 1
   - **What**: Run type performance audit and save metrics
   - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-1.json`
   - **Verify**: JSON file created with metrics
+  - **Completed**: Commit 9bf8ce19
 
 ### Batch 2: Taxonomy & People Base (tags, categories, contacts, company)
 
-- [ ] 2.1 Update packages/services/src files
+- [x] 2.1 Update packages/services/src files
   - **What**: Replace barrel imports with specific paths for `tags`, `categories`, `contacts`, `company`
   - **Files affected**:
     - `packages/services/src/tags.service.ts`
     - `packages/services/src/content-strategies.service.ts`
     - `packages/services/src/people.service.ts`
+    - `packages/services/src/content-strategies.tools.ts`
   - **Pattern**: `import type { TagOutput } from '@hominem/db/types/tags'` and `import { tags } from '@hominem/db/schema/tags'`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: Commit 49159477
 
-- [ ] 2.2 Update packages/hono-rpc/src/routes
+- [x] 2.2 Update packages/hono-rpc/src/routes
   - **What**: Update content-strategies.ts for content types
-  - **Files**: `packages/hono-rpc/src/routes/content-strategies.ts`
+  - **Files**: `packages/hono-rpc/src/routes/content-strategies.ts`: `ContentStrategySchema` -> `@hominem/db/schema/content`
   - **Verify**: `bun run typecheck` passes
+  - **Completed**: Commit 49159477
 
-- [ ] 2.3 Type-audit after Batch 2
+- [x] 2.3 Type-audit after Batch 2
   - **Command**: `bun run type-perf:audit --json .sisyphus/metrics/type-audit-batch-2.json`
+  - **Completed**: Commit 49159477
 
 ### Batch 3: Career & Networking (career, interviews, skills, networking_events)
 
