@@ -1,4 +1,4 @@
-import { success, error } from '@hominem/services';
+import { NotFoundError, InternalError } from '@hominem/services';
 import { Hono } from 'hono';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -18,10 +18,10 @@ componentsRoutes.get('/use-api-client.json', async (c) => {
     c.header('Content-Type', 'application/json');
     c.header('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
 
-    return c.json(success(registryData), 200);
+    return c.json(registryData);
   } catch (err) {
     console.error('Error serving use-api-client registry:', err);
-    return c.json(error('NOT_FOUND', 'Registry file not found'), 404);
+    throw new NotFoundError('Registry file not found');
   }
 });
 
@@ -41,15 +41,12 @@ componentsRoutes.get('/', async (c) => {
     c.header('Content-Type', 'application/json');
     c.header('Cache-Control', 'public, max-age=3600');
 
-    return c.json(
-      success({
-        components,
-        count: components.length,
-      }),
-      200,
-    );
+    return c.json({
+      components,
+      count: components.length,
+    });
   } catch (err) {
     console.error('Error listing components:', err);
-    return c.json(error('INTERNAL_ERROR', 'Failed to list components'), 500);
+    throw new InternalError('Failed to list components');
   }
 });

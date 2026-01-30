@@ -1,4 +1,4 @@
-import { success, error } from '@hominem/services';
+import { UnauthorizedError, InternalError } from '@hominem/services';
 import { Hono } from 'hono';
 
 import type { AppEnv } from '../../../server';
@@ -12,7 +12,7 @@ export const financePlaidCreateLinkTokenRoutes = new Hono<AppEnv>();
 financePlaidCreateLinkTokenRoutes.post('/', async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    return c.json(error('UNAUTHORIZED', 'Not authorized'), 401);
+    throw new UnauthorizedError('Not authorized');
   }
 
   try {
@@ -25,15 +25,12 @@ financePlaidCreateLinkTokenRoutes.post('/', async (c) => {
       webhook: `${env.API_URL}/api/finance/plaid/webhook`,
     });
 
-    return c.json(
-      success({
-        linkToken: createTokenResponse.data.link_token,
-        expiration: createTokenResponse.data.expiration,
-      }),
-      200,
-    );
+    return c.json({
+      linkToken: createTokenResponse.data.link_token,
+      expiration: createTokenResponse.data.expiration,
+    });
   } catch (err) {
     console.error(`Failed to create Plaid link token: ${err}`);
-    return c.json(error('INTERNAL_ERROR', 'Internal Server Error'), 500);
+    throw new InternalError('Internal Server Error');
   }
 });

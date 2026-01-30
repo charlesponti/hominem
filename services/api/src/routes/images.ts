@@ -1,4 +1,4 @@
-import { error } from '@hominem/services';
+import { ValidationError, ForbiddenError, UnavailableError, InternalError } from '@hominem/services';
 import { isValidGoogleHost } from '@hominem/utils/google';
 import { Hono } from 'hono';
 
@@ -17,7 +17,7 @@ imagesRoutes.get('/proxy', async (c) => {
   const imageUrl = c.req.query('url');
 
   if (!imageUrl) {
-    return c.json(error('VALIDATION_ERROR', 'URL parameter is required'), 400);
+    throw new ValidationError('URL parameter is required');
   }
 
   try {
@@ -26,7 +26,7 @@ imagesRoutes.get('/proxy', async (c) => {
 
     // Only allow Google hosts for security
     if (!isValidGoogleHost(decodedUrl)) {
-      return c.json(error('FORBIDDEN', 'Domain not allowed'), 403);
+      throw new ForbiddenError('Domain not allowed');
     }
 
     // Fetch the image
@@ -37,7 +37,7 @@ imagesRoutes.get('/proxy', async (c) => {
     });
 
     if (!response.ok) {
-      return c.json(error('UNAVAILABLE', `Failed to fetch image: ${response.statusText}`), 502);
+      throw new UnavailableError(`Failed to fetch image: ${response.statusText}`);
     }
 
     const contentType = response.headers.get('content-type') || 'image/jpeg';
@@ -56,11 +56,8 @@ imagesRoutes.get('/proxy', async (c) => {
     console.error('Image URL:', imageUrl);
     console.error('Decoded URL:', imageUrl ? decodeURIComponent(imageUrl) : 'N/A');
     console.error('Error stack:', err instanceof Error ? err.stack : 'No stack');
-    return c.json(
-      error('INTERNAL_ERROR', 'Failed to proxy image', {
-        message: err instanceof Error ? err.message : 'Unknown error',
-      }),
-      500,
-    );
+    throw new InternalError('Failed to proxy image', {
+      message: err instanceof Error ? err.message : 'Unknown error',
+    });
   }
 });

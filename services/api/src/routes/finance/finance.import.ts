@@ -1,7 +1,7 @@
 import type { ImportTransactionsQueuePayload } from '@hominem/jobs-services';
 import type { Job } from 'bullmq';
 
-import { success, error } from '@hominem/services';
+import { UnauthorizedError, ValidationError, NotFoundError, InternalError } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { csvStorageService } from '@hominem/utils/supabase';
 import { zValidator } from '@hono/zod-validator';
@@ -28,7 +28,7 @@ const JobIdParamsSchema = z.object({
 financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema), async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    return c.json(error('UNAUTHORIZED', 'Not authorized'), 401);
+    throw new UnauthorizedError('Not authorized');
   }
 
   try {
@@ -38,11 +38,11 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
     // Get buffer from multipart file upload
     const uploadedFile = await handleFileUploadBuffer(c.req.raw);
     if (!uploadedFile) {
-      return c.json(error('VALIDATION_ERROR', 'No file uploaded'), 400);
+      throw new ValidationError('No file uploaded');
     }
 
     if (!uploadedFile.mimetype.includes('csv')) {
-      return c.json(error('VALIDATION_ERROR', 'Only CSV files are supported'), 400);
+      throw new ValidationError('Only CSV files are supported');
     }
 
     // Upload file buffer directly to Supabase storage
@@ -61,19 +61,16 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
     );
 
     if (existingJob) {
-      return c.json(
-        success({
-          jobId: existingJob.id,
-          fileName: existingJob.data.fileName,
-          status: existingJob.finishedOn
-            ? 'done'
-            : existingJob.failedReason
-              ? 'error'
-              : 'processing',
-          message: 'File is already being processed',
-        }),
-        200,
-      );
+      return c.json({
+        jobId: existingJob.id,
+        fileName: existingJob.data.fileName,
+        status: existingJob.finishedOn
+          ? 'done'
+          : existingJob.failedReason
+            ? 'error'
+            : 'processing',
+        message: 'File is already being processed',
+      });
     }
 
     // Add import job to BullMQ
@@ -99,24 +96,18 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
       },
     );
 
-    return c.json(
-      success({
-        jobId: job.id,
-        fileName: uploadedFile.filename,
-        status: 'queued',
-      }),
-      201,
-    );
+    return c.json({
+      jobId: job.id,
+      fileName: uploadedFile.filename,
+      status: 'queued',
+    }, 201);
   } catch (err) {
     if (err instanceof Error) {
       console.error(`Import error: ${err.message}`);
-      return c.json(
-        error('INTERNAL_ERROR', 'Failed to process import', { details: err.message }),
-        500,
-      );
+      throw new InternalError('Failed to process import', { details: err.message });
     }
     console.error('Unknown import error:', err);
-    return c.json(error('INTERNAL_ERROR', 'Failed to process import'), 500);
+    throw new InternalError('Failed to process import');
   }
 });
 
@@ -124,7 +115,7 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
 financeImportRoutes.get('/active', async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    return c.json(error('UNAUTHORIZED', 'Not authorized'), 401);
+    throw new UnauthorizedError('Not authorized');
   }
 
   try {
@@ -142,15 +133,12 @@ financeImportRoutes.get('/active', async (c) => {
         progress: job.progress,
       }));
 
-    return c.json(success({ jobs: userJobs }), 200);
+    return c.json({ jobs: userJobs });
   } catch (err) {
     console.error(`Error fetching active jobs: ${err}`);
-    return c.json(
-      error('INTERNAL_ERROR', 'Failed to retrieve active import jobs', {
-        details: err instanceof Error ? err.message : String(err),
-      }),
-      500,
-    );
+    throw new InternalError('Failed to retrieve active import jobs', {
+      details: err instanceof Error ? err.message : String(err),
+    });
   }
 });
 
@@ -158,7 +146,7 @@ financeImportRoutes.get('/active', async (c) => {
 financeImportRoutes.get('/:jobId', zValidator('param', JobIdParamsSchema), async (c) => {
   const user = c.get('user');
   if (!user) {
-    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
+    throw new UnauthorizedError('Unauthorized');
   }
 
   const { jobId } = c.req.valid('param');
@@ -168,27 +156,21 @@ financeImportRoutes.get('/:jobId', zValidator('param', JobIdParamsSchema), async
 
     const job = await queues.importTransactions.getJob(jobId);
     if (!job) {
-      return c.json(error('NOT_FOUND', 'Import job not found'), 404);
+      throw new NotFoundError('Import job not found');
     }
 
-    return c.json(
-      success({
-        jobId: job.id,
-        status: job.finishedOn ? 'done' : job.failedReason ? 'error' : 'processing',
-        fileName: job.data.fileName,
-        progress: job.progress,
-        errorMessage: job.failedReason,
-        stats: job.returnvalue?.stats || {},
-      }),
-      200,
-    );
+    return c.json({
+      jobId: job.id,
+      status: job.finishedOn ? 'done' : job.failedReason ? 'error' : 'processing',
+      fileName: job.data.fileName,
+      progress: job.progress,
+      errorMessage: job.failedReason,
+      stats: job.returnvalue?.stats || {},
+    });
   } catch (err) {
     console.error(`Error fetching job status: ${err}`);
-    return c.json(
-      error('INTERNAL_ERROR', 'Failed to retrieve job status', {
-        details: err instanceof Error ? err.message : String(err),
-      }),
-      500,
-    );
+    throw new InternalError('Failed to retrieve job status', {
+      details: err instanceof Error ? err.message : String(err),
+    });
   }
 });

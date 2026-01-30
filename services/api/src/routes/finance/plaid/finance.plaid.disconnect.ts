@@ -1,5 +1,5 @@
 import { getPlaidItemByUserAndItemId, updatePlaidItemStatusById } from '@hominem/finance-services';
-import { success, error } from '@hominem/services';
+import { UnauthorizedError, NotFoundError, InternalError } from '@hominem/services';
 import { Hono } from 'hono';
 
 import type { AppEnv } from '../../../server';
@@ -12,7 +12,7 @@ export const financePlaidDisconnectRoutes = new Hono<AppEnv>();
 financePlaidDisconnectRoutes.delete('/:itemId', async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    return c.json(error('UNAUTHORIZED', 'Not authorized'), 401);
+    throw new UnauthorizedError('Not authorized');
   }
 
   const itemId = c.req.param('itemId');
@@ -22,7 +22,7 @@ financePlaidDisconnectRoutes.delete('/:itemId', async (c) => {
     const plaidItem = await getPlaidItemByUserAndItemId(userId, itemId);
 
     if (!plaidItem) {
-      return c.json(error('NOT_FOUND', 'Plaid item not found'), 404);
+      throw new NotFoundError('Plaid item not found');
     }
 
     // Remove the item from Plaid
@@ -41,14 +41,11 @@ financePlaidDisconnectRoutes.delete('/:itemId', async (c) => {
       updatedAt: new Date(),
     });
 
-    return c.json(
-      success({
-        message: 'Successfully disconnected account',
-      }),
-      200,
-    );
+    return c.json({
+      message: 'Successfully disconnected account',
+    });
   } catch (err) {
     console.error(`Disconnect error: ${err}`);
-    return c.json(error('INTERNAL_ERROR', 'Failed to disconnect account'), 500);
+    throw new InternalError('Failed to disconnect account');
   }
 });

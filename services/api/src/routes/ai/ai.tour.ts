@@ -1,5 +1,5 @@
 import { openai } from '@ai-sdk/openai';
-import { success, error } from '@hominem/services';
+import { UnauthorizedError, ValidationError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { generateObject } from 'ai';
 import { Hono } from 'hono';
@@ -53,7 +53,7 @@ export const aiTourRoutes = new Hono<AppEnv>();
 aiTourRoutes.post('/', zValidator('json', inputSchema), async (c) => {
   const user = c.get('user');
   if (!user) {
-    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
+    throw new UnauthorizedError('Unauthorized');
   }
 
   try {
@@ -91,12 +91,12 @@ aiTourRoutes.post('/', zValidator('json', inputSchema), async (c) => {
       temperature: 0.7,
     });
 
-    return c.json(success(tourBreakdown), 200);
+    return c.json(tourBreakdown);
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return c.json(error('VALIDATION_ERROR', 'Invalid input', { details: err.issues }), 400);
+      throw new ValidationError('Invalid input', { details: err.issues });
     }
     console.error('Error generating tour breakdown:', err);
-    return c.json(error('INTERNAL_ERROR', 'Failed to generate tour breakdown'), 500);
+    throw new InternalError('Failed to generate tour breakdown');
   }
 });

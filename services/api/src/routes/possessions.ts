@@ -5,8 +5,9 @@ import {
   deletePossession,
   listPossessions,
   updatePossession,
-  success,
-  error,
+  UnauthorizedError,
+  NotFoundError,
+  InternalError,
 } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -52,20 +53,17 @@ const possessionIdParamSchema = z.object({
 possessionsRoutes.get('/', async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
+    throw new UnauthorizedError('Unauthorized');
   }
 
   try {
     const items = await listPossessions(userId);
-    return c.json(success(items.map(serializePossession)), 200);
+    return c.json(items.map(serializePossession));
   } catch (err) {
     console.error('Error fetching possessions:', err);
-    return c.json(
-      error('INTERNAL_ERROR', 'Failed to fetch possessions', {
-        details: err instanceof Error ? err.message : String(err),
-      }),
-      500,
-    );
+    throw new InternalError('Failed to fetch possessions', {
+      details: err instanceof Error ? err.message : String(err),
+    });
   }
 });
 
@@ -73,12 +71,12 @@ possessionsRoutes.get('/', async (c) => {
 possessionsRoutes.post('/', zValidator('json', createPossessionSchema), async (c) => {
   const user = c.get('user');
   if (!user) {
-    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
+    throw new UnauthorizedError('Unauthorized');
   }
 
   const userId = c.get('userId');
   if (!userId) {
-    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
+    throw new UnauthorizedError('Unauthorized');
   }
 
   try {
@@ -91,15 +89,12 @@ possessionsRoutes.post('/', zValidator('json', createPossessionSchema), async (c
       dateAcquired: new Date(data.dateAcquired),
     });
 
-    return c.json(success(serializePossession(created)), 201);
+    return c.json(serializePossession(created), 201);
   } catch (err) {
     console.error('Error creating possession:', err);
-    return c.json(
-      error('INTERNAL_ERROR', 'Failed to create possession', {
-        details: err instanceof Error ? err.message : String(err),
-      }),
-      500,
-    );
+    throw new InternalError('Failed to create possession', {
+      details: err instanceof Error ? err.message : String(err),
+    });
   }
 });
 
@@ -111,7 +106,7 @@ possessionsRoutes.put(
   async (c) => {
     const userId = c.get('userId');
     if (!userId) {
-      return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
+      throw new UnauthorizedError('Unauthorized');
     }
 
     try {
@@ -126,18 +121,15 @@ possessionsRoutes.put(
       });
 
       if (!updated) {
-        return c.json(error('NOT_FOUND', 'Possession not found'), 404);
+        throw new NotFoundError('Possession not found');
       }
 
-      return c.json(success(serializePossession(updated)), 200);
+      return c.json(serializePossession(updated));
     } catch (err) {
       console.error('Error updating possession:', err);
-      return c.json(
-        error('INTERNAL_ERROR', 'Failed to update possession', {
-          details: err instanceof Error ? err.message : String(err),
-        }),
-        500,
-      );
+      throw new InternalError('Failed to update possession', {
+        details: err instanceof Error ? err.message : String(err),
+      });
     }
   },
 );
@@ -146,12 +138,12 @@ possessionsRoutes.put(
 possessionsRoutes.delete('/:id', zValidator('param', possessionIdParamSchema), async (c) => {
   const user = c.get('user');
   if (!user) {
-    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
+    throw new UnauthorizedError('Unauthorized');
   }
 
   const userId = c.get('userId');
   if (!userId) {
-    return c.json(error('UNAUTHORIZED', 'Unauthorized'), 401);
+    throw new UnauthorizedError('Unauthorized');
   }
 
   try {
@@ -159,14 +151,11 @@ possessionsRoutes.delete('/:id', zValidator('param', possessionIdParamSchema), a
 
     await deletePossession(id, userId);
 
-    return c.json(success({ deleted: true }), 200);
+    return c.json({ deleted: true });
   } catch (err) {
     console.error('Error deleting possession:', err);
-    return c.json(
-      error('INTERNAL_ERROR', 'Failed to delete possession', {
-        details: err instanceof Error ? err.message : String(err),
-      }),
-      500,
-    );
+    throw new InternalError('Failed to delete possession', {
+      details: err instanceof Error ? err.message : String(err),
+    });
   }
 });

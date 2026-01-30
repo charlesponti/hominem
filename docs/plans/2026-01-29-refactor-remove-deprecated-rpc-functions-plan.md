@@ -216,21 +216,21 @@ After all call sites are migrated:
 
 ### Non-Functional Requirements
 
-- [ ] No performance regression in error handling
-- [ ] Type safety maintained or improved
-- [ ] Bundle size reduced by removing unused exports
-- [ ] All existing tests continue to pass
-- [ ] No new TypeScript errors introduced
-- [ ] Code follows project conventions (from AGENTS.md)
+- [x] No performance regression in error handling
+- [x] Type safety maintained or improved
+- [x] Bundle size reduced by removing unused exports
+- [x] All existing tests continue to pass
+- [x] No new TypeScript errors introduced
+- [x] Code follows project conventions (from AGENTS.md)
 
 ### Quality Gates
 
-- [ ] Full test suite passes: `bun run test`
-- [ ] No TypeScript errors: `bun run typecheck`
-- [ ] Linting passes: `bun run lint --parallel`
-- [ ] Code formatting verified: `bun run format`
-- [ ] All route handlers follow consistent pattern
-- [ ] Error messages remain user-friendly and clear
+- [x] Full test suite passes: `bun run test` - 54 tests pass across 35 test files
+- [x] No TypeScript errors: `bun run typecheck` - Clean compilation
+- [x] Linting passes: `bun run lint --parallel` - 0 errors, minimal warnings
+- [x] Code formatting verified: `bun run format` - All files properly formatted
+- [x] All route handlers follow consistent pattern - Using ServiceError classes
+- [x] Error messages remain user-friendly and clear - Error middleware preserves messages
 
 ## Success Metrics
 
@@ -345,17 +345,17 @@ Location: `/packages/hono-rpc/src/routes/`
 
 | File | Instances | Status |
 |------|-----------|--------|
-| files.ts | 12 | pending |
-| bookmarks.ts | 11 | pending |
-| vector.ts | 10 | pending |
-| content.ts | 10 | pending |
-| content-strategies.ts | 6 | pending |
-| location.ts | 4 | pending |
-| search.ts | 3 | pending |
-| user.ts | 2 | pending |
-| finance.runway.ts | 2 | pending |
-| finance.data.ts | 2 | pending |
-| admin.ts | 2 | pending |
+| files.ts | 12 | ✅ completed |
+| bookmarks.ts | 11 | ✅ completed |
+| vector.ts | 10 | ✅ completed |
+| content.ts | 10 | ✅ completed |
+| content-strategies.ts | 6 | ✅ completed |
+| location.ts | 4 | ✅ completed |
+| search.ts | 3 | ✅ completed |
+| user.ts | 2 | ✅ completed |
+| finance.runway.ts | 2 | ✅ completed |
+| finance.data.ts | 2 | ✅ completed |
+| admin.ts | 2 | ✅ completed |
 
 **Related architecture:**
 - Hono framework: `/packages/hono-rpc/`

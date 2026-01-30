@@ -1,5 +1,5 @@
 import { getPlaidItemByUserAndItemId } from '@hominem/finance-services';
-import { success, error } from '@hominem/services';
+import { UnauthorizedError, NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { Hono } from 'hono';
 
@@ -11,7 +11,7 @@ export const financePlaidSyncRoutes = new Hono<AppEnv>();
 financePlaidSyncRoutes.post('/:itemId', async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    return c.json(error('UNAUTHORIZED', 'Not authorized'), 401);
+    throw new UnauthorizedError('Not authorized');
   }
 
   const itemId = c.req.param('itemId');
@@ -21,11 +21,11 @@ financePlaidSyncRoutes.post('/:itemId', async (c) => {
     const plaidItem = await getPlaidItemByUserAndItemId(userId, itemId);
 
     if (!plaidItem) {
-      return c.json(error('NOT_FOUND', 'Plaid item not found'), 404);
+      throw new NotFoundError('Plaid item not found');
     }
 
     if (plaidItem.status !== 'active') {
-      return c.json(error('VALIDATION_ERROR', 'Plaid item is not active'), 400);
+      throw new ValidationError('Plaid item is not active');
     }
 
     // Queue sync job
@@ -49,14 +49,11 @@ financePlaidSyncRoutes.post('/:itemId', async (c) => {
       },
     );
 
-    return c.json(
-      success({
-        message: 'Sync job queued successfully',
-      }),
-      200,
-    );
+    return c.json({
+      message: 'Sync job queued successfully',
+    });
   } catch (err) {
     console.error(`Manual sync error: ${err}`);
-    return c.json(error('INTERNAL_ERROR', 'Failed to queue sync job'), 500);
+    throw new InternalError('Failed to queue sync job');
   }
 });

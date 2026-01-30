@@ -1,5 +1,5 @@
 import { ensureInstitutionExists, upsertPlaidItem } from '@hominem/finance-services';
-import { success, error } from '@hominem/services';
+import { UnauthorizedError, InternalError } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -20,7 +20,7 @@ const exchangeTokenSchema = z.object({
 financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema), async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    return c.json(error('UNAUTHORIZED', 'Not authorized'), 401);
+    throw new UnauthorizedError('Not authorized');
   }
 
   const { publicToken, institutionId, institutionName } = c.req.valid('json');
@@ -66,15 +66,12 @@ financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema
       },
     );
 
-    return c.json(
-      success({
-        message: 'Successfully linked account. Your transactions will begin importing shortly.',
-        institutionName,
-      }),
-      200,
-    );
+    return c.json({
+      message: 'Successfully linked account. Your transactions will begin importing shortly.',
+      institutionName,
+    });
   } catch (err) {
     console.error(`Token exchange error: ${err}`);
-    return c.json(error('INTERNAL_ERROR', 'Failed to exchange token'), 500);
+    throw new InternalError('Failed to exchange token');
   }
 });

@@ -8,18 +8,14 @@ describe('Status Routes', () => {
 
     const res = await app.request('/api/status');
     const body = (await res.json()) as {
-      success: boolean;
-      data: {
-        status: string;
-        serverTime: string;
-        uptime: number;
-        database: string;
-      };
+      status: string;
+      serverTime: string;
+      uptime: number;
+      database: string;
     };
 
     expect(res.status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(body.data).toMatchObject({
+    expect(body).toMatchObject({
       status: 'ok',
       serverTime: expect.any(String),
       uptime: expect.any(Number),
@@ -27,10 +23,10 @@ describe('Status Routes', () => {
     });
 
     // Verify serverTime is a valid ISO string
-    expect(() => new Date(body.data.serverTime)).not.toThrow();
+    expect(() => new Date(body.serverTime)).not.toThrow();
 
     // Verify uptime is positive
-    expect(body.data.uptime).toBeGreaterThan(0);
+    expect(body.uptime).toBeGreaterThan(0);
   });
 
   test('GET /api/status - should handle database connection errors gracefully', async () => {
@@ -45,10 +41,9 @@ describe('Status Routes', () => {
     expect([200, 500]).toContain(res.status);
 
     const body = (await res.json()) as Record<string, unknown>;
-    expect(body).toHaveProperty('data');
-    const data = body.data as Record<string, unknown>;
-    expect(data).toHaveProperty('status');
-    expect(data).toHaveProperty('serverTime');
-    expect(data).toHaveProperty('uptime');
+    // New format: direct object with status, serverTime, uptime, database properties
+    expect(body).toHaveProperty('status');
+    expect(body).toHaveProperty('serverTime');
+    expect(body).toHaveProperty('uptime');
   });
 });

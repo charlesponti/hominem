@@ -1,5 +1,5 @@
 import { getPlaidItemByItemId, updatePlaidItemStatusByItemId } from '@hominem/finance-services';
-import { success, error } from '@hominem/services';
+import { UnauthorizedError, ValidationError, InternalError } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -30,7 +30,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
 
   // Verify webhook signature
   if (!verifyPlaidWebhookSignature(headers, rawBody)) {
-    return c.json(error('UNAUTHORIZED', 'Invalid webhook signature'), 401);
+    throw new UnauthorizedError('Invalid webhook signature');
   }
 
   // Parse and validate the JSON body
@@ -38,12 +38,12 @@ financePlaidWebhookRoutes.post('/', async (c) => {
   try {
     parsedBody = JSON.parse(rawBody) as Record<string, unknown>;
   } catch {
-    return c.json(error('VALIDATION_ERROR', 'Invalid JSON'), 400);
+    throw new ValidationError('Invalid JSON');
   }
 
   const parseResult = webhookSchema.safeParse(parsedBody);
   if (!parseResult.success) {
-    return c.json(error('VALIDATION_ERROR', 'Invalid webhook payload'), 400);
+    throw new ValidationError('Invalid webhook payload');
   }
 
   const { webhook_type, webhook_code, item_id, error: webhookError } = parseResult.data;
@@ -54,7 +54,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
 
     if (!plaidItem) {
       console.warn(`Plaid item ${item_id} not found for webhook`);
-      return c.json(success({ acknowledged: true }), 200); // Return success to prevent retries
+      return c.json({ acknowledged: true }); // Return success to prevent retries
     }
 
     // Handle different webhook types
@@ -121,9 +121,9 @@ financePlaidWebhookRoutes.post('/', async (c) => {
       }
     }
 
-    return c.json(success({ acknowledged: true }), 200);
+    return c.json({ acknowledged: true });
   } catch (err) {
     console.error(`Webhook processing error: ${err}`);
-    return c.json(error('INTERNAL_ERROR', 'Webhook processing failed'), 500);
+    throw new InternalError('Webhook processing failed');
   }
 });

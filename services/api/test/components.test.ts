@@ -11,14 +11,13 @@ describe('Components API', () => {
     expect(res.headers.get('content-type')).toBe('application/json')
 
     const body = (await res.json()) as {
-      success: boolean
-      data: { components: Array<{ name: string }>; count: number }
+      components: Array<{ name: string }>
+      count: number
     }
-    expect(body.success).toBe(true)
-    expect(body.data).toHaveProperty('components')
-    expect(body.data).toHaveProperty('count')
-    expect(body.data.components).toHaveLength(1)
-    expect(body.data.components[0]).toHaveProperty('name', 'use-api-client')
+    expect(body).toHaveProperty('components')
+    expect(body).toHaveProperty('count')
+    expect(body.components).toHaveLength(1)
+    expect(body.components[0]).toHaveProperty('name', 'use-api-client')
   })
 
   it('should handle 404 for missing registry files', async () => {
