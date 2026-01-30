@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useHonoClient } from './context';
+import type { OptimisticUpdateConfig } from './hooks';
 
 /**
  * Hook for mutations with optimistic updates

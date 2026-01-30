@@ -25,6 +25,20 @@ export interface HonoMutationOptions<TData, TVariables> extends Omit<
   invalidateKeys?: QueryKey[];
 }
 
+export interface OptimisticUpdateConfig<
+  TData,
+  TVariables,
+  TContext = { previousData: TData | undefined }
+> {
+  queryKey: QueryKey;
+  mutationFn: (client: HonoClient, variables: TVariables) => Promise<TData>;
+  updateFn: (oldData: TData | undefined, variables: TVariables) => TData;
+  onSuccess?: (data: TData, variables: TVariables, context: TContext) => void;
+  onError?: (error: Error, variables: TVariables, context: TContext | undefined) => void;
+  successMessage?: string;
+  errorMessage?: string;
+}
+
 /**
  * Generic hook for making queries with Hono RPC
  * Automatically transforms date strings to Date objects
