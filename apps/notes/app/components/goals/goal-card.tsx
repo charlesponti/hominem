@@ -1,4 +1,4 @@
-import type { GoalMilestone } from '@hominem/db/schema';
+import type { GoalMilestone } from '@hominem/db/types/goals';
 
 import { Button } from '@hominem/ui';
 import { Progress } from '@hominem/ui/components/ui/progress';
