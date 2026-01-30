@@ -15,7 +15,6 @@
     "./location": "./src/location/index.ts",
     "./logger": "./src/logger.ts",
     "./markdown": "./src/markdown/index.ts",
-    "./nlp": "./src/nlp/index.ts",
     "./schemas": "./src/schemas/index.ts",
     "./scraping": "./src/scraping/index.ts",
     "./time": "./src/time.ts",
