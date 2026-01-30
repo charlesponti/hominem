@@ -1,5 +1,6 @@
 import { db } from '@hominem/db';
-import { artists, type ArtistOutput } from '@hominem/db/schema';
+import { artists } from '@hominem/db/schema/music';
+import type { ArtistOutput } from '@hominem/db/types/music';
 import { sql } from 'drizzle-orm';
 
 export async function upsertArtists(records: ArtistOutput[]) {
