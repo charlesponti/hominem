@@ -1,5 +1,5 @@
 import { getDatabaseUrl, setTestDb } from '@hominem/db';
-import * as schema from '@hominem/db/schema';
+import { schema } from '@hominem/db/schema/schema';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 

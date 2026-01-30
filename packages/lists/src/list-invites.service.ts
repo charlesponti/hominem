@@ -298,7 +298,7 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
     throw new NotFoundError('ListOutput', { listId: invite.listId });
   }
 
-  if (listRecord.userId === acceptingUserId) {
+  if (listRecord.ownerId === acceptingUserId) {
     throw new ValidationError('Cannot accept an invite to a list you own', {
       listId,
       acceptingUserId,
@@ -373,7 +373,7 @@ export async function deleteListInvite(params: DeleteListInviteParams): Promise<
 
   // Ensure the requester owns the list
   const listRecord = await db.query.list.findFirst({
-    where: and(eq(list.id, listId), eq(list.userId, userId)),
+    where: and(eq(list.id, listId), eq(list.ownerId, userId)),
   });
 
   if (!listRecord) {

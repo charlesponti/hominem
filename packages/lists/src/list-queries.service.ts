@@ -22,7 +22,7 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
       id: string;
       name: string;
       description: string | null;
-      userId: string;
+      ownerId: string;
       isPublic: boolean;
       createdAt: string;
       updatedAt: string;
@@ -35,7 +35,7 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
       id: list.id,
       name: list.name,
       description: list.description,
-      userId: list.userId,
+      ownerId: list.ownerId,
       isPublic: list.isPublic,
       createdAt: list.createdAt,
       updatedAt: list.updatedAt,
@@ -49,7 +49,7 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
       .from(userLists)
       .where(eq(userLists.userId, userId))
       .innerJoin(list, eq(userLists.listId, list.id))
-      .innerJoin(users, eq(list.userId, users.id));
+      .innerJoin(users, eq(list.ownerId, users.id));
     const results = (await query.orderBy(desc(list.createdAt))) as SharedListDbResultBase[];
 
     return results.map((item) => {
@@ -57,7 +57,7 @@ export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[
         id: item.id,
         name: item.name,
         description: item.description,
-        userId: item.userId,
+        ownerId: item.ownerId,
         isPublic: item.isPublic,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
@@ -99,7 +99,7 @@ export async function getUserListsWithItemCount(
       id: list.id,
       name: list.name,
       description: list.description,
-      userId: list.userId,
+      ownerId: list.ownerId,
       isPublic: list.isPublic,
       createdAt: list.createdAt,
       updatedAt: list.updatedAt,
@@ -119,12 +119,12 @@ export async function getUserListsWithItemCount(
         item,
         and(eq(userLists.listId, item.listId), itemType ? eq(item.type, itemType) : undefined),
       )
-      .innerJoin(users, eq(list.userId, users.id))
+      .innerJoin(users, eq(list.ownerId, users.id))
       .groupBy(
         list.id,
         list.name,
         list.description,
-        list.userId,
+        list.ownerId,
         list.isPublic,
         list.createdAt,
         list.updatedAt,
@@ -140,7 +140,7 @@ export async function getUserListsWithItemCount(
         id: item.id,
         name: item.name,
         description: item.description,
-        userId: item.userId,
+        ownerId: item.ownerId,
         isPublic: item.isPublic,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
@@ -185,7 +185,7 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
       id: string;
       name: string;
       description: string | null;
-      userId: string;
+      ownerId: string;
       isPublic: boolean;
       createdAt: string;
       updatedAt: string;
@@ -198,7 +198,7 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
       id: list.id,
       name: list.name,
       description: list.description,
-      userId: list.userId,
+      ownerId: list.ownerId,
       isPublic: list.isPublic,
       createdAt: list.createdAt,
       updatedAt: list.updatedAt,
@@ -210,8 +210,8 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
     const query = db
       .select(baseSelect)
       .from(list)
-      .where(eq(list.userId, userId))
-      .innerJoin(users, eq(users.id, list.userId));
+      .where(eq(list.ownerId, userId))
+      .innerJoin(users, eq(users.id, list.ownerId));
     const queryResults = (await query.orderBy(desc(list.createdAt))) as OwnedListDbResultBase[];
 
     return queryResults.map((dbItem) => {
@@ -219,7 +219,7 @@ export async function getOwnedLists(userId: string): Promise<ListWithSpreadOwner
         id: dbItem.id,
         name: dbItem.name,
         description: dbItem.description,
-        userId: dbItem.userId,
+        ownerId: dbItem.ownerId,
         isPublic: dbItem.isPublic,
         createdAt: dbItem.createdAt,
         updatedAt: dbItem.updatedAt,
@@ -262,7 +262,7 @@ export async function getOwnedListsWithItemCount(
       id: string;
       name: string;
       description: string | null;
-      userId: string;
+      ownerId: string;
       isPublic: boolean;
       createdAt: string;
       updatedAt: string;
@@ -277,7 +277,7 @@ export async function getOwnedListsWithItemCount(
       id: list.id,
       name: list.name,
       description: list.description,
-      userId: list.userId,
+      ownerId: list.ownerId,
       isPublic: list.isPublic,
       createdAt: list.createdAt,
       updatedAt: list.updatedAt,
@@ -291,14 +291,14 @@ export async function getOwnedListsWithItemCount(
     const query = db
       .select(selectFields)
       .from(list)
-      .where(eq(list.userId, userId))
-      .innerJoin(users, eq(users.id, list.userId))
+      .where(eq(list.ownerId, userId))
+      .innerJoin(users, eq(users.id, list.ownerId))
       .leftJoin(item, and(eq(item.listId, list.id), itemType ? eq(item.type, itemType) : undefined))
       .groupBy(
         list.id,
         list.name,
         list.description,
-        list.userId,
+        list.ownerId,
         list.isPublic,
         list.createdAt,
         list.updatedAt,
@@ -314,7 +314,7 @@ export async function getOwnedListsWithItemCount(
         id: dbItem.id,
         name: dbItem.name,
         description: dbItem.description,
-        userId: dbItem.userId,
+        ownerId: dbItem.ownerId,
         isPublic: dbItem.isPublic,
         createdAt: dbItem.createdAt,
         updatedAt: dbItem.updatedAt,
@@ -365,22 +365,22 @@ export async function getAllUserListsWithPlaces(userId: string): Promise<{
         id: list.id,
         name: list.name,
         description: list.description,
-        userId: list.userId,
+        ownerId: list.ownerId,
         isPublic: list.isPublic,
         createdAt: list.createdAt,
         updatedAt: list.updatedAt,
         owner_id: users.id,
         owner_email: users.email,
         owner_name: users.name,
-        isOwned: sql<boolean>`${list.userId} = ${userId}`.as('isOwned'),
+        isOwned: sql<boolean>`${list.ownerId} = ${userId}`.as('isOwned'),
         userLists_userId: userLists.userId,
       })
       .from(list)
-      .innerJoin(users, eq(users.id, list.userId))
+      .innerJoin(users, eq(users.id, list.ownerId))
       .leftJoin(userLists, and(eq(userLists.listId, list.id), eq(userLists.userId, userId)))
       .where(
         or(
-          eq(list.userId, userId), // Owned lists
+          eq(list.ownerId, userId), // Owned lists
           isNotNull(userLists.listId), // Shared lists (join matched)
         ),
       )
@@ -418,7 +418,7 @@ export async function getAllUserListsWithPlaces(userId: string): Promise<{
         id: dbItem.id,
         name: dbItem.name,
         description: dbItem.description,
-        userId: dbItem.userId,
+        ownerId: dbItem.ownerId,
         isPublic: dbItem.isPublic,
         createdAt: dbItem.createdAt,
         updatedAt: dbItem.updatedAt,
@@ -474,7 +474,7 @@ export async function getListById(id: string, userId?: string | null) {
         id: list.id,
         name: list.name,
         description: list.description,
-        userId: list.userId,
+        ownerId: list.ownerId,
         isPublic: list.isPublic,
         createdAt: list.createdAt,
         updatedAt: list.updatedAt,
@@ -485,18 +485,18 @@ export async function getListById(id: string, userId?: string | null) {
       })
       .from(list)
       .where(eq(list.id, id))
-      .innerJoin(users, eq(users.id, list.userId))
+      .innerJoin(users, eq(users.id, list.ownerId))
       .then((rows) => rows[0]);
 
     if (!result) {
       return null;
     }
 
-    const listPart = {
+    const listPart: DbListOutput = {
       id: result.id,
       name: result.name,
       description: result.description,
-      userId: result.userId,
+      ownerId: result.ownerId,
       isPublic: result.isPublic,
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
@@ -517,7 +517,7 @@ export async function getListById(id: string, userId?: string | null) {
 
     const places = await getListPlaces(id);
 
-    const isOwnList = listDataForFormat.userId === userId;
+    const isOwnList = listDataForFormat.ownerId === userId;
     let hasAccess = isOwnList;
 
     if (!hasAccess && userId) {
@@ -576,7 +576,7 @@ export async function getListOwnedByUser(
   listId: string,
   userId: string,
 ): Promise<DbListOutput | undefined> {
-  return db.query.list.findFirst({ where: and(eq(list.id, listId), eq(list.userId, userId)) });
+  return db.query.list.findFirst({ where: and(eq(list.id, listId), eq(list.ownerId, userId)) });
 }
 
 export async function getPlaceLists({
@@ -610,18 +610,11 @@ export async function getPlaceLists({
       .innerJoin(item, eq(item.listId, list.id))
       .innerJoin(
         place,
-        and(
-          eq(place.id, item.itemId),
-          placeId
-            ? eq(place.id, placeId)
-            : googleMapsId
-              ? eq(place.googleMapsId, googleMapsId)
-              : sql`false`,
-        ),
+        or(eq(place.id, placeId || ''), eq(place.googleMapsId, googleMapsId || '')),
       )
       .leftJoin(userLists, and(eq(userLists.listId, list.id), eq(userLists.userId, userId)))
       .where(
-        and(eq(item.itemType, 'PLACE'), or(eq(list.userId, userId), isNotNull(userLists.listId))),
+        and(eq(item.itemType, 'PLACE'), or(eq(list.ownerId, userId), isNotNull(userLists.listId))),
       )
       .groupBy(list.id, list.name, place.id);
 

@@ -35,9 +35,9 @@ export async function removeUserFromList({
 }) {
   try {
     // Ensure the requester owns the list
-    const listRecord = await db.query.list.findFirst({
-      where: and(eq(list.id, listId), eq(list.userId, ownerId)),
-    });
+     const listRecord = await db.query.list.findFirst({
+       where: and(eq(list.id, listId), eq(list.ownerId, ownerId)),
+     });
 
     if (!listRecord) {
       return {

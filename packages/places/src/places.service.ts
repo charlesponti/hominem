@@ -433,7 +433,7 @@ export async function removePlaceFromList(params: {
   const { listId, placeIdentifier, userId } = params;
 
   const listAuthCheck = await db.query.list.findFirst({
-    where: and(eq(list.id, listId), eq(list.userId, userId)),
+    where: and(eq(list.id, listId), eq(list.ownerId, userId)),
   });
   if (!listAuthCheck) {
     throw new Error('Forbidden: You do not own this list.');
@@ -500,7 +500,7 @@ export async function getNearbyPlacesFromLists(params: {
     .where(
       and(
         eq(item.itemType, 'PLACE'),
-        or(eq(list.userId, userId), eq(item.userId, userId)),
+        or(eq(list.ownerId, userId), eq(item.userId, userId)),
         sql`ST_DWithin(
                 ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
                 ${place.location}::geography,

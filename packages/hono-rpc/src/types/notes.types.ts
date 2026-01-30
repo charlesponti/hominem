@@ -1,86 +1,34 @@
-import { z } from 'zod';
-
 // ============================================================================
-// Data Types - Enums and Schemas
+// Re-exports from @hominem/db/types (single source of truth)
 // ============================================================================
 
-/**
- * Base content types
- */
-export const BaseContentTypeSchema = z.enum(['note', 'task', 'timer', 'journal', 'document']);
-export type BaseContentType = z.infer<typeof BaseContentTypeSchema>;
+import type {
+  NoteOutput,
+  TaskMetadata,
+  TaskStatus,
+  Priority,
+  NoteMention,
+  NoteContentType,
+} from '@hominem/db/types/notes';
 
-/**
- * Publishing content types
- */
-export const PublishingContentTypeSchema = z.enum(['tweet', 'essay', 'blog_post', 'social_post']);
-export type PublishingContentType = z.infer<typeof PublishingContentTypeSchema>;
+import type { ContentTag, AllContentType } from '@hominem/db/schema/shared';
 
-/**
- * All possible content types
- */
-export const AllContentTypeSchema = z.union([BaseContentTypeSchema, PublishingContentTypeSchema]);
-export type AllContentType = z.infer<typeof AllContentTypeSchema>;
+import {
+  NoteContentTypeSchema,
+  TaskStatusSchema,
+  TaskMetadataSchema,
+  PrioritySchema,
+} from '@hominem/db/types/notes';
 
-/**
- * Task status for task-type notes
- */
-export const TaskStatusSchema = z.enum(['todo', 'in-progress', 'done', 'archived']);
-export type TaskStatus = z.infer<typeof TaskStatusSchema>;
+// Alias NoteOutput as Note for API backwards compatibility
+export type Note = NoteOutput;
+export type { NoteOutput };
 
-/**
- * Priority levels for tasks
- */
-export const PrioritySchema = z.enum(['low', 'medium', 'high', 'urgent']);
-export type Priority = z.infer<typeof PrioritySchema>;
+// Re-export schemas for validation
+export { NoteContentTypeSchema, TaskStatusSchema, TaskMetadataSchema, PrioritySchema };
 
-/**
- * Task metadata for task-type content
- */
-export const TaskMetadataSchema = z.object({
-  status: TaskStatusSchema.default('todo'),
-  priority: PrioritySchema.default('medium').optional(),
-  dueDate: z.string().nullable().optional(),
-  startTime: z.string().optional(),
-  firstStartTime: z.string().optional(),
-  endTime: z.string().optional(),
-  duration: z.number().optional(),
-});
-export type TaskMetadata = z.infer<typeof TaskMetadataSchema>;
-
-/**
- * Note mention (reference to another user/person)
- */
-export type NoteMention = {
-  id: string;
-  name: string;
-};
-
-/**
- * Content tag
- */
-export type ContentTag = {
-  value: string;
-};
-
-/**
- * Note represents a note from the database
- */
-export type Note = {
-  id: string;
-  userId: string;
-  type: AllContentType;
-  title: string | null;
-  content: string;
-  tags: Array<ContentTag>;
-  mentions: Array<NoteMention> | undefined;
-  analysis: any;
-  taskMetadata: TaskMetadata | undefined;
-  tweetMetadata?: Record<string, any>;
-  synced: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+// Re-export types for external consumers
+export type { TaskMetadata, TaskStatus, Priority, NoteMention, ContentTag, NoteContentType, AllContentType };
 
 // ============================================================================
 // LIST NOTES
@@ -104,7 +52,6 @@ export type NotesListOutput = { notes: Note[] };
 // ============================================================================
 
 export type NotesGetOutput = Note;
-export type NoteOutput = Note;
 
 // ============================================================================
 // CREATE NOTE

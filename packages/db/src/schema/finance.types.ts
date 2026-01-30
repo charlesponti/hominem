@@ -41,48 +41,48 @@ import { createSelectSchema, createInsertSchema } from 'drizzle-zod';
 // FINANCIAL INSTITUTION TYPES
 // ============================================
 
-export type FinancialInstitutionOutput = FinancialInstitution;
-export type FinancialInstitutionInput = FinancialInstitutionInsert;
-export type FinancialInstitutionSelect = FinancialInstitution;
+export { type FinancialInstitution as FinancialInstitutionOutput };
+export { type FinancialInstitutionInsert as FinancialInstitutionInput };
+export { type FinancialInstitution as FinancialInstitutionSelect };
 
 // ============================================
 // PLAID ITEM TYPES
 // ============================================
 
-export type PlaidItemOutput = PlaidItem;
-export type PlaidItemInput = PlaidItemInsert;
-export type PlaidItemSelect = PlaidItem;
+export { type PlaidItem as PlaidItemOutput };
+export { type PlaidItemInsert as PlaidItemInput };
+export { type PlaidItem as PlaidItemSelect };
 
 // ============================================
 // FINANCE ACCOUNT TYPES
 // ============================================
 
-export type FinanceAccountOutput = FinanceAccount;
-export type FinanceAccountInput = FinanceAccountInsert;
-export type FinanceAccountSelect = FinanceAccount;
+export { type FinanceAccount as FinanceAccountOutput };
+export { type FinanceAccountInsert as FinanceAccountInput };
+export { type FinanceAccount as FinanceAccountSelect };
 
 // ============================================
 // TRANSACTION TYPES
 // ============================================
 
-export type FinanceTransactionOutput = FinanceTransaction;
-export type FinanceTransactionInput = FinanceTransactionInsert;
-export type FinanceTransactionSelect = FinanceTransaction;
+export { type FinanceTransaction as FinanceTransactionOutput };
+export { type FinanceTransactionInsert as FinanceTransactionInput };
+export { type FinanceTransaction as FinanceTransactionSelect };
 
-export type TransactionCreatePayload = FinanceTransactionInsert;
+export { type FinanceTransactionInsert as TransactionCreatePayload };
 export type TransactionUpdatePayload = Omit<FinanceTransactionInsert, 'userId' | 'id' | 'accountId'>;
 
 // ============================================
 // BUDGET TYPES
 // ============================================
 
-export type BudgetCategoryOutput = BudgetCategory;
-export type BudgetCategoryInput = BudgetCategoryInsert;
-export type BudgetCategorySelect = BudgetCategory;
+export { type BudgetCategory as BudgetCategoryOutput };
+export { type BudgetCategoryInsert as BudgetCategoryInput };
+export { type BudgetCategory as BudgetCategorySelect };
 
-export type BudgetGoalOutput = BudgetGoal;
-export type BudgetGoalInput = BudgetGoalInsert;
-export type BudgetGoalSelect = BudgetGoal;
+export { type BudgetGoal as BudgetGoalOutput };
+export { type BudgetGoalInsert as BudgetGoalInput };
+export { type BudgetGoal as BudgetGoalSelect };
 
 // ============================================
 // RE-EXPORT STABLE ENUMS AND CONSTANTS

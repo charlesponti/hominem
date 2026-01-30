@@ -283,7 +283,7 @@ export async function findExistingTransaction(
       eq(transactions.type, txOrTxs.type as FinanceTransactionOutput['type']),
       txOrTxs.accountMask ? eq(transactions.accountMask, txOrTxs.accountMask) : undefined,
     ),
-  }) as Promise<FinanceTransactionOutput | undefined>;
+  }) as unknown as Promise<FinanceTransactionOutput | undefined>;
 }
 
 export const createTransactionInputSchema = TransactionInsertSchema.pick({

@@ -55,11 +55,11 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
     // Create a list for owner
     await db
       .insert(list)
-      .values({ id: listId, name: 'Test List', userId: ownerId })
+      .values({ id: listId, name: 'Test List', ownerId: ownerId })
       .onConflictDoNothing();
     await db
       .insert(list)
-      .values({ id: inviteListId, name: 'Invite List', userId: ownerId })
+      .values({ id: inviteListId, name: 'Invite List', ownerId: ownerId })
       .onConflictDoNothing();
 
     // Share the list with the shared user

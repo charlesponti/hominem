@@ -81,7 +81,7 @@ function AccountCard({
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-muted-foreground">Balance:</span>
                 <span className="font-semibold">
-                  {isBalanceVisible ? formatBalance(account.balance) : '••••••'}
+                  {isBalanceVisible ? formatBalance(Number(account.balance)) : '••••••'}
                 </span>
               </div>
               <Button

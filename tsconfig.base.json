@@ -26,6 +26,10 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "disableSourceOfProjectReferenceRedirect": false,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "paths": {
+      "@hominem/finance-services/*": ["./packages/finance/src/*"],
+      "@hominem/db/schema/*": ["./packages/db/src/schema/*"]
+    }
   }
 }

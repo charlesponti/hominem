@@ -1,18 +1,12 @@
 import { z } from 'zod';
+import type { ListOutput } from '@hominem/db/types/lists';
 
 // ============================================================================
 // Data Types
 // ============================================================================
 
-export type List = {
-  id: string;
-  name: string;
-  description: string | null;
-  isPublic: boolean;
-  ownerId: string;
-  createdAt: string;
-  updatedAt: string;
-  // Lists often include items or places when fetched
+export type List = ListOutput & {
+  // API-specific extensions - Lists often include items or places when fetched
   places?: any[];
   items?: any[];
   owner?: {

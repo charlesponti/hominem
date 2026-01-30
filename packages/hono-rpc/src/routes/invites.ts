@@ -61,7 +61,7 @@ export const invitesRoutes = new Hono<AppContext>()
     const baseInvites = await getInvitesForUser(userId, normalizedEmail);
 
     const filteredBaseInvites = baseInvites
-      .filter((invite: any) => invite.list?.userId !== userId)
+      .filter((invite: any) => invite.list?.ownerId !== userId)
       .map((invite: any) => ({ ...invite, belongsToAnotherUser: false }));
 
     let tokenInvite:
@@ -70,9 +70,9 @@ export const invitesRoutes = new Hono<AppContext>()
 
     if (tokenFilter) {
       const inviteByToken = await getInviteByToken(tokenFilter);
-      if (inviteByToken) {
-        const inviteList = inviteByToken.list;
-        if (inviteList && inviteList.userId !== userId) {
+     if (inviteByToken) {
+         const inviteList = inviteByToken.list;
+         if (inviteList && inviteList.ownerId !== userId) {
           const belongsToAnotherUser =
             (inviteByToken.invitedUserId && inviteByToken.invitedUserId !== userId) ||
             (normalizedEmail &&

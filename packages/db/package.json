@@ -6,13 +6,11 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema/index.ts",
-    "./types": "./src/schema/types.ts",
+    "./schema/schema": "./src/schema/schema.ts",
     "./schema/*": "./src/schema/*.schema.ts",
-    "./types/*": "./src/schema/*.types.ts",
-    "./schema/calendar": "./src/schema/calendar.schema.ts",
-    "./schema/events": "./src/schema/calendar.schema.ts",
     "./test/fixtures": "./src/test/fixtures.ts",
-    "./test/utils": "./src/test/utils.ts"
+    "./test/utils": "./src/test/utils.ts",
+    "./types/*": "./src/schema/*.types.ts"
   },
   "scripts": {
     "build": "tsc -b",

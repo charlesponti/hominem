@@ -106,7 +106,7 @@ export function AccountHeader({
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-muted-foreground">Current Balance:</span>
                 <span className="text-2xl font-bold">
-                  {isBalanceVisible ? formatBalance(account.balance) : '••••••'}
+                  {isBalanceVisible ? formatBalance(Number(account.balance)) : '••••••'}
                 </span>
               </div>
               <Button variant="ghost" size="sm" onClick={onToggleBalance}>

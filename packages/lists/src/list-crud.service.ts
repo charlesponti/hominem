@@ -22,7 +22,7 @@ export function formatList(
     id: listData.id,
     name: listData.name,
     description: listData.description || '',
-    userId: listData.userId,
+    ownerId: listData.ownerId,
     createdBy: listData.owner
       ? {
           id: listData.owner.id,
@@ -57,7 +57,7 @@ export async function createList(name: string, userId: string): Promise<ListOutp
       .values({
         id: crypto.randomUUID(),
         name,
-        userId,
+        ownerId: userId,
         // description and isPublic will use DB defaults or be null
       })
       .returning()
@@ -119,7 +119,7 @@ export async function updateList(
     const updatedList = await db
       .update(list)
       .set({ name })
-      .where(and(eq(list.id, id), eq(list.userId, userId)))
+      .where(and(eq(list.id, id), eq(list.ownerId, userId)))
       .returning()
       .then((rows) => rows[0] ?? null);
     return updatedList;
@@ -139,7 +139,7 @@ export async function deleteList(id: string, userId: string): Promise<boolean> {
   try {
     const result = await db
       .delete(list)
-      .where(and(eq(list.id, id), eq(list.userId, userId)))
+      .where(and(eq(list.id, id), eq(list.ownerId, userId)))
       .returning({ id: list.id });
     return result.length > 0; // Check if any row was actually deleted
   } catch (error) {

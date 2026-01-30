@@ -219,7 +219,7 @@ export async function deleteListItem(
             SELECT 1 FROM ${list}
             WHERE ${list.id} = ${item.listId}
             AND (
-              ${list.userId} = ${userId}
+              ${list.ownerId} = ${userId}
               OR EXISTS (
                 SELECT 1 FROM ${userLists}
                 WHERE ${userLists.listId} = ${list.id}

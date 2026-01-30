@@ -1,9 +1,47 @@
-export * from './analytics/aggregation.service';
-export * from './analytics/analytics.utils';
-export * from './analytics/time-series.service';
-export * from './analytics/transaction-analytics.service';
-export * from './budget.types';
-export * from './cleanup.service';
+export {
+  parseAmount,
+  calculateMedian,
+  formatCurrency,
+  aggregateByCategory,
+  aggregateByMonth,
+  aggregateByAccount,
+  calculateTransactionStats,
+  calculatePercentageChange,
+  calculateTrend,
+  groupTransactionsByDateRange,
+} from './analytics/aggregation.service';
+export {
+  calculateAveragePerDay,
+  calculateTimeSeriesTotals,
+} from './analytics/analytics.utils';
+export {
+  type TimeSeriesDataPoint,
+  type TimeSeriesStats,
+  type TimeSeriesResponse,
+  generateTimeSeriesData,
+  calculateTimeSeriesStats,
+} from './analytics/time-series.service';
+export {
+  type CategorySummary,
+  summarizeByCategory,
+  type MonthSummary,
+  summarizeByMonth,
+  findTopMerchants,
+  type TransactionStats,
+  type TransactionAggregation,
+  calculateTransactions,
+  type MonthlyStatsOutput,
+  getMonthlyStats,
+} from './analytics/transaction-analytics.service';
+export {
+  type BudgetCategoryBase,
+  type BudgetCategoryWithSpending,
+  type BudgetSummary,
+  type BudgetTrackingData,
+  type BudgetChartData,
+  type BudgetPieData,
+} from './budget.types';
+export { deleteAllFinanceData } from './cleanup.service';
 export {
   createAccount,
   createManyAccounts,
@@ -43,11 +81,42 @@ export {
   type InstitutionConnection,
 } from './features/accounts/accounts.domain';
 export { AccountsRepository } from './features/accounts/accounts.repository';
-export * from './core/budget.utils';
-export * from './core/budget-analytics.service';
-export * from './core/budget-categories.service';
-export * from './core/budget-goals.service';
-export * from './core/budget-tracking.service';
+export {
+  CHART_COLORS,
+  getBudgetStatus,
+  getStatusColor,
+  getChartColor,
+} from './core/budget.utils';
+export {
+  getTransactionCategoriesAnalysis,
+  bulkCreateBudgetCategoriesFromTransactions,
+} from './core/budget-analytics.service';
+export {
+  type BudgetCategoryType,
+  getBudgetCategories,
+  getBudgetCategorySuggestions,
+  getSpendingCategories,
+  createBudgetCategory,
+  updateBudgetCategory,
+  deleteBudgetCategory,
+  getBudgetCategoryById,
+  checkBudgetCategoryNameExists,
+  getUserExpenseCategories,
+  getAllBudgetCategories,
+} from './core/budget-categories.service';
+export {
+  getBudgetGoals,
+  createBudgetGoal,
+  updateBudgetGoal,
+  deleteBudgetGoal,
+} from './core/budget-goals.service';
+export {
+  getBudgetCategoriesWithSpending,
+  calculateBudgetSummary,
+  generateChartData,
+  generatePieData,
+  getBudgetTrackingData,
+} from './core/budget-tracking.service';
 export { InstitutionsRepository } from './core/institutions.repository';
 export {
   getInstitutionById,
@@ -62,7 +131,21 @@ export {
   type RunwayCalculationInput,
   runwayCalculationSchema,
 } from './core/runway.service';
-export * from './finance.analytics.service';
+export {
+  CategoryBreakdownSchema,
+  getCategoryBreakdownInputSchema,
+  getCategoryBreakdownOutputSchema,
+  getSpendingTimeSeriesInputSchema,
+  getSpendingTimeSeriesOutputSchema,
+  getTopMerchantsInputSchema,
+  getTopMerchantsOutputSchema,
+  type GetCategoryBreakdownOutput,
+  getCategoryBreakdown,
+  type GetSpendingTimeSeriesOutput,
+  getSpendingTimeSeries,
+  type GetTopMerchantsOutput,
+  getTopMerchants,
+} from './finance.analytics.service';
 export {
   calculateBudgetBreakdown,
   calculateSavingsGoal,
@@ -74,10 +157,106 @@ export {
   calculateLoanDetailsInputSchema,
   calculateLoanDetailsOutputSchema,
 } from './finance.calculators.service';
-export * from './finance.schemas';
-export * from './finance.tool-servers';
-export * from './finance.transactions.service';
-export * from './finance.types';
+export {
+  SuccessResponseSchema,
+  createFinanceAccountInputSchema,
+  getFinanceAccountsInputSchema,
+  getFinanceAccountsOutputSchema,
+  updateFinanceAccountInputSchema,
+  deleteFinanceAccountInputSchema,
+  deleteFinanceAccountOutputSchema,
+} from './finance.schemas';
+export {
+  createFinanceAccountDef,
+  createFinanceAccountServer,
+  getFinanceAccountsDef,
+  getFinanceAccountsServer,
+  updateFinanceAccountDef,
+  updateFinanceAccountServer,
+  deleteFinanceAccountDef,
+  deleteFinanceAccountServer,
+  createTransactionDef,
+  createTransactionServer,
+  getTransactionsDef,
+  getTransactionsServer,
+  updateTransactionDef,
+  updateTransactionServer,
+  deleteTransactionDef,
+  deleteTransactionServer,
+  getSpendingCategoriesDef,
+  getSpendingCategoriesServer,
+  getCategoryBreakdownDef,
+  getCategoryBreakdownServer,
+  getSpendingTimeSeriesDef,
+  getSpendingTimeSeriesServer,
+  getTopMerchantsDef,
+  getTopMerchantsServer,
+  calculateBudgetBreakdownDef,
+  calculateBudgetBreakdownServer,
+  calculateRunwayDef,
+  calculateRunwayServer,
+  calculateSavingsGoalDef,
+  calculateSavingsGoalServer,
+  calculateLoanDetailsDef,
+  calculateLoanDetailsServer,
+  getBudgetCategoriesInputSchema,
+  getBudgetCategoriesOutputSchema,
+  getBudgetCategoriesDef,
+  getBudgetCategoriesServer,
+  calculateTransactionsInputSchema,
+  calculateTransactionsOutputSchema,
+  calculateTransactionsDef,
+  calculateTransactionsServer,
+  tools,
+} from './finance.tool-servers';
+export {
+  getTransactionsInputSchema,
+  getTransactionsOutputSchema,
+  updateTransactionInputSchema,
+  updateTransactionOutputSchema,
+  deleteTransactionInputSchema,
+  deleteTransactionOutputSchema,
+  queryTransactionsOutputSchema,
+  type QueryTransactionsOutput,
+  buildWhereConditions,
+  queryTransactions,
+  getTransactions,
+  findExistingTransaction,
+  createTransactionInputSchema,
+  createTransactionOutputSchema,
+  createTransaction,
+  createTransactions,
+  updateTransactionIfNeeded,
+  updateTransaction,
+  deleteTransaction,
+} from './finance.transactions.service';
+export {
+  type FinanceAccountInput,
+  type Transaction,
+  type TransactionInsert,
+  type TransactionType,
+  type CategoryAggregate,
+  type MonthAggregate,
+  type TopMerchant,
+  type TransactionResult,
+  type QueryOptions,
+} from './finance.types';
 
-export * from './plaid.service';
-export * from './processing';
+export {
+  getPlaidItemByUserAndItemId,
+  getPlaidItemById,
+  getPlaidItemByItemId,
+  ensureInstitutionExists,
+  upsertPlaidItem,
+  updatePlaidItemStatusByItemId,
+  updatePlaidItemStatusById,
+  deletePlaidItem,
+} from './plaid.service';
+export {
+  type ParsedTransactions,
+  parseTransactionStream,
+  processTransactionsFromCSVBuffer,
+  progressEmitter,
+  processTransactionsInBulk,
+  getProcessingConfig,
+} from './processing';

@@ -19,16 +19,16 @@ export const list = pgTable(
     id: uuid('id').primaryKey().notNull(),
     name: text('name').notNull(),
     description: text('description'),
-    userId: uuid('userId').notNull(),
+    ownerId: uuid('ownerId').notNull(),
     isPublic: boolean('isPublic').notNull().default(false),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   },
   (table) => [
     foreignKey({
-      columns: [table.userId],
+      columns: [table.ownerId],
       foreignColumns: [users.id],
-      name: 'list_userId_user_id_fk',
+      name: 'list_ownerId_user_id_fk',
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
@@ -38,7 +38,7 @@ export interface List {
   id: string;
   name: string;
   description: string | null;
-  userId: string;
+  ownerId: string;
   isPublic: boolean;
   createdAt: string;
   updatedAt: string;
@@ -47,7 +47,7 @@ export interface ListInsert {
   id: string;
   name: string;
   description?: string | null;
-  userId: string;
+  ownerId: string;
   isPublic?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -196,7 +196,7 @@ export const listInviteRelations = relations(listInvite, ({ one }) => ({
 export const listRelations = relations(list, ({ one, many }) => ({
   flights: many(flight),
   user: one(users, {
-    fields: [list.userId],
+    fields: [list.ownerId],
     references: [users.id],
   }),
   items: many(item),
