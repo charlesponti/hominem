@@ -11,6 +11,9 @@ import { eventsRoutes } from './routes/events';
 import { filesRoutes } from './routes/files';
 import { financeRoutes } from './routes/finance';
 import { goalsRoutes } from './routes/goals';
+import { goalsUnifiedRoutes } from './routes/goals-unified';
+import { habitsRoutes } from './routes/habits';
+import { healthRoutes } from './routes/health';
 import { invitesRoutes } from './routes/invites';
 import { itemsRoutes } from './routes/items';
 import { listsRoutes } from './routes/lists';
@@ -49,6 +52,9 @@ function buildApp() {
     .route('/files', filesRoutes)
     .route('/finance', financeRoutes)
     .route('/goals', goalsRoutes)
+    .route('/goals-unified', goalsUnifiedRoutes)
+    .route('/habits', habitsRoutes)
+    .route('/health', healthRoutes)
     .route('/invites', invitesRoutes)
     .route('/items', itemsRoutes)
     .route('/lists', listsRoutes)

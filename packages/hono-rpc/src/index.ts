@@ -39,6 +39,9 @@ import { placesRoutes } from './routes/places';
 import { tripsRoutes } from './routes/trips';
 import { userRoutes } from './routes/user';
 import { goalsRoutes } from './routes/goals';
+import { goalsUnifiedRoutes } from './routes/goals-unified';
+import { habitsRoutes } from './routes/habits';
+import { healthRoutes } from './routes/health';
 import { chatsRoutes } from './routes/chats';
 import { messagesRoutes } from './routes/messages';
 
@@ -53,6 +56,9 @@ export {
   tripsRoutes,
   userRoutes,
   goalsRoutes,
+  goalsUnifiedRoutes,
+  habitsRoutes,
+  healthRoutes,
   chatsRoutes,
   messagesRoutes,
 };
@@ -73,6 +79,9 @@ export type PlacesType = typeof placesRoutes;
 export type TripsType = typeof tripsRoutes;
 export type UserType = typeof userRoutes;
 export type GoalsType = typeof goalsRoutes;
+export type GoalsUnifiedType = typeof goalsUnifiedRoutes;
+export type HabitsType = typeof habitsRoutes;
+export type HealthType = typeof healthRoutes;
 export type ChatsType = typeof chatsRoutes;
 export type MessagesType = typeof messagesRoutes;
 

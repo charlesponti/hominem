@@ -503,6 +503,42 @@ export async function createHabit(
   return habitEvent;
 }
 
+export async function updateHabit(
+  habitId: string,
+  userId: string,
+  updates: {
+    title?: string | undefined;
+    description?: string | undefined;
+    interval?: 'daily' | 'weekly' | 'monthly' | 'custom' | undefined;
+    recurrenceRule?: string | undefined;
+  },
+): Promise<EventWithTagsAndPeople | null> {
+  // Verify the habit exists and belongs to the user
+  const habit = await getEventById(habitId);
+  if (!habit || (habit as any).userId !== userId || (habit as any).type !== 'Habit') {
+    return null;
+  }
+
+  // Build update object with only provided fields
+  const updateData: UpdateEventInput = {};
+
+  if (updates.title !== undefined) {
+    updateData.title = updates.title;
+  }
+  if (updates.description !== undefined) {
+    updateData.description = updates.description;
+  }
+  if (updates.interval !== undefined) {
+    updateData.interval = updates.interval;
+  }
+  if (updates.recurrenceRule !== undefined) {
+    updateData.recurrenceRule = updates.recurrenceRule;
+  }
+
+  // Use the generic updateEvent function
+  return updateEvent(habitId, updateData);
+}
+
 export async function markHabitComplete(
   habitId: string,
   userId: string,
