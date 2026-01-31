@@ -22,9 +22,6 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", ".react-router/**", "build/**", "dist/**"]
     },
-    "check": {
-      "dependsOn": ["lint", "typecheck", "test"]
-    },
     "clean": {
       "cache": false
     },

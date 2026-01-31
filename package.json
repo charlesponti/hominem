@@ -26,7 +26,6 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "check": "turbo run check",
     "clean": "turbo run clean",
     "db:migrate": "turbo run db:migrate",
     "dev": "turbo run dev --parallel",
