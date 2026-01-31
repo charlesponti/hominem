@@ -1,25 +1,35 @@
 /**
  * Computed Interview Types
  *
- * This file contains all derived types computed from Interview schema.
+ * This file contains all derived types computed from the Interview schema.
  * These types are inferred from Drizzle ORM schema definitions.
+ *
+ * Rule: Import from this file, not from interviews.schema.ts
  */
 
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
-import { interviews, interview_interviewers } from './interviews.schema'
+import type {
+  Interview,
+  InterviewInsert,
+  InterviewSelect,
+  NewInterview,
+  InterviewInterviewer,
+  InterviewInterviewerInsert,
+  NewInterviewInterviewer,
+} from './interviews.schema';
 
-// Inferred types from Drizzle schema
-export type Interview = InferSelectModel<typeof interviews>
-export type InterviewInsert = InferInsertModel<typeof interviews>
-export type InterviewInterviewer = InferSelectModel<typeof interview_interviewers>
-export type InterviewInterviewerInsert = InferInsertModel<typeof interview_interviewers>
+export type {
+  Interview,
+  InterviewInsert,
+  InterviewSelect,
+  NewInterview,
+  InterviewInterviewer,
+  InterviewInterviewerInsert,
+  NewInterviewInterviewer,
+};
 
 // Legacy aliases for backward compatibility
-export type InterviewOutput = Interview
-export type InterviewInput = InterviewInsert
+export type InterviewOutput = Interview;
+export type InterviewInput = InterviewInsert;
 
-export type InterviewInterviewerOutput = InterviewInterviewer
-export type InterviewInterviewerInput = InterviewInterviewerInsert
-
-// Re-export tables for convenience
-export { interviews, interview_interviewers } from './interviews.schema'
+export type InterviewInterviewerOutput = InterviewInterviewer;
+export type InterviewInterviewerInput = InterviewInterviewerInsert;

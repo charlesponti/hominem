@@ -1,3 +1,4 @@
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
   boolean,
   index,
@@ -8,10 +9,10 @@ import {
   text,
   timestamp,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm'
-import { companies } from './company.schema'
-import { users } from './users.schema'
+} from 'drizzle-orm/pg-core';
+
+import { companies } from './company.schema';
+import { users } from './users.schema';
 
 export const jobApplicationStatusEnum = pgEnum('job_application_status', [
   'Applied',
@@ -22,7 +23,7 @@ export const jobApplicationStatusEnum = pgEnum('job_application_status', [
   'Screening',
   'Interviewing',
   'Pending',
-])
+]);
 
 export const jobPostingStatusEnum = pgEnum('job_posting_status', [
   // Enum for job posting status
@@ -31,7 +32,7 @@ export const jobPostingStatusEnum = pgEnum('job_posting_status', [
   'closed',
   'filled',
   'archived',
-])
+]);
 
 export const applicationStageNameEnum = pgEnum('application_stage_name', [
   // Enum for application stage names
@@ -45,7 +46,7 @@ export const applicationStageNameEnum = pgEnum('application_stage_name', [
   'Rejected',
   'Withdrew',
   'OnHold',
-])
+]);
 
 export const applicationStageStatusEnum = pgEnum('application_stage_status', [
   // Enum for application stage statuses
@@ -56,7 +57,7 @@ export const applicationStageStatusEnum = pgEnum('application_stage_status', [
   'Skipped',
   'Failed',
   'Passed',
-])
+]);
 
 export enum JobApplicationStatus {
   APPLIED = 'Applied',
@@ -80,38 +81,10 @@ export const jobs = pgTable('jobs', {
   createdAt: timestamp('created_at').notNull().defaultNow(), // Timestamp of when the job posting was created
   updatedAt: timestamp('updated_at').notNull().defaultNow(), // Timestamp of when the job posting was last updated
   version: integer('version').notNull().default(1), // Version number for tracking changes to the job posting
-})
-export interface Job {
-  id: string;
-  companyId: string | null;
-  title: string;
-  description: string;
-  requirements: unknown;
-  salary: string;
-  currency: string;
-  benefits: string[];
-  location: string;
-  status: 'draft' | 'open' | 'closed' | 'filled' | 'archived';
-  createdAt: Date;
-  updatedAt: Date;
-  version: number;
-}
+});
+export type Job = InferSelectModel<typeof jobs>;
+export type JobInsert = InferInsertModel<typeof jobs>;
 export type JobSelect = Job;
-export interface JobInsert {
-  id?: string;
-  companyId?: string | null;
-  title: string;
-  description: string;
-  requirements?: unknown;
-  salary: string;
-  currency?: string;
-  benefits?: string[];
-  location: string;
-  status?: 'draft' | 'open' | 'closed' | 'filled' | 'archived';
-  createdAt?: Date;
-  updatedAt?: Date;
-  version?: number;
-}
 export type NewJob = JobInsert;
 
 export const job_applications = pgTable('job_applications', {
@@ -143,53 +116,11 @@ export const job_applications = pgTable('job_applications', {
   // Metadata
   createdAt: timestamp('created_at').notNull().defaultNow(), // Timestamp of when the application record was created
   updatedAt: timestamp('updated_at').notNull().defaultNow(), // Timestamp of when the application record was last updated
-})
+});
 
-export interface JobApplication {
-  id: string;
-  position: string;
-  resumeDocumentUrl: string;
-  coverLetterDocumentUrl: string | null;
-  startDate: Date;
-  endDate: Date | null;
-  link: string | null;
-  location: string;
-  reference: boolean;
-  status: 'Applied' | 'Hired' | 'Withdrew' | 'Rejected' | 'Offer' | 'Screening' | 'Interviewing' | 'Pending';
-  salaryQuoted: string | null;
-  salaryAccepted: string | null;
-  jobPosting: string | null;
-  phoneScreen: string | null;
-  notes: string | null;
-  companyId: string;
-  userId: string;
-  jobId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type JobApplication = InferSelectModel<typeof job_applications>;
+export type JobApplicationInsert = InferInsertModel<typeof job_applications>;
 export type JobApplicationSelect = JobApplication;
-export interface JobApplicationInsert {
-  id?: string;
-  position: string;
-  resumeDocumentUrl: string;
-  coverLetterDocumentUrl?: string | null;
-  startDate?: Date;
-  endDate?: Date | null;
-  link?: string | null;
-  location?: string;
-  reference?: boolean;
-  status?: 'Applied' | 'Hired' | 'Withdrew' | 'Rejected' | 'Offer' | 'Screening' | 'Interviewing' | 'Pending';
-  salaryQuoted?: string | null;
-  salaryAccepted?: string | null;
-  jobPosting?: string | null;
-  phoneScreen?: string | null;
-  notes?: string | null;
-  companyId: string;
-  userId: string;
-  jobId?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
 
 export const application_stages = pgTable(
   'application_stages',
@@ -207,30 +138,12 @@ export const application_stages = pgTable(
   },
   (table) => ({
     jobApplicationIdIdx: index('app_stage_job_app_id_idx').on(table.jobApplicationId),
-  })
-)
+  }),
+);
 
-export interface ApplicationStage {
-  id: string;
-  jobApplicationId: string;
-  stage: 'Applied' | 'Screening' | 'Assessment' | 'Interview' | 'TechnicalTest' | 'Offer' | 'Hired' | 'Rejected' | 'Withdrew' | 'OnHold';
-  date: Date;
-  notes: string | null;
-  status: 'Pending' | 'Scheduled' | 'InProgress' | 'Completed' | 'Skipped' | 'Failed' | 'Passed' | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type ApplicationStage = InferSelectModel<typeof application_stages>;
+export type ApplicationStageInsert = InferInsertModel<typeof application_stages>;
 export type ApplicationStageSelect = ApplicationStage;
-export interface ApplicationStageInsert {
-  id?: string;
-  jobApplicationId: string;
-  stage: 'Applied' | 'Screening' | 'Assessment' | 'Interview' | 'TechnicalTest' | 'Offer' | 'Hired' | 'Rejected' | 'Withdrew' | 'OnHold';
-  date?: Date;
-  notes?: string | null;
-  status?: 'Pending' | 'Scheduled' | 'InProgress' | 'Completed' | 'Skipped' | 'Failed' | 'Passed' | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
 export type NewApplicationStage = ApplicationStageInsert;
 
 export const work_experiences = pgTable(
@@ -253,9 +166,9 @@ export const work_experiences = pgTable(
     achievements: json('achievements').$type<string[]>().default([]), // List of key achievements (changed from text to json)
     metadata: json('metadata').$type<{
       // Additional structured metadata
-      company_size?: string
-      industry?: string
-      website?: string
+      company_size?: string;
+      industry?: string;
+      website?: string;
     }>(),
     sortOrder: integer('sort_order').default(0).notNull(), // Order for displaying experiences
     isVisible: boolean('is_visible').default(true).notNull(), // Whether this experience is visible on a profile
@@ -270,102 +183,10 @@ export const work_experiences = pgTable(
     index('work_exp_created_at_idx').on(table.createdAt),
     index('work_exp_user_visible_idx').on(table.userId, table.isVisible),
     index('work_exp_user_sort_idx').on(table.userId, table.sortOrder), // Added composite index for user and sortOrder
-  ]
-)
+  ],
+);
 
-export interface WorkExperience {
-  id: string;
-  userId: string;
-  companyId: string | null;
-  title: string;
-  subtitle: string | null;
-  description: string;
-  role: string;
-  startDate: Date | null;
-  endDate: Date | null;
-  image: string | null;
-  location: string | null;
-  tags: string[];
-  achievements: string[];
-  metadata: {
-    company_size?: string;
-    industry?: string;
-    website?: string;
-  } | null;
-  sortOrder: number;
-  isVisible: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type WorkExperience = InferSelectModel<typeof work_experiences>;
+export type WorkExperienceInsert = InferInsertModel<typeof work_experiences>;
 export type WorkExperienceSelect = WorkExperience;
-export interface WorkExperienceInsert {
-  id?: string;
-  userId: string;
-  companyId?: string | null;
-  title: string;
-  subtitle?: string | null;
-  description: string;
-  role: string;
-  startDate?: Date | null;
-  endDate?: Date | null;
-  image?: string | null;
-  location?: string | null;
-  tags?: string[];
-  achievements?: string[];
-  metadata?: {
-    company_size?: string;
-    industry?: string;
-    website?: string;
-  } | null;
-  sortOrder?: number;
-  isVisible?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
 export type NewWorkExperience = WorkExperienceInsert;
-
-// ============================================
-// RELATIONS
-// ============================================
-
-export const jobsRelations = relations(jobs, ({ one, many }) => ({
-  company: one(companies, {
-    fields: [jobs.companyId],
-    references: [companies.id],
-  }),
-  jobApplications: many(job_applications),
-}))
-
-export const job_applicationsRelations = relations(job_applications, ({ one, many }) => ({
-  job: one(jobs, {
-    fields: [job_applications.jobId],
-    references: [jobs.id],
-  }),
-  company: one(companies, {
-    fields: [job_applications.companyId],
-    references: [companies.id],
-  }),
-  user: one(users, {
-    fields: [job_applications.userId],
-    references: [users.id],
-  }),
-  applicationStages: many(application_stages),
-}))
-
-export const application_stagesRelations = relations(application_stages, ({ one }) => ({
-  jobApplication: one(job_applications, {
-    fields: [application_stages.jobApplicationId],
-    references: [job_applications.id],
-  }),
-}))
-
-export const work_experiencesRelations = relations(work_experiences, ({ one }) => ({
-  user: one(users, {
-    fields: [work_experiences.userId],
-    references: [users.id],
-  }),
-  company: one(companies, {
-    fields: [work_experiences.companyId],
-    references: [companies.id],
-  }),
-}))

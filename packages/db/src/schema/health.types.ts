@@ -7,19 +7,10 @@
  * Rule: Import from this file, not from health.schema.ts
  */
 
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
-import { health } from './health.schema'
+import type { Health, HealthInsert, HealthSelect } from './health.schema';
 
-// Inferred types from Drizzle schema
-export type Health = InferSelectModel<typeof health>
-export type HealthInsert = InferInsertModel<typeof health>
+export type { Health, HealthInsert, HealthSelect };
 
 // Legacy aliases for backward compatibility
-export type HealthOutput = Health
-export type HealthInput = HealthInsert
-export type HealthSelect = Health
-
-// Re-export tables for convenience
-export {
-  health,
-} from './health.schema'
+export type HealthOutput = Health;
+export type HealthInput = HealthInsert;

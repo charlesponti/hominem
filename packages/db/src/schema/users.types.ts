@@ -7,27 +7,20 @@
  * Rule: Import from this file, not from users.schema.ts
  */
 
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
-import { account, users } from './users.schema'
+import type {
+  Account,
+  AccountInsert,
+  AccountSelect,
+  User,
+  UserInsert,
+  UserSelect,
+} from './users.schema';
 
-// Inferred types from Drizzle schema
-export type User = InferSelectModel<typeof users>
-export type UserInsert = InferInsertModel<typeof users>
-export type Account = InferSelectModel<typeof account>
-export type AccountInsert = InferInsertModel<typeof account>
+export type { User, UserInsert, UserSelect, Account, AccountInsert, AccountSelect };
 
 // Legacy aliases for backward compatibility
-export type UserSelect = User
-export type AccountSelect = Account
+export type UserOutput = User;
+export type UserInput = UserInsert;
 
-export type UserOutput = User
-export type UserInput = UserInsert
-
-export type AccountOutput = Account
-export type AccountInput = AccountInsert
-
-// Re-export tables for convenience
-export {
-  users,
-  account,
-} from './users.schema'
+export type AccountOutput = Account;
+export type AccountInput = AccountInsert;

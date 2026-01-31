@@ -1,4 +1,4 @@
-import { relations, sql } from 'drizzle-orm';
+import { type InferInsertModel, type InferSelectModel, sql } from 'drizzle-orm';
 import { index, jsonb, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import * as z from 'zod';
 
@@ -86,27 +86,9 @@ export const financialInstitutions = pgTable(
     ),
   ],
 );
-export interface FinancialInstitution {
-  id: string;
-  name: string;
-  url: string | null;
-  logo: string | null;
-  primaryColor: string | null;
-  country: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type FinancialInstitution = InferSelectModel<typeof financialInstitutions>;
+export type FinancialInstitutionInsert = InferInsertModel<typeof financialInstitutions>;
 export type FinancialInstitutionSelect = FinancialInstitution;
-export interface FinancialInstitutionInsert {
-  id: string;
-  name: string;
-  url?: string | null;
-  logo?: string | null;
-  primaryColor?: string | null;
-  country?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
 
 // Plaid items table to track connected institutions
 export const plaidItems = pgTable('plaid_items', {
@@ -125,35 +107,9 @@ export const plaidItems = pgTable('plaid_items', {
   updatedAt: updatedAtColumn(),
   userId: requiredUuidColumn('user_id').references(() => users.id),
 });
-export interface PlaidItem {
-  id: string;
-  itemId: string;
-  accessToken: string;
-  institutionId: string;
-  status: 'active' | 'error' | 'pending_expiration' | 'revoked';
-  consentExpiresAt: Date | null;
-  transactionsCursor: string | null;
-  error: string | null;
-  lastSyncedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string;
-}
+export type PlaidItem = InferSelectModel<typeof plaidItems>;
+export type PlaidItemInsert = InferInsertModel<typeof plaidItems>;
 export type PlaidItemSelect = PlaidItem;
-export interface PlaidItemInsert {
-  id?: string;
-  itemId: string;
-  accessToken: string;
-  institutionId: string;
-  status?: 'active' | 'error' | 'pending_expiration' | 'revoked';
-  consentExpiresAt?: Date | null;
-  transactionsCursor?: string | null;
-  error?: string | null;
-  lastSyncedAt?: Date | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-  userId: string;
-}
 
 // Tables
 export const financeAccounts = pgTable(
@@ -187,49 +143,9 @@ export const financeAccounts = pgTable(
     ),
   ],
 );
-export interface FinanceAccount {
-  id: string;
-  type: 'checking' | 'savings' | 'investment' | 'credit' | 'loan' | 'retirement' | 'depository' | 'brokerage' | 'other';
-  balance: string;
-  interestRate: string | null;
-  minimumPayment: string | null;
-  name: string;
-  mask: string | null;
-  isoCurrencyCode: string | null;
-  subtype: string | null;
-  officialName: string | null;
-  limit: string | null;
-  meta: Json | null;
-  lastUpdated: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  institutionId: string | null;
-  plaidItemId: string | null;
-  plaidAccountId: string | null;
-  userId: string;
-}
+export type FinanceAccount = InferSelectModel<typeof financeAccounts>;
+export type FinanceAccountInsert = InferInsertModel<typeof financeAccounts>;
 export type FinanceAccountSelect = FinanceAccount;
-export interface FinanceAccountInsert {
-  id?: string;
-  type: 'checking' | 'savings' | 'investment' | 'credit' | 'loan' | 'retirement' | 'depository' | 'brokerage' | 'other';
-  balance: string;
-  interestRate?: string | null;
-  minimumPayment?: string | null;
-  name: string;
-  mask?: string | null;
-  isoCurrencyCode?: string | null;
-  subtype?: string | null;
-  officialName?: string | null;
-  limit?: string | null;
-  meta?: Json | null;
-  lastUpdated?: Date | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-  institutionId?: string | null;
-  plaidItemId?: string | null;
-  plaidAccountId?: string | null;
-  userId: string;
-}
 
 export const transactions = pgTable(
   'transactions',
@@ -272,62 +188,9 @@ export const transactions = pgTable(
     ),
   ],
 );
-export interface FinanceTransaction {
-  id: string;
-  type: 'income' | 'expense' | 'credit' | 'debit' | 'transfer' | 'investment';
-  amount: string;
-  date: Date;
-  description: string | null;
-  merchantName: string | null;
-  accountId: string;
-  fromAccountId: string | null;
-  toAccountId: string | null;
-  status: string | null;
-  category: string | null;
-  parentCategory: string | null;
-  excluded: boolean | null;
-  tags: string | null;
-  accountMask: string | null;
-  note: string | null;
-  recurring: boolean | null;
-  pending: boolean | null;
-  paymentChannel: string | null;
-  location: TransactionLocation | null;
-  plaidTransactionId: string | null;
-  source: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  userId: string;
-}
+export type FinanceTransaction = InferSelectModel<typeof transactions>;
+export type FinanceTransactionInsert = InferInsertModel<typeof transactions>;
 export type FinanceTransactionSelect = FinanceTransaction;
-export interface FinanceTransactionInsert {
-  id?: string;
-  type: 'income' | 'expense' | 'credit' | 'debit' | 'transfer' | 'investment';
-  amount: string;
-  date: Date;
-  description?: string | null;
-  merchantName?: string | null;
-  accountId: string;
-  fromAccountId?: string | null;
-  toAccountId?: string | null;
-  status?: string | null;
-  category?: string | null;
-  parentCategory?: string | null;
-  excluded?: boolean | null;
-  tags?: string | null;
-  accountMask?: string | null;
-  note?: string | null;
-  recurring?: boolean | null;
-  pending?: boolean | null;
-  paymentChannel?: string | null;
-  location?: TransactionLocation | null;
-  plaidTransactionId?: string | null;
-  source?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-  userId: string;
-}
-
 
 export const budgetCategories = pgTable(
   'budget_categories',
@@ -364,111 +227,10 @@ export const budgetGoals = pgTable(
   ],
 );
 
-// Relations
-export const financialInstitutionRelations = relations(financialInstitutions, ({ many }) => ({
-  plaidItems: many(plaidItems),
-  accounts: many(financeAccounts),
-}));
-
-export const plaidItemRelations = relations(plaidItems, ({ one, many }) => ({
-  institution: one(financialInstitutions, {
-    fields: [plaidItems.institutionId],
-    references: [financialInstitutions.id],
-  }),
-  accounts: many(financeAccounts),
-  user: one(users, {
-    fields: [plaidItems.userId],
-    references: [users.id],
-  }),
-}));
-
-export const financeAccountRelations = relations(financeAccounts, ({ one, many }) => ({
-  fromTransactions: many(transactions, { relationName: 'fromAccount' }),
-  toTransactions: many(transactions, { relationName: 'toAccount' }),
-  institution: one(financialInstitutions, {
-    fields: [financeAccounts.institutionId],
-    references: [financialInstitutions.id],
-  }),
-  plaidItem: one(plaidItems, {
-    fields: [financeAccounts.plaidItemId],
-    references: [plaidItems.id],
-  }),
-  user: one(users, {
-    fields: [financeAccounts.userId],
-    references: [users.id],
-  }),
-}));
-
-export const transactionRelations = relations(transactions, ({ one }) => ({
-  fromAccount: one(financeAccounts, {
-    fields: [transactions.fromAccountId],
-    references: [financeAccounts.id],
-    relationName: 'fromAccount',
-  }),
-  toAccount: one(financeAccounts, {
-    fields: [transactions.toAccountId],
-    references: [financeAccounts.id],
-    relationName: 'toAccount',
-  }),
-  category: one(budgetCategories, {
-    fields: [transactions.category],
-    references: [budgetCategories.id],
-  }),
-  account: one(financeAccounts, {
-    fields: [transactions.accountId],
-    references: [financeAccounts.id],
-  }),
-  user: one(users, {
-    fields: [transactions.userId],
-    references: [users.id],
-  }),
-}));
-
-export const budgetCategoryRelations = relations(budgetCategories, ({ many }) => ({
-  goals: many(budgetGoals),
-  transactions: many(transactions),
-}));
-
-export interface BudgetCategory {
-  id: string;
-  name: string;
-  type: 'income' | 'expense';
-  budgetId: string | null;
-  averageMonthlyExpense: string | null;
-  color: string | null;
-  userId: string;
-}
+export type BudgetCategory = InferSelectModel<typeof budgetCategories>;
+export type BudgetCategoryInsert = InferInsertModel<typeof budgetCategories>;
 export type BudgetCategorySelect = BudgetCategory;
-export interface BudgetCategoryInsert {
-  id: string;
-  name: string;
-  type: 'income' | 'expense';
-  budgetId?: string | null;
-  averageMonthlyExpense?: string | null;
-  color?: string | null;
-  userId: string;
-}
 
-export interface BudgetGoal {
-  id: string;
-  name: string;
-  targetAmount: string;
-  currentAmount: string;
-  startDate: Date;
-  endDate: Date | null;
-  categoryId: string | null;
-  userId: string;
-}
+export type BudgetGoal = InferSelectModel<typeof budgetGoals>;
+export type BudgetGoalInsert = InferInsertModel<typeof budgetGoals>;
 export type BudgetGoalSelect = BudgetGoal;
-export interface BudgetGoalInsert {
-  id: string;
-  name: string;
-  targetAmount: string;
-  currentAmount: string;
-  startDate: Date;
-  endDate?: Date | null;
-  categoryId?: string | null;
-  userId: string;
-}
-
-

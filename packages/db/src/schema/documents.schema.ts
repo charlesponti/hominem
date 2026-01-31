@@ -1,5 +1,7 @@
-import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { users } from './users.schema'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+
+import { users } from './users.schema';
 
 export const documentTypeEnum = pgEnum('document_type', [
   // Created pgEnum for DocumentType
@@ -7,7 +9,7 @@ export const documentTypeEnum = pgEnum('document_type', [
   'coverLetter',
   'sample',
   'other',
-])
+]);
 
 export enum DocumentType {
   resume = 'resume',
@@ -33,29 +35,9 @@ export const documents = pgTable(
     // Changed from array to object for multiple indexes if needed in future
     userIdx: index('doc_user_id_idx').on(table.userId),
     typeIdx: index('doc_type_idx').on(table.type), // Added index on document type
-  })
-)
+  }),
+);
 
-export interface Document {
-  id: string;
-  name: string;
-  content: string;
-  description: string | null;
-  url: string | null;
-  type: 'resume' | 'coverLetter' | 'sample' | 'other';
-  userId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type Document = InferSelectModel<typeof documents>;
+export type DocumentInsert = InferInsertModel<typeof documents>;
 export type DocumentSelect = Document;
-export interface DocumentInsert {
-  id?: string;
-  name: string;
-  content: string;
-  description?: string | null;
-  url?: string | null;
-  type: 'resume' | 'coverLetter' | 'sample' | 'other';
-  userId?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}

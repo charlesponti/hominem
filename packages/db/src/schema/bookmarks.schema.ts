@@ -1,5 +1,5 @@
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm/relations';
 
 import { users } from './users.schema';
 
@@ -32,43 +32,6 @@ export const bookmark = pgTable(
   ],
 );
 
-export const bookmarkRelations = relations(bookmark, ({ one }) => ({
-  user: one(users, {
-    fields: [bookmark.userId],
-    references: [users.id],
-  }),
-}));
-
-export interface Bookmark {
-  id: string;
-  image: string | null;
-  title: string;
-  description: string | null;
-  imageHeight: string | null;
-  imageWidth: string | null;
-  locationAddress: string | null;
-  locationLat: string | null;
-  locationLng: string | null;
-  siteName: string;
-  url: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type Bookmark = InferSelectModel<typeof bookmark>;
+export type BookmarkInsert = InferInsertModel<typeof bookmark>;
 export type BookmarkSelect = Bookmark;
-export interface BookmarkInsert {
-  id: string;
-  image?: string | null;
-  title: string;
-  description?: string | null;
-  imageHeight?: string | null;
-  imageWidth?: string | null;
-  locationAddress?: string | null;
-  locationLat?: string | null;
-  locationLng?: string | null;
-  siteName: string;
-  url: string;
-  userId: string;
-  createdAt?: string;
-  updatedAt?: string;
-}

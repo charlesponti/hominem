@@ -351,6 +351,13 @@
       "when": 1769848831404,
       "tag": "0049_wise_dormammu",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1769889255522,
+      "tag": "0050_clean_jack_flag",
+      "breakpoints": true
     }
   ]
 }

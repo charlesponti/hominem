@@ -1,6 +1,7 @@
-import { relations } from 'drizzle-orm'
-import { foreignKey, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { users } from './users.schema'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { foreignKey, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+
+import { users } from './users.schema';
 
 export const chat = pgTable(
   'chat',
@@ -19,47 +20,35 @@ export const chat = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
-  ]
-)
-export interface Chat {
-  id: string;
-  title: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+  ],
+);
+export type Chat = InferSelectModel<typeof chat>;
+export type ChatInsert = InferInsertModel<typeof chat>;
 export type ChatSelect = Chat;
-export interface ChatInsert {
-  id: string;
-  title: string;
-  userId: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
 
 export type ChatMessageReasoning = {
-  type: 'reasoning' | 'redacted-reasoning'
-  text: string
-  signature?: string
-}
+  type: 'reasoning' | 'redacted-reasoning';
+  text: string;
+  signature?: string;
+};
 
 export type ChatMessageToolCall = {
-  type: 'tool-call' | 'tool-result'
-  toolName: string
-  toolCallId: string
-  args?: Record<string, unknown>
-  result?: unknown
-  isError?: boolean
-}
+  type: 'tool-call' | 'tool-result';
+  toolName: string;
+  toolCallId: string;
+  args?: Record<string, unknown>;
+  result?: unknown;
+  isError?: boolean;
+};
 
 export type ChatMessageFile = {
-  type: 'image' | 'file'
-  filename?: string
-  mimeType?: string
-  [key: string]: unknown
-}
+  type: 'image' | 'file';
+  filename?: string;
+  mimeType?: string;
+  [key: string]: unknown;
+};
 
-export type ChatMessageRole = 'user' | 'assistant' | 'tool'
+export type ChatMessageRole = 'user' | 'assistant' | 'tool';
 
 export const chatMessage = pgTable(
   'chat_message',
@@ -92,53 +81,8 @@ export const chatMessage = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
-  ]
-)
-export interface ChatMessage {
-  id: string;
-  chatId: string;
-  userId: string;
-  role: ChatMessageRole;
-  content: string;
-  toolCalls: ChatMessageToolCall[] | null;
-  reasoning: string | null;
-  files: ChatMessageFile[] | null;
-  parentMessageId: string | null;
-  messageIndex: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+  ],
+);
+export type ChatMessage = InferSelectModel<typeof chatMessage>;
+export type ChatMessageInsert = InferInsertModel<typeof chatMessage>;
 export type ChatMessageSelect = ChatMessage;
-export interface ChatMessageInsert {
-  id: string;
-  chatId: string;
-  userId: string;
-  role: ChatMessageRole;
-  content: string;
-  toolCalls?: ChatMessageToolCall[] | null;
-  reasoning?: string | null;
-  files?: ChatMessageFile[] | null;
-  parentMessageId?: string | null;
-  messageIndex?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export const chatRelations = relations(chat, ({ one, many }) => ({
-  user: one(users, {
-    fields: [chat.userId],
-    references: [users.id],
-  }),
-  chatMessages: many(chatMessage),
-}))
-
-export const chatMessageRelations = relations(chatMessage, ({ one }) => ({
-  chat: one(chat, {
-    fields: [chatMessage.chatId],
-    references: [chat.id],
-  }),
-  user: one(users, {
-    fields: [chatMessage.userId],
-    references: [users.id],
-  }),
-}))

@@ -1,7 +1,8 @@
-import { relations } from 'drizzle-orm'
-import { integer, pgTable, uuid } from 'drizzle-orm/pg-core'
-import { item } from './items.schema'
-import { trips } from './trips.schema'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { integer, pgTable, uuid } from 'drizzle-orm/pg-core';
+
+import { item } from './items.schema';
+import { trips } from './trips.schema';
 
 export const tripItems = pgTable('trip_items', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -13,31 +14,8 @@ export const tripItems = pgTable('trip_items', {
     .references(() => item.id, { onDelete: 'cascade' }),
   day: integer('day').default(1).notNull(),
   order: integer('order').default(0).notNull(),
-})
+});
 
-export interface TripItem {
-  id: string;
-  tripId: string;
-  itemId: string;
-  day: number;
-  order: number;
-}
-
-export interface TripItemInsert {
-  id?: string;
-  tripId: string;
-  itemId: string;
-  day?: number;
-  order?: number;
-}
-
-export const tripItemsRelations = relations(tripItems, ({ one }) => ({
-  trip: one(trips, {
-    fields: [tripItems.tripId],
-    references: [trips.id],
-  }),
-  item: one(item, {
-    fields: [tripItems.itemId],
-    references: [item.id],
-  }),
-}))
+export type TripItem = InferSelectModel<typeof tripItems>;
+export type TripItemInsert = InferInsertModel<typeof tripItems>;
+export type TripItemSelect = TripItem;

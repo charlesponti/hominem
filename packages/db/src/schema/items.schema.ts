@@ -1,3 +1,4 @@
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
   foreignKey,
   index,
@@ -7,13 +8,12 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm/relations'
-import { list } from './lists.schema'
-import { place } from './places.schema'
-import { users } from './users.schema'
+} from 'drizzle-orm/pg-core';
 
-export const itemType = pgEnum('ItemType', ['FLIGHT', 'PLACE'])
+import { list } from './lists.schema';
+import { users } from './users.schema';
+
+export const itemType = pgEnum('ItemType', ['FLIGHT', 'PLACE']);
 
 export const item = pgTable(
   'item',
@@ -31,7 +31,7 @@ export const item = pgTable(
     uniqueIndex('item_listId_itemId_key').using(
       'btree',
       table.listId.asc().nullsLast(),
-      table.itemId.asc().nullsLast()
+      table.itemId.asc().nullsLast(),
     ),
     // Composite index for getItemsForPlace queries
     index('item_itemId_itemType_idx').on(table.itemId, table.itemType),
@@ -53,37 +53,9 @@ export const item = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
-  ]
-)
-export interface Item {
-  id: string;
-  type: string;
-  createdAt: string;
-  updatedAt: string;
-  itemId: string;
-  listId: string;
-  userId: string;
-  itemType: 'FLIGHT' | 'PLACE';
-}
-export interface ItemInsert {
-  id: string;
-  type: string;
-  createdAt?: string;
-  updatedAt?: string;
-  itemId: string;
-  listId: string;
-  userId: string;
-  itemType?: 'FLIGHT' | 'PLACE';
-}
+  ],
+);
 
-export const itemRelations = relations(item, ({ one, many }) => ({
-  list: one(list, {
-    fields: [item.listId],
-    references: [list.id],
-  }),
-  user: one(users, {
-    fields: [item.userId],
-    references: [users.id],
-  }),
-  places: many(place),
-}))
+export type Item = InferSelectModel<typeof item>;
+export type ItemInsert = InferInsertModel<typeof item>;
+export type ItemSelect = Item;

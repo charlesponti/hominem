@@ -1,28 +1,16 @@
 /**
- * Computed Trips Types
+ * Computed Trip Types
  *
- * This file contains all derived types computed from Trips schemas.
+ * This file contains all derived types computed from the Trip schema.
  * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from trips.schema.ts
  */
 
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
-import { trips } from './trips.schema'
+import type { Trip, TripInsert, TripSelect } from './trips.schema';
 
-// Inferred types from Drizzle schema
-export type Trip = InferSelectModel<typeof trips>
-export type TripInsert = InferInsertModel<typeof trips>
+export type { Trip, TripInsert, TripSelect };
 
 // Legacy aliases for backward compatibility
-export type TripOutput = Trip
-export type TripInput = TripInsert
-
-// ============================================
-// RE-EXPORT DRIZZLE TABLES (needed for db.query)
-// ============================================
-
-export {
-  trips,
-  tripsRelations,
-} from './trips.schema'
+export type TripOutput = Trip;
+export type TripInput = TripInsert;

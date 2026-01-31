@@ -1,6 +1,7 @@
-import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm/relations'
-import { users } from './users.schema'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+
+import { users } from './users.schema';
 
 export const movie = pgTable('movie', {
   id: uuid('id').primaryKey().notNull(),
@@ -10,7 +11,7 @@ export const movie = pgTable('movie', {
   director: text('director'),
   createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
-})
+});
 
 export const movieViewings = pgTable(
   'movie_viewings',
@@ -36,56 +37,13 @@ export const movieViewings = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
-  ]
-)
+  ],
+);
 
-export const movieViewingsRelations = relations(movieViewings, ({ one }) => ({
-  movie: one(movie, {
-    fields: [movieViewings.movieId],
-    references: [movie.id],
-  }),
-  user: one(users, {
-    fields: [movieViewings.userId],
-    references: [users.id],
-  }),
-}))
+export type Movie = InferSelectModel<typeof movie>;
+export type MovieInsert = InferInsertModel<typeof movie>;
+export type MovieSelect = Movie;
 
-export const movieRelations = relations(movie, ({ many }) => ({
-  movieViewings: many(movieViewings),
-}))
-
-export interface Movie {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  director: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface MovieInsert {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  director?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface MovieViewing {
-  id: string;
-  movieId: string;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface MovieViewingInsert {
-  id: string;
-  movieId: string;
-  userId: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+export type MovieViewing = InferSelectModel<typeof movieViewings>;
+export type MovieViewingInsert = InferInsertModel<typeof movieViewings>;
+export type MovieViewingSelect = MovieViewing;

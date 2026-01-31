@@ -7,28 +7,20 @@
  * Rule: Import from this file, not from music.schema.ts
  */
 
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
-import { artists, userArtists } from './music.schema'
+import type {
+  Artist,
+  ArtistInsert,
+  ArtistSelect,
+  UserArtist,
+  UserArtistInsert,
+  UserArtistSelect,
+} from './music.schema';
 
-// Inferred types from Drizzle schema
-export type Artist = InferSelectModel<typeof artists>
-export type ArtistInsert = InferInsertModel<typeof artists>
-
-export type UserArtist = InferSelectModel<typeof userArtists>
-export type UserArtistInsert = InferInsertModel<typeof userArtists>
+export type { Artist, ArtistInsert, ArtistSelect, UserArtist, UserArtistInsert, UserArtistSelect };
 
 // Legacy aliases for backward compatibility
-export type ArtistOutput = Artist
-export type ArtistInput = ArtistInsert
+export type ArtistOutput = Artist;
+export type ArtistInput = ArtistInsert;
 
-export type UserArtistOutput = UserArtist
-export type UserArtistInput = UserArtistInsert
-
-// ============================================
-// RE-EXPORT DRIZZLE TABLES
-// ============================================
-
-export {
-  artists,
-  userArtists,
-} from './music.schema'
+export type UserArtistOutput = UserArtist;
+export type UserArtistInput = UserArtistInsert;

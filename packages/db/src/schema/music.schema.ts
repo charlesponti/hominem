@@ -1,3 +1,4 @@
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
   boolean,
   decimal,
@@ -9,8 +10,9 @@ import {
   text,
   timestamp,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { users } from './users.schema'
+} from 'drizzle-orm/pg-core';
+
+import { users } from './users.schema';
 
 export const artists = pgTable(
   'artists',
@@ -49,51 +51,12 @@ export const artists = pgTable(
     index('artist_name_idx').on(table.name),
     index('spotify_id_idx').on(table.spotifyId),
     index('genres_idx').on(table.genres),
-  ]
-)
+  ],
+);
 
-export interface Artist {
-  id: string;
-  name: string;
-  slug: string;
-  hometown: string | null;
-  country: string | null;
-  bandMembers: number;
-  genres: string[];
-  averageTicketPrice: string;
-  averagePerformanceAttendance: number | null;
-  sellsMerchandise: boolean;
-  averageMerchandisePrice: string | null;
-  imageUrl: string | null;
-  websiteUrl: string | null;
-  spotifyFollowers: number;
-  spotifyUrl: string | null;
-  spotifyId: string;
-  spotifyData: unknown;
-  createdAt: Date;
-  updatedAt: Date;
-}
-export interface ArtistInsert {
-  id?: string;
-  name: string;
-  slug: string;
-  hometown?: string | null;
-  country?: string | null;
-  bandMembers?: number;
-  genres: string[];
-  averageTicketPrice: string;
-  averagePerformanceAttendance?: number | null;
-  sellsMerchandise?: boolean;
-  averageMerchandisePrice?: string | null;
-  imageUrl?: string | null;
-  websiteUrl?: string | null;
-  spotifyFollowers?: number;
-  spotifyUrl?: string | null;
-  spotifyId: string;
-  spotifyData: unknown;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+export type Artist = InferSelectModel<typeof artists>;
+export type ArtistInsert = InferInsertModel<typeof artists>;
+export type ArtistSelect = Artist;
 
 export const userArtists = pgTable(
   'user_artists',
@@ -120,5 +83,9 @@ export const userArtists = pgTable(
     }),
     index('user_id_idx').on(table.userId),
     index('artist_id_idx').on(table.artistId),
-  ]
-)
+  ],
+);
+
+export type UserArtist = InferSelectModel<typeof userArtists>;
+export type UserArtistInsert = InferInsertModel<typeof userArtists>;
+export type UserArtistSelect = UserArtist;

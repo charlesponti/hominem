@@ -1,6 +1,7 @@
-import { relations } from 'drizzle-orm'
-import { pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core'
-import { users } from './users.schema'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
+
+import { users } from './users.schema';
 
 export const surveys = pgTable('surveys', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -9,7 +10,11 @@ export const surveys = pgTable('surveys', {
   userId: uuid('user_id')
     .references(() => users.id)
     .notNull(),
-})
+});
+
+export type Survey = InferSelectModel<typeof surveys>;
+export type SurveyInsert = InferInsertModel<typeof surveys>;
+export type SurveySelect = Survey;
 
 export const surveyOptions = pgTable('survey_options', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -18,7 +23,11 @@ export const surveyOptions = pgTable('survey_options', {
   surveyId: uuid('survey_id')
     .references(() => surveys.id)
     .notNull(),
-})
+});
+
+export type SurveyOption = InferSelectModel<typeof surveyOptions>;
+export type SurveyOptionInsert = InferInsertModel<typeof surveyOptions>;
+export type SurveyOptionSelect = SurveyOption;
 
 export const surveyVotes = pgTable('survey_votes', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -31,70 +40,8 @@ export const surveyVotes = pgTable('survey_votes', {
   userId: uuid('user_id')
     .references(() => users.id)
     .notNull(),
-})
+});
 
-export const surveysRelations = relations(surveys, ({ many }) => ({
-  options: many(surveyOptions),
-  votes: many(surveyVotes),
-}))
-
-export const surveyOptionsRelations = relations(surveyOptions, ({ one, many }) => ({
-  survey: one(surveys, {
-    fields: [surveyOptions.surveyId],
-    references: [surveys.id],
-  }),
-  votes: many(surveyVotes),
-}))
-
-export const surveyVotesRelations = relations(surveyVotes, ({ one }) => ({
-  survey: one(surveys, {
-    fields: [surveyVotes.surveyId],
-    references: [surveys.id],
-  }),
-  option: one(surveyOptions, {
-    fields: [surveyVotes.optionId],
-    references: [surveyOptions.id],
-  }),
-}))
-
-export interface Survey {
-  id: string;
-  name: string;
-  description: string | null;
-  userId: string;
-}
-
-export interface SurveyInsert {
-  id?: string;
-  name: string;
-  description?: string | null;
-  userId: string;
-}
-
-export interface SurveyOption {
-  id: string;
-  title: string;
-  description: string | null;
-  surveyId: string;
-}
-
-export interface SurveyOptionInsert {
-  id?: string;
-  title: string;
-  description?: string | null;
-  surveyId: string;
-}
-
-export interface SurveyVote {
-  id: string;
-  optionId: string;
-  surveyId: string;
-  userId: string;
-}
-
-export interface SurveyVoteInsert {
-  id?: string;
-  optionId: string;
-  surveyId: string;
-  userId: string;
-}
+export type SurveyVote = InferSelectModel<typeof surveyVotes>;
+export type SurveyVoteInsert = InferInsertModel<typeof surveyVotes>;
+export type SurveyVoteSelect = SurveyVote;

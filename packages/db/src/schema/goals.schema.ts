@@ -1,15 +1,17 @@
-import { integer, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import * as z from 'zod'
-import { users } from './users.schema'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { integer, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
-export const GoalStatusSchema = z.enum(['todo', 'in_progress', 'completed', 'archived'])
-export type GoalStatus = z.infer<typeof GoalStatusSchema>
+import { users } from './users.schema';
+
+export const GoalStatusSchema = z.enum(['todo', 'in_progress', 'completed', 'archived']);
+export type GoalStatus = z.infer<typeof GoalStatusSchema>;
 
 export const GoalMilestoneSchema = z.object({
   description: z.string(),
   completed: z.boolean().default(false),
-})
-export type GoalMilestone = z.infer<typeof GoalMilestoneSchema>
+});
+export type GoalMilestone = z.infer<typeof GoalMilestoneSchema>;
 
 export const GoalSchema = z.object({
   id: z.uuid(),
@@ -24,7 +26,7 @@ export const GoalSchema = z.object({
   dueDate: z.string().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
-})
+});
 
 export const goals = pgTable('goals', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -41,33 +43,8 @@ export const goals = pgTable('goals', {
   dueDate: timestamp('due_date', { precision: 3, mode: 'string' }),
   createdAt: timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   updatedAt: timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
-})
-export interface Goal {
-  id: string;
-  userId: string;
-  title: string;
-  description: string | null;
-  goalCategory: string | null;
-  status: string;
-  priority: number | null;
-  milestones: GoalMilestone[] | null;
-  startDate: string | null;
-  dueDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+});
+
+export type Goal = InferSelectModel<typeof goals>;
+export type GoalInsert = InferInsertModel<typeof goals>;
 export type GoalSelect = Goal;
-export interface GoalInsert {
-  id?: string;
-  userId: string;
-  title: string;
-  description?: string | null;
-  goalCategory?: string | null;
-  status?: string;
-  priority?: number | null;
-  milestones?: GoalMilestone[] | null;
-  startDate?: string | null;
-  dueDate?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-}

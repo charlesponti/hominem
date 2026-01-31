@@ -1,3 +1,4 @@
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
   index,
   integer,
@@ -8,11 +9,12 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { job_applications } from './career.schema'
-import { companies } from './company.schema'
-import { contacts } from './contacts.schema' // For interviewers
-import { users } from './users.schema'
+} from 'drizzle-orm/pg-core';
+
+import { job_applications } from './career.schema';
+import { companies } from './company.schema';
+import { contacts } from './contacts.schema'; // For interviewers
+import { users } from './users.schema';
 
 export const interviewTypeEnum = pgEnum('interview_type', [
   'PhoneScreen',
@@ -23,7 +25,7 @@ export const interviewTypeEnum = pgEnum('interview_type', [
   'Final',
   'Informational',
   'Other',
-])
+]);
 
 export const interviewFormatEnum = pgEnum('interview_format', [
   'Phone',
@@ -31,7 +33,7 @@ export const interviewFormatEnum = pgEnum('interview_format', [
   'OnSite',
   'TakeHomeAssignment',
   'Other',
-])
+]);
 
 export const interviewStatusEnum = pgEnum('interview_status', [
   // Enum for interview status
@@ -40,7 +42,7 @@ export const interviewStatusEnum = pgEnum('interview_status', [
   'Cancelled',
   'Rescheduled',
   'PendingFeedback',
-])
+]);
 
 export const interviews = pgTable(
   'interviews',
@@ -72,47 +74,12 @@ export const interviews = pgTable(
     jobApplicationIdx: index('interview_job_app_id_idx').on(table.jobApplicationId),
     companyIdx: index('interview_company_id_idx').on(table.companyId),
     scheduledAtIdx: index('interview_scheduled_at_idx').on(table.scheduledAt),
-  })
-)
+  }),
+);
 
-export interface Interview {
-  id: string;
-  userId: string;
-  jobApplicationId: string;
-  companyId: string | null;
-  type: 'PhoneScreen' | 'Technical' | 'Behavioral' | 'Panel' | 'CaseStudy' | 'Final' | 'Informational' | 'Other';
-  format: 'Phone' | 'VideoCall' | 'OnSite' | 'TakeHomeAssignment' | 'Other';
-  scheduledAt: Date;
-  durationMinutes: number | null;
-  location: string | null;
-  notes: string | null;
-  feedback: string | null;
-  thankYouNoteSent: Date | null;
-  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'Rescheduled' | 'PendingFeedback' | null;
-  questionsAsked: unknown;
-  questionsToAsk: unknown;
-  createdAt: Date;
-  updatedAt: Date;
-}
-export interface InterviewInsert {
-  id?: string;
-  userId: string;
-  jobApplicationId: string;
-  companyId?: string | null;
-  type: 'PhoneScreen' | 'Technical' | 'Behavioral' | 'Panel' | 'CaseStudy' | 'Final' | 'Informational' | 'Other';
-  format: 'Phone' | 'VideoCall' | 'OnSite' | 'TakeHomeAssignment' | 'Other';
-  scheduledAt: Date;
-  durationMinutes?: number | null;
-  location?: string | null;
-  notes?: string | null;
-  feedback?: string | null;
-  thankYouNoteSent?: Date | null;
-  status?: 'Scheduled' | 'Completed' | 'Cancelled' | 'Rescheduled' | 'PendingFeedback' | null;
-  questionsAsked?: unknown;
-  questionsToAsk?: unknown;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+export type Interview = InferSelectModel<typeof interviews>;
+export type InterviewInsert = InferInsertModel<typeof interviews>;
+export type InterviewSelect = Interview;
 export type NewInterview = InterviewInsert;
 
 // Junction table for interviewers (contacts) and interviews
@@ -132,25 +99,13 @@ export const interview_interviewers = pgTable(
   (table) => ({
     interviewInterviewerIdx: uniqueIndex('interview_interviewer_unique_idx').on(
       table.interviewId,
-      table.contactId
+      table.contactId,
     ),
     interviewIdx: index('ii_interview_id_idx').on(table.interviewId),
     contactIdx: index('ii_contact_id_idx').on(table.contactId),
-  })
-)
+  }),
+);
 
-export interface InterviewInterviewer {
-  id: string;
-  interviewId: string;
-  contactId: string;
-  role: string | null;
-  createdAt: Date;
-}
-export interface InterviewInterviewerInsert {
-  id?: string;
-  interviewId: string;
-  contactId: string;
-  role?: string | null;
-  createdAt?: Date;
-}
+export type InterviewInterviewer = InferSelectModel<typeof interview_interviewers>;
+export type InterviewInterviewerInsert = InferInsertModel<typeof interview_interviewers>;
 export type NewInterviewInterviewer = InterviewInterviewerInsert;

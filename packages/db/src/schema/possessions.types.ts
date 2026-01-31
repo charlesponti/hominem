@@ -7,16 +7,10 @@
  * Rule: Import from this file, not from possessions.schema.ts
  */
 
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
-import { possessions } from './possessions.schema'
+import type { Possession, PossessionInsert, PossessionSelect } from './possessions.schema';
 
-// Inferred types from Drizzle schema
-export type Possession = InferSelectModel<typeof possessions>
-export type PossessionInsert = InferInsertModel<typeof possessions>
+export type { Possession, PossessionInsert, PossessionSelect };
 
 // Legacy aliases for backward compatibility
-export type PossessionOutput = Possession
-export type PossessionInput = PossessionInsert
-export type PossessionSelect = Possession
-
-
+export type PossessionOutput = Possession;
+export type PossessionInput = PossessionInsert;

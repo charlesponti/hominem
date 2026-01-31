@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
   boolean,
   doublePrecision,
@@ -10,9 +10,10 @@ import {
   text,
   timestamp,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { item } from './items.schema'
-import { tags } from './tags.schema'
+} from 'drizzle-orm/pg-core';
+
+import { tags } from './tags.schema';
+import { item } from './items.schema';
 
 export const place = pgTable(
   'place',
@@ -82,82 +83,27 @@ export const place = pgTable(
     index('place_itemId_idx').on(table.itemId),
     // Index for recent places queries
     index('place_updatedAt_idx').on(table.updatedAt),
-  ]
-)
-export interface Place {
-  id: string;
-  name: string;
-  description: string | null;
-  address: string | null;
-  createdAt: string;
-  updatedAt: string;
-  itemId: string | null;
-  googleMapsId: string;
-  types: string[] | null;
-  imageUrl: string | null;
-  phoneNumber: string | null;
-  rating: number | null;
-  websiteUri: string | null;
-  photos: string[] | null;
-  priceLevel: number | null;
-  location: [number, number];
-  latitude: number | null;
-  longitude: number | null;
-  bestFor: string | null;
-  isPublic: boolean;
-  wifiInfo: string | null;
-  businessStatus: string | null;
-  openingHours: string | null;
-}
+  ],
+);
+export type Place = InferSelectModel<typeof place>;
+export type PlaceInsert = InferInsertModel<typeof place>;
 export type PlaceSelect = Place;
-export interface PlaceInsert {
-  id?: string;
-  name: string;
-  description?: string | null;
-  address?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-  itemId?: string | null;
-  googleMapsId: string;
-  types?: string[] | null;
-  imageUrl?: string | null;
-  phoneNumber?: string | null;
-  rating?: number | null;
-  websiteUri?: string | null;
-  photos?: string[] | null;
-  priceLevel?: number | null;
-  location: [number, number];
-  latitude?: number | null;
-  longitude?: number | null;
-  bestFor?: string | null;
-  isPublic?: boolean;
-  wifiInfo?: string | null;
-  businessStatus?: string | null;
-  openingHours?: string | null;
-}
-
-export const placeRelations = relations(place, ({ one }) => ({
-  item: one(item, {
-    fields: [place.itemId],
-    references: [item.id],
-  }),
-}))
 
 export const placeTags = pgTable('place_tags', {
   placeId: uuid('place_id').references(() => place.id),
   tagId: uuid('tag_id').references(() => tags.id),
-})
+});
 
 export interface WifiInfo {
   /**
    * The WiFi network name.
    */
-  network: string
+  network: string;
 
   /**
    * The WiFi password.
    */
-  password: string
+  password: string;
 }
 
 export const routeWaypoints = pgTable('route_waypoints', {
@@ -166,7 +112,7 @@ export const routeWaypoints = pgTable('route_waypoints', {
   longitude: integer('longitude').notNull(),
   elevation: integer('elevation'),
   timestamp: integer('timestamp'),
-})
+});
 
 export const transportationRoutes = pgTable('transportation_routes', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -195,4 +141,4 @@ export const transportationRoutes = pgTable('transportation_routes', {
    * The estimated time to complete the route in minutes.
    */
   estimatedTime: integer('estimated_time').notNull(),
-})
+});

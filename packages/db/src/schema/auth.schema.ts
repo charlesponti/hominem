@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
   boolean,
   foreignKey,
@@ -9,10 +9,11 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { users } from './users.schema'
+} from 'drizzle-orm/pg-core';
 
-export const tokenType = pgEnum('TokenType', ['EMAIL', 'API'])
+import { users } from './users.schema';
+
+export const tokenType = pgEnum('TokenType', ['EMAIL', 'API']);
 
 export const verificationToken = pgTable(
   'verification_token',
@@ -25,11 +26,11 @@ export const verificationToken = pgTable(
     uniqueIndex('VerificationToken_identifier_token_key').using(
       'btree',
       table.identifier.asc().nullsLast(),
-      table.token.asc().nullsLast()
+      table.token.asc().nullsLast(),
     ),
     uniqueIndex('VerificationToken_token_key').using('btree', table.token.asc().nullsLast()),
-  ]
-)
+  ],
+);
 
 export const token = pgTable(
   'token',
@@ -59,8 +60,8 @@ export const token = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('restrict'),
-  ]
-)
+  ],
+);
 
 export const session = pgTable(
   'session',
@@ -79,72 +80,14 @@ export const session = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
-  ]
-)
+  ],
+);
 
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(users, {
-    fields: [session.userId],
-    references: [users.id],
-  }),
-}))
+export type VerificationToken = InferSelectModel<typeof verificationToken>;
+export type VerificationTokenInsert = InferInsertModel<typeof verificationToken>;
 
-export const tokenRelations = relations(token, ({ one }) => ({
-  user: one(users, {
-    fields: [token.userId],
-    references: [users.id],
-  }),
-}))
+export type Token = InferSelectModel<typeof token>;
+export type TokenInsert = InferInsertModel<typeof token>;
 
-export interface VerificationToken {
-  identifier: string;
-  token: string;
-  expires: string;
-}
-
-export interface VerificationTokenInsert {
-  identifier: string;
-  token: string;
-  expires: string;
-}
-
-export interface Token {
-  id: number;
-  createdAt: string;
-  updatedAt: string;
-  type: 'EMAIL' | 'API';
-  emailToken: string | null;
-  valid: boolean;
-  expiration: string;
-  userId: string;
-  accessToken: string | null;
-  refreshToken: string | null;
-}
-
-export interface TokenInsert {
-  id?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  type: 'EMAIL' | 'API';
-  emailToken?: string | null;
-  valid?: boolean;
-  expiration: string;
-  userId: string;
-  accessToken?: string | null;
-  refreshToken?: string | null;
-}
-
-export interface Session {
-  id: string;
-  sessionToken: string;
-  userId: string;
-  expires: string;
-}
-
-export interface SessionInsert {
-  id: string;
-  sessionToken: string;
-  userId: string;
-  expires: string;
-}
-
+export type Session = InferSelectModel<typeof session>;
+export type SessionInsert = InferInsertModel<typeof session>;

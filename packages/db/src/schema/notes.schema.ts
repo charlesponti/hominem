@@ -1,4 +1,4 @@
-import { relations, sql } from 'drizzle-orm';
+import { type InferInsertModel, type InferSelectModel, sql } from 'drizzle-orm';
 import { boolean, index, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import * as z from 'zod';
 
@@ -35,13 +35,6 @@ export const notes = pgTable(
     ),
   ],
 );
-
-export const notesRelations = relations(notes, ({ one }) => ({
-  user: one(users, {
-    fields: [notes.userId],
-    references: [users.id],
-  }),
-}));
 
 export type NoteMention = {
   id: string;
@@ -107,34 +100,6 @@ export const TweetMetadataSchema = z.object({
 
 export type TweetMetadata = z.infer<typeof TweetMetadataSchema>;
 
-export interface Note {
-  id: string;
-  type: AllContentType;
-  title: string | null;
-  content: string;
-  tags: Array<ContentTag>;
-  mentions: Array<NoteMention> | undefined;
-  analysis: unknown;
-  taskMetadata: TaskMetadata | null;
-  tweetMetadata: TweetMetadata | null;
-  userId: string;
-  synced: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface NoteInsert {
-  id?: string;
-  type?: AllContentType;
-  title?: string | null;
-  content: string;
-  tags?: Array<ContentTag>;
-  mentions?: Array<NoteMention> | undefined;
-  analysis?: unknown;
-  taskMetadata?: TaskMetadata | null;
-  tweetMetadata?: TweetMetadata | null;
-  userId: string;
-  synced?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
+export type Note = InferSelectModel<typeof notes>;
+export type NoteInsert = InferInsertModel<typeof notes>;
+export type NoteSelect = Note;

@@ -1,3 +1,4 @@
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
   boolean,
   foreignKey,
@@ -7,7 +8,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
-} from 'drizzle-orm/pg-core'
+} from 'drizzle-orm/pg-core';
 
 export const users = pgTable(
   'users',
@@ -44,38 +45,11 @@ export const users = pgTable(
 
     // Unique constraint on email (for migration scenarios)
     uniqueIndex('User_email_key').using('btree', table.email.asc().nullsLast()),
-  ]
-)
-export interface UserInsert {
-  id: string;
-  supabaseId: string;
-  email: string;
-  name?: string | null;
-  image?: string | null;
-  photoUrl?: string | null;
-  isAdmin?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  birthday?: string | null;
-  emailVerified?: string | null;
-}
-
-export interface User {
-  id: string;
-  supabaseId: string;
-  email: string;
-  name: string | null;
-  image: string | null;
-  photoUrl: string | null;
-  isAdmin: boolean;
-  createdAt: string;
-  updatedAt: string;
-  birthday: string | null;
-  emailVerified: string | null;
-}
-
+  ],
+);
+export type User = InferSelectModel<typeof users>;
+export type UserInsert = InferInsertModel<typeof users>;
 export type UserSelect = User;
-
 
 export const account = pgTable(
   'account',
@@ -99,7 +73,7 @@ export const account = pgTable(
     uniqueIndex('Account_provider_providerAccountId_key').using(
       'btree',
       table.provider.asc().nullsLast(),
-      table.providerAccountId.asc().nullsLast()
+      table.providerAccountId.asc().nullsLast(),
     ),
     foreignKey({
       columns: [table.userId],
@@ -108,36 +82,8 @@ export const account = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
-  ]
-)
-export interface Account {
-  id: string;
-  userId: string;
-  type: string;
-  provider: string;
-  providerAccountId: string;
-  refreshToken: string | null;
-  accessToken: string | null;
-  expiresAt: string | null;
-  tokenType: string | null;
-  scope: string | null;
-  idToken: string | null;
-  sessionState: string | null;
-}
-
+  ],
+);
+export type Account = InferSelectModel<typeof account>;
+export type AccountInsert = InferInsertModel<typeof account>;
 export type AccountSelect = Account;
-
-export interface AccountInsert {
-  id: string;
-  userId: string;
-  type: string;
-  provider: string;
-  providerAccountId: string;
-  refreshToken?: string | null;
-  accessToken?: string | null;
-  expiresAt?: string | null;
-  tokenType?: string | null;
-  scope?: string | null;
-  idToken?: string | null;
-  sessionState?: string | null;
-}

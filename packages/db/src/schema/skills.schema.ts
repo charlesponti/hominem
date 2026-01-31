@@ -1,3 +1,4 @@
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
   boolean,
   index,
@@ -8,9 +9,10 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { jobs } from './career.schema' // Added import for jobs
-import { users } from './users.schema'
+} from 'drizzle-orm/pg-core';
+
+import { jobs } from './career.schema';
+import { users } from './users.schema';
 
 export const skillCategoryEnum = pgEnum('skill_category', [
   'Technical',
@@ -19,7 +21,7 @@ export const skillCategoryEnum = pgEnum('skill_category', [
   'Tool',
   'Framework',
   'Other',
-])
+]);
 
 export const skillProficiencyEnum = pgEnum('skill_proficiency', [
   // Enum for skill proficiency
@@ -27,7 +29,7 @@ export const skillProficiencyEnum = pgEnum('skill_proficiency', [
   'Intermediate',
   'Advanced',
   'Expert',
-])
+]);
 
 export const jobSkillImportanceEnum = pgEnum('job_skill_importance', [
   // Enum for job skill importance
@@ -35,7 +37,7 @@ export const jobSkillImportanceEnum = pgEnum('job_skill_importance', [
   'Preferred',
   'Optional',
   'NiceToHave',
-])
+]);
 
 export const skills = pgTable(
   'skills',
@@ -48,26 +50,13 @@ export const skills = pgTable(
     // parentSkillId: uuid('parent_skill_id').references((): AnyPgColumn => skills.id),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
-  }
+  },
   // Removed redundant uniqueIndex for name as .unique() handles it
-)
+);
 
-export interface Skill {
-  id: string;
-  name: string;
-  description: string | null;
-  category: 'Technical' | 'Soft' | 'Language' | 'Tool' | 'Framework' | 'Other' | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-export interface SkillInsert {
-  id?: string;
-  name: string;
-  description?: string | null;
-  category?: 'Technical' | 'Soft' | 'Language' | 'Tool' | 'Framework' | 'Other' | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+export type Skill = InferSelectModel<typeof skills>;
+export type SkillInsert = InferInsertModel<typeof skills>;
+export type SkillSelect = Skill;
 export type NewSkill = SkillInsert;
 
 export const user_skills = pgTable(
@@ -92,33 +81,12 @@ export const user_skills = pgTable(
     userSkillIdx: uniqueIndex('user_skill_unique_idx').on(table.userId, table.skillId),
     userIdx: index('user_skill_user_id_idx').on(table.userId),
     skillIdx: index('user_skill_skill_id_idx').on(table.skillId),
-  })
-)
+  }),
+);
 
-export interface UserSkill {
-  id: string;
-  userId: string;
-  skillId: string;
-  proficiencyLevel: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert' | null;
-  yearsOfExperience: number | null;
-  lastUsedDate: Date | null;
-  isVerified: boolean;
-  notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-export interface UserSkillInsert {
-  id?: string;
-  userId: string;
-  skillId: string;
-  proficiencyLevel?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert' | null;
-  yearsOfExperience?: number | null;
-  lastUsedDate?: Date | null;
-  isVerified?: boolean;
-  notes?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+export type UserSkill = InferSelectModel<typeof user_skills>;
+export type UserSkillInsert = InferInsertModel<typeof user_skills>;
+export type UserSkillSelect = UserSkill;
 export type NewUserSkill = UserSkillInsert;
 
 export const job_skills = pgTable(
@@ -140,25 +108,10 @@ export const job_skills = pgTable(
     jobSkillIdx: uniqueIndex('job_skill_unique_idx').on(table.jobId, table.skillId),
     jobIdx: index('job_skill_job_id_idx').on(table.jobId),
     skillIdx: index('job_skill_skill_id_idx').on(table.skillId),
-  })
-)
+  }),
+);
 
-export interface JobSkill {
-  id: string;
-  jobId: string;
-  skillId: string;
-  importanceLevel: 'Required' | 'Preferred' | 'Optional' | 'NiceToHave' | null;
-  notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-export interface JobSkillInsert {
-  id?: string;
-  jobId: string;
-  skillId: string;
-  importanceLevel?: 'Required' | 'Preferred' | 'Optional' | 'NiceToHave' | null;
-  notes?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+export type JobSkill = InferSelectModel<typeof job_skills>;
+export type JobSkillInsert = InferInsertModel<typeof job_skills>;
+export type JobSkillSelect = JobSkill;
 export type NewJobSkill = JobSkillInsert;

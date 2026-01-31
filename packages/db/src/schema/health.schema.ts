@@ -1,4 +1,5 @@
-import { integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const health = pgTable('health', {
   id: serial('id').primaryKey(),
@@ -9,26 +10,8 @@ export const health = pgTable('health', {
   caloriesBurned: integer('calories_burned').notNull(),
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow(),
-})
+});
 
-export interface Health {
-  id: number;
-  userId: string;
-  date: Date;
-  activityType: string;
-  duration: number;
-  caloriesBurned: number;
-  notes: string | null;
-  createdAt: Date | null;
-}
-export interface HealthInsert {
-  id?: number;
-  userId: string;
-  date: Date;
-  activityType: string;
-  duration: number;
-  caloriesBurned: number;
-  notes?: string | null;
-  createdAt?: Date | null;
-}
+export type Health = InferSelectModel<typeof health>;
+export type HealthInsert = InferInsertModel<typeof health>;
 export type HealthSelect = Health;

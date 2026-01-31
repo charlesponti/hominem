@@ -1,3 +1,4 @@
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
   boolean,
   index,
@@ -8,9 +9,10 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { contacts } from './contacts.schema' // For attendees
-import { users } from './users.schema'
+} from 'drizzle-orm/pg-core';
+
+import { contacts } from './contacts.schema'; // For attendees
+import { users } from './users.schema';
 
 export const eventTypeEnum = pgEnum('event_type', [
   'Conference',
@@ -20,7 +22,7 @@ export const eventTypeEnum = pgEnum('event_type', [
   'JobFair',
   'Seminar',
   'Other',
-])
+]);
 
 export const networking_events = pgTable(
   'networking_events',
@@ -46,41 +48,12 @@ export const networking_events = pgTable(
     userIdx: index('ne_user_id_idx').on(table.userId),
     dateIdx: index('ne_date_idx').on(table.date),
     typeIdx: index('ne_type_idx').on(table.type),
-  })
-)
+  }),
+);
 
-export interface NetworkingEvent {
-  id: string;
-  userId: string;
-  name: string;
-  description: string | null;
-  type: 'Conference' | 'Meetup' | 'Webinar' | 'Workshop' | 'JobFair' | 'Seminar' | 'Other' | null;
-  date: Date;
-  location: string | null;
-  organizer: string | null;
-  website: string | null;
-  notes: string | null;
-  keyTakeaways: string | null;
-  attachments: unknown;
-  createdAt: Date;
-  updatedAt: Date;
-}
-export interface NetworkingEventInsert {
-  id?: string;
-  userId: string;
-  name: string;
-  description?: string | null;
-  type?: 'Conference' | 'Meetup' | 'Webinar' | 'Workshop' | 'JobFair' | 'Seminar' | 'Other' | null;
-  date: Date;
-  location?: string | null;
-  organizer?: string | null;
-  website?: string | null;
-  notes?: string | null;
-  keyTakeaways?: string | null;
-  attachments?: unknown;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+export type NetworkingEvent = InferSelectModel<typeof networking_events>;
+export type NetworkingEventInsert = InferInsertModel<typeof networking_events>;
+export type NetworkingEventSelect = NetworkingEvent;
 export type NewNetworkingEvent = NetworkingEventInsert;
 
 // Junction table for contacts met at networking events
@@ -102,29 +75,13 @@ export const networking_event_attendees = pgTable(
   (table) => ({
     eventAttendeeIdx: uniqueIndex('ne_attendee_unique_idx').on(
       table.networkingEventId,
-      table.contactId
+      table.contactId,
     ),
     eventIdx: index('nea_event_id_idx').on(table.networkingEventId),
     contactIdx: index('nea_contact_id_idx').on(table.contactId),
-  })
-)
+  }),
+);
 
-export interface NetworkingEventAttendee {
-  id: string;
-  networkingEventId: string;
-  contactId: string;
-  notes: string | null;
-  followedUp: boolean;
-  followUpDate: Date | null;
-  createdAt: Date;
-}
-export interface NetworkingEventAttendeeInsert {
-  id?: string;
-  networkingEventId: string;
-  contactId: string;
-  notes?: string | null;
-  followedUp?: boolean;
-  followUpDate?: Date | null;
-  createdAt?: Date;
-}
+export type NetworkingEventAttendee = InferSelectModel<typeof networking_event_attendees>;
+export type NetworkingEventAttendeeInsert = InferInsertModel<typeof networking_event_attendees>;
 export type NewNetworkingEventAttendee = NetworkingEventAttendeeInsert;

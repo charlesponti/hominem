@@ -1,5 +1,7 @@
-import { index, pgTable, text, timestamp, uuid, vector } from 'drizzle-orm/pg-core'
-import { users } from './users.schema'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { index, pgTable, text, timestamp, uuid, vector } from 'drizzle-orm/pg-core';
+
+import { users } from './users.schema';
 
 export const vectorDocuments = pgTable(
   'vector_documents',
@@ -21,31 +23,10 @@ export const vectorDocuments = pgTable(
     index('vector_documents_user_id_idx').on(table.userId),
     index('vector_documents_source_idx').on(table.source),
     index('vector_documents_source_type_idx').on(table.sourceType),
-  ]
-)
+  ],
+);
 
-export interface VectorDocument {
-  id: string;
-  content: string;
-  metadata: string | null;
-  embedding: number[] | null;
-  userId: string | null;
-  source: string | null;
-  sourceType: string | null;
-  title: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type VectorDocument = InferSelectModel<typeof vectorDocuments>;
+export type VectorDocumentInsert = InferInsertModel<typeof vectorDocuments>;
 export type VectorDocumentSelect = VectorDocument;
-export interface NewVectorDocument {
-  id?: string;
-  content: string;
-  metadata?: string | null;
-  embedding?: number[] | null;
-  userId?: string | null;
-  source?: string | null;
-  sourceType?: string | null;
-  title?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+export type NewVectorDocument = VectorDocumentInsert;

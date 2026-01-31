@@ -1,5 +1,7 @@
-import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { users } from './users.schema'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+
+import { users } from './users.schema';
 
 export const contacts = pgTable(
   'contacts',
@@ -21,33 +23,9 @@ export const contacts = pgTable(
   (table) => ({
     userIdx: index('contact_user_id_idx').on(table.userId),
     emailIdx: index('contact_email_idx').on(table.email),
-  })
-)
+  }),
+);
 
-export interface Contact {
-  id: string;
-  userId: string;
-  firstName: string;
-  lastName: string | null;
-  email: string | null;
-  phone: string | null;
-  linkedinUrl: string | null;
-  title: string | null;
-  notes: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type Contact = InferSelectModel<typeof contacts>;
+export type ContactInsert = InferInsertModel<typeof contacts>;
 export type ContactSelect = Contact;
-export interface ContactInsert {
-  id?: string;
-  userId: string;
-  firstName: string;
-  lastName?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  linkedinUrl?: string | null;
-  title?: string | null;
-  notes?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-}

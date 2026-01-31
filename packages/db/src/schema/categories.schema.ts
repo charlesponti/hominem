@@ -1,6 +1,7 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm/relations'
-import { users } from './users.schema'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+
+import { users } from './users.schema';
 
 /**
  * Universal categories that can be used for both finance transactions and possessions
@@ -20,44 +21,8 @@ export const categories = pgTable('categories', {
     .notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
-})
+});
 
-export const categoryRelations = relations(categories, ({ one, many }) => ({
-  parent: one(categories, {
-    fields: [categories.parentId],
-    references: [categories.id],
-    relationName: 'parent_category',
-  }),
-  children: many(categories, {
-    relationName: 'parent_category',
-  }),
-  user: one(users, {
-    fields: [categories.userId],
-    references: [users.id],
-  }),
-}))
-
-export interface Category {
-  id: string;
-  name: string;
-  description: string | null;
-  domain: string;
-  icon: string | null;
-  color: string | null;
-  parentId: string | null;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-export interface CategoryInsert {
-  id?: string;
-  name: string;
-  description?: string | null;
-  domain?: string;
-  icon?: string | null;
-  color?: string | null;
-  parentId?: string | null;
-  userId: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+export type Category = InferSelectModel<typeof categories>;
+export type CategoryInsert = InferInsertModel<typeof categories>;
+export type CategorySelect = Category;

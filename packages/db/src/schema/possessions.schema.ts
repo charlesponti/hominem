@@ -1,3 +1,4 @@
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
   boolean,
   doublePrecision,
@@ -7,11 +8,11 @@ import {
   text,
   timestamp,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm/relations'
-import { categories } from './categories.schema'
-import { companies } from './company.schema'
-import { users } from './users.schema'
+} from 'drizzle-orm/pg-core';
+
+import { categories } from './categories.schema';
+import { companies } from './company.schema';
+import { users } from './users.schema';
 
 export const possessions = pgTable(
   'possessions',
@@ -73,77 +74,9 @@ export const possessions = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('restrict'),
-  ]
-)
+  ],
+);
 
-export const possessionRelations = relations(possessions, ({ one }) => ({
-  brand: one(companies, {
-    fields: [possessions.brandId],
-    references: [companies.id],
-  }),
-  category: one(categories, {
-    fields: [possessions.categoryId],
-    references: [categories.id],
-  }),
-  fromUser: one(users, {
-    fields: [possessions.fromUserId],
-    references: [users.id],
-    relationName: 'from_user',
-  }),
-  user: one(users, {
-    fields: [possessions.userId],
-    references: [users.id],
-  }),
-}))
-
-export interface Possession {
-  id: string;
-  name: string;
-  description: string | null;
-  dateAcquired: Date;
-  dateSold: Date | null;
-  brandId: string | null;
-  categoryId: string;
-  purchasePrice: number;
-  salePrice: number | null;
-  url: string | null;
-  color: string | null;
-  imageUrl: string | null;
-  modelName: string | null;
-  modelNumber: string | null;
-  serialNumber: string | null;
-  notes: string | null;
-  size: string | null;
-  fromUserId: string | null;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  isArchived: boolean;
-  tags: string[] | null;
-}
+export type Possession = InferSelectModel<typeof possessions>;
+export type PossessionInsert = InferInsertModel<typeof possessions>;
 export type PossessionSelect = Possession;
-export interface PossessionInsert {
-  id?: string;
-  name: string;
-  description?: string | null;
-  dateAcquired: Date;
-  dateSold?: Date | null;
-  brandId?: string | null;
-  categoryId: string;
-  purchasePrice: number;
-  salePrice?: number | null;
-  url?: string | null;
-  color?: string | null;
-  imageUrl?: string | null;
-  modelName?: string | null;
-  modelNumber?: string | null;
-  serialNumber?: string | null;
-  notes?: string | null;
-  size?: string | null;
-  fromUserId?: string | null;
-  userId: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-  isArchived?: boolean;
-  tags?: string[];
-}

@@ -1,10 +1,11 @@
-import { relations, sql } from 'drizzle-orm'
-import { foreignKey, index, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import * as z from 'zod'
+import { type InferInsertModel, type InferSelectModel, sql } from 'drizzle-orm';
+import { foreignKey, index, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
-import { AllContentTypeSchema } from './shared.schema'
-import type { ContentTag } from './shared.schema'
-import { users } from './users.schema'
+import type { ContentTag } from './shared.schema';
+
+import { AllContentTypeSchema } from './shared.schema';
+import { users } from './users.schema';
 
 export const ContentStrategySchema = z.object({
   topic: z.string().describe('The main topic of the content strategy'),
@@ -20,7 +21,7 @@ export const ContentStrategySchema = z.object({
             z.object({
               heading: z.string(),
               content: z.string(),
-            })
+            }),
           ),
           wordCount: z.number(),
           seoKeywords: z.array(z.string()),
@@ -34,7 +35,7 @@ export const ContentStrategySchema = z.object({
             contentIdeas: z.array(z.string()),
             hashtagSuggestions: z.array(z.string()),
             bestTimeToPost: z.string(),
-          })
+          }),
         )
         .optional(),
       visualContent: z
@@ -52,16 +53,16 @@ export const ContentStrategySchema = z.object({
       opportunities: z.array(z.string()),
     })
     .optional(),
-})
+});
 
-export type ContentStrategy = z.infer<typeof ContentStrategySchema>
+export type ContentStrategy = z.infer<typeof ContentStrategySchema>;
 
 /**
  * Content types for internet-facing content
  */
-export const ContentTypeSchema = AllContentTypeSchema
+export const ContentTypeSchema = AllContentTypeSchema;
 
-export type ContentType = z.infer<typeof AllContentTypeSchema>
+export type ContentType = z.infer<typeof AllContentTypeSchema>;
 
 /**
  * Publishing status for content
@@ -72,9 +73,9 @@ export const ContentStatusSchema = z.enum([
   'published', // Live/published
   'archived', // No longer active
   'failed', // Publishing failed
-])
+]);
 
-export type ContentStatus = z.infer<typeof ContentStatusSchema>
+export type ContentStatus = z.infer<typeof ContentStatusSchema>;
 
 /**
  * Social media metadata for tweets and social posts
@@ -97,9 +98,9 @@ export const SocialMediaMetadataSchema = z.object({
   threadPosition: z.number().optional(), // Position in thread
   threadId: z.string().optional(), // Thread identifier
   inReplyTo: z.string().optional(), // Reply to which post
-})
+});
 
-export type SocialMediaMetadata = z.infer<typeof SocialMediaMetadataSchema>
+export type SocialMediaMetadata = z.infer<typeof SocialMediaMetadataSchema>;
 
 /**
  * SEO metadata for essays and blog posts
@@ -111,9 +112,9 @@ export const SEOMetadataSchema = z.object({
   canonicalUrl: z.string().optional(),
   featuredImage: z.string().optional(),
   excerpt: z.string().optional(),
-})
+});
 
-export type SEOMetadata = z.infer<typeof SEOMetadataSchema>
+export type SEOMetadata = z.infer<typeof SEOMetadataSchema>;
 
 /**
  * Main content table for internet-facing content
@@ -147,63 +148,17 @@ export const content = pgTable(
         setweight(to_tsvector('english', ${table.content}), 'B') ||
         setweight(to_tsvector('english', coalesce(${table.excerpt}, '')), 'C') ||
         setweight(to_tsvector('english', coalesce(${sql`${table.tags}::text`}, '')), 'D')
-      )`
+      )`,
     ),
     index('content_user_idx').on(table.userId),
     index('content_status_idx').on(table.status),
     index('content_type_idx').on(table.type),
-  ]
-)
+  ],
+);
 
-export interface Content {
-  id: string;
-  type: ContentType;
-  title: string | null;
-  content: string;
-  excerpt: string | null;
-  status: ContentStatus;
-  tags: ContentTag[];
-  socialMediaMetadata: SocialMediaMetadata | null;
-  seoMetadata: SEOMetadata | null;
-  userId: string;
-  contentStrategyId: string | null;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string | null;
-  scheduledFor: string | null;
-}
+export type Content = InferSelectModel<typeof content>;
+export type ContentInsert = InferInsertModel<typeof content>;
 export type ContentSelect = Content;
-export interface ContentInsert {
-  id?: string;
-  type?: ContentType;
-  title?: string | null;
-  content: string;
-  excerpt?: string | null;
-  status?: ContentStatus;
-  tags?: ContentTag[];
-  socialMediaMetadata?: SocialMediaMetadata | null;
-  seoMetadata?: SEOMetadata | null;
-  userId: string;
-  contentStrategyId?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-  publishedAt?: string | null;
-  scheduledFor?: string | null;
-}
-
-/**
- * Relations
- */
-export const contentRelations = relations(content, ({ one }) => ({
-  user: one(users, {
-    fields: [content.userId],
-    references: [users.id],
-  }),
-  contentStrategy: one(contentStrategies, {
-    fields: [content.contentStrategyId],
-    references: [contentStrategies.id],
-  }),
-}))
 
 // Content strategies table is defined below in this same file
 
@@ -226,32 +181,9 @@ export const contentStrategies = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
-  ]
-)
+  ],
+);
 
-export const contentStrategiesRelations = relations(contentStrategies, ({ one }) => ({
-  user: one(users, {
-    fields: [contentStrategies.userId],
-    references: [users.id],
-  }),
-}))
-
-export interface ContentStrategies {
-  id: string;
-  title: string;
-  description: string | null;
-  strategy: ContentStrategy;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type ContentStrategies = InferSelectModel<typeof contentStrategies>;
+export type ContentStrategiesInsert = InferInsertModel<typeof contentStrategies>;
 export type ContentStrategiesSelect = ContentStrategies;
-export interface ContentStrategiesInsert {
-  id?: string;
-  title: string;
-  description?: string | null;
-  strategy: ContentStrategy;
-  userId: string;
-  createdAt?: string;
-  updatedAt?: string;
-}

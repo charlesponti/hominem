@@ -7,16 +7,15 @@
  * Rule: Import from this file, not from vector-documents.schema.ts
  */
 
-import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
-import { vectorDocuments } from './vector-documents.schema'
+import type {
+  VectorDocument,
+  VectorDocumentInsert,
+  VectorDocumentSelect,
+  NewVectorDocument,
+} from './vector-documents.schema';
 
-// Inferred types from Drizzle schema
-export type VectorDocument = InferSelectModel<typeof vectorDocuments>
-export type VectorDocumentInsert = InferInsertModel<typeof vectorDocuments>
+export type { VectorDocument, VectorDocumentInsert, VectorDocumentSelect, NewVectorDocument };
 
 // Legacy aliases for backward compatibility
-export type VectorDocumentOutput = VectorDocument
-export type VectorDocumentInput = VectorDocumentInsert
-export type VectorDocumentSelect = VectorDocument
-
-
+export type VectorDocumentOutput = VectorDocument;
+export type VectorDocumentInput = VectorDocumentInsert;
