@@ -1,0 +1,1 @@
+- bun run build --filter @hominem/db fails with TS2308 in src/schema/schema.ts: duplicate export for eventTypeEnum from calendar.schema.

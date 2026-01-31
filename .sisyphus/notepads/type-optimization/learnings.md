@@ -80,3 +80,68 @@ API ALIASES & EXTENSIONS in hono-rpc
 ```
 
 This pattern eliminates drift and ensures type safety across the entire stack.
+
+## Task 3: Schema File Structure & Dependencies Analysis
+
+### Key Findings
+
+#### Schema Inventory
+- **32 total schema files** in `packages/db/src/schema/`
+- **160+ table/enum exports** across all files
+- **13 files with local dependencies** (cross-imports within schema folder)
+- **19 files with no local dependencies** (pure definitions)
+
+#### Dependency Statistics
+- **Root modules (no dependencies)**: 7 files
+  - activity, auth, company, health, shared, tags, users
+- **Single-level dependencies**: 11 files
+  - Most common: import from `users` (24+ imports total)
+- **Multi-level chains**: 14 files
+  - Longest chain: 4 levels (calendar → places → items ↔ lists → travel)
+
+#### Central Hub Modules
+1. **users** (imported by 24+ files) — core domain, in almost every schema
+2. **shared** (imported by 2 files) — utility collection with 23 exports
+3. **company** (imported by 3 files) — business entity
+4. **career** (imported by 2 files) — career progression
+5. **items** (imported by 3 files, circular) — core entity with cross-deps
+
+#### Circular Dependencies (3 confirmed)
+1. **items ↔ lists**
+   - items.schema.ts imports list (line 12)
+   - lists.schema.ts imports item (line 12)
+   - Root cause: Relations between items and lists defined in both files
+   
+2. **items ↔ places**
+   - items.schema.ts imports place (line 13)
+   - places.schema.ts imports item (via type)
+   - Root cause: ItemType enum references flight/place distinctions
+   
+3. **lists ↔ travel**
+   - lists.schema.ts imports flight (line 13)
+   - travel.schema.ts imports list (via relations)
+   - Root cause: Cross-domain relations
+
+### Mitigation Notes
+- Cycles are at **Drizzle relation level**, not runtime
+- Cycles are **manageable** but block full lazy-loading optimization
+- **Phase 3 opportunity**: Extract shared types to `shared.schema.ts` to break cycles
+
+### Processing Order Recommendation
+For type generation script (Task 1), process in dependency order:
+1. Root (no deps): activity, auth, company, health, shared, tags, users
+2. Level 1: bookmarks, categories, chats, contacts, documents, finance, goals, movies, music, surveys, vector-documents, trips
+3. Level 2: career, networking_events, possessions, skills
+4. Level 3: calendar, interviews
+5. Circular group: items, lists, places, travel, trip_items
+
+### Export Density
+- Most schemas: 1-6 exports
+- Heavy modules: shared (23), finance (18), career (12)
+- Design implication: shared.ts is an anti-pattern (too many exports); consider splitting
+
+### Implications for Phase 2
+- ✅ Type generation can proceed using this order
+- ✅ Barrel export removal will work (Drizzle wildcard pattern)
+- ⚠️ Circular imports will persist (not fixable in Phase 2)
+- ✅ Generated types can handle circular deps (Drizzle supports them)

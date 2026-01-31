@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GooglePlaceDetailsResponse } from '~/lib/types';
+import type { GooglePlaceDetailsResponse } from './types';
 
 import {
   extractPhotoReferences,
