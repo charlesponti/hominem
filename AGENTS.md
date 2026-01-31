@@ -256,6 +256,14 @@ bun run db:push       # Push schema to database
 bun run db:studio     # Open Drizzle Studio UI
 ```
 
+**Migration Workflow:**
+
+1. **Modify Schema**: Edit TypeScript files in `packages/db/src/schema/`.
+2. **Generate**: Run `bun run db:generate` to create a new SQL migration file in `packages/db/src/migrations/`.
+3. **Review**: Check the generated SQL file to ensure accuracy.
+4. **Apply**: Run `bun run db:migrate` to update the local database.
+5. **No Manual Edits**: Never manually edit SQL migration files. If a migration is wrong, fix the schema and regenerate.
+
 **Patterns:**
 
 - Define schemas in `schema/` directory
@@ -268,7 +276,8 @@ bun run db:studio     # Open Drizzle Studio UI
 Always use path aliases from root `tsconfig.base.json`:
 
 ```typescript
-import { User } from '@hominem/db/schema'; // Database types
+import { user } from '@hominem/db/schema/users'; // Database table
+import type { User } from '@hominem/db/types/users'; // Database types
 import { useAuth } from '@hominem/auth'; // Auth utilities
 import { Button } from '@hominem/ui'; // UI components
 import { clsx } from '@hominem/utils'; // Utilities
@@ -307,14 +316,13 @@ For specialized guidelines, refer to:
 - `.github/skills/type-audit/SKILL.md` - Use `/type-audit` to diagnose TypeScript performance issues.
 - `.github/skills/ready-for-prod/SKILL.md` - Use `/ready-for-prod` for a final security, performance, and simplicity check.
 - `.github/instructions/principles.instructions.md` - Universal coding principles
- - `.github/instructions/principles.instructions.md` - Deprecated pointer to `AGENTS.md` (do not edit; update AGENTS.md instead)
+- `.github/instructions/principles.instructions.md` - Deprecated pointer to `AGENTS.md` (do not edit; update AGENTS.md instead)
 - `.github/instructions/react.instructions.md` - React component guidelines
 - `.github/instructions/api.instructions.md` - API development patterns
 - `.github/instructions/database.instructions.md` - Database best practices
 - `.github/copilot-instructions.md` - Full Copilot guidelines
 
 ## Universal Coding Principles
-
 
 Package References
 

@@ -37,6 +37,7 @@ export const eventTypeEnum = pgEnum('event_type', [
   'Goal',
   'Recurring',
   'Travel',
+  'Health',
 ]);
 export type EventTypeEnum = (typeof eventTypeEnum.enumValues)[number];
 
@@ -157,6 +158,24 @@ export const events = pgTable(
      * URL to booking confirmation or event details
      */
     url: text('url'),
+    // Health Tracking Fields (from consolidated health table)
+    /**
+     * Type of health activity (running, swimming, yoga, etc.)
+     */
+    activityType: text('activity_type'),
+    /**
+     * Duration of the activity in minutes
+     */
+    duration: integer('duration'),
+    /**
+     * Calories burned during the activity
+     */
+    caloriesBurned: integer('calories_burned'),
+    // Goal Status Field (from consolidated goals table)
+    /**
+     * Status of goal/task (todo, in_progress, completed, archived)
+     */
+    status: text('status'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -169,6 +188,8 @@ export const events = pgTable(
     index('events_interval_idx').on(table.interval),
     index('events_goal_category_idx').on(table.goalCategory),
     index('events_streak_count_idx').on(table.streakCount),
+    index('events_activity_type_idx').on(table.activityType),
+    index('events_status_idx').on(table.status),
     uniqueIndex('events_external_calendar_unique').on(table.externalId, table.calendarId),
   ],
 );
