@@ -2,29 +2,21 @@
  * Computed Possession Types
  *
  * This file contains all derived types computed from the Possession schema.
- * These types are computed ONCE and reused everywhere to minimize
- * TypeScript re-inference overhead.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from possessions.schema.ts
  */
 
-import type { Possession, PossessionInsert } from './possessions.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { possessions } from './possessions.schema'
 
-// ============================================
-// PRIMARY OUTPUT TYPES (computed once)
-// ============================================
+// Inferred types from Drizzle schema
+export type Possession = InferSelectModel<typeof possessions>
+export type PossessionInsert = InferInsertModel<typeof possessions>
 
-/** Possession as retrieved from database */
-export type PossessionOutput = Possession;
+// Legacy aliases for backward compatibility
+export type PossessionOutput = Possession
+export type PossessionInput = PossessionInsert
+export type PossessionSelect = Possession
 
-/** Possession insert input (for creating possessions) */
-export type PossessionInput = PossessionInsert;
 
-// Legacy aliases
-export type PossessionSelect = Possession;
-
-// ============================================
-// RE-EXPORT DRIZZLE TABLES
-// ============================================
-
-export { possessions } from './possessions.schema';

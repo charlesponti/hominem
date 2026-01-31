@@ -2,25 +2,24 @@
  * Computed Activity Types
  *
  * This file contains all derived types computed from the Activity schema.
+ * These types are inferred from Drizzle ORM schema definitions.
+ *
+ * Rule: Import from this file, not from activity.schema.ts
  */
 
-import type { Activity, ActivityInsert } from './activity.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { activities } from './activity.schema'
 
-// ============================================
-// PRIMARY OUTPUT TYPES (computed once)
-// ============================================
+// Inferred types from Drizzle schema
+export type Activity = InferSelectModel<typeof activities>
+export type ActivityInsert = InferInsertModel<typeof activities>
 
-/** Activity record as retrieved from database */
-export type ActivityOutput = Activity;
+// Legacy aliases for backward compatibility
+export type ActivityOutput = Activity
+export type ActivityInput = ActivityInsert
+export type ActivitySelect = Activity
 
-/** Activity insert input */
-export type ActivityInput = ActivityInsert;
-
-// Legacy aliases
-export type ActivitySelect = Activity;
-
-// ============================================
-// RE-EXPORT DRIZZLE TABLES
-// ============================================
-
-export { activities } from './activity.schema';
+// Re-export tables for convenience
+export {
+  activities,
+} from './activity.schema'

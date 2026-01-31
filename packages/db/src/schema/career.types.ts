@@ -2,46 +2,43 @@
  * Computed Career Types
  *
  * This file contains all derived types computed from Career schemas.
- * These types are computed ONCE and reused everywhere to minimize
- * TypeScript re-inference overhead.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from career.schema.ts
  */
 
-import type { Job, JobInsert, JobApplication, JobApplicationInsert, ApplicationStage, ApplicationStageInsert, WorkExperience, WorkExperienceInsert } from './career.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import {
+  jobs,
+  job_applications,
+  application_stages,
+  work_experiences,
+} from './career.schema'
 
-// ============================================
-// JOB TYPES
-// ============================================
+// Inferred types from Drizzle schema
+export type Job = InferSelectModel<typeof jobs>
+export type JobInsert = InferInsertModel<typeof jobs>
+export type JobApplication = InferSelectModel<typeof job_applications>
+export type JobApplicationInsert = InferInsertModel<typeof job_applications>
+export type ApplicationStage = InferSelectModel<typeof application_stages>
+export type ApplicationStageInsert = InferInsertModel<typeof application_stages>
+export type WorkExperience = InferSelectModel<typeof work_experiences>
+export type WorkExperienceInsert = InferInsertModel<typeof work_experiences>
 
-export type JobOutput = Job;
-export type JobInput = JobInsert;
+// Legacy aliases for backward compatibility
+export type JobOutput = Job
+export type JobInput = JobInsert
 
-// ============================================
-// JOB APPLICATION TYPES
-// ============================================
+export type JobApplicationOutput = JobApplication
+export type JobApplicationInput = JobApplicationInsert
 
-export type JobApplicationOutput = JobApplication;
-export type JobApplicationInput = JobApplicationInsert;
+export type ApplicationStageOutput = ApplicationStage
+export type ApplicationStageInput = ApplicationStageInsert
 
-// ============================================
-// APPLICATION STAGE TYPES
-// ============================================
+export type WorkExperienceOutput = WorkExperience
+export type WorkExperienceInput = WorkExperienceInsert
 
-export type ApplicationStageOutput = ApplicationStage;
-export type ApplicationStageInput = ApplicationStageInsert;
-
-// ============================================
-// WORK EXPERIENCE TYPES
-// ============================================
-
-export type WorkExperienceOutput = WorkExperience;
-export type WorkExperienceInput = WorkExperienceInsert;
-
-// ============================================
-// RE-EXPORT DRIZZLE TABLES (needed for db.query)
-// ============================================
-
+// Re-export tables for convenience
 export {
   jobs,
   jobsRelations,
@@ -51,4 +48,4 @@ export {
   application_stagesRelations,
   work_experiences,
   work_experiencesRelations,
-} from './career.schema';
+} from './career.schema'

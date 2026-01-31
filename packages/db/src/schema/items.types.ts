@@ -2,28 +2,22 @@
  * Computed Item Types
  *
  * This file contains all derived types computed from Item schemas.
- * These types are computed ONCE and reused everywhere to minimize
- * TypeScript re-inference overhead.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from items.schema.ts
  */
 
-import type {
-  Item,
-  ItemInsert,
-} from './items.schema';
-import {
-  item,
-  itemRelations,
-} from './items.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { item } from './items.schema'
 
-// ============================================
-// ITEM TYPES
-// ============================================
+// Inferred types from Drizzle schema
+export type Item = InferSelectModel<typeof item>
+export type ItemInsert = InferInsertModel<typeof item>
 
-export type ItemOutput = Item;
-export type ItemInput = ItemInsert;
-export type ItemSelect = Item;
+// Legacy aliases for backward compatibility
+export type ItemOutput = Item
+export type ItemInput = ItemInsert
+export type ItemSelect = Item
 
 // ============================================
 // RE-EXPORT DRIZZLE TABLES (needed for db.query)
@@ -32,4 +26,4 @@ export type ItemSelect = Item;
 export {
   item,
   itemRelations,
-} from './items.schema';
+} from './items.schema'

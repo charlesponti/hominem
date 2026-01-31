@@ -1,18 +1,25 @@
 /**
  * Computed Networking Event Types
+ *
+ * This file contains all derived types computed from Networking Event schema.
+ * These types are inferred from Drizzle ORM schema definitions.
  */
 
-import type {
-  NetworkingEvent,
-  NetworkingEventInsert,
-  NetworkingEventAttendee,
-  NetworkingEventAttendeeInsert,
-} from './networking_events.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { networking_events, networking_event_attendees } from './networking_events.schema'
 
-export type NetworkingEventOutput = NetworkingEvent;
-export type NetworkingEventInput = NetworkingEventInsert;
+// Inferred types from Drizzle schema
+export type NetworkingEvent = InferSelectModel<typeof networking_events>
+export type NetworkingEventInsert = InferInsertModel<typeof networking_events>
+export type NetworkingEventAttendee = InferSelectModel<typeof networking_event_attendees>
+export type NetworkingEventAttendeeInsert = InferInsertModel<typeof networking_event_attendees>
 
-export type NetworkingEventAttendeeOutput = NetworkingEventAttendee;
-export type NetworkingEventAttendeeInput = NetworkingEventAttendeeInsert;
+// Legacy aliases for backward compatibility
+export type NetworkingEventOutput = NetworkingEvent
+export type NetworkingEventInput = NetworkingEventInsert
 
-export { networking_events, networking_event_attendees } from './networking_events.schema';
+export type NetworkingEventAttendeeOutput = NetworkingEventAttendee
+export type NetworkingEventAttendeeInput = NetworkingEventAttendeeInsert
+
+// Re-export tables for convenience
+export { networking_events, networking_event_attendees } from './networking_events.schema'

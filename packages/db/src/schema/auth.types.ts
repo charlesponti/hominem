@@ -2,35 +2,36 @@
  * Computed Auth Types
  *
  * This file contains all derived types computed from the Auth schema.
+ * These types are inferred from Drizzle ORM schema definitions.
+ *
+ * Rule: Import from this file, not from auth.schema.ts
  */
 
-import type {
-  VerificationToken,
-  VerificationTokenInsert,
-  Token,
-  TokenInsert,
-  Session,
-  SessionInsert,
-} from './auth.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { verificationToken, token, session } from './auth.schema'
 
-// ============================================
-// PRIMARY OUTPUT TYPES (computed once)
-// ============================================
+// Inferred types from Drizzle schema
+export type VerificationToken = InferSelectModel<typeof verificationToken>
+export type VerificationTokenInsert = InferInsertModel<typeof verificationToken>
+export type Token = InferSelectModel<typeof token>
+export type TokenInsert = InferInsertModel<typeof token>
+export type Session = InferSelectModel<typeof session>
+export type SessionInsert = InferInsertModel<typeof session>
 
-/** Verification Token as retrieved from database */
-export type VerificationTokenOutput = VerificationToken;
-export type VerificationTokenInput = VerificationTokenInsert;
+// Legacy aliases for backward compatibility
+export type VerificationTokenOutput = VerificationToken
+export type VerificationTokenInput = VerificationTokenInsert
 
-/** Auth Token as retrieved from database */
-export type TokenOutput = Token;
-export type TokenInput = TokenInsert;
+export type TokenOutput = Token
+export type TokenInput = TokenInsert
 
-/** Session as retrieved from database */
-export type SessionOutput = Session;
-export type SessionInput = SessionInsert;
+export type SessionOutput = Session
+export type SessionInput = SessionInsert
 
-// ============================================
-// RE-EXPORT DRIZZLE TABLES
-// ============================================
-
-export { verificationToken, token, session, tokenType } from './auth.schema';
+// Re-export tables for convenience
+export {
+  verificationToken,
+  token,
+  session,
+  tokenType,
+} from './auth.schema'

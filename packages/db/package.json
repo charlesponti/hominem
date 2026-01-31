@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./schema": "./src/schema/index.ts",
     "./schema/schema": "./src/schema/schema.ts",
+    "./schema/tables": "./src/schema/tables.ts",
     "./schema/*": "./src/schema/*.schema.ts",
     "./test/fixtures": "./src/test/fixtures.ts",
     "./test/utils": "./src/test/utils.ts",

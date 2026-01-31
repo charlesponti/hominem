@@ -2,7 +2,7 @@ import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 import { env } from './env';
-import * as schema from './schema/schema';
+import * as schema from './schema/tables';
 
 const DATABASE_URL =
   env.NODE_ENV === 'test'

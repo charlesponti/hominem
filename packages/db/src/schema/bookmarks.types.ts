@@ -1,33 +1,27 @@
 /**
  * Computed Bookmark Types
  *
- * This file contains all derived types computed from the Bookmark schema.
- * These types are computed ONCE and reused everywhere to minimize
- * TypeScript re-inference overhead.
+ * This file contains all derived types computed from Bookmark schema.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from bookmarks.schema.ts
  */
 
-import type { Bookmark, BookmarkInsert } from './bookmarks.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { bookmark, bookmarkRelations } from './bookmarks.schema'
 
-// ============================================
-// PRIMARY OUTPUT TYPES (computed once)
-// ============================================
+// Inferred types from Drizzle schema
+export type Bookmark = InferSelectModel<typeof bookmark>
+export type BookmarkInsert = InferInsertModel<typeof bookmark>
 
-/** Bookmark as retrieved from database */
-export type BookmarkOutput = Bookmark;
+// Legacy aliases for backward compatibility
+export type BookmarkSelect = Bookmark
 
-/** Bookmark insert input (for creating bookmarks) */
-export type BookmarkInput = BookmarkInsert;
+export type BookmarkOutput = Bookmark
+export type BookmarkInput = BookmarkInsert
 
-// Legacy aliases
-export type BookmarkSelect = Bookmark;
-
-// ============================================
-// RE-EXPORT DRIZZLE TABLES / RELATIONS
-// ============================================
-
+// Re-export tables and relations
 export {
   bookmark,
   bookmarkRelations,
-} from './bookmarks.schema';
+} from './bookmarks.schema'

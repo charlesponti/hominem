@@ -2,25 +2,32 @@
  * Computed User Types
  *
  * This file contains all derived types computed from User schema.
- * These types are computed ONCE and reused everywhere.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from users.schema.ts
  */
 
-import type { User, UserInsert, Account, AccountInsert } from './users.schema';
-import { account, users } from './users.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { account, users } from './users.schema'
 
-export type UserOutput = User;
-export type UserInput = UserInsert;
+// Inferred types from Drizzle schema
+export type User = InferSelectModel<typeof users>
+export type UserInsert = InferInsertModel<typeof users>
+export type Account = InferSelectModel<typeof account>
+export type AccountInsert = InferInsertModel<typeof account>
 
-// Account types (co-located with User schema)
-export type AccountOutput = Account;
-export type AccountInput = AccountInsert;
+// Legacy aliases for backward compatibility
+export type UserSelect = User
+export type AccountSelect = Account
 
-// Legacy aliases
-export type UserSelect = User;
+export type UserOutput = User
+export type UserInput = UserInsert
 
+export type AccountOutput = Account
+export type AccountInput = AccountInsert
+
+// Re-export tables for convenience
 export {
   users,
   account,
-} from './users.schema';
+} from './users.schema'

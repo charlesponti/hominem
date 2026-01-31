@@ -2,32 +2,37 @@
  * Computed Calendar Event Types
  *
  * This file contains all derived types computed from the Calendar Event schema.
- * These types are computed ONCE and reused everywhere to minimize
- * TypeScript re-inference overhead.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from calendar.schema.ts
  */
 
-import type { CalendarEvent, CalendarEventInsert, EventSourceEnum } from './calendar.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { events, eventsTags, eventsUsers, eventsTransactions } from './calendar.schema'
 
-// ============================================
-// PRIMARY OUTPUT TYPES (computed once)
-// ============================================
+// Inferred types from Drizzle schema
+export type CalendarEvent = InferSelectModel<typeof events>
+export type CalendarEventInsert = InferInsertModel<typeof events>
 
-/** CalendarEvent as retrieved from database */
-export type CalendarEventOutput = CalendarEvent;
+export type EventsTag = InferSelectModel<typeof eventsTags>
+export type EventsTagInsert = InferInsertModel<typeof eventsTags>
 
-/** CalendarEvent insert input (for creating events) */
-export type CalendarEventInput = CalendarEventInsert;
+export type EventsUser = InferSelectModel<typeof eventsUsers>
+export type EventsUserInsert = InferInsertModel<typeof eventsUsers>
 
-// Legacy aliases
-export type CalendarEventSelect = CalendarEvent;
+export type EventsTransaction = InferSelectModel<typeof eventsTransactions>
+export type EventsTransactionInsert = InferInsertModel<typeof eventsTransactions>
+
+// Legacy aliases for backward compatibility
+export type CalendarEventOutput = CalendarEvent
+export type CalendarEventSelect = CalendarEvent
+export type CalendarEventInput = CalendarEventInsert
 
 // ============================================
 // RE-EXPORT ENUMS AND SUPPORTING TYPES
 // ============================================
 
-export type { EventSourceEnum };
+export type { EventSourceEnum } from './calendar.schema'
 
 // ============================================
 // RE-EXPORT DRIZZLE TABLES / ENUMS
@@ -40,4 +45,4 @@ export {
   eventsTransactions,
   eventTypeEnum,
   eventSourceEnum,
-} from './calendar.schema';
+} from './calendar.schema'

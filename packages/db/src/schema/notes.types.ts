@@ -2,13 +2,13 @@
  * Computed Note Types
  *
  * This file contains all derived types computed from the Note schema.
- * These types are computed ONCE and reused everywhere to minimize
- * TypeScript re-inference overhead.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from notes.schema.ts
  */
 
-import type { Note, NoteInsert } from './notes.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { notes } from './notes.schema'
 import {
   NoteContentTypeSchema,
   TaskMetadataSchema,
@@ -21,39 +21,39 @@ import {
   type NoteContentType,
   type TaskStatus,
   type Priority,
-} from './notes.schema';
+} from './notes.schema'
 
-// ============================================
-// PRIMARY OUTPUT TYPES (computed once)
-// ============================================
+// Inferred types from Drizzle schema
+export type Note = InferSelectModel<typeof notes>
+export type NoteInsert = InferInsertModel<typeof notes>
 
-/** Note as retrieved from database */
-export type NoteOutput = Note;
-
-/** Note insert input (for creating notes) */
-export type NoteInput = NoteInsert;
+// Legacy aliases for backward compatibility
+export type NoteOutput = Note
+export type NoteInput = NoteInsert
 
 /** Note sync type for client sync operations */
 export type NoteSyncItem = Omit<Note, 'id' | 'synced' | 'createdAt' | 'updatedAt' | 'tweetMetadata'> & {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
+  id?: string
+  createdAt?: string
+  updatedAt?: string
+}
 
 // ============================================
 // REPOSITORY / DOMAIN TYPES
 // ============================================
 
-export type NoteCreatePayload = NoteInsert;
+export type NoteCreatePayload = NoteInsert
 
-export type NoteUpdatePayload = Omit<NoteInput, 'userId' | 'id'>;
+export type NoteUpdatePayload = Omit<NoteInput, 'userId' | 'id'>
 
 // ============================================
 // RE-EXPORT STABLE ZOD SCHEMAS
 // ============================================
 
 // Content schemas
-export { NoteContentTypeSchema, TweetMetadataSchema, TaskMetadataSchema, TaskStatusSchema, PrioritySchema };
+export { NoteContentTypeSchema, TweetMetadataSchema, TaskMetadataSchema, TaskStatusSchema, PrioritySchema }
 
 // Re-export supporting types
-export type { NoteMention, TaskMetadata, TweetMetadata, NoteContentType, TaskStatus, Priority };
+export type { NoteMention, TaskMetadata, TweetMetadata, NoteContentType, TaskStatus, Priority }
+
+

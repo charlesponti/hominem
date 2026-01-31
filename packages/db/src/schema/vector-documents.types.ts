@@ -2,29 +2,21 @@
  * Computed Vector Document Types
  *
  * This file contains all derived types computed from the Vector Document schema.
- * These types are computed ONCE and reused everywhere to minimize
- * TypeScript re-inference overhead.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from vector-documents.schema.ts
  */
 
-import type { VectorDocument, NewVectorDocument } from './vector-documents.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { vectorDocuments } from './vector-documents.schema'
 
-// ============================================
-// PRIMARY OUTPUT TYPES (computed once)
-// ============================================
+// Inferred types from Drizzle schema
+export type VectorDocument = InferSelectModel<typeof vectorDocuments>
+export type VectorDocumentInsert = InferInsertModel<typeof vectorDocuments>
 
-/** VectorDocument as retrieved from database */
-export type VectorDocumentOutput = VectorDocument;
+// Legacy aliases for backward compatibility
+export type VectorDocumentOutput = VectorDocument
+export type VectorDocumentInput = VectorDocumentInsert
+export type VectorDocumentSelect = VectorDocument
 
-/** NewVectorDocument for creating vector documents */
-export type VectorDocumentInput = NewVectorDocument;
 
-// Legacy aliases
-export type VectorDocumentSelect = VectorDocument;
-
-// ============================================
-// RE-EXPORT DRIZZLE TABLES
-// ============================================
-
-export { vectorDocuments } from './vector-documents.schema';

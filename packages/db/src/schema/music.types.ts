@@ -2,23 +2,27 @@
  * Computed Music Types
  *
  * This file contains all derived types computed from the Music schema.
- * These types are computed ONCE and reused everywhere to minimize
- * TypeScript re-inference overhead.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from music.schema.ts
  */
 
-import type { Artist, ArtistInsert } from './music.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { artists, userArtists } from './music.schema'
 
-// ============================================
-// PRIMARY OUTPUT TYPES (computed once)
-// ============================================
+// Inferred types from Drizzle schema
+export type Artist = InferSelectModel<typeof artists>
+export type ArtistInsert = InferInsertModel<typeof artists>
 
-/** Artist as retrieved from database */
-export type ArtistOutput = Artist;
+export type UserArtist = InferSelectModel<typeof userArtists>
+export type UserArtistInsert = InferInsertModel<typeof userArtists>
 
-/** Artist insert input (for creating artists) */
-export type ArtistInput = ArtistInsert;
+// Legacy aliases for backward compatibility
+export type ArtistOutput = Artist
+export type ArtistInput = ArtistInsert
+
+export type UserArtistOutput = UserArtist
+export type UserArtistInput = UserArtistInsert
 
 // ============================================
 // RE-EXPORT DRIZZLE TABLES
@@ -27,4 +31,4 @@ export type ArtistInput = ArtistInsert;
 export {
   artists,
   userArtists,
-} from './music.schema';
+} from './music.schema'

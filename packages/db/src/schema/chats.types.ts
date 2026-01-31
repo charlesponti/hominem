@@ -2,56 +2,43 @@
  * Computed Chat Types
  *
  * This file contains all derived types computed from Chat schemas.
- * These types are computed ONCE and reused everywhere to minimize
- * TypeScript re-inference overhead.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from chats.schema.ts
  */
 
-import type {
-  Chat,
-  ChatInsert,
-  ChatMessage,
-  ChatMessageInsert,
-} from './chats.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
 import {
   chat,
   chatMessage,
   chatRelations,
   chatMessageRelations,
-} from './chats.schema';
+} from './chats.schema'
 
-// ============================================
-// CHAT TYPES
-// ============================================
+// Inferred types from Drizzle schema
+export type Chat = InferSelectModel<typeof chat>
+export type ChatInsert = InferInsertModel<typeof chat>
+export type ChatMessage = InferSelectModel<typeof chatMessage>
+export type ChatMessageInsert = InferInsertModel<typeof chatMessage>
 
-export type ChatOutput = Chat;
-export type ChatInput = ChatInsert;
-export type ChatSelect = Chat;
+// Legacy aliases for backward compatibility
+export type ChatSelect = Chat
+export type ChatMessageSelect = ChatMessage
 
-// ============================================
-// CHAT MESSAGE TYPES
-// ============================================
+export type ChatOutput = Chat
+export type ChatInput = ChatInsert
+export type ChatMessageOutput = ChatMessage
+export type ChatMessageInput = ChatMessageInsert
 
-export type ChatMessageOutput = ChatMessage;
-export type ChatMessageInput = ChatMessageInsert;
-export type ChatMessageSelect = ChatMessage;
-
-// ============================================
-// RE-EXPORT DRIZZLE TABLES (needed for db.query)
-// ============================================
-
+// Re-export tables and relations
 export {
   chat,
   chatMessage,
   chatRelations,
   chatMessageRelations,
-} from './chats.schema';
+} from './chats.schema'
 
-// ============================================
-// RE-EXPORT UNION TYPES
-// ============================================
-
+// Re-export union types
 export type {
   ChatMessageReasoning,
   ChatMessageToolCall,
@@ -61,4 +48,4 @@ export type {
   ChatMessageToolCall as ChatMessageToolCallType,
   ChatMessageFile as ChatMessageFileType,
   ChatMessageRole as ChatMessageRoleType,
-} from './chats.schema';
+} from './chats.schema'

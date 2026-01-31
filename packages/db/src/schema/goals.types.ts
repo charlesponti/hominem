@@ -2,37 +2,28 @@
  * Computed Goal Types
  *
  * This file contains all derived types computed from Goal schema.
- * These types are computed ONCE and reused everywhere.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from goals.schema.ts
  */
 
-import type { Goal, GoalInsert, GoalMilestone, GoalStatus } from './goals.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { goals } from './goals.schema'
+import type { GoalMilestone, GoalStatus } from './goals.schema'
 
-// ============================================
-// PRIMARY OUTPUT TYPES (computed once)
-// ============================================
+// Inferred types from Drizzle schema
+export type Goal = InferSelectModel<typeof goals>
+export type GoalInsert = InferInsertModel<typeof goals>
 
-/** Goal as retrieved from database */
-export type GoalOutput = Goal;
-
-/** Goal insert input (for creating goals) */
-export type GoalInput = GoalInsert;
-
-// Legacy aliases
-export type GoalSelect = Goal;
-
-// Re-export original interfaces to avoid duplication errors
-export type { Goal, GoalInsert };
+// Legacy aliases for backward compatibility
+export type GoalOutput = Goal
+export type GoalInput = GoalInsert
+export type GoalSelect = Goal
 
 // ============================================
 // RE-EXPORT SUPPORTING TYPES
 // ============================================
 
-export type { GoalMilestone, GoalStatus };
+export type { GoalMilestone, GoalStatus }
 
-// ============================================
-// RE-EXPORT DRIZZLE TABLES
-// ============================================
 
-export { goals } from './goals.schema';

@@ -2,23 +2,23 @@
  * Computed Company Types
  *
  * This file contains all derived types computed from Company schema.
- * These types are computed ONCE and reused everywhere to minimize
- * TypeScript re-inference overhead.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from company.schema.ts
  */
 
-import type { Company, CompanyInsert } from './company.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { companies } from './company.schema'
 
-// ============================================
-// PRIMARY OUTPUT TYPES (computed once)
-// ============================================
+// Inferred types from Drizzle schema
+export type Company = InferSelectModel<typeof companies>
+export type CompanyInsert = InferInsertModel<typeof companies>
 
-export type CompanyOutput = Company;
-export type CompanyInput = CompanyInsert;
+// Legacy aliases for backward compatibility
+export type CompanyOutput = Company
+export type CompanyInput = CompanyInsert
 
-// ============================================
-// RE-EXPORT DRIZZLE TABLES (needed for db.query)
-// ============================================
-
-export { companies } from './company.schema';
+// Re-export tables for convenience
+export {
+  companies,
+} from './company.schema'

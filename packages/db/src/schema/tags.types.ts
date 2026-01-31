@@ -2,21 +2,23 @@
  * Computed Tag Types
  *
  * This file contains all derived types computed from Tag schema.
- * These types are computed ONCE and reused everywhere.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from tags.schema.ts
  */
 
-import type { Tag, TagInsert } from './tags.schema';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { tags } from './tags.schema'
 
-export type TagOutput = Tag;
-export type TagInput = TagInsert;
+// Inferred types from Drizzle schema
+export type Tag = InferSelectModel<typeof tags>
+export type TagInsert = InferInsertModel<typeof tags>
 
-// Legacy aliases
-export type TagSelect = Tag;
+// Legacy aliases for backward compatibility
+export type TagSelect = Tag
 
-// ============================================
-// RE-EXPORT DRIZZLE TABLES
-// ============================================
+export type TagOutput = Tag
+export type TagInput = TagInsert
 
-export { tags } from './tags.schema';
+// Re-export tables for convenience
+export { tags } from './tags.schema'

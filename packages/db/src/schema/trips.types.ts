@@ -2,18 +2,19 @@
  * Computed Trips Types
  *
  * This file contains all derived types computed from Trips schemas.
- * These types are computed ONCE and reused everywhere to minimize
- * TypeScript re-inference overhead.
+ * These types are inferred from Drizzle ORM schema definitions.
  *
  * Rule: Import from this file, not from trips.schema.ts
  */
 
-import type { Trip, TripInsert } from './trips.schema'
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm'
+import { trips } from './trips.schema'
 
-// ============================================
-// TRIP TYPES
-// ============================================
+// Inferred types from Drizzle schema
+export type Trip = InferSelectModel<typeof trips>
+export type TripInsert = InferInsertModel<typeof trips>
 
+// Legacy aliases for backward compatibility
 export type TripOutput = Trip
 export type TripInput = TripInsert
 
