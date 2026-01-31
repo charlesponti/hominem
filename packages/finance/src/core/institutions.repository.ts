@@ -1,4 +1,7 @@
-import type { FinancialInstitutionOutput, FinancialInstitutionInput } from '@hominem/db/types/finance';
+import type {
+  FinancialInstitutionOutput,
+  FinancialInstitutionInput,
+} from '@hominem/db/types/finance';
 
 import { db } from '@hominem/db';
 import { financialInstitutions } from '@hominem/db/schema/finance';

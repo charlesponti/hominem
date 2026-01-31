@@ -1,10 +1,11 @@
+import type { ListOutput as DbListOutput } from '@hominem/db/types/lists';
+
 import { db } from '@hominem/db';
 import { item } from '@hominem/db/schema/items';
 import { list } from '@hominem/db/schema/lists';
-import { place } from '@hominem/db/schema/places';
 import { userLists } from '@hominem/db/schema/lists';
+import { place } from '@hominem/db/schema/places';
 import { users } from '@hominem/db/schema/users';
-import type { ListOutput as DbListOutput } from '@hominem/db/types/lists';
 import { logger } from '@hominem/utils/logger';
 import { and, count, desc, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
 
@@ -608,10 +609,7 @@ export async function getPlaceLists({
       })
       .from(list)
       .innerJoin(item, eq(item.listId, list.id))
-      .innerJoin(
-        place,
-        or(eq(place.id, placeId || ''), eq(place.googleMapsId, googleMapsId || '')),
-      )
+      .innerJoin(place, or(eq(place.id, placeId || ''), eq(place.googleMapsId, googleMapsId || '')))
       .leftJoin(userLists, and(eq(userLists.listId, list.id), eq(userLists.userId, userId)))
       .where(
         and(eq(item.itemType, 'PLACE'), or(eq(list.ownerId, userId), isNotNull(userLists.listId))),

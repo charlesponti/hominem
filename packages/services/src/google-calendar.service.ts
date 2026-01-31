@@ -1,6 +1,11 @@
+import type {
+  CalendarEventInput,
+  CalendarEventOutput,
+  EventSourceEnum,
+} from '@hominem/db/types/calendar';
+
 import { db } from '@hominem/db';
 import { events } from '@hominem/db/schema/calendar';
-import type { CalendarEventInput, CalendarEventOutput, EventSourceEnum } from '@hominem/db/types/calendar';
 import { logger } from '@hominem/utils/logger';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { type calendar_v3, google, Auth } from 'googleapis';

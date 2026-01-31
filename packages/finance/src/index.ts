@@ -10,10 +10,7 @@ export {
   calculateTrend,
   groupTransactionsByDateRange,
 } from './analytics/aggregation.service';
-export {
-  calculateAveragePerDay,
-  calculateTimeSeriesTotals,
-} from './analytics/analytics.utils';
+export { calculateAveragePerDay, calculateTimeSeriesTotals } from './analytics/analytics.utils';
 export {
   type TimeSeriesDataPoint,
   type TimeSeriesStats,
@@ -81,12 +78,7 @@ export {
   type InstitutionConnection,
 } from './features/accounts/accounts.domain';
 export { AccountsRepository } from './features/accounts/accounts.repository';
-export {
-  CHART_COLORS,
-  getBudgetStatus,
-  getStatusColor,
-  getChartColor,
-} from './core/budget.utils';
+export { CHART_COLORS, getBudgetStatus, getStatusColor, getChartColor } from './core/budget.utils';
 export {
   getTransactionCategoriesAnalysis,
   bulkCreateBudgetCategoriesFromTransactions,

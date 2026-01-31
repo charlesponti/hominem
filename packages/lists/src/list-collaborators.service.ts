@@ -1,7 +1,8 @@
+import type { UserListsOutput } from '@hominem/db/types/lists';
+
 import { db } from '@hominem/db';
 import { list } from '@hominem/db/schema/lists';
 import { listInvite, userLists } from '@hominem/db/schema/lists';
-import type { UserListsOutput } from '@hominem/db/types/lists';
 import { and, eq, inArray } from 'drizzle-orm';
 
 export async function isUserMemberOfList(listId: string, userId: string): Promise<boolean> {
@@ -35,9 +36,9 @@ export async function removeUserFromList({
 }) {
   try {
     // Ensure the requester owns the list
-     const listRecord = await db.query.list.findFirst({
-       where: and(eq(list.id, listId), eq(list.ownerId, ownerId)),
-     });
+    const listRecord = await db.query.list.findFirst({
+      where: and(eq(list.id, listId), eq(list.ownerId, ownerId)),
+    });
 
     if (!listRecord) {
       return {

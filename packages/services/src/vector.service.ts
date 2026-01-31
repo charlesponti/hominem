@@ -1,5 +1,6 @@
-import { vectorDocuments } from '@hominem/db/schema/vector-documents';
 import type { VectorDocumentInput, VectorDocumentOutput } from '@hominem/db/types/vector-documents';
+
+import { vectorDocuments } from '@hominem/db/schema/vector-documents';
 import { splitMarkdown, type Document } from '@hominem/utils/markdown';
 import csv from 'csv-parser';
 import { and, desc, eq, sql } from 'drizzle-orm';

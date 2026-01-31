@@ -1,9 +1,10 @@
+import type { EventOutput, EventInput, EventTypeEnum } from '@hominem/db/types/events';
+
 import { db } from '@hominem/db';
 import { events, eventsTags, eventsUsers } from '@hominem/db/schema/calendar';
 import { contacts } from '@hominem/db/schema/contacts';
 import { place } from '@hominem/db/schema/places';
 import { tags } from '@hominem/db/schema/tags';
-import type { EventOutput, EventInput, EventTypeEnum } from '@hominem/db/types/events';
 import {
   getPeopleForEvent,
   getPeopleForEvents,

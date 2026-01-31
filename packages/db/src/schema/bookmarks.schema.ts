@@ -1,6 +1,7 @@
-import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm/relations'
-import { users } from './users.schema'
+import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm/relations';
+
+import { users } from './users.schema';
 
 export const bookmark = pgTable(
   'bookmark',
@@ -28,15 +29,15 @@ export const bookmark = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
-  ]
-)
+  ],
+);
 
 export const bookmarkRelations = relations(bookmark, ({ one }) => ({
   user: one(users, {
     fields: [bookmark.userId],
     references: [users.id],
   }),
-}))
+}));
 
 export interface Bookmark {
   id: string;

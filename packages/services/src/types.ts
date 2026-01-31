@@ -1,9 +1,5 @@
 // Re-export commonly used types - available from pre-computed types
-export type {
-  ContactOutput,
-  ContactInput,
-  ContactSelect,
-} from '@hominem/db/types/contacts';
+export type { ContactOutput, ContactInput, ContactSelect } from '@hominem/db/types/contacts';
 
 export type {
   Goal,
@@ -14,24 +10,13 @@ export type {
   GoalStatus,
 } from '@hominem/db/types/goals';
 
-export type {
-  PlaceOutput,
-  PlaceInput,
-} from '@hominem/db/types/places';
+export type { PlaceOutput, PlaceInput } from '@hominem/db/types/places';
 
-export type {
-  PossessionOutput,
-  PossessionInput,
-} from '@hominem/db/types/possessions';
+export type { PossessionOutput, PossessionInput } from '@hominem/db/types/possessions';
 
-export type {
-  TagOutput,
-} from '@hominem/db/types/tags';
+export type { TagOutput } from '@hominem/db/types/tags';
 
-export type {
-  BookmarkOutput,
-  BookmarkInput,
-} from '@hominem/db/types/bookmarks';
+export type { BookmarkOutput, BookmarkInput } from '@hominem/db/types/bookmarks';
 
 export type {
   ContentOutput,
