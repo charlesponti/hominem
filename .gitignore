@@ -54,7 +54,10 @@ bun-debug.log*
 # TypeScript
 .type-analysis
 .type-traces
-.sisyphus
+!.sisyphus
+.sisyphus/*
+!.sisyphus/notepads
+!.sisyphus/plans
 
 # @ark/attest snapshots (commit these to track type performance over time)
 .attest/

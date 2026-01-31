@@ -66,8 +66,8 @@ export function createPlaceImagesService({
         }
       } else {
         try {
-          const urlObj = new URL(photoUrl);
-          if (urlObj.hostname.includes('places.googleapis.com')) {
+          if (isValidGoogleHost(photoUrl)) {
+            const urlObj = new URL(photoUrl);
             const rawPath = urlObj.pathname.replace(/^\/?v1\//, '').replace(/^\//, '');
             const baseRef = rawPath.replace(/\/media$/, '');
             if (isGooglePlacesPhotoReference(baseRef)) {
