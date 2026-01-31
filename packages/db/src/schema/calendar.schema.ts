@@ -1,19 +1,23 @@
-import { relations } from 'drizzle-orm'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
+  boolean,
   index,
   integer,
+  json,
   pgEnum,
   pgTable,
   text,
   timestamp,
   uniqueIndex,
   uuid,
-} from 'drizzle-orm/pg-core'
-import { contacts } from './contacts.schema'
-import { transactions } from './finance.schema'
-import { place } from './places.schema'
-import { tags } from './tags.schema'
-import { users } from './users.schema'
+} from 'drizzle-orm/pg-core';
+
+import { contacts } from './contacts.schema';
+import { transactions } from './finance.schema';
+import { place } from './places.schema';
+import { tags } from './tags.schema';
+import { users } from './users.schema';
 
 // Enums
 export const eventTypeEnum = pgEnum('event_type', [
@@ -29,11 +33,15 @@ export const eventTypeEnum = pgEnum('event_type', [
   'Sex',
   'Movies',
   'Reading',
-])
-export type EventTypeEnum = (typeof eventTypeEnum.enumValues)[number]
+  'Habit',
+  'Goal',
+  'Recurring',
+  'Travel',
+]);
+export type EventTypeEnum = (typeof eventTypeEnum.enumValues)[number];
 
-export const eventSourceEnum = pgEnum('event_source', ['manual', 'google_calendar'])
-export type EventSourceEnum = (typeof eventSourceEnum.enumValues)[number]
+export const eventSourceEnum = pgEnum('event_source', ['manual', 'google_calendar']);
+export type EventSourceEnum = (typeof eventSourceEnum.enumValues)[number];
 
 export const events = pgTable(
   'events',
@@ -71,6 +79,84 @@ export const events = pgTable(
      * List of people who were present at this visit (JSON array or comma-separated)
      */
     visitPeople: text('visit_people'),
+    // Activity/Habit Tracking Fields (from consolidated activities table)
+    /**
+     * Recurrence interval (daily, weekly, monthly, custom)
+     */
+    interval: text('interval'),
+    /**
+     * RFC 5545 recurrence rule for complex patterns
+     */
+    recurrenceRule: text('recurrence_rule'),
+    /**
+     * Achievement/engagement score for this event
+     */
+    score: integer('score'),
+    /**
+     * Priority level (1-10)
+     */
+    priority: integer('priority'),
+    /**
+     * Whether this tracked event is completed
+     */
+    isCompleted: boolean('is_completed').default(false),
+    /**
+     * Consecutive completions for habit tracking
+     */
+    streakCount: integer('streak_count').default(0),
+    /**
+     * Total number of times this recurring event was completed
+     */
+    completedInstances: integer('completed_instances').default(0),
+    /**
+     * Target value for quantified habits (e.g., 10000 steps)
+     */
+    targetValue: integer('target_value'),
+    /**
+     * Current value for quantified habits
+     */
+    currentValue: integer('current_value').default(0),
+    /**
+     * Unit of measurement (steps, miles, hours, etc.)
+     */
+    unit: text('unit'),
+    /**
+     * JSON reminder configuration
+     */
+    reminderSettings: json('reminder_settings'),
+    /**
+     * JSON array of dependencies or related events
+     */
+    dependencies: json('dependencies'),
+    /**
+     * JSON array of resources needed for this event
+     */
+    resources: json('resources'),
+    /**
+     * JSON array of milestones for goal tracking
+     */
+    milestones: json('milestones'),
+    /**
+     * Category for goal/activity classification
+     */
+    goalCategory: text('goal_category'),
+    /**
+     * Self-reference for parent event (for sub-goals, sub-tasks)
+     */
+    parentEventId: uuid('parent_event_id').references((): AnyPgColumn => events.id),
+    // Travel/Booking Fields (from consolidated activity table)
+    /**
+     * Booking or reservation reference number
+     */
+    bookingReference: text('booking_reference'),
+    /**
+     * Cost/price of the event (for bookings, tickets, etc.)
+     */
+    price: text('price'),
+    /**
+     * URL to booking confirmation or event details
+     */
+    url: text('url'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     deletedAt: timestamp('deleted_at'),
@@ -79,92 +165,28 @@ export const events = pgTable(
     index('events_external_id_idx').on(table.externalId),
     index('events_calendar_id_idx').on(table.calendarId),
     index('events_source_idx').on(table.source),
+    index('events_type_idx').on(table.type),
+    index('events_interval_idx').on(table.interval),
+    index('events_goal_category_idx').on(table.goalCategory),
+    index('events_streak_count_idx').on(table.streakCount),
     uniqueIndex('events_external_calendar_unique').on(table.externalId, table.calendarId),
-  ]
-)
-export interface CalendarEvent {
-  id: string;
-  title: string;
-  description: string | null;
-  date: Date;
-  placeId: string | null;
-  dateStart: Date | null;
-  dateEnd: Date | null;
-  dateTime: Date | null;
-  type: EventTypeEnum;
-  userId: string;
-  source: EventSourceEnum;
-  externalId: string | null;
-  calendarId: string | null;
-  lastSyncedAt: Date | null;
-  syncError: string | null;
-  visitNotes: string | null;
-  visitRating: number | null;
-  visitReview: string | null;
-  visitPeople: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date | null;
-}
+  ],
+);
+export type CalendarEvent = InferSelectModel<typeof events>;
+export type CalendarEventInsert = InferInsertModel<typeof events>;
 export type CalendarEventSelect = CalendarEvent;
-export interface CalendarEventInsert {
-  id: string;
-  title: string;
-  description?: string | null;
-  date: Date;
-  placeId?: string | null;
-  dateStart?: Date | null;
-  dateEnd?: Date | null;
-  dateTime?: Date | null;
-  type: EventTypeEnum;
-  userId: string;
-  source?: EventSourceEnum;
-  externalId?: string | null;
-  calendarId?: string | null;
-  lastSyncedAt?: Date | null;
-  syncError?: string | null;
-  visitNotes?: string | null;
-  visitRating?: number | null;
-  visitReview?: string | null;
-  visitPeople?: string | null;
-  createdAt?: Date;
-  updatedAt?: Date;
-  deletedAt?: Date | null;
-}
 
 export const eventsTags = pgTable('events_tags', {
   eventId: uuid('event_id').references(() => events.id),
   tagId: uuid('tag_id').references(() => tags.id),
-})
+});
 
 export const eventsUsers = pgTable('events_users', {
   eventId: uuid('event_id').references(() => events.id),
   personId: uuid('person_id').references(() => contacts.id),
-})
+});
 
 export const eventsTransactions = pgTable('events_transactions', {
   eventId: uuid('event_id').references(() => events.id),
   transactionId: uuid('transaction_id').references(() => transactions.id),
-})
-
-// Relations
-export const eventsRelations = relations(events, ({ many, one }) => ({
-  place: one(place, {
-    fields: [events.placeId],
-    references: [place.id],
-  }),
-  tags: many(eventsTags),
-  users: many(eventsUsers),
-  transactions: many(eventsTransactions),
-}))
-
-export const eventsTagsRelations = relations(eventsTags, ({ one }) => ({
-  event: one(events, {
-    fields: [eventsTags.eventId],
-    references: [events.id],
-  }),
-  tag: one(tags, {
-    fields: [eventsTags.tagId],
-    references: [tags.id],
-  }),
-}))
+});

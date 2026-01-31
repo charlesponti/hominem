@@ -1,4 +1,3 @@
-export type * from './activity.types';
 export type * from './auth.types';
 export type * from './bookmarks.types';
 export type * from './calendar.types';
@@ -9,7 +8,6 @@ export type * from './company.types';
 export type * from './contacts.types';
 export type * from './content.types';
 export type * from './documents.types';
-export type * from './events.types';
 export type * from './finance.types';
 export type * from './goals.types';
 export type * from './health.types';

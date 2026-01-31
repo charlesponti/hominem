@@ -66,11 +66,6 @@ export type {
 } from '@hominem/db/types/users';
 
 export type {
-  ActivityOutput as Activity,
-  ActivityInput as ActivityInsert,
-} from '@hominem/db/types/activity';
-
-export type {
   CategoryOutput as Category,
   CategoryInput as CategoryInsert,
 } from '@hominem/db/types/categories';

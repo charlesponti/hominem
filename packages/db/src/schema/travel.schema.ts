@@ -1,7 +1,8 @@
-import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm/relations'
-import { list } from './lists.schema'
-import { users } from './users.schema'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+
+import { list } from './lists.schema';
+import { users } from './users.schema';
 
 export const flight = pgTable(
   'flight',
@@ -35,8 +36,12 @@ export const flight = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
-  ]
-)
+  ],
+);
+
+export type Flight = InferSelectModel<typeof flight>;
+export type FlightInsert = InferInsertModel<typeof flight>;
+export type FlightSelect = Flight;
 
 export const hotel = pgTable(
   'hotel',
@@ -73,8 +78,12 @@ export const hotel = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
-  ]
-)
+  ],
+);
+
+export type Hotel = InferSelectModel<typeof hotel>;
+export type HotelInsert = InferInsertModel<typeof hotel>;
+export type HotelSelect = Hotel;
 
 export const transport = pgTable(
   'transport',
@@ -109,51 +118,9 @@ export const transport = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
-  ]
-)
+  ],
+);
 
-export const activity = pgTable(
-  'activity',
-  {
-    id: uuid('id').primaryKey().notNull(),
-    name: text('name').notNull(),
-    location: text('location').notNull(),
-    startTime: timestamp('startTime', { mode: 'string' }).notNull(),
-    endTime: timestamp('endTime', { mode: 'string' }).notNull(),
-    bookingReference: text('bookingReference'),
-    price: text('price'),
-    url: text('url'),
-    notes: text('notes'),
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
-    userId: uuid('userId').notNull(),
-    listId: uuid('listId'),
-  },
-  (table) => [
-    foreignKey({
-      columns: [table.userId],
-      foreignColumns: [users.id],
-      name: 'activity_userId_user_id_fk',
-    })
-      .onUpdate('cascade')
-      .onDelete('cascade'),
-    foreignKey({
-      columns: [table.listId],
-      foreignColumns: [list.id],
-      name: 'activity_listId_list_id_fk',
-    })
-      .onUpdate('cascade')
-      .onDelete('cascade'),
-  ]
-)
-
-export const flightRelations = relations(flight, ({ one }) => ({
-  user: one(users, {
-    fields: [flight.userId],
-    references: [users.id],
-  }),
-  list: one(list, {
-    fields: [flight.listId],
-    references: [list.id],
-  }),
-}))
+export type Transport = InferSelectModel<typeof transport>;
+export type TransportInsert = InferInsertModel<typeof transport>;
+export type TransportSelect = Transport;
