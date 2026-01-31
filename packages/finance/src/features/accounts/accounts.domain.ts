@@ -3,9 +3,17 @@ import type { FinanceAccount, FinanceAccountInsert, AccountType } from '@hominem
 import { z } from 'zod';
 
 /**
- * Domain-aligned Finance Account Schema derived from Database Schema.
+ * AccountDomainSchema - Extended account domain model
+ *
+ * This is the primary domain model for accounts in the business logic layer.
+ * It extends the database schema with domain-specific fields like plaid connection info.
+ * Used throughout the accounts service, API responses, and UI components.
+ *
+ * Note: Do NOT confuse with:
+ * - TransactionServiceAccountSchema (in finance.transactions.service.ts) - service-level validation
+ * - The raw database schema in @hominem/db - auto-generated from Drizzle
  */
-export const FinanceAccountSchema = z.object({
+export const AccountDomainSchema = z.object({
   id: z.string().uuid(),
   type: z.string() as z.ZodType<AccountType>,
   balance: z.string().or(z.number()),
@@ -80,7 +88,7 @@ export type UpdateAccountInput = {
 /**
  * Extended type with Plaid/Institution info
  */
-export const AccountWithPlaidInfoSchema = FinanceAccountSchema.extend({
+export const AccountWithPlaidInfoSchema = AccountDomainSchema.extend({
   institutionName: z.string().nullable(),
   institutionLogo: z.string().nullable(),
   isPlaidConnected: z.boolean(),

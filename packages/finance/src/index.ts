@@ -62,7 +62,7 @@ export {
   AccountsService,
 } from './features/accounts/accounts.service';
 export {
-  FinanceAccountSchema,
+  AccountDomainSchema,
   CreateAccountSchema,
   UpdateAccountSchema,
   AccountWithPlaidInfoSchema,

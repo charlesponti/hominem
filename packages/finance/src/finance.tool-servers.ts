@@ -9,7 +9,7 @@ import {
   runwayCalculationSchema,
 } from './core/runway.service';
 import {
-  FinanceAccountSchema,
+  AccountDomainSchema,
   type CreateAccountInput,
   type UpdateAccountInput,
 } from './features/accounts/accounts.domain';
@@ -64,7 +64,7 @@ export const createFinanceAccountDef = toolDefinition({
   name: 'create_finance_account',
   description: 'Create a new finance account to track money',
   inputSchema: createFinanceAccountInputSchema,
-  outputSchema: FinanceAccountSchema,
+  outputSchema: AccountDomainSchema,
 });
 
 export const createFinanceAccountServer =
@@ -107,7 +107,7 @@ export const updateFinanceAccountDef = toolDefinition({
   name: 'update_finance_account',
   description: 'Update a finance account',
   inputSchema: updateFinanceAccountInputSchema,
-  outputSchema: FinanceAccountSchema,
+  outputSchema: AccountDomainSchema,
 });
 
 export const updateFinanceAccountServer =

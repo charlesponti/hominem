@@ -11,8 +11,19 @@ import * as z from 'zod';
 
 import type { QueryOptions } from './finance.types';
 
-// Create Zod schemas for transaction validation
-const FinanceAccountSchema = z.object({
+/**
+ * TransactionServiceAccountSchema - Account data for transaction service operations
+ *
+ * This schema is used internally within the finance.transactions.service for validating
+ * and structuring account information when processing transactions.
+ *
+ * DO NOT confuse with:
+ * - AccountDomainSchema (in features/accounts/accounts.domain.ts) - full domain model with plaid fields
+ * - Database schema in @hominem/db - auto-generated from Drizzle tables
+ *
+ * Scope: Internal to TransactionService only
+ */
+const TransactionServiceAccountSchema = z.object({
   id: z.string(),
   type: z.string(),
   balance: z.string().or(z.number()),
@@ -34,7 +45,20 @@ const FinanceAccountSchema = z.object({
   minimumPayment: z.string().or(z.number()).nullable().optional(),
 });
 
-const FinanceTransactionSchema = z.object({
+/**
+ * TransactionServiceTransactionSchema - Complete transaction data for service operations
+ *
+ * This schema represents a complete transaction as stored in the database, used for
+ * validating transaction data within the TransactionService. It includes all fields
+ * from the transactions table.
+ *
+ * DO NOT confuse with:
+ * - TransactionServiceInsertSchema - only the fields needed to INSERT a transaction
+ * - TransactionSchema in @hominem/db - raw database schema from Drizzle
+ *
+ * Scope: Internal to TransactionService only
+ */
+const TransactionServiceTransactionSchema = z.object({
   id: z.string(),
   type: z.string(),
   amount: z.string().or(z.number()),
@@ -62,7 +86,24 @@ const FinanceTransactionSchema = z.object({
   userId: z.string(),
 });
 
-const TransactionInsertSchema = z.object({
+/**
+ * TransactionServiceInsertSchema - Transaction data required for INSERT operations
+ *
+ * This schema defines the minimum required fields to insert a new transaction into the database.
+ * It's a subset of TransactionServiceTransactionSchema, making most fields optional since
+ * they're either auto-generated (id, createdAt) or have defaults (date, source).
+ *
+ * Used by:
+ * - createTransactionInputSchema
+ * - updateTransactionInputSchema
+ *
+ * DO NOT confuse with:
+ * - TransactionServiceTransactionSchema - full transaction with all fields
+ * - TransactionInsertSchema in @hominem/db - raw insert schema from Drizzle
+ *
+ * Scope: Internal to TransactionService only
+ */
+const TransactionServiceInsertSchema = z.object({
   id: z.string().optional(),
   type: z.string(),
   amount: z.string().or(z.number()),
@@ -97,7 +138,7 @@ export const getTransactionsInputSchema = z.object({
   limit: z.number().optional().describe('Max results to return'),
 });
 
-const transactionWithAccountSchema = FinanceTransactionSchema.pick({
+const transactionWithAccountSchema = TransactionServiceTransactionSchema.pick({
   id: true,
   date: true,
   description: true,
@@ -110,7 +151,7 @@ const transactionWithAccountSchema = FinanceTransactionSchema.pick({
   note: true,
   accountId: true,
 }).extend({
-  account: FinanceAccountSchema.nullable(),
+  account: TransactionServiceAccountSchema.nullable(),
 });
 
 export const getTransactionsOutputSchema = z.object({
@@ -123,14 +164,14 @@ export const updateTransactionInputSchema = z
     transactionId: z.string().describe('The transaction ID'),
   })
   .extend(
-    TransactionInsertSchema.pick({
+    TransactionServiceInsertSchema.pick({
       amount: true,
       description: true,
       category: true,
     }).partial().shape,
   );
 
-export const updateTransactionOutputSchema = FinanceTransactionSchema;
+export const updateTransactionOutputSchema = TransactionServiceTransactionSchema;
 
 export const deleteTransactionInputSchema = z.object({
   transactionId: z.string().describe('The transaction ID'),
@@ -350,7 +391,7 @@ export async function findExistingTransaction(
   }) as unknown as Promise<FinanceTransactionOutput | undefined>;
 }
 
-export const createTransactionInputSchema = TransactionInsertSchema.pick({
+export const createTransactionInputSchema = TransactionServiceInsertSchema.pick({
   accountId: true,
   amount: true,
   description: true,
@@ -360,7 +401,7 @@ export const createTransactionInputSchema = TransactionInsertSchema.pick({
   date: z.date().optional().describe('Transaction date'),
 });
 
-export const createTransactionOutputSchema = FinanceTransactionSchema;
+export const createTransactionOutputSchema = TransactionServiceTransactionSchema;
 export async function createTransaction(
   input: z.infer<typeof createTransactionInputSchema> & { userId?: string },
   userId?: string,
