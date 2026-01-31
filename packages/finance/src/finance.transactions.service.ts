@@ -1,28 +1,92 @@
-import type {
-  FinanceTransactionOutput,
-  FinanceTransactionInput,
-  FinanceAccountOutput,
-  TransactionType,
-  TransactionCreatePayload,
-  TransactionUpdatePayload,
-  TransactionLocation,
-} from '@hominem/db/types/finance';
+import type { TransactionType } from '@hominem/db/schema/finance';
+import type { TransactionLocation } from '@hominem/db/schema/shared';
+import type { FinanceTransactionOutput, FinanceTransactionInput } from '@hominem/db/types/finance';
 
 import { db } from '@hominem/db';
-import {
-  financeAccounts,
-  transactions,
-  FinanceTransactionSchema,
-  TransactionInsertSchema,
-  FinanceAccountSchema,
-  TransactionLocationSchema,
-} from '@hominem/db/types/finance';
+import { financeAccounts, transactions } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
 import { and, asc, desc, eq, gte, like, lte, sql, type SQL } from 'drizzle-orm';
 import { type PgColumn } from 'drizzle-orm/pg-core';
 import * as z from 'zod';
 
 import type { QueryOptions } from './finance.types';
+
+// Create Zod schemas for transaction validation
+const FinanceAccountSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  balance: z.string().or(z.number()),
+  name: z.string(),
+  mask: z.string().nullable().optional(),
+  isoCurrencyCode: z.string().nullable().optional(),
+  subtype: z.string().nullable().optional(),
+  officialName: z.string().nullable().optional(),
+  limit: z.string().or(z.number()).nullable().optional(),
+  meta: z.unknown().nullable().optional(),
+  lastUpdated: z.date().nullable().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  institutionId: z.string().nullable().optional(),
+  plaidItemId: z.string().nullable().optional(),
+  plaidAccountId: z.string().nullable().optional(),
+  userId: z.string(),
+  interestRate: z.string().or(z.number()).nullable().optional(),
+  minimumPayment: z.string().or(z.number()).nullable().optional(),
+});
+
+const FinanceTransactionSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  amount: z.string().or(z.number()),
+  date: z.date(),
+  description: z.string().nullable().optional(),
+  merchantName: z.string().nullable().optional(),
+  accountId: z.string(),
+  fromAccountId: z.string().nullable().optional(),
+  toAccountId: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  parentCategory: z.string().nullable().optional(),
+  excluded: z.boolean().or(z.null()).default(false),
+  tags: z.string().nullable().optional(),
+  accountMask: z.string().nullable().optional(),
+  note: z.string().nullable().optional(),
+  recurring: z.boolean().or(z.null()).default(false),
+  pending: z.boolean().or(z.null()).default(false),
+  paymentChannel: z.string().nullable().optional(),
+  location: z.unknown().nullable().optional(),
+  plaidTransactionId: z.string().nullable().optional(),
+  source: z.string().nullable().default('manual'),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  userId: z.string(),
+});
+
+const TransactionInsertSchema = z.object({
+  id: z.string().optional(),
+  type: z.string(),
+  amount: z.string().or(z.number()),
+  date: z.date().optional(),
+  description: z.string().nullable().optional(),
+  merchantName: z.string().nullable().optional(),
+  accountId: z.string(),
+  fromAccountId: z.string().nullable().optional(),
+  toAccountId: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  parentCategory: z.string().nullable().optional(),
+  excluded: z.boolean().optional(),
+  tags: z.string().nullable().optional(),
+  accountMask: z.string().nullable().optional(),
+  note: z.string().nullable().optional(),
+  recurring: z.boolean().optional(),
+  pending: z.boolean().optional(),
+  paymentChannel: z.string().nullable().optional(),
+  location: z.unknown().nullable().optional(),
+  plaidTransactionId: z.string().nullable().optional(),
+  source: z.string().optional(),
+  userId: z.string().optional(),
+});
 
 // Transaction service schemas
 export const getTransactionsInputSchema = z.object({
@@ -89,7 +153,7 @@ export function buildWhereConditions(options: QueryOptions): SQL | undefined {
   const conditions: (SQL | undefined)[] = [
     options.userId ? eq(transactions.userId, options.userId) : undefined,
     options.type && typeof options.type === 'string'
-      ? eq(transactions.type, options.type)
+      ? eq(transactions.type, options.type as TransactionType)
       : undefined,
     !options.includeExcluded ? eq(transactions.excluded, false) : undefined,
     eq(transactions.pending, false),

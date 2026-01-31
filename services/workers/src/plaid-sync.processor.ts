@@ -1,11 +1,23 @@
 import type { FinanceTransactionOutput, TransactionType } from '@hominem/db/types/finance';
 import type { Job } from 'bullmq';
 
+import {
+  getPlaidItemByUserAndItemId,
+  upsertAccount,
+  getUserAccounts,
+  getTransactionByPlaidId,
+  insertTransaction,
+  updatePlaidTransaction,
+  deletePlaidTransaction,
+  updatePlaidItemCursor,
+  updatePlaidItemSyncStatus,
+  updatePlaidItemError,
+  getAccountByPlaidId,
+} from '@hominem/finance-services';
 import { logger } from '@hominem/utils/logger';
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
 
 import { env } from './env';
-import { PlaidService } from './plaid.service';
 
 /**
  * Job data for Plaid sync jobs
@@ -32,7 +44,6 @@ const configuration = new Configuration({
 });
 
 const plaidClient = new PlaidApi(configuration);
-const plaidService = new PlaidService();
 
 /**
  * Process Plaid sync jobs
@@ -51,7 +62,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
 
   try {
     // Get the Plaid item from database to make sure it exists and is valid
-    const plaidItem = await plaidService.getPlaidItem(userId, itemId);
+    const plaidItem = await getPlaidItemByUserAndItemId(userId, itemId);
 
     if (!plaidItem) {
       throw new Error(`Plaid item ${itemId} not found for user ${userId}`);
@@ -80,7 +91,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
         userId,
       };
 
-      await plaidService.upsertAccount(accountData);
+      await upsertAccount(accountData);
     }
 
     // 2. Fetch and store transactions using transactions/sync endpoint
@@ -106,7 +117,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
       // Process added transactions
       if (added.length > 0) {
         // Get all accounts for this user to map Plaid account IDs to our account IDs
-        const userAccounts = await plaidService.getUserAccounts(userId, plaidItem.id);
+        const userAccounts = await getUserAccounts(userId, plaidItem.id);
 
         const accountMap = new Map(
           userAccounts.map((account) => [account.plaidAccountId, account.id]),
@@ -125,9 +136,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
           const accountId = accountMap.get(transaction.account_id);
 
           // Check if transaction already exists
-          const existingTransaction = await plaidService.getTransactionByPlaidId(
-            transaction.transaction_id,
-          );
+          const existingTransaction = await getTransactionByPlaidId(transaction.transaction_id);
 
           if (existingTransaction) {
             // Skip - we already have this transaction
@@ -135,7 +144,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
           }
 
           // Insert new transaction
-          await plaidService.insertTransaction({
+          await insertTransaction({
             type: determineTransactionType(transaction.amount) as TransactionType,
             amount: Math.abs(transaction.amount).toFixed(2),
             date: new Date(transaction.date),
@@ -165,14 +174,12 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
       if (modified.length > 0) {
         for (const transaction of modified) {
           // Get the existing transaction
-          const existingTransaction = await plaidService.getTransactionByPlaidId(
-            transaction.transaction_id,
-          );
+          const existingTransaction = await getTransactionByPlaidId(transaction.transaction_id);
 
           if (!existingTransaction) {
             // If the transaction doesn't exist yet (rare edge case), treat it as a new transaction
             // Find the account ID first
-            const account = await plaidService.getAccountByPlaidId(transaction.account_id);
+            const account = await getAccountByPlaidId(transaction.account_id);
 
             if (!account) {
               logger.warn('Cannot find matching account for modified transaction', {
@@ -183,7 +190,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             }
 
             // Insert the transaction
-            await plaidService.insertTransaction({
+            await insertTransaction({
               type: determineTransactionType(transaction.amount) as TransactionType,
               amount: Math.abs(transaction.amount).toFixed(2),
               date: new Date(transaction.date),
@@ -208,7 +215,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             });
           } else {
             // Update the existing transaction
-            await plaidService.updateTransaction(existingTransaction.id, {
+            await updatePlaidTransaction(existingTransaction.id, {
               type: determineTransactionType(transaction.amount) as TransactionType,
               amount: Math.abs(transaction.amount).toFixed(2),
               date: new Date(transaction.date),
@@ -238,13 +245,13 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             continue;
           }
 
-          await plaidService.deleteTransaction(removed_transaction.transaction_id);
+          await deletePlaidTransaction(removed_transaction.transaction_id);
         }
       }
 
       // Update the cursor in database
       if (cursor) {
-        await plaidService.updatePlaidItemCursor(plaidItem.id, cursor);
+        await updatePlaidItemCursor(plaidItem.id, cursor);
       }
 
       // Update counts
@@ -258,7 +265,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
     }
 
     // 3. Update the last synced timestamp for this Plaid item
-    await plaidService.updatePlaidItemSyncStatus(plaidItem.id, 'active', null);
+    await updatePlaidItemSyncStatus(plaidItem.id, 'active', null);
 
     logger.info('Completed Plaid sync job', {
       jobId: job.id,
@@ -291,10 +298,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
     });
 
     // Update item status on error
-    await plaidService.updatePlaidItemError(
-      itemId,
-      error instanceof Error ? error.message : String(error),
-    );
+    await updatePlaidItemError(itemId, error instanceof Error ? error.message : String(error));
 
     throw error;
   }

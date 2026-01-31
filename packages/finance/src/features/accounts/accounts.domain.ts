@@ -1,24 +1,54 @@
-import {
-  FinanceAccountSchema as DbFinanceAccountSchema,
-  FinanceAccountInsertSchema as DbFinanceAccountInsertSchema,
-} from '@hominem/db/types/finance';
+import type { FinanceAccount, FinanceAccountInsert, AccountType } from '@hominem/db/schema/finance';
+
 import { z } from 'zod';
 
 /**
  * Domain-aligned Finance Account Schema derived from Database Schema.
  */
-export const FinanceAccountSchema = DbFinanceAccountSchema.extend({
-  isoCurrencyCode: z.string().nullable().default('USD'),
+export const FinanceAccountSchema = z.object({
+  id: z.string().uuid(),
+  type: z.string() as z.ZodType<AccountType>,
+  balance: z.string().or(z.number()),
+  interestRate: z.string().or(z.number()).nullable().optional(),
+  minimumPayment: z.string().or(z.number()).nullable().optional(),
+  name: z.string(),
+  mask: z.string().nullable().optional(),
+  isoCurrencyCode: z.string().nullable().optional().default('USD'),
+  subtype: z.string().nullable().optional(),
+  officialName: z.string().nullable().optional(),
+  limit: z.string().or(z.number()).nullable().optional(),
+  meta: z.unknown().nullable().optional(),
+  lastUpdated: z.date().nullable().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  institutionId: z.string().nullable().optional(),
+  plaidItemId: z.string().uuid().nullable().optional(),
+  plaidAccountId: z.string().nullable().optional(),
+  userId: z.string().uuid(),
 });
 
-export type FinanceAccountOutput = z.infer<typeof FinanceAccountSchema>;
+export type FinanceAccountOutput = FinanceAccount;
 
 /**
  * Input schema for creating a new account
  */
-export const CreateAccountSchema = DbFinanceAccountInsertSchema.extend({
-  isoCurrencyCode: z.string().nullable().default('USD'),
+export const CreateAccountSchema = z.object({
+  id: z.string().uuid().optional(),
+  type: z.string() as z.ZodType<AccountType>,
+  balance: z.string().or(z.number()),
+  interestRate: z.string().or(z.number()).nullable().optional(),
+  minimumPayment: z.string().or(z.number()).nullable().optional(),
+  name: z.string(),
+  mask: z.string().nullable().optional(),
+  isoCurrencyCode: z.string().nullable().optional().default('USD'),
+  subtype: z.string().nullable().optional(),
+  officialName: z.string().nullable().optional(),
+  limit: z.string().or(z.number()).nullable().optional(),
   meta: z.any().optional().nullable(),
+  institutionId: z.string().nullable().optional(),
+  plaidItemId: z.string().uuid().nullable().optional(),
+  plaidAccountId: z.string().nullable().optional(),
+  userId: z.string().uuid().optional(),
 });
 
 export type CreateAccountInput = z.infer<typeof CreateAccountSchema>;

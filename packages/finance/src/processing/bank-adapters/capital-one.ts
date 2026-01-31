@@ -1,8 +1,5 @@
-import {
-  type FinanceTransactionInput,
-  type TransactionType,
-  TransactionTypes,
-} from '@hominem/db/types/finance';
+import { type TransactionType, TransactionTypes } from '@hominem/db/schema/finance';
+import { type FinanceTransactionInput } from '@hominem/db/types/finance';
 import crypto from 'node:crypto';
 
 export interface CapitalOneTransaction {

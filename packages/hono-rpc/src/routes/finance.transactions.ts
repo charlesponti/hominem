@@ -1,10 +1,10 @@
-import { TransactionInsertSchema } from '@hominem/db/types/finance';
 import {
   queryTransactions,
   createTransaction,
   updateTransaction,
   deleteTransaction,
   getAccountById,
+  createTransactionInputSchema,
 } from '@hominem/finance-services';
 import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
@@ -67,7 +67,7 @@ export const transactionsRoutes = new Hono<AppContext>()
     // POST /create - Create new transaction
     .post(
       '/create',
-      zValidator('json', TransactionInsertSchema.omit({ userId: true })),
+      zValidator('json', createTransactionInputSchema),
       async (c) => {
         const input = c.req.valid('json');
         const userId = c.get('userId')!;

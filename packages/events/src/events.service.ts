@@ -397,29 +397,29 @@ export interface VisitStats {
 }
 
 export async function getVisitStatsByPlace(placeId: string, userId: string): Promise<VisitStats> {
-   const visits = await db
-     .select({
-       date: events.date,
-       visitRating: events.visitRating,
-     })
-     .from(events)
-     .where(and(eq(events.placeId, placeId), eq(events.userId, userId), isNull(events.deletedAt)))
-     .orderBy(desc(events.date));
+  const visits = await db
+    .select({
+      date: events.date,
+      visitRating: events.visitRating,
+    })
+    .from(events)
+    .where(and(eq(events.placeId, placeId), eq(events.userId, userId), isNull(events.deletedAt)))
+    .orderBy(desc(events.date));
 
-   const visitCount = visits.length;
-   const lastVisitDate = visits[0]?.date || null;
+  const visitCount = visits.length;
+  const lastVisitDate = visits[0]?.date || null;
 
-   const ratings = visits
-     .map((v) => v.visitRating)
-     .filter((r): r is number => r !== null && r !== undefined);
-   const averageRating =
-     ratings.length > 0 ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : null;
+  const ratings = visits
+    .map((v) => v.visitRating)
+    .filter((r): r is number => r !== null && r !== undefined);
+  const averageRating =
+    ratings.length > 0 ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : null;
 
-   return {
-     visitCount,
-     lastVisitDate,
-     averageRating,
-   };
+  return {
+    visitCount,
+    lastVisitDate,
+    averageRating,
+  };
 }
 
 /**
@@ -433,10 +433,7 @@ export interface HabitStats {
   lastCompletedDate: Date | null;
 }
 
-export async function getHabitStats(
-  userId: string,
-  habitId: string,
-): Promise<HabitStats> {
+export async function getHabitStats(userId: string, habitId: string): Promise<HabitStats> {
   const habit = await db
     .select({
       streakCount: events.streakCount,
@@ -727,11 +724,7 @@ export async function getGoalsByUser(
     sortBy?: 'progress' | 'priority' | 'name';
   },
 ): Promise<EventWithTagsAndPeople[]> {
-  const conditions = [
-    eq(events.userId, userId),
-    eq(events.type, 'Goal'),
-    isNull(events.deletedAt),
-  ];
+  const conditions = [eq(events.userId, userId), eq(events.type, 'Goal'), isNull(events.deletedAt)];
 
   if (filters?.active) {
     conditions.push(eq(events.isCompleted, false));
@@ -766,12 +759,12 @@ export async function getGoalsByUser(
     getTagsForEvents(eventIds),
   ]);
 
-   return goalsList.map((goalItem) => ({
-     ...goalItem,
-     tags: tagsMap.get(goalItem.id) || [],
-     people: peopleMap.get(goalItem.id) || [],
-   }));
- }
+  return goalsList.map((goalItem) => ({
+    ...goalItem,
+    tags: tagsMap.get(goalItem.id) || [],
+    people: peopleMap.get(goalItem.id) || [],
+  }));
+}
 
 /**
  * Health Activity Tracking Functions
@@ -1081,11 +1074,7 @@ export async function getConsolidatedGoalsByUser(
     sortBy?: 'priority' | 'createdAt' | 'status';
   },
 ): Promise<EventWithTagsAndPeople[]> {
-  const conditions = [
-    eq(events.userId, userId),
-    eq(events.type, 'Goal'),
-    isNull(events.deletedAt),
-  ];
+  const conditions = [eq(events.userId, userId), eq(events.type, 'Goal'), isNull(events.deletedAt)];
 
   if (filters?.status) {
     conditions.push(eq(events.status, filters.status));
@@ -1126,4 +1115,3 @@ export async function getConsolidatedGoalsByUser(
     people: peopleMap.get(goalItem.id) || [],
   }));
 }
-

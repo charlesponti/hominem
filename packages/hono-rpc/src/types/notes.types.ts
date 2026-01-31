@@ -1,15 +1,16 @@
 // ============================================================================
-// Re-exports from @hominem/db/types (single source of truth)
+// Re-exports from @hominem/db/schema (single source of truth)
 // ============================================================================
 
 import type {
-  NoteOutput,
+  NoteContentType,
   TaskMetadata,
   TaskStatus,
   Priority,
   NoteMention,
-  NoteContentType,
-} from '@hominem/db/types/notes';
+} from '@hominem/db/schema/notes';
+
+import type { NoteOutput } from '@hominem/db/types/notes';
 
 import type { ContentTag, AllContentType } from '@hominem/db/schema/shared';
 
@@ -18,7 +19,7 @@ import {
   TaskStatusSchema,
   TaskMetadataSchema,
   PrioritySchema,
-} from '@hominem/db/types/notes';
+} from '@hominem/db/schema/notes';
 
 // Alias NoteOutput as Note for API backwards compatibility
 export type Note = NoteOutput;

@@ -158,7 +158,7 @@ export async function generateTimeSeriesData(
   });
 
   // Generate statistics if requested
-  let stats = null;
+  let stats: TimeSeriesStats | null = null;
   if (options.includeStats && timeSeries.length > 0) {
     stats = calculateTimeSeriesStats(timeSeries);
   }

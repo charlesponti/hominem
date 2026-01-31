@@ -34,3 +34,9 @@ export type {
 // Legacy aliases for backward compatibility
 export type NoteOutput = Note;
 export type NoteInput = NoteInsert;
+
+export type NoteSyncItem = Omit<Note, 'id' | 'synced' | 'createdAt' | 'updatedAt'> & {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
