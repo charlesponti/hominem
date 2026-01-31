@@ -36,9 +36,12 @@ export function formatMessageTimestamp(dateString: string): string {
 export function adjustDateRange(
   dateFrom?: Date,
   dateTo?: Date,
-): { adjustedDateFrom?: Date; adjustedDateTo?: Date } {
+): { adjustedDateFrom?: Date | undefined; adjustedDateTo?: Date | undefined } {
   if (!(dateFrom && dateTo)) {
-    return { adjustedDateFrom: dateFrom, adjustedDateTo: dateTo };
+    const result: { adjustedDateFrom?: Date; adjustedDateTo?: Date } = {};
+    if (dateFrom) result.adjustedDateFrom = dateFrom;
+    if (dateTo) result.adjustedDateTo = dateTo;
+    return result;
   }
 
   const now = new Date();

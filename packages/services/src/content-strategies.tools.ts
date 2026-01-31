@@ -13,7 +13,7 @@ export const content_generator = tool({
       .optional()
       .describe('List of platforms to generate content for (e.g., blog, twitter, instagram)'),
   }),
-  async execute(args: { topic: string; audience?: string; platforms?: string[] }) {
+  async execute(args: { topic: string; audience?: string | undefined; platforms?: string[] | undefined }) {
     const { topic, audience = 'general', platforms = ['blog', 'twitter', 'instagram'] } = args;
 
     // Build a detailed prompt for the LLM

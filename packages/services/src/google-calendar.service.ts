@@ -80,10 +80,13 @@ export class GoogleCalendarService {
       env.GOOGLE_REDIRECT_URI,
     );
 
-    this.oauth2Client.setCredentials({
+    const credentials: { access_token: string; refresh_token?: string | null } = {
       access_token: tokens.accessToken,
-      refresh_token: tokens.refreshToken,
-    });
+    };
+    if (tokens.refreshToken) {
+      credentials.refresh_token = tokens.refreshToken;
+    }
+    this.oauth2Client.setCredentials(credentials);
 
     this.calendar = google.calendar({ version: 'v3', auth: this.oauth2Client });
   }
@@ -112,15 +115,20 @@ export class GoogleCalendarService {
       const timeMinParam = timeMin || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
 
       do {
-        const response = await this.calendar.events.list({
+        const listParams: calendar_v3.Params$Resource$Events$List = {
           calendarId,
           timeMin: timeMinParam,
-          timeMax,
           maxResults: 2500,
           singleEvents: true,
           orderBy: 'startTime',
-          pageToken,
-        });
+        };
+        if (timeMax) {
+          listParams.timeMax = timeMax;
+        }
+        if (pageToken) {
+          listParams.pageToken = pageToken;
+        }
+        const response = await this.calendar.events.list(listParams);
 
         if (response.data.items) {
           googleEvents.push(...response.data.items);

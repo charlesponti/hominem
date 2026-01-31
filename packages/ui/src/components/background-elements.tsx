@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
 
 export function BackgroundElements() {
+  const icons = ['404', '❌', '🤔', '💫'] as const;
   return (
     <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
-      {[...Array(20)].map((_, i) => (
-        <BackgroundElement
-          key={crypto.getRandomValues(new Uint32Array(1))[0]}
-          icon={['404', '❌', '🤔', '💫'][i % 4]}
-        />
-      ))}
+      {[...Array(20)].map((_, i) => {
+        const icon = icons[i % icons.length];
+        return (
+          <BackgroundElement
+            key={crypto.getRandomValues(new Uint32Array(1))[0]}
+            icon={icon || '404'}
+          />
+        );
+      })}
     </div>
   );
 }

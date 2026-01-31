@@ -45,12 +45,12 @@ export class NotesService {
   async query(
     userId: string,
     filters?: {
-      query?: string;
-      types?: string[];
-      tags?: string[];
-      since?: string;
-      limit?: number;
-      offset?: number;
+      query?: string | undefined;
+      types?: string[] | undefined;
+      tags?: string[] | undefined;
+      since?: string | undefined;
+      limit?: number | undefined;
+      offset?: number | undefined;
     },
   ): Promise<{ notes: NoteOutput[]; total: number }> {
     if (!userId) {

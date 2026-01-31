@@ -4,15 +4,15 @@ import dayjs from 'dayjs';
 
 export interface TimerOptions {
   label?: string;
-  onStart?: (label: string, startTime: Dayjs) => void;
-  onStop?: (label: string, duration: number) => void;
+  onStart?: ((label: string, startTime: Dayjs) => void) | undefined;
+  onStop?: ((label: string, duration: number) => void) | undefined;
 }
 
 export class Timer {
   private startTime: Dayjs;
   private label: string;
-  private onStart?: (label: string, startTime: Dayjs) => void;
-  private onStop?: (label: string, duration: number) => void;
+  private onStart?: ((label: string, startTime: Dayjs) => void) | undefined;
+  private onStop?: ((label: string, duration: number) => void) | undefined;
 
   constructor(options: TimerOptions = {}) {
     this.startTime = dayjs();

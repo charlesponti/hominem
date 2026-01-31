@@ -18,7 +18,7 @@ import { Drawer, DrawerContent, DrawerTrigger } from './ui/drawer';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 export interface GeocodeFeatureSelectProps {
-  initialValue?: string;
+  initialValue?: string | undefined;
   onSelect: (location: GeocodeFeature) => void;
   placeholder?: string;
 }

@@ -17,10 +17,10 @@ export function mediaQuery(query: string, options?: MediaQueryOptions) {
     const minWidthMatch = query.match(/\(min-width:\s*(\d+)px\)/);
     const maxWidthMatch = query.match(/\(max-width:\s*(\d+)px\)/);
 
-    if (minWidthMatch) {
+    if (minWidthMatch && minWidthMatch[1]) {
       return options.width >= Number.parseInt(minWidthMatch[1], 10);
     }
-    if (maxWidthMatch) {
+    if (maxWidthMatch && maxWidthMatch[1]) {
       return options.width <= Number.parseInt(maxWidthMatch[1], 10);
     }
   }

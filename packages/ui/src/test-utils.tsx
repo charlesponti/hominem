@@ -11,7 +11,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 
 interface AllTheProvidersProps {
   children: ReactNode;
-  initialEntries?: string[];
+  initialEntries?: string[] | undefined;
 }
 
 function AllTheProviders({ children, initialEntries = ['/'] }: AllTheProvidersProps) {
@@ -43,7 +43,7 @@ function AllTheProviders({ children, initialEntries = ['/'] }: AllTheProvidersPr
 }
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
-  initialEntries?: string[];
+  initialEntries?: string[] | undefined;
 }
 
 const customRender = (ui: ReactElement, options?: CustomRenderOptions): RenderResult => {
@@ -56,7 +56,7 @@ const customRender = (ui: ReactElement, options?: CustomRenderOptions): RenderRe
   });
 };
 
-const renderHook = <T,>(hook: () => T, options?: { initialEntries?: string[] }) => {
+const renderHook = <T,>(hook: () => T, options?: { initialEntries?: string[] | undefined }) => {
   const { initialEntries } = options ?? {};
   return rtlRenderHook(hook, {
     wrapper: ({ children }: { children: ReactNode }) => (

@@ -73,7 +73,7 @@ export interface ApiError {
   success: false;
   code: ErrorCode;
   message: string;
-  details?: Record<string, unknown>;
+  details?: Record<string, unknown> | undefined;
 }
 
 /**

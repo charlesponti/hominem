@@ -253,11 +253,11 @@ const getPhotos = async ({
   limit = 6,
   forceFresh,
 }: PlacePhotosOptions): Promise<string[]> => {
-  const details = await getDetails({
+  const detailsParams = {
     placeId,
     fieldMask: FIELDS.photos,
-    forceFresh,
-  });
+  } as const;
+  const details = await getDetails(forceFresh ? { ...detailsParams, forceFresh } : detailsParams);
 
   const photos = details.photos ?? [];
   return photos

@@ -28,7 +28,7 @@ export type ErrorCode =
 export class ServiceError extends Error {
   public readonly code: ErrorCode;
   public readonly statusCode: number;
-  public readonly details?: Record<string, unknown>;
+  public readonly details?: Record<string, unknown> | undefined;
 
   constructor(
     message: string,

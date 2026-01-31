@@ -42,6 +42,9 @@ export async function getGoal(id: string, userId: string): Promise<GoalOutput | 
 
 export async function createGoal(data: Omit<GoalInput, 'id'>): Promise<GoalOutput> {
   const [goal] = await db.insert(goals).values(data).returning();
+  if (!goal) {
+    throw new Error('Failed to create goal');
+  }
   return goal;
 }
 

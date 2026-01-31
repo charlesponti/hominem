@@ -81,7 +81,7 @@ export class MarkdownProcessor {
   ): Promise<{
     result: EntryContent[];
     metadata?: Metadata;
-    date?: string;
+    date?: string | undefined;
     heading: string;
   }> {
     const { metadata: extractedMetadata, processableContent } = this.processFrontmatter(content);
@@ -100,11 +100,13 @@ export class MarkdownProcessor {
     const dates = getDatesFromText(processableContent);
 
     const result = this.extractMarkdownHierarchy(ast.children);
+    
+    const date = dates.dates?.[0]?.start;
 
     return {
       result,
       metadata: extractedMetadata,
-      date: dates.dates?.[0]?.start,
+      ...(date !== undefined && { date }),
       heading,
     };
   }

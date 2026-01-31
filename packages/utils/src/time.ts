@@ -21,7 +21,6 @@ export function getDatesFromText(text: string) {
       if (!Number.isNaN(date.getTime())) {
         parsedDates.push({
           start: date.toISOString(),
-          end: undefined,
         });
       }
     } catch {

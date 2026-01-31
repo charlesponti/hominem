@@ -27,6 +27,10 @@ export async function createBookmarkForUser(
     })
     .returning();
 
+  if (!created) {
+    throw new Error('Failed to create bookmark');
+  }
+
   return created;
 }
 

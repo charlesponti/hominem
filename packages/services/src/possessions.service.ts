@@ -32,6 +32,10 @@ export async function createPossession(input: CreatePossessionInput): Promise<Po
     })
     .returning();
 
+  if (!created) {
+    throw new Error('Failed to create possession');
+  }
+
   return created;
 }
 

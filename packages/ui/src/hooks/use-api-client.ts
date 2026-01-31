@@ -5,7 +5,7 @@ const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
 
 type FetchOptions<T> = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  body?: T;
+  body?: T | undefined;
   headers?: Record<string, string>;
   stream?: boolean;
 };
@@ -56,15 +56,21 @@ export function useApiClient() {
           }
         }
 
-        const res = await fetch(`${API_URL}${endpoint}`, {
-          method,
-          headers: {
-            ...defaultHeaders,
-            ...headers,
-          },
-          body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
-          credentials: 'include',
-        });
+         const fetchBody: BodyInit | null = body instanceof FormData 
+           ? body 
+           : body 
+           ? JSON.stringify(body) 
+           : null;
+         
+         const res = await fetch(`${API_URL}${endpoint}`, {
+           method,
+           headers: {
+             ...defaultHeaders,
+             ...headers,
+           },
+           body: fetchBody,
+           credentials: 'include',
+         });
 
         if (!res.ok) {
           const error = await res.json().catch(() => ({}));
@@ -101,8 +107,8 @@ export function useApiClient() {
         options?: Omit<FetchOptions<body>, 'method' | 'body'>,
       ) => fetchApi<body, returnType>(endpoint, { ...options, method: 'GET' }),
 
-      post: <T, S>(endpoint: string, data?: T, options?: Omit<FetchOptions<T>, 'method'>) =>
-        fetchApi<T, S>(endpoint, { ...options, method: 'POST', body: data }),
+       post: <T, S>(endpoint: string, data?: T, options?: Omit<FetchOptions<T>, 'method'>) =>
+         fetchApi<T, S>(endpoint, { ...options, method: 'POST', body: data || undefined }),
 
       postStream: <T>(
         endpoint: string,

@@ -96,7 +96,7 @@ export async function getPeople({ userId }: { userId: string }): Promise<Contact
 export async function getPersonById(id: string): Promise<ContactOutput | null> {
   const result = await db.select().from(contacts).where(eq(contacts.id, id)).limit(1);
 
-  return result.length > 0 ? result[0] : null;
+  return result[0] ?? null;
 }
 
 export async function createPerson(person: PersonInput): Promise<ContactOutput> {
@@ -140,7 +140,7 @@ export async function updatePerson(id: string, person: PersonInput): Promise<Con
 
   const result = await db.update(contacts).set(updateData).where(eq(contacts.id, id)).returning();
 
-  return result.length > 0 ? result[0] : null;
+  return result[0] ?? null;
 }
 
 export async function deletePerson(id: string): Promise<boolean> {

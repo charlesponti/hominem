@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 interface UseLocationSearchOptions {
-  initialValue?: string;
+  initialValue?: string | undefined;
 }
 export function useLocationSearch({ initialValue }: UseLocationSearchOptions) {
   const [query, setQuery] = useState<string>(initialValue || '');

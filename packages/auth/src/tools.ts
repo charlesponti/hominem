@@ -6,7 +6,7 @@ export const get_user_profile = tool({
   parameters: z.object({
     userId: z.string().optional().describe('User ID (defaults to current user if not provided)'),
   }),
-  async execute(args: { userId?: string }) {
+  async execute(args: { userId?: string | undefined }) {
     return {
       message: `Retrieved profile for user ${args.userId || 'current user'}`,
     }

@@ -1,6 +1,6 @@
 interface LinkedinJobUrlInfo {
   isJobPosting: boolean;
-  query?: string;
+  query?: string | undefined;
 }
 
 export function parseLinkedinJobUrl(url: string): LinkedinJobUrlInfo {

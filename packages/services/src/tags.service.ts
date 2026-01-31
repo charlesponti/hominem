@@ -114,13 +114,13 @@ export async function getTags(): Promise<TagOutput[]> {
 export async function getTagById(id: string): Promise<TagOutput | null> {
   const result = await db.select().from(tags).where(eq(tags.id, id)).limit(1);
 
-  return result.length > 0 ? result[0] : null;
+  return result[0] ?? null;
 }
 
 export async function getTagByName(name: string): Promise<TagOutput | null> {
   const result = await db.select().from(tags).where(eq(tags.name, name)).limit(1);
 
-  return result.length > 0 ? result[0] : null;
+  return result[0] ?? null;
 }
 
 export async function createTag(tag: TagInput): Promise<TagOutput> {
@@ -134,6 +134,10 @@ export async function createTag(tag: TagInput): Promise<TagOutput> {
       description: tag.description || null,
     })
     .returning();
+
+  if (!result[0]) {
+    throw new Error('Failed to create tag');
+  }
 
   return result[0];
 }
@@ -153,7 +157,7 @@ export async function updateTag(id: string, tag: TagInput): Promise<TagOutput | 
 
   const result = await db.update(tags).set(updateData).where(eq(tags.id, id)).returning();
 
-  return result.length > 0 ? result[0] : null;
+  return result[0] ?? null;
 }
 
 export async function deleteTag(id: string): Promise<boolean> {

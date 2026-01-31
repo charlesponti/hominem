@@ -5,7 +5,7 @@ import { Button } from '../ui/button';
 interface FilterChipProps {
   label: string;
   onRemove: () => void;
-  onClick?: () => void; // Reserved for future "edit filter" functionality
+  onClick?: (() => void) | undefined; // Reserved for future "edit filter" functionality
 }
 
 export function FilterChip({ label, onRemove, onClick }: FilterChipProps) {

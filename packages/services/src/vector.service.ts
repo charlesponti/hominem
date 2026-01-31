@@ -175,7 +175,8 @@ export namespace VectorService {
     }>;
   }> {
     const embedding = await generateEmbedding(q);
-    const results = await queryVectorDocuments({ embedding, source, limit, userId });
+    const queryParams = { embedding, source, limit } as const;
+    const results = await queryVectorDocuments(userId ? { ...queryParams, userId } : queryParams);
 
     return {
       results: results.map((row) => ({
