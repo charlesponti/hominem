@@ -8,11 +8,11 @@ import { format } from 'date-fns';
 import { useHonoQuery } from '../hono';
 
 interface CategoryBreakdownParams {
-  from?: Date;
-  to?: Date;
-  account?: string;
-  category?: string;
-  limit?: number;
+  from?: Date | undefined;
+  to?: Date | undefined;
+  account?: string | undefined;
+  category?: string | undefined;
+  limit?: number | undefined;
 }
 
 /**

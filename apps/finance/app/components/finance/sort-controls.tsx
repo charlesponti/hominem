@@ -19,9 +19,9 @@ interface SortControlsProps {
   addSortOption: (option: SortOption) => void;
   updateSortOption: (index: number, option: SortOption) => void;
   removeSortOption: (index: number) => void;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  focusedSortIndex?: number | null;
+  open?: boolean | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
+  focusedSortIndex?: (number | null) | undefined;
 }
 
 const sortableFields: SortField[] = ['amount', 'date', 'description', 'category'];
@@ -40,7 +40,7 @@ export function SortControls({
   );
 
   return (
-    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+    <DropdownMenu {...(open !== undefined && { open })} {...(onOpenChange && { onOpenChange })}>
       <DropdownMenuTrigger asChild>
         <Button variant="outline">
           <ListOrdered className="size-4 mr-2" />
@@ -81,8 +81,9 @@ export function SortControls({
             <DropdownMenuItem
               onSelect={(e) => {
                 e.preventDefault(); // Prevent dropdown from closing
-                if (availableFieldsToAdd.length > 0) {
-                  addSortOption({ field: availableFieldsToAdd[0], direction: 'desc' });
+                const firstAvailable = availableFieldsToAdd[0];
+                if (firstAvailable) {
+                  addSortOption({ field: firstAvailable, direction: 'desc' });
                 }
               }}
               disabled={availableFieldsToAdd.length === 0}

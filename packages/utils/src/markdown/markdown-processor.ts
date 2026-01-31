@@ -100,7 +100,7 @@ export class MarkdownProcessor {
     const dates = getDatesFromText(processableContent);
 
     const result = this.extractMarkdownHierarchy(ast.children);
-    
+
     const date = dates.dates?.[0]?.start;
 
     return {

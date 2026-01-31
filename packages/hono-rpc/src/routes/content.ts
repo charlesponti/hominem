@@ -65,10 +65,10 @@ export const contentRoutes = new Hono<AppContext>()
 
       const contentService = new ContentService();
       const content = await contentService.list(userId, {
-        types,
-        query: query.query,
-        tags,
-        since: query.since,
+        ...(types && { types }),
+        ...(query.query && { query: query.query }),
+        ...(tags && { tags }),
+        ...(query.since && { since: query.since }),
       });
 
       return c.json({ content });
@@ -105,7 +105,7 @@ export const contentRoutes = new Hono<AppContext>()
       const parsed = createContentSchema.safeParse(body);
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.issues[0].message);
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const contentService = new ContentService();
@@ -130,14 +130,19 @@ export const contentRoutes = new Hono<AppContext>()
       const parsed = updateContentSchema.safeParse(body);
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.issues[0].message);
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const contentService = new ContentService();
       const updatedContent = await contentService.update({
         id,
         userId,
-        ...parsed.data,
+        ...(parsed.data.type !== undefined && { type: parsed.data.type }),
+        ...(parsed.data.title !== undefined && { title: parsed.data.title }),
+        ...(parsed.data.content !== undefined && { content: parsed.data.content }),
+        ...(parsed.data.tags !== undefined && { tags: parsed.data.tags }),
+        ...(parsed.data.mentions !== undefined && { mentions: parsed.data.mentions }),
+        ...(parsed.data.tweetMetadata !== undefined && { tweetMetadata: parsed.data.tweetMetadata }),
       });
 
       return c.json({ content: updatedContent });

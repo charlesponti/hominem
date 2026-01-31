@@ -140,7 +140,7 @@ export function InlineCreateForm({
           title: titleToSave,
           content: contentToSave,
           tags: additionalData.tags,
-          taskMetadata: additionalData.taskMetadata,
+          ...(additionalData.taskMetadata && { taskMetadata: additionalData.taskMetadata }),
           analysis: additionalData.analysis,
         },
         {
@@ -175,7 +175,7 @@ export function InlineCreateForm({
           title: titleToSave,
           content: contentToSave,
           tags: additionalData.tags,
-          taskMetadata: additionalData.taskMetadata,
+          ...(additionalData.taskMetadata && { taskMetadata: additionalData.taskMetadata }),
           analysis: additionalData.analysis,
         },
         {

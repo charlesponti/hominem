@@ -124,7 +124,7 @@ export const searchRoutes = new Hono<AppContext>()
       const parsed = searchSchema.safeParse(body);
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.issues[0].message);
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const { query, maxResults } = parsed.data;

@@ -81,7 +81,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       },
     );
 
-    const sendMessage = useSendMessage({ chatId, userId });
+    const sendMessage = useSendMessage({ chatId, ...(userId && { userId }) });
 
     // Cast messages to extended type to handle optimistic updates
     // Note: our ChatMessage type vs ExtendedMessage type
@@ -331,19 +331,15 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
                           (status === 'streaming' &&
                             virtualItem.index === extendedMessages.length - 1 &&
                             message.role === 'assistant') ||
-                          message.isStreaming
+                          (message.isStreaming ?? false)
                         }
-                        onRegenerate={
-                          message.role === 'assistant'
-                            ? () => handleRegenerate(message.id)
-                            : undefined
-                        }
-                        onEdit={
-                          message.role === 'user'
-                            ? (messageId: string, newContent: string) =>
-                                handleEditMessage(messageId, newContent)
-                            : undefined
-                        }
+                        {...(message.role === 'assistant' && {
+                          onRegenerate: () => handleRegenerate(message.id),
+                        })}
+                        {...(message.role === 'user' && {
+                          onEdit: (messageId: string, newContent: string) =>
+                            handleEditMessage(messageId, newContent),
+                        })}
                         onDelete={() => handleDeleteMessage(message.id)}
                       />
                     </div>
@@ -367,17 +363,15 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
                       (status === 'streaming' &&
                         index === filteredMessages.length - 1 &&
                         message.role === 'assistant') ||
-                      message.isStreaming
+                      (message.isStreaming ?? false)
                     }
-                    onRegenerate={
-                      message.role === 'assistant' ? () => handleRegenerate(message.id) : undefined
-                    }
-                    onEdit={
-                      message.role === 'user'
-                        ? (messageId: string, newContent: string) =>
-                            handleEditMessage(messageId, newContent)
-                        : undefined
-                    }
+                    {...(message.role === 'assistant' && {
+                      onRegenerate: () => handleRegenerate(message.id),
+                    })}
+                    {...(message.role === 'user' && {
+                      onEdit: (messageId: string, newContent: string) =>
+                        handleEditMessage(messageId, newContent),
+                    })}
                     onDelete={() => handleDeleteMessage(message.id)}
                   />
                 ))

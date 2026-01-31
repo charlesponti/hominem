@@ -37,9 +37,9 @@ export type PeopleListOutput = Person[];
 
 export type PeopleCreateInput = {
   firstName: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
+  lastName?: string | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
 };
 
 export const peopleCreateSchema = z.object({

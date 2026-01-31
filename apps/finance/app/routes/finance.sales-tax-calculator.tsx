@@ -10,7 +10,10 @@ const SalesTaxCalculator = () => {
   const total = price + salesTax;
 
   const handleSliderChange = (value: number[]) => {
-    setPrice(value[0]);
+    const newPrice = value[0];
+    if (newPrice !== undefined) {
+      setPrice(newPrice);
+    }
   };
 
   return (

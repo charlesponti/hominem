@@ -24,7 +24,7 @@ export function PlaidAccountStatus({
   onRefresh,
 }: {
   account: Account;
-  onRefresh?: () => void;
+  onRefresh?: (() => void) | undefined;
 }) {
   const syncItemMutation = useSyncPlaidItem();
   const removeConnectionMutation = useRemovePlaidConnection();

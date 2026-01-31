@@ -42,7 +42,7 @@ export type GooglePlacePrediction = {
   text: string;
   address: string;
   location: PlaceLocation | null;
-  priceLevel?: string | number | null;
+  priceLevel?: string | number | null | undefined;
 };
 
 export type GooglePlacesApiResponse = places_v1.Schema$GoogleMapsPlacesV1Place;

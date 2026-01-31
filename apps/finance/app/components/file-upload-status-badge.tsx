@@ -5,7 +5,7 @@ import { cn } from '~/lib/utils';
 export const FileUploadStatusBadge = memo(function FileUploadStatusBadge({
   status,
 }: {
-  status?: string;
+  status?: string | undefined;
 }) {
   if (!status) return null;
 

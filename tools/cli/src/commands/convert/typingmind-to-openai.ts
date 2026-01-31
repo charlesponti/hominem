@@ -118,7 +118,10 @@ export function convertTypingMindToOpenAI(typingMindData: z.infer<typeof TypingM
 
       // Update previous message's children to point to this message
       if (mapping[lastNodeId]) {
-        mapping[lastNodeId].children = [nodeId];
+        const lastNode = mapping[lastNodeId];
+        if (lastNode) {
+          lastNode.children = [nodeId];
+        }
       }
 
       lastNodeId = nodeId;
@@ -134,7 +137,10 @@ export function convertTypingMindToOpenAI(typingMindData: z.infer<typeof TypingM
 
     // If system node exists and there are messages, connect system to first message
     if (systemNodeId && firstMessageNodeId) {
-      mapping[systemNodeId].children = [firstMessageNodeId];
+      const systemNode = mapping[systemNodeId];
+      if (systemNode) {
+        systemNode.children = [firstMessageNodeId];
+      }
     }
 
     // Create conversation object

@@ -68,10 +68,13 @@ async function main() {
   }[] = [];
 
   for (const product of productss) {
+    const images = await product.$$('img');
+    const titles = await product.$$('h3');
+    const prices = await product.$$('.fr-ec-price');
     const [image, productTitle, price] = await Promise.all([
-      (await product.$$('img'))[0].getAttribute('src'),
-      (await product.$$('h3'))[0].textContent(),
-      (await product.$$('.fr-ec-price'))[0].textContent(),
+      images[0]?.getAttribute('src') ?? null,
+      titles[0]?.textContent() ?? null,
+      prices[0]?.textContent() ?? null,
     ]);
     results.push({
       image,

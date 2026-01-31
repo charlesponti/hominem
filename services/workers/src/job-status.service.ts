@@ -92,7 +92,6 @@ export class JobStatusService {
       // Use a specific type when calling updateStatus
       const result = await JobStatusService.updateStatus<ImportTransactionsJob>(jobId, {
         status: 'queued',
-        startTime: undefined,
         type: 'import-transactions',
       });
 

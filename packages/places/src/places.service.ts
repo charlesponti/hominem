@@ -299,10 +299,10 @@ async function fetchGooglePlacePhotoNames(
 export async function updatePlacePhotosFromGoogle(
   placeId: string,
   options?: {
-    forceFresh?: boolean;
+    forceFresh?: boolean | undefined;
     // Developer must provide a service with API key for downloading photos
-    placeImagesService?: PlaceImagesService;
-    googleApiKey?: string;
+    placeImagesService?: PlaceImagesService | undefined;
+    googleApiKey?: string | undefined;
   },
 ): Promise<boolean> {
   const forceFresh = options?.forceFresh ?? false;

@@ -155,8 +155,8 @@ export type TransactionAggregation = {
 
 export async function calculateTransactions(
   options: QueryOptions & {
-    calculationType?: 'sum' | 'average' | 'count' | 'stats';
-    descriptionLike?: string;
+    calculationType?: 'sum' | 'average' | 'count' | 'stats' | undefined;
+    descriptionLike?: string | undefined;
   },
 ): Promise<TransactionStats | TransactionAggregation> {
   // Create a new options object that includes the descriptionLike in the description field

@@ -57,7 +57,7 @@ export const ChatMessage = memo(function ChatMessage({
   const { isEditing, editContent, setEditContent, startEdit, cancelEdit, saveEdit, canSave } =
     useMessageEdit({
       initialContent: message.content || '',
-      onSave: onEdit ? (newContent) => onEdit(message.id, newContent) : undefined,
+      ...(onEdit && { onSave: (newContent) => onEdit(message.id, newContent) }),
     });
 
   const timestamp = message.createdAt ? formatMessageTimestamp(message.createdAt) : '';

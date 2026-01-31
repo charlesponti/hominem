@@ -21,9 +21,9 @@ import {
 import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, like, lte, or } from 'drizzle-orm';
 
 export interface EventFilters {
-  tagNames?: string[];
-  companion?: string;
-  sortBy?: 'date-asc' | 'date-desc' | 'summary';
+  tagNames?: string[] | undefined;
+  companion?: string | undefined;
+  sortBy?: 'date-asc' | 'date-desc' | 'summary' | undefined;
 }
 
 export interface EventWithTagsAndPeople extends EventOutput {
@@ -213,7 +213,7 @@ export async function updateEvent(
   const [people, tagsList] = await Promise.all([getPeopleForEvent(id), getTagsForEvent(id)]);
 
   return {
-    ...updatedEvent,
+    ...(updatedEvent as EventOutput),
     tags: tagsList,
     people,
   };
@@ -393,27 +393,328 @@ export interface VisitStats {
 }
 
 export async function getVisitStatsByPlace(placeId: string, userId: string): Promise<VisitStats> {
-  const visits = await db
+   const visits = await db
+     .select({
+       date: events.date,
+       visitRating: events.visitRating,
+     })
+     .from(events)
+     .where(and(eq(events.placeId, placeId), eq(events.userId, userId), isNull(events.deletedAt)))
+     .orderBy(desc(events.date));
+
+   const visitCount = visits.length;
+   const lastVisitDate = visits[0]?.date || null;
+
+   const ratings = visits
+     .map((v) => v.visitRating)
+     .filter((r): r is number => r !== null && r !== undefined);
+   const averageRating =
+     ratings.length > 0 ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : null;
+
+   return {
+     visitCount,
+     lastVisitDate,
+     averageRating,
+   };
+}
+
+/**
+ * Habit/Goal Tracking Functions
+ */
+
+export interface HabitStats {
+  streakCount: number;
+  totalCompletions: number;
+  completionRate: number; // percentage
+  lastCompletedDate: Date | null;
+}
+
+export async function getHabitStats(
+  userId: string,
+  habitId: string,
+): Promise<HabitStats> {
+  const habit = await db
     .select({
-      date: events.date,
-      visitRating: events.visitRating,
+      streakCount: events.streakCount,
+      completedInstances: events.completedInstances,
     })
     .from(events)
-    .where(and(eq(events.placeId, placeId), eq(events.userId, userId), isNull(events.deletedAt)))
-    .orderBy(desc(events.date));
+    .where(and(eq(events.id, habitId), eq(events.userId, userId)))
+    .limit(1);
 
-  const visitCount = visits.length;
-  const lastVisitDate = visits[0]?.date || null;
+  if (!habit || !habit[0]) {
+    return {
+      streakCount: 0,
+      totalCompletions: 0,
+      completionRate: 0,
+      lastCompletedDate: null,
+    };
+  }
 
-  const ratings = visits
-    .map((v) => v.visitRating)
-    .filter((r): r is number => r !== null && r !== undefined);
-  const averageRating =
-    ratings.length > 0 ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length : null;
+  const streakCount = habit[0].streakCount || 0;
+  const totalCompletions = habit[0].completedInstances || 0;
+
+  // Assuming the habit's date represents when it was created, and we calculate completions
+  // based on the interval and dates
+  const completionRate = totalCompletions > 0 ? (totalCompletions / (streakCount + 1)) * 100 : 0;
 
   return {
-    visitCount,
-    lastVisitDate,
-    averageRating,
+    streakCount,
+    totalCompletions,
+    completionRate,
+    lastCompletedDate: null,
   };
+}
+
+export async function createHabit(
+  userId: string,
+  habit: {
+    title: string;
+    description?: string;
+    interval?: string; // 'daily', 'weekly', 'monthly', etc.
+    recurrenceRule?: string; // RRULE format
+    tags?: string[];
+  },
+): Promise<EventWithTagsAndPeople> {
+  const habitEvent = await createEvent({
+    title: habit.title,
+    description: habit.description,
+    date: new Date(),
+    type: 'Habit' as EventTypeEnum,
+    userId,
+    interval: habit.interval,
+    recurrenceRule: habit.recurrenceRule,
+    streakCount: 0,
+    completedInstances: 0,
+    tags: habit.tags,
+  });
+
+  return habitEvent;
+}
+
+export async function markHabitComplete(
+  habitId: string,
+  userId: string,
+): Promise<EventWithTagsAndPeople | null> {
+  const habit = await getEventById(habitId);
+
+  if (!habit || habit.userId !== userId) {
+    return null;
+  }
+
+  const currentStreak = habit.streakCount || 0;
+  const completedInstances = habit.completedInstances || 0;
+
+  return updateEvent(habitId, {
+    streakCount: currentStreak + 1,
+    completedInstances: completedInstances + 1,
+    isCompleted: true,
+  });
+}
+
+export async function resetHabitStreak(
+  habitId: string,
+  userId: string,
+): Promise<EventWithTagsAndPeople | null> {
+  const habit = await getEventById(habitId);
+
+  if (!habit || habit.userId !== userId) {
+    return null;
+  }
+
+  return updateEvent(habitId, {
+    streakCount: 0,
+    isCompleted: false,
+  });
+}
+
+export interface GoalStats {
+  progress: number; // percentage
+  currentValue: number;
+  targetValue: number;
+  remaining: number;
+}
+
+export async function getGoalStats(goalId: string, userId: string): Promise<GoalStats> {
+  const goal = await db
+    .select({
+      currentValue: events.currentValue,
+      targetValue: events.targetValue,
+    })
+    .from(events)
+    .where(and(eq(events.id, goalId), eq(events.userId, userId)))
+    .limit(1);
+
+  if (!goal || !goal[0]) {
+    return {
+      progress: 0,
+      currentValue: 0,
+      targetValue: 0,
+      remaining: 0,
+    };
+  }
+
+  const currentValue = goal[0].currentValue || 0;
+  const targetValue = goal[0].targetValue || 0;
+  const progress = targetValue > 0 ? (currentValue / targetValue) * 100 : 0;
+  const remaining = Math.max(0, targetValue - currentValue);
+
+  return {
+    progress,
+    currentValue,
+    targetValue,
+    remaining,
+  };
+}
+
+export async function createGoal(
+  userId: string,
+  goal: {
+    title: string;
+    description?: string;
+    targetValue: number;
+    unit?: string;
+    category?: string;
+    priority?: number;
+    tags?: string[];
+  },
+): Promise<EventWithTagsAndPeople> {
+  const goalEvent = await createEvent({
+    title: goal.title,
+    description: goal.description,
+    date: new Date(),
+    type: 'Goal' as EventTypeEnum,
+    userId,
+    targetValue: goal.targetValue,
+    currentValue: 0,
+    unit: goal.unit,
+    goalCategory: goal.category,
+    priority: goal.priority,
+    tags: goal.tags,
+  });
+
+  return goalEvent;
+}
+
+export async function updateGoalProgress(
+  goalId: string,
+  userId: string,
+  increment: number,
+): Promise<EventWithTagsAndPeople | null> {
+  const goal = await getEventById(goalId);
+
+  if (!goal || goal.userId !== userId) {
+    return null;
+  }
+
+  const currentValue = (goal.currentValue || 0) + increment;
+  const targetValue = goal.targetValue || 0;
+
+  return updateEvent(goalId, {
+    currentValue: Math.min(currentValue, targetValue), // Don't exceed target
+    isCompleted: currentValue >= targetValue,
+  });
+}
+
+export async function getHabitsByUser(
+  userId: string,
+  filters?: {
+    active?: boolean;
+    sortBy?: 'streak' | 'completions' | 'name';
+  },
+): Promise<EventWithTagsAndPeople[]> {
+  const conditions = [
+    eq(events.userId, userId),
+    eq(events.type, 'Habit'),
+    isNull(events.deletedAt),
+  ];
+
+  if (filters?.active) {
+    conditions.push(eq(events.isCompleted, true));
+  }
+
+  let orderByClause: ReturnType<typeof asc> | ReturnType<typeof desc>;
+  switch (filters?.sortBy) {
+    case 'streak':
+      orderByClause = desc(events.streakCount);
+      break;
+    case 'completions':
+      orderByClause = desc(events.completedInstances);
+      break;
+    case 'name':
+    default:
+      orderByClause = asc(events.title);
+  }
+
+  const habitsList = await db
+    .select()
+    .from(events)
+    .where(and(...conditions))
+    .orderBy(orderByClause);
+
+  const eventIds = habitsList.map((event) => event.id);
+  const [peopleMap, tagsMap] = await Promise.all([
+    getPeopleForEvents(eventIds),
+    getTagsForEvents(eventIds),
+  ]);
+
+  return habitsList.map((habitItem) => ({
+    ...habitItem,
+    tags: tagsMap.get(habitItem.id) || [],
+    people: peopleMap.get(habitItem.id) || [],
+  }));
+}
+
+export async function getGoalsByUser(
+  userId: string,
+  filters?: {
+    active?: boolean;
+    category?: string;
+    sortBy?: 'progress' | 'priority' | 'name';
+  },
+): Promise<EventWithTagsAndPeople[]> {
+  const conditions = [
+    eq(events.userId, userId),
+    eq(events.type, 'Goal'),
+    isNull(events.deletedAt),
+  ];
+
+  if (filters?.active) {
+    conditions.push(eq(events.isCompleted, false));
+  }
+
+  if (filters?.category) {
+    conditions.push(eq(events.goalCategory, filters.category));
+  }
+
+  let orderByClause: ReturnType<typeof asc> | ReturnType<typeof desc>;
+  switch (filters?.sortBy) {
+    case 'progress':
+      orderByClause = desc(events.currentValue);
+      break;
+    case 'priority':
+      orderByClause = asc(events.priority);
+      break;
+    case 'name':
+    default:
+      orderByClause = asc(events.title);
+  }
+
+  const goalsList = await db
+    .select()
+    .from(events)
+    .where(and(...conditions))
+    .orderBy(orderByClause);
+
+  const eventIds = goalsList.map((event) => event.id);
+  const [peopleMap, tagsMap] = await Promise.all([
+    getPeopleForEvents(eventIds),
+    getTagsForEvents(eventIds),
+  ]);
+
+  return goalsList.map((goalItem) => ({
+    ...goalItem,
+    tags: tagsMap.get(goalItem.id) || [],
+    people: peopleMap.get(goalItem.id) || [],
+  }));
 }

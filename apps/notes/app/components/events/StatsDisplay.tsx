@@ -2,19 +2,20 @@ import type React from 'react';
 
 interface Person {
   id: string;
-  firstName?: string;
-  lastName?: string | null;
+  firstName?: string | undefined;
+  lastName?: string | null | undefined;
 }
 
 interface Activity {
   id: string;
-  date?: string;
-  time?: string;
+  date?: string | undefined;
+  time?: string | undefined;
   title: string;
-  description?: string;
-  location?: string;
-  people?: Person[];
-  tags?: string[];
+  description?: string | undefined;
+  location?: string | undefined;
+  people?: Person[] | undefined;
+  tags?: string[] | undefined;
+  source?: 'manual' | 'google_calendar' | undefined;
 }
 
 interface StatsDisplayProps {

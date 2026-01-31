@@ -6,8 +6,8 @@ import { PlaidAccountStatus } from './plaid-account-status';
 
 interface AccountStatusDisplayProps {
   account: Account;
-  showDialog?: boolean;
-  onRefresh?: () => void;
+  showDialog?: boolean | undefined;
+  onRefresh?: (() => void) | undefined;
 }
 
 export function AccountStatusDisplay({

@@ -76,7 +76,9 @@ function StreamingServiceStreamingRate({
   streamCount,
   maxEarnings,
 }: StreamingServiceRateProps) {
-  const earnings = calculateEarnings(service.rate, streamCount[0]);
+  const count = streamCount[0];
+  if (count === undefined) return null;
+  const earnings = calculateEarnings(service.rate, count);
   const percentOfMax = earnings / maxEarnings;
 
   return (

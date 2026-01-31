@@ -11,8 +11,8 @@ export type BudgetCategoryType = (typeof budgetCategories.type.enumValues)[numbe
  */
 export async function getBudgetCategories(options: {
   userId: string;
-  name?: string;
-  type?: BudgetCategoryType;
+  name?: string | undefined;
+  type?: BudgetCategoryType | undefined;
 }) {
   if (!options.userId) {
     throw new Error('User ID is required to fetch budget categories.');

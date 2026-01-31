@@ -25,9 +25,9 @@ export type CreateMessageParams = {
 };
 
 export interface ChatMessagesOptions {
-  limit?: number;
-  offset?: number;
-  orderBy?: 'asc' | 'desc';
+  limit?: number | undefined;
+  offset?: number | undefined;
+  orderBy?: 'asc' | 'desc' | undefined;
 }
 
 export class MessageService {

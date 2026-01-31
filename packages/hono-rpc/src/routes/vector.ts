@@ -44,7 +44,7 @@ export const vectorRoutes = new Hono<AppContext>()
       });
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.issues[0].message);
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const { results } = await VectorService.query({
@@ -72,7 +72,7 @@ export const vectorRoutes = new Hono<AppContext>()
       });
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.issues[0].message);
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const { results } = await VectorService.searchDocumentsByUser(
@@ -100,7 +100,7 @@ export const vectorRoutes = new Hono<AppContext>()
       });
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.issues[0].message);
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const vectors = await VectorService.getUserDocuments(
@@ -143,7 +143,7 @@ export const vectorRoutes = new Hono<AppContext>()
       const parsed = ingestTextSchema.safeParse(body);
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.issues[0].message);
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const result = await VectorService.ingestMarkdown(parsed.data.text, userId, parsed.data.metadata);

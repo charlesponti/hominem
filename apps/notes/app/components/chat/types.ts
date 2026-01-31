@@ -5,10 +5,10 @@ export interface SearchContextPreviewProps {
 
 export interface SearchResponse {
   success: boolean;
-  context?: string;
-  error?: string;
-  query?: string;
-  results?: SearchResult[];
+  context?: string | undefined;
+  error?: string | undefined;
+  query?: string | undefined;
+  results?: SearchResult[] | undefined;
 }
 
 export interface SearchResult {

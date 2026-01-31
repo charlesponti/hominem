@@ -14,7 +14,7 @@ import PlaceRow from './place-row';
 interface PlacesListProps {
   places: ListPlace[];
   listId: string;
-  canAdd?: boolean;
+  canAdd?: boolean | undefined;
 }
 
 export default function PlacesList({ places, listId, canAdd = true }: PlacesListProps) {

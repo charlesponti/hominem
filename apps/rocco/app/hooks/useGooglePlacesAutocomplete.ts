@@ -4,7 +4,7 @@ export type { GooglePlacePrediction } from '~/lib/types';
 
 export interface UseGooglePlacesAutocompleteOptions {
   input: string;
-  location?: { latitude: number; longitude: number };
+  location?: { latitude: number; longitude: number } | undefined;
 }
 
 export function useGooglePlacesAutocomplete({

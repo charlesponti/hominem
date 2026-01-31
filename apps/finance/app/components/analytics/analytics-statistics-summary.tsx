@@ -5,11 +5,11 @@ import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';
 
 interface AnalyticsStatisticsSummaryProps {
-  dateFrom?: Date;
-  dateTo?: Date;
-  selectedAccount?: string;
-  selectedCategory?: string;
-  includeStats?: boolean;
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  selectedAccount?: string | undefined;
+  selectedCategory?: string | undefined;
+  includeStats?: boolean | undefined;
 }
 
 export function AnalyticsStatisticsSummary({

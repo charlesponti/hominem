@@ -274,14 +274,14 @@ export type PlaceGetNearbyFromListsOutput = Array<{
 
 export type PlaceLogVisitInput = {
   placeId: string;
-  title?: string;
-  description?: string;
+  title?: string | undefined;
+  description?: string | undefined;
   date: string;
-  visitNotes?: string;
-  visitRating?: number;
-  visitReview?: string;
-  tags?: string[];
-  people?: string[];
+  visitNotes?: string | undefined;
+  visitRating?: number | undefined;
+  visitReview?: string | undefined;
+  tags?: string[] | undefined;
+  people?: string[] | undefined;
 };
 
 export const placeLogVisitSchema = z.object({
@@ -382,14 +382,14 @@ export type PlaceGetPlaceVisitsOutput = Array<{
 
 export type PlaceUpdateVisitInput = {
   id: string;
-  title?: string;
-  description?: string;
-  date?: string;
-  visitNotes?: string;
-  visitRating?: number;
-  visitReview?: string;
-  tags?: string[];
-  people?: string[];
+  title?: string | undefined;
+  description?: string | undefined;
+  date?: string | undefined;
+  visitNotes?: string | undefined;
+  visitRating?: number | undefined;
+  visitReview?: string | undefined;
+  tags?: string[] | undefined;
+  people?: string[] | undefined;
 };
 
 export const placeUpdateVisitSchema = z.object({

@@ -17,7 +17,7 @@ type GoogleCalendarEvent = calendar_v3.Schema$Event;
 
 export interface GoogleTokens {
   accessToken: string;
-  refreshToken?: string;
+  refreshToken?: string | undefined;
 }
 
 export interface SyncResult {

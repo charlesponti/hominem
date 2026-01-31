@@ -21,7 +21,7 @@ interface PlaidSyncJob {
  * Initialize Plaid client
  */
 const configuration = new Configuration({
-  basePath: PlaidEnvironments[env.PLAID_ENV],
+  basePath: PlaidEnvironments[env.PLAID_ENV] as string,
   baseOptions: {
     headers: {
       'PLAID-CLIENT-ID': env.PLAID_CLIENT_ID,
@@ -92,7 +92,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
     while (hasMore) {
       const transactionsResponse = await plaidClient.transactionsSync({
         access_token: accessToken,
-        cursor: cursor || undefined,
+        ...(cursor && { cursor }),
         count: batchSize,
       });
 
@@ -140,14 +140,14 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             amount: Math.abs(transaction.amount).toFixed(2),
             date: new Date(transaction.date),
             description: transaction.name,
-            merchantName: transaction.merchant_name || null,
+            merchantName: transaction.merchant_name ?? null,
             accountId: accountId as string,
             category: transaction.category
-              ? transaction.category[transaction.category.length - 1]
+              ? (transaction.category[transaction.category.length - 1] ?? null)
               : null,
             parentCategory:
               transaction.category && transaction.category.length > 1
-                ? transaction.category[0]
+                ? (transaction.category[0] ?? null)
                 : null,
             pending: transaction.pending,
             paymentChannel: transaction.payment_channel,
@@ -188,14 +188,14 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
               amount: Math.abs(transaction.amount).toFixed(2),
               date: new Date(transaction.date),
               description: transaction.name,
-              merchantName: transaction.merchant_name || null,
+              merchantName: transaction.merchant_name ?? null,
               accountId: account.id,
               category: transaction.category
-                ? transaction.category[transaction.category.length - 1]
+                ? (transaction.category[transaction.category.length - 1] ?? null)
                 : null,
               parentCategory:
                 transaction.category && transaction.category.length > 1
-                  ? transaction.category[0]
+                  ? (transaction.category[0] ?? null)
                   : null,
               pending: transaction.pending,
               paymentChannel: transaction.payment_channel,
@@ -213,13 +213,13 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
               amount: Math.abs(transaction.amount).toFixed(2),
               date: new Date(transaction.date),
               description: transaction.name,
-              merchantName: transaction.merchant_name || null,
+              merchantName: transaction.merchant_name ?? null,
               category: transaction.category
-                ? transaction.category[transaction.category.length - 1]
+                ? (transaction.category[transaction.category.length - 1] ?? null)
                 : null,
               parentCategory:
                 transaction.category && transaction.category.length > 1
-                  ? transaction.category[0]
+                  ? (transaction.category[0] ?? null)
                   : null,
               pending: transaction.pending,
             });

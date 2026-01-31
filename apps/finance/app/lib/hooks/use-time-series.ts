@@ -5,14 +5,14 @@ import { format } from 'date-fns';
 import { useHonoQuery } from '../hono';
 
 interface TimeSeriesParams {
-  dateFrom?: Date;
-  dateTo?: Date;
-  account?: string;
-  category?: string;
-  includeStats?: boolean;
-  compareToPrevious?: boolean;
-  groupBy?: 'month' | 'week' | 'day';
-  enabled?: boolean;
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  account?: string | undefined;
+  category?: string | undefined;
+  includeStats?: boolean | undefined;
+  compareToPrevious?: boolean | undefined;
+  groupBy?: 'month' | 'week' | 'day' | undefined;
+  enabled?: boolean | undefined;
 }
 
 /**
@@ -71,7 +71,10 @@ export function useTimeSeriesData({
   const formatDateLabel = (dateStr: string) => {
     if (groupBy === 'month') {
       // Convert YYYY-MM to MMM YYYY
-      const [year, month] = dateStr.split('-');
+      const parts = dateStr.split('-');
+      const year = parts[0];
+      const month = parts[1];
+      if (!year || !month) return dateStr;
       return new Date(
         Number.parseInt(year, 10),
         Number.parseInt(month, 10) - 1,

@@ -242,7 +242,20 @@ export const placesRoutes = new Hono<AppContext>()
     try {
       const input = c.req.valid('json') as z.infer<typeof placeUpdateSchema>;
 
-      const updatedPlace = await createOrUpdatePlace(input.id, input);
+      const updatedPlace = await createOrUpdatePlace(input.id, {
+        ...(input.name && { name: input.name }),
+        ...(input.description && { description: input.description }),
+        ...(input.address && { address: input.address }),
+        ...(input.latitude !== undefined && { latitude: input.latitude }),
+        ...(input.longitude !== undefined && { longitude: input.longitude }),
+        ...(input.imageUrl && { imageUrl: input.imageUrl }),
+        ...(input.rating !== undefined && { rating: input.rating }),
+        ...(input.priceLevel !== undefined && { priceLevel: input.priceLevel }),
+        ...(input.photos && { photos: input.photos }),
+        ...(input.types && { types: input.types }),
+        ...(input.websiteUri && { websiteUri: input.websiteUri }),
+        ...(input.phoneNumber && { phoneNumber: input.phoneNumber }),
+      });
 
       if (!updatedPlace) {
         throw new NotFoundError('');
@@ -302,7 +315,7 @@ export const placesRoutes = new Hono<AppContext>()
 
       const places = await googlePlaces.search({
         query: query,
-        locationBias: locationBias,
+        ...(locationBias && { locationBias: locationBias }),
       });
 
       const predictions = places.map(mapGooglePlaceToPrediction);
@@ -471,8 +484,8 @@ export const placesRoutes = new Hono<AppContext>()
         visitRating: data.visitRating ?? null,
         visitReview: data.visitReview ?? null,
         userId: userId,
-        tags: data.tags,
-        people: data.people,
+        ...(data.tags && { tags: data.tags }),
+        ...(data.people && { people: data.people }),
       });
 
       return c.json<PlaceLogVisitOutput>(serializeVisit(event), 201);
@@ -624,7 +637,7 @@ export const placesRoutes = new Hono<AppContext>()
 
       const result = {
         totalVisits,
-        averageRating,
+        ...(averageRating !== undefined && { averageRating }),
         lastVisit,
         firstVisit,
         tags: Array.from(tagCounts.entries())

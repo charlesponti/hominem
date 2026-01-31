@@ -69,6 +69,9 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
         userId,
       });
 
+      if (!result) {
+        throw new InternalError('Failed to create content strategy');
+      }
       return c.json<ContentStrategiesCreateOutput>(result, 201);
     } catch (err) {
       console.error('[contentStrategies.create] error:', err);
@@ -85,9 +88,9 @@ export const contentStrategiesRoutes = new Hono<AppContext>()
 
       const contentStrategiesService = new ContentStrategiesService();
       const result = await contentStrategiesService.update(id, userId, {
-        title: data.title,
-        description: data.description,
-        strategy: (data.strategy || {}) as any,
+        ...(data.title !== undefined && { title: data.title }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(data.strategy && { strategy: data.strategy as any }),
       });
 
       if (!result) {

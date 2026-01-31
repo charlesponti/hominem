@@ -30,12 +30,17 @@ interface LogVisitProps {
 
 export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: LogVisitProps) {
   const isEditing = !!visit;
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [visitNotes, setVisitNotes] = useState('');
+  const getDefaultDate = (): string => {
+    const iso = new Date().toISOString();
+    const parts = iso.split('T');
+    return parts[0] || '';
+  };
+  const [title, setTitle] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [date, setDate] = useState<string>(getDefaultDate());
+  const [visitNotes, setVisitNotes] = useState<string>('');
   const [visitRating, setVisitRating] = useState<number | undefined>(undefined);
-  const [visitReview, setVisitReview] = useState('');
+  const [visitReview, setVisitReview] = useState<string>('');
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
   const revalidator = useRevalidator();
   const utils = useHonoUtils();
@@ -45,7 +50,7 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
     if (visit) {
       setTitle(visit.title);
       setDescription(visit.description || '');
-      setDate(new Date(visit.date).toISOString().split('T')[0]);
+      setDate(new Date(visit.date).toISOString().split('T')[0] ?? getDefaultDate());
       setVisitNotes(visit.visitNotes || '');
       setVisitRating(visit.visitRating || undefined);
       setVisitReview(visit.visitReview || '');
@@ -66,7 +71,7 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
     } else {
       setTitle('');
       setDescription('');
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(getDefaultDate());
       setVisitNotes('');
       setVisitRating(undefined);
       setVisitReview('');

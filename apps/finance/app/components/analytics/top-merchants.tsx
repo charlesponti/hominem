@@ -6,10 +6,10 @@ import { useFinanceTopMerchants } from '~/lib/hooks/use-finance-top-merchants';
 import { formatCurrency } from '~/lib/number.utils';
 
 interface TopMerchantsProps {
-  dateFrom?: Date;
-  dateTo?: Date;
-  selectedAccount?: string;
-  selectedCategory?: string;
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  selectedAccount?: string | undefined;
+  selectedCategory?: string | undefined;
 }
 
 export function TopMerchants({

@@ -201,7 +201,7 @@ export const useCalculateBudget = (options?: { onError?: (error: Error) => void 
       onSuccess: () => {
         utils.invalidate(['finance', 'budget', 'calculate']);
       },
-      onError: options?.onError,
+      ...(options?.onError && { onError: options.onError }),
     },
   );
 };

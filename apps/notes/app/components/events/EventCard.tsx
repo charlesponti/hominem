@@ -9,14 +9,14 @@ import SourceBadge from './SourceBadge';
 
 interface Activity {
   id: string;
-  date?: string;
-  time?: string;
+  date?: string | undefined;
+  time?: string | undefined;
   title: string;
-  description?: string;
-  location?: string;
-  people?: Person[];
-  tags?: string[];
-  source?: 'manual' | 'google_calendar';
+  description?: string | undefined;
+  location?: string | undefined;
+  people?: Person[] | undefined;
+  tags?: string[] | undefined;
+  source?: 'manual' | 'google_calendar' | undefined;
 }
 
 interface EventCardProps {

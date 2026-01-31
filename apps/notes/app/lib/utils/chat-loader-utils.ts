@@ -12,7 +12,10 @@ export async function getOrCreateChat(trpcClient: HonoClientType): Promise<{ cha
   const result = (await res.json()) as ChatsListOutput;
 
   if (Array.isArray(result) && result.length > 0) {
-    return { chatId: result[0].id };
+    const firstChat = result[0];
+    if (firstChat) {
+      return { chatId: firstChat.id };
+    }
   }
 
   const createRes = await trpcClient.api.chats.$post({

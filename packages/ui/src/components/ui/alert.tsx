@@ -29,9 +29,9 @@ const alertVariants = cva(
 
 export interface AlertProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
-  type?: AlertType;
-  dismissible?: boolean;
-  onDismiss?: () => void;
+  type?: AlertType | undefined;
+  dismissible?: boolean | undefined;
+  onDismiss?: (() => void) | undefined;
 }
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(

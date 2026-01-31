@@ -101,8 +101,8 @@ export const eventsRoutes = new Hono<AppContext>()
       description,
       date: dateValue,
       type: type as EventTypeEnum,
-      tags,
-      people,
+      ...(tags && { tags }),
+      ...(people && { people }),
       userId,
     });
     return c.json<EventsCreateOutput>(serializeEvent(event), 201);

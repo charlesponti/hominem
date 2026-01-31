@@ -151,7 +151,7 @@ export const twitterRoutes = new Hono<AppContext>()
     const parsed = twitterPostSchema.safeParse(body);
 
     if (!parsed.success) {
-      throw new ValidationError(parsed.error.issues[0].message);
+      throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
     }
 
     const { text, contentId, saveAsContent } = parsed.data;

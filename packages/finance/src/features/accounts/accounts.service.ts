@@ -11,6 +11,7 @@ import type {
   FinanceAccountOutput,
   InstitutionConnection,
   PlaidConnection,
+  UpdateAccountInput,
 } from './accounts.domain';
 
 import { InstitutionService } from '../../core/institution.service';
@@ -51,7 +52,7 @@ export async function findAccountByNameForUser(
 export async function updateAccount(
   id: string,
   userId: string,
-  updates: Partial<CreateAccountInput>,
+  updates: UpdateAccountInput,
 ): Promise<FinanceAccountOutput> {
   logger.debug(`[AccountsService.updateAccount]: Updating account ${id}`);
   return AccountsRepository.update(id, userId, updates);

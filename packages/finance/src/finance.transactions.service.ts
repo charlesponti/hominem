@@ -233,14 +233,14 @@ export async function getTransactions(
 
 export function findExistingTransaction(tx: {
   date: Date;
-  accountMask?: string | null;
+  accountMask?: string | null | undefined;
   amount: string;
   type: string;
 }): Promise<FinanceTransactionOutput | undefined>;
 export function findExistingTransaction(
   txs: Array<{
     date: Date;
-    accountMask?: string | null;
+    accountMask?: string | null | undefined;
     amount: string;
     type: string;
   }>,
@@ -249,13 +249,13 @@ export async function findExistingTransaction(
   txOrTxs:
     | {
         date: Date;
-        accountMask?: string | null;
+        accountMask?: string | null | undefined;
         amount: string;
         type: string;
       }
     | Array<{
         date: Date;
-        accountMask?: string | null;
+        accountMask?: string | null | undefined;
         amount: string;
         type: string;
       }>,

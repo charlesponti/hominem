@@ -1,10 +1,10 @@
 import type { ListOutput as DbListOutput } from '@hominem/db/types/lists';
 
 export interface ListUser {
-  id?: string;
-  email?: string;
-  name?: string;
-  image?: string | null;
+  id?: string | undefined;
+  email?: string | undefined;
+  name?: string | undefined;
+  image?: string | null | undefined;
 }
 
 export interface ListWithSpreadOwner extends DbListOutput {
@@ -14,10 +14,10 @@ export interface ListWithSpreadOwner extends DbListOutput {
 
 export interface ListOutput extends DbListOutput {
   createdBy: { id: string; email: string; name: string | null } | null;
-  isOwnList?: boolean;
-  hasAccess?: boolean;
+  isOwnList?: boolean | undefined;
+  hasAccess?: boolean | undefined;
   places: ListPlace[];
-  users?: ListUser[];
+  users?: ListUser[] | undefined;
 }
 
 /**

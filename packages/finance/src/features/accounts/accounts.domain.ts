@@ -27,7 +27,25 @@ export type CreateAccountInput = z.infer<typeof CreateAccountSchema>;
  * Input schema for updating an account
  */
 export const UpdateAccountSchema = CreateAccountSchema.partial();
-export type UpdateAccountInput = z.infer<typeof UpdateAccountSchema>;
+
+// Manual type definition to satisfy exactOptionalPropertyTypes
+export type UpdateAccountInput = {
+  type?: CreateAccountInput['type'] | undefined;
+  balance?: CreateAccountInput['balance'] | undefined;
+  name?: CreateAccountInput['name'] | undefined;
+  interestRate?: CreateAccountInput['interestRate'] | undefined;
+  minimumPayment?: CreateAccountInput['minimumPayment'] | undefined;
+  mask?: CreateAccountInput['mask'] | undefined;
+  isoCurrencyCode?: CreateAccountInput['isoCurrencyCode'] | undefined;
+  subtype?: CreateAccountInput['subtype'] | undefined;
+  officialName?: CreateAccountInput['officialName'] | undefined;
+  limit?: CreateAccountInput['limit'] | undefined;
+  meta?: CreateAccountInput['meta'] | undefined;
+  institutionId?: CreateAccountInput['institutionId'] | undefined;
+  plaidItemId?: CreateAccountInput['plaidItemId'] | undefined;
+  plaidAccountId?: CreateAccountInput['plaidAccountId'] | undefined;
+  userId?: CreateAccountInput['userId'] | undefined;
+};
 
 /**
  * Extended type with Plaid/Institution info

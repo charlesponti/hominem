@@ -74,7 +74,7 @@ const TYPE_EMOJIS: Record<string, string> = {
 };
 
 interface PlaceTypeProps extends HTMLAttributes<HTMLSpanElement> {
-  emoji?: string;
+  emoji?: string | undefined;
 }
 
 const PlaceType = ({ children, className, emoji, ...props }: PlaceTypeProps) => {

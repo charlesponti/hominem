@@ -19,7 +19,7 @@ function formatTime(totalSeconds: number) {
 type ElapsedTimeProps = {
   startTimeIso: string | undefined | null;
   status: string | undefined;
-  initialDurationMs?: number; // Duration already logged for the task before this timing session
+  initialDurationMs?: number | undefined; // Duration already logged for the task before this timing session
 };
 
 export function ElapsedTime({ startTimeIso, status, initialDurationMs = 0 }: ElapsedTimeProps) {

@@ -42,7 +42,7 @@ export default function TransactionImportPage() {
       string,
       {
         file: File;
-        status?: FileStatus;
+        status?: FileStatus | undefined;
         priority: number;
         originalIndex: number;
       }
@@ -313,7 +313,7 @@ export default function TransactionImportPage() {
 
 type FileImportProps = {
   fileName: string;
-  status?: FileStatus;
+  status?: FileStatus | undefined;
   id: string;
   file: File;
   isConnected: boolean;

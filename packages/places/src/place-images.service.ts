@@ -37,7 +37,7 @@ export function createPlaceImagesService({
   appBaseUrl,
   googleApiKey,
 }: {
-  appBaseUrl?: string;
+  appBaseUrl?: string | undefined;
   googleApiKey: string;
 }) {
   const placesClient = google.places({ version: 'v1', auth: googleApiKey });

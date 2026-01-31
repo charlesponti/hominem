@@ -5,8 +5,8 @@ on:
   push:
     branches: [main]
     paths:
-      - "docker/pontistudios-postgres.dockerfile"
-      - ".github/workflows/docker-publish-db.yml"
+      - 'docker/postgres.dockerfile'
+      - '.github/workflows/docker-publish-db.yml'
 
 jobs:
   build-and-push:
@@ -26,6 +26,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./docker/pontistudios-postgres.dockerfile
+          file: ./docker/postgres.dockerfile
           push: true
           tags: ghcr.io/charlesponti/hominem/pontistudios-postgres:latest

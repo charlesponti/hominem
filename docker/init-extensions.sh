@@ -2,8 +2,6 @@
 set -e
 
 # WARNING: This script is for local/dev bootstrap only.
-# In production, extensions should be managed by SQL migrations (see migrations/0001_init_extensions.sql).
-#
 # This script is only run on initial DB creation (empty data dir).
 
 # Create extensions if they do not exist

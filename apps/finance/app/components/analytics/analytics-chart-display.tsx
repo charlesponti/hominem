@@ -27,12 +27,12 @@ const EXPENSES_COLOR = '#ef4444';
 interface AnalyticsChartDisplayProps {
   chartType: 'area' | 'bar';
   setChartType: Dispatch<SetStateAction<'area' | 'bar'>>;
-  dateFrom?: Date;
-  dateTo?: Date;
-  selectedAccount?: string;
-  selectedCategory?: string;
-  groupBy?: 'month' | 'week' | 'day';
-  compareToPrevious?: boolean;
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  selectedAccount?: string | undefined;
+  selectedCategory?: string | undefined;
+  groupBy?: 'month' | 'week' | 'day' | undefined;
+  compareToPrevious?: boolean | undefined;
 }
 
 export function AnalyticsChartDisplay({

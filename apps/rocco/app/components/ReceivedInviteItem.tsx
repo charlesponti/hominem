@@ -12,17 +12,17 @@ type ReceivedInviteItemProps =
       variant: 'preview';
       preview: {
         listName: string;
-        coverPhoto?: string | null;
-        firstItemName?: string | null;
-        invitedUserEmail?: string | null;
+        coverPhoto?: string | null | undefined;
+        firstItemName?: string | null | undefined;
+        invitedUserEmail?: string | null | undefined;
         onSignIn: () => void;
       };
     }
   | {
-      variant?: 'invite';
+      variant?: 'invite' | undefined;
       listInvite: ReceivedInvite;
-      currentUserEmail?: string;
-      canAccept?: boolean;
+      currentUserEmail?: string | undefined;
+      canAccept?: boolean | undefined;
     };
 
 const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {

@@ -59,10 +59,10 @@ export const peopleRoutes = new Hono<AppContext>()
 
     const personInput: PersonInput = {
       userId: userId,
-      firstName: input.firstName,
-      lastName: input.lastName,
-      email: input.email,
-      phone: input.phone,
+      ...(input.firstName && { firstName: input.firstName }),
+      ...(input.lastName && { lastName: input.lastName }),
+      ...(input.email && { email: input.email }),
+      ...(input.phone && { phone: input.phone }),
     };
 
     const newPerson = await createPerson(personInput);
@@ -78,7 +78,10 @@ export const peopleRoutes = new Hono<AppContext>()
 
     const personInput: PersonInput = {
       userId: userId,
-      ...input,
+      ...(input.firstName !== undefined && { firstName: input.firstName }),
+      ...(input.lastName !== undefined && { lastName: input.lastName }),
+      ...(input.email !== undefined && { email: input.email }),
+      ...(input.phone !== undefined && { phone: input.phone }),
     };
 
     const updatedPerson = await updatePerson(id, personInput);

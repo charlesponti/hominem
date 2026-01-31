@@ -17,11 +17,11 @@ import { useCreateLinkToken, useExchangeToken } from '~/lib/hooks/use-plaid';
 import { cn } from '~/lib/utils';
 
 interface PlaidLinkProps {
-  onSuccess?: (institutionName: string) => void;
-  onError?: (error: Error) => void;
-  className?: string;
-  variant?: 'default' | 'card';
-  children?: React.ReactNode;
+  onSuccess?: ((institutionName: string) => void) | undefined;
+  onError?: ((error: Error) => void) | undefined;
+  className?: string | undefined;
+  variant?: 'default' | 'card' | undefined;
+  children?: React.ReactNode | undefined;
 }
 
 export function PlaidLink({

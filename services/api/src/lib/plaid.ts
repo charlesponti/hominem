@@ -4,7 +4,7 @@ import { Configuration, CountryCode, PlaidApi, PlaidEnvironments, Products } fro
 import { env } from '../env';
 
 const configuration = new Configuration({
-  basePath: PlaidEnvironments[env.PLAID_ENV],
+  ...(PlaidEnvironments[env.PLAID_ENV] && { basePath: PlaidEnvironments[env.PLAID_ENV] }),
   baseOptions: {
     headers: {
       'PLAID-CLIENT-ID': env.PLAID_CLIENT_ID,

@@ -9,13 +9,13 @@ import { formatCurrency } from '~/lib/number.utils';
 import { cn } from '~/lib/utils';
 
 interface MonthlyBreakdownProps {
-  dateFrom?: Date;
-  dateTo?: Date;
-  selectedAccount?: string;
-  selectedCategory?: string;
-  compareToPrevious?: boolean;
-  groupBy?: 'month' | 'week' | 'day';
-  category?: string;
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  selectedAccount?: string | undefined;
+  selectedCategory?: string | undefined;
+  compareToPrevious?: boolean | undefined;
+  groupBy?: 'month' | 'week' | 'day' | undefined;
+  category?: string | undefined;
   title: string;
 }
 

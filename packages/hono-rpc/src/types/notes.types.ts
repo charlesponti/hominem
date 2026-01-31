@@ -63,7 +63,7 @@ export type NotesCreateInput = {
   content: string;
   tags?: Array<{ value: string }>;
   mentions?: Array<{ id: string; name: string }>;
-  taskMetadata?: TaskMetadata;
+  taskMetadata?: TaskMetadata | undefined;
   analysis?: any;
 };
 
@@ -78,7 +78,7 @@ export type NotesUpdateInput = {
   title?: string | null;
   content?: string;
   tags?: Array<{ value: string }>;
-  taskMetadata?: TaskMetadata | null;
+  taskMetadata?: TaskMetadata | null | undefined;
   analysis?: any | null;
 };
 

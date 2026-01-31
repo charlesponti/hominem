@@ -22,7 +22,7 @@ export async function convertCsv(inputFile: string): Promise<CsvRow[] | null> {
         const values = Object.values(data) as string[];
 
         const outputRow = keys.reduce((acc, key, index) => {
-          acc[key] = values[index];
+          acc[key] = values[index] ?? '';
           return acc;
         }, {} as CsvRow);
 

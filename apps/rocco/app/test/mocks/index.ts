@@ -22,16 +22,16 @@ export const TEST_USER: User = {
   aud: 'authenticated',
   created_at: '2023-01-01T00:00:00Z',
   updated_at: '2023-01-01T00:00:00Z',
-  email_confirmed_at: undefined,
-  phone: undefined,
-  phone_confirmed_at: undefined,
-  confirmation_sent_at: undefined,
-  recovery_sent_at: undefined,
-  last_sign_in_at: undefined,
-  role: undefined,
+  email_confirmed_at: undefined as string | undefined,
+  phone: undefined as string | undefined,
+  phone_confirmed_at: undefined as string | undefined,
+  confirmation_sent_at: undefined as string | undefined,
+  recovery_sent_at: undefined as string | undefined,
+  last_sign_in_at: undefined as string | undefined,
+  role: undefined as string | undefined,
   identities: [],
   factors: [],
-};
+} as User;
 
 export const getMockUser = () => ({
   id: USER_ID,

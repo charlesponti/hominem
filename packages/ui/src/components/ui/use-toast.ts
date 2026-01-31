@@ -182,9 +182,8 @@ function useToast() {
     ...state,
     toast,
     dismiss: (toastId?: string | undefined) => {
-      const action: Action = toastId !== undefined 
-        ? { type: 'DISMISS_TOAST', toastId }
-        : { type: 'DISMISS_TOAST' };
+      const action: Action =
+        toastId !== undefined ? { type: 'DISMISS_TOAST', toastId } : { type: 'DISMISS_TOAST' };
       dispatch(action);
     },
   };

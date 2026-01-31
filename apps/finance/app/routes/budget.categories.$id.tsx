@@ -82,7 +82,7 @@ export default function EditBudgetCategory() {
         name: formData.name,
         type: formData.type,
         averageMonthlyExpense: formData.averageMonthlyExpense,
-        color: formData.color,
+        ...(formData.color && { color: formData.color }),
       });
       navigate('/budget');
     } catch (error) {

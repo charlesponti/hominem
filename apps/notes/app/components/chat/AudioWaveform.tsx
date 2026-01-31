@@ -67,7 +67,9 @@ export function AudioWaveform({ isRecording, stream, className = '' }: AudioWave
       let x = 0;
 
       for (let i = 0; i < dataArray.length; i++) {
-        barHeight = (dataArray[i] / 255) * canvas.height;
+        const value = dataArray[i];
+        if (value === undefined) continue;
+        barHeight = (value / 255) * canvas.height;
 
         // Create gradient
         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);

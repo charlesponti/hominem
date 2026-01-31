@@ -14,7 +14,7 @@ import {
 const TWEET_CHARACTER_LIMIT = 280;
 
 // Helper function to get default strategy prompts
-function getDefaultStrategyPrompt(strategy: string) {
+function getDefaultStrategyPrompt(strategy: string): string {
   const defaultStrategies: Record<string, string> = {
     storytelling:
       'CONTENT STRATEGY: Storytelling - Create a narrative arc with beginning, middle, and end',
@@ -33,7 +33,7 @@ function getDefaultStrategyPrompt(strategy: string) {
     education: 'CONTENT STRATEGY: Education - Focus on teaching a concept or sharing knowledge',
   };
 
-  return defaultStrategies[strategy] || defaultStrategies.storytelling;
+  return defaultStrategies[strategy] ?? 'CONTENT STRATEGY: Storytelling - Create a narrative arc with beginning, middle, and end';
 }
 
 export const tweetRoutes = new Hono<AppContext>()
@@ -44,7 +44,7 @@ export const tweetRoutes = new Hono<AppContext>()
     const parsed = tweetGenerateSchema.safeParse(body);
 
     if (!parsed.success) {
-      throw new ValidationError(parsed.error.issues[0].message);
+      throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
     }
 
     const { content, strategyType, strategy } = parsed.data;
@@ -74,6 +74,9 @@ Strategy Details:
 Apply this custom strategy when creating the tweet, focusing on the target audience and incorporating the strategic approach outlined above.`;
     } else {
       // Use default strategy
+      if (!strategy) {
+        throw new ValidationError('Strategy is required when strategyType is not custom');
+      }
       strategyName = strategy as string;
       strategyPrompt = getDefaultStrategyPrompt(strategy as string);
     }

@@ -50,12 +50,15 @@ export function useImportTransactionsStore() {
 
   const convertJobToFileStatusStable = useCallback(
     (jobs: ImportTransactionsJob[]): FileStatus[] =>
-      jobs.map((job) => ({
-        file: getStableFile(job.fileName),
-        status: job.status,
-        stats: job.stats,
-        error: job.error,
-      })),
+      jobs.map(
+        (job) =>
+          ({
+            file: getStableFile(job.fileName),
+            status: job.status,
+            stats: job.stats,
+            ...(job.error && { error: job.error }),
+          }) as FileStatus,
+      ),
     [getStableFile],
   );
 
@@ -87,12 +90,15 @@ export function useImportTransactionsStore() {
                 const matchingJob = latestJobData.find((job) => job.fileName === status.file.name);
 
                 if (matchingJob) {
-                  return {
+                  const updated: FileStatus = {
                     ...status,
                     status: matchingJob.status,
                     stats: matchingJob.stats,
-                    error: matchingJob.error,
                   };
+                  if (matchingJob.error) {
+                    updated.error = matchingJob.error;
+                  }
+                  return updated;
                 }
 
                 return status;
@@ -136,12 +142,15 @@ export function useImportTransactionsStore() {
                 const matchingJob = jobData.find((job) => job.fileName === status.file.name);
 
                 if (matchingJob) {
-                  return {
+                  const updated: FileStatus = {
                     ...status,
                     status: matchingJob.status,
                     stats: matchingJob.stats,
-                    error: matchingJob.error,
                   };
+                  if (matchingJob.error) {
+                    updated.error = matchingJob.error;
+                  }
+                  return updated;
                 }
 
                 return status;

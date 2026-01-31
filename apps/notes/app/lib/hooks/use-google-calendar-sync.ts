@@ -8,9 +8,9 @@ import { useHonoMutation, useHonoClient, useHonoUtils } from '@hominem/hono-clie
 import { useCallback, useState } from 'react';
 
 export interface CalendarSyncOptions {
-  calendarId?: string;
-  timeMin?: string;
-  timeMax?: string;
+  calendarId?: string | undefined;
+  timeMin?: string | undefined;
+  timeMax?: string | undefined;
 }
 
 export function useGoogleCalendarSync() {

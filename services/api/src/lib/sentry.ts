@@ -7,8 +7,8 @@ const { SENTRY_DSN, SENTRY_DEBUG, NODE_ENV } = process.env as Record<string, str
 // Initialize Sentry
 export function initSentry() {
   Sentry.init({
-    dsn: SENTRY_DSN,
-    environment: NODE_ENV,
+    ...(SENTRY_DSN && { dsn: SENTRY_DSN }),
+    ...(NODE_ENV && { environment: NODE_ENV }),
     enabled: !!SENTRY_DSN,
     debug: !!SENTRY_DEBUG,
     tracesSampleRate: 1,

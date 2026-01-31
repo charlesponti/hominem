@@ -30,9 +30,9 @@ export type GoalFormData = z.infer<typeof GoalFormSchema>;
 interface GoalModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  goal?: Goal;
+  goal?: Goal | undefined;
   onSubmit: (data: GoalFormData) => void;
-  isLoading?: boolean;
+  isLoading?: boolean | undefined;
 }
 
 export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: GoalModalProps) {

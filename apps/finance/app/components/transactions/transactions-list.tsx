@@ -37,7 +37,7 @@ function TransactionMetadata({
   account,
 }: {
   transaction: TransactionFromAPI;
-  account?: AccountFromMap;
+  account?: AccountFromMap | undefined;
 }) {
   return (
     <div className="flex justify-between text-xs text-muted-foreground">
@@ -62,7 +62,7 @@ function TransactionListItem({
   account,
 }: {
   transaction: TransactionFromAPI;
-  account?: AccountFromMap;
+  account?: AccountFromMap | undefined;
 }) {
   return (
     <div className="group border-b border-gray-200 py-4 px-2 space-y-2">

@@ -7,12 +7,12 @@ interface CopyButtonProps {
   onClick: () => void;
   sectionName: string;
   copiedSections: Set<string>;
-  size?: 'sm' | 'default' | 'lg';
-  variant?: 'outline' | 'default' | 'destructive' | 'secondary' | 'ghost' | 'link';
+  size?: 'sm' | 'default' | 'lg' | undefined;
+  variant?: 'outline' | 'default' | 'destructive' | 'secondary' | 'ghost' | 'link' | undefined;
   children?: ReactNode;
-  shortcutKey?: string;
-  disabled?: boolean;
-  'aria-describedby'?: string;
+  shortcutKey?: string | undefined;
+  disabled?: boolean | undefined;
+  'aria-describedby'?: string | undefined;
 }
 
 export function CopyButton({

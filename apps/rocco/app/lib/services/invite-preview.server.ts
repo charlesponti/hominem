@@ -3,11 +3,11 @@ import { getPlacePhotoById } from '@hominem/places-services';
 import { getHominemPhotoURL } from '@hominem/utils/images';
 
 export type InvitePreview = {
-  listId?: string;
+  listId?: string | undefined;
   listName: string;
-  coverPhoto?: string | null;
-  firstItemName?: string | null;
-  invitedUserEmail?: string | null;
+  coverPhoto?: string | null | undefined;
+  firstItemName?: string | null | undefined;
+  invitedUserEmail?: string | null | undefined;
 };
 
 /**

@@ -41,7 +41,7 @@ export type TwitterDisconnectOutput = { success: boolean; message: string };
 
 export type TwitterPostInput = {
   text: string;
-  contentId?: string;
+  contentId?: string | undefined;
   saveAsContent?: boolean;
 };
 

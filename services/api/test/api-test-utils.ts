@@ -115,7 +115,7 @@ export const makeAuthenticatedRequest = async (
   const requestInit: RequestInit = {
     method: options.method,
     headers: Object.fromEntries(Object.entries(headers).filter(([_, value]) => value !== null)),
-    body,
+    ...(body !== undefined && { body }),
   }
 
   const request = new Request(`http://localhost${options.url}`, requestInit)

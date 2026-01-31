@@ -15,6 +15,7 @@ import type {
   CreateAccountInput,
   InstitutionConnection,
   PlaidConnection,
+  UpdateAccountInput,
 } from './accounts.domain';
 
 /**
@@ -72,7 +73,7 @@ export const AccountsRepository = {
   async update(
     id: string,
     userId: string,
-    updates: Partial<CreateAccountInput>,
+    updates: UpdateAccountInput,
   ): Promise<FinanceAccountOutput> {
     const [updated] = await db
       .update(financeAccounts)

@@ -55,24 +55,24 @@ export interface TransactionResult {
  */
 export interface QueryOptions {
   userId: string;
-  category?: string | string[];
-  dateFrom?: Date;
-  dateTo?: Date;
-  amountMin?: number;
-  amountMax?: number;
-  description?: string;
-  type?: TransactionType | TransactionType[];
-  limit?: number;
-  offset?: number;
-  sortBy?: string | string[];
-  sortDirection?: 'asc' | 'desc' | ('asc' | 'desc')[];
-  search?: string;
-  includeExcluded?: boolean;
+  category?: string | string[] | undefined;
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  amountMin?: number | undefined;
+  amountMax?: number | undefined;
+  description?: string | undefined;
+  type?: TransactionType | TransactionType[] | undefined;
+  limit?: number | undefined;
+  offset?: number | undefined;
+  sortBy?: string | string[] | undefined;
+  sortDirection?: 'asc' | 'desc' | ('asc' | 'desc')[] | undefined;
+  search?: string | undefined;
+  includeExcluded?: boolean | undefined;
 
   // Legacy options (for backward compatibility)
-  from?: string;
-  to?: string;
-  min?: string;
-  max?: string;
-  account?: string;
+  from?: string | undefined;
+  to?: string | undefined;
+  min?: string | undefined;
+  max?: string | undefined;
+  account?: string | undefined;
 }

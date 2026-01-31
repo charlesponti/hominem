@@ -16,10 +16,10 @@ import { useHonoQuery, transformDates } from '~/lib/hono';
 
 // Derive filter args from input schema where possible
 export interface FilterArgs {
-  accountId?: string;
-  dateFrom?: Date;
-  dateTo?: Date;
-  description?: string;
+  accountId?: string | undefined;
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  description?: string | undefined;
 }
 
 export const useFinanceAccounts = () =>

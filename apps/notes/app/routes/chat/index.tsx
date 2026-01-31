@@ -15,7 +15,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const result = await res.json();
 
   if (Array.isArray(result) && result.length > 0) {
-    return redirect(`/chat/${result[0].id}`, { headers });
+    const firstChat = result[0];
+    if (firstChat) {
+      return redirect(`/chat/${firstChat.id}`, { headers });
+    }
   }
 
   const createRes = await trpcClient.api.chats.$post({

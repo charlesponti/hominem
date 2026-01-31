@@ -28,7 +28,7 @@ import { usePlaidAccountsByInstitution } from '~/lib/hooks/use-plaid-accounts-by
 
 interface AccountConnectionDialogProps {
   account: Account;
-  trigger?: React.ReactNode;
+  trigger?: React.ReactNode | undefined;
 }
 
 export function AccountConnectionDialog({ account, trigger }: AccountConnectionDialogProps) {
@@ -57,13 +57,14 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
     if (!selectedInstitutionId) return;
 
     try {
+      const plaidItemId =
+        selectedPlaidAccountId && selectedPlaidAccountId !== 'none'
+          ? selectedPlaidAccountId
+          : undefined;
       await linkMutation.linkAccount.mutateAsync({
         accountId: account.id,
         institutionId: selectedInstitutionId,
-        plaidItemId:
-          selectedPlaidAccountId && selectedPlaidAccountId !== 'none'
-            ? selectedPlaidAccountId
-            : undefined,
+        ...(plaidItemId && { plaidItemId }),
       });
       setOpen(false);
       setSelectedInstitutionId('');

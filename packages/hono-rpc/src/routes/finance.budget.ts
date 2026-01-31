@@ -135,8 +135,12 @@ export const budgetRoutes = new Hono<AppContext>()
       }
 
       const result = await createBudgetCategory({
-        ...input,
+        name: input.name,
+        type: input.type,
         userId,
+        ...(input.averageMonthlyExpense && { averageMonthlyExpense: input.averageMonthlyExpense }),
+        ...(input.budgetId && { budgetId: input.budgetId }),
+        ...(input.color && { color: input.color }),
       });
 
       return c.json<BudgetCategoryCreateOutput>(serializeBudgetCategory(result), 201);
@@ -160,9 +164,15 @@ export const budgetRoutes = new Hono<AppContext>()
     async (c) => {
       const input = c.req.valid('json');
       const userId = c.get('userId')!;
-      const { id, ...updateData } = input;
+      const { id } = input;
 
-      const result = await updateBudgetCategory(id, userId, updateData);
+      const result = await updateBudgetCategory(id, userId, {
+        ...(input.name !== undefined && { name: input.name }),
+        ...(input.type !== undefined && { type: input.type }),
+        ...(input.averageMonthlyExpense !== undefined && { averageMonthlyExpense: input.averageMonthlyExpense }),
+        ...(input.budgetId !== undefined && { budgetId: input.budgetId }),
+        ...(input.color !== undefined && { color: input.color }),
+      });
       if (!result) {
         throw new NotFoundError('Category not found');
       }
@@ -389,7 +399,15 @@ export const budgetRoutes = new Hono<AppContext>()
       const input = c.req.valid('json');
       const userId = c.get('userId')!;
 
-      const result = await bulkCreateBudgetCategoriesFromTransactions(userId, input.categories);
+      const result = await bulkCreateBudgetCategoriesFromTransactions(
+        userId,
+        input.categories.map((cat) => ({
+          name: cat.name,
+          type: cat.type,
+          ...(cat.averageMonthlyExpense && { averageMonthlyExpense: cat.averageMonthlyExpense }),
+          ...(cat.color && { color: cat.color }),
+        })),
+      );
       return c.json<BudgetBulkCreateOutput>(
         {
           created: result.created ?? 0,

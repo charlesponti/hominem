@@ -371,7 +371,7 @@ export function useLinkAccountToInstitution() {
           LinkAccountResponse
         >(`/api/finance/accounts/${accountId}/link-institution`, {
           institutionId,
-          plaidItemId,
+          ...(plaidItemId && { plaidItemId }),
         });
         return response;
       } catch (err) {

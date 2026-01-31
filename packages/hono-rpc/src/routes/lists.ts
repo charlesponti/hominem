@@ -156,8 +156,8 @@ export const listsRoutes = new Hono<AppContext>()
 
       const lists = await getPlaceLists({
         userId,
-        placeId: input.placeId,
-        googleMapsId: input.googleMapsId,
+        ...(input.placeId && { placeId: input.placeId }),
+        ...(input.googleMapsId && { googleMapsId: input.googleMapsId }),
       });
 
       const result = lists.map((list) => ({

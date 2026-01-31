@@ -38,7 +38,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
     | undefined;
   const userId = rootData?.supabaseId || undefined;
 
-  const sendMessage = useSendMessage({ chatId, userId });
+  const sendMessage = useSendMessage({ chatId, ...(userId && { userId }) });
   const { uploadState, clearAll } = useFileUpload();
 
   const characterCount = inputValue.length;

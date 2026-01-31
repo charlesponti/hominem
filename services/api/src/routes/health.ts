@@ -69,10 +69,10 @@ healthRoutes.get('/', zValidator('query', healthQuerySchema), async (c) => {
   try {
     const query = c.req.valid('query');
     const results = await listHealthRecords({
-      userId: query.userId,
-      startDate: query.startDate,
-      endDate: query.endDate,
-      activityType: query.activityType,
+      ...(query.userId !== undefined && { userId: query.userId }),
+      ...(query.startDate !== undefined && { startDate: query.startDate }),
+      ...(query.endDate !== undefined && { endDate: query.endDate }),
+      ...(query.activityType !== undefined && { activityType: query.activityType }),
     });
 
     const sorted = results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -112,6 +112,9 @@ healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
     const validated = c.req.valid('json');
 
     const result = await createHealthRecord(validated);
+    if (!result) {
+      throw new InternalError('Failed to create health record');
+    }
     return c.json(serializeHealthRecord(result), 201);
   } catch (err) {
     console.error('Error creating health record:', err);
@@ -131,7 +134,13 @@ healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) =
 
     const validated = c.req.valid('json');
 
-    const result = await updateHealthRecord(numericId, validated);
+    const result = await updateHealthRecord(numericId, {
+      ...(validated.date !== undefined && { date: validated.date }),
+      ...(validated.activityType !== undefined && { activityType: validated.activityType }),
+      ...(validated.duration !== undefined && { duration: validated.duration }),
+      ...(validated.caloriesBurned !== undefined && { caloriesBurned: validated.caloriesBurned }),
+      ...(validated.notes !== undefined && { notes: validated.notes }),
+    });
 
     if (!result) {
       throw new NotFoundError('Health record not found');

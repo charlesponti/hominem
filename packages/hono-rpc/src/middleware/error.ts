@@ -13,7 +13,7 @@ export interface ApiErrorResponse {
   error: string;  // Lowercase error code (e.g., 'not_found', 'validation_error')
   code: ErrorCode;  // Original error code for client-side error handling
   message: string;  // Human-readable error message
-  details?: Record<string, unknown>;  // Additional error context
+  details?: Record<string, unknown> | undefined;  // Additional error context
 }
 
 /**

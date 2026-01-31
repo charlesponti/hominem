@@ -33,10 +33,10 @@ export const askCommand = new Command()
     let responseText = '\n';
 
     if (options.showThinking) {
-      responseText += `${chalk.bold.green('thinking:')} ${chalk.white(thinking.replace(/<think>/g, '').trim())}\n\n`;
+      responseText += `${chalk.bold.green('thinking:')} ${chalk.white(thinking?.replace(/<think>/g, '').trim() ?? '')}\n\n`;
     }
 
-    responseText += `${chalk.bold.blue('Answer:')} ${chalk.white(answer.trim())}`;
+    responseText += `${chalk.bold.blue('Answer:')} ${chalk.white(answer?.trim() ?? '')}`;
 
     consola.log(responseText);
   });

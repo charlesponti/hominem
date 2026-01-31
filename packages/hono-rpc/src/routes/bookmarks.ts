@@ -89,7 +89,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
       const parsed = createBookmarkSchema.safeParse(body);
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.issues[0].message);
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const { url } = parsed.data;
@@ -138,7 +138,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
       const parsed = updateBookmarkSchema.safeParse(body);
 
       if (!parsed.success) {
-        throw new ValidationError(parsed.error.issues[0].message);
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
       const { url } = parsed.data;

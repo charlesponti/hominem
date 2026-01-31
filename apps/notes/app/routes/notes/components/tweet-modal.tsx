@@ -99,7 +99,12 @@ export function TweetModal({
     if (newType === 'default') {
       setStrategy('storytelling');
     } else if (customStrategies.length > 0) {
-      setStrategy(customStrategies[0].id);
+      const firstStrategy = customStrategies[0];
+      if (firstStrategy) {
+        setStrategy(firstStrategy.id);
+      } else {
+        setStrategy('');
+      }
     } else {
       setStrategy('');
     }
@@ -134,7 +139,7 @@ export function TweetModal({
       postTweet.mutate(
         {
           text: generatedTweet,
-          contentId, // Link to existing content if provided
+          ...(contentId && { contentId }), // Link to existing content if provided
           saveAsContent: true, // Always save as content for better tracking
         },
         {

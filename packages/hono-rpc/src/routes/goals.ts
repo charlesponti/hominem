@@ -40,7 +40,7 @@ export const goalsRoutes = new Hono<AppContext>()
       userId,
       showArchived,
       sortBy,
-      category,
+      ...(category && { category }),
     });
     return c.json<GoalListOutput>(goals as GoalOutput[]);
   })
@@ -72,7 +72,16 @@ export const goalsRoutes = new Hono<AppContext>()
     const id = c.req.param('id');
     const data = c.req.valid('json');
 
-    const goal = await updateGoal(id, userId, data);
+    const goal = await updateGoal(id, userId, {
+      ...(data.title !== undefined && { title: data.title }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.goalCategory !== undefined && { goalCategory: data.goalCategory }),
+      ...(data.status !== undefined && { status: data.status }),
+      ...(data.priority !== undefined && { priority: data.priority }),
+      ...(data.startDate !== undefined && { startDate: data.startDate }),
+      ...(data.dueDate !== undefined && { dueDate: data.dueDate }),
+      ...(data.milestones !== undefined && { milestones: data.milestones }),
+    });
     if (!goal) {
       throw new NotFoundError('GoalOutput not found');
     }

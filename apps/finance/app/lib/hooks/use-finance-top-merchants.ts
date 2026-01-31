@@ -3,11 +3,11 @@ import type { TopMerchantsOutput } from '@hominem/hono-rpc/types/finance.types';
 import { useHonoQuery } from '../hono';
 
 type UseFinanceTopMerchantsParams = {
-  from?: string;
-  to?: string;
-  account?: string;
-  category?: string;
-  limit?: number;
+  from?: string | undefined;
+  to?: string | undefined;
+  account?: string | undefined;
+  category?: string | undefined;
+  limit?: number | undefined;
 };
 
 export function useFinanceTopMerchants({

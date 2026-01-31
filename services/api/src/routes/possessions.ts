@@ -114,10 +114,13 @@ possessionsRoutes.put(
       const data = c.req.valid('json');
 
       const updated = await updatePossession({
-        ...data,
         id,
         userId,
-        dateAcquired: data.dateAcquired ? new Date(data.dateAcquired) : undefined,
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(data.dateAcquired !== undefined && { dateAcquired: new Date(data.dateAcquired) }),
+        ...(data.purchasePrice !== undefined && { purchasePrice: data.purchasePrice }),
+        ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
       });
 
       if (!updated) {

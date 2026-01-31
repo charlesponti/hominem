@@ -5,12 +5,12 @@ import { memo, useMemo } from 'react';
 import { cn } from '~/lib/utils';
 
 interface UserAvatarProps {
-  id?: string;
-  name?: string;
-  email?: string;
-  image?: string | null;
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
+  id?: string | undefined;
+  name?: string | undefined;
+  email?: string | undefined;
+  image?: string | null | undefined;
+  size?: 'sm' | 'md' | 'lg' | undefined;
+  className?: string | undefined;
 }
 
 const sizeClasses = {

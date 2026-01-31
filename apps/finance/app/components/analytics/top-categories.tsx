@@ -6,10 +6,10 @@ import { useCategoryBreakdown } from '~/lib/hooks/use-analytics';
 import { formatCurrency } from '~/lib/number.utils';
 
 interface TopCategoriesProps {
-  dateFrom?: Date;
-  dateTo?: Date;
-  selectedAccount?: string;
-  selectedCategory?: string;
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  selectedAccount?: string | undefined;
+  selectedCategory?: string | undefined;
 }
 
 export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategoriesProps) {

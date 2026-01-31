@@ -8,8 +8,8 @@ import type {
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
 interface SyncOptions {
-  calendarId?: string;
-  timeMin?: string;
+  calendarId?: string | undefined;
+  timeMin?: string | undefined;
 }
 
 export function useGoogleCalendarSync() {

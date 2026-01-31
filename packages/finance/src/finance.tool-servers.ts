@@ -113,11 +113,16 @@ export const updateFinanceAccountDef = toolDefinition({
 export const updateFinanceAccountServer =
   (userId: string) => async (input: z.infer<typeof updateFinanceAccountInputSchema>) => {
     const { accountId, balance, currency, type, name } = input;
-    const payload: UpdateAccountInput = {
-      ...(name !== undefined && { name }),
-      ...(type !== undefined && { type: type as UpdateAccountInput['type'] }),
-      ...(currency !== undefined && { isoCurrencyCode: currency }),
-    };
+    const payload: UpdateAccountInput = {};
+    if (name !== undefined) {
+      payload.name = name;
+    }
+    if (type !== undefined) {
+      payload.type = type as UpdateAccountInput['type'];
+    }
+    if (currency !== undefined) {
+      payload.isoCurrencyCode = currency;
+    }
     if (balance !== undefined) {
       payload.balance = balance.toString();
     }

@@ -145,7 +145,7 @@ const ProcessingStat = memo(function ProcessingStat({
   value,
 }: {
   label: string;
-  value?: number;
+  value?: number | undefined;
 }) {
   if (value === undefined) return null;
   return (

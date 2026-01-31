@@ -43,11 +43,11 @@ export type EventsGetOutput = Event;
 
 export type EventsCreateInput = {
   title: string;
-  description?: string;
-  date?: string | Date;
-  type?: string;
-  tags?: string[];
-  people?: string[];
+  description?: string | undefined;
+  date?: string | Date | undefined;
+  type?: string | undefined;
+  tags?: string[] | undefined;
+  people?: string[] | undefined;
 };
 
 export const eventsCreateSchema = z.object({
@@ -109,9 +109,9 @@ export type GoogleCalendar = {
 export type EventsGoogleCalendarsOutput = GoogleCalendar[];
 
 export type EventsGoogleSyncInput = {
-  calendarId?: string;
-  timeMin?: string;
-  timeMax?: string;
+  calendarId?: string | undefined;
+  timeMin?: string | undefined;
+  timeMax?: string | undefined;
 };
 
 export const eventsGoogleSyncSchema = z.object({

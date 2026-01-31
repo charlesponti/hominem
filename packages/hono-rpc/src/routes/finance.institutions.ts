@@ -29,6 +29,13 @@ export const institutionsRoutes = new Hono<AppContext>()
   })), async (c) => {
     const input = c.req.valid('json');
 
-    const result = await createInstitution(input);
+    const result = await createInstitution({
+      id: input.id,
+      name: input.name,
+      url: input.url ?? null,
+      logo: input.logo ?? null,
+      primaryColor: input.primaryColor ?? null,
+      country: input.country ?? null,
+    });
     return c.json<InstitutionCreateOutput>(result as any, 201);
   });
