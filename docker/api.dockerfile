@@ -71,7 +71,7 @@ COPY --from=deps /app/node_modules ./node_modules
 
 # Copy source code from pruner (includes packages and app source)
 COPY --from=pruner /app/out/full/packages ./packages
-COPY --from=pruner /app/out/full/apps/api ./apps/api
+COPY --from=pruner /app/out/full/services/api ./services/api
 
 # Set proper permissions
 RUN chown -R hominem:bunuser /app
@@ -87,5 +87,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:${PORT:-3000}/api/status || exit 1
 
 # Start the application directly from source with Bun
-ENTRYPOINT ["bun", "run", "apps/api/src/index.ts"]
+ENTRYPOINT ["bun", "run", "services/api/src/index.ts"]
 CMD []
