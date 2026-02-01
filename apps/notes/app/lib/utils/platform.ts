@@ -1,24 +1,24 @@
 export function getOS() {
-  const userAgent = window.navigator.userAgent
-  const platform = window.navigator.platform
-  const macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K']
-  const windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE']
-  const iosPlatforms = ['iPhone', 'iPad', 'iPod']
-  let os = null
+  const userAgent = window.navigator.userAgent;
+  const platform = window.navigator.platform;
+  const macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
+  const windowsPlatforms = ['Win32', 'Win64', 'Windows', 'WinCE'];
+  const iosPlatforms = ['iPhone', 'iPad', 'iPod'];
+  let os = null;
 
   if (macosPlatforms.indexOf(platform) !== -1) {
-    os = 'Mac OS'
+    os = 'Mac OS';
   } else if (iosPlatforms.indexOf(platform) !== -1) {
-    os = 'iOS'
+    os = 'iOS';
   } else if (windowsPlatforms.indexOf(platform) !== -1) {
-    os = 'Windows'
+    os = 'Windows';
   } else if (/Android/.test(userAgent)) {
-    os = 'Android'
+    os = 'Android';
   } else if (!os && /Linux/.test(platform)) {
-    os = 'Linux'
+    os = 'Linux';
   }
 
-  return os
+  return os;
 }
 
-export const isMac = () => getOS() === 'Mac OS'
+export const isMac = () => getOS() === 'Mac OS';

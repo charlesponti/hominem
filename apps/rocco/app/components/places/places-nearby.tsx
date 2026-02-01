@@ -2,15 +2,16 @@ import { List } from '@hominem/ui/list';
 import { Loading } from '@hominem/ui/loading';
 import { MapPin } from 'lucide-react';
 import { href } from 'react-router';
+
 import { useGeolocation } from '~/hooks/useGeolocation';
-import { trpc } from '~/lib/trpc/client';
+import { useNearbyPlaces } from '~/lib/hooks/use-places';
+
 import PlaceRow from './place-row';
 
 type Props = {
   latitude?: number;
   longitude?: number;
-  radiusKm?: number;
-  limit?: number;
+  radiusMeters?: number;
 };
 
 // Default location: San Francisco (fallback)
@@ -19,18 +20,17 @@ const DEFAULT_LOCATION = {
   longitude: -122.4194,
 };
 
-const formatDistance = (distanceInMeters: number) => {
-  if (distanceInMeters < 1000) {
-    return `${Math.round(distanceInMeters)}m`;
+const formatDistance = (distance: { km: number; miles: number }) => {
+  if (distance.km < 1) {
+    return `${Math.round(distance.km * 1000)}m`;
   }
-  return `${(distanceInMeters / 1000).toFixed(1)}km`;
+  return `${distance.km.toFixed(1)}km`;
 };
 
 export default function PlacesNearby({
   latitude: providedLatitude,
   longitude: providedLongitude,
-  radiusKm = 5,
-  limit = 4,
+  radiusMeters = 5000,
 }: Props) {
   // Get user's current location from cached hook (only if not provided via props)
   const { currentLocation } = useGeolocation({
@@ -46,16 +46,14 @@ export default function PlacesNearby({
       ? { latitude: providedLatitude, longitude: providedLongitude }
       : currentLocation || DEFAULT_LOCATION;
   const {
-    data: places = [],
+    data: placesResult,
     isLoading,
     error,
-  } = trpc.places.getNearbyFromLists.useQuery({
-    latitude: location.latitude,
-    longitude: location.longitude,
-    radiusKm,
-    limit,
-  });
+  } = useNearbyPlaces(location.latitude, location.longitude, radiusMeters);
+
+  const places = placesResult ?? [];
   const title = <h2 className="heading-2">Nearby</h2>;
+  const radiusKm = (radiusMeters ?? 5000) / 1000;
 
   if (isLoading) {
     return (
@@ -98,13 +96,13 @@ export default function PlacesNearby({
       <div className="flex items-center justify-between">{title}</div>
 
       <List>
-        {places.map((place) => {
+        {places.map((place: (typeof places)[0]) => {
           return (
             <PlaceRow
               key={place.id}
               name={place.name}
               href={href('/places/:id', { id: place.id })}
-              photoUrl={place.photos?.[0] ?? null}
+              photoUrl={null}
               imageUrl={place.imageUrl}
               meta={
                 <div className="flex gap-1 items-center text-xs text-muted-foreground">

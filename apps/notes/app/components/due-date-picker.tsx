@@ -1,12 +1,12 @@
-import { DatePicker } from '@hominem/ui/components/date-picker'
+import { DatePicker } from '@hominem/ui/components/date-picker';
 
 interface DueDatePickerProps {
-  value: Date | undefined
-  onSelect: (date: Date | undefined) => void
-  disabled?: boolean
-  className?: string
-  id?: string
-  placeholder?: string
+  value: Date | undefined;
+  onSelect: (date: Date | undefined) => void;
+  disabled?: boolean;
+  className?: string;
+  id?: string;
+  placeholder?: string;
 }
 
 export function DueDatePicker({
@@ -27,5 +27,5 @@ export function DueDatePicker({
       placeholder={placeholder}
       label="Due Date"
     />
-  )
+  );
 }

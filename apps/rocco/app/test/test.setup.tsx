@@ -1,21 +1,8 @@
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeAll, vi } from 'vitest';
+
 import './utils';
-
-// Polyfill Web APIs for React Router v7 compatibility
-// React Router v7 uses Request/Response internally and needs them
-// to be from a consistent implementation to avoid AbortSignal errors
-import { fetch, Headers, Request, Response } from '@remix-run/web-fetch';
-
-// @ts-expect-error - Polyfilling globals for test environment
-globalThis.fetch = fetch;
-// @ts-expect-error - Polyfilling globals for test environment
-globalThis.Request = Request;
-// @ts-expect-error - Polyfilling globals for test environment
-globalThis.Response = Response;
-// @ts-expect-error - Polyfilling globals for test environment
-globalThis.Headers = Headers;
 
 // Set NODE_ENV to test for environment variable defaults
 process.env.NODE_ENV = 'test';
@@ -32,6 +19,12 @@ global.IntersectionObserver = class IntersectionObserver {
   }
   unobserve() {}
 };
+
+// Fix for JSDOM recursion bug with hardwareConcurrency
+Object.defineProperty(navigator, 'hardwareConcurrency', {
+  get: () => 4,
+  configurable: true,
+});
 
 // Ensure jsdom environment is fully initialized before tests run
 beforeAll(() => {

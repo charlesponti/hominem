@@ -20,35 +20,42 @@
   },
   "workspaces": [
     "apps/*",
+    "services/*",
+    "tools/*",
     "packages/*"
   ],
   "scripts": {
     "build": "turbo run build",
-    "check": "turbo run check",
     "clean": "turbo run clean",
     "db:migrate": "turbo run db:migrate",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "format": "turbo run format",
+    "precommit": "bunx lefthook run pre-commit",
     "prepush": "bun run test",
     "prerelease": "bun run test",
     "start:dev": "bun apps/api/src/index.ts",
     "start:prod": "bun apps/api/src/index.ts",
     "test": "turbo run test",
+    "type-audit": "bun run scripts/type-performance.ts run-all",
+    "type-perf:analyze": "bun run scripts/type-performance.ts analyze",
+    "type-perf:audit": "bun run scripts/type-performance.ts audit",
     "typecheck": "turbo run typecheck"
   },
   "dependencies": {
-    "@trpc/server": "^11.4.2",
+    "drizzle-orm": "0.45.1",
     "react": "^19.2.3",
     "react-dom": "^19.1.0",
     "react-router": "7.12.0"
   },
   "devDependencies": {
+    "@ark/attest": "^0.56.0",
     "@tanstack/ai": "^0.2.0",
     "@turbo/gen": "2.6.3",
     "@types/node": "^22.15.2",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "@vitest/coverage-v8": "latest",
     "drizzle-kit": "^0.31.4",
     "ink": "^6.6.0",
     "lefthook": "^2.0.2",
@@ -59,6 +66,14 @@
     "typescript": "5.9.3",
     "vite-tsconfig-paths": "6.0.3",
     "vitest": "4.0.16"
+  },
+  "overrides": {
+    "@hono/zod-validator": "0.7.6",
+    "@types/react": "19.2.9",
+    "@types/react-dom": "19.2.3",
+    "drizzle-orm": "0.45.1",
+    "hono": "4.11.6",
+    "zod": "4.3.6"
   },
   "engines": {
     "bun": ">=1.1.0",

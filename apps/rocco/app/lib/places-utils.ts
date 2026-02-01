@@ -1,10 +1,12 @@
-import type { PlaceInsert } from '@hominem/data/places';
+import type { PlaceInput } from '@hominem/db/types/places';
+
+import { getHominemPhotoURL, sanitizeStoredPhotos } from '@hominem/utils/images';
+
 import type {
   GooglePlaceDetailsResponse,
   GooglePlacePrediction,
   GooglePlacesApiResponse,
-} from '~/lib/types';
-import { getHominemPhotoURL, sanitizeStoredPhotos } from '@hominem/utils/images';
+} from '~/lib/shared-types';
 
 export const getPlacePhotoUrl = (reference: string | null | undefined) => {
   if (!reference) return null;
@@ -16,18 +18,18 @@ function toLocationTuple(latitude?: number | null, longitude?: number | null): [
 }
 
 /**
- * Transforms Google Places API response to database PlaceInsert format
+ * Transforms Google Places API response to database PlaceInput format
  */
 export const transformGooglePlaceToPlaceInsert = (
   googlePlace: GooglePlaceDetailsResponse,
   googleMapsId: string,
-): PlaceInsert => {
+): PlaceInput => {
   const rawPhotos = extractPhotoReferences(googlePlace.photos);
   const fetchedPhotos = sanitizeStoredPhotos(rawPhotos);
   const latitude = googlePlace.location?.latitude ?? null;
   const longitude = googlePlace.location?.longitude ?? null;
 
-  const result: PlaceInsert = {
+  const result: PlaceInput = {
     googleMapsId,
     name: googlePlace.displayName?.text || 'Unknown Place',
     address: googlePlace.formattedAddress ?? null,

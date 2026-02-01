@@ -1,28 +1,31 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "UI Package",
-  "extends": "../tsconfig/library.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": "./src",
+    "rootDir": "src",
     "outDir": "./build",
     "jsx": "react-jsx",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "incremental": true
+    "types": ["vite/client", "node"],
+    "composite": true,
+    "tsBuildInfoFile": "../../.cache/ui.tsbuildinfo",
+    "sourceMap": false,
+    "declarationMap": true
   },
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": [
     "node_modules",
-    "./src/test-utils.tsx",
-    "./src/**/*.test.tsx",
     "build",
-    "dist"
+    "dist",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }

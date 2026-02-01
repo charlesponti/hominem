@@ -1,21 +1,22 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import type { User } from '@supabase/supabase-js'
+import type { User } from '@supabase/supabase-js';
+
+import { useSupabaseAuthContext } from '@hominem/auth';
 
 interface ProfileProps {
-  user: User
+  user: User;
 }
 
 export function Profile({ user }: ProfileProps) {
-  const { supabase } = useSupabaseAuthContext()
+  const { supabase } = useSupabaseAuthContext();
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error('Logout error:', error);
     }
-  }
+  };
 
   return (
     <div className="profile-container">
@@ -37,5 +38,5 @@ export function Profile({ user }: ProfileProps) {
         Logout
       </button>
     </div>
-  )
+  );
 }

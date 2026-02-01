@@ -1,95 +1,96 @@
-import { useId, useState } from 'react'
-import { useNavigate } from 'react-router'
-import type { Route } from './+types/events.people'
+import { useId, useState } from 'react';
+import { useNavigate } from 'react-router';
+
+import type { Route } from './+types/events.people';
 
 interface Person {
-  id: string
-  firstName?: string
-  lastName?: string
+  id: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
   try {
-    const url = new URL(request.url)
-    const baseUrl = `${url.protocol}//${url.host}`
+    const url = new URL(request.url);
+    const baseUrl = `${url.protocol}//${url.host}`;
 
-    const response = await fetch(`${baseUrl}/api/events/people`)
+    const response = await fetch(`${baseUrl}/api/events/people`);
     if (!response.ok) {
-      throw new Response('Failed to fetch people', { status: response.status })
+      throw new Response('Failed to fetch people', { status: response.status });
     }
-    return await response.json()
+    return await response.json();
   } catch (error) {
-    console.error('Error in loader:', error)
-    throw error
+    console.error('Error in loader:', error);
+    throw error;
   }
 }
 
 export async function action({ request }: Route.ActionArgs) {
   try {
-    const formData = await request.formData()
-    const personData = Object.fromEntries(formData)
+    const formData = await request.formData();
+    const personData = Object.fromEntries(formData);
 
-    const url = new URL(request.url)
-    const baseUrl = `${url.protocol}//${url.host}`
+    const url = new URL(request.url);
+    const baseUrl = `${url.protocol}//${url.host}`;
     const response = await fetch(`${baseUrl}/api/events/people`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(personData),
-    })
+    });
 
     if (!response.ok) {
-      throw new Response('Failed to create person', { status: response.status })
+      throw new Response('Failed to create person', { status: response.status });
     }
 
-    return { success: true, person: await response.json() }
+    return { success: true, person: await response.json() };
   } catch (error) {
-    console.error('Error in action:', error)
-    throw error
+    console.error('Error in action:', error);
+    throw error;
   }
 }
 
 export default function PeoplePage({ loaderData }: Route.ComponentProps) {
-  const navigate = useNavigate()
-  const people = loaderData as Person[]
-  const firstNameId = useId()
-  const lastNameId = useId()
+  const navigate = useNavigate();
+  const people = loaderData as Person[];
+  const firstNameId = useId();
+  const lastNameId = useId();
 
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [editingPerson, setEditingPerson] = useState<Person | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
 
   const deletePerson = async (id: string) => {
     if (!confirm('Are you sure you want to delete this person?')) {
-      return
+      return;
     }
 
     try {
       const response = await fetch(`/api/events/people/${id}`, {
         method: 'DELETE',
-      })
+      });
 
       if (response.ok) {
         // Refresh the page to reload data
-        window.location.reload()
+        window.location.reload();
       } else {
-        const errorData = await response.json()
-        console.error('Error deleting person:', errorData.error)
-        alert('Failed to delete person')
+        const errorData = await response.json();
+        console.error('Error deleting person:', errorData.error);
+        alert('Failed to delete person');
       }
     } catch (error) {
-      console.error('Error deleting person:', error)
-      alert('Failed to delete person')
+      console.error('Error deleting person:', error);
+      alert('Failed to delete person');
     }
-  }
+  };
 
   const startEdit = (person: Person) => {
-    setEditingPerson({ ...person })
-  }
+    setEditingPerson({ ...person });
+  };
 
   const cancelEdit = () => {
-    setEditingPerson(null)
-  }
+    setEditingPerson(null);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -204,7 +205,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                           value={editingPerson.firstName || ''}
                           onChange={(e) =>
                             setEditingPerson((prev) =>
-                              prev ? { ...prev, firstName: e.target.value } : null
+                              prev ? { ...prev, firstName: e.target.value } : null,
                             )
                           }
                           className="input input-bordered w-full bg-white border-gray-300 text-black focus:border-black"
@@ -223,7 +224,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                           value={editingPerson.lastName || ''}
                           onChange={(e) =>
                             setEditingPerson((prev) =>
-                              prev ? { ...prev, lastName: e.target.value } : null
+                              prev ? { ...prev, lastName: e.target.value } : null,
                             )
                           }
                           className="input input-bordered w-full bg-white border-gray-300 text-black focus:border-black"
@@ -265,7 +266,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                         className="btn bg-blue-600 text-white hover:bg-blue-700 border-0"
                         onClick={() => {
                           // Handle update logic here
-                          setEditingPerson(null)
+                          setEditingPerson(null);
                         }}
                       >
                         Save Changes
@@ -286,5 +287,5 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

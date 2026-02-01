@@ -1,13 +1,14 @@
-import type { ChatFileAttachment } from '~/lib/types/chat.js'
-import { AttachmentsPreview } from './AttachmentsPreview.js'
-import { SearchContextPreview } from './SearchContextPreview.js'
+import type { ChatFileAttachment } from '~/lib/types/chat.js';
+
+import { AttachmentsPreview } from './AttachmentsPreview.js';
+import { SearchContextPreview } from './SearchContextPreview.js';
 
 interface ChatAttachmentsProps {
-  attachedFiles: ChatFileAttachment[]
-  searchContext: string
-  onRemoveFile: (fileId: string) => void
-  onRemoveAllFiles: () => void
-  onRemoveSearchContext: () => void
+  attachedFiles: ChatFileAttachment[];
+  searchContext: string;
+  onRemoveFile: (fileId: string) => void;
+  onRemoveAllFiles: () => void;
+  onRemoveSearchContext: () => void;
 }
 
 export function ChatAttachments({
@@ -33,5 +34,5 @@ export function ChatAttachments({
         <SearchContextPreview searchContext={searchContext} onRemove={onRemoveSearchContext} />
       )}
     </>
-  )
+  );
 }

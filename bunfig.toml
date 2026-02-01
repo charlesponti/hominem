@@ -1,0 +1,9 @@
+[install]
+peer = false
+
+[install.scopes]
+"drizzle-orm" = { "optionalPeers" = [] }
+
+[resolveExtensions]
+# Prevent peer dependencies from creating aliases
+allow-duplicate-peer-dependencies = false

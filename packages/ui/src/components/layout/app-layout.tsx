@@ -1,14 +1,14 @@
-import { useNavigation } from 'react-router'
+import { useNavigation } from 'react-router';
 
 interface AppLayoutProps {
-  children: React.ReactNode
-  navigation?: React.ReactNode
-  backgroundImage?: string
+  children: React.ReactNode;
+  navigation?: React.ReactNode;
+  backgroundImage?: string;
 }
 
 export function AppLayout({ children, navigation, backgroundImage }: AppLayoutProps) {
-  const navigationState = useNavigation()
-  const isNavigating = navigationState.state !== 'idle'
+  const navigationState = useNavigation();
+  const isNavigating = navigationState.state !== 'idle';
 
   return (
     <>
@@ -33,5 +33,5 @@ export function AppLayout({ children, navigation, backgroundImage }: AppLayoutPr
         </main>
       </div>
     </>
-  )
+  );
 }

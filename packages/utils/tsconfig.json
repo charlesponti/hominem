@@ -1,41 +1,29 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Utils Package",
-  "extends": "../tsconfig/library.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "rootDir": "src",
     "outDir": "./build",
-    "rootDir": "./src",
-    "module": "ES2022",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "test": [
-        "./test/*"
-      ],
-      "@hominem/ui/*": [
-        "../ui/src/*"
-      ],
-      "@hominem/ui": [
-        "../ui/src/index.ts"
-      ]
-    }
+    "composite": true,
+    "tsBuildInfoFile": "../../.cache/utils.tsbuildinfo",
+    "sourceMap": false,
+    "declarationMap": true
   },
-  "references": [
-    {
-      "path": "../ai"
-    }
-  ],
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    "./src/**/*.json"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": [
     "node_modules",
-    "**/*.test.ts",
     "build",
-    "dist"
+    "dist",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }

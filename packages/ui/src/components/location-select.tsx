@@ -1,9 +1,11 @@
-import type { GeocodeFeature } from '@hominem/utils/location'
-import { Building, MapIcon } from 'lucide-react'
-import * as React from 'react'
-import { useLocationSearch } from '../hooks/use-location-search'
-import { useMediaQuery } from '../hooks/use-media-query'
-import { Button } from './ui/button'
+import type { GeocodeFeature } from '@hominem/utils/location';
+
+import { Building, MapIcon } from 'lucide-react';
+import * as React from 'react';
+
+import { useLocationSearch } from '../hooks/use-location-search';
+import { useMediaQuery } from '../hooks/use-media-query';
+import { Button } from './ui/button';
 import {
   Command,
   CommandEmpty,
@@ -11,14 +13,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from './ui/command'
-import { Drawer, DrawerContent, DrawerTrigger } from './ui/drawer'
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
+} from './ui/command';
+import { Drawer, DrawerContent, DrawerTrigger } from './ui/drawer';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 export interface GeocodeFeatureSelectProps {
-  initialValue?: string
-  onSelect: (location: GeocodeFeature) => void
-  placeholder?: string
+  initialValue?: string | undefined;
+  onSelect: (location: GeocodeFeature) => void;
+  placeholder?: string;
 }
 
 export function LocationSelect({
@@ -26,23 +28,23 @@ export function LocationSelect({
   onSelect,
   placeholder = 'Find venues in a city or neighbourhood...',
 }: GeocodeFeatureSelectProps) {
-  const [open, setOpen] = React.useState(false)
-  const isDesktop = useMediaQuery('(min-width: 768px)')
+  const [open, setOpen] = React.useState(false);
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const { query, setQuery, locationSearch } = useLocationSearch({
     initialValue,
-  })
+  });
 
   const triggerButton = (
     <Button variant="outline" className="w-full justify-start">
       {query || placeholder}
     </Button>
-  )
+  );
 
   const handleSelect = (location: GeocodeFeature) => {
-    onSelect(location)
-    setQuery(location.label)
-    setOpen(false)
-  }
+    onSelect(location);
+    setQuery(location.label);
+    setOpen(false);
+  };
 
   if (isDesktop) {
     return (
@@ -58,7 +60,7 @@ export function LocationSelect({
           />
         </PopoverContent>
       </Popover>
-    )
+    );
   }
 
   return (
@@ -76,15 +78,15 @@ export function LocationSelect({
         </div>
       </DrawerContent>
     </Drawer>
-  )
+  );
 }
 
 interface LocationListProps {
-  locations: GeocodeFeature[]
-  isLoading: boolean
-  query: string
-  setQuery: (query: string) => void
-  onSelect: (location: GeocodeFeature) => void
+  locations: GeocodeFeature[];
+  isLoading: boolean;
+  query: string;
+  setQuery: (query: string) => void;
+  onSelect: (location: GeocodeFeature) => void;
 }
 
 function LocationList({ locations, isLoading, query, setQuery, onSelect }: LocationListProps) {
@@ -117,5 +119,5 @@ function LocationList({ locations, isLoading, query, setQuery, onSelect }: Locat
         </CommandGroup>
       </CommandList>
     </Command>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import * as z from 'zod';
 
 export const PersonSchema = z
   .object({
@@ -7,7 +7,7 @@ export const PersonSchema = z
     fullName: z.string().describe('Name of the person'),
     role: z.string().describe('Role of the person in the context'),
   })
-  .describe('people mentioned in the text')
+  .describe('people mentioned in the text');
 
-export const PeopleSchema = z.array(PersonSchema)
-export type People = z.infer<typeof PeopleSchema>
+export const PeopleSchema = z.array(PersonSchema);
+export type People = z.infer<typeof PeopleSchema>;

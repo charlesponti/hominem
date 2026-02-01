@@ -1,7 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { List } from '~/lib/types';
+
 import ListPage from '~/routes/lists.$id';
 import { getMockUser, USER_ID } from '~/test/mocks/index';
 import { getMockListPlace } from '~/test/mocks/place';
@@ -19,17 +21,22 @@ vi.mock('~/contexts/map-interaction-context', () => ({
   useMapInteraction: () => ({ hoveredPlaceId: null, setHoveredPlaceId: vi.fn() }),
 }));
 
+vi.mock('~/components/map.lazy', () => ({
+  default: () => <div data-testid="lazy-map-mock">Map Mock</div>,
+}));
+
 /**
  * Simplified list tests using renderWithRouter
  *
  * Testing approach:
  * - Use renderWithRouter with real router setup
- * - Mock only tRPC queries (not the loader)
+ * - Mock only Hono RPC queries (not the loader)
  * - Focus on component behavior, not routing internals
  */
 describe('ListPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    roccoMocker.mockAddPlaceToListMutation();
   });
 
   describe('when list does not belong to user', () => {

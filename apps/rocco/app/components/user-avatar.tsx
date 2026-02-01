@@ -1,15 +1,16 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui';
 import { isValidGoogleHost } from '@hominem/utils/google';
 import { memo, useMemo } from 'react';
+
 import { cn } from '~/lib/utils';
 
 interface UserAvatarProps {
-  id?: string;
-  name?: string;
-  email?: string;
-  image?: string | null;
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
+  id?: string | undefined;
+  name?: string | undefined;
+  email?: string | undefined;
+  image?: string | null | undefined;
+  size?: 'sm' | 'md' | 'lg' | undefined;
+  className?: string | undefined;
 }
 
 const sizeClasses = {
@@ -34,7 +35,6 @@ function getProxiedImageUrl(imageUrl: string | null | undefined) {
 
   // Only proxy Google user content URLs
   if (isValidGoogleHost(imageUrl)) {
-    // Use relative path - will be proxied through the same way as /api/trpc
     return `/api/images/proxy?url=${encodeURIComponent(imageUrl)}`;
   }
 

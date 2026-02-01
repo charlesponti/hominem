@@ -1,17 +1,20 @@
-import type { ListPlace } from '@hominem/data/lists';
+import type { ListPlace } from '@hominem/lists-services';
+
 import { Alert } from '@hominem/ui';
 import { List } from '@hominem/ui/list';
 import { useCallback, useState } from 'react';
 import { href } from 'react-router';
+
 import AddPlaceControl from '~/components/lists/add-place-control';
 import { useMapInteraction } from '~/contexts/map-interaction-context';
+
 import PlaceListItemActions from './place-list-item-actions';
 import PlaceRow from './place-row';
 
 interface PlacesListProps {
   places: ListPlace[];
   listId: string;
-  canAdd?: boolean;
+  canAdd?: boolean | undefined;
 }
 
 export default function PlacesList({ places, listId, canAdd = true }: PlacesListProps) {

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { isRouteErrorResponse, useNavigate } from 'react-router';
+
 import Header from './header';
 
 interface ErrorBoundaryProps {

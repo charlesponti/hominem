@@ -1,111 +1,113 @@
-import { ActiveFiltersBar, FilterSelect, useSort, useUrlFilters } from '@hominem/ui'
-import { useEffect, useMemo, useState } from 'react'
-import { data, useNavigate } from 'react-router'
-import { getServerSession } from '~/lib/auth.server'
-import i18n from '~/lib/i18n'
-import type { RouterInput } from '~/lib/trpc'
-import { createServerTRPCClient } from '~/lib/trpc/server'
-import EventForm from '../components/events/EventForm'
-import EventList from '../components/events/EventList'
-import StatsDisplay from '../components/events/StatsDisplay'
-import SyncButton from '../components/events/SyncButton'
-import SyncStatus from '../components/events/SyncStatus'
-import { useGoogleCalendarSync } from '../hooks/useGoogleCalendarSync'
-import type { Route } from './+types/events'
+// import { createServerCallerWithToken } from '@hominem/hono-client/ssr'; // redundant if we use createServerHonoClient
+import type {
+  PeopleListOutput,
+  EventsListOutput,
+  EventsCreateInput,
+} from '@hominem/hono-rpc/types';
 
-interface EventPerson {
-  id: string
-  firstName?: string
-  lastName?: string
-}
+import { ActiveFiltersBar, FilterSelect } from '@hominem/ui/filters';
+import { useSort, useUrlFilters } from '@hominem/ui/hooks';
+import { useEffect, useMemo, useState } from 'react';
+import { data, useNavigate } from 'react-router';
 
-interface EventActivity {
-  id: string
-  date?: string
-  time?: string
-  title: string
-  description?: string
-  location?: string
-  people?: EventPerson[]
-  tags?: string[]
-}
+import { getServerSession } from '~/lib/auth.server';
+import i18n from '~/lib/i18n';
+import { createServerHonoClient } from '~/lib/trpc/server';
+
+import type { Route } from './+types/events';
+
+import EventForm from '../components/events/EventForm';
+import EventList, { type Activity } from '../components/events/EventList';
+import StatsDisplay from '../components/events/StatsDisplay';
+import SyncButton from '../components/events/SyncButton';
+import SyncStatus from '../components/events/SyncStatus';
+import { useGoogleCalendarSync } from '../hooks/useGoogleCalendarSync';
+
+type Person = PeopleListOutput[number];
+type EventData = EventsListOutput[number];
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const url = new URL(request.url)
-  const type = url.searchParams.get('type') || undefined
-  const companion = url.searchParams.get('companion') || undefined
-  type SortBy = 'date-asc' | 'date-desc' | 'summary'
-  const sortParam = url.searchParams.get('sortBy')
+  const url = new URL(request.url);
+  const type = url.searchParams.get('type') || undefined;
+  const companion = url.searchParams.get('companion') || undefined;
+  type SortBy = 'date-asc' | 'date-desc' | 'summary';
+  const sortParam = url.searchParams.get('sortBy');
   const sortBy: SortBy =
-    sortParam === 'date-asc' || sortParam === 'summary' ? sortParam : 'date-desc'
+    sortParam === 'date-asc' || sortParam === 'summary' ? sortParam : 'date-desc';
 
-  const { session, headers } = await getServerSession(request)
-  const trpc = createServerTRPCClient(session?.access_token)
+  const { session, headers } = await getServerSession(request);
+  const client = createServerHonoClient(session?.access_token);
 
-  const [events, people] = await Promise.all([
-    trpc.events.list.query({
-      tagNames: type ? [type] : undefined,
-      companion: companion || undefined,
-      sortBy,
+  const [eventsRes, peopleRes] = await Promise.all([
+    client.api.events.$get({
+      query: {
+        tagNames: type, // API expects comma separated string or array? Route expects tagNames string split by comma
+        companion: companion || undefined,
+        sortBy,
+      },
     }),
-    trpc.people.list.query(),
-  ])
+    client.api.people.list.$post({ json: {} }),
+  ]);
 
-  return data({ events, people }, { headers })
+  const eventsResult: EventsListOutput = await eventsRes.json();
+  const peopleResult: PeopleListOutput = await peopleRes.json();
+
+  const events = Array.isArray(eventsResult) ? eventsResult : [];
+  const people = Array.isArray(peopleResult) ? peopleResult : [];
+
+  return data({ events, people }, { headers });
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData()
-  const eventData: Partial<RouterInput['events']['create']> = {}
+  const formData = await request.formData();
+  // We need to construct the input object manually
 
-  for (const [key, value] of formData.entries()) {
-    if (key === 'people') {
-      if (!eventData.people) {
-        eventData.people = []
-      }
-      eventData.people.push(value as string)
-      continue
-    }
-    if (key === 'tags') {
-      const tagsValue = value as string
-      eventData.tags = tagsValue.split(',').map((tag) => tag.trim())
-      continue
-    }
-    if (key === 'title' || key === 'description' || key === 'date' || key === 'type') {
-      eventData[key] = value as string
-    }
-  }
+  const tags = formData.get('tags');
+  const people = formData.getAll('people');
+
+  const title = formData.get('title');
+  const description = formData.get('description');
+  const date = formData.get('date');
+  const type = formData.get('type');
+
+  const eventData: EventsCreateInput = {
+    title: typeof title === 'string' ? title : '',
+    description: typeof description === 'string' ? description : undefined,
+    date: typeof date === 'string' ? date : undefined,
+    type: typeof type === 'string' ? type : undefined,
+    tags: typeof tags === 'string' ? tags.split(',').map((t) => t.trim()) : undefined,
+    people: people.length > 0 ? people.map((p) => String(p)) : undefined,
+  };
 
   if (eventData.date) {
-    eventData.date = new Date(eventData.date).toISOString()
+    eventData.date = new Date(eventData.date).toISOString();
   }
 
-  const { session } = await getServerSession(request)
-  const trpc = createServerTRPCClient(session?.access_token)
-  const createInput = {
-    title: eventData.title ?? '',
-    description: eventData.description,
-    date: eventData.date,
-    type: eventData.type,
-    tags: eventData.tags,
-    people: eventData.people,
+  const { session } = await getServerSession(request);
+  const client = createServerHonoClient(session?.access_token);
+
+  const res = await client.api.events.$post({ json: eventData });
+  const result = await res.json();
+
+  if (!result.id) {
+    throw new Error('Failed to create event');
   }
-  const event = await trpc.events.create.mutate(createInput)
-  return { success: true, event }
+
+  return { success: true, event: result };
 }
 
 type EventFilters = {
-  type: string
-  companion: string
-  source: string
-  sortBy: string
-}
+  type: string;
+  companion: string;
+  source: string;
+  sortBy: string;
+};
 
 export default function EventsPage({ loaderData }: Route.ComponentProps) {
-  const navigate = useNavigate()
-  const [showAddForm, setShowAddForm] = useState(false)
+  const navigate = useNavigate();
+  const [showAddForm, setShowAddForm] = useState(false);
 
-  const { sync, syncStatus, isSyncing } = useGoogleCalendarSync()
+  const { sync, syncStatus, isSyncing } = useGoogleCalendarSync();
 
   // Use shared hooks for filter management with URL sync
   const { filters, updateFilter } = useUrlFilters<EventFilters>({
@@ -121,137 +123,128 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
       source: 'source',
       sortBy: 'sortBy',
     },
-  })
+  });
 
   // Convert sortBy string to SortOption format for useSort
   const sortOptionFromString = (sortBy: string): { field: string; direction: 'asc' | 'desc' } => {
     if (sortBy === 'date-asc') {
-      return { field: 'date', direction: 'asc' }
+      return { field: 'date', direction: 'asc' };
     }
     if (sortBy === 'date-desc') {
-      return { field: 'date', direction: 'desc' }
+      return { field: 'date', direction: 'desc' };
     }
     if (sortBy === 'summary') {
-      return { field: 'summary', direction: 'asc' }
+      return { field: 'summary', direction: 'asc' };
     }
-    return { field: 'date', direction: 'desc' }
-  }
+    return { field: 'date', direction: 'desc' };
+  };
 
   const { sortOptions, addSortOption } = useSort({
     initialSortOptions: [sortOptionFromString(filters.sortBy)],
     singleSort: true,
     urlParamName: 'sortBy',
-  })
+  });
 
   // Update sortBy filter when sortOptions change (but not on initial mount to avoid loops)
   useEffect(() => {
     if (sortOptions.length > 0) {
-      const sort = sortOptions[0]
+      const sort = sortOptions[0];
       if (!sort) {
-        return
+        return;
       }
-      let newSortBy = 'date-desc'
+      let newSortBy = 'date-desc';
       if (sort.field === 'date' && sort.direction === 'asc') {
-        newSortBy = 'date-asc'
+        newSortBy = 'date-asc';
       } else if (sort.field === 'date' && sort.direction === 'desc') {
-        newSortBy = 'date-desc'
+        newSortBy = 'date-desc';
       } else if (sort.field === 'summary') {
-        newSortBy = 'summary'
+        newSortBy = 'summary';
       }
 
       if (newSortBy !== filters.sortBy) {
-        updateFilter('sortBy', newSortBy)
+        updateFilter('sortBy', newSortBy);
       }
     }
-  }, [sortOptions]) // Only depend on sortOptions to avoid loops
+  }, [sortOptions]); // Only depend on sortOptions to avoid loops
 
-  const activities = useMemo(
-    () =>
-      ((loaderData.events ?? []) as EventActivity[]).map((activity) => ({
-        ...activity,
-        description: activity.description ?? undefined,
-        people: activity.people?.map((person) => ({
-          ...person,
-          firstName: person.firstName ?? undefined,
-          lastName: person.lastName ?? undefined,
-        })),
-      })),
-    [loaderData.events]
-  )
+  const eventsData = loaderData.events;
 
-  const people = useMemo(
-    () =>
-      ((loaderData.people ?? []) as EventPerson[]).map((person) => ({
-        ...person,
-        firstName: person.firstName ?? undefined,
-        lastName: person.lastName ?? undefined,
-      })),
-    [loaderData.people]
-  )
+  const activities: Activity[] = useMemo(() => {
+    return (eventsData as EventData[]).map((event) => ({
+      id: event.id,
+      date: event.date,
+      title: event.title,
+      description: event.description ?? undefined,
+      people: (event.people as any) || [],
+      tags: event.tags || [],
+    }));
+  }, [eventsData]);
+
+  const people: Person[] = useMemo(() => loaderData.people ?? [], [loaderData.people]);
 
   const companions = useMemo(() => {
-    const allCompanions = new Set<string>()
+    const allCompanions = new Set<string>();
     activities.forEach((activity) => {
-      activity.people?.forEach((person) => {
-        const name = `${person.firstName || ''} ${person.lastName || ''}`.trim()
-        if (name) {
-          allCompanions.add(name)
+      // activity.people is string[] according to events.types.ts
+      activity.people?.forEach((personName) => {
+        if (typeof personName === 'string' && personName) {
+          allCompanions.add(personName);
         }
-      })
-    })
-    return Array.from(allCompanions).sort()
-  }, [activities])
+      });
+    });
+    return Array.from(allCompanions).sort();
+  }, [activities]);
 
   // Prepare active filters for display
   const activeFilters = useMemo(() => {
-    const filtersList = []
+    const filtersList = [];
     if (filters.type) {
       filtersList.push({
         id: 'type',
         label: `Type: ${filters.type}`,
         onRemove: () => updateFilter('type', ''),
-      })
+      });
     }
     if (filters.companion) {
       filtersList.push({
         id: 'companion',
         label: `Companion: ${filters.companion}`,
         onRemove: () => updateFilter('companion', ''),
-      })
+      });
     }
     if (filters.source) {
       filtersList.push({
         id: 'source',
         label: `Source: ${filters.source}`,
         onRemove: () => updateFilter('source', ''),
-      })
+      });
     }
     if (filters.sortBy && filters.sortBy !== 'date-desc') {
       const sortLabels: Record<string, string> = {
         'date-asc': 'Date (Oldest First)',
         'date-desc': 'Date (Newest First)',
         summary: 'Title (A-Z)',
-      }
+      };
       filtersList.push({
         id: 'sortBy',
         label: `Sort: ${sortLabels[filters.sortBy] || filters.sortBy}`,
         onRemove: () => updateFilter('sortBy', 'date-desc'),
-      })
+      });
     }
-    return filtersList
-  }, [filters, updateFilter])
+    return filtersList;
+  }, [filters, updateFilter]);
 
   const handleSync = async () => {
-    await sync({})
-  }
+    await sync({});
+  };
 
   const handleToggleEventForm = () => {
-    setShowAddForm(!showAddForm)
-  }
+    setShowAddForm(!showAddForm);
+  };
 
-  const editEvent = (activity: EventActivity) => {
-    navigate(`/events/edit/${activity.id}`)
-  }
+  const editEvent = (activity: Activity) => {
+    navigate(`/events/edit/${activity.id}`);
+  };
 
   return (
     <div className="min-h-screen bg-muted">
@@ -305,11 +298,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
         {showAddForm && (
           <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
             <div className="rounded-xl p-6 shadow-sm bg-card border border-border">
-              <EventForm
-                showAddForm={showAddForm}
-                people={people}
-                onToggleForm={handleToggleEventForm}
-              />
+              <EventForm showAddForm={showAddForm} onToggleForm={handleToggleEventForm} />
             </div>
           </div>
         )}
@@ -359,9 +348,9 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
                     { value: 'summary', label: 'Title (A-Z)' },
                   ]}
                   onChange={(value) => {
-                    updateFilter('sortBy', value)
-                    const sortOption = sortOptionFromString(value)
-                    addSortOption(sortOption)
+                    updateFilter('sortBy', value);
+                    const sortOption = sortOptionFromString(value);
+                    addSortOption(sortOption);
                   }}
                   placeholder="Sort By"
                 />
@@ -396,5 +385,5 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

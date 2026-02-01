@@ -4,6 +4,7 @@ import { Input } from '@hominem/ui/input';
 import { Loading } from '@hominem/ui/loading';
 import { PlusCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { useCreateList } from '~/lib/lists';
 import { cn } from '~/lib/utils';
 
@@ -19,7 +20,7 @@ export default function ListForm() {
   const { supabase, isAuthenticated } = useSupabaseAuthContext();
 
   const { mutate: createList } = useCreateList({
-    onSuccess: () => {
+    onSuccess: (result) => {
       try {
         localStorage.removeItem(STORAGE_KEY);
       } catch {}
@@ -28,6 +29,10 @@ export default function ListForm() {
         setName('');
         setStatus('idle');
       }, 1500);
+    },
+    onError: (error) => {
+      setStatus('open');
+      console.error('Mutation error creating list:', error);
     },
   });
 
@@ -96,6 +101,7 @@ export default function ListForm() {
       createList({
         name: name.trim(),
         description: 'No description',
+        isPublic: false,
       });
     },
     [name, isAuthenticated, supabase, createList],

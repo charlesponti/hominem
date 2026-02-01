@@ -78,8 +78,11 @@ jobs:
       - name: 🏗️ Build
         run: bun turbo run build
 
-      - name: 🔬 Lint & Type check
+      - name: 🔬 Lint
         run: bun run lint
+
+      - name: ✅ Type check
+        run: bun run typecheck
 
       - name: ⚙️ apply database migrations
         run: bun run db:migrate

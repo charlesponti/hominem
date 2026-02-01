@@ -2,10 +2,12 @@ import { useSupabaseAuthContext } from '@hominem/auth';
 import { List } from '@hominem/ui/list';
 import { motion } from 'framer-motion';
 import { memo } from 'react';
+
+import type { PlaceWithLists } from '~/lib/types';
+
 import { ListRow } from '~/components/lists/list-row';
 import AddPlaceToList from '~/components/places/add-to-list-control';
-import { trpc } from '~/lib/trpc/client';
-import type { PlaceWithLists } from '~/lib/types';
+import { useListsContainingPlace } from '~/lib/hooks/use-lists';
 
 type Props = {
   place: PlaceWithLists;
@@ -17,15 +19,12 @@ const PlaceLists = ({ place }: Props) => {
   const resolvedPlaceId = place.id;
   const googleMapsId = place.googleMapsId;
 
-  const { data: listsContainingPlace = [], isLoading } = trpc.lists.getContainingPlace.useQuery(
-    {
-      placeId: resolvedPlaceId || undefined,
-      googleMapsId: googleMapsId || undefined,
-    },
-    {
-      enabled: isAuthenticated && Boolean(resolvedPlaceId || googleMapsId),
-    },
+  const { data: listsResult, isLoading } = useListsContainingPlace(
+    resolvedPlaceId || undefined,
+    googleMapsId || undefined,
   );
+
+  const listsContainingPlace = listsResult ?? [];
 
   if (!isAuthenticated) {
     return null;
@@ -50,7 +49,7 @@ const PlaceLists = ({ place }: Props) => {
 
       {(isLoading || listsContainingPlace.length > 0) && (
         <List isLoading={isLoading} loadingSize="md">
-          {listsContainingPlace.map((list) => (
+          {listsContainingPlace.map((list: any) => (
             <ListRow
               key={list.id}
               id={list.id}

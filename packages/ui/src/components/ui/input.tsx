@@ -1,5 +1,6 @@
-import { cn } from '../../lib/utils'
-import type * as React from 'react'
+import type * as React from 'react';
+
+import { cn } from '../../lib/utils';
 
 function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
   return (
@@ -29,11 +30,11 @@ function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
         'focus-visible:border focus-visible:border-indigo-600',
         // Invalid states
         'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
-export { Input }
+export { Input };

@@ -4,7 +4,8 @@ import { Drawer, DrawerContent, DrawerTrigger } from '@hominem/ui/components/ui/
 import { ListPlus } from 'lucide-react';
 import { useState, lazy, Suspense } from 'react';
 import z from 'zod';
-import { trpc } from '~/lib/trpc/client';
+
+import { usePlaceById, usePlaceByGoogleId } from '~/lib/hooks/use-places';
 
 const AddToListDrawerContent = lazy(() => import('./add-to-list-drawer-content'));
 
@@ -15,32 +16,26 @@ interface AddToListControlProps {
 const AddToListControl = ({ placeId }: AddToListControlProps) => {
   const [open, setOpen] = useState(false);
   const { isAuthenticated } = useSupabaseAuthContext();
-  const utils = trpc.useUtils();
   const isUuid = z.uuid().safeParse(placeId).success;
 
   // Fetch place details
-  const { data: placeDetails } = trpc.places.getDetailsById.useQuery(
-    { id: placeId },
-    {
-      enabled: isAuthenticated && isUuid,
-    },
+  const { data: placeDetailsResult } = usePlaceById(
+    isAuthenticated && isUuid ? placeId : undefined,
   );
 
-  const { data: placeDetailsByGoogleId } = trpc.places.getDetailsByGoogleId.useQuery(
-    { googleMapsId: placeId },
-    {
-      enabled: isAuthenticated && !isUuid,
-    },
+  const { data: placeDetailsByGoogleIdResult } = usePlaceByGoogleId(
+    isAuthenticated && !isUuid ? placeId : undefined,
   );
+
+  const placeDetails = placeDetailsResult ?? null;
+  const placeDetailsByGoogleId = placeDetailsByGoogleIdResult ?? null;
 
   const place = placeDetails || placeDetailsByGoogleId;
   const resolvedPlaceId = isUuid ? placeId : place?.id;
   const googleMapsId = isUuid ? place?.googleMapsId : placeId;
 
   const handleMouseEnter = () => {
-    if (isAuthenticated) {
-      utils.lists.getAll.prefetch();
-    }
+    // No-op - prefetching handled by useHonoUtils
   };
 
   if (!(isAuthenticated && place)) {

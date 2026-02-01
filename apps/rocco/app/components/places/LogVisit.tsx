@@ -1,10 +1,13 @@
+import { useHonoUtils } from '@hominem/hono-client/react';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/input';
 import { Label } from '@hominem/ui/label';
 import { Textarea } from '@hominem/ui/textarea';
 import { useEffect, useState } from 'react';
 import { useRevalidator } from 'react-router';
-import { trpc } from '~/lib/trpc/client';
+
+import { useLogPlaceVisit, useUpdatePlaceVisit } from '~/lib/hooks/use-places';
+
 import { PeopleMultiSelect } from './PeopleMultiSelect';
 
 interface LogVisitProps {
@@ -27,22 +30,27 @@ interface LogVisitProps {
 
 export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: LogVisitProps) {
   const isEditing = !!visit;
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [visitNotes, setVisitNotes] = useState('');
+  const getDefaultDate = (): string => {
+    const iso = new Date().toISOString();
+    const parts = iso.split('T');
+    return parts[0] || '';
+  };
+  const [title, setTitle] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [date, setDate] = useState<string>(getDefaultDate());
+  const [visitNotes, setVisitNotes] = useState<string>('');
   const [visitRating, setVisitRating] = useState<number | undefined>(undefined);
-  const [visitReview, setVisitReview] = useState('');
+  const [visitReview, setVisitReview] = useState<string>('');
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
   const revalidator = useRevalidator();
-  const utils = trpc.useUtils();
+  const utils = useHonoUtils();
 
   // Initialize form with visit data when editing
   useEffect(() => {
     if (visit) {
       setTitle(visit.title);
       setDescription(visit.description || '');
-      setDate(new Date(visit.date).toISOString().split('T')[0]);
+      setDate(new Date(visit.date).toISOString().split('T')[0] ?? getDefaultDate());
       setVisitNotes(visit.visitNotes || '');
       setVisitRating(visit.visitRating || undefined);
       setVisitReview(visit.visitReview || '');
@@ -63,7 +71,7 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
     } else {
       setTitle('');
       setDescription('');
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(getDefaultDate());
       setVisitNotes('');
       setVisitRating(undefined);
       setVisitReview('');
@@ -72,17 +80,17 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
   }, [visit]);
 
   const handleSuccess = () => {
-    utils.places.getPlaceVisits.invalidate({ placeId });
-    utils.places.getVisitStats.invalidate({ placeId });
+    utils.invalidate(['places', 'place-visits', placeId]);
+    utils.invalidate(['places', 'visit-stats', placeId]);
     revalidator.revalidate();
     onSuccess?.();
   };
 
-  const logVisitMutation = trpc.places.logVisit.useMutation({
+  const logVisitMutation = useLogPlaceVisit({
     onSuccess: handleSuccess,
   });
 
-  const updateVisitMutation = trpc.places.updateVisit.useMutation({
+  const updateVisitMutation = useUpdatePlaceVisit({
     onSuccess: handleSuccess,
   });
 
@@ -94,7 +102,7 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
 
     if (isEditing && visit) {
       updateVisitMutation.mutate({
-        visitId: visit.id,
+        id: visit.id,
         title: title.trim(),
         description: description.trim() || undefined,
         date,

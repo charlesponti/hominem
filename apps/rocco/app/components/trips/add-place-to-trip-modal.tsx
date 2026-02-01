@@ -7,13 +7,16 @@ import {
   DialogTrigger,
 } from '@hominem/ui/dialog';
 import { useRevalidator } from 'react-router';
+
 import { useModal } from '~/hooks/useModal';
-import { trpc } from '~/lib/trpc/client';
+import { useLists } from '~/lib/hooks/use-lists';
+import { useAddItemToTrip } from '~/lib/hooks/use-trips';
 
 export function AddPlaceToTripModal({ tripId }: { tripId: string }) {
   const { isOpen, open, close } = useModal();
-  const { data: lists } = trpc.lists.getAll.useQuery();
-  const addItemMutation = trpc.trips.addItem.useMutation();
+  const { data: listsResult } = useLists();
+  const lists = listsResult ?? [];
+  const addItemMutation = useAddItemToTrip();
   const revalidator = useRevalidator();
 
   const handleAddPlace = async (itemId: string) => {
@@ -32,11 +35,11 @@ export function AddPlaceToTripModal({ tripId }: { tripId: string }) {
           <DialogTitle>Add a place to your trip</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-          {lists?.map((list) => (
+          {lists?.map((list: any) => (
             <div key={list.id}>
               <h3 className="text-lg font-semibold mb-2">{list.name}</h3>
               <div className="space-y-2">
-                {list.places.map((place) => (
+                {list.places.map((place: any) => (
                   <div key={place.id} className="flex justify-between items-center">
                     <div>
                       <p className="font-semibold">{place.name}</p>

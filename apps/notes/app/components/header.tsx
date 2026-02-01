@@ -1,16 +1,16 @@
-import { Button } from '@hominem/ui/button'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { Button } from '@hominem/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@hominem/ui/components/ui/dropdown-menu'
-import { Bot, Calendar, Lightbulb, LogOut, MenuIcon, Settings, Sparkles } from 'lucide-react'
-import { useCallback } from 'react'
-import { href, Link, useNavigate } from 'react-router'
-import { useSupabaseAuthContext } from '@hominem/auth'
+} from '@hominem/ui/components/ui/dropdown-menu';
+import { Bot, Calendar, Lightbulb, LogOut, MenuIcon, Settings, Sparkles } from 'lucide-react';
+import { useCallback } from 'react';
+import { href, Link, useNavigate } from 'react-router';
 
-const APP_NAME = 'Animus'
+const APP_NAME = 'Animus';
 
 const navItems = [
   {
@@ -45,15 +45,15 @@ const navItems = [
     icon: Calendar,
     url: '/calendar',
   },
-]
+];
 
 const NavigationMenu = () => {
-  const navigate = useNavigate()
-  const { logout } = useSupabaseAuthContext()
+  const navigate = useNavigate();
+  const { logout } = useSupabaseAuthContext();
   const onLogoutClick = useCallback(async () => {
-    await logout()
-    navigate('/')
-  }, [logout, navigate])
+    await logout();
+    navigate('/');
+  }, [logout, navigate]);
 
   return (
     <DropdownMenu modal={false}>
@@ -97,11 +97,11 @@ const NavigationMenu = () => {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
+  );
+};
 
 function Header() {
-  const { isAuthenticated, isLoading } = useSupabaseAuthContext()
+  const { isAuthenticated, isLoading } = useSupabaseAuthContext();
 
   return (
     <header
@@ -120,13 +120,13 @@ function Header() {
         )}
       </div>
     </header>
-  )
+  );
 }
 
-export default Header
+export default Header;
 
 const SignInButton = () => {
-  const { supabase } = useSupabaseAuthContext()
+  const { supabase } = useSupabaseAuthContext();
 
   const onSignInClick = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
@@ -134,12 +134,12 @@ const SignInButton = () => {
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
       },
-    })
-  }, [supabase.auth])
+    });
+  }, [supabase.auth]);
 
   return (
     <Button onClick={onSignInClick} className="flex cursor-pointer">
       Sign In with Google
     </Button>
-  )
-}
+  );
+};

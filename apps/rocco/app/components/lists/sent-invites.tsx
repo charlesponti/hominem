@@ -1,5 +1,7 @@
 import { List } from '@hominem/ui/list';
+
 import type { SentInvite } from '~/lib/types';
+
 import InvitesEmptyState from './invites-empty-state';
 import SentInviteItem from './sent-invite-item';
 

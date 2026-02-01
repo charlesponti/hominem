@@ -1,22 +1,22 @@
-import { cn } from '../../lib/utils'
-import { FilterChip } from './filter-chip'
+import { cn } from '../../lib/utils';
+import { FilterChip } from './filter-chip';
 
 export interface ActiveFilter {
-  id: string
-  label: string
-  onRemove: () => void
-  onClick?: () => void
+  id: string;
+  label: string;
+  onRemove: () => void;
+  onClick?: () => void;
 }
 
 interface ActiveFiltersBarProps {
-  filters: ActiveFilter[]
-  label?: string
-  className?: string
+  filters: ActiveFilter[];
+  label?: string;
+  className?: string;
 }
 
 export function ActiveFiltersBar({ filters, label, className }: ActiveFiltersBarProps) {
   if (filters.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -31,5 +31,5 @@ export function ActiveFiltersBar({ filters, label, className }: ActiveFiltersBar
         />
       ))}
     </div>
-  )
+  );
 }

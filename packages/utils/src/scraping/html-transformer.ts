@@ -1,17 +1,18 @@
-import { google as googleAi } from '@ai-sdk/google'
-import { openai } from '@ai-sdk/openai'
-import { generateObject } from 'ai'
-import type { z } from 'zod'
+import type { z } from 'zod';
+
+import { google as googleAi } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
+import { generateObject } from 'ai';
 
 export async function transformHTMLToSchema<T extends z.ZodObject<z.ZodRawShape>>(
   html: string,
   schema: T,
-  model: 'openai' | 'google' = 'openai'
+  model: 'openai' | 'google' = 'openai',
 ): Promise<{
-  object: z.infer<T>
-  duration: number
+  object: z.infer<T>;
+  duration: number;
 }> {
-  const startTime = Date.now()
+  const startTime = Date.now();
   const response = await generateObject({
     model: {
       openai: openai('gpt-4o-mini', { structuredOutputs: true }),
@@ -25,10 +26,10 @@ export async function transformHTMLToSchema<T extends z.ZodObject<z.ZodRawShape>
     `,
     schema,
     mode: 'json',
-  })
-  const duration = Date.now() - startTime
+  });
+  const duration = Date.now() - startTime;
   return {
     object: response.object as z.infer<T>,
     duration,
-  }
+  };
 }

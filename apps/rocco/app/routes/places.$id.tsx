@@ -1,39 +1,46 @@
+import { getPlaceById, getPlaceByGoogleMapsId } from '@hominem/places-services';
 import { PageTitle } from '@hominem/ui';
+import { redirect } from 'react-router';
 import z from 'zod';
+
+import type { PlaceWithLists } from '~/lib/types';
+
 import ErrorBoundary from '~/components/ErrorBoundary';
+import PlaceTypes from '~/components/places/place-types';
 import PlaceAddress from '~/components/places/PlaceAddress';
 import PlaceLists from '~/components/places/PlaceLists';
 import PlaceMap from '~/components/places/PlaceMap';
 import PlacePhone from '~/components/places/PlacePhone';
 import PlacePhotos from '~/components/places/PlacePhotos';
 import PlaceRating from '~/components/places/PlaceRating';
+import PlacesNearby from '~/components/places/places-nearby';
 import PlaceStatus from '~/components/places/PlaceStatus';
 import PlaceWebsite from '~/components/places/PlaceWebsite';
-import PlaceTypes from '~/components/places/place-types';
-import PlacesNearby from '~/components/places/places-nearby';
 import { VisitHistory } from '~/components/places/VisitHistory';
 import { requireAuth } from '~/lib/guards';
-import { createCaller } from '~/lib/trpc/server';
-import type { PlaceWithLists } from '~/lib/types';
+
 import type { Route } from './+types/places.$id';
 
 export async function loader({ params, request }: Route.LoaderArgs) {
   await requireAuth(request);
   const { id } = params;
   if (!id) {
-    throw new Error('Place ID is required');
+    return redirect('/404');
   }
 
-  const trpcServer = createCaller(request);
+  const isUuid = z.string().uuid().safeParse(id).success;
+  const place = isUuid ? await getPlaceById(id) : await getPlaceByGoogleMapsId(id);
 
-  let data: PlaceWithLists;
-  if (z.uuid().safeParse(id).success) {
-    data = await trpcServer.places.getDetailsById({ id });
-  } else {
-    data = await trpcServer.places.getDetailsByGoogleId({ googleMapsId: id });
+  if (!place) {
+    return redirect('/404');
   }
 
-  return { place: data };
+  return {
+    place: {
+      ...place,
+      lists: [], // Initial empty lists, components will fetch via hooks
+    } as PlaceWithLists,
+  };
 }
 
 export default function Place({ loaderData }: Route.ComponentProps) {
@@ -45,13 +52,7 @@ export default function Place({ loaderData }: Route.ComponentProps) {
         className="max-w-full animate-in fade-in slide-in-from-bottom-2 duration-700"
         style={{ viewTransitionName: `place-photos-${place.id}` }}
       >
-        <PlacePhotos
-          alt={place.name}
-          photos={place.photos}
-          thumbnailPhotos={place.thumbnailPhotos}
-          fullPhotos={place.fullPhotos}
-          placeId={place.id}
-        />
+        <PlacePhotos alt={place.name} photos={place.photos} placeId={place.id} />
       </div>
 
       <div className="w-full space-y-12">
@@ -95,8 +96,7 @@ export default function Place({ loaderData }: Route.ComponentProps) {
             <PlacesNearby
               latitude={place.latitude}
               longitude={place.longitude}
-              radiusKm={5}
-              limit={4}
+              radiusMeters={5000}
             />
           </div>
         )}

@@ -1,5 +1,5 @@
-import { db } from '@hominem/data/db';
-import { place } from '@hominem/data/schema';
+import { db } from '@hominem/db';
+import { place } from '@hominem/db/types/places';
 import { ilike } from 'drizzle-orm';
 
 async function debug() {

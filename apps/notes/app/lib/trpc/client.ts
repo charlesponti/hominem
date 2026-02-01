@@ -1,8 +1,14 @@
-import { createTRPCReact } from '@trpc/react-query'
-import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
-import type { AppRouter } from '../../../../../packages/types/trpc'
+import type { AppType } from '@hominem/hono-rpc';
 
-export type RouterInput = inferRouterInputs<AppRouter>
-export type RouterOutput = inferRouterOutputs<AppRouter>
+import { hc } from 'hono/client';
 
-export const trpc = createTRPCReact<AppRouter>()
+/**
+ * Hono RPC client for the notes app
+ * Provides type-safe access to the API endpoints
+ */
+const client = hc<AppType>(import.meta.env.VITE_API_URL || 'http://localhost:4040');
+
+export const honoClient = client;
+
+// Export types from the client
+export type APIClient = typeof client;

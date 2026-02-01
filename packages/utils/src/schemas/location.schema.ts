@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import * as z from 'zod';
 
 export const LocationSchema = z.object({
   name: z
@@ -22,7 +22,7 @@ export const LocationSchema = z.object({
     .string()
     .describe('One of seven continents (e.g., "Europe", "North America", "Asia")')
     .nullable(),
-})
+});
 
-export const LocationsSchema = z.array(LocationSchema).describe('Locations mentioned in the text')
-export type Locations = z.infer<typeof LocationsSchema>
+export const LocationsSchema = z.array(LocationSchema).describe('Locations mentioned in the text');
+export type Locations = z.infer<typeof LocationsSchema>;

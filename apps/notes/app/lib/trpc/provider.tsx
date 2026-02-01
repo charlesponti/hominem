@@ -1,44 +1,18 @@
-import { useSupabaseAuthContext } from '@hominem/auth'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { httpBatchLink } from '@trpc/client'
-import type React from 'react'
-import { useState } from 'react'
-import { trpc } from './client'
+import type React from 'react';
 
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState } from 'react';
+
+/**
+ * Hono RPC Provider
+ * Provides query client for API interactions
+ * Individual route handlers will use the honoClient directly
+ */
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient())
-  const { supabase } = useSupabaseAuthContext()
+  const [queryClient] = useState(() => new QueryClient());
+  // Auth context available via useSupabaseAuthContext
+  // API client available via honoClient from @/lib/trpc/client
 
-  const [trpcClient] = useState(() =>
-    trpc.createClient({
-      links: [
-        httpBatchLink({
-          url: `${import.meta.env.VITE_PUBLIC_API_URL}/trpc`,
-          fetch(url, options) {
-            return fetch(url, {
-              ...options,
-              credentials: 'include',
-            })
-          },
-          async headers() {
-            const {
-              data: { session },
-            } = await supabase.auth.getSession()
-
-            if (session?.access_token) {
-              return { authorization: `Bearer ${session.access_token}` }
-            }
-
-            return {}
-          },
-        }),
-      ],
-    })
-  )
-
-  return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </trpc.Provider>
-  )
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

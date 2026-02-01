@@ -1,9 +1,9 @@
-import type { RouterOutput } from '../trpc'
+import type { ChatMessage } from '@hominem/hono-rpc/types';
 
-// Get the inferred type from the tRPC query using RouterOutput
-export type MessageFromQuery = RouterOutput['chats']['getMessages'][0]
+// Message types from Hono RPC API response
+export type MessageFromQuery = ChatMessage;
 
 // Extend the inferred message type with client-side properties
 export type ExtendedMessage = MessageFromQuery & {
-  isStreaming?: boolean
-}
+  isStreaming?: boolean;
+};

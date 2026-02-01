@@ -1,8 +1,10 @@
+import type { ReactElement, ReactNode } from 'react';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type RenderOptions, type RenderResult, render } from '@testing-library/react';
-import type { ReactElement, ReactNode } from 'react';
 import { createRoutesStub } from 'react-router';
 import { vi } from 'vitest';
+
 import { TEST_USER_EMAIL, TEST_USER_NAME, USER_ID } from './mocks';
 
 export interface MockQueryResult<T> {
@@ -82,6 +84,21 @@ vi.mock('@hominem/auth', () => ({
   useSupabaseAuth: () => mockAuthContextValue,
   useSupabaseAuthContext: () => mockAuthContextValue,
   getSupabase: () => mockSupabaseClient,
+  UserAuthService: {
+    findByIdOrEmail: vi.fn(async (opts) => {
+      const id = opts.id || opts.supabaseId;
+      return {
+        id: id,
+        supabaseId: id,
+        email: `test-${id}@example.com`,
+        name: 'Test User',
+        image: null,
+        isAdmin: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }),
+  },
 }));
 
 export function createTestQueryClient() {
@@ -126,73 +143,56 @@ function createUseMutationQuery<TData = unknown>(): UseMutationFn<TData> {
   return vi.fn<() => MockMutationResult<TData>>(() => defaultResult);
 }
 
-function createUseQuery() {
-  return {
-    data: null,
-    isLoading: false,
-    error: null,
+// Mock individual hook modules (required for vi.mocked() to work in roccoMocker)
+vi.mock('~/lib/hooks/use-lists', () => ({
+  useLists: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useListById: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  useCreateList: vi.fn(() => createUseMutationQuery()),
+  useUpdateList: vi.fn(() => createUseMutationQuery()),
+  useDeleteList: vi.fn(() => createUseMutationQuery()),
+  useListsContainingPlace: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+}));
+
+vi.mock('~/lib/hooks/use-places', () => ({
+  usePlaces: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  usePlaceById: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  usePlaceByGoogleId: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  usePlacesAutocomplete: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useNearbyPlaces: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useAddPlaceToLists: vi.fn(() => createUseMutationQuery()),
+  useRemovePlaceFromList: vi.fn(() => createUseMutationQuery()),
+}));
+
+vi.mock('~/lib/hooks/use-user', () => ({
+  useDeleteAccount: vi.fn(() => createUseMutationQuery()),
+}));
+
+// Mock Hono hooks
+vi.mock('~/lib/hono', () => ({
+  useLists: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useListById: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  useCreateList: vi.fn(() => createUseMutationQuery()),
+  useUpdateList: vi.fn(() => createUseMutationQuery()),
+  useDeleteList: vi.fn(() => createUseMutationQuery()),
+  useAddPlaceToLists: vi.fn(() => createUseMutationQuery()),
+  useRemovePlaceFromList: vi.fn(() => createUseMutationQuery()),
+  usePlaces: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  usePlaceById: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  usePlaceByGoogleId: vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  usePlacesAutocomplete: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useNearbyPlaces: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useDeleteAccount: vi.fn(() => createUseMutationQuery()),
+  useHonoUtils: vi.fn(() => ({
     invalidate: vi.fn(),
-    refetch: vi.fn(),
-    setData: vi.fn(),
-  };
-}
-
-const mockTrpcClient = {
-  useUtils: vi.fn(() => ({
-    lists: {
-      getAll: createUseQuery(),
-      getById: createUseQuery(),
-    },
-    places: {
-      getAll: createUseQuery(),
-      getById: createUseQuery(),
-      getNearbyFromLists: createUseQuery(),
-    },
+    prefetch: vi.fn(),
   })),
-  lists: {
-    getAll: { useQuery: vi.fn() },
-    getById: { useQuery: vi.fn() },
-    create: { useMutation: createUseMutationQuery() },
-    update: { useMutation: createUseMutationQuery() },
-    delete: { useMutation: createUseMutationQuery() },
-  },
-  places: {
-    getAll: { useQuery: vi.fn() },
-    getById: { useQuery: vi.fn() },
-    getNearbyFromLists: { useQuery: vi.fn() },
-    autocomplete: { useQuery: vi.fn() },
-    create: { useMutation: createUseMutationQuery() },
-    update: { useMutation: createUseMutationQuery() },
-    delete: { useMutation: createUseMutationQuery() },
-  },
-  items: {
-    getByListId: { useQuery: vi.fn() },
-    addToList: { useMutation: createUseMutationQuery() },
-    removeFromList: { useMutation: createUseMutationQuery() },
-  },
-  invites: {
-    getAll: { useQuery: vi.fn() },
-    getByList: { useQuery: vi.fn() },
-    create: { useMutation: vi.fn() },
-    accept: { useMutation: vi.fn() },
-    decline: { useMutation: vi.fn() },
-  },
-  user: {
-    deleteAccount: { useMutation: vi.fn() },
-  },
-} as const;
-
-vi.mock('~/lib/trpc/client', () => ({
-  trpc: mockTrpcClient,
 }));
 
-const MockTRPCProvider = ({ children }: { children: ReactNode }) => <>{children}</>;
+const MockHonoProvider = ({ children }: { children: ReactNode }) => <>{children}</>;
 
-vi.mock('~/lib/trpc/provider', () => ({
-  TRPCProvider: MockTRPCProvider,
+vi.mock('~/lib/hono/provider', () => ({
+  HonoProvider: MockHonoProvider,
 }));
-
-export { mockTrpcClient };
 
 export function renderWithProviders(
   ui: ReactElement,

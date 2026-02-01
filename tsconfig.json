@@ -1,13 +1,26 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "@hominem/root",
-  "extends": "./packages/tsconfig/workspace.json",
-  "compilerOptions": {
-    "rootDir": ".",
-    "baseUrl": ".",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "outDir": "dist",
-    "allowImportingTsExtensions": false
-  }
+  "files": [],
+  "references": [
+    { "path": "packages/ai" },
+    { "path": "packages/auth" },
+    { "path": "packages/career" },
+    { "path": "packages/chat" },
+    { "path": "packages/db" },
+    { "path": "packages/events" },
+    { "path": "packages/finance" },
+    { "path": "packages/health" },
+    { "path": "packages/jobs" },
+    { "path": "packages/lists" },
+    { "path": "packages/notes" },
+    { "path": "packages/places" },
+    { "path": "packages/services" },
+    { "path": "packages/ui" },
+    { "path": "packages/utils" },
+    { "path": "services/api" },
+    { "path": "services/workers" },
+    { "path": "tools/cli" },
+    { "path": "apps/finance" },
+    { "path": "apps/notes" },
+    { "path": "apps/rocco" }
+  ]
 }

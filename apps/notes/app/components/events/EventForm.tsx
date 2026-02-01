@@ -1,31 +1,26 @@
-import { Textarea } from '@hominem/ui/components/ui/textarea'
-import type React from 'react'
-import { useState } from 'react'
+import type { Person } from '@hominem/hono-rpc/types';
+import type React from 'react';
 
-interface Person {
-  id: string
-  firstName?: string
-  lastName?: string
-}
+import { Textarea } from '@hominem/ui/components/ui/textarea';
+import { useState } from 'react';
+
+import { usePeople } from '~/lib/hooks/use-people';
 
 interface EventFormProps {
-  showAddForm: boolean
-  people: Person[]
-  onToggleForm: () => void
+  showAddForm: boolean;
+  onToggleForm: () => void;
 }
 
-const EventForm: React.FC<EventFormProps> = ({
-  showAddForm,
-  people,
-  onToggleForm: _onToggleForm,
-}) => {
-  const [_selectedPeople, setSelectedPeople] = useState<Person[]>([])
+const EventForm: React.FC<EventFormProps> = ({ showAddForm, onToggleForm: _onToggleForm }) => {
+  const { data: peopleResult, isLoading: isLoadingPeople } = usePeople();
+  const people = Array.isArray(peopleResult) ? peopleResult : [];
+  const [_selectedPeople, setSelectedPeople] = useState<Person[]>([]);
 
   const handlePeopleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedIds = Array.from(e.target.selectedOptions, (option) => option.value)
-    const selectedPeopleList = people.filter((person) => selectedIds.includes(person.id))
-    setSelectedPeople(selectedPeopleList)
-  }
+    const selectedIds = Array.from(e.target.selectedOptions, (option) => option.value);
+    const selectedPeopleList = people.filter((person) => selectedIds.includes(person.id));
+    setSelectedPeople(selectedPeopleList);
+  };
 
   return (
     <>
@@ -111,13 +106,18 @@ const EventForm: React.FC<EventFormProps> = ({
                   name="people"
                   multiple
                   onChange={handlePeopleChange}
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[100px]"
+                  disabled={isLoadingPeople}
+                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[100px] disabled:opacity-50"
                 >
-                  {people.map((person) => (
-                    <option key={person.id} value={person.id}>
-                      {person.firstName || ''} {person.lastName || ''}
-                    </option>
-                  ))}
+                  {isLoadingPeople ? (
+                    <option disabled>Loading people...</option>
+                  ) : (
+                    people.map((person) => (
+                      <option key={person.id} value={person.id}>
+                        {person.firstName || ''} {person.lastName || ''}
+                      </option>
+                    ))
+                  )}
                 </select>
                 <div className="text-xs mt-1 text-muted-foreground">
                   Hold Ctrl/Cmd to select multiple people
@@ -166,7 +166,7 @@ const EventForm: React.FC<EventFormProps> = ({
         </div>
       )}
     </>
-  )
-}
+  );
+};
 
-export default EventForm
+export default EventForm;

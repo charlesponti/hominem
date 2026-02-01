@@ -1,19 +1,22 @@
-import type { Note } from '@hominem/data/types'
-import { Button } from '@hominem/ui/button'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Edit, Trash2, X } from 'lucide-react'
-import { type ReactNode, useMemo, useState } from 'react'
-import SocialX from '~/components/icons/SocialX'
-import { useFeatureFlag } from '~/lib/hooks/use-feature-flags'
-import { cn } from '~/lib/utils'
-import { TweetModal } from './tweet-modal'
+import { Button } from '@hominem/ui/button';
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { Edit, Trash2, X } from 'lucide-react';
+import { type ReactNode, useMemo, useState } from 'react';
+
+import type { Note } from '~/lib/trpc/notes-types';
+
+import SocialX from '~/components/icons/SocialX';
+import { useFeatureFlag } from '~/lib/hooks/use-feature-flags';
+import { cn } from '~/lib/utils';
+
+import { TweetModal } from './tweet-modal';
 
 interface NoteFeedItemProps {
-  note: Note
-  onEdit: (note: Note) => void
-  onDelete: (id: string) => void
-  onRemoveTag: (noteId: string, tagValue: string) => void
-  className?: string
+  note: Note;
+  onEdit: (note: Note) => void;
+  onDelete: (id: string) => void;
+  onRemoveTag: (noteId: string, tagValue: string) => void;
+  className?: string;
 }
 
 export function NoteFeedItem({
@@ -23,35 +26,35 @@ export function NoteFeedItem({
   onRemoveTag,
   className = '',
 }: NoteFeedItemProps) {
-  const [showTweetModal, setShowTweetModal] = useState(false)
-  const _isTwitterEnabled = useFeatureFlag('twitterIntegration')
+  const [showTweetModal, setShowTweetModal] = useState(false);
+  const _isTwitterEnabled = useFeatureFlag('twitterIntegration');
 
   // Extract hashtags from content
   const extractHashtags = useMemo(() => {
-    const regex = /#(\w+)/g
-    const matches = note.content.match(regex)
+    const regex = /#(\w+)/g;
+    const matches = note.content.match(regex);
     if (!matches) {
-      return []
+      return [];
     }
 
     // Remove the # prefix and return unique tags
-    return [...new Set(matches.map((tag) => tag.substring(1)))]
-  }, [note.content])
+    return [...new Set(matches.map((tag: string) => tag.substring(1)))];
+  }, [note.content]);
 
   // Combine existing tags with content hashtags
   const allTags = useMemo(() => {
-    const existingTags = note.tags?.map((tag) => tag.value) || []
-    const allTagValues = [...new Set([...existingTags, ...extractHashtags])]
-    return allTagValues.map((value) => ({ value }))
-  }, [note.tags, extractHashtags])
+    const existingTags = note.tags?.map((tag: { value: string }) => tag.value) || [];
+    const allTagValues = [...new Set([...existingTags, ...extractHashtags])];
+    return allTagValues.map((value) => ({ value }));
+  }, [note.tags, extractHashtags]);
 
   // Function to format content with highlighted hashtags
   const formattedContent = useMemo<ReactNode>(() => {
-    const parts = note.content.split(/(#\w+)/g)
+    const parts = note.content.split(/(#\w+)/g);
 
     return (
       <>
-        {parts.map((part, i) => {
+        {parts.map((part: string, i: number) => {
           if (part.startsWith('#')) {
             return (
               <span
@@ -60,19 +63,19 @@ export function NoteFeedItem({
               >
                 {part}
               </span>
-            )
+            );
           }
-          return <span key={`text-${i}-${part.length}`}>{part}</span>
+          return <span key={`text-${i}-${part.length}`}>{part}</span>;
         })}
       </>
-    )
-  }, [note.content])
+    );
+  }, [note.content]);
 
   return (
     <div
       className={cn(
         'border-b border-slate-200 dark:border-slate-700 py-4 px-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150 group',
-        className
+        className,
       )}
     >
       <div className="space-y-3">
@@ -156,11 +159,12 @@ export function NoteFeedItem({
       </div>
 
       <TweetModal
-        isOpen={showTweetModal}
-        onClose={() => setShowTweetModal(false)}
-        initialText={note.content}
+        open={showTweetModal}
+        onOpenChange={setShowTweetModal}
+        noteContent={note.content}
+        noteTitle={note.title}
         contentId={note.id}
       />
     </div>
-  )
+  );
 }

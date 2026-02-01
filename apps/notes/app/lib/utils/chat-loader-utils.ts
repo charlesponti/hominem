@@ -1,28 +1,33 @@
-import type { createServerTRPCClient } from '~/lib/trpc/server'
-import { ChatCreationError } from './errors'
+import type { HonoClientType } from '@hominem/hono-rpc/client';
+import type { ChatsListOutput, ChatsCreateOutput } from '@hominem/hono-rpc/types';
 
-type TRPCClient = ReturnType<typeof createServerTRPCClient>
+import { ChatCreationError } from './errors';
 
 /**
  * Gets the first existing chat or creates a new one
  * Returns the chat ID
  */
-export async function getOrCreateChat(trpcClient: TRPCClient): Promise<{ chatId: string }> {
-  const [chat] = await trpcClient.chats.getUserChats.query({
-    limit: 1,
-  })
+export async function getOrCreateChat(trpcClient: HonoClientType): Promise<{ chatId: string }> {
+  const res = await trpcClient.api.chats.$get();
+  const result = (await res.json()) as ChatsListOutput;
 
-  if (chat) {
-    return { chatId: chat.id }
+  if (Array.isArray(result) && result.length > 0) {
+    const firstChat = result[0];
+    if (firstChat) {
+      return { chatId: firstChat.id };
+    }
   }
 
-  const newChat = await trpcClient.chats.createChat.mutate({
-    title: 'New Chat',
-  })
+  const createRes = await trpcClient.api.chats.$post({
+    json: {
+      title: 'New Chat',
+    },
+  });
+  const createResult = (await createRes.json()) as ChatsCreateOutput;
 
-  if (!newChat.chat) {
-    throw new ChatCreationError()
+  if (!createResult || !createResult.id) {
+    throw new ChatCreationError();
   }
 
-  return { chatId: newChat.chat.id }
+  return { chatId: createResult.id };
 }

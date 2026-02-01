@@ -7,9 +7,6 @@
     "VITE_APP_BASE_URL",
     "VITE_SUPABASE_URL",
     "VITE_SUPABASE_ANON_KEY",
-    "COOKIE_NAME",
-    "COOKIE_SALT",
-    "COOKIE_SECRET",
     "DATABASE_URL",
     "GITHUB_TOKEN",
     "GOOGLE_CLIENT_ID",
@@ -23,17 +20,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        ".react-router/**",
-        "build/**",
-        "dist/**",
-        "*.tsbuildinfo"
-      ]
-    },
-    "check": {
-      "dependsOn": ["lint", "typecheck", "test"]
+      "outputs": [".next/**", "!.next/cache/**", ".react-router/**", "build/**", "dist/**"]
     },
     "clean": {
       "cache": false
@@ -43,8 +30,8 @@
     },
     "dev": {
       "cache": false,
-      "dependsOn": ["@hominem/data#build"],
-      "persistent": true
+      "persistent": true,
+      "dependsOn": ["^dev"]
     },
     "format": {
       "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],
@@ -71,8 +58,7 @@
     },
     "typecheck": {
       "dependsOn": ["^build", "typegen"],
-      "inputs": ["**/*.ts", "**/*.tsx", "tsconfig.json"],
-      "outputs": ["*.tsbuildinfo"]
+      "inputs": ["**/*.ts", "**/*.tsx", "tsconfig.json"]
     }
   }
 }

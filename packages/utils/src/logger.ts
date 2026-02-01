@@ -1,7 +1,7 @@
-import process from 'node:process'
-import pino from 'pino'
+import process from 'node:process';
+import pino from 'pino';
 
-const redactFields = ['email', 'password', 'token']
+const redactFields = ['email', 'password', 'token'];
 
 const pinoLogger = pino({
   level: process.env.LOG_LEVEL || 'debug',
@@ -11,10 +11,10 @@ const pinoLogger = pino({
   },
   formatters: {
     level(label) {
-      return { level: label }
+      return { level: label };
     },
   },
-})
+});
 
 // Create a properly typed logger wrapper
 export const logger = {
@@ -22,4 +22,4 @@ export const logger = {
   error: (message: string, error?: Error | object) => pinoLogger.error(error, message),
   warn: (message: string, data?: object) => pinoLogger.warn(data, message),
   debug: (message: string, data?: object) => pinoLogger.debug(data, message),
-}
+};

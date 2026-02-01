@@ -1,25 +1,26 @@
-import type React from 'react'
+import type React from 'react';
 
 interface Person {
-  id: string
-  firstName?: string
-  lastName?: string
+  id: string;
+  firstName?: string | undefined;
+  lastName?: string | null | undefined;
 }
 
 interface Activity {
-  id: string
-  date?: string
-  time?: string
-  title: string
-  description?: string
-  location?: string
-  people?: Person[]
-  tags?: string[]
+  id: string;
+  date?: string | undefined;
+  time?: string | undefined;
+  title: string;
+  description?: string | undefined;
+  location?: string | undefined;
+  people?: Person[] | undefined;
+  tags?: string[] | undefined;
+  source?: 'manual' | 'google_calendar' | undefined;
 }
 
 interface StatsDisplayProps {
-  activities: Activity[]
-  loading: boolean
+  activities: Activity[];
+  loading: boolean;
 }
 
 const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
@@ -30,25 +31,25 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
           <div key={`skeleton-${type}`} className="h-20 bg-muted animate-pulse rounded" />
         ))}
       </div>
-    )
+    );
   }
 
-  const totalEvents = activities.length
-  const thisMonth = new Date().getMonth()
-  const thisYear = new Date().getFullYear()
+  const totalEvents = activities.length;
+  const thisMonth = new Date().getMonth();
+  const thisYear = new Date().getFullYear();
   const thisMonthEvents = activities.filter((activity) => {
-    if (!activity.date) return false
-    const eventDate = new Date(activity.date)
-    return eventDate.getMonth() === thisMonth && eventDate.getFullYear() === thisYear
-  }).length
+    if (!activity.date) return false;
+    const eventDate = new Date(activity.date);
+    return eventDate.getMonth() === thisMonth && eventDate.getFullYear() === thisYear;
+  }).length;
 
   const uniquePeople = new Set(
-    activities.flatMap((activity) => activity.people || []).map((person) => person.id)
-  ).size
+    activities.flatMap((activity) => activity.people || []).map((person) => person.id),
+  ).size;
 
   const uniqueTags = new Set(
-    activities.flatMap((activity) => activity.tags || []).filter((tag) => tag.trim())
-  ).size
+    activities.flatMap((activity) => activity.tags || []).filter((tag) => tag.trim()),
+  ).size;
 
   const stats = [
     {
@@ -71,7 +72,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
       value: uniqueTags,
       icon: '🏷️',
     },
-  ]
+  ];
 
   return (
     <>
@@ -90,7 +91,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
         </div>
       ))}
     </>
-  )
-}
+  );
+};
 
-export default StatsDisplay
+export default StatsDisplay;

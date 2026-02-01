@@ -1,41 +1,31 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Auth Package",
-  "extends": "../tsconfig/workspace.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "target": "ES2022",
-    "types": [
-      "vite/client"
-    ],
-    "lib": [
-      "ES2022",
-      "DOM"
-    ],
+    "rootDir": "src",
+    "outDir": "./build",
     "jsx": "react-jsx",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
+    "types": ["vite/client", "node"],
     "composite": true,
-    "incremental": true
+    "tsBuildInfoFile": "../../.cache/auth.tsbuildinfo",
+    "sourceMap": false,
+    "declarationMap": true
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": [
     "node_modules",
+    "build",
     "dist",
+    ".turbo",
+    ".cache",
+    "coverage",
     "**/*.test.ts",
+    "**/*.test.tsx",
     "**/*.spec.ts",
-    "build"
-  ],
-  "references": [
-    {
-      "path": "../data"
-    }
+    "**/*.spec.tsx",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }

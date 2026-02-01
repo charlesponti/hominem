@@ -1,0 +1,190 @@
+import type {
+  AccountListOutput,
+  AccountGetOutput,
+  AccountAllOutput,
+  InstitutionsListOutput,
+  TransactionListOutput,
+  AccountData,
+} from '@hominem/hono-rpc/types/finance.types';
+import type { ApiResult } from '@hominem/services';
+import type { SortOption } from '@hominem/ui/hooks';
+
+import { format } from 'date-fns';
+import { useMemo } from 'react';
+
+import { useHonoQuery, transformDates } from '~/lib/hono';
+
+// Derive filter args from input schema where possible
+export interface FilterArgs {
+  accountId?: string | undefined;
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  description?: string | undefined;
+}
+
+export const useFinanceAccounts = () =>
+  useHonoQuery<AccountListOutput>(['finance', 'accounts', 'list'], async (client) => {
+    const res = await client.api.finance.accounts.list.$post({
+      json: { includeInactive: false },
+    });
+    return res.json() as Promise<AccountListOutput>;
+  });
+
+export const useFinancialInstitutions = () =>
+  useHonoQuery<InstitutionsListOutput>(['finance', 'institutions', 'list'], async (client) => {
+    const res = await client.api.finance.institutions.list.$post({ json: {} });
+    return res.json() as unknown as Promise<InstitutionsListOutput>;
+  });
+
+type Account = AccountData;
+type TransformedAccount = Omit<Account, 'createdAt' | 'updatedAt' | 'lastUpdated'> & {
+  createdAt: Date;
+  updatedAt: Date;
+  lastUpdated: Date | null;
+};
+
+export function useFinanceAccountsWithMap() {
+  const accountsQuery = useFinanceAccounts();
+  const accountsData = accountsQuery.data ?? [];
+
+  // Transform accounts to convert string dates to Date objects
+  const transformedAccounts = useMemo<TransformedAccount[]>(() => {
+    if (!Array.isArray(accountsData)) return [];
+    return accountsData.map((account) => ({
+      ...account,
+      createdAt: new Date(account.createdAt),
+      updatedAt: new Date(account.updatedAt),
+      lastUpdated: account.lastUpdated ? new Date(account.lastUpdated) : null,
+    }));
+  }, [accountsData]);
+
+  const accountsMap = useMemo(() => {
+    return new Map<string, TransformedAccount>(
+      transformedAccounts.map((account) => [account.id, account]),
+    );
+  }, [transformedAccounts]);
+
+  return {
+    ...accountsQuery,
+    accounts: transformedAccounts,
+    accountsMap,
+  };
+}
+
+// Hook that adds value by transforming data for unified view
+export function useAllAccounts() {
+  const allAccountsQuery = useHonoQuery<AccountAllOutput>(
+    ['finance', 'accounts', 'all'],
+    async (client) => {
+      const res = await client.api.finance.accounts.all.$post({ json: {} });
+      return res.json() as unknown as Promise<AccountAllOutput>;
+    },
+  );
+
+  const result = allAccountsQuery.data;
+
+  return {
+    isLoading: allAccountsQuery.isLoading,
+    error: allAccountsQuery.error,
+    refetch: allAccountsQuery.refetch,
+    accounts: result?.accounts ?? [],
+    connections: result?.connections ?? [],
+  };
+}
+
+export function useAccountById(id: string) {
+  const accountQuery = useHonoQuery<AccountGetOutput>(
+    ['finance', 'accounts', 'get', id],
+    async (client) => {
+      const res = await client.api.finance.accounts.get.$post({
+        json: { id },
+      });
+      return res.json() as Promise<AccountGetOutput>;
+    },
+    { enabled: !!id },
+  );
+
+  const account = accountQuery.data;
+
+  return {
+    ...accountQuery,
+    account,
+  };
+}
+
+export interface UseFinanceTransactionsOptions {
+  filters?: FilterArgs;
+  sortOptions?: SortOption[];
+  page?: number;
+  limit?: number;
+}
+
+// Hook that adds value through complex state management and data transformation
+export function useFinanceTransactions({
+  filters = {},
+  sortOptions = [{ field: 'date', direction: 'desc' }],
+  page = 0,
+  limit = 25,
+}: UseFinanceTransactionsOptions = {}) {
+  // Convert sort options to API format
+  const sortBy = useMemo(() => {
+    return sortOptions[0]?.field || 'date';
+  }, [sortOptions]);
+
+  const sortOrder = useMemo(() => {
+    return sortOptions[0]?.direction || 'desc';
+  }, [sortOptions]);
+
+  const offset = page * limit;
+
+  const query = useHonoQuery<TransactionListOutput>(
+    [
+      'finance',
+      'transactions',
+      'list',
+      {
+        filters,
+        sortBy,
+        sortOrder,
+        offset,
+        limit,
+      },
+    ],
+    async (client) => {
+      const res = await client.api.finance.transactions.list.$post({
+        json: {
+          from: filters.dateFrom ? format(filters.dateFrom, 'yyyy-MM-dd') : undefined,
+          to: filters.dateTo ? format(filters.dateTo, 'yyyy-MM-dd') : undefined,
+          account: filters.accountId && filters.accountId !== 'all' ? filters.accountId : undefined,
+          description: filters.description,
+          limit,
+          offset,
+          sortBy: [sortBy],
+          sortDirection: [sortOrder as 'asc' | 'desc'],
+        },
+      });
+      return res.json() as Promise<TransactionListOutput>;
+    },
+    {
+      staleTime: 1 * 60 * 1000,
+    },
+  );
+
+  const result = query.data;
+
+  return {
+    transactions: Array.isArray(result?.data) ? result.data : [],
+    totalTransactions: result?.filteredCount ?? 0,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  };
+}
+
+// Export types for backward compatibility
+export type AccountsListOutput = AccountListOutput;
+export type AccountsGetOutput = AccountGetOutput;
+export type AccountsAllOutput = AccountAllOutput;
+export type AccountsAccountsOutput = AccountListOutput;
+export type AccountsConnectionsOutput = AccountAllOutput['connections'];
+export type TransactionsListOutput = TransactionListOutput;

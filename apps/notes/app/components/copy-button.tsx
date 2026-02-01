@@ -1,17 +1,18 @@
-import { Check, Copy } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { Button } from '@hominem/ui/button'
+import type { ReactNode } from 'react';
+
+import { Button } from '@hominem/ui/button';
+import { Check, Copy } from 'lucide-react';
 
 interface CopyButtonProps {
-  onClick: () => void
-  sectionName: string
-  copiedSections: Set<string>
-  size?: 'sm' | 'default' | 'lg'
-  variant?: 'outline' | 'default' | 'destructive' | 'secondary' | 'ghost' | 'link'
-  children?: ReactNode
-  shortcutKey?: string
-  disabled?: boolean
-  'aria-describedby'?: string
+  onClick: () => void;
+  sectionName: string;
+  copiedSections: Set<string>;
+  size?: 'sm' | 'default' | 'lg' | undefined;
+  variant?: 'outline' | 'default' | 'destructive' | 'secondary' | 'ghost' | 'link' | undefined;
+  children?: ReactNode;
+  shortcutKey?: string | undefined;
+  disabled?: boolean | undefined;
+  'aria-describedby'?: string | undefined;
 }
 
 export function CopyButton({
@@ -26,13 +27,13 @@ export function CopyButton({
   'aria-describedby': ariaDescribedBy,
   ...props
 }: CopyButtonProps) {
-  const isCopied = copiedSections.has(sectionName)
+  const isCopied = copiedSections.has(sectionName);
 
   const ariaLabel = isCopied
     ? `${sectionName} copied to clipboard`
-    : `Copy ${sectionName} to clipboard${shortcutKey ? `. Shortcut: ${shortcutKey}` : ''}`
+    : `Copy ${sectionName} to clipboard${shortcutKey ? `. Shortcut: ${shortcutKey}` : ''}`;
 
-  const title = shortcutKey ? `Copy ${sectionName} (${shortcutKey})` : `Copy ${sectionName}`
+  const title = shortcutKey ? `Copy ${sectionName} (${shortcutKey})` : `Copy ${sectionName}`;
 
   return (
     <Button
@@ -56,5 +57,5 @@ export function CopyButton({
       <span>{children || (isCopied ? 'Copied!' : 'Copy')}</span>
       {isCopied && <span className="sr-only">Content successfully copied to clipboard</span>}
     </Button>
-  )
+  );
 }

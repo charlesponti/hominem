@@ -1,5 +1,6 @@
 import { screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+
 import Account from '~/routes/account';
 import { getMockUser } from '~/test/mocks/index';
 import { roccoMocker } from '~/test/roccoMocker';

@@ -1,45 +1,33 @@
 {
-  "extends": "../../packages/tsconfig/react.json",
-  "include": ["app/**/*", ".react-router/types/**/*", "vite.config.ts", "vitest.config.ts"],
-  "exclude": ["node_modules", "build", "dist", "public", ".turbo"],
+  "extends": ["../../tsconfig.base.json"],
   "compilerOptions": {
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "composite": true,
-    "types": ["node", "vite/client"],
-    "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",
+    "rootDir": ".",
+    "rootDirs": [".", "./.react-router/types"],
+    "jsx": "react-jsx",
+    "types": ["vite/client", "node"],
     "paths": {
-      "~/*": ["./app/*"],
-      "@hominem/ui/*": ["../../packages/ui/src/*"],
-      "@hominem/ui": ["../../packages/ui/src/index.ts"],
-      "@hominem/utils/*": ["../../packages/utils/src/*"],
-      "@hominem/utils": ["../../packages/utils/src/index.ts"],
-      "@hominem/data/*": ["../../packages/data/src/*"],
-      "@hominem/data": ["../../packages/data/src/index.ts"],
-      "@hominem/auth/*": ["../../packages/auth/src/*"],
-      "@hominem/auth": ["../../packages/auth/src/index.ts"]
+      "~/*": ["./app/*"]
     },
     "noEmit": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "strict": true
+    "incremental": true,
+    "tsBuildInfoFile": "../../.cache/app-rocco.tsbuildinfo"
   },
-  "references": [
-    {
-      "path": "../../packages/ui"
-    },
-    {
-      "path": "../../packages/utils"
-    },
-    {
-      "path": "../../packages/data"
-    },
-    {
-      "path": "../../packages/auth"
-    }
+  "include": ["app/**/*.ts", "app/**/*.tsx", ".react-router/types/**/*"],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    ".turbo",
+    ".cache",
+    "coverage",
+    ".react-router/cache",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo"
   ]
 }

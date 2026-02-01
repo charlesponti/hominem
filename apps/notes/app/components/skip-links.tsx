@@ -1,42 +1,42 @@
-import { useCallback } from 'react'
+import { useCallback } from 'react';
 
 interface SkipLinksProps {
-  className?: string
+  className?: string;
 }
 
 export function SkipLinks({ className = '' }: SkipLinksProps) {
   const skipToMain = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
-    e.preventDefault()
-    const mainContent = document.querySelector('main, [role="main"], #main-content')
+    e.preventDefault();
+    const mainContent = document.querySelector('main, [role="main"], #main-content');
     if (mainContent instanceof HTMLElement) {
-      mainContent.setAttribute('tabindex', '-1')
-      mainContent.focus()
-      mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      mainContent.setAttribute('tabindex', '-1');
+      mainContent.focus();
+      mainContent.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [])
+  }, []);
 
   const skipToNavigation = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
-    e.preventDefault()
-    const navigation = document.querySelector('nav, [role="navigation"], header')
+    e.preventDefault();
+    const navigation = document.querySelector('nav, [role="navigation"], header');
     if (navigation instanceof HTMLElement) {
       const firstFocusable = navigation.querySelector(
-        'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      )
+        'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
       if (firstFocusable instanceof HTMLElement) {
-        firstFocusable.focus()
-        firstFocusable.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        firstFocusable.focus();
+        firstFocusable.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-  }, [])
+  }, []);
 
   const skipToActions = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
-    e.preventDefault()
-    const actionButtons = document.querySelectorAll('[data-copy-button]')
+    e.preventDefault();
+    const actionButtons = document.querySelectorAll('[data-copy-button]');
     if (actionButtons.length > 0 && actionButtons[0] instanceof HTMLElement) {
-      actionButtons[0].focus()
-      actionButtons[0].scrollIntoView({ behavior: 'smooth', block: 'center' })
+      actionButtons[0].focus();
+      actionButtons[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-  }, [])
+  }, []);
 
   return (
     <div className={`sr-only focus-within:not-sr-only ${className}`}>
@@ -76,5 +76,5 @@ export function SkipLinks({ className = '' }: SkipLinksProps) {
         </ul>
       </div>
     </div>
-  )
+  );
 }

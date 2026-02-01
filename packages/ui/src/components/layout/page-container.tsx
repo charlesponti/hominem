@@ -1,10 +1,10 @@
-import { cn } from '../../lib/utils'
+import { cn } from '../../lib/utils';
 
 interface PageContainerProps {
-  children: React.ReactNode
-  className?: string
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '6xl' | 'full'
-  padding?: 'none' | 'sm' | 'md' | 'lg'
+  children: React.ReactNode;
+  className?: string;
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '6xl' | 'full';
+  padding?: 'none' | 'sm' | 'md' | 'lg';
 }
 
 export function PageContainer({
@@ -23,14 +23,14 @@ export function PageContainer({
     '4xl': 'max-w-4xl',
     '6xl': 'max-w-6xl',
     full: 'max-w-full',
-  }
+  };
 
   const paddingClasses = {
     none: '',
     sm: 'p-2',
     md: 'p-4',
     lg: 'p-6',
-  }
+  };
 
   return (
     <div
@@ -38,10 +38,10 @@ export function PageContainer({
         'container mx-auto',
         maxWidthClasses[maxWidth],
         paddingClasses[padding],
-        className
+        className,
       )}
     >
       {children}
     </div>
-  )
+  );
 }

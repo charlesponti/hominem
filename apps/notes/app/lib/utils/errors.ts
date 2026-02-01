@@ -4,17 +4,17 @@
 export class LoaderError extends Error {
   constructor(
     message: string,
-    public status = 500
+    public status = 500,
   ) {
-    super(message)
-    this.name = 'LoaderError'
+    super(message);
+    this.name = 'LoaderError';
   }
 
   /**
    * Converts the error to a React Router Response
    */
   toResponse(): Response {
-    return new Response(this.message, { status: this.status })
+    return new Response(this.message, { status: this.status });
   }
 }
 
@@ -23,8 +23,8 @@ export class LoaderError extends Error {
  */
 export class ChatLoadError extends LoaderError {
   constructor(message = 'Failed to load chat', status = 500) {
-    super(message, status)
-    this.name = 'ChatLoadError'
+    super(message, status);
+    this.name = 'ChatLoadError';
   }
 }
 
@@ -33,7 +33,7 @@ export class ChatLoadError extends LoaderError {
  */
 export class ChatCreationError extends LoaderError {
   constructor(message = 'Failed to create chat', status = 500) {
-    super(message, status)
-    this.name = 'ChatCreationError'
+    super(message, status);
+    this.name = 'ChatCreationError';
   }
 }

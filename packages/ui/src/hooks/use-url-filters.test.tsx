@@ -1,7 +1,8 @@
-import { waitFor } from '@testing-library/react'
-import { describe, expect, test, vi } from 'vitest'
-import { renderHook } from '../test-utils'
-import { useUrlFilters } from './use-url-filters'
+import { waitFor } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+
+import { renderHook } from '../test-utils';
+import { useUrlFilters } from './use-url-filters';
 
 describe('useUrlFilters', () => {
   test('reads initial filters from URL params', () => {
@@ -11,15 +12,15 @@ describe('useUrlFilters', () => {
           initialFilters: { type: '', companion: '' },
           paramMapping: { type: 'type', companion: 'companion' },
         }),
-      { initialEntries: ['/?type=Events&companion=John'] }
-    )
+      { initialEntries: ['/?type=Events&companion=John'] },
+    );
 
-    expect(result.current.filters.type).toBe('Events')
-    expect(result.current.filters.companion).toBe('John')
-  })
+    expect(result.current.filters.type).toBe('Events');
+    expect(result.current.filters.companion).toBe('John');
+  });
 
-  test('calls onFiltersChange callback', () => {
-    const onFiltersChange = vi.fn()
+  test('calls onFiltersChange callback', async () => {
+    const onFiltersChange = vi.fn();
     const { result } = renderHook(
       () =>
         useUrlFilters({
@@ -27,13 +28,15 @@ describe('useUrlFilters', () => {
           paramMapping: { type: 'type' },
           onFiltersChange,
         }),
-      { initialEntries: ['/'] }
-    )
+      { initialEntries: ['/'] },
+    );
 
-    result.current.updateFilter('type', 'Events')
+    await waitFor(() => {
+      result.current.updateFilter('type', 'Events');
+    });
 
-    expect(onFiltersChange).toHaveBeenCalled()
-  })
+    expect(onFiltersChange).toHaveBeenCalled();
+  });
 
   test('clearFilters resets filters to initial', async () => {
     const { result } = renderHook(
@@ -42,14 +45,16 @@ describe('useUrlFilters', () => {
           initialFilters: { type: '', companion: '' },
           paramMapping: { type: 'type', companion: 'companion' },
         }),
-      { initialEntries: ['/?type=Events&companion=John'] }
-    )
-
-    result.current.clearFilters()
+      { initialEntries: ['/?type=Events&companion=John'] },
+    );
 
     await waitFor(() => {
-      expect(result.current.filters.type).toBe('')
-      expect(result.current.filters.companion).toBe('')
-    })
-  })
-})
+      result.current.clearFilters();
+    });
+
+    await waitFor(() => {
+      expect(result.current.filters.type).toBe('');
+      expect(result.current.filters.companion).toBe('');
+    });
+  });
+});

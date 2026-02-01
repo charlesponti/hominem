@@ -1,7 +1,7 @@
-import type { Route } from './+types/about'
+import type { MetaArgs } from 'react-router';
 
-export function meta(_args: Route.MetaArgs) {
-  return [{ title: 'About' }, { name: 'description', content: 'About this application' }]
+export function meta(_args: MetaArgs) {
+  return [{ title: 'About' }, { name: 'description', content: 'About this application' }];
 }
 
 export default function About() {
@@ -10,5 +10,5 @@ export default function About() {
       <h2>About This App</h2>
       <p>This is a simple application built with React, Vite, and React Router.</p>
     </div>
-  )
+  );
 }

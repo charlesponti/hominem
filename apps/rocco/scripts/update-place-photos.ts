@@ -1,6 +1,7 @@
-import { listPlacesMissingPhotos, updatePlacePhotosFromGoogle } from '@hominem/data/places';
+import { listPlacesMissingPhotos, updatePlacePhotosFromGoogle } from '@hominem/places-services';
+import { googlePlaces } from '@hominem/places-services';
+
 import { env } from '../app/lib/env';
-import { googlePlaces } from '@hominem/data/places';
 
 if (!env.VITE_GOOGLE_API_KEY) {
   throw new Error('GOOGLE_API_KEY environment variable is required');

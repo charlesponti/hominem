@@ -1,15 +1,17 @@
-import { data, type LoaderFunctionArgs } from 'react-router'
-import { CalendarSync } from '~/components/calendar/calendar-sync'
-import { requireAuth } from '~/lib/guards'
-import type { Route } from './+types/calendar'
+import { data, type LoaderFunctionArgs } from 'react-router';
+
+import { CalendarSync } from '~/components/calendar/calendar-sync';
+import { requireAuth } from '~/lib/guards';
+
+import type { Route } from './+types/calendar';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { user, session, headers } = await requireAuth(request)
+  const { user, session, headers } = await requireAuth(request);
 
   // Check if user has Google account connected (without exposing tokens)
-  const hasGoogleAccount = Boolean(session.provider_token)
+  const hasGoogleAccount = Boolean(session.provider_token);
 
-  return data({ hasGoogleAccount, userId: user.id }, { headers })
+  return data({ hasGoogleAccount, userId: user.id }, { headers });
 }
 
 export default function CalendarPage({ loaderData }: Route.ComponentProps) {
@@ -39,5 +41,5 @@ export default function CalendarPage({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

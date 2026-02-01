@@ -1,34 +1,27 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "AI Package",
-  "extends": "../tsconfig/library.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": "./src",
-    "incremental": true,
-    "emitDeclarationOnly": true,
+    "rootDir": "src",
     "outDir": "./build",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@hominem/ui/*": [
-        "../ui/src/*"
-      ],
-      "@hominem/ui": [
-        "../ui/src/index.ts"
-      ]
-    }
+    "composite": true,
+    "tsBuildInfoFile": "../../.cache/ai.tsbuildinfo",
+    "sourceMap": false,
+    "declarationMap": true
   },
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    "./src/**/*.json"
-  ],
+  "include": ["src/**/*.ts"],
   "exclude": [
     "node_modules",
-    "**/*.test.ts",
     "build",
-    "dist"
+    "dist",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }

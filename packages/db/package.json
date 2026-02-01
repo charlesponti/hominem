@@ -1,0 +1,40 @@
+{
+  "name": "@hominem/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./schema/schema": "./src/schema/schema.ts",
+    "./schema/tables": "./src/schema/tables.ts",
+    "./schema/*": "./src/schema/*.schema.ts",
+    "./test/fixtures": "./src/test/fixtures.ts",
+    "./test/utils": "./src/test/utils.ts",
+    "./types/*": "./src/schema/*.types.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf build",
+    "db:generate": "bunx drizzle-kit generate",
+    "db:migrate": "bunx drizzle-kit migrate",
+    "db:migrate:test": "NODE_ENV=test bunx drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.1",
+    "drizzle-zod": "^0.7.0",
+    "postgres": "^3.4.5",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.7",
+    "dotenv": "^16.4.7",
+    "drizzle-kit": "^0.30.2",
+    "tsx": "^4.19.2",
+    "typescript": "5.9.3",
+    "vitest": "^4.0.16"
+  }
+}

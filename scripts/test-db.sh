@@ -26,8 +26,8 @@ case "${1:-}" in
       sleep 5
       
       echo "Running migrations..."
-      cd packages/data
-      DATABASE_URL="postgres://postgres:postgres@localhost:$DB_PORT/hominem-test" npm run migrate
+      cd packages/db
+      DATABASE_URL="postgres://postgres:postgres@localhost:$DB_PORT/hominem-test" bun run db:migrate
       cd ../..
       
       echo "Test database is ready on port $DB_PORT"

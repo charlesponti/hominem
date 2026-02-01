@@ -1,29 +1,28 @@
-import { List } from '@hominem/ui/list'
-import type React from 'react'
-import EventCard from './EventCard'
+import type { PeopleListOutput } from '@hominem/hono-rpc/types';
+import type React from 'react';
 
-interface Person {
-  id: string
-  firstName?: string
-  lastName?: string
-}
+import { List } from '@hominem/ui/list';
 
-interface Activity {
-  id: string
-  date?: string
-  time?: string
-  title: string
-  description?: string
-  location?: string
-  people?: Person[]
-  tags?: string[]
-  source?: 'manual' | 'google_calendar'
+import EventCard from './EventCard';
+
+type Person = PeopleListOutput[number];
+
+export interface Activity {
+  id: string;
+  date?: string | undefined;
+  time?: string | undefined;
+  title: string;
+  description?: string | undefined;
+  location?: string | undefined;
+  people?: Person[] | undefined;
+  tags?: string[] | undefined;
+  source?: 'manual' | 'google_calendar' | undefined;
 }
 
 interface EventListProps {
-  activities: Activity[]
-  loading: boolean
-  onEditEvent: (activity: Activity) => void
+  activities: Activity[];
+  loading: boolean;
+  onEditEvent: (activity: Activity) => void;
 }
 
 const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent }) => {
@@ -34,7 +33,7 @@ const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent 
         <h3 className="text-lg font-medium mb-2">No events yet</h3>
         <p className="text-sm">Start adding events to track your life's memorable moments!</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -45,7 +44,7 @@ const EventList: React.FC<EventListProps> = ({ activities, loading, onEditEvent 
         </li>
       ))}
     </List>
-  )
-}
+  );
+};
 
-export default EventList
+export default EventList;

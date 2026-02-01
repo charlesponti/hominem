@@ -11,8 +11,9 @@ import { DrawerDescription, DrawerHeader, DrawerTitle } from '@hominem/ui/compon
 import { Check, Loader2, Plus } from 'lucide-react';
 import { useMemo, useState, useCallback } from 'react';
 import { useRevalidator } from 'react-router';
+
+import { useLists, useCreateList } from '~/lib/hooks/use-lists';
 import { useAddPlaceToList, useRemoveListItem } from '~/lib/places';
-import { trpc } from '~/lib/trpc/client';
 import { cn } from '~/lib/utils';
 
 interface AddToListDrawerContentProps {
@@ -32,15 +33,16 @@ export const AddToListDrawerContent = ({
   const [searchQuery, setSearchQuery] = useState('');
   const revalidator = useRevalidator();
 
-  const { isLoading, data: rawLists } = trpc.lists.getAll.useQuery();
+  const { isLoading, data: rawListsResult } = useLists();
+  const rawLists = rawListsResult ?? [];
 
   const lists = useMemo(() => {
     if (!(rawLists && googleMapsId)) {
       return [];
     }
-    return rawLists.map((list) => ({
+    return (rawLists as any[]).map((list: any) => ({
       ...list,
-      isInList: list.places?.some((p) => p.googleMapsId === googleMapsId) ?? false,
+      isInList: list.places?.some((p: any) => p.googleMapsId === googleMapsId) ?? false,
     }));
   }, [rawLists, googleMapsId]);
 
@@ -60,7 +62,7 @@ export const AddToListDrawerContent = ({
     onSettled: () => setLoadingListId(null),
   });
 
-  const createListMutation = trpc.lists.create.useMutation();
+  const createListMutation = useCreateList();
 
   const onListSelectChange = useCallback(
     (listId: string, isInList: boolean) => {
@@ -71,7 +73,7 @@ export const AddToListDrawerContent = ({
       setLoadingListId(listId);
       if (isInList) {
         if (resolvedPlaceId) {
-          removeFromListMutation.mutateAsync({ listId, itemId: resolvedPlaceId });
+          removeFromListMutation.mutateAsync({ listId, placeId: resolvedPlaceId });
         } else {
           setLoadingListId(null);
         }
@@ -83,17 +85,7 @@ export const AddToListDrawerContent = ({
       }
 
       addToListMutation.mutate({
-        name: place.name,
-        address: place.address || undefined,
-        latitude: place.latitude || undefined,
-        longitude: place.longitude || undefined,
-        imageUrl: place.imageUrl || undefined,
-        googleMapsId: place.googleMapsId,
-        rating: place.rating || undefined,
-        types: place.types || undefined,
-        websiteUri: place.websiteUri || undefined,
-        phoneNumber: place.phoneNumber || undefined,
-        photos: place.photos || undefined,
+        placeId: place.id,
         listIds: [listId],
       });
     },
@@ -101,20 +93,14 @@ export const AddToListDrawerContent = ({
   );
 
   const handleCreateList = useCallback(async () => {
-    if (!searchQuery.trim() || !place?.googleMapsId) {
-      return;
-    }
-
     try {
-      const newList = await createListMutation.mutateAsync({
+      const result = await createListMutation.mutateAsync({
         name: searchQuery.trim(),
         description: '',
         isPublic: false,
       });
 
-      if (newList) {
-        onListSelectChange(newList.id, false);
-      }
+      onListSelectChange(result.id, false);
     } catch (error) {
       console.error('Failed to create list:', error);
     }
@@ -172,7 +158,7 @@ export const AddToListDrawerContent = ({
                     Create &quot;{searchQuery}&quot;
                   </CommandItem>
                 )}
-                {filteredLists.map((list) => (
+                {filteredLists.map((list: any) => (
                   <CommandItem
                     key={list.id}
                     value={list.name}

@@ -1,18 +1,18 @@
 export interface SearchContextPreviewProps {
-  searchContext: string
-  onRemove: () => void
+  searchContext: string;
+  onRemove: () => void;
 }
 
 export interface SearchResponse {
-  success: boolean
-  context?: string
-  error?: string
-  query?: string
-  results?: SearchResult[]
+  success: boolean;
+  context?: string | undefined;
+  error?: string | undefined;
+  query?: string | undefined;
+  results?: SearchResult[] | undefined;
 }
 
 export interface SearchResult {
-  title: string
-  snippet: string
-  url: string
+  title: string;
+  snippet: string;
+  url: string;
 }

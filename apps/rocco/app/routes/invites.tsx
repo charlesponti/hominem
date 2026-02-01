@@ -1,16 +1,19 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
+import { invitesService } from '@hominem/invites-services';
 import { PageTitle } from '@hominem/ui';
 import { List } from '@hominem/ui/list';
 import { Loading } from '@hominem/ui/loading';
 import { Mail } from 'lucide-react';
 import { useCallback } from 'react';
 import { data } from 'react-router';
-import ReceivedInviteItem from '~/components/ReceivedInviteItem';
-import { getAuthState } from '~/lib/auth.server';
-import { env } from '~/lib/env';
-import { buildInvitePreview } from '~/lib/services/invite-preview.service';
-import { createCaller } from '~/lib/trpc/server';
+
 import type { ReceivedInvite } from '~/lib/types';
+
+import ReceivedInviteItem from '~/components/ReceivedInviteItem';
+import { getAuthState, getServerSession } from '~/lib/auth.server';
+import { env } from '~/lib/env';
+import { buildInvitePreview } from '~/lib/services/invite-preview.server';
+
 import type { Route } from './+types/invites';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -34,11 +37,22 @@ export async function loader({ request }: Route.LoaderArgs) {
     );
   }
 
-  // Authenticated flow: fetch invites via tRPC
-  const trpcServer = createCaller(request);
-  const invites = (await trpcServer.invites.getReceived(
-    token ? { token } : undefined,
-  )) as ReceivedInvite[];
+  // Get user for authenticated flow
+  const { user } = await getServerSession(request);
+  if (!user) {
+    return data(
+      {
+        invites: [],
+        tokenMismatch: false,
+        requiresAuth: true,
+        preview: null,
+      },
+      { headers },
+    );
+  }
+
+  // Authenticated flow: fetch invites via service
+  const invites = await invitesService.getReceived(user.id, token ? { token } : undefined);
 
   // Check if token belongs to another user
   const tokenMismatch = token

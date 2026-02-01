@@ -4,7 +4,8 @@ import { Input } from '@hominem/ui/input';
 import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { trpc } from '~/lib/trpc/client';
+
+import { useMyVisits } from '~/lib/hooks/use-places';
 import { buildImageUrl } from '~/lib/utils';
 
 export default function VisitsPage() {
@@ -14,10 +15,10 @@ export default function VisitsPage() {
   const [endDate, setEndDate] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
-  const { data: visits, isLoading } = trpc.places.getMyVisits.useQuery({
-    startDate: startDate || undefined,
-    endDate: endDate || undefined,
-  });
+  const { data: visitsData, isLoading } = useMyVisits(
+    {}, // TODO: Add date filtering support to API or client-side filtering
+    { enabled: isAuthenticated },
+  );
 
   if (!isAuthenticated) {
     return (
@@ -28,16 +29,18 @@ export default function VisitsPage() {
     );
   }
 
+  const visits = visitsData ?? [];
+
   const filteredVisits =
     visits
-      ?.filter((visit) => {
+      ?.filter((visit: any) => {
         if (!placeFilter) {
           return true;
         }
         const placeName = visit.place?.name || '';
         return placeName.toLowerCase().includes(placeFilter.toLowerCase());
       })
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
         return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
@@ -107,7 +110,7 @@ export default function VisitsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredVisits.map((visit) => (
+          {filteredVisits.map((visit: any) => (
             <div key={visit.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
               <div className="flex items-start gap-4">
                 {visit.place?.imageUrl && (
@@ -167,9 +170,9 @@ export default function VisitsPage() {
                     </p>
                   )}
 
-                  {visit.visitPeople && (
+                  {visit.people && visit.people.length > 0 && (
                     <p className="text-sm text-muted-foreground mt-2">
-                      <span className="font-medium">With:</span> {visit.visitPeople}
+                      <span className="font-medium">With:</span> {visit.people.join(', ')}
                     </p>
                   )}
                 </div>

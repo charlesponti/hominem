@@ -1,12 +1,12 @@
-import type { Place } from '@hominem/data/places';
+import type { PlaceOutput } from '@hominem/db/types/places';
 import type { HTMLAttributes } from 'react';
 
 type WrapProps = HTMLAttributes<HTMLParagraphElement>;
 const Wrap = ({ children, ...props }: WrapProps) => <p {...props}>{children}</p>;
 
 type PlaceStatusProps = WrapProps & {
-  businessStatus: Place['businessStatus'];
-  openingHours: Place['openingHours'];
+  businessStatus: PlaceOutput['businessStatus'];
+  openingHours: PlaceOutput['openingHours'];
 };
 
 type GooglePlaceOpeningHours = {

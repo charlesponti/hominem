@@ -1,9 +1,12 @@
 import { Button } from '@hominem/ui/button';
 import { useState } from 'react';
 import { redirect } from 'react-router';
-import { trpc } from '~/lib/trpc/client';
-import { getServerSession } from '../lib/auth.server';
+
+import { useRefreshGooglePlaces } from '~/lib/hooks/use-admin';
+
 import type { Route } from './+types/admin';
+
+import { getServerSession } from '../lib/auth.server';
 
 type RefreshResult = {
   updatedCount: number;
@@ -24,7 +27,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function AdminRoute() {
   const [result, setResult] = useState<null | RefreshResult>(null);
   const [loading, setLoading] = useState(false);
-  const refreshMutation = trpc.admin.refreshGooglePlaces.useMutation();
+  const refreshMutation = useRefreshGooglePlaces();
 
   const handleRefresh = async () => {
     setLoading(true);

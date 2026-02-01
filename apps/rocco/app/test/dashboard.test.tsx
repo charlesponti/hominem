@@ -1,7 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import type { PlaceLocation } from '~/lib/types';
+
 import Dashboard, { loader } from '~/routes/index';
 import { MOCK_LISTS } from '~/test/mocks/index';
 import { roccoMocker } from '~/test/roccoMocker';

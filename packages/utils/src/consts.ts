@@ -43,7 +43,7 @@ export const QUEUE_NAMES = {
    * - apps/workers (processing jobs)
    */
   PLACE_PHOTO_ENRICH: 'place-photo-enrich',
-} as const
+} as const;
 
 /**
  * Redis Channel Names
@@ -59,4 +59,4 @@ export const REDIS_CHANNELS = {
   IMPORT_PROGRESS: 'import:progress',
   SUBSCRIBE: 'import:subscribe',
   SUBSCRIBED: 'import:subscribed',
-} as const
+} as const;

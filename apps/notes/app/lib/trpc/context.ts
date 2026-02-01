@@ -1,14 +1,10 @@
-import { initTRPC } from '@trpc/server'
+// Deprecated: tRPC context removed
+// Context is now managed by Hono middleware
 
 export interface Context {
-  request?: Request
+  request?: Request | undefined;
 }
 
 export async function createContext(request?: Request): Promise<Context> {
-  return { request }
+  return { request };
 }
-
-const t = initTRPC.context<Context>().create()
-
-export const router = t.router
-export const publicProcedure = t.procedure

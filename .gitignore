@@ -48,6 +48,20 @@ bun-debug.log*
 .env.test.local
 .env.production.local
 
+# TypeScript build cache
+.cache/
+
+# TypeScript
+.type-analysis
+.type-traces
+!.sisyphus
+.sisyphus/*
+!.sisyphus/notepads
+!.sisyphus/plans
+
+# @ark/attest snapshots (commit these to track type performance over time)
+.attest/
+
 # turbo
 .turbo
 

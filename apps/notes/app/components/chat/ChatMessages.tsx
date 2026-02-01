@@ -1,63 +1,92 @@
-import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/components/ui/input'
-import { useVirtualizer } from '@tanstack/react-virtual'
-import { Search, X } from 'lucide-react'
-import type React from 'react'
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react'
-import { useMatches } from 'react-router'
-import { useAutoScroll } from '~/lib/hooks/use-auto-scroll'
-import { useMessageSearch } from '~/lib/hooks/use-message-search'
-import { useScrollDetection } from '~/lib/hooks/use-scroll-detection'
-import { useSendMessage } from '~/lib/hooks/use-send-message.js'
-import { trpc } from '~/lib/trpc/client'
-import type { ExtendedMessage } from '~/lib/types/chat-message'
-import { findPreviousUserMessage } from '~/lib/utils/message.js'
-import { ChatMessage } from './ChatMessage.js'
-import { SkeletonMessage } from './SkeletonMessage'
-import { ThinkingComponent } from './ThinkingComponent'
+import type { HonoClient } from '@hominem/hono-client';
+import type {
+  ChatsGetMessagesOutput,
+  MessagesDeleteOutput,
+  MessagesUpdateOutput,
+} from '@hominem/hono-rpc/types';
+import type React from 'react';
+
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+import { Button } from '@hominem/ui/button';
+import { Input } from '@hominem/ui/components/ui/input';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { Search, X } from 'lucide-react';
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
+import { useMatches } from 'react-router';
+
+import type { ExtendedMessage } from '~/lib/types/chat-message';
+
+import { useAutoScroll } from '~/lib/hooks/use-auto-scroll';
+import { useMessageSearch } from '~/lib/hooks/use-message-search';
+import { useScrollDetection } from '~/lib/hooks/use-scroll-detection';
+import { useSendMessage } from '~/lib/hooks/use-send-message';
+import { findPreviousUserMessage } from '~/lib/utils/message';
+
+import { ChatMessage } from './ChatMessage';
+import { SkeletonMessage } from './SkeletonMessage';
+import { ThinkingComponent } from './ThinkingComponent';
 
 interface ChatMessagesProps {
-  chatId: string
-  status?: string
-  error?: Error | null
+  chatId: string;
+  status?: string;
+  error?: Error | null;
 }
 
 export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesProps>(
   function ChatMessages({ chatId, status = 'idle', error }, ref) {
-    const messagesContainerRef = useRef<HTMLDivElement>(null)
-    const parentRef = useRef<HTMLDivElement>(null)
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const parentRef = useRef<HTMLDivElement>(null);
 
-    const matches = useMatches()
+    const matches = useMatches();
     const rootData = matches.find((match) => match.id === 'root')?.data as
       | { supabaseId: string | null }
-      | undefined
-    const userId = rootData?.supabaseId || undefined
+      | undefined;
+    const userId = rootData?.supabaseId || undefined;
 
-    const {
-      data: messages = [],
-      isLoading,
-      error: messagesError,
-    } = trpc.chats.getMessages.useQuery(
-      { chatId, limit: 50 },
+    const messagesQuery = useHonoQuery<ChatsGetMessagesOutput>(
+      ['chats', 'getMessages', { chatId, limit: 50 }],
+      async (client: HonoClient) => {
+        const res = await client.api.chats[':id'].messages.$get({
+          param: { id: chatId },
+          query: { limit: '50' },
+        });
+        return res.json() as Promise<ChatsGetMessagesOutput>;
+      },
       {
         enabled: !!chatId,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
-      }
-    )
-
-    const utils = trpc.useUtils()
-    const deleteMessageMutation = trpc.messages.deleteMessage.useMutation({
-      onSuccess: () => {
-        utils.chats.getMessages.invalidate({ chatId, limit: 50 })
       },
-    })
+    );
 
-    const sendMessage = useSendMessage({ chatId, userId })
+    const messages = Array.isArray(messagesQuery.data) ? messagesQuery.data : [];
+    const isLoading = messagesQuery.isLoading;
+    const messagesError = messagesQuery.error;
+
+    const utils = useHonoUtils();
+
+    const deleteMessageMutation = useHonoMutation<MessagesDeleteOutput, { messageId: string }>(
+      async (client: HonoClient, variables: { messageId: string }) => {
+        const res = await client.api.messages[':messageId'].$delete({
+          param: { messageId: variables.messageId },
+        });
+        return res.json() as Promise<MessagesDeleteOutput>;
+      },
+      {
+        onSuccess: () => {
+          // Invalidate messages list for this chat
+          // Note: we need to match the query key structure
+          utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
+        },
+      },
+    );
+
+    const sendMessage = useSendMessage({ chatId, ...(userId && { userId }) });
 
     // Cast messages to extended type to handle optimistic updates
-    const extendedMessages = messages as ExtendedMessage[]
-    const shouldUseVirtualScrolling = extendedMessages.length >= 50
+    // Note: our ChatMessage type vs ExtendedMessage type
+    const extendedMessages = messages as unknown as ExtendedMessage[];
+    const shouldUseVirtualScrolling = extendedMessages.length >= 50;
 
     // Virtual scrolling setup
     const virtualizer = useVirtualizer({
@@ -66,7 +95,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       estimateSize: () => 150, // Estimated height per message
       overscan: 5, // Render 5 extra items outside viewport
       enabled: shouldUseVirtualScrolling,
-    })
+    });
 
     // Message search functionality
     const {
@@ -76,15 +105,15 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       showSearch,
       setShowSearch,
       searchInputRef,
-    } = useMessageSearch({ messages: extendedMessages })
+    } = useMessageSearch({ messages: extendedMessages });
 
     // Expose showSearch method via ref
     useImperativeHandle(ref, () => ({
       showSearch: () => {
-        setShowSearch(true)
-        setTimeout(() => searchInputRef.current?.focus(), 0)
+        setShowSearch(true);
+        setTimeout(() => searchInputRef.current?.focus(), 0);
       },
-    }))
+    }));
 
     // Scroll detection
     const { isNearBottom, checkIfNearBottom } = useScrollDetection({
@@ -92,7 +121,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       parentRef: parentRef as React.RefObject<HTMLDivElement | null>,
       threshold: 100,
       shouldUseVirtualScrolling,
-    })
+    });
 
     // Auto-scroll functionality
     useAutoScroll({
@@ -104,59 +133,71 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       isNearBottom,
       shouldUseVirtualScrolling,
       checkIfNearBottom,
-    })
+    });
 
     // Check if there's a streaming message (last message is assistant and streaming)
     const lastMessage =
-      extendedMessages.length > 0 ? extendedMessages[extendedMessages.length - 1] : undefined
+      extendedMessages.length > 0 ? extendedMessages[extendedMessages.length - 1] : undefined;
     const hasStreamingMessage =
       extendedMessages.length > 0 &&
       lastMessage !== undefined &&
       lastMessage.role === 'assistant' &&
-      (status === 'streaming' || lastMessage.isStreaming)
+      (status === 'streaming' || lastMessage.isStreaming);
 
     // Show thinking component only when submitted but no streaming message yet
     const showThinkingComponent =
-      status === 'submitted' || (status === 'streaming' && !hasStreamingMessage)
+      status === 'submitted' || (status === 'streaming' && !hasStreamingMessage);
 
     // Use the error from the hook if available, otherwise use the prop
-    const displayError = messagesError || error
+    const displayError = messagesError || error;
 
     const handleDeleteMessage = useCallback(
       async (messageId: string) => {
         try {
-          await deleteMessageMutation.mutateAsync({ messageId })
+          await deleteMessageMutation.mutateAsync({ messageId });
         } catch (error) {
-          console.error('Failed to delete message:', error)
+          console.error('Failed to delete message:', error);
         }
       },
-      [deleteMessageMutation]
-    )
+      [deleteMessageMutation],
+    );
 
-    const updateMessageMutation = trpc.messages.updateMessage.useMutation({
-      onSuccess: () => {
-        utils.chats.getMessages.invalidate({ chatId, limit: 50 })
+    const updateMessageMutation = useHonoMutation<
+      MessagesUpdateOutput,
+      { messageId: string; content: string }
+    >(
+      async (client: HonoClient, variables: { messageId: string; content: string }) => {
+        const res = await client.api.messages[':messageId'].$patch({
+          param: { messageId: variables.messageId },
+          json: { content: variables.content },
+        });
+        return res.json() as Promise<MessagesUpdateOutput>;
       },
-    })
+      {
+        onSuccess: () => {
+          utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
+        },
+      },
+    );
 
     const handleRegenerate = useCallback(
       async (messageId: string) => {
-        const messageIndex = extendedMessages.findIndex((m) => m.id === messageId)
-        if (messageIndex === -1) return
+        const messageIndex = extendedMessages.findIndex((m) => m.id === messageId);
+        if (messageIndex === -1) return;
 
-        const userMessage = findPreviousUserMessage(extendedMessages, messageIndex)
+        const userMessage = findPreviousUserMessage(extendedMessages, messageIndex);
         if (userMessage) {
           // Delete the assistant message and regenerate
-          await handleDeleteMessage(messageId)
+          await handleDeleteMessage(messageId);
           // Send the user message again to regenerate
           await sendMessage.mutateAsync({
-            message: userMessage.content,
+            message: userMessage.content || '',
             chatId,
-          })
+          });
         }
       },
-      [extendedMessages, handleDeleteMessage, sendMessage, chatId]
-    )
+      [extendedMessages, handleDeleteMessage, sendMessage, chatId],
+    );
 
     const handleEditMessage = useCallback(
       async (messageId: string, newContent: string) => {
@@ -165,24 +206,24 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           await updateMessageMutation.mutateAsync({
             messageId,
             content: newContent,
-          })
+          });
           // Regenerate AI response by sending the edited message
           await sendMessage.mutateAsync({
             message: newContent,
             chatId,
-          })
+          });
         } catch (error) {
-          console.error('Failed to update message:', error)
+          console.error('Failed to update message:', error);
         }
       },
-      [updateMessageMutation, sendMessage, chatId]
-    )
+      [updateMessageMutation, sendMessage, chatId],
+    );
 
     // Virtual scrolling render
     const virtualItems = useMemo(() => {
-      if (!shouldUseVirtualScrolling) return null
-      return virtualizer.getVirtualItems()
-    }, [shouldUseVirtualScrolling, virtualizer])
+      if (!shouldUseVirtualScrolling) return null;
+      return virtualizer.getVirtualItems();
+    }, [shouldUseVirtualScrolling, virtualizer]);
 
     return (
       <div className="flex flex-col h-full">
@@ -204,8 +245,8 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  setShowSearch(false)
-                  setSearchQuery('')
+                  setShowSearch(false);
+                  setSearchQuery('');
                 }}
                 aria-label="Close search"
               >
@@ -241,7 +282,9 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           {displayError && (
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
               <div className="text-sm font-medium text-destructive mb-1">Chat Error</div>
-              <div className="text-xs text-destructive/80">{displayError.message}</div>
+              <div className="text-xs text-destructive/80">
+                {displayError instanceof Error ? displayError.message : String(displayError)}
+              </div>
             </div>
           )}
 
@@ -264,9 +307,9 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
               }}
             >
               {virtualItems?.map((virtualItem) => {
-                const message = filteredMessages[virtualItem.index]
+                const message = filteredMessages[virtualItem.index];
                 if (!message) {
-                  return null
+                  return null;
                 }
                 return (
                   <div
@@ -288,24 +331,20 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
                           (status === 'streaming' &&
                             virtualItem.index === extendedMessages.length - 1 &&
                             message.role === 'assistant') ||
-                          message.isStreaming
+                          (message.isStreaming ?? false)
                         }
-                        onRegenerate={
-                          message.role === 'assistant'
-                            ? () => handleRegenerate(message.id)
-                            : undefined
-                        }
-                        onEdit={
-                          message.role === 'user'
-                            ? (messageId: string, newContent: string) =>
-                                handleEditMessage(messageId, newContent)
-                            : undefined
-                        }
+                        {...(message.role === 'assistant' && {
+                          onRegenerate: () => handleRegenerate(message.id),
+                        })}
+                        {...(message.role === 'user' && {
+                          onEdit: (messageId: string, newContent: string) =>
+                            handleEditMessage(messageId, newContent),
+                        })}
                         onDelete={() => handleDeleteMessage(message.id)}
                       />
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           ) : (
@@ -324,17 +363,15 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
                       (status === 'streaming' &&
                         index === filteredMessages.length - 1 &&
                         message.role === 'assistant') ||
-                      message.isStreaming
+                      (message.isStreaming ?? false)
                     }
-                    onRegenerate={
-                      message.role === 'assistant' ? () => handleRegenerate(message.id) : undefined
-                    }
-                    onEdit={
-                      message.role === 'user'
-                        ? (messageId: string, newContent: string) =>
-                            handleEditMessage(messageId, newContent)
-                        : undefined
-                    }
+                    {...(message.role === 'assistant' && {
+                      onRegenerate: () => handleRegenerate(message.id),
+                    })}
+                    {...(message.role === 'user' && {
+                      onEdit: (messageId: string, newContent: string) =>
+                        handleEditMessage(messageId, newContent),
+                    })}
                     onDelete={() => handleDeleteMessage(message.id)}
                   />
                 ))
@@ -346,6 +383,6 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         {/* Enhanced thinking component */}
         {showThinkingComponent && <ThinkingComponent />}
       </div>
-    )
-  }
-)
+    );
+  },
+);

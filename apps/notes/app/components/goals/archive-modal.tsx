@@ -1,11 +1,11 @@
-import { Button } from '@hominem/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@hominem/ui/dialog'
+import { Button } from '@hominem/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@hominem/ui/dialog';
 
 interface ArchiveModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  goalTitle: string
-  onConfirm: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  goalTitle: string;
+  onConfirm: () => void;
 }
 
 export function ArchiveModal({ open, onOpenChange, goalTitle, onConfirm }: ArchiveModalProps) {
@@ -29,5 +29,5 @@ export function ArchiveModal({ open, onOpenChange, goalTitle, onConfirm }: Archi
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

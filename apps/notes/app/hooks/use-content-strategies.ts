@@ -1,83 +1,149 @@
-import { trpc } from '~/lib/trpc'
+import type { HonoClient } from '@hominem/hono-client';
+import type {
+  ContentStrategiesListOutput,
+  ContentStrategiesGetOutput,
+  ContentStrategiesCreateOutput,
+  ContentStrategiesUpdateOutput,
+  ContentStrategiesDeleteOutput,
+  contentStrategiesCreateSchema,
+  contentStrategiesUpdateSchema,
+} from '@hominem/hono-rpc/types';
+import type { ContentStrategiesInsert } from '@hominem/services';
+
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+import { z } from 'zod';
 
 export function useContentStrategies() {
-  const query = trpc.contentStrategies.list.useQuery(undefined, {
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  const query = useHonoQuery<ContentStrategiesListOutput>(
+    ['content-strategies', 'list'],
+    async (client) => {
+      const res = await client.api['content-strategies'].$get();
+      return res.json() as Promise<ContentStrategiesListOutput>;
+    },
+    {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  );
+
+  const strategies = Array.isArray(query.data) ? query.data : [];
 
   return {
-    strategies: query.data || [],
+    strategies,
     isLoading: query.isLoading,
     error: query.error,
-    count: query.data?.length || 0,
-  }
+    count: strategies.length,
+  };
 }
 
 export function useContentStrategy(strategyId: string) {
-  const query = trpc.contentStrategies.getById.useQuery(
-    { id: strategyId },
+  const query = useHonoQuery<ContentStrategiesGetOutput>(
+    ['content-strategies', strategyId],
+    async (client) => {
+      const res = await client.api['content-strategies'][':id'].$get({
+        param: { id: strategyId },
+      });
+      return res.json() as Promise<ContentStrategiesGetOutput>;
+    },
     {
       enabled: !!strategyId,
       staleTime: 1000 * 60 * 5, // 5 minutes
-    }
-  )
+    },
+  );
+
+  const strategy = query.data ?? null;
 
   return {
-    strategy: query.data || null,
+    strategy,
     isLoading: query.isLoading,
     error: query.error,
-    found: !!query.data,
-  }
+    found: !!strategy,
+  };
 }
 
 export function useCreateContentStrategy() {
-  const utils = trpc.useUtils()
+  const utils = useHonoUtils();
 
-  const createStrategy = trpc.contentStrategies.create.useMutation({
-    onSuccess: () => {
-      utils.contentStrategies.list.invalidate()
+  type CreateInput = z.infer<typeof contentStrategiesCreateSchema>;
+
+  const createStrategy = useHonoMutation<ContentStrategiesCreateOutput, CreateInput>(
+    async (client, variables) => {
+      const res = await client.api['content-strategies'].$post({
+        json: {
+          ...variables,
+          description: variables.description ?? undefined,
+        },
+      });
+      return res.json() as Promise<ContentStrategiesCreateOutput>;
     },
-  })
+    {
+      onSuccess: () => {
+        utils.invalidate(['content-strategies', 'list']);
+      },
+    },
+  );
 
   return {
     createStrategy: createStrategy.mutate,
     isLoading: createStrategy.isPending,
     isError: createStrategy.isError,
     error: createStrategy.error,
-  }
+  };
 }
 
 export function useUpdateContentStrategy() {
-  const utils = trpc.useUtils()
+  const utils = useHonoUtils();
 
-  const updateStrategy = trpc.contentStrategies.update.useMutation({
-    onSuccess: (updatedStrategy) => {
-      utils.contentStrategies.list.invalidate()
-      utils.contentStrategies.getById.invalidate({ id: updatedStrategy.id })
+  type UpdateInput = z.infer<typeof contentStrategiesUpdateSchema> & { id: string };
+
+  const updateStrategy = useHonoMutation<ContentStrategiesUpdateOutput, UpdateInput>(
+    async (client, variables) => {
+      const { id, ...data } = variables;
+      const res = await client.api['content-strategies'][':id'].$patch({
+        param: { id },
+        json: {
+          ...data,
+          description: data.description ?? undefined,
+        },
+      });
+      return res.json() as Promise<ContentStrategiesUpdateOutput>;
     },
-  })
+    {
+      onSuccess: (result) => {
+        utils.invalidate(['content-strategies', 'list']);
+        utils.invalidate(['content-strategies', result.id]);
+      },
+    },
+  );
 
   return {
     updateStrategy: updateStrategy.mutate,
     isLoading: updateStrategy.isPending,
     isError: updateStrategy.isError,
     error: updateStrategy.error,
-  }
+  };
 }
 
 export function useDeleteContentStrategy() {
-  const utils = trpc.useUtils()
+  const utils = useHonoUtils();
 
-  const deleteStrategy = trpc.contentStrategies.delete.useMutation({
-    onSuccess: () => {
-      utils.contentStrategies.list.invalidate()
+  const deleteStrategy = useHonoMutation<ContentStrategiesDeleteOutput, { id: string }>(
+    async (client: HonoClient, variables: { id: string }) => {
+      const res = await client.api['content-strategies'][':id'].$delete({
+        param: { id: variables.id },
+      });
+      return res.json() as Promise<ContentStrategiesDeleteOutput>;
     },
-  })
+    {
+      onSuccess: () => {
+        utils.invalidate(['content-strategies', 'list']);
+      },
+    },
+  );
 
   return {
     deleteStrategy: deleteStrategy.mutate,
     isLoading: deleteStrategy.isPending,
     isError: deleteStrategy.isError,
     error: deleteStrategy.error,
-  }
+  };
 }

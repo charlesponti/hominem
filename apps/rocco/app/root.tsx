@@ -1,6 +1,7 @@
+import type { AuthChangeEvent } from '@supabase/supabase-js';
+
 import { SupabaseAuthProvider } from '@hominem/auth';
 import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
-import type { AuthChangeEvent } from '@supabase/supabase-js';
 import { useCallback } from 'react';
 import {
   data,
@@ -11,18 +12,15 @@ import {
   ScrollRestoration,
   useRevalidator,
 } from 'react-router';
+
 import type { Route } from './+types/root';
+
 import ErrorBoundary from './components/ErrorBoundary';
 import './globals.css';
-import { getServerSession } from './lib/auth.server';
-import { initProductionLogging } from './lib/trpc/logger';
-import { TRPCProvider } from './lib/trpc/provider';
-
-if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
-  initProductionLogging();
-}
+import { HonoProvider } from './lib/hono/provider';
 
 export async function loader({ request }: Route.LoaderArgs) {
+  const { getServerSession } = await import('./lib/auth.server');
   const { session, headers } = await getServerSession(request);
 
   return data(
@@ -80,7 +78,10 @@ export default function App({ loaderData }: Route.ComponentProps) {
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1"
+        />
         <Meta />
         <Links />
       </head>
@@ -91,9 +92,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
             config={supabaseConfig}
             onAuthEvent={handleAuthEvent}
           >
-            <TRPCProvider>
+            <HonoProvider>
               <Outlet />
-            </TRPCProvider>
+            </HonoProvider>
           </SupabaseAuthProvider>
         </UpdateGuard>
         <ScrollRestoration />

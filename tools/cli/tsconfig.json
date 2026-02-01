@@ -1,0 +1,33 @@
+{
+  "extends": ["../../tsconfig.base.json"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": ".",
+    "jsx": "react-jsx",
+    "types": ["node", "bun-types"],
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "noEmit": true,
+    "tsBuildInfoFile": "../../.cache/tool-cli.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "references": [
+    { "path": "../../packages/hono-rpc" },
+    { "path": "../../packages/hono-client" }
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo",
+    ".react-router/cache"
+  ]
+}
