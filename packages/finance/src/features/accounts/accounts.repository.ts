@@ -126,7 +126,7 @@ export const AccountsRepository = {
         // Join fields
         institutionName: financialInstitutions.name,
         institutionLogo: financialInstitutions.logo,
-        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`,
+        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`.as('isPlaidConnected'),
         plaidItemStatus: plaidItems.status,
         plaidItemError: plaidItems.error,
         plaidLastSyncedAt: plaidItems.lastSyncedAt,
@@ -165,7 +165,7 @@ export const AccountsRepository = {
         updatedAt: financeAccounts.updatedAt,
         institutionName: financialInstitutions.name,
         institutionLogo: financialInstitutions.logo,
-        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`,
+        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`.as('isPlaidConnected'),
         plaidItemStatus: plaidItems.status,
         plaidItemError: plaidItems.error,
         plaidLastSyncedAt: plaidItems.lastSyncedAt,
@@ -311,7 +311,7 @@ export const AccountsRepository = {
         updatedAt: financeAccounts.updatedAt,
         institutionName: financialInstitutions.name,
         institutionLogo: financialInstitutions.logo,
-        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`,
+        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`.as('isPlaidConnected'),
         plaidItemStatus: plaidItems.status,
         plaidItemError: plaidItems.error,
         plaidLastSyncedAt: plaidItems.lastSyncedAt,
@@ -339,8 +339,8 @@ export const AccountsRepository = {
         status: plaidItems.status,
         lastSyncedAt: plaidItems.lastSyncedAt,
         error: plaidItems.error,
-        accountCount: sql<number>`COUNT(DISTINCT ${financeAccounts.id})`,
-        isPlaidConnected: sql<boolean>`${plaidItems.id} IS NOT NULL`,
+        accountCount: sql<number>`COUNT(DISTINCT ${financeAccounts.id})`.as('accountCount'),
+        isPlaidConnected: sql<boolean>`${plaidItems.id} IS NOT NULL`.as('isPlaidConnected'),
       })
       .from(financialInstitutions)
       .leftJoin(

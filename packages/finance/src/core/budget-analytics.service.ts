@@ -18,8 +18,8 @@ export async function getTransactionCategoriesAnalysis(userId: string) {
     // Get categories that have transactions in each of the last 6 months
     const recentTransactionCategories = await db
       .select({
-        category: sql<string>`COALESCE(${transactions.category}, 'Uncategorized')`,
-        month: sql<string>`DATE_TRUNC('month', ${transactions.date})`,
+        category: sql<string>`COALESCE(${transactions.category}, 'Uncategorized')`.as('category'),
+        month: sql<string>`DATE_TRUNC('month', ${transactions.date})`.as('month'),
       })
       .from(transactions)
       .where(and(eq(transactions.userId, userId), gte(transactions.date, sixMonthsAgo)))
@@ -49,12 +49,12 @@ export async function getTransactionCategoriesAnalysis(userId: string) {
     // Now get the detailed analysis for only the consistent categories
     const transactionCategories = await db
       .select({
-        category: sql<string>`COALESCE(${transactions.category}, 'Uncategorized')`,
-        count: sql<number>`COUNT(*)`,
-        totalAmount: sql<number>`SUM(${transactions.amount})`,
-        avgAmount: sql<number>`AVG(${transactions.amount})`,
+        category: sql<string>`COALESCE(${transactions.category}, 'Uncategorized')`.as('category'),
+        count: sql<number>`COUNT(*)`.as('count'),
+        totalAmount: sql<number>`SUM(${transactions.amount})`.as('totalAmount'),
+        avgAmount: sql<number>`AVG(${transactions.amount})`.as('avgAmount'),
         // Calculate the number of months this category has transactions (should be 6 for consistent categories)
-        monthsWithTransactions: sql<number>`COUNT(DISTINCT DATE_TRUNC('month', ${transactions.date}))`,
+        monthsWithTransactions: sql<number>`COUNT(DISTINCT DATE_TRUNC('month', ${transactions.date}))`.as('monthsWithTransactions'),
       })
       .from(transactions)
       .where(

@@ -44,7 +44,7 @@ export async function getBudgetCategoriesWithSpending(options: {
   const spendingData = await db
     .select({
       category: transactions.category,
-      amount: sql<number>`SUM(ABS(${transactions.amount}))`,
+      amount: sql<number>`SUM(ABS(${transactions.amount}))`.as('amount'),
     })
     .from(transactions)
     .where(
