@@ -131,7 +131,7 @@ export class NotesService {
 
     // Get total count (without pagination)
     const countResult = await db
-      .select({ count: sql<number>`count(*)` })
+      .select({ count: sql<number>`count(*)`.as('count') })
       .from(notes)
       .where(and(...conditions.filter((c) => !!c)));
 

@@ -27,12 +27,12 @@ export async function summarizeByCategory(options: QueryOptions): Promise<Catego
 
   const result = await db
     .select({
-      category: sql<string>`COALESCE(${transactions.category}, 'Uncategorized')`,
-      count: sql<number>`COUNT(*)`.mapWith(Number),
-      total: sql<number>`SUM(${transactions.amount})`.mapWith(Number),
-      average: sql<number>`AVG(${transactions.amount})`.mapWith(Number),
-      minimum: sql<number>`MIN(${transactions.amount})`.mapWith(Number),
-      maximum: sql<number>`MAX(${transactions.amount})`.mapWith(Number),
+      category: sql<string>`COALESCE(${transactions.category}, 'Uncategorized')`.as('category'),
+      count: sql<number>`COUNT(*)`.mapWith(Number).as('count'),
+      total: sql<number>`SUM(${transactions.amount})`.mapWith(Number).as('total'),
+      average: sql<number>`AVG(${transactions.amount})`.mapWith(Number).as('average'),
+      minimum: sql<number>`MIN(${transactions.amount})`.mapWith(Number).as('minimum'),
+      maximum: sql<number>`MAX(${transactions.amount})`.mapWith(Number).as('maximum'),
     })
     .from(transactions)
     .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
@@ -68,17 +68,17 @@ export async function summarizeByMonth(options: QueryOptions): Promise<MonthSumm
 
   const query = db
     .select({
-      month: sql<string>`SUBSTR(${transactions.date}::text, 1, 7)`,
-      count: sql<number>`COUNT(*)`.mapWith(Number),
+      month: sql<string>`SUBSTR(${transactions.date}::text, 1, 7)`.as('month'),
+      count: sql<number>`COUNT(*)`.mapWith(Number).as('count'),
       income:
         sql<number>`SUM(CASE WHEN ${transactions.type} = 'income' THEN ${transactions.amount}::numeric ELSE 0 END)`.mapWith(
           Number,
-        ),
+        ).as('income'),
       expenses:
         sql<number>`SUM(CASE WHEN ${transactions.type} = 'expense' THEN ABS(${transactions.amount}::numeric) ELSE 0 END)`.mapWith(
           Number,
-        ),
-      average: sql<number>`AVG(${transactions.amount}::numeric)`.mapWith(Number),
+        ).as('expenses'),
+      average: sql<number>`AVG(${transactions.amount}::numeric)`.mapWith(Number).as('average'),
     })
     .from(transactions)
     .where(whereConditions)
@@ -107,15 +107,15 @@ export async function findTopMerchants(options: QueryOptions): Promise<TopMercha
 
   // Prefer merchantName, fallback to description, filter out empty/null
   // const merchantField = sql<string>`COALESCE(NULLIF(TRIM(${transactions.merchantName}), ''), NULLIF(TRIM(${transactions.description}), ''))`
-  const descriptionField = sql<string>`TRIM(${transactions.description})`;
+  const descriptionField = sql<string>`TRIM(${transactions.description})`.as('merchant');
 
   const result = await db
     .select({
       merchant: descriptionField,
-      frequency: sql<number>`COUNT(*)`.mapWith(Number),
-      totalSpent: sql<number>`SUM(${transactions.amount})`.mapWith(Number),
-      firstTransaction: sql<string>`MIN(${transactions.date}::text)`,
-      lastTransaction: sql<string>`MAX(${transactions.date}::text)`,
+      frequency: sql<number>`COUNT(*)`.mapWith(Number).as('frequency'),
+      totalSpent: sql<number>`SUM(${transactions.amount})`.mapWith(Number).as('totalSpent'),
+      firstTransaction: sql<string>`MIN(${transactions.date}::text)`.as('firstTransaction'),
+      lastTransaction: sql<string>`MAX(${transactions.date}::text)`.as('lastTransaction'),
     })
     .from(transactions)
     .where(whereConditions)
@@ -176,16 +176,16 @@ export async function calculateTransactions(
     switch (options.calculationType) {
       case 'sum':
         aggregateSelection = {
-          value: sql<number>`SUM(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number),
+          value: sql<number>`SUM(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number).as('value'),
         };
         break;
       case 'average':
         aggregateSelection = {
-          value: sql<number>`AVG(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number),
+          value: sql<number>`AVG(CAST(${transactions.amount} AS DECIMAL))`.mapWith(Number).as('value'),
         };
         break;
       case 'count':
-        aggregateSelection = { value: sql<number>`COUNT(*)`.mapWith(Number) };
+        aggregateSelection = { value: sql<number>`COUNT(*)`.mapWith(Number).as('value') };
         break;
       default:
         throw new Error(`Unsupported calculation type: ${options.calculationType}`);
@@ -205,11 +205,11 @@ export async function calculateTransactions(
   // Otherwise return all stats (default behavior)
   const result = await db
     .select({
-      count: sql<number>`COUNT(*)`.mapWith(Number),
-      total: sql<number>`SUM(${transactions.amount})`.mapWith(Number),
-      average: sql<number>`AVG(${transactions.amount})`.mapWith(Number),
-      minimum: sql<number>`MIN(${transactions.amount})`.mapWith(Number),
-      maximum: sql<number>`MAX(${transactions.amount})`.mapWith(Number),
+      count: sql<number>`COUNT(*)`.mapWith(Number).as('count'),
+      total: sql<number>`SUM(${transactions.amount})`.mapWith(Number).as('total'),
+      average: sql<number>`AVG(${transactions.amount})`.mapWith(Number).as('average'),
+      minimum: sql<number>`MIN(${transactions.amount})`.mapWith(Number).as('minimum'),
+      maximum: sql<number>`MAX(${transactions.amount})`.mapWith(Number).as('maximum'),
     })
     .from(transactions)
     .where(whereConditions);
@@ -259,11 +259,11 @@ export async function getMonthlyStats(params: {
       totalIncome:
         sql<number>`sum(case when ${transactions.amount} > 0 then ${transactions.amount} else 0 end)`.mapWith(
           Number,
-        ),
+        ).as('totalIncome'),
       totalExpenses:
         sql<number>`sum(case when ${transactions.amount} < 0 then abs(${transactions.amount}) else 0 end)`.mapWith(
           Number,
-        ),
+        ).as('totalExpenses'),
       transactionCount: count(),
     })
     .from(transactions)
@@ -281,7 +281,7 @@ export async function getMonthlyStats(params: {
   const categorySpendingResult = await db
     .select({
       category: transactions.category,
-      amount: sql<number>`sum(abs(${transactions.amount}::numeric))`.mapWith(Number),
+      amount: sql<number>`sum(abs(${transactions.amount}::numeric))`.mapWith(Number).as('amount'),
     })
     .from(transactions)
     .where(categorySpendingFilter)
