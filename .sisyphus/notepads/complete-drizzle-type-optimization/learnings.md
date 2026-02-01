@@ -1,4 +1,0 @@
-- Added packages/db/generate-types.ts to parse schema files with TypeScript AST and extract exported pgTable declarations.
-- Script defaults to dry-run, reports file/table counts, and skips schema files without pgTable exports.
-- Type names are derived via singularized PascalCase with overrides for events -> CalendarEvent, userLists -> UserList, contentStrategies -> ContentStrategy, and transactions -> FinanceTransaction.
-- Generated content includes the AUTO-GENERATED header and imports tables from ../src/schema/{domain}.
