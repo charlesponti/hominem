@@ -296,7 +296,7 @@ export async function queryTransactions(options: QueryOptions): Promise<QueryTra
       note: transactions.note,
       accountId: transactions.accountId,
       account: financeAccounts,
-      filteredCount: sql<number>`count(*) OVER()`.mapWith(Number),
+      filteredCount: sql<number>`count(*) OVER()`.mapWith(Number).as('filteredCount'),
     })
     .from(transactions)
     .leftJoin(financeAccounts, eq(transactions.accountId, financeAccounts.id))
