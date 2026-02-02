@@ -6,15 +6,18 @@ Hominem is a **monorepo** full-stack application using Bun, TypeScript, React, H
 
 Always run commands from the monorepo root. Do NOT `cd` into packages.
 
-| Task             | Command                                      |
+| Task | Command |
 | :--------------- | :------------------------------------------- |
-| **Install**      | `bun install`                                |
-| **Dev**          | `bun run dev` (or `--filter <package>`)      |
-| **Build**        | `bun run build`                              |
-| **Test**         | `bun run test` (or `--filter <package>`)     |
-| **Typecheck**    | `bun run typecheck`                          |
-| **Lint/Format**  | `bun run lint --parallel` / `bun run format` |
-| **Safety Check** | `bun run check` (Lint + Typecheck + Test)    |
+| **Install** | `bun install` |
+| **Dev** | `bun run dev` (or `--filter <package>`) |
+| **Build** | `bun run build` |
+| **Test** | `bun run test` (or `--filter <package>`) |
+| **Typecheck** | `bun run typecheck` |
+| **Lint/Format** | `bun run lint --parallel` / `bun run format` |
+| **Safety Check** | `bun run check` (Lint + Typecheck + Test) |
+| **Type Audit** | `bun run type-perf:audit` |
+| **Type Dashboard** | `bun run type-perf:dashboard -- --audit-first --open` |
+| **Type Diagnosis** | `bun run type-perf:diagnose -- --package <pkg>` |
 
 ## Project Structure
 
@@ -54,7 +57,11 @@ Always run commands from the monorepo root. Do NOT `cd` into packages.
 - **Type Imports**: Use `import type { ... }` separately from logic imports.
 - **Definitions**: Use `interface` for object shapes, `type` for unions/primitives/intersections.
 - **Utility Types**: Leverage `Pick<T, K>`, `Omit<T, K>`, `Partial<T>`, and `Record<K, V>`.
-- Use `type-audit` tool for performance checks.
+- Use `type-audit` tool for performance checks:
+  - `bun run type-perf:audit -- --graph` - Full audit with dependency analysis
+  - `bun run type-perf:diagnose -- --package <pkg>` - Detailed package analysis
+  - `bun run type-perf:dashboard -- --audit-first --open` - Interactive HTML dashboard
+  - `bun run type-perf:tsserver -- --logfile <path>` - IDE performance analysis
 
 ### Error Handling
 

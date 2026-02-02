@@ -19,10 +19,10 @@ export default [
     route('chat/:chatId', 'routes/chat/chat.$chatId.tsx'),
 
     // Other Routes
-    layout('routes/notes/layout.tsx', [route('notes', 'routes/notes/page.tsx')]),
-    route('/content-strategy', 'routes/content-strategy/saved.tsx'),
-    route('/content-strategy/create', 'routes/content-strategy/create.tsx'),
-    route('/content-strategy/:id', 'routes/content-strategy/view.tsx'),
+    layout('routes/notes/layout.tsx', [
+      route('notes', 'routes/notes/page.tsx'),
+      route('tasks', 'routes/tasks/page.tsx'),
+    ]),
     route('/goals', 'routes/goals/page.tsx'),
     route('/habits', 'routes/habits/page.tsx'),
     route('/events', 'routes/events.tsx'),

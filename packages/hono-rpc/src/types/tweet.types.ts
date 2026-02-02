@@ -6,8 +6,8 @@ import { z } from 'zod';
 
 export type TweetGenerateInput = {
   content: string;
-  strategyType: 'default' | 'custom';
   strategy: string;
+  strategyType?: 'default' | 'custom';
 };
 
 export const tweetGenerateSchema = z.object({

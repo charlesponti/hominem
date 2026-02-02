@@ -17,7 +17,6 @@ export { companies } from './company.schema';
 
 // Content & Knowledge
 export { notes } from './notes.schema';
-export { content, contentStrategies } from './content.schema';
 export { documents } from './documents.schema';
 export { bookmark } from './bookmarks.schema';
 
@@ -35,6 +34,9 @@ export { events, eventsTags, eventsUsers, eventsTransactions } from './calendar.
 // Goals & Planning
 export { goals } from './goals.schema';
 export { surveys, surveyOptions, surveyVotes } from './surveys.schema';
+
+// Tasks
+export { tasks } from './tasks.schema';
 
 // Lists & Items
 export { list, userLists, listInvite } from './lists.schema';

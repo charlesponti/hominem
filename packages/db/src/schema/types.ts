@@ -6,7 +6,6 @@ export type * from './categories.types';
 export type * from './chats.types';
 export type * from './company.types';
 export type * from './contacts.types';
-export type * from './content.types';
 export type * from './documents.types';
 export type * from './finance.types';
 export type * from './goals.types';

@@ -1,6 +1,6 @@
 import type { NoteInput, NoteSyncItem } from '@hominem/db/types/notes';
 
-import { NoteContentTypeSchema, TaskMetadataSchema } from '@hominem/db/schema/notes';
+import { NoteContentTypeSchema, NoteStatusSchema } from '@hominem/db/schema/notes';
 import { z } from 'zod';
 
 const noteTagSchema = z.object({ value: z.string() });
@@ -10,10 +10,12 @@ export const UpdateNoteZodSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
   type: NoteContentTypeSchema.optional(),
+  status: NoteStatusSchema.optional(),
   title: z.string().nullish(),
   content: z.string().optional(),
+  excerpt: z.string().nullish(),
   tags: noteTagsSchema.nullish(),
-  taskMetadata: TaskMetadataSchema.optional().nullish(),
+  publishingMetadata: z.any().optional().nullish(),
   analysis: z.any().optional().nullish(),
 });
 
@@ -31,6 +33,7 @@ export const ListNotesInputSchema = z.object({
   offset: z.number().optional().describe('Pagination offset'),
   query: z.string().optional().describe('Full-text search query'),
   types: z.array(NoteContentTypeSchema).optional().describe('Filter by note types'),
+  status: z.array(NoteStatusSchema).optional().describe('Filter by note status'),
   tags: z.array(z.string()).optional().describe('Filter by tags'),
   since: z.string().optional().describe('Filter notes updated after this date (ISO 8601)'),
 });

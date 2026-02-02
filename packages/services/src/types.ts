@@ -19,33 +19,15 @@ export type { TagOutput } from '@hominem/db/types/tags';
 export type { BookmarkOutput, BookmarkInput } from '@hominem/db/types/bookmarks';
 
 export type {
-  ContentOutput,
-  ContentStatus,
-  ContentStrategy,
-  ContentType,
-  SEOMetadata,
-  SocialMediaMetadata,
-  ContentStrategiesOutput,
-  ContentStrategiesInput,
-  ContentStrategiesSelect,
-  ContentStrategiesInsert,
-} from '@hominem/db/types/content';
-
-export type {
   BudgetCategoryOutput,
   FinanceAccountOutput,
   FinanceTransactionOutput as Transaction,
   FinancialInstitutionOutput,
 } from '@hominem/db/types/finance';
 
-export type {
-  NoteOutput,
-  NoteContentType,
-  NoteInput,
-  Priority,
-  TaskMetadata,
-  TaskStatus,
-} from '@hominem/db/types/notes';
+export type { NoteOutput, NoteContentType, NoteInput } from '@hominem/db/types/notes';
+
+export type { TaskOutput, TaskInput, TaskStatus, TaskPriority } from '@hominem/db/types/tasks';
 
 export type {
   ChatMessageOutput,

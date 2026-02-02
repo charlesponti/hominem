@@ -54,7 +54,10 @@ export async function getTransactionCategoriesAnalysis(userId: string) {
         totalAmount: sql<number>`SUM(${transactions.amount})`.as('totalAmount'),
         avgAmount: sql<number>`AVG(${transactions.amount})`.as('avgAmount'),
         // Calculate the number of months this category has transactions (should be 6 for consistent categories)
-        monthsWithTransactions: sql<number>`COUNT(DISTINCT DATE_TRUNC('month', ${transactions.date}))`.as('monthsWithTransactions'),
+        monthsWithTransactions:
+          sql<number>`COUNT(DISTINCT DATE_TRUNC('month', ${transactions.date}))`.as(
+            'monthsWithTransactions',
+          ),
       })
       .from(transactions)
       .where(

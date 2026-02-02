@@ -19,7 +19,6 @@ export * from './utils';
 // ============================================================================
 
 export * from './admin.types';
-export * from './content-strategies.types';
 export * from './finance.types';
 export * from './invites.types';
 export * from './items.types';

@@ -4,10 +4,9 @@
 
 import type {
   NoteContentType,
-  TaskMetadata,
-  TaskStatus,
-  Priority,
   NoteMention,
+  NoteStatus,
+  PublishingMetadata,
 } from '@hominem/db/schema/notes';
 
 import type { NoteOutput } from '@hominem/db/types/notes';
@@ -16,20 +15,36 @@ import type { ContentTag, AllContentType } from '@hominem/db/schema/shared';
 
 import {
   NoteContentTypeSchema,
-  TaskStatusSchema,
-  TaskMetadataSchema,
-  PrioritySchema,
+  NoteStatusSchema,
 } from '@hominem/db/schema/notes';
+
+// Import Task-related types from tasks schema
+import type {
+  TaskStatus,
+  TaskPriority,
+} from '@hominem/db/schema/tasks';
+
+import {
+  TaskStatusSchema,
+  TaskPrioritySchema,
+} from '@hominem/db/schema/tasks';
 
 // Alias NoteOutput as Note for API backwards compatibility
 export type Note = NoteOutput;
 export type { NoteOutput };
 
 // Re-export schemas for validation
-export { NoteContentTypeSchema, TaskStatusSchema, TaskMetadataSchema, PrioritySchema };
+export { NoteContentTypeSchema, TaskStatusSchema, TaskPrioritySchema, NoteStatusSchema };
 
 // Re-export types for external consumers
-export type { TaskMetadata, TaskStatus, Priority, NoteMention, ContentTag, NoteContentType, AllContentType };
+export type { TaskStatus, TaskPriority as Priority, NoteMention, ContentTag, NoteContentType, AllContentType, NoteStatus, PublishingMetadata };
+
+// Backward compatibility alias
+export type TaskMetadata = {
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  dueDate?: string;
+};
 
 // ============================================================================
 // LIST NOTES
@@ -64,7 +79,6 @@ export type NotesCreateInput = {
   content: string;
   tags?: Array<{ value: string }>;
   mentions?: Array<{ id: string; name: string }>;
-  taskMetadata?: TaskMetadata | undefined;
   analysis?: any;
 };
 
@@ -79,7 +93,6 @@ export type NotesUpdateInput = {
   title?: string | null;
   content?: string;
   tags?: Array<{ value: string }>;
-  taskMetadata?: TaskMetadata | null | undefined;
   analysis?: any | null;
 };
 
@@ -92,6 +105,18 @@ export type NotesUpdateOutput = Note;
 export type NotesDeleteOutput = Note;
 
 // ============================================================================
+// PUBLISH NOTE
+// ============================================================================
+
+export type NotesPublishOutput = Note;
+
+// ============================================================================
+// ARCHIVE NOTE
+// ============================================================================
+
+export type NotesArchiveOutput = Note;
+
+// ============================================================================
 // SYNC NOTES
 // ============================================================================
 
@@ -102,7 +127,6 @@ export type NotesSyncItem = {
   content: string;
   tags?: Array<{ value: string }>;
   mentions?: Array<{ id: string; name: string }>;
-  taskMetadata?: TaskMetadata | null;
   analysis?: any | null;
   createdAt?: string;
   updatedAt?: string;
@@ -116,4 +140,12 @@ export type NotesSyncOutput = {
   created: number;
   updated: number;
   failed: number;
+};
+
+// ============================================================================
+// NOTE VERSIONS
+// ============================================================================
+
+export type NotesVersionsOutput = {
+  versions: Note[];
 };

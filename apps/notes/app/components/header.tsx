@@ -6,7 +6,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@hominem/ui/components/ui/dropdown-menu';
-import { Bot, Calendar, Lightbulb, LogOut, MenuIcon, Settings, Sparkles } from 'lucide-react';
+import {
+  Bot,
+  Calendar,
+  ClipboardList,
+  Lightbulb,
+  LogOut,
+  MenuIcon,
+  Settings,
+  Sparkles,
+} from 'lucide-react';
 import { useCallback } from 'react';
 import { href, Link, useNavigate } from 'react-router';
 
@@ -14,9 +23,14 @@ const APP_NAME = 'Animus';
 
 const navItems = [
   {
-    title: 'Animus',
+    title: 'Notes',
     url: '/notes',
     icon: Sparkles,
+  },
+  {
+    title: 'Tasks',
+    url: '/tasks',
+    icon: ClipboardList,
   },
   {
     title: 'AI Assistant',

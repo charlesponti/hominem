@@ -40,6 +40,12 @@
     "type-audit": "bun run scripts/type-performance.ts run-all",
     "type-perf:analyze": "bun run scripts/type-performance.ts analyze",
     "type-perf:audit": "bun run scripts/type-performance.ts audit",
+    "type-perf:diagnose": "bun run scripts/type-performance.ts diagnose",
+    "type-perf:tsserver": "bun run scripts/type-performance.ts tsserver",
+    "type-perf:graph": "bun run scripts/type-performance.ts graph",
+    "type-perf:instantiations": "bun run scripts/type-performance.ts instantiations",
+    "type-perf:dashboard": "bun run scripts/generate-dashboard.ts",
+    "type-perf:compare": "bun run scripts/compare-type-performance.ts",
     "typecheck": "turbo run typecheck"
   },
   "dependencies": {

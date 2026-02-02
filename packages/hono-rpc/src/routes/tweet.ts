@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google';
-import { ContentStrategiesService, NotFoundError, ValidationError, InternalError } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -47,39 +47,11 @@ export const tweetRoutes = new Hono<AppContext>()
       throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
     }
 
-    const { content, strategyType, strategy } = parsed.data;
-    const contentStrategiesService = new ContentStrategiesService();
+    const { content, strategy } = parsed.data;
 
-    let strategyPrompt = '';
-    let strategyName = '';
-
-    if (strategyType === 'custom') {
-      // Fetch custom strategy from database
-      const customStrategy = await contentStrategiesService.getById(strategy as string, userId);
-
-      if (!customStrategy) {
-        throw new NotFoundError('Custom content strategy not found');
-      }
-
-      strategyName = customStrategy.title;
-      strategyPrompt = `
-CUSTOM CONTENT STRATEGY: ${customStrategy.title}
-Description: ${customStrategy.description || 'No description provided'}
-
-Strategy Details:
-- Topic: ${customStrategy.strategy.topic}
-- Target Audience: ${customStrategy.strategy.targetAudience}
-- Key Insights: ${customStrategy.strategy.keyInsights?.join(', ') || 'None specified'}
-
-Apply this custom strategy when creating the tweet, focusing on the target audience and incorporating the strategic approach outlined above.`;
-    } else {
-      // Use default strategy
-      if (!strategy) {
-        throw new ValidationError('Strategy is required when strategyType is not custom');
-      }
-      strategyName = strategy as string;
-      strategyPrompt = getDefaultStrategyPrompt(strategy as string);
-    }
+    // Get strategy prompt (only default strategies now, custom strategies removed)
+    const strategyName = strategy || 'storytelling';
+    const strategyPrompt = getDefaultStrategyPrompt(strategyName);
 
     // Create system prompt based on strategy
     const systemPrompt = `You are a social media expert specializing in creating engaging Twitter content.

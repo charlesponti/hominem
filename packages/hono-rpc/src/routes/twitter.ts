@@ -3,7 +3,7 @@ import {
   getAccountByUserAndProvider,
   listAccountsByProvider,
 } from '@hominem/auth/server';
-import { ContentService } from '@hominem/notes-services';
+import { NotesService } from '@hominem/notes-services';
 import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
@@ -155,7 +155,7 @@ export const twitterRoutes = new Hono<AppContext>()
     }
 
     const { text, contentId, saveAsContent } = parsed.data;
-    const contentService = new ContentService();
+    const notesService = new NotesService();
 
     // Find user's Twitter account
     const twitterAccount = await getAccountByUserAndProvider(userId, 'twitter');
@@ -193,11 +193,11 @@ export const twitterRoutes = new Hono<AppContext>()
     const tweetData = (await tweetResponse.json()) as TwitterTweetResponse;
     const tweet = tweetData.data;
 
-    let contentRecord = null;
+    let noteRecord = null;
 
-    // Save or update content record if requested
+    // Save or update note record if requested
     if (saveAsContent) {
-      const socialMediaMetadata = {
+      const publishingMetadata = {
         platform: 'twitter',
         externalId: tweet.id,
         url: `https://x.com/${twitterAccount.providerAccountId}/status/${tweet.id}`,
@@ -205,28 +205,25 @@ export const twitterRoutes = new Hono<AppContext>()
       };
 
       if (contentId) {
-        // Update existing content
-        contentRecord = await contentService.update({
+        // Update existing note
+        noteRecord = await notesService.update({
           id: contentId,
           userId,
-          socialMediaMetadata,
+          publishingMetadata,
           status: 'published',
-          publishedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
         });
       } else {
-        // Create new content record
-        contentRecord = await contentService.create({
+        // Create new note record
+        noteRecord = await notesService.create({
           id: randomUUID(),
           type: 'tweet',
           title: `Tweet - ${new Date().toLocaleDateString()}`,
           content: text,
           status: 'published',
-          socialMediaMetadata,
+          publishingMetadata,
           userId,
-          publishedAt: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          tags: [],
+          mentions: [],
         });
       }
     }
@@ -234,14 +231,14 @@ export const twitterRoutes = new Hono<AppContext>()
     return c.json<TwitterPostOutput>({
       success: true,
       tweet: tweetData,
-      content: contentRecord,
+      content: noteRecord,
     });
   })
 
   // Sync user's tweets from Twitter
   .post('/sync', authMiddleware, async (c) => {
     const userId = c.get('userId')!;
-    const contentService = new ContentService();
+    const notesService = new NotesService();
 
     // Find user's Twitter account
     const twitterAccount = await getAccountByUserAndProvider(userId, 'twitter');
@@ -285,14 +282,14 @@ export const twitterRoutes = new Hono<AppContext>()
     }
 
     // Check which tweets already exist in our database
-    const existingTweets = await contentService.list(userId, {
+    const { notes: existingTweets } = await notesService.query(userId, {
       types: ['tweet'],
     });
 
     const existingTweetIds = new Set(
       existingTweets
         .map((row) => {
-          const metadata = row.socialMediaMetadata as {
+          const metadata = row.publishingMetadata as {
             externalId?: string;
           } | null;
           return metadata?.externalId;
@@ -300,45 +297,41 @@ export const twitterRoutes = new Hono<AppContext>()
         .filter(Boolean),
     );
 
-    // Insert new tweets as content
+    // Insert new tweets as notes
     const newTweets = tweetsData.data.filter(
       (tweet): tweet is NonNullable<(typeof tweetsData.data)[number]> =>
         !existingTweetIds.has(tweet.id),
     );
 
-    const contentToInsert = newTweets.map((tweet) => ({
-      id: randomUUID(),
-      type: 'tweet' as const,
-      title: `Tweet - ${new Date(tweet.created_at).toLocaleDateString()}`,
-      content: tweet.text,
-      status: 'published' as const,
-      userId,
-      socialMediaMetadata: {
-        platform: 'twitter',
-        externalId: tweet.id,
-        url: `https://x.com/${twitterAccount.providerAccountId}/status/${tweet.id}`,
-        publishedAt: tweet.created_at,
-        metrics: tweet.public_metrics
-          ? {
-              reposts: tweet.public_metrics.retweet_count,
-              likes: tweet.public_metrics.like_count,
-              replies: tweet.public_metrics.reply_count,
-              views: tweet.public_metrics.impression_count,
-            }
-          : undefined,
-        inReplyTo: tweet.in_reply_to_user_id,
-      },
-      publishedAt: tweet.created_at,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
-
     let insertedCount = 0;
-    if (contentToInsert.length > 0) {
-      for (const item of contentToInsert) {
-        await contentService.create(item);
+    if (newTweets.length > 0) {
+      for (const tweet of newTweets) {
+        await notesService.create({
+          id: randomUUID(),
+          type: 'tweet',
+          title: `Tweet - ${new Date(tweet.created_at).toLocaleDateString()}`,
+          content: tweet.text,
+          status: 'published',
+          userId,
+          tags: [],
+          mentions: [],
+          publishingMetadata: {
+            platform: 'twitter',
+            externalId: tweet.id,
+            url: `https://x.com/${twitterAccount.providerAccountId}/status/${tweet.id}`,
+            metrics: tweet.public_metrics
+              ? {
+                  reposts: tweet.public_metrics.retweet_count,
+                  likes: tweet.public_metrics.like_count,
+                  replies: tweet.public_metrics.reply_count,
+                  views: tweet.public_metrics.impression_count,
+                }
+              : undefined,
+            inReplyTo: tweet.in_reply_to_user_id,
+          },
+        });
+        insertedCount++;
       }
-      insertedCount = contentToInsert.length;
     }
 
     return c.json<TwitterSyncOutput>({

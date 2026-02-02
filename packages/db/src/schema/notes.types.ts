@@ -13,11 +13,9 @@ import type {
   NoteSelect,
   NoteMention,
   NoteContentType,
-  TaskStatus,
-  Priority,
-  TaskMetadata,
-  TweetMetadata,
-} from './notes.schema';
+  NoteStatus,
+  PublishingMetadata,
+} from './notes.schema'
 
 export type {
   Note,
@@ -25,18 +23,16 @@ export type {
   NoteSelect,
   NoteMention,
   NoteContentType,
-  TaskStatus,
-  Priority,
-  TaskMetadata,
-  TweetMetadata,
-};
+  NoteStatus,
+  PublishingMetadata,
+}
 
 // Legacy aliases for backward compatibility
-export type NoteOutput = Note;
-export type NoteInput = NoteInsert;
+export type NoteOutput = Note
+export type NoteInput = NoteInsert
 
-export type NoteSyncItem = Omit<Note, 'id' | 'synced' | 'createdAt' | 'updatedAt'> & {
-  id?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
+export type NoteSyncItem = Omit<Note, 'id' | 'createdAt' | 'updatedAt'> & {
+  id?: string
+  createdAt?: string
+  updatedAt?: string
+}

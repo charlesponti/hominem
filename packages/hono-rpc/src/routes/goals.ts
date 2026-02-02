@@ -1,18 +1,16 @@
 import {
-  archiveGoal,
-  createGoal,
-  deleteGoal,
-  getGoal,
-  listGoals,
-  updateGoal,
-  NotFoundError,
-  ValidationError,
-  InternalError,
-} from '@hominem/services';
+  createConsolidatedGoal,
+  getConsolidatedGoalStats,
+  updateConsolidatedGoal,
+  getConsolidatedGoalsByUser,
+  getEventById,
+  deleteEvent,
+} from '@hominem/events-services';
+import { NotFoundError, ValidationError } from '@hominem/services';
+import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
-import { zValidator } from '@hono/zod-validator';
 import {
   GoalCreateInputSchema,
   GoalUpdateInputSchema,
@@ -21,40 +19,56 @@ import {
   type GoalGetOutput,
   type GoalCreateOutput,
   type GoalUpdateOutput,
-  type GoalArchiveOutput,
   type GoalDeleteOutput,
+  type GoalStatsOutput,
   type GoalOutput,
 } from '../types/goals.types';
 
+/**
+ * Goals Routes
+ *
+ * Consolidated goals management. All goals are stored as events with type='Goal'.
+ */
 export const goalsRoutes = new Hono<AppContext>()
-  // ListOutput goals
+  // List goals
   .get('/', authMiddleware, zValidator('query', GoalListQuerySchema), async (c) => {
     const userId = c.get('userId')!;
     const query = c.req.valid('query');
 
-    const showArchived = query.showArchived === 'true';
-    const sortBy = (query.sortBy as 'priority' | 'dueDate' | 'createdAt') || 'priority';
-    const category = query.category;
-
-    const goals = await listGoals({
-      userId,
-      showArchived,
-      sortBy,
-      ...(category && { category }),
+    const goals = await getConsolidatedGoalsByUser(userId, {
+      ...(query.status && { status: query.status }),
+      ...(query.category && { category: query.category }),
+      sortBy: (query.sortBy as any) || 'priority',
     });
-    return c.json<GoalListOutput>(goals as GoalOutput[]);
+
+    return c.json<GoalListOutput>(goals as any);
   })
 
   // Get goal by ID
   .get('/:id', authMiddleware, async (c) => {
     const userId = c.get('userId')!;
-    const id = c.req.param('id');
+    const goalId = c.req.param('id');
 
-    const goal = await getGoal(id, userId);
-    if (!goal) {
-      throw new NotFoundError('GoalOutput not found');
+    const goal = await getEventById(goalId);
+    if (!goal || (goal as any).userId !== userId || (goal as any).type !== 'Goal') {
+      throw new NotFoundError('Goal not found');
     }
-    return c.json<GoalGetOutput>(goal as GoalOutput);
+
+    return c.json<GoalGetOutput>(goal as any);
+  })
+
+  // Get goal statistics
+  .get('/:id/stats', authMiddleware, async (c) => {
+    const userId = c.get('userId')!;
+    const goalId = c.req.param('id');
+
+    const goal = await getEventById(goalId);
+    if (!goal || (goal as any).userId !== userId || (goal as any).type !== 'Goal') {
+      throw new NotFoundError('Goal not found');
+    }
+
+    const stats = await getConsolidatedGoalStats(goalId, userId);
+    return c.json<GoalStatsOutput>(stats as any);
   })
 
   // Create goal
@@ -62,52 +76,61 @@ export const goalsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const data = c.req.valid('json');
 
-    const goal = await createGoal({ ...data, userId });
-    return c.json<GoalCreateOutput>(goal as GoalOutput, 201);
+    const goal = await createConsolidatedGoal(userId, {
+      title: data.title.trim(),
+      ...(data.description && { description: data.description }),
+      ...(data.targetValue && { targetValue: data.targetValue }),
+      ...(data.unit && { unit: data.unit }),
+      ...(data.goalCategory && { category: data.goalCategory }),
+      ...(data.priority && { priority: data.priority }),
+      ...(data.status && { status: data.status }),
+      milestones: data.milestones || null,
+      ...(data.tags && { tags: data.tags }),
+    });
+
+    return c.json<GoalCreateOutput>(goal as any, 201);
   })
 
   // Update goal
   .patch('/:id', authMiddleware, zValidator('json', GoalUpdateInputSchema), async (c) => {
     const userId = c.get('userId')!;
-    const id = c.req.param('id');
+    const goalId = c.req.param('id');
     const data = c.req.valid('json');
 
-    const goal = await updateGoal(id, userId, {
-      ...(data.title !== undefined && { title: data.title }),
-      ...(data.description !== undefined && { description: data.description }),
-      ...(data.goalCategory !== undefined && { goalCategory: data.goalCategory }),
-      ...(data.status !== undefined && { status: data.status }),
-      ...(data.priority !== undefined && { priority: data.priority }),
-      ...(data.startDate !== undefined && { startDate: data.startDate }),
-      ...(data.dueDate !== undefined && { dueDate: data.dueDate }),
-      ...(data.milestones !== undefined && { milestones: data.milestones }),
+    const goal = await getEventById(goalId);
+    if (!goal || (goal as any).userId !== userId || (goal as any).type !== 'Goal') {
+      throw new NotFoundError('Goal not found');
+    }
+
+    const updated = await updateConsolidatedGoal(goalId, userId, {
+      ...(data.status && { status: data.status }),
+      ...(data.title && { title: data.title }),
+      ...(data.description && { description: data.description }),
+      ...(data.priority && { priority: data.priority }),
+      milestones: data.milestones || null,
     });
-    if (!goal) {
-      throw new NotFoundError('GoalOutput not found');
-    }
-    return c.json<GoalUpdateOutput>(goal as GoalOutput);
-  })
 
-  // Archive goal
-  .post('/:id/archive', authMiddleware, async (c) => {
-    const userId = c.get('userId')!;
-    const id = c.req.param('id');
-
-    const goal = await archiveGoal(id, userId);
-    if (!goal) {
-      throw new NotFoundError('GoalOutput not found');
+    if (!updated) {
+      throw new NotFoundError('Failed to update goal');
     }
-    return c.json<GoalArchiveOutput>(goal as GoalOutput);
+
+    return c.json<GoalUpdateOutput>(updated as any);
   })
 
   // Delete goal
   .delete('/:id', authMiddleware, async (c) => {
     const userId = c.get('userId')!;
-    const id = c.req.param('id');
+    const goalId = c.req.param('id');
 
-    const goal = await deleteGoal(id, userId);
-    if (!goal) {
-      throw new NotFoundError('GoalOutput not found');
+    const goal = await getEventById(goalId);
+    if (!goal || (goal as any).userId !== userId || (goal as any).type !== 'Goal') {
+      throw new NotFoundError('Goal not found');
     }
-    return c.json<GoalDeleteOutput>(goal as GoalOutput);
+
+    const deleted = await deleteEvent(goalId);
+    if (!deleted) {
+      throw new NotFoundError('Failed to delete goal');
+    }
+
+    return c.json<GoalDeleteOutput>({ success: true, id: goalId });
   });

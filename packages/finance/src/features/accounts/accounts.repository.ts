@@ -126,7 +126,9 @@ export const AccountsRepository = {
         // Join fields
         institutionName: financialInstitutions.name,
         institutionLogo: financialInstitutions.logo,
-        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`.as('isPlaidConnected'),
+        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`.as(
+          'isPlaidConnected',
+        ),
         plaidItemStatus: plaidItems.status,
         plaidItemError: plaidItems.error,
         plaidLastSyncedAt: plaidItems.lastSyncedAt,
@@ -165,7 +167,9 @@ export const AccountsRepository = {
         updatedAt: financeAccounts.updatedAt,
         institutionName: financialInstitutions.name,
         institutionLogo: financialInstitutions.logo,
-        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`.as('isPlaidConnected'),
+        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`.as(
+          'isPlaidConnected',
+        ),
         plaidItemStatus: plaidItems.status,
         plaidItemError: plaidItems.error,
         plaidLastSyncedAt: plaidItems.lastSyncedAt,
@@ -311,7 +315,9 @@ export const AccountsRepository = {
         updatedAt: financeAccounts.updatedAt,
         institutionName: financialInstitutions.name,
         institutionLogo: financialInstitutions.logo,
-        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`.as('isPlaidConnected'),
+        isPlaidConnected: sql<boolean>` ${financeAccounts.plaidItemId} IS NOT NULL`.as(
+          'isPlaidConnected',
+        ),
         plaidItemStatus: plaidItems.status,
         plaidItemError: plaidItems.error,
         plaidLastSyncedAt: plaidItems.lastSyncedAt,

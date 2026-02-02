@@ -7,7 +7,7 @@ import { jobs, job_applications, application_stages, work_experiences } from './
 import { categories } from './categories.schema';
 import { chat, chatMessage } from './chats.schema';
 import { companies } from './company.schema';
-import { content, contentStrategies } from './content.schema';
+
 import {
   financialInstitutions,
   plaidItems,
@@ -20,6 +20,7 @@ import { item } from './items.schema';
 import { list, userLists, listInvite } from './lists.schema';
 import { movie, movieViewings } from './movies.schema';
 import { notes } from './notes.schema';
+import { tasks } from './tasks.schema';
 import { place } from './places.schema';
 import { surveys, surveyOptions, surveyVotes } from './surveys.schema';
 import { tags } from './tags.schema';
@@ -173,24 +174,6 @@ export const chatMessageRelations = relations(chatMessage, ({ one }) => ({
 // ============================================
 // CONTENT & KNOWLEDGE
 // ============================================
-
-export const contentRelations = relations(content, ({ one }) => ({
-  user: one(users, {
-    fields: [content.userId],
-    references: [users.id],
-  }),
-  contentStrategy: one(contentStrategies, {
-    fields: [content.contentStrategyId],
-    references: [contentStrategies.id],
-  }),
-}));
-
-export const contentStrategiesRelations = relations(contentStrategies, ({ one }) => ({
-  user: one(users, {
-    fields: [contentStrategies.userId],
-    references: [users.id],
-  }),
-}));
 
 export const notesRelations = relations(notes, ({ one }) => ({
   user: one(users, {

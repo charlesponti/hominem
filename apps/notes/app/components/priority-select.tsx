@@ -1,4 +1,4 @@
-import type { Priority } from '@hominem/services/types';
+import type { TaskPriority as Priority } from '@hominem/db/schema/tasks';
 
 import {
   Select,

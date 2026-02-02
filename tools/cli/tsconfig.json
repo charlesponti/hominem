@@ -1,20 +1,35 @@
 {
-  "extends": ["../../tsconfig.base.json"],
+  "extends": [
+    "../../tsconfig.base.json"
+  ],
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
     "jsx": "react-jsx",
-    "types": ["node", "bun-types"],
+    "types": [
+      "node",
+      "bun-types"
+    ],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     },
     "noEmit": true,
     "tsBuildInfoFile": "../../.cache/tool-cli.tsbuildinfo"
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "vitest.config.mts"
+  ],
   "references": [
-    { "path": "../../packages/hono-rpc" },
-    { "path": "../../packages/hono-client" }
+    {
+      "path": "../../packages/hono-rpc"
+    },
+    {
+      "path": "../../packages/hono-client"
+    }
   ],
   "exclude": [
     "node_modules",

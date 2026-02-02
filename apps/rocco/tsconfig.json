@@ -13,7 +13,14 @@
     "incremental": true,
     "tsBuildInfoFile": "../../.cache/app-rocco.tsbuildinfo"
   },
-  "include": ["app/**/*.ts", "app/**/*.tsx", ".react-router/types/**/*"],
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    ".react-router/types/**/*",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "react-router.config.ts"
+  ],
   "exclude": [
     "node_modules",
     "build",
