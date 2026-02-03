@@ -1,4 +1,4 @@
-// Deprecated: tRPC context removed
+// Deprecated: RPC context removed
 // Context is now managed by Hono middleware
 
 export interface Context {

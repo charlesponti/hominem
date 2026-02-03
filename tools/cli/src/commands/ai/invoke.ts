@@ -4,7 +4,7 @@ import { consola } from 'consola';
 import { writeFileSync } from 'node:fs';
 import ora from 'ora';
 
-import { honoClient as trpc } from '../../lib/trpc';
+import { rpc } from '../../lib/rpc';
 
 export const invokeCommand = new Command()
   .name('invoke')
@@ -17,14 +17,14 @@ export const invokeCommand = new Command()
 
     try {
       // Create a new chat for CLI and send the message via Hono RPC
-      const createRes = await (trpc as any).api.chats.$post({ json: { title: 'CLI' } });
+      const createRes = await (rpc as any).api.chats.$post({ json: { title: 'CLI' } });
       const createJson = await createRes.json();
       if (!createJson?.id) {
         throw new Error('Failed to create chat');
       }
       const chatId = createJson.id;
 
-      const sendRes = await (trpc as any).api.chats[':id'].send.$post({
+      const sendRes = await (rpc as any).api.chats[':id'].send.$post({
         param: { id: chatId },
         json: { message },
       });

@@ -1,116 +1,111 @@
-import { redis } from '@hominem/services/redis';
-import { Command } from 'commander';
-import { consola } from 'consola';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import ora from 'ora';
-import { type Browser, chromium, type Page } from 'playwright-chromium';
+import { redis } from '@hominem/services/redis'
+import { Command } from 'commander'
+import { consola } from 'consola'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import ora from 'ora'
+import * as cheerio from 'cheerio'
 
 export const command = new Command('smgrowers').description(
   'Commands for interacting with SM Growers website',
-);
+)
 
-export default command;
+export default command
 
 interface PlantLink {
-  name: string;
-  url: string;
+  name: string
+  url: string
+}
+
+async function fetchHtml(url: string): Promise<string> {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: ${response.status}`)
+  }
+  return response.text()
 }
 
 async function main() {
-  // Launch the browser
-  const browser: Browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext();
-  const page: Page = await context.newPage();
-
-  const plantQueueKey = 'plant_queue';
+  const plantQueueKey = 'plant_queue'
 
   try {
-    // Go to the plant index page
-    await page.goto('https://www.smgrowers.com/plantindx.asp', { waitUntil: 'domcontentloaded' });
-    consola.info('Loaded plant index page'); // Replaced console.log
+    // Fetch the plant index page
+    consola.info('Fetching plant index page')
+    const indexHtml = await fetchHtml('https://www.smgrowers.com/plantindx.asp')
+    const $index = cheerio.load(indexHtml)
 
     // Get all plant links
-    const plantLinks = await page.evaluate<PlantLink[]>(() => {
-      const plants: PlantLink[] = [];
-      const links = Array.from(document.querySelectorAll('td > a'));
-
-      for (const link of links) {
-        const href = link.getAttribute('href');
-        if (href?.includes('plantdisplay.asp')) {
-          if (!link.textContent) {
-            console.warn('Found a plant link with no text:', link); // Keep console.warn inside evaluate
-            continue;
-          }
-          plants.push({
-            name: link.textContent.trim(),
-            url: new URL(href, window.location.origin).href,
-          });
+    const plantLinks: PlantLink[] = []
+    $index('td > a').each((_, element) => {
+      const $link = $index(element)
+      const href = $link.attr('href')
+      if (href?.includes('plantdisplay.asp')) {
+        const text = $link.text().trim()
+        if (!text) {
+          consola.warn('Found a plant link with no text:', href)
+          return
         }
+        plantLinks.push({
+          name: text,
+          url: new URL(href, 'https://www.smgrowers.com').href,
+        })
       }
+    })
 
-      return plants;
-    });
-
-    consola.info(`Found ${plantLinks.length} plant links`); // Replaced console.log
+    consola.info(`Found ${plantLinks.length} plant links`)
 
     // Add plant links to Redis queue
     for (const plantLink of plantLinks) {
-      await redis.lpush(plantQueueKey, JSON.stringify(plantLink));
+      await redis.lpush(plantQueueKey, JSON.stringify(plantLink))
     }
 
-    const spinner = ora('Starting plant scraping').start();
+    const spinner = ora('Starting plant scraping').start()
 
     // Process plants from the queue
     while (true) {
-      const plantData = await redis.rpop(plantQueueKey);
+      const plantData = await redis.rpop(plantQueueKey)
 
       if (!plantData) {
-        spinner.succeed('All plants scraped');
-        break;
+        spinner.succeed('All plants scraped')
+        break
       }
 
-      const plant: PlantLink = JSON.parse(plantData) as PlantLink;
+      const plant: PlantLink = JSON.parse(plantData) as PlantLink
 
-      spinner.text = `Scraping: ${plant.name} - ${plant.url}`;
+      spinner.text = `Scraping: ${plant.name} - ${plant.url}`
 
       try {
-        await page.goto(plant.url, { waitUntil: 'domcontentloaded' });
+        // Fetch plant detail page
+        const plantHtml = await fetchHtml(plant.url)
+        const $plant = cheerio.load(plantHtml)
 
         // Extract plant information
-        const plantHtml = await page.evaluate(
-          ({ name }) => {
-            const table = document.querySelector("td[width='100%'][valign='top']");
-            return table?.outerHTML || `<div>Could not find table for ${name}</div>`;
-          },
-          { name: plant.name },
-        );
+        const $table = $plant("td[width='100%'][valign='top']")
+        const tableHtml = $table.length ? $table.html()! : `<div>Could not find table for ${plant.name}</div>`
 
         // Save the HTML to a file
-        const outputDir = path.join(__dirname, 'output');
+        const outputDir = path.join(process.cwd(), 'output')
         if (!fs.existsSync(outputDir)) {
-          fs.mkdirSync(outputDir, { recursive: true });
+          fs.mkdirSync(outputDir, { recursive: true })
         }
-        const fileName = `${plant.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.html`;
-        const outputPath = path.join(outputDir, fileName);
-        fs.writeFileSync(outputPath, plantHtml);
+        const fileName = `${plant.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.html`
+        const outputPath = path.join(outputDir, fileName)
+        fs.writeFileSync(outputPath, tableHtml)
 
-        spinner.text = `Saved HTML to ${outputPath}`;
+        spinner.text = `Saved HTML to ${outputPath}`
 
         // Delay to avoid hammering the server
-        await new Promise((resolve) => setTimeout(resolve, 10000));
+        await new Promise((resolve) => setTimeout(resolve, 10000))
       } catch (error) {
-        spinner.warn(`Failed to scrape ${plant.name}. Adding back to queue.`);
-        consola.error(`Scrape error for ${plant.name}: ${error}`);
+        spinner.warn(`Failed to scrape ${plant.name}. Adding back to queue.`)
+        consola.error(`Scrape error for ${plant.name}: ${error}`)
 
-        await redis.lpush(plantQueueKey, JSON.stringify(plant));
+        await redis.lpush(plantQueueKey, JSON.stringify(plant))
       }
     }
   } catch (error) {
-    consola.error('An error occurred:', error); // Replaced console.error
-  } finally {
-    await browser.close();
+    consola.error('An error occurred:', error)
   }
 }
 
-main();
+main()

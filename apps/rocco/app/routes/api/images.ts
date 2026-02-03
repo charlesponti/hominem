@@ -8,7 +8,7 @@ import type { Route } from './+types/images';
  * Canonical image proxy for Google Places media (preferred and fastest path).
  * Returns raw image bytes suitable for `<img src="/api/images?...">` and
  * keeps the Google API key on the Rocco server. This is the single supported
- * image endpoint; the tRPC image procedure has been deprecated.
+ * image endpoint; the legacy RPC image procedure has been deprecated.
  */
 export async function loader({ request }: Route.LoaderArgs) {
   const requestUrl = new URL(request.url);

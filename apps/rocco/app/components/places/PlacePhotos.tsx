@@ -9,7 +9,7 @@ type Props = {
   alt: string;
   // Raw photo references or resolved URLs
   photos?: string[] | null;
-  // Pre-proxied URLs from tRPC
+  // Pre-proxied URLs from legacy RPC (tRPC) source
   thumbnailPhotos?: string[] | null;
   fullPhotos?: string[] | null;
   placeId: string;

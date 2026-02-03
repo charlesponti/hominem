@@ -3,7 +3,7 @@ import { Badge } from '@hominem/ui/components/ui/badge';
 import { Edit, Trash2, X, Maximize2, List, RefreshCw } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 
-import type { Note } from '~/lib/trpc/notes-types';
+import type { Note } from '~/lib/rpc/notes-types';
 
 import { cn } from '~/lib/utils';
 

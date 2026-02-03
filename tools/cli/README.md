@@ -30,7 +30,7 @@ npm install
 
 ## API Server
 
-Hominem includes a powerful API server built with Hono.js and tRPC, providing a set of tools for various tasks.
+Hominem includes a powerful API server built with Hono.js and Hono RPC, providing a set of tools for various tasks.
 
 ### Starting the Server
 
@@ -79,9 +79,9 @@ Available commands:
 
 - `/` - API information
 - `/health` - Health check endpoint
-- `/trpc/*` - tRPC endpoints for notes, email masking, and finance
+- `/api/*` - RPC endpoints for notes, email masking, and finance
 
-#### tRPC Endpoints
+#### RPC Endpoints
 
 ##### Notes
 - `notes.list` - List all notes

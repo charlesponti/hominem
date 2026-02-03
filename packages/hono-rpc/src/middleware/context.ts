@@ -19,7 +19,7 @@ import type { AppContext } from './auth';
 export const contextMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const responseHeaders = new Headers();
 
-  // Initialize queues (matching tRPC context)
+  // Initialize queues (matching legacy tRPC context)
   const queues =
     process.env.NODE_ENV === 'test'
       ? {

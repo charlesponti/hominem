@@ -7,12 +7,12 @@ import { useState } from 'react';
 /**
  * Hono RPC Provider
  * Provides query client for API interactions
- * Individual route handlers will use the honoClient directly
+ * Individual route handlers should use the Hono RPC client directly
  */
-export function TRPCProvider({ children }: { children: React.ReactNode }) {
+export function RPCProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
   // Auth context available via useSupabaseAuthContext
-  // API client available via honoClient from @/lib/trpc/client
+  // API client available via `honoClient` from ./client
 
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

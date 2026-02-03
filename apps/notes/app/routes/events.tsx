@@ -12,7 +12,7 @@ import { data, useNavigate } from 'react-router';
 
 import { getServerSession } from '~/lib/auth.server';
 import i18n from '~/lib/i18n';
-import { createServerHonoClient } from '~/lib/trpc/server';
+import { createServerHonoClient } from '~/lib/rpc/server';
 
 import type { Route } from './+types/events';
 

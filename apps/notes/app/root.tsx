@@ -22,7 +22,7 @@ import type { Route } from './+types/root';
 import './globals.css';
 import { authConfig, getServerSession } from './lib/auth.server';
 import './lib/i18n';
-import { TRPCProvider } from './lib/trpc';
+import { RPCProvider } from './lib/rpc';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { session, headers } = await getServerSession(request);
@@ -90,11 +90,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
       config={supabaseEnv}
       onAuthEvent={handleAuthEvent}
     >
-      <TRPCProvider>
+      <RPCProvider>
         <FeatureFlagsProvider>
           <Outlet />
         </FeatureFlagsProvider>
-      </TRPCProvider>
+      </RPCProvider>
     </SupabaseAuthProvider>
   );
 }
