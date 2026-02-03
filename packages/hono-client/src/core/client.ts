@@ -1,9 +1,7 @@
-export type HonoClient = { api: any };
-export type HonoClientInstance = HonoClient;
+import type { HonoClientOptions, HonoClientType } from '@hominem/hono-rpc/client';
 
-export type HonoClientOptions = {
-  fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
-};
+export type HonoClientInstance = HonoClientType;
+export type HonoClient = HonoClientInstance;
 
 export type CreateClient = (baseUrl: string, options?: HonoClientOptions) => HonoClientInstance;
 

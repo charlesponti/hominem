@@ -1,5 +1,5 @@
 # Base stage with common tools
-FROM oven/bun:1.1.38-debian AS base
+FROM oven/bun:1.3.0-debian AS base
 WORKDIR /app
 
 # Install necessary tools (only what's absolutely needed)
@@ -39,12 +39,13 @@ WORKDIR /app
 
 # Copy the pruned lockfile and package.json files
 COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/bunfig.toml ./bunfig.toml
 
 # Install only production dependencies (skip prepare scripts since source files aren't copied yet)
 RUN bun install --production --frozen-lockfile --ignore-scripts
 
 # Production stage
-FROM oven/bun:1.1.38-debian AS release
+FROM oven/bun:1.3.0-debian AS release
 WORKDIR /app
 ENV NODE_ENV=production
 ENV TURBO_TELEMETRY_DISABLED=1

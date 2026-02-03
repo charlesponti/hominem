@@ -26,7 +26,6 @@
     "ai": "^4.3.16",
     "bullmq": "5.66.4",
     "dotenv": "17.2.3",
-    "drizzle-orm": "0.45.1",
     "effect": "^3.16.10",
     "ioredis": "5.8.2",
     "mailparser": "^3.7.2",
@@ -38,6 +37,10 @@
   "devDependencies": {
     "@types/mailparser": "^3.4.5",
     "@types/pdf-parse": "^1.1.5",
+    "drizzle-orm": "0.45.1",
     "vitest": "4.0.16"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "0.45.1"
   }
 }

@@ -216,7 +216,6 @@
         "cli-progress": "^3.12.0",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
-        "drizzle-orm": "0.45.1",
         "framer-motion": "^12.24.10",
         "googleapis": "^170.0.0",
         "ioredis": "5.8.2",
@@ -251,6 +250,7 @@
         "@vitest/coverage-v8": "4.0.16",
         "autoprefixer": "^10.4.23",
         "dotenv": "17.2.3",
+        "drizzle-orm": "0.45.1",
         "msw": "^2.12.7",
         "rollup-plugin-visualizer": "6.0.5",
         "sharp": "^0.32.4",
@@ -262,6 +262,9 @@
         "vite": "7.3.0",
         "vite-tsconfig-paths": "6.0.3",
         "vitest": "4.0.16",
+      },
+      "peerDependencies": {
+        "drizzle-orm": "0.45.1",
       },
     },
     "packages/ai": {
@@ -370,13 +373,16 @@
       "dependencies": {
         "@hominem/db": "workspace:*",
         "@hominem/services": "workspace:*",
-        "drizzle-orm": "0.45.1",
         "zod": "4.3.6",
       },
       "devDependencies": {
         "@types/node": "^22.18.13",
+        "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
+      },
+      "peerDependencies": {
+        "drizzle-orm": "0.45.1",
       },
     },
     "packages/finance": {
@@ -479,13 +485,16 @@
         "@hominem/db": "workspace:*",
         "@hominem/lists-services": "workspace:*",
         "@hominem/services": "workspace:*",
-        "drizzle-orm": "0.45.1",
         "zod": "4.3.6",
       },
       "devDependencies": {
         "@types/node": "^22.18.13",
+        "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
+      },
+      "peerDependencies": {
+        "drizzle-orm": "0.45.1",
       },
     },
     "packages/jobs": {
@@ -496,14 +505,17 @@
         "@hominem/services": "workspace:*",
         "@hominem/utils": "workspace:*",
         "bullmq": "5.66.4",
-        "drizzle-orm": "0.45.1",
         "ioredis": "5.8.2",
         "zod": "4.3.6",
       },
       "devDependencies": {
         "@types/node": "^22.18.13",
+        "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
+      },
+      "peerDependencies": {
+        "drizzle-orm": "0.45.1",
       },
     },
     "packages/lists": {
@@ -514,13 +526,16 @@
         "@hominem/services": "workspace:*",
         "@hominem/utils": "workspace:*",
         "ai": "^4.3.16",
-        "drizzle-orm": "0.45.1",
         "zod": "4.3.6",
       },
       "devDependencies": {
         "@types/node": "^22.18.13",
+        "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
+      },
+      "peerDependencies": {
+        "drizzle-orm": "0.45.1",
       },
     },
     "packages/notes": {
@@ -550,15 +565,18 @@
         "@hominem/db": "workspace:*",
         "@hominem/services": "workspace:*",
         "@hominem/utils": "workspace:*",
-        "drizzle-orm": "0.45.1",
         "googleapis": "^170.0.0",
         "sharp": "^0.32.4",
         "zod": "4.3.6",
       },
       "devDependencies": {
         "@types/node": "^22.18.13",
+        "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
+      },
+      "peerDependencies": {
+        "drizzle-orm": "0.45.1",
       },
     },
     "packages/services": {
@@ -752,7 +770,6 @@
         "ai": "^4.3.16",
         "bullmq": "5.66.4",
         "dotenv": "17.2.3",
-        "drizzle-orm": "0.45.1",
         "effect": "^3.16.10",
         "ioredis": "5.8.2",
         "mailparser": "^3.7.2",
@@ -764,7 +781,11 @@
       "devDependencies": {
         "@types/mailparser": "^3.4.5",
         "@types/pdf-parse": "^1.1.5",
+        "drizzle-orm": "0.45.1",
         "vitest": "4.0.16",
+      },
+      "peerDependencies": {
+        "drizzle-orm": "0.45.1",
       },
     },
     "tools/cli": {
