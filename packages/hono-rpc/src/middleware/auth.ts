@@ -1,15 +1,15 @@
 import type { HominemUser } from '@hominem/auth/server';
 import type { Queues } from '@hominem/services/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { UnauthorizedError } from '@hominem/services';
 
+import { UnauthorizedError } from '@hominem/services';
 import { createMiddleware } from 'hono/factory';
 
 /**
  * Application Context
  *
  * This defines the context available to all route handlers.
- * Much simpler than tRPC's context system.
+ * Much simpler than the previous context system.
  */
 export interface AppContext {
   Variables: {

@@ -9,7 +9,7 @@ import type { AppContext } from './auth';
 /**
  * Context Setup Middleware
  *
- * Runs on EVERY request to initialize context (like tRPC's createContext).
+ * Runs on EVERY request to initialize context (similar to previous createContext patterns).
  * Sets up:
  * - User authentication from Supabase
  * - Queue system for background jobs
@@ -19,7 +19,7 @@ import type { AppContext } from './auth';
 export const contextMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const responseHeaders = new Headers();
 
-  // Initialize queues (matching legacy tRPC context)
+  // Initialize queues (matching legacy RPC context)
   const queues =
     process.env.NODE_ENV === 'test'
       ? {
@@ -31,7 +31,7 @@ export const contextMiddleware = createMiddleware<AppContext>(async (c, next) =>
 
   c.set('queues', queues);
 
-  // Test override for user (matching tRPC pattern)
+  // Test override for user (matching legacy RPC pattern)
   if (process.env.NODE_ENV === 'test') {
     const testUserId = c.req.header('x-user-id');
     if (testUserId) {

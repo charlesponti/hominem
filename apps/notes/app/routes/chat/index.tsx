@@ -9,9 +9,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return redirect('/', { headers });
   }
 
-  const trpcClient = createServerHonoClient(session.access_token);
+  const rpcClient = createServerHonoClient(session.access_token);
 
-  const res = await trpcClient.api.chats.$get({ query: { limit: '1' } });
+  const res = await rpcClient.api.chats.$get({ query: { limit: '1' } });
   const result = await res.json();
 
   if (Array.isArray(result) && result.length > 0) {
@@ -21,7 +21,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   }
 
-  const createRes = await trpcClient.api.chats.$post({
+  const createRes = await rpcClient.api.chats.$post({
     json: { title: 'New Chat' },
   });
   const createResult = await createRes.json();

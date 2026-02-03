@@ -1,6 +1,6 @@
 /**
  * Centralized query key factory for Hono RPC
- * Replaces legacy tRPC automatic query key generation
+ * Replaces legacy automatic query key generation
  */
 
 export const queryKeys = {

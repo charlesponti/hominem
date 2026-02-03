@@ -1,4 +1,4 @@
-// Deprecated REST endpoint - replaced by tRPC `events.people` router
+// Deprecated REST endpoint - replaced by RPC `events.people` router
 export async function loader() {
   return new Response('Not Found', { status: 404 });
 }

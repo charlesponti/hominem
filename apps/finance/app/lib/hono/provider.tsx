@@ -6,8 +6,8 @@ import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
 /**
  * Hono RPC Provider for Finance App
  *
- * Replaces TRPCProvider with much simpler and faster setup.
- * Performance: 84% faster type-checking compared to tRPC!
+ * Replaces the old TRPCProvider with a simpler, faster RPC-based setup.
+ * Performance: 84% faster type-checking compared to the previous implementation!
  */
 export function HonoProvider({ children }: { children: any }) {
   const { supabase } = useSupabaseAuthContext();

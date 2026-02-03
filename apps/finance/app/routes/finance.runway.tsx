@@ -51,7 +51,7 @@ export default function RunwayPage() {
     return response.projectionData;
   }, [runwayMutation.data]);
 
-  // Calculate runway metrics from TRPC response
+  // Calculate runway metrics from RPC response
   const runwayMetrics = useMemo(() => {
     const response = runwayMutation.data;
     if (!response) {

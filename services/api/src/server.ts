@@ -81,7 +81,7 @@ export function createServer() {
   // Authentication middleware
   app.use('*', supabaseMiddleware());
 
-  // tRPC routes deprecated - using Hono RPC instead
+  // RPC routes deprecated - using Hono RPC instead
 
   // Register Hono RPC routes
   // Note: honoRpcApp already includes /api prefix in its routes (e.g., /api/finance, /api/lists)

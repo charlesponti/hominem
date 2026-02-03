@@ -2,7 +2,7 @@ import type { SearchResponse, SearchResult } from './types';
 
 export async function performWebSearch(query: string): Promise<SearchResponse> {
   try {
-    // Using legacy tRPC HTTP format for utility functions
+    // Using legacy RPC HTTP format for utility functions
     const response = await fetch('/api/searchOperations.search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -17,7 +17,7 @@ export async function performWebSearch(query: string): Promise<SearchResponse> {
 
     const result = await response.json();
 
-    // Handle tRPC response format
+    // Handle legacy RPC response format
     if (result.result?.data) {
       const searchData = result.result.data as SearchResponse;
 

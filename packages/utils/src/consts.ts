@@ -32,7 +32,7 @@ export const QUEUE_NAMES = {
   /**
    * Queue for Google Calendar synchronization jobs
    * Used by:
-   * - apps/api/src/trpc/routers/events.ts (adding jobs)
+   * - apps/api/src/rpc/routers/events.ts (adding jobs)
    * - apps/workers/src/google-calendar-sync-worker.ts (processing jobs)
    */
   GOOGLE_CALENDAR_SYNC: 'google-calendar-sync',

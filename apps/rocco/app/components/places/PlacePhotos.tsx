@@ -9,7 +9,7 @@ type Props = {
   alt: string;
   // Raw photo references or resolved URLs
   photos?: string[] | null;
-  // Pre-proxied URLs from legacy RPC (tRPC) source
+  // Pre-proxied URLs from legacy RPC source
   thumbnailPhotos?: string[] | null;
   fullPhotos?: string[] | null;
   placeId: string;
@@ -20,7 +20,7 @@ const PlacePhotos = ({ alt, photos, thumbnailPhotos, fullPhotos, placeId }: Prop
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
-  // Fallback to raw photos if display urls aren't provided (unlikely with latest trpc)
+  // Fallback to raw photos if display urls aren't provided (unlikely with latest RPC implementation)
   const displayPhotos = thumbnailPhotos || photos || [];
   const lightboxPhotos = fullPhotos || photos || [];
 

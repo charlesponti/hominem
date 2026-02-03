@@ -1,4 +1,4 @@
-// Deprecated REST endpoint - replaced by tRPC `events.tags` router
+// Deprecated REST endpoint - replaced by RPC `events.tags` router
 export async function loader() {
   return new Response('Not Found', { status: 404 });
 }

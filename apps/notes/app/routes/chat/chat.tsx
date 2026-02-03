@@ -12,8 +12,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   try {
-    const trpcClient = createServerHonoClient(session.access_token);
-    const { chatId } = await getOrCreateChat(trpcClient);
+    const rpcClient = createServerHonoClient(session.access_token);
+    const { chatId } = await getOrCreateChat(rpcClient);
     return redirect(`/chat/${chatId}`, { headers });
   } catch (error) {
     // Convert LoaderError (or subclasses) to Response
