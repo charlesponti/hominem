@@ -25,7 +25,7 @@ import type {
   PlaceGetMyVisitsOutput,
   PlaceGetPlaceVisitsOutput,
   PlaceGetVisitStatsOutput,
-} from '@hominem/hono-rpc/types';
+} from '@hominem/hono-rpc/types/places.types';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 

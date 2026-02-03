@@ -5,7 +5,7 @@ import type {
   ItemsRemoveFromListInput,
   ItemsRemoveFromListOutput,
   ItemsGetByListIdOutput,
-} from '@hominem/hono-rpc/types';
+} from '@hominem/hono-rpc/types/items.types';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 

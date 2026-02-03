@@ -6,7 +6,7 @@ import type {
   TripsCreateOutput,
   TripsAddItemInput,
   TripsAddItemOutput,
-} from '@hominem/hono-rpc/types';
+} from '@hominem/hono-rpc/types/trips.types';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 

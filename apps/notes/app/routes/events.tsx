@@ -1,9 +1,6 @@
 // import { createServerCallerWithToken } from '@hominem/hono-client/ssr'; // redundant if we use createServerHonoClient
-import type {
-  PeopleListOutput,
-  EventsListOutput,
-  EventsCreateInput,
-} from '@hominem/hono-rpc/types';
+import type { EventsCreateInput, EventsListOutput } from '@hominem/hono-rpc/types/events.types';
+import type { PeopleListOutput } from '@hominem/hono-rpc/types/people.types';
 
 import { ActiveFiltersBar, FilterSelect } from '@hominem/ui/filters';
 import { useSort, useUrlFilters } from '@hominem/ui/hooks';

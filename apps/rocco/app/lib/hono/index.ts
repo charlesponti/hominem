@@ -21,6 +21,3 @@ export {
 } from '@hominem/hono-client/react';
 
 export { queryKeys } from '../query-keys';
-
-// Re-export types
-export type * from '@hominem/hono-rpc/types';

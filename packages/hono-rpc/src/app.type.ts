@@ -18,6 +18,3 @@ import type { app } from './app';
  * NOTE: This type is expensive to compute; import sparingly.
  */
 export type AppType = typeof app;
-
-// Re-export for backward compatibility
-export type { app };

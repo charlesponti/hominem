@@ -6,7 +6,7 @@ import type {
   TwitterPostOutput,
   TwitterSyncOutput,
   TwitterPostInput,
-} from '@hominem/hono-rpc/types';
+} from '@hominem/hono-rpc/types/twitter.types';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 

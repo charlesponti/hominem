@@ -11,6 +11,9 @@ export type {
   NotesSyncItem,
   NotesSyncInput,
   NotesSyncOutput,
+} from '@hominem/hono-rpc/types/notes.types';
+
+export type {
   GoalListOutput,
   GoalGetOutput,
   GoalCreateInput,
@@ -20,4 +23,4 @@ export type {
   GoalDeleteOutput,
   GoalArchiveOutput,
   Goal,
-} from '@hominem/hono-rpc/types';
+} from '@hominem/hono-rpc/types/goals.types';

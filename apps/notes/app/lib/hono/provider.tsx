@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { useSupabaseAuthContext } from '@hominem/auth';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
+import { createHonoClient } from '@hominem/hono-rpc/client';
 
 import { getQueryClient } from '~/lib/get-query-client';
 
@@ -23,6 +24,7 @@ export function HonoProvider({ children }: { children: ReactNode }) {
       queryClient={queryClient}
       config={{
         baseUrl: import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:3000',
+        createClient: createHonoClient,
         getAuthToken: async () => {
           try {
             const { data } = await supabase.auth.getSession();

@@ -10,7 +10,7 @@ import type {
   NotesDeleteOutput,
   NotesSyncInput,
   NotesSyncOutput,
-} from '@hominem/hono-rpc/types';
+} from '@hominem/hono-rpc/types/notes.types';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 

@@ -24,25 +24,19 @@ export type { AppType } from './app.type';
  * Routes - re-exported for convenience
  */
 import { adminRoutes } from './routes/admin';
+import { chatsRoutes } from './routes/chats';
 import { financeRoutes } from './routes/finance';
-// Finance Sub-routers for granular type inference
-import { accountsRoutes } from './routes/finance.accounts';
-import { analyzeRoutes } from './routes/finance.analyze';
-import { budgetRoutes } from './routes/finance.budget';
-import { categoriesRoutes } from './routes/finance.categories';
-import { transactionsRoutes } from './routes/finance.transactions';
+import { goalsRoutes } from './routes/goals';
+import { habitsRoutes } from './routes/habits';
+import { healthRoutes } from './routes/health';
 import { invitesRoutes } from './routes/invites';
 import { itemsRoutes } from './routes/items';
 import { listsRoutes } from './routes/lists';
+import { messagesRoutes } from './routes/messages';
 import { peopleRoutes } from './routes/people';
 import { placesRoutes } from './routes/places';
 import { tripsRoutes } from './routes/trips';
 import { userRoutes } from './routes/user';
-import { goalsRoutes } from './routes/goals';
-import { habitsRoutes } from './routes/habits';
-import { healthRoutes } from './routes/health';
-import { chatsRoutes } from './routes/chats';
-import { messagesRoutes } from './routes/messages';
 
 export {
   adminRoutes,
@@ -62,40 +56,6 @@ export {
 };
 
 /**
- * 🚀 PERFORMANCE OPTIMIZED: Granular Route Types
- *
- * Use these instead of AppType when inferring types for specific domains.
- * This prevents TypeScript from checking the entire massive API tree.
- */
-export type AdminType = typeof adminRoutes;
-export type FinanceType = typeof financeRoutes;
-export type InvitesType = typeof invitesRoutes;
-export type ItemsType = typeof itemsRoutes;
-export type ListsType = typeof listsRoutes;
-export type PeopleType = typeof peopleRoutes;
-export type PlacesType = typeof placesRoutes;
-export type TripsType = typeof tripsRoutes;
-export type UserType = typeof userRoutes;
-export type GoalsType = typeof goalsRoutes;
-export type HabitsType = typeof habitsRoutes;
-export type HealthType = typeof healthRoutes;
-export type ChatsType = typeof chatsRoutes;
-export type MessagesType = typeof messagesRoutes;
-
-/**
- * 🎯 Finance Sub-Router Types
- *
- * Using these for inference in finance-heavy views dramatically reduces
- * type instantiation depth and avoids "Type instantiation is excessively deep" errors.
- */
-export type FinanceAccountsType = typeof accountsRoutes;
-export type FinanceAnalyzeType = typeof analyzeRoutes;
-export type FinanceBudgetType = typeof budgetRoutes;
-export type FinanceCategoriesType = typeof categoriesRoutes;
-export type FinanceTransactionsType = typeof transactionsRoutes;
-
-/**
- * Types - re-exported for convenience
+ * Types - import directly from @hominem/hono-rpc/types
  */
 export type { AppContext };
-export * from './types';

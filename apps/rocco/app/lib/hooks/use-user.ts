@@ -1,5 +1,5 @@
 import type { HonoClient } from '@hominem/hono-client';
-import type { UserDeleteAccountOutput } from '@hominem/hono-rpc/types';
+import type { UserDeleteAccountOutput } from '@hominem/hono-rpc/types/user.types';
 
 import { useHonoMutation } from '@hominem/hono-client/react';
 

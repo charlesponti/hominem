@@ -1,4 +1,4 @@
-import type { ChatMessage } from '@hominem/hono-rpc/types';
+import type { ChatMessage } from '@hominem/hono-rpc/types/chat.types';
 
 // Message types from Hono RPC API response
 export type MessageFromQuery = ChatMessage;

@@ -1,5 +1,5 @@
 import type { HonoClient } from '@hominem/hono-client';
-import type { TweetGenerateInput, TweetGenerateOutput } from '@hominem/hono-rpc/types';
+import type { TweetGenerateInput, TweetGenerateOutput } from '@hominem/hono-rpc/types/tweet.types';
 
 import { useHonoMutation } from '@hominem/hono-client/react';
 import { useToast } from '@hominem/ui';

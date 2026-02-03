@@ -3,7 +3,7 @@ import type {
   PeopleListOutput,
   PeopleCreateInput,
   PeopleCreateOutput,
-} from '@hominem/hono-rpc/types';
+} from '@hominem/hono-rpc/types/people.types';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 

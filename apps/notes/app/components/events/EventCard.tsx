@@ -1,4 +1,4 @@
-import type { Person } from '@hominem/hono-rpc/types';
+import type { Person } from '@hominem/hono-rpc/types/people.types';
 import type React from 'react';
 
 import { Button } from '@hominem/ui/components/ui/button';

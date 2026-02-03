@@ -1,5 +1,5 @@
 import type { HonoClient } from '@hominem/hono-client';
-import type { ChatsListOutput } from '@hominem/hono-rpc/types';
+import type { ChatsListOutput } from '@hominem/hono-rpc/types/chat.types';
 
 import { useHonoQuery } from '@hominem/hono-client/react';
 import { Button } from '@hominem/ui/button';

@@ -14,7 +14,7 @@ import type {
   ListGetContainingPlaceOutput,
   ListRemoveCollaboratorInput,
   ListRemoveCollaboratorOutput,
-} from '@hominem/hono-rpc/types';
+} from '@hominem/hono-rpc/types/lists.types';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 

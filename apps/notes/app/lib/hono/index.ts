@@ -11,6 +11,3 @@ export {
   useHonoQuery,
   useHonoMutation,
 } from '@hominem/hono-client/react';
-
-// Re-export types
-export type * from '@hominem/hono-rpc/types';

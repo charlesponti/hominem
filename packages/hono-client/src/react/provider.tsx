@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 
-import { HonoClient, type ClientConfig } from '../core/client';
+import { createHonoClient, type ClientConfig } from '../core/client';
 import { HonoClientContext } from './context';
 
 export interface HonoProviderProps {
@@ -28,7 +28,7 @@ export function HonoProvider({
       }),
   );
 
-  const [honoClient] = useState(() => new HonoClient(config));
+  const [honoClient] = useState(() => createHonoClient(config));
 
   return (
     <HonoClientContext.Provider value={honoClient}>

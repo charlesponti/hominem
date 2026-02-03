@@ -4,7 +4,7 @@ import type {
   ChatsSendOutput,
   ChatMessage,
   ChatsGetMessagesOutput,
-} from '@hominem/hono-rpc/types';
+} from '@hominem/hono-rpc/types/chat.types';
 
 import { useHonoMutation, useHonoUtils } from '@hominem/hono-client/react';
 import { useRef } from 'react';

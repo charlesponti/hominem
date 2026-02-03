@@ -1,5 +1,5 @@
 import type { HonoClient } from '@hominem/hono-client';
-import type { ChatsUpdateOutput } from '@hominem/hono-rpc/types';
+import type { ChatsUpdateOutput } from '@hominem/hono-rpc/types/chat.types';
 
 import { useHonoMutation } from '@hominem/hono-client/react';
 import { useQueryClient } from '@tanstack/react-query';

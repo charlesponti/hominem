@@ -7,7 +7,7 @@
  * avoiding cross-package type depth limits.
  */
 
-import type { hc } from 'hono/client';
+import { hc } from 'hono/client';
 import type { AppType } from './app.type';
 
 /**
@@ -21,3 +21,9 @@ import type { AppType } from './app.type';
  * all API routes and methods with full type safety.
  */
 export type HonoClientType = ReturnType<typeof hc<AppType>>;
+
+export type HonoClientOptions = Parameters<typeof hc>[1];
+
+export function createHonoClient(baseUrl: string, options?: HonoClientOptions): HonoClientType {
+  return hc<AppType>(baseUrl, options);
+}

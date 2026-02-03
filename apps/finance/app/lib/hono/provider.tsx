@@ -2,6 +2,7 @@ import type React from 'react';
 
 import { useSupabaseAuthContext } from '@hominem/auth';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
+import { createHonoClient } from '@hominem/hono-rpc/client';
 
 /**
  * Hono RPC Provider for Finance App
@@ -16,6 +17,7 @@ export function HonoProvider({ children }: { children: any }) {
     <BaseHonoProvider
       config={{
         baseUrl: import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:4040',
+        createClient: createHonoClient,
         getAuthToken: async () => {
           const {
             data: { session },

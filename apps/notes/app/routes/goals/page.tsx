@@ -1,4 +1,4 @@
-import type { Goal } from '@hominem/hono-rpc/types';
+import type { Goal } from '@hominem/hono-rpc/types/goals.types';
 
 import { PageTitle } from '@hominem/ui';
 import { useToast } from '@hominem/ui';

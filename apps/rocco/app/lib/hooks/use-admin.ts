@@ -2,7 +2,7 @@ import type { HonoMutationOptions } from '@hominem/hono-client/react';
 import type {
   AdminRefreshGooglePlacesInput,
   AdminRefreshGooglePlacesOutput,
-} from '@hominem/hono-rpc/types';
+} from '@hominem/hono-rpc/types/admin.types';
 
 import { useHonoMutation } from '@hominem/hono-client/react';
 

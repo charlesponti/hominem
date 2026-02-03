@@ -3,7 +3,7 @@ import type {
   ChatsGetMessagesOutput,
   MessagesDeleteOutput,
   MessagesUpdateOutput,
-} from '@hominem/hono-rpc/types';
+} from '@hominem/hono-rpc/types/chat.types';
 import type React from 'react';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
