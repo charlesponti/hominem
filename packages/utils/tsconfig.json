@@ -5,6 +5,8 @@
     "rootDir": "src",
     "outDir": "./build",
     "composite": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["node"],
     "tsBuildInfoFile": "../../.cache/utils.tsbuildinfo",
     "sourceMap": false,
     "declarationMap": true

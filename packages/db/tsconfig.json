@@ -4,6 +4,7 @@
     "baseUrl": ".",
     "rootDir": "src",
     "outDir": "./build",
+    "types": ["node"],
     "composite": true,
     "tsBuildInfoFile": "../../.cache/db.tsbuildinfo",
     "sourceMap": false,

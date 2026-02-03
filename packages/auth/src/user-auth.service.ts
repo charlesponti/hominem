@@ -20,6 +20,19 @@ export class UserAuthService {
       .limit(1);
 
     if (existing) {
+      if (existing.supabaseId !== supabaseId) {
+        const [updated] = await db
+          .update(users)
+          .set({
+            supabaseId,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(users.id, existing.id))
+          .returning();
+
+        return updated ?? existing;
+      }
+
       return existing;
     }
 
@@ -34,20 +47,32 @@ export class UserAuthService {
 
     const now = new Date().toISOString();
 
-    const [created] = await db
-      .insert(users)
-      .values({
-        id: crypto.randomUUID(),
-        supabaseId,
-        email,
-        name: name ?? null,
-        image,
-        isAdmin: supabaseUser.app_metadata?.isAdmin ?? false,
-        createdAt: supabaseUser.created_at ?? now,
-        updatedAt: supabaseUser.updated_at ?? supabaseUser.created_at ?? now,
-      })
-      .onConflictDoNothing({ target: users.supabaseId })
-      .returning();
+    const insertQuery = db.insert(users).values({
+      id: crypto.randomUUID(),
+      supabaseId,
+      email,
+      name: name ?? null,
+      image,
+      isAdmin: supabaseUser.app_metadata?.isAdmin ?? false,
+      createdAt: supabaseUser.created_at ?? now,
+      updatedAt: supabaseUser.updated_at ?? supabaseUser.created_at ?? now,
+    });
+
+    const insertWithConflict = email
+      ? insertQuery.onConflictDoUpdate({
+          target: users.email,
+          set: {
+            supabaseId,
+            email,
+            name: name ?? null,
+            image,
+            isAdmin: supabaseUser.app_metadata?.isAdmin ?? false,
+            updatedAt: supabaseUser.updated_at ?? supabaseUser.created_at ?? now,
+          },
+        })
+      : insertQuery.onConflictDoNothing();
+
+    const [created] = await insertWithConflict.returning();
 
     // If insert returned nothing (race), fetch again
     if (!created) {

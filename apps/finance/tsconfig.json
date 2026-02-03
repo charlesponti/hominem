@@ -1,5 +1,5 @@
 {
-  "extends": ["../../tsconfig.base.json"],
+  "extends": ["../../tsconfig.base.web.json"],
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
@@ -14,7 +14,13 @@
     "skipLibCheck": true,
     "maxNodeModuleJsDepth": 0
   },
-  "include": ["app/**/*", ".react-router/types/**/*", "vite.config.ts", "vitest.config.ts"],
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    ".react-router/types/**/*",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ],
   "exclude": [
     "node_modules",
     "build",

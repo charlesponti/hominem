@@ -1,29 +1,17 @@
 {
-  "extends": [
-    "../../tsconfig.base.json"
-  ],
+  "extends": ["../../tsconfig.base.json"],
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     },
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "noEmit": true,
     "incremental": true,
     "tsBuildInfoFile": "../../.cache/service-api.tsbuildinfo"
   },
-  "include": [
-    "src/**/*.ts",
-    "test/**/*.ts",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "vitest.config.mts"
-  ],
+  "include": ["src/**/*.ts", "vitest.config.mts"],
   "exclude": [
     "node_modules",
     "dist",
@@ -31,6 +19,9 @@
     ".turbo",
     ".cache",
     "coverage",
+    "test",
+    "**/*.test.ts",
+    "**/*.spec.ts",
     "**/__tests__",
     "**/__mocks__",
     "*.tsbuildinfo",

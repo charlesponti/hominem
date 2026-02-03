@@ -15,9 +15,9 @@ Always run commands from the monorepo root. Do NOT `cd` into packages.
 | **Typecheck** | `bun run typecheck` |
 | **Lint/Format** | `bun run lint --parallel` / `bun run format` |
 | **Safety Check** | `bun run check` (Lint + Typecheck + Test) |
-| **Type Audit** | `bun run type-perf:audit` |
-| **Type Dashboard** | `bun run type-perf:dashboard -- --audit-first --open` |
-| **Type Diagnosis** | `bun run type-perf:diagnose -- --package <pkg>` |
+| **Type Performance (Audit)** | `bun run type-performance:audit` |
+| **Type Performance (Dashboard)** | `bun run type-performance:dashboard -- --audit-first --open` |
+| **Type Performance (Diagnose)** | `bun run type-performance:diagnose -- --package <pkg>` |
 
 ## Project Structure
 
@@ -57,11 +57,11 @@ Always run commands from the monorepo root. Do NOT `cd` into packages.
 - **Type Imports**: Use `import type { ... }` separately from logic imports.
 - **Definitions**: Use `interface` for object shapes, `type` for unions/primitives/intersections.
 - **Utility Types**: Leverage `Pick<T, K>`, `Omit<T, K>`, `Partial<T>`, and `Record<K, V>`.
-- Use `type-audit` tool for performance checks:
-  - `bun run type-perf:audit -- --graph` - Full audit with dependency analysis
-  - `bun run type-perf:diagnose -- --package <pkg>` - Detailed package analysis
-  - `bun run type-perf:dashboard -- --audit-first --open` - Interactive HTML dashboard
-  - `bun run type-perf:tsserver -- --logfile <path>` - IDE performance analysis
+- Use the `type-performance` tool for performance checks (audit mode):
+  - `bun run type-performance:audit -- --graph` - Full audit with dependency analysis
+  - `bun run type-performance:diagnose -- --package <pkg>` - Detailed package analysis
+  - `bun run type-performance:dashboard -- --audit-first --open` - Interactive HTML dashboard
+  - `bun run type-performance:tsserver -- --logfile <path>` - IDE performance analysis
 
 ### Error Handling
 
@@ -144,4 +144,4 @@ For specialized guidelines, refer to:
 - `.github/instructions/api.instructions.md` - Hono & tRPC development.
 - `.github/instructions/database.instructions.md` - Drizzle best practices.
 - `.github/skills/ready-for-prod/SKILL.md` - Final production checklist.
-- `.github/skills/type-audit/SKILL.md` - Diagnosing TypeScript performance issues.
+- `.github/skills/type-audit/SKILL.md` - Diagnosing TypeScript performance issues (type-performance tool).

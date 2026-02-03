@@ -1,5 +1,5 @@
 {
-  "extends": ["../../tsconfig.base.json"],
+  "extends": ["../../tsconfig.base.web.json"],
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": ".",
@@ -10,16 +10,16 @@
       "~/*": ["./app/*"]
     },
     "noEmit": true,
-    "incremental": true,
-    "tsBuildInfoFile": "../../.cache/app-rocco.tsbuildinfo"
+    "tsBuildInfoFile": "../../.cache/app-rocco.tsbuildinfo",
+    "skipLibCheck": true,
+    "maxNodeModuleJsDepth": 0
   },
   "include": [
     "app/**/*.ts",
     "app/**/*.tsx",
     ".react-router/types/**/*",
     "vite.config.ts",
-    "vitest.config.ts",
-    "react-router.config.ts"
+    "vitest.config.ts"
   ],
   "exclude": [
     "node_modules",
@@ -28,13 +28,13 @@
     ".turbo",
     ".cache",
     "coverage",
-    ".react-router/cache",
     "**/*.test.ts",
     "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "**/__tests__",
     "**/__mocks__",
-    "*.tsbuildinfo"
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }

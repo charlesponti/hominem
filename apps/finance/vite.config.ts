@@ -55,6 +55,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
 
     ssr: {
+      noExternal: [/^@hominem\//],
       external: ['node:fs', 'node:path', 'node:url', 'node:http'],
       resolve: {
         conditions: ['node'],

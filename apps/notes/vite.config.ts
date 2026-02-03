@@ -53,5 +53,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       },
       sourcemap: true,
     },
+
+    ssr: {
+      noExternal: [/^@hominem\//],
+    },
   };
 });

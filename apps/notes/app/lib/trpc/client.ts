@@ -6,7 +6,7 @@ import { hc } from 'hono/client';
  * Hono RPC client for the notes app
  * Provides type-safe access to the API endpoints
  */
-const client = hc<AppType>(import.meta.env.VITE_API_URL || 'http://localhost:4040');
+const client = hc<AppType>(import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:4040');
 
 export const honoClient = client;
 

@@ -5,6 +5,7 @@
     "rootDir": "src",
     "outDir": "./build",
     "composite": true,
+    "types": ["node"],
     "tsBuildInfoFile": "../../.cache/services.tsbuildinfo",
     "sourceMap": false,
     "declarationMap": true

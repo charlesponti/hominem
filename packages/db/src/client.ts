@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 import { env } from './env';
+import * as schema from './schema/tables';
 
 const DATABASE_URL =
   env.NODE_ENV === 'test'
@@ -31,9 +32,6 @@ let testDbOverride: any = null;
 
 function initDb() {
   if (!mainDb) {
-    // Require schema only when database is first accessed
-    // eslint-disable-next-line global-require,@typescript-eslint/no-var-requires
-    const schema = require('./schema/tables');
     mainDb = drizzle(pool, { schema });
   }
   return testDbOverride ?? mainDb;

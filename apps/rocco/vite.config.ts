@@ -1,9 +1,10 @@
 import { reactRouter } from '@react-router/dev/vite';
+import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [reactRouter()],
+  plugins: [tailwindcss(), reactRouter()],
   resolve: {
     alias: {
       '~': path.resolve(__dirname, 'app'),
@@ -13,29 +14,13 @@ export default defineConfig({
     exclude: ['postgres'],
   },
   ssr: {
-    external: [
-      '@hominem/lists-services',
-      '@hominem/places-services',
-      '@hominem/services',
-      '@hominem/services/travel',
-      '@hominem/services/emails',
-      '@hominem/services/queues',
-      '@hominem/services/types',
-      '@hominem/db/test/fixtures',
-    ],
+    noExternal: [/^@hominem\//],
   },
   build: {
-    rollupOptions: {
-      external: [
-        '@hominem/lists-services',
-        '@hominem/places-services',
-        '@hominem/services',
-        '@hominem/services/travel',
-        '@hominem/services/emails',
-        '@hominem/services/queues',
-        '@hominem/services/types',
-        '@hominem/db/test/fixtures',
-      ],
-    },
+    rollupOptions: {},
+  },
+  server: {
+    port: 4446,
+    strictPort: true,
   },
 });

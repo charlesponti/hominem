@@ -4,6 +4,7 @@
     "composite": true,
     "outDir": "./build",
     "rootDir": "./src",
+    "types": ["node"],
     "tsBuildInfoFile": "../../.cache/events.tsbuildinfo",
     "sourceMap": false,
     "declarationMap": true
