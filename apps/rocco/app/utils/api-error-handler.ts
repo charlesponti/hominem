@@ -17,7 +17,7 @@
  * ```
  */
 
-import type { ApiError, ErrorCode } from '@hominem/services';
+import type { ErrorCode } from '@hominem/services';
 
 /**
  * Error message configuration
@@ -93,7 +93,11 @@ export function getErrorMessage(code: ErrorCode) {
  *   });
  * }
  */
-export function handleApiError(error: ApiError) {
+export function handleApiError(error: {
+  code: ErrorCode;
+  message: string;
+  details?: Record<string, unknown>;
+}) {
   const config = getErrorMessage(error.code);
 
   // Log error for debugging
@@ -151,7 +155,7 @@ export function isRetriableError(code: ErrorCode): boolean {
  *   });
  * }
  */
-export function formatErrorDetails(error: ApiError) {
+export function formatErrorDetails(error: { code: ErrorCode; details?: Record<string, unknown> }) {
   if (!error.details) return null;
 
   if (error.code === 'VALIDATION_ERROR') {

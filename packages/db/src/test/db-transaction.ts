@@ -1,7 +1,8 @@
-import { getDatabaseUrl, setTestDb } from '@hominem/db';
-import * as schema from '@hominem/db/schema/tables';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+
+import { getDatabaseUrl, setTestDb } from '../index';
+import * as schema from '../schema/tables';
 
 export interface TestTransaction {
   db: PostgresJsDatabase<typeof schema>;

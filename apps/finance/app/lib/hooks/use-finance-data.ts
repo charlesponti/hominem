@@ -6,13 +6,12 @@ import type {
   TransactionListOutput,
   AccountData,
 } from '@hominem/hono-rpc/types/finance.types';
-import type { ApiResult } from '@hominem/services';
 import type { SortOption } from '@hominem/ui/hooks';
 
 import { format } from 'date-fns';
 import { useMemo } from 'react';
 
-import { useHonoQuery, transformDates } from '~/lib/hono';
+import { useHonoQuery } from '~/lib/hono';
 
 // Derive filter args from input schema where possible
 export interface FilterArgs {

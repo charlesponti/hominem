@@ -26,30 +26,6 @@ interface ExchangeTokenResponse {
   institutionName: string;
 }
 
-interface PlaidConnection {
-  id: string;
-  itemId: string;
-  institutionId: string;
-  institutionName: string;
-  status: 'active' | 'error' | 'pending_expiration' | 'revoked';
-  lastSyncedAt: string | null;
-  error: string | null;
-  createdAt: string;
-}
-
-interface PlaidAccount {
-  id: string;
-  name: string;
-  type: string;
-  balance: string;
-  mask: string | null;
-  subtype: string | null;
-  institutionId: string;
-  plaidItemId: string;
-  institutionName: string;
-  institutionLogo: string | null;
-}
-
 interface SyncJobResponse {
   success: boolean;
   message: string;
@@ -152,122 +128,9 @@ export function useExchangeToken() {
     data: exchangeToken.data,
   };
 }
-
 /**
- * Hook for fetching Plaid connections
- * @deprecated Use useAllAccounts() instead for unified account and connection data
+ * Hook for manually syncing a Plaid item
  */
-export function usePlaidConnections(options = {}) {
-  const { userId } = useSupabaseAuthContext();
-  const apiClient = useApiClient();
-
-  const defaultOptions = {
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  };
-
-  const query = useQuery<{ connections: PlaidConnection[] }>({
-    queryKey: PLAID_CONNECTIONS_KEY,
-    queryFn: async () => {
-      // Use the unified endpoint to get connection data
-      const response = await apiClient.get<
-        null,
-        {
-          accounts: Array<{
-            id: string;
-            name: string;
-            type: string;
-            balance: string;
-            mask: string | null;
-            subtype: string | null;
-            institutionId?: string;
-            plaidItemId?: string;
-            institutionName?: string;
-            institutionLogo?: string | null;
-            isPlaidConnected?: boolean;
-          }>;
-          connections: PlaidConnection[];
-        }
-      >('/api/finance/accounts/all');
-      return { connections: response.connections };
-    },
-    ...defaultOptions,
-    ...options,
-  });
-
-  return {
-    connections: query.data?.connections || [],
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
-    refetch: query.refetch,
-  };
-}
-
-/**
- * Hook for fetching Plaid accounts
- * @deprecated Use useAllAccounts() instead for unified account data
- */
-export function usePlaidAccounts(options = {}) {
-  const { userId } = useSupabaseAuthContext();
-  const apiClient = useApiClient();
-
-  const defaultOptions = {
-    enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  };
-
-  const query = useQuery<{ accounts: PlaidAccount[] }>({
-    queryKey: PLAID_ACCOUNTS_KEY,
-    queryFn: async () => {
-      // Use the unified endpoint and filter for Plaid accounts only
-      const response = await apiClient.get<
-        null,
-        {
-          accounts: Array<{
-            id: string;
-            name: string;
-            type: string;
-            balance: string;
-            mask: string | null;
-            subtype: string | null;
-            institutionId?: string;
-            plaidItemId?: string;
-            institutionName?: string;
-            institutionLogo?: string | null;
-            isPlaidConnected?: boolean;
-          }>;
-        }
-      >('/api/finance/accounts/all');
-
-      const plaidAccounts = response.accounts
-        .filter((account) => account.isPlaidConnected)
-        .map((account) => ({
-          id: account.id,
-          name: account.name,
-          type: account.type,
-          balance: account.balance,
-          mask: account.mask,
-          subtype: account.subtype,
-          institutionId: account.institutionId || '',
-          plaidItemId: account.plaidItemId || '',
-          institutionName: account.institutionName || '',
-          institutionLogo: account.institutionLogo || null,
-        }));
-      return { accounts: plaidAccounts };
-    },
-    ...defaultOptions,
-    ...options,
-  });
-
-  return {
-    accounts: query.data?.accounts || [],
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
-    refetch: query.refetch,
-  };
-}
 
 /**
  * Hook for manually syncing a Plaid item

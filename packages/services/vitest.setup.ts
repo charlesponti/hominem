@@ -1,7 +1,7 @@
 import { client } from '@hominem/db';
 import { afterAll, afterEach, beforeEach } from 'vitest';
 
-import { startTestTransaction, type TestTransaction } from './src/test-utils/db-transaction';
+import { startTestTransaction, type TestTransaction } from '@hominem/db/test/db-transaction';
 
 process.env.NODE_ENV = 'test';
 
