@@ -8,7 +8,7 @@ Successfully implemented **Phase 1-3** of the TypeScript performance analysis en
 
 ### Phase 1.1: TSServer Log Analysis ✅
 
-**New Command:** `bun run type-perf:tsserver`
+**New Command:** `bun run type-performance:tsserver`
 
 **Capabilities:**
 - Parses tsserver logs for real IDE performance metrics
@@ -33,12 +33,12 @@ interface TSServerMetrics {
 **Usage:**
 ```bash
 # Enable tsserver logging in VS Code, then:
-bun run type-perf:tsserver -- --logfile /path/to/tsserver.log
+bun run type-performance:tsserver -- --logfile /path/to/tsserver.log
 ```
 
 ### Phase 1.2: Type Dependency Graph Analysis ✅
 
-**New Command:** `bun run type-perf:graph`
+**New Command:** `bun run type-performance:graph`
 
 **Capabilities:**
 - Builds complete import/export dependency graph for any package
@@ -63,7 +63,7 @@ interface TypeDependencyNode {
 
 **Usage:**
 ```bash
-bun run type-perf:graph -- --package packages/db
+bun run type-performance:graph -- --package packages/db
 ```
 
 **Example Output:**
@@ -77,7 +77,7 @@ Centrality | File                           | Barrel | Exports
 
 ### Phase 1.3: Granular Instantiation Tracking ✅
 
-**New Command:** `bun run type-perf:instantiations`
+**New Command:** `bun run type-performance:instantiations`
 
 **Capabilities:**
 - Pinpoints exact line/column locations of expensive type operations
@@ -102,7 +102,7 @@ interface InstantiationSite {
 
 **Usage:**
 ```bash
-bun run type-perf:instantiations -- --package packages/db --threshold 1000
+bun run type-performance:instantiations -- --package packages/db --threshold 1000
 ```
 
 **Example Output:**
@@ -116,7 +116,7 @@ Count      | Type             | Location
 
 ### Phase 2: Interactive Dashboard ✅
 
-**New Command:** `bun run type-perf:dashboard`
+**New Command:** `bun run type-performance:dashboard`
 
 **Features:**
 - Interactive HTML dashboard with Chart.js visualizations
@@ -137,10 +137,10 @@ Count      | Type             | Location
 **Usage:**
 ```bash
 # Generate dashboard (runs audit first)
-bun run type-perf:dashboard -- --audit-first --open
+bun run type-performance:dashboard -- --audit-first --open
 
 # From existing report
-bun run type-perf:dashboard -- --input report.json --output dashboard.html --open
+bun run type-performance:dashboard -- --input report.json --output dashboard.html --open
 ```
 
 ### Phase 3: CI Integration ✅
@@ -164,7 +164,7 @@ bun run type-perf:dashboard -- --input report.json --output dashboard.html --ope
 **Usage:**
 ```bash
 # CI runs automatically, but can also run locally:
-bun run type-perf:compare -- --baseline baseline.json --current current.json
+bun run type-performance:compare -- --baseline baseline.json --current current.json
 ```
 
 **Exit Codes:**
@@ -198,7 +198,7 @@ Generates interactive HTML dashboard from audit JSON data.
 
 **Usage:**
 ```bash
-bun run type-perf:dashboard -- --audit-first --open
+bun run type-performance:dashboard -- --audit-first --open
 ```
 
 ### `scripts/compare-type-performance.ts`
@@ -206,7 +206,7 @@ Compares current performance against baseline for CI regression detection.
 
 **Usage:**
 ```bash
-bun run type-perf:compare -- --baseline base.json --current curr.json
+bun run type-performance:compare -- --baseline base.json --current curr.json
 ```
 
 ### `scripts/type-dashboard.html`
@@ -220,12 +220,12 @@ Interactive dashboard template with:
 
 ```json
 {
-  "type-perf:diagnose": "bun run scripts/type-performance.ts diagnose",
-  "type-perf:tsserver": "bun run scripts/type-performance.ts tsserver",
-  "type-perf:graph": "bun run scripts/type-performance.ts graph",
-  "type-perf:instantiations": "bun run scripts/type-performance.ts instantiations",
-  "type-perf:dashboard": "bun run scripts/generate-dashboard.ts",
-  "type-perf:compare": "bun run scripts/compare-type-performance.ts"
+  "type-performance:diagnose": "bun run scripts/type-performance.ts diagnose",
+  "type-performance:tsserver": "bun run scripts/type-performance.ts tsserver",
+  "type-performance:graph": "bun run scripts/type-performance.ts graph",
+  "type-performance:instantiations": "bun run scripts/type-performance.ts instantiations",
+  "type-performance:dashboard": "bun run scripts/generate-dashboard.ts",
+  "type-performance:compare": "bun run scripts/compare-type-performance.ts"
 }
 ```
 
@@ -252,7 +252,7 @@ Updated with:
 ### `AGENTS.md`
 Updated with:
 - New type performance commands in Core Workflow table
-- Enhanced type-audit tool references
+- Enhanced type-performance audit tool references
 - Quick commands for common use cases
 
 ## Performance Budgets
@@ -289,31 +289,31 @@ Updated with:
 ### Daily Development:
 ```bash
 # IDE feels slow - check tsserver performance
-bun run type-perf:tsserver -- --logfile ~/Library/.../tsserver.log
+bun run type-performance:tsserver -- --logfile ~/Library/.../tsserver.log
 
 # Find type hubs causing cascade re-checks
-bun run type-perf:graph -- --package packages/db
+bun run type-performance:graph -- --package packages/db
 
 # Generate dashboard for visual analysis
-bun run type-perf:dashboard -- --audit-first --open
+bun run type-performance:dashboard -- --audit-first --open
 ```
 
 ### PR Review:
 ```bash
 # Full audit before submitting PR
-bun run type-perf:audit -- --graph --json pr-audit.json
+bun run type-performance:audit -- --graph --json pr-audit.json
 
 # Compare against main branch
-bun run type-perf:compare -- --baseline main-audit.json --current pr-audit.json
+bun run type-performance:compare -- --baseline main-audit.json --current pr-audit.json
 ```
 
 ### Debugging Slow Types:
 ```bash
 # Detailed package diagnosis
-bun run type-perf:diagnose -- --package packages/hono-rpc
+bun run type-performance:diagnose -- --package packages/hono-rpc
 
 # Find exact instantiation sites
-bun run type-perf:instantiations -- --package packages/hono-rpc --threshold 500
+bun run type-performance:instantiations -- --package packages/hono-rpc --threshold 500
 ```
 
 ## Next Steps (Phase 4)

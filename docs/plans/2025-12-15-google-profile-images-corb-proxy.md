@@ -158,8 +158,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   
   // Determine API URL based on environment
   let apiUrl: string
-  if (import.meta.env.VITE_API_URL) {
-    apiUrl = import.meta.env.VITE_API_URL
+  if (import.meta.env.VITE_PUBLIC_API_URL) {
+    apiUrl = import.meta.env.VITE_PUBLIC_API_URL
   } else if (requestUrl.hostname.includes('localhost')) {
     apiUrl = 'http://localhost:4040'
   } else {
@@ -205,7 +205,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 **Route Registration** (`apps/rocco/app/routes.ts`):
 ```typescript
 export default [
-  route('api/trpc/*', './routes/api/trpc.ts'),
+  route('api/rpc/*', './routes/api/rpc.ts'),
   route('api/images/*', './routes/api/images.ts'), // ← Added
   // ... other routes
 ]

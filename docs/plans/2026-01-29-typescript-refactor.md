@@ -533,7 +533,7 @@ bun run build
 #### 6. Type Performance Audit
 
 ```bash
-bun run type-perf:audit
+bun run type-performance:audit
 ```
 
 ---
@@ -688,7 +688,7 @@ export type NotePreview = Pick<NoteOutput, 'id' | 'title' | 'summary'>;
 **A:** Run the performance audit to identify bottlenecks:
 
 ```bash
-bun run type-perf:audit --json > /tmp/perf.json
+bun run type-performance:audit --json > /tmp/perf.json
 # Analyze the output for:
 # - Packages with >5s typecheck time
 # - Type instantiation counts

@@ -9,7 +9,7 @@ estimated_effort: 1w
 
 Executive summary
 - Goal: achieve <1s TypeScript type-check time and <100MB memory for core apps.
-- Short path: quick config wins → architectural changes (types-first, Hono RPC) → nuclear options (kill tRPC / SWC).
+- Short path: quick config wins → architectural changes (types-first, Hono RPC) → nuclear options (deprecate legacy RPC / SWC).
 
 Problem statement
 - Type inference across monorepo causes massive type-instantiations and memory use. Current checks: ~6s–18s per app.
@@ -23,25 +23,25 @@ Phases & high level tasks
   - split large router packages and enable lazy-loading of routers
   - create minimal type-only packages where appropriate
 - Phase 3 (3–10d): nuclear (if needed)
-  - replace tRPC with Hono RPC route-by-route
+  - replace legacy RPC usage with Hono RPC route-by-route
   - adopt SWC for dev transpilation, keep type-check in CI
 
 Quick commands
 ```bash
 # Test Bun type checker
-cd packages/trpc || true
+cd packages/*legacy-rpc* || true
 time bun run --bun tsc --noEmit
 
 # Run project incremental typecheck (dev)
 bun run typecheck
 
 # Full CI check
-npm run -w packages/trpc typecheck:ci
+npm run -w packages/*legacy-rpc* typecheck:ci
 ```
 
 Verification checklist
 - [ ] `bun run typecheck` first/second runs show expected improvement (first run reduced, second run <1s with incremental)
-- [ ] `rg "@trpc" -n` returns no matches after migration (when complete)
+- [ ] Verify there are no legacy RPC package references after migration (when complete)
 - [ ] CI `typecheck:ci` completes without errors
 - [ ] Memory profile: peak compilation memory <100MB for targeted apps
 

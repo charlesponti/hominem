@@ -17,6 +17,7 @@
     "REDIS_URL",
     "RESEND_API_KEY"
   ],
+  "concurrency": "18",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -30,8 +31,7 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true,
-      "dependsOn": ["^dev"]
+      "persistent": true
     },
     "format": {
       "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],
