@@ -1,3 +1,5 @@
+import type { AccountData } from '@hominem/hono-rpc/types/finance.types';
+
 import { Button } from '@hominem/ui/button';
 import { DatePicker } from '@hominem/ui/components/date-picker';
 import { Badge } from '@hominem/ui/components/ui/badge';
@@ -189,11 +191,8 @@ export function AnalyticsFilters({
 
   // Ensure we have valid data even during loading
   const safeAccounts: Array<{ id: string; name: string }> = (
-    Array.isArray(accountsQuery.data) ? accountsQuery.data : []
-  ).map((acc: any) => ({
-    id: acc.id,
-    name: acc.name,
-  }));
+    (Array.isArray(accountsQuery.data) ? accountsQuery.data : []) as any[]
+  ).map((acc: any) => ({ id: acc.id, name: acc.name }));
   const safeCategories = categories
     .map((category) => ({
       id: category || '',

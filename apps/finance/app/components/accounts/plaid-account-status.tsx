@@ -69,18 +69,20 @@ export function PlaidAccountStatus({
     }
   };
 
+  const plaidAccount = account;
+
   return (
     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
       <div className="flex items-center justify-between mb-3">
         <div className="font-medium text-blue-900">Plaid Connection</div>
-        <PlaidStatusBadge status={account.plaidItemStatus ?? null} />
+        <PlaidStatusBadge status={plaidAccount.plaidItemStatus ?? null} />
       </div>
       <div className="space-y-2 text-sm text-blue-700">
-        {account.institutionName && <div>Institution: {account.institutionName}</div>}
-        {account.plaidLastSyncedAt && (
+        {plaidAccount.institutionName && <div>Institution: {plaidAccount.institutionName}</div>}
+        {plaidAccount.plaidLastSyncedAt && (
           <div>
             Last synced:{' '}
-            {new Date(account.plaidLastSyncedAt).toLocaleDateString('en-US', {
+            {new Date(plaidAccount.plaidLastSyncedAt).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'short',
               day: 'numeric',
@@ -89,16 +91,16 @@ export function PlaidAccountStatus({
             })}
           </div>
         )}
-        {account.plaidItemError && (
-          <div className="text-red-600">Error: {account.plaidItemError}</div>
-        )}
+        {plaidAccount.plaidItemError ? (
+          <div className="text-red-600">Error: {String(plaidAccount.plaidItemError)}</div>
+        ) : null}
       </div>
       <div className="flex gap-2 mt-4">
         <Button
           variant="outline"
           size="sm"
           onClick={handleSync}
-          disabled={syncItemMutation.isLoading || account.plaidItemStatus === 'revoked'}
+          disabled={syncItemMutation.isLoading || plaidAccount.plaidItemStatus === 'revoked'}
         >
           {syncItemMutation.isLoading ? (
             <RefreshCcw className="size-4 mr-2 animate-spin" />

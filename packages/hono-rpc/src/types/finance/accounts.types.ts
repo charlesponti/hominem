@@ -1,6 +1,8 @@
+import type { AccountWithPlaidInfo } from '@hominem/finance-services';
+
 import { z } from 'zod';
 
-import type { AccountData, AccountWithPlaidData, PlaidConnection, TransactionData } from './shared.types';
+import type { AccountData, PlaidConnection, TransactionData } from './shared.types';
 
 // ============================================================================
 // Accounts
@@ -70,7 +72,7 @@ export const institutionAccountsSchema = z.object({
 
 export type AccountListOutput = AccountData[];
 
-export type AccountGetOutput = AccountWithPlaidData & {
+export type AccountGetOutput = AccountWithPlaidInfo & {
   transactions: TransactionData[];
 };
 
@@ -79,10 +81,10 @@ export type AccountUpdateOutput = AccountData;
 export type AccountDeleteOutput = { success: true };
 
 export type AccountAllOutput = {
-  accounts: (AccountWithPlaidData & { transactions: TransactionData[] })[];
+  accounts: (AccountWithPlaidInfo & { transactions: TransactionData[] })[];
   connections: PlaidConnection[];
 };
 
-export type AccountsWithPlaidOutput = AccountWithPlaidData[];
+export type AccountsWithPlaidOutput = AccountWithPlaidInfo[];
 export type AccountConnectionsOutput = PlaidConnection[];
-export type AccountInstitutionAccountsOutput = AccountWithPlaidData[];
+export type AccountInstitutionAccountsOutput = AccountWithPlaidInfo[];

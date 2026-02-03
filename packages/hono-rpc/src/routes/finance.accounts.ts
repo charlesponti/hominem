@@ -38,7 +38,7 @@ import {
 /**
  * Serialization Helpers
  */
-function serializeAccount(account: any): AccountData {
+function serializeAccount<T extends Record<string, any>>(account: T): T {
   return {
     ...account,
     createdAt:
@@ -54,7 +54,7 @@ function serializeAccount(account: any): AccountData {
       typeof account.balance === 'number'
         ? account.balance
         : parseFloat(account.balance?.toString() || '0'),
-  };
+  } as T;
 }
 
 function serializeTransaction(t: any): TransactionData {

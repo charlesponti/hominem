@@ -1,11 +1,16 @@
-import type { AccountWithPlaidData, TransactionData } from '@hominem/hono-rpc/types/finance.types';
+import type {
+  AccountData,
+  AccountWithPlaidInfo,
+  TransactionData,
+} from '@hominem/hono-rpc/types/finance.types';
 
 /**
- * Account type - represents a financial account with Plaid info
+ * Account type - represents a financial account from the API
+ * Uses AccountWithPlaidInfo to include Plaid metadata for enriched account details
  */
-export type Account = AccountWithPlaidData;
+export type Account = AccountWithPlaidInfo;
 
 /**
  * Account with transactions included
  */
-export type AccountWithTransactions = AccountWithPlaidData & { transactions: TransactionData[] };
+export type AccountWithTransactions = AccountWithPlaidInfo & { transactions: TransactionData[] };

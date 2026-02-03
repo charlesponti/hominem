@@ -15,6 +15,7 @@ import type {
   BudgetCategoryOutput,
   FinancialInstitutionOutput,
 } from '@hominem/db/types/finance';
+import type { AccountWithPlaidInfo } from '@hominem/finance-services';
 
 export type InstitutionData = FinancialInstitutionOutput;
 
@@ -72,22 +73,13 @@ export type PlaidConnection = {
   accounts: number;
 };
 
-export type AccountWithPlaidData = AccountData & {
-  institution?:
-    | {
-        id: string;
-        name: string;
-        logo: string | null;
-      }
-    | null
-    | undefined;
-  institutionName?: string | undefined;
-  institutionLogo?: string | null | undefined;
-  plaidItemId?: string | null | undefined;
-  isPlaidConnected?: boolean | undefined;
-  plaidItemStatus?: string | undefined;
-  plaidLastSyncedAt?: string | undefined;
-  plaidItemError?: string | undefined;
-};
+/**
+ * Account with Plaid metadata
+ * Currently just an alias to AccountData since Plaid properties aren't part of the DB schema
+ * This type exists for future expansion when Plaid sync metadata is added
+ */
+export type AccountWithPlaidData = AccountData;
+
+export { type AccountWithPlaidInfo } from '@hominem/finance-services';
 
 export type TransactionData = FinanceTransactionOutput;

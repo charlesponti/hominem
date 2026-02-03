@@ -1,71 +1,83 @@
-# Auth Email Guard Plan
+---
+title: Auth Package Hardening and Consistency
+date: 2026-02-03
+status: planned
+category: auth
+priority: high
+estimated_effort: 3d
+---
 
-## Goal
-Add an explicit email-required guard for Google-only auth flows and ensure consistent handling across auth logic.
+Executive summary
+- Harden auth flows with explicit email guards, profile sync on login, aligned client types, constrained profile updates, and secure tool usage.
+- Add defense-in-depth across sessions, authorization, rate limiting, audit logging, and operational safety to reach a "diamond" posture.
 
-## Plan
-1. Add explicit email-required guard in auth user creation to prevent empty-email inserts.
-2. Review any other auth flows that assume email to ensure consistent handling.
-3. Summarize changes and rationale for Google-only auth assumptions.
+Problem statement
+- Login currently assumes `email` is always present. If Supabase returns a user without email, DB inserts can fail (unique or not-null constraints) and block auth.
+- Existing users are returned without synchronizing updated profile fields from Supabase, which can lead to stale `name`, `image`, or `email` values.
+- Client auth types don’t match the actual client implementation, which can cause incorrect usage.
+- Profile update helpers accept arbitrary keys and could allow unintended updates if exposed via API routes.
+- Tool stubs can be unsafe if wired into a runtime without auth checks.
+- Supabase client singleton may be misused in environments with multiple configs.
+- Supabase-to-Hominem user mapping can introduce unstable timestamps.
+- Auth hardening beyond the auth package is not centralized, leaving gaps in authorization, rate limiting, and auditability.
 
-Thanks for asking — this is a solid, nuanced area, and I’m happy to go deep with you. I reviewed the full `packages/auth` surface (server/client, user mapping, DB services, and tools). Below are the findings ordered by severity with concrete, actionable recommendations.
+Scope
+- Auth package server logic in `packages/auth/src/user-auth.service.ts` and `packages/auth/src/server.ts`.
+- Auth client implementation in `packages/auth/src/client.tsx` and types in `packages/auth/src/types.ts`.
+- User mapping in `packages/auth/src/user.ts`.
+- Tooling in `packages/auth/src/tools.ts`.
+- No changes to Supabase configuration; assumes Google-only auth remains in place.
+- Cross-cutting auth protections in route handlers and services that rely on `getServerAuth`.
 
-**Findings (ordered by severity)**
+Tasks
+- Add a guard in `findOrCreateUser` that fails early when `supabaseUser.email` is missing, with a clear log message.
+- On successful login for existing users, sync `email`, `name`, `image`, `isAdmin`, and `updatedAt` from Supabase data.
+- Ensure any auth flows that assume email use the same guard behavior.
+- Align `AuthContextType` with the actual client implementation or expand `client.tsx` to fully implement the type contract.
+- Constrain profile updates to a Zod-validated whitelist in `updateProfileBySupabaseId`.
+- Add config mismatch guard or remove singleton caching for Supabase client in `client.tsx`.
+- Avoid unstable timestamps when mapping Supabase users to `HominemUser`.
+- Gate or implement real logic for tools in `tools.ts`, including auth checks and input validation.
+- Define and document auth invariants and threat model in `docs/AUTH.md`.
+- Introduce a centralized authorization layer for server routes and services that require auth or admin access.
+- Require explicit auth requirements per route with a default-deny posture.
+- Add structured audit logging for auth events with stable event codes.
+- Add rate limiting for auth endpoints and sensitive operations.
+- Enforce secure cookie settings for server-auth responses and verify they are applied consistently.
+- Implement session rotation on login and sensitive actions.
+- Add account safety flags in DB such as `deactivatedAt`, `lastLoginAt`, and `loginCount`.
+- Add a safe email-change policy and verification path for email updates from Supabase.
+- Add CSRF protection for state-changing requests that rely on cookies.
+- Validate and sanitize any user-provided fields used in auth-adjacent flows.
+- Add re-auth or step-up checks for high-risk actions (admin changes, exports, account deletion).
+- Ensure `getServerAuth` is the only place that validates Supabase identity for server-side requests.
+- Add automated tests for auth flows, including edge cases for metadata and profile sync.
+- Add operational controls for auth emergencies (force reauth, disable login).
 
-1. **[High] Possible login failure for accounts without email**
-   - **Where:** `packages/auth/src/user-auth.service.ts`
-   - **Why:** `findOrCreateUser` sets `email` to `''` when missing. The `users.email` column is `notNull` and has a **unique constraint**. If any user logs in with no email (phone-based Supabase auth or providers without email), they will collide on `email = ''` and throw a unique violation.
-   - **Impact:** Login failures for any non-email auth scenario; also data integrity issues for future providers.
-   - **Recommendation:** Decide on a proper policy:
-     - Option A: allow `email` to be nullable (best for Supabase phone).
-     - Option B: store a synthetic unique email like `user_{supabaseId}@local` and mark as unverified.
-     - Option C: enforce email-only auth and fail early with a clear error before DB insert.
-   - **Notes:** If you never allow non-email auth, add a guard clause and log a clear error.
+Commands
+```bash
+# Optional: run auth-related tests if present
+bun run test --filter auth
+```
 
-2. **[High] Profile data not synced for existing users**
-   - **Where:** `packages/auth/src/user-auth.service.ts` and `packages/auth/src/server.ts`
-   - **Why:** If user is found by `supabaseId` or `email`, the function returns without updating `name`, `image`, or **email**. Supabase user data often changes (name, avatar, email updates, OAuth provider changes).
-   - **Impact:** Stale user profiles in the DB; inconsistent UI; potential email mismatch if user changes email in Supabase.
-   - **Recommendation:** On login, when an existing user is found, update profile fields (at least `email`, `name`, `image`, `updatedAt`). This should be safe and idempotent.
-
-3. **[Medium] `updateProfileBySupabaseId` accepts arbitrary keys**
-   - **Where:** `packages/auth/src/user-auth.service.ts`
-   - **Why:** `updates: Partial<Record<string, unknown>>` is applied directly to `.set({ ...updates })`.
-   - **Impact:** If exposed via an API route, this allows changing **any column**, including `isAdmin`, `supabaseId`, etc.
-   - **Recommendation:** Whitelist fields (e.g., `name`, `image`, `photoUrl`, `birthday`) and validate via Zod.
-
-4. **[Medium] Auth client types don’t match implementation**
-   - **Where:** `packages/auth/src/types.ts` vs `packages/auth/src/client.tsx`
-   - **Why:** `AuthContextType` describes `signIn(email, password)`, `signUp`, `signInWithOAuth`, `resetPassword`, etc., but `useSupabaseAuth` only exposes `signIn()` (Google-only) and `logout()`.
-   - **Impact:** Consumers could incorrectly rely on missing methods; potential runtime errors or inconsistency across apps.
-   - **Recommendation:** Either align the types to the actual implementation or expand `client.tsx` to implement the full interface.
-
-5. **[Medium] Supabase client singleton ignores config mismatches**
-   - **Where:** `packages/auth/src/client.tsx`
-   - **Why:** `getSupabase` caches a singleton without verifying `config` consistency.
-   - **Impact:** Potential bugs in test environments or multi-tenant setups if different config is passed.
-   - **Recommendation:** Guard on `config` or avoid the singleton.
-
-6. **[Low] Supabase-to-Hominem user conversion on client can “invent” timestamps**
-   - **Where:** `packages/auth/src/user.ts`
-   - **Why:** For `SupabaseAuthUser`, if timestamps are missing, it uses `new Date().toISOString()`; this changes on every call.
-   - **Impact:** Cache churn, UI flicker, or unexpected diffs in state comparisons.
-   - **Recommendation:** Prefer `undefined` or a stable value when source timestamps are missing.
-
-7. **[Low] Tools are placeholders with no auth checks**
-   - **Where:** `packages/auth/src/tools.ts`
-   - **Why:** The tools return “Updated profile” messages with no validation or authorization.
-   - **Impact:** If these tools are surfaced in a runtime with tool execution, they are insecure.
-   - **Recommendation:** Either stub behind an explicit dev-only flag or implement real auth + DB calls.
-
-**Additional notes**
-- `getServerAuth` correctly calls `supabase.auth.getUser()` and uses your server-side DB for canonical user data. That’s good. It returns headers for cookie setting; just ensure consumers merge/forward those headers on response.
-- The user schema uses a **unique index on email** which is good for data integrity, but requires the “email policy” decision described above.
-- `toHominemUser` uses `source.photoUrl` as fallback — good for legacy data.
-
-**Recommended next steps (pick one)**
-1. I can implement a safe, explicit “sync on login” update and a proper email policy guard in `findOrCreateUser`.
-2. I can align `client.tsx` with `AuthContextType` or simplify the type to match reality.
-3. I can add Zod-validated profile update helpers and lock down `updateProfileBySupabaseId`.
-
-If you want me to proceed, tell me which option you want first (1, 2, or 3).
+Verification checklist
+- [ ] Google login with a normal account succeeds and does not reinsert duplicate rows.
+- [ ] A user with updated Google profile info sees the new `name`/`image` reflected after login.
+- [ ] Missing-email scenario fails with a clear, actionable log and no DB error stack.
+- [ ] Client auth types accurately represent the available client methods.
+- [ ] Profile update calls cannot modify unintended columns (e.g., `isAdmin`, `supabaseId`).
+- [ ] Tool invocations require auth or are explicitly dev-only.
+- [ ] Supabase client handling is deterministic when multiple configs are used.
+- [ ] `toHominemUser` does not generate unstable timestamps when source data is missing.
+- [ ] Auth invariants and threat model are documented in `docs/AUTH.md`.
+- [ ] Every sensitive route declares its auth requirement and passes centralized authorization checks.
+- [ ] Auth events are logged with stable codes and include `userId`, `supabaseId`, `ip`, and `userAgent`.
+- [ ] Rate limits apply to login, logout, and sensitive mutations.
+- [ ] Cookie attributes are set to `HttpOnly`, `Secure`, and appropriate `SameSite` values.
+- [ ] Session tokens rotate on login and for sensitive actions.
+- [ ] Deactivated users cannot log in and receive an explicit error.
+- [ ] Email change policy is enforced with verification and audit logging.
+- [ ] CSRF protection is enabled for cookie-based mutations.
+- [ ] Admin or high-risk actions require re-auth or step-up verification.
+- [ ] Auth tests cover edge cases: missing email, mismatched supabaseId, stale metadata, and race conditions.
+- [ ] Emergency auth controls are documented and accessible to operators.

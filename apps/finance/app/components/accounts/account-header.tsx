@@ -62,7 +62,7 @@ export function AccountHeader({
     }
   };
 
-  const isPlaidAccount = account.isPlaidConnected || false;
+  const isPlaidAccount = (account as any).isPlaidConnected || false;
 
   return (
     <>
