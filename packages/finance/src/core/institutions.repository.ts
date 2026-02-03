@@ -36,8 +36,8 @@ export const InstitutionsRepository = {
         logo: input.logo || null,
         primaryColor: input.primaryColor || null,
         country: input.country || null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       } as FinancialInstitutionInput)
       .returning();
 

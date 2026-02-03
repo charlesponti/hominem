@@ -30,8 +30,8 @@ export async function getBudgetCategoriesWithSpending(options: {
     throw new Error(`Invalid monthYear format: ${monthYear}. Expected format: YYYY-MM`);
   }
 
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0); // Last day of the month
+  const startDate = new Date(year, month - 1, 1).toISOString();
+  const endDate = new Date(year, month, 0).toISOString(); // Last day of the month
 
   // Get budget categories
   const categories = await db

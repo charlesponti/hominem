@@ -13,7 +13,7 @@ export async function getTransactionCategoriesAnalysis(userId: string) {
   try {
     // First, get the current date and calculate 6 months ago
     const now = new Date();
-    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1).toISOString();
 
     // Get categories that have transactions in each of the last 6 months
     const recentTransactionCategories = await db

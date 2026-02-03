@@ -68,7 +68,7 @@ export function aggregateByCategory(transactions: FinanceTransactionOutput[]): C
 export function aggregateByMonth(transactions: FinanceTransactionOutput[]) {
   return Object.entries(
     transactions.reduce<Record<string, { totalAmount: number; count: number }>>((acc, tx) => {
-      const month = tx.date.toISOString().substring(0, 7);
+      const month = tx.date.substring(0, 7);
       const monthRecord = acc[month] || { totalAmount: 0, count: 0 };
 
       monthRecord.totalAmount += parseAmount(tx.amount);
@@ -179,7 +179,7 @@ export function groupTransactionsByDateRange(
 
     switch (range) {
       case 'day':
-        key = tx.date.toISOString().substring(0, 10);
+        key = tx.date.substring(0, 10);
         break;
       case 'week': {
         // Simple week grouping - could be improved with proper week calculation
@@ -189,18 +189,19 @@ export function groupTransactionsByDateRange(
         break;
       }
       case 'month':
-        key = tx.date.toISOString().substring(0, 7);
+        key = tx.date.substring(0, 7);
         break;
       case 'quarter': {
-        const quarter = Math.floor((tx.date.getMonth() + 3) / 3);
-        key = `${tx.date.getFullYear()}-Q${quarter}`;
+        const date = new Date(tx.date);
+        const quarter = Math.floor((date.getMonth() + 3) / 3);
+        key = `${date.getFullYear()}-Q${quarter}`;
         break;
       }
       case 'year':
-        key = tx.date.getFullYear().toString();
+        key = new Date(tx.date).getFullYear().toString();
         break;
       default:
-        key = tx.date.toISOString().substring(0, 7);
+        key = tx.date.substring(0, 7);
     }
 
     if (!acc[key]) {

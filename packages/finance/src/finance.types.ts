@@ -56,8 +56,8 @@ export interface TransactionResult {
 export interface QueryOptions {
   userId: string;
   category?: string | string[] | undefined;
-  dateFrom?: Date | undefined;
-  dateTo?: Date | undefined;
+  dateFrom?: string | undefined;
+  dateTo?: string | undefined;
   amountMin?: number | undefined;
   amountMax?: number | undefined;
   description?: string | undefined;

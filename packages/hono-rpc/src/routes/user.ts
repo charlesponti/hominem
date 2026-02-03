@@ -1,7 +1,7 @@
-import { InternalError, UnavailableError } from '@hominem/services';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+import type { UserDeleteAccountOutput } from '../types/user.types';
 
 /**
  * User Routes
@@ -22,9 +22,21 @@ export const userRoutes = new Hono<AppContext>()
       // TODO: Implement account deletion logic
       console.warn('[user.delete-account] Not yet implemented');
 
-      throw new UnavailableError('Account deletion is not yet implemented');
+      return c.json<UserDeleteAccountOutput>(
+        {
+          success: false,
+          error: 'Account deletion is not yet available.',
+        },
+        501,
+      );
     } catch (err) {
       console.error('[user.delete-account] unexpected error:', err);
-      throw new InternalError('Failed to delete account');
+      return c.json<UserDeleteAccountOutput>(
+        {
+          success: false,
+          error: 'Failed to delete account.',
+        },
+        500,
+      );
     }
   });

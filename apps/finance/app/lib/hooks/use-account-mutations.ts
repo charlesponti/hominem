@@ -12,12 +12,12 @@ import { useHonoMutation, useHonoUtils } from '~/lib/hono';
 export const useCreateAccount = () => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<AccountCreateOutput, AccountCreateInput>(
-    async (client, variables: AccountCreateInput) => {
+  return useHonoMutation(
+    async (client, variables: AccountCreateInput): Promise<AccountCreateOutput> => {
       const res = await client.api.finance.accounts.create.$post({
         json: variables,
       });
-      return res.json() as Promise<AccountCreateOutput>;
+      return res.json() as unknown as AccountCreateOutput;
     },
     {
       onSuccess: () => {
@@ -30,12 +30,12 @@ export const useCreateAccount = () => {
 export const useUpdateAccount = () => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<AccountUpdateOutput, AccountUpdateInput>(
-    async (client, variables: AccountUpdateInput) => {
+  return useHonoMutation(
+    async (client, variables: AccountUpdateInput): Promise<AccountUpdateOutput> => {
       const res = await client.api.finance.accounts.update.$post({
         json: variables,
       });
-      return res.json() as Promise<AccountUpdateOutput>;
+      return res.json() as unknown as AccountUpdateOutput;
     },
     {
       onSuccess: () => {
@@ -48,12 +48,12 @@ export const useUpdateAccount = () => {
 export const useDeleteAccount = () => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<AccountDeleteOutput, AccountDeleteInput>(
-    async (client, variables: AccountDeleteInput) => {
+  return useHonoMutation(
+    async (client, variables: AccountDeleteInput): Promise<AccountDeleteOutput> => {
       const res = await client.api.finance.accounts.delete.$post({
         json: variables,
       });
-      return res.json() as Promise<AccountDeleteOutput>;
+      return res.json() as unknown as AccountDeleteOutput;
     },
     {
       onSuccess: () => {

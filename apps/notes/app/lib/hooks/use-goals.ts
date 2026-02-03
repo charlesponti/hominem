@@ -69,9 +69,8 @@ export const useArchiveGoal = (query: GoalListQuery) => {
   return useHonoMutation<GoalArchiveOutput, { id: string }>(
     async (client: HonoClient, variables: { id: string }) => {
       const { id } = variables;
-      const res = await client.api.goals[':id'].archive.$post({
-        param: { id },
-      });
+      // Archive via update (set status to 'archived') since there is no archive endpoint
+      const res = await client.api.goals[':id'].$patch({ param: { id }, json: { status: 'archived' } });
       return res.json();
     },
     {

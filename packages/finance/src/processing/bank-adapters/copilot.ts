@@ -89,7 +89,7 @@ export function convertCopilotTransaction(
     id: crypto.randomUUID(),
     type,
     amount: finalAmount.toFixed(2), // Convert back to string
-    date: parsedDate, // Use the validated parsed date
+    date: parsedDate.toISOString(), // Use the validated parsed date
     description: data.name,
     category: data.category,
     parentCategory: data['parent category'] || data.parent_category || '',
@@ -100,7 +100,7 @@ export function convertCopilotTransaction(
     note: data.note,
     recurring: data.recurring === 'false' ? false : !!data.recurring,
     userId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 }

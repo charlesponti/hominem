@@ -110,13 +110,13 @@ financePlaidWebhookRoutes.post('/', async (c) => {
           error: webhookError
             ? `${webhookError.error_code}: ${webhookError.error_message}`
             : 'Unknown error',
-          updatedAt: new Date(),
+            updatedAt: new Date().toISOString(),
         });
       } else if (webhook_code === 'PENDING_EXPIRATION') {
         // Update item status to pending expiration
         await updatePlaidItemStatusByItemId(item_id, {
           status: 'pending_expiration',
-          updatedAt: new Date(),
+            updatedAt: new Date().toISOString(),
         });
       }
     }

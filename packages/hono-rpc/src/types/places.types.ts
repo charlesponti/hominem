@@ -445,9 +445,9 @@ export const placeGetVisitStatsSchema = z.object({
 
 export type PlaceGetVisitStatsOutput = {
   totalVisits: number;
-  averageRating?: number;
-  lastVisit?: string;
-  firstVisit?: string;
+  averageRating?: number | undefined;
+  lastVisit?: string | undefined;
+  firstVisit?: string | undefined;
   tags: Array<{
     tag: string;
     count: number;

@@ -37,8 +37,8 @@ export type Goal = {
   targetValue: number | null;
   currentValue: number | null;
   unit: string | null;
-  tags?: Array<{ id: string; name: string; color: string | null }>;
-  people?: Array<{ id: string; firstName: string; lastName: string | null }>;
+  tags?: Array<{ id: string; name: string; color: string | null }> | undefined;
+  people?: Array<{ id: string; firstName: string; lastName: string | null }> | undefined;
   createdAt: string;
   updatedAt: string;
 };

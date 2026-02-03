@@ -36,15 +36,15 @@ export function convertCapitalOneTransaction(
     id: crypto.randomUUID(),
     type: getCapitalOneTransactionType(t['Transaction Type']),
     amount: t['Transaction Amount'],
-    date: new Date(t['Transaction Date']),
+    date: new Date(t['Transaction Date']).toISOString(),
     description: t['Transaction Description'],
     accountId,
     status: 'posted',
     category: 'uncategorized',
     parentCategory: 'uncategorized',
     accountMask: t['Account Number'].slice(-4),
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     userId,
   };
 }

@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import type { PlaceGetDetailsByIdOutput } from './places.types';
+import type { FlightOutput } from '@hominem/db/types/travel';
 
 // ============================================================================
 // Data Types
@@ -12,8 +14,8 @@ export type ListItem = {
   createdAt: string;
   updatedAt: string;
   // Depending on what getItemsByListId returns, it might include expanded data
-  place?: any;
-  flight?: any;
+  place?: PlaceGetDetailsByIdOutput | undefined;
+  flight?: FlightOutput | undefined;
 };
 
 // ============================================================================

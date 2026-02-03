@@ -30,11 +30,11 @@ export const optionalNumericColumn = (name: string) => numeric(name);
 export const booleanColumn = (name: string, defaultValue = false) =>
   boolean(name).default(defaultValue);
 
-// Timestamp columns
-export const createdAtColumn = () => timestamp('created_at').defaultNow().notNull();
-export const updatedAtColumn = () => timestamp('updated_at').defaultNow().notNull();
-export const optionalTimestampColumn = (name: string) => timestamp(name);
-export const requiredTimestampColumn = (name: string) => timestamp(name).notNull();
+// Timestamp columns - always use mode: 'string' for JSON serialization compatibility
+export const createdAtColumn = () => timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull();
+export const updatedAtColumn = () => timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull();
+export const optionalTimestampColumn = (name: string) => timestamp(name, { precision: 3, mode: 'string' });
+export const requiredTimestampColumn = (name: string) => timestamp(name, { precision: 3, mode: 'string' }).notNull();
 
 // JSON columns
 export const jsonColumn = (name: string) => jsonb(name).$type<Json>();

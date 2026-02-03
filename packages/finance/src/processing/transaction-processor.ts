@@ -58,7 +58,7 @@ export async function processTransactionsInBulk(
 
   const existingTxMap = new Map(
     existingTransactions.map((t) => {
-      const key = `${t.date.toISOString()}|${t.amount}|${t.type}|${t.accountMask}`;
+      const key = `${t.date}|${t.amount}|${t.type}|${t.accountMask}`;
       return [key, t];
     }),
   );
@@ -70,7 +70,7 @@ export async function processTransactionsInBulk(
   }> = [];
 
   for (const tx of transactions) {
-    const key = `${tx.date.toISOString()}|${tx.amount}|${tx.type}|${tx.accountMask}`;
+    const key = `${tx.date}|${tx.amount}|${tx.type}|${tx.accountMask}`;
     const existingTx = existingTxMap.get(key);
     if (existingTx) {
       transactionsToUpdate.push({ newTx: tx, existingTx });

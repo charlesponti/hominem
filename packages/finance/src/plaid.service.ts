@@ -79,7 +79,7 @@ export async function upsertPlaidItem(params: {
   accessToken: string;
   institutionId: string;
   status?: PlaidItemOutput['status'];
-  lastSyncedAt?: Date | null;
+  lastSyncedAt?: string | null;
 }): Promise<PlaidItemOutput> {
   const {
     userId,
@@ -99,8 +99,8 @@ export async function upsertPlaidItem(params: {
         accessToken,
         status,
         error: null,
-        lastSyncedAt,
-        updatedAt: new Date(),
+        lastSyncedAt: lastSyncedAt ?? undefined,
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(plaidItems.id, existingItem.id))
       .returning();
@@ -116,9 +116,9 @@ export async function upsertPlaidItem(params: {
       accessToken,
       institutionId,
       status,
-      lastSyncedAt,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      lastSyncedAt: lastSyncedAt ?? undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       userId,
     })
     .returning();
@@ -134,7 +134,7 @@ export async function updatePlaidItemStatusByItemId(
     .update(plaidItems)
     .set({
       ...updates,
-      updatedAt: updates.updatedAt ?? new Date(),
+      updatedAt: (updates.updatedAt as string) ?? new Date().toISOString(),
     })
     .where(eq(plaidItems.itemId, itemId));
 }
@@ -147,7 +147,7 @@ export async function updatePlaidItemStatusById(
     .update(plaidItems)
     .set({
       ...updates,
-      updatedAt: updates.updatedAt ?? new Date(),
+      updatedAt: (updates.updatedAt as string) ?? new Date().toISOString(),
     })
     .where(eq(plaidItems.id, id));
 }
@@ -169,10 +169,10 @@ export async function updatePlaidItemSyncStatus(
   await db
     .update(plaidItems)
     .set({
-      lastSyncedAt: new Date(),
+      lastSyncedAt: new Date().toISOString(),
       status,
       error,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     })
     .where(eq(plaidItems.id, itemId));
 }
@@ -183,7 +183,7 @@ export async function updatePlaidItemError(itemId: string, error: string) {
     .set({
       status: 'error',
       error,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     })
     .where(eq(plaidItems.itemId, itemId));
 }
@@ -213,8 +213,8 @@ export async function ensureInstitutionExists(
     .values({
       id,
       name,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     })
     .returning();
 
@@ -251,7 +251,7 @@ export async function upsertAccount(accountData: {
       .update(financeAccounts)
       .set({
         balance: accountData.balance.toFixed(2),
-        lastUpdated: new Date(),
+        lastUpdated: new Date().toISOString(),
       })
       .where(eq(financeAccounts.id, existingAccount.id));
 
@@ -274,8 +274,8 @@ export async function upsertAccount(accountData: {
     interestRate: null,
     minimumPayment: null,
     meta: {},
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   });
 
   logger.info('Created new account', {
@@ -323,9 +323,10 @@ export async function insertTransaction(transactionData: {
   await db.insert(transactions).values({
     id: transactionId,
     ...transactionData,
+    date: new Date(transactionData.date).toISOString(),
     source: 'plaid',
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   });
 
   return transactionId;
@@ -358,7 +359,8 @@ export async function updateTransaction(
     .update(transactions)
     .set({
       ...updateData,
-      updatedAt: new Date(),
+      date: new Date(updateData.date).toISOString(),
+      updatedAt: new Date().toISOString(),
     })
     .where(eq(transactions.id, transactionId));
 }

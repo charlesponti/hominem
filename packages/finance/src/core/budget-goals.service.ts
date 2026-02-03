@@ -2,7 +2,6 @@ import { db } from '@hominem/db';
 import { budgetGoals } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
 import { and, eq } from 'drizzle-orm';
-import crypto from 'node:crypto';
 
 /**
  * Get budget goals for a user
@@ -28,8 +27,8 @@ export async function createBudgetGoal(data: {
   name: string;
   targetAmount: string;
   currentAmount?: string;
-  startDate: Date;
-  endDate?: Date | null;
+  startDate: string;
+  endDate?: string | null;
   categoryId?: string | null;
 }) {
   try {
@@ -64,8 +63,8 @@ export async function updateBudgetGoal(
     name: string;
     targetAmount: string;
     currentAmount: string;
-    startDate: Date;
-    endDate: Date | null;
+    startDate: string;
+    endDate: string | null;
     categoryId: string | null;
   }>,
 ) {

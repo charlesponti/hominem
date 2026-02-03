@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import type { ListOutput } from '@hominem/db/types/lists';
+import type { ListPlace, ListUser } from '@hominem/lists-services';
+import type { ListItem } from './items.types';
 
 // ============================================================================
 // Data Types
@@ -7,20 +9,10 @@ import type { ListOutput } from '@hominem/db/types/lists';
 
 export type List = ListOutput & {
   // API-specific extensions - Lists often include items or places when fetched
-  places?: any[];
-  items?: any[];
-  owner?: {
-    id: string;
-    name: string | null;
-    email: string;
-    imageUrl?: string | null;
-  };
-  collaborators?: Array<{
-    id: string;
-    name: string | null;
-    email: string;
-    imageUrl?: string | null;
-  }>;
+  places: ListPlace[];
+  items?: ListItem[] | undefined;
+  createdBy: ListUser | null;
+  users?: ListUser[] | undefined;
 };
 
 // ============================================================================

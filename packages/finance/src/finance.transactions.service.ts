@@ -34,9 +34,9 @@ const TransactionServiceAccountSchema = z.object({
   officialName: z.string().nullable().optional(),
   limit: z.string().or(z.number()).nullable().optional(),
   meta: z.unknown().nullable().optional(),
-  lastUpdated: z.date().nullable().optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  lastUpdated: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
   institutionId: z.string().nullable().optional(),
   plaidItemId: z.string().nullable().optional(),
   plaidAccountId: z.string().nullable().optional(),
@@ -62,7 +62,7 @@ const TransactionServiceTransactionSchema = z.object({
   id: z.string(),
   type: z.string(),
   amount: z.string().or(z.number()),
-  date: z.date(),
+  date: z.string(),
   description: z.string().nullable().optional(),
   merchantName: z.string().nullable().optional(),
   accountId: z.string(),
@@ -81,8 +81,8 @@ const TransactionServiceTransactionSchema = z.object({
   location: z.unknown().nullable().optional(),
   plaidTransactionId: z.string().nullable().optional(),
   source: z.string().nullable().default('manual'),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
   userId: z.string(),
 });
 
@@ -107,7 +107,7 @@ const TransactionServiceInsertSchema = z.object({
   id: z.string().optional(),
   type: z.string(),
   amount: z.string().or(z.number()),
-  date: z.date().optional(),
+  date: z.string().optional(),
   description: z.string().nullable().optional(),
   merchantName: z.string().nullable().optional(),
   accountId: z.string(),
@@ -200,9 +200,9 @@ export function buildWhereConditions(options: QueryOptions): SQL | undefined {
     eq(transactions.pending, false),
   ];
 
-  const from = options.from ? new Date(options.from) : options.dateFrom;
+  const from = options.from ?? options.dateFrom;
   if (from) conditions.push(gte(transactions.date, from));
-  const to = options.to ? new Date(options.to) : options.dateTo;
+  const to = options.to ?? options.dateTo;
   if (to) conditions.push(lte(transactions.date, to));
 
   const min = options.min ?? options.amountMin?.toString();
@@ -337,14 +337,14 @@ export async function getTransactions(
 }
 
 export function findExistingTransaction(tx: {
-  date: Date;
+  date: string;
   accountMask?: string | null | undefined;
   amount: string;
   type: string;
 }): Promise<FinanceTransactionOutput | undefined>;
 export function findExistingTransaction(
   txs: Array<{
-    date: Date;
+    date: string;
     accountMask?: string | null | undefined;
     amount: string;
     type: string;
@@ -353,13 +353,13 @@ export function findExistingTransaction(
 export async function findExistingTransaction(
   txOrTxs:
     | {
-        date: Date;
+        date: string;
         accountMask?: string | null | undefined;
         amount: string;
         type: string;
       }
     | Array<{
-        date: Date;
+        date: string;
         accountMask?: string | null | undefined;
         amount: string;
         type: string;
@@ -398,7 +398,7 @@ export const createTransactionInputSchema = TransactionServiceInsertSchema.pick(
   type: true,
   category: true,
 }).extend({
-  date: z.date().optional().describe('Transaction date'),
+  date: z.string().optional().describe('Transaction date (ISO format)'),
 });
 
 export const createTransactionOutputSchema = TransactionServiceTransactionSchema;
@@ -409,10 +409,13 @@ export async function createTransaction(
   const [result] = await createTransactions(
     [
       {
-        ...input,
-        type: input.type as TransactionType | undefined,
-        date: input.date ? new Date(input.date) : new Date(),
-      } as Partial<FinanceTransactionInput>,
+        accountId: input.accountId,
+        amount: input.amount.toString(),
+        type: (input.type as TransactionType) ?? 'expense',
+        description: input.description ?? undefined,
+        category: input.category ?? undefined,
+        date: input.date ?? new Date().toISOString(),
+      },
     ],
     userId,
   );
@@ -426,7 +429,7 @@ export async function createTransaction(
  * Create multiple transactions in a single batch.
  */
 export async function createTransactions(
-  inputs: Array<Partial<FinanceTransactionInput> & { userId?: string }>,
+  inputs: Array<Partial<Omit<FinanceTransactionInput, 'date'> & { date?: string }> & { userId?: string }>,
   userId?: string,
 ): Promise<FinanceTransactionOutput[]> {
   if (inputs.length === 0) {
@@ -441,18 +444,20 @@ export async function createTransactions(
 
     const { date, ...rest } = input;
 
+    const dateValue = date ? new Date(date) : new Date();
+
     return {
       ...rest,
       id: rest.id ?? crypto.randomUUID(),
       accountId: rest.accountId!,
       amount: rest.amount!.toString(),
       type: rest.type as TransactionType,
-      date: date instanceof Date ? date : new Date(),
+      date: dateValue,
       description: rest.description ?? '',
       category: rest.category ?? '',
       userId: effectiveUserId,
       location: rest.location as TransactionLocation,
-    } as FinanceTransactionInput;
+    } as unknown as FinanceTransactionInput;
   });
 
   try {

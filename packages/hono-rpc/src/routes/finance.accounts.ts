@@ -177,11 +177,7 @@ export const accountsRoutes = new Hono<AppContext>()
       accounts: accountsWithTransactions,
       connections: plaidConnections.map((conn) => ({
         ...conn,
-        lastSynced: conn.lastSyncedAt
-          ? typeof conn.lastSyncedAt === 'string'
-            ? conn.lastSyncedAt
-            : conn.lastSyncedAt.toISOString()
-          : '',
+        lastSynced: conn.lastSyncedAt ?? '',
       })),
     };
 
@@ -208,11 +204,7 @@ export const accountsRoutes = new Hono<AppContext>()
         institutionName: conn.institutionName || 'Unknown',
         institutionLogo: null,
         status: conn.status as any,
-        lastSynced: conn.lastSyncedAt
-          ? typeof conn.lastSyncedAt === 'string'
-            ? conn.lastSyncedAt
-            : conn.lastSyncedAt.toISOString()
-          : '',
+        lastSynced: conn.lastSyncedAt ?? '',
         accounts: 0,
       })),
       200,

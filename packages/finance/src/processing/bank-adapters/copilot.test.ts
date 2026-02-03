@@ -51,7 +51,7 @@ describe('convertCopilotTransaction', () => {
     expect(result.type).toBe('expense');
     expect(result.amount).toBe('-123.45');
     expect(result.description).toBe('Test Transaction');
-    expect(result.date).toEqual(new Date('2023-10-26'));
+    expect(result.date).toEqual(new Date('2023-10-26').toISOString());
     expect(result.category).toBe('Groceries');
     expect(result.parentCategory).toBe('Food & Dining');
     expect(result.excluded).toBe(false);
