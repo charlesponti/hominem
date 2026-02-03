@@ -1,10 +1,10 @@
 import { toast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 
-import { useFinanceAccountsWithMap, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
+import { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
 
 export function ExportTransactions() {
-  const { accountsMap } = useFinanceAccountsWithMap();
+  const { accountsMap } = useFinanceAccounts();
   const { transactions: rawTransactions } = useFinanceTransactions();
   const transactions = Array.isArray(rawTransactions) ? rawTransactions : [];
 

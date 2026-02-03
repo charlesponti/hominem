@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router';
 
 import { TransactionFilters } from '~/components/finance/transaction-filters';
 import { useCategoryBreakdown } from '~/lib/hooks/use-analytics';
-import { type FilterArgs, useFinanceAccountsWithMap } from '~/lib/hooks/use-finance-data';
+import { type FilterArgs, useFinanceAccounts } from '~/lib/hooks/use-finance-data';
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
 import { formatCurrency } from '~/lib/number.utils';
 
@@ -34,7 +34,7 @@ export default function CategoriesAnalyticsPage() {
     accountsMap,
     isLoading: accountsLoading,
     refetch: refetchAccounts,
-  } = useFinanceAccountsWithMap();
+  } = useFinanceAccounts();
 
   // Debounce filter changes (300ms delay)
   useEffect(() => {

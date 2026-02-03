@@ -38,7 +38,7 @@ financePlaidDisconnectRoutes.delete('/:itemId', async (c) => {
     await updatePlaidItemStatusById(plaidItem.id, {
       status: 'error', // Using 'error' status to indicate disconnected
       error: 'Disconnected by user',
-        updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
 
     return c.json({

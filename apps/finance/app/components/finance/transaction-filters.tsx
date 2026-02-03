@@ -14,7 +14,7 @@ import { FilterChip } from '@hominem/ui/filters';
 import { ListFilter, RefreshCcw } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
-import type { FilterArgs, useFinanceAccountsWithMap } from '~/lib/hooks/use-finance-data';
+import type { FilterArgs, useFinanceAccounts } from '~/lib/hooks/use-finance-data';
 
 import { AccountSelect } from '~/components/account-select';
 import { SortControls } from '~/components/finance/sort-controls';
@@ -26,7 +26,7 @@ interface ActiveSortOption extends SortOption {
 }
 
 interface TransactionFiltersProps {
-  accountsMap: Map<string, ReturnType<typeof useFinanceAccountsWithMap>['accounts'][number]>;
+  accountsMap: ReturnType<typeof useFinanceAccounts>['accountsMap'];
   accountsLoading: boolean;
 
   // Filters state

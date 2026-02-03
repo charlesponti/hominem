@@ -429,7 +429,9 @@ export async function createTransaction(
  * Create multiple transactions in a single batch.
  */
 export async function createTransactions(
-  inputs: Array<Partial<Omit<FinanceTransactionInput, 'date'> & { date?: string }> & { userId?: string }>,
+  inputs: Array<
+    Partial<Omit<FinanceTransactionInput, 'date'> & { date?: string }> & { userId?: string }
+  >,
   userId?: string,
 ): Promise<FinanceTransactionOutput[]> {
   if (inputs.length === 0) {

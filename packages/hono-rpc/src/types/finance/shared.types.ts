@@ -13,10 +13,10 @@ import type {
   FinanceAccountOutput,
   FinanceTransactionOutput,
   BudgetCategoryOutput,
-  FinancialInstitutionOutput
-} from '@hominem/db/types/finance'
+  FinancialInstitutionOutput,
+} from '@hominem/db/types/finance';
 
-export type InstitutionData = FinancialInstitutionOutput
+export type InstitutionData = FinancialInstitutionOutput;
 
 export type TimeSeriesDataPoint = {
   date: string;
@@ -58,9 +58,9 @@ export type TimeSeriesStats = {
   count?: number;
 };
 
-export type BudgetCategoryData = BudgetCategoryOutput
+export type BudgetCategoryData = BudgetCategoryOutput;
 
-export type AccountData = FinanceAccountOutput
+export type AccountData = FinanceAccountOutput;
 
 export type PlaidConnection = {
   id: string;
@@ -73,19 +73,21 @@ export type PlaidConnection = {
 };
 
 export type AccountWithPlaidData = AccountData & {
-  institution?: {
-    id: string;
-    name: string;
-    logo: string | null;
-  } | null;
-  // Flattened properties often expected by frontend
-  institutionName?: string;
-  institutionLogo?: string | null;
-  plaidItemId?: string | null;
-  isPlaidConnected?: boolean;
-  plaidItemStatus?: string;
-  plaidLastSyncedAt?: string;
-  plaidItemError?: string;
+  institution?:
+    | {
+        id: string;
+        name: string;
+        logo: string | null;
+      }
+    | null
+    | undefined;
+  institutionName?: string | undefined;
+  institutionLogo?: string | null | undefined;
+  plaidItemId?: string | null | undefined;
+  isPlaidConnected?: boolean | undefined;
+  plaidItemStatus?: string | undefined;
+  plaidLastSyncedAt?: string | undefined;
+  plaidItemError?: string | undefined;
 };
 
-export type TransactionData = FinanceTransactionOutput
+export type TransactionData = FinanceTransactionOutput;

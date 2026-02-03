@@ -6,7 +6,7 @@ import { TransactionFilters } from '~/components/finance/transaction-filters';
 import { TransactionsList } from '~/components/transactions/transactions-list';
 import {
   type FilterArgs,
-  useFinanceAccountsWithMap,
+  useFinanceAccounts,
   useFinanceTransactions,
 } from '~/lib/hooks/use-finance-data';
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
@@ -34,7 +34,7 @@ export default function TransactionsPage() {
     isLoading: accountsLoading,
     error: accountsError,
     refetch: refetchAccounts,
-  } = useFinanceAccountsWithMap();
+  } = useFinanceAccounts();
 
   const filters = {
     ...currentFilters,

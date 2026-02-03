@@ -1,5 +1,3 @@
-import type { AccountData } from '@hominem/hono-rpc/types/finance.types';
-
 import { Button } from '@hominem/ui/button';
 import { DatePicker } from '@hominem/ui/components/date-picker';
 import { Badge } from '@hominem/ui/components/ui/badge';
@@ -16,8 +14,6 @@ import { CategorySelect } from '~/components/category-select';
 import { GroupBySelect } from '~/components/group-by-select';
 import { useFinanceCategories } from '~/lib/hooks/use-analytics';
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data';
-
-type AccountsData = AccountData[];
 
 interface AnalyticsFiltersProps {
   dateFrom: Date | undefined;
@@ -51,7 +47,7 @@ interface FilterChipsProps {
   setIncludeStats: Dispatch<SetStateAction<boolean>>;
   compareToPrevious: boolean;
   setCompareToPrevious: Dispatch<SetStateAction<boolean>>;
-  accounts: AccountsData;
+  accounts: Array<{ id: string; name: string }>;
   categories: { id: string; name: string }[];
   isLoading: boolean;
 }
@@ -192,7 +188,12 @@ export function AnalyticsFilters({
   const compareToPreviousId = useId();
 
   // Ensure we have valid data even during loading
-  const safeAccounts = Array.isArray(accountsQuery.data) ? accountsQuery.data : [];
+  const safeAccounts: Array<{ id: string; name: string }> = (
+    Array.isArray(accountsQuery.data) ? accountsQuery.data : []
+  ).map((acc: any) => ({
+    id: acc.id,
+    name: acc.name,
+  }));
   const safeCategories = categories
     .map((category) => ({
       id: category || '',

@@ -1,14 +1,11 @@
 import { CreditCard, DollarSign, Tag } from 'lucide-react';
 
-import type {
-  useFinanceAccountsWithMap,
-  useFinanceTransactions,
-} from '~/lib/hooks/use-finance-data';
+import type { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
 
 import { cn } from '~/lib/utils';
 
 type TransactionFromAPI = ReturnType<typeof useFinanceTransactions>['transactions'][number];
-type AccountsMap = ReturnType<typeof useFinanceAccountsWithMap>['accountsMap'];
+type AccountsMap = ReturnType<typeof useFinanceAccounts>['accountsMap'];
 type AccountFromMap = NonNullable<AccountsMap> extends Map<string, infer T> ? T : never;
 
 type TransactionsListProps = {
