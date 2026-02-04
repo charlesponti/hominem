@@ -1,0 +1,14 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "RAILPACK",
+    "buildCommand": "rm -rf /root/.bun/install/cache && bun turbo run build --filter=@hominem/rocco --force"
+  },
+  "deploy": {
+    "startCommand": "cd apps/rocco && bun run start",
+    "healthcheckPath": "/",
+    "healthcheckTimeout": 100,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
