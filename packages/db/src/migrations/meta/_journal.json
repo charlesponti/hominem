@@ -372,6 +372,20 @@
       "when": 1770054096378,
       "tag": "0052_huge_nemesis",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1770174773274,
+      "tag": "0053_dizzy_jimmy_woo",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1770176646430,
+      "tag": "0054_lucky_miss_america",
+      "breakpoints": true
     }
   ]
 }

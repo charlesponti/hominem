@@ -44,11 +44,11 @@ export const networking_events = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => ({
-    userIdx: index('ne_user_id_idx').on(table.userId),
-    dateIdx: index('ne_date_idx').on(table.date),
-    typeIdx: index('ne_type_idx').on(table.type),
-  }),
+  (table) => [
+    index('ne_user_id_idx').on(table.userId),
+    index('ne_date_idx').on(table.date),
+    index('ne_type_idx').on(table.type),
+  ],
 );
 
 export type NetworkingEvent = InferSelectModel<typeof networking_events>;
@@ -72,14 +72,11 @@ export const networking_event_attendees = pgTable(
     followUpDate: timestamp('follow_up_date'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
-  (table) => ({
-    eventAttendeeIdx: uniqueIndex('ne_attendee_unique_idx').on(
-      table.networkingEventId,
-      table.contactId,
-    ),
-    eventIdx: index('nea_event_id_idx').on(table.networkingEventId),
-    contactIdx: index('nea_contact_id_idx').on(table.contactId),
-  }),
+  (table) => [
+    uniqueIndex('ne_attendee_unique_idx').on(table.networkingEventId, table.contactId),
+    index('nea_event_id_idx').on(table.networkingEventId),
+    index('nea_contact_id_idx').on(table.contactId),
+  ],
 );
 
 export type NetworkingEventAttendee = InferSelectModel<typeof networking_event_attendees>;

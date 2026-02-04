@@ -10,7 +10,6 @@ export * from './relations';
 
 // Users & Auth
 export { users, account } from './users.schema';
-export { verificationToken, token, session } from './auth.schema';
 
 // Company & Organization
 export { companies } from './company.schema';

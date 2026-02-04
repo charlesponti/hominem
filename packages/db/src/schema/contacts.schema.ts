@@ -20,10 +20,10 @@ export const contacts = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => ({
-    userIdx: index('contact_user_id_idx').on(table.userId),
-    emailIdx: index('contact_email_idx').on(table.email),
-  }),
+  (table) => [
+    index('contact_user_id_idx').on(table.userId),
+    index('contact_email_idx').on(table.email),
+  ],
 );
 
 export type Contact = InferSelectModel<typeof contacts>;

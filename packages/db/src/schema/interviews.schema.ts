@@ -69,12 +69,12 @@ export const interviews = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => ({
-    userIdx: index('interview_user_id_idx').on(table.userId),
-    jobApplicationIdx: index('interview_job_app_id_idx').on(table.jobApplicationId),
-    companyIdx: index('interview_company_id_idx').on(table.companyId),
-    scheduledAtIdx: index('interview_scheduled_at_idx').on(table.scheduledAt),
-  }),
+  (table) => [
+    index('interview_user_id_idx').on(table.userId),
+    index('interview_job_app_id_idx').on(table.jobApplicationId),
+    index('interview_company_id_idx').on(table.companyId),
+    index('interview_scheduled_at_idx').on(table.scheduledAt),
+  ],
 );
 
 export type Interview = InferSelectModel<typeof interviews>;
@@ -96,14 +96,11 @@ export const interview_interviewers = pgTable(
     role: text('role'), // e.g., Hiring Manager, Technical Interviewer, HR
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
-  (table) => ({
-    interviewInterviewerIdx: uniqueIndex('interview_interviewer_unique_idx').on(
-      table.interviewId,
-      table.contactId,
-    ),
-    interviewIdx: index('ii_interview_id_idx').on(table.interviewId),
-    contactIdx: index('ii_contact_id_idx').on(table.contactId),
-  }),
+  (table) => [
+    uniqueIndex('interview_interviewer_unique_idx').on(table.interviewId, table.contactId),
+    index('ii_interview_id_idx').on(table.interviewId),
+    index('ii_contact_id_idx').on(table.contactId),
+  ],
 );
 
 export type InterviewInterviewer = InferSelectModel<typeof interview_interviewers>;

@@ -1,5 +1,5 @@
 import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { foreignKey, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { users } from './users.schema';
 
@@ -37,6 +37,8 @@ export const movieViewings = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
+    index('movie_viewings_movie_id_idx').on(table.movieId),
+    index('movie_viewings_user_id_idx').on(table.userId),
   ],
 );
 

@@ -1,5 +1,5 @@
 import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { foreignKey, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { users } from './users.schema';
 
@@ -29,6 +29,7 @@ export const bookmark = pgTable(
     })
       .onUpdate('cascade')
       .onDelete('cascade'),
+    index('bookmark_user_id_idx').on(table.userId),
   ],
 );
 

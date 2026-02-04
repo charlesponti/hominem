@@ -57,7 +57,7 @@ export const events = pgTable(
     dateTime: timestamp('date_time'),
     type: eventTypeEnum('type').notNull(),
     userId: uuid('user_id')
-      .references(() => users.id)
+      .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
     source: eventSourceEnum('source').default('manual').notNull(),
     externalId: text('external_id'),
@@ -190,6 +190,9 @@ export const events = pgTable(
     index('events_streak_count_idx').on(table.streakCount),
     index('events_activity_type_idx').on(table.activityType),
     index('events_status_idx').on(table.status),
+    index('events_place_id_idx').on(table.placeId),
+    index('events_status_date_idx').on(table.status, table.date),
+    index('events_user_id_date_idx').on(table.userId, table.date),
     uniqueIndex('events_external_calendar_unique').on(table.externalId, table.calendarId),
   ],
 );
@@ -202,12 +205,26 @@ export const eventsTags = pgTable('events_tags', {
   tagId: uuid('tag_id').references(() => tags.id),
 });
 
-export const eventsUsers = pgTable('events_users', {
-  eventId: uuid('event_id').references(() => events.id),
-  personId: uuid('person_id').references(() => contacts.id),
-});
+export const eventsUsers = pgTable(
+  'events_users',
+  {
+    eventId: uuid('event_id').references(() => events.id),
+    personId: uuid('person_id').references(() => contacts.id),
+  },
+  (table) => [
+    index('events_users_event_id_idx').on(table.eventId),
+    index('events_users_person_id_idx').on(table.personId),
+  ],
+);
 
-export const eventsTransactions = pgTable('events_transactions', {
-  eventId: uuid('event_id').references(() => events.id),
-  transactionId: uuid('transaction_id').references(() => transactions.id),
-});
+export const eventsTransactions = pgTable(
+  'events_transactions',
+  {
+    eventId: uuid('event_id').references(() => events.id),
+    transactionId: uuid('transaction_id').references(() => transactions.id),
+  },
+  (table) => [
+    index('events_transactions_event_id_idx').on(table.eventId),
+    index('events_transactions_transaction_id_idx').on(table.transactionId),
+  ],
+);

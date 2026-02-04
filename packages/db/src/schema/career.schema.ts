@@ -107,16 +107,22 @@ export const job_applications = pgTable('job_applications', {
   // Relationships
   companyId: uuid('company_id') // Foreign key to the company the application is for
     .notNull()
-    .references(() => companies.id),
+    .references(() => companies.id, { onDelete: 'set null' }),
   userId: uuid('user_id') // Foreign key to the user who submitted the application
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, { onDelete: 'cascade' }),
   jobId: uuid('job_id').references(() => jobs.id), // Foreign key to the specific job posting (if available)
 
   // Metadata
   createdAt: timestamp('created_at').notNull().defaultNow(), // Timestamp of when the application record was created
   updatedAt: timestamp('updated_at').notNull().defaultNow(), // Timestamp of when the application record was last updated
-});
+  },
+  (table) => [
+    index('job_applications_company_id_idx').on(table.companyId),
+    index('job_applications_job_id_idx').on(table.jobId),
+    index('job_applications_user_id_idx').on(table.userId),
+  ],
+);
 
 export type JobApplication = InferSelectModel<typeof job_applications>;
 export type JobApplicationInsert = InferInsertModel<typeof job_applications>;
@@ -136,9 +142,9 @@ export const application_stages = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(), // Timestamp of when this stage record was created
     updatedAt: timestamp('updated_at').notNull().defaultNow(), // Timestamp of when this stage record was last updated
   },
-  (table) => ({
-    jobApplicationIdIdx: index('app_stage_job_app_id_idx').on(table.jobApplicationId),
-  }),
+  (table) => [
+    index('app_stage_job_app_id_idx').on(table.jobApplicationId),
+  ],
 );
 
 export type ApplicationStage = InferSelectModel<typeof application_stages>;
