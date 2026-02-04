@@ -1,8 +1,7 @@
 [install]
 peer = false
-
-[install.scopes]
-"drizzle-orm" = { "optionalPeers" = [] }
+# Ensure dependencies are properly hoisted to avoid duplicate instances
+hoist = true
 
 [resolveExtensions]
 # Prevent peer dependencies from creating aliases

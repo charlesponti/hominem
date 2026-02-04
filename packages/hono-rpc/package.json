@@ -45,8 +45,5 @@
     "@types/node": "^22.15.2",
     "drizzle-orm": "0.45.1",
     "typescript": "5.9.3"
-  },
-  "peerDependencies": {
-    "drizzle-orm": "0.45.1"
   }
 }
