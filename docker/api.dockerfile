@@ -37,9 +37,12 @@ RUN turbo prune @hominem/api --docker
 FROM base AS deps
 WORKDIR /app
 
-# Copy the pruned lockfile and package.json files
+# Copy the pruned package.json files
 COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/bunfig.toml ./bunfig.toml
+
+# Copy the original lockfile from root (not the pruned one which may be modified)
+COPY bun.lock ./bun.lock
 
 # Install only production dependencies (skip prepare scripts since source files aren't copied yet)
 RUN bun install --production --frozen-lockfile --ignore-scripts
