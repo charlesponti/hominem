@@ -1,17 +1,12 @@
 import type React from 'react';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { HonoProvider } from '~/lib/hono';
 
 /**
- * Hono RPC Provider
- * Provides query client for API interactions
- * Individual route handlers should use the Hono RPC client directly
+ * RPCProvider
+ * - Ensures the Hono RPC client and query client are available to the app
+ * - Wraps children with the `HonoProvider` which provides the Hono client and QueryClient
  */
 export function RPCProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
-  // Auth context available via useSupabaseAuthContext
-  // API client available via `honoClient` from ./client
-
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return <HonoProvider>{children}</HonoProvider>;
 }
