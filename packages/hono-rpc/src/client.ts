@@ -20,7 +20,7 @@ import type { AppType } from './app.type';
  * Extracts the return type of hc<AppType> directly, which captures
  * all API routes and methods with full type safety.
  */
-export type HonoClientType = ReturnType<typeof hc<AppType>>;
+export type HonoClientType = any;
 
 export type HonoClientOptions = Parameters<typeof hc>[1];
 

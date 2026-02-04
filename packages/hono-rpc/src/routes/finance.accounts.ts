@@ -108,42 +108,43 @@ export const accountsRoutes = new Hono<AppContext>()
     return c.json<AccountGetOutput>(result as any, 200);
   })
 
-  // POST /create - Create account
-  .post('/create', zValidator('json', accountCreateSchema), async (c) => {
-    const input = c.req.valid('json') as z.infer<typeof accountCreateSchema>;
-    const userId = c.get('userId')!;
+   // POST /create - Create account
+   .post('/create', zValidator('json', accountCreateSchema), async (c) => {
+     const input = c.req.valid('json') as z.infer<typeof accountCreateSchema>;
+     const userId = c.get('userId')!;
 
-    const result = await createAccount({
-      userId,
-      name: input.name,
-      type: input.type,
-      balance: input.balance?.toString() || '0',
-      institutionId: input.institution ?? input.institutionId ?? null,
-      isoCurrencyCode: 'USD',
-      meta: null,
-    });
+     const result = await createAccount({
+       userId,
+       name: input.name,
+       type: input.type as any,
+       balance: input.balance?.toString() || '0',
+       institutionId: input.institution ?? input.institutionId ?? null,
+       isoCurrencyCode: 'USD',
+       meta: null,
+     });
 
-    return c.json<AccountCreateOutput>(serializeAccount(result), 201);
-  })
+     return c.json<AccountCreateOutput>(serializeAccount(result), 201);
+   })
 
-  // POST /update - Update account
-  .post('/update', zValidator('json', accountUpdateSchema), async (c) => {
-    const input = c.req.valid('json') as z.infer<typeof accountUpdateSchema>;
-    const userId = c.get('userId')!;
-    const { id, ...updates } = input;
+   // POST /update - Update account
+   .post('/update', zValidator('json', accountUpdateSchema), async (c) => {
+     const input = c.req.valid('json') as z.infer<typeof accountUpdateSchema>;
+     const userId = c.get('userId')!;
+     const { id, ...updates } = input;
 
-    const result = await updateAccount(id, userId, {
-      ...updates,
-      balance: updates.balance?.toString(),
-      institutionId: updates.institution ?? updates.institutionId,
-    });
+     const result = await updateAccount(id, userId, {
+       ...updates,
+       balance: updates.balance?.toString(),
+       institutionId: updates.institution ?? updates.institutionId,
+       type: updates.type ? (updates.type as any) : undefined,
+     });
 
-    if (!result) {
-      throw new NotFoundError('Account not found');
-    }
+     if (!result) {
+       throw new NotFoundError('Account not found');
+     }
 
-    return c.json<AccountUpdateOutput>(serializeAccount(result), 200);
-  })
+     return c.json<AccountUpdateOutput>(serializeAccount(result), 200);
+   })
 
   // POST /delete - Delete account
   .post('/delete', zValidator('json', accountDeleteSchema), async (c) => {

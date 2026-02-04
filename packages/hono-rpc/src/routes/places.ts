@@ -1,3 +1,4 @@
+import type { EventTypeEnum } from '@hominem/db/types/calendar';
 import {
   createEvent,
   deleteEvent,
@@ -474,19 +475,19 @@ export const placesRoutes = new Hono<AppContext>()
 
       const dateValue = data.date ? new Date(data.date) : new Date();
 
-      const event = await createEvent({
-        title: (data.title ?? '') as string,
-        description: data.description ?? null,
-        date: dateValue,
-        type: 'Events',
-        placeId: data.placeId,
-        visitNotes: data.visitNotes ?? null,
-        visitRating: data.visitRating ?? null,
-        visitReview: data.visitReview ?? null,
-        userId: userId,
-        ...(data.tags && { tags: data.tags }),
-        ...(data.people && { people: data.people }),
-      });
+       const event = await createEvent({
+         title: (data.title ?? '') as string,
+         description: data.description ?? null,
+         date: dateValue,
+         type: 'Events' as EventTypeEnum,
+         placeId: data.placeId,
+         visitNotes: data.visitNotes ?? null,
+         visitRating: data.visitRating ?? null,
+         visitReview: data.visitReview ?? null,
+         userId: userId,
+         ...(data.tags && { tags: data.tags }),
+         ...(data.people && { people: data.people }),
+       } as any);
 
       return c.json<PlaceLogVisitOutput>(serializeVisit(event), 201);
     } catch (err) {

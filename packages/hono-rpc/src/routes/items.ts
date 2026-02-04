@@ -37,7 +37,7 @@ export const itemsRoutes = new Hono<AppContext>()
     const newItem = await addItemToList({
       listId: input.listId,
       itemId: input.itemId,
-      itemType: input.itemType,
+      itemType: input.itemType ?? 'FLIGHT',
       userId: userId,
     });
 

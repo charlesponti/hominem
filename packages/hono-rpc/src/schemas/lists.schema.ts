@@ -1,9 +1,9 @@
 import { z } from 'zod'
 
-import { ListSchema as DbListSchema, UserListsSchema as DbUserListsSchema } from '@hominem/db/schema/lists'
+import { ListInsertSchema as DbListInsertSchema, UserListsInsertSchema as DbUserListsInsertSchema } from '@hominem/db/schema/lists'
 import { ItemSchema as DbItemSchema } from '@hominem/db/schema/items'
 
-export const listSchema = DbListSchema.extend({})
+export const listSchema = DbListInsertSchema.extend({})
 
 export type ListRecord = z.infer<typeof listSchema>
 
@@ -11,17 +11,17 @@ export const listGetAllSchema = z.object({
   itemType: z.string().optional(),
 })
 
-export const listGetByIdSchema = DbListSchema.pick({ id: true })
+export const listGetByIdSchema = DbListInsertSchema.pick({ id: true })
 
-export const listCreateSchema = DbListSchema.pick({
+export const listCreateSchema = DbListInsertSchema.pick({
   name: true,
   description: true,
   isPublic: true,
 }).extend({
-  isPublic: DbListSchema.shape.isPublic.optional(),
+  isPublic: DbListInsertSchema.shape.isPublic.optional(),
 })
 
-const listUpdateBaseSchema = DbListSchema.pick({
+const listUpdateBaseSchema = DbListInsertSchema.pick({
   id: true,
   name: true,
   description: true,
@@ -34,7 +34,7 @@ export const listUpdateSchema = listUpdateBaseSchema.extend({
   isPublic: listUpdateBaseSchema.shape.isPublic.optional(),
 })
 
-export const listDeleteSchema = DbListSchema.pick({ id: true })
+export const listDeleteSchema = DbListInsertSchema.pick({ id: true })
 
 export const listDeleteItemSchema = DbItemSchema.pick({
   listId: true,
@@ -46,7 +46,7 @@ export const listGetContainingPlaceSchema = z.object({
   googleMapsId: z.string().optional(),
 })
 
-export const listRemoveCollaboratorSchema = DbUserListsSchema.pick({
+export const listRemoveCollaboratorSchema = DbUserListsInsertSchema.pick({
   listId: true,
   userId: true,
 }).extend({})
