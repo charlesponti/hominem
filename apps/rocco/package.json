@@ -82,7 +82,6 @@
     "@vitest/coverage-v8": "4.0.16",
     "autoprefixer": "^10.4.23",
     "dotenv": "17.2.3",
-    "drizzle-orm": "0.45.1",
     "msw": "^2.12.7",
     "rollup-plugin-visualizer": "6.0.5",
     "sharp": "^0.32.4",
