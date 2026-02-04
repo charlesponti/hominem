@@ -41,6 +41,8 @@ WORKDIR /app
 COPY --from=pruner /app/out/json/ .
 
 # Generate a fresh lock file for the pruned workspace structure
+# Note: We don't use --production here because it causes conflicts with
+# the generated lock file. The pruned workspace only contains necessary deps anyway.
 RUN bun install --ignore-scripts
 
 # Production stage
