@@ -21,7 +21,7 @@ export async function upsertArtists(records: ArtistOutput[]) {
         spotifyFollowers: sql`EXCLUDED.spotify_followers`,
         spotifyData: sql`EXCLUDED.spotify_data`,
         imageUrl: sql`EXCLUDED.image_url`,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       },
     })
     .returning();
