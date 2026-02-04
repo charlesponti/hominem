@@ -23,8 +23,8 @@ export const list = pgTable(
     description: text('description'),
     ownerId: uuid('ownerId').notNull(),
     isPublic: boolean('isPublic').notNull().default(false),
-    createdAt: createdAtColumn(),
-    updatedAt: updatedAtColumn(),
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   },
   (table) => [
     foreignKey({
@@ -48,8 +48,8 @@ export type ListSelect = List;
 export const userLists = pgTable(
   'user_lists',
   {
-    createdAt: createdAtColumn(),
-    updatedAt: updatedAtColumn(),
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     listId: uuid('listId').notNull(),
     userId: uuid('userId').notNull(),
   },
@@ -97,8 +97,8 @@ export const listInvite = pgTable(
     token: text('token')
       .default(sql`gen_random_uuid()`)
       .notNull(),
-    createdAt: createdAtColumn(),
-    updatedAt: updatedAtColumn(),
+    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   },
   (table) => [
     foreignKey({
