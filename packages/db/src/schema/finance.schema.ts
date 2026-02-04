@@ -1,10 +1,12 @@
 import { type InferInsertModel, type InferSelectModel, sql } from 'drizzle-orm';
 import { index, jsonb, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import * as z from 'zod';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
 import {
   type Json,
   type TransactionLocation,
+  TransactionLocationSchema,
   createdAtColumn,
   updatedAtColumn,
   requiredTextColumn,
@@ -240,3 +242,33 @@ export type BudgetCategorySelect = BudgetCategory;
 export type BudgetGoal = InferSelectModel<typeof budgetGoals>;
 export type BudgetGoalInsert = InferInsertModel<typeof budgetGoals>;
 export type BudgetGoalSelect = BudgetGoal;
+
+// Zod Validation Schemas
+// Finance Account Validation Schemas
+export const FinanceAccountSchema = createSelectSchema(financeAccounts, {
+  type: AccountTypeEnum,
+  meta: z.custom<unknown>().optional().nullable(),
+});
+
+export const FinanceAccountInsertSchema = createInsertSchema(financeAccounts, {
+  type: AccountTypeEnum,
+  meta: z.custom<unknown>().optional().nullable(),
+});
+
+// Transaction Validation Schemas
+export const insertTransactionSchema = createInsertSchema(transactions, {
+  type: TransactionTypeEnum,
+  location: TransactionLocationSchema.optional().nullable(),
+});
+
+export const updateTransactionSchema = createSelectSchema(transactions);
+
+export const TransactionSchema = createSelectSchema(transactions, {
+  type: TransactionTypeEnum,
+  location: TransactionLocationSchema.optional().nullable(),
+});
+
+export const TransactionInsertSchema = createInsertSchema(transactions, {
+  type: TransactionTypeEnum,
+  location: TransactionLocationSchema.optional().nullable(),
+});

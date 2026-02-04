@@ -9,6 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { createInsertSchema } from 'drizzle-zod';
 
 export const users = pgTable(
   'users',
@@ -87,3 +88,7 @@ export const account = pgTable(
 export type Account = InferSelectModel<typeof account>;
 export type AccountInsert = InferInsertModel<typeof account>;
 export type AccountSelect = Account;
+
+// Zod Validation Schemas
+export const UserSchema = createInsertSchema(users);
+export type UserSchemaType = typeof UserSchema;
