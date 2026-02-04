@@ -6,9 +6,7 @@ import type {
   PublishingMetadata,
 } from '@hominem/db/types/notes';
 
-// AI SDK imports
 import { db } from '@hominem/db';
-// Direct table import for DB operations
 import { notes } from '@hominem/db/schema/notes';
 import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm';
 
@@ -659,7 +657,6 @@ export type {
   ListNotesInput,
   ListNotesOutput,
   UpdateNoteInput,
-  NoteSyncItem,
 } from './types';
 
 export const notesService = new NotesService();
