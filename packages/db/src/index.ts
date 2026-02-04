@@ -8,7 +8,18 @@ export {
   takeUniqueOrThrow,
 } from './client';
 
-// Re-export validation schemas
+/**
+ * Validation Schemas (Zod validators)
+ * 
+ * ⚠️  IMPORTANT: These are VALUE exports, not TYPE exports
+ * 
+ * Prefer importing from '@hominem/db/schema/validations' instead:
+ *   import { TransactionSchema } from '@hominem/db/schema/validations';
+ * 
+ * This export is provided here for backward compatibility and for services
+ * that need direct access without importing from schema submodules.
+ * However, the canonical location is schema/validations.ts.
+ */
 export {
   UserSchema,
   FinanceAccountSchema,

@@ -7,7 +7,8 @@
     "types": ["node"],
     "tsBuildInfoFile": "../../.cache/finance.tsbuildinfo",
     "sourceMap": false,
-    "declarationMap": true
+    "declarationMap": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": [
