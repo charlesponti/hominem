@@ -91,8 +91,5 @@ export const PossessionSelectSchema = createSelectSchema(possessions, {
   dateAcquired: z.date(),
   dateSold: z.date().nullable(),
 });
-export type PossessionInsertSchemaType = z.infer<typeof PossessionInsertSchema>;
-export type PossessionSelectSchemaType = z.infer<typeof PossessionSelectSchema>;
-export type Possession = PossessionSelectSchemaType;
-export type PossessionInsert = PossessionInsertSchemaType;
-export type PossessionSelect = Possession;
+export type PossessionInput = z.infer<typeof PossessionInsertSchema>;
+export type PossessionOutput = z.infer<typeof PossessionSelectSchema>;

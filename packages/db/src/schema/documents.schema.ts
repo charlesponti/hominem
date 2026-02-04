@@ -42,8 +42,5 @@ export const documents = pgTable(
 
 export const DocumentInsertSchema = createInsertSchema(documents);
 export const DocumentSelectSchema = createSelectSchema(documents);
-export type DocumentInsertSchemaType = z.infer<typeof DocumentInsertSchema>;
-export type DocumentSelectSchemaType = z.infer<typeof DocumentSelectSchema>;
-export type Document = DocumentSelectSchemaType;
-export type DocumentInsert = DocumentInsertSchemaType;
-export type DocumentSelect = Document;
+export type DocumentInput = z.infer<typeof DocumentInsertSchema>;
+export type DocumentOutput = z.infer<typeof DocumentSelectSchema>;

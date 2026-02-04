@@ -91,12 +91,8 @@ export const InterviewSelectSchema = createSelectSchema(interviews, {
   scheduledAt: z.date(),
   thankYouNoteSent: z.date().nullable(),
 });
-export type InterviewInsertSchemaType = z.infer<typeof InterviewInsertSchema>;
-export type InterviewSelectSchemaType = z.infer<typeof InterviewSelectSchema>;
-export type Interview = InterviewSelectSchemaType;
-export type InterviewInsert = InterviewInsertSchemaType;
-export type InterviewSelect = Interview;
-export type NewInterview = InterviewInsert;
+export type InterviewInput = z.infer<typeof InterviewInsertSchema>;
+export type InterviewOutput = z.infer<typeof InterviewSelectSchema>;
 
 // Junction table for interviewers (contacts) and interviews
 export const interview_interviewers = pgTable(
@@ -125,8 +121,5 @@ export const InterviewInterviewerInsertSchema = createInsertSchema(interview_int
 export const InterviewInterviewerSelectSchema = createSelectSchema(interview_interviewers, {
   createdAt: z.string(),
 });
-export type InterviewInterviewerInsertSchemaType = z.infer<typeof InterviewInterviewerInsertSchema>;
-export type InterviewInterviewerSelectSchemaType = z.infer<typeof InterviewInterviewerSelectSchema>;
-export type InterviewInterviewer = InterviewInterviewerSelectSchemaType;
-export type InterviewInterviewerInsert = InterviewInterviewerInsertSchemaType;
-export type NewInterviewInterviewer = InterviewInterviewerInsert;
+export type InterviewInterviewerInput = z.infer<typeof InterviewInterviewerInsertSchema>;
+export type InterviewInterviewerOutput = z.infer<typeof InterviewInterviewerSelectSchema>;

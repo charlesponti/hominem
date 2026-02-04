@@ -8,21 +8,11 @@
  */
 
 import type {
-  Trip,
-  TripInsert,
-  TripSelect,
-  TripInsertSchemaType,
-  TripSelectSchemaType,
+  TripInput,
+  TripOutput,
 } from './trips.schema';
 
 export type {
-  Trip,
-  TripInsert,
-  TripSelect,
-  TripInsertSchemaType,
-  TripSelectSchemaType,
+  TripInput,
+  TripOutput,
 };
-
-// Legacy aliases for backward compatibility
-export type TripOutput = Trip;
-export type TripInput = TripInsert;

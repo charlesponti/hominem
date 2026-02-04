@@ -29,8 +29,5 @@ export const HealthSelectSchema = createSelectSchema(health, {
   updatedAt: z.string(),
   date: z.date(),
 });
-export type HealthInsertSchemaType = z.infer<typeof HealthInsertSchema>;
-export type HealthSelectSchemaType = z.infer<typeof HealthSelectSchema>;
-export type Health = HealthSelectSchemaType;
-export type HealthInsert = HealthInsertSchemaType;
-export type HealthSelect = Health;
+export type HealthInput = z.infer<typeof HealthInsertSchema>;
+export type HealthOutput = z.infer<typeof HealthSelectSchema>;

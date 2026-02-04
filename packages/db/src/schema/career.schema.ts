@@ -95,12 +95,8 @@ export const JobSelectSchema = createSelectSchema(jobs, {
   updatedAt: z.string(),
   status: z.enum(['draft', 'open', 'closed', 'filled', 'archived']).optional(),
 });
-export type JobInsertSchemaType = z.infer<typeof JobInsertSchema>;
-export type JobSelectSchemaType = z.infer<typeof JobSelectSchema>;
-export type Job = JobSelectSchemaType;
-export type JobInsert = JobInsertSchemaType;
-export type JobSelect = Job;
-export type NewJob = JobInsert;
+export type JobInput = z.infer<typeof JobInsertSchema>;
+export type JobOutput = z.infer<typeof JobSelectSchema>;
 
 export const job_applications = pgTable('job_applications', {
   id: uuid('id').primaryKey().defaultRandom(), // Unique identifier for the job application
@@ -153,11 +149,8 @@ export const JobApplicationSelectSchema = createSelectSchema(job_applications, {
   endDate: z.date().nullable(),
   status: z.enum(['Applied', 'Hired', 'Withdrew', 'Rejected', 'Offer', 'Screening', 'Interviewing', 'Pending']).optional(),
 });
-export type JobApplicationInsertSchemaType = z.infer<typeof JobApplicationInsertSchema>;
-export type JobApplicationSelectSchemaType = z.infer<typeof JobApplicationSelectSchema>;
-export type JobApplication = JobApplicationSelectSchemaType;
-export type JobApplicationInsert = JobApplicationInsertSchemaType;
-export type JobApplicationSelect = JobApplication;
+export type JobApplicationInput = z.infer<typeof JobApplicationInsertSchema>;
+export type JobApplicationOutput = z.infer<typeof JobApplicationSelectSchema>;
 
 export const application_stages = pgTable(
   'application_stages',
@@ -188,12 +181,8 @@ export const ApplicationStageSelectSchema = createSelectSchema(application_stage
   updatedAt: z.string(),
   date: z.date(),
 });
-export type ApplicationStageInsertSchemaType = z.infer<typeof ApplicationStageInsertSchema>;
-export type ApplicationStageSelectSchemaType = z.infer<typeof ApplicationStageSelectSchema>;
-export type ApplicationStage = ApplicationStageSelectSchemaType;
-export type ApplicationStageInsert = ApplicationStageInsertSchemaType;
-export type ApplicationStageSelect = ApplicationStage;
-export type NewApplicationStage = ApplicationStageInsert;
+export type ApplicationStageInput = z.infer<typeof ApplicationStageInsertSchema>;
+export type ApplicationStageOutput = z.infer<typeof ApplicationStageSelectSchema>;
 
 export const work_experiences = pgTable(
   'work_experiences',
@@ -247,9 +236,5 @@ export const WorkExperienceSelectSchema = createSelectSchema(work_experiences, {
   startDate: z.date().nullable(),
   endDate: z.date().nullable(),
 });
-export type WorkExperienceInsertSchemaType = z.infer<typeof WorkExperienceInsertSchema>;
-export type WorkExperienceSelectSchemaType = z.infer<typeof WorkExperienceSelectSchema>;
-export type WorkExperience = WorkExperienceSelectSchemaType;
-export type WorkExperienceInsert = WorkExperienceInsertSchemaType;
-export type WorkExperienceSelect = WorkExperience;
-export type NewWorkExperience = WorkExperienceInsert;
+export type WorkExperienceInput = z.infer<typeof WorkExperienceInsertSchema>;
+export type WorkExperienceOutput = z.infer<typeof WorkExperienceSelectSchema>;

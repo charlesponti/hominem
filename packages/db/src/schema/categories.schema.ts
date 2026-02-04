@@ -27,8 +27,5 @@ export const categories = pgTable('categories', {
 
 export const CategoryInsertSchema = createInsertSchema(categories);
 export const CategorySelectSchema = createSelectSchema(categories);
-export type CategoryInsertSchemaType = z.infer<typeof CategoryInsertSchema>;
-export type CategorySelectSchemaType = z.infer<typeof CategorySelectSchema>;
-export type Category = CategorySelectSchemaType;
-export type CategoryInsert = CategoryInsertSchemaType;
-export type CategorySelect = Category;
+export type CategoryInput = z.infer<typeof CategoryInsertSchema>;
+export type CategoryOutput = z.infer<typeof CategorySelectSchema>;

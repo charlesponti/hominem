@@ -8,21 +8,15 @@
  */
 
 import type {
-  Health,
-  HealthInsert,
-  HealthSelect,
-  HealthInsertSchemaType,
-  HealthSelectSchemaType,
+  HealthInput,
+  HealthOutput,
 } from './health.schema';
 
 export type {
-  Health,
-  HealthInsert,
-  HealthSelect,
-  HealthInsertSchemaType,
-  HealthSelectSchemaType,
+  HealthInput,
+  HealthOutput,
 };
 
-// Legacy aliases for backward compatibility
-export type HealthOutput = Health;
-export type HealthInput = HealthInsert;
+// Backward compatibility aliases
+export type HealthInsert = HealthInput;
+export type HealthSelect = HealthOutput;

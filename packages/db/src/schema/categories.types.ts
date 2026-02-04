@@ -8,21 +8,11 @@
  */
 
 import type {
-  Category,
-  CategoryInsert,
-  CategorySelect,
-  CategoryInsertSchemaType,
-  CategorySelectSchemaType,
+  CategoryInput,
+  CategoryOutput,
 } from './categories.schema';
 
 export type {
-  Category,
-  CategoryInsert,
-  CategorySelect,
-  CategoryInsertSchemaType,
-  CategorySelectSchemaType,
+  CategoryInput,
+  CategoryOutput,
 };
-
-// Legacy aliases for backward compatibility
-export type CategoryOutput = Category;
-export type CategoryInput = CategoryInsert;

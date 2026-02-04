@@ -18,9 +18,5 @@ export const companies = pgTable('companies', {
 
 export const CompanyInsertSchema = createInsertSchema(companies);
 export const CompanySelectSchema = createSelectSchema(companies);
-export type CompanyInsertSchemaType = z.infer<typeof CompanyInsertSchema>;
-export type CompanySelectSchemaType = z.infer<typeof CompanySelectSchema>;
-export type Company = CompanySelectSchemaType;
-export type CompanyInsert = CompanyInsertSchemaType;
-export type CompanySelect = Company;
-export type NewCompany = CompanyInsert;
+export type CompanyInput = z.infer<typeof CompanyInsertSchema>;
+export type CompanyOutput = z.infer<typeof CompanySelectSchema>;

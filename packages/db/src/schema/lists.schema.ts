@@ -39,11 +39,8 @@ export const list = pgTable(
 
 export const ListInsertSchema = createInsertSchema(list);
 export const ListSelectSchema = createSelectSchema(list);
-export type ListInsertSchemaType = z.infer<typeof ListInsertSchema>;
-export type ListSelectSchemaType = z.infer<typeof ListSelectSchema>;
-export type List = ListSelectSchemaType;
-export type ListInsert = ListInsertSchemaType;
-export type ListSelect = List;
+export type ListInput = z.infer<typeof ListInsertSchema>;
+export type ListOutput = z.infer<typeof ListSelectSchema>;
 
 export const userLists = pgTable(
   'user_lists',
@@ -77,11 +74,8 @@ export const userLists = pgTable(
 
 export const UserListsInsertSchema = createInsertSchema(userLists);
 export const UserListsSelectSchema = createSelectSchema(userLists);
-export type UserListsInsertSchemaType = z.infer<typeof UserListsInsertSchema>;
-export type UserListsSelectSchemaType = z.infer<typeof UserListsSelectSchema>;
-export type UserLists = UserListsSelectSchemaType;
-export type UserListsInsert = UserListsInsertSchemaType;
-export type UserListsSelect = UserLists;
+export type UserListsInput = z.infer<typeof UserListsInsertSchema>;
+export type UserListsOutput = z.infer<typeof UserListsSelectSchema>;
 
 export const listInvite = pgTable(
   'list_invite',
@@ -131,8 +125,5 @@ export const listInvite = pgTable(
 );
 export const ListInviteInsertSchema = createInsertSchema(listInvite);
 export const ListInviteSelectSchema = createSelectSchema(listInvite);
-export type ListInviteInsertSchemaType = z.infer<typeof ListInviteInsertSchema>;
-export type ListInviteSelectSchemaType = z.infer<typeof ListInviteSelectSchema>;
-export type ListInvite = ListInviteSelectSchemaType;
-export type ListInviteInsert = ListInviteInsertSchemaType;
-export type ListInviteSelect = ListInvite;
+export type ListInviteInput = z.infer<typeof ListInviteInsertSchema>;
+export type ListInviteOutput = z.infer<typeof ListInviteSelectSchema>;

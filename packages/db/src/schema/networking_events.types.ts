@@ -8,36 +8,15 @@
  */
 
 import type {
-  NetworkingEvent,
-  NetworkingEventInsert,
-  NetworkingEventSelect,
-  NetworkingEventInsertSchemaType,
-  NetworkingEventSelectSchemaType,
-  NewNetworkingEvent,
-  NetworkingEventAttendee,
-  NetworkingEventAttendeeInsert,
-  NetworkingEventAttendeeInsertSchemaType,
-  NetworkingEventAttendeeSelectSchemaType,
-  NewNetworkingEventAttendee,
+  NetworkingEventInput,
+  NetworkingEventOutput,
+  NetworkingEventAttendeeInput,
+  NetworkingEventAttendeeOutput,
 } from './networking_events.schema';
 
 export type {
-  NetworkingEvent,
-  NetworkingEventInsert,
-  NetworkingEventSelect,
-  NetworkingEventInsertSchemaType,
-  NetworkingEventSelectSchemaType,
-  NewNetworkingEvent,
-  NetworkingEventAttendee,
-  NetworkingEventAttendeeInsert,
-  NetworkingEventAttendeeInsertSchemaType,
-  NetworkingEventAttendeeSelectSchemaType,
-  NewNetworkingEventAttendee,
+  NetworkingEventInput,
+  NetworkingEventOutput,
+  NetworkingEventAttendeeInput,
+  NetworkingEventAttendeeOutput,
 };
-
-// Legacy aliases for backward compatibility
-export type NetworkingEventOutput = NetworkingEvent;
-export type NetworkingEventInput = NetworkingEventInsert;
-
-export type NetworkingEventAttendeeOutput = NetworkingEventAttendee;
-export type NetworkingEventAttendeeInput = NetworkingEventAttendeeInsert;

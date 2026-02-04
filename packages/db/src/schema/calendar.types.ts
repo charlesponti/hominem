@@ -8,25 +8,19 @@
  */
 
 import type {
-  CalendarEvent,
-  CalendarEventInsert,
-  CalendarEventSelect,
   EventTypeEnum,
   EventSourceEnum,
-  EventInsertSchemaType,
-  EventSelectSchemaType,
+  EventInput,
+  EventOutput,
 } from './calendar.schema';
 
 export type {
-  CalendarEvent,
-  CalendarEventInsert,
-  CalendarEventSelect,
   EventTypeEnum,
   EventSourceEnum,
-  EventInsertSchemaType,
-  EventSelectSchemaType,
+  EventInput,
+  EventOutput,
 };
 
-// Legacy aliases for backward compatibility
-export type CalendarEventOutput = CalendarEvent;
-export type CalendarEventInput = CalendarEventInsert;
+// Backward compatibility aliases
+export type CalendarEventInput = EventInput;
+export type CalendarEventOutput = EventOutput;

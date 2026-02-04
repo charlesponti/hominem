@@ -228,13 +228,12 @@ export const EventSelectSchema = createSelectSchema(events, {
   milestones: z.any().nullable(),
 });
 
-export type EventInsertSchemaType = z.infer<typeof EventInsertSchema>;
-export type EventSelectSchemaType = z.infer<typeof EventSelectSchema>;
+export type EventInput = z.infer<typeof EventInsertSchema>;
+export type EventOutput = z.infer<typeof EventSelectSchema>;
 
-// Legacy type aliases for backward compatibility
-export type CalendarEvent = EventSelectSchemaType;
-export type CalendarEventInsert = EventInsertSchemaType;
-export type CalendarEventSelect = CalendarEvent;
+// Backward compatibility aliases
+export type CalendarEventInsert = EventInput;
+export type CalendarEvent = EventOutput;
 
 export const eventsTags = pgTable('events_tags', {
   eventId: uuid('event_id').references(() => events.id),

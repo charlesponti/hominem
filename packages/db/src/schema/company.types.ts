@@ -8,23 +8,11 @@
  */
 
 import type {
-  Company,
-  CompanyInsert,
-  CompanySelect,
-  CompanyInsertSchemaType,
-  CompanySelectSchemaType,
-  NewCompany,
+  CompanyInput,
+  CompanyOutput,
 } from './company.schema';
 
 export type {
-  Company,
-  CompanyInsert,
-  CompanySelect,
-  CompanyInsertSchemaType,
-  CompanySelectSchemaType,
-  NewCompany,
+  CompanyInput,
+  CompanyOutput,
 };
-
-// Legacy aliases for backward compatibility
-export type CompanyOutput = Company;
-export type CompanyInput = CompanyInsert;

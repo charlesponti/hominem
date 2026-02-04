@@ -8,15 +8,11 @@
  */
 
 import type {
-  Contact,
-  ContactInsert,
-  ContactInsertSchemaType,
-  ContactSelectSchemaType,
+  ContactInput,
+  ContactOutput,
 } from './contacts.schema';
 
 export type {
-  Contact,
-  ContactInsert,
-  ContactInsertSchemaType,
-  ContactSelectSchemaType,
+  ContactInput,
+  ContactOutput,
 };

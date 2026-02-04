@@ -64,12 +64,8 @@ export const SkillSelectSchema = createSelectSchema(skills, {
   createdAt: z.string(),
   updatedAt: z.string(),
 });
-export type SkillInsertSchemaType = z.infer<typeof SkillInsertSchema>;
-export type SkillSelectSchemaType = z.infer<typeof SkillSelectSchema>;
-export type Skill = SkillSelectSchemaType;
-export type SkillInsert = SkillInsertSchemaType;
-export type SkillSelect = Skill;
-export type NewSkill = SkillInsert;
+export type SkillInput = z.infer<typeof SkillInsertSchema>;
+export type SkillOutput = z.infer<typeof SkillSelectSchema>;
 
 export const user_skills = pgTable(
   'user_skills',
@@ -106,12 +102,8 @@ export const UserSkillSelectSchema = createSelectSchema(user_skills, {
   updatedAt: z.string(),
   lastUsedDate: z.date().nullable(),
 });
-export type UserSkillInsertSchemaType = z.infer<typeof UserSkillInsertSchema>;
-export type UserSkillSelectSchemaType = z.infer<typeof UserSkillSelectSchema>;
-export type UserSkill = UserSkillSelectSchemaType;
-export type UserSkillInsert = UserSkillInsertSchemaType;
-export type UserSkillSelect = UserSkill;
-export type NewUserSkill = UserSkillInsert;
+export type UserSkillInput = z.infer<typeof UserSkillInsertSchema>;
+export type UserSkillOutput = z.infer<typeof UserSkillSelectSchema>;
 
 export const job_skills = pgTable(
   'job_skills',
@@ -137,9 +129,5 @@ export const job_skills = pgTable(
 
 export const JobSkillInsertSchema = createInsertSchema(job_skills);
 export const JobSkillSelectSchema = createSelectSchema(job_skills);
-export type JobSkillInsertSchemaType = z.infer<typeof JobSkillInsertSchema>;
-export type JobSkillSelectSchemaType = z.infer<typeof JobSkillSelectSchema>;
-export type JobSkill = JobSkillSelectSchemaType;
-export type JobSkillInsert = JobSkillInsertSchemaType;
-export type JobSkillSelect = JobSkill;
-export type NewJobSkill = JobSkillInsert;
+export type JobSkillInput = z.infer<typeof JobSkillInsertSchema>;
+export type JobSkillOutput = z.infer<typeof JobSkillSelectSchema>;

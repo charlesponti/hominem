@@ -63,12 +63,8 @@ export const NetworkingEventSelectSchema = createSelectSchema(networking_events,
   updatedAt: z.string(),
   date: z.date(),
 });
-export type NetworkingEventInsertSchemaType = z.infer<typeof NetworkingEventInsertSchema>;
-export type NetworkingEventSelectSchemaType = z.infer<typeof NetworkingEventSelectSchema>;
-export type NetworkingEvent = NetworkingEventSelectSchemaType;
-export type NetworkingEventInsert = NetworkingEventInsertSchemaType;
-export type NetworkingEventSelect = NetworkingEvent;
-export type NewNetworkingEvent = NetworkingEventInsert;
+export type NetworkingEventInput = z.infer<typeof NetworkingEventInsertSchema>;
+export type NetworkingEventOutput = z.infer<typeof NetworkingEventSelectSchema>;
 
 // Junction table for contacts met at networking events
 export const networking_event_attendees = pgTable(
@@ -101,8 +97,5 @@ export const NetworkingEventAttendeeSelectSchema = createSelectSchema(networking
   createdAt: z.string(),
   followUpDate: z.date().nullable(),
 });
-export type NetworkingEventAttendeeInsertSchemaType = z.infer<typeof NetworkingEventAttendeeInsertSchema>;
-export type NetworkingEventAttendeeSelectSchemaType = z.infer<typeof NetworkingEventAttendeeSelectSchema>;
-export type NetworkingEventAttendee = NetworkingEventAttendeeSelectSchemaType;
-export type NetworkingEventAttendeeInsert = NetworkingEventAttendeeInsertSchemaType;
-export type NewNetworkingEventAttendee = NetworkingEventAttendeeInsert;
+export type NetworkingEventAttendeeInput = z.infer<typeof NetworkingEventAttendeeInsertSchema>;
+export type NetworkingEventAttendeeOutput = z.infer<typeof NetworkingEventAttendeeSelectSchema>;

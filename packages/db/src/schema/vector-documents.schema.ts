@@ -36,9 +36,5 @@ export const VectorDocumentSelectSchema = createSelectSchema(vectorDocuments, {
   createdAt: z.string(),
   updatedAt: z.string(),
 });
-export type VectorDocumentInsertSchemaType = z.infer<typeof VectorDocumentInsertSchema>;
-export type VectorDocumentSelectSchemaType = z.infer<typeof VectorDocumentSelectSchema>;
-export type VectorDocument = VectorDocumentSelectSchemaType;
-export type VectorDocumentInsert = VectorDocumentInsertSchemaType;
-export type VectorDocumentSelect = VectorDocument;
-export type NewVectorDocument = VectorDocumentInsert;
+export type VectorDocumentInput = z.infer<typeof VectorDocumentInsertSchema>;
+export type VectorDocumentOutput = z.infer<typeof VectorDocumentSelectSchema>;

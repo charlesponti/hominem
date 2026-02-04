@@ -8,21 +8,11 @@
  */
 
 import type {
-  Document,
-  DocumentInsert,
-  DocumentSelect,
-  DocumentInsertSchemaType,
-  DocumentSelectSchemaType,
+  DocumentInput,
+  DocumentOutput,
 } from './documents.schema';
 
 export type {
-  Document,
-  DocumentInsert,
-  DocumentSelect,
-  DocumentInsertSchemaType,
-  DocumentSelectSchemaType,
+  DocumentInput,
+  DocumentOutput,
 };
-
-// Legacy aliases for backward compatibility
-export type DocumentOutput = Document;
-export type DocumentInput = DocumentInsert;

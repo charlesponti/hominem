@@ -30,7 +30,8 @@ export const contacts = pgTable(
 
 export const ContactInsertSchema = createInsertSchema(contacts);
 export const ContactSelectSchema = createSelectSchema(contacts);
-export type ContactInsertSchemaType = z.infer<typeof ContactInsertSchema>;
-export type ContactSelectSchemaType = z.infer<typeof ContactSelectSchema>;
-export type Contact = ContactSelectSchemaType;
-export type ContactInsert = ContactInsertSchemaType;
+export type ContactInput = z.infer<typeof ContactInsertSchema>;
+export type ContactOutput = z.infer<typeof ContactSelectSchema>;
+
+// Backward compatibility alias
+export type Contact = ContactOutput;

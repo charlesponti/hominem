@@ -8,21 +8,11 @@
  */
 
 import type {
-  Possession,
-  PossessionInsert,
-  PossessionSelect,
-  PossessionInsertSchemaType,
-  PossessionSelectSchemaType,
+  PossessionInput,
+  PossessionOutput,
 } from './possessions.schema';
 
 export type {
-  Possession,
-  PossessionInsert,
-  PossessionSelect,
-  PossessionInsertSchemaType,
-  PossessionSelectSchemaType,
+  PossessionInput,
+  PossessionOutput,
 };
-
-// Legacy aliases for backward compatibility
-export type PossessionOutput = Possession;
-export type PossessionInput = PossessionInsert;

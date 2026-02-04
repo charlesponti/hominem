@@ -29,8 +29,5 @@ export const TripSelectSchema = createSelectSchema(trips, {
   startDate: z.date().nullable(),
   endDate: z.date().nullable(),
 });
-export type TripInsertSchemaType = z.infer<typeof TripInsertSchema>;
-export type TripSelectSchemaType = z.infer<typeof TripSelectSchema>;
-export type Trip = TripSelectSchemaType;
-export type TripInsert = TripInsertSchemaType;
-export type TripSelect = Trip;
+export type TripInput = z.infer<typeof TripInsertSchema>;
+export type TripOutput = z.infer<typeof TripSelectSchema>;

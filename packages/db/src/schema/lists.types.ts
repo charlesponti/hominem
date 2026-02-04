@@ -1,45 +1,21 @@
 import type {
-  List,
-  ListInsert,
-  ListSelect,
-  ListInsertSchemaType,
-  ListSelectSchemaType,
-  UserLists,
-  UserListsInsert,
-  UserListsSelect,
-  UserListsInsertSchemaType,
-  UserListsSelectSchemaType,
-  ListInvite,
-  ListInviteInsert,
-  ListInviteSelect,
-  ListInviteInsertSchemaType,
-  ListInviteSelectSchemaType,
+  ListInput,
+  ListOutput,
+  UserListsInput,
+  UserListsOutput,
+  ListInviteInput,
+  ListInviteOutput,
 } from './lists.schema';
 
 export type {
-  List,
-  ListInsert,
-  ListSelect,
-  ListInsertSchemaType,
-  ListSelectSchemaType,
-  UserLists,
-  UserListsInsert,
-  UserListsSelect,
-  UserListsInsertSchemaType,
-  UserListsSelectSchemaType,
-  ListInvite,
-  ListInviteInsert,
-  ListInviteSelect,
-  ListInviteInsertSchemaType,
-  ListInviteSelectSchemaType,
+  ListInput,
+  ListOutput,
+  UserListsInput,
+  UserListsOutput,
+  ListInviteInput,
+  ListInviteOutput,
 };
 
-// Legacy aliases for backward compatibility
-export type ListOutput = List;
-export type ListInput = ListInsert;
-
-export type UserListsOutput = UserLists;
-export type UserListsInput = UserListsInsert;
-
-export type ListInviteOutput = ListInvite;
-export type ListInviteInput = ListInviteInsert;
+// Backward compatibility aliases
+export type ListSelect = ListOutput;
+export type ListInviteSelect = ListInviteOutput;
