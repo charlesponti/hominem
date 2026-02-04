@@ -37,16 +37,11 @@ RUN turbo prune @hominem/api --docker
 FROM base AS deps
 WORKDIR /app
 
-# Copy the pruned package.json files
+# Copy the pruned package.json files only
 COPY --from=pruner /app/out/json/ .
-COPY --from=pruner /app/bunfig.toml ./bunfig.toml
 
 # Generate a fresh lock file for the pruned workspace structure
-# This ensures the lock file matches the pruned package.json files exactly
-RUN bun install --production --ignore-scripts
-
-# Validate that the generated lock file is valid
-RUN bun install --production --frozen-lockfile --ignore-scripts
+RUN bun install --ignore-scripts
 
 # Production stage
 FROM oven/bun:1.3.0-debian AS release
