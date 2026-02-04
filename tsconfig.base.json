@@ -8,6 +8,7 @@
     "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
+    "assumeChangesOnlyAffectDirectDependencies": true,
     "composite": true,
     "declaration": true,
     "declarationMap": true,

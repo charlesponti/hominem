@@ -82,7 +82,9 @@ jobs:
         run: bun run lint
 
       - name: ✅ Type check
-        run: bun run typecheck
+        run: NODE_OPTIONS="--max-old-space-size=4096" bun run typecheck:ci
+        env:
+          TURBO_CONCURRENCY: 4
 
       - name: ⚙️ apply database migrations
         run: bun run db:migrate

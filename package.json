@@ -40,6 +40,7 @@
     "start:prod": "bun apps/api/src/index.ts",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
+    "typecheck:ci": "turbo run typecheck --concurrency=4 --continue",
     "type-performance:run-all": "bun run scripts/type-performance.ts run-all",
     "type-performance:analyze": "bun run scripts/type-performance.ts analyze",
     "type-performance:audit": "bun run scripts/type-performance.ts audit",
@@ -79,6 +80,7 @@
     "@types/react": "19.2.9",
     "@types/react-dom": "19.2.3",
     "drizzle-orm": "0.45.1",
+    "drizzle-kit": "0.31.8",
     "hono": "4.11.6",
     "zod": "4.3.6"
   },

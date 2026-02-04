@@ -17,7 +17,7 @@
     "REDIS_URL",
     "RESEND_API_KEY"
   ],
-  "concurrency": "18",
+  "concurrency": "6",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
