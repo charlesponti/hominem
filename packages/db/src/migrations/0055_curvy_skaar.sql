@@ -40,9 +40,12 @@ ALTER TABLE "events" ALTER COLUMN "created_at" SET DATA TYPE timestamp(3);--> st
 ALTER TABLE "events" ALTER COLUMN "created_at" SET DEFAULT now();--> statement-breakpoint
 ALTER TABLE "events" ALTER COLUMN "updated_at" SET DATA TYPE timestamp(3);--> statement-breakpoint
 ALTER TABLE "events" ALTER COLUMN "updated_at" SET DEFAULT now();--> statement-breakpoint
-ALTER TABLE "health" ALTER COLUMN "id" SET DATA TYPE uuid;--> statement-breakpoint
-ALTER TABLE "health" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();--> statement-breakpoint
-ALTER TABLE "health" ALTER COLUMN "user_id" SET DATA TYPE uuid;--> statement-breakpoint
+ALTER TABLE "health" ALTER COLUMN "created_at" SET DATA TYPE timestamp(3);--> statement-breakpoint
+ALTER TABLE "health" ALTER COLUMN "created_at" SET DEFAULT now();--> statement-breakpoint
+ALTER TABLE "health" ALTER COLUMN "updated_at" SET DATA TYPE timestamp(3);--> statement-breakpoint
+ALTER TABLE "health" ALTER COLUMN "updated_at" SET DEFAULT now();--> statement-breakpoint
+-- Note: health.id remains as integer to preserve existing data
+-- UUID ID conversion would require data migration and is out of scope for this phase
 ALTER TABLE "interview_interviewers" ALTER COLUMN "created_at" SET DATA TYPE timestamp(3);--> statement-breakpoint
 ALTER TABLE "interview_interviewers" ALTER COLUMN "created_at" SET DEFAULT now();--> statement-breakpoint
 ALTER TABLE "interviews" ALTER COLUMN "created_at" SET DATA TYPE timestamp(3);--> statement-breakpoint
