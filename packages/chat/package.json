@@ -21,15 +21,12 @@
     "@hominem/db": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
+    "drizzle-orm": "0.45.1",
     "zod": "4.3.6"
   },
   "devDependencies": {
     "@types/node": "^22.18.13",
-    "drizzle-orm": "0.45.1",
     "typescript": "5.9.3",
     "vitest": "4.0.16"
-  },
-  "peerDependencies": {
-    "drizzle-orm": "0.45.1"
   }
 }
