@@ -20,7 +20,7 @@ export class JobService {
       .update(jobs)
       .set({
         ...data,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
         version: data.version ? data.version + 1 : 1,
       })
       .where(eq(jobs.id, id))

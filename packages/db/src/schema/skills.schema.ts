@@ -56,8 +56,14 @@ export const skills = pgTable(
   // Removed redundant uniqueIndex for name as .unique() handles it
 );
 
-export const SkillInsertSchema = createInsertSchema(skills);
-export const SkillSelectSchema = createSelectSchema(skills);
+export const SkillInsertSchema = createInsertSchema(skills, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export const SkillSelectSchema = createSelectSchema(skills, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
 export type SkillInsertSchemaType = z.infer<typeof SkillInsertSchema>;
 export type SkillSelectSchemaType = z.infer<typeof SkillSelectSchema>;
 export type Skill = SkillSelectSchemaType;
@@ -90,8 +96,16 @@ export const user_skills = pgTable(
   ],
 );
 
-export const UserSkillInsertSchema = createInsertSchema(user_skills);
-export const UserSkillSelectSchema = createSelectSchema(user_skills);
+export const UserSkillInsertSchema = createInsertSchema(user_skills, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  lastUsedDate: z.date().nullable(),
+});
+export const UserSkillSelectSchema = createSelectSchema(user_skills, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  lastUsedDate: z.date().nullable(),
+});
 export type UserSkillInsertSchemaType = z.infer<typeof UserSkillInsertSchema>;
 export type UserSkillSelectSchemaType = z.infer<typeof UserSkillSelectSchema>;
 export type UserSkill = UserSkillSelectSchemaType;

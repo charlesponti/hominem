@@ -28,8 +28,14 @@ export const vectorDocuments = pgTable(
   ],
 );
 
-export const VectorDocumentInsertSchema = createInsertSchema(vectorDocuments);
-export const VectorDocumentSelectSchema = createSelectSchema(vectorDocuments);
+export const VectorDocumentInsertSchema = createInsertSchema(vectorDocuments, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export const VectorDocumentSelectSchema = createSelectSchema(vectorDocuments, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
 export type VectorDocumentInsertSchemaType = z.infer<typeof VectorDocumentInsertSchema>;
 export type VectorDocumentSelectSchemaType = z.infer<typeof VectorDocumentSelectSchema>;
 export type VectorDocument = VectorDocumentSelectSchemaType;

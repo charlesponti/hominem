@@ -79,8 +79,18 @@ export const possessions = pgTable(
   ],
 );
 
-export const PossessionInsertSchema = createInsertSchema(possessions);
-export const PossessionSelectSchema = createSelectSchema(possessions);
+export const PossessionInsertSchema = createInsertSchema(possessions, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  dateAcquired: z.date(),
+  dateSold: z.date().nullable(),
+});
+export const PossessionSelectSchema = createSelectSchema(possessions, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  dateAcquired: z.date(),
+  dateSold: z.date().nullable(),
+});
 export type PossessionInsertSchemaType = z.infer<typeof PossessionInsertSchema>;
 export type PossessionSelectSchemaType = z.infer<typeof PossessionSelectSchema>;
 export type Possession = PossessionSelectSchemaType;

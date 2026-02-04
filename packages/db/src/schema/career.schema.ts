@@ -85,8 +85,14 @@ export const jobs = pgTable('jobs', {
   version: integer('version').notNull().default(1), // Version number for tracking changes to the job posting
 });
 
-export const JobInsertSchema = createInsertSchema(jobs);
-export const JobSelectSchema = createSelectSchema(jobs);
+export const JobInsertSchema = createInsertSchema(jobs, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export const JobSelectSchema = createSelectSchema(jobs, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
 export type JobInsertSchemaType = z.infer<typeof JobInsertSchema>;
 export type JobSelectSchemaType = z.infer<typeof JobSelectSchema>;
 export type Job = JobSelectSchemaType;
@@ -131,8 +137,18 @@ export const job_applications = pgTable('job_applications', {
   ],
 );
 
-export const JobApplicationInsertSchema = createInsertSchema(job_applications);
-export const JobApplicationSelectSchema = createSelectSchema(job_applications);
+export const JobApplicationInsertSchema = createInsertSchema(job_applications, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  startDate: z.date(),
+  endDate: z.date().nullable(),
+});
+export const JobApplicationSelectSchema = createSelectSchema(job_applications, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  startDate: z.date(),
+  endDate: z.date().nullable(),
+});
 export type JobApplicationInsertSchemaType = z.infer<typeof JobApplicationInsertSchema>;
 export type JobApplicationSelectSchemaType = z.infer<typeof JobApplicationSelectSchema>;
 export type JobApplication = JobApplicationSelectSchemaType;
@@ -158,8 +174,16 @@ export const application_stages = pgTable(
   ],
 );
 
-export const ApplicationStageInsertSchema = createInsertSchema(application_stages);
-export const ApplicationStageSelectSchema = createSelectSchema(application_stages);
+export const ApplicationStageInsertSchema = createInsertSchema(application_stages, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  date: z.date(),
+});
+export const ApplicationStageSelectSchema = createSelectSchema(application_stages, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  date: z.date(),
+});
 export type ApplicationStageInsertSchemaType = z.infer<typeof ApplicationStageInsertSchema>;
 export type ApplicationStageSelectSchemaType = z.infer<typeof ApplicationStageSelectSchema>;
 export type ApplicationStage = ApplicationStageSelectSchemaType;
@@ -207,8 +231,18 @@ export const work_experiences = pgTable(
   ],
 );
 
-export const WorkExperienceInsertSchema = createInsertSchema(work_experiences);
-export const WorkExperienceSelectSchema = createSelectSchema(work_experiences);
+export const WorkExperienceInsertSchema = createInsertSchema(work_experiences, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  startDate: z.date().nullable(),
+  endDate: z.date().nullable(),
+});
+export const WorkExperienceSelectSchema = createSelectSchema(work_experiences, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  startDate: z.date().nullable(),
+  endDate: z.date().nullable(),
+});
 export type WorkExperienceInsertSchemaType = z.infer<typeof WorkExperienceInsertSchema>;
 export type WorkExperienceSelectSchemaType = z.infer<typeof WorkExperienceSelectSchema>;
 export type WorkExperience = WorkExperienceSelectSchemaType;

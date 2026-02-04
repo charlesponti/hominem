@@ -53,8 +53,16 @@ export const networking_events = pgTable(
   ],
 );
 
-export const NetworkingEventInsertSchema = createInsertSchema(networking_events);
-export const NetworkingEventSelectSchema = createSelectSchema(networking_events);
+export const NetworkingEventInsertSchema = createInsertSchema(networking_events, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  date: z.date(),
+});
+export const NetworkingEventSelectSchema = createSelectSchema(networking_events, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  date: z.date(),
+});
 export type NetworkingEventInsertSchemaType = z.infer<typeof NetworkingEventInsertSchema>;
 export type NetworkingEventSelectSchemaType = z.infer<typeof NetworkingEventSelectSchema>;
 export type NetworkingEvent = NetworkingEventSelectSchemaType;
@@ -85,8 +93,14 @@ export const networking_event_attendees = pgTable(
   ],
 );
 
-export const NetworkingEventAttendeeInsertSchema = createInsertSchema(networking_event_attendees);
-export const NetworkingEventAttendeeSelectSchema = createSelectSchema(networking_event_attendees);
+export const NetworkingEventAttendeeInsertSchema = createInsertSchema(networking_event_attendees, {
+  createdAt: z.string(),
+  followUpDate: z.date().nullable(),
+});
+export const NetworkingEventAttendeeSelectSchema = createSelectSchema(networking_event_attendees, {
+  createdAt: z.string(),
+  followUpDate: z.date().nullable(),
+});
 export type NetworkingEventAttendeeInsertSchemaType = z.infer<typeof NetworkingEventAttendeeInsertSchema>;
 export type NetworkingEventAttendeeSelectSchemaType = z.infer<typeof NetworkingEventAttendeeSelectSchema>;
 export type NetworkingEventAttendee = NetworkingEventAttendeeSelectSchemaType;

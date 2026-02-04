@@ -79,8 +79,18 @@ export const interviews = pgTable(
   ],
 );
 
-export const InterviewInsertSchema = createInsertSchema(interviews);
-export const InterviewSelectSchema = createSelectSchema(interviews);
+export const InterviewInsertSchema = createInsertSchema(interviews, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  scheduledAt: z.date(),
+  thankYouNoteSent: z.date().nullable(),
+});
+export const InterviewSelectSchema = createSelectSchema(interviews, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  scheduledAt: z.date(),
+  thankYouNoteSent: z.date().nullable(),
+});
 export type InterviewInsertSchemaType = z.infer<typeof InterviewInsertSchema>;
 export type InterviewSelectSchemaType = z.infer<typeof InterviewSelectSchema>;
 export type Interview = InterviewSelectSchemaType;
@@ -109,8 +119,12 @@ export const interview_interviewers = pgTable(
   ],
 );
 
-export const InterviewInterviewerInsertSchema = createInsertSchema(interview_interviewers);
-export const InterviewInterviewerSelectSchema = createSelectSchema(interview_interviewers);
+export const InterviewInterviewerInsertSchema = createInsertSchema(interview_interviewers, {
+  createdAt: z.string(),
+});
+export const InterviewInterviewerSelectSchema = createSelectSchema(interview_interviewers, {
+  createdAt: z.string(),
+});
 export type InterviewInterviewerInsertSchemaType = z.infer<typeof InterviewInterviewerInsertSchema>;
 export type InterviewInterviewerSelectSchemaType = z.infer<typeof InterviewInterviewerSelectSchema>;
 export type InterviewInterviewer = InterviewInterviewerSelectSchemaType;

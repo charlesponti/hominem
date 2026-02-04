@@ -17,8 +17,18 @@ export const trips = pgTable('trips', {
   updatedAt: updatedAtColumn(),
 });
 
-export const TripInsertSchema = createInsertSchema(trips);
-export const TripSelectSchema = createSelectSchema(trips);
+export const TripInsertSchema = createInsertSchema(trips, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  startDate: z.date().nullable(),
+  endDate: z.date().nullable(),
+});
+export const TripSelectSchema = createSelectSchema(trips, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  startDate: z.date().nullable(),
+  endDate: z.date().nullable(),
+});
 export type TripInsertSchemaType = z.infer<typeof TripInsertSchema>;
 export type TripSelectSchemaType = z.infer<typeof TripSelectSchema>;
 export type Trip = TripSelectSchemaType;

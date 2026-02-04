@@ -19,7 +19,7 @@ export class ApplicationService {
       .update(job_applications)
       .set({
         ...data,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(job_applications.id, id))
       .returning();

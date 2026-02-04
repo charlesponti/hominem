@@ -19,8 +19,16 @@ export const health = pgTable('health', {
   index('health_date_idx').on(table.date),
 ]);
 
-export const HealthInsertSchema = createInsertSchema(health);
-export const HealthSelectSchema = createSelectSchema(health);
+export const HealthInsertSchema = createInsertSchema(health, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  date: z.date(),
+});
+export const HealthSelectSchema = createSelectSchema(health, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  date: z.date(),
+});
 export type HealthInsertSchemaType = z.infer<typeof HealthInsertSchema>;
 export type HealthSelectSchemaType = z.infer<typeof HealthSelectSchema>;
 export type Health = HealthSelectSchemaType;

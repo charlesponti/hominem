@@ -191,11 +191,41 @@ export const events = pgTable(
 export const EventInsertSchema = createInsertSchema(events, {
   type: z.string(),
   source: z.enum(['manual', 'google_calendar']),
+  // Override timestamp fields created/updated to be strings (mode: 'string' in DB)
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  // Regular timestamp fields that use default mode (Date objects)
+  date: z.date(),
+  dateStart: z.date().nullable(),
+  dateEnd: z.date().nullable(),
+  dateTime: z.date().nullable(),
+  lastSyncedAt: z.date().nullable(),
+  deletedAt: z.date().nullable(),
+  // Override JSON fields
+  reminderSettings: z.any().nullable(),
+  dependencies: z.any().nullable(),
+  resources: z.any().nullable(),
+  milestones: z.any().nullable(),
 });
 
 export const EventSelectSchema = createSelectSchema(events, {
   type: z.string(),
   source: z.enum(['manual', 'google_calendar']),
+  // Override timestamp fields created/updated to be strings (mode: 'string' in DB)
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  // Regular timestamp fields that use default mode (Date objects)
+  date: z.date(),
+  dateStart: z.date().nullable(),
+  dateEnd: z.date().nullable(),
+  dateTime: z.date().nullable(),
+  lastSyncedAt: z.date().nullable(),
+  deletedAt: z.date().nullable(),
+  // Override JSON fields
+  reminderSettings: z.any().nullable(),
+  dependencies: z.any().nullable(),
+  resources: z.any().nullable(),
+  milestones: z.any().nullable(),
 });
 
 export type EventInsertSchemaType = z.infer<typeof EventInsertSchema>;

@@ -56,8 +56,14 @@ export const artists = pgTable(
   ],
 );
 
-export const ArtistInsertSchema = createInsertSchema(artists);
-export const ArtistSelectSchema = createSelectSchema(artists);
+export const ArtistInsertSchema = createInsertSchema(artists, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export const ArtistSelectSchema = createSelectSchema(artists, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
 export type ArtistInsertSchemaType = z.infer<typeof ArtistInsertSchema>;
 export type ArtistSelectSchemaType = z.infer<typeof ArtistSelectSchema>;
 export type Artist = ArtistSelectSchemaType;
@@ -92,8 +98,16 @@ export const userArtists = pgTable(
   ],
 );
 
-export const UserArtistInsertSchema = createInsertSchema(userArtists);
-export const UserArtistSelectSchema = createSelectSchema(userArtists);
+export const UserArtistInsertSchema = createInsertSchema(userArtists, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  lastListenedAt: z.date().nullable(),
+});
+export const UserArtistSelectSchema = createSelectSchema(userArtists, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  lastListenedAt: z.date().nullable(),
+});
 export type UserArtistInsertSchemaType = z.infer<typeof UserArtistInsertSchema>;
 export type UserArtistSelectSchemaType = z.infer<typeof UserArtistSelectSchema>;
 export type UserArtist = UserArtistSelectSchemaType;
