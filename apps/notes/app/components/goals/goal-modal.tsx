@@ -67,10 +67,10 @@ export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: Goa
     if (newMilestones[index]) {
       const milestoneToUpdate = newMilestones[index];
       if (field === 'description') {
-         milestoneToUpdate.description = value as string;
-       } else if (field === 'isCompleted') {
-         milestoneToUpdate.isCompleted = value as boolean;
-       }
+        milestoneToUpdate.description = value as string;
+      } else if (field === 'isCompleted') {
+        milestoneToUpdate.isCompleted = value as boolean;
+      }
     }
     form.setValue('milestones', newMilestones);
   };

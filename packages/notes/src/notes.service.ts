@@ -652,11 +652,6 @@ export {
   ListNotesOutputSchema,
   UpdateNoteZodSchema,
 } from './types';
-export type {
-  CreateNoteInput,
-  ListNotesInput,
-  ListNotesOutput,
-  UpdateNoteInput,
-} from './types';
+export type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput } from './types';
 
 export const notesService = new NotesService();

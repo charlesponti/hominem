@@ -199,12 +199,12 @@ export async function sendListInvite(params: SendListInviteParams): Promise<List
     ),
   });
 
-   if (existingInvite && !existingInvite.isAccepted) {
-     throw new ConflictError('An invite for this email address to this list already exists', {
-       listId,
-       email: normalizedInvitedEmail,
-     });
-   }
+  if (existingInvite && !existingInvite.isAccepted) {
+    throw new ConflictError('An invite for this email address to this list already exists', {
+      listId,
+      email: normalizedInvitedEmail,
+    });
+  }
 
   // Generate invite token
   const token = crypto.randomBytes(32).toString('hex');
@@ -215,18 +215,18 @@ export async function sendListInvite(params: SendListInviteParams): Promise<List
   });
 
   try {
-     const createdInvite = await db
-       .insert(listInvite)
-       .values({
-         listId,
-         invitedUserEmail: normalizedInvitedEmail,
-         invitedUserId: invitedUserRecord?.id || null,
-         isAccepted: false,
-         userId: invitingUserId,
-         token,
-       })
-       .returning()
-       .then(takeUniqueOrThrow);
+    const createdInvite = await db
+      .insert(listInvite)
+      .values({
+        listId,
+        invitedUserEmail: normalizedInvitedEmail,
+        invitedUserId: invitedUserRecord?.id || null,
+        isAccepted: false,
+        userId: invitingUserId,
+        token,
+      })
+      .returning()
+      .then(takeUniqueOrThrow);
 
     // Send invite email
     const inviteLink = `${baseUrl.replace(/\/$/, '')}/invites?token=${token}&listId=${listId}`;
@@ -284,12 +284,12 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
     throw new NotFoundError('Invite', { listId, token });
   }
 
-   if (invite.isAccepted) {
-     throw new ValidationError('Invite already accepted', {
-       listId,
-       token,
-     });
-   }
+  if (invite.isAccepted) {
+    throw new ValidationError('Invite already accepted', {
+      listId,
+      token,
+    });
+  }
 
   const listRecord = await db.query.list.findFirst({
     where: eq(list.id, invite.listId),
@@ -315,16 +315,16 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
   }
 
   try {
-     const acceptedList = await db.transaction(async (tx) => {
-       await tx
-         .update(listInvite)
-         .set({
-           isAccepted: true,
-           acceptedAt: new Date().toISOString(),
-           invitedUserId: acceptingUserId,
-           updatedAt: new Date().toISOString(),
-         })
-         .where(and(eq(listInvite.listId, invite.listId), eq(listInvite.token, invite.token)));
+    const acceptedList = await db.transaction(async (tx) => {
+      await tx
+        .update(listInvite)
+        .set({
+          isAccepted: true,
+          acceptedAt: new Date().toISOString(),
+          invitedUserId: acceptingUserId,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(and(eq(listInvite.listId, invite.listId), eq(listInvite.token, invite.token)));
 
       await tx
         .insert(userLists)
@@ -389,12 +389,12 @@ export async function deleteListInvite(params: DeleteListInviteParams): Promise<
     throw new NotFoundError('Invite', { listId, email: normalizedEmail });
   }
 
-   if (invite.isAccepted) {
-     throw new ValidationError('Invite has already been accepted and cannot be deleted', {
-       listId,
-       email: normalizedEmail,
-     });
-   }
+  if (invite.isAccepted) {
+    throw new ValidationError('Invite has already been accepted and cannot be deleted', {
+      listId,
+      email: normalizedEmail,
+    });
+  }
 
   try {
     await db
