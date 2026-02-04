@@ -88,10 +88,12 @@ export const jobs = pgTable('jobs', {
 export const JobInsertSchema = createInsertSchema(jobs, {
   createdAt: z.string(),
   updatedAt: z.string(),
+  status: z.enum(['draft', 'open', 'closed', 'filled', 'archived']).optional(),
 });
 export const JobSelectSchema = createSelectSchema(jobs, {
   createdAt: z.string(),
   updatedAt: z.string(),
+  status: z.enum(['draft', 'open', 'closed', 'filled', 'archived']).optional(),
 });
 export type JobInsertSchemaType = z.infer<typeof JobInsertSchema>;
 export type JobSelectSchemaType = z.infer<typeof JobSelectSchema>;
@@ -142,12 +144,14 @@ export const JobApplicationInsertSchema = createInsertSchema(job_applications, {
   updatedAt: z.string(),
   startDate: z.date(),
   endDate: z.date().nullable(),
+  status: z.enum(['Applied', 'Hired', 'Withdrew', 'Rejected', 'Offer', 'Screening', 'Interviewing', 'Pending']).optional(),
 });
 export const JobApplicationSelectSchema = createSelectSchema(job_applications, {
   createdAt: z.string(),
   updatedAt: z.string(),
   startDate: z.date(),
   endDate: z.date().nullable(),
+  status: z.enum(['Applied', 'Hired', 'Withdrew', 'Rejected', 'Offer', 'Screening', 'Interviewing', 'Pending']).optional(),
 });
 export type JobApplicationInsertSchemaType = z.infer<typeof JobApplicationInsertSchema>;
 export type JobApplicationSelectSchemaType = z.infer<typeof JobApplicationSelectSchema>;
