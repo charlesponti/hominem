@@ -1,7 +1,6 @@
 import { type InferInsertModel, type InferSelectModel, sql } from 'drizzle-orm';
 import { index, jsonb, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import * as z from 'zod';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
 import {
   type Json,
@@ -244,24 +243,85 @@ export type BudgetGoalInsert = InferInsertModel<typeof budgetGoals>;
 export type BudgetGoalSelect = BudgetGoal;
 
 // Zod Validation Schemas
-// Finance Account Validation Schemas
-export const FinanceAccountSchema = createSelectSchema(financeAccounts, {
-  type: AccountTypeEnum,
-  meta: z.custom<unknown>().optional().nullable(),
+// Account Validation Schemas - for service layer validation
+/**
+ * FinanceAccountSchema - Complete account data as stored in database
+ * Used for validating account information throughout the finance domain
+ */
+export const FinanceAccountSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  balance: z.string().or(z.number()),
+  name: z.string(),
+  mask: z.string().nullable().optional(),
+  isoCurrencyCode: z.string().nullable().optional(),
+  subtype: z.string().nullable().optional(),
+  officialName: z.string().nullable().optional(),
+  limit: z.string().or(z.number()).nullable().optional(),
+  meta: z.unknown().nullable().optional(),
+  lastUpdated: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  institutionId: z.string().nullable().optional(),
+  plaidItemId: z.string().nullable().optional(),
+  plaidAccountId: z.string().nullable().optional(),
+  userId: z.string(),
+  interestRate: z.string().or(z.number()).nullable().optional(),
+  minimumPayment: z.string().or(z.number()).nullable().optional(),
 });
 
-export const FinanceAccountInsertSchema = createInsertSchema(financeAccounts, {
-  type: AccountTypeEnum,
-  meta: z.custom<unknown>().optional().nullable(),
+/**
+ * FinanceAccountInsertSchema - Account data required for INSERT operations
+ * Subset of FinanceAccountSchema with optional auto-generated fields
+ */
+export const FinanceAccountInsertSchema = FinanceAccountSchema.partial().extend({
+  id: z.string().optional(),
+  balance: z.string().or(z.number()),
+  name: z.string(),
+  type: z.string(),
+  userId: z.string(),
 });
 
-// Transaction Validation Schemas
-export const TransactionSchema = createSelectSchema(transactions, {
-  type: TransactionTypeEnum,
-  location: TransactionLocationSchema.optional().nullable(),
+// Transaction Validation Schemas - for service layer validation
+/**
+ * TransactionSchema - Complete transaction data as stored in database
+ * Used for validating transaction information throughout the finance domain
+ */
+export const TransactionSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  amount: z.string().or(z.number()),
+  date: z.string(),
+  description: z.string().nullable().optional(),
+  merchantName: z.string().nullable().optional(),
+  accountId: z.string(),
+  fromAccountId: z.string().nullable().optional(),
+  toAccountId: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  parentCategory: z.string().nullable().optional(),
+  excluded: z.boolean().or(z.null()).default(false),
+  tags: z.string().nullable().optional(),
+  accountMask: z.string().nullable().optional(),
+  note: z.string().nullable().optional(),
+  recurring: z.boolean().or(z.null()).default(false),
+  pending: z.boolean().or(z.null()).default(false),
+  paymentChannel: z.string().nullable().optional(),
+  location: z.unknown().nullable().optional(),
+  plaidTransactionId: z.string().nullable().optional(),
+  source: z.string().nullable().default('manual'),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  userId: z.string(),
 });
 
-export const TransactionInsertSchema = createInsertSchema(transactions, {
-  type: TransactionTypeEnum,
-  location: TransactionLocationSchema.optional().nullable(),
+/**
+ * TransactionInsertSchema - Transaction data required for INSERT operations
+ * Subset of TransactionSchema with optional auto-generated fields
+ */
+export const TransactionInsertSchema = TransactionSchema.partial().extend({
+  id: z.string().optional(),
+  type: z.string(),
+  amount: z.string().or(z.number()),
+  accountId: z.string(),
 });

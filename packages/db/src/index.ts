@@ -8,6 +8,15 @@ export {
   takeUniqueOrThrow,
 } from './client';
 
+// Re-export validation schemas
+export {
+  UserSchema,
+  FinanceAccountSchema,
+  FinanceAccountInsertSchema,
+  TransactionSchema,
+  TransactionInsertSchema,
+} from './schema/validations';
+
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 import type * as schema from './schema/tables';
