@@ -3,9 +3,7 @@ import { index, jsonb, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-
 import * as z from 'zod';
 
 import {
-  type Json,
   type TransactionLocation,
-  TransactionLocationSchema,
   createdAtColumn,
   updatedAtColumn,
   requiredTextColumn,
@@ -92,24 +90,26 @@ export type FinancialInstitutionInsert = InferInsertModel<typeof financialInstit
 export type FinancialInstitutionSelect = FinancialInstitution;
 
 // Plaid items table to track connected institutions
-export const plaidItems = pgTable('plaid_items', {
-  id: requiredUuidColumn('id').primaryKey().defaultRandom(),
-  itemId: text('item_id').notNull().unique(), // Plaid's item_id
-  accessToken: requiredTextColumn('access_token'),
-  institutionId: text('institution_id')
-    .references(() => financialInstitutions.id)
-    .notNull(),
-  status: institutionStatusEnum('status').default('active').notNull(),
-  consentExpiresAt: optionalTimestampColumn('consent_expires_at'),
-  transactionsCursor: optionalTextColumn('transactions_cursor'),
-  error: optionalTextColumn('error'),
-  lastSyncedAt: optionalTimestampColumn('last_synced_at'),
-  createdAt: createdAtColumn(),
-  updatedAt: updatedAtColumn(),
-  userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
-}, (table) => [
-  index('plaid_items_institution_id_idx').on(table.institutionId),
-]);
+export const plaidItems = pgTable(
+  'plaid_items',
+  {
+    id: requiredUuidColumn('id').primaryKey().defaultRandom(),
+    itemId: text('item_id').notNull().unique(), // Plaid's item_id
+    accessToken: requiredTextColumn('access_token'),
+    institutionId: text('institution_id')
+      .references(() => financialInstitutions.id)
+      .notNull(),
+    status: institutionStatusEnum('status').default('active').notNull(),
+    consentExpiresAt: optionalTimestampColumn('consent_expires_at'),
+    transactionsCursor: optionalTextColumn('transactions_cursor'),
+    error: optionalTextColumn('error'),
+    lastSyncedAt: optionalTimestampColumn('last_synced_at'),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
+    userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  },
+  (table) => [index('plaid_items_institution_id_idx').on(table.institutionId)],
+);
 export type PlaidItem = InferSelectModel<typeof plaidItems>;
 export type PlaidItemInsert = InferInsertModel<typeof plaidItems>;
 export type PlaidItemSelect = PlaidItem;
@@ -243,6 +243,29 @@ export type BudgetGoalInsert = InferInsertModel<typeof budgetGoals>;
 export type BudgetGoalSelect = BudgetGoal;
 
 // Zod Validation Schemas
+// Financial Institution Validation Schemas
+export const FinancialInstitutionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  url: z.string().nullable().optional(),
+  logo: z.string().nullable().optional(),
+  primaryColor: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+// Budget Category Validation Schemas
+export const BudgetCategorySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.string(),
+  budgetId: z.string().nullable().optional(),
+  averageMonthlyExpense: z.string().or(z.number()).nullable().optional(),
+  color: z.string().nullable().optional(),
+  userId: z.string(),
+});
+
 // Account Validation Schemas - for service layer validation
 /**
  * FinanceAccountSchema - Complete account data as stored in database

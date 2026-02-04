@@ -1,15 +1,18 @@
-import { type InferInsertModel, type InferSelectModel, sql } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import {
   foreignKey,
   pgTable,
   primaryKey,
   text,
-  timestamp,
   uuid,
   boolean,
   uniqueIndex,
+  timestamp,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import * as z from 'zod';
 
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { users } from './users.schema';
 
 export const list = pgTable(
@@ -33,9 +36,11 @@ export const list = pgTable(
       .onDelete('cascade'),
   ],
 );
-export type List = InferSelectModel<typeof list>;
-export type ListInsert = InferInsertModel<typeof list>;
-export type ListSelect = List;
+
+export const ListInsertSchema = createInsertSchema(list);
+export const ListSelectSchema = createSelectSchema(list);
+export type ListInput = z.infer<typeof ListInsertSchema>;
+export type ListOutput = z.infer<typeof ListSelectSchema>;
 
 export const userLists = pgTable(
   'user_lists',
@@ -66,14 +71,16 @@ export const userLists = pgTable(
     }),
   ],
 );
-export type UserLists = InferSelectModel<typeof userLists>;
-export type UserListsInsert = InferInsertModel<typeof userLists>;
-export type UserListsSelect = UserLists;
+
+export const UserListsInsertSchema = createInsertSchema(userLists);
+export const UserListsSelectSchema = createSelectSchema(userLists);
+export type UserListsInput = z.infer<typeof UserListsInsertSchema>;
+export type UserListsOutput = z.infer<typeof UserListsSelectSchema>;
 
 export const listInvite = pgTable(
   'list_invite',
   {
-    accepted: boolean('accepted').default(false).notNull(),
+    isAccepted: boolean('accepted').default(false).notNull(),
     listId: uuid('listId').notNull(),
     invitedUserEmail: text('invitedUserEmail').notNull(),
     // Invites can be sent to users that are not registered, so the id can be null.
@@ -116,6 +123,7 @@ export const listInvite = pgTable(
     uniqueIndex('list_invite_token_unique').on(table.token),
   ],
 );
-export type ListInvite = InferSelectModel<typeof listInvite>;
-export type ListInviteInsert = InferInsertModel<typeof listInvite>;
-export type ListInviteSelect = ListInvite;
+export const ListInviteInsertSchema = createInsertSchema(listInvite);
+export const ListInviteSelectSchema = createSelectSchema(listInvite);
+export type ListInviteInput = z.infer<typeof ListInviteInsertSchema>;
+export type ListInviteOutput = z.infer<typeof ListInviteSelectSchema>;

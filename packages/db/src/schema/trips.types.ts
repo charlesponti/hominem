@@ -7,10 +7,12 @@
  * Rule: Import from this file, not from trips.schema.ts
  */
 
-import type { Trip, TripInsert, TripSelect } from './trips.schema';
+import type {
+  TripInput,
+  TripOutput,
+} from './trips.schema';
 
-export type { Trip, TripInsert, TripSelect };
-
-// Legacy aliases for backward compatibility
-export type TripOutput = Trip;
-export type TripInput = TripInsert;
+export type {
+  TripInput,
+  TripOutput,
+};

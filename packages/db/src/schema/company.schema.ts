@@ -1,5 +1,8 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
+
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 
 export const companies = pgTable('companies', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -9,11 +12,11 @@ export const companies = pgTable('companies', {
   industry: text('industry').notNull(),
   size: text('size').notNull(),
   location: text('location').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  createdAt: createdAtColumn(),
+  updatedAt: updatedAtColumn(),
 });
 
-export type Company = InferSelectModel<typeof companies>;
-export type CompanyInsert = InferInsertModel<typeof companies>;
-export type CompanySelect = Company;
-export type NewCompany = CompanyInsert;
+export const CompanyInsertSchema = createInsertSchema(companies);
+export const CompanySelectSchema = createSelectSchema(companies);
+export type CompanyInput = z.infer<typeof CompanyInsertSchema>;
+export type CompanyOutput = z.infer<typeof CompanySelectSchema>;

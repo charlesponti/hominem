@@ -1,6 +1,8 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { index, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { users } from './users.schema';
 
 export const contacts = pgTable(
@@ -17,8 +19,8 @@ export const contacts = pgTable(
     linkedinUrl: text('linkedin_url'),
     title: text('title'),
     notes: text('notes'),
-    createdAt: timestamp('created_at', { precision: 3, mode: 'string' }).notNull().defaultNow(),
-    updatedAt: timestamp('updated_at', { precision: 3, mode: 'string' }).notNull().defaultNow(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
   },
   (table) => [
     index('contact_user_id_idx').on(table.userId),
@@ -26,5 +28,10 @@ export const contacts = pgTable(
   ],
 );
 
-export type Contact = InferSelectModel<typeof contacts>;
-export type ContactInsert = InferInsertModel<typeof contacts>;
+export const ContactInsertSchema = createInsertSchema(contacts);
+export const ContactSelectSchema = createSelectSchema(contacts);
+export type ContactInput = z.infer<typeof ContactInsertSchema>;
+export type ContactOutput = z.infer<typeof ContactSelectSchema>;
+
+// Backward compatibility alias
+export type Contact = ContactOutput;

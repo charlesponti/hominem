@@ -15,7 +15,7 @@ export type GoalStatus = z.infer<typeof GoalStatusSchema>;
  */
 export const GoalMilestoneSchema = z.object({
   description: z.string(),
-  completed: z.boolean().default(false),
+  isCompleted: z.boolean().default(false),
 });
 export type GoalMilestone = z.infer<typeof GoalMilestoneSchema>;
 

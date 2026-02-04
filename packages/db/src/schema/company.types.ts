@@ -7,10 +7,12 @@
  * Rule: Import from this file, not from company.schema.ts
  */
 
-import type { Company, CompanyInsert, CompanySelect, NewCompany } from './company.schema';
+import type {
+  CompanyInput,
+  CompanyOutput,
+} from './company.schema';
 
-export type { Company, CompanyInsert, CompanySelect, NewCompany };
-
-// Legacy aliases for backward compatibility
-export type CompanyOutput = Company;
-export type CompanyInput = CompanyInsert;
+export type {
+  CompanyInput,
+  CompanyOutput,
+};

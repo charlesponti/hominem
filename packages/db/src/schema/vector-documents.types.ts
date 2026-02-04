@@ -8,14 +8,11 @@
  */
 
 import type {
-  VectorDocument,
-  VectorDocumentInsert,
-  VectorDocumentSelect,
-  NewVectorDocument,
+  VectorDocumentInput,
+  VectorDocumentOutput,
 } from './vector-documents.schema';
 
-export type { VectorDocument, VectorDocumentInsert, VectorDocumentSelect, NewVectorDocument };
-
-// Legacy aliases for backward compatibility
-export type VectorDocumentOutput = VectorDocument;
-export type VectorDocumentInput = VectorDocumentInsert;
+export type {
+  VectorDocumentInput,
+  VectorDocumentOutput,
+};

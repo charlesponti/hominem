@@ -199,7 +199,7 @@ export async function sendListInvite(params: SendListInviteParams): Promise<List
     ),
   });
 
-  if (existingInvite && !existingInvite.accepted) {
+  if (existingInvite && !existingInvite.isAccepted) {
     throw new ConflictError('An invite for this email address to this list already exists', {
       listId,
       email: normalizedInvitedEmail,
@@ -221,7 +221,7 @@ export async function sendListInvite(params: SendListInviteParams): Promise<List
         listId,
         invitedUserEmail: normalizedInvitedEmail,
         invitedUserId: invitedUserRecord?.id || null,
-        accepted: false,
+        isAccepted: false,
         userId: invitingUserId,
         token,
       })
@@ -284,7 +284,7 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
     throw new NotFoundError('Invite', { listId, token });
   }
 
-  if (invite.accepted) {
+  if (invite.isAccepted) {
     throw new ValidationError('Invite already accepted', {
       listId,
       token,
@@ -319,7 +319,7 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
       await tx
         .update(listInvite)
         .set({
-          accepted: true,
+          isAccepted: true,
           acceptedAt: new Date().toISOString(),
           invitedUserId: acceptingUserId,
           updatedAt: new Date().toISOString(),
@@ -389,7 +389,7 @@ export async function deleteListInvite(params: DeleteListInviteParams): Promise<
     throw new NotFoundError('Invite', { listId, email: normalizedEmail });
   }
 
-  if (invite.accepted) {
+  if (invite.isAccepted) {
     throw new ValidationError('Invite has already been accepted and cannot be deleted', {
       listId,
       email: normalizedEmail,

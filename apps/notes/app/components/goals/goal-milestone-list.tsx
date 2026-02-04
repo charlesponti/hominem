@@ -38,8 +38,8 @@ export function GoalMilestoneList({
           />
           <input
             type="checkbox"
-            checked={milestone.completed}
-            onChange={(e) => onChange(index, 'completed', e.target.checked)}
+            checked={milestone.isCompleted}
+            onChange={(e) => onChange(index, 'isCompleted', e.target.checked)}
             className="size-5"
           />
           <Button variant="ghost" size="sm" onClick={() => onRemove(index)}>

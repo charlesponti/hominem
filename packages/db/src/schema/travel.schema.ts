@@ -1,5 +1,6 @@
 import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { z } from 'zod'
 
 import { list } from './lists.schema';
 import { users } from './users.schema';
@@ -42,6 +43,33 @@ export const flight = pgTable(
 export type Flight = InferSelectModel<typeof flight>;
 export type FlightInsert = InferInsertModel<typeof flight>;
 export type FlightSelect = Flight;
+
+export const FlightSchema = z.object({
+  id: z.string(),
+  flightNumber: z.string(),
+  departureAirport: z.string(),
+  departureDate: z.string(),
+  arrivalDate: z.string(),
+  arrivalAirport: z.string(),
+  airline: z.string(),
+  reservationNumber: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  userId: z.string(),
+  listId: z.string().nullable().optional(),
+})
+
+export const FlightInsertSchema = FlightSchema.partial().extend({
+  id: z.string().optional(),
+  flightNumber: z.string(),
+  departureAirport: z.string(),
+  departureDate: z.string(),
+  arrivalDate: z.string(),
+  arrivalAirport: z.string(),
+  airline: z.string(),
+  userId: z.string(),
+})
 
 export const hotel = pgTable(
   'hotel',

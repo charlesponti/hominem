@@ -36,7 +36,7 @@ export async function upsertVectorDocuments(documents: VectorDocumentInput[]): P
         content: sql`EXCLUDED.content`,
         metadata: sql`EXCLUDED.metadata`,
         embedding: sql`EXCLUDED.embedding`,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       },
     });
 }
@@ -137,6 +137,7 @@ export namespace VectorService {
       });
 
       const embeddings = await Promise.all(documents.map((doc) => generateEmbedding(doc.content)));
+      const now = new Date().toISOString();
 
       const insertData: VectorDocumentInput[] = documents.map((doc, index) => ({
         id: doc.id,
@@ -146,6 +147,8 @@ export namespace VectorService {
         userId: userId,
         source: source,
         sourceType: 'csv',
+        createdAt: now,
+        updatedAt: now,
       }));
 
       await upsertVectorDocuments(insertData);
@@ -207,6 +210,7 @@ export namespace VectorService {
       const embeddings = await Promise.all(
         batch.map((doc: Document) => generateEmbedding(doc.pageContent)),
       );
+      const now = new Date().toISOString();
 
       const documents: VectorDocumentInput[] = batch.map((doc: Document, index: number) => ({
         id: randomUUID(),
@@ -216,6 +220,8 @@ export namespace VectorService {
         userId: userId,
         source: 'notes',
         sourceType: 'markdown',
+        createdAt: now,
+        updatedAt: now,
       }));
 
       const { db } = await import('@hominem/db');

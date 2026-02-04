@@ -1,4 +1,9 @@
-import type { NoteInput, NoteSyncItem } from '@hominem/db/types/notes';
+/**
+ * Note Validation Schemas
+ *
+ * Only validation schemas are defined here.
+ * Import actual types directly from @hominem/db/types/notes
+ */
 
 import { NoteContentTypeSchema, NoteStatusSchema } from '@hominem/db/schema/notes';
 import { z } from 'zod';
@@ -56,9 +61,3 @@ export const ListNotesOutputSchema = z.object({
 export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>;
 export type ListNotesInput = z.infer<typeof ListNotesInputSchema>;
 export type ListNotesOutput = z.infer<typeof ListNotesOutputSchema>;
-
-export type CreateNotePayload = NoteInput;
-
-// Export `NoteSyncItem` from the DB schema for package consumers who need the
-// sync item shape. This is intentional and canonical for `@hominem/notes`.
-export type { NoteSyncItem } from '@hominem/db/types/notes';

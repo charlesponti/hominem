@@ -96,15 +96,15 @@ export const eventsRoutes = new Hono<AppContext>()
       throw new ValidationError('Invalid event date');
     }
 
-    const event = await createEvent({
-      title: trimmedTitle,
-      description,
-      date: dateValue,
-      type: type as EventTypeEnum,
-      ...(tags && { tags }),
-      ...(people && { people }),
-      userId,
-    });
+     const event = await createEvent({
+       title: trimmedTitle,
+       description,
+       date: dateValue,
+       type: type as EventTypeEnum,
+       ...(tags && { tags }),
+       ...(people && { people }),
+       userId,
+     } as any);
     return c.json<EventsCreateOutput>(serializeEvent(event), 201);
   })
 

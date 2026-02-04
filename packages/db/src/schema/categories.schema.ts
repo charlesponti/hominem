@@ -1,6 +1,8 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import { type AnyPgColumn, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { type AnyPgColumn, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { users } from './users.schema';
 
 /**
@@ -19,10 +21,11 @@ export const categories = pgTable('categories', {
   userId: uuid('user_id')
     .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  createdAt: createdAtColumn(),
+  updatedAt: updatedAtColumn(),
 });
 
-export type Category = InferSelectModel<typeof categories>;
-export type CategoryInsert = InferInsertModel<typeof categories>;
-export type CategorySelect = Category;
+export const CategoryInsertSchema = createInsertSchema(categories);
+export const CategorySelectSchema = createSelectSchema(categories);
+export type CategoryInput = z.infer<typeof CategoryInsertSchema>;
+export type CategoryOutput = z.infer<typeof CategorySelectSchema>;

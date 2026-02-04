@@ -1,4 +1,4 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import {
   boolean,
   index,
@@ -10,7 +10,9 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { companies } from './company.schema';
 import { users } from './users.schema';
 
@@ -78,14 +80,23 @@ export const jobs = pgTable('jobs', {
   benefits: json('benefits').$type<string[]>().default([]), // Benefits offered (e.g., health insurance, retirement plans) stored as JSON
   location: text('location').notNull(), // Job location details (e.g., city, state, remote) stored as JSON
   status: jobPostingStatusEnum('status').notNull().default('draft'), // Current status of the job posting (using pgEnum)
-  createdAt: timestamp('created_at').notNull().defaultNow(), // Timestamp of when the job posting was created
-  updatedAt: timestamp('updated_at').notNull().defaultNow(), // Timestamp of when the job posting was last updated
+  createdAt: createdAtColumn(), // Timestamp of when the job posting was created
+  updatedAt: updatedAtColumn(), // Timestamp of when the job posting was last updated
   version: integer('version').notNull().default(1), // Version number for tracking changes to the job posting
 });
-export type Job = InferSelectModel<typeof jobs>;
-export type JobInsert = InferInsertModel<typeof jobs>;
-export type JobSelect = Job;
-export type NewJob = JobInsert;
+
+export const JobInsertSchema = createInsertSchema(jobs, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  status: z.enum(['draft', 'open', 'closed', 'filled', 'archived']).optional(),
+});
+export const JobSelectSchema = createSelectSchema(jobs, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  status: z.enum(['draft', 'open', 'closed', 'filled', 'archived']).optional(),
+});
+export type JobInput = z.infer<typeof JobInsertSchema>;
+export type JobOutput = z.infer<typeof JobSelectSchema>;
 
 export const job_applications = pgTable('job_applications', {
   id: uuid('id').primaryKey().defaultRandom(), // Unique identifier for the job application
@@ -96,7 +107,7 @@ export const job_applications = pgTable('job_applications', {
   endDate: timestamp('end_date'), // Date the application process concluded (if applicable)
   link: text('link'), // Link to the job posting or application portal
   location: text('location').notNull().default('Remote'), // Location of the job applied for
-  reference: boolean('reference').notNull().default(false), // Indicates if a reference was provided or required
+  hasReference: boolean('has_reference').notNull().default(false), // Indicates if a reference was provided or required
   status: jobApplicationStatusEnum('status').notNull().default(JobApplicationStatus.APPLIED),
   salaryQuoted: text('salary_quoted'), // Salary quoted by the applicant or company
   salaryAccepted: text('salary_accepted'), // Salary accepted by the applicant (if offer made)
@@ -114,8 +125,8 @@ export const job_applications = pgTable('job_applications', {
   jobId: uuid('job_id').references(() => jobs.id), // Foreign key to the specific job posting (if available)
 
   // Metadata
-  createdAt: timestamp('created_at').notNull().defaultNow(), // Timestamp of when the application record was created
-  updatedAt: timestamp('updated_at').notNull().defaultNow(), // Timestamp of when the application record was last updated
+  createdAt: createdAtColumn(), // Timestamp of when the application record was created
+  updatedAt: updatedAtColumn(), // Timestamp of when the application record was last updated
   },
   (table) => [
     index('job_applications_company_id_idx').on(table.companyId),
@@ -124,9 +135,22 @@ export const job_applications = pgTable('job_applications', {
   ],
 );
 
-export type JobApplication = InferSelectModel<typeof job_applications>;
-export type JobApplicationInsert = InferInsertModel<typeof job_applications>;
-export type JobApplicationSelect = JobApplication;
+export const JobApplicationInsertSchema = createInsertSchema(job_applications, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  startDate: z.date(),
+  endDate: z.date().nullable(),
+  status: z.enum(['Applied', 'Hired', 'Withdrew', 'Rejected', 'Offer', 'Screening', 'Interviewing', 'Pending']).optional(),
+});
+export const JobApplicationSelectSchema = createSelectSchema(job_applications, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  startDate: z.date(),
+  endDate: z.date().nullable(),
+  status: z.enum(['Applied', 'Hired', 'Withdrew', 'Rejected', 'Offer', 'Screening', 'Interviewing', 'Pending']).optional(),
+});
+export type JobApplicationInput = z.infer<typeof JobApplicationInsertSchema>;
+export type JobApplicationOutput = z.infer<typeof JobApplicationSelectSchema>;
 
 export const application_stages = pgTable(
   'application_stages',
@@ -139,18 +163,26 @@ export const application_stages = pgTable(
     date: timestamp('date').notNull().defaultNow(), // Date this stage occurred or was scheduled
     notes: text('notes'), // Notes specific to this application stage
     status: applicationStageStatusEnum('status'), // Status of this stage (using pgEnum)
-    createdAt: timestamp('created_at').notNull().defaultNow(), // Timestamp of when this stage record was created
-    updatedAt: timestamp('updated_at').notNull().defaultNow(), // Timestamp of when this stage record was last updated
+    createdAt: createdAtColumn(), // Timestamp of when this stage record was created
+    updatedAt: updatedAtColumn(), // Timestamp of when this stage record was last updated
   },
   (table) => [
     index('app_stage_job_app_id_idx').on(table.jobApplicationId),
   ],
 );
 
-export type ApplicationStage = InferSelectModel<typeof application_stages>;
-export type ApplicationStageInsert = InferInsertModel<typeof application_stages>;
-export type ApplicationStageSelect = ApplicationStage;
-export type NewApplicationStage = ApplicationStageInsert;
+export const ApplicationStageInsertSchema = createInsertSchema(application_stages, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  date: z.date(),
+});
+export const ApplicationStageSelectSchema = createSelectSchema(application_stages, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  date: z.date(),
+});
+export type ApplicationStageInput = z.infer<typeof ApplicationStageInsertSchema>;
+export type ApplicationStageOutput = z.infer<typeof ApplicationStageSelectSchema>;
 
 export const work_experiences = pgTable(
   'work_experiences',
@@ -178,8 +210,8 @@ export const work_experiences = pgTable(
     }>(),
     sortOrder: integer('sort_order').default(0).notNull(), // Order for displaying experiences
     isVisible: boolean('is_visible').default(true).notNull(), // Whether this experience is visible on a profile
-    createdAt: timestamp('created_at').defaultNow().notNull(), // Timestamp of creation
-    updatedAt: timestamp('updated_at').defaultNow().notNull(), // Timestamp of last update
+    createdAt: createdAtColumn(), // Timestamp of creation
+    updatedAt: updatedAtColumn(), // Timestamp of last update
   },
   (table) => [
     index('work_exp_user_id_idx').on(table.userId),
@@ -192,7 +224,17 @@ export const work_experiences = pgTable(
   ],
 );
 
-export type WorkExperience = InferSelectModel<typeof work_experiences>;
-export type WorkExperienceInsert = InferInsertModel<typeof work_experiences>;
-export type WorkExperienceSelect = WorkExperience;
-export type NewWorkExperience = WorkExperienceInsert;
+export const WorkExperienceInsertSchema = createInsertSchema(work_experiences, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  startDate: z.date().nullable(),
+  endDate: z.date().nullable(),
+});
+export const WorkExperienceSelectSchema = createSelectSchema(work_experiences, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  startDate: z.date().nullable(),
+  endDate: z.date().nullable(),
+});
+export type WorkExperienceInput = z.infer<typeof WorkExperienceInsertSchema>;
+export type WorkExperienceOutput = z.infer<typeof WorkExperienceSelectSchema>;

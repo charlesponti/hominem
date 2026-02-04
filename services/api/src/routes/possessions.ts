@@ -20,12 +20,17 @@ export const possessionsRoutes = new Hono<AppEnv>();
 
 // Serialize possession Date objects to ISO strings
 function serializePossession(possession: PossessionOutput) {
+  const dateToString = (date: Date | string | null): string | null => {
+    if (!date) return null;
+    return typeof date === 'string' ? date : date.toISOString();
+  };
+
   return {
     ...possession,
-    dateAcquired: possession.dateAcquired.toISOString(),
-    dateSold: possession.dateSold?.toISOString() ?? null,
-    createdAt: possession.createdAt.toISOString(),
-    updatedAt: possession.updatedAt.toISOString(),
+    dateAcquired: dateToString(possession.dateAcquired),
+    dateSold: dateToString(possession.dateSold),
+    createdAt: dateToString(possession.createdAt),
+    updatedAt: dateToString(possession.updatedAt),
   };
 }
 
@@ -87,6 +92,8 @@ possessionsRoutes.post('/', zValidator('json', createPossessionSchema), async (c
       id: crypto.randomUUID ? crypto.randomUUID() : 'generated-id',
       userId,
       dateAcquired: new Date(data.dateAcquired),
+      tags: [],
+      dateSold: null,
     });
 
     return c.json(serializePossession(created), 201);

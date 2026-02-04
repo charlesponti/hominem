@@ -62,7 +62,7 @@ export async function removeUserFromList({
       where: and(
         eq(listInvite.listId, listId),
         eq(listInvite.invitedUserId, userIdToRemove),
-        eq(listInvite.accepted, true),
+        eq(listInvite.isAccepted, true),
       ),
     });
 
@@ -87,7 +87,7 @@ export async function removeUserFromList({
           and(
             eq(listInvite.listId, listId),
             eq(listInvite.invitedUserId, userIdToRemove),
-            eq(listInvite.accepted, true),
+            eq(listInvite.isAccepted, true),
           ),
         );
     }

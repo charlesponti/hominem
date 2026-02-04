@@ -21,7 +21,7 @@ export const GoalFormSchema = z.object({
   startDate: z.date().optional(),
   dueDate: z.date().optional(),
   milestones: z
-    .array(z.object({ description: z.string().min(1), completed: z.boolean() }))
+    .array(z.object({ description: z.string().min(1), isCompleted: z.boolean() }))
     .optional(),
 });
 
@@ -68,8 +68,8 @@ export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: Goa
       const milestoneToUpdate = newMilestones[index];
       if (field === 'description') {
         milestoneToUpdate.description = value as string;
-      } else if (field === 'completed') {
-        milestoneToUpdate.completed = value as boolean;
+      } else if (field === 'isCompleted') {
+        milestoneToUpdate.isCompleted = value as boolean;
       }
     }
     form.setValue('milestones', newMilestones);
@@ -77,7 +77,7 @@ export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: Goa
 
   const addMilestone = () => {
     const milestones = form.getValues('milestones') || [];
-    form.setValue('milestones', [...milestones, { description: '', completed: false }]);
+    form.setValue('milestones', [...milestones, { description: '', isCompleted: false }]);
   };
 
   const removeMilestone = (index: number) => {

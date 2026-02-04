@@ -1,23 +1,13 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import {
-  type AnyPgColumn,
-  boolean,
-  index,
-  integer,
-  json,
-  pgEnum,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { type AnyPgColumn, boolean, index, integer, json, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import * as z from 'zod';
 
 import { contacts } from './contacts.schema';
 import { transactions } from './finance.schema';
 import { place } from './places.schema';
 import { tags } from './tags.schema';
 import { users } from './users.schema';
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 
 // Enums
 export const eventTypeEnum = pgEnum('event_type', [
@@ -176,8 +166,8 @@ export const events = pgTable(
      * Status of goal/task (todo, in_progress, completed, archived)
      */
     status: text('status'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
@@ -196,9 +186,54 @@ export const events = pgTable(
     uniqueIndex('events_external_calendar_unique').on(table.externalId, table.calendarId),
   ],
 );
-export type CalendarEvent = InferSelectModel<typeof events>;
-export type CalendarEventInsert = InferInsertModel<typeof events>;
-export type CalendarEventSelect = CalendarEvent;
+
+// Zod Schemas
+export const EventInsertSchema = createInsertSchema(events, {
+  type: z.string(),
+  source: z.enum(['manual', 'google_calendar']),
+  // Override timestamp fields created/updated to be strings (mode: 'string' in DB)
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  // Regular timestamp fields that use default mode (Date objects)
+  date: z.date(),
+  dateStart: z.date().nullable(),
+  dateEnd: z.date().nullable(),
+  dateTime: z.date().nullable(),
+  lastSyncedAt: z.date().nullable(),
+  deletedAt: z.date().nullable(),
+  // Override JSON fields
+  reminderSettings: z.any().nullable(),
+  dependencies: z.any().nullable(),
+  resources: z.any().nullable(),
+  milestones: z.any().nullable(),
+});
+
+export const EventSelectSchema = createSelectSchema(events, {
+  type: z.string(),
+  source: z.enum(['manual', 'google_calendar']),
+  // Override timestamp fields created/updated to be strings (mode: 'string' in DB)
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  // Regular timestamp fields that use default mode (Date objects)
+  date: z.date(),
+  dateStart: z.date().nullable(),
+  dateEnd: z.date().nullable(),
+  dateTime: z.date().nullable(),
+  lastSyncedAt: z.date().nullable(),
+  deletedAt: z.date().nullable(),
+  // Override JSON fields
+  reminderSettings: z.any().nullable(),
+  dependencies: z.any().nullable(),
+  resources: z.any().nullable(),
+  milestones: z.any().nullable(),
+});
+
+export type EventInput = z.infer<typeof EventInsertSchema>;
+export type EventOutput = z.infer<typeof EventSelectSchema>;
+
+// Backward compatibility aliases
+export type CalendarEventInsert = EventInput;
+export type CalendarEvent = EventOutput;
 
 export const eventsTags = pgTable('events_tags', {
   eventId: uuid('event_id').references(() => events.id),

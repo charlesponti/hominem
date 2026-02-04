@@ -8,41 +8,19 @@
  */
 
 import type {
-  Skill,
-  SkillInsert,
-  SkillSelect,
-  NewSkill,
-  UserSkill,
-  UserSkillInsert,
-  UserSkillSelect,
-  NewUserSkill,
-  JobSkill,
-  JobSkillInsert,
-  JobSkillSelect,
-  NewJobSkill,
+  SkillInput,
+  SkillOutput,
+  UserSkillInput,
+  UserSkillOutput,
+  JobSkillInput,
+  JobSkillOutput,
 } from './skills.schema';
 
 export type {
-  Skill,
-  SkillInsert,
-  SkillSelect,
-  NewSkill,
-  UserSkill,
-  UserSkillInsert,
-  UserSkillSelect,
-  NewUserSkill,
-  JobSkill,
-  JobSkillInsert,
-  JobSkillSelect,
-  NewJobSkill,
+  SkillInput,
+  SkillOutput,
+  UserSkillInput,
+  UserSkillOutput,
+  JobSkillInput,
+  JobSkillOutput,
 };
-
-// Legacy aliases for backward compatibility
-export type SkillOutput = Skill;
-export type SkillInput = SkillInsert;
-
-export type UserSkillOutput = UserSkill;
-export type UserSkillInput = UserSkillInsert;
-
-export type JobSkillOutput = JobSkill;
-export type JobSkillInput = JobSkillInsert;

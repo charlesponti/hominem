@@ -15,7 +15,7 @@ export class CompanyService {
       .update(companies)
       .set({
         ...data,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(companies.id, id))
       .returning();

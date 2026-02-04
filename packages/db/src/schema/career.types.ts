@@ -8,47 +8,23 @@
  */
 
 import type {
-  ApplicationStage,
-  ApplicationStageInsert,
-  ApplicationStageSelect,
-  Job,
-  JobInsert,
-  JobSelect,
-  JobApplication,
-  JobApplicationInsert,
-  JobApplicationSelect,
-  WorkExperience,
-  WorkExperienceInsert,
-  WorkExperienceSelect,
-  NewJob,
-  NewApplicationStage,
-  NewWorkExperience,
+  ApplicationStageInput,
+  ApplicationStageOutput,
+  JobInput,
+  JobOutput,
+  JobApplicationInput,
+  JobApplicationOutput,
+  WorkExperienceInput,
+  WorkExperienceOutput,
 } from './career.schema';
 
 export type {
-  ApplicationStage,
-  ApplicationStageInsert,
-  ApplicationStageSelect,
-  Job,
-  JobInsert,
-  JobSelect,
-  JobApplication,
-  JobApplicationInsert,
-  JobApplicationSelect,
-  WorkExperience,
-  WorkExperienceInsert,
-  WorkExperienceSelect,
-  NewJob,
-  NewApplicationStage,
-  NewWorkExperience,
+  ApplicationStageInput,
+  ApplicationStageOutput,
+  JobInput,
+  JobOutput,
+  JobApplicationInput,
+  JobApplicationOutput,
+  WorkExperienceInput,
+  WorkExperienceOutput,
 };
-
-// Legacy aliases for backward compatibility
-export type JobOutput = Job;
-export type JobInput = JobInsert;
-export type JobApplicationOutput = JobApplication;
-export type JobApplicationInput = JobApplicationInsert;
-export type ApplicationStageOutput = ApplicationStage;
-export type ApplicationStageInput = ApplicationStageInsert;
-export type WorkExperienceOutput = WorkExperience;
-export type WorkExperienceInput = WorkExperienceInsert;

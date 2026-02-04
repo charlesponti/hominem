@@ -8,10 +8,12 @@ import {
   listGetAllSchema,
   listGetByIdSchema,
   listGetContainingPlaceSchema,
-  type ListGetAllOutput,
-  type ListGetByIdOutput,
-  type ListGetContainingPlaceOutput,
-} from '../types/lists.types';
+} from '../schemas/lists.schema'
+import type {
+  ListGetAllOutput,
+  ListGetByIdOutput,
+  ListGetContainingPlaceOutput,
+} from '../types/lists.types'
 
 export const listQueryRoutes = new Hono<AppContext>()
   // ListOutput all user's lists with places

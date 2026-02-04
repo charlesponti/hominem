@@ -1,17 +1,19 @@
 import { addItemToList, getItemsByListId, removeItemFromList } from '@hominem/lists-services';
-import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
+import { NotFoundError } from '@hominem/services'
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
 import {
   itemsAddToListSchema,
-  itemsRemoveFromListSchema,
   itemsGetByListIdSchema,
-  type ItemsAddToListOutput,
-  type ItemsRemoveFromListOutput,
-  type ItemsGetByListIdOutput,
-} from '../types/items.types';
+  itemsRemoveFromListSchema,
+} from '../schemas/items.schema'
+import type {
+  ItemsAddToListOutput,
+  ItemsGetByListIdOutput,
+  ItemsRemoveFromListOutput,
+} from '../types/items.types'
 
 /**
  * Items Routes
@@ -35,7 +37,7 @@ export const itemsRoutes = new Hono<AppContext>()
     const newItem = await addItemToList({
       listId: input.listId,
       itemId: input.itemId,
-      itemType: input.itemType,
+      itemType: input.itemType ?? 'FLIGHT',
       userId: userId,
     });
 

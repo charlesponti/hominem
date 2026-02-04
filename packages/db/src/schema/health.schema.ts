@@ -1,5 +1,7 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { users } from './users.schema';
 
 export const health = pgTable('health', {
@@ -10,13 +12,22 @@ export const health = pgTable('health', {
   duration: integer('duration').notNull(),
   caloriesBurned: integer('calories_burned').notNull(),
   notes: text('notes'),
-  createdAt: timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+  createdAt: createdAtColumn(),
+  updatedAt: updatedAtColumn(),
 }, (table) => [
   index('health_user_id_idx').on(table.userId),
   index('health_date_idx').on(table.date),
 ]);
 
-export type Health = InferSelectModel<typeof health>;
-export type HealthInsert = InferInsertModel<typeof health>;
-export type HealthSelect = Health;
+export const HealthInsertSchema = createInsertSchema(health, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  date: z.date(),
+});
+export const HealthSelectSchema = createSelectSchema(health, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  date: z.date(),
+});
+export type HealthInput = z.infer<typeof HealthInsertSchema>;
+export type HealthOutput = z.infer<typeof HealthSelectSchema>;

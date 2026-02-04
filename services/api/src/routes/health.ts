@@ -5,7 +5,7 @@ import {
   listHealthRecords,
   updateHealthRecord,
 } from '@hominem/health-services';
-import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
+import { NotFoundError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -23,11 +23,15 @@ function serializeHealthRecord(record: {
   return {
     ...record,
     date: typeof record.date === 'string' ? record.date : record.date.toISOString(),
-    createdAt: record.createdAt 
-      ? (typeof record.createdAt === 'string' ? record.createdAt : record.createdAt.toISOString()) 
+    createdAt: record.createdAt
+      ? typeof record.createdAt === 'string'
+        ? record.createdAt
+        : record.createdAt.toISOString()
       : null,
     updatedAt: record.updatedAt
-      ? (typeof record.updatedAt === 'string' ? record.updatedAt : record.updatedAt.toISOString())
+      ? typeof record.updatedAt === 'string'
+        ? record.updatedAt
+        : record.updatedAt.toISOString()
       : null,
   };
 }
@@ -112,8 +116,13 @@ healthRoutes.get('/:id', async (c) => {
 healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
   try {
     const validated = c.req.valid('json');
+    const now = new Date().toISOString();
 
-    const result = await createHealthRecord(validated);
+    const result = await createHealthRecord({
+      ...validated,
+      createdAt: now,
+      updatedAt: now,
+    });
     if (!result) {
       throw new InternalError('Failed to create health record');
     }

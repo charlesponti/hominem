@@ -17,7 +17,7 @@ interface GoalCardProps {
 
 export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
   const completedMilestones =
-    goal.milestones?.filter((m: GoalMilestone) => m.completed).length || 0;
+    goal.milestones?.filter((m: GoalMilestone) => m.isCompleted).length || 0;
   const totalMilestones = goal.milestones?.length || 0;
   const progress = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0;
 
@@ -48,14 +48,14 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
               <div key={`${goal.id}-milestone-${idx}`} className="flex items-start gap-2 text-sm">
                 <div
                   className={`mt-1 size-4 rounded-full border-2 flex items-center justify-center ${
-                    milestone.completed ? 'bg-green-500 border-green-500' : 'border-muted'
+                    milestone.isCompleted ? 'bg-green-500 border-green-500' : 'border-muted'
                   }`}
                 >
-                  {milestone.completed && <CalendarCheck className="size-3 text-white" />}
+                  {milestone.isCompleted && <CalendarCheck className="size-3 text-white" />}
                 </div>
                 <span
                   className={`flex-1 ${
-                    milestone.completed ? 'text-muted-foreground line-through' : ''
+                    milestone.isCompleted ? 'text-muted-foreground line-through' : ''
                   }`}
                 >
                   {milestone.description}

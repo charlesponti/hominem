@@ -222,7 +222,7 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
       where: and(eq(listInvite.listId, inviteListId), eq(listInvite.token, invite.token)),
     });
 
-    expect(inviteRecord?.accepted).toBe(true);
+    expect(inviteRecord?.isAccepted).toBe(true);
     expect(inviteRecord?.invitedUserId).toBe(inviteeUserId);
 
     const membership = await db.query.userLists.findFirst({

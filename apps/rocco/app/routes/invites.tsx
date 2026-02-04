@@ -55,7 +55,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const rawInvites = res.ok ? await res.json() : [];
 
   // Normalize invites to ensure exactOptionalPropertyTypes compliance
-  const invites = rawInvites.map((invite) => {
+  const invites = rawInvites.map((invite: (typeof rawInvites)[number]) => {
     const normalized: typeof invite = {
       id: invite.id,
       listId: invite.listId,
@@ -94,7 +94,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   // Check if token belongs to another user
   const tokenMismatch = token
-    ? Boolean(rawInvites.find((invite) => invite.token === token)?.belongsToAnotherUser)
+    ? Boolean(
+        rawInvites.find((invite: (typeof rawInvites)[number]) => invite.token === token)
+          ?.belongsToAnotherUser,
+      )
     : false;
 
   return data({ invites, tokenMismatch, requiresAuth: false, preview: null }, { headers });
@@ -217,7 +220,7 @@ export default function Invites({ loaderData }: Route.ComponentProps) {
               }}
             />
           )}
-          {invites.map((listInvite) => (
+          {invites.map((listInvite: (typeof invites)[number]) => (
             <ReceivedInviteItem
               key={`${listInvite.listId}-${listInvite.token}`}
               listInvite={listInvite}

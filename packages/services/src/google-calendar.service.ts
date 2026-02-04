@@ -37,18 +37,34 @@ export interface GoogleCalendarSyncStatus {
 /**
  * Convert a Google Calendar event to our internal calendar event format.
  * This is a pure function that can be used independently of the service class.
+ * Returns a partial event object with all required fields.
  */
 export function convertGoogleCalendarEvent(
   googleEvent: GoogleCalendarEvent,
   calendarId: string,
   userId: string,
-): CalendarEventInput {
+): Partial<CalendarEventInput> & {
+  id: string;
+  title: string;
+  date: Date;
+  dateStart: Date | null;
+  dateEnd: Date | null;
+  lastSyncedAt: Date;
+  type: 'Events';
+  userId: string;
+  source: 'google_calendar';
+  externalId: string;
+  calendarId: string;
+  createdAt: string;
+  updatedAt: string;
+} {
   if (!googleEvent.id) {
     throw new Error('Google Calendar event must have an id');
   }
 
   const startDate = googleEvent.start?.dateTime || googleEvent.start?.date;
   const endDate = googleEvent.end?.dateTime || googleEvent.end?.date;
+  const now = new Date().toISOString();
 
   return {
     id: uuidv7(),
@@ -62,8 +78,10 @@ export function convertGoogleCalendarEvent(
     source: 'google_calendar',
     externalId: googleEvent.id,
     calendarId,
-    lastSyncedAt: new Date(),
+    lastSyncedAt: new Date(startDate || new Date()),
     syncError: null,
+    createdAt: now,
+    updatedAt: now,
   };
 }
 
@@ -169,28 +187,48 @@ export class GoogleCalendarService {
 
           if (existingEvent) {
             const googleUpdated = googleEvent.updated ? new Date(googleEvent.updated) : null;
-            const localUpdated = existingEvent.updatedAt;
+            const localUpdated = existingEvent.updatedAt ? new Date(existingEvent.updatedAt) : null;
 
             if (
               !googleUpdated ||
               !localUpdated ||
               googleUpdated.getTime() > localUpdated.getTime()
             ) {
-              // Prepare for update
-              eventsToUpsert.push({
+              // Prepare for update with all required fields
+              const baseEvent: CalendarEventInput = {
                 ...eventData,
+                dateStart: eventData.dateStart || null,
+                dateEnd: eventData.dateEnd || null,
+                dateTime: null,
+                reminderSettings: null,
+                dependencies: null,
+                resources: null,
+                milestones: null,
+                deletedAt: null,
                 id: existingEvent.id, // Keep original ID
                 createdAt: existingEvent.createdAt,
-                updatedAt: googleUpdated || new Date(),
-              });
+                updatedAt: googleUpdated ? googleUpdated.toISOString() : new Date().toISOString(),
+              };
+              eventsToUpsert.push(baseEvent);
               result.updated++;
             }
           } else {
-            // Prepare for insert
-            eventsToUpsert.push({
+            // Prepare for insert with all required fields
+            const baseEvent: CalendarEventInput = {
               ...eventData,
-              updatedAt: googleEvent.updated ? new Date(googleEvent.updated) : new Date(),
-            });
+              dateStart: eventData.dateStart || null,
+              dateEnd: eventData.dateEnd || null,
+              dateTime: null,
+              reminderSettings: null,
+              dependencies: null,
+              resources: null,
+              milestones: null,
+              deletedAt: null,
+              updatedAt: googleEvent.updated
+                ? new Date(googleEvent.updated).toISOString()
+                : new Date().toISOString(),
+            };
+            eventsToUpsert.push(baseEvent);
             result.created++;
           }
         } catch (error) {
@@ -209,7 +247,7 @@ export class GoogleCalendarService {
           const chunk = eventsToUpsert.slice(i, i + CHUNK_SIZE);
           await db
             .insert(events)
-            .values(chunk)
+            .values(chunk as (typeof events.$inferInsert)[])
             .onConflictDoUpdate({
               target: [events.externalId, events.calendarId],
               set: {

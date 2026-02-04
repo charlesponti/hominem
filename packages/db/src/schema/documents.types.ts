@@ -7,10 +7,12 @@
  * Rule: Import from this file, not from documents.schema.ts
  */
 
-import type { Document, DocumentInsert, DocumentSelect } from './documents.schema';
+import type {
+  DocumentInput,
+  DocumentOutput,
+} from './documents.schema';
 
-export type { Document, DocumentInsert, DocumentSelect };
-
-// Legacy aliases for backward compatibility
-export type DocumentOutput = Document;
-export type DocumentInput = DocumentInsert;
+export type {
+  DocumentInput,
+  DocumentOutput,
+};

@@ -27,8 +27,5 @@
     "drizzle-orm": "0.45.1",
     "typescript": "5.9.3",
     "vitest": "4.0.16"
-  },
-  "peerDependencies": {
-    "drizzle-orm": "0.45.1"
   }
 }

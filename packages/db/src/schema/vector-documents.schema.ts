@@ -1,6 +1,8 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import { index, pgTable, text, timestamp, uuid, vector } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { index, pgTable, text, uuid, vector } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { users } from './users.schema';
 
 export const vectorDocuments = pgTable(
@@ -14,8 +16,8 @@ export const vectorDocuments = pgTable(
     source: text('source'), // Source identifier (file, url, etc.)
     sourceType: text('source_type'), // Type of source (file, manual, chat, etc.)
     title: text('title'),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
   },
   (table) => [
     index('vector_documents_embedding_idx').using('hnsw', table.embedding.op('vector_cosine_ops')),
@@ -26,7 +28,13 @@ export const vectorDocuments = pgTable(
   ],
 );
 
-export type VectorDocument = InferSelectModel<typeof vectorDocuments>;
-export type VectorDocumentInsert = InferInsertModel<typeof vectorDocuments>;
-export type VectorDocumentSelect = VectorDocument;
-export type NewVectorDocument = VectorDocumentInsert;
+export const VectorDocumentInsertSchema = createInsertSchema(vectorDocuments, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export const VectorDocumentSelectSchema = createSelectSchema(vectorDocuments, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type VectorDocumentInput = z.infer<typeof VectorDocumentInsertSchema>;
+export type VectorDocumentOutput = z.infer<typeof VectorDocumentSelectSchema>;

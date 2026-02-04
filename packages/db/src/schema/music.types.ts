@@ -8,19 +8,15 @@
  */
 
 import type {
-  Artist,
-  ArtistInsert,
-  ArtistSelect,
-  UserArtist,
-  UserArtistInsert,
-  UserArtistSelect,
+  ArtistInput,
+  ArtistOutput,
+  UserArtistInput,
+  UserArtistOutput,
 } from './music.schema';
 
-export type { Artist, ArtistInsert, ArtistSelect, UserArtist, UserArtistInsert, UserArtistSelect };
-
-// Legacy aliases for backward compatibility
-export type ArtistOutput = Artist;
-export type ArtistInput = ArtistInsert;
-
-export type UserArtistOutput = UserArtist;
-export type UserArtistInput = UserArtistInsert;
+export type {
+  ArtistInput,
+  ArtistOutput,
+  UserArtistInput,
+  UserArtistOutput,
+};

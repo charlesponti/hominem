@@ -8,28 +8,15 @@
  */
 
 import type {
-  Interview,
-  InterviewInsert,
-  InterviewSelect,
-  NewInterview,
-  InterviewInterviewer,
-  InterviewInterviewerInsert,
-  NewInterviewInterviewer,
+  InterviewInput,
+  InterviewOutput,
+  InterviewInterviewerInput,
+  InterviewInterviewerOutput,
 } from './interviews.schema';
 
 export type {
-  Interview,
-  InterviewInsert,
-  InterviewSelect,
-  NewInterview,
-  InterviewInterviewer,
-  InterviewInterviewerInsert,
-  NewInterviewInterviewer,
+  InterviewInput,
+  InterviewOutput,
+  InterviewInterviewerInput,
+  InterviewInterviewerOutput,
 };
-
-// Legacy aliases for backward compatibility
-export type InterviewOutput = Interview;
-export type InterviewInput = InterviewInsert;
-
-export type InterviewInterviewerOutput = InterviewInterviewer;
-export type InterviewInterviewerInput = InterviewInterviewerInsert;

@@ -1,4 +1,4 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import {
   boolean,
   index,
@@ -7,10 +7,12 @@ import {
   pgTable,
   text,
   timestamp,
-  uniqueIndex,
   uuid,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { jobs } from './career.schema';
 import { users } from './users.schema';
 
@@ -48,16 +50,22 @@ export const skills = pgTable(
     category: skillCategoryEnum('category'),
     // Potential for a self-referential relationship for related skills or skill hierarchy
     // parentSkillId: uuid('parent_skill_id').references((): AnyPgColumn => skills.id),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
   },
   // Removed redundant uniqueIndex for name as .unique() handles it
 );
 
-export type Skill = InferSelectModel<typeof skills>;
-export type SkillInsert = InferInsertModel<typeof skills>;
-export type SkillSelect = Skill;
-export type NewSkill = SkillInsert;
+export const SkillInsertSchema = createInsertSchema(skills, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export const SkillSelectSchema = createSelectSchema(skills, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type SkillInput = z.infer<typeof SkillInsertSchema>;
+export type SkillOutput = z.infer<typeof SkillSelectSchema>;
 
 export const user_skills = pgTable(
   'user_skills',
@@ -74,8 +82,8 @@ export const user_skills = pgTable(
     lastUsedDate: timestamp('last_used_date'),
     isVerified: boolean('is_verified').default(false), // e.g., verified by a test or an employer
     notes: text('notes'),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
   },
   (table) => [
     uniqueIndex('user_skill_unique_idx').on(table.userId, table.skillId),
@@ -84,10 +92,18 @@ export const user_skills = pgTable(
   ],
 );
 
-export type UserSkill = InferSelectModel<typeof user_skills>;
-export type UserSkillInsert = InferInsertModel<typeof user_skills>;
-export type UserSkillSelect = UserSkill;
-export type NewUserSkill = UserSkillInsert;
+export const UserSkillInsertSchema = createInsertSchema(user_skills, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  lastUsedDate: z.date().nullable(),
+});
+export const UserSkillSelectSchema = createSelectSchema(user_skills, {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  lastUsedDate: z.date().nullable(),
+});
+export type UserSkillInput = z.infer<typeof UserSkillInsertSchema>;
+export type UserSkillOutput = z.infer<typeof UserSkillSelectSchema>;
 
 export const job_skills = pgTable(
   'job_skills',
@@ -101,8 +117,8 @@ export const job_skills = pgTable(
       .references(() => skills.id, { onDelete: 'cascade' }),
     importanceLevel: jobSkillImportanceEnum('importance_level'), // Using pgEnum
     notes: text('notes'),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
   },
   (table) => [
     uniqueIndex('job_skill_unique_idx').on(table.jobId, table.skillId),
@@ -111,7 +127,7 @@ export const job_skills = pgTable(
   ],
 );
 
-export type JobSkill = InferSelectModel<typeof job_skills>;
-export type JobSkillInsert = InferInsertModel<typeof job_skills>;
-export type JobSkillSelect = JobSkill;
-export type NewJobSkill = JobSkillInsert;
+export const JobSkillInsertSchema = createInsertSchema(job_skills);
+export const JobSkillSelectSchema = createSelectSchema(job_skills);
+export type JobSkillInput = z.infer<typeof JobSkillInsertSchema>;
+export type JobSkillOutput = z.infer<typeof JobSkillSelectSchema>;

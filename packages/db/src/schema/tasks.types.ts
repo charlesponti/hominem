@@ -2,7 +2,7 @@
  * Computed Task Types
  *
  * This file contains all derived types computed from the Task schema.
- * These types are inferred from Drizzle ORM schema definitions.
+ * These types are inferred from Drizzle ORM schema definitions and Zod validation schemas.
  *
  * Rule: Import from this file, not from tasks.schema.ts
  */
@@ -13,6 +13,8 @@ import type {
   TaskSelect,
   TaskStatus,
   TaskPriority,
+  TaskInsertSchemaType,
+  TaskSelectSchemaType,
 } from './tasks.schema'
 
 export type {
@@ -21,6 +23,8 @@ export type {
   TaskSelect,
   TaskStatus,
   TaskPriority,
+  TaskInsertSchemaType,
+  TaskSelectSchemaType,
 }
 
 // Legacy aliases for backward compatibility
