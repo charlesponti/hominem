@@ -1,5 +1,5 @@
 import type { ImportTransactionsQueuePayload } from '@hominem/jobs-services';
-import type { Queues } from '@hominem/services/types';
+import type { Queues } from '@hominem/services';
 import type { Job } from 'bullmq';
 import type { WebSocket } from 'ws';
 

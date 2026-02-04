@@ -5,6 +5,7 @@ import * as z from 'zod';
 import {
   type Json,
   type TransactionLocation,
+  TransactionLocationSchema,
   createdAtColumn,
   updatedAtColumn,
   requiredTextColumn,
@@ -105,7 +106,7 @@ export const plaidItems = pgTable('plaid_items', {
   lastSyncedAt: optionalTimestampColumn('last_synced_at'),
   createdAt: createdAtColumn(),
   updatedAt: updatedAtColumn(),
-  userId: requiredUuidColumn('user_id').references(() => users.id),
+  userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
 }, (table) => [
   index('plaid_items_institution_id_idx').on(table.institutionId),
 ]);
@@ -136,7 +137,7 @@ export const financeAccounts = pgTable(
     institutionId: text('institution_id').references(() => financialInstitutions.id),
     plaidItemId: optionalUuidColumn('plaid_item_id').references(() => plaidItems.id),
     plaidAccountId: optionalTextColumn('plaid_account_id'),
-    userId: requiredUuidColumn('user_id').references(() => users.id),
+    userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
   },
   (table) => [
     index('finance_accounts_search_idx').using(
@@ -180,7 +181,7 @@ export const transactions = pgTable(
     source: text('source').default('manual'),
     createdAt: createdAtColumn(),
     updatedAt: updatedAtColumn(),
-    userId: requiredUuidColumn('user_id').references(() => users.id),
+    userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
   },
   (table) => [
     index('transactions_user_id_idx').on(table.userId),
@@ -207,7 +208,7 @@ export const budgetCategories = pgTable(
     budgetId: optionalUuidColumn('budget_id'),
     averageMonthlyExpense: optionalNumericColumn('average_monthly_expense'),
     color: optionalTextColumn('color'),
-    userId: requiredUuidColumn('user_id').references(() => users.id),
+    userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
   },
   (table) => [
     index('budget_categories_search_idx').using('gin', sql`to_tsvector('english', ${table.name})`),
@@ -226,7 +227,7 @@ export const budgetGoals = pgTable(
     startDate: requiredTimestampColumn('start_date'),
     endDate: optionalTimestampColumn('end_date'),
     categoryId: optionalUuidColumn('category_id').references(() => budgetCategories.id),
-    userId: requiredUuidColumn('user_id').references(() => users.id),
+    userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
   },
   (table) => [
     index('budget_goals_search_idx').using('gin', sql`to_tsvector('english', ${table.name})`),
@@ -240,3 +241,87 @@ export type BudgetCategorySelect = BudgetCategory;
 export type BudgetGoal = InferSelectModel<typeof budgetGoals>;
 export type BudgetGoalInsert = InferInsertModel<typeof budgetGoals>;
 export type BudgetGoalSelect = BudgetGoal;
+
+// Zod Validation Schemas
+// Account Validation Schemas - for service layer validation
+/**
+ * FinanceAccountSchema - Complete account data as stored in database
+ * Used for validating account information throughout the finance domain
+ */
+export const FinanceAccountSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  balance: z.string().or(z.number()),
+  name: z.string(),
+  mask: z.string().nullable().optional(),
+  isoCurrencyCode: z.string().nullable().optional(),
+  subtype: z.string().nullable().optional(),
+  officialName: z.string().nullable().optional(),
+  limit: z.string().or(z.number()).nullable().optional(),
+  meta: z.unknown().nullable().optional(),
+  lastUpdated: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  institutionId: z.string().nullable().optional(),
+  plaidItemId: z.string().nullable().optional(),
+  plaidAccountId: z.string().nullable().optional(),
+  userId: z.string(),
+  interestRate: z.string().or(z.number()).nullable().optional(),
+  minimumPayment: z.string().or(z.number()).nullable().optional(),
+});
+
+/**
+ * FinanceAccountInsertSchema - Account data required for INSERT operations
+ * Subset of FinanceAccountSchema with optional auto-generated fields
+ */
+export const FinanceAccountInsertSchema = FinanceAccountSchema.partial().extend({
+  id: z.string().optional(),
+  balance: z.string().or(z.number()),
+  name: z.string(),
+  type: z.string(),
+  userId: z.string(),
+});
+
+// Transaction Validation Schemas - for service layer validation
+/**
+ * TransactionSchema - Complete transaction data as stored in database
+ * Used for validating transaction information throughout the finance domain
+ */
+export const TransactionSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  amount: z.string().or(z.number()),
+  date: z.string(),
+  description: z.string().nullable().optional(),
+  merchantName: z.string().nullable().optional(),
+  accountId: z.string(),
+  fromAccountId: z.string().nullable().optional(),
+  toAccountId: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  parentCategory: z.string().nullable().optional(),
+  excluded: z.boolean().or(z.null()).default(false),
+  tags: z.string().nullable().optional(),
+  accountMask: z.string().nullable().optional(),
+  note: z.string().nullable().optional(),
+  recurring: z.boolean().or(z.null()).default(false),
+  pending: z.boolean().or(z.null()).default(false),
+  paymentChannel: z.string().nullable().optional(),
+  location: z.unknown().nullable().optional(),
+  plaidTransactionId: z.string().nullable().optional(),
+  source: z.string().nullable().default('manual'),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  userId: z.string(),
+});
+
+/**
+ * TransactionInsertSchema - Transaction data required for INSERT operations
+ * Subset of TransactionSchema with optional auto-generated fields
+ */
+export const TransactionInsertSchema = TransactionSchema.partial().extend({
+  id: z.string().optional(),
+  type: z.string(),
+  amount: z.string().or(z.number()),
+  accountId: z.string(),
+});

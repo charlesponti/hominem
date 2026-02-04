@@ -35,7 +35,7 @@ export async function listHealthRecords(filters: {
     .where(and(...conditions));
 }
 
-export async function getHealthRecord(id: number) {
+export async function getHealthRecord(id: string) {
   const result = await db.select().from(health).where(eq(health.id, id)).limit(1);
   return result[0] ?? null;
 }
@@ -45,12 +45,12 @@ export async function createHealthRecord(data: HealthInsert) {
   return record;
 }
 
-export async function updateHealthRecord(id: number, updates: Partial<HealthInsert>) {
+export async function updateHealthRecord(id: string, updates: Partial<HealthInsert>) {
   const [record] = await db.update(health).set(updates).where(eq(health.id, id)).returning();
   return record ?? null;
 }
 
-export async function deleteHealthRecord(id: number) {
+export async function deleteHealthRecord(id: string) {
   const deleted = await db.delete(health).where(eq(health.id, id)).returning();
   return deleted.length > 0;
 }

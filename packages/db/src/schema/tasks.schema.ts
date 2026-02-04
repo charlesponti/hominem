@@ -27,7 +27,7 @@ export const tasks = pgTable(
     dueDate: timestamp('due_date', { precision: 3, mode: 'string' }),
     userId: uuid('user_id')
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   },

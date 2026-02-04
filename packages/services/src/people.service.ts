@@ -1,11 +1,9 @@
-import type { ContactOutput } from '@hominem/db/types/contacts';
+import type { Contact as ContactOutput } from '@hominem/db/schema/contacts';
 
 import { db } from '@hominem/db';
 import { eventsUsers } from '@hominem/db/schema/calendar';
 import { contacts } from '@hominem/db/schema/contacts';
 import { asc, eq, inArray } from 'drizzle-orm';
-
-export type { ContactOutput };
 
 export interface PersonInput {
   userId: string;

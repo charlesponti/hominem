@@ -4,10 +4,7 @@ import {
   updatePerson,
   deletePerson,
   type PersonInput,
-  type ContactSelect,
   NotFoundError,
-  ValidationError,
-  InternalError,
 } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -16,7 +13,6 @@ import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
   peopleCreateSchema,
   peopleUpdateSchema,
-  type Person,
   type PeopleListOutput,
   type PeopleCreateOutput,
   type PeopleUpdateOutput,
@@ -26,17 +22,6 @@ import {
 // ============================================================================
 // Utility Functions
 // ============================================================================
-
-/**
- * Convert Date fields to ISO strings for JSON serialization
- */
-function serializePerson(person: ContactSelect): Person {
-  return {
-    ...person,
-    createdAt: person.createdAt.toISOString(),
-    updatedAt: person.updatedAt.toISOString(),
-  };
-}
 
 // ============================================================================
 // Routes
@@ -48,8 +33,7 @@ export const peopleRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     const people = await getPeople({ userId });
-    const result = people.map(serializePerson);
-    return c.json<PeopleListOutput>(result, 200);
+    return c.json<PeopleListOutput>(people, 200);
   })
 
   // Create person
@@ -66,8 +50,7 @@ export const peopleRoutes = new Hono<AppContext>()
     };
 
     const newPerson = await createPerson(personInput);
-    const result = serializePerson(newPerson);
-    return c.json<PeopleCreateOutput>(result, 201);
+    return c.json<PeopleCreateOutput>(newPerson, 201);
   })
 
   // Update person
@@ -90,8 +73,7 @@ export const peopleRoutes = new Hono<AppContext>()
       throw new NotFoundError('Person not found');
     }
 
-    const result = serializePerson(updatedPerson);
-    return c.json<PeopleUpdateOutput>(result, 200);
+    return c.json<PeopleUpdateOutput>(updatedPerson, 200);
   })
 
   // Delete person
