@@ -1,4 +1,14 @@
-import type { NoteInput, NoteSyncItem } from '@hominem/db/types/notes';
+/**
+ * Note Types & Validation
+ *
+ * Canonical type sources:
+ * - DB types: @hominem/db/types/notes (exports from schema/*.types.ts)
+ * - Validation schemas: defined here
+ *
+ * Re-export only what consumers need; avoid duplicating DB types.
+ */
+
+import type { NoteInput, NoteSyncItem, NoteOutput } from '@hominem/db/types/notes';
 
 import { NoteContentTypeSchema, NoteStatusSchema } from '@hominem/db/schema/notes';
 import { z } from 'zod';
@@ -57,8 +67,5 @@ export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>;
 export type ListNotesInput = z.infer<typeof ListNotesInputSchema>;
 export type ListNotesOutput = z.infer<typeof ListNotesOutputSchema>;
 
-export type CreateNotePayload = NoteInput;
-
-// Export `NoteSyncItem` from the DB schema for package consumers who need the
-// sync item shape. This is intentional and canonical for `@hominem/notes`.
-export type { NoteSyncItem } from '@hominem/db/types/notes';
+// Re-export canonical types from DB layer
+export type { NoteInput, NoteSyncItem, NoteOutput };
