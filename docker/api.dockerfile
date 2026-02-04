@@ -41,10 +41,11 @@ WORKDIR /app
 COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/bunfig.toml ./bunfig.toml
 
-# Copy the original lockfile from root (not the pruned one which may be modified)
-COPY bun.lock ./bun.lock
+# Generate a fresh lock file for the pruned workspace structure
+# This ensures the lock file matches the pruned package.json files exactly
+RUN bun install --production --ignore-scripts
 
-# Install only production dependencies (skip prepare scripts since source files aren't copied yet)
+# Validate that the generated lock file is valid
 RUN bun install --production --frozen-lockfile --ignore-scripts
 
 # Production stage
