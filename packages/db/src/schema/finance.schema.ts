@@ -106,7 +106,9 @@ export const plaidItems = pgTable('plaid_items', {
   createdAt: createdAtColumn(),
   updatedAt: updatedAtColumn(),
   userId: requiredUuidColumn('user_id').references(() => users.id),
-});
+}, (table) => [
+  index('plaid_items_institution_id_idx').on(table.institutionId),
+]);
 export type PlaidItem = InferSelectModel<typeof plaidItems>;
 export type PlaidItemInsert = InferInsertModel<typeof plaidItems>;
 export type PlaidItemSelect = PlaidItem;
@@ -141,6 +143,8 @@ export const financeAccounts = pgTable(
       'gin',
       sql`to_tsvector('english', ${table.name} || ' ' || coalesce(${table.officialName}, ''))`,
     ),
+    index('finance_accounts_institution_id_idx').on(table.institutionId),
+    index('finance_accounts_plaid_item_id_idx').on(table.plaidItemId),
   ],
 );
 export type FinanceAccount = InferSelectModel<typeof financeAccounts>;
@@ -182,6 +186,8 @@ export const transactions = pgTable(
     index('transactions_user_id_idx').on(table.userId),
     index('transactions_date_idx').on(table.date),
     index('transactions_account_id_idx').on(table.accountId),
+    index('transactions_from_account_id_idx').on(table.fromAccountId),
+    index('transactions_to_account_id_idx').on(table.toAccountId),
     index('transactions_search_idx').using(
       'gin',
       sql`to_tsvector('english', coalesce(${table.description}, '') || ' ' || coalesce(${table.merchantName}, '') || ' ' || coalesce(${table.category}, '') || ' ' || coalesce(${table.parentCategory}, '') || ' ' || coalesce(${table.tags}, '') || ' ' || coalesce(${table.note}, '') || ' ' || coalesce(${table.paymentChannel}, '') || ' ' || coalesce(${table.source}, ''))`,

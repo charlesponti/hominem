@@ -12,16 +12,23 @@ import { z } from 'zod';
 
 import type { AppEnv } from '../server';
 
-// Serialize health record Date objects to ISO strings
+// Serialize health record timestamps to ISO strings
+// Handles both Date objects (legacy) and string timestamps (new schema with precision: 3)
 function serializeHealthRecord(record: {
-  date: Date;
-  createdAt: Date | null;
+  date: Date | string;
+  createdAt: Date | string | null;
+  updatedAt?: Date | string | null;
   [key: string]: unknown;
 }) {
   return {
     ...record,
-    date: record.date.toISOString(),
-    createdAt: record.createdAt?.toISOString() ?? null,
+    date: typeof record.date === 'string' ? record.date : record.date.toISOString(),
+    createdAt: record.createdAt 
+      ? (typeof record.createdAt === 'string' ? record.createdAt : record.createdAt.toISOString()) 
+      : null,
+    updatedAt: record.updatedAt
+      ? (typeof record.updatedAt === 'string' ? record.updatedAt : record.updatedAt.toISOString())
+      : null,
   };
 }
 

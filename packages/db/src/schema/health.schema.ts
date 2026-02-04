@@ -1,5 +1,5 @@
 import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import { integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import { index, integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 
 export const health = pgTable('health', {
   id: serial('id').primaryKey(),
@@ -9,8 +9,12 @@ export const health = pgTable('health', {
   duration: integer('duration').notNull(),
   caloriesBurned: integer('calories_burned').notNull(),
   notes: text('notes'),
-  createdAt: timestamp('created_at').defaultNow(),
-});
+  createdAt: timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+  index('health_user_id_idx').on(table.userId),
+  index('health_date_idx').on(table.date),
+]);
 
 export type Health = InferSelectModel<typeof health>;
 export type HealthInsert = InferInsertModel<typeof health>;

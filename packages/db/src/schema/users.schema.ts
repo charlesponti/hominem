@@ -14,7 +14,7 @@ export const users = pgTable(
   'users',
   {
     // Primary key for foreign key relationships
-    id: uuid('id').primaryKey().notNull(),
+    id: uuid('id').primaryKey().defaultRandom().notNull(),
 
     // Supabase auth integration
     supabaseId: text('supabase_id').unique().notNull(),
@@ -54,7 +54,7 @@ export type UserSelect = User;
 export const account = pgTable(
   'account',
   {
-    id: uuid('id').primaryKey().notNull(),
+    id: uuid('id').primaryKey().defaultRandom().notNull(),
     userId: uuid('userId')
       .notNull()
       .references(() => users.id),

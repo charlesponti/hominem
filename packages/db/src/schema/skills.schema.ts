@@ -77,11 +77,11 @@ export const user_skills = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => ({
-    userSkillIdx: uniqueIndex('user_skill_unique_idx').on(table.userId, table.skillId),
-    userIdx: index('user_skill_user_id_idx').on(table.userId),
-    skillIdx: index('user_skill_skill_id_idx').on(table.skillId),
-  }),
+  (table) => [
+    uniqueIndex('user_skill_unique_idx').on(table.userId, table.skillId),
+    index('user_skill_user_id_idx').on(table.userId),
+    index('user_skill_skill_id_idx').on(table.skillId),
+  ],
 );
 
 export type UserSkill = InferSelectModel<typeof user_skills>;
@@ -104,11 +104,11 @@ export const job_skills = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => ({
-    jobSkillIdx: uniqueIndex('job_skill_unique_idx').on(table.jobId, table.skillId),
-    jobIdx: index('job_skill_job_id_idx').on(table.jobId),
-    skillIdx: index('job_skill_skill_id_idx').on(table.skillId),
-  }),
+  (table) => [
+    uniqueIndex('job_skill_unique_idx').on(table.jobId, table.skillId),
+    index('job_skill_job_id_idx').on(table.jobId),
+    index('job_skill_skill_id_idx').on(table.skillId),
+  ],
 );
 
 export type JobSkill = InferSelectModel<typeof job_skills>;

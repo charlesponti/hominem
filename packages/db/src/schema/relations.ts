@@ -1,6 +1,5 @@
 import { relations } from 'drizzle-orm';
 
-import { token, session } from './auth.schema';
 import { bookmark } from './bookmarks.schema';
 import { events, eventsTags, eventsUsers, eventsTransactions } from './calendar.schema';
 import { jobs, job_applications, application_stages, work_experiences } from './career.schema';
@@ -30,23 +29,7 @@ import { trips } from './trips.schema';
 import { users } from './users.schema';
 
 // ============================================
-// AUTH & USERS
-// ============================================
-
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(users, {
-    fields: [session.userId],
-    references: [users.id],
-  }),
-}));
-
-export const tokenRelations = relations(token, ({ one }) => ({
-  user: one(users, {
-    fields: [token.userId],
-    references: [users.id],
-  }),
-}));
-
+// BOOKMARKS
 // ============================================
 // BOOKMARKS
 // ============================================
