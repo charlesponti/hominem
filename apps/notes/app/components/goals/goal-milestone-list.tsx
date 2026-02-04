@@ -1,4 +1,4 @@
-import type { GoalMilestone } from '@hominem/services/types';
+import type { GoalMilestone } from '@hominem/hono-rpc/types';
 
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/input';

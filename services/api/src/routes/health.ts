@@ -94,13 +94,8 @@ healthRoutes.get('/', zValidator('query', healthQuerySchema), async (c) => {
 healthRoutes.get('/:id', async (c) => {
   try {
     const id = c.req.param('id');
-    const numericId = Number.parseInt(id, 10);
 
-    if (Number.isNaN(numericId)) {
-      throw new ValidationError('Invalid ID format');
-    }
-
-    const result = await getHealthRecord(numericId);
+    const result = await getHealthRecord(id);
 
     if (!result) {
       throw new NotFoundError('Health record not found');
@@ -133,15 +128,10 @@ healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
 healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) => {
   try {
     const id = c.req.param('id');
-    const numericId = Number.parseInt(id, 10);
-
-    if (Number.isNaN(numericId)) {
-      throw new ValidationError('Invalid ID format');
-    }
 
     const validated = c.req.valid('json');
 
-    const result = await updateHealthRecord(numericId, {
+    const result = await updateHealthRecord(id, {
       ...(validated.date !== undefined && { date: validated.date }),
       ...(validated.activityType !== undefined && { activityType: validated.activityType }),
       ...(validated.duration !== undefined && { duration: validated.duration }),
@@ -164,13 +154,8 @@ healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) =
 healthRoutes.delete('/:id', async (c) => {
   try {
     const id = c.req.param('id');
-    const numericId = Number.parseInt(id, 10);
 
-    if (Number.isNaN(numericId)) {
-      throw new ValidationError('Invalid ID format');
-    }
-
-    const result = await deleteHealthRecord(numericId);
+    const result = await deleteHealthRecord(id);
     if (!result) {
       throw new NotFoundError('Health record not found');
     }

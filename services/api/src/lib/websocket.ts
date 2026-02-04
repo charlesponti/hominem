@@ -46,9 +46,9 @@ export function createWebSocketManager(): WebSocketManager {
   wss.on('connection', async (ws: WebSocket) => {
     logger.info('WebSocket client connected');
 
-    // Attach shared queues to the connection (singleton per process) so handlers can access them
-    (ws as unknown as { queues?: import('@hominem/services/types').Queues }).queues =
-      getOrCreateQueues();
+   // Attach shared queues to the connection (singleton per process) so handlers can access them
+   (ws as unknown as { queues?: import('@hominem/services').Queues }).queues =
+     getOrCreateQueues();
 
     // Send welcome message
     ws.send(

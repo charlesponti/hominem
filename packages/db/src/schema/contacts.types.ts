@@ -7,10 +7,6 @@
  * Rule: Import from this file, not from contacts.schema.ts
  */
 
-import type { Contact, ContactInsert, ContactSelect } from './contacts.schema';
+import type { Contact, ContactInsert } from './contacts.schema';
 
-export type { Contact, ContactInsert, ContactSelect };
-
-// Legacy aliases for backward compatibility
-export type ContactOutput = Contact;
-export type ContactInput = ContactInsert;
+export type { Contact, ContactInsert };

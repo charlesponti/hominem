@@ -106,7 +106,7 @@ export const plaidItems = pgTable('plaid_items', {
   lastSyncedAt: optionalTimestampColumn('last_synced_at'),
   createdAt: createdAtColumn(),
   updatedAt: updatedAtColumn(),
-  userId: requiredUuidColumn('user_id').references(() => users.id),
+  userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
 }, (table) => [
   index('plaid_items_institution_id_idx').on(table.institutionId),
 ]);
@@ -137,7 +137,7 @@ export const financeAccounts = pgTable(
     institutionId: text('institution_id').references(() => financialInstitutions.id),
     plaidItemId: optionalUuidColumn('plaid_item_id').references(() => plaidItems.id),
     plaidAccountId: optionalTextColumn('plaid_account_id'),
-    userId: requiredUuidColumn('user_id').references(() => users.id),
+    userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
   },
   (table) => [
     index('finance_accounts_search_idx').using(
@@ -181,7 +181,7 @@ export const transactions = pgTable(
     source: text('source').default('manual'),
     createdAt: createdAtColumn(),
     updatedAt: updatedAtColumn(),
-    userId: requiredUuidColumn('user_id').references(() => users.id),
+    userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
   },
   (table) => [
     index('transactions_user_id_idx').on(table.userId),
@@ -208,7 +208,7 @@ export const budgetCategories = pgTable(
     budgetId: optionalUuidColumn('budget_id'),
     averageMonthlyExpense: optionalNumericColumn('average_monthly_expense'),
     color: optionalTextColumn('color'),
-    userId: requiredUuidColumn('user_id').references(() => users.id),
+    userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
   },
   (table) => [
     index('budget_categories_search_idx').using('gin', sql`to_tsvector('english', ${table.name})`),
@@ -227,7 +227,7 @@ export const budgetGoals = pgTable(
     startDate: requiredTimestampColumn('start_date'),
     endDate: optionalTimestampColumn('end_date'),
     categoryId: optionalUuidColumn('category_id').references(() => budgetCategories.id),
-    userId: requiredUuidColumn('user_id').references(() => users.id),
+    userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
   },
   (table) => [
     index('budget_goals_search_idx').using('gin', sql`to_tsvector('english', ${table.name})`),

@@ -17,8 +17,8 @@ export const contacts = pgTable(
     linkedinUrl: text('linkedin_url'),
     title: text('title'),
     notes: text('notes'),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at', { precision: 3, mode: 'string' }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { precision: 3, mode: 'string' }).notNull().defaultNow(),
   },
   (table) => [
     index('contact_user_id_idx').on(table.userId),
@@ -28,4 +28,3 @@ export const contacts = pgTable(
 
 export type Contact = InferSelectModel<typeof contacts>;
 export type ContactInsert = InferInsertModel<typeof contacts>;
-export type ContactSelect = Contact;

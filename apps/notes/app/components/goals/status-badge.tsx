@@ -1,4 +1,4 @@
-import type { GoalStatus } from '@hominem/services/types';
+import type { GoalStatus } from '@hominem/hono-rpc/types';
 
 interface StatusBadgeProps {
   status: string | GoalStatus;
@@ -20,7 +20,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
               : 'bg-accent text-accent-foreground'
       }`}
     >
-      {goalStatus.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+      {goalStatus.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
     </span>
   );
 }

@@ -1,9 +1,10 @@
 import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import { index, integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import { index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { users } from './users.schema';
 
 export const health = pgTable('health', {
-  id: serial('id').primaryKey(),
-  userId: text('user_id').notNull(),
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   date: timestamp('date').notNull(),
   activityType: text('activity_type').notNull(),
   duration: integer('duration').notNull(),

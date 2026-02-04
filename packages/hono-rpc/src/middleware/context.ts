@@ -1,4 +1,4 @@
-import type { Queues } from '@hominem/services/types';
+import type { Queues } from '@hominem/services';
 
 import { getServerAuth } from '@hominem/auth/server';
 import { getOrCreateQueues } from '@hominem/services/queues';

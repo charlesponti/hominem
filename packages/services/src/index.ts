@@ -11,7 +11,7 @@ export * from './tags.service';
 export * from './tasks.service';
 export * from './typing-mind.schema';
 export * from './google-places.service';
-export * from './types';
+export type { Queues } from './types';
 
 // API Contract patterns
 export {

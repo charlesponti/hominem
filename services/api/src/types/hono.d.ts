@@ -1,5 +1,5 @@
 import type { User } from '@hominem/db/types/users';
-import type { Queues } from '@hominem/services/types';
+import type { Queues } from '@hominem/services';
 
 declare module 'hono' {
   interface ContextVariableMap {

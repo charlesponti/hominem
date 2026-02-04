@@ -1,12 +1,8 @@
-import type { ChatMessageToolCall } from '@hominem/hono-rpc/types';
-import type { ChatMessageSelect } from '@hominem/services/types';
+import type { ChatMessageToolCall, ChatMessage } from '@hominem/hono-rpc/types';
 
 import type { ProcessedFile } from './upload';
 
 export type { ProcessedFile } from './upload';
-
-// Define ChatMessage as ChatMessageSelect for convenience
-export type ChatMessage = ChatMessageSelect;
 
 // ============================================================================
 // Core Chat Types
@@ -53,13 +49,13 @@ export interface ChatMessageReasoning {
  * Chat with its messages (database format)
  */
 export interface ChatWithMessages extends Chat {
-  messages: ChatMessageSelect[];
+  messages: ChatMessage[];
 }
 
 /**
  * Database types re-exported for convenience
  */
-export type { ChatMessageSelect } from '@hominem/services/types';
+export type { ChatMessage } from '@hominem/hono-rpc/types';
 
 /**
  * File attachment in chat UI (simplified for display)
