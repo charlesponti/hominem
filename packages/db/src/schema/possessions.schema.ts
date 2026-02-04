@@ -1,4 +1,4 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import {
   boolean,
   doublePrecision,
@@ -9,7 +9,9 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { categories } from './categories.schema';
 import { companies } from './company.schema';
 import { users } from './users.schema';
@@ -40,8 +42,8 @@ export const possessions = pgTable(
     userId: uuid('user_id')
       .references(() => users.id)
       .notNull(),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
     isArchived: boolean('is_archived').default(false).notNull(),
     tags: jsonb('tags').$type<string[]>().default([]),
   },
@@ -77,6 +79,10 @@ export const possessions = pgTable(
   ],
 );
 
-export type Possession = InferSelectModel<typeof possessions>;
-export type PossessionInsert = InferInsertModel<typeof possessions>;
+export const PossessionInsertSchema = createInsertSchema(possessions);
+export const PossessionSelectSchema = createSelectSchema(possessions);
+export type PossessionInsertSchemaType = z.infer<typeof PossessionInsertSchema>;
+export type PossessionSelectSchemaType = z.infer<typeof PossessionSelectSchema>;
+export type Possession = PossessionSelectSchemaType;
+export type PossessionInsert = PossessionInsertSchemaType;
 export type PossessionSelect = Possession;

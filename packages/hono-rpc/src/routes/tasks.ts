@@ -1,10 +1,13 @@
-import { TaskPrioritySchema, TaskStatusSchema } from '@hominem/db/schema/tasks'
-import type { TaskInsert } from '@hominem/db/types/tasks'
-import { TasksService, NotFoundError, ValidationError, ForbiddenError } from '@hominem/services'
+import { TasksService } from '@hominem/services'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { z } from 'zod'
 
+import type { TaskPriority, TaskStatus } from '../schemas/tasks.schema'
+import {
+  CreateTaskInputSchema,
+  UpdateTaskInputSchema,
+  UpdateTaskStatusSchema,
+} from '../schemas/tasks.schema'
 import type { AppContext } from '../middleware/auth'
 import { authMiddleware } from '../middleware/auth'
 
@@ -26,26 +29,6 @@ function serializeTask(t: any) {
     updatedAt: typeof t.updatedAt === 'string' ? t.updatedAt : t.updatedAt?.toISOString(),
   }
 }
-
-const CreateTaskInputSchema = z.object({
-  title: z.string().min(1),
-  description: z.string().optional(),
-  status: TaskStatusSchema.default('todo'),
-  priority: TaskPrioritySchema.default('medium'),
-  dueDate: z.string().optional(),
-})
-
-const UpdateTaskInputSchema = z.object({
-  title: z.string().min(1).optional(),
-  description: z.string().optional().nullish(),
-  status: TaskStatusSchema.optional(),
-  priority: TaskPrioritySchema.optional(),
-  dueDate: z.string().optional().nullish(),
-})
-
-const UpdateTaskStatusSchema = z.object({
-  status: TaskStatusSchema,
-})
 
 export const tasksRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
@@ -69,7 +52,7 @@ export const tasksRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!
     const data = c.req.valid('json')
 
-    const taskData: TaskInsert = {
+    const taskData = {
       ...data,
       userId,
       dueDate: data.dueDate || null,
@@ -86,8 +69,8 @@ export const tasksRoutes = new Hono<AppContext>()
     const updateData: Partial<{
       title: string
       description: string | null
-      status: 'todo' | 'in-progress' | 'done' | 'archived'
-      priority: 'low' | 'medium' | 'high' | 'urgent'
+      status: TaskStatus
+      priority: TaskPriority
       dueDate: string | null
     }> = {}
 

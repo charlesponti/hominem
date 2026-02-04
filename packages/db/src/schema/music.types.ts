@@ -11,12 +11,27 @@ import type {
   Artist,
   ArtistInsert,
   ArtistSelect,
+  ArtistInsertSchemaType,
+  ArtistSelectSchemaType,
   UserArtist,
   UserArtistInsert,
   UserArtistSelect,
+  UserArtistInsertSchemaType,
+  UserArtistSelectSchemaType,
 } from './music.schema';
 
-export type { Artist, ArtistInsert, ArtistSelect, UserArtist, UserArtistInsert, UserArtistSelect };
+export type {
+  Artist,
+  ArtistInsert,
+  ArtistSelect,
+  ArtistInsertSchemaType,
+  ArtistSelectSchemaType,
+  UserArtist,
+  UserArtistInsert,
+  UserArtistSelect,
+  UserArtistInsertSchemaType,
+  UserArtistSelectSchemaType,
+};
 
 // Legacy aliases for backward compatibility
 export type ArtistOutput = Artist;

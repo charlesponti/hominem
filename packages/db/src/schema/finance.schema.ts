@@ -243,6 +243,29 @@ export type BudgetGoalInsert = InferInsertModel<typeof budgetGoals>;
 export type BudgetGoalSelect = BudgetGoal;
 
 // Zod Validation Schemas
+// Financial Institution Validation Schemas
+export const FinancialInstitutionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  url: z.string().nullable().optional(),
+  logo: z.string().nullable().optional(),
+  primaryColor: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
+
+// Budget Category Validation Schemas
+export const BudgetCategorySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.string(),
+  budgetId: z.string().nullable().optional(),
+  averageMonthlyExpense: z.string().or(z.number()).nullable().optional(),
+  color: z.string().nullable().optional(),
+  userId: z.string(),
+})
+
 // Account Validation Schemas - for service layer validation
 /**
  * FinanceAccountSchema - Complete account data as stored in database

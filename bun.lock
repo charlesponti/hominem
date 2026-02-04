@@ -356,9 +356,6 @@
         "typescript": "5.9.3",
         "vitest": "^4.0.16",
       },
-      "peerDependencies": {
-        "drizzle-orm": "0.45.1",
-      },
     },
     "packages/events": {
       "name": "@hominem/events-services",
@@ -373,9 +370,6 @@
         "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
-      },
-      "peerDependencies": {
-        "drizzle-orm": "0.45.1",
       },
     },
     "packages/finance": {
@@ -396,9 +390,6 @@
         "typescript": "5.9.3",
         "vitest": "4.0.16",
       },
-      "peerDependencies": {
-        "drizzle-orm": "0.45.1",
-      },
     },
     "packages/health": {
       "name": "@hominem/health-services",
@@ -414,9 +405,6 @@
         "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
-      },
-      "peerDependencies": {
-        "drizzle-orm": "0.45.1",
       },
     },
     "packages/hono-client": {
@@ -467,9 +455,6 @@
         "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
       },
-      "peerDependencies": {
-        "drizzle-orm": "0.45.1",
-      },
     },
     "packages/invites": {
       "name": "@hominem/invites-services",
@@ -485,9 +470,6 @@
         "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
-      },
-      "peerDependencies": {
-        "drizzle-orm": "0.45.1",
       },
     },
     "packages/jobs": {
@@ -507,9 +489,6 @@
         "typescript": "5.9.3",
         "vitest": "4.0.16",
       },
-      "peerDependencies": {
-        "drizzle-orm": "0.45.1",
-      },
     },
     "packages/lists": {
       "name": "@hominem/lists-services",
@@ -526,9 +505,6 @@
         "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
-      },
-      "peerDependencies": {
-        "drizzle-orm": "0.45.1",
       },
     },
     "packages/notes": {
@@ -547,9 +523,6 @@
         "typescript": "5.9.3",
         "vitest": "4.0.16",
       },
-      "peerDependencies": {
-        "drizzle-orm": "0.45.1",
-      },
     },
     "packages/places": {
       "name": "@hominem/places-services",
@@ -567,9 +540,6 @@
         "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
-      },
-      "peerDependencies": {
-        "drizzle-orm": "0.45.1",
       },
     },
     "packages/services": {
@@ -603,9 +573,6 @@
         "drizzle-orm": "0.45.1",
         "typescript": "5.9.3",
         "vitest": "4.0.16",
-      },
-      "peerDependencies": {
-        "drizzle-orm": "0.45.1",
       },
     },
     "packages/ui": {

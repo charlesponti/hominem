@@ -16,24 +16,25 @@ import { z } from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
-  accountListSchema,
-  accountGetSchema,
   accountCreateSchema,
-  accountUpdateSchema,
   accountDeleteSchema,
+  accountGetSchema,
+  accountListSchema,
+  accountUpdateSchema,
   institutionAccountsSchema,
-  type AccountData,
-  type AccountListOutput,
-  type AccountGetOutput,
-  type AccountCreateOutput,
-  type AccountUpdateOutput,
-  type AccountDeleteOutput,
-  type AccountAllOutput,
-  type AccountsWithPlaidOutput,
-  type AccountConnectionsOutput,
-  type AccountInstitutionAccountsOutput,
-  type TransactionData,
-} from '../types/finance.types';
+} from '../schemas/finance.accounts.schema'
+import type {
+  AccountAllOutput,
+  AccountConnectionsOutput,
+  AccountCreateOutput,
+  AccountDeleteOutput,
+  AccountGetOutput,
+  AccountInstitutionAccountsOutput,
+  AccountListOutput,
+  AccountUpdateOutput,
+  AccountsWithPlaidOutput,
+  TransactionData,
+} from '../types/finance.types'
 
 /**
  * Serialization Helpers
@@ -117,7 +118,7 @@ export const accountsRoutes = new Hono<AppContext>()
       name: input.name,
       type: input.type,
       balance: input.balance?.toString() || '0',
-      institutionId: input.institution || null,
+      institutionId: input.institution ?? input.institutionId ?? null,
       isoCurrencyCode: 'USD',
       meta: null,
     });
@@ -134,7 +135,7 @@ export const accountsRoutes = new Hono<AppContext>()
     const result = await updateAccount(id, userId, {
       ...updates,
       balance: updates.balance?.toString(),
-      institutionId: updates.institution,
+      institutionId: updates.institution ?? updates.institutionId,
     });
 
     if (!result) {

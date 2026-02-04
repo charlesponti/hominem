@@ -7,6 +7,7 @@ import {
   ListNotesInputSchema,
   ListNotesOutputSchema,
   notesService,
+  type CreateNoteInput,
 } from './notes.service';
 
 // Define output schema for a single note
@@ -29,9 +30,7 @@ export const createNoteDef = toolDefinition({
 
 export const createNoteServerForUser =
   (userId: string) =>
-  async (
-    input: z.infer<typeof CreateNoteInputSchema>,
-  ): Promise<z.infer<typeof NoteOutputSchema>> => {
+  async (input: CreateNoteInput): Promise<z.infer<typeof NoteOutputSchema>> => {
     const result = await notesService.create({ ...input, userId });
     return {
       id: result.id,

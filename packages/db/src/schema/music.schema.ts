@@ -1,4 +1,4 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import {
   boolean,
   decimal,
@@ -11,7 +11,9 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { users } from './users.schema';
 
 export const artists = pgTable(
@@ -44,8 +46,8 @@ export const artists = pgTable(
     spotifyData: jsonb('spotify_data').notNull(),
 
     // Timestamps
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
   },
   (table) => [
     index('artist_name_idx').on(table.name),
@@ -54,8 +56,12 @@ export const artists = pgTable(
   ],
 );
 
-export type Artist = InferSelectModel<typeof artists>;
-export type ArtistInsert = InferInsertModel<typeof artists>;
+export const ArtistInsertSchema = createInsertSchema(artists);
+export const ArtistSelectSchema = createSelectSchema(artists);
+export type ArtistInsertSchemaType = z.infer<typeof ArtistInsertSchema>;
+export type ArtistSelectSchemaType = z.infer<typeof ArtistSelectSchema>;
+export type Artist = ArtistSelectSchemaType;
+export type ArtistInsert = ArtistInsertSchemaType;
 export type ArtistSelect = Artist;
 
 export const userArtists = pgTable(
@@ -71,10 +77,10 @@ export const userArtists = pgTable(
     isFavorite: boolean('is_favorite').notNull().default(false),
     rating: integer('rating').default(1),
     lastListenedAt: timestamp('last_listened_at'),
-    notificationsEnabled: boolean('notifications_enabled').notNull().default(true),
+    isNotificationsEnabled: boolean('is_notifications_enabled').notNull().default(true),
     notes: text('notes'),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
   },
   (table) => [
     primaryKey({
@@ -86,6 +92,10 @@ export const userArtists = pgTable(
   ],
 );
 
-export type UserArtist = InferSelectModel<typeof userArtists>;
-export type UserArtistInsert = InferInsertModel<typeof userArtists>;
+export const UserArtistInsertSchema = createInsertSchema(userArtists);
+export const UserArtistSelectSchema = createSelectSchema(userArtists);
+export type UserArtistInsertSchemaType = z.infer<typeof UserArtistInsertSchema>;
+export type UserArtistSelectSchemaType = z.infer<typeof UserArtistSelectSchema>;
+export type UserArtist = UserArtistSelectSchemaType;
+export type UserArtistInsert = UserArtistInsertSchemaType;
 export type UserArtistSelect = UserArtist;

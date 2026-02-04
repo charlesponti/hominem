@@ -7,9 +7,21 @@
  * Rule: Import from this file, not from health.schema.ts
  */
 
-import type { Health, HealthInsert, HealthSelect } from './health.schema';
+import type {
+  Health,
+  HealthInsert,
+  HealthSelect,
+  HealthInsertSchemaType,
+  HealthSelectSchemaType,
+} from './health.schema';
 
-export type { Health, HealthInsert, HealthSelect };
+export type {
+  Health,
+  HealthInsert,
+  HealthSelect,
+  HealthInsertSchemaType,
+  HealthSelectSchemaType,
+};
 
 // Legacy aliases for backward compatibility
 export type HealthOutput = Health;

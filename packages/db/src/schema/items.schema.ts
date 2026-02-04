@@ -9,6 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { z } from 'zod'
 
 import { list } from './lists.schema';
 import { users } from './users.schema';
@@ -59,3 +60,26 @@ export const item = pgTable(
 export type Item = InferSelectModel<typeof item>;
 export type ItemInsert = InferInsertModel<typeof item>;
 export type ItemSelect = Item;
+
+// Zod Validation Schemas
+export const ItemTypeSchema = z.enum(['FLIGHT', 'PLACE'])
+
+export const ItemSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  itemId: z.string(),
+  listId: z.string(),
+  userId: z.string(),
+  itemType: ItemTypeSchema,
+})
+
+export const ItemInsertSchema = ItemSchema.partial().extend({
+  id: z.string().optional(),
+  type: z.string(),
+  itemId: z.string(),
+  listId: z.string(),
+  userId: z.string(),
+  itemType: ItemTypeSchema.optional(),
+})

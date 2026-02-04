@@ -7,9 +7,21 @@
  * Rule: Import from this file, not from possessions.schema.ts
  */
 
-import type { Possession, PossessionInsert, PossessionSelect } from './possessions.schema';
+import type {
+  Possession,
+  PossessionInsert,
+  PossessionSelect,
+  PossessionInsertSchemaType,
+  PossessionSelectSchemaType,
+} from './possessions.schema';
 
-export type { Possession, PossessionInsert, PossessionSelect };
+export type {
+  Possession,
+  PossessionInsert,
+  PossessionSelect,
+  PossessionInsertSchemaType,
+  PossessionSelectSchemaType,
+};
 
 // Legacy aliases for backward compatibility
 export type PossessionOutput = Possession;

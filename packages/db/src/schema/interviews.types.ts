@@ -11,9 +11,13 @@ import type {
   Interview,
   InterviewInsert,
   InterviewSelect,
+  InterviewInsertSchemaType,
+  InterviewSelectSchemaType,
   NewInterview,
   InterviewInterviewer,
   InterviewInterviewerInsert,
+  InterviewInterviewerInsertSchemaType,
+  InterviewInterviewerSelectSchemaType,
   NewInterviewInterviewer,
 } from './interviews.schema';
 
@@ -21,9 +25,13 @@ export type {
   Interview,
   InterviewInsert,
   InterviewSelect,
+  InterviewInsertSchemaType,
+  InterviewSelectSchemaType,
   NewInterview,
   InterviewInterviewer,
   InterviewInterviewerInsert,
+  InterviewInterviewerInsertSchemaType,
+  InterviewInterviewerSelectSchemaType,
   NewInterviewInterviewer,
 };
 

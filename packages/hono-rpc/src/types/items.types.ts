@@ -1,67 +1,51 @@
-import { z } from 'zod';
-import type { PlaceGetDetailsByIdOutput } from './places.types';
-import type { FlightOutput } from '@hominem/db/types/travel';
+import type { PlaceGetDetailsByIdOutput } from './places.types'
+import type { FlightOutput } from '../schemas/travel.schema'
 
 // ============================================================================
 // Data Types
 // ============================================================================
 
 export type ListItem = {
-  id: string;
-  listId: string;
-  itemId: string;
-  itemType: 'FLIGHT' | 'PLACE';
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  listId: string
+  itemId: string
+  itemType: 'FLIGHT' | 'PLACE'
+  createdAt: string
+  updatedAt: string
   // Depending on what getItemsByListId returns, it might include expanded data
-  place?: PlaceGetDetailsByIdOutput | undefined;
-  flight?: FlightOutput | undefined;
-};
+  place?: PlaceGetDetailsByIdOutput | undefined
+  flight?: FlightOutput | undefined
+}
 
 // ============================================================================
 // ADD ITEM TO LIST
 // ============================================================================
 
 export type ItemsAddToListInput = {
-  listId: string;
-  itemId: string;
-  itemType?: 'FLIGHT' | 'PLACE';
-};
+  listId: string
+  itemId: string
+  itemType?: 'FLIGHT' | 'PLACE'
+}
 
-export const itemsAddToListSchema = z.object({
-  listId: z.string().uuid(),
-  itemId: z.string().uuid(),
-  itemType: z.enum(['FLIGHT', 'PLACE']).default('PLACE'),
-});
-
-export type ItemsAddToListOutput = ListItem;
+export type ItemsAddToListOutput = ListItem
 
 // ============================================================================
 // REMOVE ITEM FROM LIST
 // ============================================================================
 
 export type ItemsRemoveFromListInput = {
-  listId: string;
-  itemId: string;
-};
+  listId: string
+  itemId: string
+}
 
-export const itemsRemoveFromListSchema = z.object({
-  listId: z.string().uuid(),
-  itemId: z.string().uuid(),
-});
-
-export type ItemsRemoveFromListOutput = { success: boolean };
+export type ItemsRemoveFromListOutput = { success: boolean }
 
 // ============================================================================
 // GET ITEMS BY LIST ID
 // ============================================================================
 
 export type ItemsGetByListIdInput = {
-  listId: string;
-};
+  listId: string
+}
 
-export const itemsGetByListIdSchema = z.object({
-  listId: z.string().uuid(),
-});
-
-export type ItemsGetByListIdOutput = ListItem[];
+export type ItemsGetByListIdOutput = ListItem[]

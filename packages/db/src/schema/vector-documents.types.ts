@@ -11,10 +11,19 @@ import type {
   VectorDocument,
   VectorDocumentInsert,
   VectorDocumentSelect,
+  VectorDocumentInsertSchemaType,
+  VectorDocumentSelectSchemaType,
   NewVectorDocument,
 } from './vector-documents.schema';
 
-export type { VectorDocument, VectorDocumentInsert, VectorDocumentSelect, NewVectorDocument };
+export type {
+  VectorDocument,
+  VectorDocumentInsert,
+  VectorDocumentSelect,
+  VectorDocumentInsertSchemaType,
+  VectorDocumentSelectSchemaType,
+  NewVectorDocument,
+};
 
 // Legacy aliases for backward compatibility
 export type VectorDocumentOutput = VectorDocument;

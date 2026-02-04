@@ -1,4 +1,4 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import {
   index,
   integer,
@@ -10,7 +10,9 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { job_applications } from './career.schema';
 import { companies } from './company.schema';
 import { contacts } from './contacts.schema'; // For interviewers
@@ -66,8 +68,8 @@ export const interviews = pgTable(
     status: interviewStatusEnum('status'), // e.g., Scheduled, Completed, Cancelled, Rescheduled (using pgEnum)
     questionsAsked: jsonb('questions_asked'), // Store questions asked to the candidate
     questionsToAsk: jsonb('questions_to_ask'), // Store questions the candidate plans to ask
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
   },
   (table) => [
     index('interview_user_id_idx').on(table.userId),
@@ -77,8 +79,12 @@ export const interviews = pgTable(
   ],
 );
 
-export type Interview = InferSelectModel<typeof interviews>;
-export type InterviewInsert = InferInsertModel<typeof interviews>;
+export const InterviewInsertSchema = createInsertSchema(interviews);
+export const InterviewSelectSchema = createSelectSchema(interviews);
+export type InterviewInsertSchemaType = z.infer<typeof InterviewInsertSchema>;
+export type InterviewSelectSchemaType = z.infer<typeof InterviewSelectSchema>;
+export type Interview = InterviewSelectSchemaType;
+export type InterviewInsert = InterviewInsertSchemaType;
 export type InterviewSelect = Interview;
 export type NewInterview = InterviewInsert;
 
@@ -94,7 +100,7 @@ export const interview_interviewers = pgTable(
       .notNull()
       .references(() => contacts.id, { onDelete: 'cascade' }), // Link to contacts table
     role: text('role'), // e.g., Hiring Manager, Technical Interviewer, HR
-    createdAt: timestamp('created_at').notNull().defaultNow(),
+    createdAt: createdAtColumn(),
   },
   (table) => [
     uniqueIndex('interview_interviewer_unique_idx').on(table.interviewId, table.contactId),
@@ -103,6 +109,10 @@ export const interview_interviewers = pgTable(
   ],
 );
 
-export type InterviewInterviewer = InferSelectModel<typeof interview_interviewers>;
-export type InterviewInterviewerInsert = InferInsertModel<typeof interview_interviewers>;
+export const InterviewInterviewerInsertSchema = createInsertSchema(interview_interviewers);
+export const InterviewInterviewerSelectSchema = createSelectSchema(interview_interviewers);
+export type InterviewInterviewerInsertSchemaType = z.infer<typeof InterviewInterviewerInsertSchema>;
+export type InterviewInterviewerSelectSchemaType = z.infer<typeof InterviewInterviewerSelectSchema>;
+export type InterviewInterviewer = InterviewInterviewerSelectSchemaType;
+export type InterviewInterviewerInsert = InterviewInterviewerInsertSchemaType;
 export type NewInterviewInterviewer = InterviewInterviewerInsert;

@@ -13,6 +13,8 @@ import type {
   CalendarEventSelect,
   EventTypeEnum,
   EventSourceEnum,
+  EventInsertSchemaType,
+  EventSelectSchemaType,
 } from './calendar.schema';
 
 export type {
@@ -21,6 +23,8 @@ export type {
   CalendarEventSelect,
   EventTypeEnum,
   EventSourceEnum,
+  EventInsertSchemaType,
+  EventSelectSchemaType,
 };
 
 // Legacy aliases for backward compatibility

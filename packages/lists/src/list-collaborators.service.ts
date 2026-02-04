@@ -57,14 +57,14 @@ export async function removeUserFromList({
       where: and(eq(userLists.listId, listId), eq(userLists.userId, userIdToRemove)),
     });
 
-    // Check if there's an accepted invite for this user (even if no user_lists record exists)
-    const acceptedInvite = await db.query.listInvite.findFirst({
-      where: and(
-        eq(listInvite.listId, listId),
-        eq(listInvite.invitedUserId, userIdToRemove),
-        eq(listInvite.accepted, true),
-      ),
-    });
+     // Check if there's an accepted invite for this user (even if no user_lists record exists)
+     const acceptedInvite = await db.query.listInvite.findFirst({
+       where: and(
+         eq(listInvite.listId, listId),
+         eq(listInvite.invitedUserId, userIdToRemove),
+         eq(listInvite.isAccepted, true),
+       ),
+     });
 
     // If neither exists, the user is not a collaborator
     if (!(userListRecord || acceptedInvite)) {
@@ -78,19 +78,19 @@ export async function removeUserFromList({
         .where(and(eq(userLists.listId, listId), eq(userLists.userId, userIdToRemove)));
     }
 
-    // Also delete or update the accepted invite if it exists
-    // This handles the edge case where invite is accepted but user_lists wasn't created
-    if (acceptedInvite) {
-      await db
-        .delete(listInvite)
-        .where(
-          and(
-            eq(listInvite.listId, listId),
-            eq(listInvite.invitedUserId, userIdToRemove),
-            eq(listInvite.accepted, true),
-          ),
-        );
-    }
+     // Also delete or update the accepted invite if it exists
+     // This handles the edge case where invite is accepted but user_lists wasn't created
+     if (acceptedInvite) {
+       await db
+         .delete(listInvite)
+         .where(
+           and(
+             eq(listInvite.listId, listId),
+             eq(listInvite.invitedUserId, userIdToRemove),
+             eq(listInvite.isAccepted, true),
+           ),
+         );
+     }
 
     return { success: true };
   } catch (error) {

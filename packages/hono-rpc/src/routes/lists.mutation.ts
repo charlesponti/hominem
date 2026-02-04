@@ -12,16 +12,18 @@ import { Hono } from 'hono';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
   listCreateSchema,
-  listUpdateSchema,
-  listDeleteSchema,
   listDeleteItemSchema,
+  listDeleteSchema,
   listRemoveCollaboratorSchema,
-  type ListCreateOutput,
-  type ListUpdateOutput,
-  type ListDeleteOutput,
-  type ListDeleteItemOutput,
-  type ListRemoveCollaboratorOutput,
-} from '../types/lists.types';
+  listUpdateSchema,
+} from '../schemas/lists.schema'
+import type {
+  ListCreateOutput,
+  ListDeleteItemOutput,
+  ListDeleteOutput,
+  ListRemoveCollaboratorOutput,
+  ListUpdateOutput,
+} from '../types/lists.types'
 
 export const listMutationRoutes = new Hono<AppContext>()
   // Create new list

@@ -1,11 +1,17 @@
-import { NoteContentTypeSchema, NoteStatusSchema } from '@hominem/db/schema/notes'
-import { AllContentTypeSchema, type AllContentType } from '@hominem/db/schema/shared'
-import type { NoteInput, PublishingMetadata } from '@hominem/db/types/notes'
 import { NotesService } from '@hominem/notes-services'
-import { NotFoundError, ValidationError, InternalError } from '@hominem/services'
+import { NotFoundError } from '@hominem/services'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
-import { z } from 'zod'
+
+import {
+  AllContentTypeSchema,
+  type AllContentType,
+  CreateNoteInputSchema,
+  NotesListQuerySchema,
+  NotesSyncSchema,
+  PublishNoteSchema,
+  UpdateNoteInputSchema,
+} from '../schemas/notes.schema'
 
 import type {
   NotesListOutput,
@@ -58,90 +64,10 @@ function serializeNote(n: any): NoteOutput {
   }
 }
 
-const NoteMentionSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-})
-
-const CreateNoteInputSchema = z.object({
-  type: NoteContentTypeSchema.default('note'),
-  status: NoteStatusSchema.default('draft').optional(),
-  title: z.string().optional(),
-  content: z.string(),
-  excerpt: z.string().optional(),
-  tags: z
-    .array(z.object({ value: z.string() }))
-    .optional()
-    .default([]),
-  mentions: z.array(NoteMentionSchema).optional().default([]),
-  publishingMetadata: z.any().optional(),
-  analysis: z.unknown().optional(),
-})
-
-const UpdateNoteInputSchema = z.object({
-  type: NoteContentTypeSchema.optional(),
-  status: NoteStatusSchema.optional(),
-  title: z.string().nullish(),
-  content: z.string().optional(),
-  excerpt: z.string().nullish(),
-  tags: z.array(z.object({ value: z.string() })).nullish(),
-  publishingMetadata: z.any().optional().nullish(),
-  analysis: z.unknown().optional().nullish(),
-})
-
-const SyncNoteItemSchema = z.object({
-  id: z.uuid().optional(),
-  type: NoteContentTypeSchema,
-  status: NoteStatusSchema.optional(),
-  title: z.string().nullish(),
-  content: z.string(),
-  excerpt: z.string().nullish(),
-  tags: z
-    .array(z.object({ value: z.string() }))
-    .optional()
-    .default([]),
-  mentions: z.array(NoteMentionSchema).optional().default([]),
-  publishingMetadata: z.any().optional().nullish(),
-  analysis: z.unknown().optional().nullish(),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
-  publishedAt: z.string().optional(),
-  scheduledFor: z.string().optional(),
-})
-
-const notesListQuerySchema = z.object({
-  types: z.string().optional(),
-  status: z.string().optional(),
-  tags: z.string().optional(),
-  query: z.string().optional(),
-  since: z.string().optional(),
-  sortBy: z.enum(['createdAt', 'updatedAt', 'title']).optional(),
-  sortOrder: z.enum(['asc', 'desc']).optional(),
-  limit: z.string().optional(),
-  offset: z.string().optional(),
-  includeAllVersions: z.string().optional(),
-})
-
-const publishNoteSchema = z.object({
-  platform: z.string().optional(),
-  url: z.string().optional(),
-  externalId: z.string().optional(),
-  scheduledFor: z.string().optional(),
-  seo: z
-    .object({
-      metaTitle: z.string().optional(),
-      metaDescription: z.string().optional(),
-      keywords: z.array(z.string()).optional(),
-      canonicalUrl: z.string().optional(),
-      featuredImage: z.string().optional(),
-    })
-    .optional(),
-})
-
 export const notesRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
   // List notes - returns only latest versions by default
-  .get('/', zValidator('query', notesListQuerySchema), async (c) => {
+  .get('/', zValidator('query', NotesListQuerySchema), async (c) => {
     const userId = c.get('userId')!
     const queryParams = c.req.valid('query')
 
@@ -230,7 +156,7 @@ export const notesRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!
     const data = c.req.valid('json')
 
-    const noteData: NoteInput = {
+    const noteData = {
       ...data,
       userId,
       tags: data.tags || [],
@@ -264,7 +190,7 @@ export const notesRoutes = new Hono<AppContext>()
   })
 
   // Publish note
-  .post('/:id/publish', zValidator('json', publishNoteSchema), async (c) => {
+  .post('/:id/publish', zValidator('json', PublishNoteSchema), async (c) => {
     const userId = c.get('userId')!
     const id = c.req.param('id')
     const data = c.req.valid('json')
@@ -327,7 +253,7 @@ export const notesRoutes = new Hono<AppContext>()
   // Sync notes
   .post(
     '/sync',
-    zValidator('json', z.object({ items: z.array(SyncNoteItemSchema) })),
+    zValidator('json', NotesSyncSchema),
     async (c) => {
       const userId = c.get('userId')!
       const { items } = c.req.valid('json')

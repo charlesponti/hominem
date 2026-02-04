@@ -1,9 +1,8 @@
+import type { HealthInsert } from '@hominem/db/types/health';
+
 import { db } from '@hominem/db';
 import { health } from '@hominem/db/schema/health';
 import { and, eq, gte, lte } from 'drizzle-orm';
-
-export type HealthRecord = typeof health.$inferSelect;
-export type HealthInsert = typeof health.$inferInsert;
 
 export async function listHealthRecords(filters: {
   userId?: string;

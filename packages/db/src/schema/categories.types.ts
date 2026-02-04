@@ -7,9 +7,21 @@
  * Rule: Import from this file, not from categories.schema.ts
  */
 
-import type { Category, CategoryInsert, CategorySelect } from './categories.schema';
+import type {
+  Category,
+  CategoryInsert,
+  CategorySelect,
+  CategoryInsertSchemaType,
+  CategorySelectSchemaType,
+} from './categories.schema';
 
-export type { Category, CategoryInsert, CategorySelect };
+export type {
+  Category,
+  CategoryInsert,
+  CategorySelect,
+  CategoryInsertSchemaType,
+  CategorySelectSchemaType,
+};
 
 // Legacy aliases for backward compatibility
 export type CategoryOutput = Category;

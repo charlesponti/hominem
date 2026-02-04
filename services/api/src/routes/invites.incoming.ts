@@ -13,9 +13,9 @@ invitesIncomingRoutes.get('/', async (c) => {
     throw new UnauthorizedError('Unauthorized');
   }
 
-  try {
-    const invites = await getInvitesForUser(userId);
-    const pendingInvites = invites.filter((invite) => invite.accepted === false);
+   try {
+     const invites = await getInvitesForUser(userId);
+     const pendingInvites = invites.filter((invite) => invite.isAccepted === false);
 
     // Note: listInvite has timestamps with mode: 'string', so they're already serialized
     return c.json(pendingInvites);

@@ -1,23 +1,13 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import {
-  type AnyPgColumn,
-  boolean,
-  index,
-  integer,
-  json,
-  pgEnum,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { type AnyPgColumn, boolean, index, integer, json, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import * as z from 'zod';
 
 import { contacts } from './contacts.schema';
 import { transactions } from './finance.schema';
 import { place } from './places.schema';
 import { tags } from './tags.schema';
 import { users } from './users.schema';
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 
 // Enums
 export const eventTypeEnum = pgEnum('event_type', [
@@ -176,8 +166,8 @@ export const events = pgTable(
      * Status of goal/task (todo, in_progress, completed, archived)
      */
     status: text('status'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
@@ -196,8 +186,24 @@ export const events = pgTable(
     uniqueIndex('events_external_calendar_unique').on(table.externalId, table.calendarId),
   ],
 );
-export type CalendarEvent = InferSelectModel<typeof events>;
-export type CalendarEventInsert = InferInsertModel<typeof events>;
+
+// Zod Schemas
+export const EventInsertSchema = createInsertSchema(events, {
+  type: z.string(),
+  source: z.enum(['manual', 'google_calendar']),
+});
+
+export const EventSelectSchema = createSelectSchema(events, {
+  type: z.string(),
+  source: z.enum(['manual', 'google_calendar']),
+});
+
+export type EventInsertSchemaType = z.infer<typeof EventInsertSchema>;
+export type EventSelectSchemaType = z.infer<typeof EventSelectSchema>;
+
+// Legacy type aliases for backward compatibility
+export type CalendarEvent = EventSelectSchemaType;
+export type CalendarEventInsert = EventInsertSchemaType;
 export type CalendarEventSelect = CalendarEvent;
 
 export const eventsTags = pgTable('events_tags', {

@@ -1,6 +1,8 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { users } from './users.schema';
 
 export const trips = pgTable('trips', {
@@ -11,10 +13,14 @@ export const trips = pgTable('trips', {
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  createdAt: createdAtColumn(),
+  updatedAt: updatedAtColumn(),
 });
 
-export type Trip = InferSelectModel<typeof trips>;
-export type TripInsert = InferInsertModel<typeof trips>;
+export const TripInsertSchema = createInsertSchema(trips);
+export const TripSelectSchema = createSelectSchema(trips);
+export type TripInsertSchemaType = z.infer<typeof TripInsertSchema>;
+export type TripSelectSchemaType = z.infer<typeof TripSelectSchema>;
+export type Trip = TripSelectSchemaType;
+export type TripInsert = TripInsertSchemaType;
 export type TripSelect = Trip;

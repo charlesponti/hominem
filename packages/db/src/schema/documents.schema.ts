@@ -1,6 +1,8 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
-import { index, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { index, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
+import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { users } from './users.schema';
 
 export const documentTypeEnum = pgEnum('document_type', [
@@ -28,8 +30,8 @@ export const documents = pgTable(
     url: text('url'), // URL to the document if stored externally (e.g., S3)
     type: documentTypeEnum('type').notNull(), // Type of the document, using pgEnum
     userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }), // Foreign key to the user who owns this document
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    createdAt: createdAtColumn(),
+    updatedAt: updatedAtColumn(),
   },
   (table) => ({
     // Changed from array to object for multiple indexes if needed in future
@@ -38,6 +40,10 @@ export const documents = pgTable(
   }),
 );
 
-export type Document = InferSelectModel<typeof documents>;
-export type DocumentInsert = InferInsertModel<typeof documents>;
+export const DocumentInsertSchema = createInsertSchema(documents);
+export const DocumentSelectSchema = createSelectSchema(documents);
+export type DocumentInsertSchemaType = z.infer<typeof DocumentInsertSchema>;
+export type DocumentSelectSchemaType = z.infer<typeof DocumentSelectSchema>;
+export type Document = DocumentSelectSchemaType;
+export type DocumentInsert = DocumentInsertSchemaType;
 export type DocumentSelect = Document;

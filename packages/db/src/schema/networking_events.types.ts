@@ -11,9 +11,13 @@ import type {
   NetworkingEvent,
   NetworkingEventInsert,
   NetworkingEventSelect,
+  NetworkingEventInsertSchemaType,
+  NetworkingEventSelectSchemaType,
   NewNetworkingEvent,
   NetworkingEventAttendee,
   NetworkingEventAttendeeInsert,
+  NetworkingEventAttendeeInsertSchemaType,
+  NetworkingEventAttendeeSelectSchemaType,
   NewNetworkingEventAttendee,
 } from './networking_events.schema';
 
@@ -21,9 +25,13 @@ export type {
   NetworkingEvent,
   NetworkingEventInsert,
   NetworkingEventSelect,
+  NetworkingEventInsertSchemaType,
+  NetworkingEventSelectSchemaType,
   NewNetworkingEvent,
   NetworkingEventAttendee,
   NetworkingEventAttendeeInsert,
+  NetworkingEventAttendeeInsertSchemaType,
+  NetworkingEventAttendeeSelectSchemaType,
   NewNetworkingEventAttendee,
 };
 

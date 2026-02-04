@@ -36,12 +36,12 @@ export function GoalMilestoneList({
             className="flex-1"
             placeholder="Milestone description"
           />
-          <input
-            type="checkbox"
-            checked={milestone.completed}
-            onChange={(e) => onChange(index, 'completed', e.target.checked)}
-            className="size-5"
-          />
+           <input
+             type="checkbox"
+             checked={milestone.isCompleted}
+             onChange={(e) => onChange(index, 'isCompleted', e.target.checked)}
+             className="size-5"
+           />
           <Button variant="ghost" size="sm" onClick={() => onRemove(index)}>
             <XCircle className="size-4 text-red-500" />
           </Button>
