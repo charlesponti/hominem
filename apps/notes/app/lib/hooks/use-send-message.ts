@@ -2,7 +2,6 @@ import type { HonoClient } from '@hominem/hono-client';
 import type {
   ChatsSendInput,
   ChatsSendOutput,
-  ChatMessage,
   ChatsGetMessagesOutput,
 } from '@hominem/hono-rpc/types/chat.types';
 
@@ -24,7 +23,7 @@ export function useSendMessage({ chatId, userId }: { chatId: string; userId?: st
     }
   };
 
-  const markStreamingComplete = (currentChatId: string, messageId: string) => {
+  const _markStreamingComplete = (currentChatId: string, messageId: string) => {
     const key = ['chats', 'getMessages', { chatId: currentChatId, limit: 50 }];
     const oldData = utils.getData<ChatsGetMessagesOutput>(key);
     if (!oldData) return;

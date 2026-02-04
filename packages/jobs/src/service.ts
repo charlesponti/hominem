@@ -152,7 +152,7 @@ export async function getJobsByIds<T extends BaseJob>(jobIds: string[]): Promise
     );
     // Filter out null jobs
     return jobs.filter((job): job is Awaited<T> => !!job);
-  } catch (_error) {
+  } catch {
     return [];
   }
 }

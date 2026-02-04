@@ -1,6 +1,5 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
 import { useApiClient } from '@hominem/ui';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 // Define query keys at the top of the file as constants

@@ -177,9 +177,7 @@ export default function AccountsPage() {
           <AlertTriangle className="size-4" />
           <AlertTitle>Error Loading Data</AlertTitle>
           <AlertDescription>
-            {allAccountsQuery.error?.message ||
-              allAccountsQuery.error?.message ||
-              'Failed to load banking data'}
+            {allAccountsQuery.error?.message || 'Failed to load banking data'}
           </AlertDescription>
         </Alert>
       ) : null}

@@ -29,7 +29,6 @@
     "@emotion/styled": "^11.14.1",
     "@headlessui/react": "^2.2.9",
     "@hominem/auth": "workspace:*",
-    "@hominem/db": "workspace:*",
     "@hominem/events-services": "workspace:*",
     "@hominem/hono-client": "workspace:*",
     "@hominem/hono-rpc": "workspace:*",

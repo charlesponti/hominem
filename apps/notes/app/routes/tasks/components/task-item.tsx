@@ -1,4 +1,4 @@
-import type { TaskPriority, TaskStatus } from '@hominem/db/schema/tasks';
+import type { Priority, TaskStatus } from '@hominem/hono-rpc/types';
 
 import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
@@ -13,7 +13,7 @@ interface TaskItemProps {
   onDelete: (id: string) => void;
 }
 
-const priorityColors: Record<TaskPriority, string> = {
+const priorityColors: Record<Priority, string> = {
   low: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
   medium: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
   high: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',

@@ -1,14 +1,6 @@
-import { getInviteByToken, getPlaceListPreview } from '@hominem/lists-services';
-import { getPlacePhotoById } from '@hominem/places-services';
-import { getHominemPhotoURL } from '@hominem/utils/images';
+import type { InvitesPreviewOutput } from '@hominem/hono-rpc/types/invites.types';
 
-export type InvitePreview = {
-  listId?: string | undefined;
-  listName: string;
-  coverPhoto?: string | null | undefined;
-  firstItemName?: string | null | undefined;
-  invitedUserEmail?: string | null | undefined;
-};
+import { createServerHonoClient } from '~/lib/rpc/server';
 
 /**
  * Builds preview data for an invite when the user is not authenticated.
@@ -17,39 +9,14 @@ export type InvitePreview = {
  * @param token - The invite token from the URL query parameter
  * @returns Preview data or null if invite not found
  */
-export async function buildInvitePreview(token: string): Promise<InvitePreview | null> {
-  const invite = await getInviteByToken(token);
+export type InvitePreview = InvitesPreviewOutput;
 
-  if (!invite) {
+export async function buildInvitePreview(token: string): Promise<InvitePreview | null> {
+  const client = createServerHonoClient();
+  const res = await client.api.invites.preview.$post({ json: { token } });
+  if (!res.ok) {
     return null;
   }
 
-  const list = invite.list;
-  let coverPhoto: string | null | undefined;
-  let firstItemName: string | null | undefined;
-
-  if (list?.id) {
-    const firstPlace = await getPlaceListPreview(list.id);
-
-    if (firstPlace) {
-      firstItemName = firstPlace.name ?? firstPlace.description ?? null;
-
-      // Prefer server-provided resolved photo URL when available
-      coverPhoto = (firstPlace as { photoUrl?: string }).photoUrl ?? firstPlace.imageUrl;
-
-      // Fall back to fetching by place photo id and resolve on the server
-      if (!coverPhoto && firstPlace.itemId) {
-        const rawPhoto = await getPlacePhotoById(firstPlace.itemId);
-        coverPhoto = rawPhoto ? getHominemPhotoURL(rawPhoto, 600, 400) : null;
-      }
-    }
-  }
-
-  return {
-    listId: list?.id ?? invite.listId,
-    listName: list?.name ?? invite.list?.name ?? 'Shared list',
-    coverPhoto: coverPhoto || undefined,
-    firstItemName,
-    invitedUserEmail: invite.invitedUserEmail,
-  };
+  return res.json();
 }

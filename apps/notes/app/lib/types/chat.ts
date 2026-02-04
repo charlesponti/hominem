@@ -1,4 +1,4 @@
-import type { ChatMessageToolCall } from '@hominem/db/types/chats';
+import type { ChatMessageToolCall } from '@hominem/hono-rpc/types';
 import type { ChatMessageSelect } from '@hominem/services/types';
 
 import type { ProcessedFile } from './upload';

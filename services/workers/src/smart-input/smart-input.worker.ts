@@ -5,7 +5,7 @@ import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { generateObject } from 'ai';
 import { type Job, Worker } from 'bullmq';
-import z, { ZodError } from 'zod';
+import { ZodError } from 'zod';
 
 import { HealthService } from '../health.service';
 import { type Candidates, CandidatesSchema, type SubmissionAttachment } from '../lib/writer.schema';

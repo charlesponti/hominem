@@ -1,8 +1,6 @@
 import type { FinanceTransactionOutput } from '@hominem/db/types/finance';
 
-import { AccountTypeEnum } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
-import { z } from 'zod';
 
 import type {
   AccountWithPlaidInfo,

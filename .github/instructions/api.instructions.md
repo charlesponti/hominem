@@ -1,10 +1,11 @@
 ---
-applyTo: 'packages/hono-rpc/**, services/api/**, apps/api/**, packages/**/src/routes/**'
+applyTo: 'packages/hono-rpc/**, services/api/**'
 ---
 
-# Hono RPC API Engineering Guidelines
+# API Engineering
 
-Rules
+## Rules
+
 - Define named request/response types and export them from `packages/hono-rpc/src/types` or the relevant service package.
 - Do not infer route types from app instances.
 - Service layer is framework-agnostic and throws typed errors.
@@ -17,7 +18,8 @@ Rules
 - Service functions accept a single object parameter.
 - Do not expose internal error details to clients.
 
-Anti-rules
+## Anti-rules
+
 - No duplicated domain types; import from `@hominem/db/schema`.
 - No HTTP/framework logic in services.
 - No plain `Error` for user-visible failures.

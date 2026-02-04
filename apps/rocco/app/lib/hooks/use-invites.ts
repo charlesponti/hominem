@@ -80,7 +80,7 @@ export const useAcceptInvite = () => {
       return res.json() as Promise<InvitesAcceptOutput>;
     },
     {
-      onSuccess: (result) => {
+      onSuccess: (_result) => {
         utils.invalidate(queryKeys.invites.received());
         utils.invalidate(queryKeys.lists.all());
       },
@@ -99,7 +99,7 @@ export const useDeclineInvite = () => {
       return res.json() as Promise<InvitesDeclineOutput>;
     },
     {
-      onSuccess: (result) => {
+      onSuccess: (_result) => {
         utils.invalidate(queryKeys.invites.received());
       },
     },

@@ -12,13 +12,6 @@ import { useNavigate } from 'react-router';
 
 import { useTransactionCategories, useBulkCreateBudgetCategories } from '~/lib/hooks/use-budget';
 
-interface TransactionCategory {
-  name: string;
-  transactionCount: number;
-  averageAmount: number;
-  suggestedBudget: number;
-}
-
 export default function BudgetCategoriesSetup() {
   const navigate = useNavigate();
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());

@@ -1,4 +1,3 @@
-import { getPlaceById, getPlaceByGoogleMapsId } from '@hominem/places-services';
 import { PageTitle } from '@hominem/ui';
 import { redirect } from 'react-router';
 import z from 'zod';
@@ -18,18 +17,32 @@ import PlaceStatus from '~/components/places/PlaceStatus';
 import PlaceWebsite from '~/components/places/PlaceWebsite';
 import { VisitHistory } from '~/components/places/VisitHistory';
 import { requireAuth } from '~/lib/guards';
+import { createServerHonoClient } from '~/lib/rpc/server';
 
 import type { Route } from './+types/places.$id';
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  await requireAuth(request);
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+
   const { id } = params;
   if (!id) {
     return redirect('/404');
   }
 
   const isUuid = z.string().uuid().safeParse(id).success;
-  const place = isUuid ? await getPlaceById(id) : await getPlaceByGoogleMapsId(id);
+  const client = createServerHonoClient(authResult.session?.access_token);
+  const res = isUuid
+    ? await client.api.places.get.$post({ json: { id } })
+    : await client.api.places['get-by-google-id'].$post({ json: { googleMapsId: id } });
+
+  if (!res.ok) {
+    return redirect('/404');
+  }
+
+  const place = await res.json();
 
   if (!place) {
     return redirect('/404');
@@ -62,7 +75,10 @@ export default function Place({ loaderData }: Route.ComponentProps) {
         >
           <PageTitle title={place.name} />
 
-          <PlaceStatus businessStatus={place.businessStatus} openingHours={place.openingHours} />
+          <PlaceStatus
+            {...(place.businessStatus ? { businessStatus: place.businessStatus } : {})}
+            {...(place.openingHours ? { openingHours: place.openingHours } : {})}
+          />
 
           <div className="space-y-2">
             <PlaceTypes types={place.types || []} />

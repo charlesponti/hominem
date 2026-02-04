@@ -1,5 +1,5 @@
-import type { TaskPriority, TaskStatus } from '@hominem/db/schema/tasks';
 import type { HonoClient } from '@hominem/hono-client';
+import type { Priority, TaskStatus } from '@hominem/hono-rpc/types';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
@@ -8,7 +8,7 @@ export interface Task {
   title: string;
   description?: string;
   status: TaskStatus;
-  priority: TaskPriority;
+  priority: Priority;
   dueDate?: string;
   userId: string;
   createdAt: string;
@@ -22,7 +22,7 @@ export interface TasksListOutput {
 export interface CreateTaskInput {
   title: string;
   description?: string;
-  priority: TaskPriority;
+  priority: Priority;
   dueDate?: string;
 }
 

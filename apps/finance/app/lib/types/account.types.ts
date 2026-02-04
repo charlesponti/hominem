@@ -1,8 +1,4 @@
-import type {
-  AccountData,
-  AccountWithPlaidInfo,
-  TransactionData,
-} from '@hominem/hono-rpc/types/finance.types';
+import type { AccountWithPlaidInfo, TransactionData } from '@hominem/hono-rpc/types/finance.types';
 
 /**
  * Account type - represents a financial account from the API

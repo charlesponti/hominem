@@ -7,11 +7,9 @@ import type {
 } from '@hominem/db/types/notes';
 
 // AI SDK imports
-import { google } from '@ai-sdk/google';
 import { db } from '@hominem/db';
 // Direct table import for DB operations
 import { notes } from '@hominem/db/schema/notes';
-import { generateText } from 'ai';
 import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm';
 
 import type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput } from './types';

@@ -44,18 +44,16 @@ export async function createPlaceFromPrediction(prediction: GooglePlacePredictio
    */
   const photoUrls: string[] = [];
 
-  const latitude = prediction.location?.latitude || null;
-  const longitude = prediction.location?.longitude || null;
-  const location: [number, number] = latitude && longitude ? [longitude, latitude] : [0, 0];
+  const latitude = prediction.location?.latitude ?? null;
+  const longitude = prediction.location?.longitude ?? null;
 
   return {
     id: prediction.place_id,
     name: prediction.text || '',
     description: null,
-    address: prediction.address || '',
+    address: prediction.address || null,
     createdAt: '',
     updatedAt: '',
-    itemId: null,
     googleMapsId: prediction.place_id,
     types: null,
     imageUrl: null,
@@ -64,11 +62,7 @@ export async function createPlaceFromPrediction(prediction: GooglePlacePredictio
     websiteUri: null,
     latitude,
     longitude,
-    location,
-    bestFor: null,
-    isPublic: false,
-    wifiInfo: null,
-    photos: photoUrls,
+    photos: photoUrls.length > 0 ? photoUrls : null,
     priceLevel: null,
     businessStatus: null,
     openingHours: null,

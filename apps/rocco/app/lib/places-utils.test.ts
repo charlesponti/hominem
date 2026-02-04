@@ -117,20 +117,18 @@ describe('places-utils', () => {
 
       const result = transformGooglePlaceToPlaceInsert(googlePlace, 'google-id-123');
 
+      // With exactOptionalPropertyTypes, only set fields that have values
       expect(result).toEqual({
         googleMapsId: 'google-id-123',
         name: 'Test Place',
         address: '123 Test St',
         latitude: 45,
         longitude: -122,
-        location: [-122, 45], // [longitude, latitude]
-        types: ['restaurant', 'food'],
         rating: 4.5,
         websiteUri: 'https://example.com',
         phoneNumber: '+1 555-0199',
         priceLevel: 2,
         photos: ['places/123/photos/abc', 'places/123/photos/def'],
-        imageUrl: null,
       });
     });
 
@@ -141,14 +139,15 @@ describe('places-utils', () => {
 
       const result = transformGooglePlaceToPlaceInsert(googlePlace, 'min-id');
 
-      expect(result).toMatchObject({
+      // With exactOptionalPropertyTypes, missing fields are omitted rather than set to null
+      expect(result).toEqual({
         googleMapsId: 'min-id',
         name: 'Minimal Place',
-        address: null,
-        latitude: null,
-        longitude: null,
-        photos: null,
       });
+      expect(result.address).toBeUndefined();
+      expect(result.latitude).toBeUndefined();
+      expect(result.longitude).toBeUndefined();
+      expect(result.photos).toBeUndefined();
     });
 
     it('should sanitize photos during transformation', () => {

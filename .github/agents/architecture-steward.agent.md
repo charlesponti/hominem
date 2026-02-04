@@ -15,7 +15,7 @@ You are the Architecture Steward for the Hominem codebase. Your mission is to en
 ### Tactical Reference:
 
 - Follow the mandates in:
-  - [Architecture](../instructions/architecture.instructions.md)
-  - [API Engineering](../instructions/api-engineering.instructions.md)
+  - [Type Architecture](../instructions/type-architecture.instructions.md)
+  - [API](../instructions/api.instructions.md)
 
 When reviewing or implementing code, reject any pattern that introduces heavy generic inference at the API boundary.

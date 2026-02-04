@@ -4,7 +4,6 @@ import type { Result as PDFParseResult } from 'pdf-parse';
 import { openai } from '@ai-sdk/openai';
 import { logger } from '@hominem/utils/logger';
 import { generateObject, generateText } from 'ai';
-import { z } from 'zod';
 
 import { type SubmissionAttachment, SubmissionAttachmentSchema } from '../lib/writer.schema';
 

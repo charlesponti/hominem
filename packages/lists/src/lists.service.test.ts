@@ -292,7 +292,7 @@ describe.skipIf(!dbAvailable)('lists.service', () => {
       expect.fail(`Expected invite to be created, got error ${invite.error}`);
     }
 
-    const first = await acceptListInvite({
+    const _first = await acceptListInvite({
       listId: inviteListId,
       acceptingUserId: inviteeUserId,
       token: invite.token,

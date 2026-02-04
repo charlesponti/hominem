@@ -1,5 +1,4 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
-import { getListById } from '@hominem/lists-services';
 import { Alert, PageTitle } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
 import { UserPlus } from 'lucide-react';
@@ -17,18 +16,28 @@ import { MapInteractionProvider } from '~/contexts/map-interaction-context';
 import { useGeolocation } from '~/hooks/useGeolocation';
 import { requireAuth } from '~/lib/guards';
 import { useListById } from '~/lib/hooks/use-lists';
+import { createServerHonoClient } from '~/lib/rpc/server';
 
 import type { Route } from './+types/lists.$id';
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-  await requireAuth(request);
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
 
   const { id } = params;
   if (!id) {
     return redirect('/404');
   }
 
-  const list = await getListById(id);
+  const client = createServerHonoClient(authResult.session?.access_token);
+  const res = await client.api.lists.get.$post({ json: { id } });
+  if (!res.ok) {
+    return redirect('/404');
+  }
+
+  const list = await res.json();
   if (!list) {
     return redirect('/404');
   }
@@ -81,7 +90,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   // Use optional chaining and default to check ownership
   const ownerId = 'ownerId' in list ? list.ownerId : (list as any).userId;
   const isOwner = ownerId === user?.id;
-  const hasAccess = 'hasAccess' in list ? list.hasAccess : isOwner;
+  const hasAccess = 'hasAccess' in list ? (list.hasAccess as boolean) : isOwner;
   const collaborators = 'collaborators' in list ? list.collaborators : (list as any).users || [];
 
   return (

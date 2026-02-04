@@ -47,7 +47,7 @@ export const logHealthActivityServer = async (
 };
 
 export const getHealthActivitiesServer = async (
-  input: z.infer<typeof getHealthActivitiesInputSchema>,
+  _input: z.infer<typeof getHealthActivitiesInputSchema>,
 ) => {
   return { activities: [] as z.infer<typeof ActivitySchema>[] };
 };

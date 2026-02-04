@@ -2,9 +2,10 @@
 applyTo: 'packages/db/**'
 ---
 
-# Database Workflow
+# Database
 
-Rules
+## Modifying the Database
+
 - Modify schema in `packages/db/src/schema/`.
 - Generate migrations with `bun run db:generate`.
 - Apply migrations with `bun run db:migrate`.

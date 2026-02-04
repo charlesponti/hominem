@@ -3,16 +3,10 @@ import { Toaster } from '@hominem/ui/components/ui/toaster';
 import { Suspense } from 'react';
 import { Outlet } from 'react-router';
 
-import type { Route } from './+types/layout';
-
 import Header from '../components/header';
 import { LoadingScreen } from '../components/loading';
 
-export async function loader(_args: Route.LoaderArgs) {
-  return {};
-}
-
-export default function Layout({ loaderData: _loaderData }: Route.ComponentProps) {
+export default function Layout() {
   return (
     <>
       <AppLayout navigation={<Header />}>

@@ -4,7 +4,7 @@ import { Input } from '@hominem/ui/input';
 import { RefreshCw, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { Note, NotesCreateInput, NotesUpdateInput } from '~/lib/rpc/notes-types';
+import type { Note, NotesCreateInput } from '~/lib/rpc/notes-types';
 
 import { useCreateNote, useUpdateNote } from '~/hooks/use-notes';
 

@@ -1,6 +1,5 @@
 import { db } from '@hominem/db';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import * as z from 'zod';
 
 import { convertGoogleCalendarEvent, GoogleCalendarService } from './google-calendar.service';
 

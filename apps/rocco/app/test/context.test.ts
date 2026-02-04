@@ -1,6 +1,5 @@
-import { createTestUser } from '@hominem/db/test/fixtures';
 import crypto from 'node:crypto';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the dependencies
 vi.mock('../lib/supabase/server', () => ({
@@ -9,19 +8,6 @@ vi.mock('../lib/supabase/server', () => ({
 
 describe('Request Context', () => {
   const testUserId = crypto.randomUUID();
-  const testUserId2 = crypto.randomUUID();
-
-  beforeAll(async () => {
-    // Create test users in the database
-    await createTestUser({
-      id: testUserId,
-      name: 'Test User',
-    });
-    await createTestUser({
-      id: testUserId2,
-      name: null,
-    });
-  });
 
   beforeEach(() => {
     vi.clearAllMocks();

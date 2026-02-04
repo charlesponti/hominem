@@ -5,7 +5,7 @@ import type {
   TwitterPostOutput,
 } from '@hominem/hono-rpc/types/twitter.types';
 
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+import { useHonoMutation, useHonoQuery } from '@hominem/hono-client/react';
 import { useToast } from '@hominem/ui';
 import { useCallback } from 'react';
 

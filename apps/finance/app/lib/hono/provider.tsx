@@ -1,5 +1,3 @@
-import type React from 'react';
-
 import { useSupabaseAuthContext } from '@hominem/auth';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
 import { createHonoClient } from '@hominem/hono-rpc/client';

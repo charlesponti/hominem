@@ -1,4 +1,4 @@
-import type { TaskPriority as Priority } from '@hominem/db/schema/tasks';
+import type { Priority } from '@hominem/hono-rpc/types';
 
 import {
   Select,

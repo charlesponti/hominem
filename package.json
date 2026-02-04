@@ -26,11 +26,13 @@
   ],
   "scripts": {
     "build": "turbo run build",
+    "check": "bun run validate-db-imports && bun run typecheck && bun run lint",
     "clean": "turbo run clean",
     "db:migrate": "turbo run db:migrate",
     "dev": "turbo dev --ui tui",
     "lint": "turbo run lint",
     "format": "turbo run format",
+    "validate-db-imports": "node scripts/validate-db-imports.js",
     "precommit": "bunx lefthook run pre-commit",
     "prepush": "bun run test",
     "prerelease": "bun run test",

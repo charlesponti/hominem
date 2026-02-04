@@ -1,4 +1,29 @@
-import type { places_v1 } from 'googleapis';
+export type GooglePlaceDisplayName = {
+  text?: string;
+};
+
+export type GooglePlaceLocation = {
+  latitude?: number | null;
+  longitude?: number | null;
+};
+
+export type GooglePlacePhoto = {
+  name?: string | null;
+};
+
+export type GoogleAddressComponent = {
+  longText?: string;
+  shortText?: string;
+  types?: string[];
+};
+
+export type GooglePlacesApiResponse = {
+  id?: string | null;
+  displayName?: GooglePlaceDisplayName | null;
+  formattedAddress?: string | null;
+  location?: GooglePlaceLocation | null;
+  priceLevel?: string | number | null;
+};
 
 export interface BaseModel {
   createdAt: string;
@@ -29,8 +54,6 @@ export type GooglePlacePrediction = {
   priceLevel?: string | number | null | undefined;
 };
 
-export type GooglePlacesApiResponse = places_v1.Schema$GoogleMapsPlacesV1Place;
-
 // Type for temporary place data from Google Places API
 export type GooglePlaceData = {
   id: string;
@@ -51,6 +74,11 @@ export type GooglePlaceData = {
   priceLevel?: number | null;
 };
 
-export type GoogleAddressComponent = places_v1.Schema$GoogleMapsPlacesV1PlaceAddressComponent;
-export type GooglePlacePhoto = places_v1.Schema$GoogleMapsPlacesV1Photo;
-export type GooglePlaceDetailsResponse = places_v1.Schema$GoogleMapsPlacesV1Place;
+export type GooglePlaceDetailsResponse = GooglePlacesApiResponse & {
+  types?: string[] | null;
+  rating?: number | null;
+  websiteUri?: string | null;
+  nationalPhoneNumber?: string | null;
+  photos?: GooglePlacePhoto[] | null;
+  addressComponents?: GoogleAddressComponent[] | null;
+};

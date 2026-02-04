@@ -1,4 +1,4 @@
-import type { TaskPriority } from '@hominem/db/schema/tasks';
+import type { Priority } from '@hominem/hono-rpc/types';
 
 import { Button } from '@hominem/ui/button';
 import { DatePicker } from '@hominem/ui/components/date-picker';
@@ -24,7 +24,7 @@ export function TaskCreateForm({ onSuccess }: TaskCreateFormProps) {
   const createTask = useCreateTask();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<TaskPriority>('medium');
+  const [priority, setPriority] = useState<Priority>('medium');
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [error, setError] = useState<Error | null>(null);
 
@@ -78,7 +78,7 @@ export function TaskCreateForm({ onSuccess }: TaskCreateFormProps) {
       <div className="flex flex-wrap gap-3 items-end">
         <div className="flex-1 min-w-[140px]">
           <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Priority</label>
-          <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
+          <Select value={priority} onValueChange={(v) => setPriority(v as Priority)}>
             <SelectTrigger className="h-9 text-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
               <SelectValue />
             </SelectTrigger>

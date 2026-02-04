@@ -1,5 +1,3 @@
-import type { AccountData } from '@hominem/hono-rpc/types/finance.types';
-
 import { Button } from '@hominem/ui/button';
 import { DatePicker } from '@hominem/ui/components/date-picker';
 import { Badge } from '@hominem/ui/components/ui/badge';

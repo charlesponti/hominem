@@ -29,7 +29,7 @@ export const useCreatePerson = () => {
       return res.json() as Promise<PeopleCreateOutput>;
     },
     {
-      onSuccess: (result) => {
+      onSuccess: (_result) => {
         utils.invalidate(queryKeys.people.list());
       },
     },

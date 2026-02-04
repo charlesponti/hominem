@@ -1,4 +1,4 @@
-import type { GoalMilestone } from '@hominem/db/types/goals';
+import type { GoalMilestone } from '@hominem/hono-rpc/types';
 
 import { Button } from '@hominem/ui';
 import { Progress } from '@hominem/ui/components/ui/progress';

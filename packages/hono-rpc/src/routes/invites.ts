@@ -6,6 +6,7 @@ import {
   getInviteByListAndToken,
   getInviteByToken,
   getInvitesForUser,
+  getPlaceListPreview,
   getListInvites,
   getOutboundInvites,
   isUserMemberOfList,
@@ -15,6 +16,7 @@ import {
   type DeleteListInviteParams,
 } from '@hominem/lists-services';
 import { getListOwnedByUser } from '@hominem/lists-services';
+import { getPlacePhotoById } from '@hominem/places-services';
 import {
   ConflictError,
   ForbiddenError,
@@ -22,12 +24,12 @@ import {
   ValidationError,
   UnauthorizedError,
   InternalError,
-  isServiceError,
 } from '@hominem/services';
+import { getHominemPhotoURL } from '@hominem/utils/images';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
-import { authMiddleware, type AppContext } from '../middleware/auth';
+import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
 import {
   invitesGetReceivedSchema,
   invitesGetByListSchema,
@@ -35,6 +37,7 @@ import {
   invitesAcceptSchema,
   invitesDeclineSchema,
   invitesDeleteSchema,
+  invitesPreviewSchema,
   type InvitesGetReceivedOutput,
   type InvitesGetSentOutput,
   type InvitesGetByListOutput,
@@ -42,6 +45,7 @@ import {
   type InvitesAcceptOutput,
   type InvitesDeclineOutput,
   type InvitesDeleteOutput,
+  type InvitesPreviewOutput,
 } from '../types/invites.types';
 
 // ============================================================================
@@ -49,6 +53,47 @@ import {
 // ============================================================================
 
 export const invitesRoutes = new Hono<AppContext>()
+  // Invite preview (public)
+  .post('/preview', publicMiddleware, zValidator('json', invitesPreviewSchema), async (c) => {
+    const input = c.req.valid('json');
+    const invite = await getInviteByToken(input.token);
+
+    if (!invite) {
+      return c.json<InvitesPreviewOutput>(null, 200);
+    }
+
+    const list = invite.list;
+    let coverPhoto: string | null | undefined;
+    let firstItemName: string | null | undefined;
+
+    if (list?.id) {
+      const firstPlace = await getPlaceListPreview(list.id);
+
+      if (firstPlace) {
+        firstItemName = firstPlace.name ?? firstPlace.description ?? null;
+
+        // Prefer server-provided resolved photo URL when available
+        coverPhoto = (firstPlace as { photoUrl?: string }).photoUrl ?? firstPlace.imageUrl;
+
+        // Fall back to fetching by place photo id and resolve on the server
+        if (!coverPhoto && firstPlace.itemId) {
+          const rawPhoto = await getPlacePhotoById(firstPlace.itemId);
+          coverPhoto = rawPhoto ? getHominemPhotoURL(rawPhoto, 600, 400) : null;
+        }
+      }
+    }
+
+    return c.json<InvitesPreviewOutput>(
+      {
+        listId: list?.id ?? invite.listId,
+        listName: list?.name ?? invite.list?.name ?? 'Shared list',
+        coverPhoto: coverPhoto || undefined,
+        firstItemName,
+        invitedUserEmail: invite.invitedUserEmail,
+      },
+      200,
+    );
+  })
   // Get received invites (no service call - query operation)
   .post('/received', authMiddleware, zValidator('json', invitesGetReceivedSchema), async (c) => {
     const input = c.req.valid('json');
@@ -64,15 +109,13 @@ export const invitesRoutes = new Hono<AppContext>()
       .filter((invite: any) => invite.list?.ownerId !== userId)
       .map((invite: any) => ({ ...invite, belongsToAnotherUser: false }));
 
-    let tokenInvite:
-      | ((typeof baseInvites)[number] & { belongsToAnotherUser: boolean })
-      | undefined;
+    let tokenInvite: ((typeof baseInvites)[number] & { belongsToAnotherUser: boolean }) | undefined;
 
     if (tokenFilter) {
       const inviteByToken = await getInviteByToken(tokenFilter);
-     if (inviteByToken) {
-         const inviteList = inviteByToken.list;
-         if (inviteList && inviteList.ownerId !== userId) {
+      if (inviteByToken) {
+        const inviteList = inviteByToken.list;
+        if (inviteList && inviteList.ownerId !== userId) {
           const belongsToAnotherUser =
             (inviteByToken.invitedUserId && inviteByToken.invitedUserId !== userId) ||
             (normalizedEmail &&

@@ -1,4 +1,6 @@
 {
+  "typescript.tsserver.enableTracing": true,
+  "typescript.tsserver.log": "normal",
   "files.watcherExclude": {
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,

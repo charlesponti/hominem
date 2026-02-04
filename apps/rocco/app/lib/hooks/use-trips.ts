@@ -48,7 +48,7 @@ export const useCreateTrip = () => {
       return res.json() as Promise<TripsCreateOutput>;
     },
     {
-      onSuccess: (result) => {
+      onSuccess: (_result) => {
         utils.invalidate(queryKeys.trips.all());
       },
     },

@@ -39,7 +39,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
   }, []);
 
   const addPlaceToList = useAddPlaceToList({
-    onSuccess: (result) => {
+    onSuccess: (_result) => {
       setStatus('success');
       clearSuccessTimer();
       successTimerRef.current = setTimeout(() => {

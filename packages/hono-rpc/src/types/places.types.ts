@@ -1,6 +1,6 @@
 /**
  * Places Domain Types
- * 
+ *
  * Single source of truth for all place-related API contracts.
  * These types are:
  * - Explicit (not inferred from code)
@@ -62,6 +62,11 @@ export type PlaceCreateOutput = {
   rating: number | null;
   priceLevel: number | null;
   photos: string[] | null;
+  types: string[] | null;
+  websiteUri: string | null;
+  phoneNumber: string | null;
+  businessStatus: string | null;
+  openingHours: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -114,6 +119,11 @@ export type PlaceUpdateOutput = {
   rating: number | null;
   priceLevel: number | null;
   photos: string[] | null;
+  types: string[] | null;
+  websiteUri: string | null;
+  phoneNumber: string | null;
+  businessStatus: string | null;
+  openingHours: string | null;
   updatedAt: string;
 };
 
@@ -147,6 +157,11 @@ export type PlaceGetDetailsByIdOutput = {
   rating: number | null;
   priceLevel: number | null;
   photos: string[] | null;
+  types: string[] | null;
+  websiteUri: string | null;
+  phoneNumber: string | null;
+  businessStatus: string | null;
+  openingHours: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -163,6 +178,11 @@ export type PlaceGetDetailsByGoogleIdOutput = {
   rating: number | null;
   priceLevel: number | null;
   photos: string[] | null;
+  types: string[] | null;
+  websiteUri: string | null;
+  phoneNumber: string | null;
+  businessStatus: string | null;
+  openingHours: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -180,10 +200,12 @@ export type PlaceAutocompleteInput = {
 
 export const placeAutocompleteSchema = z.object({
   query: z.string().min(1),
-  location: z.object({
-    lat: z.number(),
-    lng: z.number(),
-  }).optional(),
+  location: z
+    .object({
+      lat: z.number(),
+      lng: z.number(),
+    })
+    .optional(),
   radius: z.number().optional(),
   types: z.array(z.string()).optional(),
 });
@@ -258,6 +280,12 @@ export type PlaceGetNearbyFromListsOutput = Array<{
   googleMapsId: string;
   rating: number | null;
   priceLevel: number | null;
+  photos: string[] | null;
+  types: string[] | null;
+  websiteUri: string | null;
+  phoneNumber: string | null;
+  businessStatus: string | null;
+  openingHours: string | null;
   distance: {
     km: number;
     miles: number;
@@ -437,10 +465,12 @@ export type PlaceGetVisitStatsInput = {
 
 export const placeGetVisitStatsSchema = z.object({
   placeId: z.string().optional(),
-  timeRange: z.object({
-    start: z.string(),
-    end: z.string(),
-  }).optional(),
+  timeRange: z
+    .object({
+      start: z.string(),
+      end: z.string(),
+    })
+    .optional(),
 });
 
 export type PlaceGetVisitStatsOutput = {

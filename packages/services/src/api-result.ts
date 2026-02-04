@@ -1,5 +1,3 @@
-import type { ErrorCode } from './errors';
-
 /**
  * Type for extracting the success data type from an ApiResult
  *

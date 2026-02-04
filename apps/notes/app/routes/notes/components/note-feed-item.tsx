@@ -1,7 +1,7 @@
 import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Edit, Trash2, X, Maximize2, List, RefreshCw } from 'lucide-react';
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useMemo } from 'react';
 
 import type { Note } from '~/lib/rpc/notes-types';
 
@@ -71,7 +71,6 @@ export function NoteFeedItem({
   }, [note.content]);
 
   // Check if note has versions (parentNoteId exists means it's a version of something)
-  const hasVersions = note.parentNoteId || note.versionNumber > 1;
   const versionLabel =
     note.versionNumber > 1 ? `v${note.versionNumber}` : note.parentNoteId ? 'v2+' : null;
 

@@ -20,7 +20,7 @@ export default function ListForm() {
   const { supabase, isAuthenticated } = useSupabaseAuthContext();
 
   const { mutate: createList } = useCreateList({
-    onSuccess: (result) => {
+    onSuccess: (_result) => {
       try {
         localStorage.removeItem(STORAGE_KEY);
       } catch {}

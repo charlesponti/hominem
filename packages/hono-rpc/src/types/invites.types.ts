@@ -15,17 +15,21 @@ export type Invite = {
   status: string; // 'pending' | 'accepted' | 'declined'
   createdAt: string;
   updatedAt: string;
-  list?: {
-    id: string;
-    name: string;
-    ownerId?: string;
-  };
-  invitingUser?: {
-    id: string;
-    email: string | null;
-    name?: string | null;
-  };
-  belongsToAnotherUser?: boolean;
+  list?:
+    | {
+        id: string;
+        name: string;
+        ownerId?: string | undefined;
+      }
+    | undefined;
+  invitingUser?:
+    | {
+        id: string;
+        email: string | null;
+        name?: string | null | undefined;
+      }
+    | undefined;
+  belongsToAnotherUser?: boolean | undefined;
 };
 
 // ============================================================================
@@ -126,3 +130,23 @@ export const invitesDeleteSchema = z.object({
 });
 
 export type InvitesDeleteOutput = { success: boolean };
+
+// ============================================================================
+// INVITE PREVIEW (PUBLIC)
+// ============================================================================
+
+export type InvitesPreviewInput = {
+  token: string;
+};
+
+export const invitesPreviewSchema = z.object({
+  token: z.string().min(1, 'Token is required'),
+});
+
+export type InvitesPreviewOutput = {
+  listId?: string | undefined;
+  listName: string;
+  coverPhoto?: string | null | undefined;
+  firstItemName?: string | null | undefined;
+  invitedUserEmail?: string | null | undefined;
+} | null;

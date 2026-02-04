@@ -1,6 +1,5 @@
 import type React from 'react';
 
-import { useSupabaseAuthContext } from '@hominem/auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 

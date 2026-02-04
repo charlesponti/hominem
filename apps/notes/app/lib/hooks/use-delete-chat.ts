@@ -5,7 +5,7 @@ import { useHonoMutation } from '@hominem/hono-client/react';
 import { useQueryClient } from '@tanstack/react-query';
 
 // Query keys
-const QUERY_KEYS = {
+const _QUERY_KEYS = {
   chats: (userId: string) => ['chats', userId] as const,
   chatStats: (userId: string) => ['chatStats', userId] as const,
   chat: (chatId: string) => ['chat', chatId] as const,
@@ -14,7 +14,7 @@ const QUERY_KEYS = {
 /**
  * Hook for deleting a chat
  */
-export function useDeleteChat(userId: string) {
+export function useDeleteChat(_userId: string) {
   const queryClient = useQueryClient();
 
   const deleteChatMutation = useHonoMutation<ChatsDeleteOutput, { chatId: string }>(

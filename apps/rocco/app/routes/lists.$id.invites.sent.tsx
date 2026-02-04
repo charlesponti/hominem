@@ -18,7 +18,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return { invites: null };
 }
 
-export default function ListSentInvites({ loaderData }: Route.ComponentProps) {
+export default function ListSentInvites() {
   const { data: invitesData, isLoading } = useSentInvites();
   const invites = invitesData ?? [];
 
