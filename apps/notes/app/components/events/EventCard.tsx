@@ -1,30 +1,27 @@
-import { Button } from '@hominem/ui/components/ui/button'
-import { MapPinIcon, PencilIcon, UsersIcon } from 'lucide-react'
-import type React from 'react'
-import { useMemo } from 'react'
-import SourceBadge from './SourceBadge'
+import type { Person } from '@hominem/hono-rpc/types/people.types';
+import type React from 'react';
 
-interface Person {
-  id: string
-  firstName?: string
-  lastName?: string
-}
+import { Button } from '@hominem/ui/components/ui/button';
+import { MapPinIcon, PencilIcon, UsersIcon } from 'lucide-react';
+import { useMemo } from 'react';
+
+import SourceBadge from './SourceBadge';
 
 interface Activity {
-  id: string
-  date?: string
-  time?: string
-  title: string
-  description?: string
-  location?: string
-  people?: Person[]
-  tags?: string[]
-  source?: 'manual' | 'google_calendar'
+  id: string;
+  date?: string | undefined;
+  time?: string | undefined;
+  title: string;
+  description?: string | undefined;
+  location?: string | undefined;
+  people?: Person[] | undefined;
+  tags?: string[] | undefined;
+  source?: 'manual' | 'google_calendar' | undefined;
 }
 
 interface EventCardProps {
-  activity: Activity
-  onEditEvent: (activity: Activity) => void
+  activity: Activity;
+  onEditEvent: (activity: Activity) => void;
 }
 
 const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
@@ -34,27 +31,27 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
         ?.map((p) => `${p.firstName} ${p.lastName}`)
         .join(', ')
         .trim(),
-    [activity.people]
-  )
+    [activity.people],
+  );
   const tags = useMemo(
     () => activity.tags?.filter((tag) => tag.trim()).slice(0, 3),
-    [activity.tags]
-  )
-  const tagCount = useMemo(() => tags?.length ?? 0, [tags])
+    [activity.tags],
+  );
+  const tagCount = useMemo(() => tags?.length ?? 0, [tags]);
 
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return ''
-    const date = new Date(dateStr)
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-    })
-  }
+    });
+  };
 
   const handleEditEvent = () => {
-    onEditEvent(activity)
-  }
+    onEditEvent(activity);
+  };
 
   return (
     <div
@@ -62,8 +59,8 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
       onClick={handleEditEvent}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          handleEditEvent()
+          e.preventDefault();
+          handleEditEvent();
         }
       }}
     >
@@ -146,7 +143,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
         </Button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default EventCard
+export default EventCard;

@@ -1,18 +1,19 @@
-import { AppLayout } from '@hominem/ui/components/layout/app-layout'
-import { Toaster } from '@hominem/ui/components/ui/toaster'
-import { Suspense, useEffect } from 'react'
-import { Outlet, useSearchParams } from 'react-router'
-import Header from '~/components/header'
-import { LoadingScreen } from '~/components/loading'
-import { useToast } from '@hominem/ui/components/ui/use-toast'
+import { useToast } from '@hominem/ui';
+import { AppLayout } from '@hominem/ui/components/layout/app-layout';
+import { Toaster } from '@hominem/ui/components/ui/toaster';
+import { Suspense, useEffect } from 'react';
+import { Outlet, useSearchParams } from 'react-router';
+
+import Header from '~/components/header';
+import { LoadingScreen } from '~/components/loading';
 
 export default function Layout() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const { toast } = useToast()
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const error = searchParams.get('error')
-    const description = searchParams.get('description') || searchParams.get('error_description')
+    const error = searchParams.get('error');
+    const description = searchParams.get('description') || searchParams.get('error_description');
 
     // Show toast for errors from URL params
     if (error) {
@@ -20,16 +21,16 @@ export default function Layout() {
         variant: 'destructive',
         title: error,
         description: description ?? undefined,
-      })
+      });
 
       // Clear the error params from URL without refreshing
-      const newParams = new URLSearchParams(searchParams)
-      newParams.delete('error')
-      newParams.delete('description')
-      newParams.delete('error_description')
-      setSearchParams(newParams, { replace: true })
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('error');
+      newParams.delete('description');
+      newParams.delete('error_description');
+      setSearchParams(newParams, { replace: true });
     }
-  }, [searchParams, toast, setSearchParams])
+  }, [searchParams, toast, setSearchParams]);
 
   return (
     <>
@@ -40,5 +41,5 @@ export default function Layout() {
       </AppLayout>
       <Toaster />
     </>
-  )
+  );
 }

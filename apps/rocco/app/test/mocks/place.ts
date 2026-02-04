@@ -1,8 +1,10 @@
-import type { ListPlace as DataListPlace } from '@hominem/data/lists';
+import type { ListPlace as DataListPlace } from '@hominem/lists-services';
+
 import { createElement } from 'react';
 import { vi } from 'vitest';
 
 import type { GooglePlaceData, Place } from '~/lib/types';
+
 import { TEST_USER_EMAIL, TEST_USER_NAME, USER_ID } from './index';
 
 vi.mock('@vis.gl/react-google-maps', async (importOriginal) => {
@@ -28,17 +30,12 @@ export const MOCK_PLACE: Place = {
   phoneNumber: '+1 (123) 456-7890',
   latitude: 123.456,
   longitude: 789.012,
-  location: [123.456, 789.012],
   photos: ['test-photo-url-1', 'test-photo-url-2'],
   priceLevel: 2,
   rating: 4.5,
   websiteUri: 'https://test-place.example.com',
-  bestFor: null,
-  isPublic: false,
-  wifiInfo: null,
   createdAt: '2021-01-01T00:00:00.000Z',
   updatedAt: '2021-01-01T00:00:00.000Z',
-  itemId: null,
   businessStatus: null,
   openingHours: null,
 };
@@ -73,7 +70,7 @@ export const MOCK_PLACE_SEARCH = [
 ];
 
 /**
- * Creates a mock ListPlace (from @hominem/data) from a Place mock
+ * Creates a mock ListPlace (from @hominem/services) from a Place mock
  * @param overrides - Optional overrides for specific fields
  */
 export const getMockListPlace = (overrides?: Partial<DataListPlace>): DataListPlace => ({

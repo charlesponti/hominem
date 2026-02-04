@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   AlertCircle,
   Download,
@@ -9,18 +9,20 @@ import {
   Send,
   Square,
   Trash2,
-} from 'lucide-react'
-import { useCallback, useState } from 'react'
-import { formatDuration, useAudioRecorder } from '~/lib/hooks/use-audio-recorder.js'
-import { AudioPlayer } from './AudioPlayer.js'
-import { AudioWaveform } from './AudioWaveform.js'
+} from 'lucide-react';
+import { useCallback, useState } from 'react';
+
+import { formatDuration, useAudioRecorder } from '~/lib/hooks/use-audio-recorder.js';
+
+import { AudioPlayer } from './AudioPlayer.js';
+import { AudioWaveform } from './AudioWaveform.js';
 
 interface AudioRecorderProps {
-  onRecordingComplete?: (audioBlob: Blob, transcription?: string) => void
-  onTranscription?: (text: string) => void
-  autoTranscribe?: boolean
-  showPlayer?: boolean
-  className?: string
+  onRecordingComplete?: (audioBlob: Blob, transcription?: string) => void;
+  onTranscription?: (text: string) => void;
+  autoTranscribe?: boolean;
+  showPlayer?: boolean;
+  className?: string;
 }
 
 export function AudioRecorder({
@@ -30,9 +32,9 @@ export function AudioRecorder({
   showPlayer = true,
   className = '',
 }: AudioRecorderProps) {
-  const [isTranscribing, setIsTranscribing] = useState(false)
-  const [transcription, setTranscription] = useState<string>('')
-  const [transcriptionError, setTranscriptionError] = useState<string>('')
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcription, setTranscription] = useState<string>('');
+  const [transcriptionError, setTranscriptionError] = useState<string>('');
 
   const {
     state,
@@ -42,71 +44,71 @@ export function AudioRecorder({
     resumeRecording,
     clearRecording,
     downloadRecording,
-  } = useAudioRecorder()
+  } = useAudioRecorder();
 
   const handleStartRecording = useCallback(async () => {
-    setTranscription('')
-    setTranscriptionError('')
-    await startRecording()
-  }, [startRecording])
+    setTranscription('');
+    setTranscriptionError('');
+    await startRecording();
+  }, [startRecording]);
 
   const handleStopRecording = useCallback(async () => {
-    stopRecording()
+    stopRecording();
 
     // Auto-transcribe if enabled
     if (autoTranscribe && state.audioBlob) {
-      await transcribeAudio(state.audioBlob)
+      await transcribeAudio(state.audioBlob);
     }
-  }, [stopRecording, autoTranscribe, state.audioBlob])
+  }, [stopRecording, autoTranscribe, state.audioBlob]);
 
   const transcribeAudio = useCallback(
     async (audioBlob: Blob) => {
-      if (!audioBlob) return
+      if (!audioBlob) return;
 
-      setIsTranscribing(true)
-      setTranscriptionError('')
+      setIsTranscribing(true);
+      setTranscriptionError('');
 
       try {
-        const formData = new FormData()
-        formData.append('audio', audioBlob, 'recording.webm')
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.webm');
 
         const response = await fetch('/api/transcribe', {
           method: 'POST',
           body: formData,
-        })
+        });
 
-        const result = await response.json()
+        const result = await response.json();
 
         if (result.success) {
-          setTranscription(result.transcription.text)
-          onTranscription?.(result.transcription.text)
+          setTranscription(result.transcription.text);
+          onTranscription?.(result.transcription.text);
         } else {
-          setTranscriptionError(result.error || 'Transcription failed')
+          setTranscriptionError(result.error || 'Transcription failed');
         }
       } catch (error) {
-        console.error('Transcription error:', error)
-        setTranscriptionError('Failed to transcribe audio')
+        console.error('Transcription error:', error);
+        setTranscriptionError('Failed to transcribe audio');
       } finally {
-        setIsTranscribing(false)
+        setIsTranscribing(false);
       }
     },
-    [onTranscription]
-  )
+    [onTranscription],
+  );
 
   const handleSendRecording = useCallback(() => {
     if (state.audioBlob) {
-      onRecordingComplete?.(state.audioBlob, transcription)
-      clearRecording()
-      setTranscription('')
-      setTranscriptionError('')
+      onRecordingComplete?.(state.audioBlob, transcription);
+      clearRecording();
+      setTranscription('');
+      setTranscriptionError('');
     }
-  }, [state.audioBlob, transcription, onRecordingComplete, clearRecording])
+  }, [state.audioBlob, transcription, onRecordingComplete, clearRecording]);
 
   const handleRetryTranscription = useCallback(() => {
     if (state.audioBlob) {
-      transcribeAudio(state.audioBlob)
+      transcribeAudio(state.audioBlob);
     }
-  }, [state.audioBlob, transcribeAudio])
+  }, [state.audioBlob, transcribeAudio]);
 
   if (!state.isSupported) {
     return (
@@ -114,7 +116,7 @@ export function AudioRecorder({
         <AlertCircle className="size-8 mx-auto mb-2" />
         <p>Audio recording is not supported in this browser.</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -254,5 +256,5 @@ export function AudioRecorder({
         </div>
       )}
     </div>
-  )
+  );
 }

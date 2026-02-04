@@ -2,6 +2,7 @@ import {
   createSupabaseServerClient as sharedCreateSupabaseServerClient,
   getServerAuth as sharedGetServerAuth,
 } from '@hominem/auth/server';
+
 import { env } from './env';
 
 export const authConfig = {

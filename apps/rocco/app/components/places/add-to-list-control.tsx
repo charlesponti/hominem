@@ -1,22 +1,13 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@hominem/ui/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover';
-import { Loading } from '@hominem/ui/loading';
-import { Check, ListPlus, Loader2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { useRevalidator } from 'react-router';
+import { Drawer, DrawerContent, DrawerTrigger } from '@hominem/ui/components/ui/drawer';
+import { ListPlus } from 'lucide-react';
+import { useState, lazy, Suspense } from 'react';
 import z from 'zod';
-import { useAddPlaceToList, useRemoveListItem } from '~/lib/places';
-import { trpc } from '~/lib/trpc/client';
-import { cn } from '~/lib/utils';
+
+import { usePlaceById, usePlaceByGoogleId } from '~/lib/hooks/use-places';
+
+const AddToListDrawerContent = lazy(() => import('./add-to-list-drawer-content'));
 
 interface AddToListControlProps {
   placeId: string;
@@ -24,92 +15,27 @@ interface AddToListControlProps {
 
 const AddToListControl = ({ placeId }: AddToListControlProps) => {
   const [open, setOpen] = useState(false);
-  const [loadingListId, setLoadingListId] = useState<string | null>(null);
   const { isAuthenticated } = useSupabaseAuthContext();
-  const revalidator = useRevalidator();
   const isUuid = z.uuid().safeParse(placeId).success;
 
   // Fetch place details
-  const { data: placeDetails } = trpc.places.getDetailsById.useQuery(
-    { id: placeId },
-    {
-      enabled: isAuthenticated && isUuid,
-    },
+  const { data: placeDetailsResult } = usePlaceById(
+    isAuthenticated && isUuid ? placeId : undefined,
   );
 
-  const { data: placeDetailsByGoogleId } = trpc.places.getDetailsByGoogleId.useQuery(
-    { googleMapsId: placeId },
-    {
-      enabled: isAuthenticated && !isUuid,
-    },
+  const { data: placeDetailsByGoogleIdResult } = usePlaceByGoogleId(
+    isAuthenticated && !isUuid ? placeId : undefined,
   );
+
+  const placeDetails = placeDetailsResult ?? null;
+  const placeDetailsByGoogleId = placeDetailsByGoogleIdResult ?? null;
 
   const place = placeDetails || placeDetailsByGoogleId;
   const resolvedPlaceId = isUuid ? placeId : place?.id;
   const googleMapsId = isUuid ? place?.googleMapsId : placeId;
 
-  const { isLoading, data: rawLists } = trpc.lists.getAll.useQuery();
-
-  // Derive isInList from cached lists data
-  const lists = useMemo(() => {
-    if (!(rawLists && googleMapsId)) {
-      return [];
-    }
-    return rawLists.map((list) => ({
-      ...list,
-      isInList: list.places?.some((p) => p.googleMapsId === googleMapsId) ?? false,
-    }));
-  }, [rawLists, googleMapsId]);
-
-  const removeFromListMutation = useRemoveListItem({
-    onSettled: () => {
-      setLoadingListId(null);
-      revalidator.revalidate();
-      setOpen(false);
-    },
-  });
-
-  const addToListMutation = useAddPlaceToList({
-    onSuccess: () => {
-      revalidator.revalidate();
-      setOpen(false);
-    },
-    onSettled: () => setLoadingListId(null),
-  });
-
-  const onListSelectChange = (listId: string, isInList: boolean) => {
-    if (!place) {
-      return;
-    }
-
-    setLoadingListId(listId);
-    if (isInList) {
-      if (resolvedPlaceId) {
-        removeFromListMutation.mutateAsync({ listId, itemId: resolvedPlaceId });
-      } else {
-        setLoadingListId(null);
-      }
-      return;
-    }
-
-    if (!place.googleMapsId) {
-      throw new Error('googleMapsId is required');
-    }
-
-    addToListMutation.mutate({
-      name: place.name,
-      address: place.address || undefined,
-      latitude: place.latitude || undefined,
-      longitude: place.longitude || undefined,
-      imageUrl: place.imageUrl || undefined,
-      googleMapsId: place.googleMapsId,
-      rating: place.rating || undefined,
-      types: place.types || undefined,
-      websiteUri: place.websiteUri || undefined,
-      phoneNumber: place.phoneNumber || undefined,
-      photos: place.photos || undefined,
-      listIds: [listId],
-    });
+  const handleMouseEnter = () => {
+    // No-op - prefetching handled by useHonoUtils
   };
 
   if (!(isAuthenticated && place)) {
@@ -118,54 +44,24 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button size="sm" className="flex items-center gap-2">
-            <ListPlus size={8} />
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>
+          <Button size="sm" className="flex items-center gap-2" onMouseEnter={handleMouseEnter}>
+            <ListPlus size={16} />
             Add to lists
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[300px] p-0" align="start">
-          <Command>
-            <CommandInput placeholder="Search lists..." />
-            <CommandList>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loading size="md" />
-                </div>
-              ) : (
-                <>
-                  <CommandEmpty>No lists found.</CommandEmpty>
-                  <CommandGroup>
-                    {lists.map((list) => (
-                      <CommandItem
-                        key={list.id}
-                        value={list.name}
-                        onSelect={() => {
-                          onListSelectChange(list.id, list.isInList);
-                        }}
-                        className="flex items-center justify-between"
-                      >
-                        <span className="flex-1">{list.name}</span>
-                        {loadingListId === list.id ? (
-                          <Loader2 size={16} className="animate-spin" />
-                        ) : (
-                          <Check
-                            className={cn('size-4', {
-                              'opacity-0': !list.isInList,
-                              'opacity-100': list.isInList,
-                            })}
-                          />
-                        )}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </>
-              )}
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+        </DrawerTrigger>
+        <DrawerContent>
+          <Suspense fallback={<div className="h-[40vh] bg-background animate-pulse" />}>
+            <AddToListDrawerContent
+              place={place}
+              resolvedPlaceId={resolvedPlaceId}
+              googleMapsId={googleMapsId}
+              onClose={() => setOpen(false)}
+            />
+          </Suspense>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };

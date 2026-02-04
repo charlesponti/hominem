@@ -1,8 +1,11 @@
-import { Command as CommandPrimitive } from 'cmdk'
-import { SearchIcon } from 'lucide-react'
-import type * as React from 'react'
-import { cn } from '../../lib/utils'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './dialog'
+import type * as React from 'react';
+
+import { Command as CommandPrimitive } from 'cmdk';
+import { SearchIcon } from 'lucide-react';
+
+import { cn } from '../../lib/utils';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './dialog';
+import { Loading } from './loading';
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return (
@@ -10,11 +13,11 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
       data-slot="command"
       className={cn(
         'bg-popover text-popover-foreground flex h-full w-full flex-col gap-2 overflow-hidden rounded-md',
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function CommandDialog({
@@ -25,10 +28,10 @@ function CommandDialog({
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof Dialog> & {
-  title?: string
-  description?: string
-  className?: string
-  showCloseButton?: boolean
+  title?: string;
+  description?: string;
+  className?: string;
+  showCloseButton?: boolean;
 }) {
   return (
     <Dialog {...props}>
@@ -45,7 +48,7 @@ function CommandDialog({
         </Command>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function CommandInput({
@@ -59,12 +62,12 @@ function CommandInput({
         data-slot="command-input"
         className={cn(
           'placeholder:text-muted-foreground h-8 border-border border flex px-2 w-full rounded-md bg-transparent text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50',
-          className
+          className,
         )}
         {...props}
       />
     </div>
-  )
+  );
 }
 
 function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
@@ -74,13 +77,25 @@ function CommandList({ className, ...props }: React.ComponentProps<typeof Comman
       className={cn('max-h-[300px] scroll-py-1 overflow-x-hidden overflow-y-auto', className)}
       {...props}
     />
-  )
+  );
 }
 
 function CommandEmpty({ ...props }: React.ComponentProps<typeof CommandPrimitive.Empty>) {
   return (
     <CommandPrimitive.Empty data-slot="command-empty" className="text-center text-sm" {...props} />
-  )
+  );
+}
+
+function CommandListLoading({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <div
+      data-slot="command-loading"
+      className={cn('flex items-center justify-center py-8', className)}
+      {...props}
+    >
+      <Loading size="md" />
+    </div>
+  );
 }
 
 function CommandGroup({
@@ -92,11 +107,11 @@ function CommandGroup({
       data-slot="command-group"
       className={cn(
         'text-foreground **:[[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:py-1.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium',
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function CommandSeparator({
@@ -109,7 +124,7 @@ function CommandSeparator({
       className={cn('bg-border -mx-1 h-px', className)}
       {...props}
     />
-  )
+  );
 }
 
 function CommandItem({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Item>) {
@@ -119,11 +134,11 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
       className={cn(
         'hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
         "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 function CommandShortcut({ className, ...props }: React.ComponentProps<'span'>) {
@@ -133,7 +148,7 @@ function CommandShortcut({ className, ...props }: React.ComponentProps<'span'>) 
       className={cn('text-muted-foreground ml-auto text-xs tracking-widest', className)}
       {...props}
     />
-  )
+  );
 }
 
 export {
@@ -144,6 +159,7 @@ export {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandListLoading,
   CommandSeparator,
   CommandShortcut,
-}
+};

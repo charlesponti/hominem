@@ -8,6 +8,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf build",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src"
   },
@@ -15,11 +17,12 @@
     "@ai-sdk/google": "^1.1.20",
     "@ai-sdk/openai": "^1.2.1",
     "@ai-sdk/openai-compatible": "^0.1.13",
+    "@hominem/utils": "workspace:*",
     "ai": "^4.3.16",
-    "ollama-ai-provider": "^1.2.0"
+    "ollama-ai-provider": "^1.2.0",
+    "zod": "4.3.6"
   },
   "devDependencies": {
-    "@hominem/tsconfigs": "workspace:*",
     "typescript": "5.9.3"
   }
 }

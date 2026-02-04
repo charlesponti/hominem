@@ -1,13 +1,14 @@
-import { getTimeAgo } from '@hominem/utils/time'
-import { AlertCircle, CheckCircle } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import i18n from '~/lib/i18n'
+import { getTimeAgo } from '@hominem/utils/time';
+import { AlertCircle, CheckCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+import i18n from '~/lib/i18n';
 
 interface SyncStatusProps {
-  lastSyncedAt: string | Date | null
-  syncError: string | null
-  eventCount: number
-  connected: boolean
+  lastSyncedAt: string | Date | null;
+  syncError: string | null;
+  eventCount: number;
+  connected: boolean;
 }
 
 export default function SyncStatus({
@@ -16,18 +17,18 @@ export default function SyncStatus({
   eventCount,
   connected,
 }: SyncStatusProps) {
-  const [timeAgo, setTimeAgo] = useState<string>('')
+  const [timeAgo, setTimeAgo] = useState<string>('');
 
   useEffect(() => {
     const updateTimeAgo = () => {
-      setTimeAgo(getTimeAgo(lastSyncedAt, 'Never synced'))
-    }
+      setTimeAgo(getTimeAgo(lastSyncedAt, 'Never synced'));
+    };
 
-    updateTimeAgo()
-    const interval = setInterval(updateTimeAgo, 60000) // Update every minute
+    updateTimeAgo();
+    const interval = setInterval(updateTimeAgo, 60000); // Update every minute
 
-    return () => clearInterval(interval)
-  }, [lastSyncedAt])
+    return () => clearInterval(interval);
+  }, [lastSyncedAt]);
 
   if (!connected) {
     return (
@@ -35,7 +36,7 @@ export default function SyncStatus({
         <span className="mr-2">📅</span>
         Google Calendar not connected
       </div>
-    )
+    );
   }
 
   return (
@@ -58,5 +59,5 @@ export default function SyncStatus({
         </>
       )}
     </div>
-  )
+  );
 }

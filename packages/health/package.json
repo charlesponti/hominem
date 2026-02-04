@@ -1,0 +1,36 @@
+{
+  "name": "@hominem/health-services",
+  "version": "0.0.0",
+  "description": "Health, workout, and mental wellness services",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./tools": "./src/health.tools.ts"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf build",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsc -b -w",
+    "format": "bunx oxfmt ./src",
+    "lint": "bunx oxlint ./src",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@hominem/db": "workspace:*",
+    "@tanstack/ai": "0.2.0",
+    "ai": "^4.3.16",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.13",
+    "drizzle-orm": "0.45.1",
+    "typescript": "5.9.3",
+    "vitest": "4.0.16"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "0.45.1"
+  }
+}

@@ -7,8 +7,8 @@ import type { Session as SupabaseSession, User as SupabaseUser } from '@supabase
 export interface HominemUser {
   id: string
   email: string
-  name?: string
-  image?: string
+  name?: string | undefined
+  image?: string | undefined
   supabaseId: string
   isAdmin: boolean
   createdAt: string

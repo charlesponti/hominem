@@ -1,212 +1,233 @@
-import { load as cheerio } from 'cheerio'
 import {
   MarkdownTextSplitter,
   type RecursiveCharacterTextSplitterParams,
-} from 'langchain/text_splitter'
-import rehypeStringify from 'rehype-stringify'
-import remarkParse from 'remark-parse'
-import remarkRehype from 'remark-rehype'
-import { unified } from 'unified'
-import type { TextAnalysis } from '../schemas/text-analysis.schema'
-import { getDatesFromText } from '../time'
-import { extractMetadata, type Metadata } from './metadata.schema'
-import { detectTask, normalizeWhitespace } from './utils'
+} from 'langchain/text_splitter';
+import { toString } from 'mdast-util-to-string';
+import remarkFrontmatter from 'remark-frontmatter';
+import remarkGfm from 'remark-gfm';
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
+import { parse as parseYaml } from 'yaml';
 
-export interface EntryContent {
-  tag: string
-  text: string
-  section: string | null
-  isTask?: boolean
-  isComplete?: boolean
-  textAnalysis?: TextAnalysis
-  subentries?: EntryContent[]
+import { getDatesFromText } from '../time';
+import { extractMetadata, type Metadata } from './metadata.schema';
+
+// Document type from langchain
+export interface Document<Metadata extends Record<string, unknown> = Record<string, unknown>> {
+  pageContent: string;
+  metadata: Metadata;
 }
 
-interface GetProcessedEntryParams {
-  $: ReturnType<typeof import('cheerio').load>
-  elem: ReturnType<ReturnType<typeof import('cheerio').load>>[0]
-  entry: {
-    content: EntryContent[]
-    date?: string
-    filename: string
-    heading: string
-  }
-  section: string | null
-}
-
-export interface ProcessedMarkdownFileEntry {
-  content: EntryContent[]
-  date?: string
-  filename: string
-  heading: string
-  metadata?: Metadata
-  frontmatter?: Record<string, unknown>
-}
-
-export interface ProcessedMarkdownFile {
-  entries: ProcessedMarkdownFileEntry[]
-  metadata?: Metadata
+/**
+ * Utility function to split markdown content into chunks using LangChain's MarkdownTextSplitter.
+ */
+export async function splitMarkdown(
+  content: string,
+  options?: Partial<RecursiveCharacterTextSplitterParams>,
+): Promise<Document[]> {
+  const splitter = MarkdownTextSplitter.fromLanguage('markdown', {
+    chunkSize: 512,
+    chunkOverlap: 50,
+    ...options,
+  });
+  return await splitter.createDocuments([content]);
 }
 
 export class MarkdownProcessor {
-  async getChunks(content: string, options?: Partial<RecursiveCharacterTextSplitterParams>) {
-    const splitter = MarkdownTextSplitter.fromLanguage('markdown', {
-      separators: ['#', '##', '###', '####', '#####', '######'],
-      ...options,
-    })
-    const chunks = await splitter.splitText(content)
-    return chunks
+  async getChunks(
+    content: string,
+    options?: Partial<RecursiveCharacterTextSplitterParams>,
+  ): Promise<string[]> {
+    const docs = await splitMarkdown(content, options);
+    return docs.map((doc) => doc.pageContent);
   }
 
-  async processFileWithAst(content: string, filename: string): Promise<ProcessedMarkdownFile> {
-    const { result } = await this.convertMarkdownToJSON(content, filename)
-
-    return result
+  async processFileWithAst(content: string, filename: string): Promise<EntryContent[]> {
+    const { result } = await this.convertMarkdownToJSON(content, filename);
+    return result;
   }
 
   processFrontmatter(content: string): {
-    content: string
-    metadata: Metadata
-    frontmatter?: Record<string, unknown>
+    metadata: Metadata;
+    processableContent: string;
   } {
-    // Find the frontmatter content at the start of the file
-    const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n/)
-    let frontmatter: Record<string, unknown> | undefined
-    let processableContent = content
-    let metadata: Metadata = {}
+    const ast = unified().use(remarkParse).use(remarkFrontmatter, ['yaml']).parse(content);
 
-    if (frontmatterMatch) {
-      // Parse the frontmatter content (assuming YAML format)
-      const frontmatterContent = frontmatterMatch[1]
+    let metadata: Metadata = {};
+    let processableContent = content;
 
-      if (!frontmatterContent) {
-        return { content, metadata, frontmatter: undefined }
+    const yamlNode = ast.children.find((node: any) => node.type === 'yaml');
+    if (yamlNode && 'value' in yamlNode) {
+      try {
+        const frontmatter = parseYaml(yamlNode.value as string);
+        if (frontmatter) {
+          metadata = extractMetadata(frontmatter as Record<string, unknown>);
+        }
+        if (yamlNode.position) {
+          processableContent = content.slice(yamlNode.position.end.offset);
+          processableContent = processableContent.replace(/^\n+/, '');
+        }
+      } catch (e) {
+        console.error('Error parsing frontmatter:', e);
       }
-
-      // Extract key-value pairs
-      frontmatter = Object.fromEntries(
-        frontmatterContent
-          .split('\n')
-          .filter((line) => line.includes(':'))
-          .map((line) => {
-            const [key, ...valueParts] = line.split(':')
-            const value = valueParts.join(':').trim()
-            if (!key) { return [value] }
-            return [key.trim(), value.replace(/^['"]|['"]$/g, '')]
-          })
-      )
-
-      // Validate and extract metadata
-      if (frontmatter) {
-        metadata = extractMetadata(frontmatter)
-      }
-
-      // Remove the frontmatter from the content
-      processableContent = content.slice(frontmatterMatch[0].length)
     }
 
-    return { content: processableContent, metadata, frontmatter }
-  }
-
-  async convertMarkdownToHTML(content: string) {
-    const file = await unified()
-      .use(remarkParse)
-      .use(remarkRehype)
-      .use(rehypeStringify)
-      .process(content)
-
-    return cheerio(String(file))
-  }
-
-  convertMarkdownToAST(content: string) {
-    const processor = unified().use(remarkParse)
-    return processor.parse(content)
-  }
-
-  private async calculateReadingMetrics(
-    content: string
-  ): Promise<{ wordCount: number; readingTime: number }> {
-    const words = content.trim().split(/\s+/).length
-    // Average reading speed: 200-250 words per minute
-    const readingTime = Math.ceil(words / 200)
-
-    return { wordCount: words, readingTime }
+    return { metadata, processableContent };
   }
 
   async convertMarkdownToJSON(
-    markdownContent: string,
-    filename: string
-  ): Promise<{ result: ProcessedMarkdownFile; html: string }> {
-    const { content: body, metadata, frontmatter } = this.processFrontmatter(markdownContent)
-    const { wordCount, readingTime } = await this.calculateReadingMetrics(body)
-    metadata.wordCount = wordCount
-    metadata.readingTime = readingTime
+    content: string,
+    filename: string,
+  ): Promise<{
+    result: EntryContent[];
+    metadata?: Metadata;
+    date?: string | undefined;
+    heading: string;
+  }> {
+    const { metadata: extractedMetadata, processableContent } = this.processFrontmatter(content);
 
-    const baseName = filename.split('/').pop()?.replace(/\.md$/, '') || filename
-    const headingRegex = /^#{1,6}\s+(.*)/
-    const lines = body.split('\n')
-    const entries: ProcessedMarkdownFileEntry[] = []
-    let currentHeading = ''
-    let buffer: string[] = []
+    const ast = unified()
+      .use(remarkParse)
+      .use(remarkGfm)
+      .use(remarkFrontmatter, ['yaml'])
+      .parse(processableContent);
 
-    const flushBuffer = () => {
-      const texts = buffer.map((l) => l.trim()).filter((l) => l)
-      if (!texts.length) { return }
-      const heading = currentHeading || baseName
-      const { dates, fullDate } = getDatesFromText(heading)
-      const entry: ProcessedMarkdownFileEntry = { filename, heading, content: [], frontmatter }
-      if (dates?.[0]) { entry.date = dates[0].start.split('T')[0] }
-      else if (fullDate) { entry.date = fullDate.split('T')[0] }
-      for (const text of texts) {
-        const normalized = normalizeWhitespace(text)
-        const { isTask, isComplete } = detectTask(normalized)
-        entry.content.push({
-          tag: 'text',
-          text,
-          section: currentHeading || null,
-          isTask,
-          isComplete,
-          subentries: [],
-        })
-      }
-      entries.push(entry)
-    }
+    const headingNode = ast.children.find((node: any) => node.type === 'heading');
+    const heading = headingNode
+      ? toString(headingNode)
+      : filename.replace('.md', '').split('_').join(' ');
 
-    for (const line of lines) {
-      const match = headingRegex.exec(line)
-      if (match) {
-        flushBuffer()
-        currentHeading = match[1]?.trim() || ''
-        buffer = []
-      } else {
-        buffer.push(line)
-      }
-    }
-    flushBuffer()
+    const dates = getDatesFromText(processableContent);
 
-    const result: ProcessedMarkdownFile = { entries, metadata }
-    return { result, html: body }
-  }
+    const result = this.extractMarkdownHierarchy(ast.children);
 
-  async getProcessedEntry(params: GetProcessedEntryParams): Promise<EntryContent | undefined> {
-    const { $, elem, section } = params
-    const text = $(elem).contents().first().text().trim()
-    if (!text) { return }
-    const normalizedText = normalizeWhitespace(text)
-    const { isTask, isComplete, taskText } = detectTask(normalizedText)
+    const date = dates.dates?.[0]?.start;
 
     return {
-      tag: elem.type,
-      text: taskText || normalizedText,
-      section,
-      isTask,
-      isComplete,
-      subentries: [],
-    }
+      result,
+      metadata: extractedMetadata,
+      ...(date !== undefined && { date }),
+      heading,
+    };
   }
 
-  getPreviousEntry(entry: ProcessedMarkdownFileEntry | null): EntryContent | undefined {
-    if (!entry) { return undefined }
-    return entry.content[entry.content.length - 1]
+  extractMarkdownHierarchy(nodes: unknown[]): EntryContent[] {
+    const entries: EntryContent[] = [];
+
+    for (const node of nodes) {
+      if (typeof node !== 'object' || node === null) continue;
+
+      const nodeObj = node as Record<string, unknown>;
+      const nodeType = nodeObj.type as string;
+
+      if (nodeType === 'heading') {
+        const headingNode = nodeObj as { depth: number; children: unknown[] };
+        const text = this.extractText(headingNode.children);
+        entries.push({
+          tag: `h${headingNode.depth}`,
+          text,
+          section: null,
+        });
+      } else if (nodeType === 'paragraph') {
+        const paragraphNode = nodeObj as { children: unknown[] };
+        const text = this.extractText(paragraphNode.children).trim();
+        if (text) {
+          entries.push({
+            tag: 'p',
+            text,
+            section: null,
+          });
+        }
+      } else if (nodeType === 'list') {
+        const listNode = nodeObj as { children: unknown[] };
+        const listEntries = this.extractListItems(listNode.children);
+        entries.push(...listEntries);
+      }
+    }
+
+    return entries;
   }
+
+  private extractListItems(items: unknown[]): EntryContent[] {
+    const entries: EntryContent[] = [];
+
+    for (const item of items) {
+      if (typeof item !== 'object' || item === null) continue;
+
+      const itemObj = item as Record<string, unknown>;
+      if (itemObj.type !== 'listItem') continue;
+
+      const listItemNode = itemObj as { checked?: boolean; children: unknown[] };
+      const isComplete = listItemNode.checked ?? false;
+      const isTask = listItemNode.checked !== undefined;
+
+      const children = listItemNode.children as unknown[];
+      for (const child of children) {
+        if (typeof child !== 'object' || child === null) continue;
+
+        const childObj = child as Record<string, unknown>;
+        if (childObj.type === 'paragraph') {
+          const paragraphNode = childObj as { children: unknown[] };
+          const text = this.extractText(paragraphNode.children).trim();
+          if (text) {
+            entries.push({
+              tag: 'li',
+              text,
+              section: null,
+              isTask,
+              isComplete,
+            });
+          }
+        }
+      }
+    }
+
+    return entries;
+  }
+
+  private extractText(nodes: unknown[]): string {
+    const text: string[] = [];
+
+    for (const node of nodes) {
+      if (typeof node !== 'object' || node === null) continue;
+
+      const nodeObj = node as Record<string, unknown>;
+      const nodeType = nodeObj.type as string;
+
+      if (nodeType === 'text') {
+        const textNode = nodeObj as { value: string };
+        text.push(textNode.value);
+      } else if (nodeType === 'emphasis' || nodeType === 'strong') {
+        const emphasisNode = nodeObj as { children: unknown[] };
+        text.push(this.extractText(emphasisNode.children));
+      } else if (nodeType === 'link') {
+        const linkNode = nodeObj as { children: unknown[] };
+        text.push(this.extractText(linkNode.children));
+      } else if (nodeType === 'code') {
+        const codeNode = nodeObj as { value: string };
+        text.push(codeNode.value);
+      }
+    }
+
+    return text.join('');
+  }
+}
+
+export type { RecursiveCharacterTextSplitterParams };
+
+export interface EntryContent {
+  tag: string;
+  text: string;
+  section: string | null;
+  isTask?: boolean;
+  isComplete?: boolean;
+  subentries?: EntryContent[];
+}
+
+export interface ProcessedMarkdownFileEntry {
+  content: EntryContent[];
+  date?: string;
+  filename: string;
+  heading: string;
+  metadata?: Metadata;
 }

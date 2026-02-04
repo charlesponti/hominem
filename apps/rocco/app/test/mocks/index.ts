@@ -1,4 +1,5 @@
 import type { User } from '@supabase/supabase-js';
+
 import type { List, Place } from '~/lib/types';
 
 export * from './place';
@@ -21,16 +22,16 @@ export const TEST_USER: User = {
   aud: 'authenticated',
   created_at: '2023-01-01T00:00:00Z',
   updated_at: '2023-01-01T00:00:00Z',
-  email_confirmed_at: undefined,
-  phone: undefined,
-  phone_confirmed_at: undefined,
-  confirmation_sent_at: undefined,
-  recovery_sent_at: undefined,
-  last_sign_in_at: undefined,
-  role: undefined,
+  email_confirmed_at: undefined as string | undefined,
+  phone: undefined as string | undefined,
+  phone_confirmed_at: undefined as string | undefined,
+  confirmation_sent_at: undefined as string | undefined,
+  recovery_sent_at: undefined as string | undefined,
+  last_sign_in_at: undefined as string | undefined,
+  role: undefined as string | undefined,
   identities: [],
   factors: [],
-};
+} as User;
 
 export const getMockUser = () => ({
   id: USER_ID,
@@ -65,7 +66,6 @@ export const getMockPlace = (): Place => ({
   address: '123 Test St',
   createdAt: '2021-01-01T00:00:00.000Z',
   updatedAt: '2021-01-01T00:00:00.000Z',
-  itemId: '123',
   googleMapsId: '123',
   types: ['type1', 'type2'],
   imageUrl: 'https://example.com/image.jpg',
@@ -74,11 +74,7 @@ export const getMockPlace = (): Place => ({
   websiteUri: null,
   latitude: 37.7749,
   longitude: -122.4194,
-  location: [37.7749, -122.4194],
-  bestFor: null,
-  isPublic: false,
-  wifiInfo: null,
-  photos: null,
+  photos: [],
   priceLevel: null,
   businessStatus: null,
   openingHours: null,
@@ -89,7 +85,7 @@ export const getMockLists = () => [
     id: '1',
     name: 'List 1',
     description: 'Test list 1',
-    userId: USER_ID,
+    ownerId: USER_ID,
     isPublic: false,
     createdAt: '2021-01-01T00:00:00.000Z',
     updatedAt: '2021-01-01T00:00:00.000Z',
@@ -98,7 +94,7 @@ export const getMockLists = () => [
     id: '2',
     name: 'List 2',
     description: 'Test list 2',
-    userId: USER_ID,
+    ownerId: USER_ID,
     isPublic: false,
     createdAt: '2021-01-01T00:00:00.000Z',
     updatedAt: '2021-01-01T00:00:00.000Z',
@@ -109,7 +105,7 @@ export const MOCK_LIST: List = {
   id: 'list-1',
   name: 'Coffee Spots',
   description: 'Great places for coffee',
-  userId: USER_ID,
+  ownerId: USER_ID,
   isPublic: false,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
@@ -123,7 +119,7 @@ export const MOCK_LISTS: List[] = [
     id: 'list-2',
     name: 'Weekend Getaways',
     description: 'Places to visit on weekends',
-    userId: USER_ID,
+    ownerId: USER_ID,
     isPublic: false,
     places: [],
     createdAt: new Date().toISOString(),

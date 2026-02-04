@@ -1,4 +1,4 @@
-import { Bot } from 'lucide-react'
+import { Bot } from 'lucide-react';
 
 export function ThinkingComponent() {
   return (
@@ -18,5 +18,5 @@ export function ThinkingComponent() {
         </div>
       </div>
     </div>
-  )
+  );
 }

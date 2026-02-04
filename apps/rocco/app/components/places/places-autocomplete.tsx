@@ -2,12 +2,14 @@ import { Alert } from '@hominem/ui';
 import { Input } from '@hominem/ui/input';
 import { Check, MapPin, Search } from 'lucide-react';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
+
 import { useGeolocation } from '~/hooks/useGeolocation';
 import {
   type GooglePlacePrediction,
   useGooglePlacesAutocomplete,
 } from '~/hooks/useGooglePlacesAutocomplete';
 import { cn } from '~/lib/utils';
+
 import styles from './places-autocomplete.module.css';
 
 function PlacesAutocomplete({
@@ -39,10 +41,16 @@ function PlacesAutocomplete({
     timeoutId.current = id;
   }, []);
 
-  const { data, error, isLoading } = useGooglePlacesAutocomplete({
+  const {
+    data: result,
+    error,
+    isLoading,
+  } = useGooglePlacesAutocomplete({
     input: debouncedValue,
     location: currentLocation ?? undefined,
   });
+
+  const data = result ?? [];
 
   const handleSelect = useCallback(
     (place: GooglePlacePrediction) => {
@@ -57,7 +65,7 @@ function PlacesAutocomplete({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!(isOpen && data)) {
+      if (!(isOpen && data && data.length > 0)) {
         return;
       }
 
@@ -142,7 +150,7 @@ function PlacesAutocomplete({
 
           {!isLoading && data && data.length > 0 && (
             <div className="py-1">
-              {data.map((suggestion, index) => (
+              {data.map((suggestion: any, index: number) => (
                 <button
                   key={suggestion.place_id}
                   type="button"

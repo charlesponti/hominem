@@ -1,20 +1,25 @@
-import { Button } from '@hominem/ui/button'
-import { Progress } from '@hominem/ui/components/ui/progress'
-import type { Goal } from '@hominem/utils/types'
-import { CalendarCheck, Edit, Trash2 } from 'lucide-react'
-import { PriorityBadge } from './priority-badge'
-import { StatusBadge } from './status-badge'
+import type { GoalMilestone } from '@hominem/hono-rpc/types';
+
+import { Button } from '@hominem/ui';
+import { Progress } from '@hominem/ui/components/ui/progress';
+import { CalendarCheck, Edit, Trash2 } from 'lucide-react';
+
+import type { Goal } from '~/lib/rpc/notes-types';
+
+import { PriorityBadge } from './priority-badge';
+import { StatusBadge } from './status-badge';
 
 interface GoalCardProps {
-  goal: Goal
-  onEdit: (goal: Goal) => void
-  onDelete: (goal: Goal) => void
+  goal: Goal;
+  onEdit: (goal: Goal) => void;
+  onDelete: (goal: Goal) => void;
 }
 
 export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
-  const completedMilestones = goal.milestones?.filter((m) => m.completed).length || 0
-  const totalMilestones = goal.milestones?.length || 0
-  const progress = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0
+  const completedMilestones =
+    goal.milestones?.filter((m: GoalMilestone) => m.completed).length || 0;
+  const totalMilestones = goal.milestones?.length || 0;
+  const progress = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0;
 
   return (
     <div className="group flex flex-col bg-card rounded-lg border p-6 hover:shadow-lg transition-all">
@@ -39,7 +44,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
         {goal.milestones && goal.milestones.length > 0 && (
           <div className="space-y-2">
             <Progress value={progress} className="mb-4 h-2" />
-            {goal.milestones.map((milestone, idx) => (
+            {goal.milestones.map((milestone: GoalMilestone, idx: number) => (
               <div key={`${goal.id}-milestone-${idx}`} className="flex items-start gap-2 text-sm">
                 <div
                   className={`mt-1 size-4 rounded-full border-2 flex items-center justify-center ${
@@ -71,5 +76,5 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
         {goal.priority && <PriorityBadge priority={goal.priority} />}
       </div>
     </div>
-  )
+  );
 }

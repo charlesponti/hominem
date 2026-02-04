@@ -1,16 +1,18 @@
-import { X } from 'lucide-react'
-import { Button } from '@hominem/ui/button'
-import type { UploadedFile } from '~/lib/types/upload.js'
-import { AudioRecorder } from './AudioRecorder.js'
-import { FileUploader } from './FileUploader.js'
+import { Button } from '@hominem/ui/button';
+import { X } from 'lucide-react';
+
+import type { UploadedFile } from '~/lib/types/upload.js';
+
+import { AudioRecorder } from './AudioRecorder.js';
+import { FileUploader } from './FileUploader.js';
 
 interface ChatModalsProps {
-  showFileUploader: boolean
-  showAudioRecorder: boolean
-  onCloseFileUploader: () => void
-  onCloseAudioRecorder: () => void
-  onFilesUploaded: (files: UploadedFile[]) => void
-  onAudioRecorded: (audioBlob: Blob, transcript?: string) => void
+  showFileUploader: boolean;
+  showAudioRecorder: boolean;
+  onCloseFileUploader: () => void;
+  onCloseAudioRecorder: () => void;
+  onFilesUploaded: (files: UploadedFile[]) => void;
+  onAudioRecorded: (audioBlob: Blob, transcript?: string) => void;
 }
 
 export function ChatModals({
@@ -53,5 +55,5 @@ export function ChatModals({
         </div>
       )}
     </>
-  )
+  );
 }

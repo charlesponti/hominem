@@ -1,5 +1,6 @@
 import { screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+
 import { MOCK_PLACE } from '~/test/mocks/place';
 import { roccoMocker } from '~/test/roccoMocker';
 import { renderWithRouter } from '~/test/utils';

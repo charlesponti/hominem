@@ -1,6 +1,6 @@
 interface ReasoningPartProps {
-  reasoning: string
-  index: number
+  reasoning: string;
+  index: number;
 }
 
 export function ReasoningPart({ reasoning, index }: ReasoningPartProps) {
@@ -15,5 +15,5 @@ export function ReasoningPart({ reasoning, index }: ReasoningPartProps) {
       </div>
       <div className="text-sm opacity-80 whitespace-pre-wrap leading-relaxed">{reasoning}</div>
     </div>
-  )
+  );
 }

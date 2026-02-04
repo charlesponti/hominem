@@ -18,7 +18,8 @@ import {
 } from '@hominem/ui/components/ui/drawer';
 import { Check, Loader2, Plus, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
-import { trpc } from '~/lib/trpc/client';
+
+import { usePeople, useCreatePerson } from '~/lib/hooks/use-people';
 import { cn } from '~/lib/utils';
 
 interface Person {
@@ -41,23 +42,13 @@ export function PeopleMultiSelect({
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const utils = trpc.useUtils();
 
-  const { data: people = [], isLoading } = trpc.people.list.useQuery();
-  const createPersonMutation = trpc.people.create.useMutation({
-    onSuccess: (newPerson) => {
-      onChange([...value, newPerson.id]);
-      setSearchQuery('');
-      setIsCreating(false);
-      setOpen(false);
-      utils.people.list.setData(undefined, (oldPeople = []) => {
-        return [...oldPeople, newPerson];
-      });
-    },
-  });
+  const { data: peopleResult, isLoading } = usePeople();
+  const people = peopleResult ?? [];
+  const createPersonMutation = useCreatePerson();
 
   const selectedPeople = useMemo(() => {
-    return people.filter((person) => value.includes(person.id));
+    return people.filter((person: any) => value.includes(person.id));
   }, [people, value]);
 
   const filteredPeople = useMemo(() => {
@@ -66,7 +57,7 @@ export function PeopleMultiSelect({
     }
 
     const query = searchQuery.toLowerCase().trim();
-    return people.filter((person) => {
+    return people.filter((person: any) => {
       const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase();
       return (
         person.firstName.toLowerCase().includes(query) ||
@@ -81,7 +72,7 @@ export function PeopleMultiSelect({
       return false;
     }
     const query = searchQuery.toLowerCase().trim();
-    return !filteredPeople.some((person) => {
+    return !filteredPeople.some((person: any) => {
       const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase();
       return fullName === query || person.firstName.toLowerCase() === query;
     });
@@ -137,7 +128,7 @@ export function PeopleMultiSelect({
           >
             <div className="flex flex-wrap gap-1 flex-1">
               {selectedPeople.length > 0 ? (
-                selectedPeople.map((person) => (
+                selectedPeople.map((person: any) => (
                   <Badge
                     key={person.id}
                     variant="secondary"
@@ -217,7 +208,7 @@ export function PeopleMultiSelect({
                     )}
                   </CommandEmpty>
                   <CommandGroup>
-                    {filteredPeople.map((person) => {
+                    {filteredPeople.map((person: any) => {
                       const isSelected = value.includes(person.id);
                       return (
                         <CommandItem

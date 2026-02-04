@@ -1,10 +1,10 @@
-type LoadingSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
+type LoadingSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 
 type LoadingProps = {
-  color?: string
-  size?: LoadingSize
-  className?: string
-}
+  color?: string;
+  size?: LoadingSize;
+  className?: string;
+};
 
 const sizes = {
   sm: '1rem',
@@ -13,7 +13,7 @@ const sizes = {
   xl: '4rem',
   '2xl': '5rem',
   '3xl': '6rem',
-}
+};
 
 export function Loading({ color, size = 'md', className }: LoadingProps) {
   return (
@@ -24,7 +24,7 @@ export function Loading({ color, size = 'md', className }: LoadingProps) {
       />
       <span className="sr-only">Loading...</span>
     </output>
-  )
+  );
 }
 
 export function LoadingScreen() {
@@ -32,5 +32,5 @@ export function LoadingScreen() {
     <div className="flex items-center justify-center max-h-[300px] mx-auto w-full">
       <Loading size="3xl" />
     </div>
-  )
+  );
 }

@@ -1,39 +1,40 @@
-import type { Content } from '@hominem/data/types'
-import { Button } from '@hominem/ui/button'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Card, CardContent } from '@hominem/ui/components/ui/card'
-import { Edit, Trash2, X } from 'lucide-react'
-import { useMemo } from 'react'
+import { Button } from '@hominem/ui/button';
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { Card, CardContent } from '@hominem/ui/components/ui/card';
+import { Edit, Trash2, X } from 'lucide-react';
+import { useMemo } from 'react';
+
+import type { Note } from '~/lib/rpc/notes-types';
 
 interface NoteCardProps {
-  note: Content
-  onEdit: (note: Content) => void
-  onDelete: (id: string) => void
-  onRemoveTag: (noteId: string, tagValue: string) => void
-  className?: string
+  note: Note;
+  onEdit: (note: Note) => void;
+  onDelete: (id: string) => void;
+  onRemoveTag: (noteId: string, tagValue: string) => void;
+  className?: string;
 }
 
 export function NoteCard({ note, onEdit, onDelete, onRemoveTag, className = '' }: NoteCardProps) {
   // Extract hashtags from content
   const extractHashtags = useMemo(() => {
-    const regex = /#(\w+)/g
-    const matches = note.content.match(regex)
-    if (!matches) return []
+    const regex = /#(\w+)/g;
+    const matches = note.content.match(regex);
+    if (!matches) return [];
 
     // Remove the # prefix and return unique tags
-    return [...new Set(matches.map((tag) => tag.substring(1)))]
-  }, [note.content])
+    return [...new Set(matches.map((tag: string) => tag.substring(1)))];
+  }, [note.content]);
 
   // Combine existing tags with content hashtags
   const allTags = useMemo(() => {
-    const existingTags = note.tags?.map((tag) => tag.value) || []
-    const allTagValues = [...new Set([...existingTags, ...extractHashtags])]
-    return allTagValues.map((value) => ({ value }))
-  }, [note.tags, extractHashtags])
+    const existingTags = note.tags?.map((tag: { value: string }) => tag.value) || [];
+    const allTagValues = [...new Set([...existingTags, ...extractHashtags])];
+    return allTagValues.map((value) => ({ value }));
+  }, [note.tags, extractHashtags]);
 
   // Function to format content with highlighted hashtags
   const formatContent = (content: string) => {
-    const parts = content.split(/(#\w+)/g)
+    const parts = content.split(/(#\w+)/g);
 
     return (
       <>
@@ -47,14 +48,14 @@ export function NoteCard({ note, onEdit, onDelete, onRemoveTag, className = '' }
               >
                 {part}
               </span>
-            )
+            );
           }
           // Create a key that doesn't rely solely on index but has uniqueness
-          return <span key={`text-${i}-${part.length}`}>{part}</span>
+          return <span key={`text-${i}-${part.length}`}>{part}</span>;
         })}
       </>
-    )
-  }
+    );
+  };
 
   return (
     <Card
@@ -113,5 +114,5 @@ export function NoteCard({ note, onEdit, onDelete, onRemoveTag, className = '' }
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

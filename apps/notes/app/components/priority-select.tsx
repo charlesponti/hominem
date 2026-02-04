@@ -1,18 +1,19 @@
-import type { Priority } from '@hominem/data/types'
+import type { Priority } from '@hominem/hono-rpc/types';
+
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
+} from '@hominem/ui/components/ui/select';
 
 interface PrioritySelectProps {
-  value: Priority
-  onValueChange: (value: Priority) => void
-  disabled?: boolean
-  className?: string
-  id?: string
+  value: Priority;
+  onValueChange: (value: Priority) => void;
+  disabled?: boolean;
+  className?: string;
+  id?: string;
 }
 
 export function PrioritySelect({
@@ -46,5 +47,5 @@ export function PrioritySelect({
         </SelectContent>
       </Select>
     </div>
-  )
+  );
 }

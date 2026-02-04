@@ -1,15 +1,12 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [".env.local", "**/.env.*local"],
+  "globalDependencies": ["package.json", "bun.lock", ".env.local", "**/.env.*local"],
   "globalEnv": [
     "SUPABASE_URL",
     "SUPABASE_SERVICE_ROLE_KEY",
     "VITE_APP_BASE_URL",
     "VITE_SUPABASE_URL",
     "VITE_SUPABASE_ANON_KEY",
-    "COOKIE_NAME",
-    "COOKIE_SALT",
-    "COOKIE_SECRET",
     "DATABASE_URL",
     "GITHUB_TOKEN",
     "GOOGLE_CLIENT_ID",
@@ -20,38 +17,48 @@
     "REDIS_URL",
     "RESEND_API_KEY"
   ],
+  "concurrency": "18",
   "tasks": {
     "build": {
-      "outputs": [".next/**", "!.next/cache/**", "build/**", "dist/**", "*.tsbuildinfo"],
-      "dependsOn": ["^build"]
-    },
-    "lint": {
-      "outputs": []
-    },
-    "dev": {
-      "cache": false,
-      "persistent": true,
-      "dependsOn": ["@hominem/data#build"]
-    },
-    "test": {
-      "dependsOn": [],
-      "outputs": []
-    },
-    "typecheck": {
       "dependsOn": ["^build"],
-      "outputs": []
+      "outputs": [".next/**", "!.next/cache/**", ".react-router/**", "build/**", "dist/**"]
     },
-    "format": {
-      "outputs": []
+    "clean": {
+      "cache": false
     },
     "db:migrate": {
       "cache": false
     },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "format": {
+      "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],
+      "outputs": []
+    },
+    "lint": {
+      "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],
+      "outputs": []
+    },
     "start": {
       "dependsOn": ["build"]
     },
-    "clean": {
-      "cache": false
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "src/**/*.{ts,tsx,js,jsx}",
+        "app/**/*.{ts,tsx,js,jsx}",
+        "test/**/*.{ts,tsx,js,jsx}"
+      ],
+      "outputs": []
+    },
+    "typegen": {
+      "outputs": [".react-router/**", "app/routes/+types/**/*"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "typegen"],
+      "inputs": ["**/*.ts", "**/*.tsx", "tsconfig.json"]
     }
   }
 }

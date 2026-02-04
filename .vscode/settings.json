@@ -1,42 +1,22 @@
 {
-  "cSpell.words": [
-    "tsquery",
-    "tsvector",
-    "websearch"
-  ],
-  "css.validate": false,
-  "editor.defaultFormatter": "oxc.oxc-vscode",
-  "editor.formatOnSave": true,
-  "editor.quickSuggestions": {
-    "strings": true
+  "typescript.tsserver.enableTracing": true,
+  "typescript.tsserver.log": "normal",
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.cache/**": true,
+    "**/.tsbuildinfo": true,
+    "**/.turbo/**": true,
+    "**/.react-router/cache/**": true
   },
-  "files.associations": {
-    "*.css": "tailwindcss"
-  },
-  "geminicodeassist.inlineSuggestions.enableAuto": true,
-  "github.copilot.chat.newWorkspace.useContext7": true,
-  "npm.scriptRunner": "bun",
-  "tailwindCSS.experimental.classRegex": [
-    [
-      "cva\\(([^)]*)\\)",
-      "[\"'`]([^\"'`]*).*?[\"'`]"
-    ],
-    [
-      "cn\\(([^)]*)\\)",
-      "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"
-    ]
-  ],
-  "tailwindCSS.experimental.configFile": "./packages/ui/src/styles/globals.css",
-  "tailwindCSS.files.exclude": [
-    "**/.git/**",
-    "**/node_modules/**",
-    "**/.next/**",
-    "**/dist/**"
-  ],
-  "tailwindCSS.includeLanguages": {
-    "typescript": "javascript",
-    "typescriptreact": "javascript"
-  },
-  "tailwindCSS.rootFontSize": 16,
-  "terminal.integrated.shellIntegration.enabled": true
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/.cache": true,
+    "**/.turbo": true
+  }
 }

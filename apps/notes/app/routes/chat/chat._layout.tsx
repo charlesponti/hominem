@@ -1,5 +1,5 @@
-import { Outlet } from 'react-router'
+import { Outlet } from 'react-router';
 
 export default function ChatLayout() {
-  return <Outlet />
+  return <Outlet />;
 }

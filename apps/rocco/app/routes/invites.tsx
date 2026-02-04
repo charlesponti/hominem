@@ -5,12 +5,13 @@ import { Loading } from '@hominem/ui/loading';
 import { Mail } from 'lucide-react';
 import { useCallback } from 'react';
 import { data } from 'react-router';
+
 import ReceivedInviteItem from '~/components/ReceivedInviteItem';
-import { getAuthState } from '~/lib/auth.server';
+import { getAuthState, getServerSession } from '~/lib/auth.server';
 import { env } from '~/lib/env';
-import { buildInvitePreview } from '~/lib/services/invite-preview.service';
-import { createCaller } from '~/lib/trpc/server';
-import type { ReceivedInvite } from '~/lib/types';
+import { createServerHonoClient } from '~/lib/rpc/server';
+import { buildInvitePreview } from '~/lib/services/invite-preview.server';
+
 import type { Route } from './+types/invites';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -34,15 +35,66 @@ export async function loader({ request }: Route.LoaderArgs) {
     );
   }
 
-  // Authenticated flow: fetch invites via tRPC
-  const trpcServer = createCaller(request);
-  const invites = (await trpcServer.invites.getReceived(
-    token ? { token } : undefined,
-  )) as ReceivedInvite[];
+  // Get user for authenticated flow
+  const { user, session } = await getServerSession(request);
+  if (!user || !session) {
+    return data(
+      {
+        invites: [],
+        tokenMismatch: false,
+        requiresAuth: true,
+        preview: null,
+      },
+      { headers },
+    );
+  }
+
+  // Authenticated flow: fetch invites via RPC
+  const client = createServerHonoClient(session.access_token);
+  const res = await client.api.invites.received.$post({ json: { token } });
+  const rawInvites = res.ok ? await res.json() : [];
+
+  // Normalize invites to ensure exactOptionalPropertyTypes compliance
+  const invites = rawInvites.map((invite) => {
+    const normalized: typeof invite = {
+      id: invite.id,
+      listId: invite.listId,
+      invitingUserId: invite.invitingUserId,
+      invitedUserId: invite.invitedUserId,
+      invitedUserEmail: invite.invitedUserEmail,
+      token: invite.token,
+      status: invite.status,
+      createdAt: invite.createdAt,
+      updatedAt: invite.updatedAt,
+    };
+
+    // Only add optional properties if they exist
+    if (invite.list) {
+      normalized.list = {
+        id: invite.list.id,
+        name: invite.list.name,
+        ...(invite.list.ownerId !== undefined ? { ownerId: invite.list.ownerId } : {}),
+      };
+    }
+
+    if (invite.invitingUser) {
+      normalized.invitingUser = {
+        id: invite.invitingUser.id,
+        email: invite.invitingUser.email,
+        ...(invite.invitingUser.name !== undefined ? { name: invite.invitingUser.name } : {}),
+      };
+    }
+
+    if (invite.belongsToAnotherUser) {
+      normalized.belongsToAnotherUser = invite.belongsToAnotherUser;
+    }
+
+    return normalized;
+  });
 
   // Check if token belongs to another user
   const tokenMismatch = token
-    ? Boolean(invites.find((invite) => invite.token === token)?.belongsToAnotherUser)
+    ? Boolean(rawInvites.find((invite) => invite.token === token)?.belongsToAnotherUser)
     : false;
 
   return data({ invites, tokenMismatch, requiresAuth: false, preview: null }, { headers });

@@ -1,4 +1,5 @@
 import { List as ListIcon, Mail, Search } from 'lucide-react';
+
 import AppLink from './app-link';
 
 const Footer = () => {

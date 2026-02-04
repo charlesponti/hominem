@@ -1,14 +1,15 @@
-import type { ReactNode } from 'react'
-import { cn } from '../lib/utils'
+import type { ReactNode } from 'react';
 
-export type PageTitleVariant = 'serif' | 'sans' | 'large'
+import { cn } from '../lib/utils';
+
+export type PageTitleVariant = 'serif' | 'sans' | 'large';
 
 interface PageTitleProps {
-  title: string
-  subtitle?: string
-  actions?: ReactNode
-  variant?: PageTitleVariant
-  className?: string
+  title: string;
+  subtitle?: string;
+  actions?: ReactNode;
+  variant?: PageTitleVariant;
+  className?: string;
 }
 
 export function PageTitle({
@@ -22,7 +23,7 @@ export function PageTitle({
     serif: 'heading-1',
     sans: 'text-2xl font-sans font-semibold',
     large: 'heading-1 text-3xl md:text-4xl',
-  }
+  };
 
   return (
     <div className={cn('flex flex-1 justify-between items-center gap-2 group pr-2', className)}>
@@ -32,7 +33,7 @@ export function PageTitle({
       </div>
       {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
     </div>
-  )
+  );
 }
 
-export default PageTitle
+export default PageTitle;

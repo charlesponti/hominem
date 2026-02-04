@@ -1,5 +1,6 @@
 import { logger } from '@hominem/utils/logger';
 import { redirect } from 'react-router';
+
 import { createSupabaseServerClient } from '~/lib/auth.server';
 
 export async function loader({ request }: { request: Request }) {

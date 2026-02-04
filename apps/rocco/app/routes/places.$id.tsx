@@ -1,51 +1,59 @@
 import { PageTitle } from '@hominem/ui';
+import { redirect } from 'react-router';
 import z from 'zod';
+
+import type { PlaceWithLists } from '~/lib/types';
+
 import ErrorBoundary from '~/components/ErrorBoundary';
+import PlaceTypes from '~/components/places/place-types';
 import PlaceAddress from '~/components/places/PlaceAddress';
 import PlaceLists from '~/components/places/PlaceLists';
 import PlaceMap from '~/components/places/PlaceMap';
 import PlacePhone from '~/components/places/PlacePhone';
 import PlacePhotos from '~/components/places/PlacePhotos';
 import PlaceRating from '~/components/places/PlaceRating';
+import PlacesNearby from '~/components/places/places-nearby';
 import PlaceStatus from '~/components/places/PlaceStatus';
 import PlaceWebsite from '~/components/places/PlaceWebsite';
-import PlaceTypes from '~/components/places/place-types';
-import PlacesNearby from '~/components/places/places-nearby';
 import { VisitHistory } from '~/components/places/VisitHistory';
 import { requireAuth } from '~/lib/guards';
-import { logger } from '~/lib/logger';
-import { createCaller } from '~/lib/trpc/server';
-import type { PlaceWithLists } from '~/lib/types';
+import { createServerHonoClient } from '~/lib/rpc/server';
+
 import type { Route } from './+types/places.$id';
 
 export async function loader({ params, request }: Route.LoaderArgs) {
-  await requireAuth(request);
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) {
+    return authResult;
+  }
+
   const { id } = params;
   if (!id) {
-    throw new Error('Place ID is required');
+    return redirect('/404');
   }
 
-  const trpcServer = createCaller(request);
+  const isUuid = z.string().uuid().safeParse(id).success;
+  const client = createServerHonoClient(authResult.session?.access_token);
+  const res = isUuid
+    ? await client.api.places.get.$post({ json: { id } })
+    : await client.api.places['get-by-google-id'].$post({ json: { googleMapsId: id } });
 
-  let data: PlaceWithLists | null = null;
-  if (z.uuid().safeParse(id).success) {
-    data = await trpcServer.places.getDetailsById({ id });
-  } else {
-    data = await trpcServer.places.getDetailsByGoogleId({ googleMapsId: id });
+  if (!res.ok) {
+    return redirect('/404');
   }
 
-  if (!data) {
-    throw new Error('Place not found');
+  const place = await res.json();
+
+  if (!place) {
+    return redirect('/404');
   }
 
-  logger.info('Loaded place details', {
-    id: data.id,
-    googleMapsId: data.googleMapsId,
-    photosCount: data.photos?.length ?? 0,
-    thumbnailsCount: data.thumbnailPhotos?.length ?? 0,
-  });
-
-  return { place: data };
+  return {
+    place: {
+      ...place,
+      lists: [], // Initial empty lists, components will fetch via hooks
+    } as PlaceWithLists,
+  };
 }
 
 export default function Place({ loaderData }: Route.ComponentProps) {
@@ -57,11 +65,7 @@ export default function Place({ loaderData }: Route.ComponentProps) {
         className="max-w-full animate-in fade-in slide-in-from-bottom-2 duration-700"
         style={{ viewTransitionName: `place-photos-${place.id}` }}
       >
-        <PlacePhotos
-          alt={place.name}
-          photos={place.thumbnailPhotos ?? place.photos}
-          placeId={place.id}
-        />
+        <PlacePhotos alt={place.name} photos={place.photos} placeId={place.id} />
       </div>
 
       <div className="w-full space-y-12">
@@ -71,7 +75,10 @@ export default function Place({ loaderData }: Route.ComponentProps) {
         >
           <PageTitle title={place.name} />
 
-          <PlaceStatus businessStatus={place.businessStatus} openingHours={place.openingHours} />
+          <PlaceStatus
+            {...(place.businessStatus ? { businessStatus: place.businessStatus } : {})}
+            {...(place.openingHours ? { openingHours: place.openingHours } : {})}
+          />
 
           <div className="space-y-2">
             <PlaceTypes types={place.types || []} />
@@ -105,8 +112,7 @@ export default function Place({ loaderData }: Route.ComponentProps) {
             <PlacesNearby
               latitude={place.latitude}
               longitude={place.longitude}
-              radiusKm={5}
-              limit={4}
+              radiusMeters={5000}
             />
           </div>
         )}

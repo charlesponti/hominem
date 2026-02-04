@@ -1,9 +1,12 @@
+import { useHonoUtils } from '@hominem/hono-client/react';
 import { Button } from '@hominem/ui/button';
 import { List } from '@hominem/ui/list';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { Edit2, Star, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import { trpc } from '~/lib/trpc/client';
+
+import { useDeletePlaceVisit, usePlaceVisits } from '~/lib/hooks/use-places';
+
 import { LogVisit } from './LogVisit';
 
 interface VisitHistoryProps {
@@ -51,19 +54,16 @@ const itemVariants: Variants = {
 };
 
 function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: VisitItemProps) {
-  const utils = trpc.useUtils();
-  const deleteVisit = trpc.places.deleteVisit.useMutation({
-    onSuccess: () => {
-      utils.places.getPlaceVisits.invalidate({ placeId });
-      utils.places.getVisitStats.invalidate({ placeId });
-    },
-  });
+  const utils = useHonoUtils();
+  const deleteVisit = useDeletePlaceVisit();
 
   const handleDelete = useCallback(async () => {
     if (confirm('Are you sure you want to delete this visit?')) {
-      await deleteVisit.mutateAsync({ visitId: visit.id });
+      await deleteVisit.mutateAsync({ id: visit.id });
+      utils.invalidate(['places', 'place-visits', placeId]);
+      utils.invalidate(['places', 'visit-stats', placeId]);
     }
-  }, [visit.id, deleteVisit]);
+  }, [visit.id, deleteVisit, placeId, utils]);
 
   if (isEditing) {
     return (
@@ -147,9 +147,8 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
 }
 
 export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
-  const { data: visits, isLoading: visitsLoading } = trpc.places.getPlaceVisits.useQuery({
-    placeId,
-  });
+  const { data: visitsResult, isLoading: visitsLoading } = usePlaceVisits(placeId);
+  const visits = visitsResult ?? [];
 
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [editingVisitId, setEditingVisitId] = useState<string | null>(null);
@@ -194,7 +193,7 @@ export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
       ) : (
         <List isLoading={visitsLoading} loadingSize="md">
           <AnimatePresence mode="popLayout">
-            {visits?.map((visit) => (
+            {visits?.map((visit: any) => (
               <VisitItem
                 key={visit.id}
                 visit={visit}

@@ -1,24 +1,25 @@
-import { useState } from 'react'
-import { cn } from '~/lib/utils'
+import { useState } from 'react';
+
+import { cn } from '~/lib/utils';
 
 interface SyncButtonProps {
-  onSync: () => Promise<void>
-  disabled?: boolean
+  onSync: () => Promise<void>;
+  disabled?: boolean;
 }
 
 export default function SyncButton({ onSync, disabled = false }: SyncButtonProps) {
-  const [isSyncing, setIsSyncing] = useState(false)
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const handleSync = async () => {
-    if (isSyncing || disabled) return
+    if (isSyncing || disabled) return;
 
-    setIsSyncing(true)
+    setIsSyncing(true);
     try {
-      await onSync()
+      await onSync();
     } finally {
-      setIsSyncing(false)
+      setIsSyncing(false);
     }
-  }
+  };
 
   return (
     <button
@@ -30,7 +31,7 @@ export default function SyncButton({ onSync, disabled = false }: SyncButtonProps
         {
           'bg-muted text-muted-foreground cursor-not-allowed': disabled || isSyncing,
           'bg-card text-foreground cursor-pointer hover:bg-accent': !(disabled || isSyncing),
-        }
+        },
       )}
     >
       <svg
@@ -52,5 +53,5 @@ export default function SyncButton({ onSync, disabled = false }: SyncButtonProps
       </svg>
       {isSyncing ? 'Syncing...' : 'Sync Google Calendar'}
     </button>
-  )
+  );
 }

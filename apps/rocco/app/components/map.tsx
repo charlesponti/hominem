@@ -12,9 +12,12 @@ import {
   useMapsLibrary,
 } from '@vis.gl/react-google-maps';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { useMapInteraction } from '~/contexts/map-interaction-context';
+
 import type { Place, PlaceLocation } from '~/lib/types';
+
+import { useMapInteraction } from '~/contexts/map-interaction-context';
 import { cn } from '~/lib/utils';
+
 import styles from './map.module.css';
 
 // Default center (San Francisco) when no places or location available

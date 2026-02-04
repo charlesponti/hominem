@@ -1,7 +1,7 @@
-import { Star } from 'lucide-react'
+import { Star } from 'lucide-react';
 
 interface PriorityBadgeProps {
-  priority: number
+  priority: number;
 }
 
 export function PriorityBadge({ priority }: PriorityBadgeProps) {
@@ -14,5 +14,5 @@ export function PriorityBadge({ priority }: PriorityBadgeProps) {
       <Star size={14} />
       <span className="text-xs">{priority}</span>
     </div>
-  )
+  );
 }

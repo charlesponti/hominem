@@ -1,29 +1,34 @@
-import { Button } from '@hominem/ui/button'
+import type { ChatMessageToolCall } from '@hominem/hono-rpc/types/chat.types';
+
+import { Button } from '@hominem/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@hominem/ui/dropdown'
-import { Textarea } from '@hominem/ui/textarea'
-import { formatMessageTimestamp } from '@hominem/utils/dates'
-import { Check, Copy, Edit2, MoreVertical, RotateCcw, Save, Trash2, X } from 'lucide-react'
-import { memo, useState } from 'react'
-import { useMessageEdit } from '~/lib/hooks/use-message-edit'
-import type { ExtendedMessage } from '~/lib/types/chat-message'
-import { cn } from '~/lib/utils'
-import { copyToClipboard } from '~/lib/utils/clipboard'
-import { MarkdownContent } from './MarkdownContent'
-import { ReasoningPart } from './ReasoningPart'
-import { ToolInvocationPart } from './ToolInvocationPart'
+} from '@hominem/ui/dropdown';
+import { Textarea } from '@hominem/ui/textarea';
+import { formatMessageTimestamp } from '@hominem/utils/dates';
+import { Check, Copy, Edit2, MoreVertical, RotateCcw, Save, Trash2, X } from 'lucide-react';
+import { memo, useState } from 'react';
+
+import type { ExtendedMessage } from '~/lib/types/chat-message';
+
+import { useMessageEdit } from '~/lib/hooks/use-message-edit';
+import { cn } from '~/lib/utils';
+import { copyToClipboard } from '~/lib/utils/clipboard';
+
+import { MarkdownContent } from './MarkdownContent';
+import { ReasoningPart } from './ReasoningPart';
+import { ToolInvocationPart } from './ToolInvocationPart';
 
 interface ChatMessageProps {
-  message: ExtendedMessage
-  isStreaming?: boolean
-  onRegenerate?: () => void
-  onEdit?: (messageId: string, newContent: string) => void
-  onDelete?: () => void
+  message: ExtendedMessage;
+  isStreaming?: boolean;
+  onRegenerate?: () => void;
+  onEdit?: (messageId: string, newContent: string) => void;
+  onDelete?: () => void;
 }
 
 export const ChatMessage = memo(function ChatMessage({
@@ -33,29 +38,29 @@ export const ChatMessage = memo(function ChatMessage({
   onEdit,
   onDelete,
 }: ChatMessageProps) {
-  const isUser = message.role === 'user'
-  const hasContent = message.content && message.content.trim().length > 0
+  const isUser = message.role === 'user';
+  const hasContent = message.content && message.content.trim().length > 0;
   const hasToolCalls =
-    message.toolCalls && Array.isArray(message.toolCalls) && message.toolCalls.length > 0
-  const hasReasoning = message.reasoning && message.reasoning.trim().length > 0
-  const [copied, setCopied] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
+    message.toolCalls && Array.isArray(message.toolCalls) && message.toolCalls.length > 0;
+  const hasReasoning = message.reasoning && message.reasoning.trim().length > 0;
+  const [copied, setCopied] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleCopyMessage = async () => {
-    const success = await copyToClipboard(message.content)
+    const success = await copyToClipboard(message.content || '');
     if (success) {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
-  }
+  };
 
   const { isEditing, editContent, setEditContent, startEdit, cancelEdit, saveEdit, canSave } =
     useMessageEdit({
-      initialContent: message.content,
-      onSave: onEdit ? (newContent) => onEdit(message.id, newContent) : undefined,
-    })
+      initialContent: message.content || '',
+      ...(onEdit && { onSave: (newContent) => onEdit(message.id, newContent) }),
+    });
 
-  const timestamp = message.createdAt ? formatMessageTimestamp(message.createdAt) : ''
+  const timestamp = message.createdAt ? formatMessageTimestamp(message.createdAt) : '';
 
   return (
     <article
@@ -147,7 +152,7 @@ export const ChatMessage = memo(function ChatMessage({
       {/* Tool calls section */}
       {hasToolCalls && (
         <div className="flex flex-col gap-2">
-          {message.toolCalls!.map((toolCall, index) => (
+          {message.toolCalls!.map((toolCall: ChatMessageToolCall, index: number) => (
             <ToolInvocationPart
               key={toolCall.toolCallId || `tool-${index}`}
               toolInvocation={toolCall}
@@ -163,8 +168,8 @@ export const ChatMessage = memo(function ChatMessage({
           className="flex flex-col gap-2"
           aria-label="Edit message"
           onSubmit={(e) => {
-            e.preventDefault()
-            saveEdit()
+            e.preventDefault();
+            saveEdit();
           }}
         >
           <Textarea
@@ -176,9 +181,9 @@ export const ChatMessage = memo(function ChatMessage({
             aria-describedby="edit-instructions"
             onKeyDown={(e) => {
               if (e.key === 'Escape') {
-                cancelEdit()
+                cancelEdit();
               } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                saveEdit()
+                saveEdit();
               }
             }}
           />
@@ -231,5 +236,5 @@ export const ChatMessage = memo(function ChatMessage({
         )}
       </div>
     </article>
-  )
-})
+  );
+});

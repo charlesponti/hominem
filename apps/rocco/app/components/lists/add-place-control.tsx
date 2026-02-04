@@ -4,8 +4,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/
 import { Loading } from '@hominem/ui/loading';
 import { CheckCircle2, PlusCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import PlacesAutocomplete from '~/components/places/places-autocomplete';
+
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete';
+
+import PlacesAutocomplete from '~/components/places/places-autocomplete';
 import { createPlaceFromPrediction, useAddPlaceToList } from '~/lib/places';
 
 interface AddPlaceControlProps {
@@ -37,7 +39,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
   }, []);
 
   const addPlaceToList = useAddPlaceToList({
-    onSuccess: () => {
+    onSuccess: (_result) => {
       setStatus('success');
       clearSuccessTimer();
       successTimerRef.current = setTimeout(() => {
@@ -46,15 +48,9 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         setErrorMessage(null);
       }, 1500);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       setStatus('error');
-      const message =
-        error instanceof Error
-          ? error.message
-          : typeof error === 'string'
-            ? error
-            : 'Failed to add place. Please try again.';
-      setErrorMessage(message);
+      setErrorMessage(error?.message || 'Failed to add place');
     },
   });
 
@@ -67,17 +63,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         throw new Error('googleMapsId is required');
       }
       addPlaceToList.mutate({
-        name: place.name,
-        address: place.address || undefined,
-        latitude: place.latitude || undefined,
-        longitude: place.longitude || undefined,
-        imageUrl: place.imageUrl || undefined,
-        googleMapsId: place.googleMapsId,
-        rating: place.rating || undefined,
-        types: place.types || undefined,
-        websiteUri: place.websiteUri || undefined,
-        phoneNumber: place.phoneNumber || undefined,
-        photos: place.photos || undefined,
+        placeId: place.id,
         listIds: [listId],
       });
     } catch (error) {
@@ -110,18 +96,6 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
   };
 
   const getErrorMessage = () => {
-    if (addPlaceToList.error) {
-      const error = addPlaceToList.error;
-      if (error instanceof Error) {
-        return error.message;
-      }
-      if (typeof error === 'string') {
-        return error;
-      }
-      if (error && typeof error === 'object' && 'message' in error) {
-        return String(error.message);
-      }
-    }
     return errorMessage;
   };
 
@@ -142,7 +116,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[90vw] max-w-[400px] p-4"
+        className="w-[90vw] max-w-100 p-4"
         align="start"
         aria-label="Add place to list"
         aria-busy={status === 'submitting'}

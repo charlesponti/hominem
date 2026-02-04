@@ -1,48 +1,49 @@
-import type { FileObject } from '@supabase/storage-js'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import { getSupabaseAdmin } from './admin'
+import type { FileObject } from '@supabase/storage-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+import { getSupabaseAdmin } from './admin';
 
 export interface StoredFile {
-  id: string
-  originalName: string
-  filename: string
-  mimetype: string
-  size: number
-  url: string
-  uploadedAt: Date
+  id: string;
+  originalName: string;
+  filename: string;
+  mimetype: string;
+  size: number;
+  url: string;
+  uploadedAt: Date;
 }
 
 export class SupabaseStorageService {
-  private client: SupabaseClient
-  private bucketName: string
-  private maxFileSize: number
-  private isPublic: boolean
+  private client: SupabaseClient;
+  private bucketName: string;
+  private maxFileSize: number;
+  private isPublic: boolean;
 
   constructor(
     bucketName = 'csv-imports',
     options?: {
-      maxFileSize?: number
-      isPublic?: boolean
-      allowedMimeTypes?: string[]
-    }
+      maxFileSize?: number;
+      isPublic?: boolean;
+      allowedMimeTypes?: string[];
+    },
   ) {
-    this.client = getSupabaseAdmin()
-    this.bucketName = bucketName
-    this.maxFileSize = options?.maxFileSize || 50 * 1024 * 1024 // 50MB default
-    this.isPublic = options?.isPublic ?? false
+    this.client = getSupabaseAdmin();
+    this.bucketName = bucketName;
+    this.maxFileSize = options?.maxFileSize || 50 * 1024 * 1024; // 50MB default
+    this.isPublic = options?.isPublic ?? false;
   }
 
   /**
    * Ensure the bucket exists, create it if it doesn't
    */
   async ensureBucket(): Promise<void> {
-    const { data: buckets, error: listError } = await this.client.storage.listBuckets()
+    const { data: buckets, error: listError } = await this.client.storage.listBuckets();
 
     if (listError) {
-      throw new Error(`Failed to list buckets: ${listError.message}`)
+      throw new Error(`Failed to list buckets: ${listError.message}`);
     }
 
-    const bucketExists = buckets?.some((bucket) => bucket.name === this.bucketName)
+    const bucketExists = buckets?.some((bucket) => bucket.name === this.bucketName);
 
     if (!bucketExists) {
       const { error: createError } = await this.client.storage.createBucket(this.bucketName, {
@@ -57,10 +58,10 @@ export class SupabaseStorageService {
           'video/*',
         ],
         fileSizeLimit: this.maxFileSize,
-      })
+      });
 
       if (createError) {
-        throw new Error(`Failed to create bucket: ${createError.message}`)
+        throw new Error(`Failed to create bucket: ${createError.message}`);
       }
     }
   }
@@ -75,27 +76,27 @@ export class SupabaseStorageService {
   async uploadCsvFile(
     fileName: string,
     fileContent: Buffer | string,
-    userId: string
+    userId: string,
   ): Promise<string> {
-    await this.ensureBucket()
+    await this.ensureBucket();
 
     // Create a unique file path with timestamp and user ID
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_')
-    const filePath = `${userId}/${timestamp}_${sanitizedFileName}`
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const sanitizedFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = `${userId}/${timestamp}_${sanitizedFileName}`;
 
     const { data, error } = await this.client.storage
       .from(this.bucketName)
       .upload(filePath, fileContent, {
         contentType: 'text/csv',
         upsert: false,
-      })
+      });
 
     if (error) {
-      throw new Error(`Failed to upload file: ${error.message}`)
+      throw new Error(`Failed to upload file: ${error.message}`);
     }
 
-    return data.path
+    return data.path;
   }
 
   /**
@@ -111,34 +112,34 @@ export class SupabaseStorageService {
     mimetype: string,
     userId: string,
     options?: {
-      filename?: string // base filename to use (extension auto-appended)
-      originalName?: string // for record-keeping, defaults to filename or 'file'
-    }
+      filename?: string; // base filename to use (extension auto-appended)
+      originalName?: string; // for record-keeping, defaults to filename or 'file'
+    },
   ): Promise<StoredFile> {
     if (buffer.byteLength > this.maxFileSize) {
-      throw new Error(`File size exceeds maximum limit of ${this.maxFileSize} bytes`)
+      throw new Error(`File size exceeds maximum limit of ${this.maxFileSize} bytes`);
     }
 
-    await this.ensureBucket()
+    await this.ensureBucket();
 
-    const id = crypto.randomUUID()
-    const originalName = options?.originalName || options?.filename || 'file'
-    const extension = this.getFileExtension(originalName, mimetype)
+    const id = crypto.randomUUID();
+    const originalName = options?.originalName || options?.filename || 'file';
+    const extension = this.getFileExtension(originalName, mimetype);
 
     // Determine stored filename.
     // Priority:
     // 1) options.filename (sanitized)
     // 2) generated id + extension (legacy behavior)
-    let storedName: string
+    let storedName: string;
     if (options?.filename) {
       // sanitize provided filename
-      const sanitized = options.filename.replace(/[^a-zA-Z0-9.-]/g, '_')
-      storedName = sanitized.endsWith(extension) ? sanitized : `${sanitized}${extension}`
+      const sanitized = options.filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+      storedName = sanitized.endsWith(extension) ? sanitized : `${sanitized}${extension}`;
     } else {
-      storedName = `${id}${extension}`
+      storedName = `${id}${extension}`;
     }
 
-    const filename = `${userId}/${storedName}` // Organize files by user ID
+    const filename = `${userId}/${storedName}`; // Organize files by user ID
 
     // Upload to Supabase Storage
     const { data: _data, error } = await this.client.storage
@@ -146,14 +147,14 @@ export class SupabaseStorageService {
       .upload(filename, buffer, {
         contentType: mimetype,
         upsert: false,
-      })
+      });
 
     if (error) {
-      throw new Error(`Failed to upload file: ${error.message}`)
+      throw new Error(`Failed to upload file: ${error.message}`);
     }
 
     // Get public URL
-    const { data: urlData } = this.client.storage.from(this.bucketName).getPublicUrl(filename)
+    const { data: urlData } = this.client.storage.from(this.bucketName).getPublicUrl(filename);
 
     return {
       id,
@@ -163,7 +164,7 @@ export class SupabaseStorageService {
       size: buffer.byteLength,
       url: urlData.publicUrl,
       uploadedAt: new Date(),
-    }
+    };
   }
 
   /**
@@ -172,7 +173,7 @@ export class SupabaseStorageService {
    * @returns The file content as text
    */
   async downloadCsvFile(filePath: string): Promise<string> {
-    const { data, error } = await this.client.storage.from(this.bucketName).download(filePath)
+    const { data, error } = await this.client.storage.from(this.bucketName).download(filePath);
 
     if (error) {
       // Enhanced error logging for Supabase download issues
@@ -182,23 +183,23 @@ export class SupabaseStorageService {
         errorName: error.name,
         filePath,
         bucketName: this.bucketName,
-      })
+      });
       throw new Error(
         `Failed to download file: ${JSON.stringify({
           message: error.message,
           name: error.name,
           filePath,
           bucketName: this.bucketName,
-        })}`
-      )
+        })}`,
+      );
     }
 
     if (!data) {
-      throw new Error('No file data received')
+      throw new Error('No file data received');
     }
 
     // Convert blob to text
-    return await data.text()
+    return await data.text();
   }
 
   /**
@@ -207,7 +208,7 @@ export class SupabaseStorageService {
    * @returns The file content as Buffer
    */
   async downloadCsvFileAsBuffer(filePath: string): Promise<Buffer> {
-    const { data, error } = await this.client.storage.from(this.bucketName).download(filePath)
+    const { data, error } = await this.client.storage.from(this.bucketName).download(filePath);
 
     if (error) {
       throw new Error(
@@ -216,16 +217,16 @@ export class SupabaseStorageService {
           name: error.name,
           filePath,
           bucketName: this.bucketName,
-        })}`
-      )
+        })}`,
+      );
     }
 
     if (!data) {
-      throw new Error('No file data received')
+      throw new Error('No file data received');
     }
 
     // Convert blob to buffer
-    return Buffer.from(await data.arrayBuffer())
+    return Buffer.from(await data.arrayBuffer());
   }
 
   /**
@@ -239,32 +240,32 @@ export class SupabaseStorageService {
       // List files in the user's directory
       const { data: files, error: listError } = await this.client.storage
         .from(this.bucketName)
-        .list(userId)
+        .list(userId);
 
       if (listError) {
-        console.error('Error listing files:', listError)
-        return null
+        console.error('Error listing files:', listError);
+        return null;
       }
 
-      const file = files?.find((f: { name: string }) => f.name.startsWith(fileId))
+      const file = files?.find((f: { name: string }) => f.name.startsWith(fileId));
 
       if (!file) {
-        return null
+        return null;
       }
 
       // Download the file from user's directory
-      const filePath = `${userId}/${file.name}`
-      const { data, error } = await this.client.storage.from(this.bucketName).download(filePath)
+      const filePath = `${userId}/${file.name}`;
+      const { data, error } = await this.client.storage.from(this.bucketName).download(filePath);
 
       if (error) {
-        console.error('Error downloading file:', error)
-        return null
+        console.error('Error downloading file:', error);
+        return null;
       }
 
-      return await data.arrayBuffer()
+      return await data.arrayBuffer();
     } catch (error) {
-      console.error('Error in getFile:', error)
-      return null
+      console.error('Error in getFile:', error);
+      return null;
     }
   }
 
@@ -279,32 +280,32 @@ export class SupabaseStorageService {
       // List files in the user's directory
       const { data: files, error: listError } = await this.client.storage
         .from(this.bucketName)
-        .list(userId)
+        .list(userId);
 
       if (listError) {
-        console.error('Error listing files:', listError)
-        return false
+        console.error('Error listing files:', listError);
+        return false;
       }
 
-      const file = files?.find((f: { name: string }) => f.name.startsWith(fileId))
+      const file = files?.find((f: { name: string }) => f.name.startsWith(fileId));
 
       if (!file) {
-        return false
+        return false;
       }
 
       // Delete the file from user's directory
-      const filePath = `${userId}/${file.name}`
-      const { error } = await this.client.storage.from(this.bucketName).remove([filePath])
+      const filePath = `${userId}/${file.name}`;
+      const { error } = await this.client.storage.from(this.bucketName).remove([filePath]);
 
       if (error) {
-        console.error('Error deleting file:', error)
-        return false
+        console.error('Error deleting file:', error);
+        return false;
       }
 
-      return true
+      return true;
     } catch (error) {
-      console.error('Error in deleteFile:', error)
-      return false
+      console.error('Error in deleteFile:', error);
+      return false;
     }
   }
 
@@ -319,27 +320,27 @@ export class SupabaseStorageService {
       // List files in the user's directory to find the one that starts with the fileId
       const { data: files, error: listError } = await this.client.storage
         .from(this.bucketName)
-        .list(userId)
+        .list(userId);
 
       if (listError) {
-        console.error('Error listing files:', listError)
-        return null
+        console.error('Error listing files:', listError);
+        return null;
       }
 
-      const file = files?.find((f: { name: string }) => f.name.startsWith(fileId))
+      const file = files?.find((f: { name: string }) => f.name.startsWith(fileId));
 
       if (!file) {
-        return null
+        return null;
       }
 
       // Get public URL for the file in user's directory
-      const filePath = `${userId}/${file.name}`
-      const { data } = this.client.storage.from(this.bucketName).getPublicUrl(filePath)
+      const filePath = `${userId}/${file.name}`;
+      const { data } = this.client.storage.from(this.bucketName).getPublicUrl(filePath);
 
-      return data.publicUrl
+      return data.publicUrl;
     } catch (error) {
-      console.error('Error in getFileUrl:', error)
-      return null
+      console.error('Error in getFileUrl:', error);
+      return null;
     }
   }
 
@@ -352,17 +353,17 @@ export class SupabaseStorageService {
   async getSignedUrl(filePath: string, expiresIn = 3600): Promise<string> {
     const { data, error } = await this.client.storage
       .from(this.bucketName)
-      .createSignedUrl(filePath, expiresIn)
+      .createSignedUrl(filePath, expiresIn);
 
     if (error) {
-      throw new Error(`Failed to create signed URL: ${error.message}`)
+      throw new Error(`Failed to create signed URL: ${error.message}`);
     }
 
     if (!data?.signedUrl) {
-      throw new Error('No signed URL received')
+      throw new Error('No signed URL received');
     }
 
-    return data.signedUrl
+    return data.signedUrl;
   }
 
   /**
@@ -371,13 +372,13 @@ export class SupabaseStorageService {
    * @returns Array of file objects
    */
   async listUserFiles(userId: string): Promise<FileObject[]> {
-    const { data, error } = await this.client.storage.from(this.bucketName).list(userId)
+    const { data, error } = await this.client.storage.from(this.bucketName).list(userId);
 
     if (error) {
-      throw new Error(`Failed to list files: ${error.message}`)
+      throw new Error(`Failed to list files: ${error.message}`);
     }
 
-    return data || []
+    return data || [];
   }
 
   /**
@@ -385,9 +386,9 @@ export class SupabaseStorageService {
    */
   private getFileExtension(filename: string, mimetype: string) {
     // First try to get extension from filename
-    const dotIndex = filename.lastIndexOf('.')
+    const dotIndex = filename.lastIndexOf('.');
     if (dotIndex !== -1) {
-      return filename.substring(dotIndex)
+      return filename.substring(dotIndex);
     }
 
     // Fallback to mimetype mapping
@@ -407,9 +408,9 @@ export class SupabaseStorageService {
       'video/webm': '.webm',
       'text/csv': '.csv',
       'application/csv': '.csv',
-    }
+    };
 
-    return mimeToExt[mimetype] || ''
+    return mimeToExt[mimetype] || '';
   }
 
   /**
@@ -432,9 +433,9 @@ export class SupabaseStorageService {
       'video/webm',
       'text/csv',
       'application/csv',
-    ]
+    ];
 
-    return allowedTypes.includes(mimetype)
+    return allowedTypes.includes(mimetype);
   }
 }
 
@@ -442,14 +443,14 @@ export class SupabaseStorageService {
 export const csvStorageService = new SupabaseStorageService('csv-imports', {
   maxFileSize: 50 * 1024 * 1024, // 50MB
   isPublic: false,
-})
+});
 
 export const fileStorageService = new SupabaseStorageService('chat-files', {
   maxFileSize: 10 * 1024 * 1024, // 10MB
   isPublic: true,
-})
+});
 
 export const placeImagesStorageService = new SupabaseStorageService('place-images', {
   maxFileSize: 10 * 1024 * 1024, // 10MB
   isPublic: true,
-})
+});

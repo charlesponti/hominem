@@ -25,6 +25,30 @@ export function isGooglePlacesPhotoReference(url: string): boolean {
 }
 
 /**
+ * Normalizes a photo reference string.
+ * If the string is a proxied URL (starts with /api/images?resource=), it extracts the raw resource.
+ * Otherwise, returns the string as-is.
+ *
+ * @param photo - photo reference or proxied URL
+ * @returns normalized photo reference
+ */
+export function normalizePhotoReference(photo: string): string {
+  if (photo.startsWith('/api/images?')) {
+    try {
+      // Use a placeholder base for relative URL parsing
+      const url = new URL(photo, 'http://placeholder');
+      const resource = url.searchParams.get('resource');
+      if (resource) {
+        return resource;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return photo;
+}
+
+/**
  * Sanitizes an array of photo references or URLs.
  * Filters out empty/invalid values and removes duplicates.
  *
@@ -36,9 +60,9 @@ export function sanitizeStoredPhotos(photos: string[] | null | undefined): strin
     return [];
   }
 
-  const sanitized = photos.filter(
-    (photo): photo is string => typeof photo === 'string' && photo.trim().length > 0,
-  );
+  const sanitized = photos
+    .filter((photo): photo is string => typeof photo === 'string' && photo.trim().length > 0)
+    .map((photo) => normalizePhotoReference(photo.trim()));
 
   return Array.from(new Set(sanitized));
 }

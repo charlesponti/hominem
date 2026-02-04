@@ -1,5 +1,5 @@
-import { createOllama } from 'ollama-ai-provider'
+import { createOllama } from 'ollama-ai-provider';
 
-export const ollama = createOllama()
+export const ollama = createOllama();
 
-export type Ollama = ReturnType<typeof createOllama>
+export type Ollama = ReturnType<typeof createOllama>;

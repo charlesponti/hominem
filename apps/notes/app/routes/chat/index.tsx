@@ -1,30 +1,34 @@
-import { type LoaderFunctionArgs, redirect } from 'react-router'
-import { getServerSession } from '~/lib/auth.server'
-import { createServerTRPCClient } from '~/lib/trpc/server'
+import { type LoaderFunctionArgs, redirect } from 'react-router';
+
+import { getServerSession } from '~/lib/auth.server';
+import { createServerHonoClient } from '~/lib/rpc/server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { user, session, headers } = await getServerSession(request)
+  const { user, session, headers } = await getServerSession(request);
   if (!(user && session)) {
-    return redirect('/', { headers })
+    return redirect('/', { headers });
   }
 
-  const trpcClient = createServerTRPCClient(session.access_token)
+  const rpcClient = createServerHonoClient(session.access_token);
 
-  const [firstChat] = await trpcClient.chats.getUserChats.query({
-    limit: 1,
-  })
+  const res = await rpcClient.api.chats.$get({ query: { limit: '1' } });
+  const result = await res.json();
 
-  if (firstChat) {
-    return redirect(`/chat/${firstChat.id}`, { headers })
+  if (Array.isArray(result) && result.length > 0) {
+    const firstChat = result[0];
+    if (firstChat) {
+      return redirect(`/chat/${firstChat.id}`, { headers });
+    }
   }
 
-  const newChat = await trpcClient.chats.createChat.mutate({
-    title: 'New Chat',
-  })
+  const createRes = await rpcClient.api.chats.$post({
+    json: { title: 'New Chat' },
+  });
+  const createResult = await createRes.json();
 
-  if (!newChat.chat) {
-    return redirect('/', { headers })
+  if (!createResult || !createResult.id) {
+    return redirect('/', { headers });
   }
 
-  return redirect(`/chat/${newChat.chat.id}`, { headers })
+  return redirect(`/chat/${createResult.id}`, { headers });
 }

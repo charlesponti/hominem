@@ -1,11 +1,12 @@
-import { redirect } from 'react-router'
-import { createSupabaseServerClient } from '~/lib/auth.server'
+import { redirect } from 'react-router';
+
+import { createSupabaseServerClient } from '~/lib/auth.server';
 
 export async function loader({ request }: { request: Request }) {
-  const { supabase, headers } = createSupabaseServerClient(request)
-  const url = new URL(request.url)
-  const returnTo = url.searchParams.get('return_to') || '/'
-  const redirectTo = `${url.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`
+  const { supabase, headers } = createSupabaseServerClient(request);
+  const url = new URL(request.url);
+  const returnTo = url.searchParams.get('return_to') || '/';
+  const redirectTo = `${url.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -18,11 +19,11 @@ export async function loader({ request }: { request: Request }) {
         prompt: 'consent',
       },
     },
-  })
+  });
 
   if (error) {
-    throw new Response(error.message, { status: 500 })
+    throw new Response(error.message, { status: 500 });
   }
 
-  return redirect(data.url, { headers })
+  return redirect(data.url, { headers });
 }

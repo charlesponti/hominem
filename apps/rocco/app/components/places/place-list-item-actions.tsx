@@ -16,6 +16,7 @@ import {
 } from '@hominem/ui/dropdown';
 import { ExternalLink, MoreVertical, Trash } from 'lucide-react';
 import { type MouseEvent, useCallback, useMemo } from 'react';
+
 import { useModal } from '~/hooks/useModal';
 import { useRemoveListItem } from '~/lib/places';
 
@@ -46,7 +47,7 @@ const PlaceListItemActions = ({
   });
 
   const onDeleteClick = useCallback(() => {
-    removeListItemMutation.mutate({ listId, itemId: placeId });
+    removeListItemMutation.mutate({ listId, placeId });
   }, [listId, placeId, removeListItemMutation]);
 
   const handleDropdownButtonClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {

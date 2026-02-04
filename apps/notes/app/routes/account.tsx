@@ -1,61 +1,45 @@
-import { Button } from '@hominem/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@hominem/ui/components/ui/card'
-import { useToast } from '@hominem/ui/components/ui/use-toast'
-import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router'
-import { ConnectTwitterAccount } from '~/components/connect-twitter-account'
-import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth'
-import { useSupabaseAuthContext } from '@hominem/auth'
+import { useSupabaseAuthContext } from '@hominem/auth';
+import { Button } from '@hominem/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@hominem/ui/card';
+import { useEffect, useState } from 'react';
+import { Navigate } from 'react-router';
+
+import { ConnectTwitterAccount } from '~/components/connect-twitter-account';
+import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth';
 
 export default function AccountPage() {
-  const { userId, isLoading, logout } = useSupabaseAuthContext()
-  const { toast } = useToast()
-  const { refetch } = useTwitterOAuth()
+  const { userId, isLoading, logout } = useSupabaseAuthContext();
+  const { refetch } = useTwitterOAuth();
 
-  const [urlParams, setUrlParams] = useState<URLSearchParams | null>(null)
+  const [urlParams, setUrlParams] = useState<URLSearchParams | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setUrlParams(new URLSearchParams(window.location.search))
+      setUrlParams(new URLSearchParams(window.location.search));
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (urlParams) {
-      const twitterStatus = urlParams.get('twitter')
+      const twitterStatus = urlParams.get('twitter');
       if (twitterStatus === 'connected') {
-        toast({
-          title: 'Success',
-          description: 'Twitter account connected successfully!',
-        })
         // Clean up URL
-        window.history.replaceState({}, '', window.location.pathname)
+        window.history.replaceState({}, '', window.location.pathname);
         // Refresh accounts
-        refetch()
+        refetch();
       } else if (twitterStatus === 'error') {
-        toast({
-          title: 'Error',
-          description: 'Failed to connect Twitter account. Please try again.',
-          variant: 'destructive',
-        })
         // Clean up URL
-        window.history.replaceState({}, '', window.location.pathname)
+        window.history.replaceState({}, '', window.location.pathname);
       }
     }
-  }, [urlParams, toast, refetch])
+  }, [urlParams, refetch]);
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
 
   if (!userId) {
-    return <Navigate to="/auth/signin" replace />
+    return <Navigate to="/auth/signin" replace />;
   }
 
   return (
@@ -99,5 +83,5 @@ export default function AccountPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

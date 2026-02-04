@@ -1,14 +1,16 @@
-import type { Goal, GoalMilestone, GoalStatus } from '@hominem/data/types'
-import { Button } from '@hominem/ui/button'
-import { DatePicker } from '@hominem/ui/components/date-picker'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@hominem/ui/dialog'
-import { Input } from '@hominem/ui/input'
-import { Label } from '@hominem/ui/label'
-import { Textarea } from '@hominem/ui/textarea'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Controller, useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { GoalMilestoneList } from './goal-milestone-list'
+import type { Goal, GoalMilestone, GoalStatus } from '@hominem/services/types';
+
+import { Button } from '@hominem/ui/button';
+import { DatePicker } from '@hominem/ui/components/date-picker';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@hominem/ui/dialog';
+import { Input } from '@hominem/ui/input';
+import { Label } from '@hominem/ui/label';
+import { Textarea } from '@hominem/ui/textarea';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+import { GoalMilestoneList } from './goal-milestone-list';
 
 export const GoalFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -21,21 +23,20 @@ export const GoalFormSchema = z.object({
   milestones: z
     .array(z.object({ description: z.string().min(1), completed: z.boolean() }))
     .optional(),
-})
+});
 
-export type GoalFormData = z.infer<typeof GoalFormSchema>
+export type GoalFormData = z.infer<typeof GoalFormSchema>;
 
 interface GoalModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  goal?: Goal
-  onSubmit: (data: GoalFormData) => void
-  isLoading?: boolean
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  goal?: Goal | undefined;
+  onSubmit: (data: GoalFormData) => void;
+  isLoading?: boolean | undefined;
 }
 
 export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: GoalModalProps) {
   const form = useForm<GoalFormData>({
-    // @ts-expect-error - zodResolver v5 expects Zod v3 types, but we're using Zod v4 which is runtime compatible
     resolver: zodResolver(GoalFormSchema as never),
     defaultValues: {
       title: goal?.title ?? '',
@@ -47,45 +48,45 @@ export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: Goa
       dueDate: goal?.dueDate ? new Date(goal.dueDate) : undefined,
       milestones: goal?.milestones ?? [],
     },
-  })
+  });
 
   const {
     handleSubmit,
     control,
     register,
     formState: { errors },
-  } = form
+  } = form;
 
   const handleMilestoneChange = (
     index: number,
     field: keyof GoalMilestone,
-    value: string | boolean
+    value: string | boolean,
   ) => {
-    const milestones = form.getValues('milestones') || []
-    const newMilestones = [...milestones]
+    const milestones = form.getValues('milestones') || [];
+    const newMilestones = [...milestones];
     if (newMilestones[index]) {
-      const milestoneToUpdate = newMilestones[index]
+      const milestoneToUpdate = newMilestones[index];
       if (field === 'description') {
-        milestoneToUpdate.description = value as string
+        milestoneToUpdate.description = value as string;
       } else if (field === 'completed') {
-        milestoneToUpdate.completed = value as boolean
+        milestoneToUpdate.completed = value as boolean;
       }
     }
-    form.setValue('milestones', newMilestones)
-  }
+    form.setValue('milestones', newMilestones);
+  };
 
   const addMilestone = () => {
-    const milestones = form.getValues('milestones') || []
-    form.setValue('milestones', [...milestones, { description: '', completed: false }])
-  }
+    const milestones = form.getValues('milestones') || [];
+    form.setValue('milestones', [...milestones, { description: '', completed: false }]);
+  };
 
   const removeMilestone = (index: number) => {
-    const milestones = form.getValues('milestones') || []
+    const milestones = form.getValues('milestones') || [];
     form.setValue(
       'milestones',
-      milestones.filter((_, i) => i !== index)
-    )
-  }
+      milestones.filter((_, i) => i !== index),
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -213,5 +214,5 @@ export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: Goa
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

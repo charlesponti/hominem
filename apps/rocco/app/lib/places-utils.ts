@@ -1,49 +1,62 @@
-import type { PlaceInsert } from '@hominem/data/places';
+import type { PlaceCreateInput } from '@hominem/hono-rpc/types';
+
+import { getHominemPhotoURL, sanitizeStoredPhotos } from '@hominem/utils/images';
+
 import type {
   GooglePlaceDetailsResponse,
   GooglePlacePrediction,
   GooglePlacesApiResponse,
-} from '~/lib/types';
-import { sanitizeStoredPhotos } from '@hominem/utils/images';
-import { logger } from './logger';
+} from '~/lib/shared-types';
 
-function toLocationTuple(latitude?: number | null, longitude?: number | null): [number, number] {
-  return latitude != null && longitude != null ? [longitude, latitude] : [0, 0];
-}
+export const getPlacePhotoUrl = (reference: string | null | undefined) => {
+  if (!reference) return null;
+  return getHominemPhotoURL(reference);
+};
 
 /**
- * Transforms Google Places API response to database PlaceInsert format
+ * Transforms Google Places API response to API PlaceCreateInput format
  */
 export const transformGooglePlaceToPlaceInsert = (
   googlePlace: GooglePlaceDetailsResponse,
   googleMapsId: string,
-): PlaceInsert => {
+): PlaceCreateInput => {
   const rawPhotos = extractPhotoReferences(googlePlace.photos);
   const fetchedPhotos = sanitizeStoredPhotos(rawPhotos);
   const latitude = googlePlace.location?.latitude ?? null;
   const longitude = googlePlace.location?.longitude ?? null;
 
-  const result: PlaceInsert = {
+  // Build result object conditionally to satisfy exactOptionalPropertyTypes
+  const result: PlaceCreateInput = {
     googleMapsId,
     name: googlePlace.displayName?.text || 'Unknown Place',
-    address: googlePlace.formattedAddress ?? null,
-    latitude,
-    longitude,
-    location: toLocationTuple(latitude, longitude),
-    types: googlePlace.types ?? null,
-    rating: googlePlace.rating ?? null,
-    websiteUri: googlePlace.websiteUri ?? null,
-    phoneNumber: googlePlace.nationalPhoneNumber ?? null,
-    priceLevel: parsePriceLevel(googlePlace.priceLevel),
-    photos: fetchedPhotos.length > 0 ? fetchedPhotos : null,
-    imageUrl: null, // Will be computed from photos if needed
   };
 
-  logger.info('Transformed Google Place to DB insert', {
-    googleMapsId,
-    name: result.name,
-    photosCount: fetchedPhotos.length,
-  });
+  // Only add optional properties if they have values
+  if (googlePlace.formattedAddress) {
+    result.address = googlePlace.formattedAddress;
+  }
+  if (latitude != null) {
+    result.latitude = latitude;
+  }
+  if (longitude != null) {
+    result.longitude = longitude;
+  }
+  if (googlePlace.rating != null) {
+    result.rating = googlePlace.rating;
+  }
+  if (googlePlace.websiteUri) {
+    result.websiteUri = googlePlace.websiteUri;
+  }
+  if (googlePlace.nationalPhoneNumber) {
+    result.phoneNumber = googlePlace.nationalPhoneNumber;
+  }
+  const parsedPriceLevel = parsePriceLevel(googlePlace.priceLevel);
+  if (parsedPriceLevel != null) {
+    result.priceLevel = parsedPriceLevel;
+  }
+  if (fetchedPhotos.length > 0) {
+    result.photos = fetchedPhotos;
+  }
 
   return result;
 };
@@ -86,7 +99,7 @@ export const parsePriceLevel = (priceLevel: string | number | null | undefined) 
 export const mapGooglePlaceToPrediction = (
   placeResult: GooglePlacesApiResponse,
 ): GooglePlacePrediction => ({
-  place_id: placeResult.id,
+  place_id: placeResult.id ?? '',
   text: placeResult.displayName?.text ?? '',
   address: placeResult.formattedAddress ?? '',
   location:

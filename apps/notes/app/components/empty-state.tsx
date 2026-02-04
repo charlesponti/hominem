@@ -1,16 +1,17 @@
-import type { LucideIcon } from 'lucide-react'
-import { Button } from './button'
+import type { LucideIcon } from 'lucide-react';
+
+import { Button } from '@hominem/ui';
 
 interface EmptyStateProps {
-  icon?: LucideIcon
-  title: string
-  description?: string
+  icon?: LucideIcon;
+  title: string;
+  description?: string;
   action?: {
-    label: string
-    onClick: () => void
-    variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive'
-  }
-  className?: string
+    label: string;
+    onClick: () => void;
+    variant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive';
+  };
+  className?: string;
 }
 
 export function EmptyState({ icon: Icon, title, description, action, className }: EmptyStateProps) {
@@ -25,5 +26,5 @@ export function EmptyState({ icon: Icon, title, description, action, className }
         </Button>
       )}
     </div>
-  )
+  );
 }

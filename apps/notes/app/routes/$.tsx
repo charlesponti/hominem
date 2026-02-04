@@ -1,6 +1,6 @@
-import { Button } from '@hominem/ui/button'
-import { Bot, Home, Lightbulb, StickyNote } from 'lucide-react'
-import { Link } from 'react-router'
+import { Button } from '@hominem/ui/button';
+import { Bot, Home, Lightbulb, StickyNote } from 'lucide-react';
+import { Link } from 'react-router';
 
 export default function NotFoundPage() {
   return (
@@ -61,5 +61,5 @@ export default function NotFoundPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

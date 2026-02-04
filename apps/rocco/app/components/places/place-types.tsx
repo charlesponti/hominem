@@ -1,4 +1,5 @@
 import type { HTMLAttributes } from 'react';
+
 import { cn } from '~/lib/utils';
 
 const EXCLUDED_TYPES = ['establishment', 'food', 'point_of_interest', 'political'];
@@ -73,7 +74,7 @@ const TYPE_EMOJIS: Record<string, string> = {
 };
 
 interface PlaceTypeProps extends HTMLAttributes<HTMLSpanElement> {
-  emoji?: string;
+  emoji?: string | undefined;
 }
 
 const PlaceType = ({ children, className, emoji, ...props }: PlaceTypeProps) => {

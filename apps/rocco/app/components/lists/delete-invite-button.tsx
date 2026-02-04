@@ -10,8 +10,9 @@ import {
 } from '@hominem/ui/dialog';
 import { Trash2 } from 'lucide-react';
 import { useCallback } from 'react';
+
 import { useModal } from '~/hooks/useModal';
-import { trpc } from '~/lib/trpc/client';
+import { useDeleteInvite } from '~/lib/hooks/use-invites';
 
 type DeleteInviteButtonProps = {
   listId: string;
@@ -25,18 +26,15 @@ export default function DeleteInviteButton({
   onDelete,
 }: DeleteInviteButtonProps) {
   const { isOpen, open, close } = useModal();
-  const deleteInvite = trpc.invites.delete.useMutation();
+  const deleteInvite = useDeleteInvite();
 
   const handleDelete = useCallback(async () => {
-    // Optimistically remove immediately
-    onDelete(invitedUserEmail);
     try {
       await deleteInvite.mutateAsync({ listId, invitedUserEmail });
+      onDelete(invitedUserEmail);
       close();
     } catch (error) {
       console.error('Failed to delete invite:', error);
-      // Note: We don't rollback here since onDelete was already called
-      // The parent component should handle error recovery if needed
     }
   }, [deleteInvite, listId, invitedUserEmail, onDelete, close]);
 

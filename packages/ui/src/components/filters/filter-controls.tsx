@@ -1,12 +1,13 @@
-import type { ReactNode } from 'react'
-import { cn } from '../../lib/utils'
-import { type ActiveFilter, ActiveFiltersBar } from './active-filters-bar'
+import type { ReactNode } from 'react';
+
+import { cn } from '../../lib/utils';
+import { type ActiveFilter, ActiveFiltersBar } from './active-filters-bar';
 
 interface FilterControlsProps {
-  children: ReactNode
-  showActiveFilters?: boolean
-  activeFilters?: ActiveFilter[]
-  className?: string
+  children: ReactNode;
+  showActiveFilters?: boolean;
+  activeFilters?: ActiveFilter[];
+  className?: string;
 }
 
 export function FilterControls({
@@ -22,5 +23,5 @@ export function FilterControls({
         <ActiveFiltersBar filters={activeFilters} />
       )}
     </div>
-  )
+  );
 }

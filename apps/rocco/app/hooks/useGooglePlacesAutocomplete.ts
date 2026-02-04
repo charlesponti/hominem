@@ -1,10 +1,10 @@
-import { trpc } from '~/lib/trpc/client';
+import { usePlacesAutocomplete } from '../lib/hooks/use-places';
 
 export type { GooglePlacePrediction } from '~/lib/types';
 
 export interface UseGooglePlacesAutocompleteOptions {
   input: string;
-  location?: { latitude: number; longitude: number };
+  location?: { latitude: number; longitude: number } | undefined;
 }
 
 export function useGooglePlacesAutocomplete({
@@ -12,16 +12,6 @@ export function useGooglePlacesAutocomplete({
   location,
 }: UseGooglePlacesAutocompleteOptions) {
   const trimmed = input.trim();
-  const enabled = trimmed.length >= 3;
 
-  return trpc.places.autocomplete.useQuery(
-    location
-      ? { query: trimmed, latitude: location.latitude, longitude: location.longitude }
-      : { query: trimmed },
-    {
-      enabled,
-      staleTime: 1000 * 60,
-      retry: 1,
-    },
-  );
+  return usePlacesAutocomplete(trimmed, location?.latitude, location?.longitude);
 }

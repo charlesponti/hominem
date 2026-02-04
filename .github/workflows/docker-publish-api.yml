@@ -10,7 +10,7 @@ on:
   push:
     tags: [ 'v*.*.*' ]
     paths:
-      - "apps/api/**"
+      - "services/api/**"
       - "packages/**"
       - "docker/**"
       - ".github/workflows/**"

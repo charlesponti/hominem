@@ -2,38 +2,39 @@ import { Button } from '@hominem/ui/button';
 import { ArrowRight, ListCheck } from 'lucide-react';
 import { useCallback } from 'react';
 import { Link } from 'react-router';
-import { trpc } from '~/lib/trpc/client';
+
 import type { ReceivedInvite } from '~/lib/types';
+
+import { useAcceptInvite } from '~/lib/hooks/use-invites';
 
 type ReceivedInviteItemProps =
   | {
       variant: 'preview';
       preview: {
         listName: string;
-        coverPhoto?: string | null;
-        firstItemName?: string | null;
-        invitedUserEmail?: string | null;
+        coverPhoto?: string | null | undefined;
+        firstItemName?: string | null | undefined;
+        invitedUserEmail?: string | null | undefined;
         onSignIn: () => void;
       };
     }
   | {
-      variant?: 'invite';
+      variant?: 'invite' | undefined;
       listInvite: ReceivedInvite;
-      currentUserEmail?: string;
-      canAccept?: boolean;
+      currentUserEmail?: string | undefined;
+      canAccept?: boolean | undefined;
     };
 
 const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
   const inviteProps = props.variant !== 'preview' ? props : null;
   const previewProps = props.variant === 'preview' ? props : null;
 
-  const { mutate, status } = trpc.invites.accept.useMutation();
+  const { mutate, isPending } = useAcceptInvite();
 
   const normalizedUserEmail = inviteProps?.currentUserEmail?.toLowerCase();
+  const normalizedInviteEmail = inviteProps?.listInvite.invitedUserEmail?.toLowerCase();
   const isEmailMismatch =
-    normalizedUserEmail &&
-    inviteProps &&
-    normalizedUserEmail !== inviteProps.listInvite.invitedUserEmail.toLowerCase();
+    normalizedUserEmail && normalizedInviteEmail && normalizedUserEmail !== normalizedInviteEmail;
 
   const onAcceptClick = useCallback(() => {
     if (!inviteProps) {
@@ -102,7 +103,8 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
 
   // Handle invite variant - TypeScript knows inviteProps is not null here
   const { listInvite, canAccept = true } = inviteProps!;
-  const { accepted, list } = listInvite;
+  const { status, list } = listInvite;
+  const isAccepted = status === 'accepted';
 
   return (
     <li className="flex flex-col gap-3 p-6 bg-white border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -113,7 +115,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
           </div>
           <p className="text-xl font-semibold text-gray-900">{list?.name || 'Unknown List'}</p>
         </div>
-        {accepted ? (
+        {isAccepted ? (
           <Link
             to={`/lists/${list?.id || listInvite.listId}`}
             className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover active:bg-primary-hover text-primary-foreground rounded-lg shadow-sm transition-colors font-medium"
@@ -122,10 +124,10 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
             <ArrowRight size={18} />
           </Link>
         ) : (
-          <AcceptButton status={status} canAccept={canAccept} onAcceptClick={onAcceptClick} />
+          <AcceptButton status={isPending} canAccept={canAccept} onAcceptClick={onAcceptClick} />
         )}
       </div>
-      {!accepted && isEmailMismatch && (
+      {!isAccepted && isEmailMismatch && (
         <p className="flex flex-col gap-2 text-sm text-amber-700">
           <span>
             Invited as <span className="italic text-purple-400">{listInvite.invitedUserEmail}</span>
@@ -144,17 +146,17 @@ const AcceptButton = ({
   canAccept,
   onAcceptClick,
 }: {
-  status: 'pending' | 'success' | 'error' | 'idle';
+  status: boolean;
   canAccept: boolean;
   onAcceptClick: () => void;
 }) => {
   return (
     <Button
       className="px-4 py-2 rounded-lg shadow-sm transition-colors font-medium"
-      disabled={status === 'pending' || !canAccept}
+      disabled={status || !canAccept}
       onClick={onAcceptClick}
     >
-      {status === 'pending' ? 'Accepting...' : canAccept ? 'Accept invite' : 'Sign in to accept'}
+      {status ? 'Accepting...' : canAccept ? 'Accept invite' : 'Sign in to accept'}
     </Button>
   );
 };

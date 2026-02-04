@@ -32,7 +32,7 @@ export const QUEUE_NAMES = {
   /**
    * Queue for Google Calendar synchronization jobs
    * Used by:
-   * - apps/api/src/trpc/routers/events.ts (adding jobs)
+   * - apps/api/src/rpc/routers/events.ts (adding jobs)
    * - apps/workers/src/google-calendar-sync-worker.ts (processing jobs)
    */
   GOOGLE_CALENDAR_SYNC: 'google-calendar-sync',
@@ -43,7 +43,7 @@ export const QUEUE_NAMES = {
    * - apps/workers (processing jobs)
    */
   PLACE_PHOTO_ENRICH: 'place-photo-enrich',
-} as const
+} as const;
 
 /**
  * Redis Channel Names
@@ -59,4 +59,4 @@ export const REDIS_CHANNELS = {
   IMPORT_PROGRESS: 'import:progress',
   SUBSCRIBE: 'import:subscribe',
   SUBSCRIBED: 'import:subscribed',
-} as const
+} as const;

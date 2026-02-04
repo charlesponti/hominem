@@ -1,13 +1,14 @@
-import { forwardRef, type HTMLAttributes } from 'react'
-import { cn } from '../lib/utils'
-import { Loading } from './ui/loading'
+import { forwardRef, type HTMLAttributes } from 'react';
 
-type LoadingSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl'
+import { cn } from '../lib/utils';
+import { Loading } from './ui/loading';
+
+type LoadingSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 
 type ListProps = HTMLAttributes<HTMLUListElement> & {
-  isLoading?: boolean
-  loadingSize?: LoadingSize
-}
+  isLoading?: boolean;
+  loadingSize?: LoadingSize;
+};
 
 const List = forwardRef<HTMLUListElement, ListProps>(
   ({ className, isLoading, loadingSize = 'md', children, ...props }, ref) => {
@@ -16,7 +17,7 @@ const List = forwardRef<HTMLUListElement, ListProps>(
         ref={ref}
         className={cn(
           'list-none bg-white/50 divide-y divide-border rounded-md border border-border overflow-hidden',
-          className
+          className,
         )}
         {...props}
       >
@@ -28,10 +29,10 @@ const List = forwardRef<HTMLUListElement, ListProps>(
           children
         )}
       </ul>
-    )
-  }
-)
+    );
+  },
+);
 
-List.displayName = 'List'
+List.displayName = 'List';
 
-export { List }
+export { List };

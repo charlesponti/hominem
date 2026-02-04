@@ -1,4 +1,4 @@
-import type { UserSelect } from '@hominem/data/schema'
+import type { UserSelect } from '@hominem/db/types/users'
 import type { AuthAppMetadata, AuthUserMetadata, HominemUser, SupabaseAuthUser } from './types'
 
 function extractName(userMetadata: AuthUserMetadata) {
@@ -57,9 +57,9 @@ export function toHominemUser(source: HominemUserSource): HominemUser {
     email: source.email,
     name: source.name || undefined,
     image: source.image || source.photoUrl || undefined,
-    supabaseId: source.supabaseId,
+    supabaseId: source.supabaseId ?? '',
     isAdmin: Boolean(source.isAdmin),
-    createdAt: source.createdAt,
-    updatedAt: source.updatedAt,
+    createdAt: source.createdAt.toString(),
+    updatedAt: source.updatedAt.toString(),
   }
 }

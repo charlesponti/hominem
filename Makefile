@@ -47,6 +47,7 @@ clean:
 	find . -type d -name ".next" -exec rm -rf {} +
 	find . -type d -name ".turbo" -exec rm -rf {} +
 	find . -name "bun.lock" -exec rm -rf {} +
+	find . -name '*.tsbuildinfo' -type f -not -path './node_modules/*' -delete
 
 # Stop Docker containers
 docker-down:
@@ -75,6 +76,14 @@ test-with-db: test-db-start
 
 # Full cleanup and reinstall
 reset: clean install
+
+lbt:
+	@echo "Running lint..."
+	@bun run lint --force > /dev/null && echo "Lint passed" || echo "Lint failed"
+	@echo "Running build..."
+	@bun run build --force > /dev/null && echo "Build passed" || echo "Build failed"
+	@echo "Running typecheck..."
+	@bun run typecheck --force > /dev/null && echo "Typecheck passed" || echo "Typecheck failed"
 
 # Default target
 all: install build

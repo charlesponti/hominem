@@ -1,8 +1,9 @@
-import { Button } from '@hominem/ui/button'
-import type { SearchContextPreviewProps } from './types.js'
+import { Button } from '@hominem/ui/button';
+
+import type { SearchContextPreviewProps } from './types.js';
 
 export function SearchContextPreview({ searchContext, onRemove }: SearchContextPreviewProps) {
-  if (!searchContext) return null
+  if (!searchContext) return null;
 
   return (
     <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -22,5 +23,5 @@ export function SearchContextPreview({ searchContext, onRemove }: SearchContextP
         {searchContext.substring(0, 200)}...
       </p>
     </div>
-  )
+  );
 }

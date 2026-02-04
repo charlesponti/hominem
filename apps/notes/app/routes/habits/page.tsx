@@ -25,7 +25,7 @@ const mockHabits = [
     targetValue: 1,
     unit: 'chapter',
   },
-]
+];
 
 export default function HabitsPage() {
   // Placeholder for state management (e.g., showing a form to add new habits)
@@ -73,5 +73,5 @@ export default function HabitsPage() {
         </p>
       )}
     </div>
-  )
+  );
 }
