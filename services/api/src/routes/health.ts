@@ -116,8 +116,13 @@ healthRoutes.get('/:id', async (c) => {
 healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
   try {
     const validated = c.req.valid('json');
+    const now = new Date().toISOString();
 
-    const result = await createHealthRecord(validated);
+    const result = await createHealthRecord({
+      ...validated,
+      createdAt: now,
+      updatedAt: now,
+    });
     if (!result) {
       throw new InternalError('Failed to create health record');
     }

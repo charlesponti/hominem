@@ -17,7 +17,7 @@ type SentInviteItemProps = {
 };
 
 export default function SentInviteItem({ invite, listId, onDelete }: SentInviteItemProps) {
-  const { accepted, invitedUserEmail, token, user_invitedUserId } = invite;
+  const { isAccepted, invitedUserEmail, token, user_invitedUserId } = invite;
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   const getInviteUrl = useCallback(
@@ -49,7 +49,7 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
   return (
     <li className="flex flex-col md:flex-row md:items-center gap-3 p-3 group hover:bg-gray-50 transition-colors">
       <div className="flex items-center gap-2 flex-1 min-w-0">
-        {accepted ? (
+        {isAccepted ? (
           <UserAvatar
             name={userName ?? undefined}
             email={invitedUserEmail}
@@ -64,7 +64,7 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
         </div>
       </div>
       <div className="ml-0 md:ml-2 flex justify-end items-center gap-3 flex-wrap">
-        {accepted ? (
+        {isAccepted ? (
           user_invitedUserId?.id && (
             <RemoveCollaboratorButton
               listId={listId}

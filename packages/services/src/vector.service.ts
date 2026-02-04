@@ -116,47 +116,47 @@ export namespace VectorService {
     });
   }
 
-   async function processRecordsToVectors(
-     records: Record<string, unknown>[],
-     userId: string,
-     source: string,
-   ): Promise<number> {
-     const batchSize = 50;
-     let totalProcessed = 0;
+  async function processRecordsToVectors(
+    records: Record<string, unknown>[],
+    userId: string,
+    source: string,
+  ): Promise<number> {
+    const batchSize = 50;
+    let totalProcessed = 0;
 
-     for (let i = 0; i < records.length; i += batchSize) {
-       const batch = records.slice(i, i + batchSize);
+    for (let i = 0; i < records.length; i += batchSize) {
+      const batch = records.slice(i, i + batchSize);
 
-       const documents = batch.map((record) => {
-         const textData = Object.values(record).join(' ');
-         return {
-           id: (record.id as string) || randomUUID(),
-           content: textData,
-           metadata: JSON.stringify(record),
-         };
-       });
+      const documents = batch.map((record) => {
+        const textData = Object.values(record).join(' ');
+        return {
+          id: (record.id as string) || randomUUID(),
+          content: textData,
+          metadata: JSON.stringify(record),
+        };
+      });
 
-       const embeddings = await Promise.all(documents.map((doc) => generateEmbedding(doc.content)));
-       const now = new Date().toISOString();
+      const embeddings = await Promise.all(documents.map((doc) => generateEmbedding(doc.content)));
+      const now = new Date().toISOString();
 
-       const insertData: VectorDocumentInput[] = documents.map((doc, index) => ({
-         id: doc.id,
-         content: doc.content,
-         metadata: doc.metadata,
-         embedding: embeddings[index],
-         userId: userId,
-         source: source,
-         sourceType: 'csv',
-         createdAt: now,
-         updatedAt: now,
-       }));
+      const insertData: VectorDocumentInput[] = documents.map((doc, index) => ({
+        id: doc.id,
+        content: doc.content,
+        metadata: doc.metadata,
+        embedding: embeddings[index],
+        userId: userId,
+        source: source,
+        sourceType: 'csv',
+        createdAt: now,
+        updatedAt: now,
+      }));
 
-       await upsertVectorDocuments(insertData);
-       totalProcessed += batch.length;
-     }
+      await upsertVectorDocuments(insertData);
+      totalProcessed += batch.length;
+    }
 
-     return totalProcessed;
-   }
+    return totalProcessed;
+  }
 
   export async function query({
     q,
@@ -192,45 +192,45 @@ export namespace VectorService {
     };
   }
 
-   export async function ingestMarkdown(
-     text: string,
-     userId: string,
-     metadata?: Record<string, unknown>,
-   ): Promise<{ success: boolean; chunksProcessed: number }> {
-     const splitDocuments = await splitMarkdown(text, {
-       chunkSize: 256,
-       chunkOverlap: 20,
-     });
+  export async function ingestMarkdown(
+    text: string,
+    userId: string,
+    metadata?: Record<string, unknown>,
+  ): Promise<{ success: boolean; chunksProcessed: number }> {
+    const splitDocuments = await splitMarkdown(text, {
+      chunkSize: 256,
+      chunkOverlap: 20,
+    });
 
-     const batchSize = 50;
-     let totalChunks = 0;
+    const batchSize = 50;
+    let totalChunks = 0;
 
-     for (let i = 0; i < splitDocuments.length; i += batchSize) {
-       const batch = splitDocuments.slice(i, i + batchSize);
-       const embeddings = await Promise.all(
-         batch.map((doc: Document) => generateEmbedding(doc.pageContent)),
-       );
-       const now = new Date().toISOString();
+    for (let i = 0; i < splitDocuments.length; i += batchSize) {
+      const batch = splitDocuments.slice(i, i + batchSize);
+      const embeddings = await Promise.all(
+        batch.map((doc: Document) => generateEmbedding(doc.pageContent)),
+      );
+      const now = new Date().toISOString();
 
-       const documents: VectorDocumentInput[] = batch.map((doc: Document, index: number) => ({
-         id: randomUUID(),
-         content: doc.pageContent,
-         metadata: JSON.stringify({ ...doc.metadata, ...metadata }),
-         embedding: embeddings[index],
-         userId: userId,
-         source: 'notes',
-         sourceType: 'markdown',
-         createdAt: now,
-         updatedAt: now,
-       }));
+      const documents: VectorDocumentInput[] = batch.map((doc: Document, index: number) => ({
+        id: randomUUID(),
+        content: doc.pageContent,
+        metadata: JSON.stringify({ ...doc.metadata, ...metadata }),
+        embedding: embeddings[index],
+        userId: userId,
+        source: 'notes',
+        sourceType: 'markdown',
+        createdAt: now,
+        updatedAt: now,
+      }));
 
-       const { db } = await import('@hominem/db');
-       await db.insert(vectorDocuments).values(documents);
-       totalChunks += batch.length;
-     }
+      const { db } = await import('@hominem/db');
+      await db.insert(vectorDocuments).values(documents);
+      totalChunks += batch.length;
+    }
 
-     return { success: true, chunksProcessed: totalChunks };
-   }
+    return { success: true, chunksProcessed: totalChunks };
+  }
 
   export async function searchDocumentsByUser(
     query: string,

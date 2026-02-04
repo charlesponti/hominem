@@ -21,7 +21,7 @@ export const GoalFormSchema = z.object({
   startDate: z.date().optional(),
   dueDate: z.date().optional(),
   milestones: z
-    .array(z.object({ description: z.string().min(1), completed: z.boolean() }))
+    .array(z.object({ description: z.string().min(1), isCompleted: z.boolean() }))
     .optional(),
 });
 

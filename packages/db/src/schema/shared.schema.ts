@@ -31,8 +31,8 @@ export const booleanColumn = (name: string, defaultValue = false) =>
   boolean(name).default(defaultValue);
 
 // Timestamp columns - always use mode: 'string' for JSON serialization compatibility
-export const createdAtColumn = () => timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull();
-export const updatedAtColumn = () => timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull();
+export const createdAtColumn = () => timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull();
+export const updatedAtColumn = () => timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull();
 export const optionalTimestampColumn = (name: string) => timestamp(name, { precision: 3, mode: 'string' });
 export const requiredTimestampColumn = (name: string) => timestamp(name, { precision: 3, mode: 'string' }).notNull();
 

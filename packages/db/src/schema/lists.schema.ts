@@ -86,7 +86,7 @@ export type UserListsSelect = UserLists;
 export const listInvite = pgTable(
   'list_invite',
   {
-    isAccepted: boolean('is_accepted').default(false).notNull(),
+    isAccepted: boolean('accepted').default(false).notNull(),
     listId: uuid('listId').notNull(),
     invitedUserEmail: text('invitedUserEmail').notNull(),
     // Invites can be sent to users that are not registered, so the id can be null.

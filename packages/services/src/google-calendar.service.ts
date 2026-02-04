@@ -176,44 +176,25 @@ export class GoogleCalendarService {
       const googleEventIds = new Set<string>();
       const eventsToUpsert: CalendarEventInput[] = [];
 
-       // Process each Google Calendar event
-       for (const googleEvent of googleEvents) {
-         if (!googleEvent.id) continue;
-         googleEventIds.add(googleEvent.id);
+      // Process each Google Calendar event
+      for (const googleEvent of googleEvents) {
+        if (!googleEvent.id) continue;
+        googleEventIds.add(googleEvent.id);
 
-         try {
-           const eventData = convertGoogleCalendarEvent(googleEvent, calendarId, this.userId);
-           const existingEvent = existingEventsByExternalId.get(googleEvent.id);
+        try {
+          const eventData = convertGoogleCalendarEvent(googleEvent, calendarId, this.userId);
+          const existingEvent = existingEventsByExternalId.get(googleEvent.id);
 
-            if (existingEvent) {
-              const googleUpdated = googleEvent.updated ? new Date(googleEvent.updated) : null;
-              const localUpdated = existingEvent.updatedAt ? new Date(existingEvent.updatedAt) : null;
+          if (existingEvent) {
+            const googleUpdated = googleEvent.updated ? new Date(googleEvent.updated) : null;
+            const localUpdated = existingEvent.updatedAt ? new Date(existingEvent.updatedAt) : null;
 
-              if (
-                !googleUpdated ||
-                !localUpdated ||
-                googleUpdated.getTime() > localUpdated.getTime()
-              ) {
-                // Prepare for update with all required fields
-                const baseEvent: CalendarEventInput = {
-                  ...eventData,
-                  dateStart: eventData.dateStart || null,
-                  dateEnd: eventData.dateEnd || null,
-                  dateTime: null,
-                  reminderSettings: null,
-                  dependencies: null,
-                  resources: null,
-                  milestones: null,
-                  deletedAt: null,
-                  id: existingEvent.id, // Keep original ID
-                  createdAt: existingEvent.createdAt,
-                  updatedAt: googleUpdated ? googleUpdated.toISOString() : new Date().toISOString(),
-                };
-                eventsToUpsert.push(baseEvent);
-                result.updated++;
-              }
-            } else {
-              // Prepare for insert with all required fields
+            if (
+              !googleUpdated ||
+              !localUpdated ||
+              googleUpdated.getTime() > localUpdated.getTime()
+            ) {
+              // Prepare for update with all required fields
               const baseEvent: CalendarEventInput = {
                 ...eventData,
                 dateStart: eventData.dateStart || null,
@@ -224,43 +205,64 @@ export class GoogleCalendarService {
                 resources: null,
                 milestones: null,
                 deletedAt: null,
-                updatedAt: googleEvent.updated ? new Date(googleEvent.updated).toISOString() : new Date().toISOString(),
+                id: existingEvent.id, // Keep original ID
+                createdAt: existingEvent.createdAt,
+                updatedAt: googleUpdated ? googleUpdated.toISOString() : new Date().toISOString(),
               };
               eventsToUpsert.push(baseEvent);
-              result.created++;
+              result.updated++;
             }
-         } catch (error) {
-           result.errors.push(
-             `Failed to process event ${googleEvent.id}: ${
-               error instanceof Error ? error.message : String(error)
-             }`,
-           );
-         }
-       }
+          } else {
+            // Prepare for insert with all required fields
+            const baseEvent: CalendarEventInput = {
+              ...eventData,
+              dateStart: eventData.dateStart || null,
+              dateEnd: eventData.dateEnd || null,
+              dateTime: null,
+              reminderSettings: null,
+              dependencies: null,
+              resources: null,
+              milestones: null,
+              deletedAt: null,
+              updatedAt: googleEvent.updated
+                ? new Date(googleEvent.updated).toISOString()
+                : new Date().toISOString(),
+            };
+            eventsToUpsert.push(baseEvent);
+            result.created++;
+          }
+        } catch (error) {
+          result.errors.push(
+            `Failed to process event ${googleEvent.id}: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
+        }
+      }
 
-       // Batch Upsert
-       if (eventsToUpsert.length > 0) {
-         const CHUNK_SIZE = 500;
-         for (let i = 0; i < eventsToUpsert.length; i += CHUNK_SIZE) {
-           const chunk = eventsToUpsert.slice(i, i + CHUNK_SIZE);
-           await db
-             .insert(events)
-             .values(chunk as typeof events.$inferInsert[])
-             .onConflictDoUpdate({
-               target: [events.externalId, events.calendarId],
-               set: {
-                 title: sql`excluded.title`,
-                 description: sql`excluded.description`,
-                 date: sql`excluded.date`,
-                 dateStart: sql`excluded.date_start`,
-                 dateEnd: sql`excluded.date_end`,
-                 lastSyncedAt: sql`excluded.last_synced_at`,
-                 syncError: sql`excluded.sync_error`,
-                 updatedAt: sql`excluded.updated_at`,
-               },
-             });
-         }
-       }
+      // Batch Upsert
+      if (eventsToUpsert.length > 0) {
+        const CHUNK_SIZE = 500;
+        for (let i = 0; i < eventsToUpsert.length; i += CHUNK_SIZE) {
+          const chunk = eventsToUpsert.slice(i, i + CHUNK_SIZE);
+          await db
+            .insert(events)
+            .values(chunk as (typeof events.$inferInsert)[])
+            .onConflictDoUpdate({
+              target: [events.externalId, events.calendarId],
+              set: {
+                title: sql`excluded.title`,
+                description: sql`excluded.description`,
+                date: sql`excluded.date`,
+                dateStart: sql`excluded.date_start`,
+                dateEnd: sql`excluded.date_end`,
+                lastSyncedAt: sql`excluded.last_synced_at`,
+                syncError: sql`excluded.sync_error`,
+                updatedAt: sql`excluded.updated_at`,
+              },
+            });
+        }
+      }
 
       // Handle deleted events
       const idsToMarkDeleted: string[] = existingEvents
