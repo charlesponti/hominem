@@ -256,13 +256,6 @@ export const FinanceAccountInsertSchema = createInsertSchema(financeAccounts, {
 });
 
 // Transaction Validation Schemas
-export const insertTransactionSchema = createInsertSchema(transactions, {
-  type: TransactionTypeEnum,
-  location: TransactionLocationSchema.optional().nullable(),
-});
-
-export const updateTransactionSchema = createSelectSchema(transactions);
-
 export const TransactionSchema = createSelectSchema(transactions, {
   type: TransactionTypeEnum,
   location: TransactionLocationSchema.optional().nullable(),

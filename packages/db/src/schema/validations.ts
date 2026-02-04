@@ -13,8 +13,6 @@ export { UserSchema } from './users.schema';
 export {
   FinanceAccountSchema,
   FinanceAccountInsertSchema,
-  insertTransactionSchema,
-  updateTransactionSchema,
   TransactionSchema,
   TransactionInsertSchema,
 } from './finance.schema';
