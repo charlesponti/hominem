@@ -64,7 +64,6 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitest/coverage-v8": "latest",
-    "drizzle-kit": "^0.31.4",
     "ink": "^6.6.0",
     "lefthook": "^2.0.2",
     "oxfmt": "^0.24.0",

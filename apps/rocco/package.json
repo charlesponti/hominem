@@ -48,6 +48,7 @@
     "cli-progress": "^3.12.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "drizzle-orm": "0.45.1",
     "framer-motion": "^12.24.10",
     "googleapis": "^170.0.0",
     "ioredis": "5.8.2",
@@ -82,7 +83,6 @@
     "@vitest/coverage-v8": "4.0.16",
     "autoprefixer": "^10.4.23",
     "dotenv": "17.2.3",
-    "drizzle-orm": "0.45.1",
     "msw": "^2.12.7",
     "rollup-plugin-visualizer": "6.0.5",
     "sharp": "^0.32.4",
@@ -94,8 +94,5 @@
     "vite": "7.3.0",
     "vite-tsconfig-paths": "6.0.3",
     "vitest": "4.0.16"
-  },
-  "peerDependencies": {
-    "drizzle-orm": "0.45.1"
   }
 }
