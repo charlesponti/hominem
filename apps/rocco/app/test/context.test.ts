@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the dependencies
@@ -7,8 +7,6 @@ vi.mock('../lib/supabase/server', () => ({
 }));
 
 describe('Request Context', () => {
-  const testUserId = crypto.randomUUID();
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -16,7 +14,7 @@ describe('Request Context', () => {
   it('should extract user from request headers when present', async () => {
     // These tests verify that user context can be extracted from requests
     // This is used for middleware authentication
-    const testUserId = crypto.randomUUID();
+    const testUserId = randomUUID();
     expect(testUserId).toBeDefined();
   });
 });
