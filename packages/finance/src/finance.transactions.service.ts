@@ -6,8 +6,7 @@ import { FinanceAccountSchema, TransactionSchema, TransactionInsertSchema } from
 import { db } from '@hominem/db';
 import { financeAccounts, transactions } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
-import { and, asc, desc, eq, gte, like, lte, sql, type SQL } from '@hominem/db';
-import { type PgColumn } from 'drizzle-orm/pg-core';
+import { and, asc, desc, eq, gte, like, lte, sql, type SQL, type PgColumn } from '@hominem/db';
 import * as z from 'zod';
 
 import type { QueryOptions } from './finance.types';
