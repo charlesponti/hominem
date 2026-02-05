@@ -9,6 +9,7 @@ import {
   listPlaidConnectionsForUser,
   getAccountsForInstitution,
 } from '@hominem/finance-services';
+import type { AccountType } from '@hominem/db/schema/finance';
 import { NotFoundError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -105,7 +106,7 @@ export const accountsRoutes = new Hono<AppContext>()
       transactions: (accountData?.transactions || []).map(serializeTransaction),
     };
 
-    return c.json<AccountGetOutput>(result as any, 200);
+    return c.json<AccountGetOutput>(result, 200);
   })
 
    // POST /create - Create account
@@ -116,7 +117,7 @@ export const accountsRoutes = new Hono<AppContext>()
      const result = await createAccount({
        userId,
        name: input.name,
-       type: input.type as any,
+       type: input.type as AccountType,
        balance: input.balance?.toString() || '0',
        institutionId: input.institution ?? input.institutionId ?? null,
        isoCurrencyCode: 'USD',
@@ -136,7 +137,7 @@ export const accountsRoutes = new Hono<AppContext>()
        ...updates,
        balance: updates.balance?.toString(),
        institutionId: updates.institution ?? updates.institutionId,
-       type: updates.type ? (updates.type as any) : undefined,
+       type: updates.type as AccountType | undefined,
      });
 
      if (!result) {
@@ -178,12 +179,17 @@ export const accountsRoutes = new Hono<AppContext>()
     const result = {
       accounts: accountsWithTransactions,
       connections: plaidConnections.map((conn) => ({
-        ...conn,
+        id: conn.id,
+        institutionId: conn.institutionId || '',
+        institutionName: conn.institutionName || 'Unknown',
+        institutionLogo: null,
+        status: (conn.status || 'active') as 'active' | 'error' | 'disconnected',
         lastSynced: conn.lastSyncedAt ?? '',
+        accounts: 0,
       })),
     };
 
-    return c.json<AccountAllOutput>(result as any, 200);
+    return c.json<AccountAllOutput>(result, 200);
   })
 
   // POST /with-plaid - Get accounts with Plaid info
@@ -205,7 +211,7 @@ export const accountsRoutes = new Hono<AppContext>()
         institutionId: conn.institutionId || '',
         institutionName: conn.institutionName || 'Unknown',
         institutionLogo: null,
-        status: conn.status as any,
+        status: (conn.status || 'active') as 'active' | 'error' | 'disconnected',
         lastSynced: conn.lastSyncedAt ?? '',
         accounts: 0,
       })),

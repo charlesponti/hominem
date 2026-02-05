@@ -20,8 +20,12 @@ export const GoalMilestoneSchema = z.object({
 export type GoalMilestone = z.infer<typeof GoalMilestoneSchema>;
 
 /**
- * Goal represents a goal from the database
- * Dates and timestamps are represented as ISO strings
+ * Goal represents a goal from the database via EventWithTagsAndPeople
+ * Matches the actual database schema and service return types:
+ * - createdAt/updatedAt are strings (timestamp with mode: 'string')
+ * - date/dateStart/dateEnd are Date objects (regular timestamps)
+ * - status is text, not an enum
+ * - milestones is JSON (any type)
  */
 export type Goal = {
   id: string;
@@ -29,18 +33,20 @@ export type Goal = {
   title: string;
   description: string | null;
   goalCategory: string | null;
-  status: GoalStatus;
+  status: string | null;
   priority: number | null;
-  milestones: GoalMilestone[] | null;
-  startDate: string | null;
-  dueDate: string | null;
+  milestones: any | null;
+  date: Date;
+  dateStart: Date | null;
+  dateEnd: Date | null;
   targetValue: number | null;
   currentValue: number | null;
   unit: string | null;
-  tags?: Array<{ id: string; name: string; color: string | null }> | undefined;
+  type: string;
+  tags?: Array<{ id: string; name: string; color: string | null; description: string | null }> | undefined;
   people?: Array<{ id: string; firstName: string; lastName: string | null }> | undefined;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string; // timestamp with mode: 'string' in DB schema
+  updatedAt: string; // timestamp with mode: 'string' in DB schema
 };
 
 // ============================================================================
@@ -53,8 +59,8 @@ export const GoalCreateInputSchema = z.object({
   goalCategory: z.string().optional(),
   status: GoalStatusSchema.default('todo'),
   priority: z.number().int().optional(),
-  startDate: z.string().optional(),
-  dueDate: z.string().optional(),
+  dateStart: z.string().optional(),
+  dateEnd: z.string().optional(),
   targetValue: z.number().optional(),
   unit: z.string().optional(),
   milestones: z.array(GoalMilestoneSchema).optional(),
@@ -67,8 +73,8 @@ export const GoalUpdateInputSchema = z.object({
   goalCategory: z.string().optional(),
   status: GoalStatusSchema.optional(),
   priority: z.number().int().optional(),
-  startDate: z.string().optional(),
-  dueDate: z.string().optional(),
+  dateStart: z.string().optional(),
+  dateEnd: z.string().optional(),
   targetValue: z.number().optional(),
   currentValue: z.number().optional(),
   unit: z.string().optional(),
@@ -78,7 +84,7 @@ export const GoalUpdateInputSchema = z.object({
 export const GoalListQuerySchema = z.object({
   status: GoalStatusSchema.optional(),
   category: z.string().optional(),
-  sortBy: z.enum(['priority', 'dueDate', 'createdAt', 'status']).optional(),
+  sortBy: z.enum(['priority', 'createdAt', 'status']).optional(),
   showArchived: z.string().optional(),
 });
 
@@ -94,12 +100,16 @@ export type GoalListQuery = z.infer<typeof GoalListQuerySchema>;
 // Output Types
 // ============================================================================
 
+/**
+ * Goal statistics output - matches ConsolidatedGoalStats from service layer
+ */
 export type GoalStatsOutput = {
-  totalProgress: number;
-  remainingValue: number;
-  milestonesCount: number;
-  completedMilestonesCount: number;
-  daysRemaining: number | null;
+  status: string;
+  progress: number;
+  currentValue: number;
+  targetValue: number;
+  remaining: number;
+  milestones?: unknown;
 };
 
 export type GoalListOutput = Goal[];

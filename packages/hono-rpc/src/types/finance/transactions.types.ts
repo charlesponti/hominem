@@ -1,6 +1,23 @@
 import type { TransactionData } from './shared.types'
 
 // ============================================================================
+// Named Types for TransactionUpdateInput
+// ============================================================================
+
+export type TransactionUpdateData = {
+  accountId?: string
+  amount?: string | number
+  description?: string | null
+  category?: string | null
+  date?: string
+  merchantName?: string | null
+  note?: string | null
+  tags?: string | null
+  excluded?: boolean | null
+  recurring?: boolean | null
+}
+
+// ============================================================================
 // Transactions
 // ============================================================================
 
@@ -30,18 +47,7 @@ export type TransactionCreateInput = {
 
 export type TransactionUpdateInput = {
   id: string
-  data: {
-    accountId?: string
-    amount?: string | number
-    description?: string | null
-    category?: string | null
-    date?: string
-    merchantName?: string | null
-    note?: string | null
-    tags?: string | null
-    excluded?: boolean | null
-    recurring?: boolean | null
-  }
+  data: TransactionUpdateData
 }
 
 export type TransactionDeleteInput = {

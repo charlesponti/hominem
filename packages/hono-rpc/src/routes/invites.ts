@@ -38,6 +38,7 @@ import {
   invitesDeclineSchema,
   invitesDeleteSchema,
   invitesPreviewSchema,
+  type Invite,
   type InvitesGetReceivedOutput,
   type InvitesGetSentOutput,
   type InvitesGetByListOutput,
@@ -47,6 +48,34 @@ import {
   type InvitesDeleteOutput,
   type InvitesPreviewOutput,
 } from '../types/invites.types';
+
+/**
+ * Transform database invite to API contract format
+ *
+ * Database schema uses 'userId' for inviting user and 'isAccepted' boolean,
+ * but API contract uses 'invitingUserId' and 'status' enum.
+ */
+function transformInviteToApiFormat(dbInvite: any): Invite {
+  return {
+    id: dbInvite.token, // Use token as id since DB doesn't have separate id
+    listId: dbInvite.listId,
+    invitingUserId: dbInvite.userId, // Map userId -> invitingUserId
+    invitedUserId: dbInvite.invitedUserId,
+    invitedUserEmail: dbInvite.invitedUserEmail,
+    token: dbInvite.token,
+    status: dbInvite.isAccepted ? 'accepted' : dbInvite.acceptedAt ? 'declined' : 'pending', // Map boolean -> enum
+    createdAt: dbInvite.createdAt,
+    updatedAt: dbInvite.updatedAt,
+    ...(dbInvite.list && { list: dbInvite.list }),
+    ...(dbInvite.user_invitedUserId && {
+      invitingUser: {
+        id: dbInvite.user_invitedUserId.id,
+        email: dbInvite.user_invitedUserId.email,
+        name: dbInvite.user_invitedUserId.name,
+      }
+    }),
+  };
+}
 
 // ============================================================================
 // Routes
@@ -138,7 +167,7 @@ export const invitesRoutes = new Hono<AppContext>()
         ]
       : filteredBaseInvites;
 
-    return c.json<InvitesGetReceivedOutput>(invites as any, 200);
+    return c.json<InvitesGetReceivedOutput>(invites.map(transformInviteToApiFormat), 200);
   })
 
   // Get sent invites
@@ -147,7 +176,7 @@ export const invitesRoutes = new Hono<AppContext>()
 
     const invites = await getOutboundInvites(userId);
 
-    return c.json<InvitesGetSentOutput>(invites as any, 200);
+    return c.json<InvitesGetSentOutput>(invites.map(transformInviteToApiFormat), 200);
   })
 
   // Get invites by list
@@ -162,7 +191,7 @@ export const invitesRoutes = new Hono<AppContext>()
 
     const invites = await getListInvites(input.listId);
 
-    return c.json<InvitesGetByListOutput>(invites as any, 200);
+    return c.json<InvitesGetByListOutput>(invites.map(transformInviteToApiFormat), 200);
   })
 
   // Create invite
@@ -208,7 +237,7 @@ export const invitesRoutes = new Hono<AppContext>()
 
     const result = await sendListInvite(params);
 
-    return c.json<InvitesCreateOutput>(result as any, 201);
+    return c.json<InvitesCreateOutput>(transformInviteToApiFormat(result), 201);
   })
 
   // Accept invite
@@ -236,7 +265,7 @@ export const invitesRoutes = new Hono<AppContext>()
       token: input.token,
     });
 
-    return c.json<InvitesAcceptOutput>(updatedInvite as any, 200);
+    return c.json<InvitesAcceptOutput>(transformInviteToApiFormat(updatedInvite), 200);
   })
 
   // Decline invite

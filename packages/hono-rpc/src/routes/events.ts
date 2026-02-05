@@ -98,13 +98,37 @@ export const eventsRoutes = new Hono<AppContext>()
 
      const event = await createEvent({
        title: trimmedTitle,
-       description,
+       description: description ?? null,
        date: dateValue,
+       dateStart: null,
+       dateEnd: null,
+       dateTime: null,
        type: type as EventTypeEnum,
+       userId,
+       source: 'manual',
+       externalId: null,
+       calendarId: null,
+       lastSyncedAt: null,
+       syncError: null,
+       placeId: null,
+       visitNotes: null,
+       visitRating: null,
+       visitReview: null,
+       visitPeople: null,
+       interval: null,
+       recurrenceRule: null,
+       score: null,
+       priority: null,
+       reminderSettings: null,
+       dependencies: null,
+       resources: null,
+       milestones: null,
+       createdAt: new Date().toISOString(),
+       updatedAt: new Date().toISOString(),
+       deletedAt: null,
        ...(tags && { tags }),
        ...(people && { people }),
-       userId,
-     } as any);
+     });
     return c.json<EventsCreateOutput>(serializeEvent(event), 201);
   })
 
@@ -164,7 +188,7 @@ export const eventsRoutes = new Hono<AppContext>()
     });
 
     const calendars = await googleService.getCalendarList();
-    return c.json<EventsGoogleCalendarsOutput>(calendars as any);
+    return c.json<EventsGoogleCalendarsOutput>(calendars);
   })
 
   // Sync Google Calendar

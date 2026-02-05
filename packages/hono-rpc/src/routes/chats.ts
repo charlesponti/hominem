@@ -17,6 +17,7 @@ import {
   type ChatsGetMessagesOutput,
   chatsSendSchema,
 } from '../types/chat.types';
+import { toCoreMessage, typeToolsForAI } from '../utils/ai-adapters';
 import { getLMStudioAdapter } from '../utils/llm';
 import { getAvailableTools } from '../utils/tools';
 
@@ -145,10 +146,12 @@ const chatByIdRoutes = new Hono<AppContext>()
     });
 
     const messagesWithNewUser: CoreMessage[] = [
-      ...historyMessages.map((m) => ({
-        role: m.role as any,
-        content: m.content as string,
-      })),
+      ...historyMessages.map((m) =>
+        toCoreMessage({
+          role: m.role,
+          content: m.content as string,
+        }),
+      ),
       {
         role: 'user',
         content: message,
@@ -158,7 +161,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     const adapter = getLMStudioAdapter();
     const { textStream, toolCalls } = await streamText({
       model: adapter,
-      tools: getAvailableTools(userId) as any,
+      tools: typeToolsForAI(getAvailableTools(userId)),
       messages: messagesWithNewUser,
     });
 

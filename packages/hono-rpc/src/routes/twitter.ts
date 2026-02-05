@@ -93,8 +93,7 @@ export const twitterRoutes = new Hono<AppContext>()
   .get('/accounts', authMiddleware, async (c) => {
     const userId = c.get('userId')!;
     const accounts = await listAccountsByProvider(userId, 'twitter');
-    // @ts-ignore: Account types might mismatch slightly but runtime is fine
-    return c.json<TwitterAccountsListOutput>(accounts as any);
+    return c.json<TwitterAccountsListOutput>(accounts);
   })
 
   // Get Twitter authorization URL

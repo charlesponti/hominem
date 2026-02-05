@@ -105,7 +105,7 @@ export const transactionsRoutes = new Hono<AppContext>()
       }
     }
 
-    const result = await updateTransaction({ transactionId: id, ...data } as any, userId);
+    const result = await updateTransaction({ transactionId: id, ...data }, userId);
 
     if (!result) {
       throw new NotFoundError('Transaction not found');

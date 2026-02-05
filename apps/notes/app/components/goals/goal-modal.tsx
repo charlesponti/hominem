@@ -18,8 +18,8 @@ export const GoalFormSchema = z.object({
   goalCategory: z.string().optional(),
   status: z.enum(['todo', 'in_progress', 'completed', 'archived']),
   priority: z.number().min(1).max(5).optional(),
-  startDate: z.date().optional(),
-  dueDate: z.date().optional(),
+  dateStart: z.date().optional(),
+  dateEnd: z.date().optional(),
   milestones: z
     .array(z.object({ description: z.string().min(1), isCompleted: z.boolean() }))
     .optional(),
@@ -44,8 +44,8 @@ export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: Goa
       goalCategory: goal?.goalCategory ?? '',
       status: (goal?.status as GoalStatus) ?? 'todo',
       priority: goal?.priority ?? 1,
-      startDate: goal?.startDate ? new Date(goal.startDate) : undefined,
-      dueDate: goal?.dueDate ? new Date(goal.dueDate) : undefined,
+      dateStart: goal?.dateStart ? new Date(goal.dateStart) : undefined,
+      dateEnd: goal?.dateEnd ? new Date(goal.dateEnd) : undefined,
       milestones: goal?.milestones ?? [],
     },
   });
@@ -163,12 +163,12 @@ export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: Goa
           </div>
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="startDate" className="text-base font-semibold">
+              <Label htmlFor="dateStart" className="text-base font-semibold">
                 Start Date
               </Label>
               <Controller
                 control={control}
-                name="startDate"
+                name="dateStart"
                 render={({ field }) => (
                   <DatePicker
                     value={field.value}
@@ -179,12 +179,12 @@ export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: Goa
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dueDate" className="text-base font-semibold">
+              <Label htmlFor="dateEnd" className="text-base font-semibold">
                 Due Date
               </Label>
               <Controller
                 control={control}
-                name="dueDate"
+                name="dateEnd"
                 render={({ field }) => (
                   <DatePicker
                     value={field.value}

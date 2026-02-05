@@ -7,6 +7,7 @@ import {
   getEventById,
   deleteEvent,
   updateHabit,
+  type EventWithTagsAndPeople,
 } from '@hominem/events-services';
 import { NotFoundError, ValidationError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
@@ -14,6 +15,13 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+
+/**
+ * Type predicate to check if an event is a Habit owned by a specific user
+ */
+function isUserHabit(event: EventWithTagsAndPeople | null, userId: string): event is EventWithTagsAndPeople & { type: 'Habit'; userId: string } {
+  return event !== null && event.userId === userId && event.type === 'Habit';
+}
 
 /**
  * Validation Schemas
@@ -67,7 +75,7 @@ export const habitsRoutes = new Hono<AppContext>()
     const habitId = c.req.param('id');
 
     const habit = await getEventById(habitId);
-    if (!habit || (habit as any).userId !== userId || (habit as any).type !== 'Habit') {
+    if (!isUserHabit(habit, userId)) {
       throw new NotFoundError('Habit not found');
     }
 
@@ -80,7 +88,7 @@ export const habitsRoutes = new Hono<AppContext>()
     const habitId = c.req.param('id');
 
     const habit = await getEventById(habitId);
-    if (!habit || (habit as any).userId !== userId || (habit as any).type !== 'Habit') {
+    if (!isUserHabit(habit, userId)) {
       throw new NotFoundError('Habit not found');
     }
 
@@ -115,7 +123,7 @@ export const habitsRoutes = new Hono<AppContext>()
     const data = c.req.valid('json');
 
     const habit = await getEventById(habitId);
-    if (!habit || (habit as any).userId !== userId || (habit as any).type !== 'Habit') {
+    if (!isUserHabit(habit, userId)) {
       throw new NotFoundError('Habit not found');
     }
 
@@ -159,7 +167,7 @@ export const habitsRoutes = new Hono<AppContext>()
     const habitId = c.req.param('id');
 
     const habit = await getEventById(habitId);
-    if (!habit || (habit as any).userId !== userId || (habit as any).type !== 'Habit') {
+    if (!isUserHabit(habit, userId)) {
       throw new NotFoundError('Habit not found');
     }
 

@@ -2,6 +2,7 @@ import {
   createList,
   deleteList,
   deleteListItem,
+  getListById,
   removeUserFromList,
   updateList,
 } from '@hominem/lists-services';
@@ -18,12 +19,39 @@ import {
   listUpdateSchema,
 } from '../schemas/lists.schema'
 import type {
+  List,
   ListCreateOutput,
   ListDeleteItemOutput,
   ListDeleteOutput,
   ListRemoveCollaboratorOutput,
   ListUpdateOutput,
 } from '../types/lists.types'
+
+/**
+ * Transform list from service layer to API contract
+ * Converts null values to undefined for exactOptionalPropertyTypes compatibility
+ */
+function transformListToApiFormat(list: any): List {
+  return {
+    ...list,
+    createdBy: list.createdBy ? {
+      id: list.createdBy.id,
+      email: list.createdBy.email,
+      name: list.createdBy.name ?? undefined, // null -> undefined
+    } : null,
+    users: list.users?.map((user: any) => ({
+      id: user.id,
+      email: user.email,
+      name: user.name ?? undefined, // null -> undefined
+      image: user.image ?? undefined, // null -> undefined
+    })),
+    items: list.items?.map((item: any) => ({
+      ...item,
+      place: item.place ?? undefined,
+      flight: item.flight ?? undefined,
+    })),
+  };
+}
 
 export const listMutationRoutes = new Hono<AppContext>()
   // Create new list
@@ -37,7 +65,7 @@ export const listMutationRoutes = new Hono<AppContext>()
       throw new InternalError('Failed to create list');
     }
 
-    return c.json<ListCreateOutput>(newList as any, 201);
+    return c.json<ListCreateOutput>(transformListToApiFormat(newList), 201);
   })
 
   // Update existing list
@@ -55,7 +83,13 @@ export const listMutationRoutes = new Hono<AppContext>()
       throw new ForbiddenError("You don't have permission to update this list");
     }
 
-    return c.json<ListUpdateOutput>(updatedList as any, 200);
+    // Fetch full list with all relations to match API contract
+    const fullList = await getListById(input.id, userId);
+    if (!fullList) {
+      throw new InternalError('Failed to fetch updated list');
+    }
+
+    return c.json<ListUpdateOutput>(transformListToApiFormat(fullList), 200);
   })
 
   // Delete list
@@ -102,15 +136,15 @@ export const listMutationRoutes = new Hono<AppContext>()
       });
 
       if ('error' in result) {
-        const statusCode = (result.status ?? 500) as any;
+        const statusCode = result.status ?? 500;
         if (statusCode === 403) {
-          throw new ForbiddenError((result.error as string) || 'Operation failed');
+          throw new ForbiddenError(String(result.error) || 'Operation failed');
         } else if (statusCode === 404) {
           throw new (await import('@hominem/services')).NotFoundError(
-            (result.error as string) || 'Operation failed',
+            String(result.error) || 'Operation failed',
           );
         } else {
-          throw new InternalError((result.error as string) || 'Operation failed');
+          throw new InternalError(String(result.error) || 'Operation failed');
         }
       }
 

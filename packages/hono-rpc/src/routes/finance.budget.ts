@@ -37,6 +37,7 @@ import {
   type BudgetCalculateOutput,
   type BudgetBulkCreateOutput,
   type TransactionCategoryAnalysisOutput,
+  type BudgetCategoryWithSpending,
 } from '../types/finance.types';
 
 /**
@@ -82,19 +83,21 @@ export const budgetRoutes = new Hono<AppContext>()
 
       const totalBudgeted = result.reduce((sum, item) => sum + item.budgetAmount, 0);
 
+      const categoriesWithSpending: BudgetCategoryWithSpending[] = result.map((item) => ({
+        ...serializeBudgetCategory(item),
+        actualSpending: item.actualSpending,
+        percentageSpent: item.percentageSpent,
+        budgetAmount: item.budgetAmount,
+        allocationPercentage: totalBudgeted > 0 ? (item.budgetAmount / totalBudgeted) * 100 : 0,
+        variance: item.variance,
+        remaining: item.remaining,
+        color: item.color || '#000000',
+        status: item.status,
+        statusColor: item.statusColor || '#000000',
+      }));
+
       return c.json<BudgetCategoriesListWithSpendingOutput>(
-        result.map((item) => ({
-          ...serializeBudgetCategory(item),
-          actualSpending: item.actualSpending,
-          percentageSpent: item.percentageSpent,
-          budgetAmount: item.budgetAmount,
-          allocationPercentage: totalBudgeted > 0 ? (item.budgetAmount / totalBudgeted) * 100 : 0,
-          variance: item.variance,
-          remaining: item.remaining,
-          color: item.color || '#000000',
-          status: item.status as any,
-          statusColor: item.statusColor || '#000000',
-        })),
+        categoriesWithSpending,
         200,
       );
     },
@@ -208,7 +211,52 @@ export const budgetRoutes = new Hono<AppContext>()
       userId,
       monthYear: input.monthYear,
     });
-    return c.json<BudgetTrackingOutput>(result as any, 200);
+
+    // Transform service data to API contract by adding computed fields
+    const totalBudget = result.summary.totalBudgeted;
+    const totalSpent = result.summary.totalActual;
+    const remaining = totalBudget - totalSpent;
+    const percentSpent = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+
+    let status: 'on-track' | 'warning' | 'over-budget';
+    if (percentSpent > 100) {
+      status = 'over-budget';
+    } else if (percentSpent > 80) {
+      status = 'warning';
+    } else {
+      status = 'on-track';
+    }
+
+    const output: BudgetTrackingOutput = {
+      month: input.monthYear,
+      monthYear: input.monthYear,
+      totalBudget,
+      totalSpent,
+      remaining,
+      status,
+      summary: result.summary,
+      categories: result.categories.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        budgeted: cat.budgetAmount,
+        spent: cat.actualSpending,
+        remaining: cat.remaining,
+        percentage: cat.percentageSpent,
+        actualSpending: cat.actualSpending,
+        percentageSpent: cat.percentageSpent,
+        budgetAmount: cat.budgetAmount,
+        color: cat.color,
+        status: cat.status,
+        statusColor: cat.statusColor,
+      })),
+      chartData: result.chartData?.map((point) => ({
+        ...point,
+        month: input.monthYear, // Add month field required by API contract
+      })),
+      pieData: result.pieData,
+    };
+
+    return c.json<BudgetTrackingOutput>(output, 200);
   })
 
   // POST /history - Get budget history
@@ -233,8 +281,8 @@ export const budgetRoutes = new Hono<AppContext>()
 
       const allMonthlySummaries = await summarizeByMonth({
         userId,
-        from: startDate.toISOString(),
-        to: endDate.toISOString(),
+        dateFrom: startDate.toISOString(),
+        dateTo: endDate.toISOString(),
       });
 
       const actualsMap = new Map<string, number>();
@@ -376,7 +424,19 @@ export const budgetRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     const result = await getTransactionCategoriesAnalysis(userId);
-    return c.json<TransactionCategoryAnalysisOutput>(result as any, 200);
+
+    // Transform service result: rename 'name' field to 'category'
+    const transformed = result.map((item) => ({
+      category: item.name,
+      name: item.name,
+      totalAmount: item.totalAmount,
+      transactionCount: item.transactionCount,
+      averageAmount: item.averageAmount,
+      suggestedBudget: item.suggestedBudget,
+      monthsWithTransactions: item.monthsWithTransactions,
+    }));
+
+    return c.json<TransactionCategoryAnalysisOutput>(transformed, 200);
   })
 
   // POST /bulk-create - Bulk create from transactions

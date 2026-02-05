@@ -8,8 +8,8 @@ export type TwitterAccount = {
   id: string;
   provider: string;
   providerAccountId: string;
-  accessToken: string | null;
-  // Add other fields as needed from Account service
+  expiresAt: Date | null;
+  // Note: accessToken intentionally excluded from API response for security
 };
 
 export type TwitterTweet = {

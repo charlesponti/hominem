@@ -2,7 +2,109 @@ import type { EmptyInput } from '../utils';
 import type { BudgetCategoryData } from './shared.types';
 
 // ============================================================================
-// Budget
+// Named Types for BudgetCategoriesListWithSpending
+// ============================================================================
+
+export type BudgetCategoryWithSpending = BudgetCategoryData & {
+  actualSpending: number;
+  percentageSpent: number;
+  budgetAmount: number;
+  allocationPercentage: number;
+  variance: number;
+  remaining: number;
+  color: string;
+  status: 'on-track' | 'warning' | 'over-budget';
+  statusColor: string;
+};
+
+// ============================================================================
+// Named Types for BudgetTrackingOutput
+// ============================================================================
+
+export type BudgetTrackingCategory = {
+  id: string;
+  name: string;
+  budgeted: number;
+  spent: number;
+  remaining: number;
+  percentage: number;
+  actualSpending?: number;
+  percentageSpent?: number;
+  budgetAmount?: number;
+  allocationPercentage?: number;
+  variance?: number;
+  status?: 'on-track' | 'warning' | 'over-budget';
+  statusColor?: string;
+  color?: string;
+};
+
+export type BudgetChartDataPoint = {
+  month: string;
+  budgeted: number;
+  actual: number;
+};
+
+export type BudgetPieDataPoint = {
+  name: string;
+  value: number;
+};
+
+// ============================================================================
+// Named Types for BudgetHistoryOutput
+// ============================================================================
+
+export type BudgetHistoryDataPoint = {
+  date: string;
+  budgeted: number;
+  actual: number;
+};
+
+// ============================================================================
+// Named Types for BudgetCalculateOutput
+// ============================================================================
+
+export type BudgetCategoryAllocation = {
+  category: string;
+  amount: number;
+  percentage: number;
+};
+
+export type BudgetProjection = {
+  month: number;
+  savings: number;
+  totalSaved: number;
+};
+
+// ============================================================================
+// Named Types for BudgetBulkCreateInput
+// ============================================================================
+
+export type BudgetCategoryInput = {
+  name: string;
+  type: 'income' | 'expense';
+  amount?: number;
+  averageMonthlyExpense?: string;
+  color?: string;
+};
+
+// ============================================================================
+// Named Types for TransactionCategoryAnalysisOutput
+// ============================================================================
+
+export type TransactionCategoryAnalysis = {
+  category: string;
+  name?: string;
+  totalAmount: number;
+  transactionCount: number;
+  averageAmount: number;
+  type?: 'income' | 'expense';
+  suggested?: boolean;
+  suggestedBudget?: number;
+  monthsWithTransactions?: number;
+};
+
+// ============================================================================
+// Budget Operations
 // ============================================================================
 
 export type BudgetCategoriesListInput = EmptyInput;
@@ -12,20 +114,7 @@ export type BudgetCategoriesListWithSpendingInput = {
   month?: string;
   monthYear?: string;
 };
-
-export type BudgetCategoriesListWithSpendingOutput = Array<
-  BudgetCategoryData & {
-    actualSpending: number;
-    percentageSpent: number;
-    budgetAmount: number;
-    allocationPercentage: number;
-    variance: number;
-    remaining: number;
-    color: string;
-    status: 'on-track' | 'warning' | 'over-budget';
-    statusColor: string;
-  }
->;
+export type BudgetCategoriesListWithSpendingOutput = BudgetCategoryWithSpending[];
 
 export type BudgetCategoryGetInput = { id: string };
 export type BudgetCategoryCreateInput = {
@@ -65,42 +154,16 @@ export type BudgetTrackingOutput = {
   remaining: number;
   status: 'on-track' | 'warning' | 'over-budget';
   summary?: any;
-  categories: Array<{
-    id: string;
-    name: string;
-    budgeted: number;
-    spent: number;
-    remaining: number;
-    percentage: number;
-    actualSpending?: number;
-    percentageSpent?: number;
-    budgetAmount?: number;
-    allocationPercentage?: number;
-    variance?: number;
-    status?: 'on-track' | 'warning' | 'over-budget';
-    statusColor?: string;
-    color?: string;
-  }>;
-  chartData?: Array<{
-    month: string;
-    budgeted: number;
-    actual: number;
-  }>;
-  pieData?: Array<{
-    name: string;
-    value: number;
-  }>;
+  categories: BudgetTrackingCategory[];
+  chartData?: BudgetChartDataPoint[];
+  pieData?: BudgetPieDataPoint[];
 };
 
 export type BudgetHistoryInput = {
   months?: number;
 };
 
-export type BudgetHistoryOutput = Array<{
-  date: string;
-  budgeted: number;
-  actual: number;
-}>;
+export type BudgetHistoryOutput = BudgetHistoryDataPoint[];
 
 export type BudgetCalculateInput = {
   income: number;
@@ -120,28 +183,14 @@ export type BudgetCalculateOutput = {
   totalExpenses?: number;
   surplus?: number;
   savingsRate?: number;
-  categories?: Array<{
-    category: string;
-    amount: number;
-    percentage: number;
-  }>;
-  projections?: Array<{
-    month: number;
-    savings: number;
-    totalSaved: number;
-  }>;
+  categories?: BudgetCategoryAllocation[];
+  projections?: BudgetProjection[];
   calculatedAt?: string;
   source?: 'manual' | 'categories';
 };
 
 export type BudgetBulkCreateInput = {
-  categories: Array<{
-    name: string;
-    type: 'income' | 'expense';
-    amount?: number;
-    averageMonthlyExpense?: string;
-    color?: string;
-  }>;
+  categories: BudgetCategoryInput[];
 };
 
 export type BudgetBulkCreateOutput = {
@@ -149,14 +198,4 @@ export type BudgetBulkCreateOutput = {
   categories: BudgetCategoryData[];
 };
 
-export type TransactionCategoryAnalysisOutput = Array<{
-  category: string;
-  name?: string;
-  totalAmount: number;
-  transactionCount: number;
-  averageAmount: number;
-  type?: 'income' | 'expense';
-  suggested?: boolean;
-  suggestedBudget?: number;
-  monthsWithTransactions?: number;
-}>;
+export type TransactionCategoryAnalysisOutput = TransactionCategoryAnalysis[];

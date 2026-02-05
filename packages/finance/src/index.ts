@@ -210,6 +210,7 @@ export {
   deleteTransactionOutputSchema,
   queryTransactionsOutputSchema,
   type QueryTransactionsOutput,
+  buildWhereConditions,
   queryTransactions,
   getTransactions,
   findExistingTransaction,

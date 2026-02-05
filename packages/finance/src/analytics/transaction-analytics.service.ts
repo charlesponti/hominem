@@ -250,8 +250,8 @@ export async function getMonthlyStats(params: {
 
   const monthFilter = buildWhereConditions({
     userId,
-    from: startDate.toISOString().split('T')[0],
-    to: endDate.toISOString().split('T')[0],
+    dateFrom: startDate.toISOString().split('T')[0],
+    dateTo: endDate.toISOString().split('T')[0],
   });
 
   const totalsResult = await db
@@ -273,8 +273,8 @@ export async function getMonthlyStats(params: {
 
   const categorySpendingFilter = buildWhereConditions({
     userId,
-    from: startDate.toISOString().split('T')[0],
-    to: endDate.toISOString().split('T')[0],
+    dateFrom: startDate.toISOString().split('T')[0],
+    dateTo: endDate.toISOString().split('T')[0],
     type: 'expense',
   });
 

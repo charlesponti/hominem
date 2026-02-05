@@ -61,6 +61,18 @@ import {
 } from '../types/places.types';
 
 /**
+ * Transform place from service layer to API contract
+ * Converts Date objects to ISO strings for API response
+ */
+function transformPlaceToApiFormat(place: any): any {
+  return {
+    ...place,
+    createdAt: place.createdAt instanceof Date ? place.createdAt.toISOString() : place.createdAt,
+    updatedAt: place.updatedAt instanceof Date ? place.updatedAt.toISOString() : place.updatedAt,
+  };
+}
+
+/**
  * Serialize visit data with Date to string conversion
  */
 function serializeVisit(visit: any): any {
@@ -227,7 +239,7 @@ export const placesRoutes = new Hono<AppContext>()
         console.warn('[places.create] Failed to enqueue photo enrichment:', err);
       }
 
-      return c.json<PlaceCreateOutput>(createdPlace as any, 201);
+      return c.json<PlaceCreateOutput>(transformPlaceToApiFormat(createdPlace), 201);
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -262,7 +274,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw new NotFoundError('');
       }
 
-      return c.json<PlaceUpdateOutput>(updatedPlace as any, 200);
+      return c.json<PlaceUpdateOutput>(transformPlaceToApiFormat(updatedPlace), 200);
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -361,7 +373,7 @@ export const placesRoutes = new Hono<AppContext>()
         // Non-fatal
       }
 
-      return c.json<PlaceGetDetailsByIdOutput>(dbPlace as any, 200);
+      return c.json<PlaceGetDetailsByIdOutput>(transformPlaceToApiFormat(dbPlace), 200);
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -383,7 +395,7 @@ export const placesRoutes = new Hono<AppContext>()
 
         const place = await getPlaceByGoogleMapsId(input.googleMapsId);
 
-        return c.json<PlaceGetDetailsByGoogleIdOutput>(place as any || null, 200);
+        return c.json<PlaceGetDetailsByGoogleIdOutput>(place ? transformPlaceToApiFormat(place) : null, 200);
       } catch (err) {
         if (isServiceError(err)) {
           throw err;
@@ -430,7 +442,7 @@ export const placesRoutes = new Hono<AppContext>()
            userId,
          });
 
-         return c.json<PlaceRemoveFromListOutput>(undefined as any, 200);
+         return c.json<PlaceRemoveFromListOutput>(null, 200);
        } catch (err) {
         if (isServiceError(err)) {
           throw err;
@@ -456,7 +468,7 @@ export const placesRoutes = new Hono<AppContext>()
         limit: input.limit ?? 20,
       });
 
-      return c.json<PlaceGetNearbyFromListsOutput>(places as any, 200);
+      return c.json<PlaceGetNearbyFromListsOutput>(places.map(transformPlaceToApiFormat), 200);
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -476,18 +488,38 @@ export const placesRoutes = new Hono<AppContext>()
       const dateValue = data.date ? new Date(data.date) : new Date();
 
        const event = await createEvent({
-         title: (data.title ?? '') as string,
+         title: data.title ?? '',
          description: data.description ?? null,
          date: dateValue,
+         dateStart: null,
+         dateEnd: null,
+         dateTime: null,
          type: 'Events' as EventTypeEnum,
-         placeId: data.placeId,
+         placeId: data.placeId ?? null,
+         userId: userId,
+         source: 'manual',
+         externalId: null,
+         calendarId: null,
+         lastSyncedAt: null,
+         syncError: null,
          visitNotes: data.visitNotes ?? null,
          visitRating: data.visitRating ?? null,
          visitReview: data.visitReview ?? null,
-         userId: userId,
+         visitPeople: null,
+         interval: null,
+         recurrenceRule: null,
+         score: null,
+         priority: null,
+         reminderSettings: null,
+         dependencies: null,
+         resources: null,
+         milestones: null,
+         createdAt: new Date().toISOString(),
+         updatedAt: new Date().toISOString(),
+         deletedAt: null,
          ...(data.tags && { tags: data.tags }),
          ...(data.people && { people: data.people }),
-       } as any);
+       });
 
       return c.json<PlaceLogVisitOutput>(serializeVisit(event), 201);
     } catch (err) {
@@ -547,9 +579,17 @@ export const placesRoutes = new Hono<AppContext>()
     try {
       const input = c.req.valid('json') as z.infer<typeof placeUpdateVisitSchema>;
 
-      const { id, date, ...updateData } = input;
+      const { id, date, ...rest } = input;
 
-      const updatedEvent = await updateEvent(id, updateData as any);
+      // Filter out undefined values for exactOptionalPropertyTypes
+      const updateData: Record<string, any> = {};
+      Object.entries(rest).forEach(([key, value]) => {
+        if (value !== undefined) {
+          updateData[key] = value;
+        }
+      });
+
+      const updatedEvent = await updateEvent(id, updateData);
 
       if (!updatedEvent) {
         throw new NotFoundError('');

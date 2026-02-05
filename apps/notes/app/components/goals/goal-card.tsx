@@ -69,10 +69,10 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
       <div className="flex items-center gap-3 text-sm">
         {goal.goalCategory && (
           <span className="text-muted-foreground bg-muted px-2 py-1 rounded">
-            {goal.goalCategory}
+            {String(goal.goalCategory)}
           </span>
         )}
-        <StatusBadge status={goal.status} />
+        <StatusBadge status={goal.status ?? 'todo'} />
         {goal.priority && <PriorityBadge priority={goal.priority} />}
       </div>
     </div>

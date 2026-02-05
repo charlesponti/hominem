@@ -2,6 +2,19 @@ import type { AccountWithPlaidInfo } from './shared.types'
 import type { AccountData, PlaidConnection, TransactionData } from './shared.types'
 
 // ============================================================================
+// Named Types for AccountGetOutput and AccountAllOutput
+// ============================================================================
+
+export type AccountWithTransactions = AccountWithPlaidInfo & {
+  transactions: TransactionData[]
+}
+
+export type AccountsAllData = {
+  accounts: AccountWithTransactions[]
+  connections: PlaidConnection[]
+}
+
+// ============================================================================
 // Accounts
 // ============================================================================
 
@@ -40,18 +53,13 @@ export type AccountInstitutionAccountsInput = {
 
 export type AccountListOutput = AccountData[]
 
-export type AccountGetOutput = AccountWithPlaidInfo & {
-  transactions: TransactionData[]
-}
+export type AccountGetOutput = AccountWithTransactions
 
 export type AccountCreateOutput = AccountData
 export type AccountUpdateOutput = AccountData
 export type AccountDeleteOutput = { success: true }
 
-export type AccountAllOutput = {
-  accounts: (AccountWithPlaidInfo & { transactions: TransactionData[] })[]
-  connections: PlaidConnection[]
-}
+export type AccountAllOutput = AccountsAllData
 
 export type AccountsWithPlaidOutput = AccountWithPlaidInfo[]
 export type AccountConnectionsOutput = PlaidConnection[]

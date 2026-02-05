@@ -6,7 +6,7 @@ import { FinanceAccountSchema, TransactionSchema, TransactionInsertSchema } from
 import { db } from '@hominem/db';
 import { financeAccounts, transactions } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
-import { and, eq, sql } from '@hominem/db';
+import { and, eq, sql, gte, lte, like, type SQL } from '@hominem/db';
 import * as z from 'zod';
 
 import type { QueryOptions } from './finance.types';
@@ -77,6 +77,63 @@ export const queryTransactionsOutputSchema = z.object({
 });
 
 export type QueryTransactionsOutput = z.infer<typeof queryTransactionsOutputSchema>;
+
+/**
+ * Build SQL WHERE conditions from query options
+ * Used by analytics services for direct SQL construction
+ *
+ * @param options - Query options including filters
+ * @returns SQL condition object or undefined if no filters
+ */
+export function buildWhereConditions(options?: Partial<QueryOptions>): SQL<unknown> | undefined {
+  const conditions: Array<SQL<unknown>> = [];
+  const opts = options || {};
+
+  if (opts.userId) {
+    conditions.push(eq(transactions.userId, opts.userId));
+  }
+
+  if (!opts.includeExcluded) {
+    conditions.push(eq(transactions.excluded, false));
+    conditions.push(eq(transactions.pending, false));
+  }
+
+  if (opts.dateFrom) {
+    conditions.push(gte(transactions.date, opts.dateFrom));
+  }
+
+  if (opts.dateTo) {
+    conditions.push(lte(transactions.date, opts.dateTo));
+  }
+
+  if (opts.category) {
+    const categories = Array.isArray(opts.category) ? opts.category : [opts.category];
+    const categoryConditions = categories.map((cat: string) =>
+      sql`(${transactions.category} ILIKE ${`%${cat}%`} OR ${transactions.parentCategory} ILIKE ${`%${cat}%`})`,
+    );
+    if (categoryConditions.length > 0) {
+      conditions.push(sql`(${sql.join(categoryConditions, sql` OR `)})`);
+    }
+  }
+
+  if (opts.type && typeof opts.type === 'string') {
+    conditions.push(eq(transactions.type, opts.type as any));
+  }
+
+  if (opts.description) {
+    conditions.push(sql`${transactions.description} ILIKE ${`%${opts.description}%`}`);
+  }
+
+  if (opts.amountMin !== undefined) {
+    conditions.push(gte(transactions.amount, opts.amountMin.toString()));
+  }
+
+  if (opts.amountMax !== undefined) {
+    conditions.push(lte(transactions.amount, opts.amountMax.toString()));
+  }
+
+  return conditions.length > 0 ? and(...conditions) : undefined;
+}
 
 /**
  * Query transactions with flexible filtering, sorting, and pagination.

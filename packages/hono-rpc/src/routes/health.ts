@@ -5,6 +5,7 @@ import {
   getHealthActivitiesByUser,
   getEventById,
   deleteEvent,
+  type EventWithTagsAndPeople,
 } from '@hominem/events-services';
 import { NotFoundError, ValidationError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
@@ -12,6 +13,13 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+
+/**
+ * Type predicate to check if an event is a Health activity owned by a specific user
+ */
+function isUserHealthActivity(event: EventWithTagsAndPeople | null, userId: string): event is EventWithTagsAndPeople & { type: 'Health'; userId: string } {
+  return event !== null && event.userId === userId && event.type === 'Health';
+}
 
 /**
  * Validation Schemas
@@ -72,7 +80,7 @@ export const healthRoutes = new Hono<AppContext>()
     const activityId = c.req.param('id');
 
     const activity = await getEventById(activityId);
-    if (!activity || (activity as any).userId !== userId || (activity as any).type !== 'Health') {
+    if (!isUserHealthActivity(activity, userId)) {
       throw new NotFoundError('Health activity not found');
     }
 
@@ -131,7 +139,7 @@ export const healthRoutes = new Hono<AppContext>()
     const data = c.req.valid('json');
 
     const activity = await getEventById(activityId);
-    if (!activity || (activity as any).userId !== userId || (activity as any).type !== 'Health') {
+    if (!isUserHealthActivity(activity, userId)) {
       throw new NotFoundError('Health activity not found');
     }
 
@@ -155,7 +163,7 @@ export const healthRoutes = new Hono<AppContext>()
     const activityId = c.req.param('id');
 
     const activity = await getEventById(activityId);
-    if (!activity || (activity as any).userId !== userId || (activity as any).type !== 'Health') {
+    if (!isUserHealthActivity(activity, userId)) {
       throw new NotFoundError('Health activity not found');
     }
 

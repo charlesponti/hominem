@@ -10,10 +10,23 @@ import {
   itemsRemoveFromListSchema,
 } from '../schemas/items.schema'
 import type {
+  ListItem,
   ItemsAddToListOutput,
   ItemsGetByListIdOutput,
   ItemsRemoveFromListOutput,
 } from '../types/items.types'
+
+/**
+ * Transform item from service layer to API contract
+ * Converts null values to undefined for exactOptionalPropertyTypes compatibility
+ */
+function transformItemToApiFormat(item: any): ListItem {
+  return {
+    ...item,
+    place: item.place ?? undefined, // null -> undefined
+    flight: item.flight ?? undefined, // null -> undefined
+  };
+}
 
 /**
  * Items Routes
@@ -41,7 +54,7 @@ export const itemsRoutes = new Hono<AppContext>()
       userId: userId,
     });
 
-    return c.json<ItemsAddToListOutput>(newItem as any, 201);
+    return c.json<ItemsAddToListOutput>(transformItemToApiFormat(newItem), 201);
   })
 
   // Remove item from list
@@ -68,5 +81,5 @@ export const itemsRoutes = new Hono<AppContext>()
 
     const items = await getItemsByListId(input.listId);
 
-    return c.json<ItemsGetByListIdOutput>(items as any, 200);
+    return c.json<ItemsGetByListIdOutput>(items.map(transformItemToApiFormat), 200);
   });

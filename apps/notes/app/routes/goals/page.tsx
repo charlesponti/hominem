@@ -25,7 +25,7 @@ import { useGoals, useCreateGoal, useUpdateGoal, useArchiveGoal } from '~/lib/ho
 
 export default function GoalsPage() {
   const [showArchived, setShowArchived] = useState(false);
-  const [sortOrder, setSortOrder] = useState<'priority' | 'dueDate' | 'createdAt'>('priority');
+  const [sortOrder, setSortOrder] = useState<'priority' | 'status' | 'createdAt'>('priority');
   const [categoryFilter, setCategoryFilter] = useState('');
 
   const queryParams = {
@@ -51,8 +51,8 @@ export default function GoalsPage() {
     createGoal.mutate(
       {
         ...data,
-        startDate: data.startDate?.toISOString(),
-        dueDate: data.dueDate?.toISOString(),
+        dateStart: data.dateStart?.toISOString(),
+        dateEnd: data.dateEnd?.toISOString(),
       },
       {
         onSuccess: () => {
@@ -76,8 +76,8 @@ export default function GoalsPage() {
         id: currentGoal.id,
         json: {
           ...data,
-          startDate: data.startDate?.toISOString(),
-          dueDate: data.dueDate?.toISOString(),
+          dateStart: data.dateStart?.toISOString(),
+          dateEnd: data.dateEnd?.toISOString(),
         },
       },
       {
@@ -137,14 +137,14 @@ export default function GoalsPage() {
           />
           <Select
             value={sortOrder}
-            onValueChange={(v) => setSortOrder(v as 'priority' | 'dueDate' | 'createdAt')}
+            onValueChange={(v) => setSortOrder(v as 'priority' | 'status' | 'createdAt')}
           >
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="priority">Priority</SelectItem>
-              <SelectItem value="dueDate">Due Date</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
               <SelectItem value="createdAt">Creation Date</SelectItem>
             </SelectContent>
           </Select>

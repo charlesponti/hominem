@@ -10,10 +10,37 @@ import {
   listGetContainingPlaceSchema,
 } from '../schemas/lists.schema'
 import type {
+  List,
   ListGetAllOutput,
   ListGetByIdOutput,
   ListGetContainingPlaceOutput,
 } from '../types/lists.types'
+
+/**
+ * Transform list from service layer to API contract
+ * Converts null values to undefined for exactOptionalPropertyTypes compatibility
+ */
+function transformListToApiFormat(list: any): List {
+  return {
+    ...list,
+    createdBy: list.createdBy ? {
+      id: list.createdBy.id,
+      email: list.createdBy.email,
+      name: list.createdBy.name ?? undefined, // null -> undefined
+    } : null,
+    users: list.users?.map((user: any) => ({
+      id: user.id,
+      email: user.email,
+      name: user.name ?? undefined, // null -> undefined
+      image: user.image ?? undefined, // null -> undefined
+    })),
+    items: list.items?.map((item: any) => ({
+      ...item,
+      place: item.place ?? undefined,
+      flight: item.flight ?? undefined,
+    })),
+  };
+}
 
 export const listQueryRoutes = new Hono<AppContext>()
   // ListOutput all user's lists with places
@@ -23,7 +50,7 @@ export const listQueryRoutes = new Hono<AppContext>()
     const { ownedListsWithPlaces, sharedListsWithPlaces } = await getAllUserListsWithPlaces(userId);
 
     const result = [...ownedListsWithPlaces, ...sharedListsWithPlaces];
-    return c.json<ListGetAllOutput>(result as any, 200);
+    return c.json<ListGetAllOutput>(result.map(transformListToApiFormat), 200);
   })
 
   // Get single list by ID (public route)
@@ -37,7 +64,7 @@ export const listQueryRoutes = new Hono<AppContext>()
       throw new NotFoundError('ListOutput not found');
     }
 
-    return c.json<ListGetByIdOutput>(list as any, 200);
+    return c.json<ListGetByIdOutput>(transformListToApiFormat(list), 200);
   })
 
   // Get lists containing a specific place

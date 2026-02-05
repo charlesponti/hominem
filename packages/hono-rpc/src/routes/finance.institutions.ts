@@ -15,7 +15,7 @@ export const institutionsRoutes = new Hono<AppContext>()
   // POST /list - ListOutput institutions
   .post('/list', async (c) => {
     const result = await getAllInstitutions();
-    return c.json<InstitutionsListOutput>(result as any, 200);
+    return c.json<InstitutionsListOutput>(result, 200);
   })
 
   // POST /create - Create institution
@@ -37,5 +37,5 @@ export const institutionsRoutes = new Hono<AppContext>()
       primaryColor: input.primaryColor ?? null,
       country: input.country ?? null,
     });
-    return c.json<InstitutionCreateOutput>(result as any, 201);
+    return c.json<InstitutionCreateOutput>(result, 201);
   });

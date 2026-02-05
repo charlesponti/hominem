@@ -19,6 +19,24 @@ import type {
 
 export type InstitutionData = FinancialInstitution
 
+// ============================================================================
+// Named Types for TimeSeriesDataPoint
+// ============================================================================
+
+export type TimeSeriesTrend = {
+  raw: string
+  formatted: string
+  direction: 'up' | 'down' | 'flat'
+  percentChange?: string
+  previousAmount?: number
+  formattedPreviousAmount?: string
+  percentChangeExpenses?: string
+  rawExpenses?: string
+  previousExpenses?: number
+  formattedPreviousExpenses?: string
+  directionExpenses?: 'up' | 'down'
+}
+
 export type TimeSeriesDataPoint = {
   date: string
   amount: number
@@ -26,19 +44,7 @@ export type TimeSeriesDataPoint = {
   income: number
   count: number
   average: number
-  trend?: {
-    raw: string
-    formatted: string
-    direction: 'up' | 'down' | 'flat'
-    percentChange?: string
-    previousAmount?: number
-    formattedPreviousAmount?: string
-    percentChangeExpenses?: string
-    rawExpenses?: string
-    previousExpenses?: number
-    formattedPreviousExpenses?: string
-    directionExpenses?: 'up' | 'down'
-  }
+  trend?: TimeSeriesTrend
   formattedAmount?: string
   formattedIncome?: string
   formattedExpenses?: string

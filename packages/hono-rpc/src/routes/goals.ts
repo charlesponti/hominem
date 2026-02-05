@@ -5,12 +5,14 @@ import {
   getConsolidatedGoalsByUser,
   getEventById,
   deleteEvent,
+  type EventWithTagsAndPeople,
 } from '@hominem/events-services';
 import { NotFoundError, ValidationError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+
 import {
   GoalCreateInputSchema,
   GoalUpdateInputSchema,
@@ -23,6 +25,13 @@ import {
   type GoalStatsOutput,
   type GoalOutput,
 } from '../types/goals.types';
+
+/**
+ * Type predicate to check if an event is a Goal owned by a specific user
+ */
+function isUserGoal(event: EventWithTagsAndPeople | null, userId: string): event is EventWithTagsAndPeople & { type: 'Goal'; userId: string } {
+  return event !== null && event.userId === userId && event.type === 'Goal';
+}
 
 /**
  * Goals Routes
@@ -38,10 +47,10 @@ export const goalsRoutes = new Hono<AppContext>()
     const goals = await getConsolidatedGoalsByUser(userId, {
       ...(query.status && { status: query.status }),
       ...(query.category && { category: query.category }),
-      sortBy: (query.sortBy as any) || 'priority',
+      ...(query.sortBy && { sortBy: query.sortBy }),
     });
 
-    return c.json<GoalListOutput>(goals as any);
+    return c.json<GoalListOutput>(goals);
   })
 
   // Get goal by ID
@@ -50,11 +59,11 @@ export const goalsRoutes = new Hono<AppContext>()
     const goalId = c.req.param('id');
 
     const goal = await getEventById(goalId);
-    if (!goal || (goal as any).userId !== userId || (goal as any).type !== 'Goal') {
+    if (!isUserGoal(goal, userId)) {
       throw new NotFoundError('Goal not found');
     }
 
-    return c.json<GoalGetOutput>(goal as any);
+    return c.json<GoalGetOutput>(goal);
   })
 
   // Get goal statistics
@@ -63,12 +72,12 @@ export const goalsRoutes = new Hono<AppContext>()
     const goalId = c.req.param('id');
 
     const goal = await getEventById(goalId);
-    if (!goal || (goal as any).userId !== userId || (goal as any).type !== 'Goal') {
+    if (!isUserGoal(goal, userId)) {
       throw new NotFoundError('Goal not found');
     }
 
     const stats = await getConsolidatedGoalStats(goalId, userId);
-    return c.json<GoalStatsOutput>(stats as any);
+    return c.json<GoalStatsOutput>(stats);
   })
 
   // Create goal
@@ -88,7 +97,7 @@ export const goalsRoutes = new Hono<AppContext>()
       ...(data.tags && { tags: data.tags }),
     });
 
-    return c.json<GoalCreateOutput>(goal as any, 201);
+    return c.json<GoalCreateOutput>(goal, 201);
   })
 
   // Update goal
@@ -98,7 +107,7 @@ export const goalsRoutes = new Hono<AppContext>()
     const data = c.req.valid('json');
 
     const goal = await getEventById(goalId);
-    if (!goal || (goal as any).userId !== userId || (goal as any).type !== 'Goal') {
+    if (!isUserGoal(goal, userId)) {
       throw new NotFoundError('Goal not found');
     }
 
@@ -114,7 +123,7 @@ export const goalsRoutes = new Hono<AppContext>()
       throw new NotFoundError('Failed to update goal');
     }
 
-    return c.json<GoalUpdateOutput>(updated as any);
+    return c.json<GoalUpdateOutput>(updated);
   })
 
   // Delete goal
@@ -123,7 +132,7 @@ export const goalsRoutes = new Hono<AppContext>()
     const goalId = c.req.param('id');
 
     const goal = await getEventById(goalId);
-    if (!goal || (goal as any).userId !== userId || (goal as any).type !== 'Goal') {
+    if (!isUserGoal(goal, userId)) {
       throw new NotFoundError('Goal not found');
     }
 

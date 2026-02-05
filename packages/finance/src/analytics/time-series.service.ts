@@ -167,8 +167,8 @@ export async function generateTimeSeriesData(
     data: timeSeries,
     stats,
     query: {
-      from: options.from,
-      to: options.to,
+      from: options.dateFrom,
+      to: options.dateTo,
       account: options.account,
       category: options.category,
       limit: options.limit,

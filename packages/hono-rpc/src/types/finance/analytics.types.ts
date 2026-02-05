@@ -1,6 +1,84 @@
 import type { TimeSeriesDataPoint, TimeSeriesStats } from './shared.types';
 
 // ============================================================================
+// Named Types for TopMerchantsOutput
+// ============================================================================
+
+export type Merchant = {
+  name: string;
+  totalSpent: number;
+  transactionCount: number;
+};
+
+// ============================================================================
+// Named Types for CategoryBreakdownOutput
+// ============================================================================
+
+export type CategoryBreakdownItem = {
+  category: string;
+  amount: number;
+  percentage: number;
+  transactionCount: number;
+};
+
+// ============================================================================
+// Named Types for CalculateTransactionsOutput
+// ============================================================================
+
+export type TransactionStats = {
+  min: number;
+  max: number;
+  mean: number;
+  median: number;
+  stdDev: number;
+};
+
+// ============================================================================
+// Named Types for MonthlyStatsOutput
+// ============================================================================
+
+export type CategorySpendingItem = {
+  name: string | null;
+  amount: number;
+};
+
+// ============================================================================
+// Named Types for SpendingDataPoint (route-specific explicit types)
+// ============================================================================
+
+export type SpendingDataPointBase = {
+  date: string;
+  amount: number;
+  expenses: number;
+  income: number;
+  count: number;
+  average: number;
+  formattedAmount?: string;
+  formattedIncome?: string;
+  formattedExpenses?: string;
+};
+
+export type SpendingDataPointTrend = {
+  raw: string;
+  formatted: string;
+  direction: 'up' | 'down' | 'flat';
+  percentChange?: string;
+  previousAmount?: number;
+  formattedPreviousAmount?: string;
+  percentChangeExpenses?: string;
+  rawExpenses?: string;
+  previousExpenses?: number;
+  formattedPreviousExpenses?: string;
+  directionExpenses?: 'up' | 'down';
+};
+
+export type SpendingDataPointWithTrend = SpendingDataPointBase & {
+  trend: SpendingDataPointTrend;
+};
+
+export type SpendingDataPoint = SpendingDataPointBase | SpendingDataPointWithTrend;
+
+// ============================================================================
 // Analytics / Analyze
 // ============================================================================
 
@@ -29,11 +107,7 @@ export type TopMerchantsInput = {
 };
 
 export type TopMerchantsOutput = {
-  merchants: Array<{
-    name: string;
-    totalSpent: number;
-    transactionCount: number;
-  }>;
+  merchants: Merchant[];
 };
 
 export type CategoryBreakdownInput = {
@@ -44,12 +118,7 @@ export type CategoryBreakdownInput = {
 };
 
 export type CategoryBreakdownOutput = {
-  breakdown: Array<{
-    category: string;
-    amount: number;
-    percentage: number;
-    transactionCount: number;
-  }>;
+  breakdown: CategoryBreakdownItem[];
   totalSpending: number;
   averagePerDay: number;
 };
@@ -69,13 +138,7 @@ export type CalculateTransactionsOutput = {
   sum?: number;
   average?: number;
   count?: number;
-  stats?: {
-    min: number;
-    max: number;
-    mean: number;
-    median: number;
-    stdDev: number;
-  };
+  stats?: TransactionStats;
   formattedSum?: string;
   formattedAverage?: string;
 };
@@ -101,7 +164,7 @@ export type MonthlyStatsOutput = {
   totalIncome?: number;
   totalExpenses?: number;
   netIncome?: number;
-  categorySpending?: Array<{ name: string | null; amount: number }>;
+  categorySpending?: CategorySpendingItem[];
   startDate?: string;
   endDate?: string;
 };
