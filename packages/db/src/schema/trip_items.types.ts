@@ -12,5 +12,12 @@ import type { TripItem, TripItemInsert, TripItemSelect } from './trip_items.sche
 export type { TripItem, TripItemInsert, TripItemSelect };
 
 // Legacy aliases for backward compatibility
+/**
+ * @deprecated Use {@link TripItem} instead. This alias will be removed in a future version.
+ */
 export type TripItemOutput = TripItem;
+
+/**
+ * @deprecated Use {@link TripItemInsert} instead. This alias will be removed in a future version.
+ */
 export type TripItemInput = TripItemInsert;

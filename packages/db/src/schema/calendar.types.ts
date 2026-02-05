@@ -22,5 +22,12 @@ export type {
 };
 
 // Backward compatibility aliases
+/**
+ * @deprecated Use {@link EventInput} instead. This alias will be removed in a future version.
+ */
 export type CalendarEventInput = EventInput;
+
+/**
+ * @deprecated Use {@link EventOutput} instead. This alias will be removed in a future version.
+ */
 export type CalendarEventOutput = EventOutput;

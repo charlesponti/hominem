@@ -232,7 +232,14 @@ export type EventInput = z.infer<typeof EventInsertSchema>;
 export type EventOutput = z.infer<typeof EventSelectSchema>;
 
 // Backward compatibility aliases
+/**
+ * @deprecated Use {@link EventInput} instead. This alias will be removed in a future version.
+ */
 export type CalendarEventInsert = EventInput;
+
+/**
+ * @deprecated Use {@link EventOutput} instead. This alias will be removed in a future version.
+ */
 export type CalendarEvent = EventOutput;
 
 export const eventsTags = pgTable('events_tags', {

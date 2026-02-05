@@ -3,17 +3,17 @@ name: docker-publish-api
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["code-quality"]
-    branches: ["main"]
+    workflows: ['code-quality']
+    branches: ['main']
     types:
       - completed
   push:
-    tags: [ 'v*.*.*' ]
+    tags: ['v*.*.*']
     paths:
-      - "services/api/**"
-      - "packages/**"
-      - "docker/**"
-      - ".github/workflows/**"
+      - 'services/api/**'
+      - 'packages/**'
+      - 'docker/**'
+      - '.github/workflows/**'
 
 env:
   REGISTRY: ghcr.io
@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
         with:
@@ -52,7 +52,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./docker/api.dockerfile
+          file: ./services/api/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

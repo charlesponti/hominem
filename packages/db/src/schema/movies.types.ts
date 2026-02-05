@@ -26,8 +26,22 @@ export type {
 };
 
 // Legacy aliases for backward compatibility
+/**
+ * @deprecated Use {@link Movie} instead. This alias will be removed in a future version.
+ */
 export type MovieOutput = Movie;
+
+/**
+ * @deprecated Use {@link MovieInsert} instead. This alias will be removed in a future version.
+ */
 export type MovieInput = MovieInsert;
 
+/**
+ * @deprecated Use {@link MovieViewing} instead. This alias will be removed in a future version.
+ */
 export type MovieViewingOutput = MovieViewing;
+
+/**
+ * @deprecated Use {@link MovieViewingInsert} instead. This alias will be removed in a future version.
+ */
 export type MovieViewingInput = MovieViewingInsert;
