@@ -35,10 +35,10 @@ describe('useSort', () => {
   test('addSortOption replaces existing option in single-sort mode', async () => {
     const { result } = renderHook(() => useSort({ singleSort: true }));
 
-    await waitFor(() => {
+    act(() => {
       result.current.addSortOption({ field: 'name', direction: 'asc' });
     });
-    await waitFor(() => {
+    act(() => {
       result.current.addSortOption({ field: 'date', direction: 'desc' });
     });
 
