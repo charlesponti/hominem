@@ -12,6 +12,7 @@
     "./middleware/*": "./src/middleware/*.ts"
   },
   "scripts": {
+    "build": "bunx tsc --incremental",
     "typecheck": "bunx tsc --noEmit --incremental",
     "dev": "bunx tsc --noEmit --incremental --watch",
     "clean": "rm -rf build node_modules/.cache"
