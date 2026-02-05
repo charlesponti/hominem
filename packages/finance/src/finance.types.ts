@@ -64,15 +64,9 @@ export interface QueryOptions {
   type?: TransactionType | TransactionType[] | undefined;
   limit?: number | undefined;
   offset?: number | undefined;
-  sortBy?: string | string[] | undefined;
-  sortDirection?: 'asc' | 'desc' | ('asc' | 'desc')[] | undefined;
+  sortBy?: string | undefined;
+  sortDirection?: 'asc' | 'desc' | undefined;
   search?: string | undefined;
   includeExcluded?: boolean | undefined;
-
-  // Legacy options (for backward compatibility)
-  from?: string | undefined;
-  to?: string | undefined;
-  min?: string | undefined;
-  max?: string | undefined;
   account?: string | undefined;
 }

@@ -393,6 +393,13 @@
       "when": 1770200461368,
       "tag": "0055_curvy_skaar",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1738792800000,
+      "tag": "0056_add_transaction_search_vector",
+      "breakpoints": true
     }
   ]
 }

@@ -126,14 +126,14 @@ export function useFinanceTransactions({
     async (client) => {
       const res = await client.api.finance.transactions.list.$post({
         json: {
-          from: filters.dateFrom ? format(filters.dateFrom, 'yyyy-MM-dd') : undefined,
-          to: filters.dateTo ? format(filters.dateTo, 'yyyy-MM-dd') : undefined,
+          dateFrom: filters.dateFrom ? format(filters.dateFrom, 'yyyy-MM-dd') : undefined,
+          dateTo: filters.dateTo ? format(filters.dateTo, 'yyyy-MM-dd') : undefined,
           account: filters.accountId && filters.accountId !== 'all' ? filters.accountId : undefined,
           description: filters.description,
           limit,
           offset,
-          sortBy: [sortBy],
-          sortDirection: [sortOrder as 'asc' | 'desc'],
+          sortBy,
+          sortDirection: sortOrder as 'asc' | 'desc',
         },
       });
       return res.json();

@@ -210,7 +210,6 @@ export {
   deleteTransactionOutputSchema,
   queryTransactionsOutputSchema,
   type QueryTransactionsOutput,
-  buildWhereConditions,
   queryTransactions,
   getTransactions,
   findExistingTransaction,
@@ -222,6 +221,7 @@ export {
   updateTransaction,
   deleteTransaction,
 } from './finance.transactions.service';
+export { TransactionQueryBuilder, type TransactionQueryResult } from './transaction-query-builder';
 export {
   type FinanceAccountInput,
   type Transaction,

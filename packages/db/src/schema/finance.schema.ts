@@ -1,5 +1,5 @@
 import { type InferInsertModel, type InferSelectModel, sql } from 'drizzle-orm';
-import { index, jsonb, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { customType, index, jsonb, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import * as z from 'zod';
 
 import {
@@ -18,6 +18,13 @@ import {
   jsonColumn,
 } from './shared.schema';
 import { users } from './users.schema';
+
+// Custom types
+const tsvector = customType<{ data: string }>({
+  dataType() {
+    return 'tsvector';
+  },
+});
 
 // Enums
 export const transactionTypeEnum = pgEnum('transaction_type', [
@@ -179,6 +186,7 @@ export const transactions = pgTable(
     location: jsonb('location').$type<TransactionLocation>(),
     plaidTransactionId: text('plaid_transaction_id').unique(),
     source: text('source').default('manual'),
+    searchVector: tsvector('search_vector'), // Generated column for full-text search
     createdAt: createdAtColumn(),
     updatedAt: updatedAtColumn(),
     userId: requiredUuidColumn('user_id').references(() => users.id, { onDelete: 'cascade' }),
@@ -189,10 +197,8 @@ export const transactions = pgTable(
     index('transactions_account_id_idx').on(table.accountId),
     index('transactions_from_account_id_idx').on(table.fromAccountId),
     index('transactions_to_account_id_idx').on(table.toAccountId),
-    index('transactions_search_idx').using(
-      'gin',
-      sql`to_tsvector('english', coalesce(${table.description}, '') || ' ' || coalesce(${table.merchantName}, '') || ' ' || coalesce(${table.category}, '') || ' ' || coalesce(${table.parentCategory}, '') || ' ' || coalesce(${table.tags}, '') || ' ' || coalesce(${table.note}, '') || ' ' || coalesce(${table.paymentChannel}, '') || ' ' || coalesce(${table.source}, ''))`,
-    ),
+    // Use the generated search_vector column for full-text search (much faster than computing on-the-fly)
+    index('idx_transactions_search_vector').using('gin', table.searchVector),
   ],
 );
 export type FinanceTransaction = InferSelectModel<typeof transactions>;

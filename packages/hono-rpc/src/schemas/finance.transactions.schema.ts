@@ -4,18 +4,18 @@ import { transactionSchema } from './finance.schema'
 import { TransactionInsertSchema } from '@hominem/db/schema/finance'
 
 export const transactionListSchema = z.object({
-  from: z.string().optional(),
-  to: z.string().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
   category: z.string().optional(),
-  min: z.string().optional(),
-  max: z.string().optional(),
+  amountMin: z.number().optional(),
+  amountMax: z.number().optional(),
   account: z.string().optional(),
   limit: z.number().int().min(1).max(100).default(50),
   offset: z.number().int().min(0).default(0),
   description: z.string().optional(),
   search: z.string().optional(),
-  sortBy: z.array(z.string()).optional(),
-  sortDirection: z.array(z.enum(['asc', 'desc'])).optional(),
+  sortBy: z.string().optional(),
+  sortDirection: z.enum(['asc', 'desc']).optional(),
 })
 
 export const transactionCreateSchema = TransactionInsertSchema.pick({

@@ -29,7 +29,8 @@ results/
 output/
 
 # bun
-bun.lockb
+# Note: lockfile should be committed for monorepos to ensure consistent dependencies
+# bun.lock
 
 # Google credentials
 credentials.json
