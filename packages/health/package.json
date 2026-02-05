@@ -9,7 +9,6 @@
     "./tools": "./src/health.tools.ts"
   },
   "scripts": {
-    "build": "tsc -b",
     "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
     "dev": "tsc -b -w",
