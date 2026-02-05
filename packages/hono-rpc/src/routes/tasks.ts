@@ -13,23 +13,6 @@ import { authMiddleware } from '../middleware/auth'
 
 const tasksService = new TasksService()
 
-/**
- * Serialization helper to ensure consistent date formatting
- */
-function serializeTask(t: any) {
-  return {
-    id: t.id,
-    title: t.title,
-    description: t.description,
-    status: t.status,
-    priority: t.priority,
-    dueDate: t.dueDate,
-    userId: t.userId,
-    createdAt: typeof t.createdAt === 'string' ? t.createdAt : t.createdAt?.toISOString(),
-    updatedAt: typeof t.updatedAt === 'string' ? t.updatedAt : t.updatedAt?.toISOString(),
-  }
-}
-
 export const tasksRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
   // List tasks
@@ -37,7 +20,7 @@ export const tasksRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!
 
     const tasks = await tasksService.list(userId)
-    return c.json({ tasks: tasks.map(serializeTask) })
+    return c.json({ tasks })
   })
   // Get single task
   .get('/:id', async (c) => {
@@ -45,7 +28,7 @@ export const tasksRoutes = new Hono<AppContext>()
     const id = c.req.param('id')
 
     const task = await tasksService.getById(id, userId)
-    return c.json(serializeTask(task))
+    return c.json(task)
   })
   // Create task
   .post('/', zValidator('json', CreateTaskInputSchema), async (c) => {
@@ -58,7 +41,7 @@ export const tasksRoutes = new Hono<AppContext>()
       dueDate: data.dueDate || null,
     }
     const newTask = await tasksService.create(taskData)
-    return c.json(serializeTask(newTask), 201)
+    return c.json(newTask, 201)
   })
   // Update task
   .patch('/:id', zValidator('json', UpdateTaskInputSchema), async (c) => {
@@ -91,7 +74,7 @@ export const tasksRoutes = new Hono<AppContext>()
     }
 
     const updatedTask = await tasksService.update(id, userId, updateData)
-    return c.json(serializeTask(updatedTask))
+    return c.json(updatedTask)
   })
   // Delete task
   .delete('/:id', async (c) => {
@@ -99,7 +82,7 @@ export const tasksRoutes = new Hono<AppContext>()
     const id = c.req.param('id')
 
     const deletedTask = await tasksService.delete(id, userId)
-    return c.json(serializeTask(deletedTask))
+    return c.json(deletedTask)
   })
   // Update task status
   .post('/:id/status', zValidator('json', UpdateTaskStatusSchema), async (c) => {
@@ -108,5 +91,5 @@ export const tasksRoutes = new Hono<AppContext>()
     const { status } = c.req.valid('json')
 
     const updatedTask = await tasksService.updateStatus(id, userId, status)
-    return c.json(serializeTask(updatedTask))
+    return c.json(updatedTask)
   })
