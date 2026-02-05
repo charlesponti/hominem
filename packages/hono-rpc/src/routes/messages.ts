@@ -16,24 +16,9 @@ import type {
 const messageService = new MessageService();
 
 /**
- * Serialization Helpers
+ * No serialization helpers needed!
+ * Database types are returned directly - timestamps already as strings.
  */
-function serializeChatMessage(m: any): ChatMessage {
-  return {
-    id: m.id,
-    chatId: m.chatId,
-    userId: m.userId,
-    role: m.role,
-    content: m.content,
-    files: m.files,
-    toolCalls: m.toolCalls,
-    reasoning: m.reasoning,
-    parentMessageId: m.parentMessageId,
-    messageIndex: m.messageIndex,
-    createdAt: typeof m.createdAt === 'string' ? m.createdAt : m.createdAt.toISOString(),
-    updatedAt: typeof m.updatedAt === 'string' ? m.updatedAt : m.updatedAt.toISOString(),
-  };
-}
 
 const updateMessageSchema = z.object({
   content: z.string().min(1, 'Message content cannot be empty'),
@@ -55,7 +40,7 @@ export const messagesRoutes = new Hono<AppContext>()
     if (!message) {
       throw new NotFoundError('Message not found');
     }
-    return c.json<MessagesGetOutput>({ message: serializeChatMessage(message) });
+    return c.json<MessagesGetOutput>({ message });
   })
 
   // Update message
@@ -76,7 +61,10 @@ export const messagesRoutes = new Hono<AppContext>()
     await messageService.deleteMessagesAfter(message.chatId, message.createdAt, userId);
 
     const updatedMessage = await messageService.updateMessage({ messageId, content });
-    return c.json<MessagesUpdateOutput>({ message: serializeChatMessage(updatedMessage) });
+    if (!updatedMessage) {
+      throw new InternalError('Failed to update message');
+    }
+    return c.json<MessagesUpdateOutput>({ message: updatedMessage });
   })
 
   // Delete message

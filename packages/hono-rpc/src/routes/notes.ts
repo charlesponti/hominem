@@ -31,38 +31,9 @@ import { authMiddleware, type AppContext } from '../middleware/auth'
 const notesService = new NotesService()
 
 /**
- * Serialization Helpers
+ * No serialization helpers needed!
+ * Database types are returned directly - timestamps already as strings.
  */
-function serializeNote(n: any): NoteOutput {
-  return {
-    id: n.id,
-    userId: n.userId,
-    type: n.type,
-    status: n.status || 'draft',
-    title: n.title,
-    content: n.content,
-    excerpt: n.excerpt,
-    tags: n.tags || [],
-    mentions: n.mentions || [],
-    publishingMetadata: n.publishingMetadata,
-    analysis: n.analysis,
-    isLatestVersion: n.isLatestVersion ?? true,
-    parentNoteId: n.parentNoteId,
-    versionNumber: n.versionNumber ?? 1,
-    createdAt: typeof n.createdAt === 'string' ? n.createdAt : n.createdAt.toISOString(),
-    updatedAt: typeof n.updatedAt === 'string' ? n.updatedAt : n.updatedAt.toISOString(),
-    publishedAt: n.publishedAt
-      ? typeof n.publishedAt === 'string'
-        ? n.publishedAt
-        : n.publishedAt.toISOString()
-      : null,
-    scheduledFor: n.scheduledFor
-      ? typeof n.scheduledFor === 'string'
-        ? n.scheduledFor
-        : n.scheduledFor.toISOString()
-      : null,
-  }
-}
 
 export const notesRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
@@ -127,7 +98,7 @@ export const notesRoutes = new Hono<AppContext>()
     // Apply pagination
     const paginatedNotes = limit ? sortedNotes.slice(offset, offset + limit) : sortedNotes.slice(offset)
 
-    return c.json<NotesListOutput>({ notes: paginatedNotes.map(serializeNote) })
+    return c.json<NotesListOutput>({ notes: paginatedNotes })
   })
 
   // Get note by ID
@@ -139,7 +110,7 @@ export const notesRoutes = new Hono<AppContext>()
     if (!note) {
       throw new NotFoundError('Note not found')
     }
-    return c.json<NotesGetOutput>(serializeNote(note))
+    return c.json<NotesGetOutput>(note)
   })
 
   // Get all versions of a note
@@ -148,7 +119,7 @@ export const notesRoutes = new Hono<AppContext>()
     const id = c.req.param('id')
 
     const versions = await notesService.getNoteVersions(id, userId)
-    return c.json<NotesVersionsOutput>({ versions: versions.map(serializeNote) })
+    return c.json<NotesVersionsOutput>({ versions: versions })
   })
 
   // Create note
@@ -163,7 +134,7 @@ export const notesRoutes = new Hono<AppContext>()
       mentions: data.mentions || [],
     }
     const newNote = await notesService.create(noteData)
-    return c.json<NotesCreateOutput>(serializeNote(newNote), 201)
+    return c.json<NotesCreateOutput>(newNote, 201)
   })
 
   // Update note
@@ -177,7 +148,7 @@ export const notesRoutes = new Hono<AppContext>()
       ...data,
       userId,
     })
-    return c.json<NotesUpdateOutput>(serializeNote(updatedNote))
+    return c.json<NotesUpdateOutput>(updatedNote)
   })
 
   // Delete note
@@ -186,7 +157,7 @@ export const notesRoutes = new Hono<AppContext>()
     const id = c.req.param('id')
 
     const deletedNote = await notesService.delete(id, userId)
-    return c.json<NotesDeleteOutput>(serializeNote(deletedNote))
+    return c.json<NotesDeleteOutput>(deletedNote)
   })
 
   // Publish note
@@ -202,7 +173,7 @@ export const notesRoutes = new Hono<AppContext>()
       ...(data.scheduledFor && { scheduledFor: data.scheduledFor }),
       ...(data.seo && { seo: data.seo }),
     } as Parameters<typeof notesService.publish>[2])
-    return c.json<NotesPublishOutput>(serializeNote(publishedNote))
+    return c.json<NotesPublishOutput>(publishedNote)
   })
 
   // Archive note
@@ -211,7 +182,7 @@ export const notesRoutes = new Hono<AppContext>()
     const id = c.req.param('id')
 
     const archivedNote = await notesService.archive(id, userId)
-    return c.json<NotesArchiveOutput>(serializeNote(archivedNote))
+    return c.json<NotesArchiveOutput>(archivedNote)
   })
 
   // Unpublish note
@@ -220,7 +191,7 @@ export const notesRoutes = new Hono<AppContext>()
     const id = c.req.param('id')
 
     const unpublishedNote = await notesService.unpublish(id, userId)
-    return c.json<NotesUpdateOutput>(serializeNote(unpublishedNote))
+    return c.json<NotesUpdateOutput>(unpublishedNote)
   })
 
   // Expand note with AI
@@ -229,7 +200,7 @@ export const notesRoutes = new Hono<AppContext>()
     const id = c.req.param('id')
 
     const expandedNote = await notesService.developNote(id, userId, 'expand')
-    return c.json<NotesUpdateOutput>(serializeNote(expandedNote))
+    return c.json<NotesUpdateOutput>(expandedNote)
   })
 
   // Outline note with AI
@@ -238,7 +209,7 @@ export const notesRoutes = new Hono<AppContext>()
     const id = c.req.param('id')
 
     const outlinedNote = await notesService.developNote(id, userId, 'outline')
-    return c.json<NotesUpdateOutput>(serializeNote(outlinedNote))
+    return c.json<NotesUpdateOutput>(outlinedNote)
   })
 
   // Rewrite note with AI
@@ -247,7 +218,7 @@ export const notesRoutes = new Hono<AppContext>()
     const id = c.req.param('id')
 
     const rewrittenNote = await notesService.developNote(id, userId, 'rewrite')
-    return c.json<NotesUpdateOutput>(serializeNote(rewrittenNote))
+    return c.json<NotesUpdateOutput>(rewrittenNote)
   })
 
   // Sync notes

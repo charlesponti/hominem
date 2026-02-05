@@ -38,41 +38,9 @@ import type {
 } from '../types/finance.types'
 
 /**
- * Serialization Helpers
+ * No serialization helpers needed!
+ * Database types are returned directly - timestamps already as strings.
  */
-function serializeAccount<T extends Record<string, any>>(account: T): T {
-  return {
-    ...account,
-    createdAt:
-      typeof account.createdAt === 'string' ? account.createdAt : account.createdAt.toISOString(),
-    updatedAt:
-      typeof account.updatedAt === 'string' ? account.updatedAt : account.updatedAt.toISOString(),
-    lastUpdated: account.lastUpdated
-      ? typeof account.lastUpdated === 'string'
-        ? account.lastUpdated
-        : account.lastUpdated.toISOString()
-      : null,
-    balance:
-      typeof account.balance === 'number'
-        ? account.balance
-        : parseFloat(account.balance?.toString() || '0'),
-  } as T;
-}
-
-function serializeTransaction(t: any): TransactionData {
-  return {
-    ...t,
-    date: typeof t.date === 'string' ? t.date : t.date.toISOString(),
-    authorizedDate: t.authorizedDate
-      ? typeof t.authorizedDate === 'string'
-        ? t.authorizedDate
-        : t.authorizedDate.toISOString()
-      : null,
-    createdAt: typeof t.createdAt === 'string' ? t.createdAt : t.createdAt.toISOString(),
-    updatedAt: typeof t.updatedAt === 'string' ? t.updatedAt : t.updatedAt.toISOString(),
-    amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount?.toString() || '0'),
-  };
-}
 
 /**
  * Finance Accounts Routes
@@ -84,7 +52,7 @@ export const accountsRoutes = new Hono<AppContext>()
   .post('/list', zValidator('json', accountListSchema), async (c) => {
     const userId = c.get('userId')!;
     const accounts = await listAccounts(userId);
-    return c.json<AccountListOutput>(accounts.map(serializeAccount), 200);
+    return c.json<AccountListOutput>(accounts, 200);
   })
 
   // POST /get - Get single account
@@ -102,8 +70,8 @@ export const accountsRoutes = new Hono<AppContext>()
     const accountData = accountWithTransactions.find((acc) => acc.id === account.id);
 
     const result = {
-      ...serializeAccount(account),
-      transactions: (accountData?.transactions || []).map(serializeTransaction),
+      ...account,
+      transactions: accountData?.transactions || [],
     };
 
     return c.json<AccountGetOutput>(result, 200);
@@ -124,7 +92,7 @@ export const accountsRoutes = new Hono<AppContext>()
        meta: null,
      });
 
-     return c.json<AccountCreateOutput>(serializeAccount(result), 201);
+     return c.json<AccountCreateOutput>(result, 201);
    })
 
    // POST /update - Update account
@@ -144,7 +112,7 @@ export const accountsRoutes = new Hono<AppContext>()
        throw new NotFoundError('Account not found');
      }
 
-     return c.json<AccountUpdateOutput>(serializeAccount(result), 200);
+     return c.json<AccountUpdateOutput>(result, 200);
    })
 
   // POST /delete - Delete account
@@ -169,8 +137,8 @@ export const accountsRoutes = new Hono<AppContext>()
     );
 
     const accountsWithTransactions = allAccounts.map((account) => ({
-      ...serializeAccount(account),
-      transactions: (transactionsMap.get(account.id) || []).map(serializeTransaction),
+      ...account,
+      transactions: transactionsMap.get(account.id) || [],
     }));
 
     // Get Plaid connections
@@ -197,7 +165,7 @@ export const accountsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     const result = await listAccountsWithPlaidInfo(userId);
-    return c.json<AccountsWithPlaidOutput>(result.map(serializeAccount), 200);
+    return c.json<AccountsWithPlaidOutput>(result, 200);
   })
 
   // POST /connections - Get institution connections
@@ -225,5 +193,5 @@ export const accountsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     const result = await getAccountsForInstitution(userId, input.institutionId);
-    return c.json<AccountInstitutionAccountsOutput>(result.map(serializeAccount), 200);
+    return c.json<AccountInstitutionAccountsOutput>(result, 200);
   });

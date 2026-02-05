@@ -1,174 +1,123 @@
-import type {
-  AllContentType,
-  ContentTag,
-  JsonValue,
-  NoteContentType,
+// ============================================================================
+// Re-export Database Types (Single Source of Truth)
+// ============================================================================
+
+export type {
+  Note,
+  NoteInsert,
   NoteMention,
+  NoteContentType,
   NoteStatus,
   PublishingMetadata,
+} from '@hominem/db/types/notes';
+
+export type {
+  AllContentType,
+  ContentTag,
   TaskPriority,
   TaskStatus,
-} from '../schemas/notes.schema'
+} from '../schemas/notes.schema';
 
 export {
   NoteContentTypeSchema,
   NoteStatusSchema,
   TaskPrioritySchema,
   TaskStatusSchema,
-} from '../schemas/notes.schema'
+} from '../schemas/notes.schema';
 
-export type NoteOutput = {
-  id: string
-  userId: string
-  type: NoteContentType
-  status: NoteStatus
-  title?: string | null
-  content: string
-  excerpt?: string | null
-  tags: ContentTag[]
-  mentions: NoteMention[]
-  publishingMetadata?: PublishingMetadata
-  analysis?: JsonValue
-  isLatestVersion: boolean
-  parentNoteId?: string | null
-  versionNumber: number
-  createdAt: string
-  updatedAt: string
-  publishedAt: string | null
-  scheduledFor: string | null
-}
+// ============================================================================
+// API-Specific Types
+// ============================================================================
 
-export type Note = NoteOutput
+import type { Note, NoteContentType, NoteStatus, NoteMention, PublishingMetadata } from '@hominem/db/types/notes';
+import type { AllContentType, ContentTag, TaskPriority, TaskStatus } from '../schemas/notes.schema';
 
-export type {
-  AllContentType,
-  ContentTag,
-  NoteContentType,
-  NoteMention,
-  NoteStatus,
-  PublishingMetadata,
-  TaskStatus,
-  TaskPriority as Priority,
-}
+// Type alias for JSON values
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 // Backward compatibility alias
+export type NoteOutput = Note;
+
+export type { TaskPriority as Priority };
+
+// Task metadata helper type
 export type TaskMetadata = {
-  status?: TaskStatus
-  priority?: TaskPriority
-  dueDate?: string
-}
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  dueDate?: string;
+};
 
 // ============================================================================
-// LIST NOTES
+// Output Types (Inferred from returns - these are optional aliases)
 // ============================================================================
 
-export type NotesListInput = {
-  types?: AllContentType[]
-  tags?: string[]
-  query?: string
-  since?: string
-  sortBy?: 'createdAt' | 'updatedAt' | 'title'
-  sortOrder?: 'asc' | 'desc'
-  limit?: number
-  offset?: number
-}
-
-export type NotesListOutput = { notes: Note[] }
-
-// ============================================================================
-// GET NOTE
-// ============================================================================
-
-export type NotesGetOutput = Note
+export type NotesListOutput = { notes: Note[] };
+export type NotesGetOutput = Note;
+export type NotesCreateOutput = Note;
+export type NotesUpdateOutput = Note;
+export type NotesDeleteOutput = Note;
+export type NotesPublishOutput = Note;
+export type NotesArchiveOutput = Note;
+export type NotesVersionsOutput = { versions: Note[] };
 
 // ============================================================================
 // CREATE NOTE
 // ============================================================================
 
 export type NotesCreateInput = {
-  type?: NoteContentType
-  status?: NoteStatus
-  title?: string
-  content: string
-  excerpt?: string
-  tags?: ContentTag[]
-  mentions?: NoteMention[]
-  publishingMetadata?: PublishingMetadata
-  analysis?: JsonValue
-}
-
-export type NotesCreateOutput = Note
+  type?: NoteContentType;
+  status?: NoteStatus;
+  title?: string;
+  content: string;
+  excerpt?: string;
+  tags?: ContentTag[];
+  mentions?: NoteMention[];
+  publishingMetadata?: PublishingMetadata;
+  analysis?: JsonValue;
+};
 
 // ============================================================================
 // UPDATE NOTE
 // ============================================================================
 
 export type NotesUpdateInput = {
-  type?: NoteContentType
-  status?: NoteStatus
-  title?: string | null
-  content?: string
-  excerpt?: string | null
-  tags?: ContentTag[] | null
-  publishingMetadata?: PublishingMetadata | null
-  analysis?: JsonValue | null
-}
-
-export type NotesUpdateOutput = Note
-
-// ============================================================================
-// DELETE NOTE
-// ============================================================================
-
-export type NotesDeleteOutput = Note
-
-// ============================================================================
-// PUBLISH NOTE
-// ============================================================================
-
-export type NotesPublishOutput = Note
-
-// ============================================================================
-// ARCHIVE NOTE
-// ============================================================================
-
-export type NotesArchiveOutput = Note
+  type?: NoteContentType;
+  status?: NoteStatus;
+  title?: string | null;
+  content?: string;
+  excerpt?: string | null;
+  tags?: ContentTag[] | null;
+  publishingMetadata?: PublishingMetadata | null;
+  analysis?: JsonValue | null;
+};
 
 // ============================================================================
 // SYNC NOTES
 // ============================================================================
 
 export type NotesSyncItem = {
-  id?: string
-  type: NoteContentType
-  status?: NoteStatus
-  title?: string | null
-  content: string
-  excerpt?: string | null
-  tags?: ContentTag[]
-  mentions?: NoteMention[]
-  publishingMetadata?: PublishingMetadata | null
-  analysis?: JsonValue | null
-  createdAt?: string
-  updatedAt?: string
-  publishedAt?: string
-  scheduledFor?: string
-}
+  id?: string;
+  type: NoteContentType;
+  status?: NoteStatus;
+  title?: string | null;
+  content: string;
+  excerpt?: string | null;
+  tags?: ContentTag[];
+  mentions?: NoteMention[];
+  publishingMetadata?: PublishingMetadata | null;
+  analysis?: JsonValue | null;
+  createdAt?: string;
+  updatedAt?: string;
+  publishedAt?: string;
+  scheduledFor?: string;
+};
 
 export type NotesSyncInput = {
-  items: NotesSyncItem[]
-}
+  items: NotesSyncItem[];
+};
 
 export type NotesSyncOutput = {
-  created: number
-  updated: number
-  failed: number
-}
-
-// ============================================================================
-// NOTE VERSIONS
-// ============================================================================
-
-export type NotesVersionsOutput = {
-  versions: Note[]
-}
+  created: number;
+  updated: number;
+  failed: number;
+};

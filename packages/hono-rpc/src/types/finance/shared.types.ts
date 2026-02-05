@@ -9,83 +9,81 @@
  * - Transaction data
  */
 
-import type {
-  AccountWithPlaidInfo as AccountWithPlaidInfoSchema,
-  BudgetCategory,
-  FinanceAccount,
-  FinanceTransaction,
-  FinancialInstitution,
-} from '../../schemas/finance.schema'
-
-export type InstitutionData = FinancialInstitution
-
 // ============================================================================
-// Named Types for TimeSeriesDataPoint
+// Re-export Database Types (Single Source of Truth)
 // ============================================================================
 
+export type {
+  FinancialInstitution as InstitutionData,
+  BudgetCategory as BudgetCategoryData,
+  FinanceAccount as AccountData,
+  FinanceTransaction as TransactionData,
+  AccountType,
+  TransactionType,
+} from '@hominem/db/types/finance';
+
+export type {
+  AccountWithPlaidInfo,
+} from '../../schemas/finance.schema';
+
+// ============================================================================
+// API-Specific Computed Types
+// ============================================================================
+
+// Time series and statistics types (not in DB)
 export type TimeSeriesTrend = {
-  raw: string
-  formatted: string
-  direction: 'up' | 'down' | 'flat'
-  percentChange?: string
-  previousAmount?: number
-  formattedPreviousAmount?: string
-  percentChangeExpenses?: string
-  rawExpenses?: string
-  previousExpenses?: number
-  formattedPreviousExpenses?: string
-  directionExpenses?: 'up' | 'down'
-}
+  raw: string;
+  formatted: string;
+  direction: 'up' | 'down' | 'flat';
+  percentChange?: string;
+  previousAmount?: number;
+  formattedPreviousAmount?: string;
+  percentChangeExpenses?: string;
+  rawExpenses?: string;
+  previousExpenses?: number;
+  formattedPreviousExpenses?: string;
+  directionExpenses?: 'up' | 'down';
+};
 
 export type TimeSeriesDataPoint = {
-  date: string
-  amount: number
-  expenses: number
-  income: number
-  count: number
-  average: number
-  trend?: TimeSeriesTrend
-  formattedAmount?: string
-  formattedIncome?: string
-  formattedExpenses?: string
-}
+  date: string;
+  amount: number;
+  expenses: number;
+  income: number;
+  count: number;
+  average: number;
+  trend?: TimeSeriesTrend;
+  formattedAmount?: string;
+  formattedIncome?: string;
+  formattedExpenses?: string;
+};
 
 export type TimeSeriesStats = {
-  total: number
-  average: number
-  min: number
-  max: number
-  trend: 'up' | 'down' | 'stable'
-  changePercentage: number
-  periodCovered?: string
-  totalIncome?: number
-  totalExpenses?: number
-  averageIncome?: number
-  averageExpenses?: number
-  count?: number
-}
+  total: number;
+  average: number;
+  min: number;
+  max: number;
+  trend: 'up' | 'down' | 'stable';
+  changePercentage: number;
+  periodCovered?: string;
+  totalIncome?: number;
+  totalExpenses?: number;
+  averageIncome?: number;
+  averageExpenses?: number;
+  count?: number;
+};
 
-export type BudgetCategoryData = BudgetCategory
-
-export type AccountData = FinanceAccount
-
+// Plaid connection metadata (not in DB schema)
 export type PlaidConnection = {
-  id: string
-  institutionId: string
-  institutionName: string
-  institutionLogo: string | null
-  status: 'active' | 'error' | 'disconnected'
-  lastSynced: string
-  accounts: number
-}
+  id: string;
+  institutionId: string;
+  institutionName: string;
+  institutionLogo: string | null;
+  status: 'active' | 'error' | 'disconnected';
+  lastSynced: string;
+  accounts: number;
+};
 
-/**
- * Account with Plaid metadata
- * Currently just an alias to AccountData since Plaid properties aren't part of the DB schema
- * This type exists for future expansion when Plaid sync metadata is added
- */
-export type AccountWithPlaidData = AccountData
-
-export type AccountWithPlaidInfo = AccountWithPlaidInfoSchema
-
-export type TransactionData = FinanceTransaction
+// Account with Plaid metadata (future expansion)
+import type { FinanceAccount } from '@hominem/db/types/finance';
+export type AccountWithPlaidData = FinanceAccount;

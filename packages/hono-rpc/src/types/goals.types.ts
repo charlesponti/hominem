@@ -17,9 +17,6 @@ export type {
   GoalMilestone,
 } from '@hominem/db/types/goals';
 
-// Import Goal for use in output types
-import type { Goal } from '@hominem/db/types/goals';
-
 /**
  * Zod schemas for validation - re-export imported schemas
  */
@@ -88,10 +85,13 @@ export type GoalStatsOutput = {
   milestones?: unknown;
 };
 
-export type GoalListOutput = Goal[];
-export type GoalGetOutput = Goal;
-export type GoalCreateOutput = Goal;
-export type GoalUpdateOutput = Goal;
+// Import EventWithTagsAndPeople for output types (this comes from events service)
+import type { EventWithTagsAndPeople } from '@hominem/events-services';
+
+export type GoalListOutput = EventWithTagsAndPeople[];
+export type GoalGetOutput = EventWithTagsAndPeople;
+export type GoalCreateOutput = EventWithTagsAndPeople;
+export type GoalUpdateOutput = EventWithTagsAndPeople;
 export type GoalDeleteOutput = { success: true; id: string };
-export type GoalArchiveOutput = Goal;
-export type GoalOutput = Goal;
+export type GoalArchiveOutput = EventWithTagsAndPeople;
+export type GoalOutput = EventWithTagsAndPeople;

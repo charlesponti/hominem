@@ -41,16 +41,9 @@ import {
 } from '../types/finance.types';
 
 /**
- * Serialization Helpers
+ * No serialization helpers needed!
+ * Database types are returned directly - timestamps already as strings.
  */
-function serializeBudgetCategory(cat: any): BudgetCategoryData {
-  return {
-    ...cat,
-    createdAt: typeof cat.createdAt === 'string' ? cat.createdAt : cat.createdAt.toISOString(),
-    updatedAt: typeof cat.updatedAt === 'string' ? cat.updatedAt : cat.updatedAt.toISOString(),
-    amount: typeof cat.amount === 'number' ? cat.amount : parseFloat(cat.amount?.toString() || '0'),
-  };
-}
 
 /**
  * Finance Budget Routes
@@ -65,7 +58,7 @@ export const budgetRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
 
     const result = await getAllBudgetCategories(userId);
-    return c.json<BudgetCategoriesListOutput>(result.map(serializeBudgetCategory), 200);
+    return c.json<BudgetCategoriesListOutput>(result, 200);
   })
 
   // POST /categories/list-with-spending - ListOutput with spending
@@ -84,7 +77,7 @@ export const budgetRoutes = new Hono<AppContext>()
       const totalBudgeted = result.reduce((sum, item) => sum + item.budgetAmount, 0);
 
       const categoriesWithSpending: BudgetCategoryWithSpending[] = result.map((item) => ({
-        ...serializeBudgetCategory(item),
+        ...item,
         actualSpending: item.actualSpending,
         percentageSpent: item.percentageSpent,
         budgetAmount: item.budgetAmount,
@@ -112,7 +105,7 @@ export const budgetRoutes = new Hono<AppContext>()
     if (!result) {
       throw new NotFoundError('Category not found');
     }
-    return c.json<BudgetCategoryGetOutput>(serializeBudgetCategory(result), 200);
+    return c.json<BudgetCategoryGetOutput>(result, 200);
   })
 
   // POST /categories/create - Create category
@@ -146,7 +139,11 @@ export const budgetRoutes = new Hono<AppContext>()
         ...(input.color && { color: input.color }),
       });
 
-      return c.json<BudgetCategoryCreateOutput>(serializeBudgetCategory(result), 201);
+      if (!result) {
+        throw new InternalError('Failed to create budget category');
+      }
+
+      return c.json<BudgetCategoryCreateOutput>(result, 201);
     },
   )
 
@@ -179,7 +176,7 @@ export const budgetRoutes = new Hono<AppContext>()
       if (!result) {
         throw new NotFoundError('Category not found');
       }
-      return c.json<BudgetCategoryUpdateOutput>(serializeBudgetCategory(result), 200);
+      return c.json<BudgetCategoryUpdateOutput>(result, 200);
     },
   )
 
@@ -471,7 +468,7 @@ export const budgetRoutes = new Hono<AppContext>()
       return c.json<BudgetBulkCreateOutput>(
         {
           created: result.created ?? 0,
-          categories: result.categories.map(serializeBudgetCategory),
+          categories: result.categories,
         },
         201,
       );

@@ -1,40 +1,22 @@
 import { z } from 'zod';
 
 // ============================================================================
-// Data Types
+// Re-export Database Types (Single Source of Truth)
 // ============================================================================
 
-export type ChatMessageToolCall = {
-  toolCallId: string;
-  toolName: string;
-  type: 'tool-call' | 'tool-result';
-  args: Record<string, any>;
-  result?: any;
-  isError?: boolean;
-};
+export type {
+  Chat,
+  ChatMessage,
+  ChatMessageToolCall,
+  ChatMessageFile,
+  ChatMessageRole,
+} from '@hominem/db/types/chats';
 
-export type ChatMessage = {
-  id: string;
-  chatId: string;
-  userId: string;
-  role: 'system' | 'user' | 'assistant' | 'tool';
-  content: string | null;
-  files: any | null;
-  toolCalls: ChatMessageToolCall[] | null;
-  reasoning: string | null;
-  parentMessageId: string | null;
-  messageIndex: number | null;
-  createdAt: string;
-  updatedAt: string;
-};
+// ============================================================================
+// API-Specific Composition Types
+// ============================================================================
 
-export type Chat = {
-  id: string;
-  userId: string;
-  title: string;
-  createdAt: string;
-  updatedAt: string;
-};
+import type { Chat, ChatMessage } from '@hominem/db/types/chats';
 
 export type ChatWithMessages = Chat & {
   messages: ChatMessage[];
@@ -46,7 +28,7 @@ export type ChatWithMessages = Chat & {
 
 export type ChatsSendInput = {
   message: string;
-  chatId?: string; // Optional if we want to support sending to new chat, but route usually takes ID in param
+  chatId?: string;
 };
 
 export const chatsSendSchema = z.object({
@@ -54,7 +36,7 @@ export const chatsSendSchema = z.object({
   chatId: z.string().optional(),
 });
 
-export type ChatsSendOutputData = {
+export type ChatsSendOutput = {
   streamId: string;
   chatId: string;
   chatTitle: string;
@@ -68,50 +50,15 @@ export type ChatsSendOutputData = {
   };
 };
 
-export type ChatsSendOutput = ChatsSendOutputData;
-
 // ============================================================================
-// LIST CHATS
+// Output Types (Inferred from returns - these are optional aliases)
 // ============================================================================
 
 export type ChatsListOutput = Chat[];
-
-// ============================================================================
-// GET CHAT
-// ============================================================================
-
 export type ChatsGetOutput = ChatWithMessages;
-
-// ============================================================================
-// CREATE CHAT
-// ============================================================================
-
-export type ChatsCreateInput = {
-  title: string;
-};
-
 export type ChatsCreateOutput = Chat;
-
-// ============================================================================
-// UPDATE CHAT
-// ============================================================================
-
-export type ChatsUpdateInput = {
-  title: string;
-};
-
 export type ChatsUpdateOutput = { success: boolean };
-
-// ============================================================================
-// DELETE CHAT
-// ============================================================================
-
 export type ChatsDeleteOutput = { success: boolean };
-
-// ============================================================================
-// GET MESSAGES
-// ============================================================================
-
 export type ChatsGetMessagesOutput = ChatMessage[];
 
 // ============================================================================
