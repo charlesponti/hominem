@@ -8,7 +8,6 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsc -b",
     "clean": "rm -rf build",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src"

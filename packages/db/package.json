@@ -16,7 +16,6 @@
     "./types/*": "./src/schema/*.types.ts"
   },
   "scripts": {
-    "build": "tsc -b",
     "clean": "rm -rf build",
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bunx drizzle-kit migrate",
