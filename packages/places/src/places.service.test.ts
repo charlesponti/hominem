@@ -13,27 +13,32 @@ vi.mock('@hominem/services/google-places', () => ({
 }));
 
 // Mock db
-vi.mock('@hominem/db', () => ({
-  db: {
-    select: vi.fn(() => ({
-      from: vi.fn(() => ({
-        where: vi.fn().mockResolvedValue([]),
-      })),
-    })),
-    insert: vi.fn(() => ({
-      values: vi.fn(() => ({
-        onConflictDoUpdate: vi.fn(() => ({
-          returning: vi.fn().mockResolvedValue([{ id: '1' }]),
+vi.mock('@hominem/db', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+
+  return {
+    ...actual,
+    db: {
+      select: vi.fn(() => ({
+        from: vi.fn(() => ({
+          where: vi.fn().mockResolvedValue([]),
         })),
       })),
-    })),
-    query: {
-      place: {
-        findMany: vi.fn().mockResolvedValue([]),
+      insert: vi.fn(() => ({
+        values: vi.fn(() => ({
+          onConflictDoUpdate: vi.fn(() => ({
+            returning: vi.fn().mockResolvedValue([{ id: '1' }]),
+          })),
+        })),
+      })),
+      query: {
+        place: {
+          findMany: vi.fn().mockResolvedValue([]),
+        },
       },
     },
-  },
-}));
+  };
+});
 
 vi.mock('@hominem/db/schema', () => ({
   place: {},

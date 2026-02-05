@@ -2,7 +2,7 @@ import type { HealthInsert } from '@hominem/db/types/health';
 
 import { db } from '@hominem/db';
 import { health } from '@hominem/db/schema/health';
-import { and, eq, gte, lte } from 'drizzle-orm';
+import { and, eq, gte, lte } from '@hominem/db';
 
 export async function listHealthRecords(filters: {
   userId?: string;

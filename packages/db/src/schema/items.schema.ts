@@ -9,7 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { z } from 'zod'
+import { z } from 'zod';
 
 import { list } from './lists.schema';
 import { users } from './users.schema';
@@ -62,7 +62,7 @@ export type ItemInsert = InferInsertModel<typeof item>;
 export type ItemSelect = Item;
 
 // Zod Validation Schemas
-export const ItemTypeSchema = z.enum(['FLIGHT', 'PLACE'])
+export const ItemTypeSchema = z.enum(['FLIGHT', 'PLACE']);
 
 export const ItemSchema = z.object({
   id: z.string(),
@@ -73,7 +73,7 @@ export const ItemSchema = z.object({
   listId: z.string(),
   userId: z.string(),
   itemType: ItemTypeSchema,
-})
+});
 
 export const ItemInsertSchema = ItemSchema.partial().extend({
   id: z.string().optional(),
@@ -82,4 +82,4 @@ export const ItemInsertSchema = ItemSchema.partial().extend({
   listId: z.string(),
   userId: z.string(),
   itemType: ItemTypeSchema.optional(),
-})
+});

@@ -1,7 +1,7 @@
 import { db } from '@hominem/db';
 import { budgetGoals } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
-import { and, eq } from 'drizzle-orm';
+import { and, eq } from '@hominem/db';
 
 /**
  * Get budget goals for a user

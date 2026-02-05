@@ -2,7 +2,12 @@ import { eq } from 'drizzle-orm';
 import crypto from 'node:crypto';
 
 import { db } from '../index';
-import { financeAccounts, financialInstitutions, plaidItems, transactions } from '../schema/finance.schema';
+import {
+  financeAccounts,
+  financialInstitutions,
+  plaidItems,
+  transactions,
+} from '../schema/finance.schema';
 import { users } from '../schema/users.schema';
 import { createTestUser } from './fixtures';
 

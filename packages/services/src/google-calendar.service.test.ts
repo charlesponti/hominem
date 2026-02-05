@@ -47,7 +47,9 @@ vi.mock('googleapis', () => {
 });
 
 // Mock @hominem/db
-vi.mock('@hominem/db', () => {
+vi.mock('@hominem/db', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+
   const mockWhere = vi.fn().mockImplementation(() => {
     const promise = Promise.resolve([]) as any;
     promise.orderBy = vi.fn().mockReturnValue(promise);
@@ -67,6 +69,7 @@ vi.mock('@hominem/db', () => {
   const mockUpdate = vi.fn().mockReturnValue({ set: mockSet });
 
   return {
+    ...actual,
     db: {
       select: mockSelect,
       insert: mockInsert,

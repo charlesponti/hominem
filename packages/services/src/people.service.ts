@@ -3,7 +3,7 @@ import type { Contact as ContactOutput } from '@hominem/db/schema/contacts';
 import { db } from '@hominem/db';
 import { eventsUsers } from '@hominem/db/schema/calendar';
 import { contacts } from '@hominem/db/schema/contacts';
-import { asc, eq, inArray } from 'drizzle-orm';
+import { asc, eq, inArray } from '@hominem/db';
 
 export interface PersonInput {
   userId: string;

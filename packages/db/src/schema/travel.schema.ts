@@ -1,6 +1,6 @@
 import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { z } from 'zod'
+import { z } from 'zod';
 
 import { list } from './lists.schema';
 import { users } from './users.schema';
@@ -58,7 +58,7 @@ export const FlightSchema = z.object({
   updatedAt: z.string(),
   userId: z.string(),
   listId: z.string().nullable().optional(),
-})
+});
 
 export const FlightInsertSchema = FlightSchema.partial().extend({
   id: z.string().optional(),
@@ -69,7 +69,7 @@ export const FlightInsertSchema = FlightSchema.partial().extend({
   arrivalAirport: z.string(),
   airline: z.string(),
   userId: z.string(),
-})
+});
 
 export const hotel = pgTable(
   'hotel',

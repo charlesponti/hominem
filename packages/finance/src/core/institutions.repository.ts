@@ -5,7 +5,7 @@ import type {
 
 import { db } from '@hominem/db';
 import { financialInstitutions } from '@hominem/db/schema/finance';
-import { eq } from 'drizzle-orm';
+import { eq } from '@hominem/db';
 
 /**
  * Repository for Financial Institutions

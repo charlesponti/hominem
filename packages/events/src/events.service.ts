@@ -22,7 +22,7 @@ import {
   removeTagsFromEvent,
   syncTagsForEvent,
 } from '@hominem/services/tags';
-import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, like, lte, or } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, like, lte, or } from '@hominem/db';
 
 export interface EventFilters {
   tagNames?: string[] | undefined;

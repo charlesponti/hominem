@@ -8,7 +8,7 @@ import type {
 
 import { db } from '@hominem/db';
 import { notes } from '@hominem/db/schema/notes';
-import { and, desc, eq, or, type SQLWrapper, sql } from 'drizzle-orm';
+import { and, desc, eq, or, type SQLWrapper, sql } from '@hominem/db';
 
 import type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput } from './types';
 

@@ -1,5 +1,5 @@
 import { users } from '@hominem/db/schema/users';
-import { eq, or } from 'drizzle-orm';
+import { eq, or } from '@hominem/db';
 
 import type { SupabaseAuthUser } from './types';
 

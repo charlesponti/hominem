@@ -6,7 +6,6 @@ import { jobs, job_applications, application_stages, work_experiences } from './
 import { categories } from './categories.schema';
 import { chat, chatMessage } from './chats.schema';
 import { companies } from './company.schema';
-
 import {
   financialInstitutions,
   plaidItems,
@@ -19,10 +18,10 @@ import { item } from './items.schema';
 import { list, userLists, listInvite } from './lists.schema';
 import { movie, movieViewings } from './movies.schema';
 import { notes } from './notes.schema';
-import { tasks } from './tasks.schema';
 import { place } from './places.schema';
 import { surveys, surveyOptions, surveyVotes } from './surveys.schema';
 import { tags } from './tags.schema';
+import { tasks } from './tasks.schema';
 import { flight } from './travel.schema';
 import { tripItems } from './trip_items.schema';
 import { trips } from './trips.schema';

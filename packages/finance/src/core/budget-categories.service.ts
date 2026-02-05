@@ -1,7 +1,7 @@
 import { db } from '@hominem/db';
 import { budgetCategories, transactions } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
-import { and, eq, like } from 'drizzle-orm';
+import { and, eq, like } from '@hominem/db';
 import crypto from 'node:crypto';
 
 export type BudgetCategoryType = (typeof budgetCategories.type.enumValues)[number];

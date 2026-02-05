@@ -52,11 +52,21 @@ export type GoalSelect = Goal;
  * Zod validation schemas
  */
 export const GoalInsertSchema = createInsertSchema(goals, {
-  status: z.nativeEnum({ 'todo': 'todo', 'in_progress': 'in_progress', 'completed': 'completed', 'archived': 'archived' }),
+  status: z.nativeEnum({
+    todo: 'todo',
+    in_progress: 'in_progress',
+    completed: 'completed',
+    archived: 'archived',
+  }),
 });
 
 export const GoalSelectSchema = createSelectSchema(goals, {
-  status: z.nativeEnum({ 'todo': 'todo', 'in_progress': 'in_progress', 'completed': 'completed', 'archived': 'archived' }),
+  status: z.nativeEnum({
+    todo: 'todo',
+    in_progress: 'in_progress',
+    completed: 'completed',
+    archived: 'archived',
+  }),
 });
 
 export type GoalInsertSchemaType = z.infer<typeof GoalInsertSchema>;

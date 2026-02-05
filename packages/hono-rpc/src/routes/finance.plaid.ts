@@ -9,7 +9,7 @@ import {
 import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { zValidator } from '@hono/zod-validator';
-import { and, eq } from 'drizzle-orm';
+import { and, eq } from '@hominem/db';
 import { Hono } from 'hono';
 import { z } from 'zod';
 

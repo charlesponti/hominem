@@ -4,7 +4,7 @@ import {
   processPlacePhotos,
   googlePlaces,
 } from '@hominem/places-services';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql } from '@hominem/db';
 
 /**
  * Migration script to download Google Photos images for existing places

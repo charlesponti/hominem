@@ -22,7 +22,6 @@
     "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
     "ai": "^4.3.16",
-    "drizzle-orm": "0.45.1",
     "zod": "4.3.6"
   },
   "devDependencies": {

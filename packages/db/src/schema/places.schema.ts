@@ -12,8 +12,8 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-import { tags } from './tags.schema';
 import { item } from './items.schema';
+import { tags } from './tags.schema';
 
 export const place = pgTable(
   'place',

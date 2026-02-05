@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(bun install:*)",
+      "Bash(bun run typecheck:*)",
+      "Bash(turbo run:*)",
+      "Bash(bunx turbo run:*)",
+      "Bash(wc:*)",
+      "Bash(xargs:*)"
+    ]
+  }
+}

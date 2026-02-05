@@ -1,9 +1,19 @@
-import { type InferInsertModel, type InferSelectModel, sql } from 'drizzle-orm'
-import { foreignKey, index, json, pgTable, text, timestamp, uuid, integer, boolean } from 'drizzle-orm/pg-core'
-import * as z from 'zod'
+import { type InferInsertModel, type InferSelectModel, sql } from 'drizzle-orm';
+import {
+  foreignKey,
+  index,
+  json,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  integer,
+  boolean,
+} from 'drizzle-orm/pg-core';
+import * as z from 'zod';
 
-import { type AllContentType, AllContentTypeSchema, type ContentTag } from './shared.schema'
-import { users } from './users.schema'
+import { type AllContentType, AllContentTypeSchema, type ContentTag } from './shared.schema';
+import { users } from './users.schema';
 
 /**
  * Publishing status for notes
@@ -12,9 +22,9 @@ export const NoteStatusSchema = z.enum([
   'draft', // Default, work in progress
   'published', // Live/published to a platform
   'archived', // No longer active but preserved
-])
+]);
 
-export type NoteStatus = z.infer<typeof NoteStatusSchema>
+export type NoteStatus = z.infer<typeof NoteStatusSchema>;
 
 /**
  * Publishing metadata consolidates all platform-specific data
@@ -59,9 +69,9 @@ export const PublishingMetadataSchema = z.object({
   // Import tracking
   importedAt: z.string().optional(),
   importedFrom: z.string().optional(),
-})
+});
 
-export type PublishingMetadata = z.infer<typeof PublishingMetadataSchema>
+export type PublishingMetadata = z.infer<typeof PublishingMetadataSchema>;
 
 export const notes = pgTable(
   'notes',
@@ -111,21 +121,21 @@ export const notes = pgTable(
       name: 'notes_parent_fk',
     }).onDelete('cascade'),
   ],
-)
+);
 
 export type NoteMention = {
-  id: string
-  name: string
-}
+  id: string;
+  name: string;
+};
 
 /**
  * ContentType defines the type of personal notes for specialized behavior
  * These can include both base types and publishing types
  */
-export const NoteContentTypeSchema = AllContentTypeSchema
+export const NoteContentTypeSchema = AllContentTypeSchema;
 
-export type NoteContentType = AllContentType
+export type NoteContentType = AllContentType;
 
-export type Note = InferSelectModel<typeof notes>
-export type NoteInsert = InferInsertModel<typeof notes>
-export type NoteSelect = Note
+export type Note = InferSelectModel<typeof notes>;
+export type NoteInsert = InferInsertModel<typeof notes>;
+export type NoteSelect = Note;

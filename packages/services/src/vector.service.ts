@@ -3,7 +3,7 @@ import type { VectorDocumentInput, VectorDocumentOutput } from '@hominem/db/type
 import { vectorDocuments } from '@hominem/db/schema/vector-documents';
 import { splitMarkdown, type Document } from '@hominem/utils/markdown';
 import csv from 'csv-parser';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from '@hominem/db';
 import { randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
 import OpenAI from 'openai';

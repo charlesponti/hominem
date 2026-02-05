@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq } from '@hominem/db'
 import { account } from '@hominem/db/schema/users'
 
 export type AccountRecord = typeof account.$inferSelect

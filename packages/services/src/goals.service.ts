@@ -2,7 +2,7 @@ import type { GoalInput, GoalOutput } from '@hominem/db/types/goals';
 
 import { db } from '@hominem/db';
 import { goals } from '@hominem/db/schema/goals';
-import { and, asc, desc, eq, ilike, ne } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, ne } from '@hominem/db';
 
 export async function listGoals(params: {
   userId: string;

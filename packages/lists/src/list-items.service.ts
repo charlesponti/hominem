@@ -7,7 +7,7 @@ import { place } from '@hominem/db/schema/places';
 import { users } from '@hominem/db/schema/users';
 import { getHominemPhotoURL } from '@hominem/utils/images';
 import { logger } from '@hominem/utils/logger';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from '@hominem/db';
 import crypto from 'node:crypto';
 
 import type { ListPlace } from './types';

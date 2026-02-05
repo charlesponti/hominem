@@ -3,7 +3,7 @@ import type { UserListsOutput } from '@hominem/db/types/lists';
 import { db } from '@hominem/db';
 import { list } from '@hominem/db/schema/lists';
 import { listInvite, userLists } from '@hominem/db/schema/lists';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from '@hominem/db';
 
 export async function isUserMemberOfList(listId: string, userId: string): Promise<boolean> {
   const membership = await db.query.userLists.findFirst({

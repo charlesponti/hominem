@@ -14,7 +14,7 @@ import {
 } from '@hominem/services';
 import { sendInviteEmail } from '@hominem/services/emails';
 import { logger } from '@hominem/utils/logger';
-import { and, eq, or } from 'drizzle-orm';
+import { and, eq, or } from '@hominem/db';
 import crypto from 'node:crypto';
 import { z } from 'zod';
 

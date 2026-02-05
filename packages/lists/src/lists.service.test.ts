@@ -5,7 +5,7 @@ import { listInvite } from '@hominem/db/schema/lists';
 import { users } from '@hominem/db/schema/users';
 import { createTestUser } from '@hominem/db/test/fixtures';
 import { sendInviteEmail } from '@hominem/services/resend';
-import { and, eq } from 'drizzle-orm';
+import { and, eq } from '@hominem/db';
 import crypto from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

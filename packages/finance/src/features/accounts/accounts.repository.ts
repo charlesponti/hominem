@@ -6,7 +6,7 @@ import type {
 
 import { db } from '@hominem/db';
 import { financeAccounts, financialInstitutions, plaidItems } from '@hominem/db/schema/finance';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from '@hominem/db';
 import crypto from 'node:crypto';
 
 import type {

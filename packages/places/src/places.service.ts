@@ -9,7 +9,7 @@ import { place } from '@hominem/db/schema/places';
 import { googlePlaces } from '@hominem/services/google-places';
 import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/google';
 import { normalizePhotoReference, sanitizeStoredPhotos } from '@hominem/utils/images';
-import { and, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, or, sql } from '@hominem/db';
 
 import { isGooglePhotosUrl, type PlaceImagesService } from './place-images.service';
 

@@ -24,7 +24,7 @@ import {
   transactions,
 } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
-import { and, eq } from 'drizzle-orm';
+import { and, eq } from '@hominem/db';
 import { randomUUID } from 'node:crypto';
 
 /**

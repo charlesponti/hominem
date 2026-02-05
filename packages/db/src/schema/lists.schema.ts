@@ -1,4 +1,4 @@
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { sql } from 'drizzle-orm';
 import {
   foreignKey,
   pgTable,
@@ -9,7 +9,7 @@ import {
   uniqueIndex,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import * as z from 'zod';
 
 import { createdAtColumn, updatedAtColumn } from './shared.schema';

@@ -2,7 +2,7 @@ import type { PossessionInput, PossessionOutput } from '@hominem/db/types/posses
 
 import { db } from '@hominem/db';
 import { possessions } from '@hominem/db/schema/possessions';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq } from '@hominem/db';
 
 type CreatePossessionInput = Omit<PossessionInput, 'createdAt' | 'updatedAt'> & {
   userId: string;

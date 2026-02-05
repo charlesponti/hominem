@@ -7,7 +7,7 @@ import type {
 import { db } from '@hominem/db';
 import { events } from '@hominem/db/schema/calendar';
 import { logger } from '@hominem/utils/logger';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from '@hominem/db';
 import { type calendar_v3, google, Auth } from 'googleapis';
 import { v7 as uuidv7 } from 'uuid';
 

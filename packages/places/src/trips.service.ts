@@ -10,7 +10,7 @@ import { tripItems } from '@hominem/db/schema/trip_items';
 import { trips } from '@hominem/db/schema/trips';
 import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { logger } from '@hominem/utils/logger';
-import { and, eq } from 'drizzle-orm';
+import { and, eq } from '@hominem/db';
 import { z } from 'zod';
 
 type TripItemWithPlace = {

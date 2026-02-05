@@ -3,7 +3,7 @@ import type { TagOutput } from '@hominem/db/types/tags';
 import { db } from '@hominem/db';
 import { eventsTags } from '@hominem/db/schema/calendar';
 import { tags } from '@hominem/db/schema/tags';
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray } from '@hominem/db';
 import { randomUUID } from 'node:crypto';
 
 export interface TagInput {

@@ -2,7 +2,7 @@ import type { CompanyOutput, CompanyInput } from '@hominem/db/types/company';
 
 import { db } from '@hominem/db';
 import { companies } from '@hominem/db/schema/company';
-import { eq, type SQL } from 'drizzle-orm';
+import { eq, type SQL } from '@hominem/db';
 
 export class CompanyService {
   async create(data: Omit<CompanyInput, 'id' | 'version' | 'createdAt' | 'updatedAt'>) {
