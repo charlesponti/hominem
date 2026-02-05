@@ -21,7 +21,6 @@
     "./types/change-management": "./src/types/change-management.ts"
   },
   "scripts": {
-    "build": "tsc -d",
     "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
     "format": "bunx oxfmt ./src",

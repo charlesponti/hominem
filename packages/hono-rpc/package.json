@@ -13,7 +13,6 @@
   },
   "scripts": {
     "typecheck": "bunx tsc --noEmit --incremental",
-    "build": "tsc -b tsconfig.json",
     "dev": "bunx tsc --noEmit --incremental --watch",
     "clean": "rm -rf build node_modules/.cache"
   },
