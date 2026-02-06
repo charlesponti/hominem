@@ -2,7 +2,7 @@
 FROM oven/bun:1.3.0-debian AS base
 WORKDIR /app
 
-# Install necessary tools (only what's absolutely needed)
+# Install necessary tools
 RUN apt-get update && \
   apt-get install -y --no-install-recommends curl ca-certificates && \
   apt-get clean && \
@@ -13,37 +13,20 @@ ENV PATH="/usr/local/bin:${PATH}"
 ENV NODE_ENV=production
 ENV TURBO_TELEMETRY_DISABLED=1
 
-# Pruner stage - use turbo to create a pruned workspace with only what's needed
-FROM base AS pruner
+# Builder stage - install all dependencies
+FROM base AS builder
 WORKDIR /app
 
-# Install Node.js (required for turbo CLI)
-RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
-  apt-get update && \
-  apt-get install -y --fix-missing nodejs && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
+# Copy the entire workspace
+COPY package.json bun.lock ./
+COPY packages ./packages
+COPY services ./services
+COPY tools ./tools
+COPY apps ./apps
+COPY config ./config
 
-# Install turbo globally
-RUN bun install -g turbo
-
-# Copy repo content needed for pruning
-COPY . .
-
-# Prune the workspace to only include the API app and its deps
-RUN turbo prune @hominem/api --docker
-
-# Dependencies stage - install dependencies
-FROM base AS deps
-WORKDIR /app
-
-# Copy the pruned package.json files only
-COPY --from=pruner /app/out/json/ .
-
-# Generate a fresh lock file for the pruned workspace structure
-# Note: We don't use --production here because it causes conflicts with
-# the generated lock file. The pruned workspace only contains necessary deps anyway.
-RUN bun install --ignore-scripts
+# Install all dependencies with the lock file
+RUN bun install --frozen-lockfile
 
 # Production stage
 FROM oven/bun:1.3.0-debian AS release
@@ -65,15 +48,16 @@ RUN addgroup --gid 1001 bunuser && \
 RUN mkdir -p /app/logs && \
   chown -R hominem:bunuser /app/logs
 
-# Copy package files for reference
-COPY --from=pruner /app/out/json/ .
+# Copy package files from builder
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/bun.lock ./bun.lock
 
-# Copy node_modules from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+# Copy node_modules from builder
+COPY --from=builder /app/node_modules ./node_modules
 
-# Copy source code from pruner (includes packages and app source)
-COPY --from=pruner /app/out/full/packages ./packages
-COPY --from=pruner /app/out/full/services/api ./services/api
+# Copy source code and workspace packages
+COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/services/api ./services/api
 
 # Set proper permissions
 RUN chown -R hominem:bunuser /app
