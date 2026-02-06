@@ -50,6 +50,10 @@ export type ChatsSendOutput = {
   };
 };
 
+export type ChatsCreateInput = {
+  title: string;
+};
+
 // ============================================================================
 // Output Types (Inferred from returns - these are optional aliases)
 // ============================================================================

@@ -1,5 +1,8 @@
-import type { PlaceCreateOutput, PlaceGetDetailsByIdOutput } from '@hominem/hono-rpc/types';
-import type { Invite } from '@hominem/hono-rpc/types';
+import type { Invite } from '@hominem/hono-rpc/types/invites.types';
+import type {
+  PlaceCreateOutput,
+  PlaceGetDetailsByIdOutput,
+} from '@hominem/hono-rpc/types/places.types';
 import type { SentInvite as SentInviteType } from '@hominem/invites-services';
 import type { ListOutput } from '@hominem/lists-services';
 

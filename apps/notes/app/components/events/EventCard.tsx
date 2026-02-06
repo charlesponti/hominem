@@ -1,23 +1,11 @@
-import type { Person } from '@hominem/hono-rpc/types/people.types';
 import type React from 'react';
 
 import { Button } from '@hominem/ui/components/ui/button';
 import { MapPinIcon, PencilIcon, UsersIcon } from 'lucide-react';
 import { useMemo } from 'react';
 
+import type { Activity } from './EventList';
 import SourceBadge from './SourceBadge';
-
-interface Activity {
-  id: string;
-  date?: string | undefined;
-  time?: string | undefined;
-  title: string;
-  description?: string | undefined;
-  location?: string | undefined;
-  people?: Person[] | undefined;
-  tags?: string[] | undefined;
-  source?: 'manual' | 'google_calendar' | undefined;
-}
 
 interface EventCardProps {
   activity: Activity;

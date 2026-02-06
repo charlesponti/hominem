@@ -167,14 +167,36 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
   const eventsData = loaderData.events;
 
   const activities: Activity[] = useMemo(() => {
-    return (eventsData as EventData[]).map((event) => ({
-      id: event.id,
-      date: event.date,
-      title: event.title,
-      description: event.description ?? undefined,
-      people: (event.people as any) || [],
-      tags: event.tags || [],
-    }));
+    return (eventsData as EventData[]).map((event) => {
+      const dateValue = event.date instanceof Date ? event.date.toISOString() : event.date ?? undefined;
+      const normalizeTimestamp = (value: string | Date) =>
+        value instanceof Date ? value.toISOString() : value;
+      const people: Person[] = (event.people ?? []).map((person) => ({
+        id: person.id,
+        userId: event.userId,
+        firstName: person.firstName,
+        lastName: person.lastName ?? null,
+        email: null,
+        phone: null,
+        linkedinUrl: null,
+        title: null,
+        notes: null,
+        createdAt: normalizeTimestamp(event.createdAt),
+        updatedAt: normalizeTimestamp(event.updatedAt),
+      }));
+      const tags =
+        event.tags?.map((tag) => tag.name).filter((name): name is string => Boolean(name?.trim())) ?? [];
+
+      return {
+        id: event.id,
+        date: dateValue,
+        title: event.title,
+        description: event.description ?? undefined,
+        people,
+        tags,
+        source: event.source,
+      } satisfies Activity;
+    });
   }, [eventsData]);
 
   const people: Person[] = useMemo(() => loaderData.people ?? [], [loaderData.people]);

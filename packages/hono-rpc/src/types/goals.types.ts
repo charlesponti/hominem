@@ -1,5 +1,6 @@
-import { z } from 'zod';
+// Force rebuild after schema changes
 import { GoalStatusSchema, GoalMilestoneSchema } from '@hominem/db/schema/goals';
+import { z } from 'zod';
 
 // ============================================================================
 // Database Types - Re-exported from @hominem/db
@@ -9,13 +10,7 @@ import { GoalStatusSchema, GoalMilestoneSchema } from '@hominem/db/schema/goals'
  * Core types imported directly from the database schema.
  * No manual duplication - these are the source of truth.
  */
-export type {
-  Goal,
-  GoalInsert,
-  GoalSelect,
-  GoalStatus,
-  GoalMilestone,
-} from '@hominem/db/types/goals';
+export type { GoalInsert, GoalSelect, GoalStatus, GoalMilestone } from '@hominem/db/schema/goals';
 
 /**
  * Zod schemas for validation - re-export imported schemas
@@ -95,3 +90,8 @@ export type GoalUpdateOutput = EventWithTagsAndPeople;
 export type GoalDeleteOutput = { success: true; id: string };
 export type GoalArchiveOutput = EventWithTagsAndPeople;
 export type GoalOutput = EventWithTagsAndPeople;
+
+/**
+ * Alias for GoalOutput - used by frontend components
+ */
+export type Goal = GoalOutput;

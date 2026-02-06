@@ -11,11 +11,12 @@ export type { EventOutput as Event, EventTypeEnum } from '@hominem/db/types/cale
 // ============================================================================
 
 import type { EventOutput } from '@hominem/db/types/calendar';
+import type { EventWithTagsAndPeople } from '@hominem/events-services';
 
-export type EventsListOutput = EventOutput[];
-export type EventsGetOutput = EventOutput;
-export type EventsCreateOutput = EventOutput;
-export type EventsUpdateOutput = EventOutput;
+export type EventsListOutput = EventWithTagsAndPeople[];
+export type EventsGetOutput = EventWithTagsAndPeople;
+export type EventsCreateOutput = EventWithTagsAndPeople;
+export type EventsUpdateOutput = EventWithTagsAndPeople;
 export type EventsDeleteOutput = { success: boolean };
 
 // ============================================================================

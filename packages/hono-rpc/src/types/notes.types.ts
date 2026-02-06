@@ -60,6 +60,19 @@ export type NotesPublishOutput = Note;
 export type NotesArchiveOutput = Note;
 export type NotesVersionsOutput = { versions: Note[] };
 
+export type NotesListInput = {
+  types?: NoteContentType[];
+  status?: Array<'draft' | 'published' | 'archived'>;
+  tags?: string[];
+  query?: string;
+  since?: string;
+  sortBy?: 'createdAt' | 'updatedAt' | 'title';
+  sortOrder?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+  includeAllVersions?: boolean;
+};
+
 // ============================================================================
 // CREATE NOTE
 // ============================================================================

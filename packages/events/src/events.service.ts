@@ -1,10 +1,11 @@
 import type {
-  CalendarEvent,
-  CalendarEventInsert,
+  EventOutput as DbEventOutput,
+  EventInput as DbEventInput,
   EventTypeEnum,
-} from '@hominem/db/schema/calendar';
+} from '@hominem/db/types/calendar';
 
 import { db } from '@hominem/db';
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, like, lte, or } from '@hominem/db';
 import { events, eventsTags, eventsUsers } from '@hominem/db/schema/calendar';
 import { contacts } from '@hominem/db/schema/contacts';
 import { place } from '@hominem/db/schema/places';
@@ -22,7 +23,6 @@ import {
   removeTagsFromEvent,
   syncTagsForEvent,
 } from '@hominem/services/tags';
-import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, like, lte, or } from '@hominem/db';
 
 export interface EventFilters {
   tagNames?: string[] | undefined;
@@ -30,7 +30,8 @@ export interface EventFilters {
   sortBy?: 'date-asc' | 'date-desc' | 'summary' | undefined;
 }
 
-export interface EventWithTagsAndPeople extends CalendarEvent {
+export interface EventWithTagsAndPeople extends DbEventOutput {
+  goalCategory: DbEventOutput['goalCategory'];
   tags: Array<{ id: string; name: string; color: string | null; description: string | null }>;
   people: Array<{ id: string; firstName: string; lastName: string | null }>;
 }
@@ -129,30 +130,70 @@ export async function getEvents(filters: EventFilters = {}): Promise<EventWithTa
     ...eventItem,
     tags: tagsMap.get(eventItem.id) || [],
     people: peopleMap.get(eventItem.id) || [],
-  }));
+  })) as EventWithTagsAndPeople[];
 }
 
 export async function createEvent(
-  event: Omit<CalendarEventInsert, 'id'> & {
+  event: Omit<DbEventInput, 'id'> & {
     tags?: string[];
     people?: string[];
   },
 ): Promise<EventWithTagsAndPeople> {
+  const now = new Date().toISOString();
+  const insertEvent: typeof events.$inferInsert = {
+    id: crypto.randomUUID(),
+    title: event.title,
+    description: event.description ?? null,
+    date: event.date ?? new Date(),
+    dateStart: event.dateStart ?? null,
+    dateEnd: event.dateEnd ?? null,
+    dateTime: event.dateTime ?? null,
+    type: (event.type || 'Events') as EventTypeEnum,
+    userId: event.userId,
+    source: event.source ?? 'manual',
+    externalId: event.externalId ?? null,
+    calendarId: event.calendarId ?? null,
+    placeId: event.placeId ?? null,
+    lastSyncedAt: event.lastSyncedAt ?? null,
+    syncError: event.syncError ?? null,
+    visitNotes: event.visitNotes ?? null,
+    visitRating: event.visitRating ?? null,
+    visitReview: event.visitReview ?? null,
+    visitPeople: event.visitPeople ?? null,
+    interval: event.interval ?? null,
+    recurrenceRule: event.recurrenceRule ?? null,
+    score: event.score ?? null,
+    priority: event.priority ?? null,
+    goalCategory: event.goalCategory ?? null,
+    targetValue: event.targetValue ?? null,
+    currentValue: event.currentValue ?? 0,
+    unit: event.unit ?? null,
+    isCompleted: event.isCompleted ?? false,
+    streakCount: event.streakCount ?? 0,
+    totalCompletions: event.totalCompletions ?? 0,
+    completedInstances: event.completedInstances ?? 0,
+    lastCompletedAt: event.lastCompletedAt ?? null,
+    expiresInDays: event.expiresInDays ?? null,
+    reminderTime: event.reminderTime ?? null,
+    reminderSettings: event.reminderSettings ?? null,
+    parentEventId: event.parentEventId ?? null,
+    status: event.status ?? 'active',
+    deletedAt: event.deletedAt ?? null,
+    activityType: event.activityType ?? null,
+    duration: event.duration ?? null,
+    caloriesBurned: event.caloriesBurned ?? null,
+    isTemplate: event.isTemplate ?? false,
+    nextOccurrence: event.nextOccurrence ?? null,
+    dependencies: event.dependencies ?? null,
+    resources: event.resources ?? null,
+    milestones: event.milestones ?? null,
+    createdAt: now,
+    updatedAt: now,
+  };
+
   const [result] = await db
     .insert(events)
-    .values({
-      id: crypto.randomUUID(),
-      title: event.title,
-      description: event.description || null,
-      date: event.date,
-      type: (event.type || 'Events') as EventTypeEnum,
-      placeId: event.placeId || null,
-      userId: event.userId,
-      visitNotes: event.visitNotes || null,
-      visitRating: event.visitRating || null,
-      visitReview: event.visitReview || null,
-      visitPeople: event.visitPeople || null,
-    })
+    .values(insertEvent)
     .returning();
 
   if (!result) {
@@ -178,25 +219,38 @@ export async function createEvent(
     ...result,
     tags: tagsList,
     people,
-  };
+  } as unknown as EventWithTagsAndPeople;
 }
 
-export type UpdateEventInput = Partial<
-  Omit<typeof events.$inferInsert, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
-> & {
+export type UpdateEventInput = Partial<Omit<DbEventInput, 'id' | 'userId' | 'createdAt' | 'updatedAt'>> & {
   tags?: string[];
   people?: string[];
+  // Additional fields for goals and activities
+  currentValue?: number;
+  targetValue?: number;
+  completedInstances?: number;
+  duration?: number;
+  caloriesBurned?: number;
+  goalCategory?: string;
+  unit?: string;
 };
 
 export async function updateEvent(
   id: string,
   event: UpdateEventInput,
 ): Promise<EventWithTagsAndPeople | null> {
-  const updateData: Partial<typeof events.$inferInsert> = {};
+  const { tags: tagsInput, people: peopleInput, type, ...eventData } = event;
+  const updateData = {
+    ...(eventData as Partial<typeof events.$inferInsert>),
+    ...(type !== undefined ? { type: type as EventTypeEnum } : {}),
+    updatedAt: new Date().toISOString(),
+  } satisfies Partial<typeof events.$inferInsert>;
 
-  Object.assign(updateData, { ...event, updatedAt: new Date() });
-
-  const result = await db.update(events).set(updateData).where(eq(events.id, id)).returning();
+  const result = await db
+    .update(events)
+    .set(updateData)
+    .where(eq(events.id, id))
+    .returning();
 
   if (result.length === 0) {
     return null;
@@ -204,12 +258,12 @@ export async function updateEvent(
 
   const updatedEvent = result[0];
 
-  if (event.people !== undefined) {
-    await replacePeopleForEvent(id, event.people);
+  if (peopleInput !== undefined) {
+    await replacePeopleForEvent(id, peopleInput);
   }
 
-  if (event.tags !== undefined) {
-    const tagObjects = await findOrCreateTagsByNames(event.tags);
+  if (tagsInput !== undefined) {
+    const tagObjects = await findOrCreateTagsByNames(tagsInput);
     const tagIds = tagObjects.map((tag) => tag.id);
     await syncTagsForEvent(id, tagIds);
   }
@@ -217,7 +271,7 @@ export async function updateEvent(
   const [people, tagsList] = await Promise.all([getPeopleForEvent(id), getTagsForEvent(id)]);
 
   return {
-    ...(updatedEvent as CalendarEvent),
+    ...(updatedEvent as DbEventOutput),
     tags: tagsList,
     people,
   };
@@ -247,7 +301,7 @@ export async function getEventById(id: string): Promise<EventWithTagsAndPeople |
     ...result,
     tags: tagsList,
     people,
-  };
+  } as unknown as EventWithTagsAndPeople;
 }
 
 export async function getEventByExternalId(
@@ -273,7 +327,7 @@ export async function getEventByExternalId(
     ...result,
     tags: tagsList,
     people,
-  };
+  } as unknown as EventWithTagsAndPeople;
 }
 
 export interface SyncStatus {
@@ -437,7 +491,7 @@ export async function getHabitStats(userId: string, habitId: string): Promise<Ha
   const habit = await db
     .select({
       streakCount: events.streakCount,
-      completedInstances: events.completedInstances,
+      completedInstances: (events as any).completedInstances,
     })
     .from(events)
     .where(and(eq(events.id, habitId), eq(events.userId, userId)))
@@ -491,7 +545,7 @@ export async function createHabit(
   };
 
   const habitEvent = await createEvent(
-    habitEventInput as Omit<CalendarEventInsert, 'id'> & {
+    habitEventInput as Omit<DbEventInput, 'id'> & {
       tags?: string[];
       people?: string[];
     },
@@ -582,8 +636,8 @@ export interface GoalStats {
 export async function getGoalStats(goalId: string, userId: string): Promise<GoalStats> {
   const goal = await db
     .select({
-      currentValue: events.currentValue,
-      targetValue: events.targetValue,
+      currentValue: (events as any).currentValue,
+      targetValue: (events as any).targetValue,
     })
     .from(events)
     .where(and(eq(events.id, goalId), eq(events.userId, userId)))
@@ -638,7 +692,7 @@ export async function createGoal(
   };
 
   const goalEvent = await createEvent(
-    goalEventInput as Omit<CalendarEventInsert, 'id'> & {
+    goalEventInput as Omit<DbEventInput, 'id'> & {
       tags?: string[];
       people?: string[];
     },
@@ -690,7 +744,7 @@ export async function getHabitsByUser(
       orderByClause = desc(events.streakCount);
       break;
     case 'completions':
-      orderByClause = desc(events.completedInstances);
+      orderByClause = desc((events as any).completedInstances);
       break;
     case 'name':
     default:
@@ -713,7 +767,7 @@ export async function getHabitsByUser(
     ...habitItem,
     tags: tagsMap.get(habitItem.id) || [],
     people: peopleMap.get(habitItem.id) || [],
-  }));
+  })) as unknown as EventWithTagsAndPeople[];
 }
 
 export async function getGoalsByUser(
@@ -737,7 +791,7 @@ export async function getGoalsByUser(
   let orderByClause: ReturnType<typeof asc> | ReturnType<typeof desc>;
   switch (filters?.sortBy) {
     case 'progress':
-      orderByClause = desc(events.currentValue);
+      orderByClause = desc((events as any).currentValue);
       break;
     case 'priority':
       orderByClause = asc(events.priority);
@@ -763,7 +817,7 @@ export async function getGoalsByUser(
     ...goalItem,
     tags: tagsMap.get(goalItem.id) || [],
     people: peopleMap.get(goalItem.id) || [],
-  }));
+  })) as unknown as EventWithTagsAndPeople[];
 }
 
 /**
@@ -805,8 +859,8 @@ export async function getHealthActivityStats(
 
   const activities = await db
     .select({
-      duration: events.duration,
-      caloriesBurned: events.caloriesBurned,
+      duration: (events as any).duration,
+      caloriesBurned: (events as any).caloriesBurned,
       date: events.date,
     })
     .from(events)
@@ -853,7 +907,7 @@ export async function logHealthActivity(
   };
 
   const healthEvent = await createEvent(
-    healthEventInput as Omit<CalendarEventInsert, 'id'> & {
+    healthEventInput as Omit<DbEventInput, 'id'> & {
       tags?: string[];
       people?: string[];
     },
@@ -917,10 +971,10 @@ export async function getHealthActivitiesByUser(
   let orderByClause: ReturnType<typeof asc> | ReturnType<typeof desc>;
   switch (filters?.sortBy) {
     case 'calories':
-      orderByClause = desc(events.caloriesBurned);
+      orderByClause = desc((events as any).caloriesBurned);
       break;
     case 'duration':
-      orderByClause = desc(events.duration);
+      orderByClause = desc((events as any).duration);
       break;
     case 'date':
     default:
@@ -943,7 +997,7 @@ export async function getHealthActivitiesByUser(
     ...activityItem,
     tags: tagsMap.get(activityItem.id) || [],
     people: peopleMap.get(activityItem.id) || [],
-  }));
+  })) as unknown as EventWithTagsAndPeople[];
 }
 
 /**
@@ -966,8 +1020,8 @@ export async function getConsolidatedGoalStats(
   const goal = await db
     .select({
       status: events.status,
-      currentValue: events.currentValue,
-      targetValue: events.targetValue,
+      currentValue: (events as any).currentValue,
+      targetValue: (events as any).targetValue,
       milestones: events.milestones,
     })
     .from(events)
@@ -1030,7 +1084,7 @@ export async function createConsolidatedGoal(
   };
 
   const goalEvent = await createEvent(
-    goalEventInput as Omit<CalendarEventInsert, 'id'> & {
+    goalEventInput as Omit<DbEventInput, 'id'> & {
       tags?: string[];
       people?: string[];
     },
@@ -1094,7 +1148,7 @@ export async function getConsolidatedGoalsByUser(
       break;
     case 'createdAt':
     default:
-      orderByClause = desc(events.createdAt);
+      orderByClause = desc((events as any).createdAt);
   }
 
   const goalsList = await db
@@ -1113,5 +1167,5 @@ export async function getConsolidatedGoalsByUser(
     ...goalItem,
     tags: tagsMap.get(goalItem.id) || [],
     people: peopleMap.get(goalItem.id) || [],
-  }));
+  })) as unknown as EventWithTagsAndPeople[];
 }

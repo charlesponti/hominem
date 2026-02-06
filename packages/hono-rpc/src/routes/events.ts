@@ -101,12 +101,32 @@ export const eventsRoutes = new Hono<AppContext>()
        dependencies: null,
        resources: null,
        milestones: null,
-       createdAt: new Date().toISOString(),
-       updatedAt: new Date().toISOString(),
-       deletedAt: null,
-       ...(tags && { tags }),
-       ...(people && { people }),
-     });
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+        // Default values for new fields
+        currentValue: 0,
+        streakCount: 0,
+        totalCompletions: 0,
+        completedInstances: 0,
+        isCompleted: false,
+        isTemplate: false,
+        status: 'active',
+        // Nullable fields
+        goalCategory: null,
+        targetValue: null,
+        unit: null,
+        lastCompletedAt: null,
+        expiresInDays: null,
+        reminderTime: null,
+        parentEventId: null,
+        activityType: null,
+        duration: null,
+        caloriesBurned: null,
+        nextOccurrence: null,
+        ...(tags && { tags }),
+        ...(people && { people }),
+      });
     return c.json<EventsCreateOutput>(event, 201);
   })
 
