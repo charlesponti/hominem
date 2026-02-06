@@ -1,6 +1,6 @@
 # Hominem CLI
 
-Command line tools for various tasks.
+App-focused CLI utilities (auth, AI, notes, possessions, health). General-purpose scrapers and converters now live in `/Users/charlesponti/Developer/_scripts`.
 
 ## Installation
 

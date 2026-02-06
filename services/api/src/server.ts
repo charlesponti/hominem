@@ -13,6 +13,7 @@ import { prettyJSON } from 'hono/pretty-json';
 import { env } from './env';
 import { supabaseMiddleware } from './middleware/supabase';
 import { aiRoutes } from './routes/ai';
+import { authRoutes } from './routes/auth';
 import { componentsRoutes } from './routes/components';
 import { financeRoutes } from './routes/finance';
 import { plaidRoutes } from './routes/finance/plaid';
@@ -90,6 +91,7 @@ export function createServer() {
   // Register other route handlers
   app.route('/api/status', statusRoutes);
   app.route('/api/health', healthRoutes);
+  app.route('/api/auth', authRoutes);
   app.route('/api/ai', aiRoutes);
   app.route('/api/oauth', oauthRoutes);
   app.route('/api/possessions', possessionsRoutes);

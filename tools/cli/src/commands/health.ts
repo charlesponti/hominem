@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import { consola } from 'consola';
 import ora from 'ora';
 
-import { getAuthToken } from '@/utils/auth.utils';
+import { getAuthToken } from '@/utils/auth';
 
 export const command = new Command()
   .command('health')
@@ -15,9 +15,9 @@ export const command = new Command()
     const spinner = ora('Checking API health').start();
     try {
       // Try to get auth token if available
-      let token: ReturnType<typeof getAuthToken>;
+      let token: string | undefined;
       try {
-        token = getAuthToken();
+        token = await getAuthToken();
       } catch (_e) {
         // Continue without token for health check
       }

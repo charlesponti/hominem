@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import { consola } from 'consola';
 import ora from 'ora';
 
-import { getAuthToken } from '@/utils/auth.utils';
+import { getAuthToken } from '@/utils/auth';
 
 export const command = new Command()
   .name('possessions')
@@ -19,9 +19,9 @@ command
     const spinner = ora('Fetching possessions').start();
     try {
       // Get auth token if available
-      let token: ReturnType<typeof getAuthToken>;
+      let token: string | undefined;
       try {
-        token = getAuthToken();
+        token = await getAuthToken();
       } catch (_e) {
         spinner.warn('Not authenticated. Some features may be limited.');
       }
