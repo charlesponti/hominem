@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # Allow manual trigger
   push:
     paths:
-      - "packages/db/scripts/migrate-place-images.ts"
+      - "packages/places/src/scripts/migrate-place-images.ts"
       - ".github/workflows/migrate-place-images.yml"
 
 jobs:

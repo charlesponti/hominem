@@ -1,18 +1,15 @@
-import {
-  createPlaceImagesService,
-  isGooglePhotosUrl,
-  processPlacePhotos,
-  googlePlaces,
-} from '@hominem/places-services';
-import { eq, sql } from '@hominem/db';
+import { db, eq, sql } from '@hominem/db';
+import { place } from '@hominem/db/schema/places';
+import { env } from '@hominem/services/env';
+import { googlePlaces } from '@hominem/services/google-places';
+
+import { createPlaceImagesService, isGooglePhotosUrl } from '../place-images.service';
+import { processPlacePhotos } from '../places.service';
 
 /**
  * Migration script to download Google Photos images for existing places
  * and store them in Supabase Storage
  */
-import { db } from '../src/db';
-import { place } from '../src/db/schema';
-import { env } from '../src/env';
 
 const GOOGLE_API_KEY = env.GOOGLE_API_KEY;
 
@@ -170,13 +167,13 @@ async function migrateImages() {
   } catch (error) {
     console.error('Migration failed:', error);
     process.exit(1);
-  } finally {
-    process.exit(0);
   }
 }
 
 // Run the migration
-migrateImages().catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+migrateImages()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
