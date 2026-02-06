@@ -1,0 +1,93 @@
+# Base stage with common tools
+FROM oven/bun:1.3.0-debian AS base
+WORKDIR /app
+
+# Install necessary tools (only what's absolutely needed)
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends curl ca-certificates && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# Set up environment
+ENV PATH="/usr/local/bin:${PATH}"
+ENV NODE_ENV=production
+ENV TURBO_TELEMETRY_DISABLED=1
+
+# Pruner stage - use turbo to create a pruned workspace with only what's needed
+FROM base AS pruner
+WORKDIR /app
+
+# Install Node.js (required for turbo CLI)
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
+  apt-get update && \
+  apt-get install -y --fix-missing nodejs && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# Install turbo globally
+RUN bun install -g turbo
+
+# Copy repo content needed for pruning
+COPY . .
+
+# Prune the workspace to only include the API app and its deps
+RUN turbo prune @hominem/api --docker
+
+# Dependencies stage - install dependencies
+FROM base AS deps
+WORKDIR /app
+
+# Copy the pruned package.json files only
+COPY --from=pruner /app/out/json/ .
+
+# Generate a fresh lock file for the pruned workspace structure
+# Note: We don't use --production here because it causes conflicts with
+# the generated lock file. The pruned workspace only contains necessary deps anyway.
+RUN bun install --ignore-scripts
+
+# Production stage
+FROM oven/bun:1.3.0-debian AS release
+WORKDIR /app
+ENV NODE_ENV=production
+ENV TURBO_TELEMETRY_DISABLED=1
+
+# Install only essential packages for production
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends ca-certificates curl && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN addgroup --gid 1001 bunuser && \
+  adduser --uid 1001 --gid 1001 hominem
+
+# Create logs directory with correct permissions
+RUN mkdir -p /app/logs && \
+  chown -R hominem:bunuser /app/logs
+
+# Copy package files for reference
+COPY --from=pruner /app/out/json/ .
+
+# Copy node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source code from pruner (includes packages and app source)
+COPY --from=pruner /app/out/full/packages ./packages
+COPY --from=pruner /app/out/full/services/api ./services/api
+
+# Set proper permissions
+RUN chown -R hominem:bunuser /app
+
+# Security: Run as non-root user
+USER hominem
+
+# Expose port (use default if not specified)
+EXPOSE ${PORT:-3000}
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-3000}/api/status || exit 1
+
+# Start the application directly from source with Bun
+ENTRYPOINT ["bun", "run", "services/api/src/index.ts"]
+CMD []

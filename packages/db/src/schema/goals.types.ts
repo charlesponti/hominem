@@ -12,5 +12,12 @@ import type { Goal, GoalInsert, GoalSelect, GoalStatus, GoalMilestone, GoalInser
 export type { Goal, GoalInsert, GoalSelect, GoalStatus, GoalMilestone, GoalInsertSchemaType, GoalSelectSchemaType };
 
 // Legacy aliases for backward compatibility
+/**
+ * @deprecated Use {@link Goal} instead. This alias will be removed in a future version.
+ */
 export type GoalOutput = Goal;
+
+/**
+ * @deprecated Use {@link GoalInsert} instead. This alias will be removed in a future version.
+ */
 export type GoalInput = GoalInsert;

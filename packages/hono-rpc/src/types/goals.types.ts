@@ -1,53 +1,21 @@
+// Force rebuild after schema changes
+import { GoalStatusSchema, GoalMilestoneSchema } from '@hominem/db/schema/goals';
 import { z } from 'zod';
 
 // ============================================================================
-// Data Types - Schemas and Types
+// Database Types - Re-exported from @hominem/db
 // ============================================================================
 
 /**
- * Goal status
+ * Core types imported directly from the database schema.
+ * No manual duplication - these are the source of truth.
  */
-export const GoalStatusSchema = z.enum(['todo', 'in_progress', 'completed', 'archived']);
-export type GoalStatus = z.infer<typeof GoalStatusSchema>;
+export type { GoalInsert, GoalSelect, GoalStatus, GoalMilestone } from '@hominem/db/schema/goals';
 
 /**
- * Goal milestone
+ * Zod schemas for validation - re-export imported schemas
  */
-export const GoalMilestoneSchema = z.object({
-  description: z.string(),
-  isCompleted: z.boolean().default(false),
-});
-export type GoalMilestone = z.infer<typeof GoalMilestoneSchema>;
-
-/**
- * Goal represents a goal from the database via EventWithTagsAndPeople
- * Matches the actual database schema and service return types:
- * - createdAt/updatedAt are strings (timestamp with mode: 'string')
- * - date/dateStart/dateEnd are Date objects (regular timestamps)
- * - status is text, not an enum
- * - milestones is JSON (any type)
- */
-export type Goal = {
-  id: string;
-  userId: string;
-  title: string;
-  description: string | null;
-  goalCategory: string | null;
-  status: string | null;
-  priority: number | null;
-  milestones: any | null;
-  date: Date;
-  dateStart: Date | null;
-  dateEnd: Date | null;
-  targetValue: number | null;
-  currentValue: number | null;
-  unit: string | null;
-  type: string;
-  tags?: Array<{ id: string; name: string; color: string | null; description: string | null }> | undefined;
-  people?: Array<{ id: string; firstName: string; lastName: string | null }> | undefined;
-  createdAt: string; // timestamp with mode: 'string' in DB schema
-  updatedAt: string; // timestamp with mode: 'string' in DB schema
-};
+export { GoalStatusSchema, GoalMilestoneSchema };
 
 // ============================================================================
 // Input Schemas
@@ -112,10 +80,18 @@ export type GoalStatsOutput = {
   milestones?: unknown;
 };
 
-export type GoalListOutput = Goal[];
-export type GoalGetOutput = Goal;
-export type GoalCreateOutput = Goal;
-export type GoalUpdateOutput = Goal;
+// Import EventWithTagsAndPeople for output types (this comes from events service)
+import type { EventWithTagsAndPeople } from '@hominem/events-services';
+
+export type GoalListOutput = EventWithTagsAndPeople[];
+export type GoalGetOutput = EventWithTagsAndPeople;
+export type GoalCreateOutput = EventWithTagsAndPeople;
+export type GoalUpdateOutput = EventWithTagsAndPeople;
 export type GoalDeleteOutput = { success: true; id: string };
-export type GoalArchiveOutput = Goal;
-export type GoalOutput = Goal;
+export type GoalArchiveOutput = EventWithTagsAndPeople;
+export type GoalOutput = EventWithTagsAndPeople;
+
+/**
+ * Alias for GoalOutput - used by frontend components
+ */
+export type Goal = GoalOutput;

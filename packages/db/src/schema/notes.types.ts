@@ -28,7 +28,14 @@ export type {
 }
 
 // Legacy aliases for backward compatibility
+/**
+ * @deprecated Use {@link Note} instead. This alias will be removed in a future version.
+ */
 export type NoteOutput = Note
+
+/**
+ * @deprecated Use {@link NoteInsert} instead. This alias will be removed in a future version.
+ */
 export type NoteInput = NoteInsert
 
 export type NoteSyncItem = Omit<Note, 'id' | 'createdAt' | 'updatedAt'> & {

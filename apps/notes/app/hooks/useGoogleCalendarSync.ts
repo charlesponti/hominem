@@ -38,10 +38,12 @@ export function useGoogleCalendarSync() {
   );
 
   const sync = async (options: SyncOptions) => {
-    await syncMutation.mutateAsync({
-      calendarId: options.calendarId,
-      timeMin: options.timeMin,
-    });
+    const calendarId = options.calendarId ?? 'primary';
+    const payload: EventsGoogleSyncInput = { calendarId };
+    if (options.timeMin) {
+      payload.timeMin = options.timeMin;
+    }
+    await syncMutation.mutateAsync(payload);
   };
 
   const syncStatus = statusQuery.data;

@@ -1,6 +1,6 @@
 {
-  "id": "dc7986e1-3e75-4026-803e-044236c526b3",
-  "prevId": "e5c527a4-9541-48d8-9a11-b6380c653851",
+  "id": "34371530-f731-47ce-a5c1-aafa9c87ac3a",
+  "prevId": "6da02079-cb9c-47fb-b975-214c1a3965e7",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1505,26 +1505,11 @@
           "primaryKey": false,
           "notNull": false
         },
-        "is_completed": {
-          "name": "is_completed",
-          "type": "boolean",
+        "goal_category": {
+          "name": "goal_category",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "default": false
-        },
-        "streak_count": {
-          "name": "streak_count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
-        },
-        "completed_instances": {
-          "name": "completed_instances",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 0
+          "notNull": false
         },
         "target_value": {
           "name": "target_value",
@@ -1545,33 +1530,55 @@
           "primaryKey": false,
           "notNull": false
         },
+        "is_completed": {
+          "name": "is_completed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "streak_count": {
+          "name": "streak_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "total_completions": {
+          "name": "total_completions",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "completed_instances": {
+          "name": "completed_instances",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 0
+        },
+        "last_completed_at": {
+          "name": "last_completed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "expires_in_days": {
+          "name": "expires_in_days",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reminder_time": {
+          "name": "reminder_time",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "reminder_settings": {
           "name": "reminder_settings",
           "type": "json",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "dependencies": {
-          "name": "dependencies",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "resources": {
-          "name": "resources",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "milestones": {
-          "name": "milestones",
-          "type": "json",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "goal_category": {
-          "name": "goal_category",
-          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -1581,21 +1588,16 @@
           "primaryKey": false,
           "notNull": false
         },
-        "booking_reference": {
-          "name": "booking_reference",
+        "status": {
+          "name": "status",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "'active'"
         },
-        "price": {
-          "name": "price",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "url": {
-          "name": "url",
-          "type": "text",
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },
@@ -1617,9 +1619,34 @@
           "primaryKey": false,
           "notNull": false
         },
-        "status": {
-          "name": "status",
-          "type": "text",
+        "is_template": {
+          "name": "is_template",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "next_occurrence": {
+          "name": "next_occurrence",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dependencies": {
+          "name": "dependencies",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resources": {
+          "name": "resources",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "milestones": {
+          "name": "milestones",
+          "type": "json",
           "primaryKey": false,
           "notNull": false
         },
@@ -1636,20 +1663,14 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
-        "events_external_id_idx": {
-          "name": "events_external_id_idx",
+        "events_user_id_idx": {
+          "name": "events_user_id_idx",
           "columns": [
             {
-              "expression": "external_id",
+              "expression": "user_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1660,26 +1681,11 @@
           "method": "btree",
           "with": {}
         },
-        "events_calendar_id_idx": {
-          "name": "events_calendar_id_idx",
+        "events_date_idx": {
+          "name": "events_date_idx",
           "columns": [
             {
-              "expression": "calendar_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "events_source_idx": {
-          "name": "events_source_idx",
-          "columns": [
-            {
-              "expression": "source",
+              "expression": "date",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1695,51 +1701,6 @@
           "columns": [
             {
               "expression": "type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "events_interval_idx": {
-          "name": "events_interval_idx",
-          "columns": [
-            {
-              "expression": "interval",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "events_goal_category_idx": {
-          "name": "events_goal_category_idx",
-          "columns": [
-            {
-              "expression": "goal_category",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "events_streak_count_idx": {
-          "name": "events_streak_count_idx",
-          "columns": [
-            {
-              "expression": "streak_count",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

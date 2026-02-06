@@ -28,5 +28,12 @@ export type {
 }
 
 // Legacy aliases for backward compatibility
+/**
+ * @deprecated Use {@link Task} instead. This alias will be removed in a future version.
+ */
 export type TaskOutput = Task
+
+/**
+ * @deprecated Use {@link TaskInsert} instead. This alias will be removed in a future version.
+ */
 export type TaskInput = TaskInsert

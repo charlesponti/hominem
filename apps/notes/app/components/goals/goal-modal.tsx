@@ -1,4 +1,4 @@
-import type { Goal, GoalMilestone, GoalStatus } from '@hominem/hono-rpc/types';
+import type { GoalOutput as Goal, GoalMilestone, GoalStatus } from '@hominem/hono-rpc/types';
 
 import { Button } from '@hominem/ui/button';
 import { DatePicker } from '@hominem/ui/components/date-picker';

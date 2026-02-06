@@ -27,18 +27,9 @@ import type {
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**
- * Serialization Helpers
+ * No serialization helpers needed!
+ * Database types are returned directly - timestamps already as strings.
  */
-function serializeTransaction(t: any): TransactionData {
-  return {
-    ...t,
-    date: typeof t.date === 'string' ? t.date : t.date.toISOString(),
-    authorizedDate: t.authorizedDate ? (typeof t.authorizedDate === 'string' ? t.authorizedDate : t.authorizedDate.toISOString()) : null,
-    createdAt: typeof t.createdAt === 'string' ? t.createdAt : t.createdAt.toISOString(),
-    updatedAt: typeof t.updatedAt === 'string' ? t.updatedAt : t.updatedAt.toISOString(),
-    amount: typeof t.amount === 'number' ? t.amount : parseFloat(t.amount?.toString() || '0'),
-  };
-}
 
 /**
  * Finance Transactions Routes
@@ -58,7 +49,7 @@ export const transactionsRoutes = new Hono<AppContext>()
 
     return c.json<TransactionListOutput>(
       {
-        data: result.data.map(serializeTransaction),
+        data: result.data as unknown as TransactionData[],
         filteredCount: result.filteredCount,
         totalUserCount: result.totalUserCount,
       },
@@ -87,7 +78,7 @@ export const transactionsRoutes = new Hono<AppContext>()
         userId,
       });
 
-      return c.json<TransactionCreateOutput>(serializeTransaction(result), 201);
+      return c.json<TransactionCreateOutput>(result, 201);
     },
   )
 
@@ -111,7 +102,7 @@ export const transactionsRoutes = new Hono<AppContext>()
       throw new NotFoundError('Transaction not found');
     }
 
-    return c.json<TransactionUpdateOutput>(serializeTransaction(result), 200);
+    return c.json<TransactionUpdateOutput>(result, 200);
   })
 
   // POST /delete - Delete transaction

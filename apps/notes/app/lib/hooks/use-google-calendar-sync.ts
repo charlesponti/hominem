@@ -31,11 +31,15 @@ export function useGoogleCalendarSync() {
     setSyncError(null);
 
     try {
-      const result = await syncMutation.mutateAsync({
-        calendarId: options.calendarId,
-        timeMin: options.timeMin,
-        timeMax: options.timeMax,
-      });
+      const calendarId = options.calendarId ?? 'primary';
+      const payload: EventsGoogleSyncInput = { calendarId };
+      if (options.timeMin) {
+        payload.timeMin = options.timeMin;
+      }
+      if (options.timeMax) {
+        payload.timeMax = options.timeMax;
+      }
+      const result = await syncMutation.mutateAsync(payload);
 
       setSyncResult(result);
     } catch (error) {

@@ -514,12 +514,32 @@ export const placesRoutes = new Hono<AppContext>()
          dependencies: null,
          resources: null,
          milestones: null,
-         createdAt: new Date().toISOString(),
-         updatedAt: new Date().toISOString(),
-         deletedAt: null,
-         ...(data.tags && { tags: data.tags }),
-         ...(data.people && { people: data.people }),
-       });
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          deletedAt: null,
+          // Default values for new fields
+          currentValue: 0,
+          streakCount: 0,
+          totalCompletions: 0,
+          completedInstances: 0,
+          isCompleted: false,
+          isTemplate: false,
+          status: 'active',
+          // Nullable fields
+          goalCategory: null,
+          targetValue: null,
+          unit: null,
+          lastCompletedAt: null,
+          expiresInDays: null,
+          reminderTime: null,
+          parentEventId: null,
+          activityType: null,
+          duration: null,
+          caloriesBurned: null,
+          nextOccurrence: null,
+          ...(data.tags && { tags: data.tags }),
+          ...(data.people && { people: data.people }),
+        });
 
       return c.json<PlaceLogVisitOutput>(serializeVisit(event), 201);
     } catch (err) {

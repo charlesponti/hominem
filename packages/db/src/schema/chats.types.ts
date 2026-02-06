@@ -34,8 +34,22 @@ export type {
 };
 
 // Legacy aliases for backward compatibility
+/**
+ * @deprecated Use {@link Chat} instead. This alias will be removed in a future version.
+ */
 export type ChatOutput = Chat;
+
+/**
+ * @deprecated Use {@link ChatInsert} instead. This alias will be removed in a future version.
+ */
 export type ChatInput = ChatInsert;
 
+/**
+ * @deprecated Use {@link ChatMessage} instead. This alias will be removed in a future version.
+ */
 export type ChatMessageOutput = ChatMessage;
+
+/**
+ * @deprecated Use {@link ChatMessageInsert} instead. This alias will be removed in a future version.
+ */
 export type ChatMessageInput = ChatMessageInsert;

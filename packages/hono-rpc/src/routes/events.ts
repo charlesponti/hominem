@@ -31,31 +31,9 @@ import {
 } from '../types/events.types';
 
 /**
- * Serialization Helpers
+ * No serialization helpers needed!
+ * Database types are returned directly - timestamps already as strings.
  */
-function serializeEvent(e: any): EventJson {
-  return {
-    ...e,
-    date: typeof e.date === 'string' ? e.date : e.date.toISOString(),
-    dateStart: e.dateStart
-      ? typeof e.dateStart === 'string'
-        ? e.dateStart
-        : e.dateStart.toISOString()
-      : null,
-    dateEnd: e.dateEnd
-      ? typeof e.dateEnd === 'string'
-        ? e.dateEnd
-        : e.dateEnd.toISOString()
-      : null,
-    createdAt: typeof e.createdAt === 'string' ? e.createdAt : e.createdAt.toISOString(),
-    updatedAt: typeof e.updatedAt === 'string' ? e.updatedAt : e.updatedAt.toISOString(),
-    lastSyncedAt: e.lastSyncedAt
-      ? typeof e.lastSyncedAt === 'string'
-        ? e.lastSyncedAt
-        : e.lastSyncedAt.toISOString()
-      : null,
-  };
-}
 
 export const eventsRoutes = new Hono<AppContext>()
   // ListOutput events
@@ -66,7 +44,7 @@ export const eventsRoutes = new Hono<AppContext>()
     const sortBy = query.sortBy as 'date-asc' | 'date-desc' | 'summary' | undefined;
 
     const eventsData = await getEvents({ tagNames, companion, sortBy });
-    return c.json<EventsListOutput>(eventsData.map(serializeEvent));
+    return c.json<EventsListOutput>(eventsData);
   })
 
   // Get event by ID
@@ -76,7 +54,7 @@ export const eventsRoutes = new Hono<AppContext>()
     if (!event) {
       throw new NotFoundError('Event not found');
     }
-    return c.json<EventsGetOutput>(serializeEvent(event));
+    return c.json<EventsGetOutput>(event);
   })
 
   // Create event
@@ -123,13 +101,33 @@ export const eventsRoutes = new Hono<AppContext>()
        dependencies: null,
        resources: null,
        milestones: null,
-       createdAt: new Date().toISOString(),
-       updatedAt: new Date().toISOString(),
-       deletedAt: null,
-       ...(tags && { tags }),
-       ...(people && { people }),
-     });
-    return c.json<EventsCreateOutput>(serializeEvent(event), 201);
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+        // Default values for new fields
+        currentValue: 0,
+        streakCount: 0,
+        totalCompletions: 0,
+        completedInstances: 0,
+        isCompleted: false,
+        isTemplate: false,
+        status: 'active',
+        // Nullable fields
+        goalCategory: null,
+        targetValue: null,
+        unit: null,
+        lastCompletedAt: null,
+        expiresInDays: null,
+        reminderTime: null,
+        parentEventId: null,
+        activityType: null,
+        duration: null,
+        caloriesBurned: null,
+        nextOccurrence: null,
+        ...(tags && { tags }),
+        ...(people && { people }),
+      });
+    return c.json<EventsCreateOutput>(event, 201);
   })
 
   // Update event
@@ -153,14 +151,14 @@ export const eventsRoutes = new Hono<AppContext>()
     if (!updated) {
       throw new NotFoundError('Event not found');
     }
-    return c.json<EventsUpdateOutput>(serializeEvent(updated));
+    return c.json<EventsUpdateOutput>(updated);
   })
 
   // Delete event
   .delete('/:id', authMiddleware, async (c) => {
     const id = c.req.param('id');
     const result = await deleteEvent(id);
-    return c.json<EventsDeleteOutput>(result);
+    return c.json<EventsDeleteOutput>({ success: result });
   })
 
   // Get Google Calendars

@@ -32,11 +32,32 @@ export type {
 };
 
 // Legacy aliases for backward compatibility
+/**
+ * @deprecated Use {@link Survey} instead. This alias will be removed in a future version.
+ */
 export type SurveyOutput = Survey;
+
+/**
+ * @deprecated Use {@link SurveyInsert} instead. This alias will be removed in a future version.
+ */
 export type SurveyInput = SurveyInsert;
 
+/**
+ * @deprecated Use {@link SurveyOption} instead. This alias will be removed in a future version.
+ */
 export type SurveyOptionOutput = SurveyOption;
+
+/**
+ * @deprecated Use {@link SurveyOptionInsert} instead. This alias will be removed in a future version.
+ */
 export type SurveyOptionInput = SurveyOptionInsert;
 
+/**
+ * @deprecated Use {@link SurveyVote} instead. This alias will be removed in a future version.
+ */
 export type SurveyVoteOutput = SurveyVote;
+
+/**
+ * @deprecated Use {@link SurveyVoteInsert} instead. This alias will be removed in a future version.
+ */
 export type SurveyVoteInput = SurveyVoteInsert;

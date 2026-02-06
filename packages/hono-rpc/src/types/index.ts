@@ -1,39 +1,30 @@
 /**
- * Centralized Type Exports
+ * Barrel file for @hominem/hono-rpc types
  *
- * All types are organized by domain and re-exported here for convenience.
+ * This file re-exports the public type definitions for the RPC surface so consumers
+ * can import from '@hominem/hono-rpc/types'.
  *
- * Input types are derived from Zod schemas (ensuring sync with validation).
- * Output types are inferred from route handlers (ensuring sync with API).
+ * Keep this list in sync with the files present in this directory. Prefer exporting
+ * the top-level aggregates (e.g. `finance.types`) when they exist to avoid duplicate
+ * exports across multiple modules.
  */
 
-// ============================================================================
-// Utilities
-// ============================================================================
-
-export * from './utils';
-// export * from './errors';
-
-// ============================================================================
-// Domain Types
-// ============================================================================
-
+/* Core RPC type groups */
 export * from './admin.types';
+export * from './chat.types';
+export * from './events.types';
 export * from './finance.types';
+export * from './goals.types';
 export * from './invites.types';
 export * from './items.types';
 export * from './lists.types';
+export * from './notes.types';
 export * from './people.types';
 export * from './places.types';
 export * from './trips.types';
-export * from './user.types';
-export * from './chat.types';
-export * from './twitter.types';
-export * from './notes.types';
-export * from './events.types';
 export * from './tweet.types';
-export * from './goals.types';
+export * from './twitter.types';
+export * from './user.types';
 
-// TODO: Add other domains as they are refactored
-// export * from './bookmarks.types';
-// export * from './chats.types';
+/* Utility types */
+export * from './utils';

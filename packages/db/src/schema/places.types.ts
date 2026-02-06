@@ -12,5 +12,12 @@ import type { Place, PlaceInsert, PlaceSelect, WifiInfo } from './places.schema'
 export type { Place, PlaceInsert, PlaceSelect, WifiInfo };
 
 // Legacy aliases for backward compatibility
+/**
+ * @deprecated Use {@link Place} instead. This alias will be removed in a future version.
+ */
 export type PlaceOutput = Place;
+
+/**
+ * @deprecated Use {@link PlaceInsert} instead. This alias will be removed in a future version.
+ */
 export type PlaceInput = PlaceInsert;

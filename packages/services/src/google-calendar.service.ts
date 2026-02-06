@@ -1,6 +1,6 @@
 import type {
-  CalendarEventInput,
-  CalendarEventOutput,
+  EventInput as DbEventInput,
+  EventOutput as DbEventOutput,
   EventSourceEnum,
 } from '@hominem/db/types/calendar';
 
@@ -14,6 +14,92 @@ import { v7 as uuidv7 } from 'uuid';
 import { env } from './env';
 
 type GoogleCalendarEvent = calendar_v3.Schema$Event;
+type DbEventWithTimestamps = DbEventOutput & {
+  createdAt?: string | Date | null;
+  updatedAt?: string | Date | null;
+};
+function normalizeEventOutput(event: typeof events.$inferSelect): DbEventWithTimestamps {
+  return {
+    ...event,
+    currentValue: event.currentValue ?? 0,
+    completedInstances: event.completedInstances ?? 0,
+    streakCount: event.streakCount ?? 0,
+    totalCompletions: event.totalCompletions ?? 0,
+    isCompleted: event.isCompleted ?? false,
+    isTemplate: event.isTemplate ?? false,
+  };
+}
+
+const calendarEventFieldDefaults: Pick<
+  DbEventInput,
+  | 'placeId'
+  | 'visitNotes'
+  | 'visitRating'
+  | 'visitReview'
+  | 'visitPeople'
+  | 'interval'
+  | 'recurrenceRule'
+  | 'score'
+  | 'priority'
+  | 'goalCategory'
+  | 'targetValue'
+  | 'currentValue'
+  | 'unit'
+  | 'isCompleted'
+  | 'streakCount'
+  | 'totalCompletions'
+  | 'completedInstances'
+  | 'lastCompletedAt'
+  | 'expiresInDays'
+  | 'reminderTime'
+  | 'reminderSettings'
+  | 'parentEventId'
+  | 'status'
+  | 'deletedAt'
+  | 'activityType'
+  | 'duration'
+  | 'caloriesBurned'
+  | 'isTemplate'
+  | 'nextOccurrence'
+  | 'dependencies'
+  | 'resources'
+  | 'milestones'
+  | 'dateTime'
+> = {
+  placeId: null,
+  visitNotes: null,
+  visitRating: null,
+  visitReview: null,
+  visitPeople: null,
+  interval: null,
+  recurrenceRule: null,
+  score: null,
+  priority: null,
+  goalCategory: null,
+  targetValue: null,
+  currentValue: 0,
+  unit: null,
+  isCompleted: false,
+  streakCount: 0,
+  totalCompletions: 0,
+  completedInstances: 0,
+  lastCompletedAt: null,
+  expiresInDays: null,
+  reminderTime: null,
+  reminderSettings: null,
+  parentEventId: null,
+  status: 'active',
+  deletedAt: null,
+  activityType: null,
+  duration: null,
+  caloriesBurned: null,
+  isTemplate: false,
+  nextOccurrence: null,
+  dependencies: null,
+  resources: null,
+  milestones: null,
+  dateTime: null,
+};
 
 export interface GoogleTokens {
   accessToken: string;
@@ -43,7 +129,7 @@ export function convertGoogleCalendarEvent(
   googleEvent: GoogleCalendarEvent,
   calendarId: string,
   userId: string,
-): Partial<CalendarEventInput> & {
+): Partial<DbEventInput> & {
   id: string;
   title: string;
   date: Date;
@@ -55,8 +141,6 @@ export function convertGoogleCalendarEvent(
   source: 'google_calendar';
   externalId: string;
   calendarId: string;
-  createdAt: string;
-  updatedAt: string;
 } {
   if (!googleEvent.id) {
     throw new Error('Google Calendar event must have an id');
@@ -64,24 +148,29 @@ export function convertGoogleCalendarEvent(
 
   const startDate = googleEvent.start?.dateTime || googleEvent.start?.date;
   const endDate = googleEvent.end?.dateTime || googleEvent.end?.date;
-  const now = new Date().toISOString();
+  const dateStart = startDate ? new Date(startDate) : null;
+  const dateEnd = endDate ? new Date(endDate) : null;
+  const primaryDate = dateStart ?? new Date();
+  const durationInMinutes =
+    dateStart && dateEnd ? Math.max(0, Math.round((dateEnd.getTime() - dateStart.getTime()) / 60000)) : null;
 
   return {
+    ...calendarEventFieldDefaults,
     id: uuidv7(),
     title: googleEvent.summary || 'Untitled Event',
     description: googleEvent.description || null,
-    date: new Date(startDate || new Date()),
-    dateStart: startDate ? new Date(startDate) : null,
-    dateEnd: endDate ? new Date(endDate) : null,
+    date: new Date(primaryDate),
+    dateStart,
+    dateEnd,
+    dateTime: dateStart,
     type: 'Events',
     userId,
     source: 'google_calendar',
     externalId: googleEvent.id,
     calendarId,
-    lastSyncedAt: new Date(startDate || new Date()),
+    lastSyncedAt: new Date(),
     syncError: null,
-    createdAt: now,
-    updatedAt: now,
+    duration: durationInMinutes,
   };
 }
 
@@ -161,20 +250,22 @@ export class GoogleCalendarService {
       });
 
       // Get existing synced events from our database for this calendar
-      const existingEvents: CalendarEventOutput[] = await db
-        .select()
-        .from(events)
-        .where(
-          and(
-            eq(events.userId, this.userId),
-            eq(events.calendarId, calendarId),
-            eq(events.source, 'google_calendar'),
-          ),
-        );
+      const existingEvents = (
+        await db
+          .select()
+          .from(events)
+          .where(
+            and(
+              eq(events.userId, this.userId),
+              eq(events.calendarId, calendarId),
+              eq(events.source, 'google_calendar'),
+            ),
+          )
+      ).map(normalizeEventOutput);
 
       const existingEventsByExternalId = new Map(existingEvents.map((e) => [e.externalId, e]));
       const googleEventIds = new Set<string>();
-      const eventsToUpsert: CalendarEventInput[] = [];
+      const eventsToUpsert: DbEventInput[] = [];
 
       // Process each Google Calendar event
       for (const googleEvent of googleEvents) {
@@ -183,6 +274,11 @@ export class GoogleCalendarService {
 
         try {
           const eventData = convertGoogleCalendarEvent(googleEvent, calendarId, this.userId);
+          const normalizedEventData: DbEventInput = {
+            ...calendarEventFieldDefaults,
+            ...eventData,
+            currentValue: eventData.currentValue ?? 0,
+          };
           const existingEvent = existingEventsByExternalId.get(googleEvent.id);
 
           if (existingEvent) {
@@ -195,38 +291,17 @@ export class GoogleCalendarService {
               googleUpdated.getTime() > localUpdated.getTime()
             ) {
               // Prepare for update with all required fields
-              const baseEvent: CalendarEventInput = {
-                ...eventData,
-                dateStart: eventData.dateStart || null,
-                dateEnd: eventData.dateEnd || null,
-                dateTime: null,
-                reminderSettings: null,
-                dependencies: null,
-                resources: null,
-                milestones: null,
-                deletedAt: null,
-                id: existingEvent.id, // Keep original ID
-                createdAt: existingEvent.createdAt,
-                updatedAt: googleUpdated ? googleUpdated.toISOString() : new Date().toISOString(),
+              const baseEvent: DbEventInput = {
+                ...normalizedEventData,
+                id: existingEvent.id,
               };
               eventsToUpsert.push(baseEvent);
               result.updated++;
             }
           } else {
             // Prepare for insert with all required fields
-            const baseEvent: CalendarEventInput = {
-              ...eventData,
-              dateStart: eventData.dateStart || null,
-              dateEnd: eventData.dateEnd || null,
-              dateTime: null,
-              reminderSettings: null,
-              dependencies: null,
-              resources: null,
-              milestones: null,
-              deletedAt: null,
-              updatedAt: googleEvent.updated
-                ? new Date(googleEvent.updated).toISOString()
-                : new Date().toISOString(),
+            const baseEvent: DbEventInput = {
+              ...normalizedEventData,
             };
             eventsToUpsert.push(baseEvent);
             result.created++;
@@ -250,16 +325,48 @@ export class GoogleCalendarService {
             .values(chunk as (typeof events.$inferInsert)[])
             .onConflictDoUpdate({
               target: [events.externalId, events.calendarId],
-              set: {
-                title: sql`excluded.title`,
-                description: sql`excluded.description`,
-                date: sql`excluded.date`,
-                dateStart: sql`excluded.date_start`,
-                dateEnd: sql`excluded.date_end`,
-                lastSyncedAt: sql`excluded.last_synced_at`,
-                syncError: sql`excluded.sync_error`,
-                updatedAt: sql`excluded.updated_at`,
-              },
+               set: {
+                 title: sql`excluded.title`,
+                 description: sql`excluded.description`,
+                 date: sql`excluded.date`,
+                 dateStart: sql`excluded.date_start`,
+                 dateEnd: sql`excluded.date_end`,
+                 dateTime: sql`excluded.date_time`,
+                 placeId: sql`excluded.place_id`,
+                 lastSyncedAt: sql`excluded.last_synced_at`,
+                 syncError: sql`excluded.sync_error`,
+                 visitNotes: sql`excluded.visit_notes`,
+                 visitRating: sql`excluded.visit_rating`,
+                 visitReview: sql`excluded.visit_review`,
+                 visitPeople: sql`excluded.visit_people`,
+                 interval: sql`excluded.interval`,
+                 recurrenceRule: sql`excluded.recurrence_rule`,
+                 score: sql`excluded.score`,
+                 priority: sql`excluded.priority`,
+                 goalCategory: sql`excluded.goal_category`,
+                 targetValue: sql`excluded.target_value`,
+                 currentValue: sql`excluded.current_value`,
+                 unit: sql`excluded.unit`,
+                 isCompleted: sql`excluded.is_completed`,
+                 streakCount: sql`excluded.streak_count`,
+                 totalCompletions: sql`excluded.total_completions`,
+                 completedInstances: sql`excluded.completed_instances`,
+                 lastCompletedAt: sql`excluded.last_completed_at`,
+                 expiresInDays: sql`excluded.expires_in_days`,
+                 reminderTime: sql`excluded.reminder_time`,
+                 reminderSettings: sql`excluded.reminder_settings`,
+                 parentEventId: sql`excluded.parent_event_id`,
+                 status: sql`excluded.status`,
+                 deletedAt: sql`excluded.deleted_at`,
+                 activityType: sql`excluded.activity_type`,
+                 duration: sql`excluded.duration`,
+                 caloriesBurned: sql`excluded.calories_burned`,
+                 isTemplate: sql`excluded.is_template`,
+                 nextOccurrence: sql`excluded.next_occurrence`,
+                 dependencies: sql`excluded.dependencies`,
+                 resources: sql`excluded.resources`,
+                 milestones: sql`excluded.milestones`,
+               },
             });
         }
       }
@@ -305,11 +412,13 @@ export class GoogleCalendarService {
    */
   async pushEventToGoogle(eventId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const eventData: CalendarEventOutput[] = await db
-        .select()
-        .from(events)
-        .where(eq(events.id, eventId))
-        .limit(1);
+      const eventData = (
+        await db
+          .select()
+          .from(events)
+          .where(eq(events.id, eventId))
+          .limit(1)
+      ).map(normalizeEventOutput);
 
       if (eventData.length === 0) {
         return { success: false, error: 'Event not found' };
@@ -436,11 +545,13 @@ export class GoogleCalendarService {
    * Get sync status for user
    */
   async getSyncStatus(): Promise<GoogleCalendarSyncStatus> {
-    const syncedEvents: CalendarEventOutput[] = await db
-      .select()
-      .from(events)
-      .where(and(eq(events.userId, this.userId), eq(events.source, 'google_calendar')))
-      .orderBy(events.lastSyncedAt);
+    const syncedEvents = (
+      await db
+        .select()
+        .from(events)
+        .where(and(eq(events.userId, this.userId), eq(events.source, 'google_calendar')))
+        .orderBy(events.lastSyncedAt)
+    ).map(normalizeEventOutput);
 
     const lastEvent = syncedEvents[syncedEvents.length - 1];
 

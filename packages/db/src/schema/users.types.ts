@@ -19,8 +19,22 @@ import type {
 export type { User, UserInsert, UserSelect, Account, AccountInsert, AccountSelect };
 
 // Legacy aliases for backward compatibility
+/**
+ * @deprecated Use {@link User} instead. This alias will be removed in a future version.
+ */
 export type UserOutput = User;
+
+/**
+ * @deprecated Use {@link UserInsert} instead. This alias will be removed in a future version.
+ */
 export type UserInput = UserInsert;
 
+/**
+ * @deprecated Use {@link Account} instead. This alias will be removed in a future version.
+ */
 export type AccountOutput = Account;
+
+/**
+ * @deprecated Use {@link AccountInsert} instead. This alias will be removed in a future version.
+ */
 export type AccountInput = AccountInsert;

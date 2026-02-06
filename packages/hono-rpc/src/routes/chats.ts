@@ -39,34 +39,9 @@ const ensureChatAndUser = async (userId: string | undefined, chatId: string | un
 };
 
 /**
- * Serialization Helpers
+ * No serialization helpers needed!
+ * Database types are returned directly - timestamps already as strings.
  */
-function serializeChat(c: any): Chat {
-  return {
-    id: c.id,
-    userId: c.userId,
-    title: c.title,
-    createdAt: typeof c.createdAt === 'string' ? c.createdAt : c.createdAt.toISOString(),
-    updatedAt: typeof c.updatedAt === 'string' ? c.updatedAt : c.updatedAt.toISOString(),
-  };
-}
-
-function serializeChatMessage(m: any): ChatMessage {
-  return {
-    id: m.id,
-    chatId: m.chatId,
-    userId: m.userId,
-    role: m.role,
-    content: m.content,
-    files: m.files,
-    toolCalls: m.toolCalls,
-    reasoning: m.reasoning,
-    parentMessageId: m.parentMessageId,
-    messageIndex: m.messageIndex,
-    createdAt: typeof m.createdAt === 'string' ? m.createdAt : m.createdAt.toISOString(),
-    updatedAt: typeof m.updatedAt === 'string' ? m.updatedAt : m.updatedAt.toISOString(),
-  };
-}
 
 const chatsCreateSchema = z.object({
   title: z.string().min(1),
@@ -100,8 +75,8 @@ const chatByIdRoutes = new Hono<AppContext>()
     }
 
     return c.json<ChatsGetOutput>({
-      ...serializeChat(chatData),
-      messages: messagesData.map(serializeChatMessage),
+      ...chatData,
+      messages: messagesData,
     });
   })
 
@@ -220,13 +195,18 @@ const chatByIdRoutes = new Hono<AppContext>()
       }
     }
 
+    // Ensure both messages are non-null before returning
+    if (!assistantMessage || !userMessage) {
+      throw new InternalError('Failed to create or update message');
+    }
+
     return c.json<ChatsSendOutput>({
       streamId: assistantMessage.id,
       chatId: currentChat.id,
       chatTitle: currentChat.title,
       messages: {
-        user: serializeChatMessage(userMessage),
-        assistant: serializeChatMessage(assistantMessage),
+        user: userMessage,
+        assistant: assistantMessage,
       },
       metadata: {
         startTime: startTime,
@@ -244,7 +224,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       limit: limit ? parseInt(limit) : undefined,
       offset: offset ? parseInt(offset) : undefined,
     });
-    return c.json<ChatsGetMessagesOutput>(messagesData.map(serializeChatMessage));
+    return c.json<ChatsGetMessagesOutput>(messagesData);
   });
 
 export const chatsRoutes = new Hono<AppContext>()
@@ -255,7 +235,7 @@ export const chatsRoutes = new Hono<AppContext>()
     const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 50;
 
     const chatsData = await chatService.getUserChats(userId, limit);
-    return c.json<ChatsListOutput>(chatsData.map(serializeChat));
+    return c.json<ChatsListOutput>(chatsData);
   })
 
   // Create chat
@@ -264,7 +244,7 @@ export const chatsRoutes = new Hono<AppContext>()
     const { title } = c.req.valid('json');
 
     const result = await chatService.createChat({ title, userId });
-    return c.json<ChatsCreateOutput>(serializeChat(result), 201);
+    return c.json<ChatsCreateOutput>(result, 201);
   })
 
   // Search chats
@@ -278,7 +258,7 @@ export const chatsRoutes = new Hono<AppContext>()
     }
 
     const chatsData = await chatService.searchChats({ userId, query, limit });
-    return c.json({ chats: chatsData.map(serializeChat) });
+    return c.json({ chats: chatsData });
   })
 
   .route('/:id', chatByIdRoutes);

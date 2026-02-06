@@ -18,7 +18,10 @@
       "Bash(git commit --no-verify -m \"$\\(cat <<''EOF''\nrefactor: queryTransactions with builder pattern and Railway build fix\n\n## queryTransactions Refactoring \\(All Phases\\)\n\n### Phase 1: Database Optimization\n- Add search_vector generated column for full-text search \\(60%+ faster\\)\n- Create GIN index on search_vector for instant lookups\n- Eliminates expensive tsvector computation on every query\n\n### Phase 2: Query Builder Pattern\n- Create TransactionQueryBuilder class \\(318 lines\\)\n- Fluent, chainable interface for composable queries\n- Type-safe column references \\(no manual PgColumn mapping\\)\n- Remove 142-line buildWhereConditions function\n- Reduce complexity by 70%\n\n### Phase 3: API Modernization\n- Remove legacy field names: from/to/min/max\n- Use modern names: dateFrom/dateTo/amountMin/amountMax\n- Update API schemas, types, and frontend hooks\n- Simplify sortBy/sortDirection \\(no longer accept arrays\\)\n\n### Phase 4: Comprehensive Testing\n- Add 35 unit tests for TransactionQueryBuilder \\(all passing\\)\n- 100% coverage of builder methods\n- Test edge cases and complex filter combinations\n\n## Railway Build Fix\n- Uncomment bun.lock in .gitignore \\(must be committed for monorepos\\)\n- Add railway.json and nixpacks.toml to API service\n- Ensure Bun is used for builds and correct start command\n\n## Results\n- Code: 758 additions, 152 deletions\n- Performance: 60%+ faster search queries\n- Maintainability: Composable methods, single responsibility\n- Type Safety: Full inference, no manual assertions\n- Test Coverage: 0% → 100% for query builder\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(bunx tsc:*)",
       "Bash(npm run typecheck:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(npx tsc:*)",
+      "Bash(chmod:*)",
+      "Bash(bash scripts/benchmark-report.sh:*)"
     ]
   }
 }

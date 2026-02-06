@@ -12,5 +12,12 @@ import type { Tag, TagInsert, TagSelect } from './tags.schema';
 export type { Tag, TagInsert, TagSelect };
 
 // Legacy aliases for backward compatibility
+/**
+ * @deprecated Use {@link Tag} instead. This alias will be removed in a future version.
+ */
 export type TagOutput = Tag;
+
+/**
+ * @deprecated Use {@link TagInsert} instead. This alias will be removed in a future version.
+ */
 export type TagInput = TagInsert;

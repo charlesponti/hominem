@@ -1,41 +1,23 @@
 import { z } from 'zod';
 
 // ============================================================================
-// Data Types
+// Re-export Database Types (Single Source of Truth)
 // ============================================================================
 
-export type Event = {
-  id: string;
-  userId: string;
-  title: string;
-  description: string | null;
-  date: string;
-  type: string;
-  tags: string[];
-  people: string[];
-  dateStart: string | null;
-  dateEnd: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
+export type { EventOutput as Event, EventTypeEnum } from '@hominem/db/types/calendar';
 
 // ============================================================================
-// LIST EVENTS
+// Output Types (Inferred from returns - these are optional aliases)
 // ============================================================================
 
-export type EventsListInput = {
-  tagNames?: string[];
-  companion?: string;
-  sortBy?: 'date-asc' | 'date-desc' | 'summary';
-};
+import type { EventOutput } from '@hominem/db/types/calendar';
+import type { EventWithTagsAndPeople } from '@hominem/events-services';
 
-export type EventsListOutput = Event[];
-
-// ============================================================================
-// GET EVENT
-// ============================================================================
-
-export type EventsGetOutput = Event;
+export type EventsListOutput = EventWithTagsAndPeople[];
+export type EventsGetOutput = EventWithTagsAndPeople;
+export type EventsCreateOutput = EventWithTagsAndPeople;
+export type EventsUpdateOutput = EventWithTagsAndPeople;
+export type EventsDeleteOutput = { success: boolean };
 
 // ============================================================================
 // CREATE EVENT
@@ -58,8 +40,6 @@ export const eventsCreateSchema = z.object({
   tags: z.array(z.string()).optional(),
   people: z.array(z.string()).optional(),
 });
-
-export type EventsCreateOutput = Event;
 
 // ============================================================================
 // UPDATE EVENT
@@ -87,35 +67,24 @@ export const eventsUpdateSchema = z.object({
   people: z.array(z.string()).optional(),
 });
 
-export type EventsUpdateOutput = Event;
-
 // ============================================================================
-// DELETE EVENT
+// GOOGLE CALENDAR SYNC
 // ============================================================================
 
-export type EventsDeleteOutput = boolean;
-
-// ============================================================================
-// GOOGLE CALENDAR
-// ============================================================================
-
-export type GoogleCalendar = {
+export type EventsGoogleCalendarsOutput = Array<{
   id: string;
   summary: string;
-  description?: string;
   primary?: boolean;
-};
-
-export type EventsGoogleCalendarsOutput = GoogleCalendar[];
+}>;
 
 export type EventsGoogleSyncInput = {
-  calendarId?: string | undefined;
-  timeMin?: string | undefined;
-  timeMax?: string | undefined;
+  calendarId: string;
+  timeMin?: string;
+  timeMax?: string;
 };
 
 export const eventsGoogleSyncSchema = z.object({
-  calendarId: z.string().optional().default('primary'),
+  calendarId: z.string(),
   timeMin: z.string().optional(),
   timeMax: z.string().optional(),
 });
