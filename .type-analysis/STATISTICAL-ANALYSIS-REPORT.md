@@ -1,8 +1,8 @@
 # Type Performance Statistical Analysis Report - Week 4
 
-**Date:** February 5, 2026
+**Date:** February 6, 2026
 **Baseline:** `.type-analysis/baseline-week4-optimization.json`
-**Status:** ✅ Healthy
+**Status:** ⚠️ Needs Attention (1 critical file)
 
 ## Executive Summary
 
@@ -12,20 +12,20 @@ Phase 6 (Week 4) focuses on the Calendar domain optimization. Following the spli
 
 | Package | Check Time (s) | Files | Slow Files (>1s) | Avg File Time (ms) |
 | :--- | :--- | :--- | :--- | :--- |
-| **apps/rocco** | 5.43 | 5550 | 0 | 0.98 |
-| **apps/notes** | 5.62 | 6714 | 0 | 0.84 |
-| **apps/finance** | 1.55 | 4458 | 0 | 0.35 |
-| **packages/hono-rpc** | 5.08 | 5288 | 0 | 0.96 |
-| **packages/hono-client** | 5.22 | 5368 | 0 | 0.97 |
-| **packages/events** | 4.41 | 3564 | 0 | 1.24 |
-| **packages/services** | 4.52 | 4104 | 0 | 1.10 |
-| **packages/db** | 0.65 | 1378 | 0 | 0.47 |
+| **apps/rocco** | 5.23 | 5550 | 0 | 0.94 |
+| **apps/notes** | 5.44 | 6714 | 0 | 0.81 |
+| **apps/finance** | 1.53 | 4458 | 0 | 0.34 |
+| **packages/hono-rpc** | 5.06 | 5288 | 0 | 0.96 |
+| **packages/hono-client** | 7.39 | 5368 | 1 | 1.38 |
+| **packages/events** | 4.38 | 3564 | 0 | 1.23 |
+| **packages/services** | 4.55 | 4104 | 0 | 1.11 |
+| **packages/db** | 0.66 | 1378 | 0 | 0.48 |
 
 ## Key Findings
 
-1. **Modularization Success:** The split of `calendar.schema.ts` has successfully isolated complexity. `packages/events` now checks in 4.41s across 3,564 files (including dependencies), which is well within acceptable limits.
-2. **Zero Slow Files:** No individual file exceeds the 1s type-check threshold.
-3. **Type Safety Alignment:** Downstream services and routes are now fully aligned with the expanded `events` table schema, providing default values for new goal and activity tracking fields.
+1. **Modularization Success:** The split of `calendar.schema.ts` has mostly isolated complexity. `packages/events` checks in 4.38s across 3,564 files (including dependencies), within acceptable limits.
+2. **One Critical File:** `packages/db/src/schema/calendar-events.schema.ts` exceeds the 1s threshold (2.12s). This is now the primary optimization target.
+3. **Type Hub Risk:** Highest-centrality files remain `packages/hono-rpc/src/middleware/auth.ts`, `packages/ui/src/lib/utils.ts`, `packages/db/src/schema/users.schema.ts`, and `packages/db/src/schema/shared.schema.ts`.
 4. **RPC Consistency:** `hono-rpc` remains stable at ~5s check time, maintaining high-performance type inference.
 
 ## Optimization Outcomes
