@@ -5,7 +5,7 @@
     "buildCommand": "bun turbo run build --filter=@hominem/workers --force"
   },
   "deploy": {
-    "startCommand": "cd apps/workers && bun run start",
+    "startCommand": "cd services/workers && bun run start",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }

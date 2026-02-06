@@ -27,7 +27,7 @@
       "runtime": "bun",
       // The arguments to pass to the `bun` executable, if any.
       // Unlike `args`, these are passed to the executable itself, not the program.
-      "runtimeArgs": [],
+      "runtimeArgs": []
     },
     {
       "type": "bun",
@@ -64,14 +64,10 @@
       "name": "Debug API App (Node.js)",
       "cwd": "${workspaceFolder}/apps/api",
       "runtimeExecutable": "bun",
-      "runtimeArgs": [
-        "dev"
-      ],
+      "runtimeArgs": ["dev"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "outputCapture": "std",
       "env": {
         "NODE_OPTIONS": "--inspect"
@@ -85,9 +81,7 @@
       "cwd": "${workspaceFolder}/apps/cli",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
+      "skipFiles": ["<node_internals>/**"]
     },
     {
       "type": "chrome",
@@ -121,13 +115,11 @@
       "type": "node",
       "request": "launch",
       "name": "Debug Workers App (Node.js)",
-      "program": "${workspaceFolder}/apps/workers/src/index.ts",
-      "cwd": "${workspaceFolder}/apps/workers",
+      "program": "${workspaceFolder}/services/workers/src/index.ts",
+      "cwd": "${workspaceFolder}/services/workers",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }
