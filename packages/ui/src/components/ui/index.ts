@@ -9,6 +9,8 @@ export * from './drawer';
 export * from './dropdown-menu';
 export * from './input';
 export * from './label';
+export * from './loading';
+export * from './loading-spinner';
 export * from './popover';
 export * from './progress';
 export * from './radio-group';

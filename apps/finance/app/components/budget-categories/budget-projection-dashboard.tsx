@@ -1,5 +1,6 @@
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { Target } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -59,8 +60,8 @@ export function BudgetProjectionDashboard() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
-            <p className="mt-2 text-sm text-gray-600">Loading budget data...</p>
+            <LoadingSpinner size="md" className="mx-auto" />
+            <p className="mt-2 text-sm text-muted-foreground">Loading budget data...</p>
           </div>
         </CardContent>
       </Card>
@@ -77,8 +78,8 @@ export function BudgetProjectionDashboard() {
         <CardContent>
           <div className="text-center py-12">
             <Target className="size-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Budget Categories</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-lg font-semibold text-foreground mb-2">No Budget Categories</h3>
+            <p className="text-muted-foreground mb-4">
               Create budget categories to start tracking your financial goals.
             </p>
             <Button asChild>
@@ -99,14 +100,14 @@ export function BudgetProjectionDashboard() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               Calculate your budget projections to see savings forecasts and financial summaries.
             </p>
             <Button onClick={handleCalculate} disabled={totalIncome <= 0}>
               Calculate Projections
             </Button>
             {totalIncome <= 0 && (
-              <p className="text-sm text-red-600 mt-2">
+              <p className="text-sm text-destructive mt-2">
                 Add income categories to calculate projections
               </p>
             )}
@@ -125,8 +126,8 @@ export function BudgetProjectionDashboard() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
-            <p className="mt-2 text-sm text-gray-600">Calculating projections...</p>
+            <LoadingSpinner size="md" className="mx-auto" />
+            <p className="mt-2 text-sm text-muted-foreground">Calculating projections...</p>
           </div>
         </CardContent>
       </Card>
@@ -142,7 +143,7 @@ export function BudgetProjectionDashboard() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
-            <p className="text-red-600 mb-4">
+            <p className="text-destructive mb-4">
               Error calculating projections: {budgetCalculateMutation.error.message}
             </p>
             <Button onClick={handleRecalculate}>Try Again</Button>
@@ -214,20 +215,20 @@ export function BudgetProjectionDashboard() {
                 <div className="grid gap-4">
                   <div className="flex justify-between">
                     <span>Monthly Income:</span>
-                    <span className="font-semibold text-green-600">
+                    <span className="font-semibold text-foreground">
                       {formatCurrency(budgetData.income ?? 0)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Total Expenses:</span>
-                    <span className="font-semibold text-blue-600">
+                    <span className="font-semibold text-foreground">
                       {formatCurrency(budgetData.totalExpenses ?? 0)}
                     </span>
                   </div>
                   <div className="flex justify-between border-t pt-2">
                     <span>Monthly Surplus:</span>
                     <span
-                      className={`font-bold ${projectedSurplus >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                      className={`font-bold ${projectedSurplus >= 0 ? 'text-foreground' : 'text-destructive'}`}
                     >
                       {formatCurrency(projectedSurplus)}
                     </span>

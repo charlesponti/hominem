@@ -39,14 +39,16 @@ const SalesTaxCalculator = () => {
 
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Base Price:</span>
+              <span className="text-muted-foreground">Base Price:</span>
               <span className="font-medium">${price.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Sales Tax ({(TAX_RATE * 100).toFixed(2)}%):</span>
+              <span className="text-muted-foreground">
+                Sales Tax ({(TAX_RATE * 100).toFixed(2)}%):
+              </span>
               <span className="font-medium">${salesTax.toFixed(2)}</span>
             </div>
-            <div className="h-px bg-gray-200 my-2" />
+            <div className="h-px border-t border-border my-2" />
             <div className="flex justify-between font-medium">
               <span>Total:</span>
               <span>${total.toFixed(2)}</span>

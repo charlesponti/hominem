@@ -148,7 +148,7 @@ export function TweetModal({
       <DialogContent className="sm:max-w-131">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Twitter className="size-5 text-blue-500" />
+            <Twitter className="size-5 text-foreground" />
             Generate Tweet
           </DialogTitle>
           <DialogDescription>
@@ -169,7 +169,7 @@ export function TweetModal({
                     {!hasTwitterAccount && (
                       <Link
                         to="/account"
-                        className="text-xs text-blue-500 hover:text-blue-600 underline"
+                        className="text-xs text-foreground hover:text-foreground/80 underline"
                       >
                         Connect account
                       </Link>
@@ -199,7 +199,7 @@ export function TweetModal({
                     <SelectItem key={s.value} value={s.value}>
                       <div className="flex flex-col">
                         <span>{s.label}</span>
-                        <span className="text-xs text-gray-500">{s.description}</span>
+                        <span className="text-xs text-muted-foreground">{s.description}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -225,7 +225,7 @@ export function TweetModal({
                     disabled={isGenerating}
                     className="flex items-center gap-1"
                   >
-                    <RefreshCw className={`size-3 ${isGenerating ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`size-3 ${isGenerating ? '' : ''}`} />
                     Regenerate
                   </Button>
                 </div>
@@ -233,7 +233,7 @@ export function TweetModal({
 
               {isGenerating ? (
                 <div className="flex items-center justify-center p-8 border rounded-md">
-                  <Loader2 className="size-6 animate-spin" />
+                  <Loader2 className="size-6" />
                   <span className="ml-2">Generating tweet...</span>
                 </div>
               ) : (
@@ -252,15 +252,11 @@ export function TweetModal({
           {/* Note Preview */}
           <div className="space-y-2">
             <Label>Note Content</Label>
-            <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-md border">
+            <div className="p-3 border border-border rounded-md">
               {noteTitle && (
-                <h4 className="font-medium text-sm text-slate-900 dark:text-slate-100 mb-2">
-                  {noteTitle}
-                </h4>
+                <h4 className="font-medium text-sm text-foreground mb-2">{noteTitle}</h4>
               )}
-              <p className="text-sm text-slate-700 dark:text-slate-300 line-clamp-3">
-                {noteContent}
-              </p>
+              <p className="text-sm text-muted-foreground line-clamp-3">{noteContent}</p>
             </div>
           </div>
         </div>
@@ -274,7 +270,7 @@ export function TweetModal({
             <Button onClick={handleGenerate} disabled={isGenerating}>
               {isGenerating ? (
                 <>
-                  <Loader2 className="size-4 animate-spin mr-2" />
+                  <Loader2 className="size-4 mr-2" />
                   Generating...
                 </>
               ) : (
@@ -285,11 +281,11 @@ export function TweetModal({
             <Button
               onClick={handlePost}
               disabled={isOverLimit || postTweet.isPending}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {postTweet.isPending ? (
                 <>
-                  <Loader2 className="size-4 animate-spin mr-2" />
+                  <Loader2 className="size-4 mr-2" />
                   Posting...
                 </>
               ) : (

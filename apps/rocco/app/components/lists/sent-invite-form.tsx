@@ -57,7 +57,7 @@ export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps
           className="px-4 py-2 rounded-md shadow-sm transition-colors font-medium"
           disabled={email.length === 0 || mutation.isPending}
         >
-          <span>Invit{mutation.isPending ? <span className="fade-in">ing...</span> : 'e'}</span>
+          <span>Invit{mutation.isPending ? <span>ing...</span> : 'e'}</span>
         </Button>
       </form>
     </div>

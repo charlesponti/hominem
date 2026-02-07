@@ -16,7 +16,7 @@ export default function Lists() {
       <div className="space-y-2">
         {title}
         <div className="text-center py-8">
-          <p className="text-red-600">Error loading lists: {apiError?.message}</p>
+          <p className="text-destructive">Error loading lists: {apiError?.message}</p>
         </div>
       </div>
     );
@@ -28,9 +28,11 @@ export default function Lists() {
 
       <div className="space-y-1">
         {displayLists.length === 0 && !isLoading ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-10 text-center">
-            <h3 className="text-lg font-semibold text-gray-900">No lists yet</h3>
-            <p className="mt-1 text-sm text-gray-600">Get started by creating your first list.</p>
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-muted p-10 text-center">
+            <h3 className="text-lg font-semibold text-foreground">No lists yet</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Get started by creating your first list.
+            </p>
           </div>
         ) : (
           <List isLoading={isLoading} loadingSize="lg">

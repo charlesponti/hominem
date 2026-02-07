@@ -150,9 +150,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
       >
         {content}
       </ReactMarkdown>
-      {isStreaming && (
-        <span className="inline-block w-2 h-4 bg-foreground animate-pulse ml-1 align-middle" />
-      )}
+      {isStreaming && <span className="inline-block w-2 h-4 bg-foreground ml-1 align-middle" />}
     </div>
   );
 }

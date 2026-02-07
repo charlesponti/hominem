@@ -43,7 +43,7 @@ export function GoalMilestoneList({
             className="size-5"
           />
           <Button variant="ghost" size="sm" onClick={() => onRemove(index)}>
-            <XCircle className="size-4 text-red-500" />
+            <XCircle className="size-4 text-muted-foreground" />
           </Button>
         </div>
       ))}

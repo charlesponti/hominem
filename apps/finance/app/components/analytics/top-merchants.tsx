@@ -51,11 +51,13 @@ export function TopMerchants({
             ))}
           </div>
         ) : error instanceof Error ? (
-          <div className="text-red-500">
+          <div className="text-destructive">
             {error.message || 'Your merchants are not available. Please try again later.'}
           </div>
         ) : error ? (
-          <div className="text-red-500">An unknown error occurred while fetching merchants.</div>
+          <div className="text-destructive">
+            An unknown error occurred while fetching merchants.
+          </div>
         ) : Array.isArray(topMerchants?.merchants) && topMerchants.merchants.length > 0 ? (
           <div className="space-y-3">
             {topMerchants.merchants.map((m: any) => (

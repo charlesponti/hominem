@@ -20,15 +20,12 @@ export function PrioritySelect({
   value,
   onValueChange,
   disabled = false,
-  className = 'bg-white/90 dark:bg-slate-700/90',
+  className = 'bg-muted',
   id = 'priority-select',
 }: PrioritySelectProps) {
   return (
     <div className="flex-1">
-      <label
-        htmlFor={id}
-        className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-      >
+      <label htmlFor={id} className="block text-sm font-medium text-foreground mb-2">
         Priority
       </label>
       <Select
@@ -39,7 +36,7 @@ export function PrioritySelect({
         <SelectTrigger id={id} className={className}>
           <SelectValue placeholder="Select priority" />
         </SelectTrigger>
-        <SelectContent className="bg-white dark:bg-slate-800 w-full">
+        <SelectContent className="w-full">
           <SelectItem value="low">Low</SelectItem>
           <SelectItem value="medium">Medium</SelectItem>
           <SelectItem value="high">High</SelectItem>

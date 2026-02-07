@@ -1,6 +1,5 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
 import { List } from '@hominem/ui/list';
-import { motion } from 'framer-motion';
 import { memo } from 'react';
 
 import type { PlaceWithLists } from '~/lib/types';
@@ -38,13 +37,9 @@ const PlaceLists = ({ place }: Props) => {
       </div>
 
       {listsContainingPlace.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-sm text-muted-foreground py-4"
-        >
+        <div className="text-sm text-muted-foreground py-4">
           You haven't added this place to any lists yet.
-        </motion.div>
+        </div>
       ) : null}
 
       {(isLoading || listsContainingPlace.length > 0) && (

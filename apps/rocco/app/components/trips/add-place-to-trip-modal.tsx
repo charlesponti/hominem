@@ -43,7 +43,7 @@ export function AddPlaceToTripModal({ tripId }: { tripId: string }) {
                   <div key={place.id} className="flex justify-between items-center">
                     <div>
                       <p className="font-semibold">{place.name}</p>
-                      <p className="text-sm text-gray-500">{place.description}</p>
+                      <p className="text-sm text-muted-foreground">{place.description}</p>
                     </div>
                     <Button size="sm" onClick={() => handleAddPlace(place.id)}>
                       Add

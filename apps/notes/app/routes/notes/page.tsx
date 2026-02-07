@@ -96,9 +96,9 @@ export default function NotesPage() {
   return (
     <div className="flex flex-col h-screen w-full max-w-2xl mx-auto">
       {/* Fixed Header */}
-      <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 z-10">
+      <header className="shrink-0 border-b border-border z-10">
         <div className="py-4 px-4">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Notes</h1>
+          <h1 className="text-2xl font-bold text-foreground">Notes</h1>
         </div>
       </header>
 
@@ -107,7 +107,7 @@ export default function NotesPage() {
         <div ref={feedContainerRef} className="h-full overflow-y-auto">
           <div className="px-4 py-4 space-y-4">
             {/* Create form */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+            <div className="border border-border rounded-lg p-4">
               <InlineCreateForm
                 isVisible={formMode === 'create'}
                 onSuccess={handleFormSuccess}
@@ -119,7 +119,7 @@ export default function NotesPage() {
 
             {/* Edit form (shown when editing) */}
             {formMode === 'edit' && itemToEdit && (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+              <div className="border border-border rounded-lg p-4">
                 <InlineCreateForm
                   isVisible={true}
                   onSuccess={handleFormSuccess}
@@ -132,20 +132,18 @@ export default function NotesPage() {
 
             {isLoading && (
               <div className="flex flex-col items-center justify-center py-16">
-                <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4" />
-                <p className="text-slate-500 dark:text-slate-400">Loading notes...</p>
+                <div className="w-8 h-8 border-4 border-primary/30 border-t-primary mb-4" />
+                <p className="text-muted-foreground">Loading notes...</p>
               </div>
             )}
 
             {!isLoading && allContentItems.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-24 h-24 bg-linear-to-br from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 rounded-3xl flex items-center justify-center mb-6">
-                  <Sparkles className="w-12 h-12 text-blue-500 dark:text-blue-400" />
+                <div className="w-24 h-24 border border-dashed border-border rounded-3xl flex items-center justify-center mb-6">
+                  <Sparkles className="w-12 h-12 text-foreground" />
                 </div>
-                <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  No notes yet
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 max-w-md">
+                <h3 className="text-xl font-semibold text-foreground mb-2">No notes yet</h3>
+                <p className="text-muted-foreground max-w-md">
                   Start capturing your thoughts and ideas. Use the input above to create your first
                   note.
                 </p>
@@ -153,7 +151,7 @@ export default function NotesPage() {
             )}
 
             {allContentItems.length > 0 && (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+              <div className="border border-border rounded-lg overflow-hidden">
                 {allContentItems.map((item: Note) => (
                   <NoteFeedItem
                     key={item.id}

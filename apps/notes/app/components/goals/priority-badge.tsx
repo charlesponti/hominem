@@ -8,7 +8,11 @@ export function PriorityBadge({ priority }: PriorityBadgeProps) {
   return (
     <div
       className={`flex items-center gap-1 ${
-        priority > 3 ? 'text-destructive' : priority === 3 ? 'yellow-600' : 'text-green-600'
+        priority > 3
+          ? 'text-foreground'
+          : priority === 3
+            ? 'text-muted-foreground'
+            : 'text-muted-foreground/60'
       }`}
     >
       <Star size={14} />

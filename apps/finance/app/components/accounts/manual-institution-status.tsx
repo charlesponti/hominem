@@ -21,7 +21,7 @@ export function ManualInstitutionStatus({
     : undefined;
   return (
     <div className="flex items-center space-x-2">
-      <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200">
+      <Badge variant="secondary" className="text-foreground border border-foreground">
         <CheckCircleIcon className="size-3 mr-1" />
         Connected
       </Badge>

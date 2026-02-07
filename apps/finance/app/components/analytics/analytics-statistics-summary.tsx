@@ -74,7 +74,7 @@ export function AnalyticsStatisticsSummary({
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center text-red-500">
+          <div className="text-center text-destructive">
             {error.message || 'Unable to load statistics. Please try again later.'}
           </div>
         </CardContent>
@@ -114,7 +114,7 @@ export function AnalyticsStatisticsSummary({
                     For period {stats.periodCovered}
                   </div>
                 </div>
-                <div className="text-xl font-bold text-red-600 font-mono">
+                <div className="text-xl font-bold text-destructive font-mono">
                   {formatCurrency(stats.totalExpenses)}
                 </div>
               </div>
@@ -136,7 +136,7 @@ export function AnalyticsStatisticsSummary({
                   <div className="text-sm font-medium text-neutral-900">Average Expenses</div>
                   <div className="text-xs text-muted-foreground">Over {stats.count} months</div>
                 </div>
-                <div className="text-xl font-bold text-red-600 font-mono">
+                <div className="text-xl font-bold text-destructive font-mono">
                   {formatCurrency(stats.averageExpenses)}
                 </div>
               </div>

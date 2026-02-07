@@ -53,7 +53,7 @@ export default function AccountDetailsPage() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center space-y-4">
-          <RefreshCcw className="size-8 animate-spin mx-auto text-muted-foreground" />
+          <RefreshCcw className="size-8 mx-auto text-muted-foreground" />
           <p className="text-muted-foreground">Loading account details...</p>
         </div>
       </div>

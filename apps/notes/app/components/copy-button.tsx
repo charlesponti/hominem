@@ -46,11 +46,11 @@ export function CopyButton({
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
       title={title}
-      className="focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      className="focus:ring-2 focus:ring-accent focus:ring-offset-2"
       {...props}
     >
       {isCopied ? (
-        <Check className="size-4 mr-2 text-green-600" aria-hidden="true" />
+        <Check className="size-4 mr-2 text-foreground" aria-hidden="true" />
       ) : (
         <Copy className="size-4 mr-2" aria-hidden="true" />
       )}

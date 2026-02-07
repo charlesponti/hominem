@@ -168,7 +168,8 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
 
   const activities: Activity[] = useMemo(() => {
     return (eventsData as EventData[]).map((event) => {
-      const dateValue = event.date instanceof Date ? event.date.toISOString() : event.date ?? undefined;
+      const dateValue =
+        event.date instanceof Date ? event.date.toISOString() : (event.date ?? undefined);
       const normalizeTimestamp = (value: string | Date) =>
         value instanceof Date ? value.toISOString() : value;
       const people: Person[] = (event.people ?? []).map((person) => ({
@@ -185,7 +186,9 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
         updatedAt: normalizeTimestamp(event.updatedAt),
       }));
       const tags =
-        event.tags?.map((tag) => tag.name).filter((name): name is string => Boolean(name?.trim())) ?? [];
+        event.tags
+          ?.map((tag) => tag.name)
+          .filter((name): name is string => Boolean(name?.trim())) ?? [];
 
       return {
         id: event.id,
@@ -266,7 +269,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <div className="min-h-screen bg-muted">
+    <div className="min-h-screen bg-background">
       <div className="pt-12 pb-8 relative bg-card">
         <div className="max-w-6xl mx-auto px-8">
           {/* Title and Actions Row */}
@@ -315,7 +318,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
       <div className="max-w-6xl mx-auto px-8 py-8">
         {/* Event Form - Show/hide with smooth transition */}
         {showAddForm && (
-          <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="mb-8">
             <div className="rounded-xl p-6 shadow-sm bg-card border border-border">
               <EventForm showAddForm={showAddForm} onToggleForm={handleToggleEventForm} />
             </div>
@@ -379,7 +382,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
               <button
                 type="button"
                 onClick={() => navigate('/events/people')}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 whitespace-nowrap bg-muted text-muted-foreground hover:bg-accent hover:text-foreground"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 whitespace-nowrap border border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-foreground"
               >
                 <span>👥</span>
                 <span>Manage People</span>

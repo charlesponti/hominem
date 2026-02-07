@@ -108,7 +108,7 @@ export function DropZone({
         'relative border-2 border-dashed rounded-lg p-12',
         {
           'border-primary bg-primary/5': dragActive,
-          'border-gray-300 bg-gray-50': !dragActive,
+          'border-border bg-muted': !dragActive,
         },
         'transition-colors duration-200 ease-in-out',
         'flex flex-col items-center justify-center gap-4',
@@ -140,7 +140,7 @@ export function DropZone({
 
       {/* Your existing UI content here */}
       <div className="text-center space-y-2">
-        <p className="text-gray-500">
+        <p className="text-muted-foreground">
           Drag and drop files here, or{' '}
           <span className="text-primary font-medium">click to browse</span>
         </p>

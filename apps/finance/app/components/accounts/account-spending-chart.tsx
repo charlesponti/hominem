@@ -83,7 +83,7 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
         </CardHeader>
         <CardContent>
           <div className="h-80 w-full flex items-center justify-center">
-            <div className="text-red-500">
+            <div className="text-destructive">
               Failed to load chart data
               {process.env.NODE_ENV === 'development' && (
                 <div className="text-xs mt-2 text-muted-foreground">Error: {error.message}</div>

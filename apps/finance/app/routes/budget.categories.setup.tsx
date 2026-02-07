@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@hominem/ui/components/ui/card';
+import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { ArrowLeft, Check, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -71,8 +72,8 @@ export default function BudgetCategoriesSetup() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
-          <p className="mt-2 text-sm text-gray-600">Loading transaction categories...</p>
+          <LoadingSpinner size="md" className="mx-auto" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading transaction categories...</p>
         </div>
       </div>
     );
@@ -93,7 +94,7 @@ export default function BudgetCategoriesSetup() {
         </Button>
         <div>
           <h1 className="text-3xl font-serif tracking-tight">Set up Budget Categories</h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Select the transaction categories you'd like to convert to budget categories. We'll
             suggest budget amounts based on your spending history.
           </p>
@@ -127,8 +128,8 @@ export default function BudgetCategoriesSetup() {
                   key={transactionCategory.name || transactionCategory.category}
                   className={`w-full text-left flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-colors ${
                     selectedCategories.has(transactionCategory.name || transactionCategory.category)
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-primary bg-accent'
+                      : 'border-muted hover:border-border'
                   }`}
                   onClick={() =>
                     toggleTransactionCategory(
@@ -143,8 +144,8 @@ export default function BudgetCategoriesSetup() {
                         selectedCategories.has(
                           transactionCategory.name || transactionCategory.category,
                         )
-                          ? 'bg-blue-500 border-blue-500'
-                          : 'border-gray-300'
+                          ? 'bg-primary border-primary'
+                          : 'border-border'
                       }`}
                     >
                       {selectedCategories.has(
@@ -155,24 +156,24 @@ export default function BudgetCategoriesSetup() {
                       <div className="font-medium">
                         {transactionCategory.name || transactionCategory.category}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-muted-foreground">
                         {transactionCategory.transactionCount} transactions • Avg: $
                         {Math.abs(transactionCategory.averageAmount).toFixed(2)}/month
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-medium text-green-600">
+                    <div className="font-medium text-foreground">
                       ${(transactionCategory.suggestedBudget || 0).toFixed(0)}/month
                     </div>
-                    <div className="text-xs text-gray-500">Suggested budget</div>
+                    <div className="text-xs text-muted-foreground">Suggested budget</div>
                   </div>
                 </button>
               ))}
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-500">No transaction categories found.</p>
+              <p className="text-muted-foreground">No transaction categories found.</p>
             </div>
           )}
         </CardContent>
@@ -190,7 +191,7 @@ export default function BudgetCategoriesSetup() {
         >
           {bulkCreateMutation.isPending ? (
             <>
-              <div className="animate-spin rounded-full size-4 border-b-2 border-white" />
+              <div className="rounded-full size-4 border-b-2 border-white" />
               Creating...
             </>
           ) : (

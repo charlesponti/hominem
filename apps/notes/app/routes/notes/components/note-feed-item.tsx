@@ -58,7 +58,7 @@ export function NoteFeedItem({
             return (
               <span
                 key={`hashtag-${i}-${part.replace('#', '')}`}
-                className="text-blue-600 dark:text-blue-400 font-medium"
+                className="text-foreground font-medium"
               >
                 {part}
               </span>
@@ -77,7 +77,7 @@ export function NoteFeedItem({
   return (
     <div
       className={cn(
-        'border-b border-slate-200 dark:border-slate-700 py-4 px-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-150 group',
+        'border-b border-border py-4 px-4 transition-colors duration-150 group',
         className,
       )}
     >
@@ -86,14 +86,12 @@ export function NoteFeedItem({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {note.title && (
-              <h3 className="font-semibold text-base text-slate-900 dark:text-slate-100">
-                {note.title}
-              </h3>
+              <h3 className="font-semibold text-base text-foreground">{note.title}</h3>
             )}
             {versionLabel && (
               <Badge
                 variant="secondary"
-                className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-0"
+                className="text-xs border border-foreground text-foreground"
               >
                 {versionLabel}
               </Badge>
@@ -103,7 +101,7 @@ export function NoteFeedItem({
 
         {/* Content */}
         <div>
-          <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
             {formattedContent}
           </p>
         </div>
@@ -115,14 +113,14 @@ export function NoteFeedItem({
               <Badge
                 key={tag.value}
                 variant="secondary"
-                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 border-0 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border border-foreground text-secondary-foreground"
               >
                 {tag.value}
                 {!extractHashtags.includes(tag.value) && (
                   <button
                     type="button"
                     onClick={() => onRemoveTag(note.id, tag.value)}
-                    className="ml-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
+                    className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <X className="size-3" />
                   </button>
@@ -133,8 +131,8 @@ export function NoteFeedItem({
         )}
 
         {/* Action bar */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-700">
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex items-center justify-between pt-2 border-t border-border">
+          <p className="text-xs text-muted-foreground">
             {new Date(note.createdAt).toLocaleDateString()}
           </p>
           <div className="flex items-center gap-1">
@@ -144,7 +142,7 @@ export function NoteFeedItem({
                 variant="ghost"
                 size="sm"
                 onClick={() => onExpand(note)}
-                className="size-7 p-0 text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:text-slate-500 dark:hover:text-blue-400 dark:hover:bg-blue-900/20 transition-colors"
+                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                 title="Expand"
               >
                 <Maximize2 className="size-3.5" />
@@ -155,7 +153,7 @@ export function NoteFeedItem({
                 variant="ghost"
                 size="sm"
                 onClick={() => onOutline(note)}
-                className="size-7 p-0 text-slate-400 hover:text-green-500 hover:bg-green-50 dark:text-slate-500 dark:hover:text-green-400 dark:hover:bg-green-900/20 transition-colors"
+                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                 title="Outline"
               >
                 <List className="size-3.5" />
@@ -166,20 +164,20 @@ export function NoteFeedItem({
                 variant="ghost"
                 size="sm"
                 onClick={() => onRewrite(note)}
-                className="size-7 p-0 text-slate-400 hover:text-purple-500 hover:bg-purple-50 dark:text-slate-500 dark:hover:text-purple-400 dark:hover:bg-purple-900/20 transition-colors"
+                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                 title="Rewrite"
               >
                 <RefreshCw className="size-3.5" />
               </Button>
             )}
 
-            <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1" />
+            <div className="w-px h-4 bg-border mx-1" />
 
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onEdit(note)}
-              className="size-8 p-0 text-slate-600 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="size-8 p-0 text-secondary-foreground hover:text-foreground transition-colors"
               title="Edit note"
             >
               <Edit className="size-4" />
@@ -188,7 +186,7 @@ export function NoteFeedItem({
               variant="ghost"
               size="sm"
               onClick={() => onDelete(note.id)}
-              className="size-8 p-0 text-slate-600 hover:text-red-500 hover:bg-red-50 dark:text-slate-400 dark:hover:text-red-400 dark:hover:bg-red-900/30 transition-colors"
+              className="size-8 p-0 text-secondary-foreground hover:text-foreground transition-colors"
               title="Delete note"
             >
               <Trash2 className="size-4" />

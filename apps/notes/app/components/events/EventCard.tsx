@@ -5,6 +5,7 @@ import { MapPinIcon, PencilIcon, UsersIcon } from 'lucide-react';
 import { useMemo } from 'react';
 
 import type { Activity } from './EventList';
+
 import SourceBadge from './SourceBadge';
 
 interface EventCardProps {
@@ -43,7 +44,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
 
   return (
     <div
-      className="grid grid-cols-[1fr_80px_50px] md:grid-cols-[100px_80px_1fr_120px_100px_50px] lg:grid-cols-[120px_100px_1fr_150px_120px_60px] gap-0 p-0 min-h-[60px] items-center group cursor-pointer hover:bg-gray-50"
+      className="grid grid-cols-[1fr_80px_50px] md:grid-cols-[100px_80px_1fr_120px_100px_50px] lg:grid-cols-[120px_100px_1fr_150px_120px_60px] gap-0 p-0 min-h-[60px] items-center group cursor-pointer border-b border-border"
       onClick={handleEditEvent}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -87,7 +88,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium bg-muted text-muted-foreground"
+                  className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium border border-muted-foreground/50 text-muted-foreground"
                 >
                   {tag}
                 </span>

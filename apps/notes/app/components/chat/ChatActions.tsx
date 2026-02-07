@@ -33,7 +33,7 @@ export function ChatActions({
         disabled={!hasInput || isSearching}
         title="Search the web"
       >
-        {isSearching ? <Loader2 className="size-4 animate-spin" /> : <Globe className="size-4" />}
+        {isSearching ? <Loader2 className="size-4" /> : <Globe className="size-4" />}
       </Button>
 
       <Button

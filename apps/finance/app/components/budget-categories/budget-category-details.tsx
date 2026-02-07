@@ -1,3 +1,4 @@
+import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { Progress } from '@hominem/ui/components/ui/progress';
 import { useMemo } from 'react';
 
@@ -92,8 +93,8 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
   if (isLoadingCategories || isLoadingStats) {
     return (
       <div className="text-center">
-        <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
-        <p className="mt-2 text-sm text-gray-600">Loading category details...</p>
+        <LoadingSpinner size="md" className="mx-auto" />
+        <p className="mt-2 text-sm text-muted-foreground">Loading category details...</p>
       </div>
     );
   }
@@ -101,7 +102,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
   if (errorCategories || errorStats) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-center text-red-600">
+        <div className="text-center text-destructive">
           <p>Error loading category details</p>
           <p className="text-sm">
             {errorCategories?.message || errorStats || 'An error occurred while loading data'}
@@ -115,8 +116,8 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <p className="text-gray-600">No budget categories found.</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-muted-foreground">No budget categories found.</p>
+          <p className="text-sm text-muted-foreground">
             Please add budget categories to see tracking details.
           </p>
         </div>
@@ -128,8 +129,10 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <p className="text-gray-600">No spending data available for {selectedMonthYear}.</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-muted-foreground">
+            No spending data available for {selectedMonthYear}.
+          </p>
+          <p className="text-sm text-muted-foreground">
             Transactions will appear here once they are recorded.
           </p>
         </div>
@@ -149,10 +152,10 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
             <div
               className={`px-2 py-1 rounded text-xs font-medium ${
                 item.status === 'over-budget'
-                  ? 'bg-red-100 text-red-800'
+                  ? 'bg-destructive/10 text-destructive'
                   : item.status === 'warning'
-                    ? 'bg-orange-100 text-orange-800'
-                    : 'bg-green-100 text-green-800'
+                    ? 'bg-warning-subtle text-warning'
+                    : 'bg-muted text-foreground'
               }`}
             >
               {item.status === 'over-budget'
@@ -166,7 +169,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm mb-3">
             <div>
               <p className="text-muted-foreground">Budgeted</p>
-              <p className="font-semibold text-blue-600">{formatCurrency(item.budgetAmount)}</p>
+              <p className="font-semibold text-foreground">{formatCurrency(item.budgetAmount)}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Actual</p>
@@ -175,7 +178,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
             <div>
               <p className="text-muted-foreground">Variance</p>
               <p
-                className={`font-semibold ${item.variance < 0 ? 'text-red-600' : 'text-green-600'}`}
+                className={`font-semibold ${item.variance < 0 ? 'text-destructive' : 'text-foreground'}`}
               >
                 {item.variance < 0 ? '+' : ''}
                 {formatCurrency(Math.abs(item.variance))}
@@ -187,7 +190,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
             </div>
             <div>
               <p className="text-muted-foreground">Allocation</p>
-              <p className="font-semibold text-purple-600">
+              <p className="font-semibold text-foreground">
                 {item.allocationPercentage.toFixed(1)}%
               </p>
             </div>
@@ -200,12 +203,14 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
             </div>
             <Progress value={Math.min(100, item.percentageSpent)} className="h-2" />
             {item.percentageSpent > 100 && (
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-xs text-destructive mt-1">
                 {formatCurrency(Math.abs(item.variance))} over budget
               </p>
             )}
             {item.budgetAmount > 0 && item.actualSpending === 0 && (
-              <p className="text-xs text-gray-500 mt-1">No spending recorded for this category</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                No spending recorded for this category
+              </p>
             )}
           </div>
         </div>

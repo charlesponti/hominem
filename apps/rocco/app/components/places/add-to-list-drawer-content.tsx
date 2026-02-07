@@ -151,7 +151,7 @@ export const AddToListDrawerContent = ({
                     disabled={createListMutation.isPending}
                   >
                     {createListMutation.isPending ? (
-                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      <Loader2 className="mr-2 size-4" />
                     ) : (
                       <Plus className="mr-2 size-4" />
                     )}
@@ -170,7 +170,7 @@ export const AddToListDrawerContent = ({
                     <span className="flex-1">{list.name}</span>
                     {loadingListId === list.id ||
                     (createListMutation.isPending && searchQuery.trim() === list.name) ? (
-                      <Loader2 size={16} className="animate-spin" />
+                      <Loader2 size={16} />
                     ) : (
                       <Check
                         className={cn('size-4', {

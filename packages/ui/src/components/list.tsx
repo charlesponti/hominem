@@ -16,7 +16,7 @@ const List = forwardRef<HTMLUListElement, ListProps>(
       <ul
         ref={ref}
         className={cn(
-          'list-none bg-white/50 divide-y divide-border rounded-md border border-border overflow-hidden',
+          'list-none bg-muted divide-y divide-border rounded-md border border-border overflow-hidden',
           className,
         )}
         {...props}

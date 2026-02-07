@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
 
+import { CHART_COLORS } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import { Skeleton } from '@hominem/ui/components/ui/skeleton';
@@ -20,9 +21,6 @@ import {
 
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';
-
-const INCOME_COLOR = '#ABF4B6';
-const EXPENSES_COLOR = '#ef4444';
 
 interface AnalyticsChartDisplayProps {
   chartType: 'area' | 'bar';
@@ -108,7 +106,7 @@ export function AnalyticsChartDisplay({
         </CardHeader>
         <CardContent>
           <div className="h-80 w-full max-w-full flex items-center justify-center">
-            <div className="text-center text-red-500">
+            <div className="text-center text-destructive">
               {error.message || 'Unable to load chart data. Please try again later.'}
             </div>
           </div>
@@ -170,12 +168,12 @@ export function AnalyticsChartDisplay({
                 >
                   <defs>
                     <linearGradient id={incomeGradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={INCOME_COLOR} stopOpacity={0.8} />
-                      <stop offset="95%" stopColor={INCOME_COLOR} stopOpacity={0.2} />
+                      <stop offset="5%" stopColor={CHART_COLORS.positive} stopOpacity={0.8} />
+                      <stop offset="95%" stopColor={CHART_COLORS.positive} stopOpacity={0.2} />
                     </linearGradient>
                     <linearGradient id={expensesGradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={EXPENSES_COLOR} stopOpacity={0.8} />
-                      <stop offset="95%" stopColor={EXPENSES_COLOR} stopOpacity={0.2} />
+                      <stop offset="5%" stopColor={CHART_COLORS.negative} stopOpacity={0.8} />
+                      <stop offset="95%" stopColor={CHART_COLORS.negative} stopOpacity={0.2} />
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="name" className="text-xs" />
@@ -190,14 +188,14 @@ export function AnalyticsChartDisplay({
                   <Area
                     type="monotone"
                     dataKey="Income"
-                    stroke={INCOME_COLOR}
+                    stroke={CHART_COLORS.positive}
                     fillOpacity={1}
                     fill={`url(#${incomeGradientId})`}
                   />
                   <Area
                     type="monotone"
                     dataKey="Expenses"
-                    stroke={EXPENSES_COLOR}
+                    stroke={CHART_COLORS.negative}
                     fillOpacity={1}
                     fill={`url(#${expensesGradientId})`}
                   />
@@ -212,8 +210,8 @@ export function AnalyticsChartDisplay({
                   <CartesianGrid strokeDasharray="3 3" />
                   <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                   <Legend />
-                  <Bar dataKey="Income" fill={INCOME_COLOR} />
-                  <Bar dataKey="Expenses" fill={EXPENSES_COLOR} />
+                  <Bar dataKey="Income" fill={CHART_COLORS.positive} />
+                  <Bar dataKey="Expenses" fill={CHART_COLORS.negative} />
                 </BarChart>
               )}
             </ResponsiveContainer>

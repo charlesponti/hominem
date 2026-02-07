@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from '@hominem/ui/components/ui/alert-dialog';
 import { Label } from '@hominem/ui/components/ui/label';
+import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import {
   Select,
   SelectContent,
@@ -29,14 +30,14 @@ import {
 } from '~/lib/hooks/use-budget';
 
 const categoryColors = [
-  'bg-blue-500',
-  'bg-green-500',
-  'bg-yellow-500',
-  'bg-purple-500',
-  'bg-red-500',
-  'bg-indigo-500',
-  'bg-pink-500',
-  'bg-teal-500',
+  'bg-emphasis-highest',
+  'bg-emphasis-high',
+  'bg-emphasis-medium',
+  'bg-emphasis-low',
+  'bg-emphasis-lower',
+  'bg-emphasis-subtle',
+  'bg-emphasis-minimal',
+  'bg-emphasis-faint',
 ];
 
 export default function EditBudgetCategory() {
@@ -109,8 +110,8 @@ export default function EditBudgetCategory() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
-          <p className="mt-2 text-sm text-gray-600">Loading category...</p>
+          <LoadingSpinner size="md" className="mx-auto" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading category...</p>
         </div>
       </div>
     );
@@ -119,8 +120,8 @@ export default function EditBudgetCategory() {
   if (!category) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Category Not Found</h3>
-        <p className="text-gray-600 mb-4">The category you're looking for doesn't exist.</p>
+        <h3 className="text-lg font-semibold text-foreground mb-2">Category Not Found</h3>
+        <p className="text-muted-foreground mb-4">The category you're looking for doesn't exist.</p>
         <Button onClick={handleCancel}>Back to Categories</Button>
       </div>
     );
@@ -128,7 +129,7 @@ export default function EditBudgetCategory() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-3xl font-serif tracking-tight text-gray-900">{category.name}</h1>
+      <h1 className="text-3xl font-serif tracking-tight text-foreground">{category.name}</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor={nameId}>Category Name</Label>
@@ -180,7 +181,7 @@ export default function EditBudgetCategory() {
                 type="button"
                 onClick={() => setFormData({ ...formData, color })}
                 className={`w-8 h-8 rounded-full ${color} ${
-                  formData.color === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''
+                  formData.color === color ? 'ring-2 ring-offset-2 ring-border' : ''
                 }`}
               />
             ))}
@@ -226,7 +227,7 @@ export default function EditBudgetCategory() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               disabled={deleteCategoryMutation.isPending}
             >
               {deleteCategoryMutation.isPending ? 'Deleting...' : 'Delete'}

@@ -266,7 +266,7 @@ export function TransactionFilters({
             focusedSortIndex={focusedSortIndex}
           />
           <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-            <RefreshCcw className={`size-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCcw className={`size-4 mr-2 ${loading ? '' : ''}`} />
             Refresh
           </Button>
         </div>

@@ -11,13 +11,13 @@ const MusicStreamingCalculator = () => {
   const [streamCount, setStreamCount] = useState([100000]);
 
   const streamingServices = [
-    { name: 'Apple Music', rate: 0.008, color: 'bg-red-500' },
-    { name: 'Spotify', rate: 0.004, color: 'bg-green-500' },
-    { name: 'Amazon Music', rate: 0.004, color: 'bg-blue-500' },
-    { name: 'YouTube Music', rate: 0.003, color: 'bg-red-600' },
-    { name: 'Tidal', rate: 0.01, color: 'bg-blue-600' },
-    { name: 'Deezer', rate: 0.0035, color: 'bg-purple-500' },
-    { name: 'Pandora', rate: 0.0015, color: 'bg-blue-400' },
+    { name: 'Apple Music', rate: 0.008, color: 'bg-emphasis-highest' },
+    { name: 'Spotify', rate: 0.004, color: 'bg-emphasis-high' },
+    { name: 'Amazon Music', rate: 0.004, color: 'bg-emphasis-medium' },
+    { name: 'YouTube Music', rate: 0.003, color: 'bg-emphasis-low' },
+    { name: 'Tidal', rate: 0.01, color: 'bg-emphasis-lower' },
+    { name: 'Deezer', rate: 0.0035, color: 'bg-emphasis-subtle' },
+    { name: 'Pandora', rate: 0.0015, color: 'bg-emphasis-minimal' },
   ];
 
   const highestRate = Math.max(...streamingServices.map((service) => service.rate));
@@ -90,7 +90,7 @@ function StreamingServiceStreamingRate({
           <span className="text-lg font-bold">{earnings.toFixed(2)}</span>
         </div>
       </div>
-      <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
         <div
           className={`h-full ${service.color} transition-all duration-300`}
           style={{

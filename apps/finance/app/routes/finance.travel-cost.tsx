@@ -33,17 +33,17 @@ const TravelCostCard = () => {
         <div className="space-y-4">
           {/* Transportation Section */}
           <div className="flex items-start space-x-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Plane className="w-6 h-6 text-blue-600" />
+            <div className="p-2 border border-emphasis-highest">
+              <Plane className="w-6 h-6 text-foreground" />
             </div>
             <div className="flex-1">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold">Transportation</h3>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-muted-foreground">
                   {getCategoryPercentage(transportation)}% of total
                 </span>
               </div>
-              <div className="mt-1 text-sm text-gray-600">
+              <div className="mt-1 text-sm text-muted-foreground">
                 <div className="flex justify-between">
                   <span>Flights</span>
                   <span>{formatCurrency(transportation.flight)}</span>
@@ -62,17 +62,17 @@ const TravelCostCard = () => {
 
           {/* Accommodation Section */}
           <div className="flex items-start space-x-4">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Building className="w-6 h-6 text-green-600" />
+            <div className="p-2 border border-emphasis-high">
+              <Building className="w-6 h-6 text-foreground" />
             </div>
             <div className="flex-1">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold">Accommodation</h3>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-muted-foreground">
                   {getCategoryPercentage(accommodation)}% of total
                 </span>
               </div>
-              <div className="mt-1 text-sm text-gray-600">
+              <div className="mt-1 text-sm text-muted-foreground">
                 <div className="flex justify-between">
                   <span>Hotel</span>
                   <span>{formatCurrency(accommodation.hotel)}</span>
@@ -91,17 +91,17 @@ const TravelCostCard = () => {
 
           {/* Food Section */}
           <div className="flex items-start space-x-4">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <Utensils className="w-6 h-6 text-orange-600" />
+            <div className="p-2 border border-emphasis-medium">
+              <Utensils className="w-6 h-6 text-foreground" />
             </div>
             <div className="flex-1">
               <div className="flex justify-between items-center">
                 <h3 className="font-semibold">Food</h3>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-muted-foreground">
                   {getCategoryPercentage(food)}% of total
                 </span>
               </div>
-              <div className="mt-1 text-sm text-gray-600">
+              <div className="mt-1 text-sm text-muted-foreground">
                 <div className="flex justify-between">
                   <span>Restaurants</span>
                   <span>{formatCurrency(food.restaurants)}</span>

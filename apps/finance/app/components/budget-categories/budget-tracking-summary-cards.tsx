@@ -24,7 +24,7 @@ export function BudgetTrackingSummaryCards({
           <Target className="size-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-blue-600">{formatCurrency(totalAllocated)}</div>
+          <div className="text-2xl font-bold text-foreground">{formatCurrency(totalAllocated)}</div>
         </CardContent>
       </Card>
 
@@ -32,9 +32,9 @@ export function BudgetTrackingSummaryCards({
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Actual Spending</CardTitle>
           {totalActual > totalAllocated ? (
-            <TrendingUp className="size-4 text-red-500" />
+            <TrendingUp className="size-4 text-destructive" />
           ) : (
-            <TrendingDown className="size-4 text-green-500" />
+            <TrendingDown className="size-4 text-foreground" />
           )}
         </CardHeader>
         <CardContent>
@@ -46,14 +46,14 @@ export function BudgetTrackingSummaryCards({
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Variance</CardTitle>
           {totalActual > totalAllocated ? (
-            <TrendingUp className="size-4 text-red-500" />
+            <TrendingUp className="size-4 text-destructive" />
           ) : (
-            <TrendingDown className="size-4 text-green-500" />
+            <TrendingDown className="size-4 text-foreground" />
           )}
         </CardHeader>
         <CardContent>
           <div
-            className={`text-2xl font-bold ${totalActual > totalAllocated ? 'text-red-600' : 'text-green-600'}`}
+            className={`text-2xl font-bold ${totalActual > totalAllocated ? 'text-destructive' : 'text-foreground'}`}
           >
             {totalActual > totalAllocated ? '+' : ''}
             {formatCurrency(variance)}

@@ -148,15 +148,15 @@ export function KeyboardShortcutsHelp({ className = '' }: KeyboardShortcutsHelpP
               <div className="space-y-6">
                 {Object.entries(groupedShortcuts).map(([category, categoryShortcuts]) => (
                   <div key={category}>
-                    <h3 className="font-semibold text-lg mb-3 text-gray-900">{category}</h3>
+                    <h3 className="font-semibold text-lg mb-3 text-foreground">{category}</h3>
                     <div className="space-y-2">
                       {categoryShortcuts.map((shortcut) => (
                         <div
                           key={`${shortcut.keys}-${shortcut.description}`}
-                          className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 hover:bg-gray-100"
+                          className="flex items-center justify-between py-2 px-3 rounded-lg border border-border hover:border-border/80"
                         >
-                          <span className="text-gray-700">{shortcut.description}</span>
-                          <code className="px-2 py-1 bg-white border rounded text-sm font-mono text-gray-800 shadow-sm">
+                          <span className="text-foreground">{shortcut.description}</span>
+                          <code className="px-2 py-1 border rounded text-sm font-mono text-foreground shadow-sm">
                             {shortcut.keys}
                           </code>
                         </div>
@@ -165,7 +165,7 @@ export function KeyboardShortcutsHelp({ className = '' }: KeyboardShortcutsHelpP
                   </div>
                 ))}
 
-                <div className="pt-4 border-t text-sm text-gray-600">
+                <div className="pt-4 border-t text-sm text-muted-foreground">
                   <p className="mb-2">
                     <strong>Tip:</strong> Most shortcuts work from anywhere on the page.
                   </p>

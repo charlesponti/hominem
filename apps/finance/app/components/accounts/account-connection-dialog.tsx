@@ -132,13 +132,15 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
                   </div>
                 </div>
                 {linkedPlaidAccount && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="text-sm font-medium text-blue-900">Linked to Plaid Account</div>
-                    <div className="text-sm text-blue-700">
+                  <div className="p-3 bg-muted border border-border rounded-lg">
+                    <div className="text-sm font-medium text-foreground">
+                      Linked to Plaid Account
+                    </div>
+                    <div className="text-sm text-muted-foreground">
                       {linkedPlaidAccount.name}{' '}
                       {linkedPlaidAccount.mask ? `••••${linkedPlaidAccount.mask}` : ''}
                     </div>
-                    <div className="text-xs text-blue-600">
+                    <div className="text-xs text-muted-foreground">
                       Balance: ${Number(linkedPlaidAccount.balance).toLocaleString()}
                     </div>
                   </div>

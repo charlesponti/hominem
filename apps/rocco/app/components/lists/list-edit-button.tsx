@@ -18,7 +18,7 @@ export default function ListEditButton({ list }: ListEditButtonProps) {
       <Button
         size="icon"
         variant="ghost"
-        className="size-8 hover:text-indigo-600 focus-visible:bg-indigo-50"
+        className="size-8 hover:text-primary focus-visible:bg-accent"
         onClick={() => setIsEditDialogOpen(true)}
         aria-label="Edit list"
       >

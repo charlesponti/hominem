@@ -1,5 +1,6 @@
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Button } from '@hominem/ui/components/ui/button';
+import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { useSort } from '@hominem/ui/hooks';
 import { format, subMonths } from 'date-fns';
 import { ArrowDown, ArrowUp, X } from 'lucide-react';
@@ -232,7 +233,7 @@ export default function CategoriesAnalyticsPage() {
           {activeFilters.map((filter) => (
             <Badge
               key={filter.id}
-              className="flex items-center gap-1 pr-1 bg-muted text-foreground text-xs"
+              className="flex items-center gap-1 pr-1 border border-foreground text-foreground text-xs"
             >
               <span>{filter.label}</span>
               <Button
@@ -251,7 +252,7 @@ export default function CategoriesAnalyticsPage() {
             </Badge>
           ))}
           {searchValue.trim() && (
-            <Badge className="flex items-center gap-1 pr-1 bg-muted text-foreground text-xs">
+            <Badge className="flex items-center gap-1 pr-1 border border-foreground text-foreground text-xs">
               <span>Search: {searchValue}</span>
               <Button
                 type="button"
@@ -282,15 +283,15 @@ export default function CategoriesAnalyticsPage() {
       {/* Loading State */}
       {loading ? (
         <div className="flex justify-center py-10">
-          <output className="animate-pulse space-y-4 w-full" aria-live="polite">
+          <output className="space-y-4 w-full" aria-live="polite">
             {[1, 2, 3, 4, 5].map((val) => (
-              <div key={val} className="h-12 bg-gray-100 rounded-md w-full" />
+              <div key={val} className="h-12 border border-foreground w-full" />
             ))}
           </output>
         </div>
       ) : error ? (
         /* Error State */
-        <div className="p-8 text-center text-red-500" role="alert">
+        <div className="p-8 text-center text-destructive" role="alert">
           <p className="mb-4">
             {typeof error === 'string'
               ? error
@@ -304,7 +305,7 @@ export default function CategoriesAnalyticsPage() {
         </div>
       ) : filteredAndSortedData.length === 0 ? (
         /* Empty State */
-        <div className="p-8 text-center text-[#917C6F]">
+        <div className="p-8 text-center text-muted-foreground">
           {searchValue.trim() || activeFilters.length > 0
             ? 'No categories found matching your filters.'
             : 'No category data available for the selected period.'}
@@ -313,8 +314,8 @@ export default function CategoriesAnalyticsPage() {
         /* Table with Data */
         <div className="relative">
           {isFetching && !isLoading && (
-            <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center">
-              <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900" />
+            <div className="absolute inset-0 bg-emphasis-medium z-10 flex items-center justify-center">
+              <LoadingSpinner size="md" />
             </div>
           )}
           <table className="w-full text-sm" aria-label="Categories breakdown">
@@ -380,7 +381,7 @@ export default function CategoriesAnalyticsPage() {
                 return (
                   <tr
                     key={item.category}
-                    className="border-b border-gray-300 hover:bg-muted/50 cursor-pointer transition-colors"
+                    className="border-b border-border cursor-pointer"
                     onClick={() =>
                       navigate(`/analytics/category/${encodeURIComponent(item.category)}`)
                     }
@@ -416,9 +417,9 @@ export default function CategoriesAnalyticsPage() {
                           {percentage.toFixed(1)}%
                         </div>
                         {/* Progress Bar */}
-                        <div className="w-24 bg-gray-200 rounded-full h-1">
+                        <div className="w-24 border border-foreground rounded-full h-1">
                           <div
-                            className="h-1 rounded-full transition-all duration-300 ease-in-out bg-blue-500"
+                            className="h-1 rounded-full bg-primary"
                             style={{
                               width: `${Math.min(percentage, 100)}%`,
                             }}

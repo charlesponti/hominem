@@ -93,18 +93,18 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 py-16">
+      <div className="border-b border-border py-16">
         <div className="max-w-4xl mx-auto px-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-light text-black mb-2">People</h1>
-              <p className="text-gray-600">Manage the people in your events</p>
+              <p className="text-muted-foreground">Manage the people in your events</p>
             </div>
             <button
               type="button"
-              className="btn bg-blue-600 text-white hover:bg-blue-700 border-0"
+              className="btn bg-primary text-primary-foreground hover:bg-primary/90 border-0"
               onClick={() => navigate('/events')}
             >
               ← Back to Events
@@ -119,7 +119,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
         <div className="mb-8">
           <button
             type="button"
-            className="btn bg-green-600 text-white hover:bg-green-700 border-0"
+            className="btn bg-primary text-primary-foreground hover:bg-primary/90 border-0"
             onClick={() => setShowAddForm(true)}
           >
             + Add New Person
@@ -128,7 +128,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
 
         {/* Add Person Form */}
         {showAddForm && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
+          <div className="rounded-lg border border-border p-6 mb-8">
             <h3 className="text-xl font-medium text-black mb-4">Add New Person</h3>
             <form method="post">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -144,7 +144,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                     id={firstNameId}
                     name="firstName"
                     placeholder="Enter first name"
-                    className="input input-bordered w-full bg-white border-gray-300 text-black focus:border-black"
+                    className="input input-bordered w-full bg-card border-border text-black focus:border-black"
                   />
                 </div>
                 <div>
@@ -156,20 +156,20 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                     id={lastNameId}
                     name="lastName"
                     placeholder="Enter last name"
-                    className="input input-bordered w-full bg-white border-gray-300 text-black focus:border-black"
+                    className="input input-bordered w-full bg-card border-border text-black focus:border-black"
                   />
                 </div>
               </div>
               <div className="flex gap-2">
                 <button
                   type="submit"
-                  className="btn bg-green-600 text-white hover:bg-green-700 border-0"
+                  className="btn bg-primary text-primary-foreground hover:bg-primary/90 border-0"
                 >
                   Add Person
                 </button>
                 <button
                   type="button"
-                  className="btn bg-gray-500 text-white hover:bg-gray-600 border-0"
+                  className="btn bg-secondary text-secondary-foreground hover:bg-secondary/90 border-0"
                   onClick={() => setShowAddForm(false)}
                 >
                   Cancel
@@ -180,13 +180,15 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
         )}
 
         {/* People List */}
-        <div className="bg-white rounded-lg border border-gray-200">
+        <div className="rounded-lg border border-border">
           {people.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-gray-600 mb-4">No people found. Add your first person above!</p>
+              <p className="text-muted-foreground mb-4">
+                No people found. Add your first person above!
+              </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-border">
               {people.map((person) => (
                 <div key={person.id} className="p-6">
                   {editingPerson && editingPerson.id === person.id ? (
@@ -208,7 +210,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                               prev ? { ...prev, firstName: e.target.value } : null,
                             )
                           }
-                          className="input input-bordered w-full bg-white border-gray-300 text-black focus:border-black"
+                          className="input input-bordered w-full bg-card border-border text-black focus:border-black"
                         />
                       </div>
                       <div>
@@ -227,7 +229,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                               prev ? { ...prev, lastName: e.target.value } : null,
                             )
                           }
-                          className="input input-bordered w-full bg-white border-gray-300 text-black focus:border-black"
+                          className="input input-bordered w-full bg-card border-border text-black focus:border-black"
                         />
                       </div>
                     </div>
@@ -239,19 +241,19 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                           {`${person.firstName || ''} ${person.lastName || ''}`.trim() ||
                             'Unnamed Person'}
                         </h3>
-                        <p className="text-sm text-gray-500">ID: {person.id}</p>
+                        <p className="text-sm text-muted-foreground">ID: {person.id}</p>
                       </div>
                       <div className="flex gap-2">
                         <button
                           type="button"
-                          className="btn btn-sm bg-blue-600 text-white hover:bg-blue-700 border-0"
+                          className="btn btn-sm bg-primary text-primary-foreground hover:bg-primary/90 border-0"
                           onClick={() => startEdit(person)}
                         >
                           Edit
                         </button>
                         <button
                           type="button"
-                          className="btn btn-sm bg-red-600 text-white hover:bg-red-700 border-0"
+                          className="btn btn-sm bg-secondary text-secondary-foreground hover:bg-secondary/90 border-0"
                           onClick={() => deletePerson(person.id)}
                         >
                           Delete
@@ -263,7 +265,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                     <div className="flex gap-2 mt-4">
                       <button
                         type="button"
-                        className="btn bg-blue-600 text-white hover:bg-blue-700 border-0"
+                        className="btn bg-primary text-primary-foreground hover:bg-primary/90 border-0"
                         onClick={() => {
                           // Handle update logic here
                           setEditingPerson(null);
@@ -273,7 +275,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
                       </button>
                       <button
                         type="button"
-                        className="btn bg-gray-500 text-white hover:bg-gray-600 border-0"
+                        className="btn bg-primary text-primary-foreground hover:bg-primary/90 border-0"
                         onClick={cancelEdit}
                       >
                         Cancel

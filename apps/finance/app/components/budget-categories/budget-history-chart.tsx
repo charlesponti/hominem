@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import {
   CartesianGrid,
   Legend,
@@ -27,8 +28,8 @@ export function BudgetHistoryChart({ historyMonths = 6 }: BudgetHistoryChartProp
         </CardHeader>
         <CardContent className="h-[300px] md:h-[400px] flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
-            <p className="mt-2 text-sm text-gray-600">Loading history data...</p>
+            <LoadingSpinner size="md" className="mx-auto" />
+            <p className="mt-2 text-sm text-muted-foreground">Loading history data...</p>
           </div>
         </CardContent>
       </Card>
@@ -42,7 +43,7 @@ export function BudgetHistoryChart({ historyMonths = 6 }: BudgetHistoryChartProp
           <CardTitle>Budget Adherence Over Time ({historyMonths} Months)</CardTitle>
         </CardHeader>
         <CardContent className="h-[300px] md:h-[400px] flex items-center justify-center">
-          <div className="text-center text-red-600">
+          <div className="text-center text-destructive">
             <p>Error loading history data</p>
             <p className="text-sm">{error.message}</p>
           </div>

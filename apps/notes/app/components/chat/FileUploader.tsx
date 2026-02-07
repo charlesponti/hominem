@@ -188,7 +188,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
                     {file.textContent && (
                       <>
                         <span>•</span>
-                        <CheckCircle className="size-3 text-green-500" />
+                        <CheckCircle className="size-3 text-foreground" />
                         <span>Processed</span>
                       </>
                     )}

@@ -162,11 +162,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
             size="sm"
             title="Send message"
           >
-            {isSubmitting ? (
-              <LoaderCircle className="size-4 animate-spin" />
-            ) : (
-              <Send className="size-4" />
-            )}
+            {isSubmitting ? <LoaderCircle className="size-4" /> : <Send className="size-4" />}
           </Button>
         </div>
 

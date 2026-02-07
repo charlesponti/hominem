@@ -49,11 +49,11 @@ export default function AdminRoute() {
         {loading ? 'Refreshing...' : 'Refresh Google Maps Places'}
       </Button>
       {result && (
-        <div className="mt-4 p-4 border rounded bg-gray-50">
+        <div className="mt-4 p-4 border border-border rounded">
           <div>Updated: {result.updatedCount}</div>
           <div>Duration: {result.duration}ms</div>
           {result.errors ? (
-            <div className="text-red-600">Error: {String(result.errors)}</div>
+            <div className="text-destructive">Error: {String(result.errors)}</div>
           ) : null}
         </div>
       )}

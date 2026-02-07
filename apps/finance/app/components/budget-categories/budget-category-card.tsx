@@ -52,7 +52,7 @@ export function BudgetCategoryCard({ category, onEdit, onDelete }: BudgetCategor
               variant="ghost"
               size="sm"
               onClick={() => onDelete(category)}
-              className="size-6 p-0 text-red-600 hover:text-red-700"
+              className="size-6 p-0 text-destructive hover:text-destructive/80"
             >
               <Trash2 className="size-3" />
             </Button>
@@ -65,23 +65,23 @@ export function BudgetCategoryCard({ category, onEdit, onDelete }: BudgetCategor
 
       <CardContent className="px-4 pt-0 pb-4">
         <div className="flex items-center justify-between mb-1">
-          <div className="text-base font-bold text-gray-900">
+          <div className="text-base font-bold text-foreground">
             ${category.spent.toLocaleString()}
           </div>
           <span
-            className={`text-xs font-medium ${remaining >= 0 ? 'text-green-600' : 'text-red-600'}`}
+            className={`text-xs font-medium ${remaining >= 0 ? 'text-foreground' : 'text-destructive'}`}
           >
             {remaining >= 0 ? '+' : ''}${remaining.toLocaleString()} remaining
           </span>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-1.5">
+        <div className="w-full border border-foreground rounded-full h-1.5">
           <div
-            className={cn('h-1.5 rounded-full transition-all duration-300 ease-in-out', {
-              'bg-red-500': spentPercentage > 100,
-              'bg-amber-500': spentPercentage > 80 && spentPercentage <= 100,
-              'bg-emerald-500': spentPercentage <= 80,
+            className={cn('h-1.5 rounded-full', {
+              'bg-destructive': spentPercentage > 100,
+              'bg-warning': spentPercentage > 80 && spentPercentage <= 100,
+              'bg-emphasis-highest': spentPercentage <= 80,
             })}
             style={{
               width: `${Math.min(spentPercentage, 100)}%`,

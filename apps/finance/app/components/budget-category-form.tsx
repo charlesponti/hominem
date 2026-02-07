@@ -112,7 +112,7 @@ export function BudgetCategoryForm({
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {errorMsg && (
-            <div className="text-red-500 text-sm" role="alert">
+            <div className="text-destructive text-sm" role="alert">
               {errorMsg}
             </div>
           )}

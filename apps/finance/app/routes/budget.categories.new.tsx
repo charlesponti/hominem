@@ -16,14 +16,14 @@ import { useNavigate } from 'react-router';
 import { useCreateBudgetCategory } from '~/lib/hooks/use-budget';
 
 const categoryColors = [
-  'bg-blue-500',
-  'bg-green-500',
-  'bg-yellow-500',
-  'bg-purple-500',
-  'bg-red-500',
-  'bg-indigo-500',
-  'bg-pink-500',
-  'bg-teal-500',
+  'bg-emphasis-highest',
+  'bg-emphasis-high',
+  'bg-emphasis-medium',
+  'bg-emphasis-low',
+  'bg-emphasis-lower',
+  'bg-emphasis-subtle',
+  'bg-emphasis-minimal',
+  'bg-emphasis-faint',
 ];
 
 export default function NewBudgetCategory() {
@@ -128,17 +128,14 @@ export default function NewBudgetCategory() {
                     type="button"
                     onClick={() => setFormData({ ...formData, color })}
                     className={`w-8 h-8 rounded-full ${color} ${
-                      formData.color === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''
+                      formData.color === color ? 'ring-2 ring-offset-2 ring-border' : ''
                     }`}
                   />
                 ))}
               </div>
             </div>
 
-            <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
+            <div>
               <Button
                 type="submit"
                 disabled={

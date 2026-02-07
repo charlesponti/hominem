@@ -11,17 +11,17 @@ export const FileUploadStatusBadge = memo(function FileUploadStatusBadge({
 
   const getStatusConfig = (status: string): { bg: string; text: string; label: string } => {
     const configs = {
-      uploading: { bg: 'bg-blue-50', text: 'text-blue-700', label: 'Uploading' },
-      processing: { bg: 'bg-purple-50', text: 'text-purple-700', label: 'Processing' },
-      queued: { bg: 'bg-amber-50', text: 'text-amber-700', label: 'Queued' },
-      done: { bg: 'bg-green-50', text: 'text-green-700', label: 'Complete' },
-      error: { bg: 'bg-red-50', text: 'text-red-700', label: 'Error' },
+      uploading: { bg: 'bg-muted', text: 'text-foreground', label: 'Uploading' },
+      processing: { bg: 'bg-muted', text: 'text-foreground', label: 'Processing' },
+      queued: { bg: 'bg-secondary', text: 'text-secondary-foreground', label: 'Queued' },
+      done: { bg: 'bg-accent', text: 'text-accent-foreground', label: 'Complete' },
+      error: { bg: 'bg-destructive/10', text: 'text-destructive', label: 'Error' },
     } as const;
 
     return (
       configs[status as keyof typeof configs] || {
-        bg: 'bg-gray-50',
-        text: 'text-gray-700',
+        bg: 'bg-muted',
+        text: 'text-foreground',
         label: status,
       }
     );

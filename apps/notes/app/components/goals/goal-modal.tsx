@@ -106,7 +106,7 @@ export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: Goa
               placeholder="What do you want to achieve?"
             />
             {errors.title && (
-              <p className="text-right text-red-500 text-sm">{errors.title.message}</p>
+              <p className="text-right text-foreground text-sm">{errors.title.message}</p>
             )}
           </div>
           <div className="space-y-2">

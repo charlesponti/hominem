@@ -56,10 +56,8 @@ export default function AccountPage() {
   return (
     <div className="container mx-auto py-8 max-w-3xl">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
-          Finance Settings
-        </h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-muted-foreground">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Finance Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Manage your financial data, export transactions, and other account settings.
         </p>
       </header>

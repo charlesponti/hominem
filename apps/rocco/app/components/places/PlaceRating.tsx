@@ -19,7 +19,7 @@ const PlaceRating = ({ rating, size = 'md' }: PlaceRatingProps) => {
         })}
       >
         <span className="text-black font-semibold">{rating}</span>
-        <span className="text-gray-500">/ 5</span>
+        <span className="text-muted-foreground">/ 5</span>
       </div>
     </div>
   );

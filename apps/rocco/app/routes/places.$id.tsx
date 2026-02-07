@@ -61,16 +61,13 @@ export default function Place({ loaderData }: Route.ComponentProps) {
 
   return (
     <div data-testid="place" className="flex flex-col items-start gap-4">
-      <div
-        className="max-w-full animate-in fade-in slide-in-from-bottom-2 duration-700"
-        style={{ viewTransitionName: `place-photos-${place.id}` }}
-      >
+      <div className="max-w-full" style={{ viewTransitionName: `place-photos-${place.id}` }}>
         <PlacePhotos alt={place.name} photos={place.photos} placeId={place.id} />
       </div>
 
       <div className="w-full space-y-12">
         <div
-          className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-3 duration-700 delay-100"
+          className="flex flex-col gap-2"
           style={{ viewTransitionName: `place-header-${place.id}` }}
         >
           <PageTitle title={place.name} />
@@ -99,16 +96,16 @@ export default function Place({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
 
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+        <div>
           <PlaceLists place={place} />
         </div>
 
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+        <div>
           <VisitHistory placeId={place.id} placeName={place.name} />
         </div>
 
         {place.latitude !== null && place.longitude !== null && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+          <div>
             <PlacesNearby
               latitude={place.latitude}
               longitude={place.longitude}
@@ -118,7 +115,7 @@ export default function Place({ loaderData }: Route.ComponentProps) {
         )}
 
         {place.latitude !== null && place.longitude !== null && (
-          <div className="animate-in fade-in slide-in-from-right duration-700 delay-500">
+          <div>
             <PlaceMap
               latitude={place.latitude}
               longitude={place.longitude}

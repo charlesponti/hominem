@@ -84,7 +84,7 @@ export default function ListInvites({ loaderData }: Route.ComponentProps) {
           actions={
             <Link
               to={`/lists/${list.id}`}
-              className="text-sm text-gray-600 hover:text-gray-900 underline"
+              className="text-sm text-muted-foreground hover:text-foreground underline"
             >
               View List
             </Link>

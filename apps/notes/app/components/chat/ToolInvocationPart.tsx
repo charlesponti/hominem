@@ -13,10 +13,7 @@ export function ToolInvocationPart({ toolInvocation, index }: ToolInvocationPart
 
   if (type === 'tool-call') {
     return (
-      <div
-        key={id}
-        className="bg-background/50 dark:bg-background/30 p-3 rounded-lg border border-border/50 mt-2"
-      >
+      <div key={id} className="bg-background/50 p-3 rounded-lg border border-border/50 mt-2">
         <div className="font-medium text-sm flex items-center gap-2 text-muted-foreground">
           <span className="text-base">🔧</span>
           <span>Calling {toolName}...</span>
@@ -38,9 +35,7 @@ export function ToolInvocationPart({ toolInvocation, index }: ToolInvocationPart
         key={id}
         className={cn(
           'p-3 rounded-lg border mt-2',
-          isError
-            ? 'bg-destructive/10 border-destructive/20'
-            : 'bg-background/50 dark:bg-background/30 border-border/50',
+          isError ? 'bg-destructive/10 border-destructive/20' : 'bg-background/50 border-border/50',
         )}
       >
         <div

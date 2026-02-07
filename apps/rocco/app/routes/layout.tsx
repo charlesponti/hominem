@@ -33,7 +33,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Layout() {
   return (
-    <AppLayout navigation={<Header />} backgroundImage="/rocco-background-2.webp">
+    <AppLayout navigation={<Header />}>
       <Suspense fallback={<LoadingScreen />}>
         <div className="max-w-4xl mx-auto">
           <Outlet />

@@ -27,10 +27,11 @@ export default function SyncButton({ onSync, disabled = false }: SyncButtonProps
       onClick={handleSync}
       disabled={disabled || isSyncing}
       className={cn(
-        'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 border border-border',
+        'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 border',
         {
-          'bg-muted text-muted-foreground cursor-not-allowed': disabled || isSyncing,
-          'bg-card text-foreground cursor-pointer hover:bg-accent': !(disabled || isSyncing),
+          'border-muted-foreground/30 text-muted-foreground cursor-not-allowed':
+            disabled || isSyncing,
+          'border-foreground text-foreground cursor-pointer': !(disabled || isSyncing),
         },
       )}
     >
@@ -40,7 +41,7 @@ export default function SyncButton({ onSync, disabled = false }: SyncButtonProps
         viewBox="0 0 24 24"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className={isSyncing ? 'animate-spin' : ''}
+        className={isSyncing ? '' : ''}
       >
         <title>Sync Google Calendar</title>
         <path

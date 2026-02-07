@@ -72,12 +72,12 @@ export function PlaidAccountStatus({
   const plaidAccount = account;
 
   return (
-    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+    <div className="p-4 bg-muted border border-border rounded-lg">
       <div className="flex items-center justify-between mb-3">
-        <div className="font-medium text-blue-900">Plaid Connection</div>
+        <div className="font-medium text-foreground">Plaid Connection</div>
         <PlaidStatusBadge status={plaidAccount.plaidItemStatus ?? null} />
       </div>
-      <div className="space-y-2 text-sm text-blue-700">
+      <div className="space-y-2 text-sm text-muted-foreground">
         {plaidAccount.institutionName && <div>Institution: {plaidAccount.institutionName}</div>}
         {plaidAccount.plaidLastSyncedAt && (
           <div>
@@ -92,7 +92,7 @@ export function PlaidAccountStatus({
           </div>
         )}
         {plaidAccount.plaidItemError ? (
-          <div className="text-red-600">Error: {String(plaidAccount.plaidItemError)}</div>
+          <div className="text-destructive">Error: {String(plaidAccount.plaidItemError)}</div>
         ) : null}
       </div>
       <div className="flex gap-2 mt-4">
@@ -103,7 +103,7 @@ export function PlaidAccountStatus({
           disabled={syncItemMutation.isLoading || plaidAccount.plaidItemStatus === 'revoked'}
         >
           {syncItemMutation.isLoading ? (
-            <RefreshCcw className="size-4 mr-2 animate-spin" />
+            <RefreshCcw className="size-4 mr-2" />
           ) : (
             <RefreshCcw className="size-4 mr-2" />
           )}

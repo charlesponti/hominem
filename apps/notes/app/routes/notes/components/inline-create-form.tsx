@@ -124,16 +124,16 @@ export function InlineCreateForm({
   // Edit mode - show full form in a modal-like container
   if (isEditMode) {
     return (
-      <div className="w-full max-w-4xl mx-auto mb-6 bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-lg transition-all duration-200">
+      <div className="w-full max-w-4xl mx-auto mb-6 backdrop-blur-sm rounded-xl border border-border shadow-lg transition-all duration-200\">
         <div className="p-4">
           {/* Header */}
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">Edit Note</h3>
+            <h3 className="text-lg font-semibold text-foreground">Edit Note</h3>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleCancel}
-              className="size-8 p-0 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+              className="size-8 p-0 text-muted-foreground hover:text-foreground"
             >
               <X className="size-4" />
             </Button>
@@ -145,7 +145,7 @@ export function InlineCreateForm({
               placeholder="Note title (optional)"
               value={inputTitle}
               onChange={(e) => setInputTitle(e.target.value)}
-              className="text-sm bg-white/90 dark:bg-slate-700/90 dark:text-slate-100 border-slate-200/70 dark:border-slate-600/70 placeholder-slate-400 dark:placeholder-slate-500 backdrop-blur-sm focus:border-blue-300/80 dark:focus:border-blue-500/80 focus:ring-2 focus:ring-blue-300/30 dark:focus:ring-blue-500/30 transition-all"
+              className="text-sm bg-transparent text-foreground border-border placeholder-muted-foreground focus:border-border focus:ring-2 focus:ring-accent transition-all"
             />
 
             <Textarea
@@ -153,7 +153,7 @@ export function InlineCreateForm({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               rows={4}
-              className="text-sm bg-white/90 dark:bg-slate-700/90 dark:text-slate-100 border-slate-200/70 dark:border-slate-600/70 placeholder-slate-400 dark:placeholder-slate-500 backdrop-blur-sm focus:border-blue-300/80 dark:focus:border-blue-500/80 focus:ring-2 focus:ring-blue-300/30 dark:focus:ring-blue-500/30 transition-all resize-none"
+              className="text-sm bg-transparent text-foreground border border-border placeholder-muted-foreground focus:border-border focus:ring-2 focus:ring-accent resize-none"
             />
 
             {/* Action buttons */}
@@ -164,15 +164,15 @@ export function InlineCreateForm({
               <Button
                 onClick={handleSave}
                 disabled={isSaveDisabled}
-                className="h-8 px-4 bg-blue-500 hover:bg-blue-600 text-white transition-all disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
+                className="h-8 px-4 bg-primary hover:bg-primary/90 text-primary-foreground transition-all disabled:bg-muted disabled:text-muted-foreground"
               >
-                {isSaving ? <RefreshCw className="size-4 animate-spin" /> : 'Save'}
+                {isSaving ? <RefreshCw className="size-4" /> : 'Save'}
               </Button>
             </div>
 
             {/* Error message */}
             {error && (
-              <div className="text-red-500 text-sm p-3 text-center bg-red-100 dark:bg-red-900/30 rounded-md border border-red-200 dark:border-red-800/50">
+              <div className="text-foreground text-sm p-3 text-center border border-muted-foreground/30 rounded-md">
                 {error.message}
               </div>
             )}
@@ -190,7 +190,7 @@ export function InlineCreateForm({
           placeholder="Title (optional)"
           value={inputTitle}
           onChange={(e) => setInputTitle(e.target.value)}
-          className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all"
+          className="text-sm text-foreground border-border placeholder-muted-foreground focus:border-border focus:ring-2 focus:ring-accent transition-all"
         />
 
         <Textarea
@@ -198,21 +198,21 @@ export function InlineCreateForm({
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           rows={3}
-          className="text-base bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all resize-none"
+          className="text-base text-foreground border-border placeholder-muted-foreground focus:border-border focus:ring-2 focus:ring-accent transition-all resize-none"
         />
 
         <div className="flex justify-end">
           <Button
             onClick={handleSave}
             disabled={isSaveDisabled}
-            className="h-9 px-6 bg-blue-500 hover:bg-blue-600 text-white transition-all disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
+            className="h-9 px-6 bg-primary hover:bg-primary/90 text-primary-foreground transition-all disabled:bg-muted disabled:text-muted-foreground"
           >
-            {isSaving ? <RefreshCw className="size-4 animate-spin" /> : 'Save'}
+            {isSaving ? <RefreshCw className="size-4" /> : 'Save'}
           </Button>
         </div>
 
         {error && (
-          <div className="text-red-500 text-sm p-3 text-center bg-red-100 dark:bg-red-900/30 rounded-md border border-red-200 dark:border-red-800/50">
+          <div className="text-foreground text-sm p-3 text-center bg-muted rounded-md border border-border">
             {error.message}
           </div>
         )}

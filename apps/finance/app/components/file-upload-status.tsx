@@ -1,6 +1,5 @@
 import type { FileStatus } from '@hominem/jobs-services';
 
-import { motion } from 'framer-motion';
 import { XIcon } from 'lucide-react';
 import { memo } from 'react';
 
@@ -21,10 +20,10 @@ export const FileUploadStatus = memo(function FileUploadStatus({
     return (
       <output className="w-full">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-sm text-gray-500 font-medium">
+          <span className="text-sm text-muted-foreground font-medium">
             {status === 'uploading' ? 'Uploading' : 'Processing'}
           </span>
-          <span className="text-sm font-medium text-blue-600">
+          <span className="text-sm font-medium text-foreground">
             {progress !== undefined ? `${Math.round(progress)}%` : ''}
           </span>
         </div>
@@ -33,14 +32,14 @@ export const FileUploadStatus = memo(function FileUploadStatus({
             <ProgressBar
               progress={progress}
               className={cn(
-                'h-2 bg-blue-100',
-                'before:bg-gradient-to-r before:from-blue-500 before:to-indigo-500',
+                'h-2 bg-muted',
+                'before:bg-gradient-to-r before:from-[var(--color-emphasis-high)] before:to-[var(--color-emphasis-medium)]',
               )}
               aria-label={`${Math.round(progress)}% complete`}
             />
           ) : (
-            <div className="h-2 bg-blue-100 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 animate-progress-indeterminate" />
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-[var(--color-emphasis-high)] to-[var(--color-emphasis-medium)] animate-progress-indeterminate" />
             </div>
           )}
         </div>
@@ -52,12 +51,12 @@ export const FileUploadStatus = memo(function FileUploadStatus({
     return (
       <output className="w-full">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-sm text-gray-500 font-medium">Queue position</span>
+          <span className="text-sm text-muted-foreground font-medium">Queue position</span>
         </div>
         <div className="w-full">
           <ProgressBar
             progress={0}
-            className="h-2 bg-amber-100 before:bg-gradient-to-r before:from-amber-500 before:to-orange-500"
+            className="h-2 bg-warning-subtle before:bg-gradient-to-r before:from-warning before:to-warning/70"
           />
         </div>
       </output>
@@ -70,18 +69,10 @@ export const FileUploadStatus = memo(function FileUploadStatus({
         <div className="w-full">
           <ProgressBar
             progress={100}
-            className="h-2 bg-green-100 before:bg-gradient-to-r before:from-green-500 before:to-emerald-500"
+            className="h-2 bg-emphasis-minimal before:bg-gradient-to-r before:from-[var(--color-emphasis-highest)] before:to-[var(--color-emphasis-high)]"
           />
         </div>
-        {stats && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
-          >
-            <ProcessingStats stats={stats} />
-          </motion.div>
-        )}
+        {stats && <ProcessingStats stats={stats} />}
       </output>
     );
   }
@@ -89,7 +80,7 @@ export const FileUploadStatus = memo(function FileUploadStatus({
   if (status === 'error') {
     return (
       <output className="mt-2" role="alert">
-        <div className="flex items-start gap-2 p-3 rounded-md bg-red-50 text-red-700">
+        <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 text-destructive">
           <XIcon className="w-5 h-5 mt-0.5 flex-shrink-0" aria-hidden="true" />
           <span className="text-sm">{error}</span>
         </div>
@@ -97,18 +88,18 @@ export const FileUploadStatus = memo(function FileUploadStatus({
     );
   }
 
-  return <output className="text-sm text-gray-500">{status}</output>;
+  return <output className="text-sm text-muted-foreground">{status}</output>;
 });
 
 const ProcessingStats = memo(function ProcessingStats({ stats }: { stats: FileStatus['stats'] }) {
   if (!stats || typeof stats !== 'object') return null;
 
   return (
-    <dl className="mt-3 divide-y divide-gray-100">
+    <dl className="mt-3 divide-y divide-border">
       {stats.processingTime !== undefined && (
         <div className="py-2 first:pt-0 last:pb-0">
           <dt className="sr-only">Processing time</dt>
-          <dd className="text-sm text-gray-900 font-medium">
+          <dd className="text-sm text-foreground font-medium">
             Completed in {(stats.processingTime / 1000).toFixed(1)}s
           </dd>
         </div>
@@ -128,9 +119,9 @@ const ProcessingStats = memo(function ProcessingStats({ stats }: { stats: FileSt
 
       {stats.errors?.length && stats.errors.length > 0 ? (
         <div className="py-2">
-          <dt className="text-sm font-medium text-gray-700">Errors</dt>
+          <dt className="text-sm font-medium text-foreground">Errors</dt>
           <dd className="mt-1">
-            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-50 text-red-700">
+            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-destructive/10 text-destructive">
               {stats.errors.length} error{stats.errors.length > 1 ? 's' : ''}
             </span>
           </dd>
@@ -150,8 +141,8 @@ const ProcessingStat = memo(function ProcessingStat({
   if (value === undefined) return null;
   return (
     <div>
-      <dt className="text-sm font-medium text-gray-500">{label}</dt>
-      <dd className="mt-1 text-sm text-gray-900">{value.toLocaleString()}</dd>
+      <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
+      <dd className="mt-1 text-sm text-foreground">{value.toLocaleString()}</dd>
     </div>
   );
 });

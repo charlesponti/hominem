@@ -92,10 +92,10 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
   return (
     <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/20 data-[state=open]:animate-fade-in" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/20" />
         <Dialog.Content
           data-testid="list-edit-dialog"
-          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg focus:outline-none"
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-secondary p-6 shadow-lg focus:outline-none"
         >
           {!showDeleteConfirmation ? (
             <>
@@ -183,7 +183,7 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
           <Dialog.Close asChild>
             <button
               type="button"
-              className="absolute right-2 top-2 text-muted-foreground hover:text-gray-700"
+              className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
               aria-label="Close"
             >
               <span className="sr-only">Close</span>×

@@ -119,7 +119,7 @@ const MapMarker = memo(
         borderRadius: '50%',
         backgroundColor: isHovered || isSelected ? '#EF4444' : '#DC2626',
         border: '2px solid white',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
         transition: 'width 0.2s, height 0.2s, background-color 0.2s',
         cursor: 'pointer' as const,
       }),
@@ -274,8 +274,8 @@ const RoccoMap = ({
         className="flex flex-1 relative overflow-hidden rounded-lg shadow-2xl size-full"
       >
         {isLoadingCurrentLocation ? (
-          <div className="absolute left-0 right-0 mt-2 mx-auto max-w-fit z-10 p-1 px-4 rounded-lg border-blue-500 bg-blue-200 text-blue-600 text-sm">
-            <span className="animate-ping inline-flex size-1 rounded-full bg-blue-800 opacity-75 mb-0.5 mr-3" />
+          <div className="absolute left-0 right-0 mt-2 mx-auto max-w-fit z-10 p-1 px-4 rounded-lg border-primary bg-accent text-foreground text-sm">
+            <span className="animate-ping inline-flex size-1 rounded-full bg-primary opacity-75 mb-0.5 mr-3" />
             Loading current location
           </div>
         ) : null}
@@ -307,7 +307,7 @@ const RoccoMap = ({
                   borderRadius: '50%',
                   backgroundColor: '#4285F4',
                   border: '2px solid white',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
                 }}
               />
             </AdvancedMarker>
@@ -328,7 +328,7 @@ const RoccoMap = ({
                 {selectedMarker.id && (
                   <a
                     href={`/places/${selectedMarker.id}`}
-                    className="text-xs text-indigo-600 hover:underline mt-1"
+                    className="text-xs text-primary hover:underline mt-1"
                   >
                     View Details
                   </a>

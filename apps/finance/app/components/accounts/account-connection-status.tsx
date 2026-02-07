@@ -35,17 +35,17 @@ export function AccountConnectionSummary({ accounts }: AccountConnectionSummaryP
             {connectedCount} of {totalCount} accounts connected ({connectionRate}%)
           </p>
           {plaidLinkedCount > 0 && (
-            <p className="text-xs text-blue-600">
+            <p className="text-xs text-muted-foreground">
               <Banknote className="size-3 inline mr-1" />
               {plaidLinkedCount} linked to Plaid accounts
             </p>
           )}
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-green-600">{connectedCount}</div>
+          <div className="text-2xl font-bold text-foreground">{connectedCount}</div>
           <div className="text-xs text-muted-foreground">Connected</div>
           {plaidLinkedCount > 0 && (
-            <div className="text-sm font-medium text-blue-600">{plaidLinkedCount} Plaid</div>
+            <div className="text-sm font-medium text-foreground">{plaidLinkedCount} Plaid</div>
           )}
         </div>
       </div>

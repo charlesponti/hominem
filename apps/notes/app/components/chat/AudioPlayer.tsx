@@ -152,7 +152,7 @@ export function AudioPlayer({
             className="size-10"
           >
             {state.isLoading ? (
-              <Loader2 className="size-5 animate-spin" />
+              <Loader2 className="size-5" />
             ) : state.isPlaying ? (
               <Pause className="size-5" />
             ) : (

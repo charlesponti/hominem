@@ -1,67 +1,96 @@
 @import 'tailwindcss';
 
-@custom-variant dark (&:is(.dark *));
+/* ============================================
+ * VOID Design System v1.0
+ * Philosophy: Japanese Minimalism
+ * 
+ * Kanso (簡素 - Simplicity): Elimination of the non-essential
+ * Ma (間 - Negative Space): The void is a structural element
+ * Shibui (渋い - Understated): No performance, no decoration
+ * Wabi-sabi (侘寂 - Imperfection): Technical honesty, asymmetry
+ * ============================================ */
 
-/* Base HTML/Body styles - apps can override these */
 html,
 body {
-  font-family: var(--font-sans);
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  font-family: var(--font-mono);
+  color-scheme: dark;
+  cursor: crosshair;
+}
+
+/* Shibui: No animations, no transitions - instantaneous state changes only */
+*,
+*::before,
+*::after {
+  transition: none !important;
+  animation: none !important;
 }
 
 @theme {
-  /* Typography */
-  --font-mono: 'Geist Mono', ui-monospace, monospace;
-  --font-serif: 'Noto Serif', ui-serif, serif;
-  --font-sans: 'Noto Sans', ui-sans-serif, system-ui, sans-serif;
+  /* VOID Typography: Monospace Only - The Terminal Aesthetic */
+  --font-mono:
+    'Geist Mono', ui-monospace, 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
 
-  /* Base Colors - Light Mode */
-  --color-background: var(--color-white);
-  --color-foreground: var(--color-gray-900);
+  /* ====== VOID Color Palette: The Monochrome Mandate ====== */
 
-  --color-primary: var(--color-gray-900);
-  --color-primary-foreground: var(--color-white);
-  --color-primary-hover: var(--color-gray-950);
+  /* Core Surface */
+  --color-background: #000000;
+  --color-muted: rgba(255, 255, 255, 0.05);
 
-  --color-secondary: var(--color-gray-100);
-  --color-secondary-foreground: var(--color-gray-700);
+  /* Typography & Icons */
+  --color-foreground: #ffffff;
+  --color-secondary-foreground: rgba(255, 255, 255, 0.7);
+  --color-muted-foreground: rgba(255, 255, 255, 0.4);
 
-  --color-muted: var(--color-gray-200);
-  --color-muted-foreground: var(--color-gray-500);
+  /* Technical Indicators */
+  --color-primary: #ffffff;
+  --color-primary-foreground: #000000;
+  --color-destructive: #ff0000;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgba(255, 255, 255, 0.1);
 
-  --color-accent: var(--color-gray-300);
-  --color-accent-foreground: var(--color-gray-700);
+  /* Minimal System States */
+  --color-secondary: rgba(255, 255, 255, 0.1);
+  --color-accent: rgba(255, 255, 255, 0.15);
+  --color-accent-foreground: #ffffff;
+  --color-input: #000000;
+  --color-ring: #ffffff;
 
-  --color-destructive: var(--color-red-500);
-  --color-destructive-foreground: var(--color-white);
+  --color-chart-1: rgba(255, 255, 255, 0.9);
+  --color-chart-2: rgba(255, 255, 255, 0.7);
+  --color-chart-3: rgba(255, 255, 255, 0.5);
+  --color-chart-4: rgba(255, 255, 255, 0.3);
+  --color-chart-5: rgba(255, 255, 255, 0.15);
 
-  --color-border: var(--color-gray-200);
-  --color-input: var(--color-white);
-  --color-ring: var(--color-gray-700);
+  /* Chart Semantic Colors */
+  --color-chart-positive: rgba(255, 255, 255, 0.7); /* income, growth, success */
+  --color-chart-negative: #ff0000; /* expenses, decline, destructive */
+  --color-chart-neutral: rgba(255, 255, 255, 0.5); /* baseline, reference */
 
-  --color-chart-1: var(--color-gray-500);
-  --color-chart-2: var(--color-green-500);
-  --color-chart-3: var(--color-blue-500);
-  --color-chart-4: var(--color-indigo-500);
-  --color-chart-5: var(--color-yellow-500);
+  /* Standardized Opacity Levels for Differentiation */
+  --color-emphasis-highest: rgba(255, 255, 255, 0.9);
+  --color-emphasis-high: rgba(255, 255, 255, 0.7);
+  --color-emphasis-medium: rgba(255, 255, 255, 0.5);
+  --color-emphasis-low: rgba(255, 255, 255, 0.3);
+  --color-emphasis-lower: rgba(255, 255, 255, 0.2);
+  --color-emphasis-subtle: rgba(255, 255, 255, 0.15);
+  --color-emphasis-minimal: rgba(255, 255, 255, 0.1);
+  --color-emphasis-faint: rgba(255, 255, 255, 0.05);
+  /* Technical State Colors */
+  --color-success: rgba(255, 255, 255, 0.7);
+  --color-warning: #ff8800;
 
-  /* Design System Tokens */
-  --color-success: var(--color-emerald-600);
-  --color-warning: var(--color-amber-500);
-  --radius: 0.5rem;
-  --radius-lg: 1rem;
+  /* Shibui: No rounded corners - sharp precision only */
+  --radius: 0px;
+  --radius-lg: 0px;
 
-  /* Gradients */
-  --color-primary-gradient-start: var(--color-gray-500);
-  --color-primary-gradient-end: var(--color-gray-900);
-  --color-destructive-gradient-start: var(--color-red-500);
-  --color-destructive-gradient-end: var(--color-red-600);
+  /* Ma: Massive spacing for negative space */
+  --spacing-ma-xl: 16rem;
+  --spacing-ma-lg: 8rem;
+  --spacing-ma-md: 4rem;
+  --spacing-ma-sm: 2rem;
 
-  /* Glass Effects */
-  --color-glass-background: var(--color-white) / 50%;
-  --color-glass-border: var(--color-black) / 10%;
+  /* Wabi-sabi: ASCII Texture opacity limit */
+  --ascii-opacity-max: 0.2;
   --glass-blur: 12px;
 }
 
@@ -101,7 +130,7 @@ body {
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    border-color: var(--color-border, currentColor);
   }
 
   button {
@@ -120,8 +149,10 @@ body {
   h4,
   h5,
   h6 {
-    color: var(--primary);
-    font-family: var(--font-serif);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: -0.05em;
+    font-weight: 400;
   }
 
   :root {
@@ -160,35 +191,6 @@ body {
     --glass-blur: var(--glass-blur);
     --input-background-focus: var(--primary);
     --input-text-focus: var(--primary-foreground);
-  }
-
-  .dark {
-    /* Override @theme variables for dark mode - Tailwind utilities will pick these up */
-    --color-background: var(--color-gray-900);
-    --color-foreground: var(--color-gray-50);
-    --color-primary: var(--color-gray-50);
-    --color-primary-foreground: var(--color-gray-900);
-    --color-primary-hover: var(--color-gray-100);
-    --color-secondary: var(--color-gray-700);
-    --color-secondary-foreground: var(--color-gray-50);
-    --color-muted: var(--color-gray-800);
-    --color-muted-foreground: var(--color-gray-400);
-    --color-accent: var(--color-gray-700);
-    --color-accent-foreground: var(--color-gray-50);
-    --color-destructive: var(--color-red-600);
-    --color-destructive-foreground: var(--color-gray-50);
-    --color-border: var(--color-gray-700);
-    --color-input: var(--color-gray-700);
-    --color-ring: var(--color-gray-400);
-    --color-chart-1: var(--color-gray-400);
-    --color-chart-2: var(--color-green-400);
-    --color-chart-3: var(--color-blue-400);
-    --color-chart-4: var(--color-indigo-400);
-    --color-chart-5: var(--color-yellow-400);
-
-    /* Override glass effects for dark mode */
-    --color-glass-background: var(--color-gray-900) / 50%;
-    --color-glass-border: var(--color-white) / 10%;
   }
 }
 
@@ -277,6 +279,23 @@ body {
     background-color: var(--warning);
   }
 
+  .bg-warning-subtle {
+    background-color: color-mix(in srgb, var(--warning) 10%, transparent);
+  }
+
+  .text-warning-subtle {
+    color: var(--warning);
+    background-color: color-mix(in srgb, var(--warning) 10%, transparent);
+  }
+
+  .border-warning {
+    border-color: var(--warning);
+  }
+
+  .border-warning-subtle {
+    border-color: color-mix(in srgb, var(--warning) 50%, transparent);
+  }
+
   .text-destructive-foreground {
     color: var(--destructive-foreground);
   }
@@ -313,55 +332,78 @@ body {
     background-color: var(--chart-5);
   }
 
-  /* Typography Design System */
-
-  /* Base Heading Style */
-  .heading {
-    font-family: var(--font-serif);
-    font-style: italic;
-    letter-spacing: -0.05em; /* tracking-tighter */
-    font-weight: 300; /* font-semilight */
+  /* Standardized Emphasis Levels for Differentiation */
+  .bg-emphasis-highest {
+    background-color: var(--color-emphasis-highest);
   }
 
-  /* Heading & Display Styles */
+  .bg-emphasis-high {
+    background-color: var(--color-emphasis-high);
+  }
+
+  .bg-emphasis-medium {
+    background-color: var(--color-emphasis-medium);
+  }
+
+  .bg-emphasis-low {
+    background-color: var(--color-emphasis-low);
+  }
+
+  .bg-emphasis-lower {
+    background-color: var(--color-emphasis-lower);
+  }
+
+  .bg-emphasis-subtle {
+    background-color: var(--color-emphasis-subtle);
+  }
+
+  .bg-emphasis-minimal {
+    background-color: var(--color-emphasis-minimal);
+  }
+
+  /* b====== VOID Typography System ====== */
+
+  /* Display scales - monospace only */
   .display-1 {
-    font-size: clamp(2.5rem, 4vw, 5rem);
+    font-size: clamp(2.5rem, 5vw, 6rem);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: -0.05em;
   }
 
   .display-2 {
     font-size: clamp(2rem, 3vw, 3.5rem);
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: -0.05em;
   }
 
   .heading-1 {
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-weight: 300; /* font-semilight */
-    font-size: clamp(2.25rem, 3vw, 3rem); /* text-4xl to text-5xl range */
-    letter-spacing: -0.06em; /* tighter for larger text */
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-size: clamp(2.25rem, 3vw, 3rem);
+    letter-spacing: -0.05em;
   }
 
   .heading-2 {
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-weight: 300; /* font-semilight */
-    font-size: clamp(1.5rem, 2vw, 1.875rem); /* text-2xl range */
-    letter-spacing: -0.05em; /* tracking-tighter */
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-size: clamp(1.5rem, 2vw, 1.875rem);
+    letter-spacing: -0.05em;
   }
 
   .heading-3 {
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-weight: 300; /* font-semilight */
-    font-size: clamp(1.125rem, 1.5vw, 1.25rem); /* text-lg range */
-    letter-spacing: -0.04em; /* slightly less tight for smaller text */
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-size: clamp(1.125rem, 1.5vw, 1.25rem);
+    letter-spacing: -0.04em;
   }
 
   .heading-4 {
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-weight: 300; /* font-semilight */
+    font-family: var(--font-mono);
+    text-transform: uppercase;
     font-size: clamp(1rem, 1.25vw, 1.25rem);
-    letter-spacing: -0.03em; /* less tight for smaller text */
+    letter-spacing: -0.03em;
   }
 
   /* Body Styles */
@@ -398,12 +440,71 @@ body {
     font-size: clamp(0.875rem, 1vw, 1.125rem);
   }
 
-  /* Specialized Styles */
-  .price {
-    font-size: clamp(1.25rem, 2vw, 1.75rem);
+  /* Ma: Negative Space Utilities */
+  .ma-xl {
+    margin: var(--spacing-ma-xl);
   }
 
+  .ma-lg {
+    margin: var(--spacing-ma-lg);
+  }
+
+  .ma-md {
+    margin: var(--spacing-ma-md);
+  }
+
+  .ma-sm {
+    margin: var(--spacing-ma-sm);
+  }
+
+  .my-ma-xl {
+    margin-top: var(--spacing-ma-xl);
+    margin-bottom: var(--spacing-ma-xl);
+  }
+
+  .my-ma-lg {
+    margin-top: var(--spacing-ma-lg);
+    margin-bottom: var(--spacing-ma-lg);
+  }
+
+  .my-ma-md {
+    margin-top: var(--spacing-ma-md);
+    margin-bottom: var(--spacing-ma-md);
+  }
+
+  .my-ma-sm {
+    margin-top: var(--spacing-ma-sm);
+    margin-bottom: var(--spacing-ma-sm);
+  }
+
+  /* Wabi-sabi: ASCII Texture - Signal in the Void */
+  .ascii-texture {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ascii-texture::before {
+    content: '+ · ~ - / \\ + · ~ - / \\ + · ~ - / \\ + · ~ - / \\ + · ~ - / \\ + · ~ - / \\ + · ~ - / \\ + · ~ - / \\';
+    position: absolute;
+    inset: 0;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    opacity: 0.1;
+    pointer-events: none;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 2;
+    z-index: 0;
+  }
+
+  .ascii-texture > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* VOID: Remove all decorative elements */
   .btn {
-    @apply px-4 py-2 rounded-md font-light tracking-wide transition-colors bg-primary text-primary-foreground gap-2 flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary hover:outline-none hover:ring-2 hover:ring-offset-2 hover:ring-primary;
+    @apply px-4 py-2 font-light tracking-wide bg-primary text-primary-foreground gap-2 flex items-center;
+    cursor: crosshair;
   }
 }

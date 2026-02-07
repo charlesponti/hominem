@@ -83,7 +83,7 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
             key={chat.id}
             to={`/chat/${chat.id}`}
             onClick={handleChatSelect}
-            className={`block p-3 rounded-lg mb-2 hover:bg-muted/50 transition-colors group ${
+            className={`block p-3 rounded-lg mb-2 transition-colors group border-l-2 border-l-transparent hover:border-l-primary ${
               currentChatId === chat.id ? 'bg-muted' : ''
             }`}
           >

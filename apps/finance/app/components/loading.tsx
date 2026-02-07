@@ -24,7 +24,7 @@ export function Loading({
   const content = (
     <div className={cn('flex items-center justify-center', className)}>
       <div className="flex items-center space-x-3">
-        <Loader2 className={cn('animate-spin', sizeClasses[size])} />
+        <Loader2 className={cn(sizeClasses[size])} />
         {text && <span className="text-sm text-muted-foreground">{text}</span>}
       </div>
     </div>
@@ -32,7 +32,7 @@ export function Loading({
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
+      <div className="fixed inset-0 flex items-center justify-center border border-border/30 z-50">
         {content}
       </div>
     );

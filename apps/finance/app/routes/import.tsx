@@ -3,7 +3,6 @@ import type { FileStatus, ImportRequestResponse } from '@hominem/jobs-services';
 import { Button } from '@hominem/ui/button';
 import { Alert, AlertDescription } from '@hominem/ui/components/ui/alert';
 import { Badge } from '@hominem/ui/components/ui/badge';
-import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { DropZone } from '~/components/drop-zone';
@@ -179,63 +178,33 @@ export default function TransactionImportPage() {
 
   return (
     <div className="p-4 sm:p-6 md:p-8">
-      <div
-        className={cn(
-          'w-full max-w-2xl mx-auto p-8 space-y-6',
-          'transition-all duration-500 ease-in-out',
-        )}
-      >
+      <div className={cn('w-full max-w-2xl mx-auto p-8 space-y-6')}>
         {/* Title */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-2"
-        >
+        <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">Import Transactions</h1>
-            {!isConnected && (
-              <Badge variant="outline" className="animate-pulse">
-                Connecting...
-              </Badge>
-            )}
+            <h1 className="text-2xl font-bold text-foreground">Import Transactions</h1>
+            {!isConnected && <Badge variant="outline">Connecting...</Badge>}
           </div>
-          <p className="text-gray-500">Drag and drop your CSV files or click to browse</p>
-        </motion.div>
+          <p className="text-muted-foreground">Drag and drop your CSV files or click to browse</p>
+        </div>
 
         {/* Error display */}
         {isError && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-          >
+          <div>
             <Alert variant="destructive">
               <AlertDescription>
                 {error?.message || 'An error occurred during import'}
               </AlertDescription>
             </Alert>
-          </motion.div>
+          </div>
         )}
 
         {/* File upload area */}
-        <motion.div
-          className="w-full flex justify-center"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{
-            type: 'spring',
-            stiffness: 500,
-            damping: 30,
-            delay: 0.1,
-          }}
-        >
+        <div className="w-full flex justify-center">
           <DropZone
             isImporting={isImportInProgress}
             dragActive={dragActive}
-            className={cn(
-              'transition-all duration-300',
-              dragActive && 'scale-[1.02] border-blue-400',
-            )}
+            className={cn(dragActive && 'border-muted-foreground')}
             onDrop={handleDropWithValidation}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -243,45 +212,35 @@ export default function TransactionImportPage() {
             accept=".csv"
             multiple={true}
           />
-        </motion.div>
+        </div>
 
         {/* Single file list with all files */}
         {allFiles.length > 0 && (
-          <motion.div
-            className="space-y-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{
-              type: 'spring',
-              stiffness: 400,
-              damping: 25,
-            }}
-          >
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-700">Files</h2>
-              <div className="flex items-center gap-4 text-sm text-gray-500">
+              <h2 className="text-lg font-semibold text-foreground">Files</h2>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 {statusCounts.selected > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="size-2 bg-gray-400 rounded-full" />
+                    <div className="size-2 bg-muted-foreground rounded-full" />
                     {statusCounts.selected} selected
                   </span>
                 )}
                 {statusCounts.processing > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="size-2 bg-blue-500 rounded-full" />
+                    <div className="size-2 bg-emphasis-high rounded-full" />
                     {statusCounts.processing} processing
                   </span>
                 )}
                 {statusCounts.queued > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="size-2 bg-amber-500 rounded-full" />
+                    <div className="size-2 bg-warning rounded-full" />
                     {statusCounts.queued} queued
                   </span>
                 )}
                 {statusCounts.completed > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="size-2 bg-green-500 rounded-full" />
+                    <div className="size-2 bg-emphasis-highest rounded-full" />
                     {statusCounts.completed} completed
                   </span>
                 )}
@@ -289,22 +248,20 @@ export default function TransactionImportPage() {
             </div>
 
             <ul className="space-y-3">
-              <AnimatePresence>
-                {allFiles.map((file) => (
-                  <FileImport
-                    key={file.id}
-                    fileName={file.fileName}
-                    status={file.status}
-                    id={file.id}
-                    file={file.file}
-                    isConnected={isConnected}
-                    onStart={memoizedStartSingleFile}
-                    onRemove={memoizedHandleRemoveFile}
-                  />
-                ))}
-              </AnimatePresence>
+              {allFiles.map((file) => (
+                <FileImport
+                  key={file.id}
+                  fileName={file.fileName}
+                  status={file.status}
+                  id={file.id}
+                  file={file.file}
+                  isConnected={isConnected}
+                  onStart={memoizedStartSingleFile}
+                  onRemove={memoizedHandleRemoveFile}
+                />
+              ))}
             </ul>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>
@@ -365,20 +322,20 @@ const FileImport = memo(function FileImport({
   // Memoize status indicator to prevent recreation
   const statusIndicator = useMemo(() => {
     if (!status) {
-      return <div className="size-3 bg-gray-400 rounded-full" />;
+      return <div className="size-3 bg-muted-foreground rounded-full" />;
     }
 
     const indicators = {
-      uploading: <div className="size-3 bg-blue-500 rounded-full animate-pulse" />,
-      processing: <div className="size-3 bg-purple-500 rounded-full animate-pulse" />,
-      queued: <div className="size-3 bg-amber-500 rounded-full" />,
-      done: <div className="size-3 bg-green-500 rounded-full" />,
-      error: <div className="size-3 bg-red-500 rounded-full" />,
+      uploading: <div className="size-3 bg-emphasis-high rounded-full" />,
+      processing: <div className="size-3 bg-emphasis-medium rounded-full" />,
+      queued: <div className="size-3 bg-warning rounded-full" />,
+      done: <div className="size-3 bg-emphasis-highest rounded-full" />,
+      error: <div className="size-3 bg-destructive rounded-full" />,
     };
 
     return (
       indicators[status.status as keyof typeof indicators] || (
-        <div className="size-3 bg-gray-400 rounded-full" />
+        <div className="size-3 bg-muted-foreground rounded-full" />
       )
     );
   }, [status]);
@@ -396,33 +353,22 @@ const FileImport = memo(function FileImport({
   const itemClassName = useMemo(
     () =>
       cn(
-        'p-4 rounded-lg backdrop-blur-sm',
-        'border border-gray-200/50',
+        'p-4 rounded-lg',
+        'border border-muted/50',
         'shadow-sm hover:shadow-md',
-        'transition-all duration-200 ease-in-out',
         // Add subtle border color based on status
-        !status && 'border-l-4 border-l-gray-400',
-        status?.status === 'processing' && 'border-l-4 border-l-purple-500',
-        status?.status === 'uploading' && 'border-l-4 border-l-blue-500',
-        status?.status === 'queued' && 'border-l-4 border-l-amber-500',
-        status?.status === 'done' && 'border-l-4 border-l-green-500',
-        status?.status === 'error' && 'border-l-4 border-l-red-500',
+        !status && 'border-l-4 border-l-muted-foreground',
+        status?.status === 'processing' && 'border-l-4 border-l-white/50',
+        status?.status === 'uploading' && 'border-l-4 border-l-white/70',
+        status?.status === 'queued' && 'border-l-4 border-l-warning',
+        status?.status === 'done' && 'border-l-4 border-l-white/90',
+        status?.status === 'error' && 'border-l-4 border-l-destructive',
       ),
     [status],
   );
 
   return (
-    <motion.li
-      className={itemClassName}
-      key={id} // Use key instead of layoutId for simpler animation
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{
-        duration: 0.2,
-        ease: 'easeOut',
-      }}
-    >
+    <li className={itemClassName}>
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           {statusIndicator}
@@ -434,7 +380,7 @@ const FileImport = memo(function FileImport({
                 size="sm"
                 onClick={handleStart}
                 disabled={!isConnected}
-                className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700"
+                className="h-8 px-3 text-xs border border-primary text-primary font-medium"
               >
                 Start
               </Button>
@@ -444,7 +390,7 @@ const FileImport = memo(function FileImport({
                 size="sm"
                 variant="outline"
                 onClick={handleRemove}
-                className="h-8 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                className="h-8 px-3 text-xs border-destructive/50 text-destructive hover:border-destructive"
               >
                 Remove
               </Button>
@@ -453,6 +399,6 @@ const FileImport = memo(function FileImport({
         </div>
         {status ? <FileUploadStatus uploadStatus={status} /> : null}
       </div>
-    </motion.li>
+    </li>
   );
 });

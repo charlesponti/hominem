@@ -66,7 +66,7 @@ function AccountCard({
             </div>
           </div>
           {isPlaidAccount && (
-            <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200">
+            <Badge variant="secondary" className="text-foreground bg-muted border-border">
               Connected
             </Badge>
           )}
@@ -186,7 +186,7 @@ export default function AccountsPage() {
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <div className="text-center space-y-4">
-            <RefreshCcw className="size-8 animate-spin mx-auto text-muted-foreground" />
+            <RefreshCcw className="size-8 mx-auto text-muted-foreground" />
             <p className="text-muted-foreground">Loading your bank accounts...</p>
           </div>
         </div>

@@ -143,7 +143,7 @@ function PlacesAutocomplete({
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-border rounded-md shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-secondary border border-border rounded-md shadow-lg max-h-60 overflow-y-auto"
           data-testid="places-autocomplete-results"
         >
           {isLoading && <PlacesAutocompleteLoading show={!!value} />}
@@ -157,15 +157,15 @@ function PlacesAutocomplete({
                   onClick={() => handleSelect(suggestion)}
                   className={cn(
                     'flex items-center px-3 py-2 cursor-pointer transition-colors w-full text-left overflow-x-hidden',
-                    'hover:bg-gray-50 focus:bg-gray-50 focus:outline-none',
-                    selectedIndex === index && 'bg-gray-100',
+                    'hover:bg-muted focus:bg-muted focus:outline-none',
+                    selectedIndex === index && 'bg-muted',
                     styles.autocompleteItem,
                   )}
                   data-testid="places-autocomplete-option"
                 >
                   <MapPin className="size-4 text-muted-foreground mr-3 shrink-0" />
                   <div className="flex flex-col truncate flex-1">
-                    <span className="font-medium text-sm text-gray-900">{suggestion.text}</span>
+                    <span className="font-medium text-sm text-foreground">{suggestion.text}</span>
                     <span className="text-muted-foreground font-light text-xs">
                       {suggestion.address}
                     </span>
@@ -197,10 +197,10 @@ const PlacesAutocompleteLoading = (props: React.ComponentProps<'div'> & { show: 
 
 const LoadingItem = (props: React.ComponentProps<'div'>) => (
   <div className="flex items-center px-3 py-2" {...props}>
-    <div className="size-4 bg-gray-200 rounded mr-3 animate-pulse" />
+    <div className="size-4 border border-border rounded mr-3" />
     <div className="flex flex-col flex-1">
-      <div className="w-3/4 h-3 bg-gray-200 rounded mb-1 animate-pulse" />
-      <div className="w-1/2 h-2 bg-gray-100 rounded animate-pulse" />
+      <div className="w-3/4 h-3 border border-border rounded mb-1" />
+      <div className="w-1/2 h-2 border border-border rounded" />
     </div>
   </div>
 );

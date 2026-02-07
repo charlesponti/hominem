@@ -22,7 +22,7 @@ function TransactionAmount({ transaction }: { transaction: TransactionFromAPI })
 
   return (
     <div className="text-right">
-      <div className={cn('font-semibold', isNegative ? 'text-red-600' : 'text-emerald-600')}>
+      <div className={cn('font-semibold', isNegative ? 'text-destructive' : 'text-foreground')}>
         ${displayAmount}
       </div>
     </div>
@@ -62,7 +62,7 @@ function TransactionListItem({
   account?: AccountFromMap | undefined;
 }) {
   return (
-    <div className="group border-b border-gray-200 py-4 px-2 space-y-2">
+    <div className="group border-b border-border py-4 px-2 space-y-2">
       <div className="w-full flex items-center justify-between gap-4">
         <h3 className="font-serif text-black tracking-tight">
           {transaction.description || 'Transaction'}
@@ -82,22 +82,19 @@ export function TransactionsList({
 }: TransactionsListProps) {
   if (loading) {
     return (
-      <div className="space-y-0 mx-auto border border-gray-200 rounded-lg overflow-hidden">
+      <div className="space-y-0 mx-auto border border-border rounded-lg overflow-hidden">
         {Array.from({ length: 5 }, (_, i) => `skeleton-${Date.now()}-${i}`).map((key) => (
-          <div
-            key={key}
-            className="p-4 sm:p-6 animate-pulse border-b border-gray-100 last:border-b-0"
-          >
+          <div key={key} className="p-4 sm:p-6 border-b border-muted last:border-b-0">
             <div className="flex items-start gap-4">
-              <div className="size-12 rounded-full bg-gray-200" />
+              <div className="size-12 rounded-full bg-muted" />
               <div className="flex-1 space-y-2">
                 <div className="flex justify-between">
-                  <div className="h-4 bg-gray-200 rounded w-1/2" />
-                  <div className="h-4 bg-gray-200 rounded w-16" />
+                  <div className="h-4 bg-muted rounded w-1/2" />
+                  <div className="h-4 bg-muted rounded w-16" />
                 </div>
                 <div className="flex gap-4">
-                  <div className="h-3 bg-gray-100 rounded w-20" />
-                  <div className="h-3 bg-gray-100 rounded w-24" />
+                  <div className="h-3 bg-muted rounded w-20" />
+                  <div className="h-3 bg-muted rounded w-24" />
                 </div>
               </div>
             </div>
@@ -109,28 +106,30 @@ export function TransactionsList({
 
   if (error) {
     return (
-      <div className="p-8 text-center border border-red-200 bg-red-50 rounded-lg max-w-4xl mx-auto">
-        <div className="text-red-600 font-medium">{error}</div>
+      <div className="p-8 text-center border border-destructive/50 bg-destructive/10 rounded-lg max-w-4xl mx-auto">
+        <div className="text-destructive font-medium">{error}</div>
       </div>
     );
   }
 
   if (transactions.length === 0) {
     return (
-      <div className="p-8 text-center border border-gray-200 bg-gray-50 rounded-lg max-w-4xl mx-auto">
+      <div className="p-8 text-center border border-border bg-muted rounded-lg max-w-4xl mx-auto">
         <div className="flex flex-col items-center gap-3">
-          <div className="size-12 rounded-full bg-gray-200 flex items-center justify-center">
+          <div className="size-12 rounded-full bg-muted flex items-center justify-center">
             <DollarSign className="size-6 text-muted-foreground" />
           </div>
-          <div className="text-gray-600 font-medium">No transactions found</div>
-          <div className="text-sm text-gray-500">Try adjusting your filters or date range</div>
+          <div className="text-muted-foreground font-medium">No transactions found</div>
+          <div className="text-sm text-muted-foreground">
+            Try adjusting your filters or date range
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto border border-gray-200 rounded-lg overflow-hidden">
+    <div className="mx-auto border border-border rounded-lg overflow-hidden">
       {transactions.map((transaction) => (
         <TransactionListItem
           key={transaction.id}

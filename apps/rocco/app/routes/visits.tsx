@@ -148,7 +148,7 @@ export default function VisitsPage() {
 
                     {visit.visitRating && (
                       <div className="flex items-center gap-1 shrink-0">
-                        <Star className="size-4 fill-yellow-400 text-yellow-400" />
+                        <Star className="size-4 fill-foreground text-foreground" />
                         <span className="text-sm font-medium">{visit.visitRating}</span>
                       </div>
                     )}

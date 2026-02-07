@@ -32,12 +32,12 @@ export default function TasksPage() {
   return (
     <div className="flex flex-col h-screen w-full max-w-2xl mx-auto">
       {/* Fixed Header */}
-      <header className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 z-10">
+      <header className="shrink-0 border-b border-border z-10">
         <div className="py-4 px-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Tasks</h1>
+          <h1 className="text-2xl font-bold text-foreground">Tasks</h1>
           <button
             onClick={() => setShowCreateForm(!showCreateForm)}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+            className="text-sm text-foreground hover:text-foreground/80 font-medium"
           >
             {showCreateForm ? 'Cancel' : 'New Task'}
           </button>
@@ -53,20 +53,18 @@ export default function TasksPage() {
 
             {isLoading && (
               <div className="flex flex-col items-center justify-center py-16">
-                <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4" />
-                <p className="text-slate-500 dark:text-slate-400">Loading tasks...</p>
+                <div className="w-8 h-8 border-4 border-primary/30 border-t-primary mb-4" />
+                <p className="text-muted-foreground">Loading tasks...</p>
               </div>
             )}
 
             {!isLoading && tasks.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-24 h-24 bg-linear-to-br from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 rounded-3xl flex items-center justify-center mb-6">
-                  <ClipboardList className="w-12 h-12 text-green-500 dark:text-green-400" />
+                <div className="w-24 h-24 border border-dashed border-border rounded-3xl flex items-center justify-center mb-6">
+                  <ClipboardList className="w-12 h-12 text-foreground" />
                 </div>
-                <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                  No tasks yet
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 max-w-md">
+                <h3 className="text-xl font-semibold text-foreground mb-2">No tasks yet</h3>
+                <p className="text-muted-foreground max-w-md">
                   Keep track of what you need to do. Click "New Task" to get started.
                 </p>
               </div>
@@ -76,9 +74,9 @@ export default function TasksPage() {
               <>
                 {/* Incomplete tasks */}
                 {incompleteTasks.length > 0 && (
-                  <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-                    <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                      <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <div className="rounded-lg border border-border overflow-hidden">
+                    <div className="px-4 py-2 bg-muted border-b border-border">
+                      <h2 className="text-sm font-semibold text-foreground">
                         To Do ({incompleteTasks.length})
                       </h2>
                     </div>
@@ -95,9 +93,9 @@ export default function TasksPage() {
 
                 {/* Completed tasks */}
                 {completedTasks.length > 0 && (
-                  <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-                    <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
-                      <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  <div className="rounded-lg border border-border overflow-hidden">
+                    <div className="px-4 py-2 bg-muted border-b border-border">
+                      <h2 className="text-sm font-semibold text-foreground">
                         Completed ({completedTasks.length})
                       </h2>
                     </div>

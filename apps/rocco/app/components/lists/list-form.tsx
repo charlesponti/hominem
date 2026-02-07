@@ -146,15 +146,15 @@ export default function ListForm() {
           </form>
 
           {status === 'submitting' ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">
+            <div className="absolute inset-0 flex items-center justify-center rounded-lg">
               <Loading size="sm" />
-              <span className="ml-2 text-sm text-gray-600">Creating...</span>
+              <span className="ml-2 text-sm text-muted-foreground">Creating...</span>
             </div>
           ) : null}
 
           {status === 'success' ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 rounded-lg">
-              <span className="text-sm font-semibold text-green-700">Created!</span>
+            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-lg">
+              <span className="text-sm font-semibold text-foreground">Created!</span>
             </div>
           ) : null}
         </div>
@@ -166,7 +166,7 @@ export default function ListForm() {
           onClick={status === 'idle' ? handleOpen : handleClose}
           disabled={status === 'submitting'}
           variant={status !== 'idle' ? 'secondary' : 'default'}
-          className="flex items-center gap-2 disabled:bg-indigo-200"
+          className="flex items-center gap-2 disabled:opacity-50"
         >
           {status !== 'idle' ? (
             <span> Cancel </span>

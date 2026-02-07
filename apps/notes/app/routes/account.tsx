@@ -45,10 +45,8 @@ export default function AccountPage() {
   return (
     <div className="container mx-auto py-8 px-4 md:px-6 lg:px-8 max-w-3xl">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
-          Profile
-        </h1>
-        <p className="mt-1 text-sm text-gray-600 dark:text-muted-foreground">Manage your account</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Profile</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Manage your account</p>
       </header>
 
       <div className="space-y-8">

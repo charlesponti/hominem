@@ -52,7 +52,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
           </Button>
         </DrawerTrigger>
         <DrawerContent>
-          <Suspense fallback={<div className="h-[40vh] bg-background animate-pulse" />}>
+          <Suspense fallback={<div className="h-[40vh] bg-background" />}>
             <AddToListDrawerContent
               place={place}
               resolvedPlaceId={resolvedPlaceId}

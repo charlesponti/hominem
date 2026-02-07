@@ -1,3 +1,4 @@
+import { CHART_COLORS } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/card';
 import { Badge } from '@hominem/ui/components/ui/badge';
@@ -189,7 +190,7 @@ export default function RunwayPage() {
             </CardHeader>
             <CardContent>
               <div
-                className={`text-2xl font-bold ${runwayMetrics.isRunwayDangerous ? 'text-red-600' : 'text-green-600'}`}
+                className={`text-2xl font-bold ${runwayMetrics.isRunwayDangerous ? 'text-destructive' : 'text-foreground'}`}
               >
                 {runwayMetrics.monthsUntilZero === Number.POSITIVE_INFINITY
                   ? '∞'
@@ -210,7 +211,7 @@ export default function RunwayPage() {
             </CardHeader>
             <CardContent>
               <div
-                className={`text-2xl font-bold ${runwayMetrics.minimumBalance < 0 ? 'text-red-600' : 'text-blue-600'}`}
+                className={`text-2xl font-bold ${runwayMetrics.minimumBalance < 0 ? 'text-destructive' : 'text-foreground'}`}
               >
                 {formatCurrency(runwayMetrics.minimumBalance)}
               </div>
@@ -315,11 +316,11 @@ export default function RunwayPage() {
               {plannedPurchases.map((purchase, index) => (
                 <div
                   key={`${purchase.description}-${purchase.date}-${index}`}
-                  className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                  className="flex justify-between items-center p-3 border border-border"
                 >
                   <div>
                     <span className="font-medium">{purchase.description}</span>
-                    <span className="text-sm text-gray-500 ml-2">
+                    <span className="text-sm text-muted-foreground ml-2">
                       on {new Date(purchase.date).toLocaleDateString()}
                     </span>
                   </div>
@@ -357,18 +358,18 @@ export default function RunwayPage() {
                   <YAxis tickFormatter={(value) => formatCurrency(value)} />
                   <Tooltip
                     formatter={(value) => [formatCurrency(Number(value)), 'Projected Balance']}
-                    labelStyle={{ color: '#374151' }}
+                    labelStyle={{ color: CHART_COLORS.neutral }}
                     contentStyle={{
-                      backgroundColor: '#fff',
-                      border: '1px solid #d1d5db',
+                      backgroundColor: CHART_COLORS.tooltip.background,
+                      border: `1px solid ${CHART_COLORS.tooltip.border}`,
                       borderRadius: '6px',
                     }}
                   />
-                  <ReferenceLine y={0} stroke="#ef4444" strokeDasharray="2 2" />
+                  <ReferenceLine y={0} stroke={CHART_COLORS.negative} strokeDasharray="2 2" />
                   <Line
                     type="monotone"
                     dataKey="balance"
-                    stroke="#10b981"
+                    stroke={CHART_COLORS.positive}
                     strokeWidth={2}
                     dot={(props) => {
                       const { cx, cy, payload } = props;
@@ -378,13 +379,13 @@ export default function RunwayPage() {
                           cx={cx}
                           cy={cy}
                           r={4}
-                          fill={isNegative ? '#ef4444' : '#10b981'}
-                          stroke={isNegative ? '#ef4444' : '#10b981'}
+                          fill={isNegative ? CHART_COLORS.negative : CHART_COLORS.positive}
+                          stroke={isNegative ? CHART_COLORS.negative : CHART_COLORS.positive}
                           strokeWidth={2}
                         />
                       );
                     }}
-                    activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
+                    activeDot={{ r: 6, stroke: CHART_COLORS.positive, strokeWidth: 2 }}
                   />
                 </LineChart>
               </ResponsiveContainer>

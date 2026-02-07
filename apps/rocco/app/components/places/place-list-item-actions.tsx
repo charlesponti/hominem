@@ -79,16 +79,16 @@ const PlaceListItemActions = ({
             <MoreVertical size={16} />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-white border border-border text-gray-900 shadow-lg">
+        <DropdownMenuContent className="bg-secondary border border-border text-foreground shadow-lg">
           <DropdownMenuItem onClick={handleOpenMaps} className="flex items-center gap-2 py-2">
-            <ExternalLink size={16} className="text-indigo-600 focus:text-white" />
+            <ExternalLink size={16} className="text-primary focus:text-white" />
             Open in Maps
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={handleOpenDeleteModal}
-            className="text-red-600 hover:underline underline-offset-4 hover:bg-red-50 py-2"
+            className="text-destructive hover:underline underline-offset-4 hover:border-destructive/50 py-2"
           >
-            <Trash size={16} className="text-red-600" />
+            <Trash size={16} className="text-destructive" />
             Remove from list
           </DropdownMenuItem>
         </DropdownMenuContent>

@@ -59,12 +59,12 @@ export function TaskCreateForm({ onSuccess }: TaskCreateFormProps) {
   };
 
   return (
-    <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4 space-y-4">
+    <div className="w-full border border-border rounded-lg p-4 space-y-4">
       <Input
         placeholder="Task title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500"
+        className="text-sm text-foreground border-border placeholder-muted-foreground"
       />
 
       <Textarea
@@ -72,14 +72,14 @@ export function TaskCreateForm({ onSuccess }: TaskCreateFormProps) {
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         rows={2}
-        className="text-sm bg-white dark:bg-slate-800 dark:text-slate-100 border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 resize-none"
+        className="text-sm text-foreground border-border placeholder-muted-foreground resize-none"
       />
 
       <div className="flex flex-wrap gap-3 items-end">
         <div className="flex-1 min-w-[140px]">
-          <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Priority</label>
+          <label className="text-xs text-muted-foreground mb-1 block">Priority</label>
           <Select value={priority} onValueChange={(v) => setPriority(v as Priority)}>
-            <SelectTrigger className="h-9 text-sm bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+            <SelectTrigger className="h-9 text-sm border-border">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -92,17 +92,17 @@ export function TaskCreateForm({ onSuccess }: TaskCreateFormProps) {
         </div>
 
         <div className="flex-1 min-w-[140px]">
-          <label className="text-xs text-slate-500 dark:text-slate-400 mb-1 block">Due Date</label>
+          <label className="text-xs text-muted-foreground mb-1 block">Due Date</label>
           <DatePicker value={dueDate} onSelect={setDueDate} id="task-due-date" label="" />
         </div>
 
         <Button
           onClick={handleSubmit}
           disabled={isSaveDisabled}
-          className="h-9 px-4 bg-blue-500 hover:bg-blue-600 text-white transition-all disabled:bg-slate-300 disabled:text-slate-500 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
+          className="h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground transition-all disabled:bg-muted disabled:text-muted-foreground"
         >
           {isSaving ? (
-            <RefreshCw className="size-4 animate-spin" />
+            <RefreshCw className="size-4" />
           ) : (
             <>
               <Plus className="size-4 mr-1" />
@@ -113,7 +113,7 @@ export function TaskCreateForm({ onSuccess }: TaskCreateFormProps) {
       </div>
 
       {error && (
-        <div className="text-red-500 text-sm p-3 text-center bg-red-100 dark:bg-red-900/30 rounded-md border border-red-200 dark:border-red-800/50">
+        <div className="text-foreground text-sm p-3 text-center border border-muted-foreground/30 rounded-md">
           {error.message}
         </div>
       )}

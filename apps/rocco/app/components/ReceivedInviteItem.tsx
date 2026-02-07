@@ -51,16 +51,16 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
   if (previewProps) {
     const { preview } = previewProps;
     return (
-      <li className="flex flex-col gap-3 p-6 bg-white border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+      <li className="flex flex-col gap-3 p-6 bg-secondary border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-            <ListCheck className="size-4 text-indigo-600" />
+          <div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+            <ListCheck className="size-4 text-primary" />
           </div>
-          <p className="text-xl font-semibold text-gray-900">{preview.listName}</p>
+          <p className="text-xl font-semibold text-foreground">{preview.listName}</p>
         </div>
 
         {preview.coverPhoto ? (
-          <div className="w-full h-40 bg-gray-100 rounded-md overflow-hidden">
+          <div className="w-full h-40 bg-muted rounded-md overflow-hidden">
             <img
               src={preview.coverPhoto}
               alt={preview.listName}
@@ -68,23 +68,23 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
             />
           </div>
         ) : (
-          <div className="w-full h-40 rounded-md bg-linear-to-br from-indigo-50 to-purple-50 border border-dashed border-border flex items-center justify-center text-muted-foreground text-sm">
+          <div className="w-full h-40 rounded-md bg-muted border border-dashed border-border flex items-center justify-center text-muted-foreground text-sm">
             No photo yet
           </div>
         )}
 
         {preview.firstItemName && (
-          <p className="text-sm text-gray-600">
-            First item: <span className="font-medium text-gray-800">{preview.firstItemName}</span>
+          <p className="text-sm text-muted-foreground">
+            First item: <span className="font-medium text-foreground">{preview.firstItemName}</span>
           </p>
         )}
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Sign in to accept this invite{' '}
             {preview.invitedUserEmail ? (
               <span>
-                for <span className="text-purple-700 font-medium">{preview.invitedUserEmail}</span>
+                for <span className="text-foreground font-medium">{preview.invitedUserEmail}</span>
               </span>
             ) : (
               'with your account.'
@@ -107,13 +107,13 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
   const isAccepted = status === 'accepted';
 
   return (
-    <li className="flex flex-col gap-3 p-6 bg-white border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+    <li className="flex flex-col gap-3 p-6 bg-secondary border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0">
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-            <ListCheck className="size-4 text-indigo-600" />
+          <div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+            <ListCheck className="size-4 text-primary" />
           </div>
-          <p className="text-xl font-semibold text-gray-900">{list?.name || 'Unknown List'}</p>
+          <p className="text-xl font-semibold text-foreground">{list?.name || 'Unknown List'}</p>
         </div>
         {isAccepted ? (
           <Link
@@ -128,9 +128,10 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
         )}
       </div>
       {!isAccepted && isEmailMismatch && (
-        <p className="flex flex-col gap-2 text-sm text-amber-700">
+        <p className="flex flex-col gap-2 text-sm text-muted-foreground">
           <span>
-            Invited as <span className="italic text-purple-400">{listInvite.invitedUserEmail}</span>
+            Invited as{' '}
+            <span className="italic text-muted-foreground">{listInvite.invitedUserEmail}</span>
           </span>
           <span>Accepting will attach it to your current Google login.</span>
         </p>

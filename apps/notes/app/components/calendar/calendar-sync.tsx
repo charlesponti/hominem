@@ -189,7 +189,7 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
             <Button onClick={handleSync} disabled={isLoading} className="w-full">
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  <Loader2 className="mr-2 size-4" />
                   Syncing...
                 </>
               ) : (
@@ -204,26 +204,26 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
               <div
                 className={`p-4 rounded-lg ${
                   syncResult && !syncError
-                    ? 'bg-green-50 border border-green-200'
-                    : 'bg-red-50 border border-red-200'
+                    ? 'bg-muted border border-border'
+                    : 'bg-muted border border-border'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   {syncResult && !syncError ? (
-                    <CheckCircle className="size-5 text-green-600" />
+                    <CheckCircle className="size-5 text-foreground" />
                   ) : (
-                    <AlertCircle className="size-5 text-red-600" />
+                    <AlertCircle className="size-5 text-muted-foreground" />
                   )}
                   <span
-                    className={`font-medium ${syncResult && !syncError ? 'text-green-800' : 'text-red-800'}`}
+                    className={`font-medium ${syncResult && !syncError ? 'text-foreground' : 'text-foreground'}`}
                   >
                     {syncResult && !syncError ? 'Sync Successful!' : 'Sync Failed'}
                   </span>
                 </div>
                 {syncResult && !syncError ? (
-                  <p className="text-green-700 mt-1">{syncResult.message}</p>
+                  <p className="text-muted-foreground mt-1">{syncResult.message}</p>
                 ) : (
-                  <p className="text-red-700 mt-1">{syncError}</p>
+                  <p className="text-muted-foreground mt-1">{syncError}</p>
                 )}
               </div>
             ) : null}

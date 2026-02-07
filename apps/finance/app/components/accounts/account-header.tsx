@@ -50,15 +50,15 @@ export function AccountHeader({
   const getAccountTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'credit':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'text-foreground border-2 border-emphasis-lower';
       case 'depository':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'text-foreground border-2 border-emphasis-lower';
       case 'investment':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'text-foreground border-2 border-emphasis-subtle';
       case 'loan':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+        return 'text-foreground border-2 border-emphasis-minimal';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'text-foreground border-2 border-border';
     }
   };
 

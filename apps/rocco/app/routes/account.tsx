@@ -91,8 +91,8 @@ export default function Account({ loaderData }: Route.ComponentProps) {
             )}
             <div className="flex flex-col">
               <p className="text-lg font-medium">{user.name}</p>
-              <p className="text-sm text-gray-600">{user.email}</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">{user.email}</p>
+              <p className="text-sm text-muted-foreground">
                 <MemberSince createdAt={user.createdAt} />
               </p>
             </div>

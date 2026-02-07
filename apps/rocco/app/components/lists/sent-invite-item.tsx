@@ -47,7 +47,7 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
   const userName: string = user_invitedUserId?.name || invitedUserEmail.split('@')[0] || 'U';
 
   return (
-    <li className="flex flex-col md:flex-row md:items-center gap-3 p-3 group hover:bg-gray-50 transition-colors">
+    <li className="flex flex-col md:flex-row md:items-center gap-3 p-3 group border-b border-border transition-colors">
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {isAccepted ? (
           <UserAvatar
@@ -60,7 +60,7 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
           <Mail className="text-muted-foreground size-5 shrink-0" />
         )}
         <div className="flex-1 min-w-0">
-          <p className="font-light text-gray-600 truncate text-base">{invitedUserEmail}</p>
+          <p className="font-light text-muted-foreground truncate text-base">{invitedUserEmail}</p>
         </div>
       </div>
       <div className="ml-0 md:ml-2 flex justify-end items-center gap-3 flex-wrap">
@@ -79,11 +79,11 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
               variant="outline"
               size="icon"
               onClick={() => copyInviteUrl(token)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground rounded-md transition-colors"
               title="Copy invite URL"
             >
               {isCopied ? (
-                <Check className="size-4 text-green-600" />
+                <Check className="size-4 text-foreground" />
               ) : (
                 <LinkIcon className="size-4" />
               )}
@@ -93,7 +93,7 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
               invitedUserEmail={invitedUserEmail}
               onDelete={onDelete}
             />
-            <span className="px-3 py-1 text-sm font-medium text-amber-700 bg-amber-100 rounded-full">
+            <span className="px-3 py-1 text-sm font-medium text-warning bg-warning-subtle rounded-full">
               Pending
             </span>
           </>

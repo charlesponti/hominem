@@ -71,7 +71,7 @@ export default function PlacesNearby({
       <div className="space-y-4">
         {title}
         <div className="text-center py-8">
-          <p className="text-red-600">Error loading nearby places: {error.message}</p>
+          <p className="text-destructive">Error loading nearby places: {error.message}</p>
         </div>
       </div>
     );
@@ -81,9 +81,9 @@ export default function PlacesNearby({
     return (
       <div className="space-y-4">
         {title}
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center">
           <MapPin className="w-12 h-12 text-muted-foreground mb-3" />
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             No places from your lists found within {radiusKm}km of this location
           </p>
         </div>

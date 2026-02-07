@@ -1,7 +1,6 @@
 import { useHonoUtils } from '@hominem/hono-client/react';
 import { Button } from '@hominem/ui/button';
 import { List } from '@hominem/ui/list';
-import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { Edit2, Star, Trash2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
@@ -33,26 +32,6 @@ interface VisitItemProps {
   onCancel: () => void;
 }
 
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.2,
-      ease: 'easeOut',
-    },
-  },
-  exit: {
-    opacity: 0,
-    y: -10,
-    transition: {
-      duration: 0.15,
-      ease: 'easeIn',
-    },
-  },
-};
-
 function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: VisitItemProps) {
   const utils = useHonoUtils();
   const deleteVisit = useDeletePlaceVisit();
@@ -67,7 +46,7 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
 
   if (isEditing) {
     return (
-      <motion.li variants={itemVariants} layout className="py-2">
+      <li className="py-2">
         <LogVisit
           placeId={placeId}
           placeName={placeName}
@@ -75,13 +54,13 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
           onSuccess={onCancel}
           onCancel={onCancel}
         />
-      </motion.li>
+      </li>
     );
   }
 
   return (
-    <motion.li variants={itemVariants} layout className="group">
-      <div className="flex items-center gap-3 p-2 hover:bg-gray-50 transition-colors">
+    <li className="group">
+      <div className="flex items-center gap-3 p-2 border-b border-border/30">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-muted-foreground">
@@ -97,7 +76,7 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
             <div className="space-x-6 flex items-center">
               {visit.visitRating && (
                 <div className="flex items-center gap-1 shrink-0">
-                  <Star className="size-4 fill-yellow-400 text-yellow-400" />
+                  <Star className="size-4 fill-foreground text-foreground" />
                   <span className="text-xs text-muted-foreground">{visit.visitRating}</span>
                 </div>
               )}
@@ -142,7 +121,7 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
           )}
         </div>
       </div>
-    </motion.li>
+    </li>
   );
 }
 
@@ -183,31 +162,23 @@ export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
       )}
 
       {!visitsLoading && (!visits || visits.length === 0) ? (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-sm text-muted-foreground py-4"
-        >
-          No visits recorded yet.
-        </motion.div>
+        <div className="text-sm text-muted-foreground py-4">No visits recorded yet.</div>
       ) : (
         <List isLoading={visitsLoading} loadingSize="md">
-          <AnimatePresence mode="popLayout">
-            {visits?.map((visit: any) => (
-              <VisitItem
-                key={visit.id}
-                visit={visit}
-                placeId={placeId}
-                placeName={placeName}
-                isEditing={editingVisitId === visit.id}
-                onEdit={() => {
-                  setEditingVisitId(visit.id);
-                  setShowInlineForm(false);
-                }}
-                onCancel={() => setEditingVisitId(null)}
-              />
-            ))}
-          </AnimatePresence>
+          {visits?.map((visit: any) => (
+            <VisitItem
+              key={visit.id}
+              visit={visit}
+              placeId={placeId}
+              placeName={placeName}
+              isEditing={editingVisitId === visit.id}
+              onEdit={() => {
+                setEditingVisitId(visit.id);
+                setShowInlineForm(false);
+              }}
+              onCancel={() => setEditingVisitId(null)}
+            />
+          ))}
         </List>
       )}
     </div>

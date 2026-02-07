@@ -45,11 +45,13 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategori
             ))}
           </div>
         ) : error instanceof Error ? (
-          <div className="text-red-500">
+          <div className="text-destructive">
             {error.message || 'Your categories are not available. Please try again later.'}
           </div>
         ) : error ? (
-          <div className="text-red-500">An unknown error occurred while fetching categories.</div>
+          <div className="text-destructive">
+            An unknown error occurred while fetching categories.
+          </div>
         ) : Array.isArray(categoryBreakdown?.breakdown) &&
           categoryBreakdown.breakdown.length > 0 ? (
           <div className="space-y-3">

@@ -11,11 +11,11 @@ export function EmptyState({ transactionCategoriesCount, onAddCategory }: EmptyS
   const navigate = useNavigate();
   return (
     <div className="text-center py-12">
-      <div className="mx-auto flex items-center justify-center size-12 rounded-full bg-gray-100">
+      <div className="mx-auto flex items-center justify-center size-12 rounded-full bg-muted">
         <Plus className="size-6 text-muted-foreground" />
       </div>
-      <h3 className="mt-2 text-sm font-medium text-gray-900">No budget categories</h3>
-      <p className="mt-1 text-sm text-gray-500">
+      <h3 className="mt-2 text-sm font-medium text-foreground">No budget categories</h3>
+      <p className="mt-1 text-sm text-muted-foreground">
         {transactionCategoriesCount && transactionCategoriesCount > 0
           ? `We found ${transactionCategoriesCount} categories from your transactions. Set up your budget categories to start tracking your spending.`
           : 'Get started by creating your first budget category.'}

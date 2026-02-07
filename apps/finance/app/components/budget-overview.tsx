@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { Target } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -49,8 +50,8 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
       <Card>
         <CardContent className="flex items-center justify-center py-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full size-6 border-b-2 border-gray-900 mx-auto" />
-            <p className="mt-2 text-xs text-gray-600">Loading budget data...</p>
+            <LoadingSpinner size="sm" className="mx-auto" />
+            <p className="mt-2 text-xs text-muted-foreground">Loading budget data...</p>
           </div>
         </CardContent>
       </Card>
@@ -61,8 +62,8 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
     return (
       <Card>
         <CardContent className="text-center py-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-1">Error Loading Budget Data</h3>
-          <p className="text-xs text-gray-600">
+          <h3 className="text-sm font-semibold text-foreground mb-1">Error Loading Budget Data</h3>
+          <p className="text-xs text-muted-foreground">
             {errorCategories?.message || errorStats || 'An error occurred while loading data'}
           </p>
         </CardContent>
@@ -74,8 +75,8 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
     return (
       <Card>
         <CardContent className="text-center py-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-1">No Budget Categories</h3>
-          <p className="text-xs text-gray-600">
+          <h3 className="text-sm font-semibold text-foreground mb-1">No Budget Categories</h3>
+          <p className="text-xs text-muted-foreground">
             Please add budget categories to see performance data.
           </p>
         </CardContent>
@@ -87,8 +88,8 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
     return (
       <Card>
         <CardContent className="text-center py-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-1">No Budget Set</h3>
-          <p className="text-xs text-gray-600">
+          <h3 className="text-sm font-semibold text-foreground mb-1">No Budget Set</h3>
+          <p className="text-xs text-muted-foreground">
             Set budget amounts for your categories to track performance.
           </p>
         </CardContent>
@@ -108,7 +109,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <div className="text-xs text-muted-foreground">Budgeted</div>
-            <div className="text-lg font-semibold text-blue-600">
+            <div className="text-lg font-semibold text-foreground">
               {formatCurrency(totalBudgeted)}
             </div>
           </div>

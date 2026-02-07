@@ -58,7 +58,7 @@ export default function MonthlyAnalyticsPage() {
       )}
 
       {error ? (
-        <div className="text-red-500 p-4 border border-red-300 rounded bg-red-50">
+        <div className="text-destructive p-4 border border-destructive/50 rounded bg-destructive/10">
           <p>Error loading monthly statistics</p>
         </div>
       ) : null}
@@ -75,18 +75,20 @@ export default function MonthlyAnalyticsPage() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Net Income</span>
                   <span
-                    className={`font-bold ${(stats.netIncome ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                    className={`font-bold ${(stats.netIncome ?? 0) >= 0 ? 'text-foreground' : 'text-destructive'}`}
                   >
                     {formatCurrency(stats.netIncome ?? 0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">Total Income</span>
-                  <span className="text-green-600">{formatCurrency(stats.totalIncome ?? 0)}</span>
+                  <span className="text-foreground">{formatCurrency(stats.totalIncome ?? 0)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm ">
                   <span className="font-medium">Total Expenses</span>
-                  <span className="text-red-600">{formatCurrency(stats.totalExpenses ?? 0)}</span>
+                  <span className="text-destructive">
+                    {formatCurrency(stats.totalExpenses ?? 0)}
+                  </span>
                 </div>
               </div>
             </CardContent>

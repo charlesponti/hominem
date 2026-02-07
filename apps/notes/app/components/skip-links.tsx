@@ -40,7 +40,7 @@ export function SkipLinks({ className = '' }: SkipLinksProps) {
 
   return (
     <div className={`sr-only focus-within:not-sr-only ${className}`}>
-      <div className="fixed top-0 left-0 z-50 p-2 bg-white border-2 border-blue-500 rounded-md shadow-lg">
+      <div className="fixed top-0 left-0 z-50 p-2 border-2 border-border rounded-md shadow-lg">
         <h2 className="text-sm font-semibold mb-2">Skip to:</h2>
         <ul className="space-y-1">
           <li>
@@ -48,7 +48,7 @@ export function SkipLinks({ className = '' }: SkipLinksProps) {
               type="button"
               onClick={skipToMain}
               onKeyDown={(e) => e.key === 'Enter' && skipToMain(e)}
-              className="text-sm text-blue-600 hover:text-blue-800 underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+              className="text-sm text-foreground hover:text-foreground/80 underline focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
             >
               Main content
             </button>
@@ -58,7 +58,7 @@ export function SkipLinks({ className = '' }: SkipLinksProps) {
               type="button"
               onClick={skipToNavigation}
               onKeyDown={(e) => e.key === 'Enter' && skipToNavigation(e)}
-              className="text-sm text-blue-600 hover:text-blue-800 underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+              className="text-sm text-foreground hover:text-foreground/80 underline focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
             >
               Navigation
             </button>
@@ -68,7 +68,7 @@ export function SkipLinks({ className = '' }: SkipLinksProps) {
               type="button"
               onClick={skipToActions}
               onKeyDown={(e) => e.key === 'Enter' && skipToActions(e)}
-              className="text-sm text-blue-600 hover:text-blue-800 underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+              className="text-sm text-foreground hover:text-foreground/80 underline focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
             >
               Copy actions
             </button>

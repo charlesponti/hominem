@@ -6,26 +6,21 @@ import { cn } from '../../lib/utils';
 
 export type AlertType = 'success' | 'error' | 'warning' | 'info';
 
-const alertVariants = cva(
-  'relative w-full rounded-lg border p-4 backdrop-blur-sm animate-in fade-in duration-300',
-  {
-    variants: {
-      variant: {
-        default: 'bg-background text-foreground',
-        destructive:
-          'text-destructive border-destructive/50 dark:border-destructive [&>svg]:text-destructive',
-        success:
-          'bg-green-50/50 border-green-200/50 text-green-900 dark:bg-green-950/50 dark:border-green-800/50 dark:text-green-100',
-        warning:
-          'bg-yellow-50/50 border-yellow-200/50 text-yellow-900 dark:bg-yellow-950/50 dark:border-yellow-800/50 dark:text-yellow-100',
-        info: 'bg-blue-50/50 border-blue-200/50 text-blue-900 dark:bg-blue-950/50 dark:border-blue-800/50 dark:text-blue-100',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
+const alertVariants = cva('relative w-full border p-4', {
+  variants: {
+    variant: {
+      default: 'text-foreground',
+      destructive: 'text-destructive border-destructive/50 [&>svg]:text-destructive',
+      success: 'bg-muted border-border text-foreground [&>svg]:text-foreground',
+      warning:
+        'border-[var(--color-warning)]/50 text-[var(--color-warning)] [&>svg]:text-[var(--color-warning)]',
+      info: 'bg-muted border-border text-foreground [&>svg]:text-foreground',
     },
   },
-);
+  defaultVariants: {
+    variant: 'default',
+  },
+});
 
 export interface AlertProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
@@ -74,13 +69,13 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
     const getIconColor = () => {
       switch (type) {
         case 'success':
-          return 'text-green-600 dark:text-green-400';
+          return 'text-foreground';
         case 'error':
           return 'text-destructive';
         case 'warning':
-          return 'text-yellow-600 dark:text-yellow-400';
+          return 'text-[var(--color-warning)]';
         case 'info':
-          return 'text-blue-600 dark:text-blue-400';
+          return 'text-foreground';
         default:
           return '';
       }
@@ -106,7 +101,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
           {dismissible && (
             <button
               type="button"
-              className="shrink-0 rounded p-1 opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              className="shrink-0 p-1 opacity-70 hover:opacity-100 focus:outline-none"
               onClick={handleDismiss}
               aria-label="Dismiss alert"
             >
@@ -122,11 +117,7 @@ Alert.displayName = 'Alert';
 
 const AlertTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h5
-      ref={ref}
-      className={cn('mb-1 font-medium leading-none tracking-tight', className)}
-      {...props}
-    />
+    <h5 ref={ref} className={cn('mb-1 font-mono uppercase tracking-tight', className)} {...props} />
   ),
 );
 AlertTitle.displayName = 'AlertTitle';

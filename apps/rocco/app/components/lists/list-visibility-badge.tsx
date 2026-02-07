@@ -10,8 +10,8 @@ export default function ListVisibilityBadge({ isPublic }: ListVisibilityBadgePro
   return (
     <span
       className={cn('flex max-w-fit items-center gap-1.5 px-3 py-1 rounded-full', {
-        'bg-green-100 text-green-700': isPublic,
-        'bg-gray-100 text-gray-700': !isPublic,
+        'bg-accent text-accent-foreground': isPublic,
+        'bg-muted text-foreground': !isPublic,
       })}
     >
       {isPublic ? (

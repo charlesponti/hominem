@@ -51,7 +51,7 @@ export default function RemoveCollaboratorButton({
         disabled={removeCollaborator.isPending}
         title="Remove collaborator"
       >
-        <Trash2 className="size-4 text-red-700" />
+        <Trash2 className="size-4 text-destructive" />
       </Button>
 
       <Dialog open={isOpen} onOpenChange={(shouldOpen) => (shouldOpen ? open() : close())}>

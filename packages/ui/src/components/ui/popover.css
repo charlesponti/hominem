@@ -1,9 +1,9 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Popover Colors - Light Mode */
-  --color-popover: var(--color-gray-50);
-  --color-popover-foreground: var(--color-gray-900);
+  /* Popover Colors - Kanso Monochrome */
+  --color-popover: #000000;
+  --color-popover-foreground: #ffffff;
 }
 
 @layer base {
@@ -12,17 +12,11 @@
     --popover: var(--color-popover);
     --popover-foreground: var(--color-popover-foreground);
   }
-
-  .dark {
-    /* Popover Colors - Dark Mode */
-    --color-popover: var(--color-gray-800);
-    --color-popover-foreground: var(--color-gray-50);
-  }
 }
 
 @layer utilities {
   .bg-popover {
-    background-color: white;
+    background-color: #000000;
   }
 
   .text-popover-foreground {

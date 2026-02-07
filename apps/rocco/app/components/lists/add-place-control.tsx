@@ -108,7 +108,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
           type="button"
           data-testid="add-to-list-button"
           disabled={!canAdd || status === 'submitting'}
-          className="flex items-center gap-2 disabled:bg-indigo-200"
+          className="flex items-center gap-2 disabled:bg-muted"
           aria-label={!canAdd ? 'Cannot add places to this list' : 'Add place to list'}
         >
           <PlusCircle size={18} />
@@ -130,12 +130,12 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         {status === 'submitting' ? (
           <div className="flex flex-col items-center justify-center py-8">
             <Loading size="md" />
-            <span className="mt-2 text-sm text-gray-600">Adding place...</span>
+            <span className="mt-2 text-sm text-muted-foreground">Adding place...</span>
           </div>
         ) : status === 'success' ? (
           <div className="flex flex-col items-center justify-center py-8">
-            <CheckCircle2 className="size-8 text-green-600 mb-2" />
-            <span className="text-sm font-semibold text-green-700">Added!</span>
+            <CheckCircle2 className="size-8 text-foreground mb-2" />
+            <span className="text-sm font-semibold text-foreground">Added!</span>
           </div>
         ) : (
           <div className="space-y-3">

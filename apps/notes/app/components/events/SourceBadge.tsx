@@ -6,7 +6,7 @@ export default function SourceBadge({ source }: SourceBadgeProps) {
   if (source === 'google_calendar') {
     return (
       <span
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border border-foreground text-foreground"
         title="Synced from Google Calendar"
       >
         <svg
@@ -53,7 +53,7 @@ export default function SourceBadge({ source }: SourceBadgeProps) {
 
   return (
     <span
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border border-muted-foreground/50 text-muted-foreground"
       title="Manually created"
     >
       ✏️ Manual

@@ -64,7 +64,7 @@ const PlaceStatus = ({ businessStatus, openingHours, ...props }: PlaceStatusProp
     if (isOpen) {
       return (
         <Wrap {...props}>
-          <span className="text-green-500 font-semibold mr-2">Open today</span>
+          <span className="text-foreground font-semibold mr-2">Open today</span>
           <br />
           {weekdayText[todayIdx]?.replace(/[a-zA-Z]+: /, '').replace(/–/g, ' to ') ||
             'Hours not available'}
@@ -78,7 +78,7 @@ const PlaceStatus = ({ businessStatus, openingHours, ...props }: PlaceStatusProp
 
     return (
       <Wrap {...props}>
-        <span className="text-red-500 font-semibold">Closed</span>{' '}
+        <span className="text-destructive font-semibold">Closed</span>{' '}
         <span>
           <span>Opens again </span>
           {nextDayText || 'soon'}

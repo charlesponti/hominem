@@ -35,7 +35,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
             <Edit className="size-4 text-muted-foreground" />
           </Button>
           <Button variant="ghost" size="sm" onClick={() => onDelete(goal)}>
-            <Trash2 className="size-4 text-red-500" />
+            <Trash2 className="size-4 text-muted-foreground" />
           </Button>
         </div>
       </div>
@@ -48,10 +48,10 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
               <div key={`${goal.id}-milestone-${idx}`} className="flex items-start gap-2 text-sm">
                 <div
                   className={`mt-1 size-4 rounded-full border-2 flex items-center justify-center ${
-                    milestone.isCompleted ? 'bg-green-500 border-green-500' : 'border-muted'
+                    milestone.isCompleted ? 'bg-foreground border-foreground' : 'border-muted'
                   }`}
                 >
-                  {milestone.isCompleted && <CalendarCheck className="size-3 text-white" />}
+                  {milestone.isCompleted && <CalendarCheck className="size-3 text-background" />}
                 </div>
                 <span
                   className={`flex-1 ${
@@ -68,7 +68,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
 
       <div className="flex items-center gap-3 text-sm">
         {goal.goalCategory && (
-          <span className="text-muted-foreground bg-muted px-2 py-1 rounded">
+          <span className="text-muted-foreground border border-muted-foreground/30 px-2 py-1 rounded">
             {String(goal.goalCategory)}
           </span>
         )}

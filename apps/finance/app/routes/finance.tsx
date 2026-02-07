@@ -84,14 +84,14 @@ export default function TransactionsPage() {
       {/* Shared Loading, Error, and Empty States */}
       {loading ? (
         <div className="flex justify-center py-10">
-          <div className="animate-pulse space-y-4 w-full">
+          <div className="space-y-4 w-full">
             {[1, 2, 3, 4, 5].map((val) => (
-              <div key={val} className="h-24 bg-gray-100 rounded-md w-full md:h-12" />
+              <div key={val} className="h-24 bg-muted rounded-md w-full md:h-12" />
             ))}
           </div>
         </div>
       ) : error ? (
-        <div className="p-8 text-center text-red-500">
+        <div className="p-8 text-center text-destructive">
           {typeof error === 'string'
             ? error
             : error instanceof Error
@@ -99,7 +99,7 @@ export default function TransactionsPage() {
               : 'An unknown error occurred'}
         </div>
       ) : transactions.length === 0 ? (
-        <div className="p-8 text-center text-[#917C6F]">No transactions found.</div>
+        <div className="p-8 text-center text-muted-foreground">No transactions found.</div>
       ) : (
         <>
           <TransactionsList

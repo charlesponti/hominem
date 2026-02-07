@@ -138,7 +138,7 @@ function FilterChips({
       {chips.map((chip) => (
         <Badge
           key={chip.key}
-          className="flex items-center gap-1 pr-1 bg-muted text-foreground text-xs max-w-full"
+          className="flex items-center gap-1 pr-1 border border-foreground text-foreground text-xs max-w-full"
         >
           <span className="truncate">{chip.label}</span>
           <Button
@@ -213,7 +213,7 @@ export function AnalyticsFilters({
               </Button>
             </Dialog.Trigger>
             <Dialog.Portal>
-              <Dialog.Overlay className="fixed inset-0 z-40 bg-black/20 data-[state=open]:animate-fade-in" />
+              <Dialog.Overlay className="fixed inset-0 z-40 bg-black/20" />
               <Dialog.Content className="fixed right-0 top-0 z-50 h-full w-full sm:max-w-md overflow-y-auto bg-white shadow-lg focus:outline-none">
                 <div className="p-6">
                   <div className="mb-6">
@@ -291,7 +291,7 @@ export function AnalyticsFilters({
                   <Dialog.Close asChild>
                     <button
                       type="button"
-                      className="absolute right-4 top-4 text-muted-foreground hover:text-gray-700"
+                      className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
                       aria-label="Close"
                     >
                       <span className="sr-only">Close</span>×

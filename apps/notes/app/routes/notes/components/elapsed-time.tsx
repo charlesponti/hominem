@@ -57,7 +57,7 @@ export function ElapsedTime({ startTimeIso, status, initialDurationMs = 0 }: Ela
   }
 
   return (
-    <span className="ml-2 text-xs font-mono text-slate-500 dark:text-slate-400">
+    <span className="ml-2 text-xs font-mono text-muted-foreground">
       {formatTime(elapsedSeconds)}
     </span>
   );

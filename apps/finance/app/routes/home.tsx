@@ -1,4 +1,5 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
+import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { ArrowRight } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router';
@@ -36,7 +37,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900" />
+        <LoadingSpinner size="md" />
       </div>
     );
   }
@@ -44,7 +45,7 @@ export default function Home() {
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900" />
+        <LoadingSpinner size="md" />
       </div>
     );
   }
@@ -55,9 +56,9 @@ export default function Home() {
         <div className="max-w-4xl w-full text-center">
           {/* Hero Section */}
           <h1 className="font-serif text-4xl md:text-6xl font-bold mb-6 tracking-tighter">
-            Take control of <span className="text-green-600 italic">your money.</span>
+            Take control of <span className="text-foreground italic">your money.</span>
           </h1>
-          <h2 className="font-sans text-xl font-bold text-center mb-12 text-gray-500">
+          <h2 className="font-sans text-xl font-bold text-center mb-12 text-muted-foreground">
             Everything you need to understand, plan, and control your money
           </h2>
 
@@ -66,33 +67,33 @@ export default function Home() {
             <button
               type="button"
               onClick={handleSignIn}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="bg-primary text-primary-foreground hover:bg-[var(--color-primary-hover)] font-semibold py-4 px-8 text-lg"
             >
               Get Started Free
               <ArrowRight className="inline-block ml-2 size-5" />
             </button>
-            <p className="text-sm text-gray-500 mt-3">No credit card required</p>
+            <p className="text-sm text-muted-foreground mt-3">No credit card required</p>
           </div>
         </div>
       </main>
 
-      <footer className="py-6 border-t border-gray-200">
+      <footer className="py-6 border-t border-border">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between text-center md:text-left">
-            <p className="text-sm text-gray-600 mb-4 md:mb-0">
+            <p className="text-sm text-muted-foreground mb-4 md:mb-0">
               © {new Date().getFullYear()} Florin. All rights reserved.
             </p>
             <div className="flex gap-6 justify-center md:justify-end">
-              <a href="/about" className="text-sm text-gray-600 hover:text-blue-600">
+              <a href="/about" className="text-sm text-muted-foreground hover:text-foreground">
                 About
               </a>
-              <a href="/privacy" className="text-sm text-gray-600 hover:text-blue-600">
+              <a href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">
                 Privacy
               </a>
-              <a href="/terms" className="text-sm text-gray-600 hover:text-blue-600">
+              <a href="/terms" className="text-sm text-muted-foreground hover:text-foreground">
                 Terms
               </a>
-              <a href="/help" className="text-sm text-gray-600 hover:text-blue-600">
+              <a href="/help" className="text-sm text-muted-foreground hover:text-foreground">
                 Help
               </a>
             </div>

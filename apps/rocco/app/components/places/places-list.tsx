@@ -34,7 +34,7 @@ export default function PlacesList({ places, listId, canAdd = true }: PlacesList
         </Alert>
       )}
       {places.length === 0 ? (
-        <div className="flex flex-col gap-2 items-center justify-center rounded-2xl bg-white/30 p-6">
+        <div className="flex flex-col gap-2 items-center justify-center rounded-2xl p-6">
           <div className="flex flex-col items-center">
             <h3 className="heading-2">No places yet</h3>
             <p className="body-3 text-muted-foreground max-w-md">

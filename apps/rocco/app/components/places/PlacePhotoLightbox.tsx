@@ -52,21 +52,21 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
       onClick={onClose}
     >
       {/* Close button */}
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all hover:scale-110"
+        className="absolute top-4 right-4 z-10 p-2 rounded-full border border-border/50 backdrop-blur-sm transition-all hover:scale-110"
         aria-label="Close lightbox"
       >
         <X size={24} className="text-white" />
       </button>
 
       {/* Counter */}
-      <div className="absolute top-4 left-4 z-10 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white font-medium">
+      <div className="absolute top-4 left-4 z-10 px-4 py-2 rounded-full backdrop-blur-sm text-white font-medium">
         {activeIndex + 1} / {photos.length}
       </div>
 
@@ -79,7 +79,7 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
               e.stopPropagation();
               goToPrevious();
             }}
-            className="absolute left-4 z-10 p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all hover:scale-110"
+            className="absolute left-4 z-10 p-3 rounded-full border border-border/50 backdrop-blur-sm transition-all hover:scale-110"
             aria-label="Previous photo"
           >
             <ChevronLeft size={32} className="text-white" />
@@ -91,7 +91,7 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
               e.stopPropagation();
               goToNext();
             }}
-            className="absolute right-4 z-10 p-3 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm transition-all hover:scale-110"
+            className="absolute right-4 z-10 p-3 rounded-full border border-border/50 backdrop-blur-sm transition-all hover:scale-110"
             aria-label="Next photo"
           >
             <ChevronRight size={32} className="text-white" />

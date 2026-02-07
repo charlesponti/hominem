@@ -132,9 +132,9 @@ export function AudioRecorder({
       {/* Recording Status and Waveform */}
       {state.isRecording && (
         <div className="space-y-3">
-          <div className="flex items-center justify-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center justify-center gap-3 p-4 bg-muted border border-border rounded-lg">
             <div className="flex items-center gap-2">
-              <div className="size-3 bg-red-500 rounded-full animate-pulse" />
+              <div className="size-3 bg-foreground rounded-full" />
               <span className="text-sm font-medium">
                 {state.isPaused ? 'Recording Paused' : 'Recording'}
               </span>
@@ -214,7 +214,7 @@ export function AudioRecorder({
 
               {isTranscribing ? (
                 <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                  <Loader2 className="size-4 animate-spin" />
+                  <Loader2 className="size-4" />
                   <span className="text-sm">Transcribing audio...</span>
                 </div>
               ) : transcriptionError ? (

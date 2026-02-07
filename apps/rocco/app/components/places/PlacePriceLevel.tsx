@@ -6,7 +6,7 @@ const PlacePriceLevel = ({ priceLevel }: { priceLevel: number }) => {
         // Render price level as dollar signs
         priceLevel &&
           [...Array(priceLevel)].map((_, _i) => (
-            <span key={_} className="text-green-500 px-[4px]">
+            <span key={_} className="text-foreground px-[4px]">
               🤑
             </span>
           ))

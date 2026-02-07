@@ -22,13 +22,13 @@ interface MonthlyBreakdownProps {
 const DeltaIcon = ({ delta }: { delta: number }) => {
   if (delta > 0)
     return (
-      <span className="text-red-500 mr-1" title="Increase">
+      <span className="text-destructive mr-1" title="Increase">
         ▲
       </span>
     );
   if (delta < 0)
     return (
-      <span className="text-green-500 mr-1" title="Decrease">
+      <span className="text-foreground mr-1" title="Decrease">
         ▼
       </span>
     );
@@ -62,7 +62,7 @@ function TrendsDelta({
         <DeltaIcon delta={delta} />
         <span
           className={
-            delta > 0 ? 'text-red-600' : delta < 0 ? 'text-green-600' : 'text-muted-foreground'
+            delta > 0 ? 'text-destructive' : delta < 0 ? 'text-foreground' : 'text-muted-foreground'
           }
         >
           {formatCurrency(Math.abs(delta))}
@@ -85,7 +85,7 @@ function TrendsContent({
 }) {
   const expensesDelta = (currMonth.expenses ?? 0) - (prevMonth.expenses ?? 0);
   return (
-    <div className="rounded-lg border bg-muted/40 p-4 mb-4">
+    <div className="rounded-lg border p-4 mb-4">
       <div className="grid grid-cols-1 gap-4">
         <TrendsDelta
           label="Largest spending change"
@@ -139,8 +139,8 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel, category }: M
       {compareToPrevious && (
         <td
           className={cn('text-right py-2 font-mono', {
-            'text-red-500': item.trend?.directionExpenses === 'up',
-            'text-green-500': item.trend?.directionExpenses === 'down',
+            'text-destructive': item.trend?.directionExpenses === 'up',
+            'text-foreground': item.trend?.directionExpenses === 'down',
           })}
         >
           {item.trend
@@ -163,7 +163,7 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel, category }:
   return (
     <button
       type="button"
-      className="w-full text-left rounded-lg border p-4 shadow-sm bg-background cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+      className="w-full text-left rounded-lg border p-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
       onClick={() => navigate(monthlyAnalyticsUrl)}
       onKeyDown={(e: React.KeyboardEvent) => {
         if (e.key === 'Enter' || e.key === ' ') navigate(monthlyAnalyticsUrl);
@@ -197,8 +197,8 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel, category }:
             Spending Trend:{' '}
             <span
               className={cn('font-mono', {
-                'text-red-500': item.trend?.directionExpenses === 'up',
-                'text-green-500': item.trend?.directionExpenses === 'down',
+                'text-destructive': item.trend?.directionExpenses === 'up',
+                'text-foreground': item.trend?.directionExpenses === 'down',
               })}
             >
               {item.trend

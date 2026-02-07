@@ -28,7 +28,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {['total', 'month', 'people', 'tags'].map((type) => (
-          <div key={`skeleton-${type}`} className="h-20 bg-muted animate-pulse rounded" />
+          <div key={`skeleton-${type}`} className="h-20 border border-border rounded-md" />
         ))}
       </div>
     );

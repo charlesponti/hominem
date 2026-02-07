@@ -184,7 +184,7 @@ export function PeopleMultiSelect({
             <CommandList>
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="size-4 animate-spin" />
+                  <Loader2 className="size-4" />
                 </div>
               ) : (
                 <>
@@ -197,7 +197,7 @@ export function PeopleMultiSelect({
                         disabled={isCreating}
                       >
                         {isCreating ? (
-                          <Loader2 className="mr-2 size-4 animate-spin" />
+                          <Loader2 className="mr-2 size-4" />
                         ) : (
                           <Plus className="mr-2 size-4" />
                         )}
@@ -235,7 +235,7 @@ export function PeopleMultiSelect({
                         disabled={isCreating}
                       >
                         {isCreating ? (
-                          <Loader2 className="mr-2 size-4 animate-spin" />
+                          <Loader2 className="mr-2 size-4" />
                         ) : (
                           <Plus className="mr-2 size-4" />
                         )}

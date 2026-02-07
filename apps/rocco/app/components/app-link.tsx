@@ -37,8 +37,8 @@ const AppLink = ({
       to={to}
       {...props}
       className={cn(
-        'text-gray-900 cursor-pointer',
-        isActive ? 'bg-indigo-100 text-indigo-700' : null,
+        'text-foreground cursor-pointer',
+        isActive ? 'bg-accent text-foreground' : null,
         className,
       )}
     >

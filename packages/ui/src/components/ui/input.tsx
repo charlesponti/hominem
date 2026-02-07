@@ -13,11 +13,11 @@ function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
         // Spacing
         'px-3 py-1',
         // Border & background
-        'bg-input border-border rounded-md border',
+        'bg-input border-border border',
         // Typography
         'text-base md:text-sm',
         // Visual effects
-        'shadow-xs transition-[color,box-shadow] outline-none',
+        'outline-none',
         // File input styles
         'file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground',
         // Placeholder styles
@@ -27,9 +27,9 @@ function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
         // Disabled states
         'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
         // Focus states
-        'focus-visible:border focus-visible:border-indigo-600',
+        'focus-visible:border focus-visible:border-foreground',
         // Invalid states
-        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+        'aria-invalid:border-destructive',
         className,
       )}
       {...props}

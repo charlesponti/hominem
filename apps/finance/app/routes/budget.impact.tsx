@@ -1,5 +1,7 @@
+import { CHART_COLORS } from '@hominem/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import { Label } from '@hominem/ui/components/ui/label';
+import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { RadioGroup, RadioGroupItem } from '@hominem/ui/components/ui/radio-group';
 import {
   Select,
@@ -239,8 +241,8 @@ const BudgetImpactCalculator = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full size-8 border-b-2 border-gray-900 mx-auto" />
-          <p className="mt-2 text-sm text-gray-600">Loading your financial data...</p>
+          <LoadingSpinner size="md" className="mx-auto" />
+          <p className="mt-2 text-sm text-muted-foreground">Loading your financial data...</p>
         </div>
       </div>
     );
@@ -249,11 +251,11 @@ const BudgetImpactCalculator = () => {
   if (historicalError || currentError) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Data</h3>
-        <p className="text-gray-600 mb-4">
+        <h3 className="text-lg font-semibold text-foreground mb-2">Error Loading Data</h3>
+        <p className="text-muted-foreground mb-4">
           {historicalError?.message || currentError || 'Unable to load your financial data'}
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Please ensure you have imported transactions to use this calculator.
         </p>
       </div>
@@ -263,11 +265,11 @@ const BudgetImpactCalculator = () => {
   if (!financialMetrics.hasEnoughData) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Not Enough Data</h3>
-        <p className="text-gray-600 mb-4">
+        <h3 className="text-lg font-semibold text-foreground mb-2">Not Enough Data</h3>
+        <p className="text-muted-foreground mb-4">
           We need at least 2 months of transaction data to provide accurate impact analysis.
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           You currently have {financialMetrics.dataMonths} month
           {financialMetrics.dataMonths !== 1 ? 's' : ''} of data.
         </p>
@@ -297,19 +299,19 @@ const BudgetImpactCalculator = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Average Monthly Income</p>
-              <p className="text-lg font-semibold text-green-600">
+              <p className="text-lg font-semibold text-foreground">
                 {formatCurrency(financialMetrics.averageMonthlyIncome)}
               </p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Average Monthly Expenses</p>
-              <p className="text-lg font-semibold text-red-600">
+              <p className="text-lg font-semibold text-destructive">
                 {formatCurrency(financialMetrics.averageMonthlyExpenses)}
               </p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Average Monthly Savings</p>
-              <p className="text-lg font-semibold text-blue-600">
+              <p className="text-lg font-semibold text-foreground">
                 {formatCurrency(financialMetrics.averageMonthlySavings)}
               </p>
             </div>
@@ -405,7 +407,7 @@ const BudgetImpactCalculator = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 bg-slate-100 rounded-lg">
+              <div className="p-4 bg-muted rounded-lg">
                 <h3 className="font-semibold mb-2 flex items-center gap-2">
                   <TrendingUp className="size-4" />
                   Impact Summary
@@ -424,7 +426,7 @@ const BudgetImpactCalculator = () => {
                   <p>
                     New Savings Rate:{' '}
                     <span
-                      className={`font-semibold ${newSavingsRate >= 0 ? 'text-green-600' : 'text-red-600'}`}
+                      className={`font-semibold ${newSavingsRate >= 0 ? 'text-foreground' : 'text-destructive'}`}
                     >
                       {newSavingsRate.toFixed(1)}%
                     </span>
@@ -450,10 +452,10 @@ const BudgetImpactCalculator = () => {
                       key={`${insight.type}-${insight.message}`}
                       className={`p-3 rounded-lg border ${
                         insight.type === 'danger'
-                          ? 'bg-red-50 border-red-200 text-red-800'
+                          ? 'bg-destructive/10 border-destructive/50 text-destructive'
                           : insight.type === 'warning'
-                            ? 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                            : 'bg-blue-50 border-blue-200 text-blue-800'
+                            ? 'bg-warning-subtle border-warning-subtle text-warning'
+                            : 'bg-muted border-border text-foreground'
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -477,15 +479,15 @@ const BudgetImpactCalculator = () => {
                 <Area
                   type="monotone"
                   dataKey="baseline"
-                  stroke="#8884d8"
-                  fill="#8884d8"
+                  stroke={CHART_COLORS.chart2}
+                  fill={CHART_COLORS.chart2}
                   name="Without Purchase"
                 />
                 <Area
                   type="monotone"
                   dataKey="withPurchase"
-                  stroke="#82ca9d"
-                  fill="#82ca9d"
+                  stroke={CHART_COLORS.positive}
+                  fill={CHART_COLORS.positive}
                   name="With Purchase"
                 />
               </AreaChart>
