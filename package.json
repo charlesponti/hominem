@@ -30,7 +30,9 @@
     "clean": "turbo run clean",
     "db:migrate": "turbo run db:migrate",
     "dev": "turbo dev --ui tui",
-    "lint": "turbo run lint",
+    "lint": "bun run lint:styles && turbo run lint",
+    "lint:styles": "bunx stylelint \"{apps,packages,services}/**/*.css\" --config tools/stylelint-config-void.cjs",
+    "lint:copy": "bun tools/void-copy-lint.mjs",
     "format": "turbo run format",
     "validate-db-imports": "node scripts/validate-db-imports.js",
     "precommit": "bunx lefthook run pre-commit",
@@ -73,7 +75,8 @@
     "turbo": "^2.7.4",
     "typescript": "5.9.3",
     "vite-tsconfig-paths": "6.0.3",
-    "vitest": "4.0.16"
+    "vitest": "4.0.16",
+    "stylelint": "^16.9.0"
   },
   "overrides": {
     "@hono/zod-validator": "0.7.6",

@@ -29,6 +29,7 @@ import type {
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
+import { endTrace, startTrace } from '~/lib/performance/trace';
 import { queryKeys } from '~/lib/query-keys';
 
 /**
@@ -104,23 +105,38 @@ export const useDeletePlace = (
  */
 export const usePlacesAutocomplete = (
   query: string | undefined,
-  latitude: number | undefined,
-  longitude: number | undefined,
+  options: {
+    latitude?: number;
+    longitude?: number;
+    radiusMeters?: number;
+    sessionToken?: string;
+  } = {},
 ) =>
   useHonoQuery<PlaceAutocompleteOutput>(
-    queryKeys.places.autocomplete(query || '', latitude, longitude),
+    queryKeys.places.autocomplete(
+      query || '',
+      options.latitude,
+      options.longitude,
+      options.sessionToken,
+    ),
     async (client: HonoClient) => {
       if (!query || query.length < 2) return [] as unknown as PlaceAutocompleteOutput;
       const res = await client.api.places.autocomplete.$post({
         json: {
           query,
-          location: latitude && longitude ? { lat: latitude, lng: longitude } : undefined,
+          location:
+            typeof options.latitude === 'number' && typeof options.longitude === 'number'
+              ? { lat: options.latitude, lng: options.longitude }
+              : undefined,
+          radius: options.radiusMeters,
+          sessionToken: options.sessionToken,
         },
       });
       return res.json() as Promise<PlaceAutocompleteOutput>;
     },
     {
       enabled: !!query && query.length >= 2,
+      staleTime: 30_000,
     },
   );
 
@@ -235,11 +251,28 @@ export const useNearbyPlaces = (
   useHonoQuery<PlaceGetNearbyFromListsOutput>(
     queryKeys.places.nearby(latitude, longitude, radiusMeters),
     async (client: HonoClient) => {
-      if (latitude === undefined || longitude === undefined) return [];
-      const res = await client.api.places.nearby.$post({
-        json: { location: { lat: latitude, lng: longitude }, radius: radiusMeters }, // Corrected structure
+      const trace = startTrace('places.nearby', {
+        latitude,
+        longitude,
+        radiusMeters,
       });
-      return res.json();
+      let responsePayload: PlaceGetNearbyFromListsOutput | null = null;
+      try {
+        if (latitude === undefined || longitude === undefined) {
+          return [] as PlaceGetNearbyFromListsOutput;
+        }
+
+        const res = await client.api.places.nearby.$post({
+          json: { location: { lat: latitude, lng: longitude }, radius: radiusMeters },
+        });
+        const payload = await res.json();
+        responsePayload = payload;
+        return payload;
+      } finally {
+        endTrace(trace, {
+          resultSize: Array.isArray(responsePayload) ? responsePayload.length : 0,
+        });
+      }
     },
     {
       enabled: latitude !== undefined && longitude !== undefined,

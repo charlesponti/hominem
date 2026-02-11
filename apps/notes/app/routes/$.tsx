@@ -41,7 +41,7 @@ export default function NotFoundPage() {
 
         {/* Helpful Links */}
         <div className="mt-12 pt-8 border-t border-border/50 w-full">
-          <p className="text-lg text-muted-foreground mb-4 font-extralight font-serif tracking-tight italic">
+          <p className="text-lg text-muted-foreground mb-4 font-extralight  tracking-tight italic">
             Quick Links
           </p>
           <div className="flex flex-wrap justify-center gap-8 text-sm">

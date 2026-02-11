@@ -136,7 +136,7 @@ export default function TransactionImportPage() {
       } else {
         toast({
           title: 'Invalid files',
-          description: 'Please select only CSV files',
+          description: 'Select CSV files only',
           variant: 'destructive',
         });
       }
@@ -222,25 +222,25 @@ export default function TransactionImportPage() {
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 {statusCounts.selected > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="size-2 bg-muted-foreground rounded-full" />
+                    <div className="size-2 bg-muted-foreground " />
                     {statusCounts.selected} selected
                   </span>
                 )}
                 {statusCounts.processing > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="size-2 bg-emphasis-high rounded-full" />
+                    <div className="size-2 bg-emphasis-high " />
                     {statusCounts.processing} processing
                   </span>
                 )}
                 {statusCounts.queued > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="size-2 bg-warning rounded-full" />
+                    <div className="size-2 bg-warning " />
                     {statusCounts.queued} queued
                   </span>
                 )}
                 {statusCounts.completed > 0 && (
                   <span className="flex items-center gap-1">
-                    <div className="size-2 bg-emphasis-highest rounded-full" />
+                    <div className="size-2 bg-emphasis-highest " />
                     {statusCounts.completed} completed
                   </span>
                 )}
@@ -294,7 +294,7 @@ const FileImport = memo(function FileImport({
     if (!isConnected) {
       toast({
         title: 'Connection required',
-        description: 'Please wait for the connection to be established',
+        description: 'Wait for connection to establish',
         variant: 'destructive',
       });
       return;
@@ -322,20 +322,20 @@ const FileImport = memo(function FileImport({
   // Memoize status indicator to prevent recreation
   const statusIndicator = useMemo(() => {
     if (!status) {
-      return <div className="size-3 bg-muted-foreground rounded-full" />;
+      return <div className="size-3 bg-muted-foreground " />;
     }
 
     const indicators = {
-      uploading: <div className="size-3 bg-emphasis-high rounded-full" />,
-      processing: <div className="size-3 bg-emphasis-medium rounded-full" />,
-      queued: <div className="size-3 bg-warning rounded-full" />,
-      done: <div className="size-3 bg-emphasis-highest rounded-full" />,
-      error: <div className="size-3 bg-destructive rounded-full" />,
+      uploading: <div className="size-3 bg-emphasis-high " />,
+      processing: <div className="size-3 bg-emphasis-medium " />,
+      queued: <div className="size-3 bg-warning " />,
+      done: <div className="size-3 bg-emphasis-highest " />,
+      error: <div className="size-3 bg-destructive " />,
     };
 
     return (
       indicators[status.status as keyof typeof indicators] || (
-        <div className="size-3 bg-muted-foreground rounded-full" />
+        <div className="size-3 bg-muted-foreground " />
       )
     );
   }, [status]);
@@ -353,9 +353,9 @@ const FileImport = memo(function FileImport({
   const itemClassName = useMemo(
     () =>
       cn(
-        'p-4 rounded-lg',
+        'p-4 ',
         'border border-muted/50',
-        'shadow-sm hover:shadow-md',
+        '',
         // Add subtle border color based on status
         !status && 'border-l-4 border-l-muted-foreground',
         status?.status === 'processing' && 'border-l-4 border-l-white/50',

@@ -39,7 +39,7 @@ export function AnalyticsStatisticsSummary({
     return (
       <Card>
         <CardContent className="pt-6">
-          <div className="text-center font-normal text-base text-neutral-700">
+          <div className="text-center font-normal text-base text-secondary-foreground">
             Statistics are disabled. Enable them in filters to see summary data.
           </div>
         </CardContent>
@@ -75,7 +75,7 @@ export function AnalyticsStatisticsSummary({
       <Card>
         <CardContent className="pt-6">
           <div className="text-center text-destructive">
-            {error.message || 'Unable to load statistics. Please try again later.'}
+            {error.message || 'Unable to load statistics. Retry later.'}
           </div>
         </CardContent>
       </Card>
@@ -87,7 +87,7 @@ export function AnalyticsStatisticsSummary({
       {stats ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-neutral-900">
+            <CardTitle className="text-lg font-semibold text-secondary-foreground">
               Financial Summary
             </CardTitle>
           </CardHeader>
@@ -96,7 +96,7 @@ export function AnalyticsStatisticsSummary({
               {/* Total Income Row */}
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-neutral-900">Total Income</div>
+                  <div className="text-sm font-medium text-secondary-foreground">Total Income</div>
                   <div className="text-xs text-muted-foreground">
                     For period {stats.periodCovered}
                   </div>
@@ -109,7 +109,7 @@ export function AnalyticsStatisticsSummary({
               {/* Total Expenses Row */}
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-neutral-900">Total Expenses</div>
+                  <div className="text-sm font-medium text-secondary-foreground">Total Expenses</div>
                   <div className="text-xs text-muted-foreground">
                     For period {stats.periodCovered}
                   </div>
@@ -122,7 +122,7 @@ export function AnalyticsStatisticsSummary({
               {/* Average Income Row */}
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-neutral-900">Average Income</div>
+                  <div className="text-sm font-medium text-secondary-foreground">Average Income</div>
                   <div className="text-xs text-muted-foreground">Over {stats.count} months</div>
                 </div>
                 <div className="text-xl font-bold text-black font-mono">
@@ -133,7 +133,7 @@ export function AnalyticsStatisticsSummary({
               {/* Average Expenses Row */}
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-neutral-900">Average Expenses</div>
+                  <div className="text-sm font-medium text-secondary-foreground">Average Expenses</div>
                   <div className="text-xs text-muted-foreground">Over {stats.count} months</div>
                 </div>
                 <div className="text-xl font-bold text-destructive font-mono">
@@ -146,7 +146,7 @@ export function AnalyticsStatisticsSummary({
       ) : (
         <Card>
           <CardContent className="pt-6">
-            <div className="text-center font-normal text-base text-neutral-700">
+            <div className="text-center font-normal text-base text-secondary-foreground">
               No statistics available. Try enabling stats in filters.
             </div>
           </CardContent>

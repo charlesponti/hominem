@@ -29,9 +29,9 @@ export default function ListSentInvites() {
         {isLoading && <Loading />}
         {invites?.length === 0 && 'Your invites will appear here.'}
         {invites && invites.length > 0 && (
-          <ul className="space-y-2">
+          <ul className="space-y-4">
             {invites.map((invite: any) => (
-              <li key={invite.listId} className="card shadow-md p-4">
+              <li key={invite.listId} className="border p-4">
                 <p>
                   <span className="font-semibold mr-2">List ID:</span>
                   {invite.listId}

@@ -31,7 +31,7 @@ export function ChatActions({
         size="sm"
         onClick={onWebSearch}
         disabled={!hasInput || isSearching}
-        title="Search the web"
+        title="WEB SEARCH"
       >
         {isSearching ? <Loader2 className="size-4" /> : <Globe className="size-4" />}
       </Button>
@@ -41,7 +41,7 @@ export function ChatActions({
         size="sm"
         onClick={onFileUpload}
         disabled={isLoading}
-        title="Attach files"
+        title="ATTACH FILES"
       >
         <Paperclip className="size-4" />
       </Button>
@@ -50,7 +50,7 @@ export function ChatActions({
         variant={isVoiceMode ? 'default' : 'outline'}
         size="sm"
         onClick={onToggleVoiceMode}
-        title="Toggle voice mode"
+        title="VOICE MODE"
       >
         <Volume2 className="size-4" />
       </Button>
@@ -60,7 +60,7 @@ export function ChatActions({
         size="sm"
         onClick={onAudioRecord}
         disabled={isLoading}
-        title="Record audio"
+        title="RECORD AUDIO"
       >
         <Mic className="size-4" />
       </Button>
@@ -71,7 +71,7 @@ export function ChatActions({
         size="sm"
         onClick={onClearChat}
         disabled={isLoading}
-        className="text-xs text-muted-foreground hover:text-foreground"
+        className="text-xs text-muted-foreground"
       >
         <Eraser className="size-3 mr-1" />
       </Button>

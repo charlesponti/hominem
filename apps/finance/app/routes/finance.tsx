@@ -86,7 +86,7 @@ export default function TransactionsPage() {
         <div className="flex justify-center py-10">
           <div className="space-y-4 w-full">
             {[1, 2, 3, 4, 5].map((val) => (
-              <div key={val} className="h-24 bg-muted rounded-md w-full md:h-12" />
+              <div key={val} className="h-24 bg-muted w-full md:h-12" />
             ))}
           </div>
         </div>

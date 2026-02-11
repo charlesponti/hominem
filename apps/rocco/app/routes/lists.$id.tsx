@@ -131,7 +131,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
                   />
                 ))}
                 {collaborators.length > 5 && (
-                  <div className="flex size-6 items-center justify-center rounded-full border-2 border-border text-xs">
+                  <div className="flex size-6 items-center justify-center border-2 border-border text-xs">
                     +{collaborators.length - 5}
                   </div>
                 )}

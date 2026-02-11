@@ -33,13 +33,13 @@ export const FileUploadStatus = memo(function FileUploadStatus({
               progress={progress}
               className={cn(
                 'h-2 bg-muted',
-                'before:bg-gradient-to-r before:from-[var(--color-emphasis-high)] before:to-[var(--color-emphasis-medium)]',
+                'before:bg-emphasis-high',
               )}
               aria-label={`${Math.round(progress)}% complete`}
             />
           ) : (
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[var(--color-emphasis-high)] to-[var(--color-emphasis-medium)] animate-progress-indeterminate" />
+            <div className="h-2 bg-muted overflow-hidden">
+              <div className="h-full bg-emphasis-high void-anim-breezy-progress" />
             </div>
           )}
         </div>
@@ -56,7 +56,7 @@ export const FileUploadStatus = memo(function FileUploadStatus({
         <div className="w-full">
           <ProgressBar
             progress={0}
-            className="h-2 bg-warning-subtle before:bg-gradient-to-r before:from-warning before:to-warning/70"
+            className="h-2 bg-warning-subtle before:bg-warning"
           />
         </div>
       </output>
@@ -69,7 +69,7 @@ export const FileUploadStatus = memo(function FileUploadStatus({
         <div className="w-full">
           <ProgressBar
             progress={100}
-            className="h-2 bg-emphasis-minimal before:bg-gradient-to-r before:from-[var(--color-emphasis-highest)] before:to-[var(--color-emphasis-high)]"
+            className="h-2 bg-emphasis-minimal before:bg-emphasis-high"
           />
         </div>
         {stats && <ProcessingStats stats={stats} />}
@@ -80,7 +80,7 @@ export const FileUploadStatus = memo(function FileUploadStatus({
   if (status === 'error') {
     return (
       <output className="mt-2" role="alert">
-        <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 text-destructive">
+        <div className="flex items-start gap-2 p-3 bg-destructive/10 text-destructive">
           <XIcon className="w-5 h-5 mt-0.5 flex-shrink-0" aria-hidden="true" />
           <span className="text-sm">{error}</span>
         </div>
@@ -121,7 +121,7 @@ const ProcessingStats = memo(function ProcessingStats({ stats }: { stats: FileSt
         <div className="py-2">
           <dt className="text-sm font-medium text-foreground">Errors</dt>
           <dd className="mt-1">
-            <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-destructive/10 text-destructive">
+            <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-destructive/10 text-destructive">
               {stats.errors.length} error{stats.errors.length > 1 ? 's' : ''}
             </span>
           </dd>

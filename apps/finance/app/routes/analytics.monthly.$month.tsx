@@ -58,7 +58,7 @@ export default function MonthlyAnalyticsPage() {
       )}
 
       {error ? (
-        <div className="text-destructive p-4 border border-destructive/50 rounded bg-destructive/10">
+        <div className="text-destructive p-4 border border-destructive/50 bg-destructive/10">
           <p>Error loading monthly statistics</p>
         </div>
       ) : null}

@@ -17,7 +17,7 @@ export default function NotesPage() {
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
 
   const {
-    data: notesData,
+    data: notes,
     isLoading,
     refetch,
   } = useNotesList({
@@ -27,7 +27,7 @@ export default function NotesPage() {
     limit: 100,
   });
 
-  const allContentItems = (Array.isArray(notesData) ? notesData : []) as Note[];
+  const allContentItems = (notes ?? []) as Note[];
   const updateItem = useUpdateNote();
   const deleteItem = useDeleteNote();
 
@@ -107,7 +107,7 @@ export default function NotesPage() {
         <div ref={feedContainerRef} className="h-full overflow-y-auto">
           <div className="px-4 py-4 space-y-4">
             {/* Create form */}
-            <div className="border border-border rounded-lg p-4">
+            <div className="border border-border p-4">
               <InlineCreateForm
                 isVisible={formMode === 'create'}
                 onSuccess={handleFormSuccess}
@@ -119,7 +119,7 @@ export default function NotesPage() {
 
             {/* Edit form (shown when editing) */}
             {formMode === 'edit' && itemToEdit && (
-              <div className="border border-border rounded-lg p-4">
+              <div className="border border-border p-4">
                 <InlineCreateForm
                   isVisible={true}
                   onSuccess={handleFormSuccess}
@@ -139,7 +139,7 @@ export default function NotesPage() {
 
             {!isLoading && allContentItems.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-24 h-24 border border-dashed border-border rounded-3xl flex items-center justify-center mb-6">
+                <div className="w-24 h-24 border border-dashed border-border flex items-center justify-center mb-6">
                   <Sparkles className="w-12 h-12 text-foreground" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">No notes yet</h3>
@@ -151,7 +151,7 @@ export default function NotesPage() {
             )}
 
             {allContentItems.length > 0 && (
-              <div className="border border-border rounded-lg overflow-hidden">
+              <div className="border border-border overflow-hidden">
                 {allContentItems.map((item: Note) => (
                   <NoteFeedItem
                     key={item.id}

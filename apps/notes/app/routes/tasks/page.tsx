@@ -60,7 +60,7 @@ export default function TasksPage() {
 
             {!isLoading && tasks.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-24 h-24 border border-dashed border-border rounded-3xl flex items-center justify-center mb-6">
+                <div className="w-24 h-24 border border-dashed border-border  flex items-center justify-center mb-6">
                   <ClipboardList className="w-12 h-12 text-foreground" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">No tasks yet</h3>
@@ -74,7 +74,7 @@ export default function TasksPage() {
               <>
                 {/* Incomplete tasks */}
                 {incompleteTasks.length > 0 && (
-                  <div className="rounded-lg border border-border overflow-hidden">
+                  <div className=" border border-border overflow-hidden">
                     <div className="px-4 py-2 bg-muted border-b border-border">
                       <h2 className="text-sm font-semibold text-foreground">
                         To Do ({incompleteTasks.length})
@@ -93,7 +93,7 @@ export default function TasksPage() {
 
                 {/* Completed tasks */}
                 {completedTasks.length > 0 && (
-                  <div className="rounded-lg border border-border overflow-hidden">
+                  <div className=" border border-border overflow-hidden">
                     <div className="px-4 py-2 bg-muted border-b border-border">
                       <h2 className="text-sm font-semibold text-foreground">
                         Completed ({completedTasks.length})

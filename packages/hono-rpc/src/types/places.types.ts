@@ -196,6 +196,8 @@ export type PlaceAutocompleteInput = {
   location?: { lat: number; lng: number };
   radius?: number;
   types?: string[];
+  sessionToken?: string;
+  includeQueryPredictions?: boolean;
 };
 
 export const placeAutocompleteSchema = z.object({
@@ -208,6 +210,8 @@ export const placeAutocompleteSchema = z.object({
     .optional(),
   radius: z.number().optional(),
   types: z.array(z.string()).optional(),
+  sessionToken: z.string().optional(),
+  includeQueryPredictions: z.boolean().optional(),
 });
 
 export type PlaceAutocompleteOutput = Array<{

@@ -43,7 +43,7 @@ export function PlaidAccountStatus({
     } catch {
       toast({
         title: 'Sync Failed',
-        description: 'Failed to start sync. Please try again.',
+        description: 'Sync start failed. Retry.',
         variant: 'destructive',
       });
     }
@@ -63,7 +63,7 @@ export function PlaidAccountStatus({
     } catch {
       toast({
         title: 'Removal Failed',
-        description: 'Failed to remove connection. Please try again.',
+        description: 'Remove failed. Retry.',
         variant: 'destructive',
       });
     }
@@ -72,7 +72,7 @@ export function PlaidAccountStatus({
   const plaidAccount = account;
 
   return (
-    <div className="p-4 bg-muted border border-border rounded-lg">
+    <div className="p-4 bg-muted border border-border">
       <div className="flex items-center justify-between mb-3">
         <div className="font-medium text-foreground">Plaid Connection</div>
         <PlaidStatusBadge status={plaidAccount.plaidItemStatus ?? null} />

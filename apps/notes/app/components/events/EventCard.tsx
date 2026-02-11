@@ -44,7 +44,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
 
   return (
     <div
-      className="grid grid-cols-[1fr_80px_50px] md:grid-cols-[100px_80px_1fr_120px_100px_50px] lg:grid-cols-[120px_100px_1fr_150px_120px_60px] gap-0 p-0 min-h-[60px] items-center group cursor-pointer border-b border-border"
+      className="grid grid-cols-[1fr_80px_50px] md:grid-cols-[100px_80px_1fr_120px_100px_50px] lg:grid-cols-[120px_100px_1fr_150px_120px_60px] gap-0 p-0 min-h-[60px] items-center group border-b border-border cursor-crosshair"
       onClick={handleEditEvent}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -63,7 +63,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
 
       {/* Type Column */}
       <div className="event-table-cell event-col-type">
-        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium transition-transform duration-150 group-hover:scale-105">
+        <span className="inline-flex items-center px-2 py-1  text-xs font-medium">
           Event
         </span>
       </div>
@@ -88,7 +88,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
               {tags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-medium border border-muted-foreground/50 text-muted-foreground"
+                  className="inline-flex items-center px-1.5 py-0.5  text-xs font-medium border border-muted-foreground/50 text-muted-foreground"
                 >
                   {tag}
                 </span>

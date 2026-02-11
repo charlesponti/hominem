@@ -287,7 +287,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
               <button
                 type="button"
                 onClick={handleToggleEventForm}
-                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold rounded-lg transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 bg-primary text-primary-foreground"
+                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold bg-primary text-primary-foreground void-anim-breezy"
               >
                 <span className="text-lg">+</span>
                 <span>{showAddForm ? 'Cancel' : 'Add Event'}</span>
@@ -319,14 +319,14 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
         {/* Event Form - Show/hide with smooth transition */}
         {showAddForm && (
           <div className="mb-8">
-            <div className="rounded-xl p-6 shadow-sm bg-card border border-border">
+            <div className="p-6 bg-card border border-border">
               <EventForm showAddForm={showAddForm} onToggleForm={handleToggleEventForm} />
             </div>
           </div>
         )}
 
         {/* Filters and Secondary Actions */}
-        <div className="mb-8 p-5 rounded-xl bg-card">
+        <div className="mb-8 p-5  bg-card">
           <div className="flex flex-col gap-4">
             <div className="flex items-end gap-4">
               <div className="flex items-end gap-3 flex-1">
@@ -382,7 +382,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
               <button
                 type="button"
                 onClick={() => navigate('/events/people')}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 whitespace-nowrap border border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-foreground"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium  whitespace-nowrap border border-muted-foreground/30 text-muted-foreground hover:text-foreground hover:border-foreground"
               >
                 <span>👥</span>
                 <span>Manage People</span>

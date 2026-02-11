@@ -37,63 +37,51 @@ function getErrorDetails(error: unknown): ErrorDetails {
       case 404:
         return {
           message: 'Page Not Found',
-          details: "The page you're looking for doesn't exist or has been moved.",
+          details: 'Page not found.',
           icon: <AlertCircle className="size-20 sm:size-24" />,
           iconColor: 'text-foreground/70',
-          suggestions: ['Check the URL for typos', 'Return to the home page', 'Browse your lists'],
+          suggestions: ['Check URL', 'Go home', 'Open lists'],
         };
       case 401:
         return {
           message: 'Authentication Required',
-          details: 'You need to sign in to access this page.',
+          details: 'Sign in required.',
           icon: <LogIn className="size-20 sm:size-24" />,
           iconColor: 'text-[var(--color-warning)]/70',
-          suggestions: ['Sign in with your Google account', 'Contact support if you need help'],
+          suggestions: ['Sign in with Google', 'Contact support'],
           showAuth: true,
         };
       case 403:
         return {
           message: 'Access Denied',
-          details: "You don't have permission to access this resource.",
+          details: 'Access denied.',
           icon: <ShieldAlert className="size-20 sm:size-24" />,
           iconColor: 'text-destructive/70',
-          suggestions: [
-            'Check if you have the right permissions',
-            'Contact the list owner for access',
-            'Return to your lists',
-          ],
+          suggestions: ['Verify permissions', 'Ask owner for access', 'Return to lists'],
         };
       case 500:
         return {
           message: 'Server Error',
-          details: "Something went wrong on our end. We're working to fix it.",
+          details: 'Server error.',
           icon: <ServerCrash className="size-20 sm:size-24" />,
           iconColor: 'text-destructive/70',
-          suggestions: [
-            'Try refreshing the page',
-            'Wait a few minutes and try again',
-            'Contact support if the issue persists',
-          ],
+          suggestions: ['Refresh', 'Retry later', 'Contact support'],
         };
       case 503:
         return {
           message: 'Service Unavailable',
-          details: 'The service is temporarily unavailable. Please try again later.',
+          details: 'Service unavailable.',
           icon: <WifiOff className="size-20 sm:size-24" />,
           iconColor: 'text-[var(--color-warning)]/70',
-          suggestions: [
-            'Check your internet connection',
-            'Try again in a few minutes',
-            'Check our status page',
-          ],
+          suggestions: ['Check connection', 'Retry', 'Check status page'],
         };
       default:
         return {
           message: `Error ${error.status}`,
-          details: error.statusText || 'An unexpected error occurred.',
+          details: error.statusText || 'Unexpected error.',
           icon: <AlertCircle className="size-20 sm:size-24" />,
           iconColor: 'text-destructive/70',
-          suggestions: ['Try refreshing the page', 'Go back to the previous page', 'Return home'],
+          suggestions: ['Refresh', 'Go back', 'Home'],
         };
     }
   }
@@ -104,16 +92,10 @@ function getErrorDetails(error: unknown): ErrorDetails {
     return {
       message: 'Something Went Wrong',
       details:
-        import.meta.env.DEV || error.message.length < 100
-          ? error.message
-          : 'An unexpected error occurred. Please try again.',
+        import.meta.env.DEV || error.message.length < 100 ? error.message : 'Unexpected error.',
       icon: <Bug className="size-20 sm:size-24" />,
       iconColor: 'text-muted-foreground',
-      suggestions: [
-        'Try refreshing the page',
-        'Clear your browser cache',
-        'Contact support if the issue persists',
-      ],
+      suggestions: ['Refresh', 'Clear cache', 'Contact support'],
     };
   }
 
@@ -121,10 +103,10 @@ function getErrorDetails(error: unknown): ErrorDetails {
   console.error('ErrorBoundary caught an error:', error);
   return {
     message: 'Unexpected Error',
-    details: 'An unexpected error occurred. Please try again.',
+    details: 'Unexpected error.',
     icon: <AlertCircle className="size-20 sm:size-24" />,
     iconColor: 'text-muted-foreground/70',
-    suggestions: ['Try refreshing the page', 'Return to the home page', 'Contact support'],
+    suggestions: ['Refresh', 'Home', 'Contact support'],
   };
 }
 

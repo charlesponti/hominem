@@ -1,7 +1,7 @@
 import type { HonoClient } from '@hominem/hono-client';
 import type {
+  Note,
   NotesListInput,
-  NotesListOutput,
   NotesGetOutput,
   NotesCreateInput,
   NotesCreateOutput,
@@ -25,13 +25,14 @@ export function useNotesList(options: NotesListInput = {}) {
   if (options.limit) queryParams.limit = String(options.limit);
   if (options.offset) queryParams.offset = String(options.offset);
 
-  return useHonoQuery<NotesListOutput>(
+  return useHonoQuery<Note[]>(
     ['notes', 'list', options],
     async (client: HonoClient) => {
       const res = await client.api.notes.$get({
         query: queryParams,
       });
-      return res.json();
+      const data = await res.json();
+      return Array.isArray(data?.notes) ? data.notes : [];
     },
     {
       staleTime: 1000 * 60 * 1, // 1 minute

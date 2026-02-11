@@ -85,7 +85,7 @@ function TrendsContent({
 }) {
   const expensesDelta = (currMonth.expenses ?? 0) - (prevMonth.expenses ?? 0);
   return (
-    <div className="rounded-lg border p-4 mb-4">
+    <div className="border p-4 mb-4">
       <div className="grid grid-cols-1 gap-4">
         <TrendsDelta
           label="Largest spending change"
@@ -117,7 +117,7 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel, category }: M
 
   return (
     <tr
-      className="border-b hover:bg-muted/50 cursor-pointer"
+      className="border-b hover:bg-muted/50 "
       onClick={() => navigate(monthlyAnalyticsUrl)}
       tabIndex={0}
       onKeyDown={(e: React.KeyboardEvent) => {
@@ -163,7 +163,7 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel, category }:
   return (
     <button
       type="button"
-      className="w-full text-left rounded-lg border p-4 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+      className="w-full text-left  border p-4  focus:outline-none focus:ring-2 focus:ring-primary"
       onClick={() => navigate(monthlyAnalyticsUrl)}
       onKeyDown={(e: React.KeyboardEvent) => {
         if (e.key === 'Enter' || e.key === ' ') navigate(monthlyAnalyticsUrl);

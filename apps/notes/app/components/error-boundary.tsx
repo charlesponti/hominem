@@ -39,11 +39,11 @@ export class ErrorBoundary extends Component<Props, State> {
           <AlertTriangle className="size-12 text-destructive mb-4" />
           <h2 className="text-lg font-semibold mb-2">Something went wrong</h2>
           <p className="text-muted-foreground mb-4 max-w-md">
-            An unexpected error occurred. Please try refreshing the page.
+            Unexpected error. Reload to continue.
           </p>
           <Button onClick={() => window.location.reload()} className="flex items-center gap-2">
             <RefreshCw className="size-4" />
-            Refresh Page
+            RELOAD
           </Button>
         </div>
       );

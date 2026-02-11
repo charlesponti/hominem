@@ -59,7 +59,8 @@ export function NoteCard({ note, onEdit, onDelete, onRemoveTag, className = '' }
 
   return (
     <Card
-      className={`h-full flex flex-col overflow-hidden bg-card shadow-md hover:shadow-lg transition-shadow duration-200 rounded-xl border border-border ${className}`}
+      metadata={`CHAR_CT: ${note.content.length}`}
+      className={`h-full flex flex-col overflow-hidden bg-card border border-border ${className}`}
     >
       <CardContent className="p-5 flex flex-col flex-1 min-h-0">
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -75,14 +76,14 @@ export function NoteCard({ note, onEdit, onDelete, onRemoveTag, className = '' }
                 <Badge
                   key={tag.value}
                   variant="secondary"
-                  className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium border border-foreground text-foreground"
+                  className="flex items-center gap-1 px-2.5 py-0.5 text-xs font-medium border border-foreground text-foreground"
                 >
                   {tag.value}
                   {!extractHashtags.includes(tag.value) && (
                     <button
                       type="button"
                       onClick={() => onRemoveTag(note.id, tag.value)}
-                      className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
+                      className="ml-1 text-muted-foreground hover:text-foreground "
                     >
                       <X className="size-3" />
                     </button>
@@ -97,7 +98,7 @@ export function NoteCard({ note, onEdit, onDelete, onRemoveTag, className = '' }
             variant="outline"
             size="sm"
             onClick={() => onEdit(note)}
-            className="text-secondary-foreground transition-colors"
+            className="text-secondary-foreground "
           >
             <Edit className="size-4 mr-1" /> Edit
           </Button>
@@ -105,7 +106,7 @@ export function NoteCard({ note, onEdit, onDelete, onRemoveTag, className = '' }
             variant="ghost"
             size="sm"
             onClick={() => onDelete(note.id)}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground hover:text-foreground "
           >
             <Trash2 className="size-4 mr-1" /> Delete
           </Button>

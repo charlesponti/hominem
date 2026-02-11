@@ -46,7 +46,7 @@ export default function AccountPage() {
       toast({
         title: 'Error',
         description:
-          error.message || 'There was a problem deleting your finance data. Please try again.',
+          error.message || 'Delete failed. Retry.',
         variant: 'destructive',
       });
       setShowConfirmDelete(false);
@@ -72,7 +72,7 @@ export default function AccountPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <ExportTransactions />
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-md">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border">
               <div>
                 <h3 className="text-md font-semibold">Import Transactions</h3>
                 <p className="text-sm text-muted-foreground">
@@ -95,7 +95,7 @@ export default function AccountPage() {
             <CardDescription>These actions are permanent and cannot be undone.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-destructive/50 rounded-md bg-destructive/5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-destructive/50 bg-destructive/5">
               <div>
                 <h3 className="text-md font-semibold text-destructive">Delete All Finance Data</h3>
                 <p className="text-sm text-destructive/80">

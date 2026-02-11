@@ -201,7 +201,7 @@ export function AnalyticsFilters({
   const [open, setOpen] = useState(false);
 
   return (
-    <Card className="border-none shadow-none">
+    <Card className="border-none ">
       <div className="px-4 py-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           {/* Filter Dialog Trigger */}
@@ -214,7 +214,7 @@ export function AnalyticsFilters({
             </Dialog.Trigger>
             <Dialog.Portal>
               <Dialog.Overlay className="fixed inset-0 z-40 bg-black/20" />
-              <Dialog.Content className="fixed right-0 top-0 z-50 h-full w-full sm:max-w-md overflow-y-auto bg-white shadow-lg focus:outline-none">
+              <Dialog.Content className="fixed right-0 top-0 z-50 h-full w-full sm:max-w-md overflow-y-auto bg-white  focus:outline-none">
                 <div className="p-6">
                   <div className="mb-6">
                     <Dialog.Title className="text-lg font-bold">Customize Filters</Dialog.Title>

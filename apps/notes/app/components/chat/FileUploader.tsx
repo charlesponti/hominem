@@ -95,9 +95,9 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
       <button
         type="button"
         className={`
-          border-2 border-dashed rounded-lg p-6 text-center transition-colors w-full
+          border-2 border-dashed p-6 text-center w-full
           ${isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'}
-          ${uploadState.isUploading ? 'pointer-events-none opacity-50' : 'hover:border-primary/50'}
+          ${uploadState.isUploading ? 'pointer-events-none ' : 'hover:border-primary/50'}
         `}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -139,9 +139,9 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
             <span>Uploading...</span>
             <span>{uploadState.progress}%</span>
           </div>
-          <div className="w-full bg-secondary rounded-full h-2">
+          <div className="w-full bg-secondary h-2">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-2"
               style={{ width: `${uploadState.progress}%` }}
             />
           </div>
@@ -174,7 +174,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
 
           <div className="space-y-2 max-h-40 overflow-y-auto">
             {uploadState.uploadedFiles.map((file) => (
-              <div key={file.id} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+              <div key={file.id} className="flex items-center gap-3 p-3 bg-muted">
                 {/* File Icon */}
                 <div className="shrink-0">{getFileIcon(file.type)}</div>
 
@@ -208,7 +208,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
                     <img
                       src={file.thumbnail}
                       alt="Thumbnail"
-                      className="w-12 h-12 object-cover rounded"
+                      className="w-12 h-12 object-cover"
                     />
                   </div>
                 )}

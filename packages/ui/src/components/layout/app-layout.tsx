@@ -14,7 +14,7 @@ export function AppLayout({ children, navigation, backgroundImage }: AppLayoutPr
     <>
       {isNavigating && (
         <div className="fixed top-0 left-0 w-full z-50">
-          <div className="h-1 bg-primary animate-pulse" />
+          <div className="h-1 bg-white" />
         </div>
       )}
 

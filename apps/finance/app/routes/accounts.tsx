@@ -55,7 +55,7 @@ function AccountCard({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-1.5 bg-muted rounded">{getAccountTypeIcon(account.type)}</div>
+            <div className="p-1.5 bg-muted">{getAccountTypeIcon(account.type)}</div>
             <div>
               <CardTitle className="text-lg">{account.name}</CardTitle>
               <CardDescription>
@@ -124,7 +124,7 @@ export default function AccountsPage() {
   const handleConnectionError = (error: Error) => {
     toast({
       title: 'Connection Failed',
-      description: error.message || 'Failed to connect bank account. Please try again.',
+      description: error.message || 'Failed to connect bank account. Retry.',
       variant: 'destructive',
     });
   };
@@ -196,7 +196,7 @@ export default function AccountsPage() {
       {!isLoading && !hasAccounts && !hasError && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="p-4 bg-muted rounded-full mb-4">
+            <div className="p-4 bg-muted mb-4">
               <Building2 className="size-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold mb-2">No Bank Accounts</h3>

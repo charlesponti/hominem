@@ -10,6 +10,15 @@ interface UpdateGuardProps {
   appName?: string;
 }
 
+const ASCII_LOADING = `
+  ____  _            _       _     _
+ |  _ \\| |          | |     | |   (_)
+ | |_) | |_   _  ___| | __ _| |_   _  ___
+ |  _ <| | | | |/ __| |/ _\` | __| | |/ _ \\
+ | |_) | | |_| | (__| | (_| | |_  | | (_) |
+ |____/|_|\\__,_|\\___|_|\\__,_|\\__| |_|\\___/
+`;
+
 export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: UpdateGuardProps) {
   const [isReady, setIsReady] = useState(false);
 
@@ -80,8 +89,8 @@ export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: U
   if (!isReady) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-        <img src={logo} alt={`${appName} Logo`} className="w-32 h-32 mb-4 animate-pulse" />
-        <p className="text-muted-foreground">Checking for updates...</p>
+        <pre className="text-primary font-mono text-sm mb-4 animate-pulse">{ASCII_LOADING}</pre>
+        <p className="text-muted-foreground text-sm">Checking for updates...</p>
       </div>
     );
   }

@@ -11,7 +11,7 @@ interface FilterChipProps {
 export function FilterChip({ label, onRemove, onClick }: FilterChipProps) {
   return (
     <div
-      className="flex items-center gap-1 bg-muted text-muted-foreground px-2 py-1 rounded-full text-xs cursor-pointer hover:bg-muted-foreground/10 transition-colors"
+      className="flex items-center gap-1 bg-muted text-muted-foreground px-2 py-1 text-xs hover:bg-muted-foreground/10"
       title={onClick ? `Click to edit: ${label}` : label}
       onClick={onClick}
       onKeyDown={(e) => {
@@ -27,7 +27,7 @@ export function FilterChip({ label, onRemove, onClick }: FilterChipProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="size-4 rounded-full hover:bg-muted-foreground/20"
+        className="size-4 hover:bg-muted-foreground/20"
         onClick={(e) => {
           e.stopPropagation();
           onRemove();

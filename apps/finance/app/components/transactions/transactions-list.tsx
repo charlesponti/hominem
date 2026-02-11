@@ -64,7 +64,7 @@ function TransactionListItem({
   return (
     <div className="group border-b border-border py-4 px-2 space-y-2">
       <div className="w-full flex items-center justify-between gap-4">
-        <h3 className="font-serif text-black tracking-tight">
+        <h3 className=" text-black tracking-tight">
           {transaction.description || 'Transaction'}
         </h3>
         <TransactionAmount transaction={transaction} />
@@ -82,19 +82,19 @@ export function TransactionsList({
 }: TransactionsListProps) {
   if (loading) {
     return (
-      <div className="space-y-0 mx-auto border border-border rounded-lg overflow-hidden">
+      <div className="space-y-0 mx-auto border border-border overflow-hidden">
         {Array.from({ length: 5 }, (_, i) => `skeleton-${Date.now()}-${i}`).map((key) => (
           <div key={key} className="p-4 sm:p-6 border-b border-muted last:border-b-0">
             <div className="flex items-start gap-4">
-              <div className="size-12 rounded-full bg-muted" />
+              <div className="size-12 bg-muted" />
               <div className="flex-1 space-y-2">
                 <div className="flex justify-between">
-                  <div className="h-4 bg-muted rounded w-1/2" />
-                  <div className="h-4 bg-muted rounded w-16" />
+                  <div className="h-4 bg-muted w-1/2" />
+                  <div className="h-4 bg-muted w-16" />
                 </div>
                 <div className="flex gap-4">
-                  <div className="h-3 bg-muted rounded w-20" />
-                  <div className="h-3 bg-muted rounded w-24" />
+                  <div className="h-3 bg-muted w-20" />
+                  <div className="h-3 bg-muted w-24" />
                 </div>
               </div>
             </div>
@@ -106,7 +106,7 @@ export function TransactionsList({
 
   if (error) {
     return (
-      <div className="p-8 text-center border border-destructive/50 bg-destructive/10 rounded-lg max-w-4xl mx-auto">
+      <div className="p-8 text-center border border-destructive/50 bg-destructive/10 max-w-4xl mx-auto">
         <div className="text-destructive font-medium">{error}</div>
       </div>
     );
@@ -114,9 +114,9 @@ export function TransactionsList({
 
   if (transactions.length === 0) {
     return (
-      <div className="p-8 text-center border border-border bg-muted rounded-lg max-w-4xl mx-auto">
+      <div className="p-8 text-center border border-border bg-muted max-w-4xl mx-auto">
         <div className="flex flex-col items-center gap-3">
-          <div className="size-12 rounded-full bg-muted flex items-center justify-center">
+          <div className="size-12 bg-muted flex items-center justify-center">
             <DollarSign className="size-6 text-muted-foreground" />
           </div>
           <div className="text-muted-foreground font-medium">No transactions found</div>
@@ -129,7 +129,7 @@ export function TransactionsList({
   }
 
   return (
-    <div className="mx-auto border border-border rounded-lg overflow-hidden">
+    <div className="mx-auto border border-border overflow-hidden">
       {transactions.map((transaction) => (
         <TransactionListItem
           key={transaction.id}

@@ -28,7 +28,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {['total', 'month', 'people', 'tags'].map((type) => (
-          <div key={`skeleton-${type}`} className="h-20 border border-border rounded-md" />
+          <div key={`skeleton-${type}`} className="h-20 border border-border" />
         ))}
       </div>
     );
@@ -79,7 +79,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className="p-5 rounded-lg border backdrop-blur-sm bg-card border-border"
+          className="p-5 border backdrop-blur-sm bg-card border-border"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xl opacity-80">{stat.icon}</span>

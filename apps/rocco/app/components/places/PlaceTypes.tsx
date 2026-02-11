@@ -83,17 +83,12 @@ const PlaceType = ({ children, className, emoji, ...props }: PlaceTypeProps) => 
       data-testid="place-type"
       className={cn(
         'inline-flex items-center gap-1.5',
-        'rounded-full',
         'px-3 py-1.5',
         'text-xs font-semibold tracking-wide',
         'bg-muted',
         'border border-border',
         'text-foreground',
-        'shadow-sm',
         'backdrop-blur-sm',
-        'transition-all duration-200 ease-out',
-        'hover:shadow-md hover:scale-105 hover:border-accent',
-        'active:scale-100',
         className,
       )}
       {...props}

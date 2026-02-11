@@ -34,38 +34,38 @@ const NavigationMenu = () => {
         avoidCollisions={true}
         side="bottom"
       >
-        <DropdownMenuItem asChild className="cursor-pointer py-2">
+        <DropdownMenuItem asChild className=" py-2">
           <Link to={href('/')} className="flex items-center space-x-2">
             <Globe2Icon className="size-4" />
             <span>Explore</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer py-2">
+        <DropdownMenuItem asChild className=" py-2">
           <Link to={href('/lists')} className="flex items-center space-x-2">
             <List className="size-4" />
             <span>Lists</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer py-2">
+        <DropdownMenuItem asChild className=" py-2">
           <Link to={href('/invites')} className="flex items-center space-x-2">
             <UserPlus className="size-4" />
             <span>Invites</span>
           </Link>
         </DropdownMenuItem>
-        {/* <DropdownMenuItem asChild className="cursor-pointer py-2">
+        {/* <DropdownMenuItem asChild className=" py-2">
           <Link to={href('/trips')} className="flex items-center space-x-2">
             <MapPin className="size-4" />
             <span>Trips</span>
           </Link>
         </DropdownMenuItem> */}
-        <DropdownMenuItem asChild className="cursor-pointer py-2">
+        <DropdownMenuItem asChild className=" py-2">
           <Link to={href('/account')} className="flex items-center space-x-2">
             <Settings className="size-4" />
             <span>Account</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="cursor-pointer py-2 flex items-center space-x-2"
+          className=" py-2 flex items-center space-x-2"
           onClick={onLogoutClick}
         >
           <LogOut className="size-4" />

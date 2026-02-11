@@ -1,4 +1,5 @@
 import { useSupabaseAuthContext } from '@hominem/auth';
+import { Button } from '@hominem/ui/button';
 import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { ArrowRight } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
@@ -55,24 +56,24 @@ export default function Home() {
       <main className="grow flex flex-col items-center justify-center px-6 py-16">
         <div className="max-w-4xl w-full text-center">
           {/* Hero Section */}
-          <h1 className="font-serif text-4xl md:text-6xl font-bold mb-6 tracking-tighter">
+          <h1 className="font-mono text-4xl md:text-6xl font-bold mb-6 tracking-tighter uppercase">
             Take control of <span className="text-foreground italic">your money.</span>
           </h1>
-          <h2 className="font-sans text-xl font-bold text-center mb-12 text-muted-foreground">
+          <h2 className="font-mono text-xl font-bold text-center mb-12 text-muted-foreground uppercase opacity-70">
             Everything you need to understand, plan, and control your money
           </h2>
 
           {/* CTA Button */}
           <div className="mb-16">
-            <button
-              type="button"
+            <Button
               onClick={handleSignIn}
-              className="bg-primary text-primary-foreground hover:bg-[var(--color-primary-hover)] font-semibold py-4 px-8 text-lg"
+              size="lg"
+              className="py-8 px-12 text-xl"
             >
               Get Started Free
-              <ArrowRight className="inline-block ml-2 size-5" />
-            </button>
-            <p className="text-sm text-muted-foreground mt-3">No credit card required</p>
+              <ArrowRight className="inline-block ml-2 size-6" />
+            </Button>
+            <p className="text-xs font-mono text-muted-foreground mt-3 uppercase tracking-widest">No credit card required</p>
           </div>
         </div>
       </main>

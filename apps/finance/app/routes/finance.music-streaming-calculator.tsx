@@ -90,9 +90,9 @@ function StreamingServiceStreamingRate({
           <span className="text-lg font-bold">{earnings.toFixed(2)}</span>
         </div>
       </div>
-      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+      <div className="h-2 w-full bg-muted overflow-hidden">
         <div
-          className={`h-full ${service.color} transition-all duration-300`}
+          className={`h-full ${service.color}`}
           style={{
             width: `${percentOfMax * 100}%`,
           }}

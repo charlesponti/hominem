@@ -112,7 +112,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
         <div className="space-y-4">
           <div>
             <h4 className="text-sm font-medium mb-2">Account Details</h4>
-            <div className="p-3 bg-muted rounded-lg">
+            <div className="p-3 bg-muted">
               <div className="font-medium">{account.name}</div>
               <div className="text-sm text-muted-foreground">{account.type}</div>
               {account.balance && (
@@ -125,14 +125,14 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
             <div>
               <h4 className="text-sm font-medium mb-2">Current Connection</h4>
               <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-muted">
                   <div className="flex items-center space-x-2">
                     <div className="font-medium">{linkedInstitution.name}</div>
                     <Badge variant="secondary">Connected</Badge>
                   </div>
                 </div>
                 {linkedPlaidAccount && (
-                  <div className="p-3 bg-muted border border-border rounded-lg">
+                  <div className="p-3 bg-muted border border-border">
                     <div className="text-sm font-medium text-foreground">
                       Linked to Plaid Account
                     </div>

@@ -24,7 +24,7 @@ export default function VisitsPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold mb-4">My Visits</h1>
-        <p className="text-muted-foreground">Please sign in to view your visits.</p>
+        <p className="text-muted-foreground">Sign in to view visits.</p>
       </div>
     );
   }
@@ -91,7 +91,7 @@ export default function VisitsPage() {
               id="sort"
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest')}
-              className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+              className="flex h-10 w-full border border-input bg-transparent px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled: md:text-sm"
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
@@ -101,24 +101,22 @@ export default function VisitsPage() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-8 text-muted-foreground">Loading visits...</div>
+        <div className="text-center py-8 text-muted-foreground">Loading visits</div>
       ) : filteredVisits.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          {visits?.length === 0
-            ? 'No visits recorded yet. Start logging your visits to places!'
-            : 'No visits match your filters.'}
+          {visits?.length === 0 ? 'No visits recorded.' : 'No visits match filters.'}
         </div>
       ) : (
         <div className="space-y-4">
           {filteredVisits.map((visit: any) => (
-            <div key={visit.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+            <div key={visit.id} className="border p-4">
               <div className="flex items-start gap-4">
                 {visit.place?.imageUrl && (
                   <Link to={`/places/${visit.place.id}`} className="shrink-0">
                     <img
                       src={buildImageUrl(visit.place.imageUrl)}
                       alt={visit.place.name}
-                      className="size-16 rounded-md object-cover"
+                      className="size-16 object-cover"
                     />
                   </Link>
                 )}

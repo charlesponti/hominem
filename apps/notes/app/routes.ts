@@ -9,6 +9,7 @@ export default [
 
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
+    route('workspace', 'routes/workspace.tsx'),
 
     // Chat Routes
     route('chat', 'routes/chat/index.tsx'),

@@ -14,8 +14,8 @@ export const queryKeys = {
     all: () => ['places'] as const,
     get: (id: string) => ['places', 'get', id] as const,
     getByGoogleId: (id: string) => ['places', 'get-by-google-id', id] as const,
-    autocomplete: (query: string, lat?: number, lng?: number) =>
-      ['places', 'autocomplete', query, lat, lng] as const,
+    autocomplete: (query: string, lat?: number, lng?: number, sessionToken?: string) =>
+      ['places', 'autocomplete', query, lat, lng, sessionToken] as const,
     nearby: (lat?: number, lng?: number, radius?: number) =>
       ['places', 'nearby', lat, lng, radius] as const,
     myVisits: (input?: any) => ['places', 'my-visits', input] as const,

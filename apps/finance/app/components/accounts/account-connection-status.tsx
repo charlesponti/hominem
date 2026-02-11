@@ -27,7 +27,7 @@ export function AccountConnectionSummary({ accounts }: AccountConnectionSummaryP
   const connectionRate = totalCount > 0 ? Math.round((connectedCount / totalCount) * 100) : 0;
 
   return (
-    <div className="bg-muted/50 rounded-lg p-4">
+    <div className="bg-muted/50 p-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-medium">Account Connections</h3>

@@ -130,7 +130,7 @@ export const AddToListDrawerContent = ({
           Choose a list to add this place to, or create a new one.
         </DrawerDescription>
       </DrawerHeader>
-      <Command className="rounded-none border-none">
+      <Command className=" border-none">
         <CommandInput
           placeholder="Search lists..."
           value={searchQuery}

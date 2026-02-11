@@ -118,7 +118,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
         <div className="text-center">
           <p className="text-muted-foreground">No budget categories found.</p>
           <p className="text-sm text-muted-foreground">
-            Please add budget categories to see tracking details.
+            Add budget categories to view tracking.
           </p>
         </div>
       </div>
@@ -143,14 +143,14 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
   return (
     <div className="space-y-4">
       {budgetDataWithActuals.map((item) => (
-        <div key={item.id} className="border rounded-lg p-4">
+        <div key={item.id} className="border p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <div className="size-4 rounded-full" style={{ backgroundColor: item.statusColor }} />
+              <div className="size-4" style={{ backgroundColor: item.statusColor }} />
               <span className="font-medium text-lg">{item.name}</span>
             </div>
             <div
-              className={`px-2 py-1 rounded text-xs font-medium ${
+              className={`px-2 py-1 text-xs font-medium ${
                 item.status === 'over-budget'
                   ? 'bg-destructive/10 text-destructive'
                   : item.status === 'warning'

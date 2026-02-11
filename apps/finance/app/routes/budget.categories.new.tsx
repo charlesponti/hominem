@@ -127,8 +127,8 @@ export default function NewBudgetCategory() {
                     key={color}
                     type="button"
                     onClick={() => setFormData({ ...formData, color })}
-                    className={`w-8 h-8 rounded-full ${color} ${
-                      formData.color === color ? 'ring-2 ring-offset-2 ring-border' : ''
+                    className={`w-8 h-8  ${color} ${
+                      formData.color === color ? 'ring-2  ring-border' : ''
                     }`}
                   />
                 ))}

@@ -256,7 +256,7 @@ const BudgetImpactCalculator = () => {
           {historicalError?.message || currentError || 'Unable to load your financial data'}
         </p>
         <p className="text-sm text-muted-foreground">
-          Please ensure you have imported transactions to use this calculator.
+          Import transactions to use this calculator.
         </p>
       </div>
     );
@@ -407,7 +407,7 @@ const BudgetImpactCalculator = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="p-4 bg-muted rounded-lg">
+              <div className="p-4 bg-muted">
                 <h3 className="font-semibold mb-2 flex items-center gap-2">
                   <TrendingUp className="size-4" />
                   Impact Summary
@@ -450,7 +450,7 @@ const BudgetImpactCalculator = () => {
                   {insights.map((insight) => (
                     <div
                       key={`${insight.type}-${insight.message}`}
-                      className={`p-3 rounded-lg border ${
+                      className={`p-3 border ${
                         insight.type === 'danger'
                           ? 'bg-destructive/10 border-destructive/50 text-destructive'
                           : insight.type === 'warning'

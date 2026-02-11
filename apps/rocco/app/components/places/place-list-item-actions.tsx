@@ -79,7 +79,7 @@ const PlaceListItemActions = ({
             <MoreVertical size={16} />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="bg-secondary border border-border text-foreground shadow-lg">
+        <DropdownMenuContent className="bg-secondary border border-border text-foreground">
           <DropdownMenuItem onClick={handleOpenMaps} className="flex items-center gap-2 py-2">
             <ExternalLink size={16} className="text-primary focus:text-white" />
             Open in Maps

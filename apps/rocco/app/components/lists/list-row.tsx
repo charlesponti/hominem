@@ -15,17 +15,17 @@ export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
   const thumbnailUrl = buildImageUrl(imageUrl, 80, 80);
 
   return (
-    <li className="flex items-center gap-3 p-2 group border-b border-border transition-colors">
+    <li className="flex items-center gap-3 p-2 group border-b border-border">
       <Link to={`/lists/${id}`} viewTransition className="flex-1 min-w-0 focus:outline-none">
         <div className="flex items-center gap-4">
           {imageUrl !== undefined ? (
             <>
-              <div className="size-8 rounded-sm overflow-hidden shrink-0 border border-border flex items-center justify-center">
+              <div className="size-8 overflow-hidden shrink-0 border border-border flex items-center justify-center">
                 {imageUrl ? (
                   <img
                     src={thumbnailUrl}
                     alt={imageAlt || name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover"
                     style={{ viewTransitionName: `list-image-${id}` }}
                   />
                 ) : (

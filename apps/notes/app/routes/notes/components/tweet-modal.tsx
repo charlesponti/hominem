@@ -116,10 +116,10 @@ export function TweetModal({
         {
           onSuccess: (_data) => {
             const message = contentId
-              ? 'Tweet posted and content updated!'
-              : 'Tweet posted and saved to notes!';
+              ? 'Tweet posted; content updated.'
+              : 'Tweet posted; saved to notes.';
             toast({
-              title: 'Tweet posted successfully!',
+              title: 'Tweet posted',
               description: message,
             });
             handleClose();
@@ -128,7 +128,7 @@ export function TweetModal({
             console.error('Failed to post tweet:', error);
             toast({
               title: 'Failed to post tweet',
-              description: 'There was an error posting your tweet. Please try again.',
+              description: 'Posting failed. Retry.',
               variant: 'destructive',
             });
           },
@@ -232,9 +232,9 @@ export function TweetModal({
               </div>
 
               {isGenerating ? (
-                <div className="flex items-center justify-center p-8 border rounded-md">
+                <div className="flex items-center justify-center p-8 border">
                   <Loader2 className="size-6" />
-                  <span className="ml-2">Generating tweet...</span>
+                  <span className="ml-2">Generating tweet</span>
                 </div>
               ) : (
                 <Textarea
@@ -252,7 +252,7 @@ export function TweetModal({
           {/* Note Preview */}
           <div className="space-y-2">
             <Label>Note Content</Label>
-            <div className="p-3 border border-border rounded-md">
+            <div className="p-3 border border-border">
               {noteTitle && (
                 <h4 className="font-medium text-sm text-foreground mb-2">{noteTitle}</h4>
               )}

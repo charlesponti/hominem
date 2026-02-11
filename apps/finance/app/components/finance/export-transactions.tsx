@@ -54,7 +54,7 @@ export function ExportTransactions() {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-md">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border">
       <div>
         <h3 className="text-md font-semibold">Export Transactions</h3>
         <p className="text-sm text-muted-foreground">

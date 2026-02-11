@@ -381,7 +381,7 @@ export default function CategoriesAnalyticsPage() {
                 return (
                   <tr
                     key={item.category}
-                    className="border-b border-border cursor-pointer"
+                    className="border-b border-border "
                     onClick={() =>
                       navigate(`/analytics/category/${encodeURIComponent(item.category)}`)
                     }
@@ -417,9 +417,9 @@ export default function CategoriesAnalyticsPage() {
                           {percentage.toFixed(1)}%
                         </div>
                         {/* Progress Bar */}
-                        <div className="w-24 border border-foreground rounded-full h-1">
+                        <div className="w-24 border border-foreground h-1">
                           <div
-                            className="h-1 rounded-full bg-primary"
+                            className="h-1 bg-primary"
                             style={{
                               width: `${Math.min(percentage, 100)}%`,
                             }}

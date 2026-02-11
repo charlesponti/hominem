@@ -64,7 +64,7 @@ export const ChatMessage = memo(function ChatMessage({
 
   return (
     <article
-      className={cn('group relative p-4 rounded-lg flex flex-col gap-3', {
+      className={cn('group relative p-4 flex flex-col gap-3', {
         'bg-primary text-primary-foreground ml-12': isUser,
         'bg-muted mr-12': !isUser,
       })}

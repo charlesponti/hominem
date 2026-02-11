@@ -9,7 +9,7 @@ interface ListVisibilityBadgeProps {
 export default function ListVisibilityBadge({ isPublic }: ListVisibilityBadgeProps) {
   return (
     <span
-      className={cn('flex max-w-fit items-center gap-1.5 px-3 py-1 rounded-full', {
+      className={cn('flex max-w-fit items-center gap-1.5 px-3 py-1', {
         'bg-accent text-accent-foreground': isPublic,
         'bg-muted text-foreground': !isPublic,
       })}
