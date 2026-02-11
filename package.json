@@ -69,21 +69,21 @@
     "@vitest/coverage-v8": "latest",
     "ink": "^6.6.0",
     "lefthook": "^2.0.2",
-    "oxfmt": "^0.24.0",
-    "oxlint": "^1.39.0",
+    "oxfmt": "0.31.0",
+    "oxlint": "1.46.0",
+    "stylelint": "^16.9.0",
     "tsx": "^4.19.3",
-    "turbo": "^2.7.4",
+    "turbo": "^2.8.6",
     "typescript": "5.9.3",
     "vite-tsconfig-paths": "6.0.3",
-    "vitest": "4.0.16",
-    "stylelint": "^16.9.0"
+    "vitest": "4.0.16"
   },
   "overrides": {
     "@hono/zod-validator": "0.7.6",
     "@types/react": "19.2.9",
     "@types/react-dom": "19.2.3",
-    "drizzle-orm": "0.45.1",
     "drizzle-kit": "0.31.8",
+    "drizzle-orm": "0.45.1",
     "hono": "4.11.6",
     "zod": "4.3.6"
   },

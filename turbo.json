@@ -30,7 +30,7 @@
       "cache": false
     },
     "dev": {
-      "cache": false,
+      "cache": true,
       "persistent": true
     },
     "format": {
