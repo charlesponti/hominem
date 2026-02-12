@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@hominem/hono-rpc": "workspace:*",
-    "axios": "1.12.0",
+    "axios": "1.13.5",
     "chalk": "^5.4.1",
     "commander": "^13.1.0",
     "consola": "^3.4.2",
