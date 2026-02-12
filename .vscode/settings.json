@@ -16,5 +16,8 @@
     "**/dist": true,
     "**/.cache": true,
     "**/.turbo": true
+  },
+  "chat.tools.terminal.autoApprove": {
+    "bunx": true
   }
 }

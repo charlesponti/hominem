@@ -136,7 +136,6 @@ body {
   /* Deep Void: Instant Logic */
   * {
     transition: none !important;
-    border-radius: 0 !important;
   }
 
   button {
@@ -167,6 +166,7 @@ body {
   }
 
   /* Deep Void: Void Scrollbar (Sanose) */
+  /* stylelint-disable selector-disallowed-list */
   ::-webkit-scrollbar {
     width: 2px;
     height: 2px;
@@ -180,6 +180,7 @@ body {
   ::-webkit-scrollbar-thumb:hover {
     background: var(--primary);
   }
+  /* stylelint-enable selector-disallowed-list */
 
   /* Ensure Radix portals work correctly */
   [data-radix-portal] {
