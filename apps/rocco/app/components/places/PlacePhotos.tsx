@@ -35,7 +35,7 @@ const PlacePhotos = ({ alt, photos, thumbnailPhotos, fullPhotos, placeId }: Prop
 
   if (!displayPhotos || displayPhotos.length === 0) {
     return (
-      <div className="h-80 flex items-center justify-center border border-dashed border-border rounded-2xl">
+      <div className="h-80 flex items-center justify-center border border-dashed border-border">
         <div className="text-center">
           <ImageIcon className="w-16 h-16 text-muted-foreground mx-auto mb-2" />
           <p className="text-muted-foreground text-sm">No photos available</p>
@@ -62,7 +62,7 @@ const PlacePhotos = ({ alt, photos, thumbnailPhotos, fullPhotos, placeId }: Prop
               type="button"
               key={photoUrl}
               onClick={() => openLightbox(index)}
-              className="shrink-0 snap-center group relative cursor-pointer w-[85vw] h-[85vw] max-w-[350px] max-h-[350px] sm:w-[350px] sm:h-[350px] aspect-square rounded-2xl overflow-hidden border border-border hover:scale-105 transition-all duration-300"
+              className="shrink-0 snap-center group relative  w-[85vw] h-[85vw] max-w-[350px] max-h-[350px] sm:w-[350px] sm:h-[350px] aspect-square overflow-hidden border border-border"
               aria-label={`View photo ${index + 1} of ${displayPhotos.length}`}
             >
               {hasFailed ? (
@@ -83,7 +83,7 @@ const PlacePhotos = ({ alt, photos, thumbnailPhotos, fullPhotos, placeId }: Prop
                     index === 0 ? { viewTransitionName: `place-photo-image-${placeId}` } : undefined
                   }
                   className={cn(
-                    'object-cover w-full h-full transition-all duration-300 group-hover:scale-105',
+                    'object-cover w-full h-full',
                   )}
                   onError={() => handleImageError(index)}
                 />

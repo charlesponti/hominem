@@ -103,7 +103,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
         />
         {isDebouncing && (
           <div className="absolute right-2 top-2.5">
-            <div className="size-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+            <div className="size-4 border-2 border-foreground/30 border-t-foreground/80 void-anim-breezy-progress" />
           </div>
         )}
       </div>

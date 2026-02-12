@@ -49,7 +49,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
               const isCopied = copiedCodeBlocks.has(blockId);
               return (
                 <div className="relative group my-4">
-                  <div className="flex items-center justify-between bg-muted/50 px-3 py-1.5 rounded-t-lg border-b border-border">
+                  <div className="flex items-center justify-between bg-muted/50 px-3 py-1.5 border-b border-border">
                     <span className="text-xs font-mono text-muted-foreground">{language}</span>
                     <Button
                       variant="ghost"
@@ -76,7 +76,6 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
                     style={oneDark}
                     customStyle={{
                       margin: 0,
-                      borderRadius: '0 0 0.5rem 0.5rem',
                       fontSize: '0.875rem',
                     }}
                     PreTag="div"

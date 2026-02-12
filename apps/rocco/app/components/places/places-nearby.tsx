@@ -81,7 +81,7 @@ export default function PlacesNearby({
     return (
       <div className="space-y-4">
         {title}
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-8 text-center">
+        <div className="flex flex-col items-center justify-center border border-dashed border-border p-8 text-center">
           <MapPin className="w-12 h-12 text-muted-foreground mb-3" />
           <p className="text-muted-foreground">
             No places from your lists found within {radiusKm}km of this location

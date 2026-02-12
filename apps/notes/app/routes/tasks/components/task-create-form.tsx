@@ -59,7 +59,7 @@ export function TaskCreateForm({ onSuccess }: TaskCreateFormProps) {
   };
 
   return (
-    <div className="w-full border border-border rounded-lg p-4 space-y-4">
+    <div className="w-full border border-border  p-4 space-y-4">
       <Input
         placeholder="Task title"
         value={title}
@@ -99,7 +99,7 @@ export function TaskCreateForm({ onSuccess }: TaskCreateFormProps) {
         <Button
           onClick={handleSubmit}
           disabled={isSaveDisabled}
-          className="h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground transition-all disabled:bg-muted disabled:text-muted-foreground"
+          className="h-9 px-4 bg-primary hover:bg-primary/90 text-primary-foreground disabled:bg-muted disabled:text-muted-foreground"
         >
           {isSaving ? (
             <RefreshCw className="size-4" />
@@ -113,7 +113,7 @@ export function TaskCreateForm({ onSuccess }: TaskCreateFormProps) {
       </div>
 
       {error && (
-        <div className="text-foreground text-sm p-3 text-center border border-muted-foreground/30 rounded-md">
+        <div className="text-foreground text-sm p-3 text-center border border-muted-foreground/30 ">
           {error.message}
         </div>
       )}

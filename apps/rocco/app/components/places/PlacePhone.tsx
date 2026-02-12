@@ -11,7 +11,7 @@ export default function PlacePhone({ phoneNumber }: PlacePhoneProps) {
   return (
     <a
       href={`tel:${phoneNumber}`}
-      className="flex items-center gap-2 text-primary hover:text-primary text-sm font-semilight transition-colors"
+      className="flex items-center gap-2 text-primary hover:text-primary text-sm font-semilight"
     >
       <Phone size={14} className="mt-0.5 shrink-0" />
       <div className="flex-1 min-w-0">{phoneNumber}</div>

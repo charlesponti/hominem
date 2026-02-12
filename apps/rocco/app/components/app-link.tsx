@@ -24,7 +24,7 @@ const AppLink = ({
     return (
       <Link to={to} {...props}>
         <span
-          className={cn('btn btn-primary text-white px-4 py-3 hover:cursor-pointer', className)}
+          className={cn('btn btn-primary text-white px-4 py-3 hover:', className)}
         >
           {children}
         </span>
@@ -37,7 +37,7 @@ const AppLink = ({
       to={to}
       {...props}
       className={cn(
-        'text-foreground cursor-pointer',
+        'text-foreground ',
         isActive ? 'bg-accent text-foreground' : null,
         className,
       )}

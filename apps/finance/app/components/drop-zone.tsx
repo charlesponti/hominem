@@ -105,16 +105,15 @@ export function DropZone({
     <button
       type="button"
       className={cn(
-        'relative border-2 border-dashed rounded-lg p-12',
+        'relative border-2 border-dashed p-12',
         {
           'border-primary bg-primary/5': dragActive,
           'border-border bg-muted': !dragActive,
         },
-        'transition-colors duration-200 ease-in-out',
         'flex flex-col items-center justify-center gap-4',
         {
-          'opacity-50 pointer-events-none cursor-not-allowed': isImporting,
-          'cursor-pointer': !isImporting,
+          ' pointer-events-none cursor-not-allowed': isImporting,
+          '': !isImporting,
         },
         className,
       )}

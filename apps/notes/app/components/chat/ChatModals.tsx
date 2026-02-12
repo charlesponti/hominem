@@ -28,7 +28,7 @@ export function ChatModals({
       {/* File Upload Modal */}
       {showFileUploader && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="border rounded-lg p-6 w-full max-w-md">
+          <div className="border p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Upload Files</h3>
               <Button variant="ghost" size="sm" onClick={onCloseFileUploader}>
@@ -43,7 +43,7 @@ export function ChatModals({
       {/* Audio Recorder Modal */}
       {showAudioRecorder && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="border rounded-lg p-6 w-full max-w-md">
+          <div className="border p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Record Audio</h3>
               <Button variant="ghost" size="sm" onClick={onCloseAudioRecorder}>

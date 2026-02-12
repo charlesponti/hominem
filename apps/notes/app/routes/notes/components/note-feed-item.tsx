@@ -77,7 +77,7 @@ export function NoteFeedItem({
   return (
     <div
       className={cn(
-        'border-b border-border py-4 px-4 transition-colors duration-150 group',
+        'border-b border-border py-4 px-4 group',
         className,
       )}
     >
@@ -113,14 +113,16 @@ export function NoteFeedItem({
               <Badge
                 key={tag.value}
                 variant="secondary"
-                className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border border-foreground text-secondary-foreground"
+                className="flex items-center gap-1 px-2 py-0.5  text-xs font-medium border border-foreground text-secondary-foreground"
               >
                 {tag.value}
                 {!extractHashtags.includes(tag.value) && (
                   <button
                     type="button"
                     onClick={() => onRemoveTag(note.id, tag.value)}
-                    className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
+                    className="ml-1 text-muted-foreground hover:text-foreground"
+                    title={`Remove ${tag.value}`}
+                    aria-label={`Remove tag ${tag.value}`}
                   >
                     <X className="size-3" />
                   </button>
@@ -142,7 +144,7 @@ export function NoteFeedItem({
                 variant="ghost"
                 size="sm"
                 onClick={() => onExpand(note)}
-                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent "
                 title="Expand"
               >
                 <Maximize2 className="size-3.5" />
@@ -153,7 +155,7 @@ export function NoteFeedItem({
                 variant="ghost"
                 size="sm"
                 onClick={() => onOutline(note)}
-                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent "
                 title="Outline"
               >
                 <List className="size-3.5" />
@@ -164,7 +166,7 @@ export function NoteFeedItem({
                 variant="ghost"
                 size="sm"
                 onClick={() => onRewrite(note)}
-                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent "
                 title="Rewrite"
               >
                 <RefreshCw className="size-3.5" />
@@ -177,7 +179,7 @@ export function NoteFeedItem({
               variant="ghost"
               size="sm"
               onClick={() => onEdit(note)}
-              className="size-8 p-0 text-secondary-foreground hover:text-foreground transition-colors"
+              className="size-8 p-0 text-secondary-foreground hover:text-foreground "
               title="Edit note"
             >
               <Edit className="size-4" />
@@ -186,7 +188,7 @@ export function NoteFeedItem({
               variant="ghost"
               size="sm"
               onClick={() => onDelete(note.id)}
-              className="size-8 p-0 text-secondary-foreground hover:text-foreground transition-colors"
+              className="size-8 p-0 text-secondary-foreground hover:text-foreground "
               title="Delete note"
             >
               <Trash2 className="size-4" />

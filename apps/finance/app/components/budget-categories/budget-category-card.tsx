@@ -36,7 +36,7 @@ export function BudgetCategoryCard({ category, onEdit, onDelete }: BudgetCategor
       <CardHeader className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className={`size-3 rounded-full ${category.color}`} />
+            <div className={`size-3 ${category.color}`} />
             <CardTitle className="text-base">{category.name}</CardTitle>
           </div>
           <div className="flex items-center gap-1">
@@ -76,9 +76,9 @@ export function BudgetCategoryCard({ category, onEdit, onDelete }: BudgetCategor
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full border border-foreground rounded-full h-1.5">
+        <div className="w-full border border-foreground h-1.5">
           <div
-            className={cn('h-1.5 rounded-full', {
+            className={cn('h-1.5', {
               'bg-destructive': spentPercentage > 100,
               'bg-warning': spentPercentage > 80 && spentPercentage <= 100,
               'bg-emphasis-highest': spentPercentage <= 80,

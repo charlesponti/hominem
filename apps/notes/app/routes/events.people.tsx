@@ -128,7 +128,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
 
         {/* Add Person Form */}
         {showAddForm && (
-          <div className="rounded-lg border border-border p-6 mb-8">
+          <div className="border border-border p-6 mb-8">
             <h3 className="text-xl font-medium text-black mb-4">Add New Person</h3>
             <form method="post">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -180,7 +180,7 @@ export default function PeoplePage({ loaderData }: Route.ComponentProps) {
         )}
 
         {/* People List */}
-        <div className="rounded-lg border border-border">
+        <div className="border border-border">
           {people.length === 0 ? (
             <div className="p-8 text-center">
               <p className="text-muted-foreground mb-4">

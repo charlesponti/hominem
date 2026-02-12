@@ -28,7 +28,7 @@ export default function Lists() {
 
       <div className="space-y-1">
         {displayLists.length === 0 && !isLoading ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-muted p-10 text-center">
+          <div className="flex flex-col items-center justify-center border border-dashed border-muted p-10 text-center">
             <h3 className="text-lg font-semibold text-foreground">No lists yet</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Get started by creating your first list.

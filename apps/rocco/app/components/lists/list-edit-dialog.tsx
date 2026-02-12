@@ -95,7 +95,7 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/20" />
         <Dialog.Content
           data-testid="list-edit-dialog"
-          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-secondary p-6 shadow-lg focus:outline-none"
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 bg-secondary p-6 focus:outline-none"
         >
           {!showDeleteConfirmation ? (
             <>

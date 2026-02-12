@@ -17,6 +17,7 @@ import type { Place, PlaceLocation } from '~/lib/types';
 
 import { useMapInteraction } from '~/contexts/map-interaction-context';
 import { cn } from '~/lib/utils';
+import { endTrace, startTrace } from '~/lib/performance/trace';
 
 import styles from './map.module.css';
 
@@ -116,11 +117,8 @@ const MapMarker = memo(
       () => ({
         width: isHovered || isSelected ? '32px' : '24px',
         height: isHovered || isSelected ? '32px' : '24px',
-        borderRadius: '50%',
-        backgroundColor: isHovered || isSelected ? '#EF4444' : '#DC2626',
+        backgroundColor: isHovered || isSelected ? '#ef4444' : '#dc2626',
         border: '2px solid white',
-        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-        transition: 'width 0.2s, height 0.2s, background-color 0.2s',
         cursor: 'pointer' as const,
       }),
       [isHovered, isSelected],
@@ -134,7 +132,7 @@ const MapMarker = memo(
           isHovered || isSelected ? 'REQUIRED' : 'OPTIONAL_AND_HIDES_LOWER_PRIORITY'
         }
       >
-        <div style={markerStyle} />
+        <div style={markerStyle} className="void-anim-breezy" />
       </AdvancedMarker>
     );
   },
@@ -185,6 +183,7 @@ const RoccoMap = ({
     lng: initialCenter.longitude,
   });
   const [mapZoom, setMapZoom] = useState(zoom);
+  const markerCount = markers.length;
 
   // Memoize marker click handler factory to avoid recreating functions
   const handleMarkerClick = useCallback((marker: PlaceLocation) => {
@@ -217,22 +216,32 @@ const RoccoMap = ({
 
   // Update center/zoom on user interaction
   const handleMapIdle = useCallback((event: MapEvent<unknown>) => {
-    const map = event.map;
-    if (map) {
-      // Mark that user has interacted with the map
-      setHasUserInteracted(true);
+    const trace = startTrace('rocco-map-idle', {
+      mapId: effectiveMapId,
+      markerCount,
+    });
 
-      const newCenter = map.getCenter();
-      const newZoom = map.getZoom();
-      if (newCenter && newZoom) {
-        setMapCenter({
-          lat: newCenter.lat(),
-          lng: newCenter.lng(),
-        });
-        setMapZoom(newZoom);
-      }
+    const map = event.map;
+    if (!map) {
+      endTrace(trace);
+      return;
     }
-  }, []);
+
+    // Mark that user has interacted with the map
+    setHasUserInteracted(true);
+
+    const newCenter = map.getCenter();
+    const newZoom = map.getZoom();
+    if (newCenter && newZoom) {
+      setMapCenter({
+        lat: newCenter.lat(),
+        lng: newCenter.lng(),
+      });
+      setMapZoom(newZoom);
+    }
+
+    endTrace(trace, { zoom: newZoom });
+  }, [effectiveMapId, markerCount]);
 
   const renderedMarkers = useMemo(
     () =>
@@ -271,11 +280,11 @@ const RoccoMap = ({
         data-testid="rocco-map"
         data-zoom={mapZoom}
         data-center={JSON.stringify(mapCenter)}
-        className="flex flex-1 relative overflow-hidden rounded-lg shadow-2xl size-full"
+        className="flex flex-1 relative overflow-hidden size-full"
       >
         {isLoadingCurrentLocation ? (
-          <div className="absolute left-0 right-0 mt-2 mx-auto max-w-fit z-10 p-1 px-4 rounded-lg border-primary bg-accent text-foreground text-sm">
-            <span className="animate-ping inline-flex size-1 rounded-full bg-primary opacity-75 mb-0.5 mr-3" />
+          <div className="absolute left-0 right-0 mt-2 mx-auto max-w-fit z-10 p-1 px-4 border-primary bg-accent text-foreground text-sm">
+            <span className="inline-flex size-1 bg-primary  mb-0.5 mr-3 void-anim-breezy-loop" />
             Loading current location
           </div>
         ) : null}

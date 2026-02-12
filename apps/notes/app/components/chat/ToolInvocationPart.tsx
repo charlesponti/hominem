@@ -13,13 +13,13 @@ export function ToolInvocationPart({ toolInvocation, index }: ToolInvocationPart
 
   if (type === 'tool-call') {
     return (
-      <div key={id} className="bg-background/50 p-3 rounded-lg border border-border/50 mt-2">
+      <div key={id} className="bg-background/50 p-3 border border-border/50 mt-2">
         <div className="font-medium text-sm flex items-center gap-2 text-muted-foreground">
           <span className="text-base">🔧</span>
           <span>Calling {toolName}...</span>
         </div>
         {args && Object.keys(args).length > 0 && (
-          <div className="text-xs opacity-70 mt-2 font-mono bg-muted/30 p-2 rounded">
+          <div className="text-xs opacity-70 mt-2 font-mono bg-muted/30 p-2">
             <pre className="whitespace-pre-wrap wrap-break-word">
               {JSON.stringify(args, null, 2)}
             </pre>
@@ -34,7 +34,7 @@ export function ToolInvocationPart({ toolInvocation, index }: ToolInvocationPart
       <div
         key={id}
         className={cn(
-          'p-3 rounded-lg border mt-2',
+          'p-3 border mt-2',
           isError ? 'bg-destructive/10 border-destructive/20' : 'bg-background/50 border-border/50',
         )}
       >
@@ -50,7 +50,7 @@ export function ToolInvocationPart({ toolInvocation, index }: ToolInvocationPart
           </span>
         </div>
         {result !== undefined && (
-          <pre className="text-xs opacity-70 mt-2 font-mono bg-muted/30 p-2 rounded whitespace-pre-wrap wrap-break-word">
+          <pre className="text-xs opacity-70 mt-2 font-mono bg-muted/30 p-2 whitespace-pre-wrap wrap-break-word">
             {JSON.stringify(result, null, 2)}
           </pre>
         )}

@@ -51,7 +51,7 @@ export default function HabitsPage() {
           // Replace with actual HabitCard component later
           <div
             key={habit.id}
-            className="p-4 border rounded-lg shadow-sm bg-card text-card-foreground"
+            className="p-4 border   bg-card text-card-foreground"
           >
             <h2 className="text-xl font-semibold mb-2">{habit.title}</h2>
             <p className="text-sm text-muted-foreground mb-1">Interval: {habit.interval}</p>

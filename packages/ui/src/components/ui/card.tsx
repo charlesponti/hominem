@@ -2,11 +2,19 @@ import * as React from 'react';
 
 import { cn } from '../../lib/utils';
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('border bg-card text-card-foreground', className)} {...props} />
-  ),
-);
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { metadata?: string }
+>(({ className, metadata, children, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn('relative border bg-card text-card-foreground', className)}
+    {...props}
+  >
+    {metadata && <span className="void-metadata">{metadata}</span>}
+    {children}
+  </div>
+));
 Card.displayName = 'Card';
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
@@ -20,7 +28,7 @@ const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HT
   ({ className, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn('text-lg font-semibold leading-none tracking-tight', className)}
+      className={cn('text-lg font-normal leading-none tracking-tight uppercase', className)}
       {...props}
     />
   ),

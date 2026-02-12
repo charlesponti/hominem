@@ -32,7 +32,7 @@ export default function SyncStatus({
 
   if (!connected) {
     return (
-      <div className="px-4 py-2 rounded-lg border text-sm bg-muted border-border text-muted-foreground">
+      <div className="px-4 py-2  border text-sm bg-muted border-border text-muted-foreground">
         <span className="mr-2">📅</span>
         Google Calendar not connected
       </div>
@@ -40,7 +40,7 @@ export default function SyncStatus({
   }
 
   return (
-    <div className="px-4 py-2 rounded-lg border text-sm flex items-center gap-3 bg-muted border-border">
+    <div className="px-4 py-2  border text-sm flex items-center gap-3 bg-muted border-border">
       {syncError ? (
         <>
           <AlertCircle className="size-4 text-destructive" />

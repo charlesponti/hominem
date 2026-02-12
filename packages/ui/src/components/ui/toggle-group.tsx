@@ -10,7 +10,7 @@ const ToggleGroupContext = React.createContext<VariantProps<typeof toggleGroupIt
 });
 
 const toggleGroupItemVariants = cva(
-  'inline-flex items-center justify-center text-sm font-medium ring-offset-background transition-colors hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-accent data-[state=on]:text-accent-foreground',
+  'inline-flex items-center justify-center text-sm font-medium ring-offset-background  hover:bg-muted hover:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible: disabled:pointer-events-none disabled: data-[state=on]:bg-accent data-[state=on]:text-accent-foreground',
   {
     variants: {
       variant: {
@@ -39,7 +39,7 @@ const ToggleGroup = React.forwardRef<
   <ToggleGroupPrimitive.Root
     ref={ref}
     className={cn(
-      'inline-flex items-center justify-center overflow-hidden rounded-md border border-input bg-transparent shadow-sm',
+      'inline-flex items-center justify-center overflow-hidden  border border-input bg-transparent shadow-sm',
       className,
     )}
     {...props}

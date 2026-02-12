@@ -123,7 +123,7 @@ export function AudioRecorder({
     <div className={`space-y-4 ${className}`}>
       {/* Error Display */}
       {state.error && (
-        <div className="flex items-center gap-2 text-sm text-destructive p-3 bg-destructive/10 rounded-lg">
+        <div className="flex items-center gap-2 text-sm text-destructive p-3 bg-destructive/10 ">
           <AlertCircle className="size-4" />
           <span>{state.error}</span>
         </div>
@@ -132,9 +132,9 @@ export function AudioRecorder({
       {/* Recording Status and Waveform */}
       {state.isRecording && (
         <div className="space-y-3">
-          <div className="flex items-center justify-center gap-3 p-4 bg-muted border border-border rounded-lg">
+          <div className="flex items-center justify-center gap-3 p-4 bg-muted border border-border">
             <div className="flex items-center gap-2">
-              <div className="size-3 bg-foreground rounded-full" />
+              <div className="size-3 bg-foreground" />
               <span className="text-sm font-medium">
                 {state.isPaused ? 'Recording Paused' : 'Recording'}
               </span>
@@ -156,7 +156,7 @@ export function AudioRecorder({
         {!state.isRecording ? (
           <Button
             onClick={handleStartRecording}
-            className="size-12 rounded-full"
+            className="size-12"
             disabled={state.error !== null}
           >
             <Mic className="size-5" />
@@ -175,7 +175,7 @@ export function AudioRecorder({
             <Button
               variant="destructive"
               onClick={handleStopRecording}
-              className="size-12 rounded-full"
+              className="size-12"
             >
               <Square className="size-5" />
             </Button>
@@ -213,21 +213,21 @@ export function AudioRecorder({
               </div>
 
               {isTranscribing ? (
-                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2 p-3 bg-muted ">
                   <Loader2 className="size-4" />
                   <span className="text-sm">Transcribing audio...</span>
                 </div>
               ) : transcriptionError ? (
-                <div className="flex items-center gap-2 text-sm text-destructive p-3 bg-destructive/10 rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-destructive p-3 bg-destructive/10 ">
                   <AlertCircle className="size-4" />
                   <span>{transcriptionError}</span>
                 </div>
               ) : transcription ? (
-                <div className="p-3 bg-muted rounded-lg">
+                <div className="p-3 bg-muted ">
                   <p className="text-sm">{transcription}</p>
                 </div>
               ) : (
-                <div className="p-3 bg-muted rounded-lg text-muted-foreground">
+                <div className="p-3 bg-muted  text-muted-foreground">
                   <p className="text-sm">No transcription available</p>
                 </div>
               )}

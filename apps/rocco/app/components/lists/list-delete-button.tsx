@@ -27,7 +27,7 @@ const ListDeleteButton = ({ listId, onDelete }: { listId: string; onDelete: () =
     <button
       type="button"
       data-testid="delete-list-button"
-      className="flex items-center px-4 rounded-md hover:cursor-pointer hover:bg-destructive/10 focus:bg-destructive/10 transition-colors"
+      className="flex items-center px-4 hover:bg-destructive/10 focus:bg-destructive/10"
       onClick={onDeleteClick}
       onKeyDown={onDeleteKeyDown}
     >

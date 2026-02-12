@@ -6,7 +6,7 @@ export function SearchContextPreview({ searchContext, onRemove }: SearchContextP
   if (!searchContext) return null;
 
   return (
-    <div className="mb-4 p-3 border border-border rounded-lg">
+    <div className="mb-4 p-3 border border-border">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium text-foreground">Web Search Context</span>
         <Button

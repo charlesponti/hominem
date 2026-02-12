@@ -71,13 +71,7 @@ export function AudioWaveform({ isRecording, stream, className = '' }: AudioWave
         if (value === undefined) continue;
         barHeight = (value / 255) * canvas.height;
 
-        // Create gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        gradient.addColorStop(0, '#ef4444'); // red-500
-        gradient.addColorStop(0.5, '#f97316'); // orange-500
-        gradient.addColorStop(1, '#eab308'); // yellow-500
-
-        ctx.fillStyle = gradient;
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
         ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
 
         x += barWidth + 1;
@@ -97,14 +91,14 @@ export function AudioWaveform({ isRecording, stream, className = '' }: AudioWave
 
   if (!isRecording) {
     return (
-      <div className={`h-16 bg-muted rounded-lg flex items-center justify-center ${className}`}>
+      <div className={`h-16 bg-muted flex items-center justify-center ${className}`}>
         <div className="text-sm text-muted-foreground">Click to start recording</div>
       </div>
     );
   }
 
   return (
-    <div className={`h-16 bg-muted rounded-lg overflow-hidden ${className}`}>
+    <div className={`h-16 bg-muted overflow-hidden ${className}`}>
       <canvas ref={canvasRef} className="w-full h-full" style={{ display: 'block' }} />
     </div>
   );

@@ -81,11 +81,11 @@ export function AccountHeader({
       </div>
 
       {/* Account Summary Card */}
-      <Card>
+      <Card metadata={isPlaidAccount ? 'SOURCE: PLAID_API_V2' : 'SOURCE: MANUAL_ENTRY'}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-muted rounded-lg">{getAccountTypeIcon(account.type)}</div>
+              <div className="p-2 bg-muted">{getAccountTypeIcon(account.type)}</div>
               <div>
                 <CardTitle className="text-xl">{account.name}</CardTitle>
                 <CardDescription className="flex items-center space-x-2">
@@ -102,7 +102,7 @@ export function AccountHeader({
         <CardContent className="space-y-4">
           {/* Balance for Plaid accounts */}
           {isPlaidAccount && account.balance && (
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+            <div className="flex items-center justify-between p-4 bg-muted/50 ">
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-muted-foreground">Current Balance:</span>
                 <span className="text-2xl font-bold">

@@ -68,7 +68,7 @@ export default function AccountPage() {
             <CardDescription>Manage your session.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-4 border rounded-md">
+            <div className="flex items-center justify-between p-4 border ">
               <div>
                 <h3 className="font-medium">Sign Out</h3>
                 <p className="text-sm text-muted-foreground">End your current session.</p>

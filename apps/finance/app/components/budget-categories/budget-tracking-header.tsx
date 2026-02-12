@@ -21,7 +21,7 @@ export function BudgetTrackingHeader({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-3xl font-serif tracking-tight">Budget Tracking</h1>
+        <h1 className="text-3xl  tracking-tight">Budget Tracking</h1>
       </div>
       <div className="flex items-center gap-2">
         <DateMonthSelect selectedMonthYear={selectedMonthYear} onMonthChange={onMonthChange} />

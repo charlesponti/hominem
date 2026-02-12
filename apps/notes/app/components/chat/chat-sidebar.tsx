@@ -90,7 +90,7 @@ export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: Ch
               <RouterLink
                 to="/"
                 className={cn(
-                  'block p-2 rounded-lg text-sm font-medium transition-colors hover:bg-muted/50',
+                  'block p-2 text-sm font-medium hover:bg-muted/50',
                   pathname === '/' ? 'bg-muted text-foreground' : 'text-muted-foreground',
                 )}
                 onClick={handleNavigation}
@@ -107,7 +107,7 @@ export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: Ch
         {isLoggedIn ? (
           <RouterLink
             to="/account"
-            className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+            className="flex items-center gap-2 p-2 hover:bg-muted/50"
             onClick={handleNavigation}
           >
             <User className="size-5" />

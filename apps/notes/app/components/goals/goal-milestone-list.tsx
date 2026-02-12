@@ -28,7 +28,7 @@ export function GoalMilestoneList({
       {milestones?.map((milestone, index) => (
         <div
           key={`milestone-${index}-${milestone.description}`}
-          className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:border-primary/50 transition-colors"
+          className="flex items-center gap-3 p-3 border bg-card hover:border-primary/50"
         >
           <Input
             value={milestone.description}

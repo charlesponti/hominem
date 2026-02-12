@@ -30,8 +30,8 @@ export function CopyButton({
   const isCopied = copiedSections.has(sectionName);
 
   const ariaLabel = isCopied
-    ? `${sectionName} copied to clipboard`
-    : `Copy ${sectionName} to clipboard${shortcutKey ? `. Shortcut: ${shortcutKey}` : ''}`;
+    ? `${sectionName} copied`
+    : `Copy ${sectionName}${shortcutKey ? `. Shortcut: ${shortcutKey}` : ''}`;
 
   const title = shortcutKey ? `Copy ${sectionName} (${shortcutKey})` : `Copy ${sectionName}`;
 
@@ -46,7 +46,7 @@ export function CopyButton({
       aria-label={ariaLabel}
       aria-describedby={ariaDescribedBy}
       title={title}
-      className="focus:ring-2 focus:ring-accent focus:ring-offset-2"
+      className=""
       {...props}
     >
       {isCopied ? (
@@ -54,8 +54,8 @@ export function CopyButton({
       ) : (
         <Copy className="size-4 mr-2" aria-hidden="true" />
       )}
-      <span>{children || (isCopied ? 'Copied!' : 'Copy')}</span>
-      {isCopied && <span className="sr-only">Content successfully copied to clipboard</span>}
+      <span>{children || (isCopied ? 'COPIED' : 'COPY')}</span>
+      {isCopied && <span className="sr-only">Content copied</span>}
     </Button>
   );
 }

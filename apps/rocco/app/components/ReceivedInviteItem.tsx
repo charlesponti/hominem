@@ -51,16 +51,16 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
   if (previewProps) {
     const { preview } = previewProps;
     return (
-      <li className="flex flex-col gap-3 p-6 bg-secondary border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+      <li className="flex flex-col gap-3 p-6 bg-secondary border border-border">
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+          <div className="size-8 bg-muted flex items-center justify-center shrink-0">
             <ListCheck className="size-4 text-primary" />
           </div>
           <p className="text-xl font-semibold text-foreground">{preview.listName}</p>
         </div>
 
         {preview.coverPhoto ? (
-          <div className="w-full h-40 bg-muted rounded-md overflow-hidden">
+          <div className="w-full h-40 bg-muted overflow-hidden">
             <img
               src={preview.coverPhoto}
               alt={preview.listName}
@@ -68,7 +68,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
             />
           </div>
         ) : (
-          <div className="w-full h-40 rounded-md bg-muted border border-dashed border-border flex items-center justify-center text-muted-foreground text-sm">
+          <div className="w-full h-40 bg-muted border border-dashed border-border flex items-center justify-center text-muted-foreground text-sm">
             No photo yet
           </div>
         )}
@@ -91,7 +91,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
             )}
           </p>
           <Button
-            className="px-4 py-2 rounded-lg shadow-sm transition-colors font-medium"
+            className="px-4 py-2 font-medium"
             onClick={preview.onSignIn}
           >
             Continue with Google
@@ -107,10 +107,10 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
   const isAccepted = status === 'accepted';
 
   return (
-    <li className="flex flex-col gap-3 p-6 bg-secondary border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+    <li className="flex flex-col gap-3 p-6 bg-secondary border border-border">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0">
         <div className="flex items-center gap-3">
-          <div className="size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+          <div className="size-8 bg-muted flex items-center justify-center shrink-0">
             <ListCheck className="size-4 text-primary" />
           </div>
           <p className="text-xl font-semibold text-foreground">{list?.name || 'Unknown List'}</p>
@@ -118,7 +118,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
         {isAccepted ? (
           <Link
             to={`/lists/${list?.id || listInvite.listId}`}
-            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover active:bg-primary-hover text-primary-foreground rounded-lg shadow-sm transition-colors font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary-hover active:bg-primary-hover text-primary-foreground font-medium"
           >
             <span>View list</span>
             <ArrowRight size={18} />
@@ -153,7 +153,7 @@ const AcceptButton = ({
 }) => {
   return (
     <Button
-      className="px-4 py-2 rounded-lg shadow-sm transition-colors font-medium"
+      className="px-4 py-2 font-medium"
       disabled={status || !canAccept}
       onClick={onAcceptClick}
     >

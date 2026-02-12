@@ -118,7 +118,7 @@ export default function ListForm() {
           <form onSubmit={handleSubmit} className="w-full">
             <div className="flex gap-1">
               <div
-                className={cn('transition-opacity duration-200 flex-1', {
+                className={cn('flex-1', {
                   'opacity-0 pointer-events-none': isOverlayVisible,
                   'opacity-100': !isOverlayVisible,
                 })}
@@ -146,14 +146,14 @@ export default function ListForm() {
           </form>
 
           {status === 'submitting' ? (
-            <div className="absolute inset-0 flex items-center justify-center rounded-lg">
+            <div className="absolute inset-0 flex items-center justify-center">
               <Loading size="sm" />
               <span className="ml-2 text-sm text-muted-foreground">Creating...</span>
             </div>
           ) : null}
 
           {status === 'success' ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-lg">
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-sm font-semibold text-foreground">Created!</span>
             </div>
           ) : null}
@@ -166,7 +166,7 @@ export default function ListForm() {
           onClick={status === 'idle' ? handleOpen : handleClose}
           disabled={status === 'submitting'}
           variant={status !== 'idle' ? 'secondary' : 'default'}
-          className="flex items-center gap-2 disabled:opacity-50"
+          className="flex items-center gap-2 disabled:"
         >
           {status !== 'idle' ? (
             <span> Cancel </span>

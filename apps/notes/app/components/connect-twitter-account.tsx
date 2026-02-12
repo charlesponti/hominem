@@ -24,7 +24,7 @@ export function ConnectTwitterAccount() {
       toast({
         variant: 'destructive',
         title: 'Disconnect failed',
-        description: 'Please try again.',
+        description: 'Retry disconnect.',
       });
     }
   };
@@ -46,7 +46,7 @@ export function ConnectTwitterAccount() {
           {accounts.map((account) => (
             <div
               key={account.id}
-              className="flex items-center justify-between p-3 border rounded-lg"
+              className="flex items-center justify-between p-3 border"
             >
               <div className="flex items-center gap-2">
                 <Twitter className="size-4 text-muted-foreground" />
@@ -56,7 +56,7 @@ export function ConnectTwitterAccount() {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleDisconnect(account.id)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground"
               >
                 Disconnect
               </Button>

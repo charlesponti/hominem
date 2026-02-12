@@ -42,8 +42,8 @@ export default function PlaceRow({
   return (
     <li
       className={cn(
-        'flex items-center gap-3 px-2 py-1 group border-b border-border/30 transition-colors',
-        'focus-within:bg-accent focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
+        'flex items-center gap-3 px-2 py-1 group border-b border-border/30',
+        'focus-within:bg-accent focus-within:ring-2 focus-within:ring-ring focus-within:',
         {
           'bg-accent': isSelected,
         },
@@ -54,13 +54,13 @@ export default function PlaceRow({
     >
       <Link to={href} viewTransition className="flex-1 min-w-0 focus:outline-none">
         <div className="flex items-center gap-4">
-          <div className="size-8 rounded-sm overflow-hidden shrink-0 border border-border flex items-center justify-center">
+          <div className="size-8 overflow-hidden shrink-0 border border-border flex items-center justify-center">
             {resolvedImage ? (
               <img
                 src={resolvedImage}
                 alt={name}
                 style={{ viewTransitionName: `place-row-image-${href.split('/').pop()}` }}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-cover"
               />
             ) : (
               <Star className="text-muted-foreground" size={28} />

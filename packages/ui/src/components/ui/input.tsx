@@ -25,7 +25,7 @@ function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
         // Selection styles
         'selection:bg-primary selection:text-primary-foreground',
         // Disabled states
-        'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+        'disabled:pointer-events-none disabled:cursor-not-allowed disabled:',
         // Focus states
         'focus-visible:border focus-visible:border-foreground',
         // Invalid states

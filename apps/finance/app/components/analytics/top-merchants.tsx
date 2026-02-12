@@ -52,7 +52,7 @@ export function TopMerchants({
           </div>
         ) : error instanceof Error ? (
           <div className="text-destructive">
-            {error.message || 'Your merchants are not available. Please try again later.'}
+            {error.message || 'Merchants unavailable. Retry later.'}
           </div>
         ) : error ? (
           <div className="text-destructive">

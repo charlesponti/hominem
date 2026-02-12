@@ -143,7 +143,7 @@ function PlacesAutocomplete({
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-secondary border border-border rounded-md shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-secondary border border-border max-h-60 overflow-y-auto"
           data-testid="places-autocomplete-results"
         >
           {isLoading && <PlacesAutocompleteLoading show={!!value} />}
@@ -156,7 +156,7 @@ function PlacesAutocomplete({
                   type="button"
                   onClick={() => handleSelect(suggestion)}
                   className={cn(
-                    'flex items-center px-3 py-2 cursor-pointer transition-colors w-full text-left overflow-x-hidden',
+                    'flex items-center px-3 py-2  w-full text-left overflow-x-hidden',
                     'hover:bg-muted focus:bg-muted focus:outline-none',
                     selectedIndex === index && 'bg-muted',
                     styles.autocompleteItem,
@@ -197,10 +197,10 @@ const PlacesAutocompleteLoading = (props: React.ComponentProps<'div'> & { show: 
 
 const LoadingItem = (props: React.ComponentProps<'div'>) => (
   <div className="flex items-center px-3 py-2" {...props}>
-    <div className="size-4 border border-border rounded mr-3" />
+    <div className="size-4 border border-border mr-3" />
     <div className="flex flex-col flex-1">
-      <div className="w-3/4 h-3 border border-border rounded mb-1" />
-      <div className="w-1/2 h-2 border border-border rounded" />
+      <div className="w-3/4 h-3 border border-border mb-1" />
+      <div className="w-1/2 h-2 border border-border" />
     </div>
   </div>
 );

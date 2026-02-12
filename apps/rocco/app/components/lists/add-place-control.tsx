@@ -73,7 +73,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
           ? error.message
           : typeof error === 'string'
             ? error
-            : 'Failed to process place selection. Please try again.';
+            : 'Failed to process place selection. Retry.';
       setErrorMessage(message);
     }
   };
@@ -140,10 +140,10 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         ) : (
           <div className="space-y-3">
             {displayError && (
-              <Alert type="error" dismissible onDismiss={handleRetry}>
-                {displayError}
-              </Alert>
-            )}
+            <Alert type="error" dismissible onDismiss={handleRetry}>
+              {displayError}
+            </Alert>
+          )}
             <PlacesAutocomplete setSelected={handlePlaceSelect} />
           </div>
         )}

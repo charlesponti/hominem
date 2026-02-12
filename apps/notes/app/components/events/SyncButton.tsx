@@ -27,11 +27,11 @@ export default function SyncButton({ onSync, disabled = false }: SyncButtonProps
       onClick={handleSync}
       disabled={disabled || isSyncing}
       className={cn(
-        'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 border',
+        'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium  border',
         {
           'border-muted-foreground/30 text-muted-foreground cursor-not-allowed':
             disabled || isSyncing,
-          'border-foreground text-foreground cursor-pointer': !(disabled || isSyncing),
+          'border-foreground text-foreground ': !(disabled || isSyncing),
         },
       )}
     >

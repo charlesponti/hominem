@@ -42,7 +42,7 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, onToggleForm: _onTog
                   name="date"
                   defaultValue={new Date().toISOString().split('T')[0]}
                   required
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-3 py-2 text-sm border bg-card text-foreground border-border focus:border-primary"
                 />
               </div>
               <div>
@@ -56,7 +56,7 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, onToggleForm: _onTog
                   type="time"
                   id="time"
                   name="time"
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-3 py-2 text-sm border bg-card text-foreground border-border focus:border-primary"
                 />
               </div>
             </div>
@@ -74,7 +74,7 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, onToggleForm: _onTog
                   name="title"
                   placeholder="e.g., Movie Night"
                   required
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-3 py-2 text-sm border bg-card text-foreground border-border focus:border-primary"
                 />
               </div>
               <div>
@@ -89,7 +89,7 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, onToggleForm: _onTog
                   id="location"
                   name="location"
                   placeholder="e.g., AMC Theater"
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-3 py-2 text-sm border bg-card text-foreground border-border focus:border-primary"
                 />
               </div>
             </div>
@@ -107,7 +107,7 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, onToggleForm: _onTog
                   multiple
                   onChange={handlePeopleChange}
                   disabled={isLoadingPeople}
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20 min-h-[100px] disabled:opacity-50"
+                  className="w-full px-3 py-2 text-sm border bg-card text-foreground border-border focus:border-primary min-h-[100px] disabled:"
                 >
                   {isLoadingPeople ? (
                     <option disabled>Loading people...</option>
@@ -135,7 +135,7 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, onToggleForm: _onTog
                   id="tags"
                   name="tags"
                   placeholder="Comma-separated tags"
-                  className="w-full px-3 py-2 text-sm border rounded-md transition-all duration-150 focus:-translate-y-px bg-card text-foreground border-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full px-3 py-2 text-sm border bg-card text-foreground border-border focus:border-primary"
                 />
               </div>
             </div>
@@ -157,7 +157,7 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, onToggleForm: _onTog
             <div className="flex gap-3 pt-2">
               <button
                 type="submit"
-                className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-150 shadow-sm hover:shadow-md hover:-translate-y-0.5 bg-primary text-primary-foreground"
+                className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold bg-primary text-primary-foreground"
               >
                 Create Event
               </button>

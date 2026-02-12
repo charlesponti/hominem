@@ -76,9 +76,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
       <Card>
         <CardContent className="text-center py-6">
           <h3 className="text-sm font-semibold text-foreground mb-1">No Budget Categories</h3>
-          <p className="text-xs text-muted-foreground">
-            Please add budget categories to see performance data.
-          </p>
+          <p className="text-xs text-muted-foreground">Add budget categories to view data.</p>
         </CardContent>
       </Card>
     );
@@ -98,7 +96,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
   }
 
   return (
-    <Card>
+    <Card metadata={`KPI_OBJ_CT: ${categories.length}`}>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Target className="size-4" />

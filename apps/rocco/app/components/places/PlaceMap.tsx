@@ -14,7 +14,7 @@ const PlaceMap = ({ latitude, longitude, name, googleMapsId: _googleMapsId }: Pr
 
   return (
     <div className="relative group">
-      <div className="rounded-2xl overflow-hidden shadow-md border border-border h-[300px]">
+      <div className="overflow-hidden border border-border h-[300px]">
         <iframe
           title={`Map showing ${name}`}
           src={mapUrl}

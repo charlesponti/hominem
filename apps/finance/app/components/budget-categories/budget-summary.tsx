@@ -32,9 +32,9 @@ export function BudgetSummary({ totalBudget, totalSpent }: BudgetSummaryProps) {
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full border border-foreground rounded-full h-1.5">
+        <div className="w-full border border-foreground h-1.5">
           <div
-            className="h-1.5 rounded-full transition-all duration-300 ease-in-out"
+            className="h-1.5"
             style={{
               width: `${Math.min(spentPercentage, 100)}%`,
               backgroundColor: getProgressColor(),

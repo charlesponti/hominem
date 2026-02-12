@@ -1,0 +1,7 @@
+# Ignore generated build output and other generated directories
+**/build/**
+**/dist/**
+**/.next/**
+**/out/**
+**/coverage/**
+**/node_modules/**

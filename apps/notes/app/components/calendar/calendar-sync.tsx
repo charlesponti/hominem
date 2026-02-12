@@ -95,17 +95,13 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
           <Calendar className="size-5" />
           Google Calendar Sync
         </CardTitle>
-        <CardDescription>
-          Sync your Google Calendar events to your personal calendar
-        </CardDescription>
+        <CardDescription>Sync Google Calendar events to your calendar</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!hasGoogleAccount ? (
           <div className="text-center py-8">
             <AlertCircle className="size-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              Please connect your Google account first to sync calendar events.
-            </p>
+            <p className="text-muted-foreground">Connect Google to enable calendar sync.</p>
             <Button
               className="mt-4"
               onClick={() => {
@@ -114,7 +110,7 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
                 )}`;
               }}
             >
-              Connect Google Account
+              CONNECT GOOGLE
             </Button>
           </div>
         ) : (
@@ -138,7 +134,7 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor={startDateId}>Start Date (Optional)</Label>
+                  <Label htmlFor={startDateId}>Start Date</Label>
                   <Input
                     id={startDateId}
                     type="date"
@@ -147,7 +143,7 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
                   />
                 </div>
                 <div>
-                  <Label htmlFor={endDateId}>End Date (Optional)</Label>
+                  <Label htmlFor={endDateId}>End Date</Label>
                   <Input
                     id={endDateId}
                     type="date"
@@ -175,13 +171,13 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
                   }
                   onClick={setDefaultTimeRange}
                 >
-                  This Month
+                  THIS MONTH
                 </Button>
                 <Button
                   variant={!(timeRange.start || timeRange.end) ? 'default' : 'outline'}
                   onClick={() => setTimeRange({ start: '', end: '' })}
                 >
-                  All Time
+                  ALL TIME
                 </Button>
               </div>
             </div>
@@ -190,23 +186,19 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 size-4" />
-                  Syncing...
+                  SYNCING
                 </>
               ) : (
                 <>
                   <Calendar className="mr-2 size-4" />
-                  Sync Calendar
+                  SYNC CALENDAR
                 </>
               )}
             </Button>
 
             {syncResult || syncError ? (
               <div
-                className={`p-4 rounded-lg ${
-                  syncResult && !syncError
-                    ? 'bg-muted border border-border'
-                    : 'bg-muted border border-border'
-                }`}
+                className="p-4 bg-muted border border-border"
               >
                 <div className="flex items-center gap-2">
                   {syncResult && !syncError ? (
@@ -215,9 +207,9 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
                     <AlertCircle className="size-5 text-muted-foreground" />
                   )}
                   <span
-                    className={`font-medium ${syncResult && !syncError ? 'text-foreground' : 'text-foreground'}`}
+                    className="font-medium text-foreground"
                   >
-                    {syncResult && !syncError ? 'Sync Successful!' : 'Sync Failed'}
+                    {syncResult && !syncError ? 'SYNC COMPLETE' : 'SYNC FAILED'}
                   </span>
                 </div>
                 {syncResult && !syncError ? (

@@ -46,10 +46,6 @@ export function AnalyticsChartDisplay({
   // Adjust date range to ensure full month is included
   const { adjustedDateFrom, adjustedDateTo } = adjustDateRange(dateFrom, dateTo);
 
-  // Generate unique IDs for gradient elements
-  const incomeGradientId = useId();
-  const expensesGradientId = useId();
-
   const {
     data: timeSeriesData,
     isLoading,
@@ -107,7 +103,7 @@ export function AnalyticsChartDisplay({
         <CardContent>
           <div className="h-80 w-full max-w-full flex items-center justify-center">
             <div className="text-center text-destructive">
-              {error.message || 'Unable to load chart data. Please try again later.'}
+              {error.message || 'Unable to load chart data. Retry later.'}
             </div>
           </div>
         </CardContent>
@@ -166,16 +162,6 @@ export function AnalyticsChartDisplay({
                   data={incomeExpensesChartData}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
-                  <defs>
-                    <linearGradient id={incomeGradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={CHART_COLORS.positive} stopOpacity={0.8} />
-                      <stop offset="95%" stopColor={CHART_COLORS.positive} stopOpacity={0.2} />
-                    </linearGradient>
-                    <linearGradient id={expensesGradientId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={CHART_COLORS.negative} stopOpacity={0.8} />
-                      <stop offset="95%" stopColor={CHART_COLORS.negative} stopOpacity={0.2} />
-                    </linearGradient>
-                  </defs>
                   <XAxis dataKey="name" className="text-xs" />
                   <YAxis
                     className="text-xs"
@@ -189,15 +175,15 @@ export function AnalyticsChartDisplay({
                     type="monotone"
                     dataKey="Income"
                     stroke={CHART_COLORS.positive}
-                    fillOpacity={1}
-                    fill={`url(#${incomeGradientId})`}
+                    fillOpacity={0.2}
+                    fill={CHART_COLORS.positive}
                   />
                   <Area
                     type="monotone"
                     dataKey="Expenses"
                     stroke={CHART_COLORS.negative}
-                    fillOpacity={1}
-                    fill={`url(#${expensesGradientId})`}
+                    fillOpacity={0.2}
+                    fill={CHART_COLORS.negative}
                   />
                 </AreaChart>
               ) : (

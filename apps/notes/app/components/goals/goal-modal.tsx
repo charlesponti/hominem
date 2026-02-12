@@ -139,7 +139,7 @@ export function GoalModal({ open, onOpenChange, goal, onSubmit, isLoading }: Goa
               <select
                 id="status"
                 {...register('status')}
-                className="w-full p-2 text-base border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full p-2 text-base border  focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="todo">To Do</option>
                 <option value="in_progress">In Progress</option>

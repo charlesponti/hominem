@@ -1,12 +1,13 @@
 @import 'tailwindcss';
+@import './animations.css';
 
 /* ============================================
- * VOID Design System v1.0
+ * VOID Design System v1.1
  * Philosophy: Japanese Minimalism
  * 
  * Kanso (簡素 - Simplicity): Elimination of the non-essential
  * Ma (間 - Negative Space): The void is a structural element
- * Shibui (渋い - Understated): No performance, no decoration
+ * Shibui (渋い - Understated): No decoration; motion only via shared breezy wave
  * Wabi-sabi (侘寂 - Imperfection): Technical honesty, asymmetry
  * ============================================ */
 
@@ -17,12 +18,11 @@ body {
   cursor: crosshair;
 }
 
-/* Shibui: No animations, no transitions - instantaneous state changes only */
+/* Shibui: No ad-hoc animations or transitions; only shared breezy utilities allowed */
 *,
 *::before,
 *::after {
   transition: none !important;
-  animation: none !important;
 }
 
 @theme {
@@ -133,10 +133,54 @@ body {
     border-color: var(--color-border, currentColor);
   }
 
-  button {
-    cursor: pointer;
-    font-family: inherit;
+  /* Deep Void: Instant Logic */
+  * {
+    transition: none !important;
   }
+
+  button {
+    cursor: crosshair;
+    font-family: inherit;
+    text-transform: uppercase;
+  }
+
+  /* Deep Void: Instant Inversion Interaction (Shibui) */
+  .void-invert {
+    transition: none !important;
+  }
+
+  .void-invert:hover,
+  .void-invert:focus-visible,
+  .void-invert[data-state='open'],
+  .void-invert:active {
+    background-color: var(--color-foreground) !important;
+    color: var(--color-background) !important;
+  }
+
+  /* Deep Void: Instant Inversion Interaction (Shibui) */
+  .void-invert:active,
+  .void-invert:focus {
+    background-color: var(--foreground) !important;
+    color: var(--background) !important;
+    transition: none !important;
+  }
+
+  /* Deep Void: Void Scrollbar (Sanose) */
+  /* stylelint-disable selector-disallowed-list */
+  ::-webkit-scrollbar {
+    width: 2px;
+    height: 2px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-foreground);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
+  /* stylelint-enable selector-disallowed-list */
 
   /* Ensure Radix portals work correctly */
   [data-radix-portal] {
@@ -197,6 +241,23 @@ body {
 @layer utilities {
   .container {
     @apply mx-auto px-2 sm:px-0 max-w-5xl;
+  }
+
+  /* Breezy wave: approved motion primitive */
+  .void-anim-breezy {
+    animation: void-breezy-wave 320ms cubic-bezier(0.32, 0.72, 0.28, 1) forwards;
+  }
+
+  .void-anim-breezy-loop {
+    animation: void-breezy-wave 1.8s cubic-bezier(0.32, 0.72, 0.28, 1) infinite;
+  }
+
+  .void-anim-breezy-progress {
+    animation: void-breezy-stream 1.8s linear infinite;
+  }
+
+  .void-anim-breezy-stagger > * {
+    animation: void-breezy-wave 1.8s cubic-bezier(0.32, 0.72, 0.28, 1) infinite;
   }
 
   .h-screen-dynamic {
@@ -305,11 +366,13 @@ body {
   }
 
   .ring-outline {
-    box-shadow: 0 0 0 2px var(--ring);
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
   }
 
   .ring-ring {
-    box-shadow: 0 0 0 3px var(--ring);
+    outline: 3px solid var(--ring);
+    outline-offset: 1px;
   }
 
   .bg-chart-1 {
@@ -500,6 +563,11 @@ body {
   .ascii-texture > * {
     position: relative;
     z-index: 1;
+  }
+
+  /* Deep Void: Technical Ornamentation Utility */
+  .void-metadata {
+    @apply absolute top-1 right-1 font-mono text-[10px] uppercase opacity-10 pointer-events-none tracking-widest;
   }
 
   /* VOID: Remove all decorative elements */

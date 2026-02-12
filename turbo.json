@@ -30,7 +30,7 @@
       "cache": false
     },
     "dev": {
-      "cache": false,
+      "cache": true,
       "persistent": true
     },
     "format": {
@@ -38,7 +38,7 @@
       "outputs": []
     },
     "lint": {
-      "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],
+      "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md,css}", "app/**/*.{ts,tsx,js,jsx,json,md,css}", "tools/stylelint-config-void.cjs"],
       "outputs": []
     },
     "start": {

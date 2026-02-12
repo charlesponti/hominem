@@ -28,6 +28,18 @@ export type PlacePhotosOptions = {
   forceFresh?: boolean;
 };
 
+export type AutocompleteOptions = {
+  input: string;
+  sessionToken?: string;
+  locationBias?: {
+    latitude: number;
+    longitude: number;
+    radius: number;
+  };
+  includeQueryPredictions?: boolean;
+  includedPrimaryTypes?: string[];
+};
+
 // Types extracted from rocco/app/lib/types.ts
 export type PlaceLocation = {
   latitude: number;
@@ -113,6 +125,11 @@ const DEFAULT_SEARCH_FIELD_MASK = withPlacesPrefix([
   FIELDS.location,
   FIELDS.types,
 ]);
+
+const DEFAULT_AUTOCOMPLETE_FIELD_MASK =
+  'suggestions.placePrediction.placeId,suggestions.placePrediction.text,' +
+  'suggestions.placePrediction.structuredFormat,' +
+  'suggestions.placePrediction.types,suggestions.placePrediction.distanceMeters';
 
 // For place details endpoint (returns single place)
 const DEFAULT_DETAILS_FIELD_MASK = [
@@ -248,6 +265,50 @@ const search = async ({
   return places;
 };
 
+const autocomplete = async ({
+  input,
+  sessionToken,
+  locationBias,
+  includeQueryPredictions,
+  includedPrimaryTypes,
+}: AutocompleteOptions): Promise<
+  places_v1.Schema$GoogleMapsPlacesV1AutocompletePlacesResponseSuggestion[]
+> => {
+  const body: places_v1.Schema$GoogleMapsPlacesV1AutocompletePlacesRequest = { input };
+
+  if (sessionToken) {
+    body.sessionToken = sessionToken;
+  }
+
+  if (includeQueryPredictions !== undefined) {
+    body.includeQueryPredictions = includeQueryPredictions;
+  }
+
+  if (includedPrimaryTypes) {
+    body.includedPrimaryTypes = includedPrimaryTypes;
+  }
+
+  if (locationBias) {
+    body.locationBias = {
+      circle: {
+        center: {
+          latitude: locationBias.latitude,
+          longitude: locationBias.longitude,
+        },
+        radius: locationBias.radius,
+      },
+    };
+  }
+
+  // Autocomplete responses are session-scoped; avoid caching.
+  const response = await createPlacesClient().places.autocomplete(
+    { requestBody: body },
+    { headers: { 'X-Goog-FieldMask': DEFAULT_AUTOCOMPLETE_FIELD_MASK } },
+  );
+
+  return response.data.suggestions ?? [];
+};
+
 const getPhotos = async ({
   placeId,
   limit = 6,
@@ -269,6 +330,7 @@ const getPhotos = async ({
 export const googlePlaces = {
   getDetails,
   search,
+  autocomplete,
   getPhotos,
 };
 

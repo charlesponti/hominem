@@ -64,9 +64,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   if (!(supabaseUrl && supabaseAnonKey)) {
-    throw new Error(
-      'Missing required Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY',
-    );
+    throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY');
   }
 
   const supabaseConfig = {

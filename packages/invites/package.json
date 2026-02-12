@@ -10,7 +10,6 @@
   "scripts": {
     "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
-    "dev": "tsc -b -w",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
     "test": "vitest run --passWithNoTests",

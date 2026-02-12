@@ -129,7 +129,7 @@ export default function EditBudgetCategory() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-3xl font-serif tracking-tight text-foreground">{category.name}</h1>
+      <h1 className="text-3xl  tracking-tight text-foreground">{category.name}</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor={nameId}>Category Name</Label>
@@ -180,8 +180,8 @@ export default function EditBudgetCategory() {
                 key={color}
                 type="button"
                 onClick={() => setFormData({ ...formData, color })}
-                className={`w-8 h-8 rounded-full ${color} ${
-                  formData.color === color ? 'ring-2 ring-offset-2 ring-border' : ''
+                className={`w-8 h-8  ${color} ${
+                  formData.color === color ? 'ring-2  ring-border' : ''
                 }`}
               />
             ))}

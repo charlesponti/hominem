@@ -10,6 +10,7 @@ import {
   Bot,
   Calendar,
   ClipboardList,
+  Layers,
   Lightbulb,
   LogOut,
   MenuIcon,
@@ -26,6 +27,11 @@ const navItems = [
     title: 'Notes',
     url: '/notes',
     icon: Sparkles,
+  },
+  {
+    title: 'Workspace',
+    url: '/workspace',
+    icon: Layers,
   },
   {
     title: 'Tasks',
@@ -75,7 +81,7 @@ const NavigationMenu = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="cursor-pointer px-2 text-primary focus-visible:ring-2 ring-primary focus-visible:ring-offset-0 rounded-md"
+          className=" px-2 text-primary focus-visible:ring-2 ring-primary focus-visible:"
         >
           <MenuIcon className="size-5" />
         </Button>
@@ -88,7 +94,7 @@ const NavigationMenu = () => {
         side="bottom"
       >
         {navItems.map((item) => (
-          <DropdownMenuItem key={item.title} asChild className="cursor-pointer py-2">
+          <DropdownMenuItem key={item.title} asChild className=" py-2">
             {/* @ts-ignore */}
             <Link to={href(item.url)} className="flex items-center space-x-2">
               {item.icon && <item.icon className="size-4" />}
@@ -96,14 +102,14 @@ const NavigationMenu = () => {
             </Link>
           </DropdownMenuItem>
         ))}
-        <DropdownMenuItem asChild className="cursor-pointer py-2">
+        <DropdownMenuItem asChild className=" py-2">
           <Link to={href('/account')} className="flex items-center space-x-2">
             <Settings className="size-4" />
             <span>Account</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="cursor-pointer py-2 flex items-center space-x-2"
+          className=" py-2 flex items-center space-x-2"
           onClick={onLogoutClick}
         >
           <LogOut className="size-4" />
@@ -152,7 +158,7 @@ const SignInButton = () => {
   }, [supabase.auth]);
 
   return (
-    <Button onClick={onSignInClick} className="flex cursor-pointer">
+    <Button onClick={onSignInClick} className="flex ">
       Sign In with Google
     </Button>
   );

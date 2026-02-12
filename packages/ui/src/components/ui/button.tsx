@@ -6,16 +6,16 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const buttonVariants = cva(
-  "p-2 inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-semilight disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none aria-invalid:border-destructive uppercase tracking-tight",
+  "p-2 inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-semilight disabled:pointer-events-none disabled: [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none aria-invalid:border-destructive uppercase tracking-tight",
   {
     variants: {
       variant: {
         default:
-          'bg-primary text-primary-foreground hover:bg-emphasis-highest active:bg-emphasis-highest',
-        destructive: 'bg-destructive text-white hover:bg-destructive active:bg-destructive',
-        outline: 'border hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
+          'bg-primary text-primary-foreground void-invert',
+        destructive: 'bg-destructive text-white void-invert',
+        outline: 'border hover:bg-accent hover:text-accent-foreground void-invert',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary void-invert',
+        ghost: 'hover:bg-accent hover:text-accent-foreground void-invert',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {

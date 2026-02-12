@@ -153,10 +153,10 @@ export function KeyboardShortcutsHelp({ className = '' }: KeyboardShortcutsHelpP
                       {categoryShortcuts.map((shortcut) => (
                         <div
                           key={`${shortcut.keys}-${shortcut.description}`}
-                          className="flex items-center justify-between py-2 px-3 rounded-lg border border-border hover:border-border/80"
+                          className="flex items-center justify-between py-2 px-3 border border-border hover:border-border/80"
                         >
                           <span className="text-foreground">{shortcut.description}</span>
-                          <code className="px-2 py-1 border rounded text-sm font-mono text-foreground shadow-sm">
+                          <code className="px-2 py-1 border text-sm font-mono text-foreground">
                             {shortcut.keys}
                           </code>
                         </div>

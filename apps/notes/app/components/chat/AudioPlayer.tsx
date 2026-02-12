@@ -95,7 +95,7 @@ export function AudioPlayer({
   const progressPercent = state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0;
 
   return (
-    <div className={`bg-muted rounded-lg p-4 space-y-3 ${className}`}>
+    <div className={`bg-muted p-4 space-y-3 ${className}`}>
       {/* Hidden audio element */}
       <audio ref={audioRef} preload="metadata" />
 
@@ -107,18 +107,15 @@ export function AudioPlayer({
 
       {/* Progress bar */}
       <div className="space-y-2">
-        <div
-          className="w-full h-2 bg-secondary rounded-full cursor-pointer relative"
-          onClick={handleSeek}
-        >
+        <div className="w-full h-2 bg-secondary  relative" onClick={handleSeek}>
           <div
-            className="h-full bg-primary rounded-full transition-all duration-150"
+            className="h-full bg-primary"
             style={{ width: `${progressPercent}%` }}
           />
 
           {/* Progress handle */}
           <div
-            className="absolute top-1/2 size-4 bg-primary rounded-full shadow-md transform -translate-y-1/2 -translate-x-1/2 opacity-0 hover:opacity-100 transition-opacity"
+            className="absolute top-1/2 size-4 bg-primary void-anim-breezy transform -translate-y-1/2 -translate-x-1/2"
             style={{ left: `${progressPercent}%` }}
           />
         </div>
@@ -200,8 +197,8 @@ export function AudioPlayer({
               step="0.05"
               value={state.isMuted ? 0 : state.volume}
               onChange={handleVolumeChange}
-              className="w-16 h-1 bg-secondary rounded-lg appearance-none cursor-pointer"
-            />
+            className="w-16 h-1 bg-secondary appearance-none "
+          />
           </div>
 
           {/* Download button */}

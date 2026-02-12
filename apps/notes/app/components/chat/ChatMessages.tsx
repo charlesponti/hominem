@@ -280,7 +280,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         >
           {/* Error Display */}
           {displayError && (
-            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+            <div className="bg-destructive/10 border border-destructive/20 p-4">
               <div className="text-sm font-medium text-destructive mb-1">Chat Error</div>
               <div className="text-xs text-destructive/80">
                 {displayError instanceof Error ? displayError.message : String(displayError)}
@@ -351,7 +351,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
             <div className="space-y-4">
               {filteredMessages.length === 0 && searchQuery ? (
                 <div className="text-center text-muted-foreground py-8">
-                  <Search className="size-8 mx-auto mb-2 opacity-50" />
+                  <Search className="size-8 mx-auto mb-2 " />
                   <p>No messages found matching &quot;{searchQuery}&quot;</p>
                 </div>
               ) : (

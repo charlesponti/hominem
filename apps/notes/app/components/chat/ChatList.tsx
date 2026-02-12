@@ -83,7 +83,7 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
             key={chat.id}
             to={`/chat/${chat.id}`}
             onClick={handleChatSelect}
-            className={`block p-3 rounded-lg mb-2 transition-colors group border-l-2 border-l-transparent hover:border-l-primary ${
+            className={`block p-3 mb-2 group border-l-2 border-l-transparent hover:border-l-primary ${
               currentChatId === chat.id ? 'bg-muted' : ''
             }`}
           >
@@ -98,7 +98,7 @@ export function ChatList({ userId, onChatSelect, showSearch = false }: ChatListP
               <Button
                 variant="ghost"
                 size="sm"
-                className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
                 onClick={(e) => handleDeleteChat(chat.id, e)}
               >
                 <Trash2 className="size-3" />

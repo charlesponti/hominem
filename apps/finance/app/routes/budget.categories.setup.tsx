@@ -93,7 +93,7 @@ export default function BudgetCategoriesSetup() {
           Back to Tracking
         </Button>
         <div>
-          <h1 className="text-3xl font-serif tracking-tight">Set up Budget Categories</h1>
+          <h1 className="text-3xl  tracking-tight">Set up Budget Categories</h1>
           <p className="text-muted-foreground mt-1">
             Select the transaction categories you'd like to convert to budget categories. We'll
             suggest budget amounts based on your spending history.
@@ -126,7 +126,7 @@ export default function BudgetCategoriesSetup() {
               {transactionCategories.map((transactionCategory: any) => (
                 <button
                   key={transactionCategory.name || transactionCategory.category}
-                  className={`w-full text-left flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-colors ${
+                  className={`w-full text-left flex items-center justify-between p-4 border  ${
                     selectedCategories.has(transactionCategory.name || transactionCategory.category)
                       ? 'border-primary bg-accent'
                       : 'border-muted hover:border-border'
@@ -140,7 +140,7 @@ export default function BudgetCategoriesSetup() {
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`size-4 rounded border-2 flex items-center justify-center ${
+                      className={`size-4 border-2 flex items-center justify-center ${
                         selectedCategories.has(
                           transactionCategory.name || transactionCategory.category,
                         )
@@ -191,7 +191,7 @@ export default function BudgetCategoriesSetup() {
         >
           {bulkCreateMutation.isPending ? (
             <>
-              <div className="rounded-full size-4 border-b-2 border-white" />
+              <div className="size-4 border-b-2 border-white" />
               Creating...
             </>
           ) : (

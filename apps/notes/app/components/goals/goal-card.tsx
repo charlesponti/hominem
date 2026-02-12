@@ -22,7 +22,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
   const progress = totalMilestones > 0 ? (completedMilestones / totalMilestones) * 100 : 0;
 
   return (
-    <div className="group flex flex-col bg-card rounded-lg border p-6 hover:shadow-lg transition-all">
+    <div className="group flex flex-col bg-card border p-6">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <h3 className="text-xl font-semibold mb-1 pr-4">{goal.title}</h3>
@@ -30,7 +30,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
             <p className="text-muted-foreground text-sm line-clamp-2 mb-2">{goal.description}</p>
           )}
         </div>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100">
           <Button variant="ghost" size="sm" onClick={() => onEdit(goal)}>
             <Edit className="size-4 text-muted-foreground" />
           </Button>
@@ -47,7 +47,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
             {goal.milestones.map((milestone: GoalMilestone, idx: number) => (
               <div key={`${goal.id}-milestone-${idx}`} className="flex items-start gap-2 text-sm">
                 <div
-                  className={`mt-1 size-4 rounded-full border-2 flex items-center justify-center ${
+                  className={`mt-1 size-4 border-2 flex items-center justify-center ${
                     milestone.isCompleted ? 'bg-foreground border-foreground' : 'border-muted'
                   }`}
                 >
@@ -68,7 +68,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
 
       <div className="flex items-center gap-3 text-sm">
         {goal.goalCategory && (
-          <span className="text-muted-foreground border border-muted-foreground/30 px-2 py-1 rounded">
+          <span className="text-muted-foreground border border-muted-foreground/30 px-2 py-1">
             {String(goal.goalCategory)}
           </span>
         )}

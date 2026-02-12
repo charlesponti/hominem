@@ -10,7 +10,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
   return (
     <span
-      className={`px-2 py-1 rounded ${
+      className={`px-2 py-1 ${
         goalStatus === 'completed'
           ? 'bg-accent text-accent-foreground'
           : goalStatus === 'in_progress'

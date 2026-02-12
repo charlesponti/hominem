@@ -188,7 +188,7 @@ export function PlaidLink({
           >
             {isLoading ? (
               <>
-                <div className="mr-2 size-4 rounded-full border-2 border-b-transparent" />
+                <div className="mr-2 size-4 border-2 border-b-transparent" />
                 {isCreatingToken
                   ? 'Initializing...'
                   : isExchanging
@@ -221,7 +221,7 @@ export function PlaidLink({
     >
       {isLoading ? (
         <>
-          <div className="size-4 rounded-full border-2 border-b-transparent" />
+          <div className="size-4 border-2 border-b-transparent" />
           {isCreatingToken ? 'Initializing...' : isExchanging ? 'Connecting...' : 'Loading...'}
         </>
       ) : (

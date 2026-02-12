@@ -118,16 +118,21 @@ function extractPhotoReferences(photos: any[]): string[] {
 }
 
 function mapGooglePlaceToPrediction(place: any) {
+  const fromPrediction = place.placePrediction ?? place;
+  const structured = fromPrediction.structuredFormat;
+  const textObj = fromPrediction.text;
+  const text = textObj?.text || fromPrediction.displayName?.text || '';
+  const address =
+    structured?.secondaryText?.text ||
+    fromPrediction.formattedAddress ||
+    structured?.mainText?.text ||
+    '';
+
   return {
-    place_id: place.id,
-    text: place.displayName?.text || '',
-    address: place.formattedAddress,
-    location: place.location
-      ? {
-          latitude: place.location.latitude,
-          longitude: place.location.longitude,
-        }
-      : null,
+    place_id: fromPrediction.placeId || fromPrediction.id,
+    text,
+    address,
+    location: null,
   };
 }
 
@@ -326,12 +331,18 @@ export const placesRoutes = new Hono<AppContext>()
             }
           : undefined;
 
-      const places = await googlePlaces.search({
-        query: query,
-        ...(locationBias && { locationBias: locationBias }),
+      const suggestions = await googlePlaces.autocomplete({
+        input: query,
+        ...(input.sessionToken ? { sessionToken: input.sessionToken } : {}),
+        includeQueryPredictions: input.includeQueryPredictions ?? false,
+        includedPrimaryTypes: input.types ?? [],
+        ...(locationBias && { locationBias }),
       });
 
-      const predictions = places.map(mapGooglePlaceToPrediction);
+      const predictions = suggestions
+        .map((suggestion) => suggestion.placePrediction)
+        .filter(Boolean)
+        .map(mapGooglePlaceToPrediction);
       return c.json<PlaceAutocompleteOutput>(predictions, 200);
     } catch (err) {
       if (isServiceError(err)) {

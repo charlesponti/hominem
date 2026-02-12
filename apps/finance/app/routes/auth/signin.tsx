@@ -40,18 +40,18 @@ export default function SignInPage() {
   }, [supabase.auth]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-background to-muted/50">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md space-y-8 p-8">
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl font-bold text-center">Welcome Back</CardTitle>
+            <CardTitle className="text-3xl font-bold text-center">Sign In</CardTitle>
             <CardDescription className="text-center">
-              Sign in to your Florin account
+              Access your Florin account
             </CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
-              <div className="text-destructive text-sm bg-destructive/10 p-3 rounded-md mb-6">
+              <div className="text-destructive text-sm bg-destructive/10 p-3 mb-6">
                 {error}
               </div>
             )}

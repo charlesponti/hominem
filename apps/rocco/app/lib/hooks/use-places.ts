@@ -29,6 +29,7 @@ import type {
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
+import { endTrace, startTrace } from '~/lib/performance/trace';
 import { queryKeys } from '~/lib/query-keys';
 
 /**
@@ -235,11 +236,28 @@ export const useNearbyPlaces = (
   useHonoQuery<PlaceGetNearbyFromListsOutput>(
     queryKeys.places.nearby(latitude, longitude, radiusMeters),
     async (client: HonoClient) => {
-      if (latitude === undefined || longitude === undefined) return [];
-      const res = await client.api.places.nearby.$post({
-        json: { location: { lat: latitude, lng: longitude }, radius: radiusMeters }, // Corrected structure
+      const trace = startTrace('places.nearby', {
+        latitude,
+        longitude,
+        radiusMeters,
       });
-      return res.json();
+      let responsePayload: PlaceGetNearbyFromListsOutput | null = null;
+      try {
+        if (latitude === undefined || longitude === undefined) {
+          return [] as PlaceGetNearbyFromListsOutput;
+        }
+
+        const res = await client.api.places.nearby.$post({
+          json: { location: { lat: latitude, lng: longitude }, radius: radiusMeters },
+        });
+        const payload = await res.json();
+        responsePayload = payload;
+        return payload;
+      } finally {
+        endTrace(trace, {
+          resultSize: Array.isArray(responsePayload) ? responsePayload.length : 0,
+        });
+      }
     },
     {
       enabled: latitude !== undefined && longitude !== undefined,

@@ -15,7 +15,7 @@ export function BudgetCategoriesHeader({
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-serif tracking-tighter text-foreground">Budget Categories</h1>
+        <h1 className="text-3xl  tracking-tighter text-foreground">Budget Categories</h1>
       </div>
       <div className="flex gap-2">
         {/* {transactionCategoriesCount && transactionCategoriesCount > 0 && (

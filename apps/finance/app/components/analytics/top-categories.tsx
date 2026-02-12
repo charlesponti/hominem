@@ -46,7 +46,7 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategori
           </div>
         ) : error instanceof Error ? (
           <div className="text-destructive">
-            {error.message || 'Your categories are not available. Please try again later.'}
+            {error.message || 'Categories unavailable. Retry later.'}
           </div>
         ) : error ? (
           <div className="text-destructive">

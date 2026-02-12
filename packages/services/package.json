@@ -25,7 +25,6 @@
   "scripts": {
     "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
-    "dev": "tsc -d -w",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
     "test": "vitest run --passWithNoTests",

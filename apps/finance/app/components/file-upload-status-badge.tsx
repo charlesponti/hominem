@@ -30,7 +30,7 @@ export const FileUploadStatusBadge = memo(function FileUploadStatusBadge({
   const config = getStatusConfig(status);
 
   return (
-    <span className={cn('px-2 py-1 rounded-full text-xs font-medium', config.bg, config.text)}>
+    <span className={cn('px-2 py-1 text-xs font-medium', config.bg, config.text)}>
       {config.label}
     </span>
   );

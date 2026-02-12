@@ -38,11 +38,11 @@ export function TaskItem({ task, onStatusChange, onDelete }: TaskItemProps) {
     <div
       className={`
         flex items-start gap-3 py-3 px-4 border-b border-border
-        hover:bg-muted/50 transition-colors
+        hover:bg-muted/50
         ${isDone ? 'opacity-60' : ''}
       `}
     >
-      <Checkbox checked={isDone} onCheckedChange={handleToggle} className="mt-1" />
+      <Checkbox checked={isDone} onCheckedChange={handleToggle} className="mt-1 " />
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -53,7 +53,7 @@ export function TaskItem({ task, onStatusChange, onDelete }: TaskItemProps) {
           </span>
           <Badge
             variant="secondary"
-            className={`text-xs ${priorityColors[task.priority]} border-0`}
+            className={`text-xs ${priorityColors[task.priority]} border-0 `}
           >
             {task.priority}
           </Badge>
@@ -72,7 +72,7 @@ export function TaskItem({ task, onStatusChange, onDelete }: TaskItemProps) {
         variant="ghost"
         size="sm"
         onClick={() => onDelete(task.id)}
-        className="size-8 p-0 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+        className="size-8 p-0 text-muted-foreground hover:text-foreground shrink-0"
         title="Delete task"
       >
         <Trash2 className="size-4" />

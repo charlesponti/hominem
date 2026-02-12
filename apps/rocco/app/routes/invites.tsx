@@ -187,21 +187,20 @@ export default function Invites({ loaderData }: Route.ComponentProps) {
       </div>
 
       {tokenMismatch && (
-        <div className="rounded-lg border border-destructive/50 border-2 p-4 text-sm text-destructive">
-          This invite was found, but it belongs to a different user. Please sign in with the correct
-          email or ask the sender to re-invite you.
+        <div className="border border-destructive/50 border-2 p-4 text-sm text-destructive">
+          Invite belongs to another user. Sign in with the correct email or request re-invite.
         </div>
       )}
 
       {/* Empty State */}
       {!requiresAuth && (!invites || invites.length === 0) && !tokenMismatch && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-muted p-6 md:p-12 text-center">
-          <div className="w-16 h-16 rounded-full border border-muted flex items-center justify-center mb-4">
+        <div className="flex flex-col items-center justify-center border-2 border-dashed border-muted p-6 md:p-12 text-center">
+          <div className="w-16 h-16 border border-muted flex items-center justify-center mb-4">
             <Mail className="w-8 h-8 text-primary" />
           </div>
           <h3 className="text-xl font-semibold text-foreground mb-2">No invitations yet</h3>
           <p className="text-muted-foreground max-w-md">
-            When someone invites you to collaborate on a list, you'll see it here.
+            Invitations will appear here when received.
           </p>
         </div>
       )}

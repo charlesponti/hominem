@@ -25,7 +25,7 @@ export function DatePicker({
   value,
   onSelect,
   disabled = false,
-  className = 'w-full justify-start text-left font-normal bg-muted border-border placeholder:text-muted-foreground backdrop-blur-sm focus:border-ring focus:ring-2 focus:ring-ring/30 transition-all',
+  className = 'w-full justify-start text-left font-normal bg-muted border-border placeholder:text-muted-foreground backdrop-blur-sm focus:border-ring focus:ring-2 focus:ring-ring/30 ',
   id = 'date-picker',
   placeholder = 'Pick a date',
   label,
