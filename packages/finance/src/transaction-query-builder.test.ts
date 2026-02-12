@@ -5,9 +5,10 @@
  * for various filter combinations without requiring a database connection.
  */
 
-import { describe, it, expect } from 'vitest';
-import { TransactionQueryBuilder } from './transaction-query-builder';
 import { sql } from '@hominem/db';
+import { describe, it, expect } from 'vitest';
+
+import { TransactionQueryBuilder } from './transaction-query-builder';
 
 describe('TransactionQueryBuilder', () => {
   const testUserId = 'test-user-123';
@@ -30,32 +31,40 @@ describe('TransactionQueryBuilder', () => {
 
   describe('filterByDateRange', () => {
     it('should add date range filters', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByDateRange('2024-01-01', '2024-12-31');
+      const builder = new TransactionQueryBuilder(testUserId).filterByDateRange(
+        '2024-01-01',
+        '2024-12-31',
+      );
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle only from date', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByDateRange('2024-01-01', undefined);
+      const builder = new TransactionQueryBuilder(testUserId).filterByDateRange(
+        '2024-01-01',
+        undefined,
+      );
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle only to date', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByDateRange(undefined, '2024-12-31');
+      const builder = new TransactionQueryBuilder(testUserId).filterByDateRange(
+        undefined,
+        '2024-12-31',
+      );
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle no dates', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByDateRange(undefined, undefined);
+      const builder = new TransactionQueryBuilder(testUserId).filterByDateRange(
+        undefined,
+        undefined,
+      );
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
@@ -64,32 +73,28 @@ describe('TransactionQueryBuilder', () => {
 
   describe('filterByAmount', () => {
     it('should add amount range filters', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByAmount(100, 1000);
+      const builder = new TransactionQueryBuilder(testUserId).filterByAmount(100, 1000);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle only min amount', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByAmount(100, undefined);
+      const builder = new TransactionQueryBuilder(testUserId).filterByAmount(100, undefined);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle only max amount', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByAmount(undefined, 1000);
+      const builder = new TransactionQueryBuilder(testUserId).filterByAmount(undefined, 1000);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle zero as valid amount', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByAmount(0, 0);
+      const builder = new TransactionQueryBuilder(testUserId).filterByAmount(0, 0);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
@@ -98,32 +103,32 @@ describe('TransactionQueryBuilder', () => {
 
   describe('filterByCategory', () => {
     it('should add single category filter', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByCategory('Food');
+      const builder = new TransactionQueryBuilder(testUserId).filterByCategory('Food');
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should add multiple category filters with OR logic', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByCategory(['Food', 'Transportation', 'Entertainment']);
+      const builder = new TransactionQueryBuilder(testUserId).filterByCategory([
+        'Food',
+        'Transportation',
+        'Entertainment',
+      ]);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle empty category', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByCategory(undefined);
+      const builder = new TransactionQueryBuilder(testUserId).filterByCategory(undefined);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle empty array', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByCategory([]);
+      const builder = new TransactionQueryBuilder(testUserId).filterByCategory([]);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
@@ -133,24 +138,21 @@ describe('TransactionQueryBuilder', () => {
   describe('filterByAccount', () => {
     it('should filter by UUID account ID', () => {
       const accountId = '123e4567-e89b-12d3-a456-426614174000';
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByAccount(accountId);
+      const builder = new TransactionQueryBuilder(testUserId).filterByAccount(accountId);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should filter by account name', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByAccount('Chase Checking');
+      const builder = new TransactionQueryBuilder(testUserId).filterByAccount('Chase Checking');
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle no account filter', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByAccount(undefined);
+      const builder = new TransactionQueryBuilder(testUserId).filterByAccount(undefined);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
@@ -159,16 +161,14 @@ describe('TransactionQueryBuilder', () => {
 
   describe('filterByDescription', () => {
     it('should add description filter', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByDescription('Starbucks');
+      const builder = new TransactionQueryBuilder(testUserId).filterByDescription('Starbucks');
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle empty description', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByDescription(undefined);
+      const builder = new TransactionQueryBuilder(testUserId).filterByDescription(undefined);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
@@ -177,32 +177,28 @@ describe('TransactionQueryBuilder', () => {
 
   describe('search', () => {
     it('should add full-text search filter', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .search('coffee shop');
+      const builder = new TransactionQueryBuilder(testUserId).search('coffee shop');
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should trim search term', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .search('  coffee shop  ');
+      const builder = new TransactionQueryBuilder(testUserId).search('  coffee shop  ');
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle empty search term', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .search('');
+      const builder = new TransactionQueryBuilder(testUserId).search('');
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle whitespace-only search term', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .search('   ');
+      const builder = new TransactionQueryBuilder(testUserId).search('   ');
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
@@ -211,8 +207,7 @@ describe('TransactionQueryBuilder', () => {
 
   describe('sort', () => {
     it('should add single sort', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .sort('amount', 'desc');
+      const builder = new TransactionQueryBuilder(testUserId).sort('amount', 'desc');
 
       const query = builder.toSQL();
       expect(query.orderBy.length).toBeGreaterThan(0);
@@ -228,16 +223,14 @@ describe('TransactionQueryBuilder', () => {
     });
 
     it('should default to desc direction', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .sort('amount');
+      const builder = new TransactionQueryBuilder(testUserId).sort('amount');
 
       const query = builder.toSQL();
       expect(query.orderBy.length).toBeGreaterThan(0);
     });
 
     it('should always add id sort for stable pagination', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .sort('amount', 'asc');
+      const builder = new TransactionQueryBuilder(testUserId).sort('amount', 'asc');
 
       const query = builder.toSQL();
       // Should have amount sort + id sort
@@ -247,8 +240,7 @@ describe('TransactionQueryBuilder', () => {
 
   describe('paginate', () => {
     it('should set limit and offset', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .paginate(50, 100);
+      const builder = new TransactionQueryBuilder(testUserId).paginate(50, 100);
 
       // Can't directly test limit/offset without executing, but we can verify builder methods are chainable
       expect(builder).toBeInstanceOf(TransactionQueryBuilder);
@@ -298,8 +290,7 @@ describe('TransactionQueryBuilder', () => {
 
   describe('includeExcluded', () => {
     it('should not filter excluded transactions when true', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .includeExcluded(true);
+      const builder = new TransactionQueryBuilder(testUserId).includeExcluded(true);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
@@ -315,16 +306,14 @@ describe('TransactionQueryBuilder', () => {
 
   describe('filterByType', () => {
     it('should filter by transaction type', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByType('expense');
+      const builder = new TransactionQueryBuilder(testUserId).filterByType('expense');
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();
     });
 
     it('should handle no type filter', () => {
-      const builder = new TransactionQueryBuilder(testUserId)
-        .filterByType(undefined);
+      const builder = new TransactionQueryBuilder(testUserId).filterByType(undefined);
 
       const query = builder.toSQL();
       expect(query.where).toBeDefined();

@@ -191,10 +191,7 @@ export async function createEvent(
     updatedAt: now,
   };
 
-  const [result] = await db
-    .insert(events)
-    .values(insertEvent)
-    .returning();
+  const [result] = await db.insert(events).values(insertEvent).returning();
 
   if (!result) {
     throw new Error('Failed to create event');
@@ -222,7 +219,9 @@ export async function createEvent(
   } as unknown as EventWithTagsAndPeople;
 }
 
-export type UpdateEventInput = Partial<Omit<DbEventInput, 'id' | 'userId' | 'createdAt' | 'updatedAt'>> & {
+export type UpdateEventInput = Partial<
+  Omit<DbEventInput, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+> & {
   tags?: string[];
   people?: string[];
   // Additional fields for goals and activities
@@ -246,11 +245,7 @@ export async function updateEvent(
     updatedAt: new Date().toISOString(),
   } satisfies Partial<typeof events.$inferInsert>;
 
-  const result = await db
-    .update(events)
-    .set(updateData)
-    .where(eq(events.id, id))
-    .returning();
+  const result = await db.update(events).set(updateData).where(eq(events.id, id)).returning();
 
   if (result.length === 0) {
     return null;

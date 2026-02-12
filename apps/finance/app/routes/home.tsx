@@ -65,15 +65,13 @@ export default function Home() {
 
           {/* CTA Button */}
           <div className="mb-16">
-            <Button
-              onClick={handleSignIn}
-              size="lg"
-              className="py-8 px-12 text-xl"
-            >
+            <Button onClick={handleSignIn} size="lg" className="py-8 px-12 text-xl">
               Get Started Free
               <ArrowRight className="inline-block ml-2 size-6" />
             </Button>
-            <p className="text-xs font-mono text-muted-foreground mt-3 uppercase tracking-widest">No credit card required</p>
+            <p className="text-xs font-mono text-muted-foreground mt-3 uppercase tracking-widest">
+              No credit card required
+            </p>
           </div>
         </div>
       </main>

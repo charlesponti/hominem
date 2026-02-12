@@ -172,11 +172,7 @@ export function AudioRecorder({
               {state.isPaused ? <Play className="size-4" /> : <Pause className="size-4" />}
             </Button>
 
-            <Button
-              variant="destructive"
-              onClick={handleStopRecording}
-              className="size-12"
-            >
+            <Button variant="destructive" onClick={handleStopRecording} className="size-12">
               <Square className="size-5" />
             </Button>
           </div>

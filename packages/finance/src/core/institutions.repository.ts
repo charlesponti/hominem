@@ -4,8 +4,8 @@ import type {
 } from '@hominem/db/types/finance';
 
 import { db } from '@hominem/db';
-import { financialInstitutions } from '@hominem/db/schema/finance';
 import { eq } from '@hominem/db';
+import { financialInstitutions } from '@hominem/db/schema/finance';
 
 /**
  * Repository for Financial Institutions

@@ -117,9 +117,7 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <p className="text-muted-foreground">No budget categories found.</p>
-          <p className="text-sm text-muted-foreground">
-            Add budget categories to view tracking.
-          </p>
+          <p className="text-sm text-muted-foreground">Add budget categories to view tracking.</p>
         </div>
       </div>
     );

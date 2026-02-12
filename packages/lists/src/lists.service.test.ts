@@ -1,11 +1,11 @@
 import { db } from '@hominem/db';
+import { and, eq } from '@hominem/db';
 import { item as itemTable } from '@hominem/db/schema/items';
 import { list, userLists } from '@hominem/db/schema/lists';
 import { listInvite } from '@hominem/db/schema/lists';
 import { users } from '@hominem/db/schema/users';
 import { createTestUser } from '@hominem/db/test/fixtures';
 import { sendInviteEmail } from '@hominem/services/resend';
-import { and, eq } from '@hominem/db';
 import crypto from 'node:crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

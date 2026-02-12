@@ -140,10 +140,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
             <span>{uploadState.progress}%</span>
           </div>
           <div className="w-full bg-secondary h-2">
-            <div
-              className="bg-primary h-2"
-              style={{ width: `${uploadState.progress}%` }}
-            />
+            <div className="bg-primary h-2" style={{ width: `${uploadState.progress}%` }} />
           </div>
         </div>
       )}
@@ -205,11 +202,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
                 {/* Thumbnail */}
                 {file.thumbnail && (
                   <div className="shrink-0">
-                    <img
-                      src={file.thumbnail}
-                      alt="Thumbnail"
-                      className="w-12 h-12 object-cover"
-                    />
+                    <img src={file.thumbnail} alt="Thumbnail" className="w-12 h-12 object-cover" />
                   </div>
                 )}
 

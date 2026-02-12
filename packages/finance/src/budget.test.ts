@@ -1,8 +1,8 @@
 import { db } from '@hominem/db';
+import { eq, or } from '@hominem/db';
 import { budgetCategories } from '@hominem/db/schema/finance';
 import { users } from '@hominem/db/schema/users';
 import { createTestUser } from '@hominem/db/test/fixtures';
-import { eq, or } from '@hominem/db';
 import crypto from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 

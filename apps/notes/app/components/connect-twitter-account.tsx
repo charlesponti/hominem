@@ -44,10 +44,7 @@ export function ConnectTwitterAccount() {
       ) : (
         <div className="space-y-2">
           {accounts.map((account) => (
-            <div
-              key={account.id}
-              className="flex items-center justify-between p-3 border"
-            >
+            <div key={account.id} className="flex items-center justify-between p-3 border">
               <div className="flex items-center gap-2">
                 <Twitter className="size-4 text-muted-foreground" />
                 <span className="font-medium">@{account.providerAccountId}</span>

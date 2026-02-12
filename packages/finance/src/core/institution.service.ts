@@ -1,6 +1,6 @@
 import { db } from '@hominem/db';
-import { plaidItems } from '@hominem/db/schema/finance';
 import { and, eq } from '@hominem/db';
+import { plaidItems } from '@hominem/db/schema/finance';
 
 import { InstitutionsRepository } from './institutions.repository';
 

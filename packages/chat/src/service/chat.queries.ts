@@ -1,8 +1,8 @@
 import type { ChatOutput } from '@hominem/db/types/chats';
 
 import { db, takeUniqueOrThrow } from '@hominem/db';
-import { chat, chatMessage } from '@hominem/db/schema/chats';
 import { and, desc, eq } from '@hominem/db';
+import { chat, chatMessage } from '@hominem/db/schema/chats';
 
 import type { CreateChatParams } from './chat.types';
 

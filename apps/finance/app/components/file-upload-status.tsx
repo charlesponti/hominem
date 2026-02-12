@@ -31,10 +31,7 @@ export const FileUploadStatus = memo(function FileUploadStatus({
           {typeof progress === 'number' ? (
             <ProgressBar
               progress={progress}
-              className={cn(
-                'h-2 bg-muted',
-                'before:bg-emphasis-high',
-              )}
+              className={cn('h-2 bg-muted', 'before:bg-emphasis-high')}
               aria-label={`${Math.round(progress)}% complete`}
             />
           ) : (
@@ -54,10 +51,7 @@ export const FileUploadStatus = memo(function FileUploadStatus({
           <span className="text-sm text-muted-foreground font-medium">Queue position</span>
         </div>
         <div className="w-full">
-          <ProgressBar
-            progress={0}
-            className="h-2 bg-warning-subtle before:bg-warning"
-          />
+          <ProgressBar progress={0} className="h-2 bg-warning-subtle before:bg-warning" />
         </div>
       </output>
     );
@@ -67,10 +61,7 @@ export const FileUploadStatus = memo(function FileUploadStatus({
     return (
       <output className="space-y-3">
         <div className="w-full">
-          <ProgressBar
-            progress={100}
-            className="h-2 bg-emphasis-minimal before:bg-emphasis-high"
-          />
+          <ProgressBar progress={100} className="h-2 bg-emphasis-minimal before:bg-emphasis-high" />
         </div>
         {stats && <ProcessingStats stats={stats} />}
       </output>

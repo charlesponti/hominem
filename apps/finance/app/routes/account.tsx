@@ -45,8 +45,7 @@ export default function AccountPage() {
       console.error('Error deleting finance data:', error);
       toast({
         title: 'Error',
-        description:
-          error.message || 'Delete failed. Retry.',
+        description: error.message || 'Delete failed. Retry.',
         variant: 'destructive',
       });
       setShowConfirmDelete(false);

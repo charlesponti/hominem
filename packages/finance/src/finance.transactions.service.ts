@@ -2,14 +2,19 @@ import type { TransactionType } from '@hominem/db/schema/finance';
 import type { TransactionLocation } from '@hominem/db/schema/shared';
 import type { FinanceTransactionOutput, FinanceTransactionInput } from '@hominem/db/types/finance';
 
-import { FinanceAccountSchema, TransactionSchema, TransactionInsertSchema } from '@hominem/db/schema/validations';
 import { db } from '@hominem/db';
-import { financeAccounts, transactions } from '@hominem/db/schema/finance';
+import { and, eq, sql, gte, lte, type SQL } from '@hominem/db';
+import { transactions } from '@hominem/db/schema/finance';
+import {
+  FinanceAccountSchema,
+  TransactionSchema,
+  TransactionInsertSchema,
+} from '@hominem/db/schema/finance.schema';
 import { logger } from '@hominem/utils/logger';
-import { and, eq, sql, gte, lte, like, type SQL } from '@hominem/db';
 import * as z from 'zod';
 
 import type { QueryOptions } from './finance.types';
+
 import { TransactionQueryBuilder } from './transaction-query-builder';
 
 /**
@@ -108,8 +113,9 @@ export function buildWhereConditions(options?: Partial<QueryOptions>): SQL<unkno
 
   if (opts.category) {
     const categories = Array.isArray(opts.category) ? opts.category : [opts.category];
-    const categoryConditions = categories.map((cat: string) =>
-      sql`(${transactions.category} ILIKE ${`%${cat}%`} OR ${transactions.parentCategory} ILIKE ${`%${cat}%`})`,
+    const categoryConditions = categories.map(
+      (cat: string) =>
+        sql`(${transactions.category} ILIKE ${`%${cat}%`} OR ${transactions.parentCategory} ILIKE ${`%${cat}%`})`,
     );
     if (categoryConditions.length > 0) {
       conditions.push(sql`(${sql.join(categoryConditions, sql` OR `)})`);
@@ -162,7 +168,12 @@ export async function queryTransactions(options: QueryOptions): Promise<QueryTra
   }
 
   // Add sorting
-  const sortField = (options.sortBy || 'date') as 'date' | 'amount' | 'description' | 'category' | 'id';
+  const sortField = (options.sortBy || 'date') as
+    | 'date'
+    | 'amount'
+    | 'description'
+    | 'category'
+    | 'id';
   const sortDirection = options.sortDirection || 'desc';
   builder.sort(sortField, sortDirection);
 

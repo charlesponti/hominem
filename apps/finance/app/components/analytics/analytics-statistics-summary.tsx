@@ -109,7 +109,9 @@ export function AnalyticsStatisticsSummary({
               {/* Total Expenses Row */}
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-secondary-foreground">Total Expenses</div>
+                  <div className="text-sm font-medium text-secondary-foreground">
+                    Total Expenses
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     For period {stats.periodCovered}
                   </div>
@@ -122,7 +124,9 @@ export function AnalyticsStatisticsSummary({
               {/* Average Income Row */}
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-secondary-foreground">Average Income</div>
+                  <div className="text-sm font-medium text-secondary-foreground">
+                    Average Income
+                  </div>
                   <div className="text-xs text-muted-foreground">Over {stats.count} months</div>
                 </div>
                 <div className="text-xl font-bold text-black font-mono">
@@ -133,7 +137,9 @@ export function AnalyticsStatisticsSummary({
               {/* Average Expenses Row */}
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <div className="text-sm font-medium text-secondary-foreground">Average Expenses</div>
+                  <div className="text-sm font-medium text-secondary-foreground">
+                    Average Expenses
+                  </div>
                   <div className="text-xs text-muted-foreground">Over {stats.count} months</div>
                 </div>
                 <div className="text-xl font-bold text-destructive font-mono">

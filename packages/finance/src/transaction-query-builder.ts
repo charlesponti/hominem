@@ -12,10 +12,11 @@
  * - Uses generated search_vector column for fast full-text search
  */
 
-import { db, and, asc, desc, eq, gte, lte, like, sql, type SQL } from '@hominem/db';
-import { financeAccounts, transactions } from '@hominem/db/schema/finance';
 import type { TransactionType } from '@hominem/db/schema/finance';
 import type { FinanceTransactionOutput } from '@hominem/db/types/finance';
+
+import { db, and, asc, desc, eq, gte, lte, like, sql, type SQL } from '@hominem/db';
+import { financeAccounts, transactions } from '@hominem/db/schema/finance';
 
 export interface TransactionQueryResult {
   data: Array<
@@ -150,9 +151,7 @@ export class TransactionQueryBuilder {
   includeExcluded(include?: boolean): this {
     if (include) {
       // Remove the excluded filter we added in constructor
-      this.conditions = this.conditions.filter(
-        (c) => c !== eq(transactions.excluded, false),
-      );
+      this.conditions = this.conditions.filter((c) => c !== eq(transactions.excluded, false));
     }
     return this;
   }
@@ -284,22 +283,25 @@ export class TransactionQueryBuilder {
       .offset(this.offsetValue);
 
     // Get total user count (only need this if we got results)
-    const totalUserCount = data.length > 0
-      ? await db
-          .select({ count: sql<number>`count(*)::int`.as('count') })
-          .from(transactions)
-          .where(
-            and(
-              eq(transactions.userId, this.userId),
-              eq(transactions.excluded, false),
-              eq(transactions.pending, false),
-            ),
-          )
-          .then((res) => res[0]?.count ?? 0)
-      : 0;
+    const totalUserCount =
+      data.length > 0
+        ? await db
+            .select({ count: sql<number>`count(*)::int`.as('count') })
+            .from(transactions)
+            .where(
+              and(
+                eq(transactions.userId, this.userId),
+                eq(transactions.excluded, false),
+                eq(transactions.pending, false),
+              ),
+            )
+            .then((res) => res[0]?.count ?? 0)
+        : 0;
 
     return {
-      data: data.map(({ filteredCount: _, searchVector: __, ...tx }) => tx) as TransactionQueryResult['data'],
+      data: data.map(
+        ({ filteredCount: _, searchVector: __, ...tx }) => tx,
+      ) as TransactionQueryResult['data'],
       filteredCount: data[0]?.filteredCount ?? 0,
       totalUserCount,
     };

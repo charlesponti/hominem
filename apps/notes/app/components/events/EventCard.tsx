@@ -63,9 +63,7 @@ const EventCard: React.FC<EventCardProps> = ({ activity, onEditEvent }) => {
 
       {/* Type Column */}
       <div className="event-table-cell event-col-type">
-        <span className="inline-flex items-center px-2 py-1  text-xs font-medium">
-          Event
-        </span>
+        <span className="inline-flex items-center px-2 py-1  text-xs font-medium">Event</span>
       </div>
 
       {/* Event Title Column */}

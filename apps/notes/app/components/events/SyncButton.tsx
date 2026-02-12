@@ -26,14 +26,11 @@ export default function SyncButton({ onSync, disabled = false }: SyncButtonProps
       type="button"
       onClick={handleSync}
       disabled={disabled || isSyncing}
-      className={cn(
-        'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium  border',
-        {
-          'border-muted-foreground/30 text-muted-foreground cursor-not-allowed':
-            disabled || isSyncing,
-          'border-foreground text-foreground ': !(disabled || isSyncing),
-        },
-      )}
+      className={cn('inline-flex items-center gap-2 px-4 py-2 text-sm font-medium  border', {
+        'border-muted-foreground/30 text-muted-foreground cursor-not-allowed':
+          disabled || isSyncing,
+        'border-foreground text-foreground ': !(disabled || isSyncing),
+      })}
     >
       <svg
         width="16"

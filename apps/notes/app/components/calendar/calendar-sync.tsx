@@ -197,18 +197,14 @@ export function CalendarSync({ userId, hasGoogleAccount }: CalendarSyncProps) {
             </Button>
 
             {syncResult || syncError ? (
-              <div
-                className="p-4 bg-muted border border-border"
-              >
+              <div className="p-4 bg-muted border border-border">
                 <div className="flex items-center gap-2">
                   {syncResult && !syncError ? (
                     <CheckCircle className="size-5 text-foreground" />
                   ) : (
                     <AlertCircle className="size-5 text-muted-foreground" />
                   )}
-                  <span
-                    className="font-medium text-foreground"
-                  >
+                  <span className="font-medium text-foreground">
                     {syncResult && !syncError ? 'SYNC COMPLETE' : 'SYNC FAILED'}
                   </span>
                 </div>

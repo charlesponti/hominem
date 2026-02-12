@@ -1,6 +1,6 @@
 import { db } from '@hominem/db';
-import { financeAccounts, transactions } from '@hominem/db/schema/finance';
 import { count, desc, eq, type SQL, sql } from '@hominem/db';
+import { financeAccounts, transactions } from '@hominem/db/schema/finance';
 
 import type { QueryOptions, TopMerchant } from '../finance.types';
 

@@ -45,15 +45,11 @@ export default function SignInPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-center">Sign In</CardTitle>
-            <CardDescription className="text-center">
-              Access your Florin account
-            </CardDescription>
+            <CardDescription className="text-center">Access your Florin account</CardDescription>
           </CardHeader>
           <CardContent>
             {error && (
-              <div className="text-destructive text-sm bg-destructive/10 p-3 mb-6">
-                {error}
-              </div>
+              <div className="text-destructive text-sm bg-destructive/10 p-3 mb-6">{error}</div>
             )}
 
             <div className="space-y-4">

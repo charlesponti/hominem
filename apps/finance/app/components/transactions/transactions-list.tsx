@@ -64,9 +64,7 @@ function TransactionListItem({
   return (
     <div className="group border-b border-border py-4 px-2 space-y-2">
       <div className="w-full flex items-center justify-between gap-4">
-        <h3 className=" text-black tracking-tight">
-          {transaction.description || 'Transaction'}
-        </h3>
+        <h3 className=" text-black tracking-tight">{transaction.description || 'Transaction'}</h3>
         <TransactionAmount transaction={transaction} />
       </div>
       <TransactionMetadata transaction={transaction} account={account} />

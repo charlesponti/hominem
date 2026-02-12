@@ -1,6 +1,6 @@
+import type { PeopleListOutput } from '@hominem/hono-rpc/types/people.types';
 import type React from 'react';
 
-import type { PeopleListOutput } from '@hominem/hono-rpc/types/people.types';
 import { List } from '@hominem/ui/list';
 
 import EventCard from './EventCard';

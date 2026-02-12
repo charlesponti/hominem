@@ -17,6 +17,7 @@ type TransactionLocation = {
 } | null;
 
 import { db } from '@hominem/db';
+import { and, eq } from '@hominem/db';
 import {
   financialInstitutions,
   plaidItems,
@@ -24,7 +25,6 @@ import {
   transactions,
 } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
-import { and, eq } from '@hominem/db';
 import { randomUUID } from 'node:crypto';
 
 /**

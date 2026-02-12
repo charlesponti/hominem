@@ -1,8 +1,8 @@
 import type { JobApplicationOutput, JobApplicationInput } from '@hominem/db/types/career';
 
 import { db } from '@hominem/db';
-import { job_applications } from '@hominem/db/schema/career';
 import { eq, type SQL } from '@hominem/db';
+import { job_applications } from '@hominem/db/schema/career';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 
 export const JobApplicationSchema = createSelectSchema(job_applications);

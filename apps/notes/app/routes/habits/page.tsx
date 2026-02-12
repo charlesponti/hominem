@@ -49,10 +49,7 @@ export default function HabitsPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {mockHabits.map((habit) => (
           // Replace with actual HabitCard component later
-          <div
-            key={habit.id}
-            className="p-4 border   bg-card text-card-foreground"
-          >
+          <div key={habit.id} className="p-4 border   bg-card text-card-foreground">
             <h2 className="text-xl font-semibold mb-2">{habit.title}</h2>
             <p className="text-sm text-muted-foreground mb-1">Interval: {habit.interval}</p>
             <p className="text-sm mb-3">{habit.description}</p>

@@ -84,8 +84,8 @@ vi.mock('@hominem/db', async (importOriginal) => {
   };
 });
 
-// Mock @hominem/db/schema
-vi.mock('@hominem/db/schema', () => ({
+// Mock @hominem/db/schema/calendar
+vi.mock('@hominem/db/schema/calendar', () => ({
   events: {
     id: 'id',
     userId: 'userId',
@@ -102,6 +102,9 @@ vi.mock('@hominem/db/schema', () => ({
     dateStart: 'dateStart',
     dateEnd: 'dateEnd',
   },
+  eventsUsers: {},
+  eventsTags: {},
+  eventsTransactions: {},
 }));
 
 // Mock drizzle-orm

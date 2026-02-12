@@ -1,6 +1,6 @@
-import chalk from 'chalk'
-import { Command } from 'commander'
-import { consola } from 'consola'
+import chalk from 'chalk';
+import { Command } from 'commander';
+import { consola } from 'consola';
 
 import {
   deviceCodeLogin,
@@ -8,9 +8,9 @@ import {
   interactiveLogin,
   logout,
   requireAccessToken,
-} from '@/utils/auth'
+} from '@/utils/auth';
 
-const DEFAULT_AUTH_BASE = 'http://localhost:3000'
+const DEFAULT_AUTH_BASE = 'http://localhost:3000';
 
 const loginCommand = new Command('login')
   .description('Authenticate the CLI with your Hominem account')
@@ -21,36 +21,36 @@ const loginCommand = new Command('login')
       authBaseUrl: options.baseUrl,
       provider: 'supabase',
       scopes: options.scope,
-    } as const
+    } as const;
 
-    await interactiveLogin(baseOptions)
-  })
+    await interactiveLogin(baseOptions);
+  });
 
 const statusCommand = new Command('status')
   .description('Show current authentication status')
   .action(async () => {
-    const tokens = await getStoredTokens()
+    const tokens = await getStoredTokens();
     if (!tokens?.accessToken) {
-      consola.info(chalk.yellow('Not authenticated. Run `hominem auth login`'))
-      return
+      consola.info(chalk.yellow('Not authenticated. Run `hominem auth login`'));
+      return;
     }
-    consola.info(chalk.green('Authenticated'))
+    consola.info(chalk.green('Authenticated'));
     if (tokens.expiresAt) {
-      consola.info(`Expires at: ${tokens.expiresAt}`)
+      consola.info(`Expires at: ${tokens.expiresAt}`);
     }
     if (tokens.scopes?.length) {
-      consola.info(`Scopes: ${tokens.scopes.join(' ')}`)
+      consola.info(`Scopes: ${tokens.scopes.join(' ')}`);
     }
     if (tokens.provider) {
-      consola.info(`Provider: ${tokens.provider}`)
+      consola.info(`Provider: ${tokens.provider}`);
     }
-  })
+  });
 
 const logoutCommand = new Command('logout')
   .description('Clear local authentication tokens')
   .action(async () => {
-    await logout()
-  })
+    await logout();
+  });
 
 // Legacy shim: `hominem auth` without subcommand performs login
 export const command = new Command('auth')
@@ -60,8 +60,8 @@ export const command = new Command('auth')
   .addCommand(logoutCommand)
   .action(async () => {
     await requireAccessToken().catch(async () => {
-      await interactiveLogin({ authBaseUrl: DEFAULT_AUTH_BASE, provider: 'supabase' })
-    })
-  })
+      await interactiveLogin({ authBaseUrl: DEFAULT_AUTH_BASE, provider: 'supabase' });
+    });
+  });
 
-export default command
+export default command;

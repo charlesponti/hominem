@@ -7,8 +7,8 @@ import type {
 } from '@hominem/db/types/notes';
 
 import { db } from '@hominem/db';
-import { notes } from '@hominem/db/schema/notes';
 import { and, desc, eq, or, type SQLWrapper, sql } from '@hominem/db';
+import { notes } from '@hominem/db/schema/notes';
 
 import type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput } from './types';
 

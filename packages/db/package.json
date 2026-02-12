@@ -5,17 +5,23 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./schema": "./src/schema/index.ts",
-    "./schema/schema": "./src/schema/schema.ts",
-    "./schema/tables": "./src/schema/tables.ts",
-    "./schema/validations": "./src/schema/validations.ts",
-    "./schema/*": "./src/schema/*.schema.ts",
+    "./schema/*": "./src/schema/*.ts",
     "./test/fixtures": "./src/test/fixtures.ts",
     "./test/utils": "./src/test/utils.ts",
     "./test/db-transaction": "./src/test/db-transaction.ts",
     "./types/*": "./src/schema/*.types.ts"
   },
+  "types": "./build/index.d.ts",
+  "typesVersions": {
+    "*": {
+      ".": ["build/index.d.ts"],
+      "schema/*": ["build/schema/*"],
+      "types/*": ["build/schema/*.types.d.ts"]
+    }
+  },
   "scripts": {
+    "build": "tsc --emitDeclarationOnly --outDir build",
+    "prepare": "bun run build",
     "clean": "rm -rf build",
     "db:generate": "bunx drizzle-kit generate",
     "db:migrate": "bunx drizzle-kit migrate",

@@ -255,9 +255,7 @@ const BudgetImpactCalculator = () => {
         <p className="text-muted-foreground mb-4">
           {historicalError?.message || currentError || 'Unable to load your financial data'}
         </p>
-        <p className="text-sm text-muted-foreground">
-          Import transactions to use this calculator.
-        </p>
+        <p className="text-sm text-muted-foreground">Import transactions to use this calculator.</p>
       </div>
     );
   }

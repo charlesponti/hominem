@@ -40,11 +40,9 @@ vi.mock('@hominem/db', async (importOriginal) => {
   };
 });
 
-vi.mock('@hominem/db/schema', () => ({
-  place: {},
-  item: {},
-  list: {},
-}));
+vi.mock('@hominem/db/schema/places', () => ({ place: {} }));
+vi.mock('@hominem/db/schema/items', () => ({ item: {} }));
+vi.mock('@hominem/db/schema/lists', () => ({ list: {}, userLists: {}, listInvite: {} }));
 
 describe('preparePlaceInsertData', () => {
   it('should normalize imageUrl and photos', async () => {

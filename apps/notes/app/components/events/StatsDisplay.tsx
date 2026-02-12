@@ -77,10 +77,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ activities, loading }) => {
   return (
     <>
       {stats.map((stat) => (
-        <div
-          key={stat.label}
-          className="p-5 border backdrop-blur-sm bg-card border-border"
-        >
+        <div key={stat.label} className="p-5 border backdrop-blur-sm bg-card border-border">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xl opacity-80">{stat.icon}</span>
             <span className="text-3xl font-bold tracking-tight text-foreground">{stat.value}</span>

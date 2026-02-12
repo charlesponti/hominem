@@ -1,8 +1,8 @@
 import type { HealthInsert } from '@hominem/db/types/health';
 
 import { db } from '@hominem/db';
-import { health } from '@hominem/db/schema/health';
 import { and, eq, gte, lte } from '@hominem/db';
+import { health } from '@hominem/db/schema/health';
 
 export async function listHealthRecords(filters: {
   userId?: string;

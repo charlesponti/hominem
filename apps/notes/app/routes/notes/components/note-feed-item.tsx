@@ -75,12 +75,7 @@ export function NoteFeedItem({
     note.versionNumber > 1 ? `v${note.versionNumber}` : note.parentNoteId ? 'v2+' : null;
 
   return (
-    <div
-      className={cn(
-        'border-b border-border py-4 px-4 group',
-        className,
-      )}
-    >
+    <div className={cn('border-b border-border py-4 px-4 group', className)}>
       <div className="space-y-3">
         {/* Header */}
         <div className="flex items-center justify-between">

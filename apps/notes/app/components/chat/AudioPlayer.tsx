@@ -108,10 +108,7 @@ export function AudioPlayer({
       {/* Progress bar */}
       <div className="space-y-2">
         <div className="w-full h-2 bg-secondary  relative" onClick={handleSeek}>
-          <div
-            className="h-full bg-primary"
-            style={{ width: `${progressPercent}%` }}
-          />
+          <div className="h-full bg-primary" style={{ width: `${progressPercent}%` }} />
 
           {/* Progress handle */}
           <div
@@ -197,8 +194,8 @@ export function AudioPlayer({
               step="0.05"
               value={state.isMuted ? 0 : state.volume}
               onChange={handleVolumeChange}
-            className="w-16 h-1 bg-secondary appearance-none "
-          />
+              className="w-16 h-1 bg-secondary appearance-none "
+            />
           </div>
 
           {/* Download button */}

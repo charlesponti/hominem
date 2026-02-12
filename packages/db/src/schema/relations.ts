@@ -21,14 +21,11 @@ import { notes } from './notes.schema';
 import { place } from './places.schema';
 import { surveys, surveyOptions, surveyVotes } from './surveys.schema';
 import { tags } from './tags.schema';
-import { tasks } from './tasks.schema';
 import { flight } from './travel.schema';
 import { tripItems } from './trip_items.schema';
 import { trips } from './trips.schema';
 import { users } from './users.schema';
 
-// ============================================
-// BOOKMARKS
 // ============================================
 // BOOKMARKS
 // ============================================

@@ -108,10 +108,7 @@ const NavigationMenu = () => {
             <span>Account</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          className=" py-2 flex items-center space-x-2"
-          onClick={onLogoutClick}
-        >
+        <DropdownMenuItem className=" py-2 flex items-center space-x-2" onClick={onLogoutClick}>
           <LogOut className="size-4" />
           <span>Log out</span>
         </DropdownMenuItem>

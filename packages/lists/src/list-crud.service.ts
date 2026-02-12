@@ -1,7 +1,7 @@
 import { db, takeUniqueOrThrow } from '@hominem/db';
+import { and, eq } from '@hominem/db';
 import { list } from '@hominem/db/schema/lists';
 import { logger } from '@hominem/utils/logger';
-import { and, eq } from '@hominem/db';
 import crypto from 'node:crypto';
 
 import type { ListOutput, ListPlace, ListUser, ListWithSpreadOwner } from './types';

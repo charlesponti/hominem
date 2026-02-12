@@ -1,7 +1,7 @@
 import type { Task, TaskInsert, TaskStatus } from '@hominem/db/types/tasks';
 
 import { db } from '@hominem/db';
-import { tasks } from '@hominem/db/schema/tables';
+import { tasks } from '@hominem/db/schema/tasks';
 import { and, desc, eq } from '@hominem/db';
 
 import { ForbiddenError, NotFoundError, InternalError } from './errors';

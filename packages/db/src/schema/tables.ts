@@ -1,12 +1,9 @@
 /**
  * Table Exports (for Drizzle Query API)
  *
- * This file exports table definitions and relations to enable
- * Drizzle's relational query API (db.query.*) while allowing lazy
- * type loading when consumers import from .types.ts files.
+ * ## Rules:
+ * - Never export from relations
  */
-
-export * from './relations';
 
 // Users & Auth
 export { users, account } from './users.schema';

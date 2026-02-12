@@ -20,10 +20,7 @@ export default function HomePage() {
         Notes for execution. Organize thoughts, tasks, and data without ceremony.
       </p>
       <div className="flex flex-col sm:flex-row gap-4">
-        <Link
-          to="/notes"
-          className="px-6 py-3 bg-primary text-primary-foreground void-anim-breezy"
-        >
+        <Link to="/notes" className="px-6 py-3 bg-primary text-primary-foreground void-anim-breezy">
           ENTER
         </Link>
       </div>
