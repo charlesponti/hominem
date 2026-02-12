@@ -1,10 +1,15 @@
-import { InlineCreateForm } from '~/routes/notes/components/inline-create-form';
-import { EnhancedNoteItem } from '~/components/notes/enhanced-note-item';
-import { useNotesList } from '~/hooks/use-notes';
 import { useMemo, useState } from 'react';
 
+import { EnhancedNoteItem } from '~/components/notes/enhanced-note-item';
+import { useNotesList } from '~/hooks/use-notes';
+import { InlineCreateForm } from '~/routes/notes/components/inline-create-form';
+
 export function WorkspaceNotesPanel({ chatId, userId }: { chatId: string; userId?: string }) {
-  const { data: notes, isLoading } = useNotesList({ limit: 40, sortBy: 'updatedAt', sortOrder: 'desc' });
+  const { data: notes, isLoading } = useNotesList({
+    limit: 40,
+    sortBy: 'updatedAt',
+    sortOrder: 'desc',
+  });
   const noteList = notes ?? [];
   const [query, setQuery] = useState('');
 
@@ -20,7 +25,9 @@ export function WorkspaceNotesPanel({ chatId, userId }: { chatId: string; userId
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold uppercase tracking-[0.4em] text-muted-foreground">Notes</h2>
+        <h2 className="text-lg font-semibold uppercase tracking-[0.4em] text-muted-foreground">
+          Notes
+        </h2>
         <input
           aria-label="Search notes"
           placeholder="Surface keywords"
@@ -38,12 +45,7 @@ export function WorkspaceNotesPanel({ chatId, userId }: { chatId: string; userId
           <p className="text-xs text-muted-foreground">No notes match that search yet.</p>
         )}
         {filteredNotes.map((note) => (
-          <EnhancedNoteItem
-            key={note.id}
-            note={note}
-            chatId={chatId}
-            {...(userId ? { userId } : {})}
-          />
+          <EnhancedNoteItem key={note.id} note={note} chatId={chatId} userId={userId} />
         ))}
       </div>
     </section>

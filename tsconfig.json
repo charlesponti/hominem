@@ -22,5 +22,16 @@
     { "path": "apps/finance" },
     { "path": "apps/notes" },
     { "path": "apps/rocco" }
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ]
 }

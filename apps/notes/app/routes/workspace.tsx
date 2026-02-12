@@ -1,18 +1,19 @@
-import { ChatInput } from '~/components/chat/ChatInput';
-import { ChatMessages } from '~/components/chat/ChatMessages';
-import { TaskCreateForm } from './tasks/components/task-create-form';
-import { TaskItem } from './tasks/components/task-item';
-import { GoalCard } from '~/components/goals/goal-card';
-import { useGoals } from '~/lib/hooks/use-goals';
-import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
-import { useTasksList, useUpdateTaskStatus, useDeleteTask } from '~/hooks/use-tasks';
-import { useEventsList } from '~/hooks/use-events';
-import { WorkspaceNotesPanel } from '~/components/workspace/workspace-notes-panel';
 import { useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useLoaderData, useMatches, type LoaderFunctionArgs, data } from 'react-router';
 
+import { ChatInput } from '~/components/chat/ChatInput';
+import { ChatMessages } from '~/components/chat/ChatMessages';
+import { GoalCard } from '~/components/goals/goal-card';
+import { WorkspaceNotesPanel } from '~/components/workspace/workspace-notes-panel';
+import { useEventsList } from '~/hooks/use-events';
+import { useTasksList, useUpdateTaskStatus, useDeleteTask } from '~/hooks/use-tasks';
 import { requireAuth } from '~/lib/guards';
+import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
+import { useGoals } from '~/lib/hooks/use-goals';
 import { createServerHonoClient } from '~/lib/rpc/server';
+
+import { TaskCreateForm } from './tasks/components/task-create-form';
+import { TaskItem } from './tasks/components/task-item';
 
 interface WorkspaceLoaderData {
   chatId: string;
@@ -60,7 +61,7 @@ export default function WorkspacePage() {
   const updateTaskStatus = useUpdateTaskStatus();
   const deleteTask = useDeleteTask();
 
-  const { data: goalsData, isLoading: goalsLoading } = useGoals({ showArchived: 'false' });
+  const { data: goalsData, isLoading: goalsLoading } = useGoals({ showArchived: false });
   const goals = Array.isArray(goalsData) ? goalsData : [];
 
   const { data: eventsData, isLoading: eventsLoading } = useEventsList({ limit: 6 });
@@ -102,7 +103,9 @@ export default function WorkspacePage() {
         <div className="grid gap-4 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
           <aside className="flex flex-col gap-3 border border-border bg-card p-5 rounded-2xl shadow-none">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">AI ASSISTANT</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                AI ASSISTANT
+              </p>
               <h1 className="mt-2 text-2xl font-semibold text-foreground">Command Center</h1>
             </div>
             <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border bg-background">
@@ -137,7 +140,7 @@ export default function WorkspacePage() {
               </div>
 
               <div className="mt-4">
-                <WorkspaceNotesPanel chatId={chatId} {...(userId ? { userId } : {})} />
+                <WorkspaceNotesPanel chatId={chatId} userId={userId} />
               </div>
             </div>
 
@@ -145,7 +148,9 @@ export default function WorkspacePage() {
               <div className="border border-border bg-card p-5 rounded-2xl">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Tasks</p>
+                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                      Tasks
+                    </p>
                     <h3 className="text-lg font-semibold text-foreground">In Progress</h3>
                   </div>
                   <Link className="text-xs text-primary cursor-crosshair" to="/tasks">
@@ -176,7 +181,9 @@ export default function WorkspacePage() {
               <div className="border border-border bg-card p-5 rounded-2xl">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Goals</p>
+                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                      Goals
+                    </p>
                     <h3 className="text-lg font-semibold text-foreground">Active Intentions</h3>
                   </div>
                   <Link className="text-xs text-primary cursor-crosshair" to="/goals">
@@ -188,9 +195,12 @@ export default function WorkspacePage() {
                   {!goalsLoading && goals.length === 0 && (
                     <p className="text-xs text-muted-foreground">No goals configured.</p>
                   )}
-                  {!goalsLoading && goals.slice(0, 2).map((goal) => (
-                    <GoalCard key={goal.id} goal={goal} onEdit={() => {}} onDelete={() => {}} />
-                  ))}
+                  {!goalsLoading &&
+                    goals
+                      .slice(0, 2)
+                      .map((goal) => (
+                        <GoalCard key={goal.id} goal={goal} onEdit={() => {}} onDelete={() => {}} />
+                      ))}
                 </div>
               </div>
             </div>

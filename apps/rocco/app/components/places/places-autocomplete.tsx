@@ -1,7 +1,7 @@
 import { Alert } from '@hominem/ui';
 import { Input } from '@hominem/ui/input';
 import { Check, MapPin, Search } from 'lucide-react';
-import { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useGeolocation } from '~/hooks/useGeolocation';
 import {
@@ -20,32 +20,23 @@ function PlacesAutocomplete({
   const [value, setValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [isDebouncing, setIsDebouncing] = useState(false);
   const timeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const optionRefs = useRef<HTMLButtonElement[]>([]);
-  const sessionTokenRef = useRef<string>(crypto.randomUUID());
-  const listboxId = useId();
-  const statusId = useId();
-  const DEBOUNCE_TIME_MS = 200;
-  const MIN_QUERY_LENGTH = 2;
+  const DEBOUNCE_TIME_MS = 300;
   const [debouncedValue, setDebouncedValue] = useState('');
   const { currentLocation } = useGeolocation();
 
   const onValueChange = useCallback((newValue: string) => {
-    const trimmed = newValue;
-    setValue(trimmed);
+    setValue(newValue);
     setSelectedIndex(-1);
-    setIsOpen(trimmed.trim().length >= MIN_QUERY_LENGTH);
-    setIsDebouncing(true);
+    setIsOpen(newValue.length > 0);
 
     if (timeoutId.current) {
       clearTimeout(timeoutId.current);
     }
     const id = setTimeout(() => {
-      setDebouncedValue(trimmed);
-      setIsDebouncing(false);
+      setDebouncedValue(newValue);
     }, DEBOUNCE_TIME_MS);
     timeoutId.current = id;
   }, []);
@@ -57,28 +48,9 @@ function PlacesAutocomplete({
   } = useGooglePlacesAutocomplete({
     input: debouncedValue,
     location: currentLocation ?? undefined,
-    radiusMeters: 50_000,
-    sessionToken: sessionTokenRef.current,
   });
 
   const data = result ?? [];
-
-  const hasQuery = debouncedValue.trim().length >= MIN_QUERY_LENGTH;
-  const hasResults = data && data.length > 0;
-  const status: 'idle' | 'debouncing' | 'loading' | 'results' | 'empty' | 'error' =
-    error
-      ? 'error'
-      : isDebouncing
-        ? 'debouncing'
-        : isLoading
-          ? 'loading'
-          : hasQuery
-            ? hasResults
-              ? 'results'
-              : 'empty'
-            : 'idle';
-
-  const activeOptionId = selectedIndex >= 0 ? `${listboxId}-option-${selectedIndex}` : undefined;
 
   const handleSelect = useCallback(
     (place: GooglePlacePrediction) => {
@@ -86,8 +58,6 @@ function PlacesAutocomplete({
       setSelected(place);
       setIsOpen(false);
       setSelectedIndex(-1);
-      setDebouncedValue(`${place.text}, ${place.address}`);
-      sessionTokenRef.current = crypto.randomUUID();
       inputRef.current?.blur();
     },
     [setSelected],
@@ -108,22 +78,9 @@ function PlacesAutocomplete({
           e.preventDefault();
           setSelectedIndex((prev) => (prev > 0 ? prev - 1 : data.length - 1));
           break;
-        case 'Home':
-          e.preventDefault();
-          setSelectedIndex(0);
-          break;
-        case 'End':
-          e.preventDefault();
-          setSelectedIndex(data.length - 1);
-          break;
         case 'Enter':
           e.preventDefault();
           if (selectedIndex >= 0 && data[selectedIndex]) {
-            handleSelect(data[selectedIndex]);
-          }
-          break;
-        case 'Tab':
-          if (isOpen && selectedIndex >= 0 && data[selectedIndex]) {
             handleSelect(data[selectedIndex]);
           }
           break;
@@ -164,16 +121,6 @@ function PlacesAutocomplete({
     };
   }, []);
 
-  useEffect(() => {
-    if (!isOpen || selectedIndex < 0) return;
-    const active = optionRefs.current[selectedIndex];
-    active?.scrollIntoView({ block: 'nearest' });
-  }, [isOpen, selectedIndex]);
-
-  useEffect(() => {
-    optionRefs.current = [];
-  }, [data]);
-
   return (
     <div data-testid="places-autocomplete" className="relative w-full">
       {/* Input Field */}
@@ -186,14 +133,8 @@ function PlacesAutocomplete({
           value={value}
           onChange={(e) => onValueChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => value.trim().length >= MIN_QUERY_LENGTH && setIsOpen(true)}
+          onFocus={() => value.length > 0 && setIsOpen(true)}
           className="pl-10 pr-4"
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={isOpen}
-          aria-controls={listboxId}
-          aria-activedescendant={activeOptionId}
-          aria-describedby={status !== 'idle' ? statusId : undefined}
           data-testid="places-autocomplete-input"
         />
       </div>
@@ -202,17 +143,12 @@ function PlacesAutocomplete({
       {isOpen && (
         <div
           ref={dropdownRef}
-          className={cn(
-            'absolute z-50 w-full mt-1 max-h-60 overflow-y-auto',
-            styles.panel,
-          )}
-          role="listbox"
-          id={listboxId}
+          className="absolute z-50 w-full mt-1 bg-secondary border border-border max-h-60 overflow-y-auto"
           data-testid="places-autocomplete-results"
         >
-          {status === 'loading' && <PlacesAutocompleteLoading show={!!value} />}
+          {isLoading && <PlacesAutocompleteLoading show={!!value} />}
 
-          {status === 'results' && (
+          {!isLoading && data && data.length > 0 && (
             <div className="py-1">
               {data.map((suggestion: any, index: number) => (
                 <button
@@ -220,17 +156,11 @@ function PlacesAutocomplete({
                   type="button"
                   onClick={() => handleSelect(suggestion)}
                   className={cn(
-                    'flex items-center px-3 py-2 w-full text-left overflow-x-hidden',
-                    'focus:outline-none',
-                    styles.option,
+                    'flex items-center px-3 py-2  w-full text-left overflow-x-hidden',
+                    'hover:bg-muted focus:bg-muted focus:outline-none',
+                    selectedIndex === index && 'bg-muted',
+                    styles.autocompleteItem,
                   )}
-                  role="button"
-                  aria-selected={selectedIndex === index}
-                  id={`${listboxId}-option-${index}`}
-                  tabIndex={-1}
-                  ref={(node) => {
-                    if (node) optionRefs.current[index] = node;
-                  }}
                   data-testid="places-autocomplete-option"
                 >
                   <MapPin className="size-4 text-muted-foreground mr-3 shrink-0" />
@@ -246,28 +176,8 @@ function PlacesAutocomplete({
             </div>
           )}
 
-          {status === 'empty' && (
-            <div className={styles.status} id={statusId} aria-live="polite">
-              NO MATCHES FOR “{debouncedValue.trim()}”
-            </div>
-          )}
-
-          {status === 'error' && error && (
-            <div className={styles.status} id={statusId} aria-live="polite">
-              ERROR: {error.message}
-            </div>
-          )}
-
-          {status === 'loading' && (
-            <div className={styles.status} id={statusId} aria-live="polite">
-              SCANNING…
-            </div>
-          )}
-
-          {status === 'debouncing' && (
-            <div className={styles.status} id={statusId} aria-live="polite">
-              LISTENING…
-            </div>
+          {value && !isLoading && data && data.length === 0 && (
+            <div className="text-center py-4 text-sm text-muted-foreground">No results found.</div>
           )}
         </div>
       )}

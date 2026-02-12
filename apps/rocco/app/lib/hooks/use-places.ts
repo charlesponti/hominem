@@ -105,38 +105,23 @@ export const useDeletePlace = (
  */
 export const usePlacesAutocomplete = (
   query: string | undefined,
-  options: {
-    latitude?: number;
-    longitude?: number;
-    radiusMeters?: number;
-    sessionToken?: string;
-  } = {},
+  latitude: number | undefined,
+  longitude: number | undefined,
 ) =>
   useHonoQuery<PlaceAutocompleteOutput>(
-    queryKeys.places.autocomplete(
-      query || '',
-      options.latitude,
-      options.longitude,
-      options.sessionToken,
-    ),
+    queryKeys.places.autocomplete(query || '', latitude, longitude),
     async (client: HonoClient) => {
       if (!query || query.length < 2) return [] as unknown as PlaceAutocompleteOutput;
       const res = await client.api.places.autocomplete.$post({
         json: {
           query,
-          location:
-            typeof options.latitude === 'number' && typeof options.longitude === 'number'
-              ? { lat: options.latitude, lng: options.longitude }
-              : undefined,
-          radius: options.radiusMeters,
-          sessionToken: options.sessionToken,
+          location: latitude && longitude ? { lat: latitude, lng: longitude } : undefined,
         },
       });
       return res.json() as Promise<PlaceAutocompleteOutput>;
     },
     {
       enabled: !!query && query.length >= 2,
-      staleTime: 30_000,
     },
   );
 
