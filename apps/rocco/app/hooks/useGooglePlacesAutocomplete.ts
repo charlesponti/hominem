@@ -37,5 +37,5 @@ export function useGooglePlacesAutocomplete({
     rpcParams.sessionToken = sessionToken;
   }
 
-  return usePlacesAutocomplete(trimmed, rpcParams);
+  return usePlacesAutocomplete(trimmed, rpcParams.latitude, rpcParams.longitude);
 }
