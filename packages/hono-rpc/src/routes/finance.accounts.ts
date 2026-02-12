@@ -1,3 +1,5 @@
+import type { AccountType } from '@hominem/db/types/finance';
+
 import {
   listAccounts,
   getAccountWithPlaidInfo,
@@ -9,21 +11,11 @@ import {
   listPlaidConnectionsForUser,
   getAccountsForInstitution,
 } from '@hominem/finance-services';
-import type { AccountType } from '@hominem/db/types/finance';
 import { NotFoundError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { z } from 'zod';
 
-import { authMiddleware, type AppContext } from '../middleware/auth';
-import {
-  accountCreateSchema,
-  accountDeleteSchema,
-  accountGetSchema,
-  accountListSchema,
-  accountUpdateSchema,
-  institutionAccountsSchema,
-} from '../schemas/finance.accounts.schema'
 import type {
   AccountAllOutput,
   AccountConnectionsOutput,
@@ -35,7 +27,17 @@ import type {
   AccountUpdateOutput,
   AccountsWithPlaidOutput,
   TransactionData,
-} from '../types/finance.types'
+} from '../types/finance.types';
+
+import { authMiddleware, type AppContext } from '../middleware/auth';
+import {
+  accountCreateSchema,
+  accountDeleteSchema,
+  accountGetSchema,
+  accountListSchema,
+  accountUpdateSchema,
+  institutionAccountsSchema,
+} from '../schemas/finance.accounts.schema';
 
 /**
  * No serialization helpers needed!
@@ -77,43 +79,43 @@ export const accountsRoutes = new Hono<AppContext>()
     return c.json<AccountGetOutput>(result, 200);
   })
 
-   // POST /create - Create account
-   .post('/create', zValidator('json', accountCreateSchema), async (c) => {
-     const input = c.req.valid('json') as z.infer<typeof accountCreateSchema>;
-     const userId = c.get('userId')!;
+  // POST /create - Create account
+  .post('/create', zValidator('json', accountCreateSchema), async (c) => {
+    const input = c.req.valid('json') as z.infer<typeof accountCreateSchema>;
+    const userId = c.get('userId')!;
 
-     const result = await createAccount({
-       userId,
-       name: input.name,
-       type: input.type as AccountType,
-       balance: input.balance?.toString() || '0',
-       institutionId: input.institution ?? input.institutionId ?? null,
-       isoCurrencyCode: 'USD',
-       meta: null,
-     });
+    const result = await createAccount({
+      userId,
+      name: input.name,
+      type: input.type as AccountType,
+      balance: input.balance?.toString() || '0',
+      institutionId: input.institution ?? input.institutionId ?? null,
+      isoCurrencyCode: 'USD',
+      meta: null,
+    });
 
-     return c.json<AccountCreateOutput>(result, 201);
-   })
+    return c.json<AccountCreateOutput>(result, 201);
+  })
 
-   // POST /update - Update account
-   .post('/update', zValidator('json', accountUpdateSchema), async (c) => {
-     const input = c.req.valid('json') as z.infer<typeof accountUpdateSchema>;
-     const userId = c.get('userId')!;
-     const { id, ...updates } = input;
+  // POST /update - Update account
+  .post('/update', zValidator('json', accountUpdateSchema), async (c) => {
+    const input = c.req.valid('json') as z.infer<typeof accountUpdateSchema>;
+    const userId = c.get('userId')!;
+    const { id, ...updates } = input;
 
-     const result = await updateAccount(id, userId, {
-       ...updates,
-       balance: updates.balance?.toString(),
-       institutionId: updates.institution ?? updates.institutionId,
-       type: updates.type as AccountType | undefined,
-     });
+    const result = await updateAccount(id, userId, {
+      ...updates,
+      balance: updates.balance?.toString(),
+      institutionId: updates.institution ?? updates.institutionId,
+      type: updates.type as AccountType | undefined,
+    });
 
-     if (!result) {
-       throw new NotFoundError('Account not found');
-     }
+    if (!result) {
+      throw new NotFoundError('Account not found');
+    }
 
-     return c.json<AccountUpdateOutput>(result, 200);
-   })
+    return c.json<AccountUpdateOutput>(result, 200);
+  })
 
   // POST /delete - Delete account
   .post('/delete', zValidator('json', accountDeleteSchema), async (c) => {

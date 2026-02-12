@@ -1,9 +1,9 @@
 import type { ContactOutput } from '@hominem/db/types/contacts';
 
 import { db } from '@hominem/db';
+import { asc, eq, inArray } from '@hominem/db';
 import { eventsUsers } from '@hominem/db/schema/calendar';
 import { contacts } from '@hominem/db/schema/contacts';
-import { asc, eq, inArray } from '@hominem/db';
 
 export interface PersonInput {
   userId: string;

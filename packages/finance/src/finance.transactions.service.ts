@@ -1,6 +1,6 @@
 import type { TransactionType } from '@hominem/db/types/finance';
-import type { TransactionLocation } from '@hominem/db/types/shared';
 import type { FinanceTransactionOutput, FinanceTransactionInput } from '@hominem/db/types/finance';
+import type { TransactionLocation } from '@hominem/db/types/shared';
 
 import { db } from '@hominem/db';
 import { and, eq, sql, gte, lte, type SQL } from '@hominem/db';

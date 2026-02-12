@@ -3,6 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "typesVersions": {
+    "*": {
+      "types/*": [
+        "build/schema/*.types.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": "./src/index.ts",
     "./schema/*": "./src/schema/*.schema.ts",
@@ -14,11 +21,6 @@
     "./test/utils": "./src/test/utils.ts",
     "./test/db-transaction": "./src/test/db-transaction.ts",
     "./types/*": "./src/schema/*.types.ts"
-  },
-  "typesVersions": {
-    "*": {
-      "types/*": ["build/schema/*.types.d.ts"]
-    }
   },
   "scripts": {
     "build": "tsc --emitDeclarationOnly --outDir build",

@@ -1,1 +1,8 @@
-export type { Json, ContentTag, BaseContentType, PublishingContentType, AllContentType, TransactionLocation } from './shared.schema';
+export type {
+  Json,
+  ContentTag,
+  BaseContentType,
+  PublishingContentType,
+  AllContentType,
+  TransactionLocation,
+} from './shared.schema';
