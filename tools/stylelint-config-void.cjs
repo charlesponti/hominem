@@ -1,6 +1,14 @@
 // Central stylelint config enforcing VOID constraints
 module.exports = {
   defaultSeverity: 'error',
+  ignoreFiles: [
+    '**/build/**',
+    '**/dist/**',
+    '**/.next/**',
+    '**/out/**',
+    '**/coverage/**',
+    '**/node_modules/**',
+  ],
   rules: {
     'color-no-hex': null,
     'color-named': 'never',
@@ -8,7 +16,7 @@ module.exports = {
     'declaration-property-value-disallowed-list': {
       'box-shadow': [/./],
       'backdrop-filter': [/./],
-      'background': [/gradient/i],
+      background: [/gradient/i],
       'background-image': [/gradient/i],
       'border-radius': [/./],
     },
@@ -56,4 +64,4 @@ module.exports = {
       },
     },
   ],
-}
+};
