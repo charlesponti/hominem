@@ -2,7 +2,7 @@ import type { TransactionType } from '@hominem/db/schema/finance';
 import type { TransactionLocation } from '@hominem/db/schema/shared';
 import type { FinanceTransactionOutput, FinanceTransactionInput } from '@hominem/db/types/finance';
 
-import { FinanceAccountSchema, TransactionSchema, TransactionInsertSchema } from '@hominem/db';
+import { FinanceAccountSchema, TransactionSchema, TransactionInsertSchema } from '@hominem/db/schema/validations';
 import { db } from '@hominem/db';
 import { financeAccounts, transactions } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
