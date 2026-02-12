@@ -2,7 +2,6 @@
   "extends": ["../../tsconfig.base.web.json"],
   "compilerOptions": {
     "baseUrl": ".",
-    "rootDir": ".",
     "rootDirs": [".", "./.react-router/types"],
     "jsx": "react-jsx",
     "types": ["node", "vite/client", "@testing-library/jest-dom"],
