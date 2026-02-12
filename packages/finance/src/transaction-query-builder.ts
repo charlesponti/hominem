@@ -12,7 +12,7 @@
  * - Uses generated search_vector column for fast full-text search
  */
 
-import type { TransactionType } from '@hominem/db/schema/finance';
+import type { TransactionType } from '@hominem/db/types/finance';
 import type { FinanceTransactionOutput } from '@hominem/db/types/finance';
 
 import { db, and, asc, desc, eq, gte, lte, like, sql, type SQL } from '@hominem/db';

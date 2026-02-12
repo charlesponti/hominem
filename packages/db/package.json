@@ -5,17 +5,18 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./schema/*": "./src/schema/*.ts",
+    "./schema/*": "./src/schema/*.schema.ts",
+    "./schema/validations": "./src/schema/validations.ts",
+    "./schema/tables": "./src/schema/tables.ts",
+    "./schema/relations": "./src/schema/relations.ts",
+    "./schema/calendar.enums": "./src/schema/calendar.enums.ts",
     "./test/fixtures": "./src/test/fixtures.ts",
     "./test/utils": "./src/test/utils.ts",
     "./test/db-transaction": "./src/test/db-transaction.ts",
     "./types/*": "./src/schema/*.types.ts"
   },
-  "types": "./build/index.d.ts",
   "typesVersions": {
     "*": {
-      ".": ["build/index.d.ts"],
-      "schema/*": ["build/schema/*"],
       "types/*": ["build/schema/*.types.d.ts"]
     }
   },

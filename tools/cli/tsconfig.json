@@ -1,17 +1,61 @@
 {
-  "extends": ["../../tsconfig.base.json"],
   "compilerOptions": {
+    "target": "ESNext",
+    "lib": [
+      "ESNext"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "baseUrl": ".",
+    "strict": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+    "tsBuildInfoFile": "../../.cache/tool-cli.tsbuildinfo",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "checkJs": false,
+    "maxNodeModuleJsDepth": 0,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "disableSourceOfProjectReferenceRedirect": false,
+    "verbatimModuleSyntax": true,
     "rootDir": ".",
     "jsx": "react-jsx",
-    "types": ["node", "bun-types"],
+    "types": [
+      "node",
+      "bun-types"
+    ],
     "paths": {
-      "@/*": ["src/*"]
+      "@hominem/finance-services/*": [
+        "../../packages/finance/src/*"
+      ],
+      "googleapis": [
+        "../../types/googleapis.d.ts"
+      ],
+      "@/*": [
+        "src/*"
+      ]
     },
-    "noEmit": true,
-    "tsBuildInfoFile": "../../.cache/tool-cli.tsbuildinfo"
+    "noEmit": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "vitest.config.mts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "vitest.config.mts"
+  ],
   "references": [
     {
       "path": "../../packages/hono-rpc"

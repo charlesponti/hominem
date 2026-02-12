@@ -1,16 +1,54 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "target": "ESNext",
+    "lib": [
+      "ESNext"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "strict": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "assumeChangesOnlyAffectDirectDependencies": true,
     "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": false,
+    "incremental": true,
+    "tsBuildInfoFile": "../../.cache/finance.tsbuildinfo",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "checkJs": false,
+    "maxNodeModuleJsDepth": 0,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "disableSourceOfProjectReferenceRedirect": false,
+    "verbatimModuleSyntax": true,
     "outDir": "./build",
     "rootDir": "./src",
-    "types": ["node"],
-    "tsBuildInfoFile": "../../.cache/finance.tsbuildinfo",
-    "sourceMap": false,
-    "declarationMap": true,
-    "skipLibCheck": true
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@hominem/finance-services/*": [
+        "./src/*"
+      ],
+      "googleapis": [
+        "../../types/googleapis.d.ts"
+      ]
+    }
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*"
+  ],
   "exclude": [
     "node_modules",
     "build",

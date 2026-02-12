@@ -130,7 +130,7 @@ This runs automatically during `bun run check`.
 
 ## Imports
 
-- Use path aliases from `tsconfig.base.json` for internal packages.
+- Use path aliases defined in each package/app `tsconfig.json` for internal packages.
 - Prefer direct schema/type imports per [.github/instructions/type-architecture.instructions.md](.github/instructions/type-architecture.instructions.md).
 
 ## Specialized Rules

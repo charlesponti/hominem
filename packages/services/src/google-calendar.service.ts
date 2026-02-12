@@ -13,6 +13,14 @@ import { v7 as uuidv7 } from 'uuid';
 
 import { env } from './env';
 
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
 type GoogleCalendarEvent = calendar_v3.Schema$Event;
 type DbEventWithTimestamps = DbEventOutput & {
   createdAt?: string | Date | null;
@@ -430,14 +438,14 @@ export class GoogleCalendarService {
         return { success: false, error: 'Event not found' };
       }
 
-      const googleEvent: Record<string, unknown> = {
+      const googleEvent: Record<string, JsonValue> = {
         summary: event.title,
-        description: event.description || undefined,
+        description: event.description ?? null,
         start: {
-          dateTime: event.dateStart?.toISOString() || event.date.toISOString(),
+          dateTime: event.dateStart?.toISOString() ?? event.date.toISOString(),
         },
         end: {
-          dateTime: event.dateEnd?.toISOString() || event.date.toISOString(),
+          dateTime: event.dateEnd?.toISOString() ?? event.date.toISOString(),
         },
       };
 

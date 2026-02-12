@@ -9,7 +9,7 @@ import {
   listPlaidConnectionsForUser,
   getAccountsForInstitution,
 } from '@hominem/finance-services';
-import type { AccountType } from '@hominem/db/schema/finance';
+import type { AccountType } from '@hominem/db/types/finance';
 import { NotFoundError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';

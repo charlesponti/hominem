@@ -1,4 +1,4 @@
-import type { AccountType } from '@hominem/db/schema/finance';
+import type { AccountType } from '@hominem/db/types/finance';
 
 import { z } from 'zod';
 

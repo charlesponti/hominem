@@ -1,4 +1,4 @@
-import type { Contact as ContactOutput } from '@hominem/db/schema/contacts';
+import type { ContactOutput } from '@hominem/db/types/contacts';
 
 import { db } from '@hominem/db';
 import { eventsUsers } from '@hominem/db/schema/calendar';

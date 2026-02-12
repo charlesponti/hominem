@@ -1,5 +1,5 @@
-import type { TransactionType } from '@hominem/db/schema/finance';
-import type { TransactionLocation } from '@hominem/db/schema/shared';
+import type { TransactionType } from '@hominem/db/types/finance';
+import type { TransactionLocation } from '@hominem/db/types/shared';
 import type { FinanceTransactionOutput, FinanceTransactionInput } from '@hominem/db/types/finance';
 
 import { db } from '@hominem/db';
@@ -9,7 +9,7 @@ import {
   FinanceAccountSchema,
   TransactionSchema,
   TransactionInsertSchema,
-} from '@hominem/db/schema/finance.schema';
+} from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
 import * as z from 'zod';
 

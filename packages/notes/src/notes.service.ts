@@ -1,4 +1,4 @@
-import type { NoteStatus } from '@hominem/db/schema/notes';
+import type { NoteStatus } from '@hominem/db/types/notes';
 import type {
   NoteOutput,
   NoteInput,
