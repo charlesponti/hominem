@@ -14,14 +14,15 @@ interface EnhancedNoteItemProps {
   onRemoveTag?: (noteId: string, tag: string) => void;
 }
 
-const AI_PROMPTS: Record<string, (note: Note) => string> = {
-  expand: (note) =>
+const AI_PROMPTS = {
+  expand: (note: Note) =>
     `Expand this note into a more structured version with actionable steps:\n${note.content}`,
-  outline: (note) =>
+  outline: (note: Note) =>
     `Create an outline for this note so I can turn it into a plan:\n${note.content}`,
-  rewrite: (note) => `Rewrite this note with sharper language and clear intent:\n${note.content}`,
-  summarize: (note) => `Summarize this note into a 2-sentence takeaway:\n${note.content}`,
-};
+  rewrite: (note: Note) =>
+    `Rewrite this note with sharper language and clear intent:\n${note.content}`,
+  summarize: (note: Note) => `Summarize this note into a 2-sentence takeaway:\n${note.content}`,
+} as const;
 
 type AIAction = keyof typeof AI_PROMPTS;
 
@@ -40,7 +41,7 @@ export function EnhancedNoteItem({
 
   const titleOrPreview = useMemo(() => {
     if (note.title) return note.title;
-    return note.content.split('\n')[0].slice(0, 80);
+    return (note.content ?? '').split('\n')[0]?.slice(0, 80) ?? '';
   }, [note]);
 
   const formattedTags = useMemo(() => (note.tags ?? []).map((tag) => tag.value), [note.tags]);

@@ -25,7 +25,7 @@ const getNow = () => {
 
 const isDev = typeof import.meta !== 'undefined' ? !!import.meta.env?.DEV : false;
 
-export const startTrace = (name: string, tags?: TraceTags): TraceHandle => ({
+export const startTrace = (name: string, tags: TraceTags): TraceHandle => ({
   name,
   start: getNow(),
   tags,

@@ -17,7 +17,7 @@ export function WorkspaceNotesPanel({ chatId, userId }: { chatId: string; userId
     if (!query) return noteList;
     const lower = query.toLowerCase();
     return noteList.filter((note) => {
-      const haystack = `${note.title ?? ''} ${note.content}`.toLowerCase();
+      const haystack = `${note.title ?? ''} ${note.content ?? ''}`.toLowerCase();
       return haystack.includes(lower);
     });
   }, [noteList, query]);
@@ -45,7 +45,12 @@ export function WorkspaceNotesPanel({ chatId, userId }: { chatId: string; userId
           <p className="text-xs text-muted-foreground">No notes match that search yet.</p>
         )}
         {filteredNotes.map((note) => (
-          <EnhancedNoteItem key={note.id} note={note} chatId={chatId} userId={userId} />
+          <EnhancedNoteItem
+            key={note.id}
+            note={note}
+            chatId={chatId}
+            {...(userId ? { userId } : {})}
+          />
         ))}
       </div>
     </section>

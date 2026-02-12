@@ -25,7 +25,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const listRes = await client.api.chats.$get({ query: { limit: '1' } });
   const listData = await listRes.json();
-  const existingChat = Array.isArray(listData) && listData[0];
+  const existingChat = Array.isArray(listData) ? listData[0] : undefined;
 
   let chatId: string | undefined = existingChat?.id;
 
@@ -61,7 +61,7 @@ export default function WorkspacePage() {
   const updateTaskStatus = useUpdateTaskStatus();
   const deleteTask = useDeleteTask();
 
-  const { data: goalsData, isLoading: goalsLoading } = useGoals({ showArchived: false });
+  const { data: goalsData, isLoading: goalsLoading } = useGoals({ showArchived: 'false' });
   const goals = Array.isArray(goalsData) ? goalsData : [];
 
   const { data: eventsData, isLoading: eventsLoading } = useEventsList({ limit: 6 });
@@ -140,7 +140,7 @@ export default function WorkspacePage() {
               </div>
 
               <div className="mt-4">
-                <WorkspaceNotesPanel chatId={chatId} userId={userId} />
+                <WorkspaceNotesPanel chatId={chatId} {...(userId ? { userId } : {})} />
               </div>
             </div>
 

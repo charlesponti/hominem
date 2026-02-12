@@ -40,7 +40,7 @@ const EventForm: React.FC<EventFormProps> = ({ showAddForm, onToggleForm: _onTog
                   type="date"
                   id="date"
                   name="date"
-                  default_value={new Date().toISOString().split('T')[0]}
+                  defaultValue={new Date().toISOString().split('T')[0]}
                   required
                   className="w-full px-3 py-2 text-sm border bg-card text-foreground border-border focus:border-primary"
                 />
