@@ -9,8 +9,7 @@
   },
   "dependencies": {
     "@hominem/hono-rpc": "workspace:*",
-    "@tanstack/react-query": "5.90.16",
-    "hono": "4.11.6"
+    "@tanstack/react-query": "5.90.16"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",

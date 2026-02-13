@@ -18,8 +18,6 @@
   },
   "dependencies": {
     "@hominem/db": "workspace:*",
-    "@hominem/services": "workspace:*",
-    "@hominem/utils": "workspace:*",
     "ai": "^4.3.16",
     "drizzle-zod": "^0.7.0",
     "zod": "4.3.6"

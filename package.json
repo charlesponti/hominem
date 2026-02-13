@@ -71,6 +71,7 @@
     "@types/react-dom": "^19.1.0",
     "@vitest/coverage-v8": "latest",
     "ink": "^6.6.0",
+    "knip": "^5.83.1",
     "oxfmt": "0.31.0",
     "oxlint": "1.46.0",
     "stylelint": "^16.9.0",

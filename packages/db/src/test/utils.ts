@@ -2,16 +2,13 @@ import { vi } from 'vitest';
 
 import { createTestUser as createTestUserShared } from './fixtures';
 
-// Import UserAuthService dynamically to avoid circular dependencies during build
-let UserAuthService: any;
-try {
-  UserAuthService = require('@hominem/auth').UserAuthService;
-} catch {
-  // Fallback for when auth package is not available
-  UserAuthService = {
-    deleteUser: async () => {},
-  };
-}
+type UserCleanupFn = (userId: string) => Promise<void>;
+
+let userCleanup: UserCleanupFn = async () => {};
+
+export const setUserCleanup = (cleanup: UserCleanupFn) => {
+  userCleanup = cleanup;
+};
 
 // Track created test users for cleanup
 const createdTestUsers: string[] = [];
@@ -316,7 +313,7 @@ export const cleanupTestData = async (): Promise<void> => {
   // Clean up test data
   for (const userId of createdTestUsers) {
     try {
-      await UserAuthService.deleteUser(userId);
+      await userCleanup(userId);
     } catch (error) {
       console.warn(`Failed to delete test user ${userId}:`, error);
     }

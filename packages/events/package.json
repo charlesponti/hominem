@@ -17,8 +17,7 @@
   },
   "dependencies": {
     "@hominem/db": "workspace:*",
-    "@hominem/services": "workspace:*",
-    "zod": "4.3.6"
+    "@hominem/services": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.18.13",
