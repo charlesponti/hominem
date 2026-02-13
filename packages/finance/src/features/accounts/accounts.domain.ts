@@ -1,6 +1,6 @@
 import type { FinanceAccount, AccountType } from '@hominem/db/types/finance';
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * AccountDomainSchema - Extended account domain model

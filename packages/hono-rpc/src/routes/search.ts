@@ -1,6 +1,6 @@
 import { ValidationError, InternalError } from '@hominem/services';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 

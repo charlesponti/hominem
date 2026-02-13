@@ -6,7 +6,7 @@
  */
 
 import { NoteContentTypeSchema, NoteStatusSchema } from '@hominem/db/schema/notes';
-import { z } from 'zod';
+import * as z from 'zod';
 
 const noteTagSchema = z.object({ value: z.string() });
 const noteTagsSchema = z.array(noteTagSchema);

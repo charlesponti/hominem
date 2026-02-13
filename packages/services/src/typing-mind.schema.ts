@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 // Define schemas for nested objects first
 const ModelInfoSchema = z.object({

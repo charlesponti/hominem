@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const assessMentalWellnessInputSchema = z.object({
   stressDescription: z.string().describe('Description of current stressors or concerns'),

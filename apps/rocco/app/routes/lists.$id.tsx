@@ -31,7 +31,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     return redirect('/404');
   }
 
-  const client = createServerHonoClient(authResult.session?.access_token);
+  const client = createServerHonoClient(authResult.session?.access_token, request);
   const res = await client.api.lists.get.$post({ json: { id } });
   if (!res.ok) {
     return redirect('/404');

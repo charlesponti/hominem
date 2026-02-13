@@ -11,7 +11,7 @@ import {
   TextAnalysisSchema,
 } from '@hominem/utils/schemas';
 import { generateObject } from 'ai';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { LLMProvider, type LLMProviderConfig } from '../llm.provider';
 

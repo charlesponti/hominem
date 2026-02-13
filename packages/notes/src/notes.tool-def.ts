@@ -1,6 +1,6 @@
 import { NoteContentTypeSchema } from '@hominem/db/schema/notes';
 import { toolDefinition } from '@tanstack/ai';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import {
   CreateNoteInputSchema,

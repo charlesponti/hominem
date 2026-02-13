@@ -16,7 +16,7 @@ import {
 import { sendInviteEmail } from '@hominem/services/emails';
 import { logger } from '@hominem/utils/logger';
 import crypto from 'node:crypto';
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * Input validation schema for sendListInvite

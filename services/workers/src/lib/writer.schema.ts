@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 const creditTypeEnum = z.enum(['tv', 'movie', 'novel', 'magazine', 'podcast']);
 const linkTypeEnum = z.enum(['IMDB', 'Twitter', 'Instagram', 'Facebook', 'LinkedIn', 'Other']);

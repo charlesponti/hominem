@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const calculateBudgetBreakdownInputSchema = z.object({
   monthlyIncome: z.number().describe('Monthly income'),

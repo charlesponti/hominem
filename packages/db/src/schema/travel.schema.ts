@@ -1,6 +1,6 @@
 import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import { foreignKey, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { list } from './lists.schema';
 import { users } from './users.schema';

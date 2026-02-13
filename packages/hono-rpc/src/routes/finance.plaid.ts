@@ -1,4 +1,5 @@
 import { db } from '@hominem/db';
+import { and, eq } from '@hominem/db';
 import { plaidItems } from '@hominem/db/schema/finance';
 import {
   ensureInstitutionExists,
@@ -9,9 +10,8 @@ import {
 import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { zValidator } from '@hono/zod-validator';
-import { and, eq } from '@hominem/db';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { env } from '../lib/env';
 import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../lib/plaid';
@@ -63,69 +63,76 @@ export const plaidRoutes = new Hono<AppContext>()
   })
 
   // POST /exchange-token - Exchange public token
-  .post('/exchange-token', zValidator('json', z.object({
-    publicToken: z.string().min(1),
-    institutionId: z.string().min(1),
-    institutionName: z.string().min(1),
-  })), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
-    const queues = c.get('queues');
+  .post(
+    '/exchange-token',
+    zValidator(
+      'json',
+      z.object({
+        publicToken: z.string().min(1),
+        institutionId: z.string().min(1),
+        institutionName: z.string().min(1),
+      }),
+    ),
+    async (c) => {
+      const input = c.req.valid('json');
+      const userId = c.get('userId')!;
+      const queues = c.get('queues');
 
-    if (!queues) {
-      throw new InternalError('Queues not available');
-    }
+      if (!queues) {
+        throw new InternalError('Queues not available');
+      }
 
-    // Exchange public token for access token
-    const exchangeResponse = await plaidClient.itemPublicTokenExchange({
-      public_token: input.publicToken,
-    });
+      // Exchange public token for access token
+      const exchangeResponse = await plaidClient.itemPublicTokenExchange({
+        public_token: input.publicToken,
+      });
 
-    const accessToken = exchangeResponse.data.access_token;
-    const itemId = exchangeResponse.data.item_id;
+      const accessToken = exchangeResponse.data.access_token;
+      const itemId = exchangeResponse.data.item_id;
 
-    // Ensure institution exists
-    await ensureInstitutionExists(input.institutionId, input.institutionName);
+      // Ensure institution exists
+      await ensureInstitutionExists(input.institutionId, input.institutionName);
 
-    // Save Plaid item
-    await upsertPlaidItem({
-      userId,
-      itemId,
-      accessToken,
-      institutionId: input.institutionId,
-      status: 'active',
-      lastSyncedAt: null,
-    });
-
-    // Queue sync job
-    await queues.plaidSync.add(
-      QUEUE_NAMES.PLAID_SYNC,
-      {
+      // Save Plaid item
+      await upsertPlaidItem({
         userId,
-        accessToken,
         itemId,
-        initialSync: true,
-      },
-      {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 5000,
-        },
-        removeOnComplete: true,
-        removeOnFail: 1000,
-      },
-    );
+        accessToken,
+        institutionId: input.institutionId,
+        status: 'active',
+        lastSyncedAt: null,
+      });
 
-    return c.json<PlaidExchangeTokenOutput>(
-      {
-        accessToken,
-        itemId,
-        requestId: exchangeResponse.data.request_id,
-      },
-      200,
-    );
-  })
+      // Queue sync job
+      await queues.plaidSync.add(
+        QUEUE_NAMES.PLAID_SYNC,
+        {
+          userId,
+          accessToken,
+          itemId,
+          initialSync: true,
+        },
+        {
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 5000,
+          },
+          removeOnComplete: true,
+          removeOnFail: 1000,
+        },
+      );
+
+      return c.json<PlaidExchangeTokenOutput>(
+        {
+          accessToken,
+          itemId,
+          requestId: exchangeResponse.data.request_id,
+        },
+        200,
+      );
+    },
+  )
 
   // POST /sync-item - Sync Plaid item
   .post('/sync-item', zValidator('json', z.object({ itemId: z.string() })), async (c) => {
@@ -182,10 +189,7 @@ export const plaidRoutes = new Hono<AppContext>()
 
     // Get the plaid item
     const plaidItem = await db.query.plaidItems.findFirst({
-      where: and(
-        eq(plaidItems.id, input.itemId),
-        eq(plaidItems.userId, userId),
-      ),
+      where: and(eq(plaidItems.id, input.itemId), eq(plaidItems.userId, userId)),
     });
 
     if (!plaidItem) {

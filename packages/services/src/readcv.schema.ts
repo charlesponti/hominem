@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 // Side Project schema
 const SideProjectSchema = z.object({

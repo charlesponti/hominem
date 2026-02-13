@@ -1,7 +1,7 @@
-import { z } from 'zod'
+import { TransactionInsertSchema } from '@hominem/db/schema/finance';
+import * as z from 'zod';
 
-import { transactionSchema } from './finance.schema'
-import { TransactionInsertSchema } from '@hominem/db/schema/finance'
+import { transactionSchema } from './finance.schema';
 
 export const transactionListSchema = z.object({
   dateFrom: z.string().optional(),
@@ -16,7 +16,7 @@ export const transactionListSchema = z.object({
   search: z.string().optional(),
   sortBy: z.string().optional(),
   sortDirection: z.enum(['asc', 'desc']).optional(),
-})
+});
 
 export const transactionCreateSchema = TransactionInsertSchema.pick({
   accountId: true,
@@ -26,7 +26,7 @@ export const transactionCreateSchema = TransactionInsertSchema.pick({
   category: true,
 }).extend({
   date: z.string().optional(),
-})
+});
 
 const transactionUpdateDataSchema = transactionSchema
   .pick({
@@ -41,13 +41,13 @@ const transactionUpdateDataSchema = transactionSchema
     excluded: true,
     recurring: true,
   })
-  .partial()
+  .partial();
 
 export const transactionUpdateSchema = z.object({
   id: z.string().uuid(),
   data: transactionUpdateDataSchema,
-})
+});
 
 export const transactionDeleteSchema = transactionSchema.pick({
   id: true,
-})
+});

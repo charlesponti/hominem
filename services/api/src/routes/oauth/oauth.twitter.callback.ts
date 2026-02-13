@@ -2,7 +2,7 @@ import { createAccount, getAccountByProviderAccountId, updateAccount } from '@ho
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { randomUUID } from 'node:crypto';
-import z from 'zod';
+import * as z from 'zod';
 
 import type { AppEnv } from '../../server';
 

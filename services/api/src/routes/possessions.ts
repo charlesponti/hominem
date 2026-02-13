@@ -12,7 +12,7 @@ import {
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import crypto from 'node:crypto';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import type { AppEnv } from '../server';
 

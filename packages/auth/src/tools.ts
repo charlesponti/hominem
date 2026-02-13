@@ -1,5 +1,5 @@
-import { tool } from 'ai'
-import { z } from 'zod'
+import { tool } from 'ai';
+import * as z from 'zod';
 
 export const get_user_profile = tool({
   description: 'Get the user profile information',
@@ -9,9 +9,9 @@ export const get_user_profile = tool({
   async execute(args: { userId?: string | undefined }) {
     return {
       message: `Retrieved profile for user ${args.userId || 'current user'}`,
-    }
+    };
   },
-})
+});
 
 export const update_user_profile = tool({
   description: 'Update user profile information',
@@ -24,6 +24,6 @@ export const update_user_profile = tool({
   async execute(args) {
     return {
       message: `Updated user profile with: ${JSON.stringify(args)}`,
-    }
+    };
   },
-})
+});

@@ -33,7 +33,7 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
 
   const isUuid = z.string().uuid().safeParse(id).success;
-  const client = createServerHonoClient(authResult.session?.access_token);
+  const client = createServerHonoClient(authResult.session?.access_token, request);
   const res = isUuid
     ? await client.api.places.get.$post({ json: { id } })
     : await client.api.places['get-by-google-id'].$post({ json: { googleMapsId: id } });

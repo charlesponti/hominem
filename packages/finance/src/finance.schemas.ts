@@ -1,6 +1,6 @@
 import type { AccountType } from '@hominem/db/types/finance';
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 // Generic success response schema
 export const SuccessResponseSchema = z.object({

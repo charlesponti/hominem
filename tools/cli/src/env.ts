@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import os from 'node:os';
 import path from 'node:path';
-import { z } from 'zod';
+import * as z from 'zod';
 
 const CONFIG_PATH = path.resolve(os.homedir(), '.hominem');
 dotenv.config({ path: path.resolve(CONFIG_PATH, '.env') });

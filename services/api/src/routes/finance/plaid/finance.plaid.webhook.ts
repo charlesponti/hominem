@@ -2,7 +2,7 @@ import { getPlaidItemByItemId, updatePlaidItemStatusByItemId } from '@hominem/fi
 import { UnauthorizedError, ValidationError, InternalError } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import type { AppEnv } from '../../../server';
 

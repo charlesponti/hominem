@@ -5,26 +5,26 @@ import {
   deleteTransaction,
   getAccountById,
 } from '@hominem/finance-services';
-import { NotFoundError } from '@hominem/services'
+import { NotFoundError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
-import {
-  transactionCreateSchema,
-  transactionDeleteSchema,
-  transactionListSchema,
-  transactionUpdateSchema,
-} from '../schemas/finance.transactions.schema'
 import type {
   TransactionCreateOutput,
   TransactionData,
   TransactionDeleteOutput,
   TransactionListOutput,
   TransactionUpdateOutput,
-} from '../types/finance.types'
+} from '../types/finance.types';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+import {
+  transactionCreateSchema,
+  transactionDeleteSchema,
+  transactionListSchema,
+  transactionUpdateSchema,
+} from '../schemas/finance.transactions.schema';
 
 /**
  * No serialization helpers needed!
@@ -57,30 +57,26 @@ export const transactionsRoutes = new Hono<AppContext>()
     );
   })
 
-    // POST /create - Create new transaction
-  .post(
-    '/create',
-    zValidator('json', transactionCreateSchema),
-    async (c) => {
-        const input = c.req.valid('json');
-        const userId = c.get('userId')!;
+  // POST /create - Create new transaction
+  .post('/create', zValidator('json', transactionCreateSchema), async (c) => {
+    const input = c.req.valid('json');
+    const userId = c.get('userId')!;
 
-      // Validate account if provided
-      if (input.accountId) {
-        const account = await getAccountById(input.accountId, userId);
-        if (!account) {
-          throw new NotFoundError('Account not found');
-        }
+    // Validate account if provided
+    if (input.accountId) {
+      const account = await getAccountById(input.accountId, userId);
+      if (!account) {
+        throw new NotFoundError('Account not found');
       }
+    }
 
-      const result = await createTransaction({
-        ...input,
-        userId,
-      });
+    const result = await createTransaction({
+      ...input,
+      userId,
+    });
 
-      return c.json<TransactionCreateOutput>(result, 201);
-    },
-  )
+    return c.json<TransactionCreateOutput>(result, 201);
+  })
 
   // POST /update - Update existing transaction
   .post('/update', zValidator('json', transactionUpdateSchema), async (c) => {

@@ -1,5 +1,5 @@
 import { tool } from 'ai';
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const create_list = tool({
   description: 'Create a new list',

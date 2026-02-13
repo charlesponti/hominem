@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { z } from 'zod';
+import * as z from 'zod';
 
 const isTest = process.env.NODE_ENV === 'test';
 

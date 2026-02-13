@@ -2,7 +2,7 @@ import { google } from '@ai-sdk/google';
 import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
@@ -33,7 +33,10 @@ function getDefaultStrategyPrompt(strategy: string): string {
     education: 'CONTENT STRATEGY: Education - Focus on teaching a concept or sharing knowledge',
   };
 
-  return defaultStrategies[strategy] ?? 'CONTENT STRATEGY: Storytelling - Create a narrative arc with beginning, middle, and end';
+  return (
+    defaultStrategies[strategy] ??
+    'CONTENT STRATEGY: Storytelling - Create a narrative arc with beginning, middle, and end'
+  );
 }
 
 export const tweetRoutes = new Hono<AppContext>()
@@ -87,12 +90,10 @@ Return only the tweet text, nothing else.`;
     // Check character count
     const characterCount = tweetText.length;
 
-    return c.json<TweetGenerateOutput>(
-      {
-        text: tweetText,
-        hashtags,
-        characterCount,
-        isOverLimit: characterCount > TWEET_CHARACTER_LIMIT,
-      },
-    );
+    return c.json<TweetGenerateOutput>({
+      text: tweetText,
+      hashtags,
+      characterCount,
+      isOverLimit: characterCount > TWEET_CHARACTER_LIMIT,
+    });
   });

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 // ============================================================================
 // Re-export Database Types (Single Source of Truth)

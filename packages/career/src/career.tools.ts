@@ -1,5 +1,5 @@
 import { tool } from 'ai';
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const create_job_application = tool({
   description: 'Create a new job application',

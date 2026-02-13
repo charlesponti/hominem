@@ -2,9 +2,8 @@ import { MessageService } from '@hominem/chat-services';
 import { NotFoundError, ValidationError, ForbiddenError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
-import { authMiddleware, type AppContext } from '../middleware/auth';
 import type {
   ChatMessage,
   MessagesGetOutput,
@@ -12,6 +11,8 @@ import type {
   MessagesDeleteOutput,
   MessagesDeleteAfterOutput,
 } from '../types/chat.types';
+
+import { authMiddleware, type AppContext } from '../middleware/auth';
 
 const messageService = new MessageService();
 

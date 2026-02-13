@@ -21,7 +21,7 @@ import {
 } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
@@ -89,10 +89,7 @@ export const budgetRoutes = new Hono<AppContext>()
         statusColor: item.statusColor || '#000000',
       }));
 
-      return c.json<BudgetCategoriesListWithSpendingOutput>(
-        categoriesWithSpending,
-        200,
-      );
+      return c.json<BudgetCategoriesListWithSpendingOutput>(categoriesWithSpending, 200);
     },
   )
 
@@ -169,7 +166,9 @@ export const budgetRoutes = new Hono<AppContext>()
       const result = await updateBudgetCategory(id, userId, {
         ...(input.name !== undefined && { name: input.name }),
         ...(input.type !== undefined && { type: input.type }),
-        ...(input.averageMonthlyExpense !== undefined && { averageMonthlyExpense: input.averageMonthlyExpense }),
+        ...(input.averageMonthlyExpense !== undefined && {
+          averageMonthlyExpense: input.averageMonthlyExpense,
+        }),
         ...(input.budgetId !== undefined && { budgetId: input.budgetId }),
         ...(input.color !== undefined && { color: input.color }),
       });

@@ -11,7 +11,7 @@ import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { csvStorageService } from '@hominem/utils/supabase';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import type { AppEnv } from '../../server';
 

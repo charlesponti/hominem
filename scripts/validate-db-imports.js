@@ -143,6 +143,19 @@ function validate() {
   return 1;
 }
 
+// Additional check: ensure @hominem/db package.json does not export source files
+function checkDbPackageExports() {
+  const pkgPath = path.join(process.cwd(), 'packages', 'db', 'package.json');
+  if (!fs.existsSync(pkgPath)) return 0;
+  const pkgText = fs.readFileSync(pkgPath, 'utf8');
+  if (/\/src\/.+/.test(pkgText) || /\.schema\.ts/.test(pkgText) || /typed\//.test(pkgText)) {
+    console.error('❌ packages/db/package.json must not export source files (src/*.ts) or `typed/`)');
+    console.error('   Update exports to point at `build/` outputs and types (`build/*.d.ts`).\n');
+    return 1;
+  }
+  return 0;
+}
+
 // Run validation
-const exitCode = validate();
+const exitCode = validate() || checkDbPackageExports();
 process.exit(exitCode);

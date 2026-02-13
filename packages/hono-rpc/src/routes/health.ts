@@ -10,14 +10,17 @@ import {
 import { NotFoundError, ValidationError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**
  * Type predicate to check if an event is a Health activity owned by a specific user
  */
-function isUserHealthActivity(event: EventWithTagsAndPeople | null, userId: string): event is EventWithTagsAndPeople & { type: 'Health'; userId: string } {
+function isUserHealthActivity(
+  event: EventWithTagsAndPeople | null,
+  userId: string,
+): event is EventWithTagsAndPeople & { type: 'Health'; userId: string } {
   return event !== null && event.userId === userId && event.type === 'Health';
 }
 
@@ -88,23 +91,31 @@ export const healthRoutes = new Hono<AppContext>()
   })
 
   // Get health statistics
-  .get('/stats/summary', authMiddleware, zValidator('query', z.object({
-    activityType: z.string().optional(),
-    startDate: z.string().datetime().optional(),
-    endDate: z.string().datetime().optional(),
-  })), async (c) => {
-    const userId = c.get('userId')!;
-    const query = c.req.valid('query');
+  .get(
+    '/stats/summary',
+    authMiddleware,
+    zValidator(
+      'query',
+      z.object({
+        activityType: z.string().optional(),
+        startDate: z.string().datetime().optional(),
+        endDate: z.string().datetime().optional(),
+      }),
+    ),
+    async (c) => {
+      const userId = c.get('userId')!;
+      const query = c.req.valid('query');
 
-    const stats = await getHealthActivityStats(
-      userId,
-      query.activityType,
-      query.startDate ? new Date(query.startDate) : undefined,
-      query.endDate ? new Date(query.endDate) : undefined,
-    );
+      const stats = await getHealthActivityStats(
+        userId,
+        query.activityType,
+        query.startDate ? new Date(query.startDate) : undefined,
+        query.endDate ? new Date(query.endDate) : undefined,
+      );
 
-    return c.json<HealthActivityStatsResponse>(stats);
-  })
+      return c.json<HealthActivityStatsResponse>(stats);
+    },
+  )
 
   // Log new health activity
   .post('/', authMiddleware, zValidator('json', healthActivityCreateSchema), async (c) => {

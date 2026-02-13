@@ -8,7 +8,7 @@
  * - Safe to import directly by apps and clients
  */
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 // ============================================================================
 // CREATE PLACE

@@ -8,7 +8,7 @@ import { NotFoundError, ValidationError, InternalError } from '@hominem/services
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import { randomUUID } from 'node:crypto';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
@@ -140,7 +140,10 @@ export const twitterRoutes = new Hono<AppContext>()
       throw new NotFoundError('Twitter account not found');
     }
 
-    return c.json<TwitterDisconnectOutput>({ success: true, message: 'Twitter account disconnected' });
+    return c.json<TwitterDisconnectOutput>({
+      success: true,
+      message: 'Twitter account disconnected',
+    });
   })
 
   // Post a tweet

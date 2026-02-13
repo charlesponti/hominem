@@ -3,24 +3,35 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "types": "./build/index.d.ts",
   "typesVersions": {
     "*": {
+      ".": [
+        "build/index.d.ts"
+      ],
       "types/*": [
         "build/schema/*.types.d.ts"
       ]
     }
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./schema/*": "./src/schema/*.schema.ts",
-    "./schema/validations": "./src/schema/validations.ts",
-    "./schema/tables": "./src/schema/tables.ts",
-    "./schema/relations": "./src/schema/relations.ts",
-    "./schema/calendar.enums": "./src/schema/calendar.enums.ts",
-    "./test/fixtures": "./src/test/fixtures.ts",
-    "./test/utils": "./src/test/utils.ts",
-    "./test/db-transaction": "./src/test/db-transaction.ts",
-    "./types/*": "./src/schema/*.types.ts"
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js",
+      "default": "./build/index.js"
+    },
+    "./schema/*": "./build/schema/*.schema.js",
+    "./schema/validations": "./build/schema/validations.js",
+    "./schema/tables": "./build/schema/tables.js",
+    "./schema/relations": "./build/schema/relations.js",
+    "./schema/calendar.enums": "./build/schema/calendar.enums.js",
+    "./test/fixtures": "./build/test/fixtures.js",
+    "./test/utils": "./build/test/utils.js",
+    "./test/db-transaction": "./build/test/db-transaction.js",
+    "./types/*": {
+      "types": "./build/schema/*.types.d.ts",
+      "import": "./build/schema/*.types.js"
+    }
   },
   "scripts": {
     "build": "tsc --emitDeclarationOnly --outDir build",

@@ -3,7 +3,7 @@ import { NotFoundError, InternalError, ValidationError } from '@hominem/services
 import { zValidator } from '@hono/zod-validator';
 import { streamText, type CoreMessage } from 'ai';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {

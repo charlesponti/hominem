@@ -1,8 +1,8 @@
+import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { VectorService } from '@hominem/services/vector';
 import { fileStorageService } from '@hominem/utils/supabase';
-import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
@@ -56,7 +56,9 @@ export const vectorRoutes = new Hono<AppContext>()
       return c.json({ results, count: results.length || 0 });
     } catch (err) {
       console.error('[vector.searchVectors] error:', err);
-      throw new InternalError(`Failed to search vector store: ${err instanceof Error ? err.message : String(err)}`);
+      throw new InternalError(
+        `Failed to search vector store: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   })
 
@@ -85,7 +87,9 @@ export const vectorRoutes = new Hono<AppContext>()
       return c.json({ results, count: results.length || 0 });
     } catch (err) {
       console.error('[vector.searchUserVectors] error:', err);
-      throw new InternalError(`Failed to search user vectors: ${err instanceof Error ? err.message : String(err)}`);
+      throw new InternalError(
+        `Failed to search user vectors: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   })
 
@@ -112,7 +116,9 @@ export const vectorRoutes = new Hono<AppContext>()
       return c.json({ vectors, count: vectors.length });
     } catch (err) {
       console.error('[vector.getUserVectors] error:', err);
-      throw new InternalError(`Failed to get user vectors: ${err instanceof Error ? err.message : String(err)}`);
+      throw new InternalError(
+        `Failed to get user vectors: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   })
 
@@ -127,7 +133,9 @@ export const vectorRoutes = new Hono<AppContext>()
       return c.json({ success: result.success, message: 'Vector documents deleted successfully' });
     } catch (err) {
       console.error('[vector.deleteUserVectors] error:', err);
-      throw new InternalError(`Failed to delete user vectors: ${err instanceof Error ? err.message : String(err)}`);
+      throw new InternalError(
+        `Failed to delete user vectors: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   })
 
@@ -146,7 +154,11 @@ export const vectorRoutes = new Hono<AppContext>()
         throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
       }
 
-      const result = await VectorService.ingestMarkdown(parsed.data.text, userId, parsed.data.metadata);
+      const result = await VectorService.ingestMarkdown(
+        parsed.data.text,
+        userId,
+        parsed.data.metadata,
+      );
 
       return c.json({
         success: result.success,
@@ -155,7 +167,9 @@ export const vectorRoutes = new Hono<AppContext>()
       });
     } catch (err) {
       console.error('[vector.ingestText] error:', err);
-      throw new InternalError(`Failed to ingest text: ${err instanceof Error ? err.message : String(err)}`);
+      throw new InternalError(
+        `Failed to ingest text: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   })
 
@@ -172,7 +186,9 @@ export const vectorRoutes = new Hono<AppContext>()
       return c.json({ files, count: files.length });
     } catch (err) {
       console.error('[vector.getUserFiles] error:', err);
-      throw new InternalError(`Failed to get user files: ${err instanceof Error ? err.message : String(err)}`);
+      throw new InternalError(
+        `Failed to get user files: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   })
 
@@ -188,9 +204,14 @@ export const vectorRoutes = new Hono<AppContext>()
 
       const deleted = await fileStorageService.deleteFile(fileId, userId);
 
-      return c.json({ success: deleted, message: deleted ? 'File deleted successfully' : 'File not found' });
+      return c.json({
+        success: deleted,
+        message: deleted ? 'File deleted successfully' : 'File not found',
+      });
     } catch (err) {
       console.error('[vector.deleteUserFile] error:', err);
-      throw new InternalError(`Failed to delete file: ${err instanceof Error ? err.message : String(err)}`);
+      throw new InternalError(
+        `Failed to delete file: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   });

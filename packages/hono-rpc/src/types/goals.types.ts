@@ -1,6 +1,6 @@
 // Force rebuild after schema changes
 import { GoalStatusSchema, GoalMilestoneSchema } from '@hominem/db/schema/goals';
-import { z } from 'zod';
+import * as z from 'zod';
 
 // ============================================================================
 // Database Types - Re-exported from @hominem/db

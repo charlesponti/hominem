@@ -1,7 +1,7 @@
 import { getAllInstitutions, createInstitution } from '@hominem/finance-services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import { type InstitutionsListOutput, type InstitutionCreateOutput } from '../types/finance.types';
@@ -19,23 +19,30 @@ export const institutionsRoutes = new Hono<AppContext>()
   })
 
   // POST /create - Create institution
-  .post('/create', zValidator('json', z.object({
-    id: z.string(),
-    name: z.string().min(1),
-    url: z.string().url().optional(),
-    logo: z.string().optional(),
-    primaryColor: z.string().optional(),
-    country: z.string().optional(),
-  })), async (c) => {
-    const input = c.req.valid('json');
+  .post(
+    '/create',
+    zValidator(
+      'json',
+      z.object({
+        id: z.string(),
+        name: z.string().min(1),
+        url: z.string().url().optional(),
+        logo: z.string().optional(),
+        primaryColor: z.string().optional(),
+        country: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const input = c.req.valid('json');
 
-    const result = await createInstitution({
-      id: input.id,
-      name: input.name,
-      url: input.url ?? null,
-      logo: input.logo ?? null,
-      primaryColor: input.primaryColor ?? null,
-      country: input.country ?? null,
-    });
-    return c.json<InstitutionCreateOutput>(result, 201);
-  });
+      const result = await createInstitution({
+        id: input.id,
+        name: input.name,
+        url: input.url ?? null,
+        logo: input.logo ?? null,
+        primaryColor: input.primaryColor ?? null,
+        country: input.country ?? null,
+      });
+      return c.json<InstitutionCreateOutput>(result, 201);
+    },
+  );

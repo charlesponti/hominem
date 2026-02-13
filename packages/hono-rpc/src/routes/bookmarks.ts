@@ -8,7 +8,7 @@ import {
   InternalError,
 } from '@hominem/services';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
@@ -20,8 +20,13 @@ async function getOpenGraphData({ url }: { url: string }) {
   const html = await response.text();
 
   const getMetaContent = (property: string): string => {
-    const match = html.match(new RegExp(`<meta[^>]*property=["']${property}["'][^>]*content=["']([^"']*)["']`, 'i'))
-      || html.match(new RegExp(`<meta[^>]*content=["']([^"']*)["'][^>]*property=["']${property}["']`, 'i'));
+    const match =
+      html.match(
+        new RegExp(`<meta[^>]*property=["']${property}["'][^>]*content=["']([^"']*)["']`, 'i'),
+      ) ||
+      html.match(
+        new RegExp(`<meta[^>]*content=["']([^"']*)["'][^>]*property=["']${property}["']`, 'i'),
+      );
     return match?.[1] || '';
   };
 

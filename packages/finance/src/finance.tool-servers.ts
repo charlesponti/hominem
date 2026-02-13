@@ -1,5 +1,5 @@
 import { toolDefinition } from '@tanstack/ai';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { calculateTransactions } from './analytics/transaction-analytics.service';
 import { type BudgetCategoryType, getBudgetCategories } from './core/budget-categories.service';

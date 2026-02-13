@@ -50,7 +50,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   // Authenticated flow: fetch invites via RPC
-  const client = createServerHonoClient(session.access_token);
+  const client = createServerHonoClient(session.access_token, request);
   const res = await client.api.invites.received.$post({ json: { token } });
   const rawInvites = res.ok ? await res.json() : [];
 

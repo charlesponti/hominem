@@ -1,4 +1,5 @@
 import type { EventTypeEnum } from '@hominem/db/types/calendar';
+
 import {
   createEvent,
   deleteEvent,
@@ -24,7 +25,7 @@ import { NotFoundError, ValidationError, InternalError, isServiceError } from '@
 import { sanitizeStoredPhotos } from '@hominem/utils/images';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
@@ -229,7 +230,9 @@ export const placesRoutes = new Hono<AppContext>()
       // Enqueue photo enrichment if needed
       try {
         if (queues) {
-          const hasGooglePhotos = createdPlace.photos?.some((url: string) => isGooglePhotosUrl(url));
+          const hasGooglePhotos = createdPlace.photos?.some((url: string) =>
+            isGooglePhotosUrl(url),
+          );
           if (
             (createdPlace.photos == null || createdPlace.photos.length === 0 || hasGooglePhotos) &&
             createdPlace.googleMapsId
@@ -406,7 +409,10 @@ export const placesRoutes = new Hono<AppContext>()
 
         const place = await getPlaceByGoogleMapsId(input.googleMapsId);
 
-        return c.json<PlaceGetDetailsByGoogleIdOutput>(place ? transformPlaceToApiFormat(place) : null, 200);
+        return c.json<PlaceGetDetailsByGoogleIdOutput>(
+          place ? transformPlaceToApiFormat(place) : null,
+          200,
+        );
       } catch (err) {
         if (isServiceError(err)) {
           throw err;
@@ -423,10 +429,13 @@ export const placesRoutes = new Hono<AppContext>()
     try {
       const input = c.req.valid('json') as z.infer<typeof placeAddToListsSchema>;
 
-       return c.json<PlaceAddToListsOutput>({
+      return c.json<PlaceAddToListsOutput>(
+        {
           success: true,
           addedToLists: input.listIds.length,
-        }, 200);
+        },
+        200,
+      );
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -443,18 +452,18 @@ export const placesRoutes = new Hono<AppContext>()
     authMiddleware,
     zValidator('json', placeRemoveFromListSchema),
     async (c) => {
-       try {
-         const input = c.req.valid('json') as z.infer<typeof placeRemoveFromListSchema>;
-         const userId = c.get('userId')!;
+      try {
+        const input = c.req.valid('json') as z.infer<typeof placeRemoveFromListSchema>;
+        const userId = c.get('userId')!;
 
-         await removePlaceFromList({
-           placeIdentifier: input.placeId,
-           listId: input.listId,
-           userId,
-         });
+        await removePlaceFromList({
+          placeIdentifier: input.placeId,
+          listId: input.listId,
+          userId,
+        });
 
-         return c.json<PlaceRemoveFromListOutput>(null, 200);
-       } catch (err) {
+        return c.json<PlaceRemoveFromListOutput>(null, 200);
+      } catch (err) {
         if (isServiceError(err)) {
           throw err;
         }
@@ -498,59 +507,59 @@ export const placesRoutes = new Hono<AppContext>()
 
       const dateValue = data.date ? new Date(data.date) : new Date();
 
-       const event = await createEvent({
-         title: data.title ?? '',
-         description: data.description ?? null,
-         date: dateValue,
-         dateStart: null,
-         dateEnd: null,
-         dateTime: null,
-         type: 'Events' as EventTypeEnum,
-         placeId: data.placeId ?? null,
-         userId: userId,
-         source: 'manual',
-         externalId: null,
-         calendarId: null,
-         lastSyncedAt: null,
-         syncError: null,
-         visitNotes: data.visitNotes ?? null,
-         visitRating: data.visitRating ?? null,
-         visitReview: data.visitReview ?? null,
-         visitPeople: null,
-         interval: null,
-         recurrenceRule: null,
-         score: null,
-         priority: null,
-         reminderSettings: null,
-         dependencies: null,
-         resources: null,
-         milestones: null,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          deletedAt: null,
-          // Default values for new fields
-          currentValue: 0,
-          streakCount: 0,
-          totalCompletions: 0,
-          completedInstances: 0,
-          isCompleted: false,
-          isTemplate: false,
-          status: 'active',
-          // Nullable fields
-          goalCategory: null,
-          targetValue: null,
-          unit: null,
-          lastCompletedAt: null,
-          expiresInDays: null,
-          reminderTime: null,
-          parentEventId: null,
-          activityType: null,
-          duration: null,
-          caloriesBurned: null,
-          nextOccurrence: null,
-          ...(data.tags && { tags: data.tags }),
-          ...(data.people && { people: data.people }),
-        });
+      const event = await createEvent({
+        title: data.title ?? '',
+        description: data.description ?? null,
+        date: dateValue,
+        dateStart: null,
+        dateEnd: null,
+        dateTime: null,
+        type: 'Events' as EventTypeEnum,
+        placeId: data.placeId ?? null,
+        userId: userId,
+        source: 'manual',
+        externalId: null,
+        calendarId: null,
+        lastSyncedAt: null,
+        syncError: null,
+        visitNotes: data.visitNotes ?? null,
+        visitRating: data.visitRating ?? null,
+        visitReview: data.visitReview ?? null,
+        visitPeople: null,
+        interval: null,
+        recurrenceRule: null,
+        score: null,
+        priority: null,
+        reminderSettings: null,
+        dependencies: null,
+        resources: null,
+        milestones: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        deletedAt: null,
+        // Default values for new fields
+        currentValue: 0,
+        streakCount: 0,
+        totalCompletions: 0,
+        completedInstances: 0,
+        isCompleted: false,
+        isTemplate: false,
+        status: 'active',
+        // Nullable fields
+        goalCategory: null,
+        targetValue: null,
+        unit: null,
+        lastCompletedAt: null,
+        expiresInDays: null,
+        reminderTime: null,
+        parentEventId: null,
+        activityType: null,
+        duration: null,
+        caloriesBurned: null,
+        nextOccurrence: null,
+        ...(data.tags && { tags: data.tags }),
+        ...(data.people && { people: data.people }),
+      });
 
       return c.json<PlaceLogVisitOutput>(serializeVisit(event), 201);
     } catch (err) {

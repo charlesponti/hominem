@@ -1,7 +1,7 @@
 import { type AccountRecord, updateAccount } from '@hominem/auth/server';
 import { logger } from '@hominem/utils/logger';
 import { createHash, randomBytes } from 'node:crypto';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { env } from '../env';
 import { cache } from './redis';
