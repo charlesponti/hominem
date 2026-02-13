@@ -34,7 +34,7 @@
     }
   },
   "scripts": {
-    "build": "tsc --emitDeclarationOnly --outDir build",
+    "build": "tsc",
     "prepare": "bun run build",
     "clean": "rm -rf build",
     "db:generate": "bunx drizzle-kit generate",
