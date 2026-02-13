@@ -6,6 +6,7 @@ export default [
   route('api/transcribe', 'routes/api.transcribe.ts'),
   route('api/speech', 'routes/api.speech.ts'),
   route('api/auth/google', 'routes/api/auth/google.ts'),
+  route('api/*', 'routes/api.proxy.ts'),
 
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),

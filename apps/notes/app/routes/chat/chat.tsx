@@ -12,7 +12,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   }
 
   try {
-    const rpcClient = createServerHonoClient(session.access_token);
+    const rpcClient = createServerHonoClient(session.access_token, request);
     const { chatId } = await getOrCreateChat(rpcClient);
     return redirect(`/chat/${chatId}`, { headers });
   } catch (error) {

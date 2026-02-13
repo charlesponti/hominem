@@ -4,6 +4,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import type { ConfigEnv, PluginOption, UserConfig } from 'vite';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const isProd = mode === 'production';
@@ -14,6 +15,52 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       tailwindcss(),
       reactRouter(),
       tsconfigPaths(),
+      VitePWA({
+        registerType: 'prompt',
+        injectRegister: false,
+        devOptions: {
+          enabled: false,
+        },
+        workbox: {
+          skipWaiting: false,
+          clientsClaim: false,
+          cleanupOutdatedCaches: true,
+          navigateFallback: '/',
+          navigateFallbackDenylist: [/^\/api\//],
+          runtimeCaching: [
+            {
+              urlPattern: ({ url, request }) =>
+                request.method === 'GET' && url.pathname.startsWith('/api/'),
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'api-cache',
+                networkTimeoutSeconds: 5,
+                expiration: {
+                  maxEntries: 200,
+                  maxAgeSeconds: 60 * 60 * 24,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              urlPattern: ({ request }) => request.destination === 'image',
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'image-cache',
+                expiration: {
+                  maxEntries: 200,
+                  maxAgeSeconds: 60 * 60 * 24 * 30,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+          ],
+        },
+      }),
 
       // Add bundle analyzer when ANALYZE flag is set
       isAnalyze &&

@@ -22,7 +22,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   // If not authenticated, allow viewing the page and return preview data when possible
   if (!isAuthenticated) {
-    const preview = token ? await buildInvitePreview(token) : null;
+    const preview = token ? await buildInvitePreview(token, request) : null;
 
     return data(
       {

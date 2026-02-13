@@ -21,7 +21,7 @@ interface WorkspaceLoaderData {
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { session, headers } = await requireAuth(request);
-  const client = createServerHonoClient(session?.access_token);
+  const client = createServerHonoClient(session?.access_token, request);
 
   const listRes = await client.api.chats.$get({ query: { limit: '1' } });
   const listData = await listRes.json();

@@ -33,7 +33,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     sortParam === 'date-asc' || sortParam === 'summary' ? sortParam : 'date-desc';
 
   const { session, headers } = await getServerSession(request);
-  const client = createServerHonoClient(session?.access_token);
+  const client = createServerHonoClient(session?.access_token, request);
 
   const [eventsRes, peopleRes] = await Promise.all([
     client.api.events.$get({
@@ -81,7 +81,7 @@ export async function action({ request }: Route.ActionArgs) {
   }
 
   const { session } = await getServerSession(request);
-  const client = createServerHonoClient(session?.access_token);
+  const client = createServerHonoClient(session?.access_token, request);
 
   const res = await client.api.events.$post({ json: eventData });
   const result = await res.json();

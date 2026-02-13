@@ -66,14 +66,14 @@ const NavigationMenu = () => {
         {navItems.map((item) => (
           <DropdownMenuItem key={item.title} asChild className=" py-2">
             {/* @ts-ignore */}
-            <Link to={href(item.url)} className="flex items-center space-x-2">
+            <Link to={href(item.url)} prefetch="intent" className="flex items-center space-x-2">
               {item.icon && <item.icon className="size-4" />}
               <span>{item.title}</span>
             </Link>
           </DropdownMenuItem>
         ))}
         <DropdownMenuItem asChild className=" py-2">
-          <Link to={href('/account')} className="flex items-center space-x-2">
+          <Link to={href('/account')} prefetch="intent" className="flex items-center space-x-2">
             <Settings className="size-4" />
             <span>Account</span>
           </Link>
@@ -96,7 +96,7 @@ function Header() {
       style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
     >
       <div className="flex px-2 py-4 md:px-8 items-center justify-between">
-        <Link to="/" className="flex items-center space-x-1">
+        <Link to="/" prefetch="intent" className="flex items-center space-x-1">
           <img src="/logo-florin.png" alt={APP_NAME} className="size-6" />
           <span className="heading-2 text-primary">{APP_NAME}</span>
         </Link>

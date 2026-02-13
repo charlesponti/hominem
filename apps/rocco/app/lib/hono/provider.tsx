@@ -15,11 +15,15 @@ import { createHonoClient } from '@hominem/hono-rpc/client';
 
 export function HonoProvider({ children }: { children: ReactNode }) {
   const { supabase } = useSupabaseAuthContext();
+  const baseUrl =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:3000';
 
   return (
     <BaseHonoProvider
       config={{
-        baseUrl: import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:3000',
+        baseUrl,
         createClient: createHonoClient,
         getAuthToken: async () => {
           try {

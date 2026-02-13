@@ -11,8 +11,11 @@ import { createServerHonoClient } from '~/lib/rpc/server';
  */
 export type InvitePreview = InvitesPreviewOutput;
 
-export async function buildInvitePreview(token: string): Promise<InvitePreview | null> {
-  const client = createServerHonoClient();
+export async function buildInvitePreview(
+  token: string,
+  request?: Request,
+): Promise<InvitePreview | null> {
+  const client = createServerHonoClient(undefined, request);
   const res = await client.api.invites.preview.$post({ json: { token } });
   if (!res.ok) {
     return null;

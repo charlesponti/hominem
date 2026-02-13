@@ -9,7 +9,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     return redirect('/', { headers });
   }
 
-  const rpcClient = createServerHonoClient(session.access_token);
+  const rpcClient = createServerHonoClient(session.access_token, request);
 
   const res = await rpcClient.api.chats.$get({ query: { limit: '1' } });
   const result = await res.json();

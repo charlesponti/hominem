@@ -35,19 +35,19 @@ const NavigationMenu = () => {
         side="bottom"
       >
         <DropdownMenuItem asChild className=" py-2">
-          <Link to={href('/')} className="flex items-center space-x-2">
+          <Link to={href('/')} prefetch="intent" className="flex items-center space-x-2">
             <Globe2Icon className="size-4" />
             <span>Explore</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className=" py-2">
-          <Link to={href('/lists')} className="flex items-center space-x-2">
+          <Link to={href('/lists')} prefetch="intent" className="flex items-center space-x-2">
             <List className="size-4" />
             <span>Lists</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className=" py-2">
-          <Link to={href('/invites')} className="flex items-center space-x-2">
+          <Link to={href('/invites')} prefetch="intent" className="flex items-center space-x-2">
             <UserPlus className="size-4" />
             <span>Invites</span>
           </Link>
@@ -59,7 +59,7 @@ const NavigationMenu = () => {
           </Link>
         </DropdownMenuItem> */}
         <DropdownMenuItem asChild className=" py-2">
-          <Link to={href('/account')} className="flex items-center space-x-2">
+          <Link to={href('/account')} prefetch="intent" className="flex items-center space-x-2">
             <Settings className="size-4" />
             <span>Account</span>
           </Link>
@@ -85,7 +85,7 @@ function Header() {
       style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
     >
       <div className="flex px-4 py-2 items-center justify-between">
-        <Link to="/" className="flex items-center space-x-1">
+        <Link to="/" prefetch="intent" className="flex items-center space-x-1">
           <img src="/icons/favicon-96x96.png" alt={APP_NAME} className="size-3 mt-1" />
           <span className="heading-4 lowercase text-primary">{APP_NAME}</span>
         </Link>

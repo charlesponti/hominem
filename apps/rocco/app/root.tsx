@@ -50,14 +50,24 @@ export const meta = () => [
 export default function App({ loaderData }: Route.ComponentProps) {
   const { session } = loaderData;
   const revalidator = useRevalidator();
+  const clearOfflineCaches = useCallback(async () => {
+    if (!('caches' in window)) {
+      return;
+    }
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map((name) => caches.delete(name)));
+  }, []);
 
   const handleAuthEvent = useCallback(
     (event: AuthChangeEvent) => {
+      if (event === 'SIGNED_OUT') {
+        void clearOfflineCaches();
+      }
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
         revalidator.revalidate();
       }
     },
-    [revalidator],
+    [clearOfflineCaches, revalidator],
   );
 
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -84,17 +94,17 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Links />
       </head>
       <body>
-        <UpdateGuard logo="/icons/apple-touch-icon-152x152.png" appName="Rocco">
-          <SupabaseAuthProvider
-            initialSession={session}
-            config={supabaseConfig}
-            onAuthEvent={handleAuthEvent}
-          >
-            <HonoProvider>
+        <SupabaseAuthProvider
+          initialSession={session}
+          config={supabaseConfig}
+          onAuthEvent={handleAuthEvent}
+        >
+          <HonoProvider>
+            <UpdateGuard logo="/icons/apple-touch-icon-152x152.png" appName="Rocco">
               <Outlet />
-            </HonoProvider>
-          </SupabaseAuthProvider>
-        </UpdateGuard>
+            </UpdateGuard>
+          </HonoProvider>
+        </SupabaseAuthProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
