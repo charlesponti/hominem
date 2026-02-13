@@ -40,7 +40,11 @@ export function useSendMessage({ chatId, userId }: { chatId: string; userId?: st
     utils.invalidate(['chats', 'getMessages', { chatId: currentChatId, limit: 50 }]);
   };
 
-  type SendMessageContext = { optimisticUserMessage: ExtendedMessage; currentChatId: string };
+  type SendMessageContext = {
+    optimisticUserMessage: ExtendedMessage;
+    currentChatId: string;
+    previousMessages: ChatsGetMessagesOutput | undefined;
+  };
 
   return useHonoMutation<ChatsSendOutput, ChatsSendInput>(
     async (client: HonoClient, variables: ChatsSendInput) => {
@@ -55,6 +59,7 @@ export function useSendMessage({ chatId, userId }: { chatId: string; userId?: st
       onMutate: async (variables: ChatsSendInput): Promise<SendMessageContext | undefined> => {
         const currentChatId = variables.chatId || chatId;
         chatIdRef.current = currentChatId;
+        const key = ['chats', 'getMessages', { chatId: currentChatId, limit: 50 }];
 
         const optimisticUserMessage: ExtendedMessage = {
           id: `temp-${Date.now()}`,
@@ -71,9 +76,17 @@ export function useSendMessage({ chatId, userId }: { chatId: string; userId?: st
           messageIndex: null,
         };
 
+        await utils.cancel(key);
+        const previousMessages = utils.getData<ChatsGetMessagesOutput>(key);
+        utils.setData<ChatsGetMessagesOutput>(key, (old) => {
+          const existing = Array.isArray(old) ? old : [];
+          return [...existing, optimisticUserMessage];
+        });
+
         return {
           optimisticUserMessage,
           currentChatId,
+          previousMessages,
         };
       },
       onSuccess: (result, variables, onMutateResult: unknown) => {
@@ -95,7 +108,14 @@ export function useSendMessage({ chatId, userId }: { chatId: string; userId?: st
           );
         }
       },
-      onError: () => {
+      onError: (_error, variables, context) => {
+        if (context?.previousMessages) {
+          const currentChatId = context?.currentChatId || variables.chatId || chatId;
+          utils.setData<ChatsGetMessagesOutput>(
+            ['chats', 'getMessages', { chatId: currentChatId, limit: 50 }],
+            context.previousMessages,
+          );
+        }
         stopPolling();
       },
     },

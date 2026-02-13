@@ -1,8 +1,8 @@
 import type { PossessionInput, PossessionOutput } from '@hominem/db/types/possessions';
 
 import { db } from '@hominem/db';
-import { possessions } from '@hominem/db/schema/possessions';
 import { and, desc, eq } from '@hominem/db';
+import { possessions } from '@hominem/db/schema/possessions';
 
 type CreatePossessionInput = Omit<PossessionInput, 'createdAt' | 'updatedAt'> & {
   userId: string;

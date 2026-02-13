@@ -24,16 +24,21 @@ export const mockPlaces = {
   get: vi.fn() as Mock,
 };
 
+const OAuth2Mock = class {
+  setCredentials = mockOAuth2Client.setCredentials;
+  refreshAccessToken = mockOAuth2Client.refreshAccessToken;
+  generateAuthUrl = mockOAuth2Client.generateAuthUrl;
+  getToken = mockOAuth2Client.getToken;
+};
+
 export const googleapi = {
   Auth: {
-    OAuth2Client: class {
-      setCredentials = mockOAuth2Client.setCredentials;
-      refreshAccessToken = mockOAuth2Client.refreshAccessToken;
-      generateAuthUrl = mockOAuth2Client.generateAuthUrl;
-      getToken = mockOAuth2Client.getToken;
-    },
+    OAuth2Client: OAuth2Mock,
   },
   google: {
+    auth: {
+      OAuth2: OAuth2Mock,
+    },
     calendar: vi.fn(() => mockCalendar) as Mock,
     places: vi.fn(() => ({
       places: mockPlaces,

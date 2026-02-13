@@ -1,7 +1,4 @@
-import { db } from '@hominem/db';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-import { convertGoogleCalendarEvent, GoogleCalendarService } from './google-calendar.service';
 
 // Mock googleapis
 vi.mock('googleapis', () => {
@@ -20,6 +17,17 @@ vi.mock('googleapis', () => {
 
   return {
     google: {
+      auth: {
+        OAuth2: vi.fn().mockImplementation(function (this: any) {
+          this.setCredentials = vi.fn();
+          this.refreshAccessToken = vi.fn().mockResolvedValue({
+            credentials: {
+              access_token: 'new-access-token',
+              expiry_date: Date.now() + 3600000,
+            },
+          });
+        }),
+      },
       calendar: vi.fn(() => ({
         events: {
           list: mockEventsList,
@@ -47,8 +55,9 @@ vi.mock('googleapis', () => {
 });
 
 // Mock @hominem/db
-vi.mock('@hominem/db', async (importOriginal) => {
-  const actual = await importOriginal<any>();
+vi.mock('@hominem/db', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const actual = require('@hominem/db');
 
   const mockWhere = vi.fn().mockImplementation(() => {
     const promise = Promise.resolve([]) as any;
@@ -106,6 +115,10 @@ vi.mock('@hominem/db/schema/calendar', () => ({
   eventsTags: {},
   eventsTransactions: {},
 }));
+
+import { db } from '@hominem/db';
+
+import { convertGoogleCalendarEvent, GoogleCalendarService } from './google-calendar.service';
 
 // Mock drizzle-orm
 vi.mock('drizzle-orm', () => ({

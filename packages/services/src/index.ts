@@ -10,7 +10,6 @@ export * from './spotify.service';
 export * from './tags.service';
 export * from './tasks.service';
 export * from './typing-mind.schema';
-export * from './google-places.service';
 export type { Queues } from './types';
 
 // API Contract patterns

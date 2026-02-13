@@ -25,12 +25,49 @@ import type {
   PlaceGetMyVisitsOutput,
   PlaceGetPlaceVisitsOutput,
   PlaceGetVisitStatsOutput,
+  PlaceGetDetailsByIdOutput,
 } from '@hominem/hono-rpc/types/places.types';
+import type { ListGetAllOutput, ListGetByIdOutput } from '@hominem/hono-rpc/types/lists.types';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
 import { endTrace, startTrace } from '~/lib/performance/trace';
 import { queryKeys } from '~/lib/query-keys';
+
+const OPTIMISTIC_USER_ID = '00000000-0000-0000-0000-000000000000';
+const OPTIMISTIC_USER_EMAIL = 'unknown@local';
+
+const createOptimisticPlace = (variables: PlaceCreateInput): PlaceCreateOutput => {
+  const now = new Date().toISOString();
+  return {
+    id: `temp-place-${Date.now()}`,
+    name: variables.name,
+    description: variables.description ?? null,
+    address: variables.address ?? null,
+    latitude: variables.latitude ?? null,
+    longitude: variables.longitude ?? null,
+    imageUrl: variables.imageUrl ?? null,
+    googleMapsId: variables.googleMapsId,
+    rating: variables.rating ?? null,
+    priceLevel: variables.priceLevel ?? null,
+    photos: variables.photos ?? null,
+    types: variables.types ?? null,
+    websiteUri: variables.websiteUri ?? null,
+    phoneNumber: variables.phoneNumber ?? null,
+    businessStatus: null,
+    openingHours: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+};
+
+const getCachedPlace = (
+  utils: ReturnType<typeof useHonoUtils>,
+  placeId: string,
+): PlaceGetDetailsByIdOutput | null => {
+  const place = utils.getData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(placeId));
+  return place ?? null;
+};
 
 /**
  * Create new place
@@ -45,12 +82,61 @@ export const useCreatePlace = (
       return res.json();
     },
     {
+      ...options,
+      onMutate: async (variables) => {
+        await utils.cancel(queryKeys.places.all());
+        const previousPlaces = utils.getData<PlaceCreateOutput[]>(queryKeys.places.all());
+        const optimisticPlace = createOptimisticPlace(variables);
+
+        utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), (old) => {
+          const existing = old ?? [];
+          return [optimisticPlace, ...existing];
+        });
+        utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(optimisticPlace.id), optimisticPlace);
+
+        return {
+          previousPlaces,
+          optimisticId: optimisticPlace.id,
+        };
+      },
       onSuccess: (result, variables, context, mutationContext) => {
+        const optimisticId =
+          typeof context === 'object' &&
+          context !== null &&
+          'optimisticId' in context &&
+          typeof context.optimisticId === 'string'
+            ? context.optimisticId
+            : null;
+
+        if (optimisticId) {
+          utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), (old) => {
+            const existing = old ?? [];
+            return existing.map((place) => (place.id === optimisticId ? result : place));
+          });
+          utils.remove(queryKeys.places.get(optimisticId));
+        }
+        utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(result.id), result);
         utils.invalidate(queryKeys.places.all());
         utils.invalidate(queryKeys.places.get(result.id));
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
-      ...options,
+      onError: (error, variables, context, mutationContext) => {
+        const previousPlaces =
+          typeof context === 'object' &&
+          context !== null &&
+          'previousPlaces' in context
+            ? (context as { previousPlaces?: PlaceCreateOutput[] }).previousPlaces
+            : undefined;
+
+        if (previousPlaces) {
+          utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), previousPlaces);
+        }
+
+        options?.onError?.(error, variables, context, mutationContext);
+      },
+      onSettled: () => {
+        utils.invalidate(queryKeys.places.all());
+      },
     },
   );
 };
@@ -68,12 +154,69 @@ export const useUpdatePlace = (
       return res.json();
     },
     {
+      ...options,
+      onMutate: async (variables) => {
+        await utils.cancel(queryKeys.places.all());
+        await utils.cancel(queryKeys.places.get(variables.id));
+
+        const previousPlaces = utils.getData<PlaceCreateOutput[]>(queryKeys.places.all());
+        const previousPlace = utils.getData<PlaceGetDetailsByIdOutput>(
+          queryKeys.places.get(variables.id),
+        );
+
+        utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), (old) => {
+          const existing = old ?? [];
+          return existing.map((place) =>
+            place.id === variables.id ? { ...place, ...variables } : place,
+          );
+        });
+
+        if (previousPlace) {
+          utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(variables.id), {
+            ...previousPlace,
+            ...variables,
+          });
+        }
+
+        return { previousPlaces, previousPlace };
+      },
       onSuccess: (result, variables, context, mutationContext) => {
+        utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), (old) => {
+          const existing = old ?? [];
+          return existing.map((place) => (place.id === result.id ? result : place));
+        });
+        utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(result.id), result);
         utils.invalidate(queryKeys.places.all());
         utils.invalidate(queryKeys.places.get(result.id));
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
-      ...options,
+      onError: (error, variables, context, mutationContext) => {
+        const previousPlaces =
+          typeof context === 'object' &&
+          context !== null &&
+          'previousPlaces' in context
+            ? (context as { previousPlaces?: PlaceCreateOutput[] }).previousPlaces
+            : undefined;
+        const previousPlace =
+          typeof context === 'object' &&
+          context !== null &&
+          'previousPlace' in context
+            ? (context as { previousPlace?: PlaceGetDetailsByIdOutput }).previousPlace
+            : undefined;
+
+        if (previousPlaces) {
+          utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), previousPlaces);
+        }
+        if (previousPlace) {
+          utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(variables.id), previousPlace);
+        }
+
+        options?.onError?.(error, variables, context, mutationContext);
+      },
+      onSettled: (_result, _error, variables) => {
+        utils.invalidate(queryKeys.places.all());
+        utils.invalidate(queryKeys.places.get(variables.id));
+      },
     },
   );
 };
@@ -91,11 +234,40 @@ export const useDeletePlace = (
       return res.json();
     },
     {
+      ...options,
+      onMutate: async (variables) => {
+        await utils.cancel(queryKeys.places.all());
+        const previousPlaces = utils.getData<PlaceCreateOutput[]>(queryKeys.places.all());
+
+        utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), (old) => {
+          const existing = old ?? [];
+          return existing.filter((place) => place.id !== variables.id);
+        });
+        utils.remove(queryKeys.places.get(variables.id));
+
+        return { previousPlaces };
+      },
       onSuccess: (result, variables, context, mutationContext) => {
         utils.invalidate(queryKeys.places.all());
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
-      ...options,
+      onError: (error, variables, context, mutationContext) => {
+        const previousPlaces =
+          typeof context === 'object' &&
+          context !== null &&
+          'previousPlaces' in context
+            ? (context as { previousPlaces?: PlaceCreateOutput[] }).previousPlaces
+            : undefined;
+
+        if (previousPlaces) {
+          utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), previousPlaces);
+        }
+
+        options?.onError?.(error, variables, context, mutationContext);
+      },
+      onSettled: () => {
+        utils.invalidate(queryKeys.places.all());
+      },
     },
   );
 };
@@ -192,12 +364,105 @@ export const useAddPlaceToLists = (
       return res.json();
     },
     {
+      ...options,
+      onMutate: async (variables) => {
+        await utils.cancel(queryKeys.lists.all());
+        for (const listId of variables.listIds) {
+          await utils.cancel(queryKeys.lists.get(listId));
+        }
+
+        const previousLists = utils.getData<ListGetAllOutput>(queryKeys.lists.all());
+        const previousListById = new Map<string, ListGetByIdOutput>();
+
+        const place = getCachedPlace(utils, variables.placeId);
+        const now = new Date().toISOString();
+        const optimisticPlace = {
+          id: `temp-list-place-${Date.now()}`,
+          placeId: variables.placeId,
+          description: place?.description ?? null,
+          itemAddedAt: now,
+          googleMapsId: place?.googleMapsId ?? null,
+          name: place?.name ?? 'Place',
+          imageUrl: place?.imageUrl ?? null,
+          photos: place?.photos ?? null,
+          types: place?.types ?? null,
+          type: 'PLACE',
+          latitude: place?.latitude ?? null,
+          longitude: place?.longitude ?? null,
+          rating: place?.rating ?? null,
+          address: place?.address ?? null,
+          addedBy: {
+            id: OPTIMISTIC_USER_ID,
+            name: null,
+            email: OPTIMISTIC_USER_EMAIL,
+            image: null,
+          },
+        };
+
+        utils.setData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
+          const existing = old ?? [];
+          return existing.map((list) => {
+            if (!variables.listIds.includes(list.id)) return list;
+            return {
+              ...list,
+              places: [...list.places, optimisticPlace],
+            };
+          });
+        });
+
+        for (const listId of variables.listIds) {
+          const list = utils.getData<ListGetByIdOutput>(queryKeys.lists.get(listId));
+          if (list) {
+            previousListById.set(listId, list);
+            utils.setData<ListGetByIdOutput>(queryKeys.lists.get(listId), {
+              ...list,
+              places: [...list.places, optimisticPlace],
+            });
+          }
+        }
+
+        return { previousLists, previousListById };
+      },
       onSuccess: (result, variables, context, mutationContext) => {
         utils.invalidate(queryKeys.places.all());
         utils.invalidate(queryKeys.lists.all());
+        for (const listId of variables.listIds) {
+          utils.invalidate(queryKeys.lists.get(listId));
+        }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
-      ...options,
+      onError: (error, variables, context, mutationContext) => {
+        const previousLists =
+          typeof context === 'object' &&
+          context !== null &&
+          'previousLists' in context
+            ? (context as { previousLists?: ListGetAllOutput }).previousLists
+            : undefined;
+        const previousListById =
+          typeof context === 'object' &&
+          context !== null &&
+          'previousListById' in context &&
+          context.previousListById instanceof Map
+            ? (context as { previousListById: Map<string, ListGetByIdOutput> }).previousListById
+            : null;
+
+        if (previousLists) {
+          utils.setData<ListGetAllOutput>(queryKeys.lists.all(), previousLists);
+        }
+        if (previousListById) {
+          for (const [listId, list] of previousListById.entries()) {
+            utils.setData<ListGetByIdOutput>(queryKeys.lists.get(listId), list);
+          }
+        }
+
+        options?.onError?.(error, variables, context, mutationContext);
+      },
+      onSettled: (_result, _error, variables) => {
+        utils.invalidate(queryKeys.lists.all());
+        for (const listId of variables.listIds) {
+          utils.invalidate(queryKeys.lists.get(listId));
+        }
+      },
     },
   );
 };
@@ -215,12 +480,73 @@ export const useRemovePlaceFromList = (
       return res.json();
     },
     {
+      ...options,
+      onMutate: async (variables) => {
+        await utils.cancel(queryKeys.lists.all());
+        await utils.cancel(queryKeys.lists.get(variables.listId));
+
+        const previousLists = utils.getData<ListGetAllOutput>(queryKeys.lists.all());
+        const previousList = utils.getData<ListGetByIdOutput>(
+          queryKeys.lists.get(variables.listId),
+        );
+
+        utils.setData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
+          const existing = old ?? [];
+          return existing.map((list) => {
+            if (list.id !== variables.listId) return list;
+            return {
+              ...list,
+              places: list.places.filter(
+                (place) => place.placeId !== variables.placeId && place.id !== variables.placeId,
+              ),
+            };
+          });
+        });
+
+        if (previousList) {
+          utils.setData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId), {
+            ...previousList,
+            places: previousList.places.filter(
+              (place) => place.placeId !== variables.placeId && place.id !== variables.placeId,
+            ),
+          });
+        }
+
+        return { previousLists, previousList };
+      },
       onSuccess: (result, variables, context, mutationContext) => {
         utils.invalidate(queryKeys.places.all());
         utils.invalidate(queryKeys.lists.all());
+        utils.invalidate(queryKeys.lists.get(variables.listId));
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
-      ...options,
+      onError: (error, variables, context, mutationContext) => {
+        const previousLists =
+          typeof context === 'object' &&
+          context !== null &&
+          'previousLists' in context
+            ? (context as { previousLists?: ListGetAllOutput }).previousLists
+            : undefined;
+        const previousList =
+          typeof context === 'object' &&
+          context !== null &&
+          'previousList' in context
+            ? (context as { previousList?: ListGetByIdOutput }).previousList
+            : undefined;
+
+        if (previousLists) {
+          utils.setData<ListGetAllOutput>(queryKeys.lists.all(), previousLists);
+        }
+        if (previousList) {
+          utils.setData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId), previousList);
+        }
+
+        options?.onError?.(error, variables, context, mutationContext);
+      },
+      onSettled: (_result, _error, variables) => {
+        utils.invalidate(queryKeys.lists.all());
+        utils.invalidate(queryKeys.lists.get(variables.listId));
+      },
     },
   );
 };
@@ -277,6 +603,43 @@ export const useLogPlaceVisit = (
       return res.json();
     },
     {
+      ...options,
+      onMutate: async (variables) => {
+        await utils.cancel(queryKeys.places.myVisits());
+        const previousMyVisits = utils.getData<PlaceGetMyVisitsOutput>(queryKeys.places.myVisits());
+
+        const place = getCachedPlace(utils, variables.placeId);
+        const now = new Date().toISOString();
+        const optimisticVisit = {
+          id: `temp-visit-${Date.now()}`,
+          title: variables.title ?? null,
+          description: variables.description ?? null,
+          date: variables.date,
+          placeId: variables.placeId,
+          place: {
+            id: place?.id ?? variables.placeId,
+            name: place?.name ?? 'Place',
+            address: place?.address ?? null,
+            latitude: place?.latitude ?? null,
+            longitude: place?.longitude ?? null,
+            imageUrl: place?.imageUrl ?? null,
+          },
+          visitNotes: variables.visitNotes ?? null,
+          visitRating: variables.visitRating ?? null,
+          visitReview: variables.visitReview ?? null,
+          tags: variables.tags ?? null,
+          people: variables.people ?? null,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        utils.setData<PlaceGetMyVisitsOutput>(queryKeys.places.myVisits(), (old) => {
+          const existing = old ?? [];
+          return [optimisticVisit, ...existing];
+        });
+
+        return { previousMyVisits };
+      },
       onSuccess: (result, variables, context, mutationContext) => {
         utils.invalidate(queryKeys.places.myVisits());
         if (result.placeId) {
@@ -285,7 +648,25 @@ export const useLogPlaceVisit = (
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
-      ...options,
+      onError: (error, variables, context, mutationContext) => {
+        const previousMyVisits =
+          typeof context === 'object' &&
+          context !== null &&
+          'previousMyVisits' in context
+            ? (context as { previousMyVisits?: PlaceGetMyVisitsOutput }).previousMyVisits
+            : undefined;
+
+        if (previousMyVisits) {
+          utils.setData<PlaceGetMyVisitsOutput>(queryKeys.places.myVisits(), previousMyVisits);
+        }
+
+        options?.onError?.(error, variables, context, mutationContext);
+      },
+      onSettled: (_result, _error, variables) => {
+        utils.invalidate(queryKeys.places.myVisits());
+        utils.invalidate(queryKeys.places.placeVisits(variables.placeId));
+        utils.invalidate(queryKeys.places.visitStats(variables.placeId));
+      },
     },
   );
 };
@@ -335,6 +716,20 @@ export const useUpdatePlaceVisit = (
       return res.json();
     },
     {
+      ...options,
+      onMutate: async (variables) => {
+        await utils.cancel(queryKeys.places.myVisits());
+        const previousMyVisits = utils.getData<PlaceGetMyVisitsOutput>(queryKeys.places.myVisits());
+
+        utils.setData<PlaceGetMyVisitsOutput>(queryKeys.places.myVisits(), (old) => {
+          const existing = old ?? [];
+          return existing.map((visit) =>
+            visit.id === variables.id ? { ...visit, ...variables } : visit,
+          );
+        });
+
+        return { previousMyVisits };
+      },
       onSuccess: (result, variables, context, mutationContext) => {
         utils.invalidate(queryKeys.places.myVisits());
         if (result.placeId) {
@@ -343,7 +738,23 @@ export const useUpdatePlaceVisit = (
         }
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
-      ...options,
+      onError: (error, variables, context, mutationContext) => {
+        const previousMyVisits =
+          typeof context === 'object' &&
+          context !== null &&
+          'previousMyVisits' in context
+            ? (context as { previousMyVisits?: PlaceGetMyVisitsOutput }).previousMyVisits
+            : undefined;
+
+        if (previousMyVisits) {
+          utils.setData<PlaceGetMyVisitsOutput>(queryKeys.places.myVisits(), previousMyVisits);
+        }
+
+        options?.onError?.(error, variables, context, mutationContext);
+      },
+      onSettled: (_result, _error, variables) => {
+        utils.invalidate(queryKeys.places.myVisits());
+      },
     },
   );
 };
@@ -361,12 +772,40 @@ export const useDeletePlaceVisit = (
       return res.json();
     },
     {
+      ...options,
+      onMutate: async (variables) => {
+        await utils.cancel(queryKeys.places.myVisits());
+        const previousMyVisits = utils.getData<PlaceGetMyVisitsOutput>(queryKeys.places.myVisits());
+
+        utils.setData<PlaceGetMyVisitsOutput>(queryKeys.places.myVisits(), (old) => {
+          const existing = old ?? [];
+          return existing.filter((visit) => visit.id !== variables.id);
+        });
+
+        return { previousMyVisits };
+      },
       onSuccess: (result, variables, context, mutationContext) => {
         utils.invalidate(queryKeys.places.myVisits());
         utils.invalidate(queryKeys.places.all());
         options?.onSuccess?.(result, variables, context, mutationContext);
       },
-      ...options,
+      onError: (error, variables, context, mutationContext) => {
+        const previousMyVisits =
+          typeof context === 'object' &&
+          context !== null &&
+          'previousMyVisits' in context
+            ? (context as { previousMyVisits?: PlaceGetMyVisitsOutput }).previousMyVisits
+            : undefined;
+
+        if (previousMyVisits) {
+          utils.setData<PlaceGetMyVisitsOutput>(queryKeys.places.myVisits(), previousMyVisits);
+        }
+
+        options?.onError?.(error, variables, context, mutationContext);
+      },
+      onSettled: () => {
+        utils.invalidate(queryKeys.places.myVisits());
+      },
     },
   );
 };

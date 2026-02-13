@@ -1,8 +1,8 @@
 import { db, eq, sql } from '@hominem/db';
 import { place } from '@hominem/db/schema/places';
 import { env } from '@hominem/services/env';
-import { googlePlaces } from '@hominem/services/google-places';
 
+import { googlePlaces } from '../google-places.service';
 import { createPlaceImagesService, isGooglePhotosUrl } from '../place-images.service';
 import { processPlacePhotos } from '../places.service';
 

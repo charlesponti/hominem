@@ -41,9 +41,6 @@
       "@hominem/finance-services/*": [
         "../finance/src/*"
       ],
-      "googleapis": [
-        "../../types/googleapis.d.ts"
-      ],
       "@/*": [
         "./src/*"
       ]

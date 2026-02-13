@@ -12,7 +12,6 @@
     "./fixtures": "./src/fixtures.ts",
     "./google-calendar": "./src/google.ts",
     "./logger": "./src/logger.ts",
-    "./google-places": "./src/google-places.service.ts",
     "./people": "./src/people.service.ts",
     "./tags": "./src/tags.service.ts",
     "./env": "./src/env.ts",

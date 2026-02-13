@@ -21,7 +21,8 @@ export const useCreateAccount = () => {
     },
     {
       onSuccess: () => {
-        utils.invalidate(['finance', 'accounts']);
+        utils.invalidate(['finance', 'accounts', 'list']);
+        utils.invalidate(['finance', 'accounts', 'all']);
       },
     },
   );
@@ -38,8 +39,10 @@ export const useUpdateAccount = () => {
       return res.json() as unknown as AccountUpdateOutput;
     },
     {
-      onSuccess: () => {
-        utils.invalidate(['finance', 'accounts']);
+      onSuccess: (_result, variables) => {
+        utils.invalidate(['finance', 'accounts', 'list']);
+        utils.invalidate(['finance', 'accounts', 'all']);
+        utils.invalidate(['finance', 'accounts', 'get', variables.id]);
       },
     },
   );
@@ -56,8 +59,10 @@ export const useDeleteAccount = () => {
       return res.json() as unknown as AccountDeleteOutput;
     },
     {
-      onSuccess: () => {
-        utils.invalidate(['finance', 'accounts']);
+      onSuccess: (_result, variables) => {
+        utils.invalidate(['finance', 'accounts', 'list']);
+        utils.invalidate(['finance', 'accounts', 'all']);
+        utils.invalidate(['finance', 'accounts', 'get', variables.id]);
       },
     },
   );

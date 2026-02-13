@@ -3,8 +3,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 // Define query keys at the top of the file as constants
-const PLAID_CONNECTIONS_KEY = [['plaid', 'connections']];
-const PLAID_ACCOUNTS_KEY = [['plaid', 'accounts']];
+const PLAID_CONNECTIONS_KEY = ['plaid', 'connections'];
+const PLAID_ACCOUNTS_KEY = ['plaid', 'accounts'];
+const PLAID_ACCOUNTS_BY_INSTITUTION_KEY = ['plaid', 'accounts', 'institution'];
 
 // Type definitions
 interface CreateLinkTokenResponse {
@@ -114,7 +115,10 @@ export function useExchangeToken() {
       // Invalidate related queries to refresh connections and accounts
       queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] });
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_BY_INSTITUTION_KEY });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'with-plaid'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });
       setError(null);
     },
   });
@@ -156,7 +160,10 @@ export function useSyncPlaidItem() {
       // Invalidate connections to update status
       queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] });
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_BY_INSTITUTION_KEY });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'with-plaid'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });
       queryClient.invalidateQueries({ queryKey: ['finance', 'transactions'] });
       setError(null);
     },
@@ -195,7 +202,10 @@ export function useRemovePlaidConnection() {
       // Invalidate related queries
       queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] });
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_BY_INSTITUTION_KEY });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'with-plaid'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });
       setError(null);
     },
   });
@@ -241,11 +251,15 @@ export function useLinkAccountToInstitution() {
         throw err;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_result, variables) => {
       // Invalidate related queries to refresh account data
-      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'get', variables.accountId] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'with-plaid'] });
       queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_BY_INSTITUTION_KEY });
       setError(null);
     },
   });
@@ -280,11 +294,15 @@ export function useUnlinkAccountFromInstitution() {
         throw err;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_result, accountId) => {
       // Invalidate related queries to refresh account data
-      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'get', accountId] });
+      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'with-plaid'] });
       queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });
+      queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_BY_INSTITUTION_KEY });
       setError(null);
     },
   });

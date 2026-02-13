@@ -1,8 +1,8 @@
 import type { ArtistOutput } from '@hominem/db/types/music';
 
 import { db } from '@hominem/db';
-import { artists } from '@hominem/db/schema/music';
 import { sql } from '@hominem/db';
+import { artists } from '@hominem/db/schema/music';
 
 export async function upsertArtists(records: ArtistOutput[]) {
   if (records.length === 0) {

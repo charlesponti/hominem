@@ -1,3 +1,5 @@
+import { redis } from '@hominem/services/redis';
+import { mockPlaces } from '@hominem/services/test-utils/google-api-mocks';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -5,14 +7,14 @@ import {
   getNeighborhoodFromAddressComponents,
   googlePlacesTestUtils,
 } from './google-places.service';
-import { redis } from './redis';
-import { mockPlaces } from './test-utils/google-api-mocks';
 
 // Mock googleapis
-vi.mock('googleapis', () => import('./test-utils/google-api-mocks').then((m) => m.googleapi));
+vi.mock('googleapis', () =>
+  import('@hominem/services/test-utils/google-api-mocks').then((m) => m.googleapi),
+);
 
 // Mock Redis
-vi.mock('./redis', () => ({
+vi.mock('@hominem/services/redis', () => ({
   redis: {
     get: vi.fn(),
     setex: vi.fn(),
@@ -30,7 +32,7 @@ vi.mock('@hominem/utils/logger', () => ({
 }));
 
 // Mock env
-vi.mock('./env', () => ({
+vi.mock('@hominem/services/env', () => ({
   env: {
     GOOGLE_API_KEY: 'test-api-key',
   },

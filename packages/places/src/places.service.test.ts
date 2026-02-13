@@ -1,12 +1,12 @@
 import type { PlaceInsert } from '@hominem/db/types/places';
 
-import { googlePlaces } from '@hominem/services/google-places';
 import { describe, expect, it, vi } from 'vitest';
 
+import { googlePlaces } from './google-places.service';
 import { preparePlaceInsertData, refreshAllPlaces } from './places.service';
 
 // Mock googlePlaces
-vi.mock('@hominem/services/google-places', () => ({
+vi.mock('./google-places.service', () => ({
   googlePlaces: {
     getDetails: vi.fn(),
   },

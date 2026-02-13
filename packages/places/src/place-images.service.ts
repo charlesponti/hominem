@@ -3,7 +3,8 @@ import { isValidGoogleHost } from '@hominem/utils/google';
 import { downloadImage } from '@hominem/utils/http';
 import { isGooglePlacesPhotoReference } from '@hominem/utils/images';
 import { placeImagesStorageService } from '@hominem/utils/supabase';
-import { google } from 'googleapis';
+
+import { googlePlaces } from './google-places.service';
 
 let _placeImagesServiceInstance: PlaceImagesService | undefined;
 
@@ -14,7 +15,6 @@ let _placeImagesServiceInstance: PlaceImagesService | undefined;
 export function getPlaceImagesService(): PlaceImagesService {
   if (!_placeImagesServiceInstance) {
     _placeImagesServiceInstance = createPlaceImagesService({
-      googleApiKey: env.VITE_GOOGLE_API_KEY || env.GOOGLE_API_KEY || '',
       appBaseUrl: env.VITE_APP_BASE_URL,
     });
   }
@@ -30,18 +30,10 @@ export interface PlaceImagesService {
 }
 
 /**
- * Create a place-images service instance bound to env vars (e.g., APP_BASE_URL, GOOGLE_PLACES_API_KEY)
+ * Create a place-images service instance bound to env vars (e.g., APP_BASE_URL)
  * Developer must call this with their env values to get a working service.
  */
-export function createPlaceImagesService({
-  appBaseUrl,
-  googleApiKey,
-}: {
-  appBaseUrl?: string | undefined;
-  googleApiKey: string;
-}) {
-  const placesClient = google.places({ version: 'v1', auth: googleApiKey });
-
+export function createPlaceImagesService({ appBaseUrl }: { appBaseUrl?: string | undefined }) {
   async function downloadAndStorePlaceImage(
     googleMapsId: string,
     photoUrl: string,
@@ -80,21 +72,11 @@ export function createPlaceImagesService({
       }
 
       if (resourceName) {
-        if (!resourceName.endsWith('/media')) {
-          resourceName += '/media';
-        }
-
-        const response = await placesClient.places.photos.getMedia({
-          name: resourceName,
-          maxWidthPx: 1600,
-          maxHeightPx: 1200,
-          skipHttpRedirect: true,
-        });
-
-        if (response.data.photoUri) {
-          downloadUrl = response.data.photoUri;
+        const mediaUrl = await googlePlaces.getPhotoMediaUrl(resourceName);
+        if (mediaUrl) {
+          downloadUrl = mediaUrl;
         } else {
-          throw new Error('No photoUri in Google API response');
+          throw new Error('Failed to get photo media URL from Google Places API');
         }
       }
 

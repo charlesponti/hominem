@@ -3,14 +3,14 @@ import type { ListOutput } from '@hominem/db/types/lists';
 import type { PlaceInput, PlaceOutput } from '@hominem/db/types/places';
 
 import { db } from '@hominem/db';
+import { and, eq, inArray, isNotNull, isNull, or, sql } from '@hominem/db';
 import { item } from '@hominem/db/schema/items';
 import { list } from '@hominem/db/schema/lists';
 import { place } from '@hominem/db/schema/places';
-import { googlePlaces } from '@hominem/services/google-places';
 import { GOOGLE_PLACES_BASE_URL } from '@hominem/utils/google';
 import { normalizePhotoReference, sanitizeStoredPhotos } from '@hominem/utils/images';
-import { and, eq, inArray, isNotNull, isNull, or, sql } from '@hominem/db';
 
+import { googlePlaces } from './google-places.service';
 import { isGooglePhotosUrl, type PlaceImagesService } from './place-images.service';
 
 export type ListSummary = { id: string; name: string };

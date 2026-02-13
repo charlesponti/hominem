@@ -1,8 +1,10 @@
+import { env } from '@hominem/services/env';
+import { redis } from '@hominem/services/redis';
 import { logger } from '@hominem/utils/logger';
-import { google, type places_v1 } from 'googleapis';
 
-import { env } from './env';
-import { redis } from './redis';
+// Minimal types to avoid loading heavy googleapis type system
+type GooglePlaceData = any;
+type GooglePlacesClient = any;
 
 export type SearchPlacesOptions = {
   query: string;
@@ -57,7 +59,7 @@ export type GooglePlacePrediction = {
   priceLevel?: string | number | null | undefined;
 };
 
-export type GooglePlacesApiResponse = places_v1.Schema$GoogleMapsPlacesV1Place;
+export type GooglePlacesApiResponse = any;
 
 export type GooglePlaceData = {
   id: string;
@@ -78,9 +80,9 @@ export type GooglePlaceData = {
   priceLevel?: number | null;
 };
 
-export type GoogleAddressComponent = places_v1.Schema$GoogleMapsPlacesV1PlaceAddressComponent;
-export type GooglePlacePhoto = places_v1.Schema$GoogleMapsPlacesV1Photo;
-export type GooglePlaceDetailsResponse = places_v1.Schema$GoogleMapsPlacesV1Place;
+export type GoogleAddressComponent = any;
+export type GooglePlacePhoto = any;
+export type GooglePlaceDetailsResponse = any;
 
 const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours for persistent cache
 
@@ -92,12 +94,22 @@ const getGoogleApiKey = () => {
   return key;
 };
 
-// Create Places client lazily to avoid reading env at module import time
+// Cache the client instance once the API key is available
+let cachedPlacesClient: GooglePlacesClient | undefined;
+
 const createPlacesClient = () => {
-  return google.places({
+  if (cachedPlacesClient) {
+    return cachedPlacesClient;
+  }
+
+  // Type system avoids googleapis imports to prevent type graph construction
+  const google = require('googleapis').google;
+
+  cachedPlacesClient = google.places({
     version: 'v1',
     auth: getGoogleApiKey(),
   });
+  return cachedPlacesClient;
 };
 
 // Field names without prefix (for PlaceOutput Details API - single place response)
@@ -180,14 +192,14 @@ const getDetails = async ({
   placeId,
   fieldMask = DEFAULT_DETAILS_FIELD_MASK,
   forceFresh,
-}: PlaceDetailsOptions): Promise<GooglePlaceDetailsResponse> => {
+}: PlaceDetailsOptions): Promise<any> => {
   const cacheKey = buildCacheKey({
     path: 'places-details',
     placeId,
     fieldMask,
   });
 
-  const cached = !forceFresh ? await readCache<GooglePlaceDetailsResponse>(cacheKey) : null;
+  const cached = !forceFresh ? await readCache<any>(cacheKey) : null;
   if (cached) {
     return cached;
   }
@@ -218,8 +230,8 @@ const search = async ({
   fieldMask = DEFAULT_SEARCH_FIELD_MASK,
   maxResultCount = 10,
   forceFresh,
-}: SearchPlacesOptions): Promise<GooglePlacesApiResponse[]> => {
-  const body: places_v1.Schema$GoogleMapsPlacesV1SearchTextRequest = {
+}: SearchPlacesOptions): Promise<any[]> => {
+  const body: any = {
     textQuery: query,
     maxResultCount,
   };
@@ -244,7 +256,7 @@ const search = async ({
     maxResultCount,
   });
 
-  const cached = !forceFresh ? await readCache<GooglePlacesApiResponse[]>(cacheKey) : null;
+  const cached = !forceFresh ? await readCache<any[]>(cacheKey) : null;
   if (cached) {
     return cached;
   }
@@ -271,10 +283,8 @@ const autocomplete = async ({
   locationBias,
   includeQueryPredictions,
   includedPrimaryTypes,
-}: AutocompleteOptions): Promise<
-  places_v1.Schema$GoogleMapsPlacesV1AutocompletePlacesResponseSuggestion[]
-> => {
-  const body: places_v1.Schema$GoogleMapsPlacesV1AutocompletePlacesRequest = { input };
+}: AutocompleteOptions): Promise<any[]> => {
+  const body: any = { input };
 
   if (sessionToken) {
     body.sessionToken = sessionToken;
@@ -327,11 +337,35 @@ const getPhotos = async ({
     .slice(0, limit);
 };
 
+const getPhotoMediaUrl = async (photoResourceName: string): Promise<string | null> => {
+  try {
+    const name = photoResourceName.endsWith('/media')
+      ? photoResourceName
+      : `${photoResourceName}/media`;
+
+    const response = await createPlacesClient().places.photos.getMedia({
+      name,
+      maxWidthPx: 1600,
+      maxHeightPx: 1200,
+      skipHttpRedirect: true,
+    });
+
+    return response.data.photoUri ?? null;
+  } catch (err) {
+    logger.error('Failed to get photo media URL', {
+      photoResourceName,
+      error: String(err),
+    });
+    return null;
+  }
+};
+
 export const googlePlaces = {
   getDetails,
   search,
   autocomplete,
   getPhotos,
+  getPhotoMediaUrl,
 };
 
 export const getNeighborhoodFromAddressComponents = (
