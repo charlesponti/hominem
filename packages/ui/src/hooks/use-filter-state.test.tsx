@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import { renderHook, waitFor } from '../test-utils';
+import { act, renderHook, waitFor } from '../test-utils';
 import { useFilterState } from './use-filter-state';
 
 describe('useFilterState', () => {
@@ -15,7 +15,7 @@ describe('useFilterState', () => {
     const initialFilters = { name: 'test', age: 25 };
     const { result } = renderHook(() => useFilterState({ initialFilters }));
 
-    await waitFor(() => {
+    act(() => {
       result.current.setFilters({ name: 'updated', age: 30 });
     });
 
@@ -28,7 +28,7 @@ describe('useFilterState', () => {
     const initialFilters = { name: 'test', age: 25 };
     const { result } = renderHook(() => useFilterState({ initialFilters }));
 
-    await waitFor(() => {
+    act(() => {
       result.current.setFilters((prev) => ({ ...prev, age: 30 }));
     });
 
@@ -41,7 +41,7 @@ describe('useFilterState', () => {
     const initialFilters = { name: 'test', age: 25 };
     const { result } = renderHook(() => useFilterState({ initialFilters }));
 
-    await waitFor(() => {
+    act(() => {
       result.current.updateFilter('name', 'updated');
     });
 
@@ -54,11 +54,11 @@ describe('useFilterState', () => {
     const initialFilters = { name: 'test', age: 25 };
     const { result } = renderHook(() => useFilterState({ initialFilters }));
 
-    await waitFor(() => {
+    act(() => {
       result.current.setFilters({ name: 'updated', age: 30 });
     });
 
-    await waitFor(() => {
+    act(() => {
       result.current.clearFilters();
     });
 
@@ -71,11 +71,11 @@ describe('useFilterState', () => {
     const initialFilters = { name: 'test', age: 25 };
     const { result } = renderHook(() => useFilterState({ initialFilters }));
 
-    await waitFor(() => {
+    act(() => {
       result.current.setFilters({ name: 'updated', age: 30 });
     });
 
-    await waitFor(() => {
+    act(() => {
       result.current.resetFilters();
     });
 
@@ -89,7 +89,7 @@ describe('useFilterState', () => {
     const onFiltersChange = vi.fn();
     const { result } = renderHook(() => useFilterState({ initialFilters, onFiltersChange }));
 
-    await waitFor(() => {
+    act(() => {
       result.current.setFilters({ name: 'updated', age: 30 });
     });
 
@@ -103,7 +103,7 @@ describe('useFilterState', () => {
       useFilterState({ initialFilters, onFiltersChange, debounceMs: 100 }),
     );
 
-    await waitFor(() => {
+    act(() => {
       result.current.setFilters({ name: 'updated', age: 30 });
     });
 
@@ -125,10 +125,14 @@ describe('useFilterState', () => {
       useFilterState({ initialFilters, onFiltersChange, debounceMs: 100 }),
     );
 
-    result.current.setFilters({ name: 'updated', age: 30 });
+    act(() => {
+      result.current.setFilters({ name: 'updated', age: 30 });
+    });
     unmount();
 
-    vi.advanceTimersByTime(100);
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
     // onFiltersChange should not be called after unmount
     expect(onFiltersChange).not.toHaveBeenCalled();
 

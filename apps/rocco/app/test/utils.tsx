@@ -221,7 +221,10 @@ export function renderWithRouter(
     queryClient?: QueryClient;
   } = {},
 ): RenderResult {
-  const Stub = createRoutesStub(config.routes);
+  const routesWithFallback = config.routes.map((route) =>
+    route.HydrateFallback ? route : { ...route, HydrateFallback: () => null },
+  );
+  const Stub = createRoutesStub(routesWithFallback);
 
   return render(
     <QueryClientProvider client={queryClient}>

@@ -136,6 +136,14 @@ smartInputWorker.on('failed', (job, error) => {
 });
 
 smartInputWorker.on('error', (error) => {
+  if (isSmartInputShuttingDown) {
+    return;
+  }
+
+  if (error instanceof Error && error.message.includes('Connection is closed.')) {
+    return;
+  }
+
   logger.error('Smart input worker error', { error });
 });
 
