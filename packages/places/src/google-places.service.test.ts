@@ -1,17 +1,20 @@
-import { redis } from '@hominem/services/redis';
-import { mockPlaces } from '@hominem/services/test-utils/google-api-mocks';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  googlePlaces,
-  getNeighborhoodFromAddressComponents,
-  googlePlacesTestUtils,
-} from './google-places.service';
+const mockPlaces = {
+  searchText: vi.fn(),
+  get: vi.fn(),
+};
+
+const googleapi = {
+  google: {
+    places: vi.fn(() => ({
+      places: mockPlaces,
+    })),
+  },
+};
 
 // Mock googleapis
-vi.mock('googleapis', () =>
-  import('@hominem/services/test-utils/google-api-mocks').then((m) => m.googleapi),
-);
+vi.mock('googleapis', () => googleapi);
 
 // Mock Redis
 vi.mock('@hominem/services/redis', () => ({
@@ -38,11 +41,26 @@ vi.mock('@hominem/services/env', () => ({
   },
 }));
 
-describe('googlePlaces', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+let redis: typeof import('@hominem/services/redis').redis;
+let googlePlaces: typeof import('./google-places.service').googlePlaces;
+let getNeighborhoodFromAddressComponents: typeof import('./google-places.service').getNeighborhoodFromAddressComponents;
+let googlePlacesTestUtils: typeof import('./google-places.service').googlePlacesTestUtils;
 
+beforeAll(async () => {
+  ({ redis } = await import('@hominem/services/redis'));
+  ({ googlePlaces, getNeighborhoodFromAddressComponents, googlePlacesTestUtils } = await import(
+    './google-places.service'
+  ));
+});
+
+beforeEach(() => {
+  googlePlacesTestUtils.setClient({
+    places: mockPlaces,
+  } as any);
+  vi.clearAllMocks();
+});
+
+describe('googlePlaces', () => {
   describe('search', () => {
     const mockQuery = 'coffee shop';
     const mockPlacesList = [

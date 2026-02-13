@@ -56,9 +56,6 @@ vi.mock('googleapis', () => {
 
 // Mock @hominem/db
 vi.mock('@hominem/db', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const actual = require('@hominem/db');
-
   const mockWhere = vi.fn().mockImplementation(() => {
     const promise = Promise.resolve([]) as any;
     promise.orderBy = vi.fn().mockReturnValue(promise);
@@ -78,7 +75,7 @@ vi.mock('@hominem/db', () => {
   const mockUpdate = vi.fn().mockReturnValue({ set: mockSet });
 
   return {
-    ...actual,
+    __esModule: true,
     db: {
       select: mockSelect,
       insert: mockInsert,
@@ -90,8 +87,21 @@ vi.mock('@hominem/db', () => {
         },
       },
     },
+    and: vi.fn(),
+    eq: vi.fn(),
+    inArray: vi.fn(),
+    sql: vi.fn(),
   };
 });
+
+// Mock env required by OAuth config
+vi.mock('./env', () => ({
+  env: {
+    GOOGLE_CLIENT_ID: 'test-client-id',
+    GOOGLE_CLIENT_SECRET: 'test-client-secret',
+    GOOGLE_REDIRECT_URI: 'https://example.com/oauth/callback',
+  },
+}));
 
 // Mock @hominem/db/schema/calendar
 vi.mock('@hominem/db/schema/calendar', () => ({

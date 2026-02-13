@@ -3,8 +3,31 @@ import { redis } from '@hominem/services/redis';
 import { logger } from '@hominem/utils/logger';
 
 // Minimal types to avoid loading heavy googleapis type system
-type GooglePlaceData = any;
-type GooglePlacesClient = any;
+type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
+
+type GooglePlacesClient = {
+  places: {
+    get: (params: { name: string }, options: { headers: Record<string, string> }) => Promise<{
+      data: GooglePlaceDetailsResponse;
+    }>;
+    searchText: (
+      params: { requestBody: Record<string, JsonValue> },
+      options: { headers: Record<string, string> },
+    ) => Promise<{ data: { places?: GooglePlaceDetailsResponse[] } }>;
+    autocomplete: (
+      params: { requestBody: Record<string, JsonValue> },
+      options: { headers: Record<string, string> },
+    ) => Promise<{ data: { suggestions?: GooglePlacePrediction[] } }>;
+    photos: {
+      getMedia: (params: {
+        name: string;
+        maxWidthPx?: number;
+        maxHeightPx?: number;
+        skipHttpRedirect?: boolean;
+      }) => Promise<{ data: { photoUri?: string | null } }>;
+    };
+  };
+};
 
 export type SearchPlacesOptions = {
   query: string;
@@ -52,14 +75,22 @@ export type PlaceLocation = {
 };
 
 export type GooglePlacePrediction = {
-  place_id: string;
-  text: string;
-  address: string;
-  location: PlaceLocation | null;
-  priceLevel?: string | number | null | undefined;
+  placePrediction?: {
+    placeId?: string | null;
+    text?: { text?: string | null } | null;
+    structuredFormat?: {
+      mainText?: { text?: string | null } | null;
+      secondaryText?: { text?: string | null } | null;
+    } | null;
+    displayName?: { text?: string | null } | null;
+    formattedAddress?: string | null;
+    id?: string | null;
+  } | null;
 };
 
-export type GooglePlacesApiResponse = any;
+export type GooglePlacesApiResponse = {
+  places?: GooglePlaceDetailsResponse[];
+};
 
 export type GooglePlaceData = {
   id: string;
@@ -80,9 +111,28 @@ export type GooglePlaceData = {
   priceLevel?: number | null;
 };
 
-export type GoogleAddressComponent = any;
-export type GooglePlacePhoto = any;
-export type GooglePlaceDetailsResponse = any;
+export type GoogleAddressComponent = {
+  types?: string[];
+  longText?: string | null;
+};
+
+export type GooglePlacePhoto = {
+  name?: string | null;
+};
+
+export type GooglePlaceDetailsResponse = {
+  id?: string;
+  displayName?: { text?: string | null } | null;
+  formattedAddress?: string | null;
+  location?: { latitude?: number | null; longitude?: number | null } | null;
+  types?: string[] | null;
+  websiteUri?: string | null;
+  nationalPhoneNumber?: string | null;
+  priceLevel?: string | number | null;
+  rating?: number | null;
+  photos?: GooglePlacePhoto[] | null;
+  addressComponents?: GoogleAddressComponent[] | null;
+};
 
 const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours for persistent cache
 
@@ -97,7 +147,7 @@ const getGoogleApiKey = () => {
 // Cache the client instance once the API key is available
 let cachedPlacesClient: GooglePlacesClient | undefined;
 
-const createPlacesClient = () => {
+const createPlacesClient = (): GooglePlacesClient => {
   if (cachedPlacesClient) {
     return cachedPlacesClient;
   }
@@ -105,11 +155,12 @@ const createPlacesClient = () => {
   // Type system avoids googleapis imports to prevent type graph construction
   const google = require('googleapis').google;
 
-  cachedPlacesClient = google.places({
+  const placesClient = google.places({
     version: 'v1',
     auth: getGoogleApiKey(),
   });
-  return cachedPlacesClient;
+  cachedPlacesClient = placesClient;
+  return placesClient;
 };
 
 // Field names without prefix (for PlaceOutput Details API - single place response)
@@ -122,6 +173,7 @@ const FIELDS = {
   websiteUri: 'websiteUri',
   nationalPhoneNumber: 'nationalPhoneNumber',
   priceLevel: 'priceLevel',
+  rating: 'rating',
   photos: 'photos',
   addressComponents: 'addressComponents',
 } as const;
@@ -153,6 +205,7 @@ const DEFAULT_DETAILS_FIELD_MASK = [
   FIELDS.websiteUri,
   FIELDS.nationalPhoneNumber,
   FIELDS.priceLevel,
+  FIELDS.rating,
   FIELDS.photos,
 ].join(',');
 
@@ -192,14 +245,14 @@ const getDetails = async ({
   placeId,
   fieldMask = DEFAULT_DETAILS_FIELD_MASK,
   forceFresh,
-}: PlaceDetailsOptions): Promise<any> => {
+}: PlaceDetailsOptions): Promise<GooglePlaceDetailsResponse> => {
   const cacheKey = buildCacheKey({
     path: 'places-details',
     placeId,
     fieldMask,
   });
 
-  const cached = !forceFresh ? await readCache<any>(cacheKey) : null;
+  const cached = !forceFresh ? await readCache<GooglePlaceDetailsResponse>(cacheKey) : null;
   if (cached) {
     return cached;
   }
@@ -230,8 +283,8 @@ const search = async ({
   fieldMask = DEFAULT_SEARCH_FIELD_MASK,
   maxResultCount = 10,
   forceFresh,
-}: SearchPlacesOptions): Promise<any[]> => {
-  const body: any = {
+}: SearchPlacesOptions): Promise<GooglePlaceDetailsResponse[]> => {
+  const body: Record<string, JsonValue> = {
     textQuery: query,
     maxResultCount,
   };
@@ -256,7 +309,7 @@ const search = async ({
     maxResultCount,
   });
 
-  const cached = !forceFresh ? await readCache<any[]>(cacheKey) : null;
+  const cached = !forceFresh ? await readCache<GooglePlaceDetailsResponse[]>(cacheKey) : null;
   if (cached) {
     return cached;
   }
@@ -283,8 +336,8 @@ const autocomplete = async ({
   locationBias,
   includeQueryPredictions,
   includedPrimaryTypes,
-}: AutocompleteOptions): Promise<any[]> => {
-  const body: any = { input };
+}: AutocompleteOptions): Promise<GooglePlacePrediction[]> => {
+  const body: Record<string, JsonValue> = { input };
 
   if (sessionToken) {
     body.sessionToken = sessionToken;
@@ -332,7 +385,7 @@ const getPhotos = async ({
 
   const photos = details.photos ?? [];
   return photos
-    .map((photo) => photo.name)
+    .map((photo: GooglePlacePhoto) => photo.name)
     .filter((name): name is string => typeof name === 'string' && name.length > 0)
     .slice(0, limit);
 };
@@ -374,7 +427,7 @@ export const getNeighborhoodFromAddressComponents = (
   if (!addressComponents) {
     return null;
   }
-  const neighborhood = addressComponents.find((component) =>
+  const neighborhood = addressComponents.find((component: GoogleAddressComponent) =>
     component.types?.includes('neighborhood'),
   );
   return neighborhood ? neighborhood.longText : null;
@@ -386,5 +439,8 @@ export const googlePlacesTestUtils = {
     if (keys.length > 0) {
       await redis.del(...keys);
     }
+  },
+  setClient: (client: GooglePlacesClient | undefined) => {
+    cachedPlacesClient = client;
   },
 };

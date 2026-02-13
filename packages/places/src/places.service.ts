@@ -610,6 +610,29 @@ export async function refreshAllPlaces() {
         continue;
       }
 
+      const photoNames =
+        googleData.photos
+          ?.map((photo: { name?: string | null }) => photo.name)
+          .filter((name): name is string => typeof name === 'string' && name.length > 0) ?? [];
+
+      const priceLevel = googleData.priceLevel;
+      const normalizedPriceLevel =
+        priceLevel === 'PRICE_LEVEL_UNSPECIFIED' || priceLevel == null
+          ? null
+          : typeof priceLevel === 'number'
+            ? priceLevel
+            : priceLevel === 'PRICE_LEVEL_FREE'
+              ? 0
+              : priceLevel === 'PRICE_LEVEL_INEXPENSIVE'
+                ? 1
+                : priceLevel === 'PRICE_LEVEL_MODERATE'
+                  ? 2
+                  : priceLevel === 'PRICE_LEVEL_EXPENSIVE'
+                    ? 3
+                    : priceLevel === 'PRICE_LEVEL_VERY_EXPENSIVE'
+                      ? 4
+                      : null;
+
       await upsertPlace({
         data: {
           googleMapsId: googleData.id!,
@@ -624,11 +647,8 @@ export async function refreshAllPlaces() {
           types: googleData.types ?? placeRecord.types,
           phoneNumber: googleData.nationalPhoneNumber ?? placeRecord.phoneNumber,
           websiteUri: googleData.websiteUri ?? placeRecord.websiteUri,
-          priceLevel:
-            googleData.priceLevel === 'PRICE_LEVEL_UNSPECIFIED' || !googleData.priceLevel
-              ? null
-              : (googleData.priceLevel as unknown as number),
-          photos: googleData.photos?.map((p) => p.name!) ?? [],
+          priceLevel: normalizedPriceLevel,
+          photos: photoNames,
         },
       });
       updatedCount++;

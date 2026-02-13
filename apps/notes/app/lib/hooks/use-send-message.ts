@@ -89,8 +89,13 @@ export function useSendMessage({ chatId, userId }: { chatId: string; userId?: st
           previousMessages,
         };
       },
-      onSuccess: (result, variables, onMutateResult: unknown) => {
-        const context = onMutateResult as SendMessageContext | undefined;
+      onSuccess: (result, variables, onMutateResult, _mutationContext) => {
+        const context =
+          typeof onMutateResult === 'object' &&
+          onMutateResult !== null &&
+          'currentChatId' in onMutateResult
+            ? (onMutateResult as SendMessageContext)
+            : undefined;
         const data = result;
         const currentChatId = context?.currentChatId || variables.chatId || chatId;
         chatIdRef.current = currentChatId;
@@ -108,7 +113,13 @@ export function useSendMessage({ chatId, userId }: { chatId: string; userId?: st
           );
         }
       },
-      onError: (_error, variables, context) => {
+      onError: (_error, variables, onMutateResult, _mutationContext) => {
+        const context =
+          typeof onMutateResult === 'object' &&
+          onMutateResult !== null &&
+          'previousMessages' in onMutateResult
+            ? (onMutateResult as SendMessageContext)
+            : undefined;
         if (context?.previousMessages) {
           const currentChatId = context?.currentChatId || variables.chatId || chatId;
           utils.setData<ChatsGetMessagesOutput>(

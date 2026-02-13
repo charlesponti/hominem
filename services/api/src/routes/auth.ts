@@ -42,6 +42,7 @@ authRoutes.post('/token', async (c) => {
     code_verifier?: string;
     redirect_uri?: string;
   };
+  void redirectUri;
 
   if (!code || !codeVerifier) {
     return c.json({ error: 'code and code_verifier required' }, 400);

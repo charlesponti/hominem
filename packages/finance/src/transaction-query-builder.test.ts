@@ -5,7 +5,6 @@
  * for various filter combinations without requiring a database connection.
  */
 
-import { sql } from '@hominem/db';
 import { describe, it, expect } from 'vitest';
 
 import { TransactionQueryBuilder } from './transaction-query-builder';

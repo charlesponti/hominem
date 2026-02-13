@@ -20,6 +20,8 @@ const ASCII_LOADING = `
 `;
 
 export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: UpdateGuardProps) {
+  void logo;
+  void appName;
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {

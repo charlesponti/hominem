@@ -24,7 +24,6 @@ const processPlacePhotoJob = async (job: Job<PlacePhotoEnrichPayload>) => {
     const apiKey = env.GOOGLE_API_KEY;
     const placeImagesService = createPlaceImagesService({
       appBaseUrl: env.APP_BASE_URL,
-      googleApiKey: apiKey,
     });
 
     const result = await updatePlacePhotosFromGoogle(placeId, {

@@ -25,7 +25,6 @@ import type {
   PlaceGetMyVisitsOutput,
   PlaceGetPlaceVisitsOutput,
   PlaceGetVisitStatsOutput,
-  PlaceGetDetailsByIdOutput,
 } from '@hominem/hono-rpc/types/places.types';
 import type { ListGetAllOutput, ListGetByIdOutput } from '@hominem/hono-rpc/types/lists.types';
 
@@ -723,9 +722,23 @@ export const useUpdatePlaceVisit = (
 
         utils.setData<PlaceGetMyVisitsOutput>(queryKeys.places.myVisits(), (old) => {
           const existing = old ?? [];
-          return existing.map((visit) =>
-            visit.id === variables.id ? { ...visit, ...variables } : visit,
-          );
+          return existing.map((visit) => {
+            if (visit.id !== variables.id) {
+              return visit;
+            }
+
+            return {
+              ...visit,
+              title: variables.title ?? visit.title,
+              description: variables.description ?? visit.description,
+              date: variables.date ?? visit.date,
+              visitNotes: variables.visitNotes ?? visit.visitNotes,
+              visitRating: variables.visitRating ?? visit.visitRating,
+              visitReview: variables.visitReview ?? visit.visitReview,
+              tags: variables.tags ?? visit.tags,
+              people: variables.people ?? visit.people,
+            };
+          });
         });
 
         return { previousMyVisits };
@@ -752,7 +765,7 @@ export const useUpdatePlaceVisit = (
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, variables) => {
+      onSettled: (_result, _error, _variables) => {
         utils.invalidate(queryKeys.places.myVisits());
       },
     },

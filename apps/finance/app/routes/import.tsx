@@ -288,6 +288,7 @@ const FileImport = memo(function FileImport({
   onStart,
   onRemove,
 }: FileImportProps) {
+  void id;
   const { toast } = useToast();
 
   const handleStart = useCallback(async () => {

@@ -17,6 +17,7 @@
     "./env": "./src/env.ts",
     "./queues": "./src/queues.ts",
     "./redis": "./src/redis.ts",
+    "./test-utils/google-api-mocks": "./src/test-utils/google-api-mocks.ts",
     "./travel": "./src/travel/index.ts",
     "./vector": "./src/vector.ts",
     "./package.json": "./package.json"

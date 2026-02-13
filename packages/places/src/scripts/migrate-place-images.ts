@@ -19,7 +19,6 @@ if (!GOOGLE_API_KEY) {
 
 const placeImagesService = createPlaceImagesService({
   appBaseUrl: env.APP_BASE_URL,
-  googleApiKey: GOOGLE_API_KEY,
 });
 
 interface MigrationStats {

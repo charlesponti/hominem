@@ -67,7 +67,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   const markers: PlaceLocation[] = useMemo(
     () =>
       places
-        .filter((p: any) => Boolean(p.latitude && p.longitude))
+        .filter((p: any) => p.latitude != null && p.longitude != null)
         .map((p: any) => ({
           latitude: p.latitude as number,
           longitude: p.longitude as number,
@@ -94,52 +94,52 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   const collaborators = 'collaborators' in list ? list.collaborators : (list as any).users || [];
 
   return (
-    <MapInteractionProvider>
-      <div className="space-y-4">
-        <div className="flex-1 space-y-2">
-          {error && (
-            <Alert type="error" dismissible>
-              Error loading list updates: {error?.message}
-            </Alert>
+    <div className="space-y-4">
+      <div className="flex-1 space-y-2">
+        {error && (
+          <Alert type="error" dismissible>
+            Error loading list updates: {error?.message}
+          </Alert>
+        )}
+        <div
+          className="flex justify-between items-center"
+          style={{ viewTransitionName: `list-title-${list.id}` }}
+        >
+          <PageTitle title={list.name} />
+          {isOwner && (
+            <div className="flex items-center gap-2">
+              <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">
+                <UserPlus size={18} />
+              </Link>
+              <ListEditButton list={list as any} />
+            </div>
           )}
-          <div
-            className="flex justify-between items-center"
-            style={{ viewTransitionName: `list-title-${list.id}` }}
-          >
-            <PageTitle title={list.name} />
-            {isOwner && (
-              <div className="flex items-center gap-2">
-                <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">
-                  <UserPlus size={18} />
-                </Link>
-                <ListEditButton list={list as any} />
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
-            {collaborators && collaborators.length > 0 && (
-              <div className="flex items-center -space-x-2">
-                {collaborators.slice(0, 5).map((collaborator: any) => (
-                  <UserAvatar
-                    key={collaborator.id}
-                    id={collaborator.id}
-                    name={collaborator.name}
-                    email={collaborator.email}
-                    image={collaborator.image}
-                    size="sm"
-                  />
-                ))}
-                {collaborators.length > 5 && (
-                  <div className="flex size-6 items-center justify-center border-2 border-border text-xs">
-                    +{collaborators.length - 5}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
         </div>
+        <div className="flex items-center gap-3">
+          {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
+          {collaborators && collaborators.length > 0 && (
+            <div className="flex items-center -space-x-2">
+              {collaborators.slice(0, 5).map((collaborator: any) => (
+                <UserAvatar
+                  key={collaborator.id}
+                  id={collaborator.id}
+                  name={collaborator.name}
+                  email={collaborator.email}
+                  image={collaborator.image}
+                  size="sm"
+                />
+              ))}
+              {collaborators.length > 5 && (
+                <div className="flex size-6 items-center justify-center border-2 border-border text-xs">
+                  +{collaborators.length - 5}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
+      <MapInteractionProvider>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="overflow-y-auto space-y-4 pb-8">
             <PlacesList places={places} listId={list.id} canAdd={hasAccess} />
@@ -154,8 +154,8 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
             />
           </div>
         </div>
-      </div>
-    </MapInteractionProvider>
+      </MapInteractionProvider>
+    </div>
   );
 }
 

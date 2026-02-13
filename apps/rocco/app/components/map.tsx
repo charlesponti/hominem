@@ -27,6 +27,8 @@ const DEFAULT_CENTER: PlaceLocation = {
   longitude: -122.4194,
 };
 
+const MAP_LIBRARIES: string[] = ['marker'];
+
 export type RoccoMapProps = {
   isLoadingCurrentLocation: boolean;
   currentLocation?: PlaceLocation | null;
@@ -101,7 +103,7 @@ const MapMarker = memo(
     marker: PlaceLocation;
     isHovered: boolean;
     isSelected: boolean;
-    onClick: () => void;
+    onClick: (value: PlaceLocation) => void;
   }) => {
     // Memoize position object to avoid recreation
     const position = useMemo(
@@ -127,7 +129,7 @@ const MapMarker = memo(
     return (
       <AdvancedMarker
         position={position}
-        onClick={onClick}
+        onClick={() => onClick(marker)}
         collisionBehavior={
           isHovered || isSelected ? 'REQUIRED' : 'OPTIONAL_AND_HIDES_LOWER_PRIORITY'
         }
@@ -255,7 +257,7 @@ const RoccoMapContent = ({
             marker={marker}
             isHovered={!!isHovered}
             isSelected={!!isSelected}
-            onClick={() => handleMarkerClick(marker)}
+            onClick={handleMarkerClick}
           />
         );
       }),
@@ -350,8 +352,12 @@ const RoccoMapContent = ({
 };
 
 const RoccoMap = (props: RoccoMapProps) => {
+  if (!import.meta.env.VITE_GOOGLE_API_KEY) {
+    return <Alert type="error">Google Maps API key is missing.</Alert>;
+  }
+
   return (
-    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY} libraries={['marker']}>
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY} libraries={MAP_LIBRARIES}>
       <RoccoMapContent {...props} />
     </APIProvider>
   );

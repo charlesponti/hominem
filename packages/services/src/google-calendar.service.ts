@@ -12,9 +12,93 @@ import { v7 as uuidv7 } from 'uuid';
 
 import { env } from './env';
 
+const getGoogleOAuthConfig = () => {
+  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI } = env;
+
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI) {
+    throw new Error('Missing Google OAuth configuration');
+  }
+
+  return {
+    clientId: GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    redirectUri: GOOGLE_REDIRECT_URI,
+  };
+};
+
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
-type GoogleCalendarEvent = any; // calendar_v3.Schema$Event
+type GoogleCalendarDateTime = {
+  dateTime?: string | null;
+  date?: string | null;
+};
+
+type GoogleCalendarEvent = {
+  id?: string | null;
+  summary?: string | null;
+  description?: string | null;
+  start?: GoogleCalendarDateTime | null;
+  end?: GoogleCalendarDateTime | null;
+  updated?: string | null;
+};
+
+type GoogleCalendarListParams = {
+  calendarId: string;
+  timeMin: string;
+  maxResults: number;
+  singleEvents: boolean;
+  orderBy: string;
+  timeMax?: string;
+  pageToken?: string;
+};
+
+type CalendarListItem = {
+  id?: string | null;
+  summary?: string | null;
+};
+
+type GoogleCalendarListResponse = {
+  data: {
+    items?: CalendarListItem[];
+  };
+};
+
+type GoogleCalendarEventsResponse = {
+  data: {
+    items?: GoogleCalendarEvent[];
+    nextPageToken?: string | null;
+  };
+};
+
+type OAuth2ClientLike = {
+  setCredentials: (creds: { access_token?: string; refresh_token?: string | null }) => void;
+  refreshAccessToken: () => Promise<{ credentials: { access_token?: string; expiry_date?: number } }>;
+};
+
+type OAuth2Ctor = new (
+  clientId: string,
+  clientSecret: string,
+  redirectUri: string,
+) => OAuth2ClientLike;
+
+type GoogleCalendarClient = {
+  events: {
+    list: (params: GoogleCalendarListParams) => Promise<GoogleCalendarEventsResponse>;
+    update: (params: {
+      calendarId: string;
+      eventId: string;
+      requestBody: Record<string, JsonValue>;
+    }) => Promise<{ data: GoogleCalendarEvent }>;
+    insert: (params: {
+      calendarId: string;
+      requestBody: Record<string, JsonValue>;
+    }) => Promise<{ data: GoogleCalendarEvent }>;
+    delete: (params: { calendarId: string; eventId: string }) => Promise<void>;
+  };
+  calendarList: {
+    list: () => Promise<GoogleCalendarListResponse>;
+  };
+};
 type DbEventWithTimestamps = DbEventOutput & {
   createdAt?: string | Date | null;
   updatedAt?: string | Date | null;
@@ -178,29 +262,34 @@ export function convertGoogleCalendarEvent(
 }
 
 export class GoogleCalendarService {
-  private oauth2Client: any; // Auth.OAuth2Client
-  private calendar: any; // calendar_v3.Calendar
+  private oauth2Client: OAuth2ClientLike;
+  private calendar: GoogleCalendarClient;
   private userId: string;
 
   constructor(userId: string, tokens: GoogleTokens) {
     this.userId = userId;
 
     // Load googleapis lazily to avoid type graph construction
-    const google = require('googleapis').google;
+    const google = require('googleapis').google as {
+      auth?: { OAuth2?: OAuth2Ctor };
+      calendar: (args: { version: 'v3'; auth: OAuth2ClientLike }) => GoogleCalendarClient;
+    };
+    const OAuth2Ctor = google?.auth?.OAuth2;
     if (!OAuth2Ctor) throw new Error('OAuth2 constructor not found on googleapis package');
 
+    const oauthConfig = getGoogleOAuthConfig();
     this.oauth2Client = new OAuth2Ctor(
-      env.GOOGLE_CLIENT_ID,
-      env.GOOGLE_CLIENT_SECRET,
-      env.GOOGLE_REDIRECT_URI,
+      oauthConfig.clientId,
+      oauthConfig.clientSecret,
+      oauthConfig.redirectUri,
     );
 
     // If constructed instance is missing expected helpers (happens when mocks differ),
     // attach safe no-ops so tests won't throw during construction.
     if (typeof this.oauth2Client?.setCredentials !== 'function') {
       // attach no-op fallbacks (keeps constructor safe for tests)
-      this.oauth2Client.setCredentials = () => undefined as any;
-      this.oauth2Client.refreshAccessToken = async () => ({ credentials: {} }) as any;
+      this.oauth2Client.setCredentials = () => undefined;
+      this.oauth2Client.refreshAccessToken = async () => ({ credentials: {} });
     }
 
     const credentials: { access_token: string; refresh_token?: string | null } = {
@@ -239,7 +328,7 @@ export class GoogleCalendarService {
       const timeMinParam = timeMin || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
 
       do {
-        const listParams: any = {
+        const listParams: GoogleCalendarListParams = {
           calendarId,
           timeMin: timeMinParam,
           maxResults: 2500,
@@ -533,9 +622,8 @@ export class GoogleCalendarService {
       return (
         response.data.items
           ?.filter(
-            (
-              item: any,
-            ): item is any => Boolean(item.id && item.summary),
+            (item: CalendarListItem): item is { id: string; summary: string } =>
+              typeof item.id === 'string' && typeof item.summary === 'string',
           )
           .map((item) => ({
             id: item.id,
@@ -584,10 +672,11 @@ export async function refreshGoogleToken(
     const OAuth2Ctor = google?.auth?.OAuth2;
     if (!OAuth2Ctor) throw new Error('OAuth2 constructor not found on googleapis package');
 
+    const oauthConfig = getGoogleOAuthConfig();
     const oauth2Client = new OAuth2Ctor(
-      env.GOOGLE_CLIENT_ID,
-      env.GOOGLE_CLIENT_SECRET,
-      env.GOOGLE_REDIRECT_URI,
+      oauthConfig.clientId,
+      oauthConfig.clientSecret,
+      oauthConfig.redirectUri,
     );
 
     oauth2Client.setCredentials({
