@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   foreignKey,
+  index,
   pgTable,
   primaryKey,
   text,
@@ -69,6 +70,7 @@ export const userLists = pgTable(
       columns: [table.listId, table.userId],
       name: 'user_lists_pkey',
     }),
+    index('user_lists_user_id_idx').on(table.userId),
   ],
 );
 
@@ -121,6 +123,7 @@ export const listInvite = pgTable(
       name: 'list_invite_pkey',
     }),
     uniqueIndex('list_invite_token_unique').on(table.token),
+    index('list_invite_email_idx').on(table.invitedUserEmail),
   ],
 );
 export const ListInviteInsertSchema = createInsertSchema(listInvite);

@@ -519,17 +519,8 @@ export async function getListById(id: string, userId?: string | null) {
     const places = await getListPlaces(id);
 
     const isOwnList = listDataForFormat.ownerId === userId;
-    let hasAccess = isOwnList;
 
-    if (!hasAccess && userId) {
-      const sharedAccess = await db.query.userLists.findFirst({
-        where: and(eq(userLists.listId, id), eq(userLists.userId, userId)),
-      });
-      hasAccess = Boolean(sharedAccess);
-    }
-
-    // Efficiently fetch all collaborators (users who have access to this list) with their avatars
-    // This includes users in userLists, excluding the owner (who we already have)
+    // Fetch collaborators - this also serves as access check (if user is in collaborators, they have access)
     const collaborators = await db
       .select({
         id: users.id,
@@ -548,6 +539,12 @@ export async function getListById(id: string, userId?: string | null) {
           image: row.image || undefined,
         })),
       );
+
+    // Check access: owner OR user is in collaborators
+    let hasAccess = isOwnList;
+    if (!hasAccess && userId) {
+      hasAccess = collaborators.some((c) => c.id === userId);
+    }
 
     // Always include the owner as the first collaborator
     const allCollaborators: ListUser[] = [];
@@ -594,18 +591,23 @@ export async function getPlaceLists({
   }
 
   try {
-    // Combined query: resolve placeId and get lists in one go
-    const listsContainingPlace = await db
+    const resolvedPlaceId = placeId || sql<string>`(SELECT id FROM ${place} WHERE ${place.googleMapsId} = ${googleMapsId} LIMIT 1)`;
+
+    const result = await db
       .select({
         id: list.id,
         name: list.name,
-        resolvedPlaceId: place.id,
-        itemCount: sql<number>`
-          (SELECT COUNT(*)::int
-           FROM ${item} i
-           WHERE i."listId" = ${list.id}
-           AND i."itemType" = 'PLACE')
-        `.as('itemCount'),
+        itemCount: sql<number>`(SELECT COUNT(*)::int FROM ${item} i WHERE i."listId" = ${list.id} AND i."itemType" = 'PLACE')`.as('itemCount'),
+        imageUrl: sql<string | null>`COALESCE(
+          (SELECT p.image_url FROM ${item} i2
+           JOIN ${place} p ON p.id = i2.item_id AND i2.item_type = 'PLACE'
+           WHERE i2.list_id = ${list.id} AND p.id != ${resolvedPlaceId}
+           ORDER BY i2.created_at ASC LIMIT 1),
+          (SELECT p.image_url FROM ${item} i2
+           JOIN ${place} p ON p.id = i2.item_id AND i2.item_type = 'PLACE'
+           WHERE i2.list_id = ${list.id}
+           ORDER BY i2.created_at ASC LIMIT 1)
+        )`.as('imageUrl'),
       })
       .from(list)
       .innerJoin(item, eq(item.listId, list.id))
@@ -614,51 +616,13 @@ export async function getPlaceLists({
       .where(
         and(eq(item.itemType, 'PLACE'), or(eq(list.ownerId, userId), isNotNull(userLists.listId))),
       )
-      .groupBy(list.id, list.name, place.id);
+      .groupBy(list.id, list.name);
 
-    if (listsContainingPlace.length === 0) {
-      return [];
-    }
-
-    const listIds = listsContainingPlace.map((l) => l.id);
-    const resolvedPlaceId = listsContainingPlace[0]?.resolvedPlaceId;
-
-    // Get thumbnail imageUrl for each list (prefer different place, fallback to any)
-    const allPlacesInLists = await db
-      .select({
-        listId: item.listId,
-        placeId: place.id,
-        googleMapsId: place.googleMapsId,
-        imageUrl: sql<string | null>`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as(
-          'imageUrl',
-        ),
-        createdAt: item.createdAt,
-      })
-      .from(item)
-      .innerJoin(place, eq(place.id, item.itemId))
-      .where(and(inArray(item.listId, listIds), eq(item.itemType, 'PLACE')))
-      .orderBy(item.listId, item.createdAt);
-
-    const imageMap = new Map<string, string | null>();
-
-    for (const listId of listIds) {
-      const placesInList = allPlacesInLists.filter((p) => p.listId === listId);
-      // Prefer a place that's not the current one
-      const preferredPlace =
-        placesInList.find((p) => p.placeId !== resolvedPlaceId) || placesInList[0];
-
-      if (preferredPlace?.imageUrl) {
-        const imageUrl = preferredPlace.imageUrl;
-        imageMap.set(listId, imageUrl);
-      }
-    }
-
-    // Combine results
-    return listsContainingPlace.map((l) => ({
+    return result.map((l) => ({
       id: l.id,
       name: l.name,
       itemCount: Number(l.itemCount),
-      imageUrl: imageMap.get(l.id) || null,
+      imageUrl: l.imageUrl,
     }));
   } catch (error) {
     logger.error('Error fetching lists containing place', {

@@ -1,7 +1,7 @@
 import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Edit, Trash2, X, Maximize2, List, RefreshCw } from 'lucide-react';
-import { type ReactNode, useMemo } from 'react';
+import { type ReactNode, useCallback, useMemo, type MouseEvent } from 'react';
 
 import type { Note } from '~/lib/rpc/notes-types';
 
@@ -74,6 +74,22 @@ export function NoteFeedItem({
   const versionLabel =
     note.versionNumber > 1 ? `v${note.versionNumber}` : note.parentNoteId ? 'v2+' : null;
 
+  const handleRemoveTag = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      const tagValue = (event.target as HTMLButtonElement).dataset.tagValue;
+      if (tagValue) {
+        onRemoveTag(note.id, tagValue);
+      }
+    },
+    [note.id, onRemoveTag],
+  );
+
+  const handleExpand = useCallback(() => onExpand?.(note), [note, onExpand]);
+  const handleOutline = useCallback(() => onOutline?.(note), [note, onOutline]);
+  const handleRewrite = useCallback(() => onRewrite?.(note), [note, onRewrite]);
+  const handleEdit = useCallback(() => onEdit(note), [note, onEdit]);
+  const handleDelete = useCallback(() => onDelete(note.id), [note.id, onDelete]);
+
   return (
     <div className={cn('border-b border-border py-4 px-4 group', className)}>
       <div className="space-y-3">
@@ -114,7 +130,8 @@ export function NoteFeedItem({
                 {!extractHashtags.includes(tag.value) && (
                   <button
                     type="button"
-                    onClick={() => onRemoveTag(note.id, tag.value)}
+                    onClick={handleRemoveTag}
+                    data-tag-value={tag.value}
                     className="ml-1 text-muted-foreground hover:text-foreground"
                     title={`Remove ${tag.value}`}
                     aria-label={`Remove tag ${tag.value}`}
@@ -138,7 +155,7 @@ export function NoteFeedItem({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onExpand(note)}
+                onClick={handleExpand}
                 className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent "
                 title="Expand"
               >
@@ -149,7 +166,7 @@ export function NoteFeedItem({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onOutline(note)}
+                onClick={handleOutline}
                 className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent "
                 title="Outline"
               >
@@ -160,7 +177,7 @@ export function NoteFeedItem({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onRewrite(note)}
+                onClick={handleRewrite}
                 className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent "
                 title="Rewrite"
               >
@@ -173,7 +190,7 @@ export function NoteFeedItem({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onEdit(note)}
+              onClick={handleEdit}
               className="size-8 p-0 text-secondary-foreground hover:text-foreground "
               title="Edit note"
             >
@@ -182,7 +199,7 @@ export function NoteFeedItem({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onDelete(note.id)}
+              onClick={handleDelete}
               className="size-8 p-0 text-secondary-foreground hover:text-foreground "
               title="Delete note"
             >

@@ -25,6 +25,13 @@ export default function PlacesList({ places, listId, canAdd = true }: PlacesList
     setDeleteError('Delete failed. Retry.');
   }, []);
 
+  const handleMouseEnter = useCallback(
+    (placeId: string) => setHoveredPlaceId(placeId),
+    [setHoveredPlaceId],
+  );
+
+  const handleMouseLeave = useCallback(() => setHoveredPlaceId(null), [setHoveredPlaceId]);
+
   return (
     <>
       <AddPlaceControl listId={listId} canAdd={canAdd} />
@@ -53,8 +60,8 @@ export default function PlacesList({ places, listId, canAdd = true }: PlacesList
               href={href('/places/:id', { id: place.placeId })}
               photoUrl={place.photos?.[0] ?? null}
               imageUrl={place.imageUrl}
-              onMouseEnter={() => setHoveredPlaceId(place.placeId)}
-              onMouseLeave={() => setHoveredPlaceId(null)}
+              onMouseEnter={() => handleMouseEnter(place.placeId)}
+              onMouseLeave={handleMouseLeave}
               addedBy={place.addedBy ?? null}
               accessory={
                 <PlaceListItemActions

@@ -407,6 +407,13 @@
       "when": 1770331359732,
       "tag": "0057_aspiring_black_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1771107910809,
+      "tag": "0058_parched_maelstrom",
+      "breakpoints": true
     }
   ]
 }

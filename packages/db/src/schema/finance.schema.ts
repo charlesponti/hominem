@@ -197,6 +197,7 @@ export const transactions = pgTable(
     index('transactions_account_id_idx').on(table.accountId),
     index('transactions_from_account_id_idx').on(table.fromAccountId),
     index('transactions_to_account_id_idx').on(table.toAccountId),
+    index('transactions_category_idx').on(table.category),
     // Use the generated search_vector column for full-text search (much faster than computing on-the-fly)
     index('idx_transactions_search_vector').using('gin', table.searchVector),
   ],
