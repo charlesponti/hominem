@@ -1,8 +1,15 @@
 import tsConfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  plugins: [tsConfigPaths()],
+  plugins: [tsConfigPaths(), VitePWA({
+    registerType: 'prompt',
+    injectRegister: false,
+    devOptions: {
+      enabled: false,
+    },
+  })],
   test: {
     environment: 'jsdom',
     globals: true,
