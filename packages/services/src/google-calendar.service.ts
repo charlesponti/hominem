@@ -72,7 +72,9 @@ type GoogleCalendarEventsResponse = {
 
 type OAuth2ClientLike = {
   setCredentials: (creds: { access_token?: string; refresh_token?: string | null }) => void;
-  refreshAccessToken: () => Promise<{ credentials: { access_token?: string; expiry_date?: number } }>;
+  refreshAccessToken: () => Promise<{
+    credentials: { access_token?: string; expiry_date?: number };
+  }>;
 };
 
 type OAuth2Ctor = new (

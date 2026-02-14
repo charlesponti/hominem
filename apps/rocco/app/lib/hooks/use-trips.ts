@@ -74,9 +74,7 @@ export const useCreateTrip = () => {
       },
       onError: (error, _variables, context) => {
         const previousTrips =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousTrips' in context
+          typeof context === 'object' && context !== null && 'previousTrips' in context
             ? (context as { previousTrips?: TripsGetAllOutput }).previousTrips
             : undefined;
 
@@ -124,9 +122,7 @@ export const useAddItemToTrip = () => {
       },
       onError: (error, variables, context) => {
         const previousTrip =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousTrip' in context
+          typeof context === 'object' && context !== null && 'previousTrip' in context
             ? (context as { previousTrip?: TripsGetByIdOutput }).previousTrip
             : undefined;
 

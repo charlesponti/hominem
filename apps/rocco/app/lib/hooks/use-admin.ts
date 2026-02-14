@@ -33,7 +33,10 @@ export const useRefreshGooglePlaces = (
       },
       onError: (error, variables, context, mutationContext) => {
         if (context && typeof context === 'object' && 'previousPlaces' in context) {
-          utils.setData(queryKeys.places.all(), (context as { previousPlaces: unknown }).previousPlaces);
+          utils.setData(
+            queryKeys.places.all(),
+            (context as { previousPlaces: unknown }).previousPlaces,
+          );
         }
         options?.onError?.(error, variables, context, mutationContext);
       },

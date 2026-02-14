@@ -255,7 +255,9 @@ export function useLinkAccountToInstitution() {
       // Invalidate related queries to refresh account data
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });
-      queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'get', variables.accountId] });
+      queryClient.invalidateQueries({
+        queryKey: ['finance', 'accounts', 'get', variables.accountId],
+      });
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'with-plaid'] });
       queryClient.invalidateQueries({ queryKey: PLAID_CONNECTIONS_KEY });
       queryClient.invalidateQueries({ queryKey: PLAID_ACCOUNTS_KEY });

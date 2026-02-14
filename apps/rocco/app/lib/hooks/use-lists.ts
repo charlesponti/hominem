@@ -121,9 +121,7 @@ export const useCreateList = (options?: HonoMutationOptions<ListCreateOutput, Li
       },
       onError: (error, variables, context, mutationContext) => {
         const previousLists =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousLists' in context
+          typeof context === 'object' && context !== null && 'previousLists' in context
             ? (context as { previousLists?: ListGetAllOutput }).previousLists
             : undefined;
 
@@ -187,15 +185,11 @@ export const useUpdateList = (options?: HonoMutationOptions<ListUpdateOutput, Li
       },
       onError: (error, variables, context, mutationContext) => {
         const previousLists =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousLists' in context
+          typeof context === 'object' && context !== null && 'previousLists' in context
             ? (context as { previousLists?: ListGetAllOutput }).previousLists
             : undefined;
         const previousList =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousList' in context
+          typeof context === 'object' && context !== null && 'previousList' in context
             ? (context as { previousList?: ListGetByIdOutput }).previousList
             : undefined;
 
@@ -246,9 +240,7 @@ export const useDeleteList = (options?: HonoMutationOptions<ListDeleteOutput, Li
       },
       onError: (error, variables, context, mutationContext) => {
         const previousLists =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousLists' in context
+          typeof context === 'object' && context !== null && 'previousLists' in context
             ? (context as { previousLists?: ListGetAllOutput }).previousLists
             : undefined;
 
@@ -284,7 +276,9 @@ export const useDeleteListItem = (
         await utils.cancel(queryKeys.lists.get(variables.listId));
 
         const previousLists = utils.getData<ListGetAllOutput>(queryKeys.lists.all());
-        const previousList = utils.getData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId));
+        const previousList = utils.getData<ListGetByIdOutput>(
+          queryKeys.lists.get(variables.listId),
+        );
 
         utils.setData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
           const existing = old ?? [];
@@ -301,7 +295,9 @@ export const useDeleteListItem = (
         });
 
         if (previousList) {
-          const updatedPlaces = previousList.places.filter((place) => place.id !== variables.itemId);
+          const updatedPlaces = previousList.places.filter(
+            (place) => place.id !== variables.itemId,
+          );
           const updatedItems = previousList.items?.filter((item) => item.id !== variables.itemId);
           utils.setData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId), {
             ...previousList,
@@ -319,15 +315,11 @@ export const useDeleteListItem = (
       },
       onError: (error, variables, context, mutationContext) => {
         const previousLists =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousLists' in context
+          typeof context === 'object' && context !== null && 'previousLists' in context
             ? (context as { previousLists?: ListGetAllOutput }).previousLists
             : undefined;
         const previousList =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousList' in context
+          typeof context === 'object' && context !== null && 'previousList' in context
             ? (context as { previousList?: ListGetByIdOutput }).previousList
             : undefined;
 
@@ -387,7 +379,9 @@ export const useRemoveCollaborator = (
         await utils.cancel(queryKeys.lists.get(variables.listId));
 
         const previousLists = utils.getData<ListGetAllOutput>(queryKeys.lists.all());
-        const previousList = utils.getData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId));
+        const previousList = utils.getData<ListGetByIdOutput>(
+          queryKeys.lists.get(variables.listId),
+        );
 
         utils.setData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
           const existing = old ?? [];
@@ -416,15 +410,11 @@ export const useRemoveCollaborator = (
       },
       onError: (error, variables, context, mutationContext) => {
         const previousLists =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousLists' in context
+          typeof context === 'object' && context !== null && 'previousLists' in context
             ? (context as { previousLists?: ListGetAllOutput }).previousLists
             : undefined;
         const previousList =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousList' in context
+          typeof context === 'object' && context !== null && 'previousList' in context
             ? (context as { previousList?: ListGetByIdOutput }).previousList
             : undefined;
 

@@ -127,15 +127,11 @@ export const useCreateInvite = () => {
       },
       onError: (error, variables, context) => {
         const previousSent =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousSent' in context
+          typeof context === 'object' && context !== null && 'previousSent' in context
             ? (context as { previousSent?: InvitesGetSentOutput }).previousSent
             : undefined;
         const previousByList =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousByList' in context
+          typeof context === 'object' && context !== null && 'previousByList' in context
             ? (context as { previousByList?: InvitesGetByListOutput }).previousByList
             : undefined;
 
@@ -185,9 +181,7 @@ export const useAcceptInvite = () => {
       },
       onError: (error, _variables, context) => {
         const previousReceived =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousReceived' in context
+          typeof context === 'object' && context !== null && 'previousReceived' in context
             ? (context as { previousReceived?: InvitesGetReceivedOutput }).previousReceived
             : undefined;
 
@@ -230,9 +224,7 @@ export const useDeclineInvite = () => {
       },
       onError: (error, _variables, context) => {
         const previousReceived =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousReceived' in context
+          typeof context === 'object' && context !== null && 'previousReceived' in context
             ? (context as { previousReceived?: InvitesGetReceivedOutput }).previousReceived
             : undefined;
 
@@ -295,15 +287,11 @@ export const useDeleteInvite = () => {
       },
       onError: (error, variables, context) => {
         const previousSent =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousSent' in context
+          typeof context === 'object' && context !== null && 'previousSent' in context
             ? (context as { previousSent?: InvitesGetSentOutput }).previousSent
             : undefined;
         const previousByList =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousByList' in context
+          typeof context === 'object' && context !== null && 'previousByList' in context
             ? (context as { previousByList?: InvitesGetByListOutput }).previousByList
             : undefined;
 

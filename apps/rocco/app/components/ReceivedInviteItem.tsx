@@ -90,10 +90,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
               'with your account.'
             )}
           </p>
-          <Button
-            className="px-4 py-2 font-medium"
-            onClick={preview.onSignIn}
-          >
+          <Button className="px-4 py-2 font-medium" onClick={preview.onSignIn}>
             Continue with Google
           </Button>
         </div>

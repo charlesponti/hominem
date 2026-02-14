@@ -51,9 +51,7 @@ function DeleteAccount() {
     <>
       {isError && (
         <Alert type="error">
-          <span data-testid="delete-account-error">
-            Account delete failed. Retry.
-          </span>
+          <span data-testid="delete-account-error">Account delete failed. Retry.</span>
         </Alert>
       )}
 
@@ -81,11 +79,7 @@ export default function Account({ loaderData }: Route.ComponentProps) {
         <div className="border border-border p-4 flex flex-col gap-4">
           <div className="flex items-center gap-4">
             {user.image ? (
-              <img
-                src={user.image}
-                alt="user avatar"
-                className="w-16 h-16 object-cover"
-              />
+              <img src={user.image} alt="user avatar" className="w-16 h-16 object-cover" />
             ) : (
               <UserCircle data-testid="user-circle-icon" size={64} />
             )}

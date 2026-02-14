@@ -2,8 +2,8 @@
 
 import type { ReactNode } from 'react';
 
-import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 interface UpdateGuardProps {
@@ -12,7 +12,7 @@ interface UpdateGuardProps {
   appName?: string;
 }
 
-export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: UpdateGuardProps) {
+function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: UpdateGuardProps) {
   void logo;
   void appName;
   const { needRefresh, updateServiceWorker } = useRegisterSW({
@@ -82,7 +82,6 @@ export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: U
 
   return (
     <>
-      {children}
       {offlineMessage && !isDev && (
         <div className="fixed inset-x-0 bottom-16 z-50 flex justify-center px-4">
           <div className="flex items-center gap-3 rounded-full border border-border bg-background px-4 py-2 shadow-lg">
@@ -104,6 +103,21 @@ export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: U
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+export function UpdateGuard({ children, logo = '/logo.png', appName = 'App' }: UpdateGuardProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  return (
+    <>
+      {children}
+      {isMounted ? <UpdateGuardClient logo={logo} appName={appName} /> : null}
     </>
   );
 }

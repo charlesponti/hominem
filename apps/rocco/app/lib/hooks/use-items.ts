@@ -37,33 +37,23 @@ export const useAddItemToList = () => {
           updatedAt: now,
         };
 
-        utils.setData<ItemsGetByListIdOutput>(
-          ['items', 'by-list', variables.listId],
-          (old) => {
-            const existing = old ?? [];
-            return [optimisticItem, ...existing];
-          },
-        );
+        utils.setData<ItemsGetByListIdOutput>(['items', 'by-list', variables.listId], (old) => {
+          const existing = old ?? [];
+          return [optimisticItem, ...existing];
+        });
 
         return { previousItems, optimisticId: optimisticItem.id };
       },
       onSuccess: (result: ItemsAddToListOutput, variables: ItemsAddToListInput) => {
-        utils.setData<ItemsGetByListIdOutput>(
-          ['items', 'by-list', variables.listId],
-          (old) => {
-            const existing = old ?? [];
-            return existing.map((item) =>
-              item.itemId === result.itemId ? result : item,
-            );
-          },
-        );
+        utils.setData<ItemsGetByListIdOutput>(['items', 'by-list', variables.listId], (old) => {
+          const existing = old ?? [];
+          return existing.map((item) => (item.itemId === result.itemId ? result : item));
+        });
         utils.invalidate(['items', 'by-list', variables.listId]);
       },
       onError: (error, variables, context) => {
         const previousItems =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousItems' in context
+          typeof context === 'object' && context !== null && 'previousItems' in context
             ? (context as { previousItems?: ItemsGetByListIdOutput }).previousItems
             : undefined;
 
@@ -99,13 +89,10 @@ export const useRemoveItemFromList = () => {
           variables.listId,
         ]);
 
-        utils.setData<ItemsGetByListIdOutput>(
-          ['items', 'by-list', variables.listId],
-          (old) => {
-            const existing = old ?? [];
-            return existing.filter((item) => item.itemId !== variables.itemId);
-          },
-        );
+        utils.setData<ItemsGetByListIdOutput>(['items', 'by-list', variables.listId], (old) => {
+          const existing = old ?? [];
+          return existing.filter((item) => item.itemId !== variables.itemId);
+        });
 
         return { previousItems };
       },
@@ -114,9 +101,7 @@ export const useRemoveItemFromList = () => {
       },
       onError: (error, variables, context) => {
         const previousItems =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousItems' in context
+          typeof context === 'object' && context !== null && 'previousItems' in context
             ? (context as { previousItems?: ItemsGetByListIdOutput }).previousItems
             : undefined;
 

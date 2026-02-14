@@ -591,13 +591,18 @@ export async function getPlaceLists({
   }
 
   try {
-    const resolvedPlaceId = placeId || sql<string>`(SELECT id FROM ${place} WHERE ${place.googleMapsId} = ${googleMapsId} LIMIT 1)`;
+    const resolvedPlaceId =
+      placeId ||
+      sql<string>`(SELECT id FROM ${place} WHERE ${place.googleMapsId} = ${googleMapsId} LIMIT 1)`;
 
     const result = await db
       .select({
         id: list.id,
         name: list.name,
-        itemCount: sql<number>`(SELECT COUNT(*)::int FROM ${item} i WHERE i."listId" = ${list.id} AND i."itemType" = 'PLACE')`.as('itemCount'),
+        itemCount:
+          sql<number>`(SELECT COUNT(*)::int FROM ${item} i WHERE i."listId" = ${list.id} AND i."itemType" = 'PLACE')`.as(
+            'itemCount',
+          ),
         imageUrl: sql<string | null>`COALESCE(
           (SELECT p.image_url FROM ${item} i2
            JOIN ${place} p ON p.id = i2.item_id AND i2.item_type = 'PLACE'

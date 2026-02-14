@@ -48,9 +48,8 @@ let googlePlacesTestUtils: typeof import('./google-places.service').googlePlaces
 
 beforeAll(async () => {
   ({ redis } = await import('@hominem/services/redis'));
-  ({ googlePlaces, getNeighborhoodFromAddressComponents, googlePlacesTestUtils } = await import(
-    './google-places.service'
-  ));
+  ({ googlePlaces, getNeighborhoodFromAddressComponents, googlePlacesTestUtils } =
+    await import('./google-places.service'));
 });
 
 beforeEach(() => {

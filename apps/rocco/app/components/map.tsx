@@ -16,8 +16,8 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Place, PlaceLocation } from '~/lib/types';
 
 import { useMapInteraction } from '~/contexts/map-interaction-context';
-import { cn } from '~/lib/utils';
 import { endTrace, startTrace } from '~/lib/performance/trace';
+import { cn } from '~/lib/utils';
 
 import styles from './map.module.css';
 
@@ -217,33 +217,36 @@ const RoccoMapContent = ({
   );
 
   // Update center/zoom on user interaction
-  const handleMapIdle = useCallback((event: MapEvent<unknown>) => {
-    const trace = startTrace('rocco-map-idle', {
-      mapId: effectiveMapId,
-      markerCount,
-    });
-
-    const map = event.map;
-    if (!map) {
-      endTrace(trace);
-      return;
-    }
-
-    // Mark that user has interacted with the map
-    setHasUserInteracted(true);
-
-    const newCenter = map.getCenter();
-    const newZoom = map.getZoom();
-    if (newCenter && newZoom) {
-      setMapCenter({
-        lat: newCenter.lat(),
-        lng: newCenter.lng(),
+  const handleMapIdle = useCallback(
+    (event: MapEvent<unknown>) => {
+      const trace = startTrace('rocco-map-idle', {
+        mapId: effectiveMapId,
+        markerCount,
       });
-      setMapZoom(newZoom);
-    }
 
-    endTrace(trace, { zoom: newZoom });
-  }, [effectiveMapId, markerCount]);
+      const map = event.map;
+      if (!map) {
+        endTrace(trace);
+        return;
+      }
+
+      // Mark that user has interacted with the map
+      setHasUserInteracted(true);
+
+      const newCenter = map.getCenter();
+      const newZoom = map.getZoom();
+      if (newCenter && newZoom) {
+        setMapCenter({
+          lat: newCenter.lat(),
+          lng: newCenter.lng(),
+        });
+        setMapZoom(newZoom);
+      }
+
+      endTrace(trace, { zoom: newZoom });
+    },
+    [effectiveMapId, markerCount],
+  );
 
   const renderedMarkers = useMemo(
     () =>

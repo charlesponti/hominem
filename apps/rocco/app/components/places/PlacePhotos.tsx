@@ -82,9 +82,7 @@ const PlacePhotos = ({ alt, photos, thumbnailPhotos, fullPhotos, placeId }: Prop
                   style={
                     index === 0 ? { viewTransitionName: `place-photo-image-${placeId}` } : undefined
                   }
-                  className={cn(
-                    'object-cover w-full h-full',
-                  )}
+                  className={cn('object-cover w-full h-full')}
                   onError={() => handleImageError(index)}
                 />
               )}

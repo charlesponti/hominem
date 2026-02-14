@@ -1,5 +1,6 @@
 import type { HonoClient } from '@hominem/hono-client';
 import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/hono-client/react';
+import type { ListGetAllOutput, ListGetByIdOutput } from '@hominem/hono-rpc/types/lists.types';
 import type {
   PlaceCreateInput,
   PlaceCreateOutput,
@@ -26,7 +27,6 @@ import type {
   PlaceGetPlaceVisitsOutput,
   PlaceGetVisitStatsOutput,
 } from '@hominem/hono-rpc/types/places.types';
-import type { ListGetAllOutput, ListGetByIdOutput } from '@hominem/hono-rpc/types/lists.types';
 
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
@@ -91,7 +91,10 @@ export const useCreatePlace = (
           const existing = old ?? [];
           return [optimisticPlace, ...existing];
         });
-        utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(optimisticPlace.id), optimisticPlace);
+        utils.setData<PlaceGetDetailsByIdOutput>(
+          queryKeys.places.get(optimisticPlace.id),
+          optimisticPlace,
+        );
 
         return {
           previousPlaces,
@@ -121,9 +124,7 @@ export const useCreatePlace = (
       },
       onError: (error, variables, context, mutationContext) => {
         const previousPlaces =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousPlaces' in context
+          typeof context === 'object' && context !== null && 'previousPlaces' in context
             ? (context as { previousPlaces?: PlaceCreateOutput[] }).previousPlaces
             : undefined;
 
@@ -191,15 +192,11 @@ export const useUpdatePlace = (
       },
       onError: (error, variables, context, mutationContext) => {
         const previousPlaces =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousPlaces' in context
+          typeof context === 'object' && context !== null && 'previousPlaces' in context
             ? (context as { previousPlaces?: PlaceCreateOutput[] }).previousPlaces
             : undefined;
         const previousPlace =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousPlace' in context
+          typeof context === 'object' && context !== null && 'previousPlace' in context
             ? (context as { previousPlace?: PlaceGetDetailsByIdOutput }).previousPlace
             : undefined;
 
@@ -207,7 +204,10 @@ export const useUpdatePlace = (
           utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), previousPlaces);
         }
         if (previousPlace) {
-          utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(variables.id), previousPlace);
+          utils.setData<PlaceGetDetailsByIdOutput>(
+            queryKeys.places.get(variables.id),
+            previousPlace,
+          );
         }
 
         options?.onError?.(error, variables, context, mutationContext);
@@ -252,9 +252,7 @@ export const useDeletePlace = (
       },
       onError: (error, variables, context, mutationContext) => {
         const previousPlaces =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousPlaces' in context
+          typeof context === 'object' && context !== null && 'previousPlaces' in context
             ? (context as { previousPlaces?: PlaceCreateOutput[] }).previousPlaces
             : undefined;
 
@@ -432,9 +430,7 @@ export const useAddPlaceToLists = (
       },
       onError: (error, variables, context, mutationContext) => {
         const previousLists =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousLists' in context
+          typeof context === 'object' && context !== null && 'previousLists' in context
             ? (context as { previousLists?: ListGetAllOutput }).previousLists
             : undefined;
         const previousListById =
@@ -521,15 +517,11 @@ export const useRemovePlaceFromList = (
       },
       onError: (error, variables, context, mutationContext) => {
         const previousLists =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousLists' in context
+          typeof context === 'object' && context !== null && 'previousLists' in context
             ? (context as { previousLists?: ListGetAllOutput }).previousLists
             : undefined;
         const previousList =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousList' in context
+          typeof context === 'object' && context !== null && 'previousList' in context
             ? (context as { previousList?: ListGetByIdOutput }).previousList
             : undefined;
 
@@ -649,9 +641,7 @@ export const useLogPlaceVisit = (
       },
       onError: (error, variables, context, mutationContext) => {
         const previousMyVisits =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousMyVisits' in context
+          typeof context === 'object' && context !== null && 'previousMyVisits' in context
             ? (context as { previousMyVisits?: PlaceGetMyVisitsOutput }).previousMyVisits
             : undefined;
 
@@ -753,9 +743,7 @@ export const useUpdatePlaceVisit = (
       },
       onError: (error, variables, context, mutationContext) => {
         const previousMyVisits =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousMyVisits' in context
+          typeof context === 'object' && context !== null && 'previousMyVisits' in context
             ? (context as { previousMyVisits?: PlaceGetMyVisitsOutput }).previousMyVisits
             : undefined;
 
@@ -804,9 +792,7 @@ export const useDeletePlaceVisit = (
       },
       onError: (error, variables, context, mutationContext) => {
         const previousMyVisits =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousMyVisits' in context
+          typeof context === 'object' && context !== null && 'previousMyVisits' in context
             ? (context as { previousMyVisits?: PlaceGetMyVisitsOutput }).previousMyVisits
             : undefined;
 

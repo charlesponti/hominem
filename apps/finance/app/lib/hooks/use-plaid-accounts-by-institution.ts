@@ -36,7 +36,9 @@ export function usePlaidAccountsByInstitution(institutionId: string | null, opti
   };
 
   const query = useQuery<{ accounts: PlaidAccountByInstitution[] }>({
-    queryKey: institutionId ? PLAID_ACCOUNTS_BY_INSTITUTION_KEY(institutionId) : ['plaid', 'accounts', 'institution', 'missing'],
+    queryKey: institutionId
+      ? PLAID_ACCOUNTS_BY_INSTITUTION_KEY(institutionId)
+      : ['plaid', 'accounts', 'institution', 'missing'],
     queryFn: async () => {
       if (!institutionId) {
         throw new Error('Institution ID is required');

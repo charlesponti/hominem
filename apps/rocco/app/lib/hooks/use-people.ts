@@ -59,9 +59,7 @@ export const useCreatePerson = () => {
       },
       onError: (error, _variables, context) => {
         const previousPeople =
-          typeof context === 'object' &&
-          context !== null &&
-          'previousPeople' in context
+          typeof context === 'object' && context !== null && 'previousPeople' in context
             ? (context as { previousPeople?: PeopleListOutput }).previousPeople
             : undefined;
 

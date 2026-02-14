@@ -1,3 +1,5 @@
+import type { Context } from 'hono';
+
 import {
   ValidationError,
   ForbiddenError,
@@ -5,12 +7,12 @@ import {
   InternalError,
 } from '@hominem/services';
 import { isValidGoogleHost } from '@hominem/utils/google';
-import { Hono } from 'hono';
-import type { Context } from 'hono';
 import { createHash } from 'crypto';
+import { Hono } from 'hono';
+
+import type { AppEnv } from '../server';
 
 import { cache } from '../lib/redis';
-import type { AppEnv } from '../server';
 
 export const imagesRoutes = new Hono<AppEnv>();
 
@@ -28,15 +30,21 @@ function sleep(ms: number) {
   });
 }
 
-function setResponseHeaders(c: Context<AppEnv>, options: {
-  contentType: string;
-  etag?: string | null;
-  cacheStatus?: 'hit' | 'miss';
-}) {
+function setResponseHeaders(
+  c: Context<AppEnv>,
+  options: {
+    contentType: string;
+    etag?: string | null;
+    cacheStatus?: 'hit' | 'miss';
+  },
+) {
   c.header('Access-Control-Allow-Origin', '*');
   c.header('Access-Control-Allow-Methods', 'GET');
   c.header('Content-Type', options.contentType);
-  c.header('Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400, stale-if-error=86400');
+  c.header(
+    'Cache-Control',
+    'public, max-age=86400, stale-while-revalidate=86400, stale-if-error=86400',
+  );
   if (options.etag) {
     c.header('ETag', options.etag);
   }

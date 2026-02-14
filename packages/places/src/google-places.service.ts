@@ -7,7 +7,10 @@ type JsonValue = string | number | boolean | null | { [key: string]: JsonValue }
 
 type GooglePlacesClient = {
   places: {
-    get: (params: { name: string }, options: { headers: Record<string, string> }) => Promise<{
+    get: (
+      params: { name: string },
+      options: { headers: Record<string, string> },
+    ) => Promise<{
       data: GooglePlaceDetailsResponse;
     }>;
     searchText: (
