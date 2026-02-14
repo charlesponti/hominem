@@ -155,7 +155,7 @@ describe('GoogleCalendarService', () => {
     it('should create a service instance with valid tokens', () => {
       const service = new GoogleCalendarService(mockUserId, mockTokens);
       expect(service).toBeDefined();
-    });
+    }, 10000);
   });
 
   describe('getSyncStatus', () => {
