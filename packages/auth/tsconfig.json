@@ -52,7 +52,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx"
+    "src/**/*.tsx",
+    "../../types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",

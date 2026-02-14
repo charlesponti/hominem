@@ -54,7 +54,8 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "vitest.config.mts"
+    "vitest.config.mts",
+    "../../types/**/*.d.ts"
   ],
   "references": [
     {

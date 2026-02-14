@@ -61,7 +61,8 @@
     "app/**/*.tsx",
     ".react-router/types/**/*",
     "vite.config.ts",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "../../types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",
