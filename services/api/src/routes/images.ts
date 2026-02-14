@@ -6,6 +6,7 @@ import {
 } from '@hominem/services';
 import { isValidGoogleHost } from '@hominem/utils/google';
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import { createHash } from 'crypto';
 
 import { cache } from '../lib/redis';
@@ -27,7 +28,7 @@ function sleep(ms: number) {
   });
 }
 
-function setResponseHeaders(c: Parameters<(typeof imagesRoutes)['get']>[1], options: {
+function setResponseHeaders(c: Context<AppEnv>, options: {
   contentType: string;
   etag?: string | null;
   cacheStatus?: 'hit' | 'miss';
@@ -96,11 +97,11 @@ imagesRoutes.get('/proxy', async (c) => {
         etag: initialCached.cachedEtag,
         cacheStatus: 'hit',
       });
-      return c.body(initialCached.cachedBody);
+      return c.body(new Uint8Array(initialCached.cachedBody));
     }
 
     const lockValue = crypto.randomUUID();
-    const lockResult = await cache.set(lockKey, lockValue, 'NX', 'EX', LOCK_TTL_SECONDS);
+    const lockResult = await cache.set(lockKey, lockValue, 'EX', LOCK_TTL_SECONDS, 'NX');
     if (!lockResult) {
       for (let attempt = 0; attempt < 6; attempt += 1) {
         await sleep(200);
@@ -120,7 +121,7 @@ imagesRoutes.get('/proxy', async (c) => {
             etag: cached.cachedEtag,
             cacheStatus: 'hit',
           });
-          return c.body(cached.cachedBody);
+          return c.body(new Uint8Array(cached.cachedBody));
         }
       }
     }
@@ -164,7 +165,7 @@ imagesRoutes.get('/proxy', async (c) => {
     }
 
     setResponseHeaders(c, { contentType, etag, cacheStatus: 'miss' });
-    return c.body(imageBuffer);
+    return c.body(new Uint8Array(imageBuffer));
   } catch (err) {
     console.error('Error proxying image:', err);
     console.error('Image URL:', imageUrl);
