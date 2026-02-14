@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { useRegisterSW } from 'virtual:pwa-register/react';
 
 interface UpdateGuardProps {
   children: ReactNode;
@@ -12,13 +11,14 @@ interface UpdateGuardProps {
   appName?: string;
 }
 
-function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: UpdateGuardProps) {
+function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: Omit<UpdateGuardProps, 'children'>) {
   void logo;
   void appName;
-  const { needRefresh, updateServiceWorker } = useRegisterSW({
-    immediate: true,
-  });
-  const [isNeedRefresh] = needRefresh;
+
+  const [swState, setSwState] = useState<{
+    needRefresh: boolean;
+    updateServiceWorker: () => Promise<void>;
+  } | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [hasStaleData, setHasStaleData] = useState(false);
   const queryClient = useQueryClient();
@@ -28,9 +28,19 @@ function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: UpdateGuardP
     Boolean(import.meta.env.DEV);
 
   useEffect(() => {
-    if (typeof navigator !== 'undefined') {
-      setIsOnline(navigator.onLine);
-    }
+    let needRefresh = false;
+    let updateServiceWorker = () => Promise.resolve();
+
+    import('virtual:pwa-register/react').then((module) => {
+      const result = module.useRegisterSW({ immediate: true });
+      needRefresh = result.needRefresh[0];
+      updateServiceWorker = result.updateServiceWorker;
+      setSwState({ needRefresh, updateServiceWorker });
+    });
+  }, []);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
@@ -89,13 +99,13 @@ function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: UpdateGuardP
           </div>
         </div>
       )}
-      {isNeedRefresh && !isDev && (
+      {swState?.needRefresh && !isDev && (
         <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
           <div className="flex items-center gap-3 rounded-full border border-border bg-background px-4 py-2 shadow-lg">
             <span className="text-sm text-foreground">Update available</span>
             <button
               type="button"
-              onClick={() => updateServiceWorker(true)}
+              onClick={() => swState.updateServiceWorker()}
               className="text-sm font-semibold text-primary"
             >
               Refresh
