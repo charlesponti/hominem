@@ -51,7 +51,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
             Add to lists
           </Button>
         </DrawerTrigger>
-        <DrawerContent>
+        <DrawerContent className="bg-popover">
           <Suspense fallback={<div className="h-[40vh] bg-background" />}>
             <AddToListDrawerContent
               place={place}
