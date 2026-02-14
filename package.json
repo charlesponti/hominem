@@ -78,7 +78,6 @@
     "tsx": "^4.19.3",
     "turbo": "^2.8.6",
     "typescript": "5.9.3",
-    "vite-plugin-pwa": "^1.2.0",
     "vite-tsconfig-paths": "6.0.3",
     "vitest": "4.0.16"
   },
