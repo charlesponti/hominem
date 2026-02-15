@@ -1,4 +1,5 @@
 import { ValidationError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
@@ -89,7 +90,7 @@ async function performWebSearch(query: string, maxResults: number): Promise<Sear
 
     return results.slice(0, maxResults);
   } catch (err) {
-    console.warn('DuckDuckGo search failed, using fallback:', err);
+    logger.warn('DuckDuckGo search failed, using fallback', { error: err });
     return getFallbackSearchResults(query);
   }
 }
@@ -142,7 +143,7 @@ export const searchRoutes = new Hono<AppContext>()
         summary: generateSearchSummary(searchResults),
       } as SearchResponse);
     } catch (err) {
-      console.error('[search] error:', err);
+      logger.error('[search] error', { error: err });
       throw new InternalError(err instanceof Error ? err.message : 'Search failed');
     }
   });

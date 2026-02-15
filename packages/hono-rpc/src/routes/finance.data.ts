@@ -1,5 +1,6 @@
 import { deleteAllFinanceData } from '@hominem/finance-services';
 import { isServiceError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
@@ -29,7 +30,7 @@ export const dataRoutes = new Hono<AppContext>()
       if (isServiceError(err)) {
         throw err;
       }
-      console.error('Error deleting finance data:', err);
+      logger.error('Error deleting finance data', { error: err });
       throw new InternalError('Failed to delete finance data');
     }
   });

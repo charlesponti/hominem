@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 
+import { logger } from '@hominem/utils/logger';
+
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import type { UserDeleteAccountOutput } from '../types/user.types';
 
@@ -20,7 +22,7 @@ export const userRoutes = new Hono<AppContext>()
 
     try {
       // TODO: Implement account deletion logic
-      console.warn('[user.delete-account] Not yet implemented');
+      logger.warn('[user.delete-account] Not yet implemented');
 
       return c.json<UserDeleteAccountOutput>(
         {
@@ -30,7 +32,7 @@ export const userRoutes = new Hono<AppContext>()
         501,
       );
     } catch (err) {
-      console.error('[user.delete-account] unexpected error:', err);
+      logger.error('[user.delete-account] unexpected error', { error: err });
       return c.json<UserDeleteAccountOutput>(
         {
           success: false,

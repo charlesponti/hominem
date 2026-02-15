@@ -1,4 +1,5 @@
 import { InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
@@ -23,12 +24,12 @@ export const adminRoutes = new Hono<AppContext>()
 
     try {
       // TODO: Implement Google Places refresh logic
-      console.warn('[admin.refresh-google-places] Not yet implemented');
+      logger.warn('[admin.refresh-google-places] Not yet implemented');
 
       // Stub implementation
       return c.json({ updatedCount: 0, duration: 0 }, 200);
     } catch (err) {
-      console.error('[admin.refresh-google-places] unexpected error:', err);
+      logger.error('[admin.refresh-google-places] unexpected error', { error: err });
       throw new InternalError('Failed to refresh Google Places');
     }
   });

@@ -1,5 +1,6 @@
 import { ChatService, MessageService } from '@hominem/chat-services';
 import { NotFoundError, InternalError, ValidationError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { streamText, type CoreMessage } from 'ai';
 import { Hono } from 'hono';
@@ -185,7 +186,7 @@ const chatByIdRoutes = new Hono<AppContext>()
         assistantMessage = updatedAssistantMessage;
       }
     } catch (streamError) {
-      console.error('[chats.send] Error consuming stream:', streamError);
+      logger.error('[chats.send] Error consuming stream', { error: streamError });
       const updatedOnError = await messageService.updateMessage({
         messageId: assistantMessage.id,
         content: accumulatedContent || '[Error: Stream processing failed]',

@@ -7,6 +7,7 @@ import {
   ValidationError,
   InternalError,
 } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
@@ -81,7 +82,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
       const bookmarks = await listBookmarksByUser(userId);
       return c.json(bookmarks);
     } catch (err) {
-      console.error('[bookmarks.list] error:', err);
+      logger.error('[bookmarks.list] error', { error: err });
       throw new InternalError('Failed to list bookmarks');
     }
   })
@@ -114,7 +115,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
         converted = convertOGContentToBookmark({ url, ogContent });
       } catch (ogError) {
         // Fallback to basic URL data if OpenGraph fails
-        console.warn('OpenGraph fetch failed, using fallback data:', ogError);
+        logger.warn('OpenGraph fetch failed, using fallback data', { error: ogError });
         converted = {
           url,
           title: new URL(url).hostname,
@@ -129,7 +130,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
       const bookmark = await createBookmarkForUser(userId, converted);
       return c.json(bookmark, 201);
     } catch (err) {
-      console.error('[bookmarks.create] error:', err);
+      logger.error('[bookmarks.create] error', { error: err });
       throw new InternalError('Failed to create bookmark');
     }
   })
@@ -162,7 +163,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
         const ogContent = await getOpenGraphData({ url });
         converted = convertOGContentToBookmark({ url, ogContent });
       } catch (ogError) {
-        console.warn('OpenGraph fetch failed, using fallback data:', ogError);
+        logger.warn('OpenGraph fetch failed, using fallback data', { error: ogError });
         converted = {
           url,
           title: new URL(url).hostname,
@@ -182,7 +183,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
 
       return c.json(updatedBookmark);
     } catch (err) {
-      console.error('[bookmarks.update] error:', err);
+      logger.error('[bookmarks.update] error', { error: err });
       throw new InternalError('Failed to update bookmark');
     }
   })
@@ -196,7 +197,7 @@ export const bookmarksRoutes = new Hono<AppContext>()
       const deleted = await deleteBookmarkForUser(id, userId);
       return c.json({ success: deleted });
     } catch (err) {
-      console.error('[bookmarks.delete] error:', err);
+      logger.error('[bookmarks.delete] error', { error: err });
       throw new InternalError('Failed to delete bookmark');
     }
   });

@@ -270,7 +270,7 @@ export const twitterRoutes = new Hono<AppContext>()
 
     if (!tweetsResponse.ok) {
       const errorData = await tweetsResponse.json().catch(() => ({}));
-      console.error('Failed to fetch tweets from Twitter', {
+      logger.error('Failed to fetch tweets from Twitter', {
         status: tweetsResponse.status,
         error: errorData,
       });

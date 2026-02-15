@@ -1,5 +1,6 @@
 import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { VectorService } from '@hominem/services/vector';
+import { logger } from '@hominem/utils/logger';
 import { fileStorageService } from '@hominem/utils/supabase';
 import { Hono } from 'hono';
 import * as z from 'zod';
@@ -55,7 +56,7 @@ export const vectorRoutes = new Hono<AppContext>()
 
       return c.json({ results, count: results.length || 0 });
     } catch (err) {
-      console.error('[vector.searchVectors] error:', err);
+      logger.error('[vector.searchVectors] error:', { error: err });
       throw new InternalError(
         `Failed to search vector store: ${err instanceof Error ? err.message : String(err)}`,
       );
@@ -86,7 +87,7 @@ export const vectorRoutes = new Hono<AppContext>()
 
       return c.json({ results, count: results.length || 0 });
     } catch (err) {
-      console.error('[vector.searchUserVectors] error:', err);
+      logger.error('[vector.searchUserVectors] error:', { error: err });
       throw new InternalError(
         `Failed to search user vectors: ${err instanceof Error ? err.message : String(err)}`,
       );
@@ -115,7 +116,7 @@ export const vectorRoutes = new Hono<AppContext>()
 
       return c.json({ vectors, count: vectors.length });
     } catch (err) {
-      console.error('[vector.getUserVectors] error:', err);
+      logger.error('[vector.getUserVectors] error:', { error: err });
       throw new InternalError(
         `Failed to get user vectors: ${err instanceof Error ? err.message : String(err)}`,
       );
@@ -132,7 +133,7 @@ export const vectorRoutes = new Hono<AppContext>()
 
       return c.json({ success: result.success, message: 'Vector documents deleted successfully' });
     } catch (err) {
-      console.error('[vector.deleteUserVectors] error:', err);
+      logger.error('[vector.deleteUserVectors] error:', { error: err });
       throw new InternalError(
         `Failed to delete user vectors: ${err instanceof Error ? err.message : String(err)}`,
       );
@@ -166,7 +167,7 @@ export const vectorRoutes = new Hono<AppContext>()
         message: `${result.chunksProcessed} text chunks processed and embedded`,
       });
     } catch (err) {
-      console.error('[vector.ingestText] error:', err);
+      logger.error('[vector.ingestText] error:', { error: err });
       throw new InternalError(
         `Failed to ingest text: ${err instanceof Error ? err.message : String(err)}`,
       );
@@ -185,7 +186,7 @@ export const vectorRoutes = new Hono<AppContext>()
 
       return c.json({ files, count: files.length });
     } catch (err) {
-      console.error('[vector.getUserFiles] error:', err);
+      logger.error('[vector.getUserFiles] error:', { error: err });
       throw new InternalError(
         `Failed to get user files: ${err instanceof Error ? err.message : String(err)}`,
       );
@@ -209,7 +210,7 @@ export const vectorRoutes = new Hono<AppContext>()
         message: deleted ? 'File deleted successfully' : 'File not found',
       });
     } catch (err) {
-      console.error('[vector.deleteUserFile] error:', err);
+      logger.error('[vector.deleteUserFile] error:', { error: err });
       throw new InternalError(
         `Failed to delete file: ${err instanceof Error ? err.message : String(err)}`,
       );

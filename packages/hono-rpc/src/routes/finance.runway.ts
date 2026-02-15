@@ -1,5 +1,6 @@
 import { calculateRunway, runwayCalculationSchema } from '@hominem/finance-services';
 import { isServiceError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
@@ -37,7 +38,7 @@ export const runwayRoutes = new Hono<AppContext>()
       if (isServiceError(err)) {
         throw err;
       }
-      console.error('Runway calculation error:', err);
+      logger.error('Runway calculation error', { error: err });
       throw new InternalError('Failed to calculate runway');
     }
   });

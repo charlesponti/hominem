@@ -1,4 +1,5 @@
 import { fileStorageService } from '@hominem/utils/supabase';
+import { logger } from '@hominem/utils/logger';
 import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { Hono } from 'hono';
 
@@ -13,7 +14,7 @@ export const filesRoutes = new Hono<AppContext>()
       const files = await fileStorageService.listUserFiles(userId);
       return c.json({ files, count: files.length });
     } catch (err) {
-      console.error('[files.list] error:', err);
+      logger.error('[files.list] error', { error: err });
       throw new InternalError('Failed to list files');
     }
   })
@@ -40,7 +41,7 @@ export const filesRoutes = new Hono<AppContext>()
         message: 'File fetched successfully',
       });
     } catch (err) {
-      console.error('[files.fetch] error:', err);
+      logger.error('[files.fetch] error', { error: err });
       throw new InternalError('Failed to get file');
     }
   })
@@ -67,7 +68,7 @@ export const filesRoutes = new Hono<AppContext>()
         message: 'URL generated successfully',
       });
     } catch (err) {
-      console.error('[files.getUrl] error:', err);
+      logger.error('[files.getUrl] error', { error: err });
       throw new InternalError('Failed to generate file URL');
     }
   })
@@ -90,7 +91,7 @@ export const filesRoutes = new Hono<AppContext>()
 
       return c.json({ success: true, message: 'File deleted successfully' });
     } catch (err) {
-      console.error('[files.remove] error:', err);
+      logger.error('[files.remove] error', { error: err });
       throw new InternalError('Failed to delete file');
     }
   });

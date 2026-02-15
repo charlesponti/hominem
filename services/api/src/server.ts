@@ -7,10 +7,11 @@ import { app as honoRpcApp } from '@hominem/hono-rpc';
 import { isServiceError } from '@hominem/services';
 import { redis } from '@hominem/services/redis';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
+import { logger } from '@hominem/utils/logger';
 import { Queue } from 'bullmq';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { logger } from 'hono/logger';
+import { logger as honoLogger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 
 import { env } from './env';
@@ -68,7 +69,7 @@ export function createServer() {
   });
 
   // Logger middleware
-  app.use('*', logger());
+  app.use('*', honoLogger());
 
   // Pretty JSON middleware
   app.use('*', prettyJSON());
@@ -119,7 +120,7 @@ export function createServer() {
 
   // Global error handler - must be after routes
   app.onError((err, c) => {
-    console.error('[services/api] Error:', err);
+    logger.error('[services/api] Error', { error: err });
 
     if (isServiceError(err)) {
       return c.json(
@@ -149,7 +150,7 @@ export async function startServer() {
 
   const app = createServer();
   if (!app) {
-    console.error('Failed to create server');
+    logger.error('Failed to create server');
     process.exit(1);
   }
 
@@ -163,7 +164,7 @@ export async function startServer() {
       hostname: '0.0.0.0',
     });
   } catch (err) {
-    console.error('Failed to start server:', err);
+    logger.error('Failed to start server', { error: err });
     process.exit(1);
   }
 }

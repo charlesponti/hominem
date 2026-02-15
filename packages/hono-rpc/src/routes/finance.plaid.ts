@@ -9,6 +9,7 @@ import {
 } from '@hominem/finance-services';
 import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
+import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
@@ -202,7 +203,7 @@ export const plaidRoutes = new Hono<AppContext>()
         access_token: plaidItem.accessToken,
       });
     } catch (revokeError) {
-      console.warn('Failed to revoke Plaid access token:', revokeError);
+      logger.warn('Failed to revoke Plaid access token', { error: revokeError });
     }
 
     // Delete the plaid item

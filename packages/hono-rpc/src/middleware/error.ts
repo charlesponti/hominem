@@ -2,6 +2,8 @@ import { createMiddleware } from 'hono/factory';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { isServiceError } from '@hominem/services';
 import type { ErrorCode } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
+
 import type { AppContext } from './auth';
 
 /**
@@ -42,9 +44,9 @@ export const errorMiddleware = createMiddleware<AppContext>(async (c, next) => {
   } catch (err) {
     // Log error for debugging
     if (err instanceof Error) {
-      console.error('[API Error]', err.name, err.message);
+      logger.error('[API Error]', { error: err, name: err.name, message: err.message });
     } else {
-      console.error('[API Error]', err);
+      logger.error('[API Error]', { error: err });
     }
 
     // Handle service errors (thrown by business logic)

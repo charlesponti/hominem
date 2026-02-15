@@ -1,5 +1,6 @@
 import { formatGeocodeFeatures, type Geocoding, LAYERS } from '@hominem/utils/location';
 import { ValidationError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
@@ -17,7 +18,7 @@ export const locationRoutes = new Hono<AppContext>()
       const { GEOCODE_EARTH_API_KEY } = process.env;
 
       if (!GEOCODE_EARTH_API_KEY) {
-        console.error('Missing GEOCODE_EARTH_API_KEY environment variable');
+        logger.error('Missing GEOCODE_EARTH_API_KEY environment variable');
         throw new InternalError('Geocoding service not configured');
       }
 
@@ -33,14 +34,14 @@ export const locationRoutes = new Hono<AppContext>()
       );
 
       if (!response.ok) {
-        console.error(`Geocoding API error: ${response.status} ${response.statusText}`);
+        logger.error(`Geocoding API error: ${response.status} ${response.statusText}`);
         throw new InternalError('Error fetching location data');
       }
 
       const results = (await response.json()) as Geocoding;
       return c.json(formatGeocodeFeatures(results));
     } catch (err) {
-      console.error('[location.geocode] error:', err);
+      logger.error('[location.geocode] error', { error: err });
       throw new InternalError(`Error fetching city lat/lng: ${err instanceof Error ? err.message : String(err)}`);
     }
   });

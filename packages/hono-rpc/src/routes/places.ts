@@ -22,6 +22,7 @@ import {
   type PlaceInput,
 } from '@hominem/places-services';
 import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { sanitizeStoredPhotos } from '@hominem/utils/images';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -191,7 +192,7 @@ export const placesRoutes = new Hono<AppContext>()
             fetchedPhoneNumber = googlePlaceData.nationalPhoneNumber ?? null;
           }
         } catch (err) {
-          console.error('[places.create] Failed to fetch Google details:', err);
+          logger.error('[places.create] Failed to fetch Google details', { error: err });
         }
       }
 
@@ -244,7 +245,7 @@ export const placesRoutes = new Hono<AppContext>()
           }
         }
       } catch (err) {
-        console.warn('[places.create] Failed to enqueue photo enrichment:', err);
+        logger.warn('[places.create] Failed to enqueue photo enrichment', { error: err });
       }
 
       return c.json<PlaceCreateOutput>(transformPlaceToApiFormat(createdPlace), 201);
@@ -253,7 +254,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.create] unexpected error:', err);
+      logger.error('[places.create] unexpected error:', { error: err });
       throw new InternalError('');
     }
   })
@@ -288,7 +289,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.update] unexpected error:', err);
+      logger.error('[places.update] unexpected error:', { error: err });
       throw new InternalError('');
     }
   })
@@ -310,7 +311,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.delete] unexpected error:', err);
+      logger.error('[places.delete] unexpected error:', { error: err });
       throw new InternalError('');
     }
   })
@@ -352,7 +353,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.autocomplete] unexpected error:', err);
+      logger.error('[places.autocomplete] unexpected error:', { error: err });
       throw new InternalError('');
     }
   })
@@ -393,7 +394,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.get] unexpected error:', err);
+      logger.error('[places.get] unexpected error:', { error: err });
       throw new InternalError('');
     }
   })
@@ -418,7 +419,7 @@ export const placesRoutes = new Hono<AppContext>()
           throw err;
         }
 
-        console.error('[places.get-by-google-id] unexpected error:', err);
+        logger.error('[places.get-by-google-id] unexpected error:', { error: err });
         throw new InternalError('');
       }
     },
@@ -441,7 +442,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.add-to-lists] unexpected error:', err);
+      logger.error('[places.add-to-lists] unexpected error:', { error: err });
       throw new InternalError('');
     }
   })
@@ -468,7 +469,7 @@ export const placesRoutes = new Hono<AppContext>()
           throw err;
         }
 
-        console.error('[places.remove-from-list] unexpected error:', err);
+        logger.error('[places.remove-from-list] unexpected error:', { error: err });
         throw new InternalError('');
       }
     },
@@ -494,7 +495,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.nearby] unexpected error:', err);
+      logger.error('[places.nearby] unexpected error:', { error: err });
       throw new InternalError('');
     }
   })
@@ -567,7 +568,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.log-visit] unexpected error:', err);
+      logger.error('[places.log-visit] unexpected error:', { error: err });
       throw new InternalError('');
     }
   })
@@ -586,7 +587,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.my-visits] unexpected error:', err);
+      logger.error('[places.my-visits] unexpected error:', { error: err });
       throw new InternalError('');
     }
   })
@@ -608,7 +609,7 @@ export const placesRoutes = new Hono<AppContext>()
           throw err;
         }
 
-        console.error('[places.place-visits] unexpected error:', err);
+        logger.error('[places.place-visits] unexpected error:', { error: err });
         throw new InternalError('');
       }
     },
@@ -641,7 +642,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.update-visit] unexpected error:', err);
+      logger.error('[places.update-visit] unexpected error:', { error: err });
       throw new InternalError('');
     }
   })
@@ -663,7 +664,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.delete-visit] unexpected error:', err);
+      logger.error('[places.delete-visit] unexpected error:', { error: err });
       throw new InternalError('');
     }
   })
@@ -735,7 +736,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw err;
       }
 
-      console.error('[places.visit-stats] unexpected error:', err);
+      logger.error('[places.visit-stats] unexpected error:', { error: err });
       throw new InternalError('');
     }
   });
