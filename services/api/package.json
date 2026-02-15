@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dev": "bun --watch src/index.ts",
+    "dev": "lsof -ti:4040 | xargs kill -9 2>/dev/null; bun --watch src/index.ts",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
     "start": "bun src/index.ts | pino-pretty",
