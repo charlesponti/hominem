@@ -4,6 +4,7 @@ import type { Queue } from 'bullmq';
 import type { Context, MiddlewareHandler } from 'hono';
 
 import { toHominemUser, UserAuthService } from '@hominem/auth/server';
+import { logger } from '@hominem/utils/logger';
 import { type CookieMethodsServer, createServerClient, parseCookieHeader } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { setCookie } from 'hono/cookie';
@@ -75,7 +76,7 @@ export async function getHominemUser(
     const user = await UserAuthService.getUserById(userAuthData.id);
     return user ? toHominemUser(user) : null;
   } catch (error) {
-    console.error('Error in getHominemUser:', error);
+    logger.error('Error in getHominemUser', { error });
     return null;
   }
 }
@@ -98,7 +99,7 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
             c.set('supabaseId', hominemUser.supabaseId || hominemUser.id);
           }
         } catch (error) {
-          console.error('Error getting user in test mode:', error);
+          logger.error('Error getting user in test mode', { error });
         }
         await next();
         return;
@@ -143,7 +144,7 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
         }
       }
     } catch (error) {
-      console.error('Error getting user from cookie:', error);
+      logger.error('Error getting user from cookie', { error });
     }
 
     // If no user from cookie, try to get user from auth header (for API routes)
@@ -160,7 +161,7 @@ export const supabaseMiddleware = (): MiddlewareHandler => {
             c.set('supabaseId', hominemUser.supabaseId);
           }
         } catch (error) {
-          console.error('Error getting user from token:', error);
+          logger.error('Error getting user from token', { error });
         }
       }
     }

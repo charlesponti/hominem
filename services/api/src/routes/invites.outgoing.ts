@@ -1,5 +1,6 @@
 import { getOutboundInvites } from '@hominem/lists-services';
 import { UnauthorizedError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
 import type { AppEnv } from '../server';
@@ -19,7 +20,7 @@ invitesOutgoingRoutes.get('/', async (c) => {
     // Note: listInvite has timestamps with mode: 'string', so they're already serialized
     return c.json(invites);
   } catch (err) {
-    console.error('Error fetching outgoing invites:', err);
+    logger.error('Error fetching outgoing invites', { error: err });
     throw new InternalError('Failed to fetch outgoing invites', {
       details: err instanceof Error ? err.message : String(err),
     });

@@ -1,4 +1,5 @@
 import { NotFoundError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -20,7 +21,7 @@ componentsRoutes.get('/use-api-client.json', async (c) => {
 
     return c.json(registryData);
   } catch (err) {
-    console.error('Error serving use-api-client registry:', err);
+    logger.error('Error serving use-api-client registry', { error: err });
     throw new NotFoundError('Registry file not found');
   }
 });
@@ -46,7 +47,7 @@ componentsRoutes.get('/', async (c) => {
       count: components.length,
     });
   } catch (err) {
-    console.error('Error listing components:', err);
+    logger.error('Error listing components', { error: err });
     throw new InternalError('Failed to list components');
   }
 });

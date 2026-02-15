@@ -7,6 +7,7 @@ import {
   InternalError,
 } from '@hominem/services';
 import { isValidGoogleHost } from '@hominem/utils/google';
+import { logger } from '@hominem/utils/logger';
 import { createHash } from 'crypto';
 import { Hono } from 'hono';
 
@@ -161,24 +162,21 @@ imagesRoutes.get('/proxy', async (c) => {
         cache.set(cacheEtagKey, etag, 'EX', CACHE_TTL_SECONDS),
       ]);
     } catch (cacheError) {
-      console.warn('Failed to cache proxied image', cacheError);
+      logger.warn('Failed to cache proxied image', { error: cacheError });
     } finally {
       try {
         if (lockResult) {
           await cache.del(lockKey);
         }
       } catch (releaseError) {
-        console.warn('Failed to release cache lock', releaseError);
+        logger.warn('Failed to release cache lock', { error: releaseError });
       }
     }
 
     setResponseHeaders(c, { contentType, etag, cacheStatus: 'miss' });
     return c.body(new Uint8Array(imageBuffer));
   } catch (err) {
-    console.error('Error proxying image:', err);
-    console.error('Image URL:', imageUrl);
-    console.error('Decoded URL:', imageUrl ? decodeURIComponent(imageUrl) : 'N/A');
-    console.error('Error stack:', err instanceof Error ? err.stack : 'No stack');
+    logger.error('Error proxying image', { error: err, imageUrl, decodedUrl: imageUrl ? decodeURIComponent(imageUrl) : 'N/A' });
     throw new InternalError('Failed to proxy image', {
       message: err instanceof Error ? err.message : 'Unknown error',
     });

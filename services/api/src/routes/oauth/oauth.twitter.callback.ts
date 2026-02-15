@@ -1,4 +1,5 @@
 import { createAccount, getAccountByProviderAccountId, updateAccount } from '@hominem/auth/server';
+import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { randomUUID } from 'node:crypto';
@@ -63,7 +64,7 @@ oauthTwitterCallbackRoutes.get(
       });
 
       if (!tokenResponse.ok) {
-        console.error('Twitter token exchange failed', {
+        logger.error('Twitter token exchange failed', {
           status: tokenResponse.status,
           statusText: tokenResponse.statusText,
         });
@@ -81,7 +82,7 @@ oauthTwitterCallbackRoutes.get(
       });
 
       if (!userResponse.ok) {
-        console.error('Failed to fetch Twitter user info');
+        logger.error('Failed to fetch Twitter user info');
         return c.redirect(`${env.NOTES_URL}/account?twitter=error&reason=user_fetch`);
       }
 
@@ -119,7 +120,7 @@ oauthTwitterCallbackRoutes.get(
       // Redirect to success page
       return c.redirect(`${env.NOTES_URL}/account?twitter=connected`);
     } catch (error) {
-      console.error('Twitter OAuth callback error:', error);
+      logger.error('Twitter OAuth callback error', { error });
       return c.redirect(`${env.NOTES_URL}/account?twitter=error`);
     }
   },

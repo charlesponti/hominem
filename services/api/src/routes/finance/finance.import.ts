@@ -8,6 +8,7 @@ import {
   InternalError,
 } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
+import { logger } from '@hominem/utils/logger';
 import { csvStorageService } from '@hominem/utils/supabase';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -107,10 +108,10 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
     );
   } catch (err) {
     if (err instanceof Error) {
-      console.error(`Import error: ${err.message}`);
+      logger.error(`Import error`, { error: err.message });
       throw new InternalError('Failed to process import', { details: err.message });
     }
-    console.error('Unknown import error:', err);
+    logger.error('Unknown import error', { error: err });
     throw new InternalError('Failed to process import');
   }
 });
@@ -139,7 +140,7 @@ financeImportRoutes.get('/active', async (c) => {
 
     return c.json({ jobs: userJobs });
   } catch (err) {
-    console.error(`Error fetching active jobs: ${err}`);
+    logger.error(`Error fetching active jobs`, { error: err });
     throw new InternalError('Failed to retrieve active import jobs', {
       details: err instanceof Error ? err.message : String(err),
     });
@@ -172,7 +173,7 @@ financeImportRoutes.get('/:jobId', zValidator('param', JobIdParamsSchema), async
       stats: job.returnvalue?.stats || {},
     });
   } catch (err) {
-    console.error(`Error fetching job status: ${err}`);
+    logger.error(`Error fetching job status`, { error: err });
     throw new InternalError('Failed to retrieve job status', {
       details: err instanceof Error ? err.message : String(err),
     });

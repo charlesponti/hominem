@@ -6,6 +6,7 @@ import {
   InternalError,
 } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
 import type { AppEnv } from '../../../server';
@@ -58,7 +59,7 @@ financePlaidSyncRoutes.post('/:itemId', async (c) => {
       message: 'Sync job queued successfully',
     });
   } catch (err) {
-    console.error(`Manual sync error: ${err}`);
+    logger.error(`Manual sync error`, { error: err });
     throw new InternalError('Failed to queue sync job');
   }
 });

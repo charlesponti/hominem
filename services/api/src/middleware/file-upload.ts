@@ -6,6 +6,8 @@ export interface UploadedFile {
   buffer?: Buffer;
 }
 
+import { logger } from '@hominem/utils/logger';
+
 /**
  * Handle file upload and return buffer
  */
@@ -37,7 +39,7 @@ export async function handleFileUploadBuffer(
       size: buffer.length,
     };
   } catch (error) {
-    console.error('File upload error:', error);
+    logger.error('File upload error', { error });
     return null;
   }
 }

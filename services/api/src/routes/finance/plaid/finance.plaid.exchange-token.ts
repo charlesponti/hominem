@@ -1,6 +1,7 @@
 import { ensureInstitutionExists, upsertPlaidItem } from '@hominem/finance-services';
 import { UnauthorizedError, InternalError } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
+import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
@@ -71,7 +72,7 @@ financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema
       institutionName,
     });
   } catch (err) {
-    console.error(`Token exchange error: ${err}`);
+    logger.error(`Token exchange error`, { error: err });
     throw new InternalError('Failed to exchange token');
   }
 });

@@ -1,5 +1,6 @@
 import { getSpendingCategories } from '@hominem/finance-services';
 import { UnauthorizedError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
 import type { AppEnv } from '../../server';
@@ -18,7 +19,7 @@ financeCategoriesRoutes.get('/', async (c) => {
     const categories = await getSpendingCategories(userId);
     return c.json(categories);
   } catch (err) {
-    console.error('Error fetching spending categories:', err);
+    logger.error('Error fetching spending categories', { error: err });
     throw new InternalError('Failed to fetch spending categories', {
       details: err instanceof Error ? err.message : String(err),
     });

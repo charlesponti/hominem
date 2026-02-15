@@ -1,4 +1,5 @@
 import { UnauthorizedError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
 import type { AppEnv } from '../../../server';
@@ -30,7 +31,7 @@ financePlaidCreateLinkTokenRoutes.post('/', async (c) => {
       expiration: createTokenResponse.data.expiration,
     });
   } catch (err) {
-    console.error(`Failed to create Plaid link token: ${err}`);
+    logger.error(`Failed to create Plaid link token`, { error: err });
     throw new InternalError('Internal Server Error');
   }
 });

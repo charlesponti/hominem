@@ -6,6 +6,7 @@ import {
   updateHealthRecord,
 } from '@hominem/health-services';
 import { NotFoundError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
@@ -89,7 +90,7 @@ healthRoutes.get('/', zValidator('query', healthQuerySchema), async (c) => {
     const sorted = results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return c.json(sorted.map(serializeHealthRecord));
   } catch (err) {
-    console.error('Error fetching health data:', err);
+    logger.error('Error fetching health data', { error: err });
     throw new InternalError('Failed to fetch health data');
   }
 });
@@ -107,7 +108,7 @@ healthRoutes.get('/:id', async (c) => {
 
     return c.json(serializeHealthRecord(result));
   } catch (err) {
-    console.error('Error fetching health record:', err);
+    logger.error('Error fetching health record', { error: err });
     throw new InternalError('Failed to fetch health record');
   }
 });
@@ -128,7 +129,7 @@ healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
     }
     return c.json(serializeHealthRecord(result), 201);
   } catch (err) {
-    console.error('Error creating health record:', err);
+    logger.error('Error creating health record', { error: err });
     throw new InternalError('Failed to create health record');
   }
 });
@@ -154,7 +155,7 @@ healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) =
 
     return c.json(serializeHealthRecord(result));
   } catch (err) {
-    console.error('Error updating health record:', err);
+    logger.error('Error updating health record', { error: err });
     throw new InternalError('Failed to update health record');
   }
 });
@@ -171,7 +172,7 @@ healthRoutes.delete('/:id', async (c) => {
 
     return c.json({ deleted: true });
   } catch (err) {
-    console.error('Error deleting health record:', err);
+    logger.error('Error deleting health record', { error: err });
     throw new InternalError('Failed to delete health record');
   }
 });

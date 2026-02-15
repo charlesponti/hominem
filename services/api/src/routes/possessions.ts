@@ -9,6 +9,7 @@ import {
   NotFoundError,
   InternalError,
 } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import crypto from 'node:crypto';
@@ -65,7 +66,7 @@ possessionsRoutes.get('/', async (c) => {
     const items = await listPossessions(userId);
     return c.json(items.map(serializePossession));
   } catch (err) {
-    console.error('Error fetching possessions:', err);
+    logger.error('Error fetching possessions', { error: err });
     throw new InternalError('Failed to fetch possessions', {
       details: err instanceof Error ? err.message : String(err),
     });
@@ -98,7 +99,7 @@ possessionsRoutes.post('/', zValidator('json', createPossessionSchema), async (c
 
     return c.json(serializePossession(created), 201);
   } catch (err) {
-    console.error('Error creating possession:', err);
+    logger.error('Error creating possession', { error: err });
     throw new InternalError('Failed to create possession', {
       details: err instanceof Error ? err.message : String(err),
     });
@@ -136,7 +137,7 @@ possessionsRoutes.put(
 
       return c.json(serializePossession(updated));
     } catch (err) {
-      console.error('Error updating possession:', err);
+      logger.error('Error updating possession', { error: err });
       throw new InternalError('Failed to update possession', {
         details: err instanceof Error ? err.message : String(err),
       });
@@ -163,7 +164,7 @@ possessionsRoutes.delete('/:id', zValidator('param', possessionIdParamSchema), a
 
     return c.json({ deleted: true });
   } catch (err) {
-    console.error('Error deleting possession:', err);
+    logger.error('Error deleting possession', { error: err });
     throw new InternalError('Failed to delete possession', {
       details: err instanceof Error ? err.message : String(err),
     });

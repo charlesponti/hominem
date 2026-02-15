@@ -1,5 +1,6 @@
 import { getPlaidItemByUserAndItemId, updatePlaidItemStatusById } from '@hominem/finance-services';
 import { UnauthorizedError, NotFoundError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
 import type { AppEnv } from '../../../server';
@@ -31,7 +32,7 @@ financePlaidDisconnectRoutes.delete('/:itemId', async (c) => {
         access_token: plaidItem.accessToken,
       });
     } catch (plaidError) {
-      console.warn(`Failed to remove item from Plaid (continuing anyway): ${plaidError}`);
+      logger.warn(`Failed to remove item from Plaid (continuing anyway)`, { error: plaidError });
     }
 
     // Mark as disconnected in our database
@@ -45,7 +46,7 @@ financePlaidDisconnectRoutes.delete('/:itemId', async (c) => {
       message: 'Successfully disconnected account',
     });
   } catch (err) {
-    console.error(`Disconnect error: ${err}`);
+    logger.error(`Disconnect error`, { error: err });
     throw new InternalError('Failed to disconnect account');
   }
 });

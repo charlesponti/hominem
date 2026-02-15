@@ -1,6 +1,7 @@
 import { getPlaidItemByItemId, updatePlaidItemStatusByItemId } from '@hominem/finance-services';
 import { UnauthorizedError, ValidationError, InternalError } from '@hominem/services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
@@ -53,7 +54,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
     const plaidItem = await getPlaidItemByItemId(item_id);
 
     if (!plaidItem) {
-      console.warn(`Plaid item ${item_id} not found for webhook`);
+      logger.warn(`Plaid item ${item_id} not found for webhook`);
       return c.json({ acknowledged: true }); // Return success to prevent retries
     }
 
@@ -123,7 +124,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
 
     return c.json({ acknowledged: true });
   } catch (err) {
-    console.error(`Webhook processing error: ${err}`);
+    logger.error(`Webhook processing error`, { error: err });
     throw new InternalError('Webhook processing failed');
   }
 });

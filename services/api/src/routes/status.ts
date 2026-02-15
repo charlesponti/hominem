@@ -1,6 +1,7 @@
 import { db } from '@hominem/db';
 import { health } from '@hominem/db/schema/health';
 import { UnavailableError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
 import type { AppEnv } from '../server';
@@ -19,7 +20,7 @@ statusRoutes.get('/', async (c) => {
       database: 'connected',
     });
   } catch (err) {
-    console.error('Health check failed:', err);
+    logger.error('Health check failed', { error: err });
     throw new UnavailableError('Health check failed', {
       status: 'error',
       serverTime: new Date().toISOString(),

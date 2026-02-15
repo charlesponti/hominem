@@ -1,5 +1,6 @@
 import { getInvitesForUser } from '@hominem/lists-services';
 import { UnauthorizedError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
 import type { AppEnv } from '../server';
@@ -20,7 +21,7 @@ invitesIncomingRoutes.get('/', async (c) => {
     // Note: listInvite has timestamps with mode: 'string', so they're already serialized
     return c.json(pendingInvites);
   } catch (err) {
-    console.error('Error fetching incoming invites:', err);
+    logger.error('Error fetching incoming invites', { error: err });
     throw new InternalError('Failed to fetch invites', {
       details: err instanceof Error ? err.message : String(err),
     });

@@ -2,6 +2,8 @@ import type { Context } from 'hono';
 
 import { ZodError } from 'zod';
 
+import { logger } from '@hominem/utils/logger';
+
 export class ApiError extends Error {
   statusCode: number;
 
@@ -33,7 +35,7 @@ export function handleError(error: Error, c: Context) {
   }
 
   // Log unknown errors
-  console.error(error);
+  logger.error('Unhandled error', { error });
 
   return c.json(
     {
