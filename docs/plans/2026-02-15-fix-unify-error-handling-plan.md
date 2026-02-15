@@ -210,6 +210,7 @@ Added port cleanup to dev script to handle macOS race condition:
 - `34f72537` - fix: unify error handling across API layers
 - `1f846f39` - fix: replace console.* with structured logger
 - `6052d489` - fix: kill existing process on port 4040 before dev server starts
+- `bb37d911` - fix: replace console with structured logger in services/api
 
 ## Dependencies & Risks
 
