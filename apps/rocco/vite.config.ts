@@ -8,13 +8,34 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     reactRouter(),
-    VitePWA({
-      registerType: 'prompt',
-      injectRegister: false,
-      devOptions: {
-        enabled: false,
-      },
-      workbox: {
+      VitePWA({
+        registerType: 'prompt',
+        injectRegister: false,
+        devOptions: {
+          enabled: false,
+        },
+        manifest: {
+          name: 'Rocco',
+          short_name: 'Rocco',
+          description: 'Your personal place list',
+          theme_color: '#000000',
+          background_color: '#000000',
+          display: 'standalone',
+          start_url: '/',
+          icons: [
+            {
+              src: '/icons/favicon-196x196.png',
+              sizes: '196x196',
+              type: 'image/png',
+            },
+            {
+              src: '/icons/favicon-128.png',
+              sizes: '128x128',
+              type: 'image/png',
+            },
+          ],
+        },
+        workbox: {
         skipWaiting: false,
         clientsClaim: false,
         cleanupOutdatedCaches: true,

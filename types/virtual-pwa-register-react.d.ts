@@ -1,12 +1,18 @@
 declare module 'virtual:pwa-register/react' {
   import type React from 'react'
 
-  export function useRegisterSW(options?: {
+  export interface RegisterSWOptions {
     immediate?: boolean
-    onRegistered?: (swUrl?: string) => void
-    onRegisterError?: (err: unknown) => void
-  }): {
+    onNeedRefresh?: () => void
+    onOfflineReady?: () => void
+    onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void
+    onRegisteredSW?: (swScriptUrl: string, registration: ServiceWorkerRegistration | undefined) => void
+    onRegisterError?: (error: unknown) => void
+  }
+
+  export function useRegisterSW(options?: RegisterSWOptions): {
     needRefresh: readonly [boolean, React.Dispatch<React.SetStateAction<boolean>>]
-    updateServiceWorker: (reload?: boolean) => Promise<void>
+    offlineReady: readonly [boolean, React.Dispatch<React.SetStateAction<boolean>>]
+    updateServiceWorker: (reloadPage?: boolean) => Promise<void>
   }
 }

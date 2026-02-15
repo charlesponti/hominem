@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 interface UpdateGuardProps {
   children: ReactNode;
@@ -11,14 +12,12 @@ interface UpdateGuardProps {
   appName?: string;
 }
 
+const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
+
 function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: Omit<UpdateGuardProps, 'children'>) {
   void logo;
   void appName;
 
-  const [swState, setSwState] = useState<{
-    needRefresh: boolean;
-    updateServiceWorker: () => Promise<void>;
-  } | null>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [hasStaleData, setHasStaleData] = useState(false);
   const queryClient = useQueryClient();
@@ -27,17 +26,23 @@ function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: Omit<UpdateG
     typeof import.meta.env !== 'undefined' &&
     Boolean(import.meta.env.DEV);
 
-  useEffect(() => {
-    let needRefresh = false;
-    let updateServiceWorker = () => Promise.resolve();
-
-    import('virtual:pwa-register/react').then((module) => {
-      const result = module.useRegisterSW({ immediate: true });
-      needRefresh = result.needRefresh[0];
-      updateServiceWorker = result.updateServiceWorker;
-      setSwState({ needRefresh, updateServiceWorker });
-    });
-  }, []);
+  const {
+    offlineReady: [offlineReady, setOfflineReady],
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    immediate: true,
+    onRegistered(registration) {
+      if (registration) {
+        setInterval(() => {
+          void registration.update();
+        }, UPDATE_INTERVAL_MS);
+      }
+    },
+    onRegisterError(error) {
+      console.error('Service worker registration error:', error);
+    },
+  });
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -81,6 +86,11 @@ function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: Omit<UpdateG
     };
   }, [queryClient]);
 
+  const closePrompt = () => {
+    setOfflineReady(false);
+    setNeedRefresh(false);
+  };
+
   const offlineMessage = useMemo(() => {
     if (isOnline) {
       return null;
@@ -99,16 +109,27 @@ function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: Omit<UpdateG
           </div>
         </div>
       )}
-      {swState?.needRefresh && !isDev && (
+      {(offlineReady || needRefresh) && !isDev && (
         <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
           <div className="flex items-center gap-3 rounded-full border border-border bg-background px-4 py-2 shadow-lg">
-            <span className="text-sm text-foreground">Update available</span>
+            <span className="text-sm text-foreground">
+              {offlineReady ? 'App ready to work offline' : 'New content available'}
+            </span>
+            {needRefresh && (
+              <button
+                type="button"
+                onClick={() => updateServiceWorker(true)}
+                className="text-sm font-semibold text-primary"
+              >
+                Refresh
+              </button>
+            )}
             <button
               type="button"
-              onClick={() => swState.updateServiceWorker()}
-              className="text-sm font-semibold text-primary"
+              onClick={closePrompt}
+              className="text-sm text-foreground/70"
             >
-              Refresh
+              Close
             </button>
           </div>
         </div>
