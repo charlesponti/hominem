@@ -125,7 +125,18 @@ logger.error('[places.create] unexpected error', { error: err });
 
 - `1f846f39` - fix: replace console.* with structured logger
 - `bb37d911` - fix: replace console with structured logger in services/api
+- `8297f9d3` - fix: replace remaining console.* in hono-rpc (context middleware, plaid lib)
 - `f35a2fa5` - docs: mark error handling plan as complete
+
+## Remaining console.* (Appropriate)
+
+The following are intentionally kept as `console.*` because they're appropriate for their context:
+
+| File | Count | Reason |
+|------|-------|--------|
+| `services/api/src/lib/sentry.ts` | 2 | Sentry init messages before logger ready |
+| `services/api/src/index.ts` | 1 | Server startup message (one-time) |
+| `services/workers/src/index.ts` | 2 | Worker uncaught exception handlers (process-level) |
 
 ## Dependencies
 
