@@ -1,6 +1,8 @@
 import crypto from 'node:crypto';
 import { Configuration, CountryCode, PlaidApi, PlaidEnvironments, Products } from 'plaid';
 
+import { logger } from '@hominem/utils/logger';
+
 import { env } from './env';
 
 const configuration = new Configuration({
@@ -30,7 +32,7 @@ export function verifyPlaidWebhookSignature(
 ): boolean {
   // Skip verification if no webhook secret is provided
   if (!env.PLAID_WEBHOOK_SECRET) {
-    console.warn('PLAID_WEBHOOK_SECRET not set, skipping webhook signature verification');
+    logger.warn('PLAID_WEBHOOK_SECRET not set, skipping webhook signature verification');
     return true;
   }
 
@@ -38,7 +40,7 @@ export function verifyPlaidWebhookSignature(
     const signatureHeader = headers['plaid-webhook-signature'];
 
     if (!signatureHeader || Array.isArray(signatureHeader)) {
-      console.warn('Invalid Plaid webhook signature header');
+      logger.warn('Invalid Plaid webhook signature header');
       return false;
     }
 
@@ -57,7 +59,7 @@ export function verifyPlaidWebhookSignature(
     const givenSignature = signatureMap.v1;
 
     if (!(receivedSignature && givenSignature)) {
-      console.warn('Missing required signature components');
+      logger.warn('Missing required signature components');
       return false;
     }
 
@@ -69,7 +71,7 @@ export function verifyPlaidWebhookSignature(
 
     return crypto.timingSafeEqual(Buffer.from(givenSignature), Buffer.from(expectedSignature));
   } catch (error) {
-    console.error('Error verifying webhook signature:', error);
+    logger.error('Error verifying webhook signature', { error });
     return false;
   }
 }

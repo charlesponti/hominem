@@ -2,6 +2,7 @@ import type { Queues } from '@hominem/services';
 
 import { getServerAuth } from '@hominem/auth/server';
 import { getOrCreateQueues } from '@hominem/services/queues';
+import { logger } from '@hominem/utils/logger';
 import { createMiddleware } from 'hono/factory';
 
 import type { AppContext } from './auth';
@@ -92,7 +93,7 @@ export const contextMiddleware = createMiddleware<AppContext>(async (c, next) =>
       // For now, services handle their own Supabase clients
     }
   } catch (error) {
-    console.error('Error in context middleware:', error);
+    logger.error('Error in context middleware', { error });
     // Continue without auth - let authMiddleware handle unauthorized access
   }
 
