@@ -1,7 +1,10 @@
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
+
 import type { HominemUser } from '@hominem/auth/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { app as honoRpcApp } from '@hominem/hono-rpc';
+import { isServiceError } from '@hominem/services';
 import { redis } from '@hominem/services/redis';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { Queue } from 'bullmq';
@@ -11,6 +14,7 @@ import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 
 import { env } from './env';
+import { initSentry, sentryMiddleware } from './lib/sentry';
 import { supabaseMiddleware } from './middleware/supabase';
 import { aiRoutes } from './routes/ai';
 import { authRoutes } from './routes/auth';
@@ -82,6 +86,9 @@ export function createServer() {
   // Authentication middleware
   app.use('*', supabaseMiddleware());
 
+  // Sentry request tracking
+  app.use('*', sentryMiddleware());
+
   // RPC routes deprecated - using Hono RPC instead
 
   // Register Hono RPC routes
@@ -110,10 +117,36 @@ export function createServer() {
     });
   });
 
+  // Global error handler - must be after routes
+  app.onError((err, c) => {
+    console.error('[services/api] Error:', err);
+
+    if (isServiceError(err)) {
+      return c.json(
+        {
+          error: err.code.toLowerCase(),
+          message: err.message,
+        },
+        err.statusCode as ContentfulStatusCode,
+      );
+    }
+
+    return c.json(
+      {
+        error: 'internal_error',
+        message: 'An unexpected error occurred',
+      },
+      500,
+    );
+  });
+
   return app;
 }
 
 export async function startServer() {
+  // Initialize Sentry first
+  initSentry();
+
   const app = createServer();
   if (!app) {
     console.error('Failed to create server');
