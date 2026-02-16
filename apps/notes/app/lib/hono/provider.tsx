@@ -18,10 +18,7 @@ import { getQueryClient } from '~/lib/get-query-client';
 export function HonoProvider({ children }: { children: ReactNode }) {
   const { supabase } = useSupabaseAuthContext();
   const queryClient = getQueryClient();
-  const baseUrl =
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:3000';
+  const baseUrl = import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:4040';
 
   return (
     <BaseHonoProvider

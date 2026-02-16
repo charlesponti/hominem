@@ -9,13 +9,7 @@ export function createServerHonoClient(
   accessToken?: string,
   request?: Request,
 ): HonoClientInstance {
-  let url: string;
-  if (request) {
-    const requestUrl = new URL(request.url);
-    url = requestUrl.origin;
-  } else {
-    url = import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:4040';
-  }
+  const baseUrl = import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:4040';
 
   const headers: Record<string, string> = {};
   if (accessToken) {
@@ -26,7 +20,7 @@ export function createServerHonoClient(
     headers.cookie = cookieHeader;
   }
 
-  const client = createHonoClient(url, {
+  const client = createHonoClient(baseUrl, {
     headers,
   });
 

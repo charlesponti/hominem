@@ -1,12 +1,11 @@
 import { index, layout, type RouteConfig, route } from '@react-router/dev/routes';
 
 export default [
-  // API Routes
+  // API Routes (specific handlers)
   route('api/upload', 'routes/api.upload.ts'),
   route('api/transcribe', 'routes/api.transcribe.ts'),
   route('api/speech', 'routes/api.speech.ts'),
   route('api/auth/google', 'routes/api/auth/google.ts'),
-  route('api/*', 'routes/api.proxy.ts'),
 
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
