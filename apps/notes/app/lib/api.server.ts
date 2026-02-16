@@ -9,7 +9,11 @@ export function createServerHonoClient(
   accessToken?: string,
   request?: Request,
 ): HonoClientInstance {
-  const baseUrl = import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:4040';
+  // Support both Vite env (client/build) and process.env (server/runtime)
+  const baseUrl =
+    import.meta.env.VITE_PUBLIC_API_URL ||
+    (typeof process !== 'undefined' && process.env.VITE_PUBLIC_API_URL) ||
+    'http://localhost:4040';
 
   const headers: Record<string, string> = {};
   if (accessToken) {
