@@ -20,11 +20,37 @@ const DEFAULT_LOCATION = {
   longitude: -122.4194,
 };
 
-const formatDistance = (distance: { km: number; miles: number }) => {
-  if (distance.km < 1) {
-    return `${Math.round(distance.km * 1000)}m`;
+const formatDistance = (distance?: number | { km?: number; miles?: number } | null) => {
+  // Support three shapes:
+  // 1) numeric distance in meters (number) — what the API returns
+  // 2) object with `km` (preferred)
+  // 3) object with `miles`
+  if (typeof distance === 'number' && Number.isFinite(distance)) {
+    const km = distance / 1000;
+    if (km < 1) {
+      return `${Math.round(km * 1000)}m`;
+    }
+    return `${km.toFixed(1)}km`;
   }
-  return `${distance.km.toFixed(1)}km`;
+
+  // If it's an object, prefer km then miles
+  const kmFromObj = (distance as { km?: number } | null)?.km;
+  if (typeof kmFromObj === 'number' && Number.isFinite(kmFromObj)) {
+    if (kmFromObj < 1) {
+      return `${Math.round(kmFromObj * 1000)}m`;
+    }
+    return `${kmFromObj.toFixed(1)}km`;
+  }
+
+  const milesFromObj = (distance as { miles?: number } | null)?.miles;
+  if (typeof milesFromObj === 'number' && Number.isFinite(milesFromObj)) {
+    if (milesFromObj < 1) {
+      return `${Math.round(milesFromObj * 1609)}m`;
+    }
+    return `${milesFromObj.toFixed(1)}mi`;
+  }
+
+  return '—';
 };
 
 export default function PlacesNearby({
