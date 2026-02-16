@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { env } from '~/lib/env';
+import { clientEnv } from '~/lib/env';
 
 type Props = {
   latitude: number;
@@ -10,7 +10,7 @@ type Props = {
 };
 
 const PlaceMap = ({ latitude, longitude, name, googleMapsId: _googleMapsId }: Props) => {
-  const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${env.VITE_GOOGLE_API_KEY}&q=${encodeURIComponent(name)}&center=${latitude},${longitude}&zoom=15`;
+  const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${clientEnv.VITE_GOOGLE_API_KEY}&q=${encodeURIComponent(name)}&center=${latitude},${longitude}&zoom=15`;
 
   return (
     <div className="relative group">

@@ -8,7 +8,7 @@ import { data } from 'react-router';
 
 import ReceivedInviteItem from '~/components/ReceivedInviteItem';
 import { getAuthState, getServerSession } from '~/lib/auth.server';
-import { env } from '~/lib/env';
+import { clientEnv } from '~/lib/env';
 import { createServerHonoClient } from '~/lib/api.server';
 import { buildInvitePreview } from '~/lib/services/invite-preview.server';
 
@@ -109,7 +109,7 @@ export function meta(args: Route.MetaArgs) {
 
   // Build URL
   const fullPath = args.location.pathname + args.location.search;
-  const url = new URL(fullPath, env.VITE_APP_BASE_URL);
+  const url = new URL(fullPath, clientEnv.VITE_APP_BASE_URL);
 
   // Default meta tags
   const defaultTags = [
