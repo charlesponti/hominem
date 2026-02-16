@@ -17,12 +17,12 @@ describe('createClientEnv', () => {
 describe('createServerEnv', () => {
   it('should throw EnvValidationError for invalid env', () => {
     const schema = z.object({
-      DATABASE_URL: z.string().url(),
+      TEST_VAR_THAT_DOES_NOT_EXIST_XYZ123: z.string(),
     });
 
     const env = createServerEnv(schema, 'test');
 
-    expect(() => env.DATABASE_URL).toThrow(EnvValidationError);
+    expect(() => env.TEST_VAR_THAT_DOES_NOT_EXIST_XYZ123).toThrow(EnvValidationError);
   });
 });
 
