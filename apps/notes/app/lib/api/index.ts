@@ -1,7 +1,7 @@
 /**
- * Hono RPC Client Setup for Notes App
+ * API Client Setup for Notes App
  *
- * Re-exports Hono client utilities for use throughout the app
+ * Exports API client utilities for use throughout the app
  */
 
 export { HonoProvider } from './provider';

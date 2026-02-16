@@ -10,7 +10,7 @@ import { useTasksList, useUpdateTaskStatus, useDeleteTask } from '~/hooks/use-ta
 import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
 import { useGoals } from '~/lib/hooks/use-goals';
-import { createServerHonoClient } from '~/lib/rpc/server';
+import { createServerHonoClient } from '~/lib/api.server';
 
 import { TaskCreateForm } from './tasks/components/task-create-form';
 import { TaskItem } from './tasks/components/task-item';

@@ -2,7 +2,7 @@ import type { SpendingTimeSeriesOutput } from '@hominem/hono-rpc/types/finance.t
 
 import { format } from 'date-fns';
 
-import { useHonoQuery } from '../hono';
+import { useHonoQuery } from '~/lib/api';
 
 interface TimeSeriesParams {
   dateFrom?: Date | undefined;

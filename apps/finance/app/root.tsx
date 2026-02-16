@@ -18,7 +18,7 @@ import {
 import type { Route } from './+types/root';
 
 import { authConfig, getServerSession } from './lib/auth.server';
-import { HonoProvider } from './lib/hono';
+import { HonoProvider } from './lib/api';
 import './globals.css';
 
 export async function loader({ request }: Route.LoaderArgs) {

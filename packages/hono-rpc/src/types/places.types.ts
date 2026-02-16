@@ -293,7 +293,7 @@ export type PlaceGetNearbyFromListsOutput = Array<{
   distance: {
     km: number;
     miles: number;
-  };
+  } | null;
   lists: Array<{
     id: string;
     name: string;

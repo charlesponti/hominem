@@ -3,7 +3,7 @@ import type {
   RunwayCalculateOutput,
 } from '@hominem/hono-rpc/types/finance.types';
 
-import { useHonoMutation } from '../hono';
+import { useHonoMutation } from '~/lib/api';
 
 export const useCalculateRunway = () => {
   return useHonoMutation<RunwayCalculateOutput, RunwayCalculateInput>(async (client, variables) => {

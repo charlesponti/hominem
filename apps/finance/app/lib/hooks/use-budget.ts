@@ -16,7 +16,7 @@ import type {
   BudgetCategoriesListWithSpendingOutput,
 } from '@hominem/hono-rpc/types/finance.types';
 
-import { useHonoQuery, useHonoMutation, useHonoUtils } from '~/lib/hono';
+import { useHonoQuery, useHonoMutation, useHonoUtils } from '~/lib/api';
 
 export const useTransactionCategories = () => {
   const query = useHonoQuery<TransactionCategoryAnalysisOutput>(

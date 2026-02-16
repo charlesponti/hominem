@@ -17,7 +17,7 @@ import PlaceStatus from '~/components/places/PlaceStatus';
 import PlaceWebsite from '~/components/places/PlaceWebsite';
 import { VisitHistory } from '~/components/places/VisitHistory';
 import { requireAuth } from '~/lib/guards';
-import { createServerHonoClient } from '~/lib/rpc/server';
+import { createServerHonoClient } from '~/lib/api.server';
 
 import type { Route } from './+types/places.$id';
 

@@ -7,7 +7,7 @@ import type {
   InstitutionsListOutput,
 } from '@hominem/hono-rpc/types/finance.types';
 
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '~/lib/hono';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '~/lib/api';
 
 /**
  * Hook for creating a new institution with automatic cache invalidation

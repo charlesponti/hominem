@@ -4,7 +4,7 @@ import { Card, CardContent } from '@hominem/ui/components/ui/card';
 import { Edit, Trash2, X } from 'lucide-react';
 import { useMemo } from 'react';
 
-import type { Note } from '~/lib/rpc/notes-types';
+import type { NoteOutput as Note } from '@hominem/hono-rpc/types/notes.types';
 
 interface NoteCardProps {
   note: Note;

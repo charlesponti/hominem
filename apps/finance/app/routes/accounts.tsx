@@ -19,11 +19,30 @@ import {
   EyeOff,
   RefreshCcw,
 } from 'lucide-react';
+import { redirect } from 'react-router';
 import { useState } from 'react';
 
 import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link';
 import { RouteLink } from '~/components/route-link';
 import { useAllAccounts } from '~/lib/hooks/use-finance-data';
+import { requireAuth } from '~/lib/guards';
+import { createServerHonoClient } from '~/lib/api.server';
+
+import type { Route } from './+types/accounts';
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const authResult = await requireAuth(request);
+  if (!authResult.user) {
+    return redirect('/auth/signin');
+  }
+
+  const client = createServerHonoClient(authResult.user.id, request);
+
+  const res = await client.api.finance.accounts.all.$post({ json: {} });
+  const data = res.ok ? await res.json() : { accounts: [], connections: [] };
+
+  return data;
+}
 
 // Simple account card for overview
 function AccountCard({
@@ -111,8 +130,12 @@ function AccountCard({
   );
 }
 
-export default function AccountsPage() {
-  const allAccountsQuery = useAllAccounts();
+export default function AccountsPage({ loaderData }: Route.ComponentProps) {
+  const { accounts: initialAccounts, connections: initialConnections } = loaderData;
+
+  const allAccountsQuery = useAllAccounts({
+    initialData: { accounts: initialAccounts, connections: initialConnections },
+  });
 
   const handleConnectionSuccess = (institutionName: string) => {
     toast({

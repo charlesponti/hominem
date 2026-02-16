@@ -1,7 +1,7 @@
 import { Sparkles } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import type { Note } from '~/lib/rpc/notes-types';
+import type { NoteOutput as Note } from '@hominem/hono-rpc/types/notes.types';
 
 import { useDeleteNote, useNotesList, useUpdateNote } from '~/hooks/use-notes';
 

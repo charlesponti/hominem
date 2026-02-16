@@ -16,7 +16,7 @@ import { MapInteractionProvider } from '~/contexts/map-interaction-context';
 import { useGeolocation } from '~/hooks/useGeolocation';
 import { requireAuth } from '~/lib/guards';
 import { useListById } from '~/lib/hooks/use-lists';
-import { createServerHonoClient } from '~/lib/rpc/server';
+import { createServerHonoClient } from '~/lib/api.server';
 
 import type { Route } from './+types/lists.$id';
 

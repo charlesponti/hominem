@@ -1,9 +1,32 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import { Skeleton } from '@hominem/ui/components/ui/skeleton';
-import { useParams } from 'react-router';
+import { redirect, useParams } from 'react-router';
 
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
 import { formatCurrency } from '~/lib/number.utils';
+import { requireAuth } from '~/lib/guards';
+import { createServerHonoClient } from '~/lib/api.server';
+
+import type { Route } from './+types/analytics.monthly.$month';
+
+export async function loader({ request, params }: Route.LoaderArgs) {
+  const { month } = params;
+  if (!month) {
+    return redirect('/analytics');
+  }
+
+  const authResult = await requireAuth(request);
+  if (!authResult.user) {
+    return redirect('/auth/signin');
+  }
+
+  const client = createServerHonoClient(authResult.user.id, request);
+
+  const res = await client.api.finance.analyze['monthly-stats'].$post({ json: { month } });
+  const stats = res.ok ? await res.json() : null;
+
+  return { stats };
+}
 
 // Helper function to format month string (e.g., "2024-05" to "May 2024")
 function formatMonthDisplay(monthStr: string | undefined) {
@@ -13,9 +36,10 @@ function formatMonthDisplay(monthStr: string | undefined) {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
-export default function MonthlyAnalyticsPage() {
+export default function MonthlyAnalyticsPage({ loaderData }: Route.ComponentProps) {
   const { month } = useParams<{ month: string }>();
-  const { stats, isLoading, error } = useMonthlyStats(month);
+  const { stats: initialStats } = loaderData;
+  const { stats, isLoading, error } = useMonthlyStats(month, { initialData: initialStats });
 
   const formattedMonth = formatMonthDisplay(month);
 

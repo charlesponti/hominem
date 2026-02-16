@@ -5,7 +5,7 @@ import type {
 
 import { format } from 'date-fns';
 
-import { useHonoQuery } from '../hono';
+import { useHonoQuery } from '~/lib/api';
 
 interface CategoryBreakdownParams {
   from?: Date | undefined;

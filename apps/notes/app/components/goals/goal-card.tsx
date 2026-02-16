@@ -4,7 +4,7 @@ import { Button } from '@hominem/ui';
 import { Progress } from '@hominem/ui/components/ui/progress';
 import { CalendarCheck, Edit, Trash2 } from 'lucide-react';
 
-import type { Goal } from '~/lib/rpc/notes-types';
+import type { GoalOutput as Goal } from '@hominem/hono-rpc/types/goals.types';
 
 import { PriorityBadge } from './priority-badge';
 import { StatusBadge } from './status-badge';

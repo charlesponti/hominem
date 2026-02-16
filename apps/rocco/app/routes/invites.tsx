@@ -9,7 +9,7 @@ import { data } from 'react-router';
 import ReceivedInviteItem from '~/components/ReceivedInviteItem';
 import { getAuthState, getServerSession } from '~/lib/auth.server';
 import { env } from '~/lib/env';
-import { createServerHonoClient } from '~/lib/rpc/server';
+import { createServerHonoClient } from '~/lib/api.server';
 import { buildInvitePreview } from '~/lib/services/invite-preview.server';
 
 import type { Route } from './+types/invites';

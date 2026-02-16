@@ -3,7 +3,7 @@ import type { SortOption } from '@hominem/ui/hooks';
 import { format } from 'date-fns';
 import { useMemo } from 'react';
 
-import { useHonoQuery } from '~/lib/hono';
+import { useHonoQuery } from '~/lib/api';
 
 export interface FilterArgs {
   accountId?: string | undefined;
@@ -12,7 +12,11 @@ export interface FilterArgs {
   description?: string | undefined;
 }
 
-export const useFinanceAccounts = () => {
+export interface UseFinanceAccountsOptions {
+  initialData?: any;
+}
+
+export const useFinanceAccounts = ({ initialData }: UseFinanceAccountsOptions = {}) => {
   const { data, isLoading, error, refetch } = useHonoQuery(
     ['finance', 'accounts', 'list'],
     async (client) => {
@@ -21,6 +25,7 @@ export const useFinanceAccounts = () => {
       });
       return res.json();
     },
+    initialData ? { initialData: initialData as any } : {},
   );
 
   const accountsData = (Array.isArray(data) ? data : []) as typeof data;
@@ -48,11 +53,15 @@ export const useFinancialInstitutions = () =>
   });
 
 // Hook that adds value by transforming data for unified view
-export function useAllAccounts() {
-  const allAccountsQuery = useHonoQuery(['finance', 'accounts', 'all'], async (client) => {
-    const res = await client.api.finance.accounts.all.$post({ json: {} });
-    return res.json();
-  });
+export function useAllAccounts(options?: { initialData?: any }) {
+  const allAccountsQuery = useHonoQuery(
+    ['finance', 'accounts', 'all'],
+    async (client) => {
+      const res = await client.api.finance.accounts.all.$post({ json: {} });
+      return res.json();
+    },
+    options?.initialData ? { initialData: options.initialData } : {},
+  );
 
   const result = allAccountsQuery.data;
 
@@ -65,7 +74,7 @@ export function useAllAccounts() {
   };
 }
 
-export function useAccountById(id: string) {
+export function useAccountById(id: string, options?: { initialData?: any }) {
   const accountQuery = useHonoQuery(
     ['finance', 'accounts', 'get', id],
     async (client) => {
@@ -74,7 +83,10 @@ export function useAccountById(id: string) {
       });
       return res.json();
     },
-    { enabled: !!id },
+    {
+      enabled: !!id,
+      ...(options?.initialData ? { initialData: options.initialData } : {}),
+    },
   );
 
   const account = accountQuery.data;
@@ -90,6 +102,7 @@ export interface UseFinanceTransactionsOptions {
   sortOptions?: SortOption[];
   page?: number;
   limit?: number;
+  initialData?: any;
 }
 
 // Hook that adds value through complex state management and data transformation
@@ -98,6 +111,7 @@ export function useFinanceTransactions({
   sortOptions = [{ field: 'date', direction: 'desc' }],
   page = 0,
   limit = 25,
+  initialData,
 }: UseFinanceTransactionsOptions = {}) {
   // Convert sort options to API format
   const sortBy = useMemo(() => {
@@ -109,6 +123,14 @@ export function useFinanceTransactions({
   }, [sortOptions]);
 
   const offset = page * limit;
+
+  const queryOptions: any = {
+    staleTime: 1 * 60 * 1000,
+  };
+  
+  if (initialData) {
+    queryOptions.initialData = initialData;
+  }
 
   const query = useHonoQuery(
     [
@@ -138,9 +160,7 @@ export function useFinanceTransactions({
       });
       return res.json();
     },
-    {
-      staleTime: 1 * 60 * 1000,
-    },
+    queryOptions,
   );
 
   const result = query.data;

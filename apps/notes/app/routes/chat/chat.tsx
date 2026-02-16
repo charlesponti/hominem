@@ -1,7 +1,7 @@
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
 import { getServerSession } from '~/lib/auth.server';
-import { createServerHonoClient } from '~/lib/rpc/server';
+import { createServerHonoClient } from '~/lib/api.server';
 import { getOrCreateChat } from '~/lib/utils/chat-loader-utils';
 import { ChatLoadError, LoaderError } from '~/lib/utils/errors';
 

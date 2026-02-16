@@ -1,6 +1,6 @@
 import type { MonthlyStatsOutput } from '@hominem/hono-rpc/types/finance.types';
 
-import { useHonoQuery } from '../hono';
+import { useHonoQuery } from '~/lib/api';
 
 /**
  * Custom hook to fetch monthly finance statistics using Hono RPC

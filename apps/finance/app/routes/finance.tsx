@@ -1,5 +1,6 @@
 import { useSort } from '@hominem/ui/hooks';
 import { useEffect, useState } from 'react';
+import { redirect } from 'react-router';
 
 import { PaginationControls } from '~/components/finance/pagination-controls';
 import { TransactionFilters } from '~/components/finance/transaction-filters';
@@ -10,8 +11,35 @@ import {
   useFinanceTransactions,
 } from '~/lib/hooks/use-finance-data';
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
+import { requireAuth } from '~/lib/guards';
+import { createServerHonoClient } from '~/lib/api.server';
 
-export default function TransactionsPage() {
+import type { Route } from './+types/finance';
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const authResult = await requireAuth(request);
+  if (!authResult.user) {
+    return redirect('/auth/signin');
+  }
+
+  const client = createServerHonoClient(authResult.user.id, request);
+
+  const [accountsRes, transactionsRes] = await Promise.all([
+    client.api.finance.accounts.list.$post({ json: {} }),
+    client.api.finance.transactions.list.$post({ json: { limit: 25 } }),
+  ]);
+
+  const accounts = accountsRes.ok ? await accountsRes.json() : [];
+  const transactions = transactionsRes.ok ? await transactionsRes.json() : [];
+
+  return {
+    accounts,
+    transactions,
+  };
+}
+
+export default function TransactionsPage({ loaderData }: Route.ComponentProps) {
+  const { accounts: initialAccounts, transactions: initialTransactions } = loaderData;
   const { selectedAccount } = useSelectedAccount();
   const [currentFilters, setCurrentFilters] = useState<FilterArgs>({});
   const [searchValue, setSearchValue] = useState('');
@@ -34,7 +62,9 @@ export default function TransactionsPage() {
     isLoading: accountsLoading,
     error: accountsError,
     refetch: refetchAccounts,
-  } = useFinanceAccounts();
+  } = useFinanceAccounts({
+    initialData: initialAccounts,
+  });
 
   const filters = {
     ...currentFilters,
@@ -52,6 +82,7 @@ export default function TransactionsPage() {
     sortOptions,
     page,
     limit,
+    initialData: initialTransactions,
   });
 
   const loading = accountsLoading || transactionsLoading;

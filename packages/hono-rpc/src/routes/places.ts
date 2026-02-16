@@ -65,10 +65,46 @@ import {
 /**
  * Transform place from service layer to API contract
  * Converts Date objects to ISO strings for API response
+ * Normalizes `distance` so the API always returns either `null` or an object of the form:
+ *   { km: number, miles: number }
+ * The service layer may sometimes return a plain number (meters) or an object with km/miles.
+ * This function converts those shapes into a stable API contract.
  */
 function transformPlaceToApiFormat(place: any): any {
+  const rawDistance = place.distance;
+  let distance: { km: number; miles: number } | null = null;
+
+  if (rawDistance == null) {
+    distance = null;
+  } else if (typeof rawDistance === 'number' && Number.isFinite(rawDistance)) {
+    // Service may provide distance in meters as a plain number — convert to km/miles
+    distance = {
+      km: rawDistance / 1000,
+      miles: rawDistance / 1609.344,
+    };
+  } else if (typeof rawDistance === 'object') {
+    const kmVal = rawDistance.km;
+    const milesVal = rawDistance.miles;
+
+    const hasKm = typeof kmVal === 'number' && Number.isFinite(kmVal);
+    const hasMiles = typeof milesVal === 'number' && Number.isFinite(milesVal);
+
+    if (hasKm && hasMiles) {
+      distance = { km: kmVal, miles: milesVal };
+    } else if (hasKm) {
+      distance = { km: kmVal, miles: kmVal * 0.621371 };
+    } else if (hasMiles) {
+      distance = { km: milesVal / 0.621371, miles: milesVal };
+    } else {
+      distance = null;
+    }
+  } else {
+    distance = null;
+  }
+
   return {
     ...place,
+    distance,
     createdAt: place.createdAt instanceof Date ? place.createdAt.toISOString() : place.createdAt,
     updatedAt: place.updatedAt instanceof Date ? place.updatedAt.toISOString() : place.updatedAt,
   };

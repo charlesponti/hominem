@@ -1,8 +1,8 @@
 /**
  * Places utility hooks and helpers
  *
- * These are re-exports and wrappers around the core Hono hooks
- * defined in ~/lib/hono/hooks/use-places.ts
+ * These are re-exports and wrappers around the core API hooks
+ * defined in ~/lib/api/hooks/use-places.ts
  */
 
 import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete';

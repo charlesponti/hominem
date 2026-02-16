@@ -4,16 +4,51 @@ import { Badge } from '@hominem/ui/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import { ArrowLeft, RefreshCcw } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useParams } from 'react-router';
+import { redirect, useParams } from 'react-router';
 
 import { AccountHeader } from '~/components/accounts/account-header';
 import { AccountSpendingChart } from '~/components/accounts/account-spending-chart';
 import { RouteLink } from '~/components/route-link';
 import { TransactionsList } from '~/components/transactions/transactions-list';
 import { useAccountById, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
+import { requireAuth } from '~/lib/guards';
+import { createServerHonoClient } from '~/lib/api.server';
 
-export default function AccountDetailsPage() {
+import type { Route } from './+types/accounts.$id';
+
+export async function loader({ request, params }: Route.LoaderArgs) {
+  const { id } = params;
+  if (!id) {
+    return redirect('/accounts');
+  }
+
+  const authResult = await requireAuth(request);
+  if (!authResult.user) {
+    return redirect('/auth/signin');
+  }
+
+  const client = createServerHonoClient(authResult.user.id, request);
+
+  const [accountRes, transactionsRes] = await Promise.all([
+    client.api.finance.accounts.get.$post({ json: { id } }),
+    client.api.finance.transactions.list.$post({
+      json: { account: id, limit: 50 },
+    }),
+  ]);
+
+  const account = accountRes.ok ? await accountRes.json() : null;
+  const transactionsData = transactionsRes.ok ? await transactionsRes.json() : { data: [], filteredCount: 0 };
+
+  return {
+    account,
+    transactions: transactionsData.data,
+    totalTransactions: transactionsData.filteredCount,
+  };
+}
+
+export default function AccountDetailsPage({ loaderData }: Route.ComponentProps) {
   const { id } = useParams() as { id: string };
+  const { account: initialAccount, transactions: initialTransactions, totalTransactions: initialTotal } = loaderData;
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
 
   // Get account details
@@ -22,7 +57,7 @@ export default function AccountDetailsPage() {
     isLoading: accountLoading,
     error: accountError,
     refetch: refetchAccount,
-  } = useAccountById(id);
+  } = useAccountById(id, { initialData: initialAccount });
 
   // Create a map with a single account for the TransactionsList component
   const accountsMap = useMemo(() => {
@@ -36,10 +71,10 @@ export default function AccountDetailsPage() {
     isLoading: transactionsLoading,
     error: transactionsError,
     refetch: refetchTransactions,
-    totalTransactions,
   } = useFinanceTransactions({
     filters: { accountId: id },
     limit: 50,
+    initialData: initialTransactions,
   });
 
   const isLoading = accountLoading || transactionsLoading;
@@ -127,13 +162,13 @@ export default function AccountDetailsPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Transactions</h2>
-          <Badge variant="secondary">{totalTransactions} total</Badge>
+          <Badge variant="secondary">{initialTotal} total</Badge>
         </div>
 
         <TransactionsList
           loading={transactionsLoading}
           error={transactionsError}
-          transactions={transactions}
+          transactions={transactions.length > 0 ? transactions : initialTransactions || []}
           accountsMap={accountsMap}
         />
       </div>

@@ -7,7 +7,7 @@ import type {
   AccountDeleteOutput,
 } from '@hominem/hono-rpc/types/finance.types';
 
-import { useHonoMutation, useHonoUtils } from '~/lib/hono';
+import { useHonoMutation, useHonoUtils } from '~/lib/api';
 
 export const useCreateAccount = () => {
   const utils = useHonoUtils();

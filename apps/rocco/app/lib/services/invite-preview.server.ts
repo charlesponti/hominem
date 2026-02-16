@@ -1,6 +1,6 @@
 import type { InvitesPreviewOutput } from '@hominem/hono-rpc/types/invites.types';
 
-import { createServerHonoClient } from '~/lib/rpc/server';
+import { createServerHonoClient } from '~/lib/api.server';
 
 /**
  * Builds preview data for an invite when the user is not authenticated.

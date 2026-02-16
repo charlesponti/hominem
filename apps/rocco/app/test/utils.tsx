@@ -168,7 +168,7 @@ vi.mock('~/lib/hooks/use-user', () => ({
 }));
 
 // Mock Hono hooks
-vi.mock('~/lib/hono', () => ({
+vi.mock('~/lib/api', () => ({
   useLists: vi.fn(() => ({ data: [], isLoading: false, error: null })),
   useListById: vi.fn(() => ({ data: null, isLoading: false, error: null })),
   useCreateList: vi.fn(() => createUseMutationQuery()),
@@ -190,7 +190,7 @@ vi.mock('~/lib/hono', () => ({
 
 const MockHonoProvider = ({ children }: { children: ReactNode }) => <>{children}</>;
 
-vi.mock('~/lib/hono/provider', () => ({
+vi.mock('~/lib/api/provider', () => ({
   HonoProvider: MockHonoProvider,
 }));
 

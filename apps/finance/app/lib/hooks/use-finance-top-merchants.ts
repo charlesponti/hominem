@@ -1,6 +1,6 @@
 import type { TopMerchantsOutput } from '@hominem/hono-rpc/types/finance.types';
 
-import { useHonoQuery } from '../hono';
+import { useHonoQuery } from '~/lib/api';
 
 type UseFinanceTopMerchantsParams = {
   from?: string | undefined;

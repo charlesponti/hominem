@@ -17,7 +17,7 @@ import type { Route } from './+types/root';
 
 import ErrorBoundary from './components/ErrorBoundary';
 import './globals.css';
-import { HonoProvider } from './lib/hono/provider';
+import { HonoProvider } from './lib/api';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { getServerSession } = await import('./lib/auth.server');

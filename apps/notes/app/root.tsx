@@ -22,7 +22,7 @@ import type { Route } from './+types/root';
 import './globals.css';
 import { authConfig, getServerSession } from './lib/auth.server';
 import './lib/i18n';
-import { RPCProvider } from './lib/rpc';
+import { HonoProvider } from './lib/api';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { session, headers } = await getServerSession(request);
@@ -98,13 +98,13 @@ export default function App({ loaderData }: Route.ComponentProps) {
       config={supabaseEnv}
       onAuthEvent={handleAuthEvent}
     >
-      <RPCProvider>
+      <HonoProvider>
         <FeatureFlagsProvider>
           <UpdateGuard logo="/logo.png" appName="Notes">
             <Outlet />
           </UpdateGuard>
         </FeatureFlagsProvider>
-      </RPCProvider>
+      </HonoProvider>
     </SupabaseAuthProvider>
   );
 }
