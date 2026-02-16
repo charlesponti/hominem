@@ -2,6 +2,7 @@ export default [
   './apps/finance/vitest.config.ts',
   './apps/notes/vitest.config.ts',
   './apps/rocco/vitest.config.ts',
+  './packages/env/vitest.config.ts',
   './packages/ui/vitest.config.ts',
   './packages/invites/vitest.config.ts',
   './packages/utils/vitest.config.mts',

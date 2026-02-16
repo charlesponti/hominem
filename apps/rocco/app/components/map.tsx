@@ -16,6 +16,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Place, PlaceLocation } from '~/lib/types';
 
 import { useMapInteraction } from '~/contexts/map-interaction-context';
+import { clientEnv } from '~/lib/env';
 import { endTrace, startTrace } from '~/lib/performance/trace';
 import { cn } from '~/lib/utils';
 
@@ -159,7 +160,7 @@ const RoccoMapContent = ({
 
   // Get mapId from prop, env variable, or use default
   const effectiveMapId = useMemo(
-    () => mapId || import.meta.env.VITE_GOOGLE_MAP_ID || 'DEMO_MAP_ID',
+    () => mapId || clientEnv.VITE_GOOGLE_MAP_ID || 'DEMO_MAP_ID',
     [mapId],
   );
 
@@ -355,12 +356,12 @@ const RoccoMapContent = ({
 };
 
 const RoccoMap = (props: RoccoMapProps) => {
-  if (!import.meta.env.VITE_GOOGLE_API_KEY) {
+  if (!clientEnv.VITE_GOOGLE_API_KEY) {
     return <Alert type="error">Google Maps API key is missing.</Alert>;
   }
 
   return (
-    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY} libraries={MAP_LIBRARIES}>
+    <APIProvider apiKey={clientEnv.VITE_GOOGLE_API_KEY} libraries={MAP_LIBRARIES}>
       <RoccoMapContent {...props} />
     </APIProvider>
   );

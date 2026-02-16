@@ -24,8 +24,10 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
       VITE_APP_BASE_URL: "https://example.com"
       VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      VITE_PUBLIC_API_URL: "http://localhost:4040"
       VITE_SUPABASE_URL: "http://localhost:54321"
       VITE_SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+      VITE_SUPABASE_SERVICE_ROLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
     services:
       postgres:
         env:

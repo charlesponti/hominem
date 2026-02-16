@@ -1,6 +1,6 @@
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
-import { env } from '~/lib/env';
+import { serverEnv } from '~/lib/env';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -15,7 +15,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Response('Missing required parameters', { status: 400 });
   }
 
-  const authorizeUrl = new URL('/auth/v1/authorize', env.VITE_SUPABASE_URL);
+  const authorizeUrl = new URL('/auth/v1/authorize', serverEnv.VITE_SUPABASE_URL);
   authorizeUrl.searchParams.set('provider', provider);
   authorizeUrl.searchParams.set('redirect_to', redirectUri);
   authorizeUrl.searchParams.set('code_challenge', codeChallenge);

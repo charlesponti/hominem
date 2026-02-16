@@ -1,15 +1,26 @@
 import * as z from 'zod';
+import { createClientEnv, createServerEnv } from '@hominem/env';
 
-const envSchema = z.object({
-  VITE_APP_BASE_URL: z.string(),
-  VITE_SUPABASE_URL: z.string(),
-  VITE_SUPABASE_ANON_KEY: z.string(),
-  VITE_GOOGLE_API_KEY: z.string(),
+const clientSchema = z.object({
+  VITE_PUBLIC_API_URL: z.string().url(),
+  VITE_SUPABASE_URL: z.string().url(),
+  VITE_SUPABASE_ANON_KEY: z.string().min(1),
+  VITE_APP_BASE_URL: z.string().url(),
+  VITE_GOOGLE_API_KEY: z.string().min(1),
+  VITE_GOOGLE_MAP_ID: z.string().optional().default('DEMO_MAP_ID'),
 });
 
-// Merge import.meta.env (Vite) with process.env as a fallback for test environments
-const mergedEnv = {
-  ...(typeof import.meta !== 'undefined' ? import.meta.env : {}),
-  ...(typeof process !== 'undefined' && process.env ? process.env : {}),
-};
-export const env = envSchema.parse(mergedEnv);
+const serverSchema = z.object({
+  VITE_PUBLIC_API_URL: z.string().url(),
+  VITE_SUPABASE_URL: z.string().url(),
+  VITE_SUPABASE_ANON_KEY: z.string().min(1),
+  VITE_SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  VITE_GOOGLE_API_KEY: z.string().min(1),
+  VITE_APP_BASE_URL: z.string().url(),
+});
+
+export const clientEnv = createClientEnv(clientSchema, 'roccoClient');
+export const serverEnv = createServerEnv(serverSchema, 'roccoServer');
+
+export type ClientEnv = z.infer<typeof clientSchema>;
+export type ServerEnv = z.infer<typeof serverSchema>;

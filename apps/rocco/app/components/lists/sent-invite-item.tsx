@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 
 import type { SentInvite } from '~/lib/types';
 
-import { env } from '~/lib/env';
+import { clientEnv } from '~/lib/env';
 
 import UserAvatar from '../user-avatar';
 import DeleteInviteButton from './delete-invite-button';
@@ -22,7 +22,7 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
 
   const getInviteUrl = useCallback(
     (inviteToken: string) => {
-      const baseUrl = env.VITE_APP_BASE_URL.replace(/\/$/, '');
+      const baseUrl = clientEnv.VITE_APP_BASE_URL.replace(/\/$/, '');
       return `${baseUrl}/invites?token=${inviteToken}&listId=${listId}`;
     },
     [listId],

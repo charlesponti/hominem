@@ -13,9 +13,13 @@ import { createHonoClient } from '@hominem/hono-rpc/client';
  * - Error handling configuration
  */
 
-export function HonoProvider({ children }: { children: ReactNode }) {
+interface HonoProviderProps {
+  children: ReactNode;
+  baseUrl: string;
+}
+
+export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
   const { supabase } = useSupabaseAuthContext();
-  const baseUrl = import.meta.env.VITE_PUBLIC_API_URL || 'http://localhost:4040';
 
   return (
     <BaseHonoProvider
