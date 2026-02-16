@@ -9,18 +9,6 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     },
-    "./client": {
-      "types": "./src/client.ts",
-      "default": "./src/client.ts"
-    },
-    "./server": {
-      "types": "./src/server.ts",
-      "default": "./src/server.ts"
-    },
-    "./schema": {
-      "types": "./src/schema/index.ts",
-      "default": "./src/schema/index.ts"
-    },
     "./package.json": "./package.json"
   },
   "scripts": {
