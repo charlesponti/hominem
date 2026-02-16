@@ -1,5 +1,5 @@
-import type { RoccoServerEnv, NotesServerEnv, FinanceServerEnv } from './schema';
-import { roccoServerSchema, notesServerSchema, financeServerSchema } from './schema';
+import type { BaseServerEnv } from './schema';
+import { baseServerSchema } from './schema';
 
 /**
  * Error class for environment validation failures
@@ -23,7 +23,7 @@ function assertServerContext(): void {
     throw new EnvValidationError(
       'serverEnv can only be used in Node.js/server context. ' +
       'Use clientEnv for browser/client code.',
-      'serverEnv'
+      'baseServerEnv'
     );
   }
 }
@@ -53,7 +53,7 @@ function formatZodError(error: unknown, context: string): EnvValidationError {
 }
 
 /**
- * Creates a validated server environment for a specific app schema
+ * Creates a validated server environment
  */
 function createServerEnv<T>(schema: { parse: (data: unknown) => T }, context: string): T {
   assertServerContext();
@@ -66,31 +66,18 @@ function createServerEnv<T>(schema: { parse: (data: unknown) => T }, context: st
 }
 
 /**
- * Rocco app server environment
- * Use in: apps/rocco server loaders and API routes
+ * Base server environment with shared infrastructure variables
+ * Use in: Simple cases or extend for app-specific needs
+ * 
+ * For app-specific variables, create your own:
+ * ```typescript
+ * import { baseServerSchema } from '@hominem/env/schema';
+ * const mySchema = baseServerSchema.extend({ MY_SECRET: z.string() });
+ * export const serverEnv = mySchema.parse(process.env);
+ * ```
  */
-export const roccoServerEnv: RoccoServerEnv = createServerEnv(roccoServerSchema, 'roccoServerEnv');
+export const baseServerEnv: BaseServerEnv = createServerEnv(baseServerSchema, 'baseServerEnv');
 
-/**
- * Notes app server environment
- * Use in: apps/notes server loaders and API routes
- */
-export const notesServerEnv: NotesServerEnv = createServerEnv(notesServerSchema, 'notesServerEnv');
-
-/**
- * Finance app server environment
- * Use in: apps/finance server loaders and API routes
- */
-export const financeServerEnv: FinanceServerEnv = createServerEnv(
-  financeServerSchema,
-  'financeServerEnv'
-);
-
-/**
- * Generic server environment (for services/api and other backend services)
- * Uses the base server schema without app-specific extensions
- */
-export const serverEnv: FinanceServerEnv = createServerEnv(financeServerSchema, 'serverEnv');
-
-// Re-export types
-export type { RoccoServerEnv, NotesServerEnv, FinanceServerEnv };
+// Re-export types and schemas for apps to extend
+export type { BaseServerEnv };
+export { baseServerSchema } from './schema';

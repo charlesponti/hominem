@@ -2,12 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   baseClientSchema,
   baseServerSchema,
-  roccoClientSchema,
-  roccoServerSchema,
-  notesClientSchema,
-  notesServerSchema,
-  financeClientSchema,
-  financeServerSchema,
 } from '../src/schema';
 
 describe('Base Schemas', () => {
@@ -92,110 +86,44 @@ describe('Base Schemas', () => {
   });
 });
 
-describe('App-Specific Schemas', () => {
-  describe('roccoClientSchema', () => {
-    it('should validate correct rocco client env', () => {
-      const validEnv = {
-        VITE_PUBLIC_API_URL: 'https://api.example.com',
-        VITE_SUPABASE_URL: 'https://supabase.example.com',
-        VITE_SUPABASE_ANON_KEY: 'test-anon-key',
-        VITE_APP_BASE_URL: 'https://rocco.example.com',
-        VITE_GOOGLE_API_KEY: 'test-google-key',
-      };
-
-      expect(() => roccoClientSchema.parse(validEnv)).not.toThrow();
+describe('Schema Extension Pattern', () => {
+  it('should allow apps to extend base schemas', () => {
+    const { z } = require('zod');
+    
+    // Simulate app extending base schema
+    const appClientSchema = baseClientSchema.extend({
+      VITE_APP_BASE_URL: z.string().url(),
+      VITE_MY_CUSTOM_VAR: z.string(),
     });
 
-    it('should reject missing app-specific fields', () => {
-      const invalidEnv = {
-        VITE_PUBLIC_API_URL: 'https://api.example.com',
-        VITE_SUPABASE_URL: 'https://supabase.example.com',
-        VITE_SUPABASE_ANON_KEY: 'test-anon-key',
-        // Missing VITE_APP_BASE_URL and VITE_GOOGLE_API_KEY
-      };
+    const validEnv = {
+      VITE_PUBLIC_API_URL: 'https://api.example.com',
+      VITE_SUPABASE_URL: 'https://supabase.example.com',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key',
+      VITE_APP_BASE_URL: 'https://myapp.example.com',
+      VITE_MY_CUSTOM_VAR: 'custom-value',
+    };
 
-      expect(() => roccoClientSchema.parse(invalidEnv)).toThrow();
-    });
+    const result = appClientSchema.parse(validEnv);
+    expect(result.VITE_PUBLIC_API_URL).toBe('https://api.example.com');
+    expect(result.VITE_APP_BASE_URL).toBe('https://myapp.example.com');
+    expect(result.VITE_MY_CUSTOM_VAR).toBe('custom-value');
   });
 
-  describe('roccoServerSchema', () => {
-    it('should validate correct rocco server env', () => {
-      const validEnv = {
-        PUBLIC_API_URL: 'https://api.example.com',
-        SUPABASE_URL: 'https://supabase.example.com',
-        SUPABASE_ANON_KEY: 'test-anon-key',
-        SUPABASE_SERVICE_ROLE_KEY: 'test-service-key',
-        DATABASE_URL: 'postgresql://localhost:5432/db',
-        GOOGLE_API_KEY: 'test-google-key',
-      };
-
-      expect(() => roccoServerSchema.parse(validEnv)).not.toThrow();
+  it('should enforce app-specific required fields', () => {
+    const { z } = require('zod');
+    
+    const appClientSchema = baseClientSchema.extend({
+      VITE_REQUIRED_APP_VAR: z.string(),
     });
 
-    it('should accept optional server fields', () => {
-      const envWithOptionals = {
-        PUBLIC_API_URL: 'https://api.example.com',
-        SUPABASE_URL: 'https://supabase.example.com',
-        SUPABASE_ANON_KEY: 'test-anon-key',
-        SUPABASE_SERVICE_ROLE_KEY: 'test-service-key',
-        DATABASE_URL: 'postgresql://localhost:5432/db',
-        BETTER_AUTH_SECRET: 'secret',
-        BETTER_AUTH_URL: 'https://auth.example.com',
-      };
+    const envWithoutAppVar = {
+      VITE_PUBLIC_API_URL: 'https://api.example.com',
+      VITE_SUPABASE_URL: 'https://supabase.example.com',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key',
+      // Missing VITE_REQUIRED_APP_VAR
+    };
 
-      const result = roccoServerSchema.parse(envWithOptionals);
-      expect(result.BETTER_AUTH_SECRET).toBe('secret');
-      expect(result.BETTER_AUTH_URL).toBe('https://auth.example.com');
-    });
-  });
-
-  describe('notesClientSchema', () => {
-    it('should validate correct notes client env', () => {
-      const validEnv = {
-        VITE_PUBLIC_API_URL: 'https://api.example.com',
-        VITE_SUPABASE_URL: 'https://supabase.example.com',
-        VITE_SUPABASE_ANON_KEY: 'test-anon-key',
-        VITE_APP_BASE_URL: 'https://notes.example.com',
-      };
-
-      expect(() => notesClientSchema.parse(validEnv)).not.toThrow();
-    });
-
-    it('should use default for feature flags', () => {
-      const env = {
-        VITE_PUBLIC_API_URL: 'https://api.example.com',
-        VITE_SUPABASE_URL: 'https://supabase.example.com',
-        VITE_SUPABASE_ANON_KEY: 'test-anon-key',
-        VITE_APP_BASE_URL: 'https://notes.example.com',
-      };
-
-      const result = notesClientSchema.parse(env);
-      expect(result.VITE_FEATURE_TWITTER_INTEGRATION).toBe('false');
-    });
-  });
-
-  describe('financeSchemas', () => {
-    it('should validate correct finance client env', () => {
-      const validEnv = {
-        VITE_PUBLIC_API_URL: 'https://api.example.com',
-        VITE_SUPABASE_URL: 'https://supabase.example.com',
-        VITE_SUPABASE_ANON_KEY: 'test-anon-key',
-        VITE_APP_BASE_URL: 'https://finance.example.com',
-      };
-
-      expect(() => financeClientSchema.parse(validEnv)).not.toThrow();
-    });
-
-    it('should validate correct finance server env', () => {
-      const validEnv = {
-        PUBLIC_API_URL: 'https://api.example.com',
-        SUPABASE_URL: 'https://supabase.example.com',
-        SUPABASE_ANON_KEY: 'test-anon-key',
-        SUPABASE_SERVICE_ROLE_KEY: 'test-service-key',
-        DATABASE_URL: 'postgresql://localhost:5432/db',
-      };
-
-      expect(() => financeServerSchema.parse(validEnv)).not.toThrow();
-    });
+    expect(() => appClientSchema.parse(envWithoutAppVar)).toThrow();
   });
 });

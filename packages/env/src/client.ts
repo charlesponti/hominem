@@ -1,5 +1,5 @@
-import type { RoccoClientEnv, NotesClientEnv, FinanceClientEnv } from './schema';
-import { roccoClientSchema, notesClientSchema, financeClientSchema } from './schema';
+import type { BaseClientEnv } from './schema';
+import { baseClientSchema } from './schema';
 
 /**
  * Error class for environment validation failures
@@ -23,7 +23,7 @@ function assertClientContext(): void {
     throw new EnvValidationError(
       'clientEnv can only be used in browser/client context. ' +
       'Use serverEnv for server-side code.',
-      'clientEnv'
+      'baseClientEnv'
     );
   }
 }
@@ -53,7 +53,7 @@ function formatZodError(error: unknown, context: string): EnvValidationError {
 }
 
 /**
- * Creates a validated client environment for a specific app schema
+ * Creates a validated client environment
  */
 function createClientEnv<T>(schema: { parse: (data: unknown) => T }, context: string): T {
   assertClientContext();
@@ -66,25 +66,18 @@ function createClientEnv<T>(schema: { parse: (data: unknown) => T }, context: st
 }
 
 /**
- * Rocco app client environment
- * Use in: apps/rocco browser components
+ * Base client environment with shared infrastructure variables
+ * Use in: Simple cases or extend for app-specific needs
+ * 
+ * For app-specific variables, create your own:
+ * ```typescript
+ * import { baseClientSchema } from '@hominem/env/schema';
+ * const mySchema = baseClientSchema.extend({ VITE_MY_VAR: z.string() });
+ * export const clientEnv = mySchema.parse(import.meta.env);
+ * ```
  */
-export const roccoClientEnv: RoccoClientEnv = createClientEnv(roccoClientSchema, 'roccoClientEnv');
+export const baseClientEnv: BaseClientEnv = createClientEnv(baseClientSchema, 'baseClientEnv');
 
-/**
- * Notes app client environment
- * Use in: apps/notes browser components
- */
-export const notesClientEnv: NotesClientEnv = createClientEnv(notesClientSchema, 'notesClientEnv');
-
-/**
- * Finance app client environment
- * Use in: apps/finance browser components
- */
-export const financeClientEnv: FinanceClientEnv = createClientEnv(
-  financeClientSchema,
-  'financeClientEnv'
-);
-
-// Re-export types
-export type { RoccoClientEnv, NotesClientEnv, FinanceClientEnv };
+// Re-export types and schemas for apps to extend
+export type { BaseClientEnv };
+export { baseClientSchema } from './schema';

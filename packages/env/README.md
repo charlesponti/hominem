@@ -1,6 +1,6 @@
 # @hominem/env
 
-Unified environment variable handling with explicit client/server separation for the Hominem monorepo.
+Shared environment variable handling with explicit client/server separation for the Hominem monorepo.
 
 ## Problem This Solves
 
@@ -13,48 +13,100 @@ This caused a production bug where SSR loaders fell back to `http://localhost:40
 
 ## Solution
 
-This package provides explicit `clientEnv` and `serverEnv` exports that:
-1. **Force explicit context choice** - Must choose client or server
-2. **Validate at runtime** - Zod schemas ensure correct format
-3. **Fail fast with clear errors** - Helpful messages when env is missing
-4. **Prevent SSR issues** - Server env always uses `process.env`
+This package provides **shared base schemas** that apps extend with their own app-specific variables:
+
+1. **Base schemas** for common infrastructure (API URL, Supabase, etc.)
+2. **Apps extend** the base with their own variables
+3. **Explicit context choice** - Must choose client or server
+4. **Runtime validation** - Zod schemas ensure correct format
+
+## Architecture
+
+```
+packages/env/              # SHARED - Common/infra variables only
+├── baseClientEnv          # API_URL, SUPABASE_URL, etc.
+├── baseServerEnv          # DATABASE_URL, API keys, etc.
+└── schemas                # Reusable Zod schemas
+
+apps/rocco/                # APP-SPECIFIC
+├── app/lib/env.ts         # Extends base with VITE_GOOGLE_API_KEY, etc.
+
+apps/notes/                # APP-SPECIFIC
+├── app/lib/env.ts         # Extends base with app-specific vars
+```
 
 ## Installation
 
 ```bash
 # Already included in workspace
-import { roccoClientEnv } from '@hominem/env/client';
-import { roccoServerEnv } from '@hominem/env/server';
+import { baseClientEnv } from '@hominem/env/client';
+import { baseServerEnv } from '@hominem/env/server';
+import { baseClientSchema, baseServerSchema } from '@hominem/env/schema';
 ```
 
 ## Usage
 
-### Client Components (Browser)
+### Pattern 1: Use Base Env (Simple Cases)
+
+For code that only needs shared infrastructure variables:
 
 ```typescript
-import { roccoClientEnv } from '@hominem/env/client';
+// Client (Browser)
+import { baseClientEnv } from '@hominem/env/client';
+const apiUrl = baseClientEnv.VITE_PUBLIC_API_URL;
 
-const apiUrl = roccoClientEnv.VITE_PUBLIC_API_URL;
-const supabaseUrl = roccoClientEnv.VITE_SUPABASE_URL;
+// Server (SSR)
+import { baseServerEnv } from '@hominem/env/server';
+const apiUrl = baseServerEnv.PUBLIC_API_URL;
 ```
 
-### Server Loaders (SSR)
+### Pattern 2: Extend in Your App (Recommended)
+
+Create app-specific env that extends the base:
 
 ```typescript
-import { roccoServerEnv } from '@hominem/env/server';
+// apps/rocco/app/lib/env.ts
+import { baseClientSchema, baseServerSchema } from '@hominem/env/schema';
+import { z } from 'zod';
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const apiUrl = roccoServerEnv.PUBLIC_API_URL; // Guaranteed to work
-  // ...
-}
+// Extend base with app-specific variables
+const roccoClientSchema = baseClientSchema.extend({
+  VITE_APP_BASE_URL: z.string().url(),
+  VITE_GOOGLE_API_KEY: z.string(),
+});
+
+const roccoServerSchema = baseServerSchema.extend({
+  GOOGLE_API_KEY: z.string().optional(),
+});
+
+// Create validated env objects
+export const clientEnv = roccoClientSchema.parse(import.meta.env);
+export const serverEnv = roccoServerSchema.parse(process.env);
+
+// Export types
+export type ClientEnv = z.infer<typeof roccoClientSchema>;
+export type ServerEnv = z.infer<typeof roccoServerSchema>;
 ```
 
-### Shared Code (Explicit Context)
-
-For code used in both contexts, accept env as a parameter:
+Then use in your app:
 
 ```typescript
-// utils/api.ts
+// apps/rocco/app/components/MyComponent.tsx
+import { clientEnv } from '~/lib/env';
+const apiUrl = clientEnv.VITE_PUBLIC_API_URL;
+const googleKey = clientEnv.VITE_GOOGLE_API_KEY;
+
+// apps/rocco/app/routes/lists.$id.tsx
+import { serverEnv } from '~/lib/env';
+const apiUrl = serverEnv.PUBLIC_API_URL;
+```
+
+### Pattern 3: Shared Utilities (Explicit Context)
+
+For utilities used in both client and server:
+
+```typescript
+// packages/utils/api.ts
 type ApiConfig = {
   apiUrl: string;
   supabaseUrl: string;
@@ -65,17 +117,19 @@ export function createApiClient(config: ApiConfig) {
 }
 
 // Client usage
-import { roccoClientEnv } from '@hominem/env/client';
+import { baseClientEnv } from '@hominem/env/client';
+import { createApiClient } from '@hominem/utils/api';
 const client = createApiClient({
-  apiUrl: roccoClientEnv.VITE_PUBLIC_API_URL,
-  supabaseUrl: roccoClientEnv.VITE_SUPABASE_URL,
+  apiUrl: baseClientEnv.VITE_PUBLIC_API_URL,
+  supabaseUrl: baseClientEnv.VITE_SUPABASE_URL,
 });
 
 // Server usage  
-import { roccoServerEnv } from '@hominem/env/server';
+import { baseServerEnv } from '@hominem/env/server';
+import { createApiClient } from '@hominem/utils/api';
 const client = createApiClient({
-  apiUrl: roccoServerEnv.PUBLIC_API_URL,
-  supabaseUrl: roccoServerEnv.SUPABASE_URL,
+  apiUrl: baseServerEnv.PUBLIC_API_URL,
+  supabaseUrl: baseServerEnv.SUPABASE_URL,
 });
 ```
 
@@ -85,12 +139,8 @@ const client = createApiClient({
 
 ```typescript
 import { 
-  roccoClientEnv,    // Rocco app client env
-  notesClientEnv,    // Notes app client env
-  financeClientEnv,  // Finance app client env
-  type RoccoClientEnv,
-  type NotesClientEnv,
-  type FinanceClientEnv,
+  baseClientEnv,        // Base client env (infra only)
+  type BaseClientEnv,
   EnvValidationError
 } from '@hominem/env/client';
 ```
@@ -99,13 +149,8 @@ import {
 
 ```typescript
 import {
-  roccoServerEnv,    // Rocco app server env
-  notesServerEnv,    // Notes app server env
-  financeServerEnv,  // Finance app server env
-  serverEnv,         // Generic server env (services/api)
-  type RoccoServerEnv,
-  type NotesServerEnv,
-  type FinanceServerEnv,
+  baseServerEnv,        // Base server env (infra only)
+  type BaseServerEnv,
   EnvValidationError
 } from '@hominem/env/server';
 ```
@@ -114,42 +159,29 @@ import {
 
 ```typescript
 import {
-  // Base schemas
+  // Base schemas (extend these in your app)
   baseClientSchema,
   baseServerSchema,
-  
-  // App schemas
-  roccoClientSchema,
-  roccoServerSchema,
-  notesClientSchema,
-  notesServerSchema,
-  financeClientSchema,
-  financeServerSchema,
   
   // Types
   type BaseClientEnv,
   type BaseServerEnv,
-  // ... app-specific types
 } from '@hominem/env/schema';
 ```
 
-## Environment Variables
+## Base Environment Variables
+
+These are included in the shared package:
 
 ### Client Variables (VITE_* prefix)
-
-All client-side variables must use `VITE_` prefix for Vite to expose them:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `VITE_PUBLIC_API_URL` | Yes | API base URL |
 | `VITE_SUPABASE_URL` | Yes | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Yes | Supabase anon key |
-| `VITE_APP_BASE_URL` | Yes | App's own base URL |
-| `VITE_GOOGLE_API_KEY` | App-specific | Google Maps/Places API |
 
 ### Server Variables (no prefix)
-
-Server-only variables should NOT use `VITE_` prefix:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -160,6 +192,44 @@ Server-only variables should NOT use `VITE_` prefix:
 | `DATABASE_URL` | Yes | PostgreSQL connection |
 | `REDIS_URL` | No | Redis connection |
 | `PORT` | No | Server port (default: 3000) |
+| `NODE_ENV` | No | Environment (default: development) |
+| `GOOGLE_API_KEY` | No | Google API key |
+| `OPENAI_API_KEY` | No | OpenAI API key |
+| `PLAID_*` | No | Plaid configuration |
+| `TWITTER_*` | No | Twitter OAuth |
+| `RESEND_*` | No | Resend email |
+| `ROCCO_URL` | No | CORS allowed origin |
+| `NOTES_URL` | No | CORS allowed origin |
+| `FLORIN_URL` | No | CORS allowed origin |
+
+## Adding App-Specific Variables
+
+Each app manages its own additional variables:
+
+1. **Create app env file:**
+   ```typescript
+   // apps/[app]/app/lib/env.ts
+   import { baseClientSchema, baseServerSchema } from '@hominem/env/schema';
+   import { z } from 'zod';
+   
+   export const clientSchema = baseClientSchema.extend({
+     VITE_MY_VAR: z.string(),
+   });
+   
+   export const serverSchema = baseServerSchema.extend({
+     MY_SECRET: z.string(),
+   });
+   
+   export const clientEnv = clientSchema.parse(import.meta.env);
+   export const serverEnv = serverSchema.parse(process.env);
+   ```
+
+2. **Update app's `.env` file**
+
+3. **Use in your app:**
+   ```typescript
+   import { clientEnv } from '~/lib/env';
+   ```
 
 ## Error Handling
 
@@ -168,7 +238,7 @@ Server-only variables should NOT use `VITE_` prefix:
 ```
 EnvValidationError: Environment validation failed:
   - VITE_PUBLIC_API_URL: Required
-Context: roccoClientEnv
+Context: baseClientEnv
 ```
 
 ### Wrong Context
@@ -176,7 +246,7 @@ Context: roccoClientEnv
 ```
 EnvValidationError: clientEnv can only be used in browser/client context.
 Use serverEnv for server-side code.
-Context: clientEnv
+Context: baseClientEnv
 ```
 
 ### Invalid Format
@@ -184,7 +254,7 @@ Context: clientEnv
 ```
 EnvValidationError: Environment validation failed:
   - VITE_PUBLIC_API_URL: Invalid url
-Context: roccoClientEnv
+Context: baseClientEnv
 ```
 
 ## Migration Guide
@@ -197,11 +267,18 @@ Context: roccoClientEnv
 const apiUrl = import.meta.env.VITE_PUBLIC_API_URL;
 ```
 
-**After:**
+**After (using base env):**
 ```typescript
 // apps/rocco/app/components/MyComponent.tsx
-import { roccoClientEnv } from '@hominem/env/client';
-const apiUrl = roccoClientEnv.VITE_PUBLIC_API_URL;
+import { baseClientEnv } from '@hominem/env/client';
+const apiUrl = baseClientEnv.VITE_PUBLIC_API_URL;
+```
+
+**After (using app-specific env - recommended):**
+```typescript
+// apps/rocco/app/components/MyComponent.tsx
+import { clientEnv } from '~/lib/env';
+const apiUrl = clientEnv.VITE_PUBLIC_API_URL;
 ```
 
 ### From Direct process.env
@@ -215,8 +292,8 @@ const apiUrl = process.env.VITE_PUBLIC_API_URL || 'http://localhost:4040';
 **After:**
 ```typescript
 // apps/rocco/app/routes/lists.$id.tsx
-import { roccoServerEnv } from '@hominem/env/server';
-const apiUrl = roccoServerEnv.PUBLIC_API_URL;
+import { baseServerEnv } from '@hominem/env/server';
+const apiUrl = baseServerEnv.PUBLIC_API_URL;
 ```
 
 ### From Merged/Fallback Pattern
@@ -233,47 +310,46 @@ const baseUrl =
 **After:**
 ```typescript
 // apps/rocco/app/lib/api.server.ts
-import { roccoServerEnv } from '@hominem/env/server';
-const baseUrl = roccoServerEnv.PUBLIC_API_URL;
+import { baseServerEnv } from '@hominem/env/server';
+const baseUrl = baseServerEnv.PUBLIC_API_URL;
 ```
-
-## Adding New Environment Variables
-
-1. Add to appropriate schema in `src/schema/`:
-   - Client vars: `base.ts` or `apps/[app].ts` with `VITE_` prefix
-   - Server vars: `base.ts` or `apps/[app].ts` without prefix
-
-2. Update `.env` files with the new variable
-
-3. Use via `roccoClientEnv` or `roccoServerEnv`
 
 ## Security
 
 - **Server variables cannot leak to client** - Separate entry points enable tree-shaking
-- **Build test verifies** server code is not in client bundle
 - **Runtime check** throws if `serverEnv` is accessed in browser
-- **No secrets in client schemas** - Only `VITE_` prefixed vars in client schemas
+- **No secrets in base client schema** - Only `VITE_` prefixed vars
+- **Apps control their own secrets** - Each app manages server-only vars
 
-## Architecture
+## Package Structure
 
 ```
 packages/env/
 ├── src/
+│   ├── client.ts            # baseClientEnv export
+│   ├── server.ts            # baseServerEnv export
 │   ├── schema/
 │   │   ├── base.ts          # Shared base schemas
-│   │   ├── index.ts         # Schema exports
-│   │   └── apps/            # App-specific schemas
-│   │       ├── rocco.ts
-│   │       ├── notes.ts
-│   │       └── finance.ts
-│   ├── client.ts            # Client env exports
-│   ├── server.ts            # Server env exports
-│   └── types.ts             # Type re-exports
+│   │   └── index.ts         # Schema exports
+│   └── types.ts             # TypeScript types
 ├── tests/                   # Unit tests
-├── package.json             # Package config with exports
+├── package.json             # Package config
 ├── tsconfig.json            # TypeScript config
 └── README.md                # This file
 ```
+
+## Why This Architecture?
+
+**Before (centralized):**
+- ❌ Package had to know about every app's variables
+- ❌ Adding a var required updating shared package
+- ❌ App-specific concerns leaked into shared code
+
+**After (decentralized):**
+- ✅ Shared package only knows about infrastructure
+- ✅ Apps own their specific variables
+- ✅ Changes to one app don't affect others
+- ✅ Shared schemas are reusable building blocks
 
 ## Related
 

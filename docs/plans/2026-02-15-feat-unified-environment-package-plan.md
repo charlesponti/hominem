@@ -29,13 +29,23 @@ This leads to the production bug where SSR loaders fall back to `http://localhos
 
 ## Proposed Solution
 
-Create a single `@hominem/env` package with:
+Create a single `@hominem/env` package with **shared base schemas only**. Apps extend these with their own app-specific variables.
 
-1. **Explicit exports** - `clientEnv` and `serverEnv` force developers to choose
-2. **Zod validation** - Runtime validation with clear error messages
-3. **Type safety** - Full TypeScript support with autocomplete
-4. **Security** - Server vars cannot be imported in client code (via separate entry points)
-5. **Monorepo support** - Shared base schema with app-specific extensions
+### Architecture
+
+**Shared Package** (`@hominem/env`) - Infrastructure only:
+- `baseClientSchema` - API_URL, SUPABASE_URL, etc.
+- `baseServerSchema` - DATABASE_URL, service keys, etc.
+
+**Apps** - Extend with app-specific variables:
+```typescript
+// apps/rocco/app/lib/env.ts
+import { baseClientSchema } from '@hominem/env/schema';
+
+export const clientSchema = baseClientSchema.extend({
+  VITE_GOOGLE_API_KEY: z.string(),
+});
+```
 
 ### Package Structure
 
@@ -43,17 +53,13 @@ Create a single `@hominem/env` package with:
 packages/env/
 ├── src/
 │   ├── schema/
-│   │   ├── base.ts          # Shared variables (API_URL, SUPABASE_URL)
-│   │   ├── client.ts        # Client-only schema (VITE_*)
-│   │   ├── server.ts        # Server-only schema (DB, API keys)
-│   │   └── apps/            # App-specific schemas
-│   │       ├── rocco.ts
-│   │       ├── notes.ts
-│   │       └── finance.ts
-│   ├── client.ts            # clientEnv export
-│   ├── server.ts            # serverEnv export
-│   ├── types.ts             # TypeScript type exports
-│   └── utils.ts             # Helper functions
+│   │   ├── base.ts          # Shared variables only
+│   │   └── index.ts         # Re-exports
+│   ├── client.ts            # baseClientEnv export
+│   ├── server.ts            # baseServerEnv export
+│   └── types.ts             # TypeScript type exports
+├── tests/
+│   └── schema.test.ts       # Base schema tests
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -108,33 +114,28 @@ export const roccoServerSchema = baseServerSchema.extend({
 
 ```typescript
 // packages/env/src/client.ts
-import { z } from 'zod';
-import { roccoClientSchema } from './schema/apps/rocco';
+import { baseClientSchema } from './schema';
 
-// Validate on first access, not import
 function createClientEnv() {
-  if (typeof import.meta === 'undefined') {
+  if (typeof window === 'undefined' || typeof import.meta === 'undefined') {
     throw new Error(
       'clientEnv can only be used in browser/client context. ' +
       'Use serverEnv for server-side code.'
     );
   }
-  
-  return roccoClientSchema.parse(import.meta.env);
+  return baseClientSchema.parse(import.meta.env);
 }
 
-export const clientEnv = createClientEnv();
-export type ClientEnv = z.infer<typeof roccoClientSchema>;
+export const baseClientEnv = createClientEnv();
+export { baseClientSchema } from './schema';
 ```
 
 ### 3. Server Environment (`server.ts`)
 
 ```typescript
 // packages/env/src/server.ts
-import { z } from 'zod';
-import { roccoServerSchema } from './schema/apps/rocco';
+import { baseServerSchema } from './schema';
 
-// Validate on first access
 function createServerEnv() {
   if (typeof process === 'undefined') {
     throw new Error(
@@ -142,12 +143,11 @@ function createServerEnv() {
       'Use clientEnv for browser/client code.'
     );
   }
-  
-  return roccoServerSchema.parse(process.env);
+  return baseServerSchema.parse(process.env);
 }
 
-export const serverEnv = createServerEnv();
-export type ServerEnv = z.infer<typeof roccoServerSchema>;
+export const baseServerEnv = createServerEnv();
+export { baseServerSchema } from './schema';
 ```
 
 ### 4. Package.json Exports
@@ -174,52 +174,71 @@ export type ServerEnv = z.infer<typeof roccoServerSchema>;
 
 ## Usage Patterns
 
-### Client Component (Browser)
+### Pattern 1: Use Base Env (Simple Cases)
+
+For code that only needs shared infrastructure variables:
+
+```typescript
+// Client (Browser)
+import { baseClientEnv } from '@hominem/env/client';
+const apiUrl = baseClientEnv.VITE_PUBLIC_API_URL;
+
+// Server (SSR)
+import { baseServerEnv } from '@hominem/env/server';
+const apiUrl = baseServerEnv.PUBLIC_API_URL;
+```
+
+### Pattern 2: Extend in Your App (Recommended)
+
+Create app-specific env that extends the base:
+
+```typescript
+// apps/rocco/app/lib/env.ts
+import { baseClientSchema, baseServerSchema } from '@hominem/env/schema';
+import { z } from 'zod';
+
+const roccoClientSchema = baseClientSchema.extend({
+  VITE_APP_BASE_URL: z.string().url(),
+  VITE_GOOGLE_API_KEY: z.string(),
+});
+
+const roccoServerSchema = baseServerSchema.extend({
+  GOOGLE_API_KEY: z.string().optional(),
+});
+
+export const clientEnv = roccoClientSchema.parse(import.meta.env);
+export const serverEnv = roccoServerSchema.parse(process.env);
+```
+
+Then use in your app:
 
 ```typescript
 // apps/rocco/app/components/MyComponent.tsx
-import { clientEnv } from '@hominem/env/client';
-
+import { clientEnv } from '~/lib/env';
 const apiUrl = clientEnv.VITE_PUBLIC_API_URL;
+const googleKey = clientEnv.VITE_GOOGLE_API_KEY;
 ```
 
-### Server Loader (SSR)
+### Pattern 3: Shared Utilities (Explicit Context)
 
 ```typescript
-// apps/rocco/app/routes/lists.$id.tsx
-import { serverEnv } from '@hominem/env/server';
+// packages/utils/api.ts
+import { baseClientEnv } from '@hominem/env/client';
+import { baseServerEnv } from '@hominem/env/server';
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const apiUrl = serverEnv.PUBLIC_API_URL; // Guaranteed to work
-  // ...
-}
-```
-
-### Shared Code (Explicit Context)
-
-```typescript
-// utils/api.ts - accepts env as parameter
-type ApiConfig = {
-  apiUrl: string;
-  supabaseUrl: string;
-};
-
-export function createApiClient(config: ApiConfig) {
-  // Use config.apiUrl, config.supabaseUrl
-}
+// Accept env as parameter
+type ApiConfig = { apiUrl: string; supabaseUrl: string };
 
 // Client usage
-import { clientEnv } from '@hominem/env/client';
 const client = createApiClient({
-  apiUrl: clientEnv.VITE_PUBLIC_API_URL,
-  supabaseUrl: clientEnv.VITE_SUPABASE_URL,
+  apiUrl: baseClientEnv.VITE_PUBLIC_API_URL,
+  supabaseUrl: baseClientEnv.VITE_SUPABASE_URL,
 });
 
 // Server usage  
-import { serverEnv } from '@hominem/env/server';
 const client = createApiClient({
-  apiUrl: serverEnv.PUBLIC_API_URL,
-  supabaseUrl: serverEnv.SUPABASE_URL,
+  apiUrl: baseServerEnv.PUBLIC_API_URL,
+  supabaseUrl: baseServerEnv.SUPABASE_URL,
 });
 ```
 
@@ -233,22 +252,23 @@ const client = createApiClient({
 
 ### Phase 2: App Migration (Gradual)
 
+Each app creates its own env file extending the base schemas:
+
 **apps/rocco:**
-- Replace `app/lib/env.ts` → `@hominem/env`
-- Replace `app/lib/api.server.ts` env access → `serverEnv`
-- Replace `app/lib/api/provider.tsx` env access → `clientEnv`
-- Update components using direct `import.meta.env`
+1. Create `app/lib/env.ts` extending base schemas
+2. Replace direct `import.meta.env` usage → `clientEnv`
+3. Replace direct `process.env` usage → `serverEnv`
+4. Update imports across the app
 
 **apps/notes:**
 - Same pattern as rocco
 
 **apps/finance:**
 - Same pattern as rocco
-- Update `websocket-store.ts` to use clientEnv
 
 **services/api:**
-- Replace `src/env.ts` → `@hominem/env/server`
-- Update all route files
+- Can use `baseServerEnv` directly (no app-specific vars needed)
+- Or extend if service-specific vars required
 
 ### Phase 3: Enforcement
 1. Add Oxlint rule to warn on direct `process.env`/`import.meta.env` access
@@ -394,11 +414,25 @@ Error: Environment validation failed
 
 ### Key Design Decisions
 
-1. **Separate entry points** (`/client`, `/server`) prevent accidental imports
-2. **Explicit exports only** - No auto-detect to force conscious choice
-3. **App-specific schemas** - Each app can extend base schema
-4. **Lazy validation** - Prevents import-time crashes
-5. **VITE_ prefix for client** - Maintains Vite compatibility
+1. **Shared base only** - Package only contains infrastructure/common variables
+2. **Apps extend** - Each app creates its own env.ts extending base schemas
+3. **Separate entry points** (`/client`, `/server`) prevent accidental imports
+4. **Explicit exports** - `baseClientEnv` and `baseServerEnv` for clarity
+5. **Lazy validation** - Prevents import-time crashes
+6. **VITE_ prefix for client** - Maintains Vite compatibility
+
+### Why This Architecture?
+
+**Before (centralized app schemas):**
+- ❌ Package had to know about every app's variables
+- ❌ Adding a var required updating shared package
+- ❌ App-specific concerns leaked into shared code
+
+**After (decentralized):**
+- ✅ Shared package only knows about infrastructure
+- ✅ Apps own their specific variables
+- ✅ Changes to one app don't affect others
+- ✅ Shared schemas are reusable building blocks
 
 ### Migration Notes
 
