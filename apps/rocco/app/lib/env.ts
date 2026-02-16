@@ -14,7 +14,6 @@ const serverSchema = z.object({
   VITE_PUBLIC_API_URL: z.string().url(),
   VITE_SUPABASE_URL: z.string().url(),
   VITE_SUPABASE_ANON_KEY: z.string().min(1),
-  VITE_SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   VITE_GOOGLE_API_KEY: z.string().min(1),
   VITE_APP_BASE_URL: z.string().url(),
 });
