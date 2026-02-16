@@ -39,15 +39,14 @@ export interface ApiErrorResponse {
  * ```
  */
 export const errorMiddleware = createMiddleware<AppContext>(async (c, next) => {
+  const requestId = crypto.randomUUID().slice(0, 8);
+  const path = c.req.path;
+  const method = c.req.method;
+
   try {
     return await next();
   } catch (err) {
-    // Log error for debugging
-    if (err instanceof Error) {
-      logger.error('[API Error]', { error: err, name: err.name, message: err.message });
-    } else {
-      logger.error('[API Error]', { error: err });
-    }
+    logger.error(`[API Error] ${method} ${path} [${requestId}]`, { error: err, name: err instanceof Error ? err.name : 'unknown', message: err instanceof Error ? err.message : 'unknown' });
 
     // Handle service errors (thrown by business logic)
     if (isServiceError(err)) {

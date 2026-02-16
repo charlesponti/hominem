@@ -481,6 +481,8 @@ export const placesRoutes = new Hono<AppContext>()
       const input = c.req.valid('json') as z.infer<typeof placeGetNearbySchema>;
       const userId = c.get('userId')!;
 
+      logger.info('[places.nearby] Starting request', { userId, location: input.location, radius: input.radius });
+
       const places = await getNearbyPlacesFromLists({
         userId,
         latitude: input.location.lat,
@@ -488,6 +490,8 @@ export const placesRoutes = new Hono<AppContext>()
         radiusKm: input.radius ? input.radius / 1000 : 50,
         limit: input.limit ?? 20,
       });
+
+      logger.info('[places.nearby] Response ready', { userId, placeCount: places.length });
 
       return c.json<PlaceGetNearbyFromListsOutput>(places.map(transformPlaceToApiFormat), 200);
     } catch (err) {

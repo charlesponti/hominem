@@ -1,5 +1,6 @@
 import { getAllUserListsWithPlaces, getListById, getPlaceLists } from '@hominem/lists-services';
-import { NotFoundError } from '@hominem/services';
+import { NotFoundError, InternalError } from '@hominem/services';
+import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
@@ -47,9 +48,13 @@ export const listQueryRoutes = new Hono<AppContext>()
   .post('/list', authMiddleware, zValidator('json', listGetAllSchema), async (c) => {
     const userId = c.get('userId')!;
 
+    logger.info('[lists.list] Starting request', { userId });
+
     const { ownedListsWithPlaces, sharedListsWithPlaces } = await getAllUserListsWithPlaces(userId);
 
     const result = [...ownedListsWithPlaces, ...sharedListsWithPlaces];
+    logger.info('[lists.list] Response ready', { userId, listCount: result.length });
+
     return c.json<ListGetAllOutput>(result.map(transformListToApiFormat), 200);
   })
 

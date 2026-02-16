@@ -37,6 +37,8 @@ async function handleProxy(request: Request) {
     const response = await fetch(targetUrl, init);
     const responseHeaders = new Headers(response.headers);
     responseHeaders.delete('transfer-encoding');
+    responseHeaders.delete('content-encoding');
+    responseHeaders.delete('content-length');
 
     return new Response(await response.arrayBuffer(), {
       status: response.status,
