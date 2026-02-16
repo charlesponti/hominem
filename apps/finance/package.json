@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@hominem/auth": "workspace:*",
+    "@hominem/env": "workspace:*",
     "@hominem/hono-client": "workspace:*",
     "@hominem/hono-rpc": "workspace:*",
     "@hominem/jobs-services": "workspace:*",

@@ -18,6 +18,7 @@ import type { Route } from './+types/root';
 import ErrorBoundary from './components/ErrorBoundary';
 import './globals.css';
 import { HonoProvider } from './lib/api';
+import { serverEnv } from './lib/env';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { getServerSession } = await import('./lib/auth.server');
@@ -26,6 +27,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   return data(
     {
       session,
+      supabaseConfig: {
+        url: serverEnv.VITE_SUPABASE_URL,
+        anonKey: serverEnv.VITE_SUPABASE_ANON_KEY,
+      },
+      apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
     },
     { headers },
   );
@@ -48,7 +54,7 @@ export const meta = () => [
 ];
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session } = loaderData;
+  const { session, supabaseConfig, apiBaseUrl } = loaderData;
   const revalidator = useRevalidator();
   const clearOfflineCaches = useCallback(async () => {
     if (!('caches' in window)) {
@@ -70,18 +76,6 @@ export default function App({ loaderData }: Route.ComponentProps) {
     [clearOfflineCaches, revalidator],
   );
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  if (!(supabaseUrl && supabaseAnonKey)) {
-    throw new Error('Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY');
-  }
-
-  const supabaseConfig = {
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-  };
-
   return (
     <html lang="en">
       <head>
@@ -99,7 +93,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
           config={supabaseConfig}
           onAuthEvent={handleAuthEvent}
         >
-          <HonoProvider>
+          <HonoProvider baseUrl={apiBaseUrl}>
             <UpdateGuard logo="/icons/apple-touch-icon-152x152.png" appName="Rocco">
               <Outlet />
             </UpdateGuard>

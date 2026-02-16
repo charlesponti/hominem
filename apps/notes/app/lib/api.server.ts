@@ -1,6 +1,7 @@
 import type { HonoClientInstance } from '@hominem/hono-client';
 
 import { createHonoClient } from '@hominem/hono-rpc/client';
+import { serverEnv } from '~/lib/env';
 
 /**
  * Create a server-side Hono client with optional authentication
@@ -9,11 +10,7 @@ export function createServerHonoClient(
   accessToken?: string,
   request?: Request,
 ): HonoClientInstance {
-  // Support both Vite env (client/build) and process.env (server/runtime)
-  const baseUrl =
-    import.meta.env.VITE_PUBLIC_API_URL ||
-    (typeof process !== 'undefined' && process.env.VITE_PUBLIC_API_URL) ||
-    'http://localhost:4040';
+  const baseUrl = serverEnv.VITE_PUBLIC_API_URL;
 
   const headers: Record<string, string> = {};
   if (accessToken) {

@@ -2,7 +2,13 @@
   "name": "@hominem/env",
   "version": "0.0.0",
   "description": "Unified environment variable handling with explicit client/server separation",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
     "./client": {
       "types": "./src/client.ts",
       "default": "./src/client.ts"

@@ -3,11 +3,11 @@ import {
   getServerAuth as sharedGetServerAuth,
 } from '@hominem/auth/server';
 
-import { env } from './env';
+import { serverEnv } from './env';
 
 export const authConfig = {
-  supabaseUrl: env.VITE_SUPABASE_URL,
-  supabaseAnonKey: env.VITE_SUPABASE_ANON_KEY,
+  supabaseUrl: serverEnv.VITE_SUPABASE_URL,
+  supabaseAnonKey: serverEnv.VITE_SUPABASE_ANON_KEY,
 };
 
 export const getServerAuth = (request: Request) => sharedGetServerAuth(request, authConfig);

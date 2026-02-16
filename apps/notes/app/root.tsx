@@ -34,6 +34,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         url: authConfig.supabaseUrl,
         anonKey: authConfig.supabaseAnonKey,
       },
+      apiBaseUrl: authConfig.supabaseUrl.replace('/api', ''),
     },
     { headers },
   );
@@ -70,7 +71,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session, supabaseEnv } = loaderData;
+  const { session, supabaseEnv, apiBaseUrl } = loaderData;
   const revalidator = useRevalidator();
   const clearOfflineCaches = useCallback(async () => {
     if (!('caches' in window)) {
@@ -98,7 +99,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       config={supabaseEnv}
       onAuthEvent={handleAuthEvent}
     >
-      <HonoProvider>
+      <HonoProvider baseUrl={apiBaseUrl}>
         <FeatureFlagsProvider>
           <UpdateGuard logo="/logo.png" appName="Notes">
             <Outlet />

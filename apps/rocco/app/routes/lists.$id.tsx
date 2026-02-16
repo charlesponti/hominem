@@ -3,7 +3,7 @@ import { Alert, PageTitle } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
 import { UserPlus } from 'lucide-react';
 import { useMemo } from 'react';
-import { Link, redirect } from 'react-router';
+import { Link, redirect, useViewTransitionState } from 'react-router';
 
 import type { PlaceLocation } from '~/lib/types';
 
@@ -50,6 +50,8 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
 
   const listId = loaderData.list.id;
 
+  const isTransitioning = useViewTransitionState(`/lists/${listId}`);
+
   const {
     data: result,
     isLoading,
@@ -78,8 +80,8 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
     [places],
   );
 
-  // Show loading state only on initial load
-  if (isLoading && !result) {
+  // Show loading state only on initial load or during view transition
+  if ((isLoading && !result) || isTransitioning) {
     return (
       <div className="flex items-center justify-center h-32">
         <Loading size="lg" />
