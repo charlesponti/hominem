@@ -227,7 +227,16 @@ export const budgetRoutes = new Hono<AppContext>()
       totalSpent,
       remaining,
       status,
-      summary: result.summary,
+      summary: {
+        // Map service BudgetSummary shape to API contract
+        totalBudget: result.summary.totalBudgeted,
+        totalSpent: result.summary.totalActual,
+        // Service's `totalVariance` is computed as totalBudgeted - totalActual,
+        // which corresponds to the API `remaining` semantics.
+        remaining: result.summary.totalVariance,
+        // Service exposes budget usage as a percentage value
+        percentUsed: result.summary.budgetUsagePercentage,
+      },
       categories: result.categories.map((cat) => ({
         id: cat.id,
         name: cat.name,
