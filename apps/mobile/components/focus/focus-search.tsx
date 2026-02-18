@@ -14,13 +14,13 @@ export const ActiveSearchSummary = React.memo(
       <View style={[searchHeaderStyles.container]}>
         <View style={{ flex: 1, alignContent: 'center' }}>
           <Text variant="body" color="fg-primary" style={[searchHeaderStyles.searchText]}>
-            {activeSearch.count} results for "{activeSearch.keyword}"
+            {activeSearch.count} RESULTS FOR "{activeSearch.keyword.toUpperCase()}"
           </Text>
         </View>
         <View>
           <Pressable onPress={onCloseClick} style={[searchHeaderStyles.clearButton]}>
-            <Text variant="body" color="white">
-              Clear search
+            <Text variant="body" color="foreground">
+              CLEAR
             </Text>
           </Pressable>
         </View>
@@ -35,16 +35,16 @@ const searchHeaderStyles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     columnGap: 12,
-    backgroundColor: theme.colors.grayDark,
+    backgroundColor: theme.colors.muted,
     marginHorizontal: 4,
     paddingVertical: 12,
     paddingHorizontal: 16,
     ...borderStyle.border,
   },
   searchText: {
-    fontSize: 18,
-    lineHeight: 24,
-    color: theme.colors.white,
+    fontSize: 14,
+    lineHeight: 20,
+    color: theme.colors.foreground,
     alignItems: 'center',
     // backgroundColor: theme.colors.grayDark,
     paddingVertical: 8,
@@ -52,7 +52,7 @@ const searchHeaderStyles = StyleSheet.create({
   clearButton: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.white,
+    borderColor: theme.colors.border,
     paddingVertical: 8,
     paddingHorizontal: 12,
     alignItems: 'center',

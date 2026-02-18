@@ -1,4 +1,4 @@
-import { Link, useLocalSearchParams } from 'expo-router'
+import { useLocalSearchParams } from 'expo-router'
 import { useCallback, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
@@ -74,14 +74,13 @@ export default function FocusItemView() {
   }, [focusItem, updateFocusItem, category, due_date, text])
 
   return (
-    <Link.AppleZoomTarget>
-      <View style={styles.container}>
-        <View style={styles.formGroup}>
+    <View style={styles.container}>
+      <View style={styles.formGroup}>
           <View>
             <TextInput
               aria-disabled
-              placeholder="Enter your name"
-              label="Name"
+              placeholder="FOCUS ITEM"
+              label="Focus"
               value={text}
               style={styles.inputText}
               onChange={(e) => setText(e.nativeEvent.text)}
@@ -89,7 +88,7 @@ export default function FocusItemView() {
           </View>
           {due_date ? (
             <View style={styles.dueDateRow}>
-              <MindsherpaIcon name="calendar" size={16} color={theme.colors.black} />
+              <MindsherpaIcon name="calendar" size={16} color={theme.colors.foreground} />
               <GestureDetector gesture={dueDateTap}>
                 <Text variant="body">
                   {due_date.toLocaleDateString()} {due_date.toLocaleTimeString()}
@@ -107,9 +106,8 @@ export default function FocusItemView() {
           <View style={styles.footer}>{/* keep buttons centered */}
             <Button onPress={onFormSubmit}>Save</Button>
           </View>
-        </View>
       </View>
-    </Link.AppleZoomTarget>
+    </View>
   )
 }
 
@@ -117,15 +115,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background,
   },
   formGroup: {
     rowGap: 24,
     marginTop: 32,
   },
   inputText: {
-    fontSize: 24,
-    color: theme.colors.black,
+    fontSize: 14,
+    color: theme.colors.foreground,
     fontWeight: 'bold',
   },
   dueDateRow: {

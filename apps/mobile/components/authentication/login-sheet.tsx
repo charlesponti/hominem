@@ -29,11 +29,11 @@ const LoginSheet = () => {
     <View style={styles.container}>
       {authError ? (
         <View style={styles.errorContainer}>
-          <Text style={styles.text}>{authError}</Text>
+          <Text style={styles.text}>{authError.toUpperCase()}</Text>
         </View>
       ) : null}
       <View style={styles.buttonContainer}>
-        <Button onPress={onSignInClick} title="Continue with Apple" />
+        <Button onPress={onSignInClick} title="[CONTINUE_WITH_APPLE]" />
       </View>
     </View>
   )
@@ -44,9 +44,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     width: '100%',
-    paddingVertical: 75,
-    borderRadius: 40,
+    paddingVertical: 48,
+    borderTopWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     paddingHorizontal: 24,
+    backgroundColor: '#000000',
   },
   errorContainer: {
     alignItems: 'center',
@@ -59,10 +61,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   text: {
-    color: 'black',
+    color: '#FF0000',
     textAlign: 'center',
     paddingVertical: 20,
-    fontSize: 16,
+    fontSize: 14,
+    fontFamily: 'Geist Mono',
     fontWeight: '600',
   },
 })

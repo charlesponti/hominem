@@ -10,7 +10,7 @@ export const ViewHeader = ({ children }: PropsWithChildren) => {
       <View style={styles.navbar}>
         <Link href="/(drawer)/(tabs)/focus">
           <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 12 }}>
-            <MindsherpaIcon name="arrow-left" size={26} color={theme.colors.black} />
+            <MindsherpaIcon name="arrow-left" size={26} color={theme.colors.foreground} />
             <Text variant="bodyLarge">Today</Text>
           </View>
         </Link>

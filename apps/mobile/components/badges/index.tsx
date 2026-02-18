@@ -13,7 +13,7 @@ export const Badge = ({
     style={{
       backgroundColor: color.color ?? theme.colors.greenLight,
       borderRadius: 20,
-      color: color.textColor ?? theme.colors.black,
+      color: color.textColor ?? theme.colors.foreground,
       fontSize: 10,
       paddingVertical: 4,
       paddingHorizontal: 8,

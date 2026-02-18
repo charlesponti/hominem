@@ -1,6 +1,11 @@
-import { MMKV } from 'react-native-mmkv';
+const memoryStorage = new Map<string, string>()
 
-export const storage = new MMKV({
-  id: 'com.pontistudios.mindsherpa',
-  encryptionKey: 'com.pontistudios.mindsherpa.encryption',
-});
+export const storage = {
+  getString: (key: string) => memoryStorage.get(key),
+  set: (key: string, value: string) => {
+    memoryStorage.set(key, value)
+  },
+  delete: (key: string) => {
+    memoryStorage.delete(key)
+  },
+}

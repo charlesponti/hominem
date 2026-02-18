@@ -1,6 +1,6 @@
-import type { ViewStyle } from 'react-native'
+import type { TextStyle } from 'react-native'
 import { Text } from 'react-native'
-import Reanimated, { type StyleProps } from 'react-native-reanimated'
+import Reanimated from 'react-native-reanimated'
 
 import { theme } from '~/theme'
 import unicodeMap from './fa-unicode-map.json'
@@ -11,38 +11,29 @@ interface IconProps {
   color?: string
   name: MindsherpaIconName
   size: number
-  style?: ViewStyle | ViewStyle[]
+  style?: TextStyle | TextStyle[]
 }
 
-export const MindsherpaIcon = ({ color = theme.colors.black, name, size, style }: IconProps) => {
+export const MindsherpaIcon = ({ color = theme.colors.foreground, name, size, style }: IconProps) => {
   const icon = unicodeMap[name]
     ? String.fromCharCode(Number.parseInt(unicodeMap[name].slice(2), 16))
     : ''
 
-  return (
-    <Text style={[{ fontFamily: 'Font Awesome Regular', color, fontSize: size }, style]}>
-      {icon}
-    </Text>
-  )
+  return <Text style={[{ fontFamily: 'Font Awesome Regular', color, fontSize: size }, style]}>{icon}</Text>
 }
 
 export const AnimatedMindsherpaIcon = ({
-  color = theme.colors.black,
+  color = theme.colors.foreground,
   name,
   size,
   style,
-}: IconProps & { style: StyleProps }) => {
+}: IconProps & { style?: TextStyle | TextStyle[] }) => {
   const icon = unicodeMap[name]
     ? String.fromCharCode(Number.parseInt(unicodeMap[name].slice(2), 16))
     : ''
 
   return (
-    <Reanimated.Text
-      style={[
-        { fontFamily: 'Font Awesome Regular', color, fontSize: size },
-        ...(Array.isArray(style) ? style : [style]),
-      ]}
-    >
+    <Reanimated.Text style={[{ fontFamily: 'Font Awesome Regular', color, fontSize: size }, style]}>
       {icon}
     </Reanimated.Text>
   )

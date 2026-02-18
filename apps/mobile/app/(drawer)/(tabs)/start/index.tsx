@@ -1,11 +1,12 @@
-import { LinearGradient } from 'expo-linear-gradient'
 import { Stack, useRouter } from 'expo-router'
 import React, { useCallback } from 'react'
 import { Dimensions, Image, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native'
-import Animated, { FadeInDown } from 'react-native-reanimated'
+import Animated, { FadeIn } from 'react-native-reanimated'
 
 import { IntentPill } from '~/components/start/intent-pill'
+import { AsciiTexture } from '~/components/ui/ascii-texture'
 import { Text } from '~/theme'
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { useIntentSuggestions } from '~/utils/services/intents/use-intent-suggestions'
 
 const { width } = Dimensions.get('window')
@@ -24,39 +25,38 @@ export default function StartScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <LinearGradient colors={['#0a0c10', '#0a0c10']} style={styles.background}>
-        <SafeAreaView style={{ flex: 1 }}>
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={styles.container}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.topBar}>
-              <Image source={require('~/assets/icon.png')} style={styles.logo} />
-              <Text variant="title" color="white">
-                Mindsherpa
-              </Text>
-              <View style={styles.avatar} />
-            </View>
+      <SafeAreaView style={styles.background}>
+        <AsciiTexture />
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.topBar}>
+            <Image source={require('~/assets/icon.png')} style={styles.logo} />
+            <Text variant="title" color="foreground">
+              MINDSHERPA
+            </Text>
+            <View style={styles.avatar} />
+          </View>
 
-            <Animated.View entering={FadeInDown.springify().stiffness(140)} style={{ gap: 10, marginTop: 18 }}>
-              <Text variant="header" color="white">
-                Where should we start?
-              </Text>
-              <Text variant="body" color="white">
-                Pick a path or just say it.
-              </Text>
-            </Animated.View>
+          <Animated.View entering={FadeIn.duration(VOID_MOTION_DURATION_STANDARD)} style={{ gap: 10, marginTop: 18 }}>
+            <Text variant="header" color="foreground">
+              WHERE SHOULD WE START?
+            </Text>
+            <Text variant="body" color="secondaryForeground">
+              SELECT AN INTENT OR START FREEFORM INPUT.
+            </Text>
+          </Animated.View>
 
-            <View style={styles.pills}>
-              {suggestions.slice(0, 6).map((intent, index) => (
-                <IntentPill key={intent.id} intent={intent} delay={index * 80} onPress={onIntentPress} />
-              ))}
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </LinearGradient>
+          <View style={styles.pills}>
+            {suggestions.slice(0, 6).map((intent, index) => (
+              <IntentPill key={intent.id} intent={intent} delay={index * 80} onPress={onIntentPress} />
+            ))}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </>
   )
 }
@@ -64,6 +64,7 @@ export default function StartScreen() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
+    backgroundColor: '#000000',
   },
   container: {
     paddingHorizontal: 16,
@@ -85,7 +86,9 @@ const styles = StyleSheet.create({
     height: 34,
     width: 34,
     borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   pills: {
     marginTop: 18,

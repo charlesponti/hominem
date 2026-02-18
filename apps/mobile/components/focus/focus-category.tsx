@@ -5,14 +5,14 @@ export const FocusCategory = ({ category }: { category: keyof CategoryMap }) => 
 
   if (!foundCategory) {
     return (
-      <Text variant="small" style={{ color: '#BDBDBD' }}>
+      <Text variant="small" style={{ color: theme.colors.mutedForeground }}>
         {`🤷 ${category}`}
       </Text>
     )
   }
 
   return (
-    <Text variant="small" style={{ color: theme.colors.black }}>
+    <Text variant="small" style={{ color: theme.colors.secondaryForeground }}>
       {`${foundCategory.emoji} ${foundCategory.label}`}
     </Text>
   )

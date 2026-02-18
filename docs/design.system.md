@@ -1,4 +1,4 @@
-# VOID: Design System Manual v1.0
+# VOID: Design System Manual v1.1 (Mobile Amendment)
 
 ## 00. Philosophy: The Four Pillars
 
@@ -63,13 +63,24 @@ Borders: 1px solid at 10% opacity. Never use shadows or depth effects.
 
 ## 04. Motion & Interaction
 
-VOID is a static system.
+VOID is a constrained-motion system.
 
-Animations: Forbidden. No transition-all. No ease-in-out.
+Animations: Allowed only for technical clarity.
+Allowed properties: `opacity`, `transform: scale`.
+Duration: `80ms` to `120ms`.
+Easing: linear or standard ease-out.
 
-Transitions: Forbidden. State changes (hover/active) must be instantaneous.
+Transitions: Allowed only within the same constraints above.
+
+Forbidden motion: translate/parallax animation, blur animation, gradient animation, spring/bounce physics, and continuous pulsing (except deterministic loading indicator feedback).
 
 Cursor: crosshair is the default to remind the user of the precision required for interaction.
+
+### Mobile Platform Notes
+
+Touch runtimes (iOS/Android) do not apply cursor semantics; cursor rules are web/desktop only.
+
+ASCII texture is optional on mobile and must remain lightweight with opacity `<= 0.20`.
 
 ## 05. The ASCII Texture (Wabi-sabi)
 

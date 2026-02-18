@@ -14,8 +14,8 @@ export const FocusHeader = React.memo(() => {
     <View style={[styles.header]}>
       <View style={[styles.topRow]}>
         <View style={[styles.today]}>
-          <Text fontSize={30} fontWeight={600}>
-            Today
+          <Text variant="header" color="foreground">
+            TODAY
           </Text>
         </View>
         <View style={[styles.iconWrap]}>
@@ -25,7 +25,7 @@ export const FocusHeader = React.memo(() => {
         </View>
       </View>
       <View style={[styles.bottomRow]}>
-        <Text variant="body" color="gray">
+        <Text variant="small" color="mutedForeground">
           {todaysDate}
         </Text>
       </View>
@@ -52,8 +52,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   iconWrap: {
-    backgroundColor: theme.colors.grayLight,
+    backgroundColor: theme.colors.muted,
     borderRadius: 99,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   iconLink: {
     padding: 12,

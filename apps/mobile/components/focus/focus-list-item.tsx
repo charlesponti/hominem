@@ -2,17 +2,16 @@ import { useCallback } from 'react'
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Reanimated, {
-  interpolateColor,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated'
 import * as ContextMenu from 'zeego/context-menu'
 
 import { Link } from 'expo-router'
 import { Text as MSText, theme } from '~/theme'
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { borderStyle, listStyles } from '~/theme/styles'
 import { getLocalDate } from '~/utils/dates'
 import queryClient from '~/utils/query-client'
@@ -42,11 +41,8 @@ export const FocusListItem = ({
   style?: ViewStyle[]
 }) => {
   const translateX = useSharedValue(0)
-  const itemHeight = useSharedValue(70)
-  const fontColor = useSharedValue(0)
-  const iconBackgroundColor = useSharedValue(
-    item.state === 'completed' ? theme.colors.green : theme.colors.grayLight
-  )
+  const itemHeight = useSharedValue(64)
+  const iconBackgroundColor = useSharedValue(theme.colors.muted)
   const iconName = useSharedValue<MindsherpaIconName>('check')
   const dueDate = item.due_date ? new Date(item.due_date) : null
 
@@ -71,7 +67,7 @@ export const FocusListItem = ({
   const completeItem = useFocusItemComplete({
     onSuccess: (data) => {
       iconBackgroundColor.value = withTiming(theme.colors.green, {
-        duration: 500,
+        duration: VOID_MOTION_DURATION_STANDARD,
       })
 
       // Remove the item from the list
@@ -80,12 +76,12 @@ export const FocusListItem = ({
     onError: () => {
       iconName.value = 'circle-xmark'
       iconBackgroundColor.value = withTiming(theme.colors.red, {
-        duration: 500,
+        duration: VOID_MOTION_DURATION_STANDARD,
       })
       setTimeout(() => {
         iconName.value = 'circle-check'
-        iconBackgroundColor.value = withTiming(theme.colors.grayLight, {
-          duration: 500,
+        iconBackgroundColor.value = withTiming(theme.colors.muted, {
+          duration: VOID_MOTION_DURATION_STANDARD,
         })
       }, 1000)
     },
@@ -115,7 +111,7 @@ export const FocusListItem = ({
           runOnJS(deleteFocusItem.mutate)(item.id)
         })
       } else {
-        translateX.value = withSpring(0)
+        translateX.value = withTiming(0, { duration: VOID_MOTION_DURATION_STANDARD })
       }
     })
 
@@ -123,10 +119,6 @@ export const FocusListItem = ({
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
-  }))
-
-  const textStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(fontColor.value, [0, 1], [theme.colors.secondary, theme.colors.red]),
   }))
 
   const leftActionStyle = useAnimatedStyle(() => ({
@@ -148,15 +140,13 @@ export const FocusListItem = ({
           flex: 1,
           flexDirection: 'row',
           alignItems: 'center',
-          backgroundColor: 'blue',
         }}
       >
-        <View style={{ flex: 1, flexDirection: 'column', rowGap: 6, backgroundColor: 'red' }}>
+        <View style={{ flex: 1, flexDirection: 'column', rowGap: 6 }}>
           <Reanimated.Text
             style={[
               listStyles.text,
               styles.focusInfoContainer,
-              textStyle,
               {
                 flex: 1,
               },
@@ -167,7 +157,7 @@ export const FocusListItem = ({
           <FocusDueDate dueDate={dueDate} />
         </View>
         <Reanimated.View style={[styles.icon, iconStyle]}>
-          <MindsherpaIcon name={iconName.value} size={20} color="white" />
+          <MindsherpaIcon name={iconName.value} size={20} color={theme.colors.foreground} />
         </Reanimated.View>
       </View>
     </Reanimated.View>
@@ -193,10 +183,8 @@ export const FocusListItem = ({
             params: { id: item.id },
           }}
         >
-          <ContextMenu.Trigger action="longPress" style={{ flex: 1, width: '100%' }}>
-            <Link.AppleZoom>
-              <GestureDetector gesture={combinedGesture}>{itemInfo}</GestureDetector>
-            </Link.AppleZoom>
+          <ContextMenu.Trigger style={{ flex: 1, width: '100%' }}>
+            <GestureDetector gesture={combinedGesture}>{itemInfo}</GestureDetector>
           </ContextMenu.Trigger>
         </Link>
         <ContextMenu.Content
@@ -207,7 +195,7 @@ export const FocusListItem = ({
         >
           <ContextMenu.Label>Actions</ContextMenu.Label>
           <ContextMenu.Item key="delete" onSelect={onDeleteMenuItemPress}>
-            <ContextMenu.ItemIcon ios={{ name: 'trash', size: 20 }} />
+            <ContextMenu.ItemIcon ios={{ name: 'trash' }} />
             <ContextMenu.ItemTitle>Delete</ContextMenu.ItemTitle>
           </ContextMenu.Item>
         </ContextMenu.Content>
@@ -218,9 +206,9 @@ export const FocusListItem = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background,
     ...borderStyle.borderBottom,
-    borderRadius: 12,
+    borderRadius: 8,
     overflow: 'hidden',
   },
   itemContainer: {
@@ -228,21 +216,26 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     paddingRight: 16,
-    borderRadius: 12,
-    backgroundColor: theme.colors.white,
+    borderRadius: 8,
+    backgroundColor: theme.colors.muted,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   focusInfoContainer: {
     flex: 1,
     fontWeight: 500,
-    fontSize: 18,
-    lineHeight: 28,
+    fontSize: 14,
+    lineHeight: 20,
+    color: theme.colors.secondaryForeground,
   },
   icon: {
-    borderRadius: 9999,
+    borderRadius: 999,
     padding: 8,
     paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   leftAction: {
     position: 'absolute',
@@ -251,7 +244,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'flex-start',
-    backgroundColor: theme.colors.green,
+    backgroundColor: theme.colors.muted,
     paddingHorizontal: 20,
   },
   rightAction: {
@@ -261,12 +254,13 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'flex-end',
-    backgroundColor: theme.colors.red,
+    backgroundColor: theme.colors.destructive,
     paddingHorizontal: 20,
   },
   actionText: {
-    color: theme.colors.white,
+    color: theme.colors.foreground,
     fontWeight: 'bold',
+    fontFamily: 'Geist Mono',
   },
 })
 
@@ -275,7 +269,7 @@ const FocusDueDate = ({ dueDate }: { dueDate: Date | null }) => {
   const { localDateString } = getLocalDate(dueDate)
 
   return (
-    <MSText variant="body" color="grayDark" fontSize={13}>
+    <MSText variant="small" color="mutedForeground" fontSize={12}>
       {dueDate.toLocaleDateString()} {dueDate.toLocaleTimeString()}
     </MSText>
   )

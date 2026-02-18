@@ -8,8 +8,15 @@ if (!MSCCloudStore) {
 }
 
 const normalizeNull = <T>(value: T | null): T | null => {
-  // @ts-expect-error - runtime check for NSNull from native modules
-  if (value && value.constructor && value.constructor.name === 'NSNull') return null
+  if (
+    value &&
+    typeof value === 'object' &&
+    'constructor' in value &&
+    typeof value.constructor === 'function' &&
+    value.constructor.name === 'NSNull'
+  ) {
+    return null
+  }
   return value
 }
 

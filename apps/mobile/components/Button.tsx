@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, type ElementRef } from 'react'
 import { ActivityIndicator, TouchableOpacity, type TouchableOpacityProps } from 'react-native'
 import { Text, makeStyles } from 'theme'
 
@@ -7,16 +7,16 @@ type ButtonProps = {
   title?: string
 } & TouchableOpacityProps
 
-export const Button = forwardRef<TouchableOpacity, ButtonProps>(
+export const Button = forwardRef<ElementRef<typeof TouchableOpacity>, ButtonProps>(
   ({ title, children, isLoading, ...touchableProps }, ref) => {
     const styles = useStyles()
 
     return (
       <TouchableOpacity ref={ref} {...touchableProps} style={[styles.button, touchableProps.style]}>
-        <Text variant="body" textAlign="center" color="white" fontWeight="600">
-          {children || title}
+        <Text variant="label" textAlign="center" color="foreground" fontWeight="600">
+          {(typeof children === 'string' ? children : title)?.toUpperCase()}
         </Text>
-        {isLoading && <ActivityIndicator color="white" size="small" />}
+        {isLoading && <ActivityIndicator color={styles.loader.color} size="small" />}
       </TouchableOpacity>
     )
   }
@@ -25,19 +25,17 @@ export const Button = forwardRef<TouchableOpacity, ButtonProps>(
 const useStyles = makeStyles((theme) => ({
   button: {
     alignItems: 'center',
-    backgroundColor: theme.colors.black,
-    borderRadius: theme.borderRadii.l_12,
-    elevation: 5,
+    backgroundColor: theme.colors.muted,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     flexDirection: 'row',
-    columnGap: theme.spacing.m_16,
+    columnGap: theme.spacing.sm_12,
     justifyContent: 'center',
-    padding: theme.spacing.m_16,
-    shadowColor: theme.colors.black,
-    shadowOffset: {
-      height: 2,
-      width: 0,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    paddingVertical: theme.spacing.sm_12,
+    paddingHorizontal: theme.spacing.m_16,
+  },
+  loader: {
+    color: theme.colors.foreground,
   },
 }))

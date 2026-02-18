@@ -6,12 +6,13 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from 'react-native-reanimated'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Text, theme } from '~/theme'
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { useAuth } from '~/utils/auth-provider'
 import { useStartChat } from '~/utils/services/chat/use-chat-messages'
 import MindsherpaIcon from '../ui/icon'
@@ -20,8 +21,6 @@ import { useInputContext } from './input-context'
 type InputDockProps = {
   seedPrompt?: string
 }
-
-const SPRING_CONFIG = { damping: 18, stiffness: 180 }
 
 export const InputDock = ({ seedPrompt }: InputDockProps) => {
   const { isSignedIn } = useAuth()
@@ -50,7 +49,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
         .onEnd(() => {
           const shouldCollapse = translateY.value > 40
           expanded.value = shouldCollapse ? 0 : 1
-          translateY.value = withSpring(0, SPRING_CONFIG)
+          translateY.value = withTiming(0, { duration: VOID_MOTION_DURATION_STANDARD })
         }),
     [expanded, translateY]
   )
@@ -73,7 +72,9 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
   }
 
   const toggleExpanded = () => {
-    expanded.value = withSpring(expanded.value === 1 ? 0 : 1, SPRING_CONFIG)
+    expanded.value = withTiming(expanded.value === 1 ? 0 : 1, {
+      duration: VOID_MOTION_DURATION_STANDARD,
+    })
   }
 
   const isInDrawer = segments[0] === '(drawer)'
@@ -93,7 +94,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
         <Pressable style={styles.bar} onPress={toggleExpanded} accessibilityLabel="Expand input">
           <View style={styles.grabber} />
           <Text variant="label" color="white">
-            Ask Sherpa
+            ASK SHERPA
           </Text>
         </Pressable>
 
@@ -107,19 +108,19 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
           </Pressable>
           <TextInput
             placeholder="Where should we start?"
-            placeholderTextColor="rgba(255,255,255,0.6)"
+            placeholderTextColor={theme.colors.mutedForeground}
             style={styles.input}
             editable={!isPending && !isRecording}
             value={message}
             onChangeText={setMessage}
             onFocus={() => {
-              expanded.value = withSpring(1, SPRING_CONFIG)
+              expanded.value = withTiming(1, { duration: VOID_MOTION_DURATION_STANDARD })
             }}
           />
           <Pressable
             style={styles.iconButton}
             onPress={() => {
-              setIsRecording((prev) => !prev)
+              setIsRecording(!isRecording)
               setMode('voice')
             }}
             accessibilityLabel="Voice input"
@@ -132,7 +133,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
             onPress={onSend}
             accessibilityLabel="Send"
           >
-            <MindsherpaIcon name="arrow-up" size={20} color={theme.colors.black} />
+            <MindsherpaIcon name="arrow-up" size={20} color={theme.colors.foreground} />
           </Pressable>
         </View>
       </Animated.View>
@@ -142,18 +143,14 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(22,22,24,0.95)',
+    backgroundColor: theme.colors.background,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.colors.border,
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 10,
     width: '94%',
     alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
     position: 'absolute',
     left: '3%',
     right: '3%',
@@ -168,7 +165,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: theme.colors.border,
   },
   inputRow: {
     flexDirection: 'row',
@@ -177,20 +174,23 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#fff',
-    fontSize: 18,
+    color: theme.colors.foreground,
+    fontSize: 14,
+    fontFamily: 'Geist Mono',
     paddingVertical: 10,
   },
   iconButton: {
     height: 42,
     width: 42,
-    borderRadius: 12,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: theme.colors.muted,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   sendButton: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.muted,
   },
   disabled: {
     opacity: 0.5,

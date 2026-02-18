@@ -51,15 +51,15 @@ function Account() {
   }
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 24, rowGap: 8 }}>
-      <Text variant="cardHeader">Your account</Text>
+    <View style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 24, rowGap: 8, backgroundColor: '#000000' }}>
+      <Text variant="cardHeader" color="foreground">ACCOUNT</Text>
       {/* <Avatar size={200} url={avatarUrl || ''} onUpload={onAvatarUpload} /> */}
       <View style={{ rowGap: 24, marginTop: 32 }}>
         <View>
           <TextInput
             aria-disabled
             label="Name"
-            placeholder="Enter your name"
+            placeholder="ENTER NAME"
             value={name}
             style={{ flex: 1 }}
             onChange={(e) => setName(e.nativeEvent.text)}
@@ -76,7 +76,7 @@ function Account() {
         </View>
         {name !== initialName ? (
           <View style={{ marginTop: 24 }}>
-            <Button title="Save" disabled={isSaving} isLoading={isSaving} onPress={onSavePress} />
+            <Button title="[SAVE]" disabled={isSaving} isLoading={isSaving} onPress={onSavePress} />
           </View>
         ) : null}
       </View>
@@ -90,8 +90,12 @@ function Account() {
           rowGap: 12,
         }}
       >
-        <Button title="Sign out" onPress={onLogoutPress} />
-        <Button title="Delete account" onPress={onDeleteAccountPress} />
+        <Button title="[SIGN_OUT]" onPress={onLogoutPress} />
+        <Button
+          title="[DELETE_ACCOUNT]"
+          onPress={onDeleteAccountPress}
+          style={{ borderColor: '#FF0000' }}
+        />
       </View>
     </View>
   )

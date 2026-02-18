@@ -1,6 +1,6 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { forwardRef } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import FontAwesome from '@expo/vector-icons/FontAwesome'
+import { forwardRef } from 'react'
+import { Pressable, StyleSheet } from 'react-native'
 
 export const HeaderButton = forwardRef<typeof Pressable, { onPress?: () => void }>(
   ({ onPress }, ref) => {
@@ -10,7 +10,7 @@ export const HeaderButton = forwardRef<typeof Pressable, { onPress?: () => void 
           <FontAwesome
             name="info-circle"
             size={25}
-            color="gray"
+            color="#FFFFFF"
             style={[
               styles.headerRight,
               {
@@ -20,12 +20,12 @@ export const HeaderButton = forwardRef<typeof Pressable, { onPress?: () => void 
           />
         )}
       </Pressable>
-    );
+    )
   }
-);
+)
 
 export const styles = StyleSheet.create({
   headerRight: {
     marginRight: 15,
   },
-});
+})

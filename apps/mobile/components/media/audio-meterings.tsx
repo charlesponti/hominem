@@ -43,7 +43,7 @@ const AudioMeterings = ({ height }: { height: number }) => {
     };
   });
 
-  return <View style={[styles.bar, { height, backgroundColor: theme.colors.black }]} />;
+  return <View style={[styles.bar, { height, backgroundColor: theme.colors.foreground }]} />;
   // return <Animated.View style={[styles.bar, animatedStyles]} />;
 };
 

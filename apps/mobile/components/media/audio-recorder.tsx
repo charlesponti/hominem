@@ -13,12 +13,13 @@ import Animated, {
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+  withTiming,
+} from 'react-native-reanimated'
 
-import { theme } from '~/theme';
-import { AudioLevelVisualizer } from './audio-meterings';
-import type { Recordings } from './recordings-list';
+import { theme } from '~/theme'
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
+import { AudioLevelVisualizer } from './audio-meterings'
+import type { Recordings } from './recordings-list'
 
 export default function AudioRecorder({
   multi,
@@ -121,18 +122,20 @@ export default function AudioRecorder({
     }
   }, [multi, recording, handleMultipleRecordings]);
 
-  const backgroundColor = useSharedValue(0);
+  const backgroundColor = useSharedValue(0)
   const speakButtonBackground = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
       backgroundColor.value,
       [0, 1],
-      [theme.colors.grayLight, theme.colors.red]
+      [theme.colors.muted, theme.colors.destructive]
     ),
-  }));
+  }))
 
   useEffect(() => {
-    backgroundColor.value = recordingStatus?.isRecording ? withSpring(1) : withSpring(0);
-  }, [recordingStatus?.isRecording]);
+    backgroundColor.value = withTiming(recordingStatus?.isRecording ? 1 : 0, {
+      duration: VOID_MOTION_DURATION_STANDARD,
+    })
+  }, [backgroundColor, recordingStatus?.isRecording])
 
   return (
     <View style={[styles.container]}>
@@ -141,10 +144,10 @@ export default function AudioRecorder({
         onPress={recording ? stopRecording : startRecording}
         {...props}>
         {recordingStatus?.isRecording ? (
-          <MaterialIcons name="stop" size={24} color={theme.colors.grayLight} />
+          <MaterialIcons name="stop" size={24} color={theme.colors.foreground} />
         ) : null}
         {!recordingStatus?.isRecording ? (
-          <MaterialIcons name="mic" size={24} color={theme.colors.primary} />
+          <MaterialIcons name="mic" size={24} color={theme.colors.foreground} />
         ) : null}
       </AnimatedPressable>
       {recordingStatus?.isRecording ? <AudioLevelVisualizer levels={meterings} /> : null}
@@ -166,5 +169,7 @@ const pressableStyles = StyleSheet.create({
   speakButton: {
     padding: 8,
     borderRadius: 50,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
-});
+})

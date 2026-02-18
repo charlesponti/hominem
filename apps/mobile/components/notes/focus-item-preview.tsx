@@ -52,7 +52,7 @@ const FocusItemPreview = ({
         <MindsherpaIcon name="trash" size={24} color={theme.colors.red} />
       </Pressable>
       <Pressable disabled={disabled} style={[focusItemStyles.icon]} onPress={onIconPress}>
-        <MindsherpaIcon name="list-tree" size={24} color={theme.colors.black} />
+        <MindsherpaIcon name="list-tree" size={24} color={theme.colors.foreground} />
       </Pressable>
     </View>
   )

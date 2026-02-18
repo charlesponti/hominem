@@ -27,12 +27,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     owner: 'pontistudios',
     orientation: 'portrait',
     icon: './assets/icon.png',
-    userInterfaceStyle: 'light',
+    userInterfaceStyle: 'dark',
     assetBundlePatterns: ['**/*'],
     splash: {
       image: './assets/splash.png',
       resizeMode: 'contain',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#000000',
     },
     web: {
       bundler: 'metro',
@@ -54,6 +54,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         {
           fonts: [
             './assets/fonts/Plus_Jakarta_Sans.ttf',
+            './assets/fonts/GeistMono-Regular.ttf',
+            './assets/fonts/GeistMono-Medium.ttf',
+            './assets/fonts/GeistMono-SemiBold.ttf',
             './assets/fonts/icons/fa-regular-400.ttf',
           ],
         },
@@ -87,7 +90,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#000000',
       },
       package: bundleIdentifier,
     },

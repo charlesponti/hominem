@@ -2,7 +2,8 @@ import { captureException } from '@sentry/react-native'
 import type { PropsWithChildren } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native'
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { Text, theme } from '~/theme'
 import queryClient from '~/utils/query-client'
 import { LocalStore } from '~/utils/local-store'
@@ -53,13 +54,15 @@ export const NoteForm = (props: NoteFormProps) => {
   })
 
   useEffect(() => {
-    buttonsPaddingBottom.value = withSpring(isKeyboardVisible ? 4 : 16)
+    buttonsPaddingBottom.value = withTiming(isKeyboardVisible ? 4 : 16, {
+      duration: VOID_MOTION_DURATION_STANDARD,
+    })
   }, [buttonsPaddingBottom, isKeyboardVisible])
 
   const onGeneratedIntents = useCallback(
     async (data: GeneratedIntentsResponse) => {
-      const searchTasks = data.search?.output
-      const createTasks = data.create?.output
+      const searchTasks = data.search?.output?.map(normalizeGeneratedTask) ?? []
+      const createTasks = data.create?.output?.map(normalizeGeneratedTask) ?? []
       const chatMessage = data.chat?.output
 
       if (chatMessage && chatMessage.length > 0) {
@@ -67,7 +70,7 @@ export const NoteForm = (props: NoteFormProps) => {
         return
       }
 
-      if (searchTasks && data.output && data.search?.input.keyword) {
+      if (searchTasks.length > 0 && data.output && data.search?.input.keyword) {
         setContent('')
         await Promise.all(searchTasks.map((item) => LocalStore.upsertFocusItem(toLocalFocusItem(item))))
         queryClient.setQueryData(['focusItems'], searchTasks)
@@ -82,7 +85,7 @@ export const NoteForm = (props: NoteFormProps) => {
         return
       }
 
-      if (createTasks && createTasks.length > 0) {
+      if (createTasks.length > 0) {
         setContent('')
         await Promise.all(createTasks.map((item) => LocalStore.upsertFocusItem(toLocalFocusItem(item))))
         const previousItems: FocusItem[] = queryClient.getQueryData(['focusItems']) || []
@@ -121,7 +124,7 @@ export const NoteForm = (props: NoteFormProps) => {
       {createError ? (
         <NoteFormError>
           <Text variant="body" color="white">
-            There was an issue saving your focus items.
+            FOCUS WRITE FAILURE.
           </Text>
           <Pressable onPress={() => setCreateError(false)}>
             <MindsherpaIcon
@@ -166,6 +169,33 @@ export const NoteForm = (props: NoteFormProps) => {
   )
 }
 
+type LegacyGeneratedTask = {
+  id: number | string
+  text: string
+  category?: string
+  due_date?: string | null
+  state?: 'backlog' | 'active' | 'completed' | 'deleted'
+  created_at?: string
+  updated_at?: string
+}
+
+function normalizeGeneratedTask(task: LegacyGeneratedTask): FocusItem {
+  return {
+    id: String(task.id),
+    text: task.text,
+    type: 'task',
+    category: task.category ?? 'task',
+    due_date: task.due_date ?? null,
+    state: task.state === 'completed' ? 'completed' : 'active',
+    priority: 0,
+    sentiment: 'neutral',
+    task_size: 'medium',
+    profile_id: '',
+    created_at: task.created_at ?? new Date().toISOString(),
+    updated_at: task.updated_at ?? new Date().toISOString(),
+  }
+}
+
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
@@ -174,11 +204,11 @@ const styles = StyleSheet.create({
     maxHeight: '100%',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.background,
     paddingHorizontal: 16,
     paddingVertical: 240,
     gap: 8,
-    borderColor: theme.colors.grayMedium,
+    borderColor: theme.colors.border,
     borderWidth: 1,
     borderRadius: 20,
   },
@@ -233,10 +263,10 @@ const GenerateError = ({ onCloseClick }: { onCloseClick: () => void }) => {
           />
           <View style={{ flex: 1, paddingLeft: 12 }}>
             <Text variant="body" color="black">
-              Sherpa is having a tummy ache.
+              SHERPA UNAVAILABLE.
             </Text>
-            <Text variant="body" color="black">
-              Please try again later.
+            <Text variant="body" color="secondaryForeground">
+              RETRY LATER.
             </Text>
           </View>
         </View>
@@ -253,8 +283,8 @@ const GenerateError = ({ onCloseClick }: { onCloseClick: () => void }) => {
             },
           ]}
         >
-          <Text variant="body" color="black">
-            Close
+          <Text variant="body" color="foreground">
+            CLOSE
           </Text>
         </Pressable>
       </View>

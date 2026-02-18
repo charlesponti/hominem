@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { ActivityIndicator, StyleSheet } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { Text, theme } from '~/theme'
 import MindsherpaIcon from '../ui/icon'
 
@@ -22,24 +23,23 @@ export const FormSubmitButton = ({
   const loadingTextStyle = useAnimatedStyle(() => ({
     opacity: loadingOpacity.value,
     width: loadingWidth.value,
-  }));
+  }))
 
   useEffect(() => {
-    // 👇 Animate the loading indicator.
-    loadingWidth.value = withSpring(isLoading ? 85 : 0, { duration: 1500, clamp: { max: 95 } }) 
-    loadingOpacity.value = withSpring(isLoading ? 1 : 0, { duration: 1500 })
+    loadingWidth.value = withTiming(isLoading ? 85 : 0, { duration: VOID_MOTION_DURATION_STANDARD })
+    loadingOpacity.value = withTiming(isLoading ? 1 : 0, { duration: VOID_MOTION_DURATION_STANDARD })
   }, [isLoading, loadingWidth, loadingOpacity])
 
 
   if (isLoading) {
     return (
       <AnimatedTouchableOpacity disabled style={[styles.sendButton, styles.loadingButton]}>
-          <ActivityIndicator size="small" color="white" />
+          <ActivityIndicator size="small" color={theme.colors.foreground} />
           <AnimatedText 
             variant="body" 
-            color="white" 
+            color="foreground" 
             style={[loadingTextStyle]}>
-            Thinking...
+            PROCESSING...
           </AnimatedText>
       </AnimatedTouchableOpacity>
     )
@@ -49,9 +49,9 @@ export const FormSubmitButton = ({
     <AnimatedTouchableOpacity
       disabled={isRecording}
       onPress={onSubmitButtonClick}
-      style={[styles.sendButton, { backgroundColor: isRecording ? theme.colors.grayMedium : theme.colors['fg-primary'] }]}
+      style={[styles.sendButton, { opacity: isRecording ? 0.6 : 1 }]}
     >
-      <MindsherpaIcon name="arrow-up" size={20} color={theme.colors.white} />
+      <MindsherpaIcon name="arrow-up" size={20} color={theme.colors.foreground} />
     </AnimatedTouchableOpacity>
   )
 }
@@ -66,7 +66,9 @@ const styles = StyleSheet.create({
     maxHeight: 44,
   },
   sendButton: {
-    backgroundColor: theme.colors['fg-primary'],
+    backgroundColor: theme.colors.muted,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: 190,
     paddingHorizontal: 11,
     paddingVertical: 8,

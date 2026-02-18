@@ -22,6 +22,9 @@ function InnerRootLayout() {
 
   const [loaded, error] = useFonts({
     'Font Awesome Regular': require('../assets/fonts/icons/fa-regular-400.ttf'),
+    'Geist Mono': require('../assets/fonts/GeistMono-Regular.ttf'),
+    'Geist Mono Medium': require('../assets/fonts/GeistMono-Medium.ttf'),
+    'Geist Mono SemiBold': require('../assets/fonts/GeistMono-SemiBold.ttf'),
     'Plus Jakarta Sans': require('../assets/fonts/Plus_Jakarta_Sans.ttf'),
   })
 
@@ -77,7 +80,7 @@ function RootLayout() {
   return (
     <ThemeProvider theme={theme}>
       <SafeAreaProvider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.colors.background }}>
           <AuthProvider>
             <ApiProvider>
               <InnerRootLayout />

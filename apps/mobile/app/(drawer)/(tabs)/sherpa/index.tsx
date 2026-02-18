@@ -44,7 +44,7 @@ export default function Sherpa() {
     <BlurredGradientBackground>
       {isLoadingActiveChat || isStartingChat ? (
         <LoadingFull>
-          <Text variant="title">Loading your chat...</Text>
+          <Text variant="title" color="foreground">LOADING CHAT STREAM...</Text>
         </LoadingFull>
       ) : null}
       {activeChat ? <Chat chatId={activeChat.id} onChatEnd={onChatEnd} /> : null}

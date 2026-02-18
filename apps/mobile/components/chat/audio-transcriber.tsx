@@ -8,10 +8,11 @@ import Animated, {
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from 'react-native-reanimated'
 
 import { theme } from '~/theme'
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { AudioLevelVisualizer } from '../media/audio-meterings'
 import { useAudioTranscribe } from '../media/use-audio-transcribe'
 
@@ -112,12 +113,14 @@ export default function AudioTranscriber(props: AudioTranscriberProps) {
     backgroundColor: interpolateColor(
       backgroundColor.value,
       [0, 1],
-      [theme.colors.grayLight, theme.colors.red]
+      [theme.colors.muted, theme.colors.destructive]
     ),
   }))
 
   useEffect(() => {
-    backgroundColor.value = recordingStatus?.isRecording ? withSpring(1) : withSpring(0)
+    backgroundColor.value = withTiming(recordingStatus?.isRecording ? 1 : 0, {
+      duration: VOID_MOTION_DURATION_STANDARD,
+    })
   }, [backgroundColor, recordingStatus?.isRecording])
 
   return (
@@ -129,12 +132,12 @@ export default function AudioTranscriber(props: AudioTranscriberProps) {
         onPress={recording ? stopRecording : startRecording}
         {...props}
       >
-        {isPending ? <ActivityIndicator size="small" color={theme.colors.primary} /> : null}
+        {isPending ? <ActivityIndicator size="small" color={theme.colors.foreground} /> : null}
         {!isPending && recordingStatus?.isRecording ? (
-          <MaterialIcons name="stop" size={24} color={theme.colors.grayLight} />
+          <MaterialIcons name="stop" size={24} color={theme.colors.foreground} />
         ) : null}
         {!isPending && !recordingStatus?.isRecording ? (
-          <MaterialIcons name="mic" size={24} color={theme.colors.primary} />
+          <MaterialIcons name="mic" size={24} color={theme.colors.foreground} />
         ) : null}
       </AnimatedPressable>
     </View>

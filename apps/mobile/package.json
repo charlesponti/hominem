@@ -19,8 +19,7 @@
     "build:production:ios": "NODE_ENV=production eas build --profile production --platform ios",
     "build:update:preview": "NODE_ENV=production eas update --platform ios --branch preview --clear-cache",
     "prebuild": "expo prebuild",
-    "web": "expo start --web",
-    "codegen": "openapi-typescript http://localhost:8002/openapi.json --output utils/api-types.ts"
+    "web": "expo start --web"
   },
   "dependencies": {
     "@biomejs/biome": "2.3.15",
@@ -75,8 +74,7 @@
     "zeego": "3.0.6",
     "@hominem/hono-client": "workspace:*",
     "@hominem/hono-rpc": "workspace:*",
-    "@supabase/supabase-js": "2.88.0",
-    "axios": "^1.7.7"
+    "@supabase/supabase-js": "2.88.0"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

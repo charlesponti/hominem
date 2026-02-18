@@ -34,7 +34,7 @@ const Onboarding = () => {
     <SafeAreaView
       style={{
         flex: 1,
-        backgroundColor: theme.colors.tertiary,
+        backgroundColor: theme.colors.background,
         justifyContent: 'center',
       }}
     >
@@ -53,9 +53,11 @@ const Onboarding = () => {
             rowGap: 12,
           }}
         >
-          <Text variant="header">Welcome!</Text>
-          <Text variant="label" color="quaternary">
-            Let us know what to call you.
+          <Text variant="header" color="foreground">
+            WELCOME
+          </Text>
+          <Text variant="label" color="mutedForeground">
+            DEFINE PROFILE IDENTIFIER.
           </Text>
         </View>
 
@@ -70,7 +72,9 @@ const Onboarding = () => {
         <Button title="Create profile" onPress={onButtonPress} />
         {hasError ? (
           <FeedbackBlock error>
-            <Text variant="body">There was a problem creating your profile.</Text>
+            <Text variant="body" color="destructive">
+              PROFILE WRITE FAILED.
+            </Text>
           </FeedbackBlock>
         ) : null}
       </View>

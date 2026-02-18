@@ -44,7 +44,7 @@ export const Chat = (props: ChatProps) => {
     endChat()
   }, [endChat])
   const renderItem = useCallback(
-    ({ item }: { item: { id: string } & any }) => renderMessage(item, Markdown),
+    ({ item }: { item: (typeof formattedMessages)[number] }) => renderMessage(item, Markdown),
     [Markdown]
   )
 
@@ -56,7 +56,6 @@ export const Chat = (props: ChatProps) => {
         <FlashList
           contentContainerStyle={styles.messagesContainer}
           data={formattedMessages}
-          estimatedItemSize={120}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
         />

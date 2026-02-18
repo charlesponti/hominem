@@ -7,7 +7,7 @@ export const LoadingFull = ({ children }: PropsWithChildren) => {
   return (
     <LoadingContainer>
       {children}
-      <ActivityIndicator size="large" color="black" />
+      <ActivityIndicator size="large" color="#FFFFFF" />
     </LoadingContainer>
   )
 }
@@ -24,5 +24,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 48,
     rowGap: 24,
+    backgroundColor: '#000000',
   },
 })

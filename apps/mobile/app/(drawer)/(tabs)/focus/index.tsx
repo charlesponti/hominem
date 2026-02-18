@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { Link, Stack, useRouter } from 'expo-router'
+import { Link, Stack } from 'expo-router'
 import React, { useCallback, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
@@ -16,7 +16,6 @@ import { useFocusQuery } from '~/utils/services/notes/use-focus-query'
 
 export const FocusView = () => {
   const queryClient = useQueryClient()
-  const router = useRouter()
   const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const {
@@ -46,37 +45,26 @@ export const FocusView = () => {
     setActiveSearch(null)
   }, [onRefresh])
 
-  const openInsightsSheet = useCallback(() => {
-    router.push('/(drawer)/(tabs)/focus/insights')
-  }, [router])
-
-  const goToSherpa = useCallback(() => {
-    router.push('/(drawer)/(tabs)/sherpa')
-  }, [router])
-
   const isLoaded = Boolean(!isLoading && !isRefetching && !refreshing)
   const hasFocusItems = !!focusItems && focusItems.length > 0
 
   return (
     <>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="sparkles" onPress={goToSherpa}>
-          Sherpa
-        </Stack.Toolbar.Button>
-        <Stack.Toolbar.Button icon="arrow.clockwise" onPress={onRefresh}>
-          Refresh
-        </Stack.Toolbar.Button>
-      </Stack.Toolbar>
-
-      <Stack.Toolbar placement="bottom">
-        <Stack.Toolbar.Button icon="plus" onPress={openInsightsSheet}>
-          Quick focus
-        </Stack.Toolbar.Button>
-        <Stack.Toolbar.Spacer />
-        <Stack.Toolbar.Button icon="sparkles" onPress={goToSherpa}>
-          Sherpa
-        </Stack.Toolbar.Button>
-      </Stack.Toolbar>
+      <Stack.Screen
+        options={{
+          title: 'FOCUS',
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', columnGap: 8 }}>
+              <Link href="/(drawer)/(tabs)/sherpa">
+                <Text variant="body" color="secondaryForeground">SHERPA</Text>
+              </Link>
+              <Text variant="body" color="secondaryForeground" onPress={onRefresh}>
+                REFRESH
+              </Text>
+            </View>
+          ),
+        }}
+      />
 
       <GestureHandlerRootView style={styles.container}>
         <FocusHeader />
@@ -101,7 +89,7 @@ export const FocusView = () => {
           {isLoaded && !hasFocusItems && !activeSearch ? (
             <View style={styles.empty}>
               <Text variant="bodyLarge" color="primary">
-                You have no focus items yet.
+                NO ACTIVE FOCUS ITEMS.
               </Text>
             </View>
           ) : null}
@@ -110,7 +98,7 @@ export const FocusView = () => {
         <View style={styles.sherpaButtonContainer}>
           <View style={styles.sherpaCircleButton}>
             <Link href="/(drawer)/(tabs)/sherpa" style={{ flex: 1 }}>
-              <MindsherpaIcon name="hat-wizard" size={32} color={theme.colors.white} />
+          <MindsherpaIcon name="hat-wizard" size={32} color={theme.colors.white} />
             </Link>
           </View>
         </View>
@@ -123,6 +111,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
+    backgroundColor: theme.colors.background,
   },
   focusContainer: {
     flex: 1,
@@ -140,20 +129,13 @@ const styles = StyleSheet.create({
     paddingVertical: 75,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
-    borderRadius: 12,
+    backgroundColor: theme.colors.muted,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   scrollContainer: {
     paddingTop: 12,
-  },
-  fullLinearGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '100%',
-    backgroundColor: theme.colors.black,
-    opacity: 0,
   },
   sherpaButtonContainer: {
     alignItems: 'center',
@@ -164,8 +146,10 @@ const styles = StyleSheet.create({
     right: 0,
   },
   sherpaCircleButton: {
-    backgroundColor: theme.colors['fg-primary'],
-    borderRadius: 99,
+    backgroundColor: theme.colors.muted,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     padding: 12,
     maxWidth: 120,
     marginBottom: 24,
@@ -190,11 +174,11 @@ const FocusLoadingError = React.memo(() => {
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', columnGap: 24 }}>
           <MindsherpaIcon name="circle-exclamation" size={24} color={theme.colors.tomato} />
           <View style={{ flex: 1 }}>
-            <Text variant="body" color="black">
-              Your focus could not be loaded.
+            <Text variant="body" color="foreground">
+              FOCUS LOAD FAILED.
             </Text>
-            <Text variant="body" color="black">
-              Please, try again later.
+            <Text variant="body" color="secondaryForeground">
+              RETRY LATER.
             </Text>
           </View>
         </View>

@@ -20,7 +20,7 @@ export type MessageOutput = {
   chat_id: string
   profile_id: string
   focus_ids: string[] | null
-  focus_items: string[] | null
+  focus_items: Array<{ id: string; text: string }> | null
 }
 
 type SendChatMessageOutput = {
@@ -307,7 +307,9 @@ const toLocalMessageOutput = (message: LocalChatMessage): MessageOutput => ({
   chat_id: message.chatId,
   profile_id: '',
   focus_ids: message.focusIdsJson ? (JSON.parse(message.focusIdsJson) as string[]) : null,
-  focus_items: message.focusItemsJson ? (JSON.parse(message.focusItemsJson) as string[]) : null,
+  focus_items: message.focusItemsJson
+    ? (JSON.parse(message.focusItemsJson) as Array<{ id: string; text: string }>)
+    : null,
 })
 
 const persistMessages = async (chatId: string, messages: MessageOutput[]) => {

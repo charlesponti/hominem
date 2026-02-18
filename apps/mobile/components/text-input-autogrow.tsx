@@ -23,7 +23,7 @@ const AutoGrowingInput = ({
       ref={inputRef}
       style={[
         styles.input,
-        { color: value && value.length > 0 ? theme.colors.black : theme.colors.grayLight },
+        { color: value && value.length > 0 ? theme.colors.foreground : theme.colors.mutedForeground },
         props.style,
       ]}
       value={value}
