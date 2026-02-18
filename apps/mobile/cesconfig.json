@@ -1,0 +1,39 @@
+{
+  "cesVersion": "2.11.0",
+  "projectName": "mindsherpa",
+  "packages": [
+    {
+      "name": "expo-router",
+      "type": "navigation",
+      "options": {
+        "type": "drawer + tabs"
+      }
+    },
+    {
+      "name": "restyle",
+      "type": "styling"
+    },
+    {
+      "name": "supabase",
+      "type": "authentication"
+    }
+  ],
+  "flags": {
+    "noGit": false,
+    "noInstall": false,
+    "overwrite": false,
+    "importAlias": true,
+    "packageManager": "npm",
+    "eas": true
+  },
+  "packageManager": {
+    "type": "npm",
+    "version": "10.2.4"
+  },
+  "os": {
+    "type": "Darwin",
+    "platform": "darwin",
+    "arch": "x64",
+    "kernelVersion": "23.5.0"
+  }
+}
