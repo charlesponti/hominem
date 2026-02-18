@@ -1,10 +1,6 @@
-import { isValidGoogleHost } from '@hominem/utils/google';
-import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { isValidGoogleHost } from '@hominem/utils/google'
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+export { cn } from '@hominem/ui/lib/utils'
 
 export function buildImageUrl(src?: string | null, width = 400, height = 300) {
   if (!src) {

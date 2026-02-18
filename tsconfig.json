@@ -1,14 +1,16 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/ai" },
     { "path": "packages/auth" },
-    { "path": "packages/career" },
     { "path": "packages/chat" },
     { "path": "packages/db" },
+    { "path": "packages/env" },
     { "path": "packages/events" },
     { "path": "packages/finance" },
     { "path": "packages/health" },
+    { "path": "packages/hono-client" },
+    { "path": "packages/hono-rpc" },
+    { "path": "packages/invites" },
     { "path": "packages/jobs" },
     { "path": "packages/lists" },
     { "path": "packages/notes" },

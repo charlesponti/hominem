@@ -43,4 +43,4 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
           REDIS_URL: "redis://localhost:6379"
-        run: bun packages/db/scripts/migrate-place-images.ts
+        run: bun packages/places/src/scripts/migrate-place-images.ts

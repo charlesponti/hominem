@@ -20,7 +20,6 @@
     "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
     "googleapis": "^170.0.0",
-    "sharp": "^0.32.4",
     "zod": "4.3.6"
   },
   "devDependencies": {
