@@ -69,14 +69,14 @@ export function BudgetHistoryChart({ historyMonths = 6 }: BudgetHistoryChartProp
               <Line
                 type="monotone"
                 dataKey="budgeted"
-                stroke="#8884d8"
+                stroke="rgba(255, 255, 255, 0.9)"
                 activeDot={{ r: 8 }}
                 name="Total Budgeted"
               />
               <Line
                 type="monotone"
                 dataKey="actual"
-                stroke="#82ca9d"
+                stroke="rgba(255, 255, 255, 0.7)"
                 name="Total Actual Spending"
               />
             </LineChart>

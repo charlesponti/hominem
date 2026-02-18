@@ -195,8 +195,8 @@ export function BudgetProjectionDashboard() {
                     <Area
                       type="monotone"
                       dataKey="projected"
-                      stroke="#8884d8"
-                      fill="#8884d8"
+                      stroke="rgba(255, 255, 255, 0.7)"
+                      fill="rgba(255, 255, 255, 0.5)"
                       name="Projected Savings"
                     />
                   </AreaChart>

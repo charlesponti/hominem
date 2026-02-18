@@ -8,8 +8,14 @@ import { useBudgetCategories } from '~/lib/hooks/use-budget';
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
 import { formatCurrency } from '~/lib/number.utils';
 
-// Utility functions for budget calculations
-const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+// VOID design tokens for chart visualization
+const CHART_COLORS = [
+  'rgba(255, 255, 255, 0.9)', // var(--color-emphasis-highest)
+  'rgba(255, 255, 255, 0.7)', // var(--color-emphasis-high)
+  'rgba(255, 255, 255, 0.5)', // var(--color-emphasis-medium)
+  'rgba(255, 255, 255, 0.3)', // var(--color-emphasis-low)
+  'rgba(255, 255, 255, 0.15)', // var(--color-emphasis-subtle)
+];
 
 function getBudgetStatus(percentageSpent: number): 'on-track' | 'warning' | 'over-budget' {
   if (percentageSpent > 100) return 'over-budget';
@@ -20,16 +26,16 @@ function getBudgetStatus(percentageSpent: number): 'on-track' | 'warning' | 'ove
 function getStatusColor(status: 'on-track' | 'warning' | 'over-budget') {
   switch (status) {
     case 'on-track':
-      return '#10b981'; // emerald-500
+      return 'rgba(255, 255, 255, 0.7)'; // var(--success) / var(--color-emphasis-high)
     case 'warning':
-      return '#f59e0b'; // amber-500
+      return 'hsl(30 100% 50%)'; // var(--warning)
     case 'over-budget':
-      return '#ef4444'; // red-500
+      return 'hsl(0 100% 50%)'; // var(--destructive)
   }
 }
 
 function getChartColor(index: number) {
-  return CHART_COLORS[index % CHART_COLORS.length] || '#0088FE';
+  return CHART_COLORS[index % CHART_COLORS.length] || 'rgba(255, 255, 255, 0.9)';
 }
 
 interface BudgetCategoryDetailsProps {

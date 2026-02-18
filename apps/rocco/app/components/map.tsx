@@ -321,9 +321,9 @@ const RoccoMapContent = ({
                 width: '20px',
                 height: '20px',
                 borderRadius: '50%',
-                backgroundColor: '#4285F4',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)', // var(--color-emphasis-highest)
                 border: '2px solid white',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                // Note: boxShadow is a VOID violation but necessary for Google Maps marker visibility
               }}
             />
           </AdvancedMarker>

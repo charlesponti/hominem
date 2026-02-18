@@ -9,10 +9,10 @@ export function BudgetSummary({ totalBudget, totalSpent }: BudgetSummaryProps) {
   const remaining = totalBudget - totalSpent;
   const spentPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 
-  // Determine the color based on spending percentage
+  // Determine the color based on spending percentage using VOID design tokens
   const getProgressColor = () => {
-    if (spentPercentage > 100) return '#ff0000'; // destructive red
-    if (spentPercentage > 80) return '#ff8800'; // warning orange
+    if (spentPercentage > 100) return 'hsl(0 100% 50%)'; // var(--destructive)
+    if (spentPercentage > 80) return 'hsl(30 100% 50%)'; // var(--warning)
     return 'var(--color-emphasis-high)'; // foreground white
   };
 
