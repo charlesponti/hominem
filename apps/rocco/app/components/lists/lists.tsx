@@ -36,7 +36,7 @@ export default function Lists() {
           </div>
         ) : (
           <List isLoading={isLoading} loadingSize="lg">
-            {displayLists.map((list: any) => (
+            {displayLists.map((list) => (
               <ListRow
                 key={list.id}
                 id={list.id}

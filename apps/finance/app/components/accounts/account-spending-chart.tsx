@@ -14,6 +14,8 @@ import {
   YAxis,
 } from 'recharts';
 
+import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types';
+
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';
 
@@ -53,7 +55,7 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
 
   const chartData = useMemo(() => {
     if (!Array.isArray(timeSeriesData?.data)) return [];
-    return timeSeriesData.data.map((point: any) => ({
+    return timeSeriesData.data.map((point: TimeSeriesDataPoint) => ({
       name: formatDateLabel(point.date),
       Spending: Math.abs(point.expenses),
     }));

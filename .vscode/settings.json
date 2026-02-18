@@ -1,31 +1,46 @@
 {
-  "files.watcherExclude": {
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/node_modules/**": true,
-    "**/dist/**": true,
-    "**/build/**": true,
-    "**/.cache/**": true,
-    "**/.tsbuildinfo": true,
-    "**/.turbo/**": true,
-    "**/.react-router/cache/**": true
-  },
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/build": true,
-    "**/dist": true,
-    "**/.cache": true,
-    "**/.turbo": true
-  },
-  "chat.tools.terminal.autoApprove": {
-    "bunx": true
-  },
-  "typescript.tsserver.enableTracing": true,
-  "typescript.tsserver.log": "verbose",
-  "typescript.tsserver.maxTsServerMemory": 8072,
-  "typescript.tsserver.watchOptions": {
-    "excludeDirectories": [".turbo", "coverage", "dist", "build", "**/node_modules/**"]
-  },
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.disableAutomaticTypeAcquisition": true
+    "files.watcherExclude": {
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "**/node_modules/**": true,
+        "**/dist/**": true,
+        "**/build/**": true,
+        "**/.cache/**": true,
+        "**/.tsbuildinfo": true,
+        "**/.turbo/**": true,
+        "**/.react-router/cache/**": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/build": true,
+        "**/dist": true,
+        "**/.cache": true,
+        "**/.turbo": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        "bunx": true,
+        ".specify/scripts/bash/": true,
+        ".specify/scripts/powershell/": true
+    },
+    "typescript.tsserver.enableTracing": true,
+    "typescript.tsserver.log": "verbose",
+    "typescript.tsserver.maxTsServerMemory": 8072,
+    "typescript.tsserver.watchOptions": {
+        "excludeDirectories": [
+            ".turbo",
+            "coverage",
+            "dist",
+            "build",
+            "**/node_modules/**"
+        ]
+    },
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.disableAutomaticTypeAcquisition": true,
+    "chat.promptFilesRecommendations": {
+        "speckit.constitution": true,
+        "speckit.specify": true,
+        "speckit.plan": true,
+        "speckit.tasks": true,
+        "speckit.implement": true
+    }
 }

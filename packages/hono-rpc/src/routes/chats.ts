@@ -153,7 +153,12 @@ const chatByIdRoutes = new Hono<AppContext>()
     }
 
     let accumulatedContent = '';
-    const accumulatedToolCalls: any[] = [];
+    interface ToolCallEntry {
+      toolName: string;
+      toolCallId: string;
+      args: Record<string, unknown>;
+    }
+    const accumulatedToolCalls: ToolCallEntry[] = [];
 
     try {
       // Collect stream results

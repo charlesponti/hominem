@@ -486,7 +486,7 @@ export async function getHabitStats(userId: string, habitId: string): Promise<Ha
   const habit = await db
     .select({
       streakCount: events.streakCount,
-      completedInstances: (events as any).completedInstances,
+      completedInstances: events.completedInstances,
     })
     .from(events)
     .where(and(eq(events.id, habitId), eq(events.userId, userId)))
@@ -561,7 +561,7 @@ export async function updateHabit(
 ): Promise<EventWithTagsAndPeople | null> {
   // Verify the habit exists and belongs to the user
   const habit = await getEventById(habitId);
-  if (!habit || (habit as any).userId !== userId || (habit as any).type !== 'Habit') {
+  if (!habit || (habit as { userId?: string }).userId !== userId || (habit as { type?: string }).type !== 'Habit') {
     return null;
   }
 
@@ -591,12 +591,12 @@ export async function markHabitComplete(
 ): Promise<EventWithTagsAndPeople | null> {
   const habit = await getEventById(habitId);
 
-  if (!habit || (habit as any).userId !== userId) {
+  if (!habit || (habit as { userId?: string }).userId !== userId) {
     return null;
   }
 
-  const currentStreak = (habit as any).streakCount || 0;
-  const completedInstances = (habit as any).completedInstances || 0;
+  const currentStreak = (habit as { streakCount?: number }).streakCount || 0;
+  const completedInstances = (habit as { completedInstances?: number }).completedInstances || 0;
 
   return updateEvent(habitId, {
     streakCount: currentStreak + 1,
@@ -611,7 +611,7 @@ export async function resetHabitStreak(
 ): Promise<EventWithTagsAndPeople | null> {
   const habit = await getEventById(habitId);
 
-  if (!habit || (habit as any).userId !== userId) {
+  if (!habit || (habit as { userId?: string }).userId !== userId) {
     return null;
   }
 
@@ -631,8 +631,8 @@ export interface GoalStats {
 export async function getGoalStats(goalId: string, userId: string): Promise<GoalStats> {
   const goal = await db
     .select({
-      currentValue: (events as any).currentValue,
-      targetValue: (events as any).targetValue,
+      currentValue: events.currentValue,
+      targetValue: events.targetValue,
     })
     .from(events)
     .where(and(eq(events.id, goalId), eq(events.userId, userId)))
@@ -703,12 +703,12 @@ export async function updateGoalProgress(
 ): Promise<EventWithTagsAndPeople | null> {
   const goal = await getEventById(goalId);
 
-  if (!goal || (goal as any).userId !== userId) {
+  if (!goal || (goal as { userId?: string }).userId !== userId) {
     return null;
   }
 
-  const currentValue = ((goal as any).currentValue || 0) + increment;
-  const targetValue = (goal as any).targetValue || 0;
+  const currentValue = ((goal as { currentValue?: number }).currentValue || 0) + increment;
+  const targetValue = (goal as { targetValue?: number }).targetValue || 0;
 
   return updateEvent(goalId, {
     currentValue: Math.min(currentValue, targetValue), // Don't exceed target
@@ -739,7 +739,7 @@ export async function getHabitsByUser(
       orderByClause = desc(events.streakCount);
       break;
     case 'completions':
-      orderByClause = desc((events as any).completedInstances);
+      orderByClause = desc(events.completedInstances);
       break;
     case 'name':
     default:
@@ -786,7 +786,7 @@ export async function getGoalsByUser(
   let orderByClause: ReturnType<typeof asc> | ReturnType<typeof desc>;
   switch (filters?.sortBy) {
     case 'progress':
-      orderByClause = desc((events as any).currentValue);
+      orderByClause = desc(events.currentValue);
       break;
     case 'priority':
       orderByClause = asc(events.priority);
@@ -854,8 +854,8 @@ export async function getHealthActivityStats(
 
   const activities = await db
     .select({
-      duration: (events as any).duration,
-      caloriesBurned: (events as any).caloriesBurned,
+      duration: events.duration,
+      caloriesBurned: events.caloriesBurned,
       date: events.date,
     })
     .from(events)
@@ -923,7 +923,7 @@ export async function updateHealthActivity(
 ): Promise<EventWithTagsAndPeople | null> {
   const activity = await getEventById(activityId);
 
-  if (!activity || (activity as any).userId !== userId) {
+  if (!activity || (activity as { userId?: string }).userId !== userId) {
     return null;
   }
 
@@ -966,10 +966,10 @@ export async function getHealthActivitiesByUser(
   let orderByClause: ReturnType<typeof asc> | ReturnType<typeof desc>;
   switch (filters?.sortBy) {
     case 'calories':
-      orderByClause = desc((events as any).caloriesBurned);
+      orderByClause = desc(events.caloriesBurned);
       break;
     case 'duration':
-      orderByClause = desc((events as any).duration);
+      orderByClause = desc(events.duration);
       break;
     case 'date':
     default:
@@ -1015,8 +1015,8 @@ export async function getConsolidatedGoalStats(
   const goal = await db
     .select({
       status: events.status,
-      currentValue: (events as any).currentValue,
-      targetValue: (events as any).targetValue,
+      currentValue: events.currentValue,
+      targetValue: events.targetValue,
       milestones: events.milestones,
     })
     .from(events)
@@ -1102,7 +1102,7 @@ export async function updateConsolidatedGoal(
 ): Promise<EventWithTagsAndPeople | null> {
   const goal = await getEventById(goalId);
 
-  if (!goal || (goal as any).userId !== userId) {
+  if (!goal || (goal as { userId?: string }).userId !== userId) {
     return null;
   }
 
@@ -1143,7 +1143,7 @@ export async function getConsolidatedGoalsByUser(
       break;
     case 'createdAt':
     default:
-      orderByClause = desc((events as any).createdAt);
+      orderByClause = desc(events.createdAt);
   }
 
   const goalsList = await db

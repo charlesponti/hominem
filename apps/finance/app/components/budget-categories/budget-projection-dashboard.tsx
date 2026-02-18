@@ -31,9 +31,9 @@ export function BudgetProjectionDashboard() {
   // Calculate total income from categories
   const totalIncome =
     categories
-      .filter((cat: any) => cat.type === 'income')
+      .filter((cat) => cat.type === 'income')
       .reduce(
-        (sum: number, cat: any) =>
+        (sum, cat) =>
           sum + Number.parseFloat(String(cat.averageMonthlyExpense || '0')),
         0,
       ) || 0;
@@ -159,7 +159,7 @@ export function BudgetProjectionDashboard() {
     const projectedSurplus = budgetData.surplus ?? 0;
 
     const projections = budgetData.projections ?? [];
-    const projectionData = projections.slice(0, 6).map((proj: any) => ({
+    const projectionData = projections.slice(0, 6).map((proj) => ({
       month: `Month ${proj.month}`,
       projected: proj.totalSaved,
       baseline: projectedSurplus * proj.month,

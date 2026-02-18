@@ -177,7 +177,7 @@ export function usePersistentSettings() {
 
 interface FormState {
   step: number;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   errors: Record<string, string>;
   isValid: boolean;
 }
@@ -205,7 +205,7 @@ export function useFormState(formId: string) {
   );
 
   const updateFormData = useCallback(
-    (field: string, value: any) => {
+    (field: string, value: unknown) => {
       setFormState({
         data: { ...formState.data, [field]: value },
         errors: { ...formState.errors, [field]: '' }, // Clear field error

@@ -332,13 +332,13 @@ export const budgetRoutes = new Hono<AppContext>()
       if (input) {
         const expenses = input.expenses || [];
         const totalExpenses = expenses.reduce(
-          (sum: number, expense: any) => sum + expense.amount,
+          (sum, expense) => sum + expense.amount,
           0,
         );
         const surplus = input.income - totalExpenses;
         const savingsRate = input.income > 0 ? (surplus / input.income) * 100 : 0;
 
-        const categories = expenses.map((expense: any) => ({
+        const categories = expenses.map((expense) => ({
           ...expense,
           percentage: input.income > 0 ? (expense.amount / input.income) * 100 : 0,
         }));

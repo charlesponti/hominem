@@ -27,8 +27,8 @@ export const pool = postgres(DATABASE_URL, {
 });
 
 // Deferred initialization to avoid expensive type checking at module load
-let mainDb: any = null;
-let testDbOverride: any = null;
+let mainDb: unknown = null;
+let testDbOverride: unknown = null;
 
 function initDb() {
   if (!mainDb) {
@@ -47,7 +47,7 @@ export function getDb() {
   return initDb();
 }
 
-export function setTestDb(override: any): void {
+export function setTestDb(override: unknown): void {
   testDbOverride = override;
 }
 

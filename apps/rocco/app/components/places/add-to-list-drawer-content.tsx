@@ -12,12 +12,21 @@ import { Check, Loader2, Plus } from 'lucide-react';
 import { useMemo, useState, useCallback } from 'react';
 import { useRevalidator } from 'react-router';
 
+import type { List } from '@hominem/hono-rpc/types/lists.types';
+
+type ListWithInList = List & { isInList: boolean };
+
 import { useLists, useCreateList } from '~/lib/hooks/use-lists';
 import { useAddPlaceToList, useRemoveListItem } from '~/lib/places';
 import { cn } from '~/lib/utils';
 
 interface AddToListDrawerContentProps {
-  place: any; // Using any for now to match current implementation, should be typed properly
+  place: {
+    id: string;
+    googleMapsId: string;
+    name?: string | null;
+    imageUrl?: string | null;
+  };
   resolvedPlaceId: string | undefined;
   googleMapsId: string | undefined;
   onClose: () => void;
@@ -40,9 +49,9 @@ export const AddToListDrawerContent = ({
     if (!(rawLists && googleMapsId)) {
       return [];
     }
-    return (rawLists as any[]).map((list: any) => ({
+    return rawLists.map((list) => ({
       ...list,
-      isInList: list.places?.some((p: any) => p.googleMapsId === googleMapsId) ?? false,
+      isInList: list.places?.some((p) => p.googleMapsId === googleMapsId) ?? false,
     }));
   }, [rawLists, googleMapsId]);
 
@@ -158,7 +167,7 @@ export const AddToListDrawerContent = ({
                     Create &quot;{searchQuery}&quot;
                   </CommandItem>
                 )}
-                {filteredLists.map((list: any) => (
+                {filteredLists.map((list: ListWithInList) => (
                   <CommandItem
                     key={list.id}
                     value={list.name}

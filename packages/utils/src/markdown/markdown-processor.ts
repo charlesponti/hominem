@@ -12,6 +12,23 @@ import { parse as parseYaml } from 'yaml';
 import { getDatesFromText } from '../time';
 import { extractMetadata, type Metadata } from './metadata.schema';
 
+/**
+ * Type for markdown AST nodes from remark/unified
+ * Covers the common properties used in this processor
+ */
+export interface MarkdownAstNode {
+  type: string;
+  value?: string;
+  depth?: number;
+  checked?: boolean;
+  children?: MarkdownAstNode[];
+  position?: {
+    start: { offset: number };
+    end: { offset: number };
+  };
+  [key: string]: unknown;
+}
+
 // Document type from langchain
 export interface Document<Metadata extends Record<string, unknown> = Record<string, unknown>> {
   pageContent: string;
@@ -56,7 +73,7 @@ export class MarkdownProcessor {
     let metadata: Metadata = {};
     let processableContent = content;
 
-    const yamlNode = ast.children.find((node: any) => node.type === 'yaml');
+    const yamlNode = ast.children.find((node) => node.type === 'yaml');
     if (yamlNode && 'value' in yamlNode) {
       try {
         const frontmatter = parseYaml(yamlNode.value as string);
@@ -92,7 +109,7 @@ export class MarkdownProcessor {
       .use(remarkFrontmatter, ['yaml'])
       .parse(processableContent);
 
-    const headingNode = ast.children.find((node: any) => node.type === 'heading');
+    const headingNode = ast.children.find((node) => node.type === 'heading');
     const heading = headingNode
       ? toString(headingNode)
       : filename.replace('.md', '').split('_').join(' ');

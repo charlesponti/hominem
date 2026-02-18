@@ -81,7 +81,7 @@ export default function AccountDetailsPage({ loaderData }: Route.ComponentProps)
   const hasError = accountError || transactionsError;
 
   const refreshData = async () => {
-    await Promise.all([refetchAccount() as Promise<any>, refetchTransactions() as Promise<any>]);
+    await Promise.all([refetchAccount(), refetchTransactions()]);
   };
 
   if (isLoading) {

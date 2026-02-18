@@ -44,8 +44,8 @@ export function createClientEnv<T extends z.ZodObject<z.ZodRawShape>>(
   function getEnv(): EnvType {
     if (validated) return validated;
 
-    const hasWindow = typeof (globalThis as any).window !== 'undefined';
-    const hasImportMeta = typeof (globalThis as any).importMeta !== 'undefined';
+    const hasWindow = typeof (globalThis as { window?: unknown }).window !== 'undefined';
+    const hasImportMeta = typeof (globalThis as { importMeta?: { env?: Record<string, string | undefined> } }).importMeta !== 'undefined';
 
     if (!hasWindow || !hasImportMeta) {
       throw new EnvValidationError(
@@ -56,15 +56,15 @@ export function createClientEnv<T extends z.ZodObject<z.ZodRawShape>>(
     }
 
     try {
-      validated = schema.parse((globalThis as any).importMeta.env);
+      const importMeta = (globalThis as { importMeta?: { env?: Record<string, string | undefined> } }).importMeta;
+      validated = schema.parse(importMeta?.env ?? {});
       return validated;
     } catch (error) {
       throw formatZodError(error, ctx);
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const _env: any = {};
+  const _env: Record<string, unknown> = {};
   return new Proxy(_env, {
     get(target, prop) {
       return getEnv()[prop as keyof EnvType];
@@ -86,5 +86,5 @@ export function createClientEnv<T extends z.ZodObject<z.ZodRawShape>>(
       }
       return undefined;
     },
-  });
+  }) as EnvType;
 }

@@ -1,6 +1,7 @@
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import { Skeleton } from '@hominem/ui/components/ui/skeleton';
+import type { CategoryBreakdownItem } from '@hominem/hono-rpc/types/finance.types';
 
 import { useCategoryBreakdown } from '~/lib/hooks/use-analytics';
 import { formatCurrency } from '~/lib/number.utils';
@@ -55,7 +56,7 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategori
         ) : Array.isArray(categoryBreakdown?.breakdown) &&
           categoryBreakdown.breakdown.length > 0 ? (
           <div className="space-y-3">
-            {categoryBreakdown.breakdown.map((cat: any) => (
+            {categoryBreakdown.breakdown.map((cat: CategoryBreakdownItem) => (
               <div key={cat.category} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
                 <Badge variant="secondary" className="w-12 justify-center">
                   {cat.transactionCount}x

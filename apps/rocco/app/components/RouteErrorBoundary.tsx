@@ -47,6 +47,6 @@ export function RouteErrorBoundary({
 /**
  * Hook for handling errors in routes with API data
  */
-export function useRouteError(error?: Error | null, apiError?: any) {
+export function useRouteError(error?: Error | null, apiError?: unknown) {
   return error || apiError;
 }

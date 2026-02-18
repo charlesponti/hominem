@@ -153,7 +153,7 @@ export type BudgetTrackingOutput = {
   totalSpent: number;
   remaining: number;
   status: 'on-track' | 'warning' | 'over-budget';
-  summary?: any;
+  summary?: unknown;
   categories: BudgetTrackingCategory[];
   chartData?: BudgetChartDataPoint[];
   pieData?: BudgetPieDataPoint[];

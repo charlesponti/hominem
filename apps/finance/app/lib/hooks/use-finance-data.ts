@@ -3,6 +3,13 @@ import type { SortOption } from '@hominem/ui/hooks';
 import { format } from 'date-fns';
 import { useMemo } from 'react';
 
+import type {
+  AccountAllOutput,
+  AccountGetOutput,
+  AccountListOutput,
+  TransactionListOutput,
+} from '@hominem/hono-rpc/types/finance.types';
+
 import { useHonoQuery } from '~/lib/api';
 
 export interface FilterArgs {
@@ -13,11 +20,11 @@ export interface FilterArgs {
 }
 
 export interface UseFinanceAccountsOptions {
-  initialData?: any;
+  initialData?: AccountListOutput;
 }
 
 export const useFinanceAccounts = ({ initialData }: UseFinanceAccountsOptions = {}) => {
-  const { data, isLoading, error, refetch } = useHonoQuery(
+  const { data, isLoading, error, refetch } = useHonoQuery<AccountListOutput>(
     ['finance', 'accounts', 'list'],
     async (client) => {
       const res = await client.api.finance.accounts.list.$post({
@@ -25,16 +32,16 @@ export const useFinanceAccounts = ({ initialData }: UseFinanceAccountsOptions = 
       });
       return res.json();
     },
-    initialData ? { initialData: initialData as any } : {},
+    initialData ? { initialData } : {},
   );
 
-  const accountsData = (Array.isArray(data) ? data : []) as typeof data;
+  const accountsData = (Array.isArray(data) ? data : []) as AccountListOutput;
 
   const accountsMap = useMemo(() => {
     if (!Array.isArray(accountsData)) {
-      return new Map<string, any>();
+      return new Map<string, AccountListOutput[number]>();
     }
-    return new Map(accountsData.map((account: any) => [account.id, account]));
+    return new Map(accountsData.map((account) => [account.id, account]));
   }, [accountsData]);
 
   return {
@@ -53,8 +60,8 @@ export const useFinancialInstitutions = () =>
   });
 
 // Hook that adds value by transforming data for unified view
-export function useAllAccounts(options?: { initialData?: any }) {
-  const allAccountsQuery = useHonoQuery(
+export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
+  const allAccountsQuery = useHonoQuery<AccountAllOutput>(
     ['finance', 'accounts', 'all'],
     async (client) => {
       const res = await client.api.finance.accounts.all.$post({ json: {} });
@@ -74,8 +81,8 @@ export function useAllAccounts(options?: { initialData?: any }) {
   };
 }
 
-export function useAccountById(id: string, options?: { initialData?: any }) {
-  const accountQuery = useHonoQuery(
+export function useAccountById(id: string, options?: { initialData?: AccountGetOutput }) {
+  const accountQuery = useHonoQuery<AccountGetOutput>(
     ['finance', 'accounts', 'get', id],
     async (client) => {
       const res = await client.api.finance.accounts.get.$post({
@@ -102,7 +109,7 @@ export interface UseFinanceTransactionsOptions {
   sortOptions?: SortOption[];
   page?: number;
   limit?: number;
-  initialData?: any;
+  initialData?: TransactionListOutput;
 }
 
 // Hook that adds value through complex state management and data transformation
@@ -124,15 +131,15 @@ export function useFinanceTransactions({
 
   const offset = page * limit;
 
-  const queryOptions: any = {
+  const queryOptions: { staleTime: number; initialData?: TransactionListOutput } = {
     staleTime: 1 * 60 * 1000,
   };
-  
+
   if (initialData) {
     queryOptions.initialData = initialData;
   }
 
-  const query = useHonoQuery(
+  const query = useHonoQuery<TransactionListOutput>(
     [
       'finance',
       'transactions',

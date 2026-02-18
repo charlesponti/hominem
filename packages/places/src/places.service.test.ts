@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PlaceInsert } from '@hominem/db/types/places';
 
 import { describe, expect, it, vi } from 'vitest';

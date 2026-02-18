@@ -8,7 +8,7 @@ Kanso (簡素 - Simplicity): Elimination of the non-essential. If a pixel does n
 
 Ma (間 - Negative Space): The "void" is a structural element. Space is used to enforce focus and respect the user's cognitive load.
 
-Shibui (渋い - Understated): No performance. No animations. No decorative gradients. The beauty lies in the static presence of raw data.
+Shibui (渋い - Understated): Minimal animations; only ASCII. No decorative gradients. The beauty lies in the static presence of raw data.
 
 Wabi-sabi (侘寂 - Imperfection): Technical honesty. Asymmetry. Asynchronous patterns that reflect the "glitch" in the system rather than corporate perfection.
 

@@ -1,9 +1,16 @@
 // Lazy load logger to avoid Node.js dependencies in browser bundles
-let logger: Awaited<ReturnType<() => Promise<any>>> | undefined;
-const getLogger = async () => {
+type Logger = {
+  info: (message: string, data?: object) => void;
+  error: (message: string, error?: Error | object) => void;
+  warn: (message: string, data?: object) => void;
+  debug: (message: string, data?: object) => void;
+};
+
+let logger: Logger | undefined;
+const getLogger = async (): Promise<Logger> => {
   if (!logger) {
     const { logger: pinoLogger } = await import('./logger');
-    logger = pinoLogger;
+    logger = pinoLogger as Logger;
   }
   return logger;
 };

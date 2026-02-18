@@ -172,7 +172,7 @@ export namespace VectorService {
     results: Array<{
       id: string;
       document: string;
-      metadata: any;
+      metadata: unknown;
       source: string | null;
       sourceType: string | null;
     }>;
@@ -241,7 +241,7 @@ export namespace VectorService {
     results: Array<{
       id: string;
       document: string;
-      metadata: any;
+      metadata: unknown;
       source: string | null;
       sourceType: string | null;
       similarity: number;

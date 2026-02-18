@@ -7,7 +7,7 @@ interface UseMutationWithOptimisticOptions<TInput, TOutput> {
   // mutationFn runs with (client, variables)
   mutationFn: (client: HonoClient, variables: TInput) => Promise<TOutput>;
   onSuccess?: (data: TOutput, variables: TInput) => void;
-  onError?: (error: Error, variables: TInput) => void;
+  onError?: (error: Error, variables: TInput, context?: unknown) => void;
   successMessage?: string;
   errorMessage?: string;
   optimisticUpdate?: {
@@ -54,10 +54,11 @@ export function useMutationWithOptimistic<TInput, TOutput>({
         }
         onSuccess?.(data, variables);
       },
-      onError: (err: Error, variables: TInput, context: any) => {
-        if (optimisticUpdate && context?.previousData) {
+      onError: (err: Error, variables: TInput, context: unknown) => {
+        const ctx = context as { previousData: unknown } | undefined;
+        if (optimisticUpdate && ctx?.previousData) {
           // If the mutation fails, use the context returned from onMutate to roll back
-          utils.setData(optimisticUpdate.queryKey, context.previousData);
+          utils.setData(optimisticUpdate.queryKey, ctx.previousData);
         }
 
         const errorMessage = defaultErrorMessage || err.message || 'An error occurred';

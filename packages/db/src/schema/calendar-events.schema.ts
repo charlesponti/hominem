@@ -213,11 +213,11 @@ export const EventInsertSchema = createInsertSchema(events, {
   // Text fields
   unit: z.string().nullable(),
   goalCategory: z.string().nullable(),
-  // Override JSON fields
-  reminderSettings: z.any().nullable(),
-  dependencies: z.any().nullable(),
-  resources: z.any().nullable(),
-  milestones: z.any().nullable(),
+  // JSON fields
+  reminderSettings: z.unknown().nullable(),
+  dependencies: z.unknown().nullable(),
+  resources: z.unknown().nullable(),
+  milestones: z.unknown().nullable(),
 });
 
 /**
@@ -245,11 +245,11 @@ export const EventSelectSchema = createSelectSchema(events, {
   // Text fields
   unit: z.string().nullable(),
   goalCategory: z.string().nullable(),
-  // Override JSON fields
-  reminderSettings: z.any().nullable(),
-  dependencies: z.any().nullable(),
-  resources: z.any().nullable(),
-  milestones: z.any().nullable(),
+  // JSON fields
+  reminderSettings: z.unknown().nullable(),
+  dependencies: z.unknown().nullable(),
+  resources: z.unknown().nullable(),
+  milestones: z.unknown().nullable(),
 });
 
 export type EventInput = z.infer<typeof EventInsertSchema>;

@@ -1,10 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "unicorn",
-    "typescript",
-    "oxc"
-  ],
+  "plugins": ["unicorn", "typescript", "oxc"],
   "categories": {},
   "rules": {
     "constructor-super": "warn",
@@ -83,6 +79,7 @@
     "typescript/no-for-in-array": "warn",
     "typescript/no-implied-eval": "warn",
     "typescript/no-meaningless-void-operator": "warn",
+    "typescript/no-explicit-any": "error",
     "typescript/no-misused-new": "warn",
     "typescript/no-misused-spread": "warn",
     "typescript/no-non-null-asserted-optional-chain": "warn",

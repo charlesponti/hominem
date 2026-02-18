@@ -48,13 +48,16 @@ export function createServer() {
 
   // Set up BullMQ queues using consistent queue names.
   const plaidSyncQueue = new Queue(QUEUE_NAMES.PLAID_SYNC, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     connection: redis as any,
   });
   const importTransactionsQueue = new Queue(QUEUE_NAMES.IMPORT_TRANSACTIONS, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     connection: redis as any,
   });
 
   const placePhotoEnrichQueue = new Queue(QUEUE_NAMES.PLACE_PHOTO_ENRICH, {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     connection: redis as any,
   });
 

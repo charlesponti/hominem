@@ -150,7 +150,7 @@ function PlacesAutocomplete({
 
           {!isLoading && data && data.length > 0 && (
             <div className="py-1">
-              {data.map((suggestion: any, index: number) => (
+              {data.map((suggestion, index: number) => (
                 <button
                   key={suggestion.place_id}
                   type="button"
