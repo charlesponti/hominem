@@ -14,7 +14,7 @@ export function ProgressBar({
         style={{
           width: `${Math.min(100, Math.max(0, progress))}%`,
           opacity: progress === 100 ? 0 : 0.8,
-          boxShadow: '0 0 10px color-mix(in srgb, var(--color-warning) 50%, transparent)',
+          // VOID violation: boxShadow removed per design system (no shadows/depth effects)
         }}
       />
     </div>
