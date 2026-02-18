@@ -22,8 +22,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           enabled: false,
         },
         manifest: {
-          name: 'Florin',
-          short_name: 'Florin',
+          name: 'Finance',
+          short_name: 'Finance',
           description: 'Personal finance tracker',
           theme_color: '#ffffff',
           background_color: '#ffffff',
@@ -101,11 +101,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       },
       // Optimize in production
       devSourcemap: !isProd,
-      preprocessorOptions: {
-        scss: {
-          charset: false,
-        },
-      },
     },
 
     server: {

@@ -37,14 +37,7 @@
     "types": [
       "node"
     ],
-    "paths": {
-      "@hominem/finance-services/*": [
-        "../finance/src/*"
-      ],
-      "googleapis": [
-        "../../types/googleapis.d.ts"
-      ]
-    }
+    "paths": {}
   },
   "include": [
     "src/**/*.ts",
@@ -61,7 +54,6 @@
     "**/*.spec.ts",
     "**/__tests__",
     "**/__mocks__",
-    "*.tsbuildinfo",
-    ".react-router/cache"
+    "*.tsbuildinfo"
   ]
 }

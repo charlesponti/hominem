@@ -14,7 +14,7 @@
   "scripts": {
     "build": "bunx tsc --incremental",
     "typecheck": "bunx tsc --noEmit --incremental",
-    "clean": "rm -rf build node_modules/.cache"
+    "clean": "rm -rf dist build node_modules/.cache"
   },
   "dependencies": {
     "@ai-sdk/google": "^1.2.12",

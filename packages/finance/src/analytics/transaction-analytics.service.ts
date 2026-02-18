@@ -6,7 +6,7 @@ import type { QueryOptions, TopMerchant } from '../finance.types';
 
 import { buildWhereConditions } from '../finance.transactions.service';
 
-const formatCurrency = (amount: number): string => {
+const toFixed2 = (amount: number): string => {
   return (amount || 0).toFixed(2);
 };
 
@@ -45,10 +45,10 @@ export async function summarizeByCategory(options: QueryOptions): Promise<Catego
   return result.map((row) => ({
     category: row.category,
     count: row.count,
-    total: formatCurrency(row.total),
-    average: formatCurrency(row.average),
-    minimum: formatCurrency(row.minimum),
-    maximum: formatCurrency(row.maximum),
+    total: toFixed2(row.total),
+    average: toFixed2(row.average),
+    minimum: toFixed2(row.minimum),
+    maximum: toFixed2(row.maximum),
   }));
 }
 
@@ -92,9 +92,9 @@ export async function summarizeByMonth(options: QueryOptions): Promise<MonthSumm
   return result.map((row) => ({
     month: row.month,
     count: row.count,
-    income: formatCurrency(row.income),
-    expenses: formatCurrency(row.expenses),
-    average: formatCurrency(row.average),
+    income: toFixed2(row.income),
+    expenses: toFixed2(row.expenses),
+    average: toFixed2(row.average),
   }));
 }
 
@@ -130,7 +130,7 @@ export async function findTopMerchants(options: QueryOptions): Promise<TopMercha
       .map((row) => ({
         merchant: row.merchant,
         frequency: row.frequency,
-        totalSpent: formatCurrency(row.totalSpent),
+        totalSpent: toFixed2(row.totalSpent),
         firstTransaction: row.firstTransaction,
         lastTransaction: row.lastTransaction,
       }))
@@ -218,10 +218,10 @@ export async function calculateTransactions(
 
   return {
     count: stats.count,
-    total: formatCurrency(stats.total),
-    average: formatCurrency(stats.average),
-    minimum: formatCurrency(stats.minimum),
-    maximum: formatCurrency(stats.maximum),
+    total: toFixed2(stats.total),
+    average: toFixed2(stats.average),
+    minimum: toFixed2(stats.minimum),
+    maximum: toFixed2(stats.maximum),
   };
 }
 

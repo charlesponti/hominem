@@ -41,14 +41,7 @@
       "vite/client",
       "node"
     ],
-    "paths": {
-      "@hominem/finance-services/*": [
-        "../finance/src/*"
-      ],
-      "googleapis": [
-        "../../types/googleapis.d.ts"
-      ]
-    }
+    "paths": {}
   },
   "include": [
     "src/**/*.ts",
@@ -69,7 +62,6 @@
     "**/*.spec.tsx",
     "**/__tests__",
     "**/__mocks__",
-    "*.tsbuildinfo",
-    ".react-router/cache"
+    "*.tsbuildinfo"
   ]
 }

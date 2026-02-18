@@ -11,7 +11,6 @@ const DATABASE_URL =
 
 assert(DATABASE_URL, 'Missing DATABASE_URL');
 
-console.log('Using DATABASE_URL:', DATABASE_URL);
 export default defineConfig({
   schema: ['./src/schema/tables.ts', './src/schema/relations.ts'],
   out: './src/migrations',

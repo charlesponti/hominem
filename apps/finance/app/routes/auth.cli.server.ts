@@ -8,10 +8,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
     throw new Response('Missing redirect_uri parameter', { status: 400 });
   }
 
-  // In a real application, you would perform actual authentication here.
-  // This is a placeholder for demonstration purposes.
-  const dummyToken = 'your_super_secret_cli_token_12345';
+  const cliToken = process.env.CLI_AUTH_TOKEN;
+  if (!cliToken) {
+    throw new Response('CLI authentication is not configured', { status: 503 });
+  }
 
-  // Redirect back to the CLI with the token
-  return redirect(`${redirectUri}?token=${dummyToken}`);
+  return redirect(`${redirectUri}?token=${cliToken}`);
 }

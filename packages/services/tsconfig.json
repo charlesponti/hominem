@@ -37,11 +37,7 @@
     "types": [
       "node"
     ],
-    "paths": {
-      "@hominem/finance-services/*": [
-        "../finance/src/*"
-      ]
-    }
+    "paths": {}
   },
   "include": [
     "src/**/*.ts",
@@ -61,7 +57,6 @@
     "**/*.spec.tsx",
     "**/__tests__",
     "**/__mocks__",
-    "*.tsbuildinfo",
-    ".react-router/cache"
+    "*.tsbuildinfo"
   ]
 }

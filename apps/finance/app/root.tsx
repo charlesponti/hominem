@@ -97,7 +97,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
       onAuthEvent={handleAuthEvent}
     >
       <HonoProvider baseUrl={apiBaseUrl}>
-        <UpdateGuard logo="/logo-florin.png" appName="Florin">
+        <UpdateGuard logo="/logo-finance.png" appName="Finance">
           <Outlet />
         </UpdateGuard>
       </HonoProvider>

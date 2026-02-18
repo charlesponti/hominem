@@ -12,7 +12,7 @@ const envSchema = z.object({
     ? z.string().url().default('postgresql://postgres:postgres@localhost:5432/hominem_test')
     : z.string().url(),
 
-  FLORIN_URL: z.string().url().default('http://localhost:4444'),
+  FINANCE_URL: z.string().url().default('http://localhost:4444'),
   NOTES_URL: z.string().url().default('http://localhost:4445'),
   ROCCO_URL: z.string().url().default('http://localhost:4446'),
 

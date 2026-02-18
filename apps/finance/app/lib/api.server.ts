@@ -1,29 +1,6 @@
-import type { HonoClientInstance } from '@hominem/hono-client';
+import { createServerHonoClient as createClient } from '@hominem/hono-client/ssr'
+import { serverEnv } from '~/lib/env'
 
-import { createHonoClient } from '@hominem/hono-rpc/client';
-import { serverEnv } from '~/lib/env';
-
-/**
- * Create a server-side API client with optional authentication
- */
-export function createServerHonoClient(
-  accessToken?: string,
-  request?: Request,
-): HonoClientInstance {
-  const baseUrl = serverEnv.VITE_PUBLIC_API_URL;
-
-  const headers: Record<string, string> = {};
-  if (accessToken) {
-    headers.authorization = `Bearer ${accessToken}`;
-  }
-  const cookieHeader = request?.headers.get('Cookie');
-  if (cookieHeader) {
-    headers.cookie = cookieHeader;
-  }
-
-  const client = createHonoClient(baseUrl, {
-    headers,
-  });
-
-  return client as HonoClientInstance;
+export function createServerHonoClient(accessToken?: string, request?: Request) {
+  return createClient(serverEnv.VITE_PUBLIC_API_URL, accessToken, request)
 }

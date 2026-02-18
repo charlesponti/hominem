@@ -201,30 +201,3 @@ export function isServiceError(error: unknown): error is ServiceError {
   return error instanceof ServiceError;
 }
 
-/**
- * Convert any error to a ServiceError
- *
- * Useful in catch blocks to ensure all errors are typed
- *
- * @example
- * try {
- *   await externalApi.call()
- * } catch (error) {
- *   throw asServiceError(error, 'Failed to fetch from external API')
- * }
- */
-export function asServiceError(error: unknown, message?: string): ServiceError {
-  if (error instanceof ServiceError) {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    return new ServiceError(message || error.message, 'INTERNAL_ERROR', 500, {
-      originalError: error.message,
-    });
-  }
-
-  return new ServiceError(message || 'An unexpected error occurred', 'INTERNAL_ERROR', 500, {
-    error: String(error),
-  });
-}
