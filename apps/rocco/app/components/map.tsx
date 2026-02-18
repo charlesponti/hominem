@@ -116,13 +116,15 @@ const MapMarker = memo(
     );
 
     // Memoize style object based on hover/selected state
+    // Use VOID design tokens for colors and crosshair cursor
     const markerStyle = useMemo(
       () => ({
         width: isHovered || isSelected ? '32px' : '24px',
         height: isHovered || isSelected ? '32px' : '24px',
-        backgroundColor: isHovered || isSelected ? '#ef4444' : '#dc2626',
+        backgroundColor: 'hsl(0 100% 50%)', // var(--destructive) for consistency
+        opacity: isHovered || isSelected ? 1 : 0.9,
         border: '2px solid white',
-        cursor: 'pointer' as const,
+        cursor: 'crosshair' as const, // VOID mandates crosshair cursor
       }),
       [isHovered, isSelected],
     );

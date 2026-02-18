@@ -19,7 +19,8 @@ import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types'
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';
 
-const SPENDING_COLOR = '#ef4444';
+// Use VOID design token for destructive/negative values (expenses)
+const SPENDING_COLOR = 'hsl(0 100% 50%)'; // Maps to var(--destructive)
 
 interface AccountSpendingChartProps {
   accountId: string;

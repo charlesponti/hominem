@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
 
+// VOID design token: Use highest emphasis for waveform visualization
+const WAVEFORM_COLOR = 'rgba(255, 255, 255, 0.9)'; // Maps to var(--color-emphasis-highest)
+
 interface AudioWaveformProps {
   isRecording: boolean;
   stream: MediaStream | null;
@@ -71,7 +74,7 @@ export function AudioWaveform({ isRecording, stream, className = '' }: AudioWave
         if (value === undefined) continue;
         barHeight = (value / 255) * canvas.height;
 
-        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.fillStyle = WAVEFORM_COLOR;
         ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
 
         x += barWidth + 1;
