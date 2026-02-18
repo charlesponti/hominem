@@ -123,7 +123,7 @@ export function buildWhereConditions(options?: Partial<QueryOptions>): SQL<unkno
   }
 
   if (opts.type && typeof opts.type === 'string') {
-    conditions.push(eq(transactions.type, opts.type as any));
+    conditions.push(eq(transactions.type, opts.type));
   }
 
   if (opts.description) {

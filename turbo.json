@@ -21,7 +21,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", ".react-router/**", "build/**", "dist/**"]
+      "outputs": [".react-router/**", "build/**", "dist/**"]
     },
     "clean": {
       "cache": false

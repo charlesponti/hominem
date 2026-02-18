@@ -12,6 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import { eventSourceEnum, eventTypeEnum } from './calendar.enums';
+import type { GoalMilestone } from './goals.schema';
 import { place } from './places.schema';
 import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { users } from './users.schema';
@@ -122,7 +123,7 @@ export const events = pgTable(
     /**
      * JSON array of reminder configurations
      */
-    reminderSettings: json('reminder_settings'),
+    reminderSettings: json('reminder_settings').$type<Array<{ method: string; minutes: number }>>(),
     /**
      * ID of the parent event (for recurring events)
      */
@@ -158,15 +159,15 @@ export const events = pgTable(
     /**
      * JSON array of prerequisite event IDs
      */
-    dependencies: json('dependencies'),
+    dependencies: json('dependencies').$type<string[]>(),
     /**
      * JSON array of resource URLs/IDs
      */
-    resources: json('resources'),
+    resources: json('resources').$type<string[]>(),
     /**
      * JSON array of milestone configurations
      */
-    milestones: json('milestones'),
+    milestones: json('milestones').$type<GoalMilestone[]>(),
     // Metadata
     createdAt: createdAtColumn(),
     updatedAt: updatedAtColumn(),
@@ -184,9 +185,9 @@ export const events = pgTable(
   ],
 );
 
-// Import drizzle-zod at the end to avoid circular dependencies
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import * as z from 'zod';
+import { GoalMilestoneSchema } from './goals.schema';
 
 /**
  * Zod Schema for Event Insert Operations
@@ -213,11 +214,11 @@ export const EventInsertSchema = createInsertSchema(events, {
   // Text fields
   unit: z.string().nullable(),
   goalCategory: z.string().nullable(),
-  // Override JSON fields
-  reminderSettings: z.any().nullable(),
-  dependencies: z.any().nullable(),
-  resources: z.any().nullable(),
-  milestones: z.any().nullable(),
+  // JSON fields
+  reminderSettings: z.array(z.object({ method: z.string(), minutes: z.number() })).nullable(),
+  dependencies: z.array(z.string()).nullable(),
+  resources: z.array(z.string()).nullable(),
+  milestones: z.array(GoalMilestoneSchema).nullable(),
 });
 
 /**
@@ -245,11 +246,11 @@ export const EventSelectSchema = createSelectSchema(events, {
   // Text fields
   unit: z.string().nullable(),
   goalCategory: z.string().nullable(),
-  // Override JSON fields
-  reminderSettings: z.any().nullable(),
-  dependencies: z.any().nullable(),
-  resources: z.any().nullable(),
-  milestones: z.any().nullable(),
+  // JSON fields
+  reminderSettings: z.array(z.object({ method: z.string(), minutes: z.number() })).nullable(),
+  dependencies: z.array(z.string()).nullable(),
+  resources: z.array(z.string()).nullable(),
+  milestones: z.array(GoalMilestoneSchema).nullable(),
 });
 
 export type EventInput = z.infer<typeof EventInsertSchema>;

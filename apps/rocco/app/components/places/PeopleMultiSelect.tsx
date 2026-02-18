@@ -48,7 +48,7 @@ export function PeopleMultiSelect({
   const createPersonMutation = useCreatePerson();
 
   const selectedPeople = useMemo(() => {
-    return people.filter((person: any) => value.includes(person.id));
+    return people.filter((person) => value.includes(person.id));
   }, [people, value]);
 
   const filteredPeople = useMemo(() => {
@@ -57,7 +57,7 @@ export function PeopleMultiSelect({
     }
 
     const query = searchQuery.toLowerCase().trim();
-    return people.filter((person: any) => {
+    return people.filter((person) => {
       const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase();
       return (
         person.firstName.toLowerCase().includes(query) ||
@@ -72,7 +72,7 @@ export function PeopleMultiSelect({
       return false;
     }
     const query = searchQuery.toLowerCase().trim();
-    return !filteredPeople.some((person: any) => {
+    return !filteredPeople.some((person: Person) => {
       const fullName = `${person.firstName} ${person.lastName || ''}`.toLowerCase();
       return fullName === query || person.firstName.toLowerCase() === query;
     });
@@ -128,7 +128,7 @@ export function PeopleMultiSelect({
           >
             <div className="flex flex-wrap gap-1 flex-1">
               {selectedPeople.length > 0 ? (
-                selectedPeople.map((person: any) => (
+                selectedPeople.map((person: Person) => (
                   <Badge
                     key={person.id}
                     variant="secondary"
@@ -208,7 +208,7 @@ export function PeopleMultiSelect({
                     )}
                   </CommandEmpty>
                   <CommandGroup>
-                    {filteredPeople.map((person: any) => {
+                    {filteredPeople.map((person) => {
                       const isSelected = value.includes(person.id);
                       return (
                         <CommandItem

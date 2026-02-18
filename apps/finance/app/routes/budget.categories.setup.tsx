@@ -30,7 +30,7 @@ export default function BudgetCategoriesSetup() {
     try {
       const categoriesToCreate = Array.from(selectedCategories).map((categoryName) => {
         const transactionCategory = transactionCategories?.find(
-          (tc: any) => (tc.name || tc.category) === categoryName,
+          (tc) => (tc.name || tc.category) === categoryName,
         );
         return {
           name: categoryName,
@@ -60,7 +60,7 @@ export default function BudgetCategoriesSetup() {
 
   const handleSelectAll = () => {
     setSelectedCategories(
-      new Set(transactionCategories?.map((tc: any) => tc.name || tc.category) || []),
+      new Set(transactionCategories?.map((tc) => tc.name || tc.category) || []),
     );
   };
 
@@ -123,7 +123,7 @@ export default function BudgetCategoriesSetup() {
         <CardContent>
           {transactionCategories && transactionCategories.length > 0 ? (
             <div className="grid gap-3 max-h-96 overflow-y-auto">
-              {transactionCategories.map((transactionCategory: any) => (
+              {transactionCategories.map((transactionCategory) => (
                 <button
                   key={transactionCategory.name || transactionCategory.category}
                   className={`w-full text-left flex items-center justify-between p-4 border  ${

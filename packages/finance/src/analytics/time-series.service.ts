@@ -1,5 +1,6 @@
 import type { QueryOptions } from '../finance.types';
 
+import { formatCurrency } from './aggregation.service';
 import { summarizeByMonth } from './transaction-analytics.service';
 
 // Define interface for time series data points
@@ -59,14 +60,6 @@ export interface TimeSeriesResponse {
   timestamp: string;
 }
 
-/**
- * Helper function to format currency values consistently
- */
-const formatCurrency = (value: number): string =>
-  `$${value.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
 
 /**
  * Helper function to calculate median of a number array

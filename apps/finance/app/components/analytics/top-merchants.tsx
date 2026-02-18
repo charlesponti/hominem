@@ -1,6 +1,7 @@
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import { Skeleton } from '@hominem/ui/components/ui/skeleton';
+import type { Merchant } from '@hominem/hono-rpc/types/finance.types';
 
 import { useFinanceTopMerchants } from '~/lib/hooks/use-finance-top-merchants';
 import { formatCurrency } from '~/lib/number.utils';
@@ -60,7 +61,7 @@ export function TopMerchants({
           </div>
         ) : Array.isArray(topMerchants?.merchants) && topMerchants.merchants.length > 0 ? (
           <div className="space-y-3">
-            {topMerchants.merchants.map((m: any) => (
+            {topMerchants.merchants.map((m: Merchant) => (
               <div key={m.name} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
                 <Badge variant="secondary" className="w-12 text-center">
                   {m.transactionCount}x

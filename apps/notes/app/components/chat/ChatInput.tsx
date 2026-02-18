@@ -105,26 +105,27 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
     // The useFileUpload hook manages the state internally
   }, []);
 
-  const handleAudioRecorded = useCallback(
-    async (_audioBlob: Blob, transcript?: string) => {
-      setShowAudioRecorder(false);
+  const handleAudioTranscribed = useCallback(
+    async (transcript: string) => {
+      if (!transcript.trim()) {
+        return
+      }
 
-      if (transcript?.trim()) {
-        try {
-          onStatusChange?.('streaming');
-          await sendMessage.mutateAsync({
-            message: transcript.trim(),
-            chatId,
-          });
-          onStatusChange?.('idle');
-        } catch (error) {
-          console.error('Failed to send transcribed message:', error);
-          onStatusChange?.('error', error as Error);
-        }
+      try {
+        onStatusChange?.('streaming')
+        await sendMessage.mutateAsync({
+          message: transcript.trim(),
+          chatId,
+        })
+        onStatusChange?.('idle')
+      } catch (error) {
+        console.error('Failed to send transcribed message:', error)
+        onStatusChange?.('error', error as Error)
+        throw error
       }
     },
-    [sendMessage, chatId, onStatusChange],
-  );
+    [chatId, onStatusChange, sendMessage],
+  )
 
   const isSubmitting = sendMessage.isPending;
 
@@ -196,7 +197,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
         onCloseFileUploader={() => setShowFileUploader(false)}
         onCloseAudioRecorder={() => setShowAudioRecorder(false)}
         onFilesUploaded={handleFilesUploaded}
-        onAudioRecorded={handleAudioRecorded}
+        onAudioTranscribed={handleAudioTranscribed}
       />
     </>
   );

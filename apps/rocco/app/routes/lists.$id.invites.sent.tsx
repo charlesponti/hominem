@@ -30,7 +30,7 @@ export default function ListSentInvites() {
         {invites?.length === 0 && 'Your invites will appear here.'}
         {invites && invites.length > 0 && (
           <ul className="space-y-4">
-            {invites.map((invite: any) => (
+            {invites.map((invite) => (
               <li key={invite.listId} className="border p-4">
                 <p>
                   <span className="font-semibold mr-2">List ID:</span>

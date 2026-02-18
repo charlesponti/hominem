@@ -1,0 +1,53 @@
+{
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "biome.searchInPath": true,
+  "biome.lspBin": "node_modules/.bin/biome",
+  "deno.enablePaths": ["supabase/functions"],
+  "deno.lint": true,
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.codeActionsOnSave": {
+    "source.sortImports": "always"
+  },
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "cSpell.ignoreWords": [
+    "graphcache",
+    "openai",
+    "pydantic",
+    "rneui",
+    "supabase",
+    "Mindsherpa",
+    "Ionicons",
+    "noto",
+    "rneui",
+    "supabase",
+    "Mindsherpa",
+    "Ionicons",
+    "noto",
+    "pressable",
+    "autogrow"
+  ],
+  "cSpell.words": [
+    "biomejs",
+    "codegen",
+    "dripsy",
+    "meterings",
+    "Millis",
+    "netinfo",
+    "openapi",
+    "ponti",
+    "pontistudios",
+    "reactotron",
+    "tanstack",
+    "xmark",
+    "zeego"
+  ]
+}

@@ -1,0 +1,55 @@
+# focus_view_test.yaml
+
+appId: your.app.id  # Replace with your actual app ID
+---
+- launchApp
+- assertVisible: "Today"  # Check if the header is visible
+- assertVisible: ${DATE}  # Check if today's date is visible (Maestro will replace ${DATE} with the current date)
+
+# Test empty state
+- assertVisible: "You have no focus items yet."
+
+# Test pull-to-refresh
+- scroll
+- assertVisible: "Today"  # Make sure we're back at the top
+- swipe:
+    direction: DOWN
+    duration: 500
+- waitForAnimationToEnd
+- assertNotVisible: "You have no focus items yet."  # Assuming the refresh adds items
+
+# Test adding a new focus item
+- tapOn: "What's on your mind?"
+- inputText: "Test focus item"
+- tapOn: "Send"
+- assertVisible: "Test focus item"
+
+# Test deleting a focus item
+- tapOn:
+    text: "Test focus item"
+    longPress: true
+- tapOn: "Delete"
+- assertNotVisible: "Test focus item"
+
+# Test navigation to Account page
+- tapOn:
+    point: "10%,10%"  # Tapping approximately where the user icon should be
+- assertVisible: "Account"  # Assuming the Account page has this title
+- back
+
+# Test navigation to Sherpa page
+- tapOn:
+    point: "90%,10%"  # Tapping approximately where the message icon should be
+- assertVisible: "Sherpa"  # Assuming the Sherpa page has this title
+- back
+
+# Test error state
+# Note: You might need to mock an error condition to test this
+- assertNotVisible: "Your focus could not be loaded."
+
+# Test recording state
+# Note: This might be tricky to test without mocking the recording functionality
+- tapOn: "microphone"  # Assuming there's a microphone button
+- assertVisible: "Recording..."  # Assuming there's some indicator when recording
+- tapOn: "Stop"  # Assuming there's a stop button
+- assertNotVisible: "Recording..."

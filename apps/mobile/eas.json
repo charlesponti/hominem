@@ -1,0 +1,45 @@
+{
+  "cli": {
+    "version": ">= 10.0.3"
+  },
+  "build": {
+    "development": {
+      "channel": "development",
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "NODE_ENV": "development",
+        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:3000",
+        "EXPO_PUBLIC_SUPABASE_URL": "",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": ""
+      }
+    },
+    "simulator": {
+      "channel": "development",
+      "developmentClient": true,
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "extends": "development",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "channel": "preview",
+      "distribution": "internal"
+    },
+    "production": {
+      "channel": "production",
+      "env": {
+        "NODE_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "",
+        "EXPO_PUBLIC_SUPABASE_URL": "",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": ""
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

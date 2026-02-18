@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 interface UpdateGuardProps {
@@ -21,6 +21,7 @@ function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: Omit<UpdateG
   const [isOnline, setIsOnline] = useState(true);
   const [hasStaleData, setHasStaleData] = useState(false);
   const queryClient = useQueryClient();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isDev =
     typeof import.meta !== 'undefined' &&
     typeof import.meta.env !== 'undefined' &&
@@ -34,7 +35,7 @@ function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: Omit<UpdateG
     immediate: true,
     onRegistered(registration) {
       if (registration) {
-        setInterval(() => {
+        intervalRef.current = setInterval(() => {
           void registration.update();
         }, UPDATE_INTERVAL_MS);
       }
@@ -62,12 +63,14 @@ function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: Omit<UpdateG
       return () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
+        if (intervalRef.current) clearInterval(intervalRef.current);
       };
     }
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [isDev]);
 

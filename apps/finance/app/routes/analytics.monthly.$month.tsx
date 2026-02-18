@@ -126,7 +126,7 @@ export default function MonthlyAnalyticsPage({ loaderData }: Route.ComponentProp
             <CardContent>
               {stats.categorySpending && stats.categorySpending.length > 0 ? (
                 <ul className="space-y-2">
-                  {stats.categorySpending.map((category: any) => (
+                  {stats.categorySpending.map((category) => (
                     <li
                       key={category.name}
                       className="flex justify-between items-center border-b pb-1"

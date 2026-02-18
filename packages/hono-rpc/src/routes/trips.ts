@@ -19,10 +19,30 @@ import {
   type TripsAddItemOutput,
 } from '../types/trips.types';
 
+// Types for database results (with Date objects that need serialization)
+type TripDbRow = {
+  id: string;
+  name: string;
+  userId: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+};
+
+type TripItemDbRow = {
+  id: string;
+  tripId: string;
+  itemId: string;
+  day: number | null;
+  order: number | null;
+  createdAt?: Date | string;
+};
+
 /**
  * Serialize dates to ISO strings for JSON responses
  */
-function serializeTrip(trip: any) {
+function serializeTrip(trip: TripDbRow) {
   return {
     id: trip.id,
     name: trip.name,
@@ -42,14 +62,14 @@ function serializeTrip(trip: any) {
   };
 }
 
-function serializeTripItem(item: any) {
+function serializeTripItem(item: TripItemDbRow) {
   return {
     id: item.id,
     tripId: item.tripId,
     itemId: item.itemId,
     day: item.day ?? null,
     order: item.order ?? null,
-    createdAt: item.createdAt instanceof Date ? item.createdAt.toISOString() : item.createdAt,
+    createdAt: item.createdAt instanceof Date ? item.createdAt.toISOString() : (item.createdAt ?? ''),
   };
 }
 

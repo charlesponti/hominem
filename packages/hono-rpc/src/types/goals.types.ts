@@ -77,7 +77,7 @@ export type GoalStatsOutput = {
   currentValue: number;
   targetValue: number;
   remaining: number;
-  milestones?: unknown;
+  milestones?: { description: string; isCompleted: boolean }[] | null;
 };
 
 // Import EventWithTagsAndPeople for output types (this comes from events service)

@@ -1,11 +1,10 @@
 import { MessageService } from '@hominem/chat-services';
-import { NotFoundError, ValidationError, ForbiddenError, InternalError } from '@hominem/services';
+import { NotFoundError, ForbiddenError, InternalError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
 import type {
-  ChatMessage,
   MessagesGetOutput,
   MessagesUpdateOutput,
   MessagesDeleteOutput,

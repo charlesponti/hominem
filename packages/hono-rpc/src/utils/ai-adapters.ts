@@ -6,7 +6,7 @@
  * adapters to bridge the gap.
  */
 
-import type { CoreMessage, Tool, ToolSet } from 'ai';
+import type { CoreMessage, ToolSet } from 'ai';
 import type { ChatMessageRole } from '@hominem/db/types/chats';
 
 /**

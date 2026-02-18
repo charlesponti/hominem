@@ -165,10 +165,10 @@ export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
         <div className="text-sm text-muted-foreground py-4">No visits recorded yet.</div>
       ) : (
         <List isLoading={visitsLoading} loadingSize="md">
-          {visits?.map((visit: any) => (
+          {visits?.map((visit) => (
             <VisitItem
               key={visit.id}
-              visit={visit}
+              visit={visit as unknown as Parameters<typeof VisitItem>[0]['visit']}
               placeId={placeId}
               placeName={placeName}
               isEditing={editingVisitId === visit.id}

@@ -19,6 +19,8 @@ import {
   YAxis,
 } from 'recharts';
 
+import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types';
+
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';
 
@@ -64,7 +66,7 @@ export function AnalyticsChartDisplay({
     if (!Array.isArray(timeSeriesData?.data)) {
       return [];
     }
-    return timeSeriesData.data.map((point: any) => ({
+    return timeSeriesData.data.map((point: TimeSeriesDataPoint) => ({
       name: formatMonthYear(point.date),
       Income: point.income,
       Expenses: Math.abs(point.expenses),

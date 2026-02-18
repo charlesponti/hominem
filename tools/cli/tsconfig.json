@@ -39,12 +39,6 @@
       "bun-types"
     ],
     "paths": {
-      "@hominem/finance-services/*": [
-        "../../packages/finance/src/*"
-      ],
-      "googleapis": [
-        "../../types/googleapis.d.ts"
-      ],
       "@/*": [
         "src/*"
       ]
@@ -76,7 +70,6 @@
     "**/*.spec.ts",
     "**/__tests__",
     "**/__mocks__",
-    "*.tsbuildinfo",
-    ".react-router/cache"
+    "*.tsbuildinfo"
   ]
 }

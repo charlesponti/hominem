@@ -17,6 +17,7 @@ import type { FinanceTransactionOutput } from '@hominem/db/types/finance';
 
 import { db, and, asc, desc, eq, gte, lte, like, sql, type SQL } from '@hominem/db';
 import { financeAccounts, transactions } from '@hominem/db/schema/finance';
+import { AccountMetadataSchema } from '@hominem/db/schema/shared';
 
 export interface TransactionQueryResult {
   data: Array<
@@ -299,9 +300,25 @@ export class TransactionQueryBuilder {
         : 0;
 
     return {
-      data: data.map(
-        ({ filteredCount: _, searchVector: __, ...tx }) => tx,
-      ) as TransactionQueryResult['data'],
+      data: data.map(({ filteredCount: _, searchVector: __, ...tx }) => {
+        // Normalize account.meta to the strict AccountMetadata shape when present.
+        // Guard at runtime: only parse objects (Plaid sometimes stores strings/etc).
+        const accountNormalized =
+          tx.account
+            ? {
+                ...tx.account,
+                meta:
+                  tx.account.meta && typeof tx.account.meta === 'object'
+                    ? AccountMetadataSchema.parse(tx.account.meta)
+                    : null,
+              }
+            : null;
+
+        return {
+          ...tx,
+          account: accountNormalized,
+        } as TransactionQueryResult['data'][number];
+      }) as TransactionQueryResult['data'],
       filteredCount: data[0]?.filteredCount ?? 0,
       totalUserCount,
     };

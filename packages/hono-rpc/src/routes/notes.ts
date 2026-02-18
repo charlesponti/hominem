@@ -20,7 +20,6 @@ import type {
   NotesUpdateOutput,
   NotesDeleteOutput,
   NotesSyncOutput,
-  NoteOutput,
   NotesPublishOutput,
   NotesArchiveOutput,
   NotesVersionsOutput,

@@ -48,6 +48,7 @@ const processPlacePhotoJob = async (job: Job<PlacePhotoEnrichPayload>) => {
 };
 
 const placeWorker = new Worker(QUEUE_NAMES.PLACE_PHOTO_ENRICH, processPlacePhotoJob, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   connection: redis as any,
   concurrency: CONCURRENCY,
   lockDuration: 1000 * 60 * 2,

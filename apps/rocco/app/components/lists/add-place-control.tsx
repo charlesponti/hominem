@@ -48,7 +48,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         setErrorMessage(null);
       }, 1500);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       setStatus('error');
       setErrorMessage(error?.message || 'Failed to add place');
     },

@@ -72,9 +72,7 @@ export function useHonoMutationWithOptimistic<
 
     // On success, call user handler
     onSuccess: (data, variables, context) => {
-      if (successMessage) {
-        console.log(successMessage);
-      }
+      void successMessage;
 
       onSuccess?.(data, variables, context);
     },

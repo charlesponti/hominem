@@ -44,7 +44,7 @@ export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
         },
       }}
     >
-      {children as any}
+      {children}
     </BaseHonoProvider>
   );
 }

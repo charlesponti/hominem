@@ -1,5 +1,7 @@
 import * as z from 'zod';
 
+import type { Note } from './notes.types';
+
 // ============================================================================
 // Data Types
 // ============================================================================
@@ -54,7 +56,7 @@ export const twitterPostSchema = z.object({
 export type TwitterPostOutput = {
   success: boolean;
   tweet: { data: TwitterTweet };
-  content: any | null;
+  content: Note | null;
 };
 
 // ============================================================================

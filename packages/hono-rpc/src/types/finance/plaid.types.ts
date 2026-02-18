@@ -20,7 +20,7 @@ export type PlaidExchangeTokenInput = {
   publicToken: string;
   institutionId?: string;
   institutionName?: string;
-  metaData?: any;
+  metaData?: unknown;
 };
 
 export type PlaidSyncItemInput = {

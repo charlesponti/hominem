@@ -14,10 +14,8 @@ import {
 } from '@hominem/finance-services';
 import {
   NotFoundError,
-  ValidationError,
   ConflictError,
   InternalError,
-  isServiceError,
 } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -25,7 +23,6 @@ import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
-  type BudgetCategoryData,
   type BudgetCategoriesListOutput,
   type BudgetCategoriesListWithSpendingOutput,
   type BudgetCategoryGetOutput,
@@ -230,7 +227,16 @@ export const budgetRoutes = new Hono<AppContext>()
       totalSpent,
       remaining,
       status,
-      summary: result.summary,
+      summary: {
+        // Map service BudgetSummary shape to API contract
+        totalBudget: result.summary.totalBudgeted,
+        totalSpent: result.summary.totalActual,
+        // Service's `totalVariance` is computed as totalBudgeted - totalActual,
+        // which corresponds to the API `remaining` semantics.
+        remaining: result.summary.totalVariance,
+        // Service exposes budget usage as a percentage value
+        percentUsed: result.summary.budgetUsagePercentage,
+      },
       categories: result.categories.map((cat) => ({
         id: cat.id,
         name: cat.name,
@@ -332,13 +338,13 @@ export const budgetRoutes = new Hono<AppContext>()
       if (input) {
         const expenses = input.expenses || [];
         const totalExpenses = expenses.reduce(
-          (sum: number, expense: any) => sum + expense.amount,
+          (sum, expense) => sum + expense.amount,
           0,
         );
         const surplus = input.income - totalExpenses;
         const savingsRate = input.income > 0 ? (surplus / input.income) * 100 : 0;
 
-        const categories = expenses.map((expense: any) => ({
+        const categories = expenses.map((expense) => ({
           ...expense,
           percentage: input.income > 0 ? (expense.amount / input.income) * 100 : 0,
         }));

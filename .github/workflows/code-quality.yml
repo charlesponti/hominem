@@ -11,7 +11,6 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     env:
-      CHROMA_URL: "http://localhost:8000"
       COOKIE_SECRET: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
       DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -87,6 +86,16 @@ jobs:
         run: NODE_OPTIONS="--max-old-space-size=4096" bun run typecheck:ci
         env:
           TURBO_CONCURRENCY: 4
+
+      - name: 📱 Verify mobile gate
+        run: bun run verify:mobile
+        env:
+          EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
+          EXPO_PUBLIC_SUPABASE_URL: "http://localhost:54321"
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+
+      - name: 🧱 Build hono-rpc package
+        run: bun run --filter @hominem/hono-rpc build
 
       - name: ⚙️ apply database migrations
         run: bun run db:migrate

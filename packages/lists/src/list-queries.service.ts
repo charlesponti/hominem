@@ -1,7 +1,7 @@
 import type { ListOutput as DbListOutput } from '@hominem/db/types/lists';
 
 import { db } from '@hominem/db';
-import { and, count, desc, eq, inArray, isNotNull, or, sql } from '@hominem/db';
+import { and, count, desc, eq, isNotNull, or, sql } from '@hominem/db';
 import { item } from '@hominem/db/schema/items';
 import { list } from '@hominem/db/schema/lists';
 import { userLists } from '@hominem/db/schema/lists';

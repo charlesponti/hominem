@@ -59,7 +59,6 @@
     ".turbo",
     ".cache",
     "coverage",
-    "*.tsbuildinfo",
-    ".react-router/cache"
+    "*.tsbuildinfo"
   ]
 }

@@ -53,13 +53,13 @@ export function transformDates<T>(data: T): TransformDates<T> {
   }
 
   if (typeof data === 'object' && data !== null) {
-    const result: any = {};
+    const result: Record<string, unknown> = {};
     for (const key in data) {
       if (Object.prototype.hasOwnProperty.call(data, key)) {
         result[key] = transformDates(data[key]);
       }
     }
-    return result;
+    return result as TransformDates<T>;
   }
 
   return data as TransformDates<T>;

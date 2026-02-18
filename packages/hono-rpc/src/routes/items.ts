@@ -20,12 +20,13 @@ import type {
  * Transform item from service layer to API contract
  * Converts null values to undefined for exactOptionalPropertyTypes compatibility
  */
-function transformItemToApiFormat(item: any): ListItem {
+function transformItemToApiFormat(item: unknown): ListItem {
+  const typedItem = item as Record<string, unknown>;
   return {
-    ...item,
-    place: item.place ?? undefined, // null -> undefined
-    flight: item.flight ?? undefined, // null -> undefined
-  };
+    ...typedItem,
+    place: typedItem.place ?? undefined,
+    flight: typedItem.flight ?? undefined,
+  } as ListItem;
 }
 
 /**

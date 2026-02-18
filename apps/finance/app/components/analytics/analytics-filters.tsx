@@ -189,8 +189,8 @@ export function AnalyticsFilters({
 
   // Ensure we have valid data even during loading
   const safeAccounts: Array<{ id: string; name: string }> = (
-    (Array.isArray(accountsQuery.data) ? accountsQuery.data : []) as any[]
-  ).map((acc: any) => ({ id: acc.id, name: acc.name }));
+    Array.isArray(accountsQuery.data) ? accountsQuery.data : []
+  ).map((acc) => ({ id: acc.id, name: acc.name }));
   const safeCategories = categories
     .map((category) => ({
       id: category || '',

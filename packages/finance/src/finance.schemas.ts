@@ -1,6 +1,7 @@
 import type { AccountType } from '@hominem/db/types/finance';
 
 import * as z from 'zod';
+import { AccountMetadataSchema } from '@hominem/db/schema/shared';
 
 // Generic success response schema
 export const SuccessResponseSchema = z.object({
@@ -32,7 +33,7 @@ export const getFinanceAccountsOutputSchema = z.object({
       subtype: z.string().nullable().optional(),
       officialName: z.string().nullable().optional(),
       limit: z.string().or(z.number()).nullable().optional(),
-      meta: z.unknown().nullable().optional(),
+      meta: AccountMetadataSchema.optional().nullable(),
       lastUpdated: z.date().nullable().optional(),
       createdAt: z.date(),
       updatedAt: z.date(),

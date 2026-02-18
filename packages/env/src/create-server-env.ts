@@ -34,7 +34,7 @@ export function createServerEnv<T extends z.ZodObject<z.ZodRawShape>>(
   function getEnv(): EnvType {
     if (validated) return validated;
 
-    if (typeof (globalThis as any).process === 'undefined') {
+    if (typeof (globalThis as { process?: unknown }).process === 'undefined') {
       throw new EnvValidationError(
         'serverEnv can only be used in Node.js/server context. ' +
         'Use clientEnv for browser/client code.',
@@ -43,15 +43,15 @@ export function createServerEnv<T extends z.ZodObject<z.ZodRawShape>>(
     }
 
     try {
-      validated = schema.parse((globalThis as any).process.env);
+      const processEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process;
+      validated = schema.parse(processEnv?.env ?? {});
       return validated;
     } catch (error) {
       throw formatZodError(error, ctx);
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const _env: any = {};
+  const _env: Record<string, unknown> = {};
   return new Proxy(_env, {
     get(target, prop) {
       return getEnv()[prop as keyof EnvType];
@@ -73,5 +73,5 @@ export function createServerEnv<T extends z.ZodObject<z.ZodRawShape>>(
       }
       return undefined;
     },
-  });
+  }) as EnvType;
 }

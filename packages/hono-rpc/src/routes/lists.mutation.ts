@@ -31,26 +31,32 @@ import type {
  * Transform list from service layer to API contract
  * Converts null values to undefined for exactOptionalPropertyTypes compatibility
  */
-function transformListToApiFormat(list: any): List {
+function transformListToApiFormat(list: unknown): List {
+  const typedList = list as Record<string, unknown>;
   return {
-    ...list,
-    createdBy: list.createdBy ? {
-      id: list.createdBy.id,
-      email: list.createdBy.email,
-      name: list.createdBy.name ?? undefined, // null -> undefined
+    ...typedList,
+    createdBy: typedList.createdBy ? {
+      id: (typedList.createdBy as { id: string }).id,
+      email: (typedList.createdBy as { email: string }).email,
+      name: (typedList.createdBy as { name?: string | null }).name ?? undefined,
     } : null,
-    users: list.users?.map((user: any) => ({
-      id: user.id,
-      email: user.email,
-      name: user.name ?? undefined, // null -> undefined
-      image: user.image ?? undefined, // null -> undefined
+    users: (typedList.users as Array<Record<string, unknown>> | undefined)?.map((user) => ({
+      id: (user.id as string) || '',
+      email: (user.email as string) || '',
+      name: (user.name as string | null | undefined) ?? undefined,
+      image: (user.image as string | null | undefined) ?? undefined,
     })),
-    items: list.items?.map((item: any) => ({
-      ...item,
-      place: item.place ?? undefined,
-      flight: item.flight ?? undefined,
+    items: (typedList.items as Array<Record<string, unknown>> | undefined)?.map((item) => ({
+      id: (item.id as string) || '',
+      listId: (item.listId as string) || '',
+      itemId: (item.itemId as string) || '',
+      itemType: (item.itemType as string) || '',
+      place: item.place,
+      flight: item.flight,
+      createdAt: (item.createdAt as string) || '',
+      updatedAt: (item.updatedAt as string) || '',
     })),
-  };
+  } as List;
 }
 
 export const listMutationRoutes = new Hono<AppContext>()

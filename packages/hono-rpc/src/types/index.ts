@@ -18,6 +18,7 @@ export * from './goals.types';
 export * from './invites.types';
 export * from './items.types';
 export * from './lists.types';
+export * from './mobile.types';
 export * from './notes.types';
 export * from './people.types';
 export * from './places.types';

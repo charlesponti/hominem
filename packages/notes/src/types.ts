@@ -5,7 +5,7 @@
  * Import actual types directly from @hominem/db/types/notes
  */
 
-import { NoteContentTypeSchema, NoteStatusSchema } from '@hominem/db/schema/notes';
+import { NoteContentTypeSchema, NoteStatusSchema, NoteAnalysisSchema, PublishingMetadataSchema } from '@hominem/db/schema/notes';
 import * as z from 'zod';
 
 const noteTagSchema = z.object({ value: z.string() });
@@ -20,8 +20,8 @@ export const UpdateNoteZodSchema = z.object({
   content: z.string().optional(),
   excerpt: z.string().nullish(),
   tags: noteTagsSchema.nullish(),
-  publishingMetadata: z.any().optional().nullish(),
-  analysis: z.any().optional().nullish(),
+  publishingMetadata: PublishingMetadataSchema.optional().nullish(),
+  analysis: NoteAnalysisSchema.optional().nullish(),
 });
 
 export type UpdateNoteInput = z.infer<typeof UpdateNoteZodSchema>;

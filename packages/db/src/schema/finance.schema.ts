@@ -16,6 +16,8 @@ import {
   requiredTimestampColumn,
   optionalTimestampColumn,
   jsonColumn,
+  AccountMetadataSchema,
+  type AccountMetadata,
 } from './shared.schema';
 import { users } from './users.schema';
 
@@ -136,7 +138,7 @@ export const financeAccounts = pgTable(
     subtype: optionalTextColumn('subtype'),
     officialName: optionalTextColumn('official_name'),
     limit: optionalNumericColumn('limit'),
-    meta: jsonColumn('meta'),
+    meta: jsonb('meta').$type<AccountMetadata>(),
     lastUpdated: optionalTimestampColumn('last_updated'),
     createdAt: createdAtColumn(),
     updatedAt: updatedAtColumn(),
@@ -288,7 +290,7 @@ export const FinanceAccountSchema = z.object({
   subtype: z.string().nullable().optional(),
   officialName: z.string().nullable().optional(),
   limit: z.string().or(z.number()).nullable().optional(),
-  meta: z.unknown().nullable().optional(),
+  meta: AccountMetadataSchema.optional().nullable(),
   lastUpdated: z.string().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),

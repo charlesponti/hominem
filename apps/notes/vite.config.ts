@@ -101,11 +101,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       },
       // Optimize in production
       devSourcemap: !isProd,
-      preprocessorOptions: {
-        scss: {
-          charset: false,
-        },
-      },
     },
 
     server: {

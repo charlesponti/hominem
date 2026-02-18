@@ -17,7 +17,7 @@ import {
 import { useCallback } from 'react';
 import { href, Link, useNavigate } from 'react-router';
 
-const APP_NAME = 'Florin';
+const APP_NAME = 'Finance';
 
 const navItems = [
   {
@@ -97,7 +97,7 @@ function Header() {
     >
       <div className="flex px-2 py-4 md:px-8 items-center justify-between">
         <Link to="/" prefetch="intent" className="flex items-center space-x-1">
-          <img src="/logo-florin.png" alt={APP_NAME} className="size-6" />
+          <img src="/logo-finance.png" alt={APP_NAME} className="size-6" />
           <span className="heading-2 text-primary">{APP_NAME}</span>
         </Link>
         {!isLoading && (

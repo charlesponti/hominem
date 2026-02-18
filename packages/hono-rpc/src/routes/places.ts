@@ -3,8 +3,6 @@ import type { EventTypeEnum } from '@hominem/db/types/calendar';
 import {
   createEvent,
   deleteEvent,
-  getEventById,
-  getEvents,
   getVisitsByPlace,
   getVisitsByUser,
   updateEvent,
@@ -21,7 +19,7 @@ import {
   removePlaceFromList,
   type PlaceInput,
 } from '@hominem/places-services';
-import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
+import { NotFoundError, InternalError, isServiceError } from '@hominem/services';
 import { logger } from '@hominem/utils/logger';
 import { sanitizeStoredPhotos } from '@hominem/utils/images';
 import { zValidator } from '@hono/zod-validator';
@@ -612,7 +610,6 @@ export const placesRoutes = new Hono<AppContext>()
   // Get user's visits
   .post('/my-visits', authMiddleware, zValidator('json', placeGetMyVisitsSchema), async (c) => {
     try {
-      const input = c.req.valid('json') as z.infer<typeof placeGetMyVisitsSchema>;
       const userId = c.get('userId')!;
 
       const visits = await getVisitsByUser(userId);
@@ -656,7 +653,7 @@ export const placesRoutes = new Hono<AppContext>()
     try {
       const input = c.req.valid('json') as z.infer<typeof placeUpdateVisitSchema>;
 
-      const { id, date, ...rest } = input;
+      const { id, ...rest } = input;
 
       // Filter out undefined values for exactOptionalPropertyTypes
       const updateData: Record<string, any> = {};

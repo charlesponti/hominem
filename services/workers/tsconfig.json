@@ -62,7 +62,6 @@
     "**/*.spec.ts",
     "**/__tests__",
     "**/__mocks__",
-    "*.tsbuildinfo",
-    ".react-router/cache"
+    "*.tsbuildinfo"
   ]
 }

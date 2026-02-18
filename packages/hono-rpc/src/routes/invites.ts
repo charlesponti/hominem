@@ -55,26 +55,27 @@ import {
  * Database schema uses 'userId' for inviting user and 'isAccepted' boolean,
  * but API contract uses 'invitingUserId' and 'status' enum.
  */
-function transformInviteToApiFormat(dbInvite: any): Invite {
+function transformInviteToApiFormat(dbInvite: unknown): Invite {
+  const typedInvite = dbInvite as Record<string, unknown>;
   return {
-    id: dbInvite.token, // Use token as id since DB doesn't have separate id
-    listId: dbInvite.listId,
-    invitingUserId: dbInvite.userId, // Map userId -> invitingUserId
-    invitedUserId: dbInvite.invitedUserId,
-    invitedUserEmail: dbInvite.invitedUserEmail,
-    token: dbInvite.token,
-    status: dbInvite.isAccepted ? 'accepted' : dbInvite.acceptedAt ? 'declined' : 'pending', // Map boolean -> enum
-    createdAt: dbInvite.createdAt,
-    updatedAt: dbInvite.updatedAt,
-    ...(dbInvite.list && { list: dbInvite.list }),
-    ...(dbInvite.user_invitedUserId && {
+    id: typedInvite.token as string,
+    listId: typedInvite.listId as string,
+    invitingUserId: typedInvite.userId as string,
+    invitedUserId: typedInvite.invitedUserId as string | null,
+    invitedUserEmail: typedInvite.invitedUserEmail as string | null,
+    token: typedInvite.token as string,
+    status: typedInvite.isAccepted ? 'accepted' : typedInvite.acceptedAt ? 'declined' : 'pending',
+    createdAt: typedInvite.createdAt as string,
+    updatedAt: typedInvite.updatedAt as string,
+    ...(typedInvite.list ? { list: typedInvite.list } : {}),
+    ...(typedInvite.user_invitedUserId ? {
       invitingUser: {
-        id: dbInvite.user_invitedUserId.id,
-        email: dbInvite.user_invitedUserId.email,
-        name: dbInvite.user_invitedUserId.name,
+        id: (typedInvite.user_invitedUserId as { id: string }).id,
+        email: (typedInvite.user_invitedUserId as { email: string }).email,
+        name: (typedInvite.user_invitedUserId as { name?: string | null }).name ?? null,
       }
-    }),
-  };
+    } : {}),
+  } as Invite;
 }
 
 // ============================================================================
@@ -135,8 +136,8 @@ export const invitesRoutes = new Hono<AppContext>()
     const baseInvites = await getInvitesForUser(userId, normalizedEmail);
 
     const filteredBaseInvites = baseInvites
-      .filter((invite: any) => invite.list?.ownerId !== userId)
-      .map((invite: any) => ({ ...invite, belongsToAnotherUser: false }));
+      .filter((invite) => invite.list?.ownerId !== userId)
+      .map((invite) => ({ ...invite, belongsToAnotherUser: false }));
 
     let tokenInvite: ((typeof baseInvites)[number] & { belongsToAnotherUser: boolean }) | undefined;
 
@@ -163,7 +164,7 @@ export const invitesRoutes = new Hono<AppContext>()
     const invites = tokenInvite
       ? [
           tokenInvite,
-          ...filteredBaseInvites.filter((invite: any) => invite.token !== tokenInvite?.token),
+          ...filteredBaseInvites.filter((invite) => invite.token !== tokenInvite?.token),
         ]
       : filteredBaseInvites;
 
@@ -257,7 +258,7 @@ export const invitesRoutes = new Hono<AppContext>()
       token: input.token,
     };
 
-    const result = await acceptListInvite(params);
+    await acceptListInvite(params);
 
     // Fetch updated invite for response
     const updatedInvite = await getInviteByListAndToken({

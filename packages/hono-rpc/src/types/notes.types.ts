@@ -11,6 +11,8 @@ export type {
   PublishingMetadata,
 } from '@hominem/db/types/notes';
 
+export type { NoteAnalysis } from '../schemas/notes.schema';
+
 export type {
   AllContentType,
   ContentTag,
@@ -30,7 +32,7 @@ export {
 // ============================================================================
 
 import type { Note, NoteContentType, NoteStatus, NoteMention, PublishingMetadata } from '@hominem/db/types/notes';
-import type { AllContentType, ContentTag, TaskPriority, TaskStatus } from '../schemas/notes.schema';
+import type { AllContentType, ContentTag, TaskPriority, TaskStatus, NoteAnalysis } from '../schemas/notes.schema';
 
 // Type alias for JSON values
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
@@ -86,7 +88,7 @@ export type NotesCreateInput = {
   tags?: ContentTag[];
   mentions?: NoteMention[];
   publishingMetadata?: PublishingMetadata;
-  analysis?: JsonValue;
+  analysis?: NoteAnalysis;
 };
 
 // ============================================================================
@@ -101,7 +103,7 @@ export type NotesUpdateInput = {
   excerpt?: string | null;
   tags?: ContentTag[] | null;
   publishingMetadata?: PublishingMetadata | null;
-  analysis?: JsonValue | null;
+  analysis?: NoteAnalysis | null;
 };
 
 // ============================================================================
@@ -118,7 +120,7 @@ export type NotesSyncItem = {
   tags?: ContentTag[];
   mentions?: NoteMention[];
   publishingMetadata?: PublishingMetadata | null;
-  analysis?: JsonValue | null;
+  analysis?: NoteAnalysis | null;
   createdAt?: string;
   updatedAt?: string;
   publishedAt?: string;

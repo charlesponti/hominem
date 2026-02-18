@@ -1,4 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
+import type { ComponentType } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import Account from '~/routes/account';
@@ -61,7 +62,7 @@ describe('Account', () => {
         {
           path: '/account',
           // biome-ignore lint/suspicious/noExplicitAny: Test file needs any for route component typing
-          Component: Account as any,
+          Component: Account as ComponentType,
           loader: () => mockLoaderData,
         },
       ],
@@ -115,7 +116,7 @@ describe('Account', () => {
         {
           path: '/account',
           // biome-ignore lint/suspicious/noExplicitAny: Test file needs any for route component typing
-          Component: Account as any,
+          Component: Account as ComponentType,
           loader: () => mockLoaderData,
         },
       ],
@@ -149,7 +150,7 @@ describe('Account', () => {
         {
           path: '/account',
           // biome-ignore lint/suspicious/noExplicitAny: Test file needs any for route component typing
-          Component: Account as any,
+          Component: Account as ComponentType,
           loader: () => mockLoaderData,
         },
       ],

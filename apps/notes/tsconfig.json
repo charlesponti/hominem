@@ -45,12 +45,6 @@
       "@testing-library/jest-dom"
     ],
     "paths": {
-      "@hominem/finance-services/*": [
-        "../../packages/finance/src/*"
-      ],
-      "googleapis": [
-        "../../types/googleapis.d.ts"
-      ],
       "~/*": [
         "./app/*"
       ]

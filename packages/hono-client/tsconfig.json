@@ -37,14 +37,6 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "jsx": "react-jsx",
-    "paths": {
-      "@hominem/finance-services/*": [
-        "../finance/src/*"
-      ],
-      "googleapis": [
-        "../../types/googleapis.d.ts"
-      ]
-    }
   },
   "include": [
     "src/**/*",

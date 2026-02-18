@@ -44,7 +44,7 @@ const PlaceLists = ({ place }: Props) => {
 
       {(isLoading || listsContainingPlace.length > 0) && (
         <List isLoading={isLoading} loadingSize="md">
-          {listsContainingPlace.map((list: any) => (
+          {listsContainingPlace.map((list) => (
             <ListRow
               key={list.id}
               id={list.id}

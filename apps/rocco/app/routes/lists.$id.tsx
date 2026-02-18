@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { Link, redirect, useViewTransitionState } from 'react-router';
 
 import type { PlaceLocation } from '~/lib/types';
+import type { ListUser } from '@hominem/hono-rpc/types/lists.types';
 
 import ErrorBoundary from '~/components/ErrorBoundary';
 import ListEditButton from '~/components/lists/list-edit-button';
@@ -57,7 +58,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
     isLoading,
     error,
   } = useListById(listId, {
-    initialData: loaderData.list as any, // Direct data, no wrapper
+    initialData: loaderData.list,
     staleTime: 1000 * 60,
   });
 
@@ -69,8 +70,8 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   const markers: PlaceLocation[] = useMemo(
     () =>
       places
-        .filter((p: any) => p.latitude != null && p.longitude != null)
-        .map((p: any) => ({
+        .filter((p: { latitude: number | null; longitude: number | null; id: string; name: string; imageUrl: string | null }) => p.latitude != null && p.longitude != null)
+        .map((p: { latitude: number | null; longitude: number | null; id: string; name: string; imageUrl: string | null }) => ({
           latitude: p.latitude as number,
           longitude: p.longitude as number,
           id: p.id,
@@ -90,10 +91,10 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   }
 
   // Use optional chaining and default to check ownership
-  const ownerId = 'ownerId' in list ? list.ownerId : (list as any).userId;
+  const ownerId = 'ownerId' in list ? list.ownerId : (list as { userId?: string }).userId;
   const isOwner = ownerId === user?.id;
   const hasAccess = 'hasAccess' in list ? (list.hasAccess as boolean) : isOwner;
-  const collaborators = 'collaborators' in list ? list.collaborators : (list as any).users || [];
+  const collaborators = 'collaborators' in list ? list.collaborators : (list as { users?: unknown[] }).users || [];
 
   return (
     <div className="space-y-4">
@@ -113,15 +114,15 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
               <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">
                 <UserPlus size={18} />
               </Link>
-              <ListEditButton list={list as any} />
+              <ListEditButton list={list} />
             </div>
           )}
         </div>
         <div className="flex items-center gap-3">
           {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
-          {collaborators && collaborators.length > 0 && (
+            {collaborators && collaborators.length > 0 && (
             <div className="flex items-center -space-x-2">
-              {collaborators.slice(0, 5).map((collaborator: any) => (
+              {collaborators.slice(0, 5).map((collaborator: ListUser) => (
                 <UserAvatar
                   key={collaborator.id}
                   id={collaborator.id}

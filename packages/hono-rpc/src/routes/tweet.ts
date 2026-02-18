@@ -1,14 +1,12 @@
 import { google } from '@ai-sdk/google';
-import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
+import { ValidationError } from '@hominem/services';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
-import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
   tweetGenerateSchema,
   type TweetGenerateOutput,
-  type TweetGenerateInput,
 } from '../types/tweet.types';
 
 const TWEET_CHARACTER_LIMIT = 280;
@@ -42,7 +40,6 @@ function getDefaultStrategyPrompt(strategy: string): string {
 export const tweetRoutes = new Hono<AppContext>()
   // Generate tweet
   .post('/generate', authMiddleware, async (c) => {
-    const userId = c.get('userId')!;
     const body = await c.req.json();
     const parsed = tweetGenerateSchema.safeParse(body);
 

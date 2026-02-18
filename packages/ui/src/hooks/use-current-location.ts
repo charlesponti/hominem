@@ -21,12 +21,12 @@ export function useCurrentLocation({ enabled = true }: { enabled?: boolean }) {
         navigator.permissions.query({ name: 'geolocation' }).then((result) => {
           switch (result.state) {
             case 'denied': {
-              console.info('[RevRock] Geolocation permission denied.');
+              console.info('Geolocation permission denied.');
               break;
             }
             case 'granted': {
               console.info(
-                '[RevRock] Geolocation permission granted. However, position is unavailable.',
+                'Geolocation permission granted. However, position is unavailable.',
               );
               break;
             }

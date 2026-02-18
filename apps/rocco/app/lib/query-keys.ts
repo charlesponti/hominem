@@ -18,7 +18,7 @@ export const queryKeys = {
       ['places', 'autocomplete', query, lat, lng, sessionToken] as const,
     nearby: (lat?: number, lng?: number, radius?: number) =>
       ['places', 'nearby', lat, lng, radius] as const,
-    myVisits: (input?: any) => ['places', 'my-visits', input] as const,
+    myVisits: (input?: unknown) => ['places', 'my-visits', input] as const,
     placeVisits: (placeId: string) => ['places', 'place-visits', placeId] as const,
     visitStats: (placeId: string) => ['places', 'visit-stats', placeId] as const,
   },

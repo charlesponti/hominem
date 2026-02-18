@@ -1,10 +1,6 @@
 // Re-export for backward compatibility and main DB interface
 export {
   getDb,
-  setTestDb,
-  getDatabaseUrl,
-  pool as client,
-  takeOne,
   takeUniqueOrThrow,
 } from './client';
 
@@ -22,23 +18,15 @@ export {
   like,
   ilike,
   inArray,
-  notInArray,
   isNull,
   isNotNull,
   asc,
   desc,
   sql,
   count,
-  sum,
-  avg,
-  min,
-  max,
   type SQL,
   type SQLWrapper,
 } from 'drizzle-orm';
-
-// Re-export pg-core types to prevent duplicate instances
-export { type PgColumn } from 'drizzle-orm/pg-core';
 
 /**
  * Validation Schemas (Zod validators)
@@ -72,4 +60,4 @@ import { getDb } from './client';
  * Type is explicitly declared here rather than inferred to prevent
  * the expensive schema type computation from affecting every importer.
  */
-export const db: PostgresJsDatabase<typeof schema> = getDb();
+export const db = getDb() as PostgresJsDatabase<typeof schema>;

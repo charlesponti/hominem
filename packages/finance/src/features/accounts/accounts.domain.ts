@@ -1,6 +1,7 @@
 import type { FinanceAccount, AccountType } from '@hominem/db/types/finance';
 
 import * as z from 'zod';
+import { AccountMetadataSchema } from '@hominem/db/schema/shared';
 
 /**
  * AccountDomainSchema - Extended account domain model
@@ -25,7 +26,7 @@ export const AccountDomainSchema = z.object({
   subtype: z.string().nullable().optional(),
   officialName: z.string().nullable().optional(),
   limit: z.string().or(z.number()).nullable().optional(),
-  meta: z.unknown().nullable().optional(),
+  meta: AccountMetadataSchema.optional().nullable(),
   lastUpdated: z.string().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -52,7 +53,7 @@ export const CreateAccountSchema = z.object({
   subtype: z.string().nullable().optional(),
   officialName: z.string().nullable().optional(),
   limit: z.string().or(z.number()).nullable().optional(),
-  meta: z.any().optional().nullable(),
+  meta: AccountMetadataSchema.optional().nullable(),
   institutionId: z.string().nullable().optional(),
   plaidItemId: z.string().uuid().nullable().optional(),
   plaidAccountId: z.string().nullable().optional(),
@@ -93,7 +94,7 @@ export const AccountWithPlaidInfoSchema = AccountDomainSchema.extend({
   institutionLogo: z.string().nullable(),
   isPlaidConnected: z.boolean(),
   plaidItemStatus: z.string().nullable(),
-  plaidItemError: z.unknown().nullable(),
+  plaidItemError: z.string().nullable(),
   plaidLastSyncedAt: z.string().nullable(),
   plaidItemInternalId: z.string().nullable(),
   plaidInstitutionId: z.string().nullable(),
@@ -130,7 +131,7 @@ export const PlaidConnectionSchema = z.object({
   institutionName: z.string().nullable(),
   status: z.string(),
   lastSyncedAt: z.string().nullable(),
-  error: z.unknown().nullable(),
+  error: z.string().nullable(),
   createdAt: z.string(),
 });
 
@@ -148,7 +149,7 @@ export const InstitutionConnectionSchema = z.object({
   institutionUrl: z.string().nullable(),
   status: z.enum(['active', 'error', 'pending_expiration', 'revoked']),
   lastSyncedAt: z.string().nullable(),
-  error: z.unknown().nullable(),
+  error: z.string().nullable(),
   accountCount: z.number(),
   isPlaidConnected: z.boolean(),
 });

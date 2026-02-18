@@ -17,13 +17,14 @@ export const invokeCommand = new Command()
 
     try {
       // Create a new chat for CLI and send the message via Hono RPC
-      const createRes = await (rpc as any).api.chats.$post({ json: { title: 'CLI' } });
+      const createRes = await rpc.api.chats.$post({ json: { title: 'CLI' } });
       const createJson = await createRes.json();
       if (!createJson?.id) {
         throw new Error('Failed to create chat');
       }
       const chatId = createJson.id;
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sendRes = await (rpc as any).api.chats[':id'].send.$post({
         param: { id: chatId },
         json: { message },
