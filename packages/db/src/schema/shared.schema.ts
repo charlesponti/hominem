@@ -90,3 +90,34 @@ export const TransactionLocationSchema = z.object({
 });
 
 export type TransactionLocation = z.infer<typeof TransactionLocationSchema>;
+
+/**
+ * AccountMetadataSchema - structured metadata for external account providers (e.g. Plaid)
+ *
+ * This schema captures the common, well-defined fields we expect from external providers.
+ * Keep fields optional/null to allow for partial data from different providers, but avoid
+ * completely untyped blobs to maintain type safety across the codebase.
+ */
+export const AccountMetadataSchema = z.object({
+  // Provider identification (useful when multiple providers are supported)
+  provider: z.enum(['plaid', 'manual', 'other']).optional(),
+
+  // Plaid-specific identifiers (if available)
+  plaidAccountId: z.string().nullable().optional(),
+  plaidItemId: z.string().nullable().optional(),
+
+  // User-visible metadata
+  officialName: z.string().nullable().optional(),
+  subtype: z.string().nullable().optional(),
+  mask: z.string().nullable().optional(),
+  isoCurrencyCode: z.string().nullable().optional(),
+
+  // Balances and limits
+  availableBalance: z.number().nullable().optional(),
+  limit: z.number().nullable().optional(),
+
+  // Timestamps (ISO strings)
+  lastUpdated: z.string().nullable().optional(),
+});
+
+export type AccountMetadata = z.infer<typeof AccountMetadataSchema>;

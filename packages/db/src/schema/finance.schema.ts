@@ -16,6 +16,7 @@ import {
   requiredTimestampColumn,
   optionalTimestampColumn,
   jsonColumn,
+  AccountMetadataSchema,
 } from './shared.schema';
 import { users } from './users.schema';
 
@@ -288,7 +289,7 @@ export const FinanceAccountSchema = z.object({
   subtype: z.string().nullable().optional(),
   officialName: z.string().nullable().optional(),
   limit: z.string().or(z.number()).nullable().optional(),
-  meta: z.unknown().nullable().optional(),
+  meta: AccountMetadataSchema.optional().nullable(),
   lastUpdated: z.string().nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
