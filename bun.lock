@@ -554,6 +554,8 @@
         "@testing-library/react": "^14.3.1",
         "@testing-library/user-event": "^14.6.1",
         "@types/node": "25.2.3",
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
         "jsdom": "^25.0.1",
         "react": "^19.2.3",
         "typescript": "5.9.3",
