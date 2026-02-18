@@ -37,7 +37,6 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "jsx": "react-jsx",
-    "paths": {}
   },
   "include": [
     "src/**/*",

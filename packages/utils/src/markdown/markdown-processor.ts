@@ -16,7 +16,7 @@ import { extractMetadata, type Metadata } from './metadata.schema';
  * Type for markdown AST nodes from remark/unified
  * Covers the common properties used in this processor
  */
-export interface MarkdownAstNode {
+interface MarkdownAstNode {
   type: string;
   value?: string;
   depth?: number;
@@ -50,7 +50,7 @@ export async function splitMarkdown(
   return await splitter.createDocuments([content]);
 }
 
-export class MarkdownProcessor {
+class MarkdownProcessor {
   async getChunks(
     content: string,
     options?: Partial<RecursiveCharacterTextSplitterParams>,
@@ -230,9 +230,7 @@ export class MarkdownProcessor {
   }
 }
 
-export type { RecursiveCharacterTextSplitterParams };
-
-export interface EntryContent {
+interface EntryContent {
   tag: string;
   text: string;
   section: string | null;
@@ -241,7 +239,7 @@ export interface EntryContent {
   subentries?: EntryContent[];
 }
 
-export interface ProcessedMarkdownFileEntry {
+interface ProcessedMarkdownFileEntry {
   content: EntryContent[];
   date?: string;
   filename: string;

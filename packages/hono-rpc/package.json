@@ -23,6 +23,7 @@
     "@hominem/auth": "workspace:*",
     "@hominem/chat-services": "workspace:*",
     "@hominem/db": "workspace:*",
+    "@hominem/env": "workspace:*",
     "@hominem/events-services": "workspace:*",
     "@hominem/finance-services": "workspace:*",
     "@hominem/health-services": "workspace:*",

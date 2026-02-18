@@ -1,7 +1,7 @@
-import 'dotenv/config';
-import * as z from 'zod';
+import { createServerEnv } from '@hominem/env'
+import * as z from 'zod'
 
-const isTest = process.env.NODE_ENV === 'test';
+const isTest = process.env.NODE_ENV === 'test'
 
 const envSchema = z.object({
   PORT: z.string().default('4040'),
@@ -34,14 +34,6 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().default(''),
   RESEND_FROM_EMAIL: z.string().default(''),
   RESEND_FROM_NAME: z.string().default(''),
-});
+})
 
-export const env = new Proxy({} as z.infer<typeof envSchema>, {
-  get(_target, prop) {
-    const parsed = envSchema.parse(process.env);
-    if (prop in parsed) {
-      return parsed[prop as keyof z.infer<typeof envSchema>];
-    }
-    throw new Error(`Environment variable ${String(prop)} is not defined or invalid.`);
-  },
-});
+export const env = createServerEnv(envSchema, 'honoRpc')
