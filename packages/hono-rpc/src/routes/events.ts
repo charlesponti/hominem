@@ -17,7 +17,6 @@ import {
 } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import * as z from 'zod';
 
 import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
 import {
@@ -32,7 +31,6 @@ import {
   type EventsGoogleCalendarsOutput,
   type EventsGoogleSyncOutput,
   type EventsSyncStatusOutput,
-  type Event as EventJson,
 } from '../types/events.types';
 
 /**

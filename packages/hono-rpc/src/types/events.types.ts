@@ -10,7 +10,6 @@ export type { EventOutput as Event, EventTypeEnum } from '@hominem/db/types/cale
 // Output Types (Inferred from returns - these are optional aliases)
 // ============================================================================
 
-import type { EventOutput } from '@hominem/db/types/calendar';
 import type { EventWithTagsAndPeople } from '@hominem/events-services';
 
 export type EventsListOutput = EventWithTagsAndPeople[];

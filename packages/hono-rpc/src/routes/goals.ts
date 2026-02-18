@@ -7,7 +7,7 @@ import {
   deleteEvent,
   type EventWithTagsAndPeople,
 } from '@hominem/events-services';
-import { NotFoundError, ValidationError } from '@hominem/services';
+import { NotFoundError } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
@@ -23,7 +23,6 @@ import {
   type GoalUpdateOutput,
   type GoalDeleteOutput,
   type GoalStatsOutput,
-  type GoalOutput,
 } from '../types/goals.types';
 
 /**

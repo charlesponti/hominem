@@ -14,10 +14,8 @@ import {
 } from '@hominem/finance-services';
 import {
   NotFoundError,
-  ValidationError,
   ConflictError,
   InternalError,
-  isServiceError,
 } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -25,7 +23,6 @@ import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
-  type BudgetCategoryData,
   type BudgetCategoriesListOutput,
   type BudgetCategoriesListWithSpendingOutput,
   type BudgetCategoryGetOutput,

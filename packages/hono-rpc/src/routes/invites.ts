@@ -258,7 +258,7 @@ export const invitesRoutes = new Hono<AppContext>()
       token: input.token,
     };
 
-    const result = await acceptListInvite(params);
+    await acceptListInvite(params);
 
     // Fetch updated invite for response
     const updatedInvite = await getInviteByListAndToken({

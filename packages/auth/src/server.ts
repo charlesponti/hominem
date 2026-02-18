@@ -8,7 +8,7 @@ import {
   serializeCookieHeader,
 } from '@supabase/ssr';
 
-import type { AuthConfig, ServerAuthResult, SupabaseAuthUser } from './types';
+import type { AuthConfig, ServerAuthResult } from './types';
 
 import { toHominemUser } from './user';
 import { UserAuthService } from './user-auth.service';

@@ -5,7 +5,6 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
 import { publicMiddleware, type AppContext } from '../middleware/auth';
-import { type RunwayCalculateOutput } from '../types/finance.types';
 
 /**
  * Finance Runway Routes

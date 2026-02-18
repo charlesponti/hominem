@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 
 import { captureException } from '@sentry/react-native'
+import { useAudioTranscribe } from '../media/use-audio-transcribe'
 
 export type GeneratedTask = {
   id: string
@@ -52,6 +53,34 @@ const buildTask = (text: string): GeneratedTask => {
   }
 }
 
+function deriveIntentsFromText(content: string): GeneratedIntentsResponse {
+  const normalized = content.trim()
+  if (!normalized) {
+    return {
+      output: 'No input detected.',
+      chat: { output: 'Please enter text so I can help.' },
+    }
+  }
+
+  if (normalized.toLowerCase().startsWith('search ')) {
+    const keyword = normalized.replace(/^search\s+/i, '')
+    return {
+      output: `Showing cached matches for "${keyword}"`,
+      search: {
+        input: { keyword },
+        output: [buildTask(`Review results for ${keyword}`)],
+      },
+    }
+  }
+
+  return {
+    output: 'Created a focus item.',
+    create: {
+      output: [buildTask(normalized)],
+    },
+  }
+}
+
 export const useGetUserIntent = ({
   onSuccess,
   onError,
@@ -59,14 +88,12 @@ export const useGetUserIntent = ({
   onSuccess?: (data: GeneratedIntentsResponse) => void
   onError?: (error: Error) => void
 }) => {
+  const { mutateAsync: transcribeAudio } = useAudioTranscribe()
+
   const audioIntentMutation = useMutation<GeneratedIntentsResponse, Error, string>({
-    mutationFn: async () => {
-      return {
-        output: 'Please continue in Sherpa chat.',
-        chat: {
-          output: 'I captured your voice input. Open Sherpa and I will help from there.',
-        },
-      }
+    mutationFn: async (audioUri: string) => {
+      const transcription = await transcribeAudio(audioUri)
+      return deriveIntentsFromText(transcription)
     },
     onSuccess,
     onError: (error) => {
@@ -76,33 +103,7 @@ export const useGetUserIntent = ({
   })
 
   const textIntentMutation = useMutation<GeneratedIntentsResponse, Error, string>({
-    mutationFn: async (content: string) => {
-      const normalized = content.trim()
-      if (!normalized) {
-        return {
-          output: 'No input detected.',
-          chat: { output: 'Please enter text so I can help.' },
-        }
-      }
-
-      if (normalized.toLowerCase().startsWith('search ')) {
-        const keyword = normalized.replace(/^search\s+/i, '')
-        return {
-          output: `Showing cached matches for "${keyword}"`,
-          search: {
-            input: { keyword },
-            output: [buildTask(`Review results for ${keyword}`)],
-          },
-        }
-      }
-
-      return {
-        output: 'Created a focus item.',
-        create: {
-          output: [buildTask(normalized)],
-        },
-      }
-    },
+    mutationFn: async (content: string) => deriveIntentsFromText(content),
     onSuccess,
     onError: (error) => {
       captureException(error)

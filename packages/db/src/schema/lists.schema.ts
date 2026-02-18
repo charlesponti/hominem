@@ -13,7 +13,6 @@ import {
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import * as z from 'zod';
 
-import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { users } from './users.schema';
 
 export const list = pgTable(

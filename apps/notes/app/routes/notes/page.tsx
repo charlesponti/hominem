@@ -80,18 +80,6 @@ export default function NotesPage() {
     setFormMode('create');
   }
 
-  // Development action handlers
-  function handleExpand(note: Note) {
-    console.log('Expand note:', note.id);
-  }
-
-  function handleOutline(note: Note) {
-    console.log('Outline note:', note.id);
-  }
-
-  function handleRewrite(note: Note) {
-    console.log('Rewrite note:', note.id);
-  }
 
   return (
     <div className="flex flex-col h-screen w-full max-w-2xl mx-auto">
@@ -159,9 +147,6 @@ export default function NotesPage() {
                     onEdit={handleEditItem}
                     onDelete={handleDeleteItem}
                     onRemoveTag={removeTagFromNote}
-                    onExpand={handleExpand}
-                    onOutline={handleOutline}
-                    onRewrite={handleRewrite}
                   />
                 ))}
               </div>

@@ -3,7 +3,6 @@ import { Command } from 'commander';
 import { consola } from 'consola';
 
 import {
-  deviceCodeLogin,
   getStoredTokens,
   interactiveLogin,
   logout,

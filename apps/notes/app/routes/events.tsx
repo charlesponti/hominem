@@ -1,4 +1,3 @@
-// import { createServerCallerWithToken } from '@hominem/hono-client/ssr'; // redundant if we use createServerHonoClient
 import type { EventsCreateInput, EventsListOutput } from '@hominem/hono-rpc/types/events.types';
 import type { PeopleListOutput } from '@hominem/hono-rpc/types/people.types';
 
@@ -18,7 +17,7 @@ import EventList, { type Activity } from '../components/events/EventList';
 import StatsDisplay from '../components/events/StatsDisplay';
 import SyncButton from '../components/events/SyncButton';
 import SyncStatus from '../components/events/SyncStatus';
-import { useGoogleCalendarSync } from '../hooks/useGoogleCalendarSync';
+import { useGoogleCalendarSync } from '~/lib/hooks/use-google-calendar-sync';
 
 type Person = PeopleListOutput[number];
 type EventData = EventsListOutput[number];
@@ -104,7 +103,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const { sync, syncStatus, isSyncing } = useGoogleCalendarSync();
+  const { syncCalendar, isLoading: isSyncing, syncResult, syncError: syncErr } = useGoogleCalendarSync();
 
   // Use shared hooks for filter management with URL sync
   const { filters, updateFilter } = useUrlFilters<EventFilters>({
@@ -257,7 +256,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
   }, [filters, updateFilter]);
 
   const handleSync = async () => {
-    await sync({});
+    await syncCalendar({});
   };
 
   const handleToggleEventForm = () => {
@@ -301,13 +300,13 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
           </div>
 
           {/* Sync Status */}
-          {syncStatus && (
+          {(syncResult || syncErr) && (
             <div className="mt-4">
               <SyncStatus
-                lastSyncedAt={syncStatus.lastSyncedAt}
-                syncError={syncStatus.syncError}
-                eventCount={syncStatus.eventCount}
-                connected={syncStatus.connected}
+                lastSyncedAt={new Date().toISOString()}
+                syncError={syncErr ?? null}
+                eventCount={syncResult ? (syncResult as { created?: number }).created ?? 0 : 0}
+                connected={!syncErr}
               />
             </div>
           )}

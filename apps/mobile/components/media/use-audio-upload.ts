@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 
 import { captureException } from '@sentry/react-native'
+import { useAudioTranscribe } from './use-audio-transcribe'
 
 import type { GeneratedIntentsResponse } from '~/components/notes/use-get-user-intent'
 
@@ -13,12 +14,15 @@ export const useAudioUpload = ({
   onSuccess?: (data: AudioUploadResponse) => void
   onError?: () => void
 }) => {
+  const { mutateAsync: transcribe } = useAudioTranscribe()
+
   const mutation = useMutation<AudioUploadResponse, Error, string>({
-    mutationFn: async () => {
+    mutationFn: async (audioUri) => {
+      const text = await transcribe(audioUri)
       return {
-        output: 'Audio upload is routed through Sherpa chat.',
+        output: text,
         chat: {
-          output: 'Voice intent parsing is disabled in this build. Continue in Sherpa chat.',
+          output: text,
         },
       }
     },

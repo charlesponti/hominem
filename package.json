@@ -26,7 +26,7 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "check": "bun run validate-db-imports && bun run typecheck && bun run lint",
+    "check": "bun run validate-db-imports && bun run typecheck && bun run lint && bun run verify:voice",
     "clean": "turbo run clean",
     "db:migrate": "turbo run db:migrate",
     "dev": "turbo dev --ui tui",
@@ -45,6 +45,7 @@
     "typecheck:workspace": "npx tsc -p tsconfig.json --noEmit",
     "verify:mobile:design": "bash scripts/verify-mobile-design.sh",
     "verify:mobile": "bunx tsc -p apps/mobile/tsconfig.json --noEmit && bun run verify:mobile:design && bun run --filter @hominem/hono-rpc typecheck",
+    "verify:voice": "bash scripts/verify-voice-architecture.sh",
     "typecheck:ci": "turbo run typecheck --concurrency=4 --continue",
     "type-performance:run-all": "bun run scripts/type-performance.ts run-all",
     "type-performance:analyze": "bun run scripts/type-performance.ts analyze",

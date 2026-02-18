@@ -8,7 +8,6 @@ import { NotFoundError, ValidationError, InternalError } from '@hominem/services
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import { randomUUID } from 'node:crypto';
-import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
@@ -17,7 +16,6 @@ import {
   type TwitterAuthorizeOutput,
   type TwitterDisconnectOutput,
   type TwitterPostOutput,
-  type TwitterPostInput,
   type TwitterSyncOutput,
   type TwitterTweet,
 } from '../types/twitter.types';
@@ -44,12 +42,6 @@ interface TwitterTweetsResponse {
     in_reply_to_user_id?: string;
   }[];
 }
-
-const TwitterPostSchema = z.object({
-  text: z.string().min(1).max(280),
-  contentId: z.string().uuid().optional(),
-  saveAsContent: z.boolean().default(false),
-});
 
 function generateCodeVerifier(): string {
   const array = new Uint8Array(32);

@@ -26,7 +26,6 @@ import type {
   AccountListOutput,
   AccountUpdateOutput,
   AccountsWithPlaidOutput,
-  TransactionData,
 } from '../types/finance.types';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
