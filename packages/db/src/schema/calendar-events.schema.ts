@@ -12,6 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import { eventSourceEnum, eventTypeEnum } from './calendar.enums';
+import type { GoalMilestone } from './goals.schema';
 import { place } from './places.schema';
 import { createdAtColumn, updatedAtColumn } from './shared.schema';
 import { users } from './users.schema';
@@ -166,7 +167,7 @@ export const events = pgTable(
     /**
      * JSON array of milestone configurations
      */
-    milestones: json('milestones'),
+    milestones: json('milestones').$type<GoalMilestone[]>(),
     // Metadata
     createdAt: createdAtColumn(),
     updatedAt: updatedAtColumn(),
@@ -184,9 +185,9 @@ export const events = pgTable(
   ],
 );
 
-// Import drizzle-zod at the end to avoid circular dependencies
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import * as z from 'zod';
+import { GoalMilestoneSchema } from './goals.schema';
 
 /**
  * Zod Schema for Event Insert Operations
@@ -217,7 +218,7 @@ export const EventInsertSchema = createInsertSchema(events, {
   reminderSettings: z.unknown().nullable(),
   dependencies: z.unknown().nullable(),
   resources: z.unknown().nullable(),
-  milestones: z.unknown().nullable(),
+  milestones: z.array(GoalMilestoneSchema).nullable(),
 });
 
 /**
@@ -249,7 +250,7 @@ export const EventSelectSchema = createSelectSchema(events, {
   reminderSettings: z.unknown().nullable(),
   dependencies: z.unknown().nullable(),
   resources: z.unknown().nullable(),
-  milestones: z.unknown().nullable(),
+  milestones: z.array(GoalMilestoneSchema).nullable(),
 });
 
 export type EventInput = z.infer<typeof EventInsertSchema>;
