@@ -66,8 +66,8 @@ export const interviews = pgTable(
     feedback: text('feedback'), // Feedback received, if any
     thankYouNoteSent: timestamp('thank_you_note_sent_at'),
     status: interviewStatusEnum('status'), // e.g., Scheduled, Completed, Cancelled, Rescheduled (using pgEnum)
-    questionsAsked: jsonb('questions_asked'), // Store questions asked to the candidate
-    questionsToAsk: jsonb('questions_to_ask'), // Store questions the candidate plans to ask
+    questionsAsked: jsonb('questions_asked').$type<string[]>(),
+    questionsToAsk: jsonb('questions_to_ask').$type<string[]>(),
     createdAt: createdAtColumn(),
     updatedAt: updatedAtColumn(),
   },

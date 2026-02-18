@@ -42,7 +42,7 @@ export const networking_events = pgTable(
     website: text('website'),
     notes: text('notes'), // User's personal notes about the event
     keyTakeaways: text('key_takeaways'),
-    attachments: jsonb('attachments'), // e.g., [{ name: 'Presentation Slides', url: '...' }]
+    attachments: jsonb('attachments').$type<Array<{ name: string; url: string }>>(),
     createdAt: createdAtColumn(),
     updatedAt: updatedAtColumn(),
   },

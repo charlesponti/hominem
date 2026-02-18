@@ -123,7 +123,7 @@ export const events = pgTable(
     /**
      * JSON array of reminder configurations
      */
-    reminderSettings: json('reminder_settings'),
+    reminderSettings: json('reminder_settings').$type<Array<{ method: string; minutes: number }>>(),
     /**
      * ID of the parent event (for recurring events)
      */
@@ -159,11 +159,11 @@ export const events = pgTable(
     /**
      * JSON array of prerequisite event IDs
      */
-    dependencies: json('dependencies'),
+    dependencies: json('dependencies').$type<string[]>(),
     /**
      * JSON array of resource URLs/IDs
      */
-    resources: json('resources'),
+    resources: json('resources').$type<string[]>(),
     /**
      * JSON array of milestone configurations
      */
@@ -215,9 +215,9 @@ export const EventInsertSchema = createInsertSchema(events, {
   unit: z.string().nullable(),
   goalCategory: z.string().nullable(),
   // JSON fields
-  reminderSettings: z.unknown().nullable(),
-  dependencies: z.unknown().nullable(),
-  resources: z.unknown().nullable(),
+  reminderSettings: z.array(z.object({ method: z.string(), minutes: z.number() })).nullable(),
+  dependencies: z.array(z.string()).nullable(),
+  resources: z.array(z.string()).nullable(),
   milestones: z.array(GoalMilestoneSchema).nullable(),
 });
 
@@ -247,9 +247,9 @@ export const EventSelectSchema = createSelectSchema(events, {
   unit: z.string().nullable(),
   goalCategory: z.string().nullable(),
   // JSON fields
-  reminderSettings: z.unknown().nullable(),
-  dependencies: z.unknown().nullable(),
-  resources: z.unknown().nullable(),
+  reminderSettings: z.array(z.object({ method: z.string(), minutes: z.number() })).nullable(),
+  dependencies: z.array(z.string()).nullable(),
+  resources: z.array(z.string()).nullable(),
   milestones: z.array(GoalMilestoneSchema).nullable(),
 });
 

@@ -43,7 +43,7 @@ export const artists = pgTable(
     spotifyFollowers: integer('spotify_followers').default(0),
     spotifyUrl: text('spotify_url'),
     spotifyId: text('spotify_id').notNull().unique(),
-    spotifyData: jsonb('spotify_data').notNull(),
+    spotifyData: jsonb('spotify_data').$type<Record<string, unknown>>().notNull(),
 
     // Timestamps
     createdAt: createdAtColumn(),

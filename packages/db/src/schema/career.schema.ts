@@ -74,7 +74,7 @@ export const jobs = pgTable('jobs', {
   companyId: uuid('company_id').references(() => companies.id), // Foreign key to the company that posted the job
   title: text('title').notNull(), // Job title
   description: text('description').notNull(), // Detailed description of the job
-  requirements: json('requirements').notNull().default([]), // Job requirements (e.g., skills, experience) stored as JSON
+  requirements: json('requirements').$type<string[]>().notNull().default([]),
   salary: text('salary').notNull(), // Salary information
   currency: text('currency').notNull().default('USD'), // Currency for the salary (default to USD)
   benefits: json('benefits').$type<string[]>().default([]), // Benefits offered (e.g., health insurance, retirement plans) stored as JSON

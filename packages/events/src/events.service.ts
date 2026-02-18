@@ -1005,7 +1005,7 @@ export interface ConsolidatedGoalStats {
   currentValue: number;
   targetValue: number;
   remaining: number;
-  milestones?: unknown;
+  milestones?: { description: string; isCompleted: boolean }[] | null;
 }
 
 export async function getConsolidatedGoalStats(
@@ -1058,7 +1058,7 @@ export async function createConsolidatedGoal(
     category?: string;
     priority?: number;
     status?: string;
-    milestones?: unknown;
+    milestones?: { description: string; isCompleted: boolean }[] | null;
     tags?: string[];
   },
 ): Promise<EventWithTagsAndPeople> {
@@ -1097,7 +1097,7 @@ export async function updateConsolidatedGoal(
     title?: string;
     description?: string;
     priority?: number;
-    milestones?: unknown;
+    milestones?: { description: string; isCompleted: boolean }[] | null;
   },
 ): Promise<EventWithTagsAndPeople | null> {
   const goal = await getEventById(goalId);

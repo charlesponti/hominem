@@ -84,7 +84,7 @@ export const notes = pgTable(
     excerpt: text('excerpt'), // Short preview/SEO excerpt
     tags: json('tags').$type<Array<ContentTag>>().default([]),
     mentions: json('mentions').$type<Array<NoteMention> | undefined>().default([]),
-    analysis: json('analysis'),
+    analysis: json('analysis').$type<Record<string, string | number | boolean | null>>(),
     publishingMetadata: json('publishing_metadata').$type<PublishingMetadata>(),
     // Version tracking
     parentNoteId: uuid('parent_note_id'),
