@@ -16,6 +16,19 @@ import { type AllContentType, AllContentTypeSchema, type ContentTag } from './sh
 import { users } from './users.schema';
 
 /**
+ * Analysis data for notes - computed metadata like reading time, summary, etc.
+ */
+export const NoteAnalysisSchema = z.object({
+  readingTimeMinutes: z.number().optional(),
+  summary: z.string().optional(),
+  keywords: z.array(z.string()).optional(),
+  sentiment: z.enum(['positive', 'neutral', 'negative']).optional(),
+  language: z.string().optional(),
+});
+
+export type NoteAnalysis = z.infer<typeof NoteAnalysisSchema>;
+
+/**
  * Publishing status for notes
  */
 export const NoteStatusSchema = z.enum([
@@ -84,7 +97,7 @@ export const notes = pgTable(
     excerpt: text('excerpt'), // Short preview/SEO excerpt
     tags: json('tags').$type<Array<ContentTag>>().default([]),
     mentions: json('mentions').$type<Array<NoteMention> | undefined>().default([]),
-    analysis: json('analysis').$type<Record<string, string | number | boolean | null>>(),
+    analysis: json('analysis').$type<NoteAnalysis>(),
     publishingMetadata: json('publishing_metadata').$type<PublishingMetadata>(),
     // Version tracking
     parentNoteId: uuid('parent_note_id'),

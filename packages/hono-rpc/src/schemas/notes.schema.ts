@@ -2,6 +2,7 @@ import {
   NoteContentTypeSchema as DbNoteContentTypeSchema,
   NoteStatusSchema as DbNoteStatusSchema,
   PublishingMetadataSchema as DbPublishingMetadataSchema,
+  NoteAnalysisSchema as DbNoteAnalysisSchema,
 } from '@hominem/db/schema/notes';
 import {
   AllContentTypeSchema as DbAllContentTypeSchema,
@@ -18,6 +19,7 @@ export const NoteStatusSchema = DbNoteStatusSchema.describe('NoteStatus');
 export const AllContentTypeSchema = DbAllContentTypeSchema.describe('AllContentType');
 export const ContentTagSchema = DbContentTagSchema.extend({});
 export const PublishingMetadataSchema = DbPublishingMetadataSchema.extend({});
+export const NoteAnalysisSchema = DbNoteAnalysisSchema.extend({});
 export const TaskStatusSchema = DbTaskStatusSchema.describe('TaskStatus');
 export const TaskPrioritySchema = DbTaskPrioritySchema.describe('TaskPriority');
 
@@ -26,6 +28,7 @@ export type NoteStatus = z.infer<typeof NoteStatusSchema>;
 export type AllContentType = z.infer<typeof AllContentTypeSchema>;
 export type ContentTag = z.infer<typeof ContentTagSchema>;
 export type PublishingMetadata = z.infer<typeof PublishingMetadataSchema>;
+export type NoteAnalysis = z.infer<typeof NoteAnalysisSchema>;
 export type TaskStatus = z.infer<typeof TaskStatusSchema>;
 export type TaskPriority = z.infer<typeof TaskPrioritySchema>;
 
@@ -64,7 +67,7 @@ export const CreateNoteInputSchema = z.object({
   tags: z.array(ContentTagSchema).optional().default([]),
   mentions: z.array(NoteMentionSchema).optional().default([]),
   publishingMetadata: PublishingMetadataSchema.optional(),
-  analysis: JsonValueSchema.optional(),
+  analysis: NoteAnalysisSchema.optional(),
 });
 
 export const UpdateNoteInputSchema = z.object({
@@ -75,7 +78,7 @@ export const UpdateNoteInputSchema = z.object({
   excerpt: z.string().nullish(),
   tags: z.array(ContentTagSchema).nullish(),
   publishingMetadata: PublishingMetadataSchema.optional().nullish(),
-  analysis: JsonValueSchema.optional().nullish(),
+  analysis: NoteAnalysisSchema.optional().nullish(),
 });
 
 export const SyncNoteItemSchema = z.object({
@@ -88,7 +91,7 @@ export const SyncNoteItemSchema = z.object({
   tags: z.array(ContentTagSchema).optional().default([]),
   mentions: z.array(NoteMentionSchema).optional().default([]),
   publishingMetadata: PublishingMetadataSchema.optional().nullish(),
-  analysis: JsonValueSchema.optional().nullish(),
+  analysis: NoteAnalysisSchema.optional().nullish(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
   publishedAt: z.string().optional(),
