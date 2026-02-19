@@ -15,12 +15,12 @@ This app is the iOS mobile client for Hominem, built with Expo Router and the sh
 Required for `bun run dev` or `bun run ios`:
 
 ```bash
-EXPO_PUBLIC_API_BASE_URL="http://localhost:4040"                          # Local API server
-EXPO_PUBLIC_SUPABASE_URL="https://gzgtqwrelfynzcpsnpxw.supabase.co"      # Development Supabase project
-EXPO_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."  # Supabase anon key
-EXPO_PUBLIC_SENTRY_DSN="https://..."                                      # Error tracking (optional)
-EXPO_PUBLIC_SENTRY_ENVIRONMENT="development"                              # Sentry environment
-EXPO_PUBLIC_E2E_TESTING="false"                                           # Disable E2E test features
+EXPO_PUBLIC_API_BASE_URL="http://localhost:4040"
+EXPO_PUBLIC_SUPABASE_URL="https://gzgtqwrelfynzcpsnpxw.supabase.co"
+EXPO_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+EXPO_PUBLIC_SENTRY_DSN="https://..."
+EXPO_PUBLIC_SENTRY_ENVIRONMENT="development"
+EXPO_PUBLIC_E2E_TESTING="false"
 ```
 
 ### E2E Testing (`.env.e2e.local`)
@@ -28,23 +28,16 @@ EXPO_PUBLIC_E2E_TESTING="false"                                           # Disa
 Required for Maestro tests:
 
 ```bash
-# Test credentials (must exist in test Supabase project)
 E2E_TEST_EMAIL="e2e-test@mindsherpa.com"
 E2E_TEST_PASSWORD="your-password"
-
-# API Configuration (test server)
 EXPO_PUBLIC_API_BASE_URL="http://localhost:4040"
-
-# Supabase Authentication (test project)
 EXPO_PUBLIC_SUPABASE_URL="https://qgdiyyrpzgxxjgvqyjrx.supabase.co"
 EXPO_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_LZYR8gTGxLsnh7u7colMWQ_KfJjte7I"
-
-# E2E Testing Flag
 EXPO_PUBLIC_E2E_TESTING="true"
-
-# Sentry (optional)
 EXPO_PUBLIC_SENTRY_ENVIRONMENT="e2e"
 ```
+
+**Important:** Do NOT use `#` comments in `.env` files when sourcing them in shell. Comments can cause syntax errors during Expo startup.
 
 ### Production (`.env.production.local`)
 
