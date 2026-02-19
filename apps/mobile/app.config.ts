@@ -52,6 +52,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'expo-build-properties',
         {
           ios: {
+            entitlements: {
+              'keychain-access-groups': [
+                '$(AppIdentifierPrefix)com.pontistudios.mindsherpa',
+              ],
+            },
             infoPlist: {
               NSAppTransportSecurity: {
                 NSAllowsArbitraryLoads: false,
