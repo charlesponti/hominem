@@ -1,0 +1,5 @@
+appId: com.pontistudios.mindsherpa
+env:
+  E2E_EMAIL: ${E2E_TEST_EMAIL}
+  E2E_PASSWORD: ${E2E_TEST_PASSWORD}
+  E2E_DEV_SERVER_URL: ${E2E_DEV_SERVER_URL}

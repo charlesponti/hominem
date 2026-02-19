@@ -1,0 +1,11 @@
+appId: com.pontistudios.mindsherpa
+---
+- runFlow: ../auth/login.yaml
+- tapOn: "FOCUS"
+- waitForAnimationToEnd
+- swipe:
+    direction: LEFT
+    element:
+      id: focus-item-0
+    duration: 300
+- waitForAnimationToEnd

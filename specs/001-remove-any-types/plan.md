@@ -1,44 +1,44 @@
-# Implementation Plan: Remove Explicit Any Usage
+# Implementation Plan: [FEATURE]
 
-**Branch**: `001-remove-any-types` | **Date**: 2026-02-17 | **Spec**: /Users/charlesponti/Developer/hominem/specs/001-remove-any-types/spec.md  
-**Input**: Feature specification from `/Users/charlesponti/Developer/hominem/specs/001-remove-any-types/spec.md`
+**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
 
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
+**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
 ## Summary
 
-Remove all explicit `any` and `as any` usage across the monorepo by replacing them with schema-derived types, explicit contracts, and type guards, while preserving runtime behavior and enforcing no-explicit-any rules.
+[Extract from feature spec: primary requirement + technical approach from research]
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.9.3  
-**Primary Dependencies**: React 19, React Router 7, Hono, Zod 4, Drizzle ORM, TanStack Query (via `useHonoQuery`), Vitest  
-**Storage**: PostgreSQL (Drizzle ORM)  
-**Testing**: Vitest (with React Testing Library)  
-**Target Platform**: Web apps + server services (Bun/Node runtime)  
-**Project Type**: Monorepo (apps, packages, services, tools)  
-**Performance Goals**: N/A (type-safety refactor only)  
-**Constraints**: Preserve runtime behavior; no direct DB access in apps; single source of truth for types (DB schema → services → routes → clients)  
-**Scale/Scope**: Monorepo-wide refactor across apps, packages, services, and tools
+<!--
+  ACTION REQUIRED: Replace the content in this section with the technical details
+  for the project. The structure here is presented in advisory capacity to guide
+  the iteration process.
+-->
+
+**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]  
+**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]  
+**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]  
+**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]  
+**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: [single/web/mobile - determines source structure]  
+**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]  
+**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]  
+**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Gates:
-- Strict Typing (no `any`/`unknown`)
-- Single Source of Truth for Types
-- Validation First (Zod)
-- Clean Architecture Boundaries (no DB access in apps)
-- Security by Default
-- Quality Gates: typecheck, lint, test, validate-db-imports
+[Gates determined based on constitution file]
 
 ## Project Structure
 
 ### Documentation (this feature)
 
 ```text
-/Users/charlesponti/Developer/hominem/specs/001-remove-any-types/
+specs/[###-feature]/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
 ├── data-model.md        # Phase 1 output (/speckit.plan command)
@@ -48,45 +48,51 @@ Gates:
 ```
 
 ### Source Code (repository root)
+<!--
+  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
+  for this feature. Delete unused options and expand the chosen structure with
+  real paths (e.g., apps/admin, packages/something). The delivered plan must
+  not include Option labels.
+-->
 
 ```text
-/Users/charlesponti/Developer/hominem/apps/
-├── finance/
-├── notes/
-└── rocco/
-
-/Users/charlesponti/Developer/hominem/packages/
-├── ai/
-├── auth/
-├── career/
-├── chat/
-├── db/
-├── env/
-├── events/
-├── finance/
-├── health/
-├── hono-client/
-├── hono-rpc/
-├── invites/
-├── jobs/
-├── lists/
-├── notes/
-├── places/
+# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
+src/
+├── models/
 ├── services/
-├── ui/
-└── utils/
+├── cli/
+└── lib/
 
-/Users/charlesponti/Developer/hominem/services/
-├── api/
-└── workers/
+tests/
+├── contract/
+├── integration/
+└── unit/
 
-/Users/charlesponti/Developer/hominem/tools/
-└── cli/
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
 
-/Users/charlesponti/Developer/hominem/scripts/
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
 ```
 
-**Structure Decision**: Monorepo structure with applications under `apps/`, shared libraries under `packages/`, backend services under `services/`, and developer tooling under `tools/`.
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## Complexity Tracking
 
@@ -94,4 +100,5 @@ Gates:
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| N/A | N/A | N/A |
+| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |

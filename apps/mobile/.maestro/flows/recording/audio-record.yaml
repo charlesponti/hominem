@@ -1,0 +1,11 @@
+appId: com.pontistudios.mindsherpa
+---
+- runFlow: ../auth/login.yaml
+- tapOn: "FOCUS"
+- waitForAnimationToEnd
+- tapOn:
+    id: voice-start-button
+- waitForAnimationToEnd
+- tapOn:
+    id: voice-stop-button
+- waitForAnimationToEnd

@@ -19,6 +19,7 @@ import {
   getMobileRedirectUri,
   getSupabaseMobileClient,
 } from './supabase-mobile'
+import { E2E_TESTING } from './constants'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -31,6 +32,7 @@ type AuthContextType = {
   session: Session | null
   supabaseUser: User | null
   signInWithApple: () => Promise<void>
+  signInWithTestCredentials?: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<UserProfile>
@@ -167,6 +169,27 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     router.replace('/(drawer)/(tabs)/start')
   }, [router, supabase])
 
+  const signInWithTestCredentials = useCallback(
+    async (email: string, password: string) => {
+      if (!E2E_TESTING) {
+        throw new Error('Test auth is only available in E2E builds')
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        throw error
+      }
+
+      await hydrateFromSession(data.session)
+      router.replace('/(drawer)/(tabs)/start')
+    },
+    [hydrateFromSession, router, supabase]
+  )
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
     await LocalStore.clearAllData()
@@ -224,6 +247,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       session,
       supabaseUser,
       signInWithApple,
+      signInWithTestCredentials: E2E_TESTING ? signInWithTestCredentials : undefined,
       signOut,
       deleteAccount,
       updateProfile,
@@ -235,6 +259,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       session,
       supabaseUser,
       signInWithApple,
+      signInWithTestCredentials,
       signOut,
       deleteAccount,
       updateProfile,

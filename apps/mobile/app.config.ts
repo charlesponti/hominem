@@ -104,6 +104,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       typedRoutes: true,
       tsconfigPaths: true,
     },
+    newArchEnabled: false,
     ios: {
       bundleIdentifier,
       supportsTablet: true,

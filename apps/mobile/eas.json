@@ -18,7 +18,8 @@
       "channel": "development",
       "developmentClient": true,
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "EXPO_PUBLIC_E2E_TESTING": "true"
       },
       "extends": "development",
       "ios": {
