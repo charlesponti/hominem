@@ -5,6 +5,7 @@ export * from './possessions.service';
 export * from './tags.service';
 export * from './tasks.service';
 export * from './voice-transcription.service';
+export * from './voice-speech.service';
 export type { Queues } from './types';
 
 export {

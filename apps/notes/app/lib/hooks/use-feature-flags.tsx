@@ -3,12 +3,19 @@ import { createContext, type ReactNode, useContext } from 'react';
 // Define available feature flags
 export interface FeatureFlags {
   twitterIntegration: boolean;
-  // Add more feature flags here as needed
+  aiSdkChatWeb: boolean;
+  aiSdkChatMobile: boolean;
+  aiSdkTranscribe: boolean;
+  aiSdkSpeech: boolean;
 }
 
 // Default feature flag values
 const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
   twitterIntegration: false,
+  aiSdkChatWeb: false,
+  aiSdkChatMobile: false,
+  aiSdkTranscribe: false,
+  aiSdkSpeech: false,
 };
 
 // Feature flags context
@@ -55,8 +62,16 @@ export function FeatureFlagsProvider({ children, flags = {} }: FeatureFlagsProvi
 export function useEnvironmentFeatureFlags(): Partial<FeatureFlags> {
   // Check environment variables for feature flags
   const twitterIntegration = import.meta.env.VITE_FEATURE_TWITTER_INTEGRATION === 'true';
+  const aiSdkChatWeb = import.meta.env.VITE_FEATURE_AI_SDK_CHAT_WEB === 'true';
+  const aiSdkChatMobile = import.meta.env.VITE_FEATURE_AI_SDK_CHAT_MOBILE === 'true';
+  const aiSdkTranscribe = import.meta.env.VITE_FEATURE_AI_SDK_TRANSCRIBE === 'true';
+  const aiSdkSpeech = import.meta.env.VITE_FEATURE_AI_SDK_SPEECH === 'true';
 
   return {
     twitterIntegration,
+    aiSdkChatWeb,
+    aiSdkChatMobile,
+    aiSdkTranscribe,
+    aiSdkSpeech,
   };
 }

@@ -26,7 +26,7 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "check": "bun run validate-db-imports && bun run typecheck && bun run lint && bun run verify:voice",
+    "check": "bun run validate-db-imports && bun run typecheck && bun run lint && bun run verify:voice && bun run verify:ai-sdk",
     "clean": "turbo run clean",
     "db:migrate": "turbo run db:migrate",
     "dev": "turbo dev --ui tui",
@@ -46,6 +46,7 @@
     "verify:mobile:design": "bash scripts/verify-mobile-design.sh",
     "verify:mobile": "bunx tsc -p apps/mobile/tsconfig.json --noEmit && bun run verify:mobile:design && bun run --filter @hominem/hono-rpc typecheck",
     "verify:voice": "bash scripts/verify-voice-architecture.sh",
+    "verify:ai-sdk": "bash scripts/verify-ai-sdk-adoption.sh",
     "typecheck:ci": "turbo run typecheck --concurrency=4 --continue",
     "type-performance:run-all": "bun run scripts/type-performance.ts run-all",
     "type-performance:analyze": "bun run scripts/type-performance.ts analyze",
@@ -61,8 +62,8 @@
   },
   "dependencies": {
     "drizzle-orm": "0.45.1",
-    "react": "^19.2.3",
-    "react-dom": "^19.1.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-router": "7.12.0"
   },
   "devDependencies": {
@@ -82,8 +83,8 @@
   },
   "overrides": {
     "@hono/zod-validator": "0.7.6",
-    "@types/react": "19.2.9",
-    "@types/react-dom": "19.2.3",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
     "drizzle-kit": "0.31.8",
     "drizzle-orm": "0.45.1",
     "hono": "4.11.6",

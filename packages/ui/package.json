@@ -67,7 +67,7 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "0.562.0",
-    "react": "^19.2.3",
+    "react": "19.1.0",
     "react-day-picker": "8.10.1",
     "react-hook-form": "^7.70.0",
     "react-router": "7.12.0",
@@ -79,10 +79,10 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@types/react": "19.1.17",
+    "@types/react-dom": "19.1.11",
     "jsdom": "^25.0.1",
-    "react": "^19.2.3",
+    "react": "19.1.0",
     "typescript": "5.9.3",
     "vite": "7.3.1",
     "vite-tsconfig-paths": "6.0.3",
@@ -90,6 +90,6 @@
     "@types/node": "25.2.3"
   },
   "peerDependencies": {
-    "react": "^19.2.3"
+    "react": "19.1.0"
   }
 }

@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from 'react';
+import type { ComponentPropsWithoutRef, PropsWithChildren } from 'react';
 
 import { Link, useMatches } from 'react-router';
 
@@ -11,7 +11,7 @@ const AppLink = ({
   children,
   ...props
 }: PropsWithChildren<
-  React.HTMLProps<HTMLAnchorElement> & {
+  Omit<ComponentPropsWithoutRef<typeof Link>, 'to'> & {
     btn?: boolean;
     className?: string;
     to: string;

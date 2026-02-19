@@ -1,5 +1,6 @@
-import OpenAI, { toFile } from 'openai'
+import { experimental_transcribe } from 'ai'
 import { Buffer } from 'node:buffer'
+import { openai } from '@ai-sdk/openai'
 
 import { env } from './env'
 
@@ -49,10 +50,6 @@ export class VoiceTranscriptionError extends Error {
     this.code = code
   }
 }
-
-const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY || '',
-})
 
 export function normalizeVoiceMimeType(mimeType: string): string {
   const [baseType] = mimeType.split(';', 1)
@@ -105,27 +102,45 @@ export async function transcribeVoiceBuffer(input: {
     size: input.buffer.byteLength,
   })
 
-  const fileExtension = getVoiceFileExtension(normalizedMimeType)
-  const fileName = input.fileName || `audio${fileExtension}`
-  const processedFile = await toFile(Buffer.from(input.buffer), fileName, { type: normalizedMimeType })
+  const _fileExtension = getVoiceFileExtension(normalizedMimeType)
+  const _fileName = input.fileName || `audio${_fileExtension}`
+  const audioBuffer = Buffer.from(input.buffer)
 
   try {
-    const transcription = await openai.audio.transcriptions.create({
-      file: processedFile,
-      model: 'whisper-1',
-      language: input.language || 'en',
-      response_format: 'verbose_json',
-      timestamp_granularities: ['word'],
+    if (!env.OPENAI_API_KEY) {
+      throw new VoiceTranscriptionError('Invalid API configuration.', 'AUTH', 401)
+    }
+
+    const transcription = await experimental_transcribe({
+      model: openai.transcription('whisper-1'),
+      audio: audioBuffer,
+      providerOptions: {
+        openai: {
+          ...(input.language ? { language: input.language } : {}),
+          response_format: 'verbose_json',
+          timestamp_granularities: ['word'],
+        },
+      },
     })
 
     return {
       text: transcription.text,
-      language: transcription.language,
-      duration: transcription.duration,
-      words: transcription.words || [],
-      segments: transcription.segments || [],
+      ...(transcription.language ? { language: transcription.language } : {}),
+      ...(typeof transcription.durationInSeconds === 'number'
+        ? { duration: transcription.durationInSeconds }
+        : {}),
+      words: [],
+      segments: transcription.segments.map((segment) => ({
+        text: segment.text,
+        start: segment.startSecond,
+        end: segment.endSecond,
+      })),
     }
   } catch (error) {
+    if (error instanceof VoiceTranscriptionError) {
+      throw error
+    }
+
     if (error instanceof Error) {
       if (error.message.includes('Invalid file format')) {
         throw new VoiceTranscriptionError(

@@ -1,12 +1,16 @@
+import { useChat, type Message } from '@ai-sdk/react'
 import NetInfo from '@react-native-community/netinfo'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useMutation, useQuery, type MutationOptions } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { captureException } from '@sentry/react-native'
+import { useHonoClient } from '@hominem/hono-client/react'
 import type { Chat, ChatMessage } from '@hominem/hono-rpc/types'
 
-import { useHonoClient } from '@hominem/hono-client/react'
+import { useAuth } from '~/utils/auth-provider'
+import { createMobileChatFetch, getMobileChatEndpoint } from '~/utils/ai-sdk/mobile-chat-transport'
+import { AI_SDK_CHAT_MOBILE_ENABLED } from '~/utils/constants'
 import { LocalStore } from '~/utils/local-store'
 import type { Chat as LocalChat, ChatMessage as LocalChatMessage } from '~/utils/local-store/types'
 import { log } from '../../logger'
@@ -44,6 +48,19 @@ function toMessageOutput(message: ChatMessage): MessageOutput {
     message: message.content,
     created_at: message.createdAt,
     chat_id: message.chatId,
+    profile_id: '',
+    focus_ids: null,
+    focus_items: null,
+  }
+}
+
+function toMessageOutputFromUIMessage(message: Message, chatId: string): MessageOutput {
+  return {
+    id: message.id,
+    role: message.role === 'data' ? 'assistant' : message.role,
+    message: message.content,
+    created_at: message.createdAt ? new Date(message.createdAt).toISOString() : new Date().toISOString(),
+    chat_id: chatId,
     profile_id: '',
     focus_ids: null,
     focus_items: null,
@@ -98,74 +115,93 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
   }
 }
 
-export const useSendMessage = ({
-  chatId,
-}: {
-  chatId: string
-}) => {
+export const useSendMessage = ({ chatId }: { chatId: string }) => {
   const client = useHonoClient()
-  const [message, setMessage] = useState('')
+  const { getAccessToken } = useAuth()
   const [sendChatError, setSendChatError] = useState(false)
 
-  const { mutateAsync: sendChatMessage, isPending: isChatSending } = useMutation({
+  const chat = useChat({
+    id: `mobile-chat-${chatId}`,
+    api: getMobileChatEndpoint(chatId),
+    streamProtocol: 'data',
+    fetch: createMobileChatFetch(getAccessToken),
+    onError: (error) => {
+      setSendChatError(true)
+      captureException(error)
+    },
+    onFinish: async () => {
+      await syncMessages(client, chatId)
+      setSendChatError(false)
+    },
+  })
+
+  const { mutateAsync: sendChatMessage, isPending: isChatSending } = useMutation<SendChatMessageOutput>({
     mutationKey: ['sendChatMessage', chatId],
     mutationFn: async () => {
-      const userMessage: MessageOutput = {
-        id: generateId(),
-        role: 'user',
-        message,
-        created_at: new Date().toISOString(),
-        chat_id: chatId,
-        profile_id: '',
-        focus_ids: null,
-        focus_items: null,
-      }
-      await persistMessages(chatId, [userMessage])
-
-      const response = await client.api.chats[':id'].send.$post({
-        param: { id: chatId },
-        json: { message },
-      })
-
-      const payload = (await response.json()) as {
-        messages: {
-          user: ChatMessage
-          assistant: ChatMessage
+      const text = chat.input.trim()
+      if (!text) {
+        return {
+          messages: [],
+          function_calls: [],
         }
       }
 
-      const mappedMessages = [toMessageOutput(payload.messages.user), toMessageOutput(payload.messages.assistant)]
-      await persistMessages(chatId, mappedMessages)
-
-      return {
-        messages: mappedMessages,
-        function_calls: [],
-      } as SendChatMessageOutput
-    },
-    onSuccess: (response) => {
-      setMessage('')
-      setSendChatError(false)
-
-      if (response.function_calls.indexOf('create_tasks') > -1) {
-        queryClient.invalidateQueries({ queryKey: ['focusItems'] })
+      const status = await NetInfo.fetch()
+      if (!status.isConnected) {
+        throw new Error('offline_unavailable')
       }
 
-      queryClient.setQueryData(['chatMessages', chatId], (old: MessageOutput[] | undefined) => [
-        ...(old ?? []),
-        ...response.messages,
-      ])
+      if (!AI_SDK_CHAT_MOBILE_ENABLED) {
+        const response = await client.api.chats[':id'].send.$post({
+          param: { id: chatId },
+          json: { message: text },
+        })
+        const payload = (await response.json()) as {
+          messages: {
+            user: ChatMessage
+            assistant: ChatMessage
+          }
+        }
+        const mappedMessages = [
+          toMessageOutput(payload.messages.user),
+          toMessageOutput(payload.messages.assistant),
+        ]
+        await persistMessages(chatId, mappedMessages)
+        queryClient.setQueryData(['chatMessages', chatId], mappedMessages)
+        chat.setInput('')
+        return {
+          messages: mappedMessages,
+          function_calls: [],
+        }
+      }
+
+      await chat.append({
+        role: 'user',
+        content: text,
+      })
+      chat.setInput('')
+
+      const uiMapped = chat.messages.map((message) => toMessageOutputFromUIMessage(message, chatId))
+      queryClient.setQueryData(['chatMessages', chatId], uiMapped)
+      await persistMessages(chatId, uiMapped)
+
+      return {
+        messages: uiMapped,
+        function_calls: [],
+      }
     },
     onError: (error) => {
+      setSendChatError(true)
       log('Error sending chat message:', error)
       captureException(error)
     },
   })
 
   return {
-    message,
-    isChatSending,
+    message: chat.input,
+    isChatSending: isChatSending || chat.status === 'submitted' || chat.status === 'streaming',
     sendChatMessage,
-    setMessage,
+    setMessage: chat.setInput,
     sendChatError,
     setSendChatError,
   }
@@ -278,6 +314,17 @@ export const useActiveChat = () => {
   })
 }
 
+async function syncMessages(client: ReturnType<typeof useHonoClient>, chatId: string) {
+  const response = await client.api.chats[':id'].messages.$get({
+    param: { id: chatId },
+    query: { limit: '50' },
+  })
+  const remote = (await response.json()) as ChatMessage[]
+  const mapped = remote.map(toMessageOutput)
+  await persistMessages(chatId, mapped)
+  queryClient.setQueryData(['chatMessages', chatId], mapped)
+}
+
 async function startRemoteChat(client: ReturnType<typeof useHonoClient>, initialMessage: string): Promise<Chat> {
   const title = initialMessage.trim().slice(0, 64) || 'Sherpa chat'
 
@@ -323,7 +370,7 @@ const persistMessages = async (chatId: string, messages: MessageOutput[]) => {
         focusItemsJson: msg.focus_items ? JSON.stringify(msg.focus_items) : null,
         focusIdsJson: msg.focus_ids ? JSON.stringify(msg.focus_ids) : null,
         createdAt: msg.created_at ?? new Date().toISOString(),
-      })
-    )
+      }),
+    ),
   )
 }

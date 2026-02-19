@@ -5,6 +5,7 @@ export default [
   route('api/upload', 'routes/api.upload.ts'),
   route('api/transcribe', 'routes/api.transcribe.ts'),
   route('api/speech', 'routes/api.speech.ts'),
+  route('api/chat-ui/:chatId', 'routes/api.chat-ui.$chatId.ts'),
   route('api/auth/google', 'routes/api/auth/google.ts'),
 
   layout('routes/layout.tsx', [

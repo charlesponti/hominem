@@ -98,6 +98,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      aiSdkChatWebEnabled: process.env.EXPO_PUBLIC_AI_SDK_CHAT_WEB_ENABLED,
+      aiSdkChatMobileEnabled: process.env.EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED,
+      aiSdkTranscribeEnabled: process.env.EXPO_PUBLIC_AI_SDK_TRANSCRIBE_ENABLED,
+      aiSdkSpeechEnabled: process.env.EXPO_PUBLIC_AI_SDK_SPEECH_ENABLED,
       eas: {
         projectId: '6c717814-8866-46bc-b11f-edeedd1b7a69',
       },
