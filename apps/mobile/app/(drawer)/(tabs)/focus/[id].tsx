@@ -8,7 +8,7 @@ import { Button } from '~/components/Button'
 import TextInput from '~/components/text-input'
 import MindsherpaIcon from '~/components/ui/icon'
 import { Text, theme } from '~/theme'
-import { getLocalDate, getTimezone } from '~/utils/dates'
+import { getTimezone } from '~/utils/dates'
 import queryClient from '~/utils/query-client'
 import type { FocusItem } from '~/utils/services/notes/types'
 import {
@@ -16,11 +16,11 @@ import {
   type UpdateFocusItemInput,
 } from '~/utils/services/notes/use-update-focus'
 
-function getFocusItemDate(focusItem: FocusItem) {
-  if (!focusItem.due_date) return null
-  const { localDate } = getLocalDate(new Date(focusItem.due_date))
-  return localDate
-}
+// function getFocusItemDate(focusItem: FocusItem) {
+//   if (!focusItem.due_date) return null
+//   const { localDate } = getLocalDate(new Date(focusItem.due_date))
+//   return localDate
+// }
 
 export default function FocusItemView() {
   const { id } = useLocalSearchParams()
@@ -33,7 +33,7 @@ export default function FocusItemView() {
   }
 
   const [text, setText] = useState(focusItem.text || '')
-  const [category, setCategory] = useState(focusItem.category || '')
+  const [category, _setCategory] = useState(focusItem.category || '')
   const [due_date, setDueDate] = useState(focusItem.due_date ? new Date(focusItem.due_date) : null)
   const [open, setOpen] = useState(false)
 

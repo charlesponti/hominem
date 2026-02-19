@@ -52,11 +52,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'expo-build-properties',
         {
           ios: {
-            entitlements: {
-              'keychain-access-groups': [
-                '$(AppIdentifierPrefix)com.pontistudios.mindsherpa',
-              ],
-            },
             infoPlist: {
               NSAppTransportSecurity: {
                 NSAllowsArbitraryLoads: false,
@@ -109,7 +104,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       typedRoutes: true,
       tsconfigPaths: true,
     },
-    newArchEnabled: false,
+    newArchEnabled: true,
     ios: {
       bundleIdentifier,
       supportsTablet: true,
