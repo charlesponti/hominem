@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
@@ -7,12 +7,20 @@ import { Text, theme } from '~/theme'
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export const BottomSheet = ({ isOpen, toggleSheet }: { isOpen: boolean; toggleSheet: () => void }) => {
+  const [isVisible, setIsVisible] = useState(isOpen)
   const offset = useSharedValue(30)
   const opacity = useSharedValue(0)
 
   useEffect(() => {
+    if (isOpen) {
+      setIsVisible(true)
+    }
     offset.value = withTiming(isOpen ? 0 : 30, { duration: VOID_MOTION_DURATION_STANDARD })
     opacity.value = withTiming(isOpen ? 1 : 0, { duration: VOID_MOTION_DURATION_STANDARD })
+    if (!isOpen) {
+      const timer = setTimeout(() => setIsVisible(false), VOID_MOTION_DURATION_STANDARD)
+      return () => clearTimeout(timer)
+    }
   }, [isOpen, offset, opacity])
 
   const containerStyle = useAnimatedStyle(() => ({
@@ -20,7 +28,7 @@ export const BottomSheet = ({ isOpen, toggleSheet }: { isOpen: boolean; toggleSh
     opacity: opacity.value,
   }))
 
-  if (!isOpen) return null
+  if (!isVisible) return null
 
   return (
     <View style={styles.root}>

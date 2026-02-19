@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { useCallback, useRef } from 'react'
 
 import { captureException } from '@sentry/react-native'
 
@@ -36,9 +37,18 @@ export const useAudioTranscribe = ({
   onError?: () => void
 } = {}) => {
   const { getAccessToken } = useAuth()
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  const cancel = useCallback(() => {
+    abortControllerRef.current?.abort()
+    abortControllerRef.current = null
+  }, [])
 
   const mutation = useMutation<string, Error, string>({
     mutationFn: async (audioUri: string) => {
+      abortControllerRef.current?.abort()
+      abortControllerRef.current = new AbortController()
+
       const token = await getAccessToken()
       if (!token) {
         throw new Error('Missing auth token for voice transcription')
@@ -64,6 +74,7 @@ export const useAudioTranscribe = ({
           Authorization: `Bearer ${token}`,
         },
         body: formData,
+        signal: abortControllerRef.current.signal,
       })
 
       if (!response.ok) {
@@ -85,10 +96,11 @@ export const useAudioTranscribe = ({
     },
     onSuccess,
     onError: (error) => {
+      if (error.name === 'AbortError') return
       captureException(error)
       onError?.()
     },
   })
 
-  return mutation
+  return { ...mutation, cancel }
 }

@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
-import { FlatList, StyleSheet } from 'react-native'
+import { StyleSheet } from 'react-native'
+import { FlashList } from '@shopify/flash-list'
 import { RefreshControl } from 'react-native-gesture-handler'
 import type { FocusItem } from '~/utils/services/notes/types'
 import { FocusListItem } from './focus-list-item'
@@ -31,9 +32,9 @@ export const FocusList = ({
   }
 
   return (
-    <FlatList
+    <FlashList
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
-      style={[styles.container]}
+      style={styles.container}
       data={data}
       keyExtractor={(item: FocusItem) => `${item.id}`}
       renderItem={renderItem}

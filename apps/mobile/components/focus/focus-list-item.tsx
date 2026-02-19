@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { memo, useCallback, useEffect, useRef } from 'react'
 import { StyleSheet, Text, View, type ViewStyle } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Reanimated, {
@@ -28,6 +28,20 @@ function removeFocusItem(item: FocusItem) {
   )
 }
 
+const FocusDueDate = memo(({ dueDate }: { dueDate: Date | null }) => {
+  if (!dueDate) return null
+
+  const { localDateString } = getLocalDate(dueDate)
+
+  return (
+    <MSText variant="small" color="mutedForeground" fontSize={12}>
+      {localDateString} {dueDate.toLocaleTimeString()}
+    </MSText>
+  )
+})
+
+FocusDueDate.displayName = 'FocusDueDate'
+
 export const FocusListItem = ({
   item,
   label,
@@ -44,23 +58,43 @@ export const FocusListItem = ({
   const itemHeight = useSharedValue(64)
   const iconBackgroundColor = useSharedValue(theme.colors.muted)
   const iconName = useSharedValue<MindsherpaIconName>('check')
+  const isMutating = useSharedValue(false)
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dueDate = item.due_date ? new Date(item.due_date) : null
+
+  useEffect(() => {
+    return () => {
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const iconStyle = useAnimatedStyle(() => ({
     backgroundColor: iconBackgroundColor.value,
   }))
+
+  const resetErrorState = useCallback(() => {
+    iconName.value = 'circle-check'
+    iconBackgroundColor.value = withTiming(theme.colors.muted, {
+      duration: VOID_MOTION_DURATION_STANDARD,
+    })
+    isMutating.value = false
+  }, [iconName, iconBackgroundColor, isMutating])
+
   const deleteFocusItem = useDeleteFocus({
     onSuccess: async (deletedItemId) => {
-      // Cancel any outgoing fetches
       await queryClient.cancelQueries({ queryKey: ['focusItems'] })
-
-      // Remove the item from the list
       removeFocusItem(item)
+      isMutating.value = false
     },
     onError: () => {
       const previousItems = queryClient.getQueryData(['focusItems'])
-      // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(['focusItems'], previousItems)
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current)
+      }
+      errorTimeoutRef.current = setTimeout(resetErrorState, 1000)
     },
   })
 
@@ -69,21 +103,18 @@ export const FocusListItem = ({
       iconBackgroundColor.value = withTiming(theme.colors.green, {
         duration: VOID_MOTION_DURATION_STANDARD,
       })
-
-      // Remove the item from the list
       removeFocusItem(item)
+      isMutating.value = false
     },
     onError: () => {
       iconName.value = 'circle-xmark'
       iconBackgroundColor.value = withTiming(theme.colors.red, {
         duration: VOID_MOTION_DURATION_STANDARD,
       })
-      setTimeout(() => {
-        iconName.value = 'circle-check'
-        iconBackgroundColor.value = withTiming(theme.colors.muted, {
-          duration: VOID_MOTION_DURATION_STANDARD,
-        })
-      }, 1000)
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current)
+      }
+      errorTimeoutRef.current = setTimeout(resetErrorState, 1000)
     },
   })
 
@@ -92,21 +123,22 @@ export const FocusListItem = ({
     .activeOffsetY([-1000, 1000])
     .simultaneousWithExternalGesture(Gesture.Native())
     .onChange((event) => {
-      // Only allow one finger to pan
       if (event.numberOfPointers > 1) return
 
       const { translationX, translationY } = event
       if (Math.abs(translationX) > Math.abs(translationY)) {
-        // Horizontal pan
-        // This prevents the item from panning horizontally when the vertical swipe is greater.
         translateX.value = translationX
       }
     })
     .onEnd(() => {
+      if (isMutating.value) return
+
       if (translateX.value > SWIPE_THRESHOLD) {
+        isMutating.value = true
         translateX.value = withTiming(0)
         runOnJS(completeItem.mutate)(item.id)
       } else if (translateX.value < -SWIPE_THRESHOLD) {
+        isMutating.value = true
         translateX.value = withTiming(-itemHeight.value, {}, () => {
           runOnJS(deleteFocusItem.mutate)(item.id)
         })
@@ -263,14 +295,3 @@ const styles = StyleSheet.create({
     fontFamily: 'Geist Mono',
   },
 })
-
-const FocusDueDate = ({ dueDate }: { dueDate: Date | null }) => {
-  if (!dueDate) return null
-  const { localDateString } = getLocalDate(dueDate)
-
-  return (
-    <MSText variant="small" color="mutedForeground" fontSize={12}>
-      {dueDate.toLocaleDateString()} {dueDate.toLocaleTimeString()}
-    </MSText>
-  )
-}

@@ -3,6 +3,7 @@ import NetInfo from '@react-native-community/netinfo'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useMutation, useQuery, type MutationOptions } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { randomUUID } from 'expo-crypto'
 
 import { captureException } from '@sentry/react-native'
 import { useHonoClient } from '@hominem/hono-client/react'
@@ -344,7 +345,7 @@ async function startRemoteChat(client: ReturnType<typeof useHonoClient>, initial
   return chat
 }
 
-const generateId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+const generateId = () => randomUUID()
 
 const toLocalMessageOutput = (message: LocalChatMessage): MessageOutput => ({
   id: message.id,

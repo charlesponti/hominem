@@ -1,10 +1,14 @@
 import { captureException } from '@sentry/react-native'
 import type { Audio } from 'expo-av'
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { emitVoiceEvent } from '~/utils/voice-events'
 import { useAudioTranscribe } from './use-audio-transcribe'
+
+const MAX_METERINGS = 100
+
+type RecorderState = 'IDLE' | 'REQUESTING_PERMISSION' | 'PREPARING' | 'RECORDING' | 'STOPPING' | 'TRANSCRIBING'
 
 interface UseMobileAudioRecorderProps {
   autoTranscribe?: boolean
@@ -23,6 +27,22 @@ export function useMobileAudioRecorder({
   const [recordingStatus, setRecordingStatus] = useState<Audio.RecordingStatus>()
   const [meterings, setMeterings] = useState<number[]>([])
   const [lastRecordingUri, setLastRecordingUri] = useState<string | null>(null)
+  const [recorderState, setRecorderState] = useState<RecorderState>('IDLE')
+
+  const isMountedRef = useRef(true)
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => {
+      isMountedRef.current = false
+      if (recording) {
+        recording.stopAndUnloadAsync().catch(() => {})
+        deactivateKeepAwake().catch(() => {})
+      }
+      abortControllerRef.current?.abort()
+    }
+  }, [recording])
 
   const { mutateAsync: transcribeAudio, isPending: isTranscribing } = useAudioTranscribe({
     onSuccess: (data) => {
@@ -34,23 +54,34 @@ export function useMobileAudioRecorder({
   })
 
   const onRecordingStatusChange = useCallback((status: Audio.RecordingStatus) => {
+    if (!isMountedRef.current) return
     setRecordingStatus(status)
     const { metering } = status
     if (status.isRecording && metering !== undefined) {
-      setMeterings((current) => [...current, metering])
+      setMeterings((current) => {
+        const next = [...current, metering]
+        return next.slice(-MAX_METERINGS)
+      })
     }
   }, [])
 
   const startRecording = useCallback(async () => {
+    if (recorderState !== 'IDLE') return
+
     try {
+      setRecorderState('REQUESTING_PERMISSION')
       const { Audio } = await import('expo-av')
       activateKeepAwakeAsync().catch((error: Error) => captureException(error))
 
       const permission = await Audio.requestPermissionsAsync()
       if (permission.status !== 'granted') {
+        if (isMountedRef.current) setRecorderState('IDLE')
         onError?.()
         return
       }
+
+      if (!isMountedRef.current) return
+      setRecorderState('PREPARING')
 
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
@@ -62,39 +93,63 @@ export function useMobileAudioRecorder({
       await nextRecording.startAsync()
       nextRecording.setOnRecordingStatusUpdate(onRecordingStatusChange)
 
+      if (!isMountedRef.current) {
+        await nextRecording.stopAndUnloadAsync().catch(() => {})
+        return
+      }
+
       setRecording(nextRecording)
       setRecordingStatus(undefined)
       setMeterings([])
+      setRecorderState('RECORDING')
       emitVoiceEvent('voice_record_started', { platform: 'mobile-ios' })
     } catch (error) {
       captureException(error)
+      if (isMountedRef.current) setRecorderState('IDLE')
       onError?.()
     }
-  }, [onError, onRecordingStatusChange])
+  }, [onError, onRecordingStatusChange, recorderState])
 
   const clearRecording = useCallback(() => {
     setLastRecordingUri(null)
     setRecording(undefined)
     setRecordingStatus(undefined)
     setMeterings([])
+    setRecorderState('IDLE')
   }, [])
 
   const runTranscription = useCallback(
     async (audioUri: string) => {
-      const transcription = await transcribeAudio(audioUri)
-      onAudioTranscribed?.(transcription)
-      if (autoTranscribe) {
-        clearRecording()
+      if (!isMountedRef.current) return
+
+      abortControllerRef.current = new AbortController()
+
+      try {
+        setRecorderState('TRANSCRIBING')
+        const transcription = await transcribeAudio(audioUri)
+
+        if (!isMountedRef.current) return
+
+        onAudioTranscribed?.(transcription)
+        if (autoTranscribe) {
+          clearRecording()
+        }
+      } catch {
+        if (isMountedRef.current) {
+          setRecorderState('IDLE')
+          onError?.()
+        }
       }
     },
-    [autoTranscribe, clearRecording, onAudioTranscribed, transcribeAudio],
+    [autoTranscribe, clearRecording, onAudioTranscribed, transcribeAudio, onError],
   )
 
   const stopRecording = useCallback(async () => {
-    if (!recording) {
+    if (!recording || recorderState === 'STOPPING') {
       return
     }
 
+    setRecorderState('STOPPING')
     const durationMs = recordingStatus?.durationMillis
 
     await recording.stopAndUnloadAsync().catch((reason: Error) => {
@@ -103,6 +158,8 @@ export function useMobileAudioRecorder({
 
     deactivateKeepAwake().catch((error: Error) => captureException(error))
 
+    if (!isMountedRef.current) return
+
     const fileUri = recording.getURI()
 
     setRecording(undefined)
@@ -110,6 +167,7 @@ export function useMobileAudioRecorder({
     setMeterings([])
 
     if (!fileUri) {
+      setRecorderState('IDLE')
       return
     }
 
@@ -124,8 +182,9 @@ export function useMobileAudioRecorder({
       return
     }
 
+    setRecorderState('IDLE')
     onAudioReady?.(fileUri)
-  }, [autoTranscribe, onAudioReady, recording, recordingStatus?.durationMillis, runTranscription])
+  }, [autoTranscribe, onAudioReady, recording, recordingStatus?.durationMillis, runTranscription, recorderState])
 
   const retryTranscription = useCallback(async () => {
     if (!lastRecordingUri) {
@@ -134,13 +193,14 @@ export function useMobileAudioRecorder({
     await runTranscription(lastRecordingUri)
   }, [lastRecordingUri, runTranscription])
 
-  const isRecording = !!recordingStatus?.isRecording
+  const isRecording = recorderState === 'RECORDING'
 
   return {
     isRecording,
-    isTranscribing,
+    isTranscribing: recorderState === 'TRANSCRIBING',
     meterings,
     hasRetryRecording: !!lastRecordingUri,
+    recorderState,
     startRecording,
     stopRecording,
     retryTranscription,
