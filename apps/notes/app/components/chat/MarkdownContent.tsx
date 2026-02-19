@@ -39,7 +39,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
       <ReactMarkdown
         components={{
           // Code blocks with syntax highlighting
-          code({ className, children, ...props }) {
+          code({ className, children }) {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             const codeString = String(children).replace(/\n$/, '');
@@ -88,7 +88,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
 
             // Inline code
             return (
-              <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono" {...props}>
+              <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">
                 {children}
               </code>
             );
