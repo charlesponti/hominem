@@ -23,6 +23,10 @@ const serverSchema = z.object({
 
   GOOGLE_API_KEY: z.string().default(''),
   OPENAI_API_KEY: isTest ? z.string().default('test-openai-key') : z.string(),
+  AI_SDK_CHAT_WEB_ENABLED: z.coerce.boolean().default(false),
+  AI_SDK_CHAT_MOBILE_ENABLED: z.coerce.boolean().default(false),
+  AI_SDK_TRANSCRIBE_ENABLED: z.coerce.boolean().default(false),
+  AI_SDK_SPEECH_ENABLED: z.coerce.boolean().default(false),
 
   PLAID_CLIENT_ID: z.string().default(''),
   PLAID_API_KEY: z.string().default(''),

@@ -20,10 +20,12 @@ export const useAudioUpload = ({
     mutationFn: async (audioUri) => {
       const text = await transcribe(audioUri)
       return {
+        version: 'v1',
         output: text,
         chat: {
           output: text,
         },
+        fallback_reason: 'transcribe_only_upload',
       }
     },
     onSuccess,

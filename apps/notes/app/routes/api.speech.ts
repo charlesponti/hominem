@@ -1,10 +1,10 @@
 import type { ActionFunctionArgs } from 'react-router';
 
+import { VoiceSpeechError, generateSpeechBuffer } from '@hominem/services'
 import { fileStorageService } from '@hominem/utils/supabase';
 import { z } from 'zod';
 
 import { requireAuth } from '~/lib/guards';
-import { openai } from '~/lib/services/openai.server';
 import { jsonResponse } from '~/lib/utils/json-response';
 
 // Zod schema for speech request validation
@@ -42,23 +42,22 @@ export async function action({ request }: ActionFunctionArgs) {
 
     const { text, voice, speed } = validationResult.data;
 
-    // Generate speech using OpenAI TTS
-    const mp3Response = await openai.audio.speech.create({
-      model: 'tts-1',
+    const speech = await generateSpeechBuffer({
+      text,
       voice,
-      input: text,
-      response_format: 'mp3',
-      speed: speed,
-    });
-
-    // Convert response to buffer
-    const buffer = Buffer.from(await mp3Response.arrayBuffer());
+      speed,
+    })
 
     // Store the audio file using Supabase storage
     const fileName = `speech-${Date.now()}-${voice}-${speed}.mp3`;
-    const storedFile = await fileStorageService.storeFile(buffer, 'audio/mpeg', userId, {
+    const storedFile = await fileStorageService.storeFile(
+      speech.audioBuffer,
+      speech.mediaType || 'audio/mpeg',
+      userId,
+      {
       filename: fileName,
-    });
+      },
+    )
 
     return jsonResponse({
       success: true,
@@ -78,6 +77,10 @@ export async function action({ request }: ActionFunctionArgs) {
     let errorMessage = 'Failed to generate speech';
     let statusCode = 500;
 
+    if (error instanceof VoiceSpeechError) {
+      errorMessage = error.message
+      statusCode = error.statusCode
+    } else
     if (error instanceof Error) {
       // Handle specific OpenAI errors
       if (error.message.includes('quota')) {

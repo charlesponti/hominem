@@ -12,6 +12,22 @@ const envSchema = z.object({
   VITE_APP_BASE_URL: z.string().url().optional(),
   APP_BASE_URL: z.string().url().optional(),
   OPENAI_API_KEY: z.string().optional(),
+  AI_SDK_TRANSCRIBE_ENABLED: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
+  AI_SDK_SPEECH_ENABLED: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
+  AI_SDK_CHAT_WEB_ENABLED: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
+  AI_SDK_CHAT_MOBILE_ENABLED: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   GOOGLE_REDIRECT_URI: z.string().url().optional(),

@@ -31,10 +31,40 @@ export type ChatsSendInput = {
   chatId?: string;
 };
 
+export type ChatUIMessageInput = {
+  id: string
+  role: 'system' | 'user' | 'assistant' | 'data'
+  content: string
+  parts?: Array<Record<string, unknown>>
+  toolInvocations?: Array<Record<string, unknown>>
+  createdAt?: string | Date
+}
+
+export type ChatsUISendInput = {
+  messages: ChatUIMessageInput[]
+  chatId?: string
+  metadata?: Record<string, unknown>
+}
+
 export const chatsSendSchema = z.object({
   message: z.string().min(1),
   chatId: z.string().optional(),
 });
+
+export const chatsUISendSchema = z.object({
+  messages: z.array(
+    z.object({
+      id: z.string(),
+      role: z.enum(['system', 'user', 'assistant', 'data']),
+      content: z.string(),
+      parts: z.array(z.record(z.string(), z.unknown())).optional(),
+      toolInvocations: z.array(z.record(z.string(), z.unknown())).optional(),
+      createdAt: z.union([z.string(), z.date()]).optional(),
+    }),
+  ),
+  chatId: z.string().optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+})
 
 export type ChatsSendOutput = {
   streamId: string;
