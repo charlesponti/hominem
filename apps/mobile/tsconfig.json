@@ -3,9 +3,52 @@
   "compilerOptions": {
     "strict": true,
     "baseUrl": ".",
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "assumeChangesOnlyAffectDirectDependencies": true,
+    "incremental": true,
+    "tsBuildInfoFile": "../../.cache/app-mobile.tsbuildinfo",
+    "allowJs": false,
+    "checkJs": false,
+    "maxNodeModuleJsDepth": 0,
+    "disableSourceOfProjectReferenceRedirect": false,
     "paths": {
-      "~/*": ["*"]
-    }
+      "~/*": [
+        "./*"
+      ]
+    },
+    "noEmit": true
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "theme/**/*.ts",
+    "theme/**/*.tsx",
+    "utils/**/*.ts",
+    "utils/**/*.tsx",
+    "app.config.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".turbo",
+    ".cache",
+    ".expo/web",
+    "ios",
+    "android",
+    "coverage",
+    "tests",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo"
+  ]
 }

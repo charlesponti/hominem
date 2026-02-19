@@ -48,7 +48,29 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       'expo-apple-authentication',
-      'expo-build-properties',
+      [
+        'expo-build-properties',
+        {
+          ios: {
+            infoPlist: {
+              NSAppTransportSecurity: {
+                NSAllowsArbitraryLoads: false,
+                NSAllowsLocalNetworking: false,
+                NSExceptionDomains: {
+                  'supabase.co': {
+                    NSExceptionRequiresForwardSecrecy: true,
+                    NSIncludesSubdomains: true,
+                  },
+                  'railway.app': {
+                    NSExceptionRequiresForwardSecrecy: true,
+                    NSIncludesSubdomains: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      ],
       [
         'expo-font',
         {
