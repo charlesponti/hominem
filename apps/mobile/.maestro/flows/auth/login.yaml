@@ -1,0 +1,17 @@
+appId: com.pontistudios.mindsherpa
+---
+- launchApp
+- waitForAnimationToEnd
+- assertVisible:
+    text: "E2E TEST LOGIN"
+    timeout: 30000
+- tapOn:
+    id: test-auth-email
+- inputText: ${E2E_EMAIL}
+- tapOn:
+    id: test-auth-password
+- inputText: ${E2E_PASSWORD}
+- tapOn:
+    id: test-auth-submit
+- waitForAnimationToEnd
+- assertVisible: "MINDSHERPA"

@@ -1,0 +1,16 @@
+appId: com.pontistudios.mindsherpa
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- tapOn:
+    text: "Enter URL manually"
+    optional: true
+- inputText: ${E2E_DEV_SERVER_URL}
+  optional: true
+- pressKey: Enter
+  optional: true
+- tapOn:
+    text: "Connect"
+    optional: true
+- waitForAnimationToEnd

@@ -113,6 +113,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
             editable={!isPending && !isRecording}
             value={message}
             onChangeText={setMessage}
+            testID="input-message"
             onFocus={() => {
               expanded.value = withTiming(1, { duration: VOID_MOTION_DURATION_STANDARD })
             }}
@@ -124,6 +125,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
               setMode('voice')
             }}
             accessibilityLabel="Voice input"
+            testID="voice-input-button"
           >
             <MindsherpaIcon name="microphone" size={22} color={theme.colors.white} />
           </Pressable>
@@ -132,6 +134,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
             disabled={isPending}
             onPress={onSend}
             accessibilityLabel="Send"
+            testID="send-message-button"
           >
             <MindsherpaIcon name="arrow-up" size={20} color={theme.colors.foreground} />
           </Pressable>

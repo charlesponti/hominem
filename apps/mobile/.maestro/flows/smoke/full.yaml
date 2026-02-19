@@ -1,0 +1,10 @@
+appId: com.pontistudios.mindsherpa
+---
+- runFlow: app-launch.yaml
+- runFlow: ../auth/login.yaml
+- runFlow: ../focus/swipe-complete.yaml
+- runFlow: ../focus/swipe-delete.yaml
+- runFlow: ../focus/rapid-swipe.yaml
+- runFlow: ../recording/audio-record.yaml
+- runFlow: ../chat/send-message.yaml
+- runFlow: ../auth/logout.yaml

@@ -20,6 +20,7 @@ export const FocusList = ({
         <FocusListItem
           label={item.text}
           item={item}
+          itemIndex={index}
           showBorder={data.length === 1 || index < data.length - 1}
         />
       )

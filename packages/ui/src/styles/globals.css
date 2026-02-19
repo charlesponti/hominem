@@ -47,6 +47,8 @@ body {
   --color-destructive: #ff0000;
   --color-destructive-foreground: #ffffff;
   --color-border: rgba(255, 255, 255, 0.1);
+  --color-popover: #000000;
+  --color-popover-foreground: #ffffff;
 
   /* Minimal System States */
   --color-secondary: rgba(255, 255, 255, 0.1);
@@ -214,6 +216,8 @@ body {
     --accent-foreground: var(--color-accent-foreground);
     --destructive: var(--color-destructive);
     --destructive-foreground: var(--color-destructive-foreground);
+    --popover: var(--color-popover);
+    --popover-foreground: var(--color-popover-foreground);
     --input: var(--color-input);
     --ring: var(--color-ring);
     --chart-1: var(--color-chart-1);

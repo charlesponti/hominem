@@ -1,14 +1,14 @@
 import { useLocalSearchParams } from 'expo-router'
 import { useCallback, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
-import DatePicker from 'react-native-date-picker'
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { runOnJS } from 'react-native-reanimated'
 import { Button } from '~/components/Button'
 import TextInput from '~/components/text-input'
 import MindsherpaIcon from '~/components/ui/icon'
 import { Text, theme } from '~/theme'
-import { getLocalDate, getTimezone } from '~/utils/dates'
+import { getTimezone } from '~/utils/dates'
 import queryClient from '~/utils/query-client'
 import type { FocusItem } from '~/utils/services/notes/types'
 import {
@@ -16,11 +16,11 @@ import {
   type UpdateFocusItemInput,
 } from '~/utils/services/notes/use-update-focus'
 
-function getFocusItemDate(focusItem: FocusItem) {
-  if (!focusItem.due_date) return null
-  const { localDate } = getLocalDate(new Date(focusItem.due_date))
-  return localDate
-}
+// function getFocusItemDate(focusItem: FocusItem) {
+//   if (!focusItem.due_date) return null
+//   const { localDate } = getLocalDate(new Date(focusItem.due_date))
+//   return localDate
+// }
 
 export default function FocusItemView() {
   const { id } = useLocalSearchParams()
@@ -33,14 +33,23 @@ export default function FocusItemView() {
   }
 
   const [text, setText] = useState(focusItem.text || '')
-  const [category, setCategory] = useState(focusItem.category || '')
+  const [category, _setCategory] = useState(focusItem.category || '')
   const [due_date, setDueDate] = useState(focusItem.due_date ? new Date(focusItem.due_date) : null)
   const [open, setOpen] = useState(false)
 
-  const handleDateChange = (selectedDate: Date) => {
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (event.type === 'dismissed') {
+      setOpen(false)
+      return
+    }
+
+    if (!selectedDate) {
+      setOpen(false)
+      return
+    }
+
     setOpen(false)
     setDueDate(selectedDate)
-    // Here you would typically update the focusItem in your state or send an API request
   }
 
   const dueDateTap = Gesture.Tap().onStart(() => {
@@ -94,13 +103,14 @@ export default function FocusItemView() {
                   {due_date.toLocaleDateString()} {due_date.toLocaleTimeString()}
                 </Text>
               </GestureDetector>
-              <DatePicker
-                modal
-                open={open}
-                date={due_date}
-                onConfirm={handleDateChange}
-                onCancel={() => setOpen(false)}
-              />
+              {open ? (
+                <DateTimePicker
+                  value={due_date}
+                  mode="datetime"
+                  display="spinner"
+                  onChange={handleDateChange}
+                />
+              ) : null}
             </View>
           ) : null}
           <View style={styles.footer}>{/* keep buttons centered */}

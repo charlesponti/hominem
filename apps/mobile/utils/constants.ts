@@ -43,3 +43,7 @@ export const AI_SDK_TRANSCRIBE_ENABLED = toBooleanFlag(
 export const AI_SDK_SPEECH_ENABLED = toBooleanFlag(
   extra.aiSdkSpeechEnabled || process.env.EXPO_PUBLIC_AI_SDK_SPEECH_ENABLED,
 )
+
+export const E2E_TESTING = toBooleanFlag(
+  process.env.EXPO_PUBLIC_E2E_TESTING,
+)

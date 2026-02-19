@@ -18,6 +18,7 @@ import {
 import type { Route } from './+types/root';
 
 import { authConfig, getServerSession } from './lib/auth.server';
+import { serverEnv } from './lib/env';
 import { HonoProvider } from './lib/api';
 import './globals.css';
 
@@ -31,7 +32,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         url: authConfig.supabaseUrl,
         anonKey: authConfig.supabaseAnonKey,
       },
-      apiBaseUrl: authConfig.supabaseUrl.replace('/api', ''),
+      apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
     },
     { headers },
   );

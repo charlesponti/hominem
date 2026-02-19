@@ -45,12 +45,14 @@ FocusDueDate.displayName = 'FocusDueDate'
 export const FocusListItem = ({
   item,
   label,
+  itemIndex,
   showBorder,
   style,
   ...props
 }: {
   item: FocusItem
   label: string
+  itemIndex?: number
   showBorder?: boolean
   style?: ViewStyle[]
 }) => {
@@ -196,11 +198,15 @@ export const FocusListItem = ({
   )
 
   if (item.state === 'completed') {
-    return <View style={[styles.container]}>{itemInfo}</View>
+    return (
+      <View testID={typeof itemIndex === 'number' ? `focus-item-${itemIndex}` : undefined} style={[styles.container]}>
+        {itemInfo}
+      </View>
+    )
   }
 
   return (
-    <View style={[styles.container]}>
+    <View testID={typeof itemIndex === 'number' ? `focus-item-${itemIndex}` : undefined} style={[styles.container]}>
       <Reanimated.View style={[styles.leftAction, leftActionStyle]}>
         <Text style={styles.actionText}>Complete</Text>
       </Reanimated.View>

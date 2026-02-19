@@ -25,10 +25,10 @@ export const FocusView = () => {
     isRefetching,
     isError,
   } = useFocusQuery({
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       setRefreshing(false)
     },
-    onError: (error) => {
+    onError: (_error) => {
       setRefreshing(false)
     },
   })

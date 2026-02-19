@@ -1,0 +1,11 @@
+appId: com.pontistudios.mindsherpa
+---
+- runFlow: ../auth/login.yaml
+- tapOn: "SHERPA"
+- waitForAnimationToEnd
+- tapOn:
+    id: input-message
+- inputText: "Hello from Maestro"
+- tapOn:
+    id: send-message-button
+- waitForAnimationToEnd

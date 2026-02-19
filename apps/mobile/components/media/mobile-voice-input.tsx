@@ -68,7 +68,7 @@ export function MobileVoiceInput({
   }, [backgroundColor, isRecording])
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="voice-input">
       {isRecording ? <AudioLevelVisualizer levels={meterings} /> : null}
       <AnimatedPressable
         disabled={isTranscribing}
@@ -76,6 +76,7 @@ export function MobileVoiceInput({
         onPress={() => {
           void onPress()
         }}
+        testID={isRecording ? 'voice-stop-button' : 'voice-start-button'}
         {...props}
       >
         {isTranscribing ? <ActivityIndicator size="small" color={theme.colors.foreground} /> : null}
