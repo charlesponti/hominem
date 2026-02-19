@@ -119,6 +119,18 @@ bun run test:e2e:smoke     # Quick app launch check
 - Verify `EXPO_PUBLIC_API_BASE_URL` matches running API server
 - Check auth token is stored in secure storage via Supabase OAuth
 
+**Error: "A required entitlement isn't present":**
+- This is a Keychain access issue from `expo-secure-store`
+- **Fix**: Rebuild the iOS app with proper entitlements:
+  ```bash
+  cd apps/mobile
+  rm -rf ios/
+  bun run prebuild
+  bun run ios
+  ```
+- If that doesn't work, try a full simulator reset: `xcrun simctl erase all`
+- See [iOS Build Configuration](#ios-build-configuration) for details
+
 ## Architecture
 
 ### Authentication
@@ -147,3 +159,35 @@ bun run build:development:ios
 # Preview/production
 bun run build:production:ios
 ```
+
+## iOS Build Configuration
+
+### Keychain Entitlements
+
+The iOS app uses `expo-secure-store` to securely store authentication tokens in the Keychain. This requires proper entitlements configuration:
+
+- **Configuration**: Defined in `app.config.ts` via `expo-build-properties` plugin
+- **Entitlements File**: `ios/mindsherpa/mindsherpa.entitlements`
+- **Access Group**: `$(AppIdentifierPrefix)com.pontistudios.mindsherpa`
+
+When building:
+1. The config is read from `app.config.ts`
+2. During prebuild, it generates/updates the entitlements file
+3. Xcode signs the app with these entitlements
+4. The app gains permission to store tokens in Keychain
+
+**If you see "A required entitlement isn't present" error:**
+```bash
+# Regenerate iOS project with correct entitlements
+cd apps/mobile
+rm -rf ios/
+bun run prebuild
+bun run ios
+```
+
+### Other Important Configuration
+
+- **App Transport Security**: Configured to allow Supabase and Railway API domains
+- **Apple Sign-In**: Enabled via `expo-apple-authentication` plugin
+- **Sentry Integration**: For error tracking in development/production
+- **Audio Recording**: Permission configured via `expo-av` plugin
