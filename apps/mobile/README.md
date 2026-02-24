@@ -5,7 +5,7 @@ This app is the iOS mobile client for Hominem, built with Expo Router and the sh
 ## Runtime Scope
 
 - Production target: iOS only
-- Authentication: Supabase OAuth (Apple provider) with PKCE
+- Authentication: Apple Sign-In only (Supabase OAuth with PKCE)
 - API: `@hominem/hono-rpc` via `@hominem/hono-client`
 
 ## Environment Variables

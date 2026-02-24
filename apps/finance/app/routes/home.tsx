@@ -28,7 +28,7 @@ export default function Home() {
 
   const handleSignIn = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: 'apple',
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
       },

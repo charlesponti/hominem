@@ -7,6 +7,14 @@ export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
   const returnTo = url.searchParams.get('return_to') || '/';
   const redirectTo = `${url.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    const target = `/?error=${encodeURIComponent('Sign in with Apple before connecting Google')}`;
+    return redirect(target, { headers });
+  }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',

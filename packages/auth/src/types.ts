@@ -61,7 +61,7 @@ export interface AuthContextType {
   // Auth methods
   signIn: (email: string, password: string) => Promise<{ error?: Error }>
   signUp: (email: string, password: string) => Promise<{ error?: Error }>
-  signInWithOAuth: (provider: 'google' | 'github' | 'discord') => Promise<{ error?: Error }>
+  signInWithOAuth: (provider: 'apple' | 'google' | 'github' | 'discord') => Promise<{ error?: Error }>
   signOut: () => Promise<{ error?: Error }>
   resetPassword: (email: string) => Promise<{ error?: Error }>
 

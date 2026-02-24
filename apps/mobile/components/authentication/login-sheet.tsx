@@ -22,7 +22,7 @@ const LoginSheet = () => {
     return null
   }, [canUseTestAuth, isTestAuthDisabled])
 
-  const onSignInClick = useCallback(async () => {
+  const onSignInWithApple = useCallback(async () => {
     try {
       await signInWithApple()
       setAuthError(null)
@@ -89,7 +89,7 @@ const LoginSheet = () => {
         </View>
       ) : null}
       <View style={styles.buttonContainer}>
-        <Button onPress={onSignInClick} title="[CONTINUE_WITH_APPLE]" />
+        <Button onPress={onSignInWithApple} title="[CONTINUE_WITH_APPLE]" />
       </View>
     </View>
   )

@@ -18,7 +18,7 @@ export async function loader({ request }: { request: Request }) {
     let target = next;
     // If next is root and we have a user, go to notes to avoid home loader stripping params
     if (target === '/') {
-      target = user ? '/notes' : '/auth/signin';
+      target = user ? '/notes' : '/';
     }
 
     const sep = target.includes('?') ? '&' : '?';

@@ -117,7 +117,7 @@ const SignInButton = () => {
 
   const onSignInClick = useCallback(async () => {
     await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: 'apple',
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
       },
@@ -126,7 +126,7 @@ const SignInButton = () => {
 
   return (
     <Button onClick={onSignInClick} className="flex ">
-      Sign In with Google
+      Sign In with Apple
     </Button>
   );
 };

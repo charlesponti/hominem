@@ -68,6 +68,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
                 },
               },
             },
+            entitlements: {
+              'keychain-access-groups': [
+                '$(AppIdentifierPrefix)com.pontistudios.mindsherpa',
+              ],
+            },
           },
         },
       ],

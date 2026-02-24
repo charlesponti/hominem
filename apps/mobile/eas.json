@@ -9,9 +9,9 @@
       "distribution": "internal",
       "env": {
         "NODE_ENV": "development",
-        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:3000",
-        "EXPO_PUBLIC_SUPABASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": ""
+        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:4040",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gzgtqwrelfynzcpsnpxw.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6Z3Rxd3JlbGZ5bnpjcHNucHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjAwMTYyNjgsImV4cCI6MjAzNTU5MjI2OH0.RVKsWwVdgA9-MAbYKG4MEKnlZko2reBwRMPAjV4Ewxc"
       }
     },
     "simulator": {
@@ -34,9 +34,9 @@
       "channel": "production",
       "env": {
         "NODE_ENV": "production",
-        "EXPO_PUBLIC_API_BASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": ""
+        "EXPO_PUBLIC_API_BASE_URL": "https://mindsherpa-api-production.up.railway.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gzgtqwrelfynzcpsnpxw.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd6Z3Rxd3JlbGZ5bnpjcHNucHh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjAwMTYyNjgsImV4cCI6MjAzNTU5MjI2OH0.RVKsWwVdgA9-MAbYKG4MEKnlZko2reBwRMPAjV4Ewxc"
       }
     }
   },

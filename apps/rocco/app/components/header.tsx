@@ -94,7 +94,7 @@ function Header() {
               <Button
                 onClick={() =>
                   supabase.auth.signInWithOAuth({
-                    provider: 'google',
+                    provider: 'apple',
                     options: {
                       redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
                     },

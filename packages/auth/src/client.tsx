@@ -50,7 +50,7 @@ function useSupabaseAuth(
 
   const signIn = useCallback(async () => {
     const response = await supabaseClient.auth.signInWithOAuth({
-      provider: 'google',
+      provider: 'apple',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },

@@ -91,7 +91,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
             )}
           </p>
           <Button className="px-4 py-2 font-medium" onClick={preview.onSignIn}>
-            Continue with Google
+            Continue with Apple
           </Button>
         </div>
       </li>
@@ -130,7 +130,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
             Invited as{' '}
             <span className="italic text-muted-foreground">{listInvite.invitedUserEmail}</span>
           </span>
-          <span>Accepting will attach it to your current Google login.</span>
+          <span>Accepting will attach it to your current signed-in account.</span>
         </p>
       )}
     </li>

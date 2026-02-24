@@ -172,7 +172,7 @@ export default function Invites({ loaderData }: Route.ComponentProps) {
     const redirectPath = window.location.pathname + window.location.search;
 
     await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: 'apple',
       options: {
         // Add query params directly to redirectTo URL (like notes app does)
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
