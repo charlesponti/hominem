@@ -8,7 +8,7 @@ import type { FailedUpload, UploadedFile, UploadResponse } from '~/lib/types/upl
 
 import { jsonResponse } from '~/lib/utils/json-response';
 
-import { createSupabaseServerClient } from '../lib/auth.server';
+import { getServerAuth } from '../lib/auth.server';
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
@@ -17,13 +17,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
   try {
     // Get authentication
-    const { supabase } = createSupabaseServerClient(request);
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
+    const { user } = await getServerAuth(request);
+    if (!user) {
       return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -4,7 +4,7 @@ import type {
   ImportTransactionsJob,
 } from '@hominem/jobs-services';
 
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { useApiClient } from '@hominem/ui';
 import { REDIS_CHANNELS } from '@hominem/utils/consts';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -24,7 +24,7 @@ const PROGRESS_UPDATE_THROTTLE = 100;
 export function useImportTransactionsStore() {
   const apiClient = useApiClient();
   const queryClient = useQueryClient();
-  const { session } = useSupabaseAuthContext();
+  const { session } = useAuthContext();
   const [statuses, setStatuses] = useState<FileStatus[]>([]);
   const [activeJobIds, setActiveJobIds] = useState<string[]>([]);
   const [error, setError] = useState<Error | null>(null);

@@ -1,30 +1,24 @@
 import { redirect } from 'react-router';
 
-import { createSupabaseServerClient } from '~/lib/auth.server';
-
 export async function loader({ request }: { request: Request }) {
   const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
-  const next = requestUrl.searchParams.get('next') ?? '/';
+  const rawNext = requestUrl.searchParams.get('next');
   const errorParam = requestUrl.searchParams.get('error');
   const errorDescription = requestUrl.searchParams.get('error_description');
-
-  const { supabase, headers } = createSupabaseServerClient(request);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const next =
+    rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/notes';
 
   const getRedirectTarget = (error: string, description: string) => {
     let target = next;
-    // If next is root and we have a user, go to notes to avoid home loader stripping params
+    // Route callback failures to notes root by default.
     if (target === '/') {
-      target = user ? '/notes' : '/';
+      target = '/notes';
     }
 
     const sep = target.includes('?') ? '&' : '?';
     const params = new URLSearchParams({
-      error: encodeURIComponent(error),
-      description: encodeURIComponent(description),
+      error,
+      description,
     });
     return `${target}${sep}${params.toString()}`;
   };
@@ -34,19 +28,5 @@ export async function loader({ request }: { request: Request }) {
     return redirect(getRedirectTarget(errorParam, errorDescription ?? ''));
   }
 
-  if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (!error) {
-      // Successful authentication, redirect to the next page or home
-      return redirect(next, { headers });
-    }
-
-    if (error) {
-      return redirect(getRedirectTarget('Exchange failed', error.message), { headers });
-    }
-  }
-
-  // If there's no code and no error param, it's an invalid callback
-  return redirect(getRedirectTarget('Authentication failed', 'No code provided'), { headers });
+  return redirect(next);
 }

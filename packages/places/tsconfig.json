@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "baseUrl": ".",
@@ -34,14 +32,12 @@
     "verbatimModuleSyntax": true,
     "outDir": "./build",
     "rootDir": "./src",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
+    "paths": {
+      "@hominem/finance-services/*": ["../finance/src/*"]
+    }
   },
-  "include": [
-    "src/**/*",
-    "../../types/**/*.d.ts"
-  ],
+  "include": ["src/**/*"],
   "exclude": [
     "node_modules",
     "build",
@@ -53,6 +49,7 @@
     "**/*.spec.ts",
     "**/__tests__",
     "**/__mocks__",
-    "*.tsbuildinfo"
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }

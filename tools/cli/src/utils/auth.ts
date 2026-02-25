@@ -20,7 +20,6 @@ const DEFAULT_AUTH_BASE = env.API_URL ?? 'http://localhost:3000';
 
 interface AuthOptions {
   authBaseUrl: string;
-  provider?: 'supabase' | 'workos' | 'unknown';
   scopes?: string[];
   headless?: boolean;
 }
@@ -31,7 +30,22 @@ interface TokenResponse {
   expires_in?: number;
   expires_at?: string;
   scope?: string;
-  provider?: 'supabase' | 'workos' | 'unknown';
+  provider?: 'better-auth';
+  session_id?: string;
+  refresh_family_id?: string;
+}
+
+interface CliAuthorizeResponse {
+  authorization_url: string;
+}
+
+interface DeviceCodeResponse {
+  device_code: string;
+  user_code: string;
+  verification_uri?: string;
+  verification_uri_complete?: string;
+  expires_in?: number;
+  interval?: number;
 }
 
 export async function migrateLegacyConfig(): Promise<void> {
@@ -46,7 +60,7 @@ export async function migrateLegacyConfig(): Promise<void> {
 
     const tokens: StoredTokens = {
       accessToken: json.token,
-      provider: 'supabase',
+      provider: 'better-auth',
     };
     if (json.refreshToken) tokens.refreshToken = json.refreshToken;
     if (json.timestamp) {
@@ -65,6 +79,44 @@ export async function migrateLegacyConfig(): Promise<void> {
   }
 }
 
+function toExpiresAtIso(tokenResponse: TokenResponse, fallback?: string) {
+  if (tokenResponse.expires_at) {
+    return tokenResponse.expires_at;
+  }
+  if (tokenResponse.expires_in) {
+    return new Date(Date.now() + Math.max(0, tokenResponse.expires_in - 300) * 1000).toISOString();
+  }
+  return fallback;
+}
+
+function buildStoredTokensFromResponse(
+  tokenResponse: TokenResponse,
+  fallback?: Partial<StoredTokens>,
+): StoredTokens {
+  const stored: StoredTokens = {
+    accessToken: tokenResponse.access_token,
+    provider: tokenResponse.provider ?? fallback?.provider ?? 'better-auth',
+    issuedAt: new Date().toISOString(),
+  };
+
+  const expiresAt = toExpiresAtIso(tokenResponse, fallback?.expiresAt);
+  if (expiresAt) stored.expiresAt = expiresAt;
+
+  const refreshToken = tokenResponse.refresh_token ?? fallback?.refreshToken;
+  if (refreshToken) stored.refreshToken = refreshToken;
+
+  const scopes = tokenResponse.scope ? tokenResponse.scope.split(' ') : fallback?.scopes;
+  if (scopes?.length) stored.scopes = scopes;
+
+  const sessionId = tokenResponse.session_id ?? fallback?.sessionId;
+  if (sessionId) stored.sessionId = sessionId;
+
+  const refreshFamilyId = tokenResponse.refresh_family_id ?? fallback?.refreshFamilyId;
+  if (refreshFamilyId) stored.refreshFamilyId = refreshFamilyId;
+
+  return stored;
+}
+
 export async function getStoredTokens(): Promise<StoredTokens | null> {
   await migrateLegacyConfig();
   return loadTokens();
@@ -81,22 +133,41 @@ function createPkcePair() {
   return { verifier, challenge };
 }
 
-function buildAuthUrl(
-  base: string,
+function buildAuthorizePayload(
   redirectUri: string,
   state: string,
   challenge: string,
   scopes?: string[],
 ) {
-  const url = new URL('/auth/cli', base);
-  url.searchParams.set('response_type', 'code');
-  url.searchParams.set('code_challenge', challenge);
-  url.searchParams.set('code_challenge_method', 'S256');
-  url.searchParams.set('redirect_uri', redirectUri);
-  url.searchParams.set('state', state);
-  if (scopes?.length) url.searchParams.set('scope', scopes.join(' '));
-  url.searchParams.set('from', 'cli');
-  return url.toString();
+  return {
+    redirect_uri: redirectUri,
+    code_challenge: challenge,
+    state,
+    ...(scopes?.length ? { scope: scopes.join(' ') } : {}),
+  };
+}
+
+async function requestCliAuthorizationUrl({
+  baseUrl,
+  redirectUri,
+  state,
+  codeChallenge,
+  scopes,
+}: {
+  baseUrl: string;
+  redirectUri: string;
+  state: string;
+  codeChallenge: string;
+  scopes?: string[];
+}) {
+  const url = new URL('/api/auth/cli/authorize', baseUrl);
+  const payload = buildAuthorizePayload(redirectUri, state, codeChallenge, scopes);
+  const res = await axios.post(url.toString(), payload);
+  const data = res.data as CliAuthorizeResponse;
+  if (!data.authorization_url) {
+    throw new Error('CLI authorize endpoint did not return an authorization URL');
+  }
+  return data.authorization_url;
 }
 
 async function exchangeCodeForTokens({
@@ -110,9 +181,8 @@ async function exchangeCodeForTokens({
   codeVerifier: string;
   redirectUri: string;
 }): Promise<TokenResponse> {
-  const url = new URL('/api/auth/token', baseUrl);
+  const url = new URL('/api/auth/cli/exchange', baseUrl);
   const res = await axios.post(url.toString(), {
-    grant_type: 'authorization_code',
     code,
     code_verifier: codeVerifier,
     redirect_uri: redirectUri,
@@ -128,7 +198,25 @@ export async function interactiveLogin(options: AuthOptions) {
   const state = crypto.randomBytes(16).toString('hex');
   const { verifier, challenge } = createPkcePair();
 
-  const authUrl = buildAuthUrl(options.authBaseUrl, redirectUri, state, challenge, options.scopes);
+  if (options.headless) {
+    spinner.info('Using device-code login (headless mode)');
+    await deviceCodeLogin(options);
+    return;
+  }
+
+  let authUrl: string;
+  try {
+    authUrl = await requestCliAuthorizationUrl({
+      baseUrl: options.authBaseUrl,
+      redirectUri,
+      state,
+      codeChallenge: challenge,
+      ...(options.scopes ? { scopes: options.scopes } : {}),
+    });
+  } catch (error) {
+    spinner.fail(chalk.red('Failed to initialize CLI authorization flow'));
+    throw error;
+  }
 
   const server = http.createServer(async (req, res) => {
     if (!req.url) {
@@ -158,20 +246,9 @@ export async function interactiveLogin(options: AuthOptions) {
         redirectUri,
       });
 
-      const expiresAt = tokenResponse.expires_at
-        ? tokenResponse.expires_at
-        : tokenResponse.expires_in
-          ? new Date(Date.now() + (tokenResponse.expires_in - 300) * 1000).toISOString()
-          : undefined;
-
-      const tokens: StoredTokens = {
-        accessToken: tokenResponse.access_token,
-        provider: tokenResponse.provider ?? options.provider ?? 'unknown',
-      };
-      if (expiresAt) tokens.expiresAt = expiresAt;
-      if (tokenResponse.refresh_token) tokens.refreshToken = tokenResponse.refresh_token;
-      const scopes = tokenResponse.scope ? tokenResponse.scope.split(' ') : options.scopes;
-      if (scopes?.length) tokens.scopes = scopes;
+      const tokens = buildStoredTokensFromResponse(tokenResponse, {
+        ...(options.scopes ? { scopes: options.scopes } : {}),
+      });
 
       await saveTokens(tokens);
 
@@ -201,11 +278,68 @@ export async function interactiveLogin(options: AuthOptions) {
 }
 
 export async function deviceCodeLogin(_options: AuthOptions) {
-  consola.warn(
-    chalk.yellow(
-      'Device-code login is not supported by Supabase. Use browser-based login (default flow).',
-    ),
-  );
+  const options = _options;
+  const clientId = 'hominem-cli';
+  const scope = options.scopes?.join(' ') ?? 'cli:read';
+
+  const codeUrl = new URL('/api/auth/device/code', options.authBaseUrl);
+  const codeResponse = await axios.post(codeUrl.toString(), {
+    client_id: clientId,
+    scope,
+  });
+  const device = codeResponse.data as DeviceCodeResponse;
+
+  if (!device.device_code || !device.user_code) {
+    throw new Error('Device code endpoint returned invalid payload');
+  }
+
+  const verifyUrl = device.verification_uri_complete ?? device.verification_uri;
+  consola.info(chalk.cyan(`User code: ${device.user_code}`));
+  if (verifyUrl) {
+    consola.info(`Open: ${verifyUrl}`);
+    if (!options.headless) {
+      await open(verifyUrl).catch(() => undefined);
+    }
+  }
+
+  const intervalSec = Math.max(2, device.interval ?? 5);
+  const expiresAt = Date.now() + (device.expires_in ?? 600) * 1000;
+  const tokenUrl = new URL('/api/auth/device/token', options.authBaseUrl);
+
+  while (Date.now() < expiresAt) {
+    await new Promise((resolve) => setTimeout(resolve, intervalSec * 1000));
+
+    try {
+      const tokenResponse = await axios.post(tokenUrl.toString(), {
+        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+        device_code: device.device_code,
+        client_id: clientId,
+      });
+      const data = tokenResponse.data as TokenResponse;
+
+      const tokens = buildStoredTokensFromResponse(data, {
+        provider: 'better-auth',
+        ...(options.scopes ? { scopes: options.scopes } : {}),
+      });
+      await saveTokens(tokens);
+      consola.info(chalk.green('Authenticated via device flow'));
+      return;
+    } catch (error) {
+      if (!axios.isAxiosError(error) || !error.response?.data) {
+        throw error;
+      }
+      const payload = error.response.data as { error?: string };
+      if (payload.error === 'authorization_pending' || payload.error === 'slow_down') {
+        continue;
+      }
+      if (payload.error === 'expired_token') {
+        throw new Error('Device code expired before authorization completed');
+      }
+      throw new Error(payload.error ?? 'Device token polling failed');
+    }
+  }
+
+  throw new Error('Device authorization timed out');
 }
 
 export async function getAccessToken(forceRefresh = false): Promise<string | null> {
@@ -221,28 +355,14 @@ export async function getAccessToken(forceRefresh = false): Promise<string | nul
   if (!stored.refreshToken) return stored.accessToken;
 
   try {
-    const url = new URL('/api/auth/refresh-token', DEFAULT_AUTH_BASE);
+    const url = new URL('/api/auth/token', DEFAULT_AUTH_BASE);
     const res = await axios.post(url.toString(), {
+      grant_type: 'refresh_token',
       refresh_token: stored.refreshToken,
     });
     const data = res.data as TokenResponse;
 
-    const expiresAt = data.expires_at
-      ? data.expires_at
-      : data.expires_in
-        ? new Date(Date.now() + (data.expires_in - 300) * 1000).toISOString()
-        : stored.expiresAt;
-
-    const tokens: StoredTokens = {
-      accessToken: data.access_token,
-      provider: data.provider ?? stored.provider ?? 'unknown',
-    };
-    if (expiresAt) tokens.expiresAt = expiresAt;
-    if (data.refresh_token ?? stored.refreshToken) {
-      tokens.refreshToken = data.refresh_token ?? stored.refreshToken;
-    }
-    const scopes = data.scope ? data.scope.split(' ') : stored.scopes;
-    if (scopes?.length) tokens.scopes = scopes;
+    const tokens = buildStoredTokensFromResponse(data, stored);
 
     await saveTokens(tokens);
 

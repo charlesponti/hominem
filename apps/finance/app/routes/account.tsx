@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { useApiClient } from '@hominem/ui';
 import { toast } from '@hominem/ui';
 import { Button, buttonVariants } from '@hominem/ui/button';
@@ -26,7 +26,7 @@ import { ExportTransactions } from '~/components/finance/export-transactions';
 import { RouteLink } from '~/components/route-link';
 
 export default function AccountPage() {
-  const { logout } = useSupabaseAuthContext();
+  const { logout } = useAuthContext();
   const api = useApiClient();
   const queryClient = useQueryClient();
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);

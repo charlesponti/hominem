@@ -41,7 +41,6 @@ describe('Account', () => {
         email: MOCK_USER.email || '',
         name: MOCK_USER.user_metadata?.name || MOCK_USER.user_metadata?.full_name,
         image: undefined, // No avatar
-        supabaseId: MOCK_USER.id,
         isAdmin: false,
         createdAt: MOCK_USER.created_at || new Date().toISOString(),
         updatedAt: MOCK_USER.updated_at || MOCK_USER.created_at || new Date().toISOString(),
@@ -95,7 +94,6 @@ describe('Account', () => {
         email: MOCK_USER.email || '',
         name: MOCK_USER.user_metadata?.name || MOCK_USER.user_metadata?.full_name,
         image: 'https://example.com/avatar.jpg',
-        supabaseId: MOCK_USER.id,
         isAdmin: false,
         createdAt: MOCK_USER.created_at || new Date().toISOString(),
         updatedAt: MOCK_USER.updated_at || MOCK_USER.created_at || new Date().toISOString(),

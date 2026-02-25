@@ -1,6 +1,6 @@
 import type { HominemUser } from '@hominem/auth/server';
 import type { Queues } from '@hominem/services';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AuthEnvelope } from '@hominem/auth/types';
 
 import { UnauthorizedError } from '@hominem/services';
 import { createMiddleware } from 'hono/factory';
@@ -15,8 +15,15 @@ export interface AppContext {
   Variables: {
     user?: HominemUser;
     userId?: string;
-    supabaseId?: string;
-    supabase?: SupabaseClient;
+    auth?: AuthEnvelope;
+    authError?:
+      | 'invalid_token'
+      | 'expired_token'
+      | 'invalid_audience'
+      | 'invalid_issuer'
+      | 'disallowed_kid'
+      | 'revoked_session'
+      | 'insufficient_scope';
     queues?: Queues;
   };
   Bindings: Record<string, unknown>;
@@ -32,9 +39,10 @@ export interface AppContext {
 export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const user = c.get('user');
   const userId = c.get('userId');
+  const authError = c.get('authError');
 
   if (!user || !userId) {
-    throw new UnauthorizedError('Authentication required');
+    throw new UnauthorizedError('Authentication required', authError ? { authError } : undefined);
   }
 
   return await next();

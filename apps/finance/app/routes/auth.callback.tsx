@@ -1,23 +1,22 @@
 import { redirect } from 'react-router';
 
-import { createSupabaseServerClient } from '~/lib/auth.server';
-
 export async function loader({ request }: { request: Request }) {
   const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
-  const next = requestUrl.searchParams.get('next') ?? '/';
+  const rawNext = requestUrl.searchParams.get('next');
+  const errorParam = requestUrl.searchParams.get('error');
+  const errorDescription = requestUrl.searchParams.get('error_description');
 
-  if (code) {
-    const { supabase, headers } = createSupabaseServerClient(request);
+  const next =
+    rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/';
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (!error) {
-      // Successful authentication, redirect to the next page or home
-      return redirect(next, { headers });
-    }
+  if (errorParam) {
+    const sep = next.includes('?') ? '&' : '?';
+    const params = new URLSearchParams({
+      error: errorParam,
+      description: errorDescription ?? '',
+    });
+    return redirect(`${next}${sep}${params.toString()}`);
   }
 
-  // If there's an error or no code, redirect to login with error
-  return redirect('/login?error=Authentication failed');
+  return redirect(next);
 }

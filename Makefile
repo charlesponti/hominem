@@ -1,11 +1,20 @@
 # Makefile for Node.js, Docker, Fastify, and Drizzle project
 
+# Load root environment variables when present.
+ifneq (,$(wildcard .env))
+include .env
+export
+endif
+
 # Variables
 DOCKER_COMPOSE = docker compose
 NODE_ENV ?= development
+APPLE_KEY_PATH ?= $(CURDIR)/.auth/AuthKey_2438T5MGLH.p8
+APPLE_EXPIRES_DAYS ?= 150
+APPLE_KEY_ID ?= 2438T5MGLH
 
 # Phony targets
-.PHONY: install start dev build test lint format clean docker-up docker-down check reset all test-db-start test-db-stop test-db-restart test-db-status
+.PHONY: install start dev build test lint format clean docker-up docker-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live
 
 # Install dependencies
 install:
@@ -76,6 +85,30 @@ test-with-db: test-db-start
 
 # Full cleanup and reinstall
 reset: clean install
+
+apple-client-secret:
+	@if [ -z "$(APPLE_TEAM_ID)" ]; then \
+		echo "ERROR: APPLE_TEAM_ID is required"; \
+		echo "Usage: make apple-client-secret APPLE_TEAM_ID=<team_id> APPLE_CLIENT_ID=<services_id> [APPLE_KEY_ID=<key_id>] [APPLE_KEY_PATH=<path>] [APPLE_EXPIRES_DAYS=<days>]"; \
+		exit 1; \
+	fi
+	@if [ -z "$(APPLE_CLIENT_ID)" ]; then \
+		echo "ERROR: APPLE_CLIENT_ID is required"; \
+		echo "Usage: make apple-client-secret APPLE_TEAM_ID=<team_id> APPLE_CLIENT_ID=<services_id> [APPLE_KEY_ID=<key_id>] [APPLE_KEY_PATH=<path>] [APPLE_EXPIRES_DAYS=<days>]"; \
+		exit 1; \
+	fi
+	@bun run --filter @hominem/api auth:apple:client-secret -- \
+		--key-path "$(APPLE_KEY_PATH)" \
+		--team-id "$(APPLE_TEAM_ID)" \
+		--client-id "$(APPLE_CLIENT_ID)" \
+		--key-id "$(APPLE_KEY_ID)" \
+		--expires-days "$(APPLE_EXPIRES_DAYS)"
+
+auth-e2e:
+	@bun run test:e2e:auth
+
+auth-e2e-live:
+	@bun run test:e2e:auth:live
 
 lbt:
 	@echo "Running lint..."

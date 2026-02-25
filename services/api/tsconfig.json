@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "baseUrl": ".",
@@ -34,24 +32,13 @@
     "verbatimModuleSyntax": true,
     "rootDir": ".",
     "paths": {
-      "@hominem/finance-services/*": [
-        "../../packages/finance/src/*"
-      ],
-      "@/*": [
-        "./*"
-      ]
+      "@hominem/finance-services/*": ["../../packages/finance/src/*"],
+      "@/*": ["./*"]
     },
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "noEmit": true
   },
-  "include": [
-    "src/**/*.ts",
-    "test/**/*.ts",
-    "vitest.config.mts",
-    "../../types/**/*.d.ts"
-  ],
+  "include": ["src/**/*.ts", "test/**/*.ts", "vitest.config.mts"],
   "exclude": [
     "node_modules",
     "dist",
@@ -59,6 +46,7 @@
     ".turbo",
     ".cache",
     "coverage",
-    "*.tsbuildinfo"
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }

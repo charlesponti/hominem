@@ -18,7 +18,10 @@ export interface StoredTokens {
   refreshToken?: string;
   expiresAt?: string;
   scopes?: string[];
-  provider?: 'supabase' | 'workos' | 'unknown';
+  provider?: 'better-auth';
+  sessionId?: string;
+  refreshFamilyId?: string;
+  issuedAt?: string;
 }
 
 async function saveFallback(tokens: StoredTokens) {

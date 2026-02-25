@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { useApiClient } from '@hominem/ui';
 import { useQuery } from '@tanstack/react-query';
 
@@ -27,7 +27,7 @@ interface PlaidAccountByInstitution {
  * Hook for fetching Plaid accounts for a specific institution
  */
 export function usePlaidAccountsByInstitution(institutionId: string | null, options = {}) {
-  const { userId } = useSupabaseAuthContext();
+  const { userId } = useAuthContext();
   const apiClient = useApiClient();
 
   const defaultOptions = {

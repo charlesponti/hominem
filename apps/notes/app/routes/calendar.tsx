@@ -2,14 +2,34 @@ import { data, type LoaderFunctionArgs } from 'react-router';
 
 import { CalendarSync } from '~/components/calendar/calendar-sync';
 import { requireAuth } from '~/lib/guards';
+import { serverEnv } from '~/lib/env';
 
 import type { Route } from './+types/calendar';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { user, session, headers } = await requireAuth(request);
+  const { user, headers } = await requireAuth(request);
+  const cookie = request.headers.get('cookie');
+  const authHeader = request.headers.get('authorization');
+  const upstreamHeaders = new Headers();
+  if (cookie) {
+    upstreamHeaders.set('cookie', cookie);
+  }
+  if (authHeader) {
+    upstreamHeaders.set('authorization', authHeader);
+  }
 
-  // Check if user has Google account connected (without exposing tokens)
-  const hasGoogleAccount = Boolean(session.provider_token);
+  const googleStatusRes = await fetch(
+    new URL('/api/auth/link/google/status', serverEnv.VITE_PUBLIC_API_URL).toString(),
+    {
+      method: 'GET',
+      headers: upstreamHeaders,
+    },
+  );
+
+  const googleStatusPayload = (await googleStatusRes.json().catch(() => ({}))) as {
+    isLinked?: boolean;
+  };
+  const hasGoogleAccount = Boolean(googleStatusRes.ok && googleStatusPayload.isLinked);
 
   return data({ hasGoogleAccount, userId: user.id }, { headers });
 }

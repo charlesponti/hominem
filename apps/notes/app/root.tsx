@@ -1,7 +1,6 @@
-import type { AuthChangeEvent } from '@supabase/supabase-js';
 import type React from 'react';
 
-import { SupabaseAuthProvider } from '@hominem/auth';
+import { AuthProvider } from '@hominem/auth';
 import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
 import { useCallback } from 'react';
 import {
@@ -31,9 +30,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   return data(
     {
       session,
-      supabaseEnv: {
-        url: authConfig.supabaseUrl,
-        anonKey: authConfig.supabaseAnonKey,
+      authEnv: {
+        apiBaseUrl: authConfig.apiBaseUrl,
       },
       apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
     },
@@ -72,7 +70,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session, supabaseEnv, apiBaseUrl } = loaderData;
+  const { session, authEnv, apiBaseUrl } = loaderData;
   const revalidator = useRevalidator();
   const clearOfflineCaches = useCallback(async () => {
     if (!('caches' in window)) {
@@ -83,7 +81,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   }, []);
 
   const handleAuthEvent = useCallback(
-    (event: AuthChangeEvent) => {
+    (event: 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED') => {
       if (event === 'SIGNED_OUT') {
         void clearOfflineCaches();
       }
@@ -95,9 +93,9 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 
   return (
-    <SupabaseAuthProvider
+    <AuthProvider
       initialSession={session}
-      config={supabaseEnv}
+      config={authEnv}
       onAuthEvent={handleAuthEvent}
     >
       <HonoProvider baseUrl={apiBaseUrl}>
@@ -107,7 +105,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
           </UpdateGuard>
         </FeatureFlagsProvider>
       </HonoProvider>
-    </SupabaseAuthProvider>
+    </AuthProvider>
   );
 }
 

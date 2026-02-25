@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { toast } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert';
@@ -31,7 +31,7 @@ export function PlaidLink({
   variant = 'default',
   children,
 }: PlaidLinkProps) {
-  const { user } = useSupabaseAuthContext();
+  const { user } = useAuthContext();
   const [linkToken, setLinkToken] = useState<string | null>(null);
   const [shouldAutoOpen, setShouldAutoOpen] = useState(false);
 

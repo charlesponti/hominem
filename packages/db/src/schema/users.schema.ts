@@ -17,8 +17,9 @@ export const users = pgTable(
     // Primary key for foreign key relationships
     id: uuid('id').primaryKey().defaultRandom().notNull(),
 
-    // Supabase auth integration
-    supabaseId: text('supabase_id').unique().notNull(),
+    // Legacy external auth integration. Optional during Better Auth cutover.
+    supabaseId: text('supabase_id').unique(),
+    primaryAuthSubjectId: uuid('primary_auth_subject_id'),
 
     // User profile data (synced from Supabase)
     email: text('email').notNull(),
@@ -40,6 +41,7 @@ export const users = pgTable(
   (table) => [
     // Primary index for Supabase ID lookups
     index('supabase_id_idx').on(table.supabaseId),
+    index('users_primary_auth_subject_id_idx').on(table.primaryAuthSubjectId),
 
     // Email index for lookups
     index('email_idx').on(table.email),

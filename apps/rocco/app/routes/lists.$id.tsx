@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { Alert, PageTitle } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
 import { UserPlus } from 'lucide-react';
@@ -47,7 +47,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 }
 
 export default function ListPage({ loaderData }: Route.ComponentProps) {
-  const { user } = useSupabaseAuthContext();
+  const { user } = useAuthContext();
 
   const listId = loaderData.list.id;
 

@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { List } from '@hominem/ui/list';
 import { memo } from 'react';
 
@@ -13,7 +13,7 @@ type Props = {
 };
 
 const PlaceLists = ({ place }: Props) => {
-  const { isAuthenticated } = useSupabaseAuthContext();
+  const { isAuthenticated } = useAuthContext();
 
   const resolvedPlaceId = place.id;
   const googleMapsId = place.googleMapsId;

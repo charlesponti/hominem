@@ -12,7 +12,8 @@
   "main": "src/index.ts",
   "scripts": {
     "format": "bunx oxfmt ./src",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@hominem/hono-rpc": "workspace:*",

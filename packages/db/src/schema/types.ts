@@ -1,3 +1,4 @@
+export type * from './auth.types';
 export type * from './bookmarks.types';
 export type * from './calendar.types';
 export type * from './career.types';

@@ -56,7 +56,6 @@ supabase
 Syncable
 tavily
 typecheck
-typingmind
 Uniqlo
 uuidv
 vectorstores

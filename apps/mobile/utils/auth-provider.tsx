@@ -7,32 +7,42 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react'
-import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 
 import { LocalStore } from './local-store'
 import type { UserProfile } from './local-store/types'
 import {
-  exchangeAuthCodeFromUrl,
+  clearPersistedMobileRefreshToken,
+  exchangeMobileAuthCode,
+  fetchMobileSessionUser,
   getMobileRedirectUri,
-  getSupabaseMobileClient,
-} from './supabase-mobile'
-import { E2E_TESTING } from './constants'
+  getPersistedMobileRefreshToken,
+  persistMobileRefreshToken,
+  refreshMobileToken,
+  revokeMobileRefreshToken,
+  startAppleMobileAuth,
+  type MobileTokenPair,
+} from './better-auth-mobile'
 
 WebBrowser.maybeCompleteAuthSession()
 
 const LOCAL_MIGRATION_KEY = 'hominem_mobile_local_migration_v1'
 
+interface MobileSessionState {
+  accessToken: string
+  tokenType: string
+  expiresAtMs: number
+  expiresInSeconds: number
+}
+
 type AuthContextType = {
   isLoadingAuth: boolean
   isSignedIn: boolean
   currentUser: UserProfile | null
-  session: Session | null
-  supabaseUser: User | null
   signInWithApple: () => Promise<void>
-  signInWithTestCredentials?: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<UserProfile>
@@ -48,19 +58,33 @@ export const useAuth = () => {
 }
 
 const nowIso = () => new Date().toISOString()
+const REFRESH_PROACTIVE_WINDOW_MS = 120_000
+const REFRESH_JITTER_MS = 30_000
 
-const mapSupabaseUserToProfile = (user: User): UserProfile => ({
-  id: user.id,
-  name:
-    typeof user.user_metadata?.full_name === 'string'
-      ? user.user_metadata.full_name
-      : typeof user.user_metadata?.name === 'string'
-        ? user.user_metadata.name
-        : null,
-  email: user.email ?? null,
-  createdAt: user.created_at ?? nowIso(),
-  updatedAt: nowIso(),
-})
+function toSessionState(pair: MobileTokenPair): MobileSessionState {
+  return {
+    accessToken: pair.accessToken,
+    tokenType: pair.tokenType,
+    expiresInSeconds: pair.expiresIn,
+    expiresAtMs: Date.now() + pair.expiresIn * 1000,
+  }
+}
+
+function toUserProfile(input: {
+  id: string
+  email?: string | null
+  name?: string | null
+  createdAt?: string | undefined
+  updatedAt?: string | undefined
+}): UserProfile {
+  return {
+    id: input.id,
+    email: input.email ?? null,
+    name: input.name ?? null,
+    createdAt: input.createdAt ?? nowIso(),
+    updatedAt: input.updatedAt ?? nowIso(),
+  }
+}
 
 async function clearLegacyLocalDataOnce() {
   const migrationFlag = await SecureStore.getItemAsync(LOCAL_MIGRATION_KEY)
@@ -74,87 +98,142 @@ async function clearLegacyLocalDataOnce() {
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const router = useRouter()
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const refreshTokenRef = useRef<string | null>(null)
   const [isLoadingAuth, setIsLoadingAuth] = useState(true)
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [supabaseUser, setSupabaseUser] = useState<User | null>(null)
+  const [session, setSession] = useState<MobileSessionState | null>(null)
 
-  const supabase = useMemo(() => getSupabaseMobileClient(), [])
+  const clearRefreshTimer = useCallback(() => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current)
+      refreshTimeoutRef.current = null
+    }
+  }, [])
 
-  const hydrateFromSession = useCallback(
-    async (nextSession: Session | null) => {
-      setSession(nextSession)
-      setSupabaseUser(nextSession?.user ?? null)
-
-      if (!nextSession?.user) {
-        setCurrentUser(null)
+  const scheduleRefresh = useCallback(
+    (nextSession: MobileSessionState | null, refreshFn: () => Promise<unknown>) => {
+      clearRefreshTimer()
+      if (!nextSession) {
         return
       }
 
-      await clearLegacyLocalDataOnce()
+      const jitter = Math.floor(Math.random() * REFRESH_JITTER_MS)
+      const refreshAt = nextSession.expiresAtMs - REFRESH_PROACTIVE_WINDOW_MS - jitter
+      const delayMs = Math.max(1_000, refreshAt - Date.now())
 
-      const local = await LocalStore.getUserProfile()
-      const profile = {
-        ...mapSupabaseUserToProfile(nextSession.user),
-        ...(local ?? {}),
-        id: nextSession.user.id,
-        email: nextSession.user.email ?? null,
-        updatedAt: nowIso(),
-      }
-
-      await LocalStore.upsertUserProfile(profile)
-      setCurrentUser(profile)
+      refreshTimeoutRef.current = setTimeout(() => {
+        void refreshFn()
+      }, delayMs)
     },
-    []
+    [clearRefreshTimer]
   )
+
+  const syncUserFromAccessToken = useCallback(async (accessToken: string) => {
+    const user = await fetchMobileSessionUser(accessToken)
+    if (!user) {
+      setCurrentUser(null)
+      return null
+    }
+
+    await clearLegacyLocalDataOnce()
+
+    const local = await LocalStore.getUserProfile()
+    const merged: UserProfile = {
+      ...toUserProfile(user),
+      ...(local ?? {}),
+      id: user.id,
+      email: user.email ?? null,
+      name: user.name ?? null,
+      updatedAt: nowIso(),
+    }
+
+    const saved = await LocalStore.upsertUserProfile(merged)
+    setCurrentUser(saved)
+    return saved
+  }, [])
+
+  const applyTokenPair = useCallback(
+    async (pair: MobileTokenPair) => {
+      const nextSession = toSessionState(pair)
+      refreshTokenRef.current = pair.refreshToken
+      await persistMobileRefreshToken(pair.refreshToken)
+      setSession(nextSession)
+      await syncUserFromAccessToken(pair.accessToken)
+      return nextSession
+    },
+    [syncUserFromAccessToken]
+  )
+
+  const refreshFromStoredToken = useCallback(async () => {
+    const activeRefreshToken = refreshTokenRef.current
+    if (!activeRefreshToken) {
+      throw new Error('No refresh token available')
+    }
+
+    const pair = await refreshMobileToken(activeRefreshToken)
+    return applyTokenPair(pair)
+  }, [applyTokenPair])
 
   useEffect(() => {
     let isMounted = true
 
     LocalStore.initialize()
       .then(async () => {
-        const { data } = await supabase.auth.getSession()
-        if (!isMounted) return
-        await hydrateFromSession(data.session)
-        setIsLoadingAuth(false)
+        const storedRefreshToken = await getPersistedMobileRefreshToken()
+        if (!isMounted) {
+          return
+        }
+
+        refreshTokenRef.current = storedRefreshToken
+
+        if (!storedRefreshToken) {
+          setSession(null)
+          setCurrentUser(null)
+          setIsLoadingAuth(false)
+          return
+        }
+
+        try {
+          const pair = await refreshMobileToken(storedRefreshToken)
+          if (!isMounted) {
+            return
+          }
+          const nextSession = await applyTokenPair(pair)
+          if (!isMounted) {
+            return
+          }
+          scheduleRefresh(nextSession, refreshFromStoredToken)
+        } catch {
+          await clearPersistedMobileRefreshToken()
+          refreshTokenRef.current = null
+          if (!isMounted) {
+            return
+          }
+          setSession(null)
+          setCurrentUser(null)
+        } finally {
+          if (isMounted) {
+            setIsLoadingAuth(false)
+          }
+        }
       })
       .catch(() => {
-        if (!isMounted) return
+        if (!isMounted) {
+          return
+        }
         setIsLoadingAuth(false)
       })
-
-    const { data: authSubscription } = supabase.auth.onAuthStateChange(
-      async (_event: AuthChangeEvent, nextSession: Session | null) => {
-        await hydrateFromSession(nextSession)
-      }
-    )
 
     return () => {
       isMounted = false
-      authSubscription.subscription.unsubscribe()
+      clearRefreshTimer()
     }
-  }, [hydrateFromSession, supabase])
+  }, [applyTokenPair, clearRefreshTimer, refreshFromStoredToken, scheduleRefresh])
 
   const signInWithApple = useCallback(async () => {
-    const redirectTo = getMobileRedirectUri()
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: {
-        redirectTo,
-        skipBrowserRedirect: true,
-      },
-    })
-
-    if (error) {
-      throw error
-    }
-
-    const authUrl = data?.url
-    if (!authUrl) {
-      throw new Error('Supabase did not return OAuth authorization URL')
-    }
-
-    const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectTo)
+    const { authorizationUrl, codeVerifier, state } = await startAppleMobileAuth()
+    const result = await WebBrowser.openAuthSessionAsync(authorizationUrl, getMobileRedirectUri())
 
     if (result.type !== 'success' || !result.url) {
       if (result.type === 'cancel' || result.type === 'dismiss') {
@@ -165,39 +244,32 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       throw new Error('OAuth sign-in failed')
     }
 
-    await exchangeAuthCodeFromUrl(result.url)
+    const pair = await exchangeMobileAuthCode({
+      callbackUrl: result.url,
+      codeVerifier,
+      expectedState: state,
+    })
+
+    const nextSession = await applyTokenPair(pair)
+    scheduleRefresh(nextSession, refreshFromStoredToken)
     router.replace('/(drawer)/(tabs)/start')
-  }, [router, supabase])
-
-  const signInWithTestCredentials = useCallback(
-    async (email: string, password: string) => {
-      if (!E2E_TESTING) {
-        throw new Error('Test auth is only available in E2E builds')
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        throw error
-      }
-
-      await hydrateFromSession(data.session)
-      router.replace('/(drawer)/(tabs)/start')
-    },
-    [hydrateFromSession, router, supabase]
-  )
+  }, [applyTokenPair, refreshFromStoredToken, router, scheduleRefresh])
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    const activeRefreshToken = refreshTokenRef.current
+    if (activeRefreshToken) {
+      await revokeMobileRefreshToken(activeRefreshToken)
+    }
+
+    refreshTokenRef.current = null
+    await clearPersistedMobileRefreshToken()
     await LocalStore.clearAllData()
+    clearRefreshTimer()
+    setSession(null)
     setCurrentUser(null)
-  }, [supabase])
+  }, [clearRefreshTimer])
 
   const deleteAccount = useCallback(async () => {
-    // Deletion endpoint is currently not implemented server-side (501).
     throw new Error('Account deletion is not available yet.')
   }, [])
 
@@ -213,41 +285,38 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         updatedAt: nowIso(),
       }
 
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          name: merged.name,
-          full_name: merged.name,
-        },
-      })
-
-      if (error) {
-        throw error
-      }
-
       const saved = await LocalStore.upsertUserProfile(merged)
       setCurrentUser(saved)
       return saved
     },
-    [currentUser, supabase]
+    [currentUser]
   )
 
   const getAccessToken = useCallback(async () => {
-    const {
-      data: { session: activeSession },
-    } = await supabase.auth.getSession()
+    if (!session) {
+      return null
+    }
 
-    return activeSession?.access_token ?? null
-  }, [supabase])
+    const msUntilExpiry = session.expiresAtMs - Date.now()
+    if (msUntilExpiry <= 60_000 && refreshTokenRef.current) {
+      try {
+        const nextSession = await refreshFromStoredToken()
+        scheduleRefresh(nextSession, refreshFromStoredToken)
+        return nextSession.accessToken
+      } catch {
+        return null
+      }
+    }
+
+    return session.accessToken
+  }, [refreshFromStoredToken, scheduleRefresh, session])
 
   const value = useMemo(
     () => ({
       isLoadingAuth,
-      isSignedIn: Boolean(session?.user),
+      isSignedIn: Boolean(session?.accessToken && currentUser),
       currentUser,
-      session,
-      supabaseUser,
       signInWithApple,
-      signInWithTestCredentials: E2E_TESTING ? signInWithTestCredentials : undefined,
       signOut,
       deleteAccount,
       updateProfile,
@@ -255,11 +324,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }),
     [
       isLoadingAuth,
-      currentUser,
       session,
-      supabaseUser,
+      currentUser,
       signInWithApple,
-      signInWithTestCredentials,
       signOut,
       deleteAccount,
       updateProfile,

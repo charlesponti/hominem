@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, useCallback } from 'react';
-import { Link, useLoaderData, useMatches, type LoaderFunctionArgs, data } from 'react-router';
+import { Link, useLoaderData, type LoaderFunctionArgs, data } from 'react-router';
+import { useAuthContext } from '@hominem/auth';
 
 import { ChatInput } from '~/components/chat/ChatInput';
 import { ChatMessages } from '~/components/chat/ChatMessages';
@@ -49,11 +50,7 @@ export default function WorkspacePage() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   const messagesComponentRef = useRef<{ showSearch: () => void }>(null);
-  const matches = useMatches();
-  const rootData = matches.find((match) => match.id === 'root')?.data as
-    | { supabaseId: string | null }
-    | undefined;
-  const userId = rootData?.supabaseId || undefined;
+  const { userId } = useAuthContext();
 
   const { data: tasksData, isLoading: tasksLoading } = useTasksList();
   const tasks = tasksData?.tasks ?? [];

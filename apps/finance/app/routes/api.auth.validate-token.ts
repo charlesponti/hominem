@@ -1,27 +1,18 @@
 import type { ActionFunctionArgs } from 'react-router';
 
-import { createSupabaseServerClient } from '@hominem/auth/server';
-
 export async function action({ request }: ActionFunctionArgs) {
   const { accessToken } = await request.json();
-  const config = {
-    supabaseUrl: process.env.SUPABASE_URL!,
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY!,
-  };
-  const { supabase } = createSupabaseServerClient(request, config);
 
   if (!accessToken || typeof accessToken !== 'string') {
     throw new Response(JSON.stringify({ isValid: false }), { status: 400 });
   }
 
   try {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(accessToken);
-
-    if (error || !user) {
-      console.error('Token validation failed:', error?.message || 'No user found');
+    const res = await fetch(new URL('/api/auth/verify', request.url), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) {
       throw new Response(JSON.stringify({ isValid: false }), { status: 401 });
     }
 

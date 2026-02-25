@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { ArrowRight } from 'lucide-react';
@@ -17,7 +17,7 @@ export function meta() {
 }
 
 export default function Home() {
-  const { user, isLoading, supabase } = useSupabaseAuthContext();
+  const { user, isLoading, authClient } = useAuthContext();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,13 +27,13 @@ export default function Home() {
   }, [isLoading, user, navigate]);
 
   const handleSignIn = useCallback(async () => {
-    await supabase.auth.signInWithOAuth({
+    await authClient.auth.signInWithOAuth({
       provider: 'apple',
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
       },
     });
-  }, [supabase.auth]);
+  }, [authClient.auth]);
 
   if (isLoading) {
     return (

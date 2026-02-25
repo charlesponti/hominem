@@ -37,6 +37,8 @@ results/
 # Google credentials
 credentials.json
 token.json
+.auth/
+*.p8
 
 # debug
 npm-debug.log*
@@ -64,4 +66,3 @@ bun-debug.log*
 
 # turbo
 .turbo
-

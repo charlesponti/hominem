@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import {
   DropdownMenu,
@@ -39,7 +39,7 @@ const navItems = [
 
 const NavigationMenu = () => {
   const navigate = useNavigate();
-  const { logout } = useSupabaseAuthContext();
+  const { logout } = useAuthContext();
   const onLogoutClick = useCallback(async () => {
     await logout();
     navigate('/');
@@ -88,7 +88,7 @@ const NavigationMenu = () => {
 };
 
 function Header() {
-  const { isAuthenticated, isLoading } = useSupabaseAuthContext();
+  const { isAuthenticated, isLoading } = useAuthContext();
 
   return (
     <header
@@ -113,16 +113,16 @@ function Header() {
 export default Header;
 
 const SignInButton = () => {
-  const { supabase } = useSupabaseAuthContext();
+  const { authClient } = useAuthContext();
 
   const onSignInClick = useCallback(async () => {
-    await supabase.auth.signInWithOAuth({
+    await authClient.auth.signInWithOAuth({
       provider: 'apple',
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
       },
     });
-  }, [supabase.auth]);
+  }, [authClient.auth]);
 
   return (
     <Button onClick={onSignInClick} className="flex ">

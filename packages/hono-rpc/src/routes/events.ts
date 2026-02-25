@@ -1,4 +1,5 @@
 import type { EventTypeEnum } from '@hominem/db/types/calendar';
+import { getAccountByUserAndProvider } from '@hominem/auth/server';
 
 import {
   createEvent,
@@ -13,7 +14,6 @@ import {
   NotFoundError,
   ValidationError,
   UnauthorizedError,
-  InternalError,
 } from '@hominem/services';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -167,25 +167,16 @@ export const eventsRoutes = new Hono<AppContext>()
   // Get Google Calendars
   .get('/google/calendars', authMiddleware, async (c) => {
     const userId = c.get('userId')!;
-    const supabase = c.get('supabase');
-
-    if (!supabase) {
-      throw new InternalError('Supabase client not available');
-    }
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session?.provider_token) {
+    const account = await getAccountByUserAndProvider(userId, 'google');
+    if (!(account?.accessToken || account?.refreshToken)) {
       throw new UnauthorizedError(
         'Google Calendar access token not found in session. Please reconnect your Google account.',
       );
     }
 
     const googleService = new GoogleCalendarService(userId, {
-      accessToken: session.provider_token,
-      refreshToken: session.provider_refresh_token || undefined,
+      accessToken: account.accessToken ?? '',
+      refreshToken: account.refreshToken || undefined,
     });
 
     const calendars = await googleService.getCalendarList();
@@ -195,25 +186,16 @@ export const eventsRoutes = new Hono<AppContext>()
   // Sync Google Calendar
   .post('/google/sync', authMiddleware, zValidator('json', eventsGoogleSyncSchema), async (c) => {
     const userId = c.get('userId')!;
-    const supabase = c.get('supabase');
-
-    if (!supabase) {
-      throw new InternalError('Supabase client not available');
-    }
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session?.provider_token) {
+    const account = await getAccountByUserAndProvider(userId, 'google');
+    if (!(account?.accessToken || account?.refreshToken)) {
       throw new UnauthorizedError(
         'Google Calendar access token not found in session. Please reconnect your Google account.',
       );
     }
 
     const googleService = new GoogleCalendarService(userId, {
-      accessToken: session.provider_token,
-      refreshToken: session.provider_refresh_token || undefined,
+      accessToken: account.accessToken ?? '',
+      refreshToken: account.refreshToken || undefined,
     });
 
     const { calendarId, timeMin, timeMax } = c.req.valid('json');

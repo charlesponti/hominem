@@ -14,17 +14,17 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     case 'preview':
     case 'production':
     default:
-      bundleIdentifier = 'com.pontistudios.mindsherpa'
-      name = 'mindsherpa'
+      bundleIdentifier = 'com.pontistudios.hakumi'
+      name = 'hakumi'
   }
 
   return {
     ...config,
     name,
-    slug: 'mindsherpa',
+    slug: 'hakumi',
     version: '1.0.0',
-    scheme: 'mindsherpa',
-    owner: 'pontistudios',
+    scheme: 'hakumi',
+    owner: 'cponti44',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'dark',
@@ -57,10 +57,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
                 NSAllowsArbitraryLoads: false,
                 NSAllowsLocalNetworking: false,
                 NSExceptionDomains: {
-                  'supabase.co': {
-                    NSExceptionRequiresForwardSecrecy: true,
-                    NSIncludesSubdomains: true,
-                  },
                   'railway.app': {
                     NSExceptionRequiresForwardSecrecy: true,
                     NSIncludesSubdomains: true,
@@ -69,8 +65,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
               },
             },
             entitlements: {
-              'keychain-access-groups': [
-                '$(AppIdentifierPrefix)com.pontistudios.mindsherpa',
+                'keychain-access-groups': [
+                '$(AppIdentifierPrefix)com.pontistudios.hakumi',
               ],
             },
           },
@@ -124,19 +120,17 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     extra: {
       apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
-      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
-      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
       aiSdkChatWebEnabled: process.env.EXPO_PUBLIC_AI_SDK_CHAT_WEB_ENABLED,
       aiSdkChatMobileEnabled: process.env.EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED,
       aiSdkTranscribeEnabled: process.env.EXPO_PUBLIC_AI_SDK_TRANSCRIBE_ENABLED,
       aiSdkSpeechEnabled: process.env.EXPO_PUBLIC_AI_SDK_SPEECH_ENABLED,
       eas: {
-        projectId: '6c717814-8866-46bc-b11f-edeedd1b7a69',
+        projectId: '4dfac82b-644f-4ff3-be42-e8f941287aa1',
       },
     },
     runtimeVersion: '1.0.0',
     updates: {
-      url: 'https://u.expo.dev/6c717814-8866-46bc-b11f-edeedd1b7a69',
+      url: 'https://u.expo.dev/4dfac82b-644f-4ff3-be42-e8f941287aa1',
     },
   }
 }

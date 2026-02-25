@@ -16,6 +16,19 @@ const serverSchema = z.object({
   FINANCE_URL: z.string().url().default('http://localhost:4444'),
   NOTES_URL: z.string().url().default('http://localhost:4445'),
   ROCCO_URL: z.string().url().default('http://localhost:4446'),
+  AUTH_ISSUER: z.string().url().default('http://localhost:3000'),
+  AUTH_AUDIENCE: z.string().default('hominem-api'),
+  BETTER_AUTH_SECRET: z.string().default('dev-better-auth-secret-change-me'),
+  BETTER_AUTH_URL: z.string().url().default('http://localhost:3000'),
+  AUTH_COOKIE_DOMAIN: z.string().default(''),
+  APPLE_CLIENT_ID: z.string().default(''),
+  APPLE_CLIENT_SECRET: z.string().default(''),
+  GOOGLE_CLIENT_ID: z.string().default(''),
+  GOOGLE_CLIENT_SECRET: z.string().default(''),
+  AUTH_CAPTCHA_PROVIDER: z
+    .enum(['cloudflare-turnstile', 'google-recaptcha', 'hcaptcha', 'captchafox'])
+    .default('cloudflare-turnstile'),
+  AUTH_CAPTCHA_SECRET_KEY: z.string().default(''),
 
   SUPABASE_URL: isTest ? z.string().url().default('http://localhost:54321') : z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: isTest ? z.string().default('test-service-key') : z.string(),

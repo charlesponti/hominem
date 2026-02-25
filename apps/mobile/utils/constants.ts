@@ -2,8 +2,6 @@ import Constants from 'expo-constants'
 
 const extra = (Constants.expoConfig?.extra ?? {}) as {
   apiBaseUrl?: string
-  supabaseUrl?: string
-  supabaseAnonKey?: string
   aiSdkChatWebEnabled?: string
   aiSdkChatMobileEnabled?: string
   aiSdkTranscribeEnabled?: string
@@ -24,10 +22,6 @@ if (!configuredApiBaseUrl && isProductionRuntime) {
 }
 
 export const API_BASE_URL = configuredApiBaseUrl || fallbackApiBaseUrl
-
-export const SUPABASE_URL = extra.supabaseUrl || process.env.EXPO_PUBLIC_SUPABASE_URL || ''
-export const SUPABASE_ANON_KEY =
-  extra.supabaseAnonKey || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || ''
 
 const toBooleanFlag = (value: string | undefined) => value === 'true'
 
