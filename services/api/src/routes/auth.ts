@@ -94,7 +94,11 @@ const cliExchangeSchema = z.object({
 
 const MOBILE_FLOW_PREFIX = 'auth:mobile:flow:'
 const MOBILE_EXCHANGE_PREFIX = 'auth:mobile:exchange:'
-const MOBILE_ALLOWED_REDIRECT_URI_PREFIXES = ['mindsherpa://auth/callback']
+const MOBILE_ALLOWED_REDIRECT_URI_PREFIXES = [
+  'hakumi://auth/callback',
+  'mindsherpa://auth/callback',
+  'com.pontistudios.mindsherpa.dev://auth/callback',
+]
 const MOBILE_FLOW_TTL_SECONDS = 10 * 60
 const MOBILE_EXCHANGE_TTL_SECONDS = 2 * 60
 const CLI_FLOW_PREFIX = 'auth:cli:flow:'
@@ -229,6 +233,18 @@ function isAllowedCliRedirectUri(redirectUri: string) {
   }
 }
 
+const TRUSTED_WEB_REDIRECT_ORIGINS = new Set(
+  [env.BETTER_AUTH_URL, env.FINANCE_URL, env.NOTES_URL, env.ROCCO_URL].map((url) => new URL(url).origin)
+)
+
+function isAllowedWebRedirectUri(redirectUri: string) {
+  try {
+    return TRUSTED_WEB_REDIRECT_ORIGINS.has(new URL(redirectUri).origin)
+  } catch {
+    return false
+  }
+}
+
 function parseCliScopes(scope: string | undefined) {
   if (!scope || !scope.trim()) {
     return CLI_DEFAULT_SCOPES
@@ -326,20 +342,79 @@ async function consumeStepUp(userId: string, action: string) {
   return true
 }
 
+function copyHeadersWithSetCookie(headers: Headers) {
+  const copied = new Headers(headers)
+  const getSetCookie = (headers as Headers & { getSetCookie?: () => string[] }).getSetCookie
+  const setCookies = typeof getSetCookie === 'function' ? getSetCookie.call(headers) : []
+
+  if (setCookies.length > 0) {
+    copied.delete('set-cookie')
+    for (const setCookie of setCookies) {
+      copied.append('set-cookie', setCookie)
+    }
+  }
+
+  return copied
+}
+
+function normalizeRedirectResponse(response: Response) {
+  const location = response.headers.get('location')
+  if (!location) {
+    return response
+  }
+
+  if (response.status >= 300 && response.status < 400) {
+    return response
+  }
+
+  const headers = copyHeadersWithSetCookie(response.headers)
+  headers.set('location', location)
+  headers.delete('content-type')
+  headers.delete('content-length')
+
+  return new Response(null, {
+    status: 302,
+    headers,
+  })
+}
+
+function buildBetterAuthUrl(input: {
+  request: Request
+  path?: string | undefined
+  preserveQuery?: boolean | undefined
+}) {
+  const requestUrl = new URL(input.request.url)
+  const targetPath = input.path ? `/api/auth${input.path}` : requestUrl.pathname
+  const targetUrl = new URL(targetPath, env.BETTER_AUTH_URL)
+
+  if (input.preserveQuery) {
+    targetUrl.search = requestUrl.search
+  }
+
+  return targetUrl
+}
+
 async function callBetterAuthPluginEndpoint(input: {
   request: Request
   path: string
   method: 'GET' | 'POST'
   body?: Record<string, unknown> | undefined
 }) {
-  const url = new URL(`/api/auth${input.path}`, input.request.url).toString()
+  const url = buildBetterAuthUrl({
+    request: input.request,
+    path: input.path,
+  })
+  logger.debug('[auth:oauth] forwarding Better Auth plugin endpoint', {
+    method: input.method,
+    targetUrl: url.toString(),
+  })
   const headers = new Headers(input.request.headers)
   if (input.body) {
     headers.set('content-type', 'application/json')
   }
 
   return betterAuthServer.handler(
-    new Request(url, {
+    new Request(url.toString(), {
       method: input.method,
       headers,
       ...(input.body ? { body: JSON.stringify(input.body) } : {}),
@@ -347,9 +422,16 @@ async function callBetterAuthPluginEndpoint(input: {
   )
 }
 
-async function proxyBetterAuthPath(input: { request: Request; path: string }) {
-  const url = new URL(`/api/auth${input.path}`, input.request.url).toString()
-  return betterAuthServer.handler(new Request(url, input.request))
+async function proxyBetterAuthRequest(input: { request: Request }) {
+  const url = buildBetterAuthUrl({
+    request: input.request,
+    preserveQuery: true,
+  })
+  logger.debug('[auth:oauth] proxying Better Auth request', {
+    method: input.request.method,
+    targetUrl: url.toString(),
+  })
+  return betterAuthServer.handler(new Request(url.toString(), input.request))
 }
 
 authRoutes.get('/jwks', async (c) => {
@@ -357,9 +439,17 @@ authRoutes.get('/jwks', async (c) => {
 })
 
 async function handleProviderCallback(c: Context<AppEnv>, provider: 'apple' | 'google') {
-  return proxyBetterAuthPath({
+  const callbackUrl = new URL(c.req.url)
+  logger.info('[auth:oauth] received provider callback', {
+    provider,
+    method: c.req.method,
+    hasCode: callbackUrl.searchParams.has('code'),
+    hasState: callbackUrl.searchParams.has('state'),
+    hasError: callbackUrl.searchParams.has('error'),
+  })
+
+  return proxyBetterAuthRequest({
     request: c.req.raw,
-    path: `/callback/${provider}`,
   })
 }
 
@@ -391,21 +481,32 @@ authRoutes.get('/authorize', async (c) => {
   }
 
   const redirectUri = c.req.query('redirect_uri') ?? `${new URL(c.req.url).origin}/`
+  const clientIp = getClientIp(c)
 
-  const response = await betterAuthServer.api.signInSocial({
+  logger.info('[auth:oauth] handling authorize request', {
+    clientIp,
+    redirectUri,
+  })
+
+  const response = await callBetterAuthPluginEndpoint({
+    request: c.req.raw,
+    path: '/sign-in/social',
+    method: 'POST',
     body: {
       provider: 'apple',
       callbackURL: redirectUri,
-      disableRedirect: true,
+      disableRedirect: false,
     },
-    ...getHeaderCarrier(c),
   })
 
-  if (!response?.url) {
-    return c.json({ error: 'authorize_failed' }, 400)
-  }
+  const normalized = normalizeRedirectResponse(response)
+  logger.info('[auth:oauth] completed authorize request', {
+    clientIp,
+    status: normalized.status,
+    hasLocation: Boolean(normalized.headers.get('location')),
+  })
 
-  return c.redirect(response.url)
+  return normalized
 })
 
 authRoutes.post('/mobile/authorize', zValidator('json', mobileAuthorizeSchema), async (c) => {
@@ -420,8 +521,13 @@ authRoutes.post('/mobile/authorize', zValidator('json', mobileAuthorizeSchema), 
   }
 
   const { redirect_uri: redirectUri, code_challenge: codeChallenge, state } = c.req.valid('json')
+  const clientIp = getClientIp(c)
 
   if (!isAllowedMobileRedirectUri(redirectUri)) {
+    logger.warn('[auth:mobile] rejected authorize request due to redirect URI allowlist mismatch', {
+      clientIp,
+      redirectUri,
+    })
     return c.json(
       {
         error: 'invalid_redirect_uri',
@@ -432,7 +538,7 @@ authRoutes.post('/mobile/authorize', zValidator('json', mobileAuthorizeSchema), 
   }
 
   const flowId = createOpaqueCode(24)
-  const callbackUrl = new URL('/api/auth/mobile/callback', c.req.url)
+  const callbackUrl = new URL('/api/auth/mobile/callback', env.BETTER_AUTH_URL)
   callbackUrl.searchParams.set('flow_id', flowId)
 
   try {
@@ -443,32 +549,38 @@ authRoutes.post('/mobile/authorize', zValidator('json', mobileAuthorizeSchema), 
       state,
     }
     await redis.set(getMobileFlowKey(flowId), JSON.stringify(payload), 'EX', MOBILE_FLOW_TTL_SECONDS)
-  } catch {
+  } catch (error) {
+    logger.error('[auth:mobile] failed to persist mobile authorize flow', {
+      clientIp,
+      flowId,
+      redirectUri,
+      error: error instanceof Error ? error.message : 'unknown',
+    })
     return c.json({ error: 'flow_unavailable' }, 503)
   }
 
-  const response = await betterAuthServer.api.signInSocial({
-    body: {
-      provider: 'apple',
-      callbackURL: callbackUrl.toString(),
-      disableRedirect: true,
-    },
-    ...getHeaderCarrier(c),
+  const startUrl = new URL('/api/auth/authorize', env.BETTER_AUTH_URL)
+  startUrl.searchParams.set('provider', 'apple')
+  startUrl.searchParams.set('redirect_uri', callbackUrl.toString())
+
+  logger.info('[auth:mobile] created mobile authorize flow', {
+    clientIp,
+    flowId,
   })
 
-  if (!response?.url) {
-    return c.json({ error: 'authorize_failed' }, 400)
-  }
-
   return c.json({
-    authorization_url: response.url,
+    authorization_url: startUrl.toString(),
     flow_id: flowId,
   })
 })
 
 authRoutes.get('/mobile/callback', async (c) => {
   const flowId = c.req.query('flow_id')
+  const clientIp = getClientIp(c)
   if (!flowId) {
+    logger.warn('[auth:mobile] callback missing flow ID', {
+      clientIp,
+    })
     return c.text('Missing flow id', 400)
   }
 
@@ -477,6 +589,10 @@ authRoutes.get('/mobile/callback', async (c) => {
     const redis = await getRedis()
     const rawFlow = await redis.get(getMobileFlowKey(flowId))
     if (!rawFlow) {
+      logger.warn('[auth:mobile] callback flow is invalid or expired', {
+        clientIp,
+        flowId,
+      })
       return c.text('Authorization flow expired', 400)
     }
     await redis.del(getMobileFlowKey(flowId))
@@ -487,17 +603,33 @@ authRoutes.get('/mobile/callback', async (c) => {
         state: z.string().min(8).max(256),
       })
       .parse(JSON.parse(rawFlow))
-  } catch {
+  } catch (error) {
+    logger.error('[auth:mobile] failed to resume callback flow', {
+      clientIp,
+      flowId,
+      error: error instanceof Error ? error.message : 'unknown',
+    })
     return c.text('Failed to resume authorization flow', 503)
   }
 
   if (!flow || !isAllowedMobileRedirectUri(flow.redirectUri)) {
+    logger.warn('[auth:mobile] callback payload failed validation', {
+      clientIp,
+      flowId,
+      redirectUri: flow?.redirectUri ?? null,
+    })
     return c.text('Invalid mobile flow payload', 400)
   }
 
   const errorParam = c.req.query('error')
   if (errorParam) {
     const errorDescription = c.req.query('error_description') ?? 'Apple sign-in failed'
+    logger.warn('[auth:mobile] provider callback returned OAuth error', {
+      clientIp,
+      flowId,
+      error: errorParam,
+      errorDescription,
+    })
     return c.redirect(
       appendQueryParams(flow.redirectUri, {
         error: errorParam,
@@ -512,6 +644,10 @@ authRoutes.get('/mobile/callback', async (c) => {
   })
 
   if (!session?.user) {
+    logger.warn('[auth:mobile] callback could not establish authenticated session', {
+      clientIp,
+      flowId,
+    })
     return c.redirect(
       appendQueryParams(flow.redirectUri, {
         error: 'session_not_found',
@@ -530,6 +666,10 @@ authRoutes.get('/mobile/callback', async (c) => {
   })
 
   if (!dbUser) {
+    logger.error('[auth:mobile] callback could not map provider user to internal user', {
+      clientIp,
+      flowId,
+    })
     return c.redirect(
       appendQueryParams(flow.redirectUri, {
         error: 'session_user_not_found',
@@ -569,7 +709,12 @@ authRoutes.get('/mobile/callback', async (c) => {
       'EX',
       MOBILE_EXCHANGE_TTL_SECONDS
     )
-  } catch {
+  } catch (error) {
+    logger.error('[auth:mobile] failed to persist mobile exchange payload', {
+      clientIp,
+      flowId,
+      error: error instanceof Error ? error.message : 'unknown',
+    })
     return c.redirect(
       appendQueryParams(flow.redirectUri, {
         error: 'exchange_unavailable',
@@ -589,8 +734,13 @@ authRoutes.get('/mobile/callback', async (c) => {
 
 authRoutes.post('/mobile/exchange', zValidator('json', mobileExchangeSchema), async (c) => {
   const { code, code_verifier: codeVerifier, redirect_uri: redirectUri } = c.req.valid('json')
+  const clientIp = getClientIp(c)
 
   if (!isAllowedMobileRedirectUri(redirectUri)) {
+    logger.warn('[auth:mobile] rejected exchange due to redirect URI allowlist mismatch', {
+      clientIp,
+      redirectUri,
+    })
     return c.json({ error: 'invalid_redirect_uri' }, 400)
   }
 
@@ -599,6 +749,9 @@ authRoutes.post('/mobile/exchange', zValidator('json', mobileExchangeSchema), as
     const redis = await getRedis()
     const rawExchange = await redis.get(getMobileExchangeKey(code))
     if (!rawExchange) {
+      logger.warn('[auth:mobile] exchange code is invalid or expired', {
+        clientIp,
+      })
       return c.json({ error: 'invalid_grant', message: 'Exchange code is invalid or expired.' }, 400)
     }
     await redis.del(getMobileExchangeKey(code))
@@ -620,24 +773,42 @@ authRoutes.post('/mobile/exchange', zValidator('json', mobileExchangeSchema), as
       .safeParse(JSON.parse(rawExchange))
 
     if (!parsed.success) {
+      logger.warn('[auth:mobile] exchange payload validation failed', {
+        clientIp,
+      })
       return c.json({ error: 'invalid_grant', message: 'Malformed exchange payload.' }, 400)
     }
 
     exchange = parsed.data
-  } catch {
+  } catch (error) {
+    logger.error('[auth:mobile] exchange lookup failed', {
+      clientIp,
+      error: error instanceof Error ? error.message : 'unknown',
+    })
     return c.json({ error: 'exchange_unavailable' }, 503)
   }
 
   if (!exchange) {
+    logger.warn('[auth:mobile] exchange payload missing after lookup', {
+      clientIp,
+    })
     return c.json({ error: 'invalid_grant' }, 400)
   }
 
   if (exchange.redirectUri !== redirectUri) {
+    logger.warn('[auth:mobile] exchange redirect URI mismatch', {
+      clientIp,
+      requestRedirectUri: redirectUri,
+      storedRedirectUri: exchange.redirectUri,
+    })
     return c.json({ error: 'invalid_grant', message: 'Redirect URI mismatch.' }, 400)
   }
 
   const computedChallenge = hashPkceVerifier(codeVerifier)
   if (computedChallenge !== exchange.codeChallenge) {
+    logger.warn('[auth:mobile] exchange PKCE verification failed', {
+      clientIp,
+    })
     return c.json({ error: 'invalid_grant', message: 'PKCE verifier mismatch.' }, 400)
   }
 
@@ -745,8 +916,13 @@ authRoutes.post('/cli/authorize', zValidator('json', cliAuthorizeSchema), async 
   }
 
   const { redirect_uri: redirectUri, code_challenge: codeChallenge, state, scope } = c.req.valid('json')
+  const clientIp = getClientIp(c)
 
   if (!isAllowedCliRedirectUri(redirectUri)) {
+    logger.warn('[auth:cli] rejected authorize request due to non-loopback redirect URI', {
+      clientIp,
+      redirectUri,
+    })
     return c.json(
       {
         error: 'invalid_redirect_uri',
@@ -757,7 +933,7 @@ authRoutes.post('/cli/authorize', zValidator('json', cliAuthorizeSchema), async 
   }
 
   const flowId = createOpaqueCode(24)
-  const callbackUrl = new URL('/api/auth/cli/callback', c.req.url)
+  const callbackUrl = new URL('/api/auth/cli/callback', env.BETTER_AUTH_URL)
   callbackUrl.searchParams.set('flow_id', flowId)
 
   try {
@@ -769,25 +945,27 @@ authRoutes.post('/cli/authorize', zValidator('json', cliAuthorizeSchema), async 
       scope: parseCliScopes(scope),
     }
     await redis.set(getCliFlowKey(flowId), JSON.stringify(payload), 'EX', CLI_FLOW_TTL_SECONDS)
-  } catch {
+  } catch (error) {
+    logger.error('[auth:cli] failed to persist cli authorize flow', {
+      clientIp,
+      flowId,
+      redirectUri,
+      error: error instanceof Error ? error.message : 'unknown',
+    })
     return c.json({ error: 'flow_unavailable' }, 503)
   }
 
-  const response = await betterAuthServer.api.signInSocial({
-    body: {
-      provider: 'apple',
-      callbackURL: callbackUrl.toString(),
-      disableRedirect: true,
-    },
-    ...getHeaderCarrier(c),
+  const startUrl = new URL('/api/auth/authorize', env.BETTER_AUTH_URL)
+  startUrl.searchParams.set('provider', 'apple')
+  startUrl.searchParams.set('redirect_uri', callbackUrl.toString())
+
+  logger.info('[auth:cli] created cli authorize flow', {
+    clientIp,
+    flowId,
   })
 
-  if (!response?.url) {
-    return c.json({ error: 'authorize_failed' }, 400)
-  }
-
   return c.json({
-    authorization_url: response.url,
+    authorization_url: startUrl.toString(),
     flow_id: flowId,
   })
 })
@@ -1197,25 +1375,58 @@ authRoutes.post('/revoke', zValidator('json', revokeTokenSchema), async (c) => {
 })
 
 authRoutes.post('/link/google/start', async (c) => {
-  if (!c.get('userId')) {
+  const userId = c.get('userId')
+  const clientIp = getClientIp(c)
+  if (!userId) {
     return c.json({ error: 'unauthorized' }, 401)
   }
 
-  const redirectUri = c.req.query('redirect_uri') ?? `${new URL(c.req.url).origin}/account`
+  const redirectUri = c.req.query('redirect_uri') ?? new URL('/account', env.BETTER_AUTH_URL).toString()
 
-  const response = await betterAuthServer.api.linkSocialAccount({
+  if (!isAllowedWebRedirectUri(redirectUri)) {
+    logger.warn('[auth:link-google] rejected link start due to redirect URI allowlist mismatch', {
+      clientIp,
+      userId,
+      redirectUri,
+    })
+    return c.json(
+      {
+        error: 'invalid_redirect_uri',
+        message: 'Google link redirect URI is not on the allowlist.',
+      },
+      400
+    )
+  }
+
+  const response = await callBetterAuthPluginEndpoint({
+    request: c.req.raw,
+    path: '/link-social',
+    method: 'POST',
     body: {
       provider: 'google',
       callbackURL: redirectUri,
+      disableRedirect: false,
     },
-    ...getHeaderCarrier(c),
   })
 
-  if (!response?.url) {
+  const normalized = normalizeRedirectResponse(response)
+  if (!normalized.headers.get('location')) {
+    logger.warn('[auth:link-google] link start did not return redirect location', {
+      clientIp,
+      userId,
+      redirectUri,
+      status: normalized.status,
+    })
     return c.json({ error: 'link_failed' }, 400)
   }
 
-  return c.redirect(response.url)
+  logger.info('[auth:link-google] started google account linking flow', {
+    clientIp,
+    userId,
+    redirectUri,
+  })
+
+  return normalized
 })
 
 authRoutes.get('/link/google/status', async (c) => {

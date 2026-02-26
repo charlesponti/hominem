@@ -23,6 +23,40 @@ const mockBetterAuthApi = vi.hoisted(() => ({
 const mockBetterAuthHandler = vi.hoisted(() =>
   vi.fn(async (request: Request) => {
     const url = new URL(request.url)
+    if (url.pathname === '/api/auth/sign-in/social') {
+      return new Response(
+        JSON.stringify({
+          url: 'https://appleid.apple.com/auth/authorize?client_id=hominem',
+          redirect: true,
+        }),
+        {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            location: 'https://appleid.apple.com/auth/authorize?client_id=hominem',
+            'set-cookie':
+              '__Secure-better-auth.state=state-cookie-value; Max-Age=300; Path=/; HttpOnly; Secure; SameSite=Lax',
+          },
+        },
+      )
+    }
+
+    if (url.pathname === '/api/auth/link-social') {
+      return new Response(
+        JSON.stringify({
+          url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=hominem',
+          redirect: true,
+        }),
+        {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            location: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=hominem',
+          },
+        },
+      )
+    }
+
     if (url.pathname === '/api/auth/callback/apple' || url.pathname === '/api/auth/callback/google') {
       return new Response(null, {
         status: 302,
@@ -63,6 +97,14 @@ vi.mock('../auth/better-auth', () => ({
     api: mockBetterAuthApi,
     handler: mockBetterAuthHandler,
   },
+}))
+
+vi.mock('../middleware/auth', () => ({
+  authJwtMiddleware: () =>
+    async (c: { set: (key: string, value: unknown) => void }, next: () => Promise<void>) => {
+      c.set('userId', '11111111-1111-4111-8111-111111111111')
+      await next()
+    },
 }))
 
 vi.mock('@hominem/services/redis', () => ({
@@ -130,6 +172,45 @@ describe('CLI auth bridge routes', () => {
     expect((forwardedRequest as Request).method).toBe('POST')
   })
 
+  test('preserves callback query params when proxying GET /api/auth/callback/apple', async () => {
+    mockBetterAuthHandler.mockClear()
+    const app = createServer()
+
+    const response = await app.request(
+      'http://localhost/api/auth/callback/apple?code=test-code-1&state=test-state-1&error_description=test',
+      {
+        method: 'GET',
+      },
+    )
+
+    expect(response.status).toBe(302)
+    expect(mockBetterAuthHandler).toHaveBeenCalled()
+
+    const [forwardedRequest] = mockBetterAuthHandler.mock.calls.at(-1) ?? []
+    expect(forwardedRequest).toBeTruthy()
+    const forwardedUrl = new URL((forwardedRequest as Request).url)
+    expect(forwardedUrl.searchParams.get('code')).toBe('test-code-1')
+    expect(forwardedUrl.searchParams.get('state')).toBe('test-state-1')
+    expect(forwardedUrl.searchParams.get('error_description')).toBe('test')
+  })
+
+  test('normalizes /api/auth/authorize to explicit redirect with state cookie', async () => {
+    const app = createServer()
+
+    const response = await app.request(
+      `http://localhost/api/auth/authorize?provider=apple&redirect_uri=${encodeURIComponent(
+        'https://auth.ponti.io/api/auth/mobile/callback?flow_id=test-flow',
+      )}`,
+      {
+        method: 'GET',
+      },
+    )
+
+    expect(response.status).toBe(302)
+    expect(response.headers.get('location')).toContain('appleid.apple.com')
+    expect(response.headers.get('set-cookie')).toContain('__Secure-better-auth.state=')
+  })
+
   test('rejects non-loopback redirect URIs on /api/auth/cli/authorize', async () => {
     const app = createServer()
 
@@ -176,7 +257,10 @@ describe('CLI auth bridge routes', () => {
       flow_id: string
     }
 
-    expect(authorizeBody.authorization_url).toContain('appleid.apple.com')
+    const authorizeStart = new URL(authorizeBody.authorization_url)
+    expect(authorizeStart.pathname).toBe('/api/auth/authorize')
+    expect(authorizeStart.searchParams.get('provider')).toBe('apple')
+    expect(authorizeStart.searchParams.get('redirect_uri')).toContain('/api/auth/cli/callback?flow_id=')
     expect(authorizeBody.flow_id.length).toBeGreaterThan(10)
 
     const callbackResponse = await app.request(
@@ -292,5 +376,34 @@ describe('CLI auth bridge routes', () => {
     const body = (await exchangeResponse.json()) as { error: string; message?: string }
     expect(body.error).toBe('invalid_grant')
     expect(body.message).toContain('PKCE verifier mismatch')
+  })
+
+  test('allows trusted web redirect URIs on /api/auth/link/google/start', async () => {
+    const app = createServer()
+
+    const response = await app.request(
+      `http://localhost/api/auth/link/google/start?redirect_uri=${encodeURIComponent('http://localhost:4444/account')}`,
+      {
+        method: 'POST',
+      },
+    )
+
+    expect(response.status).toBe(302)
+    expect(response.headers.get('location')).toContain('accounts.google.com')
+  })
+
+  test('rejects untrusted web redirect URIs on /api/auth/link/google/start', async () => {
+    const app = createServer()
+
+    const response = await app.request(
+      `http://localhost/api/auth/link/google/start?redirect_uri=${encodeURIComponent('https://evil.example.com/account')}`,
+      {
+        method: 'POST',
+      },
+    )
+
+    expect(response.status).toBe(400)
+    const body = (await response.json()) as { error: string }
+    expect(body.error).toBe('invalid_redirect_uri')
   })
 })

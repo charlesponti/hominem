@@ -1,5 +1,4 @@
 const MOBILE_CALLBACK_PATH = 'auth/callback'
-const MOBILE_CALLBACK_SCHEME = 'mindsherpa:'
 
 export interface ParsedMobileCallback {
   code: string
@@ -21,15 +20,18 @@ function getNormalizedCallbackPath(url: URL) {
 
 export function parseMobileAuthCallback(input: {
   callbackUrl: string
+  expectedRedirectUri: string
   expectedState: string
 }): ParsedMobileCallback {
   const url = toUrl(input.callbackUrl)
-  if (url.protocol !== MOBILE_CALLBACK_SCHEME) {
+  const expectedUrl = toUrl(input.expectedRedirectUri)
+  if (url.protocol !== expectedUrl.protocol) {
     throw new Error('Invalid mobile callback scheme')
   }
 
   const normalizedPath = getNormalizedCallbackPath(url)
-  if (normalizedPath !== MOBILE_CALLBACK_PATH) {
+  const expectedPath = getNormalizedCallbackPath(expectedUrl)
+  if (normalizedPath !== expectedPath || normalizedPath !== MOBILE_CALLBACK_PATH) {
     throw new Error('Invalid mobile callback path')
   }
 

@@ -19,6 +19,7 @@ const LoginSheet = () => {
         return
       }
 
+      console.error('[mobile-auth] Apple sign-in failed', error)
       captureException(error)
       Alert.alert('Sign in failed', 'Unable to authenticate. Please try again.')
       setAuthError('There was a problem signing in. Our team is working on it.')

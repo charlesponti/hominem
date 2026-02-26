@@ -8,6 +8,15 @@
 // Users & Auth
 export { users, account } from './users.schema';
 export { authSubjects, authSessions, authRefreshTokens, authPasskeys, authDeviceCodes } from './auth.schema';
+export {
+  betterAuthUser,
+  betterAuthSession,
+  betterAuthAccount,
+  betterAuthVerification,
+  betterAuthPasskey,
+  betterAuthApiKey,
+  betterAuthDeviceCode,
+} from './better-auth.schema';
 
 // Company & Organization
 export { companies } from './company.schema';

@@ -73,7 +73,26 @@ describe('better-auth-mobile token flows', () => {
     globalThis.fetch = (async () => new Response('denied', { status: 401 })) as typeof fetch
 
     await expect(mobileAuth.refreshMobileToken('bad-refresh')).rejects.toThrow(
-      'Refresh token request failed (401)',
+      'Refresh token request failed (401): denied',
     )
+  })
+
+  test('includes API error code and message when exchange fails', async () => {
+    globalThis.fetch = (async () =>
+      new Response(
+        JSON.stringify({
+          error: 'invalid_grant',
+          message: 'PKCE verifier mismatch.',
+        }),
+        { status: 400, headers: { 'content-type': 'application/json' } },
+      )) as typeof fetch
+
+    await expect(
+      mobileAuth.exchangeMobileAuthCode({
+        callbackUrl: 'mindsherpa://auth/callback?state=expected&code=code-123',
+        codeVerifier: 'v'.repeat(64),
+        expectedState: 'expected',
+      }),
+    ).rejects.toThrow('Mobile token exchange failed (400): invalid_grant: PKCE verifier mismatch.')
   })
 })

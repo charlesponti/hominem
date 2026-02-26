@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth'
+import type { BetterAuthOptions } from 'better-auth'
 import type { BetterAuthPlugin } from 'better-auth'
-import { memoryAdapter } from 'better-auth/adapters/memory'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import {
   apiKey,
   bearer,
@@ -12,6 +13,8 @@ import {
   oneTimeToken,
 } from 'better-auth/plugins'
 import { passkey } from '@better-auth/passkey'
+import { db } from '@hominem/db'
+import * as schema from '@hominem/db/schema/tables'
 
 import { env } from '../env'
 
@@ -71,6 +74,11 @@ function getAuthPlugins() {
       rpID: new URL(env.BETTER_AUTH_URL).hostname,
       rpName: 'Hominem',
       origin: [env.BETTER_AUTH_URL, env.FINANCE_URL, env.NOTES_URL, env.ROCCO_URL],
+      schema: {
+        passkey: {
+          modelName: 'betterAuthPasskey',
+        },
+      },
     }),
     jwt(),
     bearer({ requireSignature: true }),
@@ -82,11 +90,21 @@ function getAuthPlugins() {
     deviceAuthorization({
       expiresIn: '10m',
       interval: '5s',
+      schema: {
+        deviceCode: {
+          modelName: 'betterAuthDeviceCode',
+        },
+      },
     }),
     apiKey({
       defaultPrefix: 'hmn_',
       requireName: true,
       enableMetadata: true,
+      schema: {
+        apikey: {
+          modelName: 'betterAuthApiKey',
+        },
+      },
       keyExpiration: {
         defaultExpiresIn: 1000 * 60 * 60 * 24 * 90,
         minExpiresIn: 1,
@@ -122,21 +140,34 @@ function getAuthPlugins() {
   return plugins
 }
 
-/**
- * Phase-1 bootstrap instance.
- *
- * Runtime is intentionally backed by memory storage while we finalize
- * production Drizzle schemas and migration cutover.
- */
-export const betterAuthServer = betterAuth({
+const betterAuthOptions: BetterAuthOptions = {
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
   trustedOrigins: getTrustedOrigins(),
   advanced: getAdvancedOptions(),
-  database: memoryAdapter({}),
+  user: {
+    modelName: 'betterAuthUser',
+  },
+  session: {
+    modelName: 'betterAuthSession',
+  },
+  account: {
+    modelName: 'betterAuthAccount',
+  },
+  verification: {
+    modelName: 'betterAuthVerification',
+  },
   emailAndPassword: {
     enabled: false,
   },
   socialProviders: getSocialProviders(),
   plugins: getAuthPlugins(),
+}
+
+export const betterAuthServer = betterAuth({
+  ...betterAuthOptions,
+  database: drizzleAdapter(db, {
+    provider: 'pg',
+    schema,
+  }),
 })

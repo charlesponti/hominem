@@ -51,6 +51,11 @@ interface MobileSessionResponse {
   user: MobileSessionUser | null
 }
 
+interface ApiErrorPayload {
+  error?: string
+  message?: string
+}
+
 function toBase64Url(value: string) {
   return value
     .replace(BASE64URL_FROM_BASE64_REGEX, '-')
@@ -84,9 +89,56 @@ function toTokenPair(payload: MobileExchangeResponse): MobileTokenPair {
   }
 }
 
+function toErrorDetail(payload: ApiErrorPayload | null) {
+  if (!payload) {
+    return null
+  }
+
+  if (payload.error && payload.message) {
+    return `${payload.error}: ${payload.message}`
+  }
+
+  if (payload.message) {
+    return payload.message
+  }
+
+  if (payload.error) {
+    return payload.error
+  }
+
+  return null
+}
+
+async function getResponseErrorDetail(response: Response) {
+  const contentType = response.headers.get('content-type') ?? ''
+  if (contentType.includes('application/json')) {
+    const payload = (await response.json().catch(() => null)) as ApiErrorPayload | null
+    const detail = toErrorDetail(payload)
+    if (detail) {
+      return detail
+    }
+  }
+
+  const bodyText = await response.text().catch(() => '')
+  const trimmed = bodyText.trim()
+  if (!trimmed) {
+    return null
+  }
+
+  return trimmed.slice(0, 220)
+}
+
+async function throwRequestError(label: string, response: Response) {
+  const detail = await getResponseErrorDetail(response)
+  if (detail) {
+    throw new Error(`${label} failed (${response.status}): ${detail}`)
+  }
+
+  throw new Error(`${label} failed (${response.status})`)
+}
+
 export function getMobileRedirectUri() {
   return makeRedirectUri({
-    scheme: 'mindsherpa',
     path: MOBILE_CALLBACK_PATH,
   })
 }
@@ -112,7 +164,7 @@ export async function startAppleMobileAuth(): Promise<{
   })
 
   if (!response.ok) {
-    throw new Error(`Mobile authorize failed (${response.status})`)
+    await throwRequestError('Mobile authorize', response)
   }
 
   const payload = (await response.json()) as MobileAuthorizeResponse
@@ -135,6 +187,7 @@ export async function exchangeMobileAuthCode(input: {
   const redirectUri = getMobileRedirectUri()
   const { code } = parseMobileAuthCallback({
     callbackUrl: input.callbackUrl,
+    expectedRedirectUri: redirectUri,
     expectedState: input.expectedState,
   })
 
@@ -151,7 +204,7 @@ export async function exchangeMobileAuthCode(input: {
   })
 
   if (!response.ok) {
-    throw new Error(`Mobile token exchange failed (${response.status})`)
+    await throwRequestError('Mobile token exchange', response)
   }
 
   return toTokenPair((await response.json()) as MobileExchangeResponse)
@@ -170,7 +223,7 @@ export async function refreshMobileToken(refreshToken: string): Promise<MobileTo
   })
 
   if (!response.ok) {
-    throw new Error(`Refresh token request failed (${response.status})`)
+    await throwRequestError('Refresh token request', response)
   }
 
   return toTokenPair((await response.json()) as MobileExchangeResponse)
@@ -197,7 +250,7 @@ export async function signInMobileE2e(input?: {
   })
 
   if (!response.ok) {
-    throw new Error(`Mobile E2E login failed (${response.status})`)
+    await throwRequestError('Mobile E2E login', response)
   }
 
   return toTokenPair((await response.json()) as MobileE2eLoginResponse)

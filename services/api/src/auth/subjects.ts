@@ -16,6 +16,7 @@ interface EnsureOAuthSubjectUserInput {
 
 interface AuthUserRecord {
   id: string
+  betterAuthUserId: string | null
   email: string
   name: string | null
   image: string | null
@@ -29,6 +30,7 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
   const [bySubject] = await db
     .select({
       id: users.id,
+      betterAuthUserId: users.betterAuthUserId,
       email: users.email,
       name: users.name,
       image: users.image,
@@ -49,12 +51,28 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
     .limit(1)
 
   if (bySubject) {
+    if (!bySubject.betterAuthUserId) {
+      await db
+        .update(users)
+        .set({
+          betterAuthUserId: input.providerSubject,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(users.id, bySubject.id))
+
+      return {
+        ...bySubject,
+        betterAuthUserId: input.providerSubject,
+      }
+    }
+
     return bySubject
   }
 
   const [existingUser] = await db
     .select({
       id: users.id,
+      betterAuthUserId: users.betterAuthUserId,
       email: users.email,
       name: users.name,
       image: users.image,
@@ -74,6 +92,7 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
         .insert(users)
         .values({
           id: randomUUID(),
+          betterAuthUserId: input.providerSubject,
           email: input.email,
           name: input.name ?? null,
           image: input.image ?? null,
@@ -83,6 +102,7 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
         })
         .returning({
           id: users.id,
+          betterAuthUserId: users.betterAuthUserId,
           email: users.email,
           name: users.name,
           image: users.image,
@@ -95,6 +115,16 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
 
   if (!user) {
     throw new Error('failed_to_ensure_user')
+  }
+
+  if (!user.betterAuthUserId) {
+    await db
+      .update(users)
+      .set({
+        betterAuthUserId: input.providerSubject,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(users.id, user.id))
   }
 
   await db
@@ -134,9 +164,13 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
 
     return {
       ...user,
+      betterAuthUserId: user.betterAuthUserId ?? input.providerSubject,
       primaryAuthSubjectId: linkedSubject.id,
     }
   }
 
-  return user
+  return {
+    ...user,
+    betterAuthUserId: user.betterAuthUserId ?? input.providerSubject,
+  }
 }
