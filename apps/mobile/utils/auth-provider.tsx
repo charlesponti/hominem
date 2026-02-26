@@ -7,39 +7,25 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type PropsWithChildren,
 } from 'react'
 
+import { authClient } from '../lib/auth-client'
 import { LocalStore } from './local-store'
 import type { UserProfile } from './local-store/types'
 import {
   clearPersistedMobileRefreshToken,
-  exchangeMobileAuthCode,
-  fetchMobileSessionUser,
-  getMobileRedirectUri,
   getPersistedMobileRefreshToken,
   persistMobileRefreshToken,
-  refreshMobileToken,
   revokeMobileRefreshToken,
   signInMobileE2e,
-  startAppleMobileAuth,
-  type MobileTokenPair,
 } from './better-auth-mobile'
 import { E2E_TESTING } from './constants'
-import { extractSuccessfulAuthCallbackUrl } from './auth-provider-result'
 
 WebBrowser.maybeCompleteAuthSession()
 
 const LOCAL_MIGRATION_KEY = 'hominem_mobile_local_migration_v1'
-
-interface MobileSessionState {
-  accessToken: string
-  tokenType: string
-  expiresAtMs: number
-  expiresInSeconds: number
-}
 
 type AuthContextType = {
   isLoadingAuth: boolean
@@ -61,31 +47,27 @@ export const useAuth = () => {
 }
 
 const nowIso = () => new Date().toISOString()
-const REFRESH_PROACTIVE_WINDOW_MS = 120_000
-const REFRESH_JITTER_MS = 30_000
-
-function toSessionState(pair: MobileTokenPair): MobileSessionState {
-  return {
-    accessToken: pair.accessToken,
-    tokenType: pair.tokenType,
-    expiresInSeconds: pair.expiresIn,
-    expiresAtMs: Date.now() + pair.expiresIn * 1000,
-  }
-}
 
 function toUserProfile(input: {
   id: string
   email?: string | null
   name?: string | null
-  createdAt?: string | undefined
-  updatedAt?: string | undefined
+  createdAt?: Date | string | undefined
+  updatedAt?: Date | string | undefined
 }): UserProfile {
+  const toIso = (date: unknown): string => {
+    if (!date) return nowIso()
+    if (typeof date === 'string') return date
+    if (date instanceof Date) return date.toISOString()
+    return nowIso()
+  }
+
   return {
     id: input.id,
     email: input.email ?? null,
     name: input.name ?? null,
-    createdAt: input.createdAt ?? nowIso(),
-    updatedAt: input.updatedAt ?? nowIso(),
+    createdAt: toIso(input.createdAt),
+    updatedAt: toIso(input.updatedAt),
   }
 }
 
@@ -101,40 +83,12 @@ async function clearLegacyLocalDataOnce() {
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const router = useRouter()
-  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const refreshTokenRef = useRef<string | null>(null)
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true)
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
-  const [session, setSession] = useState<MobileSessionState | null>(null)
 
-  const clearRefreshTimer = useCallback(() => {
-    if (refreshTimeoutRef.current) {
-      clearTimeout(refreshTimeoutRef.current)
-      refreshTimeoutRef.current = null
-    }
-  }, [])
+  const { data: session, isPending: isLoadingAuth } = authClient.useSession()
 
-  const scheduleRefresh = useCallback(
-    (nextSession: MobileSessionState | null, refreshFn: () => Promise<unknown>) => {
-      clearRefreshTimer()
-      if (!nextSession) {
-        return
-      }
-
-      const jitter = Math.floor(Math.random() * REFRESH_JITTER_MS)
-      const refreshAt = nextSession.expiresAtMs - REFRESH_PROACTIVE_WINDOW_MS - jitter
-      const delayMs = Math.max(1_000, refreshAt - Date.now())
-
-      refreshTimeoutRef.current = setTimeout(() => {
-        void refreshFn()
-      }, delayMs)
-    },
-    [clearRefreshTimer]
-  )
-
-  const syncUserFromAccessToken = useCallback(async (accessToken: string) => {
-    const user = await fetchMobileSessionUser(accessToken)
-    if (!user) {
+  const syncUserFromSession = useCallback(async () => {
+    if (!session?.user) {
       setCurrentUser(null)
       return null
     }
@@ -143,134 +97,60 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     const local = await LocalStore.getUserProfile()
     const merged: UserProfile = {
-      ...toUserProfile(user),
+      ...toUserProfile(session.user),
       ...(local ?? {}),
-      id: user.id,
-      email: user.email ?? null,
-      name: user.name ?? null,
+      id: session.user.id,
+      email: session.user.email ?? null,
+      name: session.user.name ?? null,
       updatedAt: nowIso(),
     }
 
     const saved = await LocalStore.upsertUserProfile(merged)
     setCurrentUser(saved)
     return saved
-  }, [])
-
-  const applyTokenPair = useCallback(
-    async (pair: MobileTokenPair) => {
-      const nextSession = toSessionState(pair)
-      refreshTokenRef.current = pair.refreshToken
-      await persistMobileRefreshToken(pair.refreshToken)
-      setSession(nextSession)
-      await syncUserFromAccessToken(pair.accessToken)
-      return nextSession
-    },
-    [syncUserFromAccessToken]
-  )
-
-  const refreshFromStoredToken = useCallback(async () => {
-    const activeRefreshToken = refreshTokenRef.current
-    if (!activeRefreshToken) {
-      throw new Error('No refresh token available')
-    }
-
-    const pair = await refreshMobileToken(activeRefreshToken)
-    return applyTokenPair(pair)
-  }, [applyTokenPair])
+  }, [session])
 
   useEffect(() => {
-    let isMounted = true
-
-    LocalStore.initialize()
-      .then(async () => {
-        const storedRefreshToken = await getPersistedMobileRefreshToken()
-        if (!isMounted) {
-          return
-        }
-
-        refreshTokenRef.current = storedRefreshToken
-
-        if (!storedRefreshToken) {
-          setSession(null)
-          setCurrentUser(null)
-          setIsLoadingAuth(false)
-          return
-        }
-
-        try {
-          const pair = await refreshMobileToken(storedRefreshToken)
-          if (!isMounted) {
-            return
-          }
-          const nextSession = await applyTokenPair(pair)
-          if (!isMounted) {
-            return
-          }
-          scheduleRefresh(nextSession, refreshFromStoredToken)
-        } catch {
-          await clearPersistedMobileRefreshToken()
-          refreshTokenRef.current = null
-          if (!isMounted) {
-            return
-          }
-          setSession(null)
-          setCurrentUser(null)
-        } finally {
-          if (isMounted) {
-            setIsLoadingAuth(false)
-          }
-        }
-      })
-      .catch(() => {
-        if (!isMounted) {
-          return
-        }
-        setIsLoadingAuth(false)
-      })
-
-    return () => {
-      isMounted = false
-      clearRefreshTimer()
+    if (session?.user) {
+      void syncUserFromSession()
+    } else if (!session && !isLoadingAuth) {
+      setCurrentUser(null)
     }
-  }, [applyTokenPair, clearRefreshTimer, refreshFromStoredToken, scheduleRefresh])
+  }, [session, isLoadingAuth, syncUserFromSession])
+
+  useEffect(() => {
+    const restoreSession = async () => {
+      const storedRefreshToken = await getPersistedMobileRefreshToken()
+      if (storedRefreshToken) {
+        //
+      }
+    }
+    void restoreSession()
+  }, [])
 
   const signInWithApple = useCallback(async () => {
     if (E2E_TESTING) {
       const pair = await signInMobileE2e()
-      const nextSession = await applyTokenPair(pair)
-      scheduleRefresh(nextSession, refreshFromStoredToken)
+      await persistMobileRefreshToken(pair.refreshToken)
       router.replace('/(drawer)/(tabs)/start')
       return
     }
-
-    const { authorizationUrl, codeVerifier, state } = await startAppleMobileAuth()
-    const result = await WebBrowser.openAuthSessionAsync(authorizationUrl, getMobileRedirectUri())
-    const callbackUrl = extractSuccessfulAuthCallbackUrl(result)
-
-    const pair = await exchangeMobileAuthCode({
-      callbackUrl,
-      codeVerifier,
-      expectedState: state,
+    await authClient.signIn.social({
+      provider: 'apple',
+      callbackURL: '/',
     })
-
-    const nextSession = await applyTokenPair(pair)
-    scheduleRefresh(nextSession, refreshFromStoredToken)
-    router.replace('/(drawer)/(tabs)/start')
-  }, [applyTokenPair, refreshFromStoredToken, router, scheduleRefresh])
+  }, [router])
 
   const signOut = useCallback(async () => {
-    const activeRefreshToken = refreshTokenRef.current
-    if (activeRefreshToken) {
-      await revokeMobileRefreshToken(activeRefreshToken)
+    const storedRefreshToken = await getPersistedMobileRefreshToken()
+    if (storedRefreshToken) {
+      await revokeMobileRefreshToken(storedRefreshToken)
+      await clearPersistedMobileRefreshToken()
     }
-
-    refreshTokenRef.current = null
-    await clearPersistedMobileRefreshToken()
+    await authClient.signOut()
     await LocalStore.clearAllData()
-    clearRefreshTimer()
-    setSession(null)
     setCurrentUser(null)
-  }, [clearRefreshTimer])
+  }, [])
 
   const deleteAccount = useCallback(async () => {
     throw new Error('Account deletion is not available yet.')
@@ -281,13 +161,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       if (!currentUser) {
         throw new Error('No user profile found')
       }
-
       const merged: UserProfile = {
         ...currentUser,
         ...updates,
         updatedAt: nowIso(),
       }
-
       const saved = await LocalStore.upsertUserProfile(merged)
       setCurrentUser(saved)
       return saved
@@ -296,28 +174,16 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   )
 
   const getAccessToken = useCallback(async () => {
-    if (!session) {
+    if (!session?.user) {
       return null
     }
-
-    const msUntilExpiry = session.expiresAtMs - Date.now()
-    if (msUntilExpiry <= 60_000 && refreshTokenRef.current) {
-      try {
-        const nextSession = await refreshFromStoredToken()
-        scheduleRefresh(nextSession, refreshFromStoredToken)
-        return nextSession.accessToken
-      } catch {
-        return null
-      }
-    }
-
-    return session.accessToken
-  }, [refreshFromStoredToken, scheduleRefresh, session])
+    return session.user.id
+  }, [session])
 
   const value = useMemo(
     () => ({
       isLoadingAuth,
-      isSignedIn: Boolean(session?.accessToken && currentUser),
+      isSignedIn: Boolean(session?.user && currentUser),
       currentUser,
       signInWithApple,
       signOut,
