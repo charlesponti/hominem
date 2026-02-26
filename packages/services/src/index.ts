@@ -1,5 +1,4 @@
 export * from './bookmarks.service';
-export * from './google-calendar.service';
 export * from './people.service';
 export * from './possessions.service';
 export * from './tags.service';
