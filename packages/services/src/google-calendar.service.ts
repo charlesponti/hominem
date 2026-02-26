@@ -14,7 +14,95 @@ import { env } from './env';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
-type GoogleCalendarEvent = any; // calendar_v3.Schema$Event
+interface GoogleCalendarDateTime {
+  dateTime?: string | null;
+  date?: string | null;
+}
+
+interface GoogleCalendarEvent {
+  id?: string | null;
+  summary?: string | null;
+  description?: string | null;
+  updated?: string | null;
+  start?: GoogleCalendarDateTime | null;
+  end?: GoogleCalendarDateTime | null;
+}
+
+interface OAuthCredentials {
+  access_token?: string | null;
+  refresh_token?: string | null;
+  expiry_date?: number | null;
+}
+
+interface OAuthRefreshResult {
+  credentials: OAuthCredentials;
+}
+
+interface OAuth2ClientLike {
+  setCredentials: (credentials: OAuthCredentials) => void;
+  refreshAccessToken: () => Promise<OAuthRefreshResult>;
+}
+
+interface GoogleCalendarListParams {
+  calendarId: string;
+  timeMin: string;
+  maxResults: number;
+  singleEvents: boolean;
+  orderBy: 'startTime';
+  timeMax?: string;
+  pageToken?: string;
+}
+
+interface GoogleCalendarListResponse {
+  data: {
+    items?: GoogleCalendarEvent[] | null;
+    nextPageToken?: string | null;
+  };
+}
+
+interface GoogleCalendarCalendarListEntry {
+  id?: string | null;
+  summary?: string | null;
+}
+
+interface GoogleCalendarCalendarListResponse {
+  data: {
+    items?: GoogleCalendarCalendarListEntry[] | null;
+  };
+}
+
+interface GoogleCalendarEventsClient {
+  list: (params: GoogleCalendarListParams) => Promise<GoogleCalendarListResponse>;
+  update: (params: {
+    calendarId: string;
+    eventId: string;
+    requestBody: Record<string, JsonValue>;
+  }) => Promise<void>;
+  insert: (params: {
+    calendarId: string;
+    requestBody: Record<string, JsonValue>;
+  }) => Promise<{ data: { id?: string | null } }>;
+  delete: (params: { calendarId: string; eventId: string }) => Promise<void>;
+}
+
+interface GoogleCalendarClientLike {
+  events: GoogleCalendarEventsClient;
+  calendarList: {
+    list: () => Promise<GoogleCalendarCalendarListResponse>;
+  };
+}
+
+interface GoogleApisLike {
+  auth?: {
+    OAuth2?: new (clientId: string, clientSecret: string, redirectUri: string) => OAuth2ClientLike;
+  };
+  calendar: (params: { version: 'v3'; auth: OAuth2ClientLike }) => GoogleCalendarClientLike;
+}
+
+interface GoogleApisModuleLike {
+  google: GoogleApisLike;
+}
+
 type DbEventWithTimestamps = DbEventOutput & {
   createdAt?: string | Date | null;
   updatedAt?: string | Date | null;
@@ -178,29 +266,36 @@ export function convertGoogleCalendarEvent(
 }
 
 export class GoogleCalendarService {
-  private oauth2Client: any; // Auth.OAuth2Client
-  private calendar: any; // calendar_v3.Calendar
+  private oauth2Client: OAuth2ClientLike;
+  private calendar: GoogleCalendarClientLike;
   private userId: string;
 
   constructor(userId: string, tokens: GoogleTokens) {
     this.userId = userId;
+    const clientId = env.GOOGLE_CLIENT_ID;
+    const clientSecret = env.GOOGLE_CLIENT_SECRET;
+    const redirectUri = env.GOOGLE_REDIRECT_URI;
+    if (!clientId || !clientSecret || !redirectUri) {
+      throw new Error('Google OAuth configuration is not set');
+    }
 
     // Load googleapis lazily to avoid type graph construction
-    const google = require('googleapis').google;
+    const google = (require('googleapis') as GoogleApisModuleLike).google;
+    const OAuth2Ctor = google?.auth?.OAuth2;
     if (!OAuth2Ctor) throw new Error('OAuth2 constructor not found on googleapis package');
 
     this.oauth2Client = new OAuth2Ctor(
-      env.GOOGLE_CLIENT_ID,
-      env.GOOGLE_CLIENT_SECRET,
-      env.GOOGLE_REDIRECT_URI,
+      clientId,
+      clientSecret,
+      redirectUri,
     );
 
     // If constructed instance is missing expected helpers (happens when mocks differ),
     // attach safe no-ops so tests won't throw during construction.
     if (typeof this.oauth2Client?.setCredentials !== 'function') {
       // attach no-op fallbacks (keeps constructor safe for tests)
-      this.oauth2Client.setCredentials = () => undefined as any;
-      this.oauth2Client.refreshAccessToken = async () => ({ credentials: {} }) as any;
+      this.oauth2Client.setCredentials = () => undefined;
+      this.oauth2Client.refreshAccessToken = async () => ({ credentials: {} });
     }
 
     const credentials: { access_token: string; refresh_token?: string | null } = {
@@ -239,7 +334,7 @@ export class GoogleCalendarService {
       const timeMinParam = timeMin || new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
 
       do {
-        const listParams: any = {
+        const listParams: GoogleCalendarListParams = {
           calendarId,
           timeMin: timeMinParam,
           maxResults: 2500,
@@ -532,7 +627,10 @@ export class GoogleCalendarService {
       const response = await this.calendar.calendarList.list();
       return (
         response.data.items
-          ?.filter((item: any): item is any => Boolean(item.id && item.summary))
+          ?.filter(
+            (item): item is { id: string; summary: string } =>
+              typeof item?.id === 'string' && typeof item.summary === 'string',
+          )
           .map((item) => ({
             id: item.id,
             summary: item.summary,
@@ -576,14 +674,21 @@ export async function refreshGoogleToken(
   refreshToken: string,
 ): Promise<{ accessToken: string; expiresIn: number } | null> {
   try {
-    const google = require('googleapis').google;
+    const clientId = env.GOOGLE_CLIENT_ID;
+    const clientSecret = env.GOOGLE_CLIENT_SECRET;
+    const redirectUri = env.GOOGLE_REDIRECT_URI;
+    if (!clientId || !clientSecret || !redirectUri) {
+      throw new Error('Google OAuth configuration is not set');
+    }
+
+    const google = (require('googleapis') as GoogleApisModuleLike).google;
     const OAuth2Ctor = google?.auth?.OAuth2;
     if (!OAuth2Ctor) throw new Error('OAuth2 constructor not found on googleapis package');
 
     const oauth2Client = new OAuth2Ctor(
-      env.GOOGLE_CLIENT_ID,
-      env.GOOGLE_CLIENT_SECRET,
-      env.GOOGLE_REDIRECT_URI,
+      clientId,
+      clientSecret,
+      redirectUri,
     );
 
     oauth2Client.setCredentials({

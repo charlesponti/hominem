@@ -2,24 +2,13 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'bun:test'
 
-const CLI_ROOT = path.resolve(process.cwd(), 'tools/type-audit-cli')
+const CLI_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const CLI_DIST_ENTRY = path.join(CLI_ROOT, 'dist', 'index.js')
-let isBuilt = false
 
 function runCli(args: string[], cwd = CLI_ROOT) {
-  if (!isBuilt) {
-    const build = spawnSync('bun', ['run', 'build'], {
-      cwd: CLI_ROOT,
-      encoding: 'utf-8'
-    })
-    if (build.status !== 0) {
-      throw new Error(`Failed to build type-audit CLI for tests: ${build.stderr || build.stdout}`)
-    }
-    isBuilt = true
-  }
-
   return spawnSync('node', [CLI_DIST_ENTRY, ...args], {
     cwd,
     encoding: 'utf-8'

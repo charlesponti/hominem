@@ -601,7 +601,17 @@ export async function refreshAllPlaces() {
   for (const placeRecord of places) {
     try {
       // Fetch latest data from Google Maps API
-      const googleData = await googlePlaces.getDetails({
+      const googleData: {
+        id?: string;
+        displayName?: { text?: string | null } | null;
+        formattedAddress?: string | null;
+        location?: { latitude?: number | null; longitude?: number | null } | null;
+        types?: string[] | null;
+        nationalPhoneNumber?: string | null;
+        websiteUri?: string | null;
+        priceLevel?: string | number | null;
+        photos?: Array<{ name?: string | null }> | null;
+      } = await googlePlaces.getDetails({
         placeId: placeRecord.googleMapsId,
       });
 
@@ -613,7 +623,7 @@ export async function refreshAllPlaces() {
       const photoNames =
         googleData.photos
           ?.map((photo: { name?: string | null }) => photo.name)
-          .filter((name): name is string => typeof name === 'string' && name.length > 0) ?? [];
+          .filter((name: string | null | undefined): name is string => typeof name === 'string' && name.length > 0) ?? [];
 
       const priceLevel = googleData.priceLevel;
       const normalizedPriceLevel =

@@ -3,8 +3,30 @@ import { redis } from '@hominem/services/redis';
 import { logger } from '@hominem/utils/logger';
 
 // Minimal types to avoid loading heavy googleapis type system
-type GooglePlaceData = any;
-type GooglePlacesClient = any;
+type GooglePlacesClient = {
+  places: {
+    get: (
+      params: { name: string },
+      options: { headers: { 'X-Goog-FieldMask': string } },
+    ) => Promise<{ data: GooglePlaceDetailsResponse | null | undefined }>;
+    searchText: (
+      params: { requestBody: Record<string, unknown> },
+      options: { headers: { 'X-Goog-FieldMask': string } },
+    ) => Promise<{ data: { places?: GooglePlacesApiResponse[] } }>;
+    autocomplete: (
+      params: { requestBody: Record<string, unknown> },
+      options: { headers: { 'X-Goog-FieldMask': string } },
+    ) => Promise<{ data: { suggestions?: GooglePlacePrediction[] } }>;
+    photos: {
+      getMedia: (params: {
+        name: string;
+        maxWidthPx: number;
+        maxHeightPx: number;
+        skipHttpRedirect: boolean;
+      }) => Promise<{ data: { photoUri?: string | null } }>;
+    };
+  };
+};
 
 export type SearchPlacesOptions = {
   query: string;
@@ -59,7 +81,9 @@ export type GooglePlacePrediction = {
   priceLevel?: string | number | null | undefined;
 };
 
-export type GooglePlacesApiResponse = any;
+export type GooglePlacesApiResponse = {
+  [key: string]: unknown;
+};
 
 export type GooglePlaceData = {
   id: string;
@@ -80,9 +104,28 @@ export type GooglePlaceData = {
   priceLevel?: number | null;
 };
 
-export type GoogleAddressComponent = any;
-export type GooglePlacePhoto = any;
-export type GooglePlaceDetailsResponse = any;
+export type GoogleAddressComponent = {
+  types?: string[];
+  longText?: string | null;
+  [key: string]: unknown;
+};
+export type GooglePlacePhoto = {
+  name?: string;
+  [key: string]: unknown;
+};
+export type GooglePlaceDetailsResponse = {
+  id?: string;
+  displayName?: { text?: string | null };
+  formattedAddress?: string | null;
+  location?: { latitude?: number | null; longitude?: number | null };
+  types?: string[] | null;
+  nationalPhoneNumber?: string | null;
+  websiteUri?: string | null;
+  priceLevel?: string | number | null;
+  photos?: GooglePlacePhoto[];
+  addressComponents?: GoogleAddressComponent[];
+  [key: string]: unknown;
+};
 
 const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours for persistent cache
 
@@ -103,7 +146,9 @@ const createPlacesClient = () => {
   }
 
   // Type system avoids googleapis imports to prevent type graph construction
-  const google = require('googleapis').google;
+  const google = (require('googleapis') as {
+    google: { places: (params: { version: string; auth: string }) => GooglePlacesClient };
+  }).google;
 
   cachedPlacesClient = google.places({
     version: 'v1',
@@ -192,14 +237,14 @@ const getDetails = async ({
   placeId,
   fieldMask = DEFAULT_DETAILS_FIELD_MASK,
   forceFresh,
-}: PlaceDetailsOptions): Promise<any> => {
+}: PlaceDetailsOptions): Promise<GooglePlaceDetailsResponse> => {
   const cacheKey = buildCacheKey({
     path: 'places-details',
     placeId,
     fieldMask,
   });
 
-  const cached = !forceFresh ? await readCache<any>(cacheKey) : null;
+  const cached = !forceFresh ? await readCache<GooglePlaceDetailsResponse>(cacheKey) : null;
   if (cached) {
     return cached;
   }
@@ -230,8 +275,8 @@ const search = async ({
   fieldMask = DEFAULT_SEARCH_FIELD_MASK,
   maxResultCount = 10,
   forceFresh,
-}: SearchPlacesOptions): Promise<any[]> => {
-  const body: any = {
+}: SearchPlacesOptions): Promise<GooglePlacesApiResponse[]> => {
+  const body: Record<string, unknown> = {
     textQuery: query,
     maxResultCount,
   };
@@ -256,7 +301,7 @@ const search = async ({
     maxResultCount,
   });
 
-  const cached = !forceFresh ? await readCache<any[]>(cacheKey) : null;
+  const cached = !forceFresh ? await readCache<GooglePlacesApiResponse[]>(cacheKey) : null;
   if (cached) {
     return cached;
   }
@@ -283,8 +328,8 @@ const autocomplete = async ({
   locationBias,
   includeQueryPredictions,
   includedPrimaryTypes,
-}: AutocompleteOptions): Promise<any[]> => {
-  const body: any = { input };
+}: AutocompleteOptions): Promise<GooglePlacePrediction[]> => {
+  const body: Record<string, unknown> = { input };
 
   if (sessionToken) {
     body.sessionToken = sessionToken;
@@ -381,6 +426,9 @@ export const getNeighborhoodFromAddressComponents = (
 };
 
 export const googlePlacesTestUtils = {
+  setClient: (client: GooglePlacesClient) => {
+    cachedPlacesClient = client;
+  },
   clearCache: async () => {
     const keys = await redis.keys('google-places:*');
     if (keys.length > 0) {

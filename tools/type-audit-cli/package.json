@@ -41,7 +41,7 @@
     "clean": "rm -rf dist *.tgz",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && mkdir -p dist/templates && cp src/templates/type-dashboard.html dist/templates/type-dashboard.html",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
-    "test": "bun test",
+    "test": "bun run build && bun test",
     "dev": "bun src/index.ts --help",
     "prepack": "npm run build",
     "prepublishOnly": "npm run test && npm run typecheck && npm run build"

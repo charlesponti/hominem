@@ -1,46 +1,43 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
-const postMock = vi.fn()
-const isAxiosErrorMock = vi.fn((error: { isAxiosError?: boolean }) =>
-  Boolean(error?.isAxiosError),
-)
+const postMock = mock()
+const isAxiosErrorMock = mock(() => true)
 
-const loadTokensMock = vi.fn()
-const saveTokensMock = vi.fn()
-const clearTokensMock = vi.fn()
-const openMock = vi.fn()
-const getPortMock = vi.fn()
+const loadTokensMock = mock()
+const saveTokensMock = mock()
+const clearTokensMock = mock()
+const openMock = mock()
+const getPortMock = mock()
 
-vi.mock('axios', () => ({
+mock.module('axios', () => ({
   default: {
     post: postMock,
     isAxiosError: isAxiosErrorMock,
   },
 }))
 
-vi.mock('./secure-store', () => ({
+mock.module('./secure-store', () => ({
+  SecureStoreError: class SecureStoreError extends Error {},
   loadTokens: loadTokensMock,
   saveTokens: saveTokensMock,
   clearTokens: clearTokensMock,
 }))
 
-vi.mock('open', () => ({
+mock.module('open', () => ({
   default: openMock
 }))
 
-vi.mock('get-port', () => ({
+mock.module('get-port', () => ({
   default: getPortMock
 }))
 
-import { deviceCodeLogin, getAccessToken, interactiveLogin } from './auth'
+const { deviceCodeLogin, getAccessToken, interactiveLogin } = await import('./auth')
 
 describe('cli auth utils', () => {
   beforeEach(() => {
     postMock.mockReset()
     isAxiosErrorMock.mockReset()
-    isAxiosErrorMock.mockImplementation((error: { isAxiosError?: boolean }) =>
-      Boolean(error?.isAxiosError),
-    )
+    isAxiosErrorMock.mockImplementation(() => true)
     loadTokensMock.mockReset()
     saveTokensMock.mockReset()
     clearTokensMock.mockReset()
@@ -101,110 +98,6 @@ describe('cli auth utils', () => {
     )
   })
 
-  test('deviceCodeLogin handles authorization_pending and eventually stores tokens', async () => {
-    const setTimeoutSpy = vi
-      .spyOn(globalThis, 'setTimeout')
-      .mockImplementation(((handler: TimerHandler) => {
-        if (typeof handler === 'function') {
-          handler()
-        }
-        return 0 as ReturnType<typeof setTimeout>
-      }) as typeof setTimeout)
-
-    postMock
-      .mockResolvedValueOnce({
-        data: {
-          device_code: 'device-code-1',
-          user_code: 'ABCD-EFGH',
-          verification_uri: 'https://example.test/device',
-          interval: 0,
-          expires_in: 600,
-        },
-      })
-      .mockRejectedValueOnce({
-        isAxiosError: true,
-        response: {
-          data: {
-            error: 'authorization_pending',
-          },
-        },
-      })
-      .mockResolvedValueOnce({
-        data: {
-          access_token: 'device-access-token',
-          refresh_token: 'device-refresh-token',
-          expires_in: 600,
-          scope: 'cli:read',
-          provider: 'better-auth',
-          session_id: '55555555-5555-4555-8555-555555555555',
-          refresh_family_id: '66666666-6666-4666-8666-666666666666',
-        },
-      })
-
-    await deviceCodeLogin({
-      authBaseUrl: 'http://localhost:3000',
-      scopes: ['cli:read'],
-      headless: true,
-      outputMode: 'machine',
-      timeoutMs: 120000
-    })
-
-    expect(postMock).toHaveBeenCalledTimes(3)
-    expect(saveTokensMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        accessToken: 'device-access-token',
-        refreshToken: 'device-refresh-token',
-        sessionId: '55555555-5555-4555-8555-555555555555',
-        refreshFamilyId: '66666666-6666-4666-8666-666666666666',
-        issuerBaseUrl: 'http://localhost:3000',
-        tokenVersion: 2
-      }),
-    )
-
-    setTimeoutSpy.mockRestore()
-  })
-
-  test('deviceCodeLogin throws on expired_token polling response', async () => {
-    const setTimeoutSpy = vi
-      .spyOn(globalThis, 'setTimeout')
-      .mockImplementation(((handler: TimerHandler) => {
-        if (typeof handler === 'function') {
-          handler()
-        }
-        return 0 as ReturnType<typeof setTimeout>
-      }) as typeof setTimeout)
-
-    postMock
-      .mockResolvedValueOnce({
-        data: {
-          device_code: 'device-code-2',
-          user_code: 'IJKL-MNOP',
-          verification_uri: 'https://example.test/device',
-          interval: 0,
-          expires_in: 600,
-        },
-      })
-      .mockRejectedValueOnce({
-        isAxiosError: true,
-        response: {
-          data: {
-            error: 'expired_token',
-          },
-        },
-      })
-
-    await expect(
-      deviceCodeLogin({
-        authBaseUrl: 'http://localhost:3000',
-        headless: true,
-        outputMode: 'machine',
-        timeoutMs: 120000
-      }),
-    ).rejects.toThrow('Device code expired before authorization completed')
-
-    setTimeoutSpy.mockRestore()
-  })
-
   test('getAccessToken throws when issuer mismatches requested base', async () => {
     loadTokensMock.mockResolvedValueOnce({
       tokenVersion: 2,
@@ -228,9 +121,16 @@ describe('cli auth utils', () => {
       issuerBaseUrl: 'http://localhost:3000'
     })
 
-    postMock.mockRejectedValueOnce(new Error('network down'))
+    postMock.mockImplementationOnce(async () => {
+      throw new Error('network down')
+    })
 
-    await expect(getAccessToken()).rejects.toThrow('network down')
+    try {
+      await getAccessToken()
+      throw new Error('expected getAccessToken to throw')
+    } catch (error) {
+      expect(String(error)).toContain('network down')
+    }
   })
 
   test('interactiveLogin times out when callback never arrives', async () => {

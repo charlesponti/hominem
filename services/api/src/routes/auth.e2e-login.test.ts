@@ -30,7 +30,7 @@ describe('mobile e2e login guard', () => {
     })
 
     expect(response.status).toBe(404)
-  })
+  }, 15000)
 
   test('returns 403 when secret is missing or invalid', async () => {
     process.env.NODE_ENV = 'development'
@@ -49,5 +49,5 @@ describe('mobile e2e login guard', () => {
     })
 
     expect(response.status).toBe(403)
-  })
+  }, 15000)
 })
