@@ -1,6 +1,7 @@
 import type { BetterAuthOptions } from 'better-auth';
 import type { BetterAuthPlugin } from 'better-auth';
 
+import { expo } from '@better-auth/expo';
 import { passkey } from '@better-auth/passkey';
 import { db } from '@hominem/db';
 import * as schema from '@hominem/db/schema/tables';
@@ -19,8 +20,18 @@ import {
 
 import { env } from '../env';
 
+
+
 function getTrustedOrigins() {
-  const origins = new Set([env.BETTER_AUTH_URL, env.FINANCE_URL, env.NOTES_URL, env.ROCCO_URL]);
+  const origins = new Set([
+    env.BETTER_AUTH_URL,
+    env.FINANCE_URL,
+    env.NOTES_URL,
+    env.ROCCO_URL,
+    'hakumi://',
+    'hakumi-dev://',
+    'exp://',
+  ]);
   return [...origins];
 }
 
@@ -71,6 +82,7 @@ function getSocialProviders() {
 
 function getAuthPlugins() {
   const plugins: BetterAuthPlugin[] = [
+    expo(),
     passkey({
       rpID: new URL(env.BETTER_AUTH_URL).hostname,
       rpName: 'Hominem',
