@@ -43,7 +43,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     plugins: [
       'expo-router',
       [
-        'expo-dev-launcher',
+        'expo-dev-client',
         {
           launchMode: 'most-recent',
         },
