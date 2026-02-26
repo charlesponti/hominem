@@ -23,9 +23,12 @@ import {
   persistMobileRefreshToken,
   refreshMobileToken,
   revokeMobileRefreshToken,
+  signInMobileE2e,
   startAppleMobileAuth,
   type MobileTokenPair,
 } from './better-auth-mobile'
+import { E2E_TESTING } from './constants'
+import { extractSuccessfulAuthCallbackUrl } from './auth-provider-result'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -232,20 +235,20 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   }, [applyTokenPair, clearRefreshTimer, refreshFromStoredToken, scheduleRefresh])
 
   const signInWithApple = useCallback(async () => {
-    const { authorizationUrl, codeVerifier, state } = await startAppleMobileAuth()
-    const result = await WebBrowser.openAuthSessionAsync(authorizationUrl, getMobileRedirectUri())
-
-    if (result.type !== 'success' || !result.url) {
-      if (result.type === 'cancel' || result.type === 'dismiss') {
-        const canceled = new Error('OAuth sign-in cancelled')
-        canceled.name = 'ERR_REQUEST_CANCELED'
-        throw canceled
-      }
-      throw new Error('OAuth sign-in failed')
+    if (E2E_TESTING) {
+      const pair = await signInMobileE2e()
+      const nextSession = await applyTokenPair(pair)
+      scheduleRefresh(nextSession, refreshFromStoredToken)
+      router.replace('/(drawer)/(tabs)/start')
+      return
     }
 
+    const { authorizationUrl, codeVerifier, state } = await startAppleMobileAuth()
+    const result = await WebBrowser.openAuthSessionAsync(authorizationUrl, getMobileRedirectUri())
+    const callbackUrl = extractSuccessfulAuthCallbackUrl(result)
+
     const pair = await exchangeMobileAuthCode({
-      callbackUrl: result.url,
+      callbackUrl,
       codeVerifier,
       expectedState: state,
     })

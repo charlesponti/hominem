@@ -9,7 +9,8 @@
       "distribution": "internal",
       "env": {
         "NODE_ENV": "development",
-        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:4040"
+        "EXPO_PUBLIC_API_BASE_URL": "https://auth.ponti.io",
+        "EXPO_PUBLIC_E2E_TESTING": "false"
       }
     },
     "simulator": {
@@ -17,6 +18,7 @@
       "developmentClient": true,
       "env": {
         "NODE_ENV": "development",
+        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:4040",
         "EXPO_PUBLIC_E2E_TESTING": "true"
       },
       "extends": "development",

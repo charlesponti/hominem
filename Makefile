@@ -14,7 +14,7 @@ APPLE_EXPIRES_DAYS ?= 150
 APPLE_KEY_ID ?= 2438T5MGLH
 
 # Phony targets
-.PHONY: install start dev build test lint format clean docker-up docker-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live
+.PHONY: install start dev build test lint format clean docker-up docker-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios
 
 # Install dependencies
 install:
@@ -109,6 +109,15 @@ auth-e2e:
 
 auth-e2e-live:
 	@bun run test:e2e:auth:live
+
+auth-e2e-live-local:
+	@bun run test:e2e:auth:live:local
+
+mobile-test-e2e-preflight:
+	@bun run --filter @hominem/mobile test:e2e:preflight
+
+mobile-build-dev-ios:
+	@bun run --filter @hominem/mobile build:dev:ios
 
 lbt:
 	@echo "Running lint..."

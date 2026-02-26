@@ -4,13 +4,16 @@ import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { and, db, eq, isNull } from '@hominem/db'
 import { authSubjects } from '@hominem/db/schema/auth'
+import { users } from '@hominem/db/schema/users'
 import { createHash, randomBytes } from 'node:crypto'
 
 import type { AppEnv } from '../server'
 
 import { betterAuthServer } from '../auth/better-auth'
 import { getJwks } from '../auth/key-store'
+import { env } from '../env'
 import {
+  createE2eTokenPairForUser,
   createTokenPairForUser,
   revokeByRefreshToken,
   revokeSession,
@@ -18,6 +21,7 @@ import {
 } from '../auth/session-store'
 import { ensureOAuthSubjectUser } from '../auth/subjects'
 import { issueAccessToken, verifyAccessToken } from '../auth/tokens'
+import { logger } from '@hominem/utils/logger'
 
 export const authRoutes = new Hono<AppEnv>()
 
@@ -70,6 +74,11 @@ const mobileExchangeSchema = z.object({
   redirect_uri: z.string().url(),
 })
 
+const mobileE2eLoginSchema = z.object({
+  email: z.string().email().optional(),
+  name: z.string().min(1).max(128).optional(),
+})
+
 const cliAuthorizeSchema = z.object({
   redirect_uri: z.string().url(),
   code_challenge: z.string().min(43).max(128),
@@ -106,6 +115,8 @@ const AUTH_DEVICE_CODE_LIMIT_WINDOW_SECONDS = 10 * 60
 const AUTH_DEVICE_CODE_LIMIT_MAX = 10
 const AUTH_DEVICE_TOKEN_LIMIT_WINDOW_SECONDS = 10 * 60
 const AUTH_DEVICE_TOKEN_LIMIT_MAX = 120
+const AUTH_E2E_LOGIN_LIMIT_WINDOW_SECONDS = 60
+const AUTH_E2E_LOGIN_LIMIT_MAX = 20
 
 interface AuthRateLimitInput {
   bucket: string
@@ -132,6 +143,16 @@ interface MobileExchangePayload {
     sessionId: string
     refreshFamilyId: string
   }
+}
+
+interface MobileE2eLoginResponse {
+  access_token: string
+  refresh_token: string
+  token_type: string
+  expires_in: number
+  session_id: string
+  refresh_family_id: string
+  provider: 'better-auth'
 }
 
 interface CliFlowPayload {
@@ -223,6 +244,10 @@ function parseCliScopes(scope: string | undefined) {
     return CLI_DEFAULT_SCOPES
   }
   return [...new Set(filtered)]
+}
+
+function isE2eAuthEnabled() {
+  return env.AUTH_E2E_ENABLED && env.NODE_ENV !== 'production'
 }
 
 function appendQueryParams(baseUrl: string, params: Record<string, string>) {
@@ -624,6 +649,88 @@ authRoutes.post('/mobile/exchange', zValidator('json', mobileExchangeSchema), as
     session_id: exchange.token.sessionId,
     refresh_family_id: exchange.token.refreshFamilyId,
   })
+})
+
+authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), async (c) => {
+  const clientIp = getClientIp(c)
+
+  if (!isE2eAuthEnabled()) {
+    logger.warn('[auth:e2e:mobile] denied because E2E auth is disabled', {
+      clientIp,
+      nodeEnv: env.NODE_ENV,
+    })
+    return c.json({ error: 'not_found' }, 404)
+  }
+
+  const providedSecret = c.req.header('x-e2e-auth-secret')
+  if (!providedSecret || !env.AUTH_E2E_SECRET || providedSecret !== env.AUTH_E2E_SECRET) {
+    logger.warn('[auth:e2e:mobile] denied because secret header is invalid', {
+      clientIp,
+    })
+    return c.json({ error: 'forbidden' }, 403)
+  }
+
+  const e2eLoginRateLimit = await enforceAuthRateLimit(c, {
+    bucket: 'mobile-e2e-login',
+    identifier: getClientIp(c),
+    windowSec: AUTH_E2E_LOGIN_LIMIT_WINDOW_SECONDS,
+    max: AUTH_E2E_LOGIN_LIMIT_MAX,
+  })
+  if (e2eLoginRateLimit) {
+    return e2eLoginRateLimit
+  }
+
+  const payload = c.req.valid('json')
+  const email = payload.email ?? 'mobile-e2e@hominem.local'
+  const name = payload.name ?? 'Mobile E2E User'
+  const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 16)
+
+  const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1)
+  const user =
+    existingUser ??
+    (
+      await db
+        .insert(users)
+        .values({
+          email,
+          name,
+          isAdmin: false,
+        })
+        .returning()
+    )[0]
+
+  if (!user) {
+    logger.error('[auth:e2e:mobile] failed to create or fetch user', {
+      clientIp,
+      emailHash,
+    })
+    return c.json({ error: 'e2e_user_create_failed' }, 500)
+  }
+
+  const tokenPair = await createE2eTokenPairForUser({
+    userId: user.id,
+    role: user.isAdmin ? 'admin' : 'user',
+  })
+
+  logger.info('[auth:e2e:mobile] issued token pair', {
+    clientIp,
+    emailHash,
+    userId: user.id,
+    sessionId: tokenPair.sessionId,
+    refreshFamilyId: tokenPair.refreshFamilyId,
+  })
+
+  const response: MobileE2eLoginResponse = {
+    access_token: tokenPair.accessToken,
+    refresh_token: tokenPair.refreshToken,
+    token_type: tokenPair.tokenType,
+    expires_in: tokenPair.expiresIn,
+    session_id: tokenPair.sessionId,
+    refresh_family_id: tokenPair.refreshFamilyId,
+    provider: 'better-auth',
+  }
+
+  return c.json(response)
 })
 
 authRoutes.post('/cli/authorize', zValidator('json', cliAuthorizeSchema), async (c) => {

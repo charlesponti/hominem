@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const postMock = vi.hoisted(() => vi.fn())
-const isAxiosErrorMock = vi.hoisted(() => vi.fn((error: unknown) => Boolean((error as { isAxiosError?: boolean })?.isAxiosError)))
+const postMock = vi.fn()
+const isAxiosErrorMock = vi.fn((error: unknown) =>
+  Boolean((error as { isAxiosError?: boolean })?.isAxiosError),
+)
 
-const loadTokensMock = vi.hoisted(() => vi.fn())
-const saveTokensMock = vi.hoisted(() => vi.fn())
-const clearTokensMock = vi.hoisted(() => vi.fn())
+const loadTokensMock = vi.fn()
+const saveTokensMock = vi.fn()
+const clearTokensMock = vi.fn()
 
 vi.mock('axios', () => ({
   default: {
@@ -89,7 +91,7 @@ describe('cli auth utils', () => {
           handler()
         }
         return 0 as unknown as ReturnType<typeof setTimeout>
-      }) as typeof setTimeout)
+      }) as unknown as typeof setTimeout)
 
     postMock
       .mockResolvedValueOnce({
@@ -148,7 +150,7 @@ describe('cli auth utils', () => {
           handler()
         }
         return 0 as unknown as ReturnType<typeof setTimeout>
-      }) as typeof setTimeout)
+      }) as unknown as typeof setTimeout)
 
     postMock
       .mockResolvedValueOnce({

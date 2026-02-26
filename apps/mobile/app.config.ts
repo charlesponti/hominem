@@ -7,10 +7,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   let name: string
 
   switch (NODE_ENV) {
-    // case "development":
-    //   bundleIdentifier = "com.pontistudios.mindsherpa.dev";
-    //   name = "mindsherpa-dev";
-    //   break;
+    case 'development':
+    case 'test':
+      bundleIdentifier = 'com.pontistudios.mindsherpa.dev'
+      name = 'hakumi-dev'
+      break
     case 'preview':
     case 'production':
     default:
@@ -65,8 +66,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
               },
             },
             entitlements: {
-                'keychain-access-groups': [
-                '$(AppIdentifierPrefix)com.pontistudios.hakumi',
+              'keychain-access-groups': [
+                `$(AppIdentifierPrefix)${bundleIdentifier}`,
               ],
             },
           },
@@ -120,6 +121,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     extra: {
       apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
+      e2eAuthSecret: process.env.EXPO_PUBLIC_E2E_AUTH_SECRET,
       aiSdkChatWebEnabled: process.env.EXPO_PUBLIC_AI_SDK_CHAT_WEB_ENABLED,
       aiSdkChatMobileEnabled: process.env.EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED,
       aiSdkTranscribeEnabled: process.env.EXPO_PUBLIC_AI_SDK_TRANSCRIBE_ENABLED,

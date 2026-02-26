@@ -1,13 +1,12 @@
-import * as Linking from 'expo-linking'
 import * as SecureStore from 'expo-secure-store'
 import { makeRedirectUri } from 'expo-auth-session'
 import { CryptoDigestAlgorithm, CryptoEncoding, digestStringAsync, randomUUID } from 'expo-crypto'
 
-import { API_BASE_URL } from './constants'
+import { API_BASE_URL, E2E_AUTH_SECRET } from './constants'
+import { parseMobileAuthCallback } from './mobile-auth-callback'
 
 const SECURE_STORE_REFRESH_TOKEN_KEY = 'hominem.auth.refresh_token'
 const MOBILE_CALLBACK_PATH = 'auth/callback'
-const MOBILE_CALLBACK_SCHEME = 'mindsherpa://'
 
 const BASE64URL_FROM_BASE64_REGEX = /\+/g
 const BASE64URL_FROM_BASE64_SLASH_REGEX = /\//g
@@ -39,6 +38,12 @@ interface MobileExchangeResponse {
   refresh_token: string
   token_type: string
   expires_in: number
+}
+
+interface MobileE2eLoginResponse extends MobileExchangeResponse {
+  session_id: string
+  refresh_family_id: string
+  provider: 'better-auth'
 }
 
 interface MobileSessionResponse {
@@ -86,19 +91,6 @@ export function getMobileRedirectUri() {
   })
 }
 
-function validateCallbackUrl(url: string) {
-  if (!url.startsWith(MOBILE_CALLBACK_SCHEME)) {
-    throw new Error('Invalid mobile callback scheme')
-  }
-
-  const parsed = Linking.parse(url)
-  if (parsed.path !== MOBILE_CALLBACK_PATH) {
-    throw new Error('Invalid mobile callback path')
-  }
-
-  return parsed
-}
-
 export async function startAppleMobileAuth(): Promise<{
   authorizationUrl: string
   codeVerifier: string
@@ -141,23 +133,10 @@ export async function exchangeMobileAuthCode(input: {
   expectedState: string
 }): Promise<MobileTokenPair> {
   const redirectUri = getMobileRedirectUri()
-  const parsed = validateCallbackUrl(input.callbackUrl)
-  const queryParams = parsed.queryParams ?? {}
-
-  const returnedState = typeof queryParams.state === 'string' ? queryParams.state : null
-  if (!returnedState || returnedState !== input.expectedState) {
-    throw new Error('OAuth state mismatch')
-  }
-
-  const code = typeof queryParams.code === 'string' ? queryParams.code : null
-  if (!code) {
-    const errorCode = typeof queryParams.error === 'string' ? queryParams.error : 'oauth_failed'
-    const description =
-      typeof queryParams.error_description === 'string'
-        ? queryParams.error_description
-        : 'Unable to complete Apple sign-in.'
-    throw new Error(`${errorCode}:${description}`)
-  }
+  const { code } = parseMobileAuthCallback({
+    callbackUrl: input.callbackUrl,
+    expectedState: input.expectedState,
+  })
 
   const response = await fetch(buildApiUrl('/api/auth/mobile/exchange'), {
     method: 'POST',
@@ -195,6 +174,33 @@ export async function refreshMobileToken(refreshToken: string): Promise<MobileTo
   }
 
   return toTokenPair((await response.json()) as MobileExchangeResponse)
+}
+
+export async function signInMobileE2e(input?: {
+  email?: string
+  name?: string
+}): Promise<MobileTokenPair> {
+  if (!E2E_AUTH_SECRET) {
+    throw new Error('Missing EXPO_PUBLIC_E2E_AUTH_SECRET for E2E mobile login')
+  }
+
+  const response = await fetch(buildApiUrl('/api/auth/mobile/e2e/login'), {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-e2e-auth-secret': E2E_AUTH_SECRET,
+    },
+    body: JSON.stringify({
+      email: input?.email ?? 'mobile-e2e@hominem.local',
+      name: input?.name ?? 'Mobile E2E User',
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Mobile E2E login failed (${response.status})`)
+  }
+
+  return toTokenPair((await response.json()) as MobileE2eLoginResponse)
 }
 
 export async function fetchMobileSessionUser(accessToken: string): Promise<MobileSessionUser | null> {

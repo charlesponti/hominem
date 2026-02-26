@@ -324,6 +324,20 @@ export async function createTokenPairForUser(input: {
   }
 }
 
+export async function createE2eTokenPairForUser(input: {
+  userId: string
+  role?: 'user' | 'admin' | undefined
+  scope?: string[] | undefined
+  amr?: string[] | undefined
+}) {
+  return createTokenPairForUser({
+    userId: input.userId,
+    role: input.role ?? 'user',
+    scope: input.scope ?? ['api:read', 'api:write'],
+    amr: input.amr ?? ['e2e', 'mobile'],
+  })
+}
+
 export async function revokeByRefreshToken(refreshToken: string) {
   const tokenHash = hashToken(refreshToken)
   const [existing] = await db

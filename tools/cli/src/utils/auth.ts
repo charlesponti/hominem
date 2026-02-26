@@ -5,18 +5,23 @@ import getPort from 'get-port';
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import http from 'node:http';
-import os from 'node:os';
-import path from 'node:path';
 import { URL } from 'node:url';
 import open from 'open';
 import ora from 'ora';
 
 import { env } from '../env';
+import { getHominemHomeDir } from './paths';
 import { clearTokens, loadTokens, saveTokens, type StoredTokens } from './secure-store';
 
-const LEGACY_CONFIG = path.join(os.homedir(), '.hominem', 'config.json');
-const LEGACY_GOOGLE = path.join(os.homedir(), '.hominem', 'google-token.json');
 const DEFAULT_AUTH_BASE = env.API_URL ?? 'http://localhost:3000';
+
+function getLegacyConfigPath(): string {
+  return `${getHominemHomeDir()}/config.json`;
+}
+
+function getLegacyGooglePath(): string {
+  return `${getHominemHomeDir()}/google-token.json`;
+}
 
 interface AuthOptions {
   authBaseUrl: string;
@@ -49,8 +54,10 @@ interface DeviceCodeResponse {
 }
 
 export async function migrateLegacyConfig(): Promise<void> {
+  const legacyConfig = getLegacyConfigPath();
+  const legacyGoogle = getLegacyGooglePath();
   try {
-    const content = await fs.readFile(LEGACY_CONFIG, 'utf-8');
+    const content = await fs.readFile(legacyConfig, 'utf-8');
     const json = JSON.parse(content) as {
       token?: string;
       refreshToken?: string;
@@ -71,8 +78,8 @@ export async function migrateLegacyConfig(): Promise<void> {
 
     await saveTokens(tokens);
 
-    await fs.rm(LEGACY_CONFIG, { force: true });
-    await fs.rm(LEGACY_GOOGLE, { force: true });
+    await fs.rm(legacyConfig, { force: true });
+    await fs.rm(legacyGoogle, { force: true });
     consola.info(chalk.green('Migrated CLI auth tokens to secure storage'));
   } catch (_err) {
     // ignore missing or malformed legacy config

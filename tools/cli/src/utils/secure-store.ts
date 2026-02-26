@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { getHominemHomeDir } from './paths';
 
 let keytar: typeof import('keytar') | null = null;
 try {
@@ -11,7 +12,10 @@ try {
 
 const SERVICE = 'hominem-cli';
 const ACCOUNT = `${os.userInfo().username}`;
-const FALLBACK_FILE = path.join(os.homedir(), '.hominem', 'config.json');
+
+function getFallbackFile(): string {
+  return path.join(getHominemHomeDir(), 'tokens.json');
+}
 
 export interface StoredTokens {
   accessToken: string;
@@ -25,13 +29,15 @@ export interface StoredTokens {
 }
 
 async function saveFallback(tokens: StoredTokens) {
-  await fs.mkdir(path.dirname(FALLBACK_FILE), { recursive: true });
-  await fs.writeFile(FALLBACK_FILE, JSON.stringify(tokens, null, 2));
+  const fallbackFile = getFallbackFile();
+  await fs.mkdir(path.dirname(fallbackFile), { recursive: true });
+  await fs.writeFile(fallbackFile, JSON.stringify(tokens, null, 2));
 }
 
 async function loadFallback(): Promise<StoredTokens | null> {
+  const fallbackFile = getFallbackFile();
   try {
-    const raw = await fs.readFile(FALLBACK_FILE, 'utf-8');
+    const raw = await fs.readFile(fallbackFile, 'utf-8');
     return JSON.parse(raw) as StoredTokens;
   } catch (_err) {
     return null;
@@ -60,8 +66,9 @@ export async function loadTokens(): Promise<StoredTokens | null> {
 }
 
 export async function clearTokens() {
+  const fallbackFile = getFallbackFile();
   if (keytar) {
     await keytar.deletePassword(SERVICE, ACCOUNT);
   }
-  await fs.rm(FALLBACK_FILE, { force: true });
+  await fs.rm(fallbackFile, { force: true });
 }

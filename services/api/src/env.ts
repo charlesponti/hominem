@@ -29,6 +29,8 @@ const serverSchema = z.object({
     .enum(['cloudflare-turnstile', 'google-recaptcha', 'hcaptcha', 'captchafox'])
     .default('cloudflare-turnstile'),
   AUTH_CAPTCHA_SECRET_KEY: z.string().default(''),
+  AUTH_E2E_ENABLED: z.coerce.boolean().default(false),
+  AUTH_E2E_SECRET: z.string().default(''),
 
   SUPABASE_URL: isTest ? z.string().url().default('http://localhost:54321') : z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: isTest ? z.string().default('test-service-key') : z.string(),

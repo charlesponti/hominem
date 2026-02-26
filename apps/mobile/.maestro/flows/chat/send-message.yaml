@@ -1,6 +1,6 @@
-appId: com.pontistudios.mindsherpa
+appId: com.pontistudios.mindsherpa.dev
 ---
-- runFlow: ../auth/login.yaml
+- runFlow: ../auth/login_e2e_bypass.yaml
 - tapOn: "SHERPA"
 - waitForAnimationToEnd
 - tapOn:

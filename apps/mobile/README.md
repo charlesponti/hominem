@@ -1,55 +1,40 @@
 # Hominem Mobile (iOS)
 
-This app is the iOS mobile client for Hominem, built with Expo Router and the shared Hominem RPC/auth stack.
+This app is the iOS mobile client for Hominem, built with Expo Router and Better Auth-backed API flows.
 
 ## Runtime Scope
 
 - Production target: iOS only
-- Authentication: Apple Sign-In only (Supabase OAuth with PKCE)
-- API: `@hominem/hono-rpc` via `@hominem/hono-client`
+- Authentication: Apple Sign-In primary; mobile token bootstrap via Better Auth API
+- API: `@hominem/hono-rpc` via authenticated HTTP requests
 
 ## Environment Variables
 
 ### Development (`.env.development.local`)
 
-Required for `bun run dev` or `bun run ios`:
-
 ```bash
 EXPO_PUBLIC_API_BASE_URL="http://localhost:4040"
-EXPO_PUBLIC_SUPABASE_URL="https://gzgtqwrelfynzcpsnpxw.supabase.co"
-EXPO_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-EXPO_PUBLIC_SENTRY_DSN="https://..."
-EXPO_PUBLIC_SENTRY_ENVIRONMENT="development"
 EXPO_PUBLIC_E2E_TESTING="false"
+EXPO_PUBLIC_E2E_AUTH_SECRET=""
+EXPO_PUBLIC_SENTRY_ENVIRONMENT="development"
 ```
 
-### E2E Testing (`.env.e2e.local`)
-
-Required for Maestro tests:
+### E2E (`.env.e2e.local`)
 
 ```bash
-E2E_TEST_EMAIL="e2e-test@mindsherpa.com"
-E2E_TEST_PASSWORD="your-password"
 EXPO_PUBLIC_API_BASE_URL="http://localhost:4040"
-EXPO_PUBLIC_SUPABASE_URL="https://qgdiyyrpzgxxjgvqyjrx.supabase.co"
-EXPO_PUBLIC_SUPABASE_ANON_KEY="sb_publishable_LZYR8gTGxLsnh7u7colMWQ_KfJjte7I"
 EXPO_PUBLIC_E2E_TESTING="true"
+EXPO_PUBLIC_E2E_AUTH_SECRET="<shared-non-prod-secret>"
 EXPO_PUBLIC_SENTRY_ENVIRONMENT="e2e"
 ```
 
-**Important:** Do NOT use `#` comments in `.env` files when sourcing them in shell. Comments can cause syntax errors during Expo startup.
-
 ### Production (`.env.production.local`)
 
-Used during EAS builds:
-
 ```bash
-EXPO_PUBLIC_API_BASE_URL="https://mindsherpa-api-production.up.railway.app"
-EXPO_PUBLIC_SUPABASE_URL="https://gzgtqwrelfynzcpsnpxw.supabase.co"
-EXPO_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-EXPO_PUBLIC_SENTRY_DSN="https://..."
-EXPO_PUBLIC_SENTRY_ENVIRONMENT="production"
+EXPO_PUBLIC_API_BASE_URL="https://auth.ponti.io"
 EXPO_PUBLIC_E2E_TESTING="false"
+EXPO_PUBLIC_E2E_AUTH_SECRET=""
+EXPO_PUBLIC_SENTRY_ENVIRONMENT="production"
 ```
 
 ## Development
@@ -60,134 +45,84 @@ From monorepo root:
 bun run dev --filter @hominem/mobile
 ```
 
-Or from this app directory:
+From mobile app directory:
 
 ```bash
 bun run start
 ```
 
-## E2E Testing (Maestro)
+## Maestro E2E
 
-### Setup
+### Prerequisites
 
-1. Ensure the local API server is running on `localhost:4040`
-2. Ensure test credentials exist in the test Supabase project
-3. Source the E2E environment file:
+- Java 17+ available in PATH
+- Maestro CLI installed (`curl -Ls https://get.maestro.mobile.dev | bash`)
+- Booted iOS simulator or connected iOS device
+- API server running and configured for non-production E2E auth (`AUTH_E2E_ENABLED=true`)
+
+### Recommended shell setup
 
 ```bash
-set -a
-source apps/mobile/.env.e2e.local
-set +a
+export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH:$HOME/.maestro/bin"
+export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
 ```
 
-### Running Tests
-
-From this app directory:
+### Run E2E
 
 ```bash
-# Run all E2E tests
+# all flows
 bun run test:e2e
 
-# Run specific test suites
-bun run test:e2e:auth      # Authentication flows
-bun run test:e2e:focus     # Focus management
-bun run test:e2e:chat      # Chat messaging
-bun run test:e2e:recording # Audio recording
-bun run test:e2e:smoke     # Quick app launch check
+# targeted
+bun run test:e2e:smoke
+bun run test:e2e:auth
+bun run test:e2e:focus
+bun run test:e2e:chat
+bun run test:e2e:recording
 ```
 
-### Test Requirements
+### Auth model in E2E
 
-- API server running on `http://localhost:4040`
-- Test credentials available in Supabase
-- Maestro CLI installed (`brew install mobile-dev-tools` or `npm install -g maestro-cli`)
-- iOS Simulator running with development build
+- In E2E mode (`EXPO_PUBLIC_E2E_TESTING=true`), tapping `[CONTINUE_WITH_APPLE]` uses deterministic non-production token bootstrap via `/api/auth/mobile/e2e/login`.
+- The endpoint requires `x-e2e-auth-secret` matching `AUTH_E2E_SECRET` on API.
+- This bypass is disabled in production (`NODE_ENV=production` or `AUTH_E2E_ENABLED=false`).
 
-### Troubleshooting Tests
-
-**Login test fails with "E2E TEST LOGIN" not visible:**
-- Check `.env.e2e.local` has `EXPO_PUBLIC_E2E_TESTING="true"`
-- Verify test credentials exist in Supabase
-- Ensure the app is built with development profile for E2E testing
-
-**Tests timeout waiting for animations:**
-- Verify API server is running and accessible
-- Check that Supabase connectivity is working
-- Increase timeout values in Maestro flows if needed
-
-**Auth token not passed to API:**
-- Verify `EXPO_PUBLIC_API_BASE_URL` matches running API server
-- Check auth token is stored in secure storage via Supabase OAuth
-
-**Error: "A required entitlement isn't present":**
-- This is a Keychain access issue from `expo-secure-store`
-- **Fix**: Rebuild the iOS app with proper entitlements:
-  ```bash
-  cd apps/mobile
-  rm -rf ios/
-  bun run prebuild
-  bun run ios
-  ```
-- If that doesn't work, try a full simulator reset: `xcrun simctl erase all`
-- See [iOS Build Configuration](#ios-build-configuration) for details
-
-## Architecture
-
-### Authentication
-
-Mobile app uses Supabase OAuth (Apple Sign-In) with:
-- **PKCE Flow**: Proof Key for Code Exchange for security
-- **Secure Storage**: `expo-secure-store` for token persistence
-- **Test Mode**: Optional test credentials for E2E testing (gated by `EXPO_PUBLIC_E2E_TESTING`)
-
-### API Integration
-
-- Uses `@hominem/hono-client/react` for type-safe RPC calls
-- Auth token automatically injected in all API requests
-- No direct database access (follows Hominem architecture rules)
-- Shared types with server via `@hominem/hono-rpc`
-
-## Building for EAS
+## EAS Builds
 
 ```bash
-# Simulator (development)
+# simulator
 bun run build:simulator:ios
 
-# Development build
-bun run build:development:ios
+# development build (device)
+bun run build:dev:ios
 
-# Preview/production
+# preview/production
+bun run build:preview:ios
 bun run build:production:ios
 ```
 
-## iOS Build Configuration
+## Device Auth Smoke Checklist
 
-### Keychain Entitlements
+1. Install the development build on iPhone (`bun run build:dev:ios`).
+2. Launch app and complete Apple sign-in.
+3. Verify protected data screen loads from API without auth error.
+4. Sign out and verify app returns to signed-out state.
+5. Relaunch app and verify refresh-token session restore works.
 
-The iOS app uses `expo-secure-store` to securely store authentication tokens in the Keychain. This requires proper entitlements configuration:
+## iOS IDs
 
-- **Configuration**: Defined in `app.config.ts` via `expo-build-properties` plugin
-- **Entitlements File**: `ios/mindsherpa/mindsherpa.entitlements`
-- **Access Group**: `$(AppIdentifierPrefix)com.pontistudios.mindsherpa`
+- Dev bundle ID: `com.pontistudios.mindsherpa.dev`
+- Prod bundle ID: `com.pontistudios.hakumi`
+- Shared Apple/Expo non-secret identifiers: `config/apple-auth.settings.json`
 
-When building:
-1. The config is read from `app.config.ts`
-2. During prebuild, it generates/updates the entitlements file
-3. Xcode signs the app with these entitlements
-4. The app gains permission to store tokens in Keychain
+## Live Auth Smoke Diagnostics
 
-**If you see "A required entitlement isn't present" error:**
 ```bash
-# Regenerate iOS project with correct entitlements
-cd apps/mobile
-rm -rf ios/
-bun run prebuild
-bun run ios
+# cloud URL
+bun run test:e2e:auth:live
+
+# direct local API (bypass cloudflared/cloudflare edge)
+bun run test:e2e:auth:live:local
 ```
 
-### Other Important Configuration
-
-- **App Transport Security**: Configured to allow Supabase and Railway API domains
-- **Apple Sign-In**: Enabled via `expo-apple-authentication` plugin
-- **Sentry Integration**: For error tracking in development/production
-- **Audio Recording**: Permission configured via `expo-av` plugin
+If cloud URL fails with `502` and local succeeds, tunnel/edge routing is unhealthy.
