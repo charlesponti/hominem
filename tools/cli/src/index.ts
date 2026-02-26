@@ -1,3 +1,3 @@
-import { main } from './cli'
+import { main } from './cli';
 
-export { main }
+export { main };

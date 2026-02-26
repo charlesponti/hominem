@@ -1,8 +1,8 @@
 import { data, type LoaderFunctionArgs } from 'react-router';
 
 import { CalendarSync } from '~/components/calendar/calendar-sync';
-import { requireAuth } from '~/lib/guards';
 import { serverEnv } from '~/lib/env';
+import { requireAuth } from '~/lib/guards';
 
 import type { Route } from './+types/calendar';
 

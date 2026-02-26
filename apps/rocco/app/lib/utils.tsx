@@ -1,6 +1,6 @@
-import { isValidGoogleHost } from '@hominem/utils/google'
+import { isValidGoogleHost } from '@hominem/utils/google';
 
-export { cn } from '@hominem/ui/lib/utils'
+export { cn } from '@hominem/ui/lib/utils';
 
 export function buildImageUrl(src?: string | null, width = 400, height = 300) {
   if (!src) {

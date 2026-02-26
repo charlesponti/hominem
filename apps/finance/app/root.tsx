@@ -16,9 +16,9 @@ import {
 
 import type { Route } from './+types/root';
 
+import { HonoProvider } from './lib/api';
 import { authConfig, getServerSession } from './lib/auth.server';
 import { serverEnv } from './lib/env';
-import { HonoProvider } from './lib/api';
 import './globals.css';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -90,11 +90,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 
   return (
-    <AuthProvider
-      initialSession={session}
-      config={authEnv}
-      onAuthEvent={handleAuthEvent}
-    >
+    <AuthProvider initialSession={session} config={authEnv} onAuthEvent={handleAuthEvent}>
       <HonoProvider baseUrl={apiBaseUrl}>
         <UpdateGuard logo="/logo-finance.png" appName="Finance">
           <Outlet />

@@ -1,8 +1,7 @@
 import type { Context } from 'hono';
 
-import { ZodError } from 'zod';
-
 import { logger } from '@hominem/utils/logger';
+import { ZodError } from 'zod';
 
 export class ApiError extends Error {
   statusCode: number;

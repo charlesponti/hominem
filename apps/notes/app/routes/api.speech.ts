@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from 'react-router';
 
-import { VoiceSpeechError, generateSpeechBuffer } from '@hominem/services'
+import { VoiceSpeechError, generateSpeechBuffer } from '@hominem/services';
 import { fileStorageService } from '@hominem/utils/supabase';
 import { z } from 'zod';
 
@@ -46,7 +46,7 @@ export async function action({ request }: ActionFunctionArgs) {
       text,
       voice,
       speed,
-    })
+    });
 
     // Store the audio file using Supabase storage
     const fileName = `speech-${Date.now()}-${voice}-${speed}.mp3`;
@@ -55,9 +55,9 @@ export async function action({ request }: ActionFunctionArgs) {
       speech.mediaType || 'audio/mpeg',
       userId,
       {
-      filename: fileName,
+        filename: fileName,
       },
-    )
+    );
 
     return jsonResponse({
       success: true,
@@ -78,10 +78,9 @@ export async function action({ request }: ActionFunctionArgs) {
     let statusCode = 500;
 
     if (error instanceof VoiceSpeechError) {
-      errorMessage = error.message
-      statusCode = error.statusCode
-    } else
-    if (error instanceof Error) {
+      errorMessage = error.message;
+      statusCode = error.statusCode;
+    } else if (error instanceof Error) {
       // Handle specific OpenAI errors
       if (error.message.includes('quota')) {
         errorMessage = 'API quota exceeded. Please try again later.';

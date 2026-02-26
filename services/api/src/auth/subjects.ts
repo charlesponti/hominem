@@ -1,32 +1,34 @@
-import { and, eq, isNull } from '@hominem/db'
-import { db } from '@hominem/db'
-import { authSubjects } from '@hominem/db/schema/auth'
-import { users } from '@hominem/db/schema/users'
-import { randomUUID } from 'node:crypto'
+import { and, eq, isNull } from '@hominem/db';
+import { db } from '@hominem/db';
+import { authSubjects } from '@hominem/db/schema/auth';
+import { users } from '@hominem/db/schema/users';
+import { randomUUID } from 'node:crypto';
 
-type AuthProvider = 'apple' | 'google'
+type AuthProvider = 'apple' | 'google';
 
 interface EnsureOAuthSubjectUserInput {
-  provider: AuthProvider
-  providerSubject: string
-  email: string
-  name?: string | null
-  image?: string | null
+  provider: AuthProvider;
+  providerSubject: string;
+  email: string;
+  name?: string | null;
+  image?: string | null;
 }
 
 interface AuthUserRecord {
-  id: string
-  betterAuthUserId: string | null
-  email: string
-  name: string | null
-  image: string | null
-  isAdmin: boolean
-  createdAt: string
-  updatedAt: string
-  primaryAuthSubjectId: string | null
+  id: string;
+  betterAuthUserId: string | null;
+  email: string;
+  name: string | null;
+  image: string | null;
+  isAdmin: boolean;
+  createdAt: string;
+  updatedAt: string;
+  primaryAuthSubjectId: string | null;
 }
 
-export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput): Promise<AuthUserRecord> {
+export async function ensureOAuthSubjectUser(
+  input: EnsureOAuthSubjectUserInput,
+): Promise<AuthUserRecord> {
   const [bySubject] = await db
     .select({
       id: users.id,
@@ -45,10 +47,10 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
       and(
         eq(authSubjects.provider, input.provider),
         eq(authSubjects.providerSubject, input.providerSubject),
-        isNull(authSubjects.unlinkedAt)
-      )
+        isNull(authSubjects.unlinkedAt),
+      ),
     )
-    .limit(1)
+    .limit(1);
 
   if (bySubject) {
     if (!bySubject.betterAuthUserId) {
@@ -58,15 +60,15 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
           betterAuthUserId: input.providerSubject,
           updatedAt: new Date().toISOString(),
         })
-        .where(eq(users.id, bySubject.id))
+        .where(eq(users.id, bySubject.id));
 
       return {
         ...bySubject,
         betterAuthUserId: input.providerSubject,
-      }
+      };
     }
 
-    return bySubject
+    return bySubject;
   }
 
   const [existingUser] = await db
@@ -83,7 +85,7 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
     })
     .from(users)
     .where(eq(users.email, input.email))
-    .limit(1)
+    .limit(1);
 
   const user =
     existingUser ??
@@ -111,10 +113,10 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
           updatedAt: users.updatedAt,
           primaryAuthSubjectId: users.primaryAuthSubjectId,
         })
-    )[0]
+    )[0];
 
   if (!user) {
-    throw new Error('failed_to_ensure_user')
+    throw new Error('failed_to_ensure_user');
   }
 
   if (!user.betterAuthUserId) {
@@ -124,7 +126,7 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
         betterAuthUserId: input.providerSubject,
         updatedAt: new Date().toISOString(),
       })
-      .where(eq(users.id, user.id))
+      .where(eq(users.id, user.id));
   }
 
   await db
@@ -137,7 +139,7 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
       isPrimary: !user.primaryAuthSubjectId,
       linkedAt: new Date().toISOString(),
     })
-    .onConflictDoNothing()
+    .onConflictDoNothing();
 
   const [linkedSubject] = await db
     .select({
@@ -148,10 +150,10 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
       and(
         eq(authSubjects.provider, input.provider),
         eq(authSubjects.providerSubject, input.providerSubject),
-        isNull(authSubjects.unlinkedAt)
-      )
+        isNull(authSubjects.unlinkedAt),
+      ),
     )
-    .limit(1)
+    .limit(1);
 
   if (linkedSubject && !user.primaryAuthSubjectId) {
     await db
@@ -160,17 +162,17 @@ export async function ensureOAuthSubjectUser(input: EnsureOAuthSubjectUserInput)
         primaryAuthSubjectId: linkedSubject.id,
         updatedAt: new Date().toISOString(),
       })
-      .where(eq(users.id, user.id))
+      .where(eq(users.id, user.id));
 
     return {
       ...user,
       betterAuthUserId: user.betterAuthUserId ?? input.providerSubject,
       primaryAuthSubjectId: linkedSubject.id,
-    }
+    };
   }
 
   return {
     ...user,
     betterAuthUserId: user.betterAuthUserId ?? input.providerSubject,
-  }
+  };
 }

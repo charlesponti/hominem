@@ -1,6 +1,6 @@
+import { useAuthContext } from '@hominem/auth';
 import { useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useLoaderData, type LoaderFunctionArgs, data } from 'react-router';
-import { useAuthContext } from '@hominem/auth';
 
 import { ChatInput } from '~/components/chat/ChatInput';
 import { ChatMessages } from '~/components/chat/ChatMessages';
@@ -8,10 +8,10 @@ import { GoalCard } from '~/components/goals/goal-card';
 import { WorkspaceNotesPanel } from '~/components/workspace/workspace-notes-panel';
 import { useEventsList } from '~/hooks/use-events';
 import { useTasksList, useUpdateTaskStatus, useDeleteTask } from '~/hooks/use-tasks';
+import { createServerHonoClient } from '~/lib/api.server';
 import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
 import { useGoals } from '~/lib/hooks/use-goals';
-import { createServerHonoClient } from '~/lib/api.server';
 
 import { TaskCreateForm } from './tasks/components/task-create-form';
 import { TaskItem } from './tasks/components/task-item';

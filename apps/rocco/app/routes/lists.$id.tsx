@@ -1,3 +1,5 @@
+import type { ListUser } from '@hominem/hono-rpc/types/lists.types';
+
 import { useAuthContext } from '@hominem/auth';
 import { Alert, PageTitle } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
@@ -6,7 +8,6 @@ import { useMemo } from 'react';
 import { Link, redirect, useViewTransitionState } from 'react-router';
 
 import type { PlaceLocation } from '~/lib/types';
-import type { ListUser } from '@hominem/hono-rpc/types/lists.types';
 
 import ErrorBoundary from '~/components/ErrorBoundary';
 import ListEditButton from '~/components/lists/list-edit-button';
@@ -15,9 +16,9 @@ import PlacesList from '~/components/places/places-list';
 import UserAvatar from '~/components/user-avatar';
 import { MapInteractionProvider } from '~/contexts/map-interaction-context';
 import { useGeolocation } from '~/hooks/useGeolocation';
+import { createServerHonoClient } from '~/lib/api.server';
 import { requireAuth } from '~/lib/guards';
 import { useListById } from '~/lib/hooks/use-lists';
-import { createServerHonoClient } from '~/lib/api.server';
 
 import type { Route } from './+types/lists.$id';
 
@@ -70,14 +71,30 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   const markers: PlaceLocation[] = useMemo(
     () =>
       places
-        .filter((p: { latitude: number | null; longitude: number | null; id: string; name: string; imageUrl: string | null }) => p.latitude != null && p.longitude != null)
-        .map((p: { latitude: number | null; longitude: number | null; id: string; name: string; imageUrl: string | null }) => ({
-          latitude: p.latitude as number,
-          longitude: p.longitude as number,
-          id: p.id,
-          name: p.name,
-          imageUrl: p.imageUrl,
-        })),
+        .filter(
+          (p: {
+            latitude: number | null;
+            longitude: number | null;
+            id: string;
+            name: string;
+            imageUrl: string | null;
+          }) => p.latitude != null && p.longitude != null,
+        )
+        .map(
+          (p: {
+            latitude: number | null;
+            longitude: number | null;
+            id: string;
+            name: string;
+            imageUrl: string | null;
+          }) => ({
+            latitude: p.latitude as number,
+            longitude: p.longitude as number,
+            id: p.id,
+            name: p.name,
+            imageUrl: p.imageUrl,
+          }),
+        ),
     [places],
   );
 
@@ -94,7 +111,8 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   const ownerId = 'ownerId' in list ? list.ownerId : (list as { userId?: string }).userId;
   const isOwner = ownerId === user?.id;
   const hasAccess = 'hasAccess' in list ? (list.hasAccess as boolean) : isOwner;
-  const collaborators = 'collaborators' in list ? list.collaborators : (list as { users?: unknown[] }).users || [];
+  const collaborators =
+    'collaborators' in list ? list.collaborators : (list as { users?: unknown[] }).users || [];
 
   return (
     <div className="space-y-4">
@@ -120,7 +138,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
         </div>
         <div className="flex items-center gap-3">
           {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
-            {collaborators && collaborators.length > 0 && (
+          {collaborators && collaborators.length > 0 && (
             <div className="flex items-center -space-x-2">
               {collaborators.slice(0, 5).map((collaborator: ListUser) => (
                 <UserAvatar

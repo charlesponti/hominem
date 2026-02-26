@@ -1,7 +1,8 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import crypto from 'node:crypto';
+
 import { getHominemHomeDir } from './paths';
 
 let keytar: typeof import('keytar') | null = null;
@@ -43,12 +44,21 @@ interface EncryptedTokenBlob {
   ciphertext: string;
 }
 
-type ParsedValue = string | number | boolean | null | ParsedValue[] | { [key: string]: ParsedValue };
+type ParsedValue =
+  | string
+  | number
+  | boolean
+  | null
+  | ParsedValue[]
+  | { [key: string]: ParsedValue };
 
 export class SecureStoreError extends Error {
   code: 'SECURE_STORE_ENCRYPT_FAILED' | 'SECURE_STORE_DECRYPT_FAILED' | 'SECURE_STORE_MALFORMED';
 
-  constructor(code: 'SECURE_STORE_ENCRYPT_FAILED' | 'SECURE_STORE_DECRYPT_FAILED' | 'SECURE_STORE_MALFORMED', message: string) {
+  constructor(
+    code: 'SECURE_STORE_ENCRYPT_FAILED' | 'SECURE_STORE_DECRYPT_FAILED' | 'SECURE_STORE_MALFORMED',
+    message: string,
+  ) {
     super(message);
     this.name = 'SecureStoreError';
     this.code = code;
@@ -89,17 +99,19 @@ async function encryptTokens(tokens: StoredTokens): Promise<EncryptedTokenBlob> 
       salt: salt.toString('base64'),
       iv: iv.toString('base64'),
       tag: tag.toString('base64'),
-      ciphertext: encrypted.toString('base64')
+      ciphertext: encrypted.toString('base64'),
     };
   } catch (error) {
     throw new SecureStoreError(
       'SECURE_STORE_ENCRYPT_FAILED',
-      error instanceof Error ? error.message : 'Failed to encrypt token payload'
+      error instanceof Error ? error.message : 'Failed to encrypt token payload',
     );
   }
 }
 
-function isStoredTokensLike(input: ParsedValue): input is Omit<StoredTokens, 'tokenVersion'> & Partial<Pick<StoredTokens, 'tokenVersion'>> {
+function isStoredTokensLike(
+  input: ParsedValue,
+): input is Omit<StoredTokens, 'tokenVersion'> & Partial<Pick<StoredTokens, 'tokenVersion'>> {
   if (!input || typeof input !== 'object') {
     return false;
   }
@@ -110,7 +122,9 @@ function isStoredTokensLike(input: ParsedValue): input is Omit<StoredTokens, 'to
   return typeof value.issuerBaseUrl === 'string' || typeof value.issuerBaseUrl === 'undefined';
 }
 
-function normalizeStoredTokens(input: Omit<StoredTokens, 'tokenVersion'> & Partial<Pick<StoredTokens, 'tokenVersion'>>): StoredTokens {
+function normalizeStoredTokens(
+  input: Omit<StoredTokens, 'tokenVersion'> & Partial<Pick<StoredTokens, 'tokenVersion'>>,
+): StoredTokens {
   return {
     tokenVersion: 2,
     accessToken: input.accessToken,
@@ -121,7 +135,7 @@ function normalizeStoredTokens(input: Omit<StoredTokens, 'tokenVersion'> & Parti
     ...(input.sessionId ? { sessionId: input.sessionId } : {}),
     ...(input.refreshFamilyId ? { refreshFamilyId: input.refreshFamilyId } : {}),
     ...(input.issuedAt ? { issuedAt: input.issuedAt } : {}),
-    issuerBaseUrl: input.issuerBaseUrl ?? 'http://localhost:3000'
+    issuerBaseUrl: input.issuerBaseUrl ?? 'http://localhost:3000',
   };
 }
 
@@ -146,7 +160,7 @@ async function decryptTokens(blob: EncryptedTokenBlob): Promise<StoredTokens> {
     }
     throw new SecureStoreError(
       'SECURE_STORE_DECRYPT_FAILED',
-      error instanceof Error ? error.message : 'Failed to decrypt token payload'
+      error instanceof Error ? error.message : 'Failed to decrypt token payload',
     );
   }
 }
@@ -172,7 +186,10 @@ async function loadFallback(): Promise<StoredTokens | null> {
     }
 
     if (!parsed || typeof parsed !== 'object') {
-      throw new SecureStoreError('SECURE_STORE_MALFORMED', 'Encrypted token file payload was invalid');
+      throw new SecureStoreError(
+        'SECURE_STORE_MALFORMED',
+        'Encrypted token file payload was invalid',
+      );
     }
     const blob = parsed as Partial<EncryptedTokenBlob>;
     if (
@@ -182,7 +199,10 @@ async function loadFallback(): Promise<StoredTokens | null> {
       typeof blob.tag !== 'string' ||
       typeof blob.ciphertext !== 'string'
     ) {
-      throw new SecureStoreError('SECURE_STORE_MALFORMED', 'Encrypted token file payload was invalid');
+      throw new SecureStoreError(
+        'SECURE_STORE_MALFORMED',
+        'Encrypted token file payload was invalid',
+      );
     }
 
     return await decryptTokens({
@@ -190,7 +210,7 @@ async function loadFallback(): Promise<StoredTokens | null> {
       salt: blob.salt,
       iv: blob.iv,
       tag: blob.tag,
-      ciphertext: blob.ciphertext
+      ciphertext: blob.ciphertext,
     });
   } catch (_err) {
     if (_err instanceof SecureStoreError) {

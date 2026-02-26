@@ -1,28 +1,24 @@
-import {
-  exportJWK,
-  generateKeyPair,
-  type JWK,
-} from 'jose'
+import { exportJWK, generateKeyPair, type JWK } from 'jose';
 
 interface SigningKeyPair {
-  privateKey: CryptoKey
-  publicKey: CryptoKey
-  publicJwk: JWK
-  kid: string
+  privateKey: CryptoKey;
+  publicKey: CryptoKey;
+  publicJwk: JWK;
+  kid: string;
 }
 
-let signingKeyPromise: Promise<SigningKeyPair> | null = null
+let signingKeyPromise: Promise<SigningKeyPair> | null = null;
 
 function getRandomKid() {
-  return `dev-${crypto.randomUUID()}`
+  return `dev-${crypto.randomUUID()}`;
 }
 
 async function generateSigningKey(): Promise<SigningKeyPair> {
   const { publicKey, privateKey } = await generateKeyPair('ES256', {
     extractable: true,
-  })
-  const publicJwk = await exportJWK(publicKey)
-  const kid = getRandomKid()
+  });
+  const publicJwk = await exportJWK(publicKey);
+  const kid = getRandomKid();
 
   return {
     privateKey,
@@ -34,20 +30,20 @@ async function generateSigningKey(): Promise<SigningKeyPair> {
       kid,
     },
     kid,
-  }
+  };
 }
 
 export async function getSigningKey(): Promise<SigningKeyPair> {
   if (!signingKeyPromise) {
-    signingKeyPromise = generateSigningKey()
+    signingKeyPromise = generateSigningKey();
   }
 
-  return signingKeyPromise
+  return signingKeyPromise;
 }
 
 export async function getJwks() {
-  const key = await getSigningKey()
+  const key = await getSigningKey();
   return {
     keys: [key.publicJwk],
-  }
+  };
 }

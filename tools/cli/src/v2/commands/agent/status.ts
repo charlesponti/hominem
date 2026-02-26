@@ -1,25 +1,26 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
-import { z } from 'zod'
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { z } from 'zod';
 
-import { createCommand } from '../../command-factory'
-import { getHominemHomeDir } from '@/utils/paths'
+import { getHominemHomeDir } from '@/utils/paths';
+
+import { createCommand } from '../../command-factory';
 
 function getRuntimePaths() {
-  const runtimeDir = path.join(getHominemHomeDir(), 'agent')
+  const runtimeDir = path.join(getHominemHomeDir(), 'agent');
   return {
     pidPath: path.join(runtimeDir, 'agent.pid'),
     outLogPath: path.join(runtimeDir, 'agent.out.log'),
-    errLogPath: path.join(runtimeDir, 'agent.err.log')
-  }
+    errLogPath: path.join(runtimeDir, 'agent.err.log'),
+  };
 }
 
 function isProcessAlive(pid: number): boolean {
   try {
-    process.kill(pid, 0)
-    return true
+    process.kill(pid, 0);
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -36,14 +37,14 @@ export default createCommand({
     pidPath: z.string(),
     logs: z.object({
       out: z.string(),
-      err: z.string()
-    })
+      err: z.string(),
+    }),
   }),
   async run() {
-    const runtimePaths = getRuntimePaths()
+    const runtimePaths = getRuntimePaths();
     try {
-      const raw = await fs.readFile(runtimePaths.pidPath, 'utf-8')
-      const pid = Number.parseInt(raw.trim(), 10)
+      const raw = await fs.readFile(runtimePaths.pidPath, 'utf-8');
+      const pid = Number.parseInt(raw.trim(), 10);
       if (Number.isFinite(pid) && pid > 0 && isProcessAlive(pid)) {
         return {
           running: true,
@@ -51,9 +52,9 @@ export default createCommand({
           pidPath: runtimePaths.pidPath,
           logs: {
             out: runtimePaths.outLogPath,
-            err: runtimePaths.errLogPath
-          }
-        }
+            err: runtimePaths.errLogPath,
+          },
+        };
       }
     } catch {
       // report stopped
@@ -65,8 +66,8 @@ export default createCommand({
       pidPath: runtimePaths.pidPath,
       logs: {
         out: runtimePaths.outLogPath,
-        err: runtimePaths.errLogPath
-      }
-    }
-  }
-})
+        err: runtimePaths.errLogPath,
+      },
+    };
+  },
+});

@@ -60,7 +60,6 @@ export interface TimeSeriesResponse {
   timestamp: string;
 }
 
-
 /**
  * Helper function to calculate median of a number array
  */

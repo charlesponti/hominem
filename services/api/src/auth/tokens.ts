@@ -1,29 +1,29 @@
-import { jwtVerify, SignJWT } from 'jose'
+import { jwtVerify, SignJWT } from 'jose';
 
-import { env } from '../env'
-import { getSigningKey } from './key-store'
+import type { AccessTokenClaims } from './types';
 
-import type { AccessTokenClaims } from './types'
+import { env } from '../env';
+import { getSigningKey } from './key-store';
 
-const ACCESS_TOKEN_TTL_SECONDS = 10 * 60
+const ACCESS_TOKEN_TTL_SECONDS = 10 * 60;
 
 function getAudience() {
-  return env.AUTH_AUDIENCE
+  return env.AUTH_AUDIENCE;
 }
 
 function getIssuer() {
-  return env.AUTH_ISSUER
+  return env.AUTH_ISSUER;
 }
 
 export async function issueAccessToken(input: {
-  sub: string
-  sid: string
-  scope?: string[]
-  role?: 'user' | 'admin'
-  amr?: string[]
+  sub: string;
+  sid: string;
+  scope?: string[];
+  role?: 'user' | 'admin';
+  amr?: string[];
 }) {
-  const nowEpoch = Math.floor(Date.now() / 1000)
-  const signingKey = await getSigningKey()
+  const nowEpoch = Math.floor(Date.now() / 1000);
+  const signingKey = await getSigningKey();
 
   const payload: AccessTokenClaims = {
     sub: input.sub,
@@ -32,7 +32,7 @@ export async function issueAccessToken(input: {
     role: input.role ?? 'user',
     amr: input.amr ?? ['pwd'],
     auth_time: nowEpoch,
-  }
+  };
 
   const token = await new SignJWT(payload)
     .setProtectedHeader({
@@ -45,40 +45,40 @@ export async function issueAccessToken(input: {
     .setIssuedAt(nowEpoch)
     .setExpirationTime(nowEpoch + ACCESS_TOKEN_TTL_SECONDS)
     .setJti(crypto.randomUUID())
-    .sign(signingKey.privateKey)
+    .sign(signingKey.privateKey);
 
   return {
     accessToken: token,
     expiresIn: ACCESS_TOKEN_TTL_SECONDS,
     tokenType: 'Bearer' as const,
-  }
+  };
 }
 
 export async function verifyAccessToken(token: string): Promise<AccessTokenClaims> {
-  const signingKey = await getSigningKey()
+  const signingKey = await getSigningKey();
 
   const { payload, protectedHeader } = await jwtVerify(token, signingKey.publicKey, {
     issuer: getIssuer(),
     audience: getAudience(),
     algorithms: ['ES256'],
-  })
+  });
 
   if (protectedHeader.kid !== signingKey.kid) {
-    throw new Error('disallowed_kid')
+    throw new Error('disallowed_kid');
   }
 
-  const scopeClaim = payload.scope
-  const amrClaim = payload.amr
+  const scopeClaim = payload.scope;
+  const amrClaim = payload.amr;
 
   const normalizedScope = Array.isArray(scopeClaim)
     ? scopeClaim.filter((entry): entry is string => typeof entry === 'string')
-    : []
+    : [];
   const normalizedAmr = Array.isArray(amrClaim)
     ? amrClaim.filter((entry): entry is string => typeof entry === 'string')
-    : []
+    : [];
 
   if (typeof payload.sub !== 'string' || typeof payload.sid !== 'string') {
-    throw new Error('invalid_claims')
+    throw new Error('invalid_claims');
   }
 
   return {
@@ -89,5 +89,5 @@ export async function verifyAccessToken(token: string): Promise<AccessTokenClaim
     role: payload.role === 'admin' ? 'admin' : 'user',
     amr: normalizedAmr,
     auth_time: typeof payload.auth_time === 'number' ? payload.auth_time : 0,
-  }
+  };
 }

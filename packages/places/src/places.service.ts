@@ -623,7 +623,10 @@ export async function refreshAllPlaces() {
       const photoNames =
         googleData.photos
           ?.map((photo: { name?: string | null }) => photo.name)
-          .filter((name: string | null | undefined): name is string => typeof name === 'string' && name.length > 0) ?? [];
+          .filter(
+            (name: string | null | undefined): name is string =>
+              typeof name === 'string' && name.length > 0,
+          ) ?? [];
 
       const priceLevel = googleData.priceLevel;
       const normalizedPriceLevel =

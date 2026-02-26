@@ -1,6 +1,6 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
-import { createCommand } from '../../command-factory'
+import { createCommand } from '../../command-factory';
 
 export default createCommand({
   name: 'files',
@@ -11,12 +11,12 @@ export default createCommand({
   flags: z.object({}),
   outputSchema: z.object({
     domain: z.literal('files'),
-    subcommands: z.array(z.string())
+    subcommands: z.array(z.string()),
   }),
   async run() {
     return {
       domain: 'files',
-      subcommands: ['inventory', 'head', 'rename-markdown']
-    }
-  }
-})
+      subcommands: ['inventory', 'head', 'rename-markdown'],
+    };
+  },
+});

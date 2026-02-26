@@ -1,11 +1,11 @@
-import { Stack } from 'expo-router'
+import { Stack } from 'expo-router';
 
 function AuthLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false, headerTitle: 'AUTH' }} />
     </Stack>
-  )
+  );
 }
 
-export default AuthLayout
+export default AuthLayout;

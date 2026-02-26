@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import * as z from 'zod';
 import { createServerEnv } from '@hominem/env';
+import * as z from 'zod';
 
 const isTest = process.env.NODE_ENV === 'test';
 

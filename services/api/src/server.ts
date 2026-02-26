@@ -1,7 +1,5 @@
-import type { ContentfulStatusCode } from 'hono/utils/http-status';
-
 import type { HominemUser } from '@hominem/auth/server';
-import type { AuthContextEnvelope } from './auth/types';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
 import { app as honoRpcApp } from '@hominem/hono-rpc';
 import { isServiceError } from '@hominem/services';
@@ -14,9 +12,11 @@ import { cors } from 'hono/cors';
 import { logger as honoLogger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 
-import { env } from './env';
-import { getJwks } from './auth/key-store';
+import type { AuthContextEnvelope } from './auth/types';
+
 import { betterAuthServer } from './auth/better-auth';
+import { getJwks } from './auth/key-store';
+import { env } from './env';
 import { initSentry, sentryMiddleware } from './lib/sentry';
 import { authJwtMiddleware } from './middleware/auth';
 import { aiRoutes } from './routes/ai';

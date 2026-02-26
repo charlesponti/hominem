@@ -1,7 +1,11 @@
-import { betterAuth } from 'better-auth'
-import type { BetterAuthOptions } from 'better-auth'
-import type { BetterAuthPlugin } from 'better-auth'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import type { BetterAuthOptions } from 'better-auth';
+import type { BetterAuthPlugin } from 'better-auth';
+
+import { passkey } from '@better-auth/passkey';
+import { db } from '@hominem/db';
+import * as schema from '@hominem/db/schema/tables';
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import {
   apiKey,
   bearer,
@@ -11,23 +15,20 @@ import {
   multiSession,
   openAPI,
   oneTimeToken,
-} from 'better-auth/plugins'
-import { passkey } from '@better-auth/passkey'
-import { db } from '@hominem/db'
-import * as schema from '@hominem/db/schema/tables'
+} from 'better-auth/plugins';
 
-import { env } from '../env'
+import { env } from '../env';
 
 function getTrustedOrigins() {
-  const origins = new Set([env.BETTER_AUTH_URL, env.FINANCE_URL, env.NOTES_URL, env.ROCCO_URL])
-  return [...origins]
+  const origins = new Set([env.BETTER_AUTH_URL, env.FINANCE_URL, env.NOTES_URL, env.ROCCO_URL]);
+  return [...origins];
 }
 
 function getAdvancedOptions() {
-  const cookieDomain = env.AUTH_COOKIE_DOMAIN.trim()
-  const crossSubDomainEnabled = cookieDomain.length > 0
+  const cookieDomain = env.AUTH_COOKIE_DOMAIN.trim();
+  const crossSubDomainEnabled = cookieDomain.length > 0;
   const useSecureCookies =
-    env.NODE_ENV === 'production' || new URL(env.BETTER_AUTH_URL).protocol === 'https:'
+    env.NODE_ENV === 'production' || new URL(env.BETTER_AUTH_URL).protocol === 'https:';
 
   return {
     useSecureCookies,
@@ -45,27 +46,27 @@ function getAdvancedOptions() {
       httpOnly: true,
       secure: useSecureCookies,
     },
-  }
+  };
 }
 
 function getSocialProviders() {
-  const providers: Record<string, { clientId: string; clientSecret: string }> = {}
+  const providers: Record<string, { clientId: string; clientSecret: string }> = {};
 
   if (env.APPLE_CLIENT_ID && env.APPLE_CLIENT_SECRET) {
     providers.apple = {
       clientId: env.APPLE_CLIENT_ID,
       clientSecret: env.APPLE_CLIENT_SECRET,
-    }
+    };
   }
 
   if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
     providers.google = {
       clientId: env.GOOGLE_CLIENT_ID,
       clientSecret: env.GOOGLE_CLIENT_SECRET,
-    }
+    };
   }
 
-  return providers
+  return providers;
 }
 
 function getAuthPlugins() {
@@ -120,7 +121,7 @@ function getAuthPlugins() {
       path: '/reference',
       theme: 'deepSpace',
     }),
-  ]
+  ];
 
   if (env.AUTH_CAPTCHA_SECRET_KEY) {
     const captchaPlugin = captcha({
@@ -133,11 +134,11 @@ function getAuthPlugins() {
         '/passkey/verify-authentication',
         '/api-key/create',
       ],
-    }) as BetterAuthPlugin
-    plugins.push(captchaPlugin)
+    }) as BetterAuthPlugin;
+    plugins.push(captchaPlugin);
   }
 
-  return plugins
+  return plugins;
 }
 
 const betterAuthOptions: BetterAuthOptions = {
@@ -162,7 +163,7 @@ const betterAuthOptions: BetterAuthOptions = {
   },
   socialProviders: getSocialProviders(),
   plugins: getAuthPlugins(),
-}
+};
 
 export const betterAuthServer = betterAuth({
   ...betterAuthOptions,
@@ -170,4 +171,4 @@ export const betterAuthServer = betterAuth({
     provider: 'pg',
     schema,
   }),
-})
+});

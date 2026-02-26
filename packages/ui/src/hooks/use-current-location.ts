@@ -25,9 +25,7 @@ export function useCurrentLocation({ enabled = true }: { enabled?: boolean }) {
               break;
             }
             case 'granted': {
-              console.info(
-                'Geolocation permission granted. However, position is unavailable.',
-              );
+              console.info('Geolocation permission granted. However, position is unavailable.');
               break;
             }
           }

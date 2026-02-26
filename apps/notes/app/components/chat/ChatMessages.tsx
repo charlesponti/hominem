@@ -6,10 +6,10 @@ import type {
 } from '@hominem/hono-rpc/types/chat.types';
 import type React from 'react';
 
+import { useAuthContext } from '@hominem/auth';
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/components/ui/input';
-import { useAuthContext } from '@hominem/auth';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, X } from 'lucide-react';
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';

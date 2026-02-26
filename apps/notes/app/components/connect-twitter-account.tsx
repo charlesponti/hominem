@@ -1,13 +1,13 @@
-import { Button } from '@hominem/ui/button'
-import { Twitter } from 'lucide-react'
+import { Button } from '@hominem/ui/button';
+import { Twitter } from 'lucide-react';
 
-import { useTwitterAccounts } from '~/lib/hooks/use-twitter-oauth'
+import { useTwitterAccounts } from '~/lib/hooks/use-twitter-oauth';
 
 export function ConnectTwitterAccount() {
-  const { data: accounts, isLoading } = useTwitterAccounts()
+  const { data: accounts, isLoading } = useTwitterAccounts();
 
   if (isLoading) {
-    return <div className="text-sm text-muted-foreground">Loading Twitter accounts...</div>
+    return <div className="text-sm text-muted-foreground">Loading Twitter accounts...</div>;
   }
 
   return (
@@ -30,5 +30,5 @@ export function ConnectTwitterAccount() {
         </div>
       )}
     </div>
-  )
+  );
 }

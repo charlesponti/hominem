@@ -561,7 +561,11 @@ export async function updateHabit(
 ): Promise<EventWithTagsAndPeople | null> {
   // Verify the habit exists and belongs to the user
   const habit = await getEventById(habitId);
-  if (!habit || (habit as { userId?: string }).userId !== userId || (habit as { type?: string }).type !== 'Habit') {
+  if (
+    !habit ||
+    (habit as { userId?: string }).userId !== userId ||
+    (habit as { type?: string }).type !== 'Habit'
+  ) {
     return null;
   }
 

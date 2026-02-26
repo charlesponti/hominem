@@ -1,15 +1,16 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
-import { createCommand } from '../../command-factory'
-import { CliError } from '../../errors'
-import { AuthError, interactiveLogin } from '@/utils/auth'
+import { AuthError, interactiveLogin } from '@/utils/auth';
+
+import { createCommand } from '../../command-factory';
+import { CliError } from '../../errors';
 
 const flagsSchema = z.object({
   baseUrl: z.string().default('http://localhost:3000'),
   scope: z.string().default(''),
   device: z.boolean().default(false),
-  timeoutMs: z.coerce.number().int().positive().default(120000)
-})
+  timeoutMs: z.coerce.number().int().positive().default(120000),
+});
 
 export default createCommand({
   name: 'auth login',
@@ -21,13 +22,13 @@ export default createCommand({
   outputSchema: z.object({
     authenticated: z.literal(true),
     mode: z.enum(['browser', 'device']),
-    baseUrl: z.string()
+    baseUrl: z.string(),
   }),
   async run({ flags, context }) {
     const scopes = flags.scope
       .split(',')
       .map((scope) => scope.trim())
-      .filter(Boolean)
+      .filter(Boolean);
 
     try {
       await interactiveLogin({
@@ -35,28 +36,28 @@ export default createCommand({
         scopes,
         headless: flags.device,
         outputMode: context.outputFormat === 'text' ? 'interactive' : 'machine',
-        timeoutMs: flags.timeoutMs
-      })
+        timeoutMs: flags.timeoutMs,
+      });
     } catch (error) {
       if (error instanceof AuthError) {
         throw new CliError({
           code: error.code,
           category: error.category,
           message: error.message,
-          hint: error.hint
-        })
+          hint: error.hint,
+        });
       }
       throw new CliError({
         code: 'AUTH_LOGIN_FAILED',
         category: 'auth',
-        message: error instanceof Error ? error.message : 'Authentication flow failed'
-      })
+        message: error instanceof Error ? error.message : 'Authentication flow failed',
+      });
     }
 
     return {
       authenticated: true,
       mode: flags.device ? 'device' : 'browser',
-      baseUrl: flags.baseUrl
-    }
-  }
-})
+      baseUrl: flags.baseUrl,
+    };
+  },
+});

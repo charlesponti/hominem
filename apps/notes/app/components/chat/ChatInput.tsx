@@ -1,6 +1,6 @@
+import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import { Textarea } from '@hominem/ui/textarea';
-import { useAuthContext } from '@hominem/auth';
 import { LoaderCircle, Mic, Paperclip, Send } from 'lucide-react';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
@@ -103,24 +103,24 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
   const handleAudioTranscribed = useCallback(
     async (transcript: string) => {
       if (!transcript.trim()) {
-        return
+        return;
       }
 
       try {
-        onStatusChange?.('streaming')
+        onStatusChange?.('streaming');
         await sendMessage.mutateAsync({
           message: transcript.trim(),
           chatId,
-        })
-        onStatusChange?.('idle')
+        });
+        onStatusChange?.('idle');
       } catch (error) {
-        console.error('Failed to send transcribed message:', error)
-        onStatusChange?.('error', error as Error)
-        throw error
+        console.error('Failed to send transcribed message:', error);
+        onStatusChange?.('error', error as Error);
+        throw error;
       }
     },
     [chatId, onStatusChange, sendMessage],
-  )
+  );
 
   const isSubmitting = sendMessage.isPending;
 

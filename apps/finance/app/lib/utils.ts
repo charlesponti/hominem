@@ -1,1 +1,1 @@
-export { cn } from '@hominem/ui/lib/utils'
+export { cn } from '@hominem/ui/lib/utils';

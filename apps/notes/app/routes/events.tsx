@@ -6,9 +6,10 @@ import { useSort, useUrlFilters } from '@hominem/ui/hooks';
 import { useEffect, useMemo, useState } from 'react';
 import { data, useNavigate } from 'react-router';
 
-import { getServerSession } from '~/lib/auth.server';
-import i18n from '~/lib/i18n';
 import { createServerHonoClient } from '~/lib/api.server';
+import { getServerSession } from '~/lib/auth.server';
+import { useGoogleCalendarSync } from '~/lib/hooks/use-google-calendar-sync';
+import i18n from '~/lib/i18n';
 
 import type { Route } from './+types/events';
 
@@ -17,7 +18,6 @@ import EventList, { type Activity } from '../components/events/EventList';
 import StatsDisplay from '../components/events/StatsDisplay';
 import SyncButton from '../components/events/SyncButton';
 import SyncStatus from '../components/events/SyncStatus';
-import { useGoogleCalendarSync } from '~/lib/hooks/use-google-calendar-sync';
 
 type Person = PeopleListOutput[number];
 type EventData = EventsListOutput[number];
@@ -103,7 +103,12 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const { syncCalendar, isLoading: isSyncing, syncResult, syncError: syncErr } = useGoogleCalendarSync();
+  const {
+    syncCalendar,
+    isLoading: isSyncing,
+    syncResult,
+    syncError: syncErr,
+  } = useGoogleCalendarSync();
 
   // Use shared hooks for filter management with URL sync
   const { filters, updateFilter } = useUrlFilters<EventFilters>({
@@ -305,7 +310,7 @@ export default function EventsPage({ loaderData }: Route.ComponentProps) {
               <SyncStatus
                 lastSyncedAt={new Date().toISOString()}
                 syncError={syncErr ?? null}
-                eventCount={syncResult ? (syncResult as { created?: number }).created ?? 0 : 0}
+                eventCount={syncResult ? ((syncResult as { created?: number }).created ?? 0) : 0}
                 connected={!syncErr}
               />
             </div>

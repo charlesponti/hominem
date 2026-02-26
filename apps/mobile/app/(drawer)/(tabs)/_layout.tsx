@@ -1,7 +1,7 @@
-import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs'
-import React from 'react'
+import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
+import React from 'react';
 
-import { theme } from '~/theme'
+import { theme } from '~/theme';
 
 export default function TabsLayout() {
   return (
@@ -30,5 +30,5 @@ export default function TabsLayout() {
         <Icon sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }} />
       </NativeTabs.Trigger>
     </NativeTabs>
-  )
+  );
 }

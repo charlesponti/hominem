@@ -2,10 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components
 import { Skeleton } from '@hominem/ui/components/ui/skeleton';
 import { redirect, useParams } from 'react-router';
 
+import { createServerHonoClient } from '~/lib/api.server';
+import { requireAuth } from '~/lib/guards';
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
 import { formatCurrency } from '~/lib/number.utils';
-import { requireAuth } from '~/lib/guards';
-import { createServerHonoClient } from '~/lib/api.server';
 
 import type { Route } from './+types/analytics.monthly.$month';
 

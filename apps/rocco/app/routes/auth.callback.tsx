@@ -6,8 +6,7 @@ export async function loader({ request }: { request: Request }) {
   const errorParam = requestUrl.searchParams.get('error');
   const errorDescription = requestUrl.searchParams.get('error_description');
 
-  const next =
-    rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/';
+  const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/';
 
   if (errorParam) {
     const sep = next.includes('?') ? '&' : '?';

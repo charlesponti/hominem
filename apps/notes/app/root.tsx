@@ -19,10 +19,10 @@ import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags';
 import type { Route } from './+types/root';
 
 import './globals.css';
-import { authConfig, getServerSession } from './lib/auth.server';
-import { serverEnv } from './lib/env';
-import './lib/i18n';
 import { HonoProvider } from './lib/api';
+import { authConfig, getServerSession } from './lib/auth.server';
+import './lib/i18n';
+import { serverEnv } from './lib/env';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { session, headers } = await getServerSession(request);
@@ -93,11 +93,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 
   return (
-    <AuthProvider
-      initialSession={session}
-      config={authEnv}
-      onAuthEvent={handleAuthEvent}
-    >
+    <AuthProvider initialSession={session} config={authEnv} onAuthEvent={handleAuthEvent}>
       <HonoProvider baseUrl={apiBaseUrl}>
         <FeatureFlagsProvider>
           <UpdateGuard logo="/logo.png" appName="Notes">

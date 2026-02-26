@@ -5,7 +5,12 @@
  * Import actual types directly from @hominem/db/types/notes
  */
 
-import { NoteContentTypeSchema, NoteStatusSchema, NoteAnalysisSchema, PublishingMetadataSchema } from '@hominem/db/schema/notes';
+import {
+  NoteContentTypeSchema,
+  NoteStatusSchema,
+  NoteAnalysisSchema,
+  PublishingMetadataSchema,
+} from '@hominem/db/schema/notes';
 import * as z from 'zod';
 
 const noteTagSchema = z.object({ value: z.string() });

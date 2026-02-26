@@ -1,24 +1,25 @@
-import path from 'node:path'
-import { z } from 'zod'
+import path from 'node:path';
+import { z } from 'zod';
 
-import { createCommand } from '../../command-factory'
-import { CliError } from '../../errors'
-import { JsonValueSchema } from '../../json-value-schema'
-import { invokePluginRpc } from '../../plugin-rpc'
-import type { JsonValue } from '../../contracts'
+import type { JsonValue } from '../../contracts';
+
+import { createCommand } from '../../command-factory';
+import { CliError } from '../../errors';
+import { JsonValueSchema } from '../../json-value-schema';
+import { invokePluginRpc } from '../../plugin-rpc';
 
 function parseParams(raw: string | undefined): JsonValue | undefined {
   if (!raw) {
-    return undefined
+    return undefined;
   }
   try {
-    return JSON.parse(raw) as JsonValue
+    return JSON.parse(raw) as JsonValue;
   } catch {
     throw new CliError({
       code: 'PLUGIN_PARAMS_INVALID',
       category: 'validation',
-      message: 'Plugin params must be valid JSON'
-    })
+      message: 'Plugin params must be valid JSON',
+    });
   }
 }
 
@@ -29,33 +30,33 @@ export default createCommand({
   argNames: ['pluginRoot', 'method'],
   args: z.object({
     pluginRoot: z.string().min(1),
-    method: z.string().min(1)
+    method: z.string().min(1),
   }),
   flags: z.object({
     params: z.string().optional(),
     timeoutMs: z.coerce.number().int().positive().default(5000),
-    runtimeBinary: z.string().optional()
+    runtimeBinary: z.string().optional(),
   }),
   outputSchema: z.object({
     pluginRoot: z.string(),
     method: z.string(),
-    result: JsonValueSchema
+    result: JsonValueSchema,
   }),
   async run({ args, flags, context }) {
-    const pluginRoot = path.resolve(context.cwd, args.pluginRoot)
-    const params = parseParams(flags.params)
+    const pluginRoot = path.resolve(context.cwd, args.pluginRoot);
+    const params = parseParams(flags.params);
     const result = await invokePluginRpc({
       pluginRoot,
       method: args.method,
       params,
       timeoutMs: flags.timeoutMs,
-      runtimeBinary: flags.runtimeBinary
-    })
+      runtimeBinary: flags.runtimeBinary,
+    });
 
     return {
       pluginRoot,
       method: args.method,
-      result
-    }
-  }
-})
+      result,
+    };
+  },
+});

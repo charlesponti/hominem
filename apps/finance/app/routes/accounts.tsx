@@ -19,14 +19,14 @@ import {
   EyeOff,
   RefreshCcw,
 } from 'lucide-react';
-import { redirect } from 'react-router';
 import { useState } from 'react';
+import { redirect } from 'react-router';
 
 import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link';
 import { RouteLink } from '~/components/route-link';
-import { useAllAccounts } from '~/lib/hooks/use-finance-data';
-import { requireAuth } from '~/lib/guards';
 import { createServerHonoClient } from '~/lib/api.server';
+import { requireAuth } from '~/lib/guards';
+import { useAllAccounts } from '~/lib/hooks/use-finance-data';
 
 import type { Route } from './+types/accounts';
 

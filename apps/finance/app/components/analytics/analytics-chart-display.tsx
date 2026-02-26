@@ -1,3 +1,4 @@
+import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types';
 import type { Dispatch, SetStateAction } from 'react';
 
 import { CHART_COLORS } from '@hominem/ui';
@@ -18,8 +19,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-
-import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types';
 
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';

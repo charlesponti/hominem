@@ -32,11 +32,8 @@ export function BudgetProjectionDashboard() {
   const totalIncome =
     categories
       .filter((cat) => cat.type === 'income')
-      .reduce(
-        (sum, cat) =>
-          sum + Number.parseFloat(String(cat.averageMonthlyExpense || '0')),
-        0,
-      ) || 0;
+      .reduce((sum, cat) => sum + Number.parseFloat(String(cat.averageMonthlyExpense || '0')), 0) ||
+    0;
 
   const handleCalculate = () => {
     if (totalIncome > 0) {

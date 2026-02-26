@@ -14,7 +14,10 @@ interface UpdateGuardProps {
 
 const UPDATE_INTERVAL_MS = 60 * 60 * 1000;
 
-function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: Omit<UpdateGuardProps, 'children'>) {
+function UpdateGuardClient({
+  logo = '/logo.png',
+  appName = 'App',
+}: Omit<UpdateGuardProps, 'children'>) {
   void logo;
   void appName;
 
@@ -127,11 +130,7 @@ function UpdateGuardClient({ logo = '/logo.png', appName = 'App' }: Omit<UpdateG
                 Refresh
               </button>
             )}
-            <button
-              type="button"
-              onClick={closePrompt}
-              className="text-sm text-foreground/70"
-            >
+            <button type="button" onClick={closePrompt} className="text-sm text-foreground/70">
               Close
             </button>
           </div>

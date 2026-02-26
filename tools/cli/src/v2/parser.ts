@@ -1,21 +1,22 @@
-import type { OutputFormat } from './contracts'
-import { OUTPUT_FORMATS } from './contracts'
+import type { OutputFormat } from './contracts';
+
+import { OUTPUT_FORMATS } from './contracts';
 
 export interface ParseResult {
-  commandTokens: string[]
-  args: string[]
-  flags: Record<string, string | boolean>
+  commandTokens: string[];
+  args: string[];
+  flags: Record<string, string | boolean>;
   globals: {
-    outputFormat: OutputFormat
-    quiet: boolean
-    verbose: boolean
-    interactive: boolean
-    help: boolean
-  }
+    outputFormat: OutputFormat;
+    quiet: boolean;
+    verbose: boolean;
+    interactive: boolean;
+    help: boolean;
+  };
 }
 
 function isOutputFormat(value: string): value is OutputFormat {
-  return (OUTPUT_FORMATS as readonly string[]).includes(value)
+  return (OUTPUT_FORMATS as readonly string[]).includes(value);
 }
 
 export function parseArgv(argv: string[]): ParseResult {
@@ -24,87 +25,87 @@ export function parseArgv(argv: string[]): ParseResult {
     quiet: false,
     verbose: false,
     interactive: false,
-    help: false
-  }
+    help: false,
+  };
 
-  const commandTokens: string[] = []
-  const args: string[] = []
-  const flags: Record<string, string | boolean> = {}
+  const commandTokens: string[] = [];
+  const args: string[] = [];
+  const flags: Record<string, string | boolean> = {};
 
-  let commandFinalized = false
+  let commandFinalized = false;
 
   for (let index = 0; index < argv.length; index += 1) {
-    const token = argv[index]
+    const token = argv[index];
 
     if (token === '--help' || token === '-h') {
-      globals.help = true
-      continue
+      globals.help = true;
+      continue;
     }
 
     if (token === '--quiet') {
-      globals.quiet = true
-      continue
+      globals.quiet = true;
+      continue;
     }
 
     if (token === '--verbose') {
-      globals.verbose = true
-      continue
+      globals.verbose = true;
+      continue;
     }
 
     if (token === '--interactive') {
-      globals.interactive = true
-      continue
+      globals.interactive = true;
+      continue;
     }
 
     if (token === '--format') {
-      const value = argv[index + 1]
+      const value = argv[index + 1];
       if (value && isOutputFormat(value)) {
-        globals.outputFormat = value
-        index += 1
+        globals.outputFormat = value;
+        index += 1;
       }
-      continue
+      continue;
     }
 
     if (token.startsWith('--format=')) {
-      const value = token.split('=')[1]
+      const value = token.split('=')[1];
       if (value && isOutputFormat(value)) {
-        globals.outputFormat = value
+        globals.outputFormat = value;
       }
-      continue
+      continue;
     }
 
     if (token.startsWith('--')) {
-      commandFinalized = true
-      const [nameRaw, inlineValue] = token.slice(2).split('=')
-      const name = nameRaw.trim()
+      commandFinalized = true;
+      const [nameRaw, inlineValue] = token.slice(2).split('=');
+      const name = nameRaw.trim();
 
       if (inlineValue) {
-        flags[name] = inlineValue
-        continue
+        flags[name] = inlineValue;
+        continue;
       }
 
-      const next = argv[index + 1]
+      const next = argv[index + 1];
       if (next && !next.startsWith('-')) {
-        flags[name] = next
-        index += 1
+        flags[name] = next;
+        index += 1;
       } else {
-        flags[name] = true
+        flags[name] = true;
       }
-      continue
+      continue;
     }
 
     if (!commandFinalized && args.length === 0) {
-      commandTokens.push(token)
-      continue
+      commandTokens.push(token);
+      continue;
     }
 
-    args.push(token)
+    args.push(token);
   }
 
   return {
     commandTokens,
     args,
     flags,
-    globals
-  }
+    globals,
+  };
 }

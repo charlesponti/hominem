@@ -1,4 +1,4 @@
-declare module "bun:sqlite" {
+declare module 'bun:sqlite' {
   export class Database {
     constructor(filename: string, options?: { create?: boolean });
     run(sql: string, ...params: any[]): any;
@@ -19,4 +19,4 @@ declare module "bun:sqlite" {
   }
 }
 
-declare module "vcard-parser";
+declare module 'vcard-parser';

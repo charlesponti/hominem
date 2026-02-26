@@ -1,6 +1,6 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
-import { createCommand } from '../../command-factory'
+import { createCommand } from '../../command-factory';
 
 export default createCommand({
   name: 'system',
@@ -11,12 +11,12 @@ export default createCommand({
   flags: z.object({}),
   outputSchema: z.object({
     domain: z.literal('system'),
-    subcommands: z.array(z.string())
+    subcommands: z.array(z.string()),
   }),
   async run() {
     return {
       domain: 'system',
-      subcommands: ['doctor', 'generate command', 'plugin call']
-    }
-  }
-})
+      subcommands: ['doctor', 'generate command', 'plugin call'],
+    };
+  },
+});

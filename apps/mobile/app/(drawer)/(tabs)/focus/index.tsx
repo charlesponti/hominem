@@ -1,23 +1,23 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { Link, Stack } from 'expo-router'
-import React, { useCallback, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { useQueryClient } from '@tanstack/react-query';
+import { Link, Stack } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { LoadingContainer } from '~/components/LoadingFull'
-import { PulsingCircle } from '~/components/animated/pulsing-circle'
-import { FeedbackBlock } from '~/components/feedback-block'
-import { FocusHeader } from '~/components/focus/focus-header'
-import { FocusList } from '~/components/focus/focus-list'
-import { ActiveSearchSummary, type ActiveSearch } from '~/components/focus/focus-search'
-import MindsherpaIcon from '~/components/ui/icon'
-import { Text, theme } from '~/theme'
-import { useFocusQuery } from '~/utils/services/notes/use-focus-query'
+import { PulsingCircle } from '~/components/animated/pulsing-circle';
+import { FeedbackBlock } from '~/components/feedback-block';
+import { FocusHeader } from '~/components/focus/focus-header';
+import { FocusList } from '~/components/focus/focus-list';
+import { ActiveSearchSummary, type ActiveSearch } from '~/components/focus/focus-search';
+import { LoadingContainer } from '~/components/LoadingFull';
+import MindsherpaIcon from '~/components/ui/icon';
+import { Text, theme } from '~/theme';
+import { useFocusQuery } from '~/utils/services/notes/use-focus-query';
 
 export const FocusView = () => {
-  const queryClient = useQueryClient()
-  const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null)
-  const [refreshing, setRefreshing] = useState(false)
+  const queryClient = useQueryClient();
+  const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const {
     data: focusItems,
     refetch,
@@ -26,27 +26,27 @@ export const FocusView = () => {
     isError,
   } = useFocusQuery({
     onSuccess: (_data) => {
-      setRefreshing(false)
+      setRefreshing(false);
     },
     onError: (_error) => {
-      setRefreshing(false)
+      setRefreshing(false);
     },
-  })
+  });
 
   const onRefresh = useCallback(() => {
-    setActiveSearch(null)
-    setRefreshing(true)
-    queryClient.setQueryData(['focusItems'], [])
-    refetch()
-  }, [queryClient.setQueryData, refetch])
+    setActiveSearch(null);
+    setRefreshing(true);
+    queryClient.setQueryData(['focusItems'], []);
+    refetch();
+  }, [queryClient.setQueryData, refetch]);
 
   const onSearchClose = useCallback(() => {
-    onRefresh()
-    setActiveSearch(null)
-  }, [onRefresh])
+    onRefresh();
+    setActiveSearch(null);
+  }, [onRefresh]);
 
-  const isLoaded = Boolean(!isLoading && !isRefetching && !refreshing)
-  const hasFocusItems = !!focusItems && focusItems.length > 0
+  const isLoaded = Boolean(!isLoading && !isRefetching && !refreshing);
+  const hasFocusItems = !!focusItems && focusItems.length > 0;
 
   return (
     <>
@@ -56,7 +56,9 @@ export const FocusView = () => {
           headerRight: () => (
             <View style={{ flexDirection: 'row', columnGap: 8 }}>
               <Link href="/(drawer)/(tabs)/sherpa">
-                <Text variant="body" color="secondaryForeground">SHERPA</Text>
+                <Text variant="body" color="secondaryForeground">
+                  SHERPA
+                </Text>
               </Link>
               <Text variant="body" color="secondaryForeground" onPress={onRefresh}>
                 REFRESH
@@ -98,14 +100,14 @@ export const FocusView = () => {
         <View style={styles.sherpaButtonContainer}>
           <View style={styles.sherpaCircleButton}>
             <Link href="/(drawer)/(tabs)/sherpa" style={{ flex: 1 }}>
-          <MindsherpaIcon name="hat-wizard" size={32} color={theme.colors.white} />
+              <MindsherpaIcon name="hat-wizard" size={32} color={theme.colors.white} />
             </Link>
           </View>
         </View>
       </GestureHandlerRootView>
     </>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -156,9 +158,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-})
+});
 
-export default FocusView
+export default FocusView;
 
 const FocusLoadingError = React.memo(() => {
   return (
@@ -184,5 +186,5 @@ const FocusLoadingError = React.memo(() => {
         </View>
       </FeedbackBlock>
     </View>
-  )
-})
+  );
+});

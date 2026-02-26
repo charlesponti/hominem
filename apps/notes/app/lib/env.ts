@@ -1,5 +1,5 @@
-import * as z from 'zod';
 import { createClientEnv, createServerEnv } from '@hominem/env';
+import * as z from 'zod';
 
 const clientSchema = z.object({
   VITE_PUBLIC_API_URL: z.string().url(),

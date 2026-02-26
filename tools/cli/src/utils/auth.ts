@@ -10,7 +10,13 @@ import open from 'open';
 import ora from 'ora';
 
 import { getHominemHomeDir } from './paths';
-import { clearTokens, loadTokens, saveTokens, SecureStoreError, type StoredTokens } from './secure-store';
+import {
+  clearTokens,
+  loadTokens,
+  saveTokens,
+  SecureStoreError,
+  type StoredTokens,
+} from './secure-store';
 
 const DEFAULT_AUTH_BASE = 'http://localhost:3000';
 
@@ -126,7 +132,7 @@ export async function migrateLegacyConfig(): Promise<void> {
       tokenVersion: 2,
       accessToken: json.token,
       provider: 'better-auth',
-      issuerBaseUrl: normalizeBaseUrl(DEFAULT_AUTH_BASE)
+      issuerBaseUrl: normalizeBaseUrl(DEFAULT_AUTH_BASE),
     };
     if (json.refreshToken) tokens.refreshToken = json.refreshToken;
     if (json.timestamp) {
@@ -164,7 +170,7 @@ function buildStoredTokensFromResponse(
     accessToken: tokenResponse.access_token,
     provider: tokenResponse.provider ?? fallback?.provider ?? 'better-auth',
     issuedAt: new Date().toISOString(),
-    issuerBaseUrl: normalizeBaseUrl(issuerBaseUrl)
+    issuerBaseUrl: normalizeBaseUrl(issuerBaseUrl),
   };
 
   const expiresAt = toExpiresAtIso(tokenResponse, fallback?.expiresAt);
@@ -195,7 +201,7 @@ export async function getStoredTokens(): Promise<StoredTokens | null> {
         code: 'AUTH_SECURE_STORE_FAILED',
         category: 'auth',
         message: error.message,
-        hint: 'Run `hominem auth login` to reinitialize credentials'
+        hint: 'Run `hominem auth login` to reinitialize credentials',
       });
     }
     throw error;
@@ -211,7 +217,7 @@ export async function logout(options?: { outputMode?: 'machine' | 'interactive' 
         code: 'AUTH_SECURE_STORE_FAILED',
         category: 'auth',
         message: error.message,
-        hint: 'Run `hominem auth login` to reinitialize credentials'
+        hint: 'Run `hominem auth login` to reinitialize credentials',
       });
     }
     throw error;
@@ -285,7 +291,8 @@ async function exchangeCodeForTokens({
 }
 
 export async function interactiveLogin(options: AuthOptions) {
-  const spinner = options.outputMode === 'interactive' ? ora('Starting browser login').start() : null;
+  const spinner =
+    options.outputMode === 'interactive' ? ora('Starting browser login').start() : null;
 
   const port = await getPort();
   const redirectUri = `http://127.0.0.1:${port}/callback`;
@@ -329,12 +336,14 @@ export async function interactiveLogin(options: AuthOptions) {
         spinner.fail(chalk.red('Authentication timed out'));
       }
       server.close();
-      reject(new AuthError({
-        code: 'AUTH_LOGIN_TIMEOUT',
-        category: 'auth',
-        message: `Authentication timed out after ${options.timeoutMs}ms`,
-        hint: 'Run `hominem auth login` again'
-      }));
+      reject(
+        new AuthError({
+          code: 'AUTH_LOGIN_TIMEOUT',
+          category: 'auth',
+          message: `Authentication timed out after ${options.timeoutMs}ms`,
+          hint: 'Run `hominem auth login` again',
+        }),
+      );
     }, options.timeoutMs);
 
     const complete = (error?: Error) => {
@@ -399,11 +408,13 @@ export async function interactiveLogin(options: AuthOptions) {
           emitError(options.outputMode, error);
         }
         res.writeHead(500).end('Authentication failed');
-        complete(new AuthError({
-          code: 'AUTH_LOGIN_FAILED',
-          category: 'auth',
-          message: error instanceof Error ? error.message : 'Authentication flow failed'
-        }));
+        complete(
+          new AuthError({
+            code: 'AUTH_LOGIN_FAILED',
+            category: 'auth',
+            message: error instanceof Error ? error.message : 'Authentication flow failed',
+          }),
+        );
       }
     });
 
@@ -420,11 +431,13 @@ export async function interactiveLogin(options: AuthOptions) {
         spinner.fail(chalk.red('Could not start local redirect server'));
       }
       emitError(options.outputMode, error);
-      complete(new AuthError({
-        code: 'AUTH_LOGIN_FAILED',
-        category: 'dependency',
-        message: error.message
-      }));
+      complete(
+        new AuthError({
+          code: 'AUTH_LOGIN_FAILED',
+          category: 'dependency',
+          message: error.message,
+        }),
+      );
     });
   });
 }
@@ -509,16 +522,19 @@ export async function getAccessToken(params?: {
       code: 'AUTH_ISSUER_MISSING',
       category: 'auth',
       message: 'Stored auth issuer is missing',
-      hint: 'Run `hominem auth login`'
+      hint: 'Run `hominem auth login`',
     });
   }
 
-  if (expectedIssuerBaseUrl && normalizeBaseUrl(expectedIssuerBaseUrl) !== normalizeBaseUrl(stored.issuerBaseUrl)) {
+  if (
+    expectedIssuerBaseUrl &&
+    normalizeBaseUrl(expectedIssuerBaseUrl) !== normalizeBaseUrl(stored.issuerBaseUrl)
+  ) {
     throw new AuthError({
       code: 'AUTH_ISSUER_MISMATCH',
       category: 'auth',
       message: `Token issuer ${normalizeBaseUrl(stored.issuerBaseUrl)} does not match requested base ${normalizeBaseUrl(expectedIssuerBaseUrl)}`,
-      hint: 'Run `hominem auth login --base-url <target>`'
+      hint: 'Run `hominem auth login --base-url <target>`',
     });
   }
 
@@ -533,7 +549,7 @@ export async function getAccessToken(params?: {
       code: 'AUTH_INVALID',
       category: 'auth',
       message: 'Auth token expired and no refresh token is available',
-      hint: 'Run `hominem auth login`'
+      hint: 'Run `hominem auth login`',
     });
   }
 
@@ -545,7 +561,11 @@ export async function getAccessToken(params?: {
     });
     const data = res.data as TokenResponse;
 
-    const tokens = buildStoredTokensFromResponse(data, normalizeBaseUrl(stored.issuerBaseUrl), stored);
+    const tokens = buildStoredTokensFromResponse(
+      data,
+      normalizeBaseUrl(stored.issuerBaseUrl),
+      stored,
+    );
 
     await saveTokens(tokens);
 
@@ -558,14 +578,14 @@ export async function getAccessToken(params?: {
           code: 'AUTH_INVALID',
           category: 'auth',
           message: 'Stored credentials are invalid',
-          hint: 'Run `hominem auth login`'
+          hint: 'Run `hominem auth login`',
         });
       }
     }
     throw new AuthError({
       code: 'AUTH_DEPENDENCY_UNAVAILABLE',
       category: 'dependency',
-      message: error instanceof Error ? error.message : 'Auth refresh dependency unavailable'
+      message: error instanceof Error ? error.message : 'Auth refresh dependency unavailable',
     });
   }
 }
@@ -577,7 +597,7 @@ export async function requireAccessToken() {
       code: 'AUTH_REQUIRED',
       category: 'auth',
       message: 'No auth token available',
-      hint: 'Run `hominem auth login`'
+      hint: 'Run `hominem auth login`',
     });
   }
   return token;

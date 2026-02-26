@@ -5,8 +5,7 @@ export async function loader({ request }: { request: Request }) {
   const rawNext = requestUrl.searchParams.get('next');
   const errorParam = requestUrl.searchParams.get('error');
   const errorDescription = requestUrl.searchParams.get('error_description');
-  const next =
-    rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/notes';
+  const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/notes';
 
   const getRedirectTarget = (error: string, description: string) => {
     let target = next;

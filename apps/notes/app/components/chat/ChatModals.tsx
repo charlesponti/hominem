@@ -1,33 +1,35 @@
-import { Button } from '@hominem/ui/button'
-import type { VoiceErrorCode } from '@hominem/services'
-import { Loader2, X } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import type { VoiceErrorCode } from '@hominem/services';
 
-import { emitVoiceEvent } from '~/lib/voice-events'
-import type { UploadedFile } from '~/lib/types/upload.js'
-import { SpeechInput } from '../ai-elements/speech-input.js'
+import { Button } from '@hominem/ui/button';
+import { Loader2, X } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
-import { FileUploader } from './FileUploader.js'
+import type { UploadedFile } from '~/lib/types/upload.js';
+
+import { emitVoiceEvent } from '~/lib/voice-events';
+
+import { SpeechInput } from '../ai-elements/speech-input.js';
+import { FileUploader } from './FileUploader.js';
 
 interface ChatModalsProps {
-  showFileUploader: boolean
-  showAudioRecorder: boolean
-  onCloseFileUploader: () => void
-  onCloseAudioRecorder: () => void
-  onFilesUploaded: (files: UploadedFile[]) => void
-  onAudioTranscribed: (transcript: string) => Promise<void>
+  showFileUploader: boolean;
+  showAudioRecorder: boolean;
+  onCloseFileUploader: () => void;
+  onCloseAudioRecorder: () => void;
+  onFilesUploaded: (files: UploadedFile[]) => void;
+  onAudioTranscribed: (transcript: string) => Promise<void>;
 }
 
 type TranscribeApiResponse =
   | {
-      success: true
-      transcription: { text: string }
+      success: true;
+      transcription: { text: string };
     }
   | {
-      success: false
-      error: string
-      code?: string
-    }
+      success: false;
+      error: string;
+      code?: string;
+    };
 
 export function ChatModals({
   showFileUploader,
@@ -37,66 +39,66 @@ export function ChatModals({
   onFilesUploaded,
   onAudioTranscribed,
 }: ChatModalsProps) {
-  const [isSubmittingTranscript, setIsSubmittingTranscript] = useState(false)
-  const [voiceError, setVoiceError] = useState<string | null>(null)
+  const [isSubmittingTranscript, setIsSubmittingTranscript] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
 
   const transcribeAudioBlob = useCallback(async (audioBlob: Blob) => {
     emitVoiceEvent('voice_transcribe_requested', {
       platform: 'web',
       mimeType: audioBlob.type,
       sizeBytes: audioBlob.size,
-    })
+    });
 
-    const formData = new FormData()
-    formData.append('audio', audioBlob, 'recording.webm')
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.webm');
 
     const response = await fetch('/api/transcribe', {
       method: 'POST',
       body: formData,
-    })
-    const payload = (await response.json()) as TranscribeApiResponse
+    });
+    const payload = (await response.json()) as TranscribeApiResponse;
 
     if (!response.ok || !payload.success) {
       const code: VoiceErrorCode | undefined = payload.success
         ? undefined
         : isVoiceErrorCode(payload.code)
           ? payload.code
-          : undefined
+          : undefined;
       emitVoiceEvent('voice_transcribe_failed', {
         platform: 'web',
         mimeType: audioBlob.type,
         sizeBytes: audioBlob.size,
         ...(code ? { errorCode: code } : {}),
-      })
-      throw new Error(payload.success ? 'Transcription failed' : payload.error)
+      });
+      throw new Error(payload.success ? 'Transcription failed' : payload.error);
     }
 
     emitVoiceEvent('voice_transcribe_succeeded', {
       platform: 'web',
       mimeType: audioBlob.type,
       sizeBytes: audioBlob.size,
-    })
-    return payload.transcription.text
-  }, [])
+    });
+    return payload.transcription.text;
+  }, []);
 
   const handleVoiceTranscription = useCallback(
     async (transcript: string) => {
       if (!transcript.trim()) {
-        return
+        return;
       }
-      setIsSubmittingTranscript(true)
-      setVoiceError(null)
+      setIsSubmittingTranscript(true);
+      setVoiceError(null);
       try {
-        await onAudioTranscribed(transcript.trim())
-        onCloseAudioRecorder()
+        await onAudioTranscribed(transcript.trim());
+        onCloseAudioRecorder();
       } catch (error) {
-        setVoiceError(error instanceof Error ? error.message : 'Failed to send transcript')
+        setVoiceError(error instanceof Error ? error.message : 'Failed to send transcript');
       } finally {
-        setIsSubmittingTranscript(false)
+        setIsSubmittingTranscript(false);
       }
     },
     [onAudioTranscribed, onCloseAudioRecorder],
-  )
+  );
 
   return (
     <>
@@ -128,20 +130,28 @@ export function ChatModals({
                 aria-label="Record audio message"
                 onAudioRecorded={transcribeAudioBlob}
                 onTranscriptionChange={(text) => {
-                  void handleVoiceTranscription(text)
+                  void handleVoiceTranscription(text);
                 }}
               />
               {isSubmittingTranscript ? <Loader2 className="size-4 animate-spin" /> : null}
-              <span className="text-sm text-muted-foreground">Tap to record, tap again to stop</span>
+              <span className="text-sm text-muted-foreground">
+                Tap to record, tap again to stop
+              </span>
             </div>
             {voiceError ? <p className="text-sm text-destructive">{voiceError}</p> : null}
           </div>
         </div>
       ) : null}
     </>
-  )
+  );
 }
 
 function isVoiceErrorCode(code: string | undefined): code is VoiceErrorCode {
-  return code === 'INVALID_FORMAT' || code === 'TOO_LARGE' || code === 'AUTH' || code === 'QUOTA' || code === 'TRANSCRIBE_FAILED'
+  return (
+    code === 'INVALID_FORMAT' ||
+    code === 'TOO_LARGE' ||
+    code === 'AUTH' ||
+    code === 'QUOTA' ||
+    code === 'TRANSCRIBE_FAILED'
+  );
 }

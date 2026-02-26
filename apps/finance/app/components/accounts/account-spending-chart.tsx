@@ -1,3 +1,5 @@
+import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types';
+
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import { subMonths } from 'date-fns';
@@ -13,8 +15,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-
-import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types';
 
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';

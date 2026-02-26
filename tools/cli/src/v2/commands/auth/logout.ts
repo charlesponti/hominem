@@ -1,8 +1,9 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
-import { createCommand } from '../../command-factory'
-import { AuthError, logout } from '@/utils/auth'
-import { CliError } from '../../errors'
+import { AuthError, logout } from '@/utils/auth';
+
+import { createCommand } from '../../command-factory';
+import { CliError } from '../../errors';
 
 export default createCommand({
   name: 'auth logout',
@@ -12,26 +13,26 @@ export default createCommand({
   args: z.object({}),
   flags: z.object({}),
   outputSchema: z.object({
-    loggedOut: z.literal(true)
+    loggedOut: z.literal(true),
   }),
   async run({ context }) {
     try {
       await logout({
-        outputMode: context.outputFormat === 'text' ? 'interactive' : 'machine'
-      })
+        outputMode: context.outputFormat === 'text' ? 'interactive' : 'machine',
+      });
     } catch (error) {
       if (error instanceof AuthError) {
         throw new CliError({
           code: error.code,
           category: error.category,
           message: error.message,
-          hint: error.hint
-        })
+          hint: error.hint,
+        });
       }
-      throw error
+      throw error;
     }
     return {
-      loggedOut: true
-    }
-  }
-})
+      loggedOut: true,
+    };
+  },
+});

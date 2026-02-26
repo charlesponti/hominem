@@ -1,26 +1,22 @@
-import { experimental_generateSpeech } from 'ai'
-import { openai } from '@ai-sdk/openai'
-import { Buffer } from 'node:buffer'
+import { openai } from '@ai-sdk/openai';
+import { experimental_generateSpeech } from 'ai';
+import { Buffer } from 'node:buffer';
 
-import { env } from './env'
+import { env } from './env';
 
 export class VoiceSpeechError extends Error {
-  statusCode: number
+  statusCode: number;
 
   constructor(message: string, statusCode = 500) {
-    super(message)
-    this.name = 'VoiceSpeechError'
-    this.statusCode = statusCode
+    super(message);
+    this.name = 'VoiceSpeechError';
+    this.statusCode = statusCode;
   }
 }
 
-export async function generateSpeechBuffer(input: {
-  text: string
-  voice: string
-  speed: number
-}) {
+export async function generateSpeechBuffer(input: { text: string; voice: string; speed: number }) {
   if (!env.OPENAI_API_KEY) {
-    throw new VoiceSpeechError('Invalid API configuration.', 401)
+    throw new VoiceSpeechError('Invalid API configuration.', 401);
   }
 
   try {
@@ -30,26 +26,26 @@ export async function generateSpeechBuffer(input: {
       voice: input.voice,
       outputFormat: 'mp3',
       speed: input.speed,
-    })
+    });
 
     return {
       audioBuffer: Buffer.from(speech.audio.base64, 'base64'),
       mediaType: speech.audio.mimeType,
-    }
+    };
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes('quota')) {
-        throw new VoiceSpeechError('API quota exceeded. Please try again later.', 429)
+        throw new VoiceSpeechError('API quota exceeded. Please try again later.', 429);
       }
       if (error.message.includes('API key')) {
-        throw new VoiceSpeechError('Invalid API configuration.', 401)
+        throw new VoiceSpeechError('Invalid API configuration.', 401);
       }
       if (error.message.includes('content_policy')) {
-        throw new VoiceSpeechError('Text content not allowed by content policy.', 400)
+        throw new VoiceSpeechError('Text content not allowed by content policy.', 400);
       }
-      throw new VoiceSpeechError(`Speech generation failed: ${error.message}`, 500)
+      throw new VoiceSpeechError(`Speech generation failed: ${error.message}`, 500);
     }
 
-    throw new VoiceSpeechError('Failed to generate speech', 500)
+    throw new VoiceSpeechError('Failed to generate speech', 500);
   }
 }

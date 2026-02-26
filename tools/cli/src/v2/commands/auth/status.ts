@@ -1,7 +1,8 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
-import { createCommand } from '../../command-factory'
-import { getStoredTokens } from '@/utils/auth'
+import { getStoredTokens } from '@/utils/auth';
+
+import { createCommand } from '../../command-factory';
 
 export default createCommand({
   name: 'auth status',
@@ -17,12 +18,13 @@ export default createCommand({
     issuerBaseUrl: z.string().nullable(),
     expiresAt: z.string().nullable(),
     ttlSeconds: z.number().nullable(),
-    scopes: z.array(z.string())
+    scopes: z.array(z.string()),
   }),
   async run() {
-    const tokens = await getStoredTokens()
-    const expiresAtMs = tokens?.expiresAt ? new Date(tokens.expiresAt).getTime() : null
-    const ttlSeconds = expiresAtMs === null ? null : Math.max(0, Math.floor((expiresAtMs - Date.now()) / 1000))
+    const tokens = await getStoredTokens();
+    const expiresAtMs = tokens?.expiresAt ? new Date(tokens.expiresAt).getTime() : null;
+    const ttlSeconds =
+      expiresAtMs === null ? null : Math.max(0, Math.floor((expiresAtMs - Date.now()) / 1000));
 
     return {
       authenticated: Boolean(tokens?.accessToken),
@@ -31,7 +33,7 @@ export default createCommand({
       issuerBaseUrl: tokens?.issuerBaseUrl ?? null,
       expiresAt: tokens?.expiresAt ?? null,
       ttlSeconds,
-      scopes: tokens?.scopes ?? []
-    }
-  }
-})
+      scopes: tokens?.scopes ?? [],
+    };
+  },
+});

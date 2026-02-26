@@ -1,10 +1,9 @@
 import type { GoalMilestone } from '@hominem/hono-rpc/types';
+import type { GoalOutput as Goal } from '@hominem/hono-rpc/types/goals.types';
 
 import { Button } from '@hominem/ui';
 import { Progress } from '@hominem/ui/components/ui/progress';
 import { CalendarCheck, Edit, Trash2 } from 'lucide-react';
-
-import type { GoalOutput as Goal } from '@hominem/hono-rpc/types/goals.types';
 
 import { PriorityBadge } from './priority-badge';
 import { StatusBadge } from './status-badge';

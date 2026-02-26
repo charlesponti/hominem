@@ -10,9 +10,9 @@ import { AccountHeader } from '~/components/accounts/account-header';
 import { AccountSpendingChart } from '~/components/accounts/account-spending-chart';
 import { RouteLink } from '~/components/route-link';
 import { TransactionsList } from '~/components/transactions/transactions-list';
-import { useAccountById, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
-import { requireAuth } from '~/lib/guards';
 import { createServerHonoClient } from '~/lib/api.server';
+import { requireAuth } from '~/lib/guards';
+import { useAccountById, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
 
 import type { Route } from './+types/accounts.$id';
 
@@ -37,7 +37,9 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   ]);
 
   const account = accountRes.ok ? await accountRes.json() : null;
-  const transactionsData = transactionsRes.ok ? await transactionsRes.json() : { data: [], filteredCount: 0 };
+  const transactionsData = transactionsRes.ok
+    ? await transactionsRes.json()
+    : { data: [], filteredCount: 0 };
 
   return {
     account,
@@ -48,7 +50,11 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 
 export default function AccountDetailsPage({ loaderData }: Route.ComponentProps) {
   const { id } = useParams() as { id: string };
-  const { account: initialAccount, transactions: initialTransactions, totalTransactions: initialTotal } = loaderData;
+  const {
+    account: initialAccount,
+    transactions: initialTransactions,
+    totalTransactions: initialTotal,
+  } = loaderData;
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
 
   // Get account details

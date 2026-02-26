@@ -85,11 +85,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Links />
       </head>
       <body>
-        <AuthProvider
-          initialSession={session}
-          config={authConfig}
-          onAuthEvent={handleAuthEvent}
-        >
+        <AuthProvider initialSession={session} config={authConfig} onAuthEvent={handleAuthEvent}>
           <HonoProvider baseUrl={apiBaseUrl}>
             <UpdateGuard logo="/icons/apple-touch-icon-152x152.png" appName="Rocco">
               <Outlet />
