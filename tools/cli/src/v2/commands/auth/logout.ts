@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
 import { createCommand } from '../../command-factory'
-import { logout } from '@/utils/auth'
+import { AuthError, logout } from '@/utils/auth'
+import { CliError } from '../../errors'
 
 export default createCommand({
   name: 'auth logout',
@@ -13,8 +14,22 @@ export default createCommand({
   outputSchema: z.object({
     loggedOut: z.literal(true)
   }),
-  async run() {
-    await logout()
+  async run({ context }) {
+    try {
+      await logout({
+        outputMode: context.outputFormat === 'text' ? 'interactive' : 'machine'
+      })
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw new CliError({
+          code: error.code,
+          category: error.category,
+          message: error.message,
+          hint: error.hint
+        })
+      }
+      throw error
+    }
     return {
       loggedOut: true
     }

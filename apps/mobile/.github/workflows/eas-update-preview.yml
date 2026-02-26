@@ -37,11 +37,8 @@ jobs:
 
       - name: Publish update
         env:
-          EXPO_PUBLIC_API_ENDPOINT: ${{ secrets.EXPO_PUBLIC_API_ENDPOINT }}
-          EXPO_PUBLIC_GRAPHQL_ENDPOINT: ${{ secrets.EXPO_PUBLIC_GRAPHQL_ENDPOINT }}
+          EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
+          EXPO_PUBLIC_E2E_TESTING: "false"
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
           EXPO_PUBLIC_SENTRY_ENVIRONMENT: ${{ secrets.EXPO_PUBLIC_SENTRY_ENVIRONMENT }}
-          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL }}
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
-          EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY }}
         run: NODE_ENV=production eas update --auto --platform ios --branch preview --clear-cache

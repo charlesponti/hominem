@@ -132,6 +132,7 @@ function parseStructuredOutput(format: OutputFormat, result: CapturedRun): Succe
 function buildCases(): CommandContractCase[] {
   return [
     { name: 'auth root', argv: ['auth'], expectedCommand: 'auth', expectedExitCodes: [0] },
+    { name: 'auth login machine failure', argv: ['auth', 'login', '--device', '--base-url', 'http://127.0.0.1:1'], expectedCommand: 'auth login', expectedExitCodes: [3] },
     { name: 'auth status', argv: ['auth', 'status'], expectedCommand: 'auth status', expectedExitCodes: [0] },
     { name: 'config root', argv: ['config'], expectedCommand: 'config', expectedExitCodes: [0] },
     {
@@ -152,6 +153,7 @@ function buildCases(): CommandContractCase[] {
     { name: 'system root', argv: ['system'], expectedCommand: 'system', expectedExitCodes: [0] },
     { name: 'system doctor', argv: ['system', 'doctor'], expectedCommand: 'system doctor', expectedExitCodes: [0] },
     { name: 'system generate command', argv: ['system', 'generate', 'command', 'temp', 'demo'], expectedCommand: 'system generate command', expectedExitCodes: [0] },
+    { name: 'system plugin call validation', argv: ['system', 'plugin', 'call'], expectedCommand: 'system plugin call', expectedExitCodes: [4] },
     { name: 'ai root', argv: ['ai'], expectedCommand: 'ai', expectedExitCodes: [0] },
     { name: 'ai models', argv: ['ai', 'models', '--base-url', 'http://127.0.0.1:1'], expectedCommand: 'ai models', expectedExitCodes: [3] },
     { name: 'ai invoke', argv: ['ai', 'invoke', 'hello', '--base-url', 'http://127.0.0.1:1'], expectedCommand: 'ai invoke', expectedExitCodes: [3] },

@@ -1,6 +1,8 @@
 import { once } from 'node:events'
 import { spawn } from 'node:child_process'
 import crypto from 'node:crypto'
+import type { ChildProcessByStdio, SpawnOptionsWithoutStdio } from 'node:child_process'
+import type { Readable, Writable } from 'node:stream'
 import { z } from 'zod'
 
 import { CliError } from './errors'
@@ -33,6 +35,12 @@ interface InvokePluginRpcInput {
   method: string
   params?: JsonValue
   timeoutMs?: number
+  runtimeBinary?: string
+  spawnProcess?: (
+    command: string,
+    args: string[],
+    options: SpawnOptionsWithoutStdio
+  ) => ChildProcessByStdio<Writable, Readable, Readable>
 }
 
 function parseJsonLine(line: string): JsonValue {
@@ -67,11 +75,12 @@ export async function invokePluginRpc(input: InvokePluginRpcInput): Promise<Json
     params: input.params
   })
 
-  const runtimeBinary = process.env.HOMINEM_PLUGIN_RUNTIME ?? process.execPath
+  const runtimeBinary = input.runtimeBinary ?? process.env.HOMINEM_PLUGIN_RUNTIME ?? process.execPath
   const runtimeArgs = runtimeBinary.includes('bun')
     ? ['run', entryPath]
     : [entryPath]
-  const child = spawn(runtimeBinary, runtimeArgs, {
+  const spawnProcess = input.spawnProcess ?? spawn
+  const child = spawnProcess(runtimeBinary, runtimeArgs, {
     cwd: input.pluginRoot,
     stdio: ['pipe', 'pipe', 'pipe'],
     env: {
@@ -92,6 +101,8 @@ export async function invokePluginRpc(input: InvokePluginRpcInput): Promise<Json
   child.stderr.on('data', (chunk: Buffer) => {
     stderrChunks.push(chunk.toString('utf-8'))
   })
+  const stdoutEndPromise = once(child.stdout, 'end')
+  const stderrEndPromise = once(child.stderr, 'end')
 
   const closePromise = once(child, 'close') as Promise<[number | null]>
   const errorPromise = once(child, 'error') as Promise<[Error]>
@@ -129,6 +140,7 @@ export async function invokePluginRpc(input: InvokePluginRpcInput): Promise<Json
   } finally {
     clearTimeout(timer)
   }
+  await Promise.all([stdoutEndPromise, stderrEndPromise])
 
   const stdout = stdoutChunks.join('')
   const stderr = stderrChunks.join('')
@@ -142,7 +154,7 @@ export async function invokePluginRpc(input: InvokePluginRpcInput): Promise<Json
       code: 'PLUGIN_RPC_FAILED',
       category: 'dependency',
       message: `Plugin process exited with code ${exitCode}`,
-      details: { stderr, stdout }
+      details: { stderr, stdout, runtimeBinary, runtimeArgs }
     })
   }
 

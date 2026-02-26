@@ -9,11 +9,10 @@ import { URL } from 'node:url';
 import open from 'open';
 import ora from 'ora';
 
-import { env } from '../env';
 import { getHominemHomeDir } from './paths';
-import { clearTokens, loadTokens, saveTokens, type StoredTokens } from './secure-store';
+import { clearTokens, loadTokens, saveTokens, SecureStoreError, type StoredTokens } from './secure-store';
 
-const DEFAULT_AUTH_BASE = env.API_URL ?? 'http://localhost:3000';
+const DEFAULT_AUTH_BASE = 'http://localhost:3000';
 
 function getLegacyConfigPath(): string {
   return `${getHominemHomeDir()}/config.json`;
@@ -27,6 +26,8 @@ interface AuthOptions {
   authBaseUrl: string;
   scopes?: string[];
   headless?: boolean;
+  outputMode: 'machine' | 'interactive';
+  timeoutMs: number;
 }
 
 interface TokenResponse {
@@ -38,6 +39,62 @@ interface TokenResponse {
   provider?: 'better-auth';
   session_id?: string;
   refresh_family_id?: string;
+}
+
+export class AuthError extends Error {
+  code:
+    | 'AUTH_LOGIN_TIMEOUT'
+    | 'AUTH_LOGIN_FAILED'
+    | 'AUTH_REFRESH_FAILED'
+    | 'AUTH_ISSUER_MISSING'
+    | 'AUTH_ISSUER_MISMATCH'
+    | 'AUTH_INVALID'
+    | 'AUTH_REQUIRED'
+    | 'AUTH_DEPENDENCY_UNAVAILABLE'
+    | 'AUTH_SECURE_STORE_FAILED';
+  category: 'auth' | 'dependency';
+  hint?: string;
+
+  constructor(params: {
+    code:
+      | 'AUTH_LOGIN_TIMEOUT'
+      | 'AUTH_LOGIN_FAILED'
+      | 'AUTH_REFRESH_FAILED'
+      | 'AUTH_ISSUER_MISSING'
+      | 'AUTH_ISSUER_MISMATCH'
+      | 'AUTH_INVALID'
+      | 'AUTH_REQUIRED'
+      | 'AUTH_DEPENDENCY_UNAVAILABLE'
+      | 'AUTH_SECURE_STORE_FAILED';
+    category: 'auth' | 'dependency';
+    message: string;
+    hint?: string;
+  }) {
+    super(params.message);
+    this.name = 'AuthError';
+    this.code = params.code;
+    this.category = params.category;
+    this.hint = params.hint;
+  }
+}
+
+function normalizeBaseUrl(input: string): string {
+  const parsed = new URL(input);
+  return parsed.origin;
+}
+
+function emitInfo(outputMode: 'machine' | 'interactive', message: string) {
+  if (outputMode === 'machine') {
+    return;
+  }
+  consola.info(message);
+}
+
+function emitError(outputMode: 'machine' | 'interactive', error: Error) {
+  if (outputMode === 'machine') {
+    return;
+  }
+  consola.error(error);
 }
 
 interface CliAuthorizeResponse {
@@ -66,8 +123,10 @@ export async function migrateLegacyConfig(): Promise<void> {
     if (!json.token) return;
 
     const tokens: StoredTokens = {
+      tokenVersion: 2,
       accessToken: json.token,
       provider: 'better-auth',
+      issuerBaseUrl: normalizeBaseUrl(DEFAULT_AUTH_BASE)
     };
     if (json.refreshToken) tokens.refreshToken = json.refreshToken;
     if (json.timestamp) {
@@ -80,7 +139,6 @@ export async function migrateLegacyConfig(): Promise<void> {
 
     await fs.rm(legacyConfig, { force: true });
     await fs.rm(legacyGoogle, { force: true });
-    consola.info(chalk.green('Migrated CLI auth tokens to secure storage'));
   } catch (_err) {
     // ignore missing or malformed legacy config
   }
@@ -98,12 +156,15 @@ function toExpiresAtIso(tokenResponse: TokenResponse, fallback?: string) {
 
 function buildStoredTokensFromResponse(
   tokenResponse: TokenResponse,
+  issuerBaseUrl: string,
   fallback?: Partial<StoredTokens>,
 ): StoredTokens {
   const stored: StoredTokens = {
+    tokenVersion: 2,
     accessToken: tokenResponse.access_token,
     provider: tokenResponse.provider ?? fallback?.provider ?? 'better-auth',
     issuedAt: new Date().toISOString(),
+    issuerBaseUrl: normalizeBaseUrl(issuerBaseUrl)
   };
 
   const expiresAt = toExpiresAtIso(tokenResponse, fallback?.expiresAt);
@@ -125,13 +186,39 @@ function buildStoredTokensFromResponse(
 }
 
 export async function getStoredTokens(): Promise<StoredTokens | null> {
-  await migrateLegacyConfig();
-  return loadTokens();
+  try {
+    await migrateLegacyConfig();
+    return await loadTokens();
+  } catch (error) {
+    if (error instanceof SecureStoreError) {
+      throw new AuthError({
+        code: 'AUTH_SECURE_STORE_FAILED',
+        category: 'auth',
+        message: error.message,
+        hint: 'Run `hominem auth login` to reinitialize credentials'
+      });
+    }
+    throw error;
+  }
 }
 
-export async function logout(): Promise<void> {
-  await clearTokens();
-  consola.info(chalk.green('Logged out and cleared stored tokens'));
+export async function logout(options?: { outputMode?: 'machine' | 'interactive' }): Promise<void> {
+  try {
+    await clearTokens();
+  } catch (error) {
+    if (error instanceof SecureStoreError) {
+      throw new AuthError({
+        code: 'AUTH_SECURE_STORE_FAILED',
+        category: 'auth',
+        message: error.message,
+        hint: 'Run `hominem auth login` to reinitialize credentials'
+      });
+    }
+    throw error;
+  }
+  if ((options?.outputMode ?? 'interactive') === 'interactive') {
+    consola.info(chalk.green('Logged out and cleared stored tokens'));
+  }
 }
 
 function createPkcePair() {
@@ -198,15 +285,18 @@ async function exchangeCodeForTokens({
 }
 
 export async function interactiveLogin(options: AuthOptions) {
-  const spinner = ora('Starting browser login').start();
+  const spinner = options.outputMode === 'interactive' ? ora('Starting browser login').start() : null;
 
   const port = await getPort();
   const redirectUri = `http://127.0.0.1:${port}/callback`;
   const state = crypto.randomBytes(16).toString('hex');
   const { verifier, challenge } = createPkcePair();
+  const issuerBaseUrl = normalizeBaseUrl(options.authBaseUrl);
 
   if (options.headless) {
-    spinner.info('Using device-code login (headless mode)');
+    if (spinner) {
+      spinner.info('Using device-code login (headless mode)');
+    }
     await deviceCodeLogin(options);
     return;
   }
@@ -221,66 +311,121 @@ export async function interactiveLogin(options: AuthOptions) {
       ...(options.scopes ? { scopes: options.scopes } : {}),
     });
   } catch (error) {
-    spinner.fail(chalk.red('Failed to initialize CLI authorization flow'));
+    if (spinner) {
+      spinner.fail(chalk.red('Failed to initialize CLI authorization flow'));
+    }
     throw error;
   }
 
-  const server = http.createServer(async (req, res) => {
-    if (!req.url) {
-      res.writeHead(400).end('Bad Request');
-      return;
-    }
-
-    const requestUrl = new URL(req.url, redirectUri);
-    if (requestUrl.pathname !== '/callback') {
-      res.writeHead(404).end('Not found');
-      return;
-    }
-
-    const returnedState = requestUrl.searchParams.get('state');
-    const code = requestUrl.searchParams.get('code');
-
-    if (!code || returnedState !== state) {
-      res.writeHead(400).end('Invalid request');
-      return;
-    }
-
-    try {
-      const tokenResponse = await exchangeCodeForTokens({
-        baseUrl: options.authBaseUrl,
-        code,
-        codeVerifier: verifier,
-        redirectUri,
-      });
-
-      const tokens = buildStoredTokensFromResponse(tokenResponse, {
-        ...(options.scopes ? { scopes: options.scopes } : {}),
-      });
-
-      await saveTokens(tokens);
-
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end('<h1>Login successful</h1>You can close this window.');
-      spinner.succeed(chalk.green('Authenticated via browser'));
-    } catch (error) {
-      spinner.fail(chalk.red('Failed to exchange auth code'));
-      consola.error(error);
-      res.writeHead(500).end('Authentication failed');
-    } finally {
+  await new Promise<void>((resolve, reject) => {
+    let finished = false;
+    let server: http.Server;
+    const timeout = setTimeout(() => {
+      if (finished) {
+        return;
+      }
+      finished = true;
+      if (spinner) {
+        spinner.fail(chalk.red('Authentication timed out'));
+      }
       server.close();
-    }
-  });
+      reject(new AuthError({
+        code: 'AUTH_LOGIN_TIMEOUT',
+        category: 'auth',
+        message: `Authentication timed out after ${options.timeoutMs}ms`,
+        hint: 'Run `hominem auth login` again'
+      }));
+    }, options.timeoutMs);
 
-  server.listen(port, '127.0.0.1', () => {
-    spinner.text = 'Waiting for browser authentication';
-    consola.info(`Opening browser to ${authUrl}`);
-    void open(authUrl);
-  });
+    const complete = (error?: Error) => {
+      if (finished) {
+        return;
+      }
+      finished = true;
+      clearTimeout(timeout);
+      server.close();
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    };
 
-  server.on('error', (err) => {
-    spinner.fail(chalk.red('Could not start local redirect server'));
-    consola.error(err);
-    process.exit(1);
+    server = http.createServer(async (req, res) => {
+      if (!req.url) {
+        res.writeHead(400).end('Bad Request');
+        return;
+      }
+
+      const requestUrl = new URL(req.url, redirectUri);
+      if (requestUrl.pathname !== '/callback') {
+        res.writeHead(404).end('Not found');
+        return;
+      }
+
+      const returnedState = requestUrl.searchParams.get('state');
+      const code = requestUrl.searchParams.get('code');
+
+      if (!code || returnedState !== state) {
+        res.writeHead(400).end('Invalid request');
+        return;
+      }
+
+      try {
+        const tokenResponse = await exchangeCodeForTokens({
+          baseUrl: options.authBaseUrl,
+          code,
+          codeVerifier: verifier,
+          redirectUri,
+        });
+
+        const tokens = buildStoredTokensFromResponse(tokenResponse, issuerBaseUrl, {
+          ...(options.scopes ? { scopes: options.scopes } : {}),
+        });
+
+        await saveTokens(tokens);
+
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end('<h1>Login successful</h1>You can close this window.');
+        if (spinner) {
+          spinner.succeed(chalk.green('Authenticated via browser'));
+        }
+        complete();
+      } catch (error) {
+        if (spinner) {
+          spinner.fail(chalk.red('Failed to exchange auth code'));
+        }
+        if (error instanceof Error) {
+          emitError(options.outputMode, error);
+        }
+        res.writeHead(500).end('Authentication failed');
+        complete(new AuthError({
+          code: 'AUTH_LOGIN_FAILED',
+          category: 'auth',
+          message: error instanceof Error ? error.message : 'Authentication flow failed'
+        }));
+      }
+    });
+
+    server.listen(port, '127.0.0.1', () => {
+      if (spinner) {
+        spinner.text = 'Waiting for browser authentication';
+      }
+      emitInfo(options.outputMode, `Opening browser to ${authUrl}`);
+      void open(authUrl);
+    });
+
+    server.on('error', (error) => {
+      if (spinner) {
+        spinner.fail(chalk.red('Could not start local redirect server'));
+      }
+      emitError(options.outputMode, error);
+      complete(new AuthError({
+        code: 'AUTH_LOGIN_FAILED',
+        category: 'dependency',
+        message: error.message
+      }));
+    });
   });
 }
 
@@ -301,9 +446,9 @@ export async function deviceCodeLogin(_options: AuthOptions) {
   }
 
   const verifyUrl = device.verification_uri_complete ?? device.verification_uri;
-  consola.info(chalk.cyan(`User code: ${device.user_code}`));
+  emitInfo(options.outputMode, chalk.cyan(`User code: ${device.user_code}`));
   if (verifyUrl) {
-    consola.info(`Open: ${verifyUrl}`);
+    emitInfo(options.outputMode, `Open: ${verifyUrl}`);
     if (!options.headless) {
       await open(verifyUrl).catch(() => undefined);
     }
@@ -324,12 +469,12 @@ export async function deviceCodeLogin(_options: AuthOptions) {
       });
       const data = tokenResponse.data as TokenResponse;
 
-      const tokens = buildStoredTokensFromResponse(data, {
+      const tokens = buildStoredTokensFromResponse(data, options.authBaseUrl, {
         provider: 'better-auth',
         ...(options.scopes ? { scopes: options.scopes } : {}),
       });
       await saveTokens(tokens);
-      consola.info(chalk.green('Authenticated via device flow'));
+      emitInfo(options.outputMode, chalk.green('Authenticated via device flow'));
       return;
     } catch (error) {
       if (!axios.isAxiosError(error) || !error.response?.data) {
@@ -349,9 +494,33 @@ export async function deviceCodeLogin(_options: AuthOptions) {
   throw new Error('Device authorization timed out');
 }
 
-export async function getAccessToken(forceRefresh = false): Promise<string | null> {
+export async function getAccessToken(params?: {
+  forceRefresh?: boolean;
+  expectedIssuerBaseUrl?: string;
+}): Promise<string | null> {
+  const forceRefresh = params?.forceRefresh ?? false;
+  const expectedIssuerBaseUrl = params?.expectedIssuerBaseUrl;
   const stored = await getStoredTokens();
-  if (!stored?.accessToken) return null;
+  if (!stored?.accessToken) {
+    return null;
+  }
+  if (!stored.issuerBaseUrl) {
+    throw new AuthError({
+      code: 'AUTH_ISSUER_MISSING',
+      category: 'auth',
+      message: 'Stored auth issuer is missing',
+      hint: 'Run `hominem auth login`'
+    });
+  }
+
+  if (expectedIssuerBaseUrl && normalizeBaseUrl(expectedIssuerBaseUrl) !== normalizeBaseUrl(stored.issuerBaseUrl)) {
+    throw new AuthError({
+      code: 'AUTH_ISSUER_MISMATCH',
+      category: 'auth',
+      message: `Token issuer ${normalizeBaseUrl(stored.issuerBaseUrl)} does not match requested base ${normalizeBaseUrl(expectedIssuerBaseUrl)}`,
+      hint: 'Run `hominem auth login --base-url <target>`'
+    });
+  }
 
   const expiresSoon = stored.expiresAt
     ? Date.now() > new Date(stored.expiresAt).getTime() - 5 * 60 * 1000
@@ -359,30 +528,57 @@ export async function getAccessToken(forceRefresh = false): Promise<string | nul
 
   if (!forceRefresh && !expiresSoon) return stored.accessToken;
 
-  if (!stored.refreshToken) return stored.accessToken;
+  if (!stored.refreshToken) {
+    throw new AuthError({
+      code: 'AUTH_INVALID',
+      category: 'auth',
+      message: 'Auth token expired and no refresh token is available',
+      hint: 'Run `hominem auth login`'
+    });
+  }
 
   try {
-    const url = new URL('/api/auth/token', DEFAULT_AUTH_BASE);
+    const url = new URL('/api/auth/token', normalizeBaseUrl(stored.issuerBaseUrl));
     const res = await axios.post(url.toString(), {
       grant_type: 'refresh_token',
       refresh_token: stored.refreshToken,
     });
     const data = res.data as TokenResponse;
 
-    const tokens = buildStoredTokensFromResponse(data, stored);
+    const tokens = buildStoredTokensFromResponse(data, normalizeBaseUrl(stored.issuerBaseUrl), stored);
 
     await saveTokens(tokens);
 
     return data.access_token;
-  } catch (_err) {
-    return stored.accessToken;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      if (status === 401 || status === 403) {
+        throw new AuthError({
+          code: 'AUTH_INVALID',
+          category: 'auth',
+          message: 'Stored credentials are invalid',
+          hint: 'Run `hominem auth login`'
+        });
+      }
+    }
+    throw new AuthError({
+      code: 'AUTH_DEPENDENCY_UNAVAILABLE',
+      category: 'dependency',
+      message: error instanceof Error ? error.message : 'Auth refresh dependency unavailable'
+    });
   }
 }
 
 export async function requireAccessToken() {
   const token = await getAccessToken();
   if (!token) {
-    throw new Error('No auth token available. Please run `hominem auth login`.');
+    throw new AuthError({
+      code: 'AUTH_REQUIRED',
+      category: 'auth',
+      message: 'No auth token available',
+      hint: 'Run `hominem auth login`'
+    });
   }
   return token;
 }

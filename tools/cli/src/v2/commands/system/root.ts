@@ -5,7 +5,7 @@ import { createCommand } from '../../command-factory'
 export default createCommand({
   name: 'system',
   summary: 'System domain',
-  description: 'System commands: doctor, generate command.',
+  description: 'System commands: doctor, generate command, plugin call.',
   argNames: [],
   args: z.object({}),
   flags: z.object({}),
@@ -16,7 +16,7 @@ export default createCommand({
   async run() {
     return {
       domain: 'system',
-      subcommands: ['doctor', 'generate command']
+      subcommands: ['doctor', 'generate command', 'plugin call']
     }
   }
 })

@@ -68,6 +68,12 @@ export const commandRoutes: CommandRoute[] = [
     loader: () => import('./commands/system/generate-command')
   },
   {
+    id: 'system plugin call',
+    summary: 'Invoke plugin method',
+    description: 'Calls plugin JSON-RPC through isolated child process.',
+    loader: () => import('./commands/system/plugin-call')
+  },
+  {
     id: 'ai',
     summary: 'AI command domain',
     description: 'Automation-first AI command namespace.',

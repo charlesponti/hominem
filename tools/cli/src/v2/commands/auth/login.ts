@@ -2,12 +2,13 @@ import { z } from 'zod'
 
 import { createCommand } from '../../command-factory'
 import { CliError } from '../../errors'
-import { interactiveLogin } from '@/utils/auth'
+import { AuthError, interactiveLogin } from '@/utils/auth'
 
 const flagsSchema = z.object({
   baseUrl: z.string().default('http://localhost:3000'),
   scope: z.string().default(''),
-  device: z.boolean().default(false)
+  device: z.boolean().default(false),
+  timeoutMs: z.coerce.number().int().positive().default(120000)
 })
 
 export default createCommand({
@@ -22,7 +23,7 @@ export default createCommand({
     mode: z.enum(['browser', 'device']),
     baseUrl: z.string()
   }),
-  async run({ flags }) {
+  async run({ flags, context }) {
     const scopes = flags.scope
       .split(',')
       .map((scope) => scope.trim())
@@ -32,9 +33,19 @@ export default createCommand({
       await interactiveLogin({
         authBaseUrl: flags.baseUrl,
         scopes,
-        headless: flags.device
+        headless: flags.device,
+        outputMode: context.outputFormat === 'text' ? 'interactive' : 'machine',
+        timeoutMs: flags.timeoutMs
       })
     } catch (error) {
+      if (error instanceof AuthError) {
+        throw new CliError({
+          code: error.code,
+          category: error.category,
+          message: error.message,
+          hint: error.hint
+        })
+      }
       throw new CliError({
         code: 'AUTH_LOGIN_FAILED',
         category: 'auth',

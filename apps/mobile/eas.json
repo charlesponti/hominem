@@ -34,7 +34,7 @@
       "channel": "production",
       "env": {
         "NODE_ENV": "production",
-        "EXPO_PUBLIC_API_BASE_URL": "https://mindsherpa-api-production.up.railway.app"
+        "EXPO_PUBLIC_API_BASE_URL": "https://auth.ponti.io"
       }
     }
   },

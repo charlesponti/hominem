@@ -1,0 +1,54 @@
+{
+  "name": "@hackefeller/type-audit",
+  "version": "0.1.0",
+  "description": "Portable TypeScript type-performance audit CLI for any project",
+  "type": "module",
+  "bin": {
+    "type-audit": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "typescript",
+    "tsc",
+    "performance",
+    "type-checking",
+    "cli",
+    "trace"
+  ],
+  "license": "ISC",
+  "author": "Hackefeller",
+  "homepage": "https://github.com/charlesponti/hominem/tree/main/tools/type-audit-cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/charlesponti/hominem.git",
+    "directory": "tools/type-audit-cli"
+  },
+  "bugs": {
+    "url": "https://github.com/charlesponti/hominem/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "clean": "rm -rf dist *.tgz",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && mkdir -p dist/templates && cp src/templates/type-dashboard.html dist/templates/type-dashboard.html",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit",
+    "test": "bun test",
+    "dev": "bun src/index.ts --help",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run test && npm run typecheck && npm run build"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.8",
+    "@types/node": "*",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,6 +1,6 @@
 import { CliError } from './errors'
 import type { JsonValue } from './contracts'
-import { getAccessToken } from '@/utils/auth'
+import { AuthError, getAccessToken } from '@/utils/auth'
 
 interface HttpJsonOptions {
   method?: 'GET' | 'POST'
@@ -50,7 +50,22 @@ export async function requestJson(options: HttpJsonOptions): Promise<string> {
   headers.set('content-type', 'application/json')
 
   if (options.requireAuth ?? true) {
-    const token = await getAccessToken()
+    let token: string | null
+    try {
+      token = await getAccessToken({
+        expectedIssuerBaseUrl: options.baseUrl
+      })
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw new CliError({
+          code: error.code,
+          category: error.category,
+          message: error.message,
+          hint: error.hint
+        })
+      }
+      throw error
+    }
     if (!token) {
       throw new CliError({
         code: 'AUTH_REQUIRED',

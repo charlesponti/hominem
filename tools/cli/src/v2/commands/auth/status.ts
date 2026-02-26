@@ -12,7 +12,9 @@ export default createCommand({
   flags: z.object({}),
   outputSchema: z.object({
     authenticated: z.boolean(),
+    tokenVersion: z.number().nullable(),
     provider: z.string().nullable(),
+    issuerBaseUrl: z.string().nullable(),
     expiresAt: z.string().nullable(),
     ttlSeconds: z.number().nullable(),
     scopes: z.array(z.string())
@@ -24,7 +26,9 @@ export default createCommand({
 
     return {
       authenticated: Boolean(tokens?.accessToken),
+      tokenVersion: tokens?.tokenVersion ?? null,
       provider: tokens?.provider ?? null,
+      issuerBaseUrl: tokens?.issuerBaseUrl ?? null,
       expiresAt: tokens?.expiresAt ?? null,
       ttlSeconds,
       scopes: tokens?.scopes ?? []

@@ -1,13 +1,15 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
 const postMock = vi.fn()
-const isAxiosErrorMock = vi.fn((error: unknown) =>
-  Boolean((error as { isAxiosError?: boolean })?.isAxiosError),
+const isAxiosErrorMock = vi.fn((error: { isAxiosError?: boolean }) =>
+  Boolean(error?.isAxiosError),
 )
 
 const loadTokensMock = vi.fn()
 const saveTokensMock = vi.fn()
 const clearTokensMock = vi.fn()
+const openMock = vi.fn()
+const getPortMock = vi.fn()
 
 vi.mock('axios', () => ({
   default: {
@@ -22,18 +24,30 @@ vi.mock('./secure-store', () => ({
   clearTokens: clearTokensMock,
 }))
 
-import { deviceCodeLogin, getAccessToken } from './auth'
+vi.mock('open', () => ({
+  default: openMock
+}))
+
+vi.mock('get-port', () => ({
+  default: getPortMock
+}))
+
+import { deviceCodeLogin, getAccessToken, interactiveLogin } from './auth'
 
 describe('cli auth utils', () => {
   beforeEach(() => {
     postMock.mockReset()
     isAxiosErrorMock.mockReset()
-    isAxiosErrorMock.mockImplementation((error: unknown) =>
-      Boolean((error as { isAxiosError?: boolean })?.isAxiosError),
+    isAxiosErrorMock.mockImplementation((error: { isAxiosError?: boolean }) =>
+      Boolean(error?.isAxiosError),
     )
     loadTokensMock.mockReset()
     saveTokensMock.mockReset()
     clearTokensMock.mockReset()
+    openMock.mockReset()
+    openMock.mockResolvedValue(undefined)
+    getPortMock.mockReset()
+    getPortMock.mockResolvedValue(39217)
   })
 
   test('getAccessToken refreshes expired token and persists metadata-rich response', async () => {
@@ -41,10 +55,12 @@ describe('cli auth utils', () => {
       accessToken: 'stale-access',
       refreshToken: 'refresh-token-1',
       expiresAt: new Date(Date.now() - 5_000).toISOString(),
+      tokenVersion: 2,
       provider: 'better-auth',
       scopes: ['cli:read'],
       sessionId: '11111111-1111-4111-8111-111111111111',
       refreshFamilyId: '22222222-2222-4222-8222-222222222222',
+      issuerBaseUrl: 'http://localhost:3000'
     })
 
     postMock.mockResolvedValueOnce({
@@ -64,7 +80,7 @@ describe('cli auth utils', () => {
 
     expect(token).toBe('fresh-access')
     expect(postMock).toHaveBeenCalledWith(
-      expect.stringContaining('/api/auth/token'),
+      'http://localhost:3000/api/auth/token',
       expect.objectContaining({
         grant_type: 'refresh_token',
         refresh_token: 'refresh-token-1',
@@ -79,6 +95,8 @@ describe('cli auth utils', () => {
         sessionId: '33333333-3333-4333-8333-333333333333',
         refreshFamilyId: '44444444-4444-4444-8444-444444444444',
         scopes: ['cli:read', 'cli:write'],
+        issuerBaseUrl: 'http://localhost:3000',
+        tokenVersion: 2
       }),
     )
   })
@@ -90,8 +108,8 @@ describe('cli auth utils', () => {
         if (typeof handler === 'function') {
           handler()
         }
-        return 0 as unknown as ReturnType<typeof setTimeout>
-      }) as unknown as typeof setTimeout)
+        return 0 as ReturnType<typeof setTimeout>
+      }) as typeof setTimeout)
 
     postMock
       .mockResolvedValueOnce({
@@ -127,6 +145,8 @@ describe('cli auth utils', () => {
       authBaseUrl: 'http://localhost:3000',
       scopes: ['cli:read'],
       headless: true,
+      outputMode: 'machine',
+      timeoutMs: 120000
     })
 
     expect(postMock).toHaveBeenCalledTimes(3)
@@ -136,6 +156,8 @@ describe('cli auth utils', () => {
         refreshToken: 'device-refresh-token',
         sessionId: '55555555-5555-4555-8555-555555555555',
         refreshFamilyId: '66666666-6666-4666-8666-666666666666',
+        issuerBaseUrl: 'http://localhost:3000',
+        tokenVersion: 2
       }),
     )
 
@@ -149,8 +171,8 @@ describe('cli auth utils', () => {
         if (typeof handler === 'function') {
           handler()
         }
-        return 0 as unknown as ReturnType<typeof setTimeout>
-      }) as unknown as typeof setTimeout)
+        return 0 as ReturnType<typeof setTimeout>
+      }) as typeof setTimeout)
 
     postMock
       .mockResolvedValueOnce({
@@ -175,9 +197,53 @@ describe('cli auth utils', () => {
       deviceCodeLogin({
         authBaseUrl: 'http://localhost:3000',
         headless: true,
+        outputMode: 'machine',
+        timeoutMs: 120000
       }),
     ).rejects.toThrow('Device code expired before authorization completed')
 
     setTimeoutSpy.mockRestore()
+  })
+
+  test('getAccessToken throws when issuer mismatches requested base', async () => {
+    loadTokensMock.mockResolvedValueOnce({
+      tokenVersion: 2,
+      accessToken: 'access',
+      refreshToken: 'refresh',
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      issuerBaseUrl: 'http://localhost:3000'
+    })
+
+    await expect(getAccessToken({
+      expectedIssuerBaseUrl: 'http://localhost:4040'
+    })).rejects.toThrow('does not match requested base')
+  })
+
+  test('getAccessToken does not return stale token when refresh fails', async () => {
+    loadTokensMock.mockResolvedValueOnce({
+      tokenVersion: 2,
+      accessToken: 'stale',
+      refreshToken: 'refresh-1',
+      expiresAt: new Date(Date.now() - 60_000).toISOString(),
+      issuerBaseUrl: 'http://localhost:3000'
+    })
+
+    postMock.mockRejectedValueOnce(new Error('network down'))
+
+    await expect(getAccessToken()).rejects.toThrow('network down')
+  })
+
+  test('interactiveLogin times out when callback never arrives', async () => {
+    postMock.mockResolvedValueOnce({
+      data: {
+        authorization_url: 'https://example.test/authorize'
+      }
+    })
+
+    await expect(interactiveLogin({
+      authBaseUrl: 'http://localhost:3000',
+      outputMode: 'machine',
+      timeoutMs: 10
+    })).rejects.toThrow('timed out')
   })
 })
