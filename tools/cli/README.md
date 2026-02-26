@@ -20,7 +20,7 @@ Automation-first CLI for hominem, replatformed to a typed command graph runtime.
 ## Build and Distribution
 - Primary artifact: compiled binary (`dist/hominem`)
 - Build: `bun run --filter @hominem/cli build`
-- Dev: `bun run --filter @hominem/cli dev -- --help`
+- Run built binary: `./tools/cli/dist/hominem --help`
 
 ## Config v2
 - Canonical path: `~/.hominem/config.json`

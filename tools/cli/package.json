@@ -7,7 +7,6 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "bun src/dev.ts",
     "build": "bun run build:core && bun run build:features",
     "build:core": "rm -rf dist && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json && bun build ./src/cli.ts --compile --outfile dist/hominem && node scripts/verify-bundle-size.mjs",
     "build:features": "bun build src/services/agent-server/index.ts --outdir dist/agent --target bun",

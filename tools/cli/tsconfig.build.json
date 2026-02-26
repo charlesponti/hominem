@@ -2,7 +2,6 @@
 	"extends": "./tsconfig.json",
 	"include": [
 		"src/cli.ts",
-		"src/dev.ts",
 		"src/index.ts",
 		"src/env.ts",
 		"src/utils/auth.ts",
