@@ -63,7 +63,7 @@ jobs:
         run: bun install --force
 
       - name: 🧭 TypeScript project-graph guard
-        run: bun run check:tsconfig
+        run: bun turbo run typegen && bun run check:tsconfig
 
       - name: 🏗️ Wait for services
         run: |
