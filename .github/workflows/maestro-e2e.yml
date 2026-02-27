@@ -46,8 +46,11 @@ jobs:
       - name: Select iOS Simulator
         id: sim
         run: |
-          SIM_NAME=$(xcrun simctl list devices available | grep "iPhone" | head -1 | sed 's/.*(\([^)]*\)).*/\1/' | tr -d ' ')
-          if [ -z "$SIM_NAME" ]; then SIM_NAME="iPhone 17 Pro"; fi
+          # Get available devices, filter for iPhone, pick first available
+          AVAILABLE=$(xcrun simctl list devices available | grep -E "iPhone (1[4-9]|2)" | head -5)
+          echo "Available: $AVAILABLE"
+          # Extract just the phone name from the line
+          SIM_NAME=$(echo "$AVAILABLE" | head -1 | sed 's/[[:space:]].*//')
           echo "name=$SIM_NAME" >> "$GITHUB_OUTPUT"
           echo "Selected simulator: $SIM_NAME"
 
