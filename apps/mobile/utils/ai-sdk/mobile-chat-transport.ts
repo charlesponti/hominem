@@ -9,7 +9,7 @@ export function getMobileChatEndpoint(chatId: string): string {
 }
 
 export function createMobileChatFetch(getAccessToken: GetAccessToken) {
-  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const fetchFn = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const token = await getAccessToken()
     const headers = new Headers(init?.headers)
 
@@ -29,6 +29,7 @@ export function createMobileChatFetch(getAccessToken: GetAccessToken) {
       headers,
     })
   }
+  return fetchFn as unknown as typeof fetch
 }
 
 export async function isNetworkConnected() {

@@ -129,7 +129,6 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
     id: `mobile-chat-${chatId}`,
     api: getMobileChatEndpoint(chatId),
     streamProtocol: 'data',
-    // @ts-expect-error fetch function signature is compatible at runtime
     fetch: createMobileChatFetch(getAccessToken),
     onError: (error) => {
       setSendChatError(true);
