@@ -46,10 +46,8 @@ jobs:
       - name: Select iOS Simulator
         id: sim
         run: |
-          SIM_NAME=$(xcrun simctl list devicetypes --json | \
-            python3 -c "import json,sys; dt=json.load(sys.stdin)['devicetypes']; \
-              iphones=[d['name'] for d in dt if 'iPhone' in d['name'] and 'Plus' not in d['name'] and 'Pro' not in d['name'] and 'Max' not in d['name'] and 'mini' not in d['name']]; \
-              print(iphones[-1] if iphones else 'iPhone 16')")
+          SIM_NAME=$(xcrun simctl list devices available | grep "iPhone" | head -1 | sed 's/.*(\([^)]*\)).*/\1/' | tr -d ' ')
+          if [ -z "$SIM_NAME" ]; then SIM_NAME="iPhone 17 Pro"; fi
           echo "name=$SIM_NAME" >> "$GITHUB_OUTPUT"
           echo "Selected simulator: $SIM_NAME"
 
