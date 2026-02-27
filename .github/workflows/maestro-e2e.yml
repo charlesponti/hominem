@@ -43,19 +43,29 @@ jobs:
           EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
           EXPO_PUBLIC_E2E_AUTH_SECRET: ${{ secrets.EXPO_PUBLIC_E2E_AUTH_SECRET }}
 
+      - name: Select iOS Simulator
+        id: sim
+        run: |
+          SIM_NAME=$(xcrun simctl list devicetypes --json | \
+            python3 -c "import json,sys; dt=json.load(sys.stdin)['devicetypes']; \
+              iphones=[d['name'] for d in dt if 'iPhone' in d['name'] and 'Plus' not in d['name'] and 'Pro' not in d['name'] and 'Max' not in d['name'] and 'mini' not in d['name']]; \
+              print(iphones[-1] if iphones else 'iPhone 16')")
+          echo "name=$SIM_NAME" >> "$GITHUB_OUTPUT"
+          echo "Selected simulator: $SIM_NAME"
+
       - name: Build iOS app (simulator)
         run: |
           cd apps/mobile/ios
           xcodebuild -workspace hakumidev.xcworkspace \
             -scheme hakumidev \
-            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -destination "platform=iOS Simulator,name=${{ steps.sim.outputs.name }}" \
             -configuration Debug \
             -derivedDataPath build \
             build
 
       - name: Boot iOS Simulator
         run: |
-          xcrun simctl boot "iPhone 17"
+          xcrun simctl boot "${{ steps.sim.outputs.name }}"
           xcrun simctl install booted apps/mobile/ios/build/Build/Products/Debug-iphonesimulator/hakumidev.app
 
       - name: Run Maestro tests
