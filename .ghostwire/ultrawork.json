@@ -1,10 +1,37 @@
 {
-  "active_plan": "/Users/charlesponti/Developer/hominem/.ghostwire/plans/2026-02-26-migrate-to-better-auth-expo.md",
-  "started_at": "2026-02-26T22:42:40.144Z",
-  "session_ids": ["ses_36455f734ffe32VLsNVNdRhTWz", "ses_363e124a4ffevndv64Ois9UM8d"],
-  "plan_name": "2026-02-26-migrate-to-better-auth-expo",
-  "current_wave": 1,
-  "completed_tasks": [],
-  "in_progress_task": "TASK-A",
-  "planner_session_id": "ses_363e124a4ffevndv64Ois9UM8d"
+  "session_id": "hominem-better-auth-expo-migration",
+  "created_at": "2026-02-26T10:30:00Z",
+  "wave": 3,
+  "completed_waves": [1, 2],
+  "current_task": "TASK-G",
+  "status": "WAVE_3_IN_PROGRESS",
+  "session_ids": ["ses_363b624d0ffetZGYU9BaGzIvcD"],
+  "commits_this_session": [
+    "e5da43ba - Install @better-auth/expo dependencies",
+    "adc7309e - Add Metro unstable_enablePackageExports config",
+    "19eeccc8 - Auth-client library creation + tests",
+    "8445f0aa - Refactor auth-provider.tsx for better-auth",
+    "3ca37bf4 - Fix auth-client.test.ts assertions"
+  ],
+  "wave_2_summary": {
+    "tasks_completed": ["TASK-A", "TASK-B", "TASK-C", "TASK-D", "TASK-E", "TASK-F"],
+    "code_reduction": "341 LOC → 215 LOC auth-provider.tsx (37% reduction)",
+    "tests_passing": "10/10",
+    "typescript_errors": 0,
+    "key_changes": [
+      "Replaced custom PKCE flow with authClient.signIn.social()",
+      "Replaced manual token refresh with useSession() hook",
+      "Fixed Date/string type handling for better-auth session objects",
+      "Removed ~150 LOC of custom token management"
+    ]
+  },
+  "wave_3_tasks": [
+    "TASK-G: Run E2E Maestro tests",
+    "TASK-G.1: Verify device auth flows",
+    "TASK-G.2: Test session restoration"
+  ],
+  "wave_4_tasks": [
+    "TASK-H: Delete better-auth-mobile.ts",
+    "TASK-I: Full integration test"
+  ]
 }

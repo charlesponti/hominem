@@ -14,13 +14,7 @@ import React, {
 import { authClient } from '../lib/auth-client'
 import { LocalStore } from './local-store'
 import type { UserProfile } from './local-store/types'
-import {
-  clearPersistedMobileRefreshToken,
-  getPersistedMobileRefreshToken,
-  persistMobileRefreshToken,
-  revokeMobileRefreshToken,
-  signInMobileE2e,
-} from './better-auth-mobile'
+import { signInWithE2eCredentials } from './auth-e2e'
 import { E2E_TESTING } from './constants'
 
 WebBrowser.maybeCompleteAuthSession()
@@ -98,7 +92,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     const local = await LocalStore.getUserProfile()
     const merged: UserProfile = {
       ...toUserProfile(session.user),
-      ...(local ?? {}),
+      ...local,
       id: session.user.id,
       email: session.user.email ?? null,
       name: session.user.name ?? null,
@@ -118,20 +112,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }
   }, [session, isLoadingAuth, syncUserFromSession])
 
-  useEffect(() => {
-    const restoreSession = async () => {
-      const storedRefreshToken = await getPersistedMobileRefreshToken()
-      if (storedRefreshToken) {
-        //
-      }
-    }
-    void restoreSession()
-  }, [])
-
   const signInWithApple = useCallback(async () => {
     if (E2E_TESTING) {
-      const pair = await signInMobileE2e()
-      await persistMobileRefreshToken(pair.refreshToken)
+      await signInWithE2eCredentials()
       router.replace('/(drawer)/(tabs)/start')
       return
     }
@@ -142,11 +125,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   }, [router])
 
   const signOut = useCallback(async () => {
-    const storedRefreshToken = await getPersistedMobileRefreshToken()
-    if (storedRefreshToken) {
-      await revokeMobileRefreshToken(storedRefreshToken)
-      await clearPersistedMobileRefreshToken()
-    }
     await authClient.signOut()
     await LocalStore.clearAllData()
     setCurrentUser(null)
