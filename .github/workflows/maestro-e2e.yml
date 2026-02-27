@@ -44,6 +44,7 @@ jobs:
             -scheme hakumidev \
             -destination 'platform=iOS Simulator,name=iPhone 17' \
             -configuration Debug \
+            -derivedDataPath build \
             build
 
       - name: Boot iOS Simulator
