@@ -91,11 +91,27 @@ async function run() {
     const location = response.headers.get('location') ?? ''
 
     assert(response.status === 302, `Expected /api/auth/authorize to return 302, received ${response.status}`)
+    assert(location, 'Expected Location header to be present for Apple authorization redirect')
+
+    let appleUrl: URL
+    try {
+      appleUrl = new URL(location)
+    } catch {
+      assert(false, `Expected valid URL in Location header for Apple redirect, received: ${location}`)
+    }
+
     assert(
-      location.includes('https://appleid.apple.com/auth/authorize'),
-      'Expected Apple authorization redirect URL in Location header'
+      appleUrl.protocol === 'https:' && appleUrl.hostname === 'appleid.apple.com',
+      `Expected Apple authorization redirect host to be https://appleid.apple.com, received: ${appleUrl.protocol}//${appleUrl.hostname}`
     )
-    assert(location.includes('response_mode=form_post'), 'Expected response_mode=form_post in Apple redirect')
+    assert(
+      appleUrl.pathname === '/auth/authorize',
+      `Expected Apple authorization redirect path to be /auth/authorize, received: ${appleUrl.pathname}`
+    )
+    assert(
+      appleUrl.search.includes('response_mode=form_post'),
+      'Expected response_mode=form_post in Apple redirect'
+    )
     console.log('[auth-e2e] /api/auth/authorize apple redirect ok')
   }
 
