@@ -143,9 +143,12 @@ async function run() {
 
     assert(response.status === 200, `Expected /api/auth/cli/authorize to return 200, received ${response.status}`)
     assert(typeof payload.flow_id === 'string' && payload.flow_id.length > 0, 'Expected flow_id in CLI authorize response')
+    assert(typeof payload.authorization_url === 'string', 'Expected authorization_url to be a string in CLI authorize response')
+    const authorizationUrl = new URL(payload.authorization_url as string)
     assert(
-      typeof payload.authorization_url === 'string' &&
-        payload.authorization_url.includes('https://appleid.apple.com/auth/authorize'),
+      authorizationUrl.protocol === 'https:' &&
+        authorizationUrl.hostname === 'appleid.apple.com' &&
+        authorizationUrl.pathname === '/auth/authorize',
       'Expected Apple authorization URL in CLI authorize response'
     )
     console.log('[auth-e2e] /api/auth/cli/authorize ok')
