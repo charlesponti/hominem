@@ -10,6 +10,8 @@ feature_description: "Replace custom expo-auth-session wrapper with official @be
 
 # feat: Migrate mobile auth from expo-auth-session to @better-auth/expo
 
+> Superseded by: `docs/plans/2026-02-27-auth-consolidated-plan.md` (merged on 2026-02-27)
+
 **Status**: ✅ **COMPLETE** (2026-02-27 03:35 UTC)
 
 ## Summary

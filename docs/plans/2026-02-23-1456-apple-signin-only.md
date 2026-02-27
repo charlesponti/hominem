@@ -1,5 +1,7 @@
 # WORK PLAN: Switch Mobile App to Apple Sign-In Only
 
+> Superseded by: `docs/plans/2026-02-27-auth-consolidated-plan.md` (merged on 2026-02-27)
+
 **Status:** ready  
 **Created:** 2026-02-23 14:56  
 **Priority:** High  

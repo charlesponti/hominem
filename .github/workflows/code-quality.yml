@@ -62,6 +62,9 @@ jobs:
       - name: 📦 Install dependencies
         run: bun install --force
 
+      - name: 🧭 TypeScript project-graph guard
+        run: bun run check:tsconfig
+
       - name: 🏗️ Wait for services
         run: |
           # Wait for postgres to be ready

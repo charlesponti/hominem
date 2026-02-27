@@ -4,7 +4,14 @@ This repo uses Bun as the package manager and script runner.
 
 ### Prerequisites
 
-- Bun 1.3+
+- Bun 1.3.0
+- Node.js 22.14.0
+
+Toolchain versions are pinned in `.tool-versions` and `.node-version`.
+
+Run a local environment check:
+
+- `bun run dev:doctor`
 
 ### Common tasks
 
