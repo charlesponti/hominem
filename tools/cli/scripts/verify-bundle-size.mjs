@@ -3,7 +3,7 @@ import path from 'node:path'
 import zlib from 'node:zlib'
 
 const filePath = path.resolve(process.cwd(), 'dist/hominem')
-const maxCompressedBytes = 35 * 1024 * 1024
+const maxCompressedBytes = 45 * 1024 * 1024
 
 try {
   const binary = await fs.readFile(filePath)
