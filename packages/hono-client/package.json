@@ -2,10 +2,20 @@
   "name": "@hominem/hono-client",
   "version": "0.1.0",
   "type": "module",
+  "types": "./build/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./react": "./src/react/index.ts",
-    "./ssr": "./src/ssr/index.ts"
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./react": {
+      "types": "./build/react/index.d.ts",
+      "default": "./src/react/index.ts"
+    },
+    "./ssr": {
+      "types": "./build/ssr/index.d.ts",
+      "default": "./src/ssr/index.ts"
+    }
   },
   "dependencies": {
     "@hominem/hono-rpc": "workspace:*",

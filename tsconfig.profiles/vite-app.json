@@ -1,0 +1,8 @@
+{
+  "extends": "./react-bundler-lib.json",
+  "compilerOptions": {
+    "sourceMap": true,
+    "noEmit": true,
+    "types": ["vite/client", "node"]
+  }
+}

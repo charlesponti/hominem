@@ -1,54 +1,17 @@
 {
+  "extends": "../../tsconfig.profiles/vite-app.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     "baseUrl": ".",
-    "strict": true,
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    "assumeChangesOnlyAffectDirectDependencies": true,
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "incremental": true,
     "tsBuildInfoFile": "../../.cache/app-finance.tsbuildinfo",
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "resolveJsonModule": true,
-    "allowJs": false,
-    "checkJs": false,
-    "maxNodeModuleJsDepth": 0,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "disableSourceOfProjectReferenceRedirect": false,
-    "verbatimModuleSyntax": true,
     "rootDirs": [
       ".",
       "./.react-router/types"
-    ],
-    "jsx": "react-jsx",
-    "types": [
-      "vite/client",
-      "node"
     ],
     "paths": {
       "~/*": [
         "./app/*"
       ]
-    },
-    "noEmit": true
+    }
   },
   "include": [
     "app/**/*.ts",
@@ -56,7 +19,6 @@
     ".react-router/types/**/*",
     "vite.config.ts",
     "vitest.config.ts",
-    "../../types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",

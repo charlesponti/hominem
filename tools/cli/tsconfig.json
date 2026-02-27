@@ -1,20 +1,17 @@
 {
+	"extends": "../../tsconfig.profiles/tool-bundler.json",
 	"compilerOptions": {
-		"target": "ES2021",
-		"module": "ES2022",
-		"moduleResolution": "bundler",
-		"declaration": true,
 		"outDir": "dist",
-		"rootDir": "src",
+		"rootDir": ".",
 		"baseUrl": "src",
 		"paths": {
 			"@/*": ["*"]
-		},
-		"strict": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"resolveJsonModule": true
+		}
 	},
 	"include": ["src/**/*", "test/**/*.ts", "test/**/*.tsx"],
-	"exclude": ["dist"]
+	"exclude": ["dist"],
+	"references": [
+		{ "path": "../../packages/hono-rpc" },
+		{ "path": "../../packages/hono-client" }
+	]
 }

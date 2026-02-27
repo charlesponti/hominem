@@ -10,8 +10,9 @@
     "tsBuildInfoFile": "../../.cache/app-mobile.tsbuildinfo",
     "allowJs": false,
     "checkJs": false,
+    "moduleDetection": "force",
     "maxNodeModuleJsDepth": 0,
-    "disableSourceOfProjectReferenceRedirect": false,
+    "disableSourceOfProjectReferenceRedirect": true,
     "paths": {
       "~/*": [
         "./*"
