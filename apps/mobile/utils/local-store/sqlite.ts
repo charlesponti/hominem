@@ -74,12 +74,12 @@ const normalizeMedia = (row: Record<string, unknown>): Media => ({
 })
 
 const execute = async (db: SQLite.SQLiteDatabase, sql: string, args: Array<string | number | null> = []) => {
-  await db.execAsync([{ sql, args }], false)
+  await db.runAsync(sql, args)
 }
 
 const getAll = async (db: SQLite.SQLiteDatabase, sql: string, args: Array<string | number | null> = []) => {
-  const result = (await db.getAllAsync(sql, args)) as QueryResult
-  return result.rows
+  const result = await db.getAllAsync<QueryResult>(sql, args)
+  return result
 }
 
 const getFirst = async (db: SQLite.SQLiteDatabase, sql: string, args: Array<string | number | null> = []) => {

@@ -1,6 +1,6 @@
 import Constants from 'expo-constants'
 import * as SecureStore from 'expo-secure-store'
-import { createAuthClient } from 'better-auth/react'
+import { createAuthClient } from 'better-auth/client/vanilla'
 import { expoClient } from '@better-auth/expo/client'
 
 const getBaseUrl = () => {
