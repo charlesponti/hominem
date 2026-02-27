@@ -1,8 +1,8 @@
+import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import { Textarea } from '@hominem/ui/textarea';
 import { LoaderCircle, Mic, Paperclip, Send } from 'lucide-react';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-import { useMatches } from 'react-router';
 
 import { useFileUpload } from '~/lib/hooks/use-file-upload';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
@@ -31,12 +31,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
   // Expose textarea ref to parent
   useImperativeHandle(ref, () => textareaRef.current!, []);
 
-  // Get userId from root loader data
-  const matches = useMatches();
-  const rootData = matches.find((match) => match.id === 'root')?.data as
-    | { supabaseId: string | null }
-    | undefined;
-  const userId = rootData?.supabaseId || undefined;
+  const { userId } = useAuthContext();
 
   const sendMessage = useSendMessage({ chatId, ...(userId && { userId }) });
   const { uploadState, clearAll } = useFileUpload();
@@ -108,24 +103,24 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
   const handleAudioTranscribed = useCallback(
     async (transcript: string) => {
       if (!transcript.trim()) {
-        return
+        return;
       }
 
       try {
-        onStatusChange?.('streaming')
+        onStatusChange?.('streaming');
         await sendMessage.mutateAsync({
           message: transcript.trim(),
           chatId,
-        })
-        onStatusChange?.('idle')
+        });
+        onStatusChange?.('idle');
       } catch (error) {
-        console.error('Failed to send transcribed message:', error)
-        onStatusChange?.('error', error as Error)
-        throw error
+        console.error('Failed to send transcribed message:', error);
+        onStatusChange?.('error', error as Error);
+        throw error;
       }
     },
     [chatId, onStatusChange, sendMessage],
-  )
+  );
 
   const isSubmitting = sendMessage.isPending;
 

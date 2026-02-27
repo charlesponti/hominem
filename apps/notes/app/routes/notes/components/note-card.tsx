@@ -1,10 +1,10 @@
+import type { NoteOutput as Note } from '@hominem/hono-rpc/types/notes.types';
+
 import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Card, CardContent } from '@hominem/ui/components/ui/card';
 import { Edit, Trash2, X } from 'lucide-react';
 import { useMemo } from 'react';
-
-import type { NoteOutput as Note } from '@hominem/hono-rpc/types/notes.types';
 
 interface NoteCardProps {
   note: Note;

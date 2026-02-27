@@ -1,0 +1,11 @@
+appId: com.pontistudios.mindsherpa.dev
+---
+- runFlow: ../auth/login_e2e_bypass.yaml
+- tapOn: "SHERPA"
+- waitForAnimationToEnd
+- tapOn:
+    id: input-message
+- inputText: "Hello from Maestro"
+- tapOn:
+    id: send-message-button
+- waitForAnimationToEnd

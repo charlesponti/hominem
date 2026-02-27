@@ -1,3 +1,5 @@
+import type { List } from '@hominem/hono-rpc/types/lists.types';
+
 import {
   Command,
   CommandEmpty,
@@ -11,8 +13,6 @@ import { DrawerDescription, DrawerHeader, DrawerTitle } from '@hominem/ui/compon
 import { Check, Loader2, Plus } from 'lucide-react';
 import { useMemo, useState, useCallback } from 'react';
 import { useRevalidator } from 'react-router';
-
-import type { List } from '@hominem/hono-rpc/types/lists.types';
 
 type ListWithInList = List & { isInList: boolean };
 

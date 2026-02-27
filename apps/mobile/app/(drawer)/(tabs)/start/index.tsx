@@ -1,26 +1,29 @@
-import { Stack, useRouter } from 'expo-router'
-import React, { useCallback } from 'react'
-import { Dimensions, Image, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native'
-import Animated, { FadeIn } from 'react-native-reanimated'
+import { Stack, useRouter } from 'expo-router';
+import React, { useCallback } from 'react';
+import { Dimensions, Image, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { IntentPill } from '~/components/start/intent-pill'
-import { AsciiTexture } from '~/components/ui/ascii-texture'
-import { Text } from '~/theme'
-import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
-import { useIntentSuggestions } from '~/utils/services/intents/use-intent-suggestions'
+import { IntentPill } from '~/components/start/intent-pill';
+import { AsciiTexture } from '~/components/ui/ascii-texture';
+import { Text } from '~/theme';
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
+import { useIntentSuggestions } from '~/utils/services/intents/use-intent-suggestions';
 
-const { width } = Dimensions.get('window')
+const { width } = Dimensions.get('window');
 
 export default function StartScreen() {
-  const router = useRouter()
-  const { suggestions } = useIntentSuggestions()
+  const router = useRouter();
+  const { suggestions } = useIntentSuggestions();
 
   const onIntentPress = useCallback(
     (intent: { id: string; seed_prompt?: string }) => {
-      router.push({ pathname: '/(drawer)/(tabs)/sherpa', params: { intentId: intent.id, seed: intent.seed_prompt } })
+      router.push({
+        pathname: '/(drawer)/(tabs)/sherpa',
+        params: { intentId: intent.id, seed: intent.seed_prompt },
+      });
     },
-    [router]
-  )
+    [router],
+  );
 
   return (
     <>
@@ -41,7 +44,10 @@ export default function StartScreen() {
             <View style={styles.avatar} />
           </View>
 
-          <Animated.View entering={FadeIn.duration(VOID_MOTION_DURATION_STANDARD)} style={{ gap: 10, marginTop: 18 }}>
+          <Animated.View
+            entering={FadeIn.duration(VOID_MOTION_DURATION_STANDARD)}
+            style={{ gap: 10, marginTop: 18 }}
+          >
             <Text variant="header" color="foreground">
               WHERE SHOULD WE START?
             </Text>
@@ -52,13 +58,18 @@ export default function StartScreen() {
 
           <View style={styles.pills}>
             {suggestions.slice(0, 6).map((intent, index) => (
-              <IntentPill key={intent.id} intent={intent} delay={index * 80} onPress={onIntentPress} />
+              <IntentPill
+                key={intent.id}
+                intent={intent}
+                delay={index * 80}
+                onPress={onIntentPress}
+              />
             ))}
           </View>
         </ScrollView>
       </SafeAreaView>
     </>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -95,4 +106,4 @@ const styles = StyleSheet.create({
     gap: 12,
     width: width - 32,
   },
-})
+});

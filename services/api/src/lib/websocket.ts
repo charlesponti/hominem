@@ -9,7 +9,7 @@ import { REDIS_CHANNELS } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { WebSocketServer } from 'ws';
 
-import { getHominemUser } from '../middleware/supabase';
+import { getHominemUserFromJwt } from '../middleware/auth';
 import { wsHandlers } from '../websocket/handlers';
 import { redisHandlers } from '../websocket/redis-handlers';
 
@@ -103,8 +103,7 @@ export function createWebSocketManager(): WebSocketManager {
       }
 
       try {
-        // Authenticate with Supabase
-        const hominemUser = await getHominemUser(token);
+        const hominemUser = await getHominemUserFromJwt(token);
 
         if (!hominemUser) {
           logger.error('WebSocket authentication failed: invalid token or user not found');

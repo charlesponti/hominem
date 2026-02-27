@@ -1,5 +1,3 @@
-import type { User } from '@supabase/supabase-js';
-
 import type { List, Place } from '~/lib/types';
 
 export * from './place';
@@ -8,7 +6,7 @@ export const USER_ID = 'user-id';
 export const TEST_USER_EMAIL = 'test-user@ponti.io';
 export const TEST_USER_NAME = 'Test User';
 
-export const TEST_USER: User = {
+export const TEST_USER = {
   id: USER_ID,
   email: TEST_USER_EMAIL,
   user_metadata: {
@@ -31,7 +29,7 @@ export const TEST_USER: User = {
   role: undefined as string | undefined,
   identities: [],
   factors: [],
-} as User;
+};
 
 export const getMockUser = () => ({
   id: USER_ID,

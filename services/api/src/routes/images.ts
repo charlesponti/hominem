@@ -176,7 +176,11 @@ imagesRoutes.get('/proxy', async (c) => {
     setResponseHeaders(c, { contentType, etag, cacheStatus: 'miss' });
     return c.body(new Uint8Array(imageBuffer));
   } catch (err) {
-    logger.error('Error proxying image', { error: err, imageUrl, decodedUrl: imageUrl ? decodeURIComponent(imageUrl) : 'N/A' });
+    logger.error('Error proxying image', {
+      error: err,
+      imageUrl,
+      decodedUrl: imageUrl ? decodeURIComponent(imageUrl) : 'N/A',
+    });
     throw new InternalError('Failed to proxy image', {
       message: err instanceof Error ? err.message : 'Unknown error',
     });

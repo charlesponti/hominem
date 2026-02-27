@@ -41,7 +41,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     const headers = {
       'User-Agent': request.headers.get('User-Agent') || 'Mozilla/5.0 (compatible; ImageProxy/1.0)',
       // Pass Referer to satisfy browser-key restrictions
-      Referer: serverEnv.VITE_APP_BASE_URL || request.headers.get('Referer') || 'http://localhost:3000',
+      Referer:
+        serverEnv.VITE_APP_BASE_URL || request.headers.get('Referer') || 'http://localhost:3000',
     };
 
     const response = await fetch(currentTargetUrl, {

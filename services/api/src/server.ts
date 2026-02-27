@@ -1,7 +1,5 @@
-import type { ContentfulStatusCode } from 'hono/utils/http-status';
-
 import type { HominemUser } from '@hominem/auth/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
 import { app as honoRpcApp } from '@hominem/hono-rpc';
 import { isServiceError } from '@hominem/services';
@@ -14,9 +12,13 @@ import { cors } from 'hono/cors';
 import { logger as honoLogger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 
+import type { AuthContextEnvelope } from './auth/types';
+
+import { betterAuthServer } from './auth/better-auth';
+import { getJwks } from './auth/key-store';
 import { env } from './env';
 import { initSentry, sentryMiddleware } from './lib/sentry';
-import { supabaseMiddleware } from './middleware/supabase';
+import { authJwtMiddleware } from './middleware/auth';
 import { aiRoutes } from './routes/ai';
 import { authRoutes } from './routes/auth';
 import { componentsRoutes } from './routes/components';
@@ -33,8 +35,7 @@ export type AppEnv = {
   Variables: {
     userId?: string;
     user?: HominemUser;
-    supabaseId?: string;
-    supabase?: SupabaseClient;
+    auth?: AuthContextEnvelope;
     queues: {
       plaidSync: Queue;
       importTransactions: Queue;
@@ -88,7 +89,7 @@ export function createServer() {
   );
 
   // Authentication middleware
-  app.use('*', supabaseMiddleware());
+  app.use('*', authJwtMiddleware());
 
   // Sentry request tracking
   app.use('*', sentryMiddleware());
@@ -98,6 +99,15 @@ export function createServer() {
   // Register Hono RPC routes
   // Note: honoRpcApp already includes /api prefix in its routes (e.g., /api/finance, /api/lists)
   app.route('/', honoRpcApp);
+
+  // Better Auth bootstrap surface during migration.
+  app.on(['GET', 'POST'], '/api/better-auth/*', (c) => {
+    return betterAuthServer.handler(c.req.raw);
+  });
+
+  app.get('/.well-known/jwks.json', async (c) => {
+    return c.json(await getJwks());
+  });
 
   // Register other route handlers
   app.route('/api/status', statusRoutes);

@@ -88,9 +88,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
 
             // Inline code
             return (
-              <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">
-                {children}
-              </code>
+              <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>
             );
           },
           // Headings

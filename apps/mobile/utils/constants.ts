@@ -2,12 +2,11 @@ import Constants from 'expo-constants'
 
 const extra = (Constants.expoConfig?.extra ?? {}) as {
   apiBaseUrl?: string
-  supabaseUrl?: string
-  supabaseAnonKey?: string
   aiSdkChatWebEnabled?: string
   aiSdkChatMobileEnabled?: string
   aiSdkTranscribeEnabled?: string
   aiSdkSpeechEnabled?: string
+  e2eAuthSecret?: string
 }
 
 const hostUri = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoClient?.hostUri
@@ -25,10 +24,6 @@ if (!configuredApiBaseUrl && isProductionRuntime) {
 
 export const API_BASE_URL = configuredApiBaseUrl || fallbackApiBaseUrl
 
-export const SUPABASE_URL = extra.supabaseUrl || process.env.EXPO_PUBLIC_SUPABASE_URL || ''
-export const SUPABASE_ANON_KEY =
-  extra.supabaseAnonKey || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || ''
-
 const toBooleanFlag = (value: string | undefined) => value === 'true'
 
 export const AI_SDK_CHAT_WEB_ENABLED = toBooleanFlag(
@@ -43,3 +38,9 @@ export const AI_SDK_TRANSCRIBE_ENABLED = toBooleanFlag(
 export const AI_SDK_SPEECH_ENABLED = toBooleanFlag(
   extra.aiSdkSpeechEnabled || process.env.EXPO_PUBLIC_AI_SDK_SPEECH_ENABLED,
 )
+
+export const E2E_TESTING = toBooleanFlag(
+  process.env.EXPO_PUBLIC_E2E_TESTING,
+)
+
+export const E2E_AUTH_SECRET = extra.e2eAuthSecret || process.env.EXPO_PUBLIC_E2E_AUTH_SECRET || ''

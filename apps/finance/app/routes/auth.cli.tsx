@@ -9,15 +9,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const codeChallengeMethod = url.searchParams.get('code_challenge_method') ?? 'S256';
   const state = url.searchParams.get('state');
   const scope = url.searchParams.get('scope') ?? 'openid profile email';
-  const provider = url.searchParams.get('provider') ?? 'google';
 
   if (!redirectUri || !codeChallenge || !state) {
     throw new Response('Missing required parameters', { status: 400 });
   }
 
-  const authorizeUrl = new URL('/auth/v1/authorize', serverEnv.VITE_SUPABASE_URL);
-  authorizeUrl.searchParams.set('provider', provider);
-  authorizeUrl.searchParams.set('redirect_to', redirectUri);
+  const authorizeUrl = new URL('/api/auth/authorize', serverEnv.VITE_PUBLIC_API_URL);
+  authorizeUrl.searchParams.set('provider', 'apple');
+  authorizeUrl.searchParams.set('redirect_uri', redirectUri);
   authorizeUrl.searchParams.set('code_challenge', codeChallenge);
   authorizeUrl.searchParams.set('code_challenge_method', codeChallengeMethod);
   authorizeUrl.searchParams.set('state', state);

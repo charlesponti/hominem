@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { useCallback, useMemo, useState } from 'react';
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
@@ -19,7 +19,7 @@ type ApiState = {
  * React hook for API client that handles fetch requests with authentication
  */
 export function useApiClient() {
-  const { supabase } = useSupabaseAuthContext();
+  const { session } = useAuthContext();
   const [state, setState] = useState<ApiState>({
     isLoading: false,
     error: null,
@@ -42,18 +42,8 @@ export function useApiClient() {
           defaultHeaders['Content-Type'] = 'application/json';
         }
 
-        // Verify user with Supabase Auth server before trusting session data
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (session?.access_token) {
-            defaultHeaders.Authorization = `Bearer ${session.access_token}`;
-          }
+        if (session?.access_token) {
+          defaultHeaders.Authorization = `Bearer ${session.access_token}`;
         }
 
         const fetchBody: BodyInit | null =
@@ -91,7 +81,7 @@ export function useApiClient() {
         throw error;
       }
     },
-    [supabase],
+    [session],
   );
 
   /**

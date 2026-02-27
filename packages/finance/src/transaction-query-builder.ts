@@ -303,16 +303,15 @@ export class TransactionQueryBuilder {
       data: data.map(({ filteredCount: _, searchVector: __, ...tx }) => {
         // Normalize account.meta to the strict AccountMetadata shape when present.
         // Guard at runtime: only parse objects (Plaid sometimes stores strings/etc).
-        const accountNormalized =
-          tx.account
-            ? {
-                ...tx.account,
-                meta:
-                  tx.account.meta && typeof tx.account.meta === 'object'
-                    ? AccountMetadataSchema.parse(tx.account.meta)
-                    : null,
-              }
-            : null;
+        const accountNormalized = tx.account
+          ? {
+              ...tx.account,
+              meta:
+                tx.account.meta && typeof tx.account.meta === 'object'
+                  ? AccountMetadataSchema.parse(tx.account.meta)
+                  : null,
+            }
+          : null;
 
         return {
           ...tx,

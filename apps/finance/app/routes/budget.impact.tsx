@@ -91,14 +91,8 @@ const BudgetImpactCalculator = () => {
       };
     }
 
-    const totalIncome = validMonths.reduce(
-      (sum, month) => sum + (month.Income || 0),
-      0,
-    );
-    const totalExpenses = validMonths.reduce(
-      (sum, month) => sum + (month.Spending || 0),
-      0,
-    );
+    const totalIncome = validMonths.reduce((sum, month) => sum + (month.Income || 0), 0);
+    const totalExpenses = validMonths.reduce((sum, month) => sum + (month.Spending || 0), 0);
     const totalSavings = totalIncome - totalExpenses;
 
     const averageMonthlyIncome = totalIncome / validMonths.length;

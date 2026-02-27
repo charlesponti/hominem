@@ -52,22 +52,40 @@ export const useDeleteAccount = (options?: HonoMutationOptions<UserDeleteAccount
       onError: (error, _variables, context, mutationContext) => {
         if (context && typeof context === 'object') {
           if ('previousLists' in context) {
-            utils.setData(queryKeys.lists.all(), (context as { previousLists?: unknown }).previousLists);
+            utils.setData(
+              queryKeys.lists.all(),
+              (context as { previousLists?: unknown }).previousLists,
+            );
           }
           if ('previousPlaces' in context) {
-            utils.setData(queryKeys.places.all(), (context as { previousPlaces?: unknown }).previousPlaces);
+            utils.setData(
+              queryKeys.places.all(),
+              (context as { previousPlaces?: unknown }).previousPlaces,
+            );
           }
           if ('previousTrips' in context) {
-            utils.setData(queryKeys.trips.all(), (context as { previousTrips?: unknown }).previousTrips);
+            utils.setData(
+              queryKeys.trips.all(),
+              (context as { previousTrips?: unknown }).previousTrips,
+            );
           }
           if ('previousPeople' in context) {
-            utils.setData(queryKeys.people.list(), (context as { previousPeople?: unknown }).previousPeople);
+            utils.setData(
+              queryKeys.people.list(),
+              (context as { previousPeople?: unknown }).previousPeople,
+            );
           }
           if ('previousInvitesSent' in context) {
-            utils.setData(queryKeys.invites.sent(), (context as { previousInvitesSent?: unknown }).previousInvitesSent);
+            utils.setData(
+              queryKeys.invites.sent(),
+              (context as { previousInvitesSent?: unknown }).previousInvitesSent,
+            );
           }
           if ('previousInvitesReceived' in context) {
-            utils.setData(queryKeys.invites.received(), (context as { previousInvitesReceived?: unknown }).previousInvitesReceived);
+            utils.setData(
+              queryKeys.invites.received(),
+              (context as { previousInvitesReceived?: unknown }).previousInvitesReceived,
+            );
           }
         }
 

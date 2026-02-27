@@ -5,6 +5,7 @@ import { Text, makeStyles } from 'theme'
 type ButtonProps = {
   isLoading?: boolean
   title?: string
+  testID?: string
 } & TouchableOpacityProps
 
 export const Button = forwardRef<ElementRef<typeof TouchableOpacity>, ButtonProps>(

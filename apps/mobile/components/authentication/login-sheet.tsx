@@ -10,7 +10,7 @@ const LoginSheet = () => {
   const [authError, setAuthError] = useState<string | null>(null)
   const { signInWithApple } = useAuth()
 
-  const onSignInClick = useCallback(async () => {
+  const onSignInWithApple = useCallback(async () => {
     try {
       await signInWithApple()
       setAuthError(null)
@@ -19,6 +19,7 @@ const LoginSheet = () => {
         return
       }
 
+      console.error('[mobile-auth] Apple sign-in failed', error)
       captureException(error)
       Alert.alert('Sign in failed', 'Unable to authenticate. Please try again.')
       setAuthError('There was a problem signing in. Our team is working on it.')
@@ -33,7 +34,7 @@ const LoginSheet = () => {
         </View>
       ) : null}
       <View style={styles.buttonContainer}>
-        <Button onPress={onSignInClick} title="[CONTINUE_WITH_APPLE]" />
+        <Button onPress={onSignInWithApple} title="[CONTINUE_WITH_APPLE]" />
       </View>
     </View>
   )

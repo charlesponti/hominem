@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { Label } from '@hominem/ui/components/ui/label';
 import { Input } from '@hominem/ui/input';
 import { Star } from 'lucide-react';
@@ -9,7 +9,7 @@ import { useMyVisits } from '~/lib/hooks/use-places';
 import { buildImageUrl } from '~/lib/utils';
 
 export default function VisitsPage() {
-  const { isAuthenticated } = useSupabaseAuthContext();
+  const { isAuthenticated } = useAuthContext();
   const [placeFilter, setPlaceFilter] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');

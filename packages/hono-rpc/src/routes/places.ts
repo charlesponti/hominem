@@ -217,7 +217,7 @@ export const placesRoutes = new Hono<AppContext>()
             fetchedPhotos = sanitizeStoredPhotos(rawPhotos);
             fetchedImageUrl = fetchedPhotos.length > 0 ? fetchedPhotos[0]! : null;
 
-            fetchedRating = googlePlaceData.rating ?? null;
+            fetchedRating = googlePlaceData.rating !== undefined ? googlePlaceData.rating : null;
             fetchedTypes = googlePlaceData.types ?? null;
             fetchedAddress = googlePlaceData.formattedAddress ?? null;
             fetchedLatitude = googlePlaceData.location?.latitude ?? null;
@@ -379,7 +379,7 @@ export const placesRoutes = new Hono<AppContext>()
 
       const predictions = suggestions
         .map((suggestion) => suggestion.placePrediction)
-        .filter(Boolean)
+        .filter((p): p is NonNullable<typeof p> => !!p)
         .map(mapGooglePlaceToPrediction);
       return c.json<PlaceAutocompleteOutput>(predictions, 200);
     } catch (err) {

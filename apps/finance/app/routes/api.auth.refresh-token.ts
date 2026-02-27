@@ -1,37 +1,27 @@
 import type { ActionFunctionArgs } from 'react-router';
 
-import { createSupabaseServerClient } from '@hominem/auth/server';
-
 export async function action({ request }: ActionFunctionArgs) {
   const { refreshToken } = await request.json();
-  const config = {
-    supabaseUrl: process.env.SUPABASE_URL!,
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY!,
-  };
-  const { supabase } = createSupabaseServerClient(request, config);
 
   if (!refreshToken || typeof refreshToken !== 'string') {
     throw new Response(JSON.stringify({ error: 'Missing refresh token' }), { status: 400 });
   }
 
   try {
-    const { data, error } = await supabase.auth.refreshSession({
-      refresh_token: refreshToken,
+    const res = await fetch(new URL('/api/auth/refresh-token', request.url), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ refresh_token: refreshToken }),
     });
-
-    if (error) {
-      console.error('Error refreshing token:', error);
-      throw new Response(JSON.stringify({ error: error.message }), { status: 401 });
+    if (!res.ok) {
+      const message = await res.text();
+      throw new Response(JSON.stringify({ error: message || 'Refresh failed' }), { status: 401 });
     }
-
-    if (!data.session) {
-      throw new Response(JSON.stringify({ error: 'Failed to get new session' }), { status: 401 });
-    }
-
+    const data = (await res.json()) as { access_token: string; refresh_token?: string };
     return new Response(
       JSON.stringify({
-        accessToken: data.session.access_token,
-        refreshToken: data.session.refresh_token,
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token ?? refreshToken,
       }),
       { status: 200 },
     );

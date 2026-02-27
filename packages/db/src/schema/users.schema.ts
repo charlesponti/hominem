@@ -10,6 +10,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
+import { betterAuthUser } from './better-auth.schema';
 
 export const users = pgTable(
   'users',
@@ -17,8 +18,12 @@ export const users = pgTable(
     // Primary key for foreign key relationships
     id: uuid('id').primaryKey().defaultRandom().notNull(),
 
-    // Supabase auth integration
-    supabaseId: text('supabase_id').unique().notNull(),
+    // Legacy external auth integration. Optional during Better Auth cutover.
+    supabaseId: text('supabase_id').unique(),
+    primaryAuthSubjectId: uuid('primary_auth_subject_id'),
+    betterAuthUserId: text('better_auth_user_id').references(() => betterAuthUser.id, {
+      onDelete: 'set null',
+    }),
 
     // User profile data (synced from Supabase)
     email: text('email').notNull(),
@@ -40,12 +45,15 @@ export const users = pgTable(
   (table) => [
     // Primary index for Supabase ID lookups
     index('supabase_id_idx').on(table.supabaseId),
+    index('users_primary_auth_subject_id_idx').on(table.primaryAuthSubjectId),
+    index('users_better_auth_user_id_idx').on(table.betterAuthUserId),
 
     // Email index for lookups
     index('email_idx').on(table.email),
 
     // Unique constraint on email (for migration scenarios)
     uniqueIndex('User_email_key').using('btree', table.email.asc().nullsLast()),
+    uniqueIndex('users_better_auth_user_id_uidx').on(table.betterAuthUserId),
   ],
 );
 export type User = InferSelectModel<typeof users>;

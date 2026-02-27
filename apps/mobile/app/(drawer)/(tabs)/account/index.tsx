@@ -1,17 +1,17 @@
-import { Alert } from 'react-native'
-import { useEffect, useState } from 'react'
-import { View } from 'react-native'
+import { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
+import { View } from 'react-native';
 
-import { Button } from '~/components/Button'
-import TextInput from '~/components/text-input'
-import { Text } from '~/theme'
-import { useAuth } from '~/utils/auth-provider'
+import { Button } from '~/components/Button';
+import TextInput from '~/components/text-input';
+import { Text } from '~/theme';
+import { useAuth } from '~/utils/auth-provider';
 
 function Account() {
-  const { isSignedIn, signOut, currentUser, updateProfile } = useAuth()
-  const initialName = currentUser?.name || ''
-  const [name, setName] = useState(initialName)
-  const [isSaving, setIsSaving] = useState(false)
+  const { isSignedIn, signOut, currentUser, updateProfile } = useAuth();
+  const initialName = currentUser?.name || '';
+  const [name, setName] = useState(initialName);
+  const [isSaving, setIsSaving] = useState(false);
   // const [avatarUrl, setAvatarUrl] = useState('')
 
   // const onAvatarUpload = (url: string) => {
@@ -19,40 +19,48 @@ function Account() {
   // }
 
   const onSavePress = () => {
-    setIsSaving(true)
+    setIsSaving(true);
     updateProfile({ name })
       .catch(() => undefined)
-      .finally(() => setIsSaving(false))
-  }
+      .finally(() => setIsSaving(false));
+  };
 
   const onLogoutPress = () => {
-    signOut()
-  }
+    signOut();
+  };
 
   const onDeleteAccountPress = () => {
     Alert.alert(
       'Account deletion unavailable',
       'Account deletion is not available in this release yet.',
-      [
-        { text: 'OK', style: 'default' },
-      ]
-    )
-  }
+      [{ text: 'OK', style: 'default' }],
+    );
+  };
 
   useEffect(() => {
     if (currentUser?.name) {
-      setName(currentUser.name)
+      setName(currentUser.name);
       // setAvatarUrl(profile.avatarUrl)
     }
-  }, [currentUser])
+  }, [currentUser]);
 
   if (!isSignedIn) {
-    return null
+    return null;
   }
 
   return (
-    <View style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 24, rowGap: 8, backgroundColor: '#000000' }}>
-      <Text variant="cardHeader" color="foreground">ACCOUNT</Text>
+    <View
+      style={{
+        flex: 1,
+        paddingHorizontal: 12,
+        paddingVertical: 24,
+        rowGap: 8,
+        backgroundColor: '#000000',
+      }}
+    >
+      <Text variant="cardHeader" color="foreground">
+        ACCOUNT
+      </Text>
       {/* <Avatar size={200} url={avatarUrl || ''} onUpload={onAvatarUpload} /> */}
       <View style={{ rowGap: 24, marginTop: 32 }}>
         <View>
@@ -98,7 +106,7 @@ function Account() {
         />
       </View>
     </View>
-  )
+  );
 }
 
-export default Account
+export default Account;

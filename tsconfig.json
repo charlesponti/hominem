@@ -1,4 +1,8 @@
 {
+  "compilerOptions": {
+    "disableReferencedProjectLoad": true,
+    "disableSolutionSearching": true
+  },
   "files": [],
   "references": [
     { "path": "packages/auth" },
@@ -22,6 +26,7 @@
     { "path": "services/workers" },
     { "path": "tools/cli" },
     { "path": "apps/finance" },
+    { "path": "apps/mobile" },
     { "path": "apps/notes" },
     { "path": "apps/rocco" }
   ],

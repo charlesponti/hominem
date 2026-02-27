@@ -15,7 +15,7 @@ This skill orchestrates a suite of specialized agents to ensure code meets the h
 
 To perform the audit, launch the following tasks **in parallel** using the `Task` tool:
 
-- **Type Performance**: Use the `general` agent with the prompt `/type-audit` to run the monorepo's diagnostic performance scripts.
+- **Type Performance**: Use `npx @hackefeller/type-audit --project . --threshold 1.0` for portable type-check performance auditing.
 - **Security Audit**: Use the `security-sentinel` agent to scan the current changes for vulnerabilities, hardcoded secrets, and OWASP compliance.
 - **Simplicity Review**: Use the `code-simplicity-reviewer` agent to ensure the changes are as minimal as possible and avoid over-engineering.
 

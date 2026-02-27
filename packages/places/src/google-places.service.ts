@@ -2,36 +2,6 @@ import { env } from '@hominem/services/env';
 import { redis } from '@hominem/services/redis';
 import { logger } from '@hominem/utils/logger';
 
-// Minimal types to avoid loading heavy googleapis type system
-type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
-
-type GooglePlacesClient = {
-  places: {
-    get: (
-      params: { name: string },
-      options: { headers: Record<string, string> },
-    ) => Promise<{
-      data: GooglePlaceDetailsResponse;
-    }>;
-    searchText: (
-      params: { requestBody: Record<string, JsonValue> },
-      options: { headers: Record<string, string> },
-    ) => Promise<{ data: { places?: GooglePlaceDetailsResponse[] } }>;
-    autocomplete: (
-      params: { requestBody: Record<string, JsonValue> },
-      options: { headers: Record<string, string> },
-    ) => Promise<{ data: { suggestions?: GooglePlacePrediction[] } }>;
-    photos: {
-      getMedia: (params: {
-        name: string;
-        maxWidthPx?: number;
-        maxHeightPx?: number;
-        skipHttpRedirect?: boolean;
-      }) => Promise<{ data: { photoUri?: string | null } }>;
-    };
-  };
-};
-
 export type SearchPlacesOptions = {
   query: string;
   locationBias?: {
@@ -78,21 +48,15 @@ export type PlaceLocation = {
 };
 
 export type GooglePlacePrediction = {
-  placePrediction?: {
-    placeId?: string | null;
-    text?: { text?: string | null } | null;
-    structuredFormat?: {
-      mainText?: { text?: string | null } | null;
-      secondaryText?: { text?: string | null } | null;
-    } | null;
-    displayName?: { text?: string | null } | null;
-    formattedAddress?: string | null;
-    id?: string | null;
-  } | null;
+  place_id: string;
+  text: string;
+  address: string;
+  location: PlaceLocation | null;
+  priceLevel?: string | number | null | undefined;
 };
 
 export type GooglePlacesApiResponse = {
-  places?: GooglePlaceDetailsResponse[];
+  places?: GooglePlaceData[] | null;
 };
 
 export type GooglePlaceData = {
@@ -115,26 +79,66 @@ export type GooglePlaceData = {
 };
 
 export type GoogleAddressComponent = {
+  longText?: string;
   types?: string[];
-  longText?: string | null;
 };
 
 export type GooglePlacePhoto = {
-  name?: string | null;
+  name?: string;
 };
 
-export type GooglePlaceDetailsResponse = {
+export type GooglePlaceDetailsResponse = GooglePlaceData;
+
+type PlaceDetailsLike = {
   id?: string;
-  displayName?: { text?: string | null } | null;
-  formattedAddress?: string | null;
-  location?: { latitude?: number | null; longitude?: number | null } | null;
-  types?: string[] | null;
-  websiteUri?: string | null;
-  nationalPhoneNumber?: string | null;
-  priceLevel?: string | number | null;
-  rating?: number | null;
-  photos?: GooglePlacePhoto[] | null;
-  addressComponents?: GoogleAddressComponent[] | null;
+  displayName?: { text?: string };
+  formattedAddress?: string;
+  location?: { latitude?: number; longitude?: number };
+  types?: string[];
+  websiteUri?: string;
+  nationalPhoneNumber?: string;
+  priceLevel?: string | number;
+  photos?: GooglePlacePhoto[];
+  addressComponents?: GoogleAddressComponent[];
+  rating?: number;
+};
+
+type AutocompleteSuggestionLike = {
+  placePrediction?: {
+    placeId?: string;
+    text?: { text?: string };
+    structuredFormat?: {
+      mainText?: { text?: string };
+      secondaryText?: { text?: string };
+    };
+    types?: string[];
+    distanceMeters?: number;
+  };
+};
+
+type PlacesClientLike = {
+  places: {
+    searchText: (
+      params: { requestBody: Record<string, unknown> },
+      options: { headers: { 'X-Goog-FieldMask': string } },
+    ) => Promise<{ data: { places?: PlaceDetailsLike[] | null } }>;
+    get: (
+      params: { name: string },
+      options: { headers: { 'X-Goog-FieldMask': string } },
+    ) => Promise<{ data: PlaceDetailsLike | null | undefined }>;
+    autocomplete: (
+      params: { requestBody: Record<string, unknown> },
+      options: { headers: { 'X-Goog-FieldMask': string } },
+    ) => Promise<{ data: { suggestions?: AutocompleteSuggestionLike[] | null } }>;
+    photos: {
+      getMedia: (params: {
+        name: string;
+        maxWidthPx: number;
+        maxHeightPx: number;
+        skipHttpRedirect: boolean;
+      }) => Promise<{ data: { photoUri?: string | null } }>;
+    };
+  };
 };
 
 const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours for persistent cache
@@ -148,22 +152,54 @@ const getGoogleApiKey = () => {
 };
 
 // Cache the client instance once the API key is available
-let cachedPlacesClient: GooglePlacesClient | undefined;
+let cachedPlacesClient: PlacesClientLike | undefined;
+let overridePlacesClient: PlacesClientLike | null = null;
+const detailsInFlight = new Map<string, Promise<PlaceDetailsLike>>();
+const searchInFlight = new Map<string, Promise<PlaceDetailsLike[]>>();
 
-const createPlacesClient = (): GooglePlacesClient => {
+function normalizeLocationBias(
+  locationBias: SearchPlacesOptions['locationBias'] | AutocompleteOptions['locationBias'],
+) {
+  if (!locationBias) {
+    return null;
+  }
+
+  return {
+    latitude: locationBias.latitude,
+    longitude: locationBias.longitude,
+    radius: locationBias.radius,
+  };
+}
+
+function loadPlacesClientFromGoogleApis(): PlacesClientLike {
+  const googleApi = require('googleapis') as {
+    google?: {
+      places?: (input: { version: 'v1'; auth: string }) => unknown;
+    };
+  };
+  const placesFactory = googleApi.google?.places;
+  if (typeof placesFactory !== 'function') {
+    throw new Error('Google Places client factory is not available');
+  }
+
+  const client = placesFactory({
+    version: 'v1',
+    auth: getGoogleApiKey(),
+  });
+  return client as PlacesClientLike;
+}
+
+const createPlacesClient = (): PlacesClientLike => {
+  if (overridePlacesClient) {
+    return overridePlacesClient;
+  }
+
   if (cachedPlacesClient) {
     return cachedPlacesClient;
   }
 
-  // Type system avoids googleapis imports to prevent type graph construction
-  const google = require('googleapis').google;
-
-  const placesClient = google.places({
-    version: 'v1',
-    auth: getGoogleApiKey(),
-  });
-  cachedPlacesClient = placesClient;
-  return placesClient;
+  cachedPlacesClient = loadPlacesClientFromGoogleApis();
+  return cachedPlacesClient;
 };
 
 // Field names without prefix (for PlaceOutput Details API - single place response)
@@ -176,7 +212,6 @@ const FIELDS = {
   websiteUri: 'websiteUri',
   nationalPhoneNumber: 'nationalPhoneNumber',
   priceLevel: 'priceLevel',
-  rating: 'rating',
   photos: 'photos',
   addressComponents: 'addressComponents',
 } as const;
@@ -208,7 +243,6 @@ const DEFAULT_DETAILS_FIELD_MASK = [
   FIELDS.websiteUri,
   FIELDS.nationalPhoneNumber,
   FIELDS.priceLevel,
-  FIELDS.rating,
   FIELDS.photos,
 ].join(',');
 
@@ -248,36 +282,57 @@ const getDetails = async ({
   placeId,
   fieldMask = DEFAULT_DETAILS_FIELD_MASK,
   forceFresh,
-}: PlaceDetailsOptions): Promise<GooglePlaceDetailsResponse> => {
+}: PlaceDetailsOptions): Promise<PlaceDetailsLike> => {
   const cacheKey = buildCacheKey({
     path: 'places-details',
     placeId,
     fieldMask,
   });
 
-  const cached = !forceFresh ? await readCache<GooglePlaceDetailsResponse>(cacheKey) : null;
+  const cached = !forceFresh ? await readCache<PlaceDetailsLike>(cacheKey) : null;
   if (cached) {
     return cached;
   }
 
-  const response = await createPlacesClient().places.get(
-    {
-      name: `places/${placeId}`,
-    },
-    {
-      headers: {
-        'X-Goog-FieldMask': fieldMask,
-      },
-    },
-  );
-
-  const data = response.data;
-  if (!data) {
-    throw new Error(`Place ${placeId} not found`);
+  if (!forceFresh) {
+    const inFlight = detailsInFlight.get(cacheKey);
+    if (inFlight) {
+      return inFlight;
+    }
   }
 
-  await writeCache(cacheKey, data);
-  return data;
+  const request = (async () => {
+    const response = await createPlacesClient().places.get(
+      {
+        name: `places/${placeId}`,
+      },
+      {
+        headers: {
+          'X-Goog-FieldMask': fieldMask,
+        },
+      },
+    );
+
+    const data = response.data;
+    if (!data) {
+      throw new Error(`Place ${placeId} not found`);
+    }
+
+    await writeCache(cacheKey, data);
+    return data;
+  })();
+
+  if (!forceFresh) {
+    detailsInFlight.set(cacheKey, request);
+  }
+
+  try {
+    return await request;
+  } finally {
+    if (!forceFresh) {
+      detailsInFlight.delete(cacheKey);
+    }
+  }
 };
 
 const search = async ({
@@ -286,8 +341,8 @@ const search = async ({
   fieldMask = DEFAULT_SEARCH_FIELD_MASK,
   maxResultCount = 10,
   forceFresh,
-}: SearchPlacesOptions): Promise<GooglePlaceDetailsResponse[]> => {
-  const body: Record<string, JsonValue> = {
+}: SearchPlacesOptions): Promise<PlaceDetailsLike[]> => {
+  const body: Record<string, unknown> = {
     textQuery: query,
     maxResultCount,
   };
@@ -307,30 +362,51 @@ const search = async ({
   const cacheKey = buildCacheKey({
     path: 'search',
     query,
-    locationBias,
+    locationBias: normalizeLocationBias(locationBias),
     fieldMask,
     maxResultCount,
   });
 
-  const cached = !forceFresh ? await readCache<GooglePlaceDetailsResponse[]>(cacheKey) : null;
+  const cached = !forceFresh ? await readCache<PlaceDetailsLike[]>(cacheKey) : null;
   if (cached) {
     return cached;
   }
 
-  const response = await createPlacesClient().places.searchText(
-    {
-      requestBody: body,
-    },
-    {
-      headers: {
-        'X-Goog-FieldMask': fieldMask,
-      },
-    },
-  );
+  if (!forceFresh) {
+    const inFlight = searchInFlight.get(cacheKey);
+    if (inFlight) {
+      return inFlight;
+    }
+  }
 
-  const places = response.data.places ?? [];
-  await writeCache(cacheKey, places);
-  return places;
+  const request = (async () => {
+    const response = await createPlacesClient().places.searchText(
+      {
+        requestBody: body,
+      },
+      {
+        headers: {
+          'X-Goog-FieldMask': fieldMask,
+        },
+      },
+    );
+
+    const places = response.data.places ?? [];
+    await writeCache(cacheKey, places);
+    return places;
+  })();
+
+  if (!forceFresh) {
+    searchInFlight.set(cacheKey, request);
+  }
+
+  try {
+    return await request;
+  } finally {
+    if (!forceFresh) {
+      searchInFlight.delete(cacheKey);
+    }
+  }
 };
 
 const autocomplete = async ({
@@ -339,8 +415,8 @@ const autocomplete = async ({
   locationBias,
   includeQueryPredictions,
   includedPrimaryTypes,
-}: AutocompleteOptions): Promise<GooglePlacePrediction[]> => {
-  const body: Record<string, JsonValue> = { input };
+}: AutocompleteOptions): Promise<AutocompleteSuggestionLike[]> => {
+  const body: Record<string, unknown> = { input };
 
   if (sessionToken) {
     body.sessionToken = sessionToken;
@@ -425,7 +501,7 @@ export const googlePlaces = {
 };
 
 export const getNeighborhoodFromAddressComponents = (
-  addressComponents: GooglePlaceDetailsResponse['addressComponents'],
+  addressComponents: GoogleAddressComponent[] | null | undefined,
 ) => {
   if (!addressComponents) {
     return null;
@@ -437,13 +513,17 @@ export const getNeighborhoodFromAddressComponents = (
 };
 
 export const googlePlacesTestUtils = {
+  setClient: (client: PlacesClientLike) => {
+    overridePlacesClient = client;
+  },
+  resetClient: () => {
+    overridePlacesClient = null;
+    cachedPlacesClient = undefined;
+  },
   clearCache: async () => {
     const keys = await redis.keys('google-places:*');
     if (keys.length > 0) {
       await redis.del(...keys);
     }
-  },
-  setClient: (client: GooglePlacesClient | undefined) => {
-    cachedPlacesClient = client;
   },
 };

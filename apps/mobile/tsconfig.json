@@ -10,8 +10,9 @@
     "tsBuildInfoFile": "../../.cache/app-mobile.tsbuildinfo",
     "allowJs": false,
     "checkJs": false,
+    "moduleDetection": "force",
     "maxNodeModuleJsDepth": 0,
-    "disableSourceOfProjectReferenceRedirect": false,
+    "disableSourceOfProjectReferenceRedirect": true,
     "paths": {
       "~/*": [
         "./*"
@@ -24,6 +25,8 @@
     "app/**/*.tsx",
     "components/**/*.ts",
     "components/**/*.tsx",
+    "lib/**/*.ts",
+    "lib/**/*.tsx",
     "theme/**/*.ts",
     "theme/**/*.tsx",
     "utils/**/*.ts",

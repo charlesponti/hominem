@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.profiles/tool-nodenext.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["dist"]
+}

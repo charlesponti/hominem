@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
 import { createHonoClient } from '@hominem/hono-rpc/client';
 
@@ -19,7 +19,7 @@ interface HonoProviderProps {
 }
 
 export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
-  const { supabase } = useSupabaseAuthContext();
+  const { authClient } = useAuthContext();
 
   return (
     <BaseHonoProvider
@@ -28,7 +28,7 @@ export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
         createClient: createHonoClient,
         getAuthToken: async () => {
           try {
-            const { data } = await supabase.auth.getSession();
+            const { data } = await authClient.auth.getSession();
             return data?.session?.access_token || null;
           } catch (error) {
             if (error instanceof Error) {

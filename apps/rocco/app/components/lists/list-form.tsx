@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/input';
 import { Loading } from '@hominem/ui/loading';
@@ -17,7 +17,7 @@ export default function ListForm() {
   const [status, setStatus] = useState<FormStatus>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { supabase, isAuthenticated } = useSupabaseAuthContext();
+  const { authClient, isAuthenticated } = useAuthContext();
 
   const { mutate: createList } = useCreateList({
     onSuccess: (_result) => {
@@ -87,8 +87,8 @@ export default function ListForm() {
           localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: name.trim() }));
         } catch {}
 
-        await supabase.auth.signInWithOAuth({
-          provider: 'google',
+        await authClient.auth.signInWithOAuth({
+          provider: 'apple',
           options: {
             redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/lists')}`,
           },
@@ -104,7 +104,7 @@ export default function ListForm() {
         isPublic: false,
       });
     },
-    [name, isAuthenticated, supabase, createList],
+    [name, isAuthenticated, authClient, createList],
   );
 
   const isOverlayVisible = status === 'submitting' || status === 'success';

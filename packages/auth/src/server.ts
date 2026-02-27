@@ -1,124 +1,105 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { logger } from '@hominem/utils/logger'
 
-import { logger } from '@hominem/utils/logger';
-import {
-  type CookieMethodsServer,
-  createServerClient,
-  parseCookieHeader,
-  serializeCookieHeader,
-} from '@supabase/ssr';
+import type { AuthConfig, HominemSession, HominemUser, ServerAuthResult } from './types'
 
-import type { AuthConfig, ServerAuthResult } from './types';
+interface ServerSessionPayload {
+  isAuthenticated: boolean
+  user: HominemUser | null
+  auth: ServerAuthResult['auth']
+  accessToken?: string | null
+  expiresIn?: number | null
+}
 
-import { toHominemUser } from './user';
-import { UserAuthService } from './user-auth.service';
+function getAbsoluteApiUrl(baseUrl: string, path: string) {
+  return new URL(path, baseUrl).toString()
+}
 
-/**
- * Creates cookie handling utilities for server-side Supabase client.
- * Returns headers and cookie methods that work together.
- */
-function createCookieHandlers(request: Request): {
-  headers: Headers;
-  cookies: CookieMethodsServer;
-} {
-  const headers = new Headers();
-  const cookies: CookieMethodsServer = {
-    getAll() {
-      return parseCookieHeader(request.headers.get('Cookie') ?? '').filter(
-        (cookie): cookie is { name: string; value: string } => cookie.value !== undefined,
-      );
-    },
-    setAll(cookiesToSet) {
-      cookiesToSet.forEach(({ name, value, options = {} }) => {
-        headers.append('Set-Cookie', serializeCookieHeader(name, value, { ...options, path: '/' }));
-      });
-    },
-  };
-  return { headers, cookies };
+function toSession(accessToken?: string | null, expiresIn?: number | null): HominemSession | null {
+  if (!accessToken) {
+    return null
+  }
+
+  const ttl = typeof expiresIn === 'number' && expiresIn > 0 ? expiresIn : 600
+  return {
+    access_token: accessToken,
+    token_type: 'Bearer',
+    expires_in: ttl,
+    expires_at: new Date(Date.now() + ttl * 1000).toISOString(),
+  }
 }
 
 export async function getServerAuth(
   request: Request,
-  config: AuthConfig,
+  config: AuthConfig
 ): Promise<ServerAuthResult & { headers: Headers }> {
-  if (!request.headers) {
-    throw new Error('Invalid request');
-  }
-
-  const { headers, cookies } = createCookieHandlers(request);
-
-  const supabase = createServerClient(config.supabaseUrl, config.supabaseAnonKey, { cookies });
+  const headers = new Headers()
 
   try {
-    // Always verify user with Supabase Auth server
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    const cookieHeader = request.headers.get('cookie')
+    const authHeader = request.headers.get('authorization')
 
-    if (userError || !user) {
+    const upstreamHeaders = new Headers()
+    if (cookieHeader) {
+      upstreamHeaders.set('cookie', cookieHeader)
+    }
+    if (authHeader) {
+      upstreamHeaders.set('authorization', authHeader)
+    }
+
+    const res = await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/session'), {
+      method: 'GET',
+      headers: upstreamHeaders,
+    })
+
+    if (!res.ok) {
       return {
         user: null,
         session: null,
+        auth: null,
         isAuthenticated: false,
         headers,
-      };
+      }
     }
 
-    // Get or create Hominem user
-    const userAuthData = await UserAuthService.findOrCreateUser({
-      ...user,
-      email: user.email ?? '',
-    });
-    if (!userAuthData) {
-      return {
-        user: null,
-        session: null,
-        isAuthenticated: false,
-        headers,
-      };
-    }
-
-    // Fetch session for access token if needed
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
+    const payload = (await res.json()) as ServerSessionPayload
     return {
-      user: toHominemUser(userAuthData),
-      session,
-      isAuthenticated: true,
+      user: payload.user ?? null,
+      session: toSession(payload.accessToken, payload.expiresIn),
+      auth: payload.auth ?? null,
+      isAuthenticated: Boolean(payload.isAuthenticated && payload.user),
       headers,
-    };
+    }
   } catch (error) {
-    logger.error('[getServerAuth]:', { error });
+    logger.error('[getServerAuth]', { error })
     return {
       user: null,
       session: null,
+      auth: null,
       isAuthenticated: false,
       headers,
-    };
+    }
   }
 }
 
-/**
- * Creates a Supabase server client with cookie handling.
- * Returns the client and headers for cookie management.
- */
-export function createSupabaseServerClient(
-  request: Request,
-  config: AuthConfig,
-): { supabase: SupabaseClient; headers: Headers } {
-  if (!request.headers) {
-    throw new Error('Invalid request');
+export function createServerAuthClient(_request: Request, config: AuthConfig) {
+  return {
+    headers: new Headers(),
+    authClient: {
+      auth: {
+        async getUser() {
+          const res = await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/session'), {
+            method: 'GET',
+            credentials: 'include',
+          })
+
+          if (!res.ok) {
+            return { data: { user: null }, error: new Error('Unauthorized') }
+          }
+
+          const payload = (await res.json()) as ServerSessionPayload
+          return { data: { user: payload.user }, error: null }
+        },
+      },
+    },
   }
-
-  const { headers, cookies } = createCookieHandlers(request);
-
-  const supabase = createServerClient(config.supabaseUrl, config.supabaseAnonKey, { cookies });
-
-  return { supabase, headers };
 }
-
-// Re-export for consumers importing from '@hominem/auth/server'
-export { toHominemUser };

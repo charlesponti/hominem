@@ -6,13 +6,13 @@ import type {
 } from '@hominem/hono-rpc/types/chat.types';
 import type React from 'react';
 
+import { useAuthContext } from '@hominem/auth';
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/components/ui/input';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, X } from 'lucide-react';
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
-import { useMatches } from 'react-router';
 
 import type { ExtendedMessage } from '~/lib/types/chat-message';
 
@@ -37,11 +37,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const parentRef = useRef<HTMLDivElement>(null);
 
-    const matches = useMatches();
-    const rootData = matches.find((match) => match.id === 'root')?.data as
-      | { supabaseId: string | null }
-      | undefined;
-    const userId = rootData?.supabaseId || undefined;
+    const { userId } = useAuthContext();
 
     const messagesQuery = useHonoQuery<ChatsGetMessagesOutput>(
       ['chats', 'getMessages', { chatId, limit: 50 }],

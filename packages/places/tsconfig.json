@@ -1,47 +1,11 @@
 {
+  "extends": "../../tsconfig.profiles/package-bundler.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": [
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "baseUrl": ".",
-    "strict": true,
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    "assumeChangesOnlyAffectDirectDependencies": true,
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": false,
-    "incremental": true,
     "tsBuildInfoFile": "../../.cache/places.tsbuildinfo",
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "resolveJsonModule": true,
-    "allowJs": false,
-    "checkJs": false,
-    "maxNodeModuleJsDepth": 0,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "disableSourceOfProjectReferenceRedirect": false,
-    "verbatimModuleSyntax": true,
     "outDir": "./build",
-    "rootDir": "./src",
-    "types": [
-      "node"
-    ],
+    "rootDir": "./src"
   },
-  "include": [
-    "src/**/*",
-    "../../types/**/*.d.ts"
-  ],
+  "include": ["src/**/*"],
   "exclude": [
     "node_modules",
     "build",
@@ -53,6 +17,7 @@
     "**/*.spec.ts",
     "**/__tests__",
     "**/__mocks__",
-    "*.tsbuildinfo"
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }

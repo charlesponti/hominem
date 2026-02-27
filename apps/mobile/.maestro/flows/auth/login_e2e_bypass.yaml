@@ -1,0 +1,7 @@
+appId: com.pontistudios.mindsherpa.dev
+---
+- runFlow: ../smoke/app-launch.yaml
+- assertVisible: "[CONTINUE_WITH_APPLE]"
+- tapOn: "[CONTINUE_WITH_APPLE]"
+- waitForAnimationToEnd
+- assertVisible: "FOCUS"

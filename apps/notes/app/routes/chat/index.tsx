@@ -1,7 +1,7 @@
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
-import { getServerSession } from '~/lib/auth.server';
 import { createServerHonoClient } from '~/lib/api.server';
+import { getServerSession } from '~/lib/auth.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user, session, headers } = await getServerSession(request);

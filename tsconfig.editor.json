@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "disableReferencedProjectLoad": true,
+    "disableSolutionSearching": true
+  },
+  "files": [],
+  "references": [
+    { "path": "packages/hono-rpc" },
+    { "path": "packages/hono-client" },
+    { "path": "packages/auth" },
+    { "path": "packages/db" },
+    { "path": "packages/utils" },
+    { "path": "apps/mobile" }
+  ]
+}

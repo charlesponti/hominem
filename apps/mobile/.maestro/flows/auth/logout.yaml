@@ -1,0 +1,8 @@
+appId: com.pontistudios.mindsherpa.dev
+---
+- runFlow: login.yaml
+- tapOn: "ACCOUNT"
+- waitForAnimationToEnd
+- tapOn: "[SIGN_OUT]"
+- waitForAnimationToEnd
+- assertVisible: "[CONTINUE_WITH_APPLE]"

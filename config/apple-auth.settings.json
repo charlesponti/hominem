@@ -1,0 +1,24 @@
+{
+  "appleAuth": {
+    "teamId": "3QHJ2KN8AL",
+    "servicesIdClientId": "com.pontistudios.hakumi.auth",
+    "signInKeyId": "2438T5MGLH",
+    "bundleIds": {
+      "development": "com.pontistudios.mindsherpa.dev",
+      "production": "com.pontistudios.hakumi"
+    },
+    "webAuth": {
+      "domain": "auth.ponti.io",
+      "returnUrl": "https://auth.ponti.io/api/auth/callback/apple"
+    }
+  },
+  "expo": {
+    "owner": "cponti44",
+    "projectId": "4dfac82b-644f-4ff3-be42-e8f941287aa1",
+    "projectSlug": "hakumi"
+  },
+  "secretsNotStoredInRepo": {
+    "applePrivateKeyFile": ".auth/AuthKey_<KEY_ID>.p8",
+    "appleClientSecretEnvVar": "APPLE_CLIENT_SECRET"
+  }
+}

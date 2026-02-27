@@ -123,10 +123,7 @@ This runs automatically during `bun run check`.
 
 ## Type Performance Tools
 
-- `bun run type-performance:audit`
-- `bun run type-performance:diagnose -- --package <pkg>`
-- `bun run type-performance:dashboard -- --audit-first --open`
-- `bun run type-performance:tsserver -- --logfile <path>`
+- `npx @hackefeller/type-audit --project . --threshold 1.0`
 
 ## Imports
 

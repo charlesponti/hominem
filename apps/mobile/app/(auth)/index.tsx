@@ -1,16 +1,16 @@
-import { Redirect } from 'expo-router'
-import React from 'react'
-import { Image, View } from 'react-native'
+import { Redirect } from 'expo-router';
+import React from 'react';
+import { Image, View } from 'react-native';
 
-import LoginSheet from '~/components/authentication/login-sheet'
-import { Box, Text } from '~/theme'
-import { useAuth } from '~/utils/auth-provider'
+import LoginSheet from '~/components/authentication/login-sheet';
+import { Box, Text } from '~/theme';
+import { useAuth } from '~/utils/auth-provider';
 
 function Auth() {
-  const { isSignedIn } = useAuth()
+  const { isSignedIn } = useAuth();
 
   if (isSignedIn) {
-    return <Redirect href="/(drawer)/(tabs)/start" />
+    return <Redirect href="/(drawer)/(tabs)/start" />;
   }
 
   return (
@@ -26,7 +26,7 @@ function Auth() {
       </View>
       <LoginSheet />
     </Box>
-  )
+  );
 }
 
-export default Auth
+export default Auth;

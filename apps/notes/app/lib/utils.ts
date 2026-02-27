@@ -1,4 +1,4 @@
-export { cn } from '@hominem/ui/lib/utils'
+export { cn } from '@hominem/ui/lib/utils';
 
 export function jsonResponse(data: unknown, init?: ResponseInit) {
   return new Response(JSON.stringify(data), {
@@ -7,5 +7,5 @@ export function jsonResponse(data: unknown, init?: ResponseInit) {
       'Content-Type': 'application/json',
       ...init?.headers,
     },
-  })
+  });
 }

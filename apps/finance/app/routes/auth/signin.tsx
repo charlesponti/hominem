@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import {
   Card,
@@ -23,21 +23,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 export default function SignInPage() {
-  const { supabase, isLoading } = useSupabaseAuthContext();
+  const { authClient, isLoading } = useAuthContext();
   const [error, setError] = useState('');
 
-  const handleGoogleLogin = useCallback(async () => {
+  const handleAppleLogin = useCallback(async () => {
     try {
-      await supabase.auth.signInWithOAuth({
-        provider: 'google',
+      await authClient.auth.signInWithOAuth({
+        provider: 'apple',
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
         },
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Google sign-in failed');
+      setError(err instanceof Error ? err.message : 'Apple sign-in failed');
     }
-  }, [supabase.auth]);
+  }, [authClient.auth]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -55,12 +55,12 @@ export default function SignInPage() {
             <div className="space-y-4">
               <Button
                 type="button"
-                onClick={handleGoogleLogin}
+                onClick={handleAppleLogin}
                 disabled={isLoading}
                 className="w-full"
                 size="lg"
               >
-                {isLoading ? 'Loading...' : 'Continue with Google'}
+                {isLoading ? 'Loading...' : 'Continue with Apple'}
               </Button>
             </div>
           </CardContent>

@@ -34,7 +34,7 @@ export async function getPkceVerifier(state: string): Promise<string | null> {
 // Request schemas
 
 export const TwitterDisconnectSchema = z.object({
-  accountId: z.uuid(),
+  accountId: z.string().min(1),
 });
 
 export const TwitterPostSchema = z.object({

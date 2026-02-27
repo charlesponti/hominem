@@ -38,8 +38,8 @@ const mockSession = {
   user: mockSupabaseUser,
 };
 
-vi.mock('~/lib/supabase', () => ({
-  supabase: {
+vi.mock('~/lib/authClient', () => ({
+  authClient: {
     auth: {
       getSession: vi.fn().mockResolvedValue({ data: { session: mockSession } }),
       getUser: vi.fn().mockResolvedValue({ data: { user: mockSupabaseUser } }),
@@ -73,23 +73,21 @@ const mockAuthContextValue = {
   session: mockSession,
   isAuthenticated: true,
   isLoading: false,
-  supabase: mockSupabaseClient,
+  authClient: mockSupabaseClient,
   logout: vi.fn(),
   signIn: vi.fn(),
+  unlinkGoogle: vi.fn(),
   userId: USER_ID,
 };
 
 vi.mock('@hominem/auth', () => ({
-  SupabaseAuthProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
-  useSupabaseAuth: () => mockAuthContextValue,
-  useSupabaseAuthContext: () => mockAuthContextValue,
-  getSupabase: () => mockSupabaseClient,
+  AuthProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
+  useAuthContext: () => mockAuthContextValue,
   UserAuthService: {
     findByIdOrEmail: vi.fn(async (opts) => {
-      const id = opts.id || opts.supabaseId;
+      const id = opts.id || USER_ID;
       return {
         id: id,
-        supabaseId: id,
         email: `test-${id}@example.com`,
         name: 'Test User',
         image: null,

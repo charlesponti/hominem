@@ -612,7 +612,7 @@ export async function refreshAllPlaces() {
 
       const photoNames =
         googleData.photos
-          ?.map((photo: { name?: string | null }) => photo.name)
+          ?.map((photo) => photo.name)
           .filter((name): name is string => typeof name === 'string' && name.length > 0) ?? [];
 
       const priceLevel = googleData.priceLevel;

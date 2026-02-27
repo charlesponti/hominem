@@ -10,15 +10,12 @@ import React, {
   useState,
   type PropsWithChildren,
 } from 'react'
-import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 
+import { authClient } from '../lib/auth-client'
 import { LocalStore } from './local-store'
 import type { UserProfile } from './local-store/types'
-import {
-  exchangeAuthCodeFromUrl,
-  getMobileRedirectUri,
-  getSupabaseMobileClient,
-} from './supabase-mobile'
+import { signInWithE2eCredentials } from './auth-e2e'
+import { E2E_TESTING } from './constants'
 
 WebBrowser.maybeCompleteAuthSession()
 
@@ -28,8 +25,6 @@ type AuthContextType = {
   isLoadingAuth: boolean
   isSignedIn: boolean
   currentUser: UserProfile | null
-  session: Session | null
-  supabaseUser: User | null
   signInWithApple: () => Promise<void>
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
@@ -47,18 +42,28 @@ export const useAuth = () => {
 
 const nowIso = () => new Date().toISOString()
 
-const mapSupabaseUserToProfile = (user: User): UserProfile => ({
-  id: user.id,
-  name:
-    typeof user.user_metadata?.full_name === 'string'
-      ? user.user_metadata.full_name
-      : typeof user.user_metadata?.name === 'string'
-        ? user.user_metadata.name
-        : null,
-  email: user.email ?? null,
-  createdAt: user.created_at ?? nowIso(),
-  updatedAt: nowIso(),
-})
+function toUserProfile(input: {
+  id: string
+  email?: string | null
+  name?: string | null
+  createdAt?: Date | string | undefined
+  updatedAt?: Date | string | undefined
+}): UserProfile {
+  const toIso = (date: unknown): string => {
+    if (!date) return nowIso()
+    if (typeof date === 'string') return date
+    if (date instanceof Date) return date.toISOString()
+    return nowIso()
+  }
+
+  return {
+    id: input.id,
+    email: input.email ?? null,
+    name: input.name ?? null,
+    createdAt: toIso(input.createdAt),
+    updatedAt: toIso(input.updatedAt),
+  }
+}
 
 async function clearLegacyLocalDataOnce() {
   const migrationFlag = await SecureStore.getItemAsync(LOCAL_MIGRATION_KEY)
@@ -72,109 +77,60 @@ async function clearLegacyLocalDataOnce() {
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const router = useRouter()
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true)
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [supabaseUser, setSupabaseUser] = useState<User | null>(null)
 
-  const supabase = useMemo(() => getSupabaseMobileClient(), [])
+  const { data: session, isPending: isLoadingAuth } = authClient.useSession()
 
-  const hydrateFromSession = useCallback(
-    async (nextSession: Session | null) => {
-      setSession(nextSession)
-      setSupabaseUser(nextSession?.user ?? null)
+  const syncUserFromSession = useCallback(async () => {
+    if (!session?.user) {
+      setCurrentUser(null)
+      return null
+    }
 
-      if (!nextSession?.user) {
-        setCurrentUser(null)
-        return
-      }
+    await clearLegacyLocalDataOnce()
 
-      await clearLegacyLocalDataOnce()
+    const local = await LocalStore.getUserProfile()
+    const merged: UserProfile = {
+      ...toUserProfile(session.user),
+      ...local,
+      id: session.user.id,
+      email: session.user.email ?? null,
+      name: session.user.name ?? null,
+      updatedAt: nowIso(),
+    }
 
-      const local = await LocalStore.getUserProfile()
-      const profile = {
-        ...mapSupabaseUserToProfile(nextSession.user),
-        ...(local ?? {}),
-        id: nextSession.user.id,
-        email: nextSession.user.email ?? null,
-        updatedAt: nowIso(),
-      }
-
-      await LocalStore.upsertUserProfile(profile)
-      setCurrentUser(profile)
-    },
-    []
-  )
+    const saved = await LocalStore.upsertUserProfile(merged)
+    setCurrentUser(saved)
+    return saved
+  }, [session])
 
   useEffect(() => {
-    let isMounted = true
-
-    LocalStore.initialize()
-      .then(async () => {
-        const { data } = await supabase.auth.getSession()
-        if (!isMounted) return
-        await hydrateFromSession(data.session)
-        setIsLoadingAuth(false)
-      })
-      .catch(() => {
-        if (!isMounted) return
-        setIsLoadingAuth(false)
-      })
-
-    const { data: authSubscription } = supabase.auth.onAuthStateChange(
-      async (_event: AuthChangeEvent, nextSession: Session | null) => {
-        await hydrateFromSession(nextSession)
-      }
-    )
-
-    return () => {
-      isMounted = false
-      authSubscription.subscription.unsubscribe()
+    if (session?.user) {
+      void syncUserFromSession()
+    } else if (!session && !isLoadingAuth) {
+      setCurrentUser(null)
     }
-  }, [hydrateFromSession, supabase])
+  }, [session, isLoadingAuth, syncUserFromSession])
 
   const signInWithApple = useCallback(async () => {
-    const redirectTo = getMobileRedirectUri()
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    if (E2E_TESTING) {
+      await signInWithE2eCredentials()
+      router.replace('/(drawer)/(tabs)/start')
+      return
+    }
+    await authClient.signIn.social({
       provider: 'apple',
-      options: {
-        redirectTo,
-        skipBrowserRedirect: true,
-      },
+      callbackURL: '/',
     })
-
-    if (error) {
-      throw error
-    }
-
-    const authUrl = data?.url
-    if (!authUrl) {
-      throw new Error('Supabase did not return OAuth authorization URL')
-    }
-
-    const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectTo)
-
-    if (result.type !== 'success' || !result.url) {
-      if (result.type === 'cancel' || result.type === 'dismiss') {
-        const canceled = new Error('OAuth sign-in cancelled')
-        canceled.name = 'ERR_REQUEST_CANCELED'
-        throw canceled
-      }
-      throw new Error('OAuth sign-in failed')
-    }
-
-    await exchangeAuthCodeFromUrl(result.url)
-    router.replace('/(drawer)/(tabs)/start')
-  }, [router, supabase])
+  }, [router])
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
+    await authClient.signOut()
     await LocalStore.clearAllData()
     setCurrentUser(null)
-  }, [supabase])
+  }, [])
 
   const deleteAccount = useCallback(async () => {
-    // Deletion endpoint is currently not implemented server-side (501).
     throw new Error('Account deletion is not available yet.')
   }, [])
 
@@ -183,46 +139,30 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       if (!currentUser) {
         throw new Error('No user profile found')
       }
-
       const merged: UserProfile = {
         ...currentUser,
         ...updates,
         updatedAt: nowIso(),
       }
-
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          name: merged.name,
-          full_name: merged.name,
-        },
-      })
-
-      if (error) {
-        throw error
-      }
-
       const saved = await LocalStore.upsertUserProfile(merged)
       setCurrentUser(saved)
       return saved
     },
-    [currentUser, supabase]
+    [currentUser]
   )
 
   const getAccessToken = useCallback(async () => {
-    const {
-      data: { session: activeSession },
-    } = await supabase.auth.getSession()
-
-    return activeSession?.access_token ?? null
-  }, [supabase])
+    if (!session?.user) {
+      return null
+    }
+    return session.user.id
+  }, [session])
 
   const value = useMemo(
     () => ({
       isLoadingAuth,
-      isSignedIn: Boolean(session?.user),
+      isSignedIn: Boolean(session?.user && currentUser),
       currentUser,
-      session,
-      supabaseUser,
       signInWithApple,
       signOut,
       deleteAccount,
@@ -231,9 +171,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }),
     [
       isLoadingAuth,
-      currentUser,
       session,
-      supabaseUser,
+      currentUser,
       signInWithApple,
       signOut,
       deleteAccount,

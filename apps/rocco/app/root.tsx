@@ -1,6 +1,4 @@
-import type { AuthChangeEvent } from '@supabase/supabase-js';
-
-import { SupabaseAuthProvider } from '@hominem/auth';
+import { AuthProvider } from '@hominem/auth';
 import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
 import { useCallback } from 'react';
 import {
@@ -27,9 +25,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   return data(
     {
       session,
-      supabaseConfig: {
-        url: serverEnv.VITE_SUPABASE_URL,
-        anonKey: serverEnv.VITE_SUPABASE_ANON_KEY,
+      authConfig: {
+        apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
       },
       apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
     },
@@ -54,7 +51,7 @@ export const meta = () => [
 ];
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session, supabaseConfig, apiBaseUrl } = loaderData;
+  const { session, authConfig, apiBaseUrl } = loaderData;
   const revalidator = useRevalidator();
   const clearOfflineCaches = useCallback(async () => {
     if (!('caches' in window)) {
@@ -65,7 +62,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   }, []);
 
   const handleAuthEvent = useCallback(
-    (event: AuthChangeEvent) => {
+    (event: 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED') => {
       if (event === 'SIGNED_OUT') {
         void clearOfflineCaches();
       }
@@ -88,17 +85,13 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Links />
       </head>
       <body>
-        <SupabaseAuthProvider
-          initialSession={session}
-          config={supabaseConfig}
-          onAuthEvent={handleAuthEvent}
-        >
+        <AuthProvider initialSession={session} config={authConfig} onAuthEvent={handleAuthEvent}>
           <HonoProvider baseUrl={apiBaseUrl}>
             <UpdateGuard logo="/icons/apple-touch-icon-152x152.png" appName="Rocco">
               <Outlet />
             </UpdateGuard>
           </HonoProvider>
-        </SupabaseAuthProvider>
+        </AuthProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

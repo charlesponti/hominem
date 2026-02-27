@@ -16,7 +16,6 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import type { Place, PlaceLocation } from '~/lib/types';
 
 import { useMapInteraction } from '~/contexts/map-interaction-context';
-import { clientEnv } from '~/lib/env';
 import { endTrace, startTrace } from '~/lib/performance/trace';
 import { cn } from '~/lib/utils';
 
@@ -27,8 +26,6 @@ const DEFAULT_CENTER: PlaceLocation = {
   latitude: 37.7749,
   longitude: -122.4194,
 };
-
-const MAP_LIBRARIES: string[] = ['marker'];
 
 export type RoccoMapProps = {
   isLoadingCurrentLocation: boolean;
@@ -104,7 +101,7 @@ const MapMarker = memo(
     marker: PlaceLocation;
     isHovered: boolean;
     isSelected: boolean;
-    onClick: (value: PlaceLocation) => void;
+    onClick: () => void;
   }) => {
     // Memoize position object to avoid recreation
     const position = useMemo(
@@ -130,7 +127,7 @@ const MapMarker = memo(
     return (
       <AdvancedMarker
         position={position}
-        onClick={() => onClick(marker)}
+        onClick={onClick}
         collisionBehavior={
           isHovered || isSelected ? 'REQUIRED' : 'OPTIONAL_AND_HIDES_LOWER_PRIORITY'
         }
@@ -143,7 +140,7 @@ const MapMarker = memo(
 
 MapMarker.displayName = 'MapMarker';
 
-const RoccoMapContent = ({
+const RoccoMap = ({
   zoom,
   center,
   isLoadingCurrentLocation,
@@ -160,7 +157,7 @@ const RoccoMapContent = ({
 
   // Get mapId from prop, env variable, or use default
   const effectiveMapId = useMemo(
-    () => mapId || clientEnv.VITE_GOOGLE_MAP_ID || 'DEMO_MAP_ID',
+    () => mapId || import.meta.env.VITE_GOOGLE_MAP_ID || 'DEMO_MAP_ID',
     [mapId],
   );
 
@@ -261,7 +258,7 @@ const RoccoMapContent = ({
             marker={marker}
             isHovered={!!isHovered}
             isSelected={!!isSelected}
-            onClick={handleMarkerClick}
+            onClick={() => handleMarkerClick(marker)}
           />
         );
       }),
@@ -281,88 +278,78 @@ const RoccoMapContent = ({
   }
 
   return (
-    <div
-      data-testid="rocco-map"
-      data-zoom={mapZoom}
-      data-center={JSON.stringify(mapCenter)}
-      className="flex flex-1 relative overflow-hidden size-full"
-    >
-      {isLoadingCurrentLocation ? (
-        <div className="absolute left-0 right-0 mt-2 mx-auto max-w-fit z-10 p-1 px-4 border-primary bg-accent text-foreground text-sm">
-          <span className="inline-flex size-1 bg-primary  mb-0.5 mr-3 void-anim-breezy-loop" />
-          Loading current location
-        </div>
-      ) : null}
-      <GoogleMap
-        mapId={effectiveMapId}
-        defaultZoom={zoom}
-        defaultCenter={{ lat: initialCenter.latitude, lng: initialCenter.longitude }}
-        onClick={onClick}
-        onIdle={handleMapIdle}
-        className={cn('flex size-full', styles.map)}
+    <APIProvider apiKey={import.meta.env.VITE_GOOGLE_API_KEY} libraries={['marker']}>
+      <div
+        data-testid="rocco-map"
+        data-zoom={mapZoom}
+        data-center={JSON.stringify(mapCenter)}
+        className="flex flex-1 relative overflow-hidden size-full"
       >
-        <MapUpdater
-          center={{ lat: initialCenter.latitude, lng: initialCenter.longitude }}
-          markers={markers}
-          zoom={zoom}
-          enabled={!hasUserInteracted}
-        />
-        {/* Current location blue dot - appears when location is loaded */}
-        {currentLocation && !isLoadingCurrentLocation && (
-          <AdvancedMarker
-            position={{ lat: currentLocation.latitude, lng: currentLocation.longitude }}
-            title="Your Location"
-            collisionBehavior="REQUIRED"
-          >
-            <div
-              style={{
-                width: '20px',
-                height: '20px',
-                borderRadius: '50%',
-                backgroundColor: '#4285F4',
-                border: '2px solid white',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+        {isLoadingCurrentLocation ? (
+          <div className="absolute left-0 right-0 mt-2 mx-auto max-w-fit z-10 p-1 px-4 border-primary bg-accent text-foreground text-sm">
+            <span className="inline-flex size-1 bg-primary  mb-0.5 mr-3 void-anim-breezy-loop" />
+            Loading current location
+          </div>
+        ) : null}
+        <GoogleMap
+          mapId={effectiveMapId}
+          defaultZoom={zoom}
+          defaultCenter={{ lat: initialCenter.latitude, lng: initialCenter.longitude }}
+          onClick={onClick}
+          onIdle={handleMapIdle}
+          className={cn('flex size-full', styles.map)}
+        >
+          <MapUpdater
+            center={{ lat: initialCenter.latitude, lng: initialCenter.longitude }}
+            markers={markers}
+            zoom={zoom}
+            enabled={!hasUserInteracted}
+          />
+          {/* Current location blue dot - appears when location is loaded */}
+          {currentLocation && !isLoadingCurrentLocation && (
+            <AdvancedMarker
+              position={{ lat: currentLocation.latitude, lng: currentLocation.longitude }}
+              title="Your Location"
+              collisionBehavior="REQUIRED"
+            >
+              <div
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  backgroundColor: '#4285F4',
+                  border: '2px solid white',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                }}
+              />
+            </AdvancedMarker>
+          )}
+          {renderedMarkers}
+          {selectedMarker && (
+            <InfoWindow
+              position={{
+                lat: selectedMarker.latitude,
+                lng: selectedMarker.longitude,
               }}
-            />
-          </AdvancedMarker>
-        )}
-        {renderedMarkers}
-        {selectedMarker && (
-          <InfoWindow
-            position={{
-              lat: selectedMarker.latitude,
-              lng: selectedMarker.longitude,
-            }}
-            onCloseClick={() => setSelectedMarker(null)}
-            headerContent={
-              <div className="font-semibold text-sm pr-4">{selectedMarker.name || 'Place'}</div>
-            }
-          >
-            <div className="flex flex-col gap-2 max-w-[200px]">
-              {selectedMarker.id && (
-                <a
-                  href={`/places/${selectedMarker.id}`}
-                  className="text-xs text-primary hover:underline mt-1"
-                >
-                  View Details
-                </a>
-              )}
-            </div>
-          </InfoWindow>
-        )}
-      </GoogleMap>
-    </div>
-  );
-};
-
-const RoccoMap = (props: RoccoMapProps) => {
-  if (!clientEnv.VITE_GOOGLE_API_KEY) {
-    return <Alert type="error">Google Maps API key is missing.</Alert>;
-  }
-
-  return (
-    <APIProvider apiKey={clientEnv.VITE_GOOGLE_API_KEY} libraries={MAP_LIBRARIES}>
-      <RoccoMapContent {...props} />
+              onCloseClick={() => setSelectedMarker(null)}
+              headerContent={
+                <div className="font-semibold text-sm pr-4">{selectedMarker.name || 'Place'}</div>
+              }
+            >
+              <div className="flex flex-col gap-2 max-w-[200px]">
+                {selectedMarker.id && (
+                  <a
+                    href={`/places/${selectedMarker.id}`}
+                    className="text-xs text-primary hover:underline mt-1"
+                  >
+                    View Details
+                  </a>
+                )}
+              </div>
+            </InfoWindow>
+          )}
+        </GoogleMap>
+      </div>
     </APIProvider>
   );
 };

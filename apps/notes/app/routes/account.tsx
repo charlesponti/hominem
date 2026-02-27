@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@hominem/ui/card';
 import { useEffect, useState } from 'react';
@@ -8,7 +8,7 @@ import { ConnectTwitterAccount } from '~/components/connect-twitter-account';
 import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth';
 
 export default function AccountPage() {
-  const { userId, isLoading, logout } = useSupabaseAuthContext();
+  const { userId, isLoading, logout } = useAuthContext();
   const { refetch } = useTwitterOAuth();
 
   const [urlParams, setUrlParams] = useState<URLSearchParams | null>(null);

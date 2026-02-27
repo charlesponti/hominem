@@ -1,7 +1,6 @@
-import type { AuthChangeEvent } from '@supabase/supabase-js';
 import type React from 'react';
 
-import { SupabaseAuthProvider } from '@hominem/auth';
+import { AuthProvider } from '@hominem/auth';
 import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
 import { useCallback } from 'react';
 import {
@@ -20,9 +19,10 @@ import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags';
 import type { Route } from './+types/root';
 
 import './globals.css';
+import { HonoProvider } from './lib/api';
 import { authConfig, getServerSession } from './lib/auth.server';
 import './lib/i18n';
-import { HonoProvider } from './lib/api';
+import { serverEnv } from './lib/env';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { session, headers } = await getServerSession(request);
@@ -30,11 +30,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   return data(
     {
       session,
-      supabaseEnv: {
-        url: authConfig.supabaseUrl,
-        anonKey: authConfig.supabaseAnonKey,
+      authEnv: {
+        apiBaseUrl: authConfig.apiBaseUrl,
       },
-      apiBaseUrl: authConfig.supabaseUrl.replace('/api', ''),
+      apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
     },
     { headers },
   );
@@ -71,7 +70,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session, supabaseEnv, apiBaseUrl } = loaderData;
+  const { session, authEnv, apiBaseUrl } = loaderData;
   const revalidator = useRevalidator();
   const clearOfflineCaches = useCallback(async () => {
     if (!('caches' in window)) {
@@ -82,7 +81,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   }, []);
 
   const handleAuthEvent = useCallback(
-    (event: AuthChangeEvent) => {
+    (event: 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED') => {
       if (event === 'SIGNED_OUT') {
         void clearOfflineCaches();
       }
@@ -94,11 +93,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 
   return (
-    <SupabaseAuthProvider
-      initialSession={session}
-      config={supabaseEnv}
-      onAuthEvent={handleAuthEvent}
-    >
+    <AuthProvider initialSession={session} config={authEnv} onAuthEvent={handleAuthEvent}>
       <HonoProvider baseUrl={apiBaseUrl}>
         <FeatureFlagsProvider>
           <UpdateGuard logo="/logo.png" appName="Notes">
@@ -106,7 +101,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
           </UpdateGuard>
         </FeatureFlagsProvider>
       </HonoProvider>
-    </SupabaseAuthProvider>
+    </AuthProvider>
   );
 }
 

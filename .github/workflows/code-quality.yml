@@ -62,6 +62,9 @@ jobs:
       - name: 📦 Install dependencies
         run: bun install --force
 
+      - name: 🧭 TypeScript project-graph guard
+        run: bun turbo run typegen && bun run check:tsconfig
+
       - name: 🏗️ Wait for services
         run: |
           # Wait for postgres to be ready
@@ -83,7 +86,7 @@ jobs:
         run: bun run lint
 
       - name: ✅ Type check
-        run: NODE_OPTIONS="--max-old-space-size=4096" bun run typecheck:ci
+        run: NODE_OPTIONS="--max-old-space-size=4096" bun run typecheck
         env:
           TURBO_CONCURRENCY: 4
 

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach } from 'vitest';
 
 const mockPlaces = {
   searchText: vi.fn(),
@@ -58,6 +59,10 @@ beforeEach(() => {
     places: mockPlaces,
   } as any);
   vi.clearAllMocks();
+});
+
+afterEach(() => {
+  googlePlacesTestUtils.resetClient();
 });
 
 describe('googlePlaces', () => {
@@ -140,6 +145,28 @@ describe('googlePlaces', () => {
         expect.any(Object),
       );
     });
+
+    it('should dedupe concurrent search requests for the same cache key', async () => {
+      vi.mocked(redis.get).mockResolvedValue(null);
+
+      let release: ((value: { data: { places: typeof mockPlacesList } }) => void) | null = null;
+      const pending = new Promise<{ data: { places: typeof mockPlacesList } }>((resolve) => {
+        release = resolve;
+      });
+      mockPlaces.searchText.mockReturnValue(pending);
+
+      const calls = [
+        googlePlaces.search({ query: mockQuery }),
+        googlePlaces.search({ query: mockQuery }),
+        googlePlaces.search({ query: mockQuery }),
+      ];
+
+      release?.({ data: { places: mockPlacesList } });
+      const results = await Promise.all(calls);
+
+      expect(results).toEqual([mockPlacesList, mockPlacesList, mockPlacesList]);
+      expect(mockPlaces.searchText).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('getDetails', () => {
@@ -178,6 +205,28 @@ describe('googlePlaces', () => {
       await expect(googlePlaces.getDetails({ placeId: mockPlaceId })).rejects.toThrow(
         `Place ${mockPlaceId} not found`,
       );
+    });
+
+    it('should dedupe concurrent detail requests for the same cache key', async () => {
+      vi.mocked(redis.get).mockResolvedValue(null);
+
+      let release: ((value: { data: typeof mockPlaceDetails }) => void) | null = null;
+      const pending = new Promise<{ data: typeof mockPlaceDetails }>((resolve) => {
+        release = resolve;
+      });
+      mockPlaces.get.mockReturnValue(pending);
+
+      const calls = [
+        googlePlaces.getDetails({ placeId: mockPlaceId }),
+        googlePlaces.getDetails({ placeId: mockPlaceId }),
+      ];
+
+      release?.({ data: mockPlaceDetails });
+      const [first, second] = await Promise.all(calls);
+
+      expect(first).toEqual(mockPlaceDetails);
+      expect(second).toEqual(mockPlaceDetails);
+      expect(mockPlaces.get).toHaveBeenCalledTimes(1);
     });
   });
 

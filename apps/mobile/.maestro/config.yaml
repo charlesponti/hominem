@@ -1,0 +1,4 @@
+appId: com.pontistudios.mindsherpa.dev
+env:
+  E2E_DEV_SERVER_URL: ${E2E_DEV_SERVER_URL}
+  E2E_AUTH_SECRET: ${EXPO_PUBLIC_E2E_AUTH_SECRET}

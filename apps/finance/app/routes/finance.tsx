@@ -5,14 +5,14 @@ import { redirect } from 'react-router';
 import { PaginationControls } from '~/components/finance/pagination-controls';
 import { TransactionFilters } from '~/components/finance/transaction-filters';
 import { TransactionsList } from '~/components/transactions/transactions-list';
+import { createServerHonoClient } from '~/lib/api.server';
+import { requireAuth } from '~/lib/guards';
 import {
   type FilterArgs,
   useFinanceAccounts,
   useFinanceTransactions,
 } from '~/lib/hooks/use-finance-data';
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
-import { requireAuth } from '~/lib/guards';
-import { createServerHonoClient } from '~/lib/api.server';
 
 import type { Route } from './+types/finance';
 

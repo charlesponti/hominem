@@ -200,4 +200,3 @@ export class InternalError extends ServiceError {
 export function isServiceError(error: unknown): error is ServiceError {
   return error instanceof ServiceError;
 }
-

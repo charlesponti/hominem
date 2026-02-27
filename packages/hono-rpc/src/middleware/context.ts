@@ -12,10 +12,9 @@ import type { AppContext } from './auth';
  *
  * Runs on EVERY request to initialize context (similar to previous createContext patterns).
  * Sets up:
- * - User authentication from Supabase
+ * - User authentication from Better Auth session and bearer token material
  * - Queue system for background jobs
  * - Response headers for cookies
- * - Supabase client
  */
 export const contextMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const responseHeaders = new Headers();
@@ -44,7 +43,6 @@ export const contextMiddleware = createMiddleware<AppContext>(async (c, next) =>
       if (localUser) {
         c.set('user', {
           id: localUser.id,
-          supabaseId: localUser.supabaseId,
           email: localUser.email,
           name: localUser.name ?? undefined,
           image: localUser.image ?? undefined,
@@ -53,7 +51,6 @@ export const contextMiddleware = createMiddleware<AppContext>(async (c, next) =>
           updatedAt: localUser.updatedAt,
         });
         c.set('userId', localUser.id);
-        c.set('supabaseId', localUser.supabaseId);
       }
 
       await next();
@@ -66,15 +63,14 @@ export const contextMiddleware = createMiddleware<AppContext>(async (c, next) =>
     }
   }
 
-  // Production: Get auth from Supabase
+  // Production: Get auth from Better Auth-backed API session
   try {
     const request = c.req.raw;
     const authConfig = {
-      supabaseUrl: process.env.SUPABASE_URL || '',
-      supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
+      apiBaseUrl: process.env.API_URL || 'http://localhost:3000',
     };
 
-    const { user, headers, session } = await getServerAuth(request, authConfig);
+    const { user, headers, session, auth } = await getServerAuth(request, authConfig);
 
     // Copy auth headers (cookies) to response headers
     headers.forEach((value, key) => {
@@ -84,13 +80,14 @@ export const contextMiddleware = createMiddleware<AppContext>(async (c, next) =>
     if (user) {
       c.set('user', user);
       c.set('userId', user.id);
-      c.set('supabaseId', user.supabaseId);
+    }
+    if (auth) {
+      c.set('auth', auth);
     }
 
-    // Set Supabase client if session exists
+    // Session is available for bearer propagation where needed.
     if (session) {
-      // We could initialize a Supabase client here if needed
-      // For now, services handle their own Supabase clients
+      void session;
     }
   } catch (error) {
     logger.error('Error in context middleware', { error });

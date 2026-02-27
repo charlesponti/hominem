@@ -1,56 +1,10 @@
 {
+  "extends": "../../tsconfig.profiles/service-noemit.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": [
-      "ESNext"
-    ],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "baseUrl": ".",
-    "strict": true,
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    "assumeChangesOnlyAffectDirectDependencies": true,
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "incremental": true,
     "tsBuildInfoFile": "../../.cache/service-workers.tsbuildinfo",
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "resolveJsonModule": true,
-    "allowJs": false,
-    "checkJs": false,
-    "maxNodeModuleJsDepth": 0,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "disableSourceOfProjectReferenceRedirect": false,
-    "verbatimModuleSyntax": true,
-    "rootDir": ".",
-    "types": [
-      "node"
-    ],
-    "paths": {
-      "@hominem/finance-services/*": [
-        "../../packages/finance/src/*"
-      ],
-      "@/*": [
-        "src/*"
-      ]
-    },
-    "noEmit": true
+    "rootDir": "."
   },
-  "include": [
-    "src/**/*.ts",
-    "vitest.config.ts",
-    "../../types/**/*.d.ts"
-  ],
+  "include": ["src/**/*.ts", "vitest.config.ts"],
   "exclude": [
     "node_modules",
     "dist",
@@ -62,6 +16,7 @@
     "**/*.spec.ts",
     "**/__tests__",
     "**/__mocks__",
-    "*.tsbuildinfo"
+    "*.tsbuildinfo",
+    ".react-router/cache"
   ]
 }

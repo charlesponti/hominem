@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import { Plus, User } from 'lucide-react';
 import { useCallback, useState } from 'react';
@@ -18,7 +18,7 @@ export function ChatSidebar({ userId, onNewChat, isMobile = false, onClose }: Ch
   const location = useLocation();
   const pathname = location.pathname;
   const navigate = useNavigate();
-  const { signIn } = useSupabaseAuthContext();
+  const { signIn } = useAuthContext();
   const [isSigningIn, setIsSigningIn] = useState(false);
 
   const isLoggedIn = !!userId;

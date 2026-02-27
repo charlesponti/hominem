@@ -1,4 +1,4 @@
-import { useSupabaseAuthContext } from '@hominem/auth';
+import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import { Drawer, DrawerContent, DrawerTrigger } from '@hominem/ui/components/ui/drawer';
 import { ListPlus } from 'lucide-react';
@@ -15,7 +15,7 @@ interface AddToListControlProps {
 
 const AddToListControl = ({ placeId }: AddToListControlProps) => {
   const [open, setOpen] = useState(false);
-  const { isAuthenticated } = useSupabaseAuthContext();
+  const { isAuthenticated } = useAuthContext();
   const isUuid = z.uuid().safeParse(placeId).success;
 
   // Fetch place details

@@ -9,16 +9,17 @@
       "distribution": "internal",
       "env": {
         "NODE_ENV": "development",
-        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:3000",
-        "EXPO_PUBLIC_SUPABASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": ""
+        "EXPO_PUBLIC_API_BASE_URL": "https://auth.ponti.io",
+        "EXPO_PUBLIC_E2E_TESTING": "false"
       }
     },
     "simulator": {
       "channel": "development",
       "developmentClient": true,
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:4040",
+        "EXPO_PUBLIC_E2E_TESTING": "true"
       },
       "extends": "development",
       "ios": {
@@ -33,9 +34,7 @@
       "channel": "production",
       "env": {
         "NODE_ENV": "production",
-        "EXPO_PUBLIC_API_BASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_URL": "",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": ""
+        "EXPO_PUBLIC_API_BASE_URL": "https://auth.ponti.io"
       }
     }
   },

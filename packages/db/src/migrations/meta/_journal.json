@@ -414,6 +414,41 @@
       "when": 1771107910809,
       "tag": "0058_parched_maelstrom",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1771966252868,
+      "tag": "0059_sleepy_red_shift",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1772131053424,
+      "tag": "0060_clear_thunderbolts",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1772131619584,
+      "tag": "0061_sleepy_speed_demon",
+      "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1772131763326,
+      "tag": "0062_opposite_eternity",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1772132256070,
+      "tag": "0063_special_mindworm",
+      "breakpoints": true
     }
   ]
 }
