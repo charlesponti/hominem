@@ -98,7 +98,7 @@ oauthTwitterCallbackRoutes.get(
         // Update existing account
         await updateAccount(existingAccount.id, {
           accessToken: access_token,
-          refreshToken: refresh_token,
+          refreshToken: refresh_token ?? null,
           expiresAt,
         });
       } else {
@@ -110,7 +110,7 @@ oauthTwitterCallbackRoutes.get(
           provider: 'twitter',
           providerAccountId: twitterUserId,
           accessToken: access_token,
-          refreshToken: refresh_token,
+          refreshToken: refresh_token ?? null,
           expiresAt,
           tokenType: 'bearer',
           scope: TWITTER_SCOPES,
