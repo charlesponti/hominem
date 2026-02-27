@@ -89,6 +89,24 @@ bun run test:e2e:recording
 
 ## EAS Builds
 
+### Prerequisites
+
+1. **Apple Developer Account** with App Store Connect access
+2. **EAS CLI** installed: `npm install -g eas-cli`
+3. **Expo account** linked: `eas login`
+
+### Setup Credentials
+
+```bash
+# Configure Apple API key for EAS (required for CI)
+eas credentials
+
+# Or set environment variables for CI:
+# EXPO_APPLE_ID, EXPO_APPLE_PASSWORD, EXPO_APPLE_TEAM_ID
+```
+
+### Build Commands
+
 ```bash
 # simulator
 bun run build:simulator:ios
@@ -99,6 +117,18 @@ bun run build:dev:ios
 # preview/production
 bun run build:preview:ios
 bun run build:production:ios
+```
+
+### TestFlight Deployment
+
+For production TestFlight deployment, ensure Apple credentials are configured:
+
+```bash
+# Build for production
+bun run build:production:ios
+
+# Submit to TestFlight (requires credentials)
+eas submit --platform ios --latest
 ```
 
 ## Device Auth Smoke Checklist

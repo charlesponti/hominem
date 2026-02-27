@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 10.0.3"
+    "version": ">= 10.0.3",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
@@ -35,6 +36,9 @@
       "env": {
         "NODE_ENV": "production",
         "EXPO_PUBLIC_API_BASE_URL": "https://auth.ponti.io"
+      },
+      "ios": {
+        "enterpriseProvisioning": "universal"
       }
     }
   },
