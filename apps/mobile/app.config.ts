@@ -40,11 +40,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       output: 'static',
       favicon: './assets/favicon.png',
     },
-    ios: {
-      infoPlist: {
-        ITSAppUsesNonExemptEncryption: false,
-      },
-    },
     plugins: [
       'expo-router',
       [
@@ -116,6 +111,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier,
       supportsTablet: true,
       usesAppleSignIn: true,
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
     android: {
       adaptiveIcon: {
