@@ -1,6 +1,7 @@
-import { eq, or } from '@hominem/db';
-import { db } from '@hominem/db';
-import crypto from 'node:crypto';
+import { eq, or } from 'drizzle-orm';
+
+import { db } from '../index';
+import * as crypto from 'node:crypto';
 
 import { users } from '../schema/users.schema';
 

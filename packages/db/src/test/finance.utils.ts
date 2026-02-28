@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import crypto from 'node:crypto';
+import * as crypto from 'node:crypto';
 
 import { db } from '../index';
 import {
