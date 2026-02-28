@@ -3,7 +3,11 @@
   "compilerOptions": {
     "tsBuildInfoFile": "../../.cache/db.tsbuildinfo",
     "rootDir": "src",
-    "outDir": "./build"
+    "outDir": "./build",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true
   },
   "include": ["src/**/*.ts"],
   "exclude": [
@@ -17,6 +21,7 @@
     "**/*.spec.ts",
     "**/__tests__",
     "**/__mocks__",
+    "src/test",
     "*.tsbuildinfo"
   ]
 }

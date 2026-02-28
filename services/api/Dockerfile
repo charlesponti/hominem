@@ -24,6 +24,7 @@ COPY services ./services
 COPY tools ./tools
 COPY apps ./apps
 COPY config ./config
+COPY tsconfig.profiles ./tsconfig.profiles
 
 # Install all dependencies with the lock file
 RUN bun install --frozen-lockfile
