@@ -1,7 +1,13 @@
 appId: com.pontistudios.mindsherpa.dev
 ---
 - runFlow: ../smoke/app-launch.yaml
+- extendedWaitUntil:
+    visible: "[CONTINUE_WITH_APPLE]"
+    timeout: 15000
 - assertVisible: "[CONTINUE_WITH_APPLE]"
 - tapOn: "[CONTINUE_WITH_APPLE]"
 - waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "FOCUS"
+    timeout: 15000
 - assertVisible: "FOCUS"

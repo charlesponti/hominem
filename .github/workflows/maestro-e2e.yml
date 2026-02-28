@@ -61,15 +61,18 @@ jobs:
             build
 
       - name: Boot iOS Simulator
+        id: simulator
         run: |
           xcrun simctl boot "${{ steps.sim.outputs.name }}"
+          DEVICE_UDID="$(xcrun simctl list devices booted | grep -oE '[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}' | head -1)"
           xcrun simctl install booted apps/mobile/ios/build/Build/Products/Debug-iphonesimulator/hakumidev.app
+          echo "udid=$DEVICE_UDID" >> "$GITHUB_OUTPUT"
 
       - name: Run Maestro tests
         run: |
           cd apps/mobile
           bash .maestro/scripts/validate-flows.sh
-          maestro test .maestro/flows/smoke/full.yaml
+          maestro test --device "${{ steps.simulator.outputs.udid }}" .maestro/flows/smoke/full.yaml
         env:
           EXPO_PUBLIC_E2E_AUTH_SECRET: ${{ secrets.EXPO_PUBLIC_E2E_AUTH_SECRET }}
 
