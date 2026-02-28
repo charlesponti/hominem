@@ -21,7 +21,6 @@
     "**/*.spec.ts",
     "**/__tests__",
     "**/__mocks__",
-    "src/test",
     "*.tsbuildinfo"
   ]
 }
