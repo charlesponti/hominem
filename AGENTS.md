@@ -130,6 +130,35 @@ This runs automatically during `bun run check`.
 - Use path aliases defined in each package/app `tsconfig.json` for internal packages.
 - Prefer direct schema/type imports per [.github/instructions/type-architecture.instructions.md](.github/instructions/type-architecture.instructions.md).
 
+## Schema Changes & Type Safety
+
+After modifying database schema (especially in `@hominem/db`):
+
+### Always run fresh checks:
+```bash
+# Full fresh check (clears Turbo cache, rebuilds types, runs all checks)
+bun run check:fresh
+
+# Or step by step:
+bun run clean:turbo      # Clear all caches
+bun run build:types      # Rebuild type definitions  
+bun run check            # Run full check suite
+```
+
+### Why this matters:
+- **Turbo caching** can hide downstream type errors after schema changes
+- **.d.ts files** in `build/` directories must be rebuilt for other packages to see new types
+- **Stale types** can cause `Type 'X' is not assignable to type 'Y'` errors that only appear in fresh builds
+
+### Key scripts for schema work:
+| Script | Purpose |
+|--------|---------|
+| `bun run check:fresh` | Full fresh check after schema changes |
+| `bun run typecheck:fresh` | Fresh typecheck only |
+| `bun run build:types` | Rebuild packages that generate types |
+| `bun run clean:turbo` | Clear Turbo cache |
+| `bun run db:schema:check` | Schema-specific check pipeline |
+
 ## Specialized Rules
 
 See `.github/instructions/` for scoped guidance.
