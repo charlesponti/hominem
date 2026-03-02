@@ -21,8 +21,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".react-router/**", "build/**", "dist/**", "**/*.d.ts", "**/*.d.ts.map"],
-      "outputMode": "full"
+      "outputs": [".react-router/**", "build/**", "dist/**", "**/*.d.ts", "**/*.d.ts.map"]
     },
     "clean": {
       "cache": false

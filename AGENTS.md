@@ -132,32 +132,24 @@ This runs automatically during `bun run check`.
 
 ## Schema Changes & Type Safety
 
-After modifying database schema (especially in `@hominem/db`):
+After modifying database schema (especially in `@hominem/db`), the standard commands now handle rebuilding types automatically:
 
-### Always run fresh checks:
+### Standard workflow:
 ```bash
-# Full fresh check (clears Turbo cache, rebuilds types, runs all checks)
-bun run check:fresh
-
-# Or step by step:
-bun run clean:turbo      # Clear all caches
-bun run build:types      # Rebuild type definitions  
-bun run check            # Run full check suite
+bun run check    # Rebuilds types, then runs full check suite
+bun run test     # Tests with fresh builds
 ```
 
 ### Why this matters:
-- **Turbo caching** can hide downstream type errors after schema changes
 - **.d.ts files** in `build/` directories must be rebuilt for other packages to see new types
-- **Stale types** can cause `Type 'X' is not assignable to type 'Y'` errors that only appear in fresh builds
+- **Stale types** can cause `Type 'X' is not assignable to type 'Y'` errors
+- The `check` script now runs `build:types` first to ensure downstream packages have fresh type definitions
 
-### Key scripts for schema work:
-| Script | Purpose |
-|--------|---------|
-| `bun run check:fresh` | Full fresh check after schema changes |
-| `bun run typecheck:fresh` | Fresh typecheck only |
-| `bun run build:types` | Rebuild packages that generate types |
-| `bun run clean:turbo` | Clear Turbo cache |
-| `bun run db:schema:check` | Schema-specific check pipeline |
+### If you encounter weird type errors:
+```bash
+# Clear turbo cache and rebuild everything
+rm -rf .turbo **/.turbo && bun run check
+```
 
 ## Specialized Rules
 
