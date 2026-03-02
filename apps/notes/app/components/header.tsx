@@ -8,10 +8,6 @@ import {
 } from '@hominem/ui/components/ui/dropdown-menu';
 import {
   Bot,
-  Calendar,
-  ClipboardList,
-  Layers,
-  Lightbulb,
   LogOut,
   MenuIcon,
   Settings,
@@ -29,41 +25,9 @@ const navItems = [
     icon: Sparkles,
   },
   {
-    title: 'Workspace',
-    url: '/workspace',
-    icon: Layers,
-  },
-  {
-    title: 'Tasks',
-    url: '/tasks',
-    icon: ClipboardList,
-  },
-  {
-    title: 'AI Assistant',
+    title: 'Chat',
     icon: Bot,
     url: '/chat',
-  },
-  {
-    title: 'Content Strategy',
-    icon: Lightbulb,
-    url: '/content-strategy',
-  },
-  {
-    title: 'Events',
-    url: '/events',
-  },
-  {
-    title: 'Goals',
-    url: '/goals',
-  },
-  {
-    title: 'Habits',
-    url: '/habits',
-  },
-  {
-    title: 'Calendar',
-    icon: Calendar,
-    url: '/calendar',
   },
 ];
 

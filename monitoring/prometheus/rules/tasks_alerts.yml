@@ -1,0 +1,20 @@
+groups:
+  - name: tasks_alerts
+    rules:
+      - alert: TasksOverdue
+        expr: tasks_overdue_count > 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "There are overdue tasks in the canonical tasks DB"
+          description: "tasks_overdue_count = {{ $value }} — check /Users/charlesponti/Documents/tasks/data/tasks.sqlite and the ETL pipeline."
+
+      - alert: SQLiteExporterDown
+        expr: up{job="sqlite_exporter"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "sqlite-exporter is not reachable by Prometheus"
+          description: "Prometheus scrape target 'sqlite-exporter:9100' is down or not responding."

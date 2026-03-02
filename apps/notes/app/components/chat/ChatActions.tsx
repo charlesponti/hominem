@@ -1,5 +1,5 @@
 import { Button } from '@hominem/ui/button';
-import { Eraser, Globe, Loader2, Mic, Paperclip, Volume2 } from 'lucide-react';
+import { Eraser, Globe, Loader2, Mic, Paperclip, Volume2, FileText } from 'lucide-react';
 
 interface ChatActionsProps {
   onWebSearch: () => void;
@@ -7,6 +7,7 @@ interface ChatActionsProps {
   onToggleVoiceMode: () => void;
   onAudioRecord: () => void;
   onClearChat: () => void;
+  onSaveAsNote: () => void;
   isVoiceMode: boolean;
   isLoading: boolean;
   isSearching: boolean;
@@ -19,6 +20,7 @@ export function ChatActions({
   onToggleVoiceMode,
   onAudioRecord,
   onClearChat,
+  onSaveAsNote,
   isVoiceMode,
   isLoading,
   isSearching,
@@ -63,6 +65,17 @@ export function ChatActions({
         title="RECORD AUDIO"
       >
         <Mic className="size-4" />
+      </Button>
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={onSaveAsNote}
+        disabled={isLoading}
+        title="SAVE AS NOTE"
+      >
+        <FileText className="size-4" />
       </Button>
 
       <Button

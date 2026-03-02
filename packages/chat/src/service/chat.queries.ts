@@ -1,7 +1,7 @@
 import type { ChatOutput } from '@hominem/db/types/chats';
 
 import { db, takeUniqueOrThrow } from '@hominem/db';
-import { and, desc, eq } from '@hominem/db';
+import { and, desc, eq } from 'drizzle-orm';
 import { chat, chatMessage } from '@hominem/db/schema/chats';
 
 import type { CreateChatParams } from './chat.types';
@@ -16,6 +16,7 @@ export async function createChatQuery(params: CreateChatParams): Promise<ChatOut
       id: chatId,
       title: params.title,
       userId: params.userId,
+      noteId: params.noteId,
       createdAt: now,
       updatedAt: now,
     })
@@ -74,6 +75,16 @@ export async function getUserChatsQuery(userId: string, limit = 50): Promise<Cha
     .limit(limit);
 
   return chats as ChatOutput[];
+}
+
+export async function getChatByNoteIdQuery(noteId: string, userId: string): Promise<ChatOutput | null> {
+  const [chatData] = await db
+    .select()
+    .from(chat)
+    .where(and(eq(chat.noteId, noteId), eq(chat.userId, userId)))
+    .limit(1);
+
+  return chatData ?? null;
 }
 
 export async function updateChatTitleQuery(

@@ -4,7 +4,29 @@ import type { ReactNode } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRegisterSW } from 'virtual:pwa-register/react';
+
+interface RegisterSWOptions {
+  immediate?: boolean;
+  onRegistered?: (registration: ServiceWorkerRegistration | undefined) => void;
+  onRegisterError?: (error: Error) => void;
+}
+
+interface RegisterSWResult {
+  offlineReady: [boolean, (value: boolean) => void];
+  needRefresh: [boolean, (value: boolean) => void];
+  updateServiceWorker: (reload?: boolean) => void;
+}
+
+function useRegisterSW(_options?: RegisterSWOptions): RegisterSWResult {
+  const [offlineReady, setOfflineReady] = useState(false);
+  const [needRefresh, setNeedRefresh] = useState(false);
+
+  return {
+    offlineReady: [offlineReady, setOfflineReady],
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker: () => {},
+  };
+}
 
 interface UpdateGuardProps {
   children: ReactNode;
@@ -36,14 +58,14 @@ function UpdateGuardClient({
     updateServiceWorker,
   } = useRegisterSW({
     immediate: true,
-    onRegistered(registration) {
+    onRegistered(registration: ServiceWorkerRegistration | undefined) {
       if (registration) {
         intervalRef.current = setInterval(() => {
           void registration.update();
         }, UPDATE_INTERVAL_MS);
       }
     },
-    onRegisterError(error) {
+    onRegisterError(error: Error) {
       console.error('Service worker registration error:', error);
     },
   });

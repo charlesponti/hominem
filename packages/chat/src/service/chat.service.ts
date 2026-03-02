@@ -8,6 +8,7 @@ import {
   updateChatTitleQuery,
   deleteChatQuery,
   clearChatMessagesQuery,
+  getChatByNoteIdQuery,
 } from './chat.queries';
 import {
   type ChatMessageOutput,
@@ -65,6 +66,34 @@ export class ChatService {
     } catch (error) {
       logger.error(`Failed to get user chats:: ${error}`);
       return [];
+    }
+  }
+
+  async getChatByNoteId(noteId: string, userId: string): Promise<ChatOutput | null> {
+    try {
+      return await getChatByNoteIdQuery(noteId, userId);
+    } catch (error) {
+      logger.error(`Failed to get chat by noteId:: ${error}`);
+      return null;
+    }
+  }
+
+  async getOrCreateChatForNote(noteId: string, userId: string): Promise<ChatOutput> {
+    try {
+      const existingChat = await getChatByNoteIdQuery(noteId, userId);
+      if (existingChat) {
+        return existingChat;
+      }
+
+      const noteChat = await createChatQuery({
+        title: 'Note Chat',
+        userId,
+        noteId,
+      });
+      return noteChat;
+    } catch (error) {
+      logger.error(`Failed to get or create chat for note:: ${error}`);
+      throw new ChatError('DATABASE_ERROR', 'Failed to get or create chat for note');
     }
   }
 

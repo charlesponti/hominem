@@ -374,7 +374,10 @@ const SidebarSeparator = React.forwardRef<
       {...props}
     />
   );
-});
+}) as React.ForwardRefRenderFunction<
+  React.ComponentRef<typeof Separator>,
+  React.ComponentProps<typeof Separator>
+>;
 SidebarSeparator.displayName = 'SidebarSeparator';
 
 const SidebarContent = React.forwardRef<HTMLDivElement, React.ComponentProps<'div'>>(

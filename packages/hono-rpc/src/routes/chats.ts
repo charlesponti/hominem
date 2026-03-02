@@ -47,6 +47,7 @@ const ensureChatAndUser = async (userId: string | undefined, chatId: string | un
 
 const chatsCreateSchema = z.object({
   title: z.string().min(1),
+  noteId: z.string().optional(),
 });
 
 const chatsUpdateSchema = z.object({
@@ -326,12 +327,25 @@ export const chatsRoutes = new Hono<AppContext>()
     return c.json<ChatsListOutput>(chatsData);
   })
 
+  // Get or create chat for a note
+  .get('/note/:noteId', async (c) => {
+    const userId = c.get('userId')!;
+    const noteId = c.req.param('noteId');
+
+    const chatData = await chatService.getOrCreateChatForNote(noteId, userId);
+    return c.json<ChatsCreateOutput>(chatData);
+  })
+
   // Create chat
   .post('/', zValidator('json', chatsCreateSchema), async (c) => {
     const userId = c.get('userId')!;
-    const { title } = c.req.valid('json');
+    const { title, noteId } = c.req.valid('json');
 
-    const result = await chatService.createChat({ title, userId });
+    const result = await chatService.createChat({ 
+      title, 
+      userId, 
+      ...(noteId && { noteId }),
+    });
     return c.json<ChatsCreateOutput>(result, 201);
   })
 

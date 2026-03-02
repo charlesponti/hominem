@@ -19,9 +19,8 @@ import { useMessageEdit } from '~/lib/hooks/use-message-edit';
 import { cn } from '~/lib/utils';
 import { copyToClipboard } from '~/lib/utils/clipboard';
 
+import { Reasoning, Tool } from '@hominem/ui/ai-elements';
 import { MarkdownContent } from './MarkdownContent';
-import { ReasoningPart } from './ReasoningPart';
-import { ToolInvocationPart } from './ToolInvocationPart';
 
 interface ChatMessageProps {
   message: ExtendedMessage;
@@ -147,17 +146,30 @@ export const ChatMessage = memo(function ChatMessage({
       )}
 
       {/* Reasoning section (shown first for assistant messages) */}
-      {!isUser && hasReasoning && <ReasoningPart reasoning={message.reasoning!} index={0} />}
+      {!isUser && hasReasoning && <Reasoning>{message.reasoning}</Reasoning>}
 
       {/* Tool calls section */}
       {hasToolCalls && (
         <div className="flex flex-col gap-2">
           {message.toolCalls!.map((toolCall: ChatMessageToolCall, index: number) => (
-            <ToolInvocationPart
+            <Tool
               key={toolCall.toolCallId || `tool-${index}`}
-              toolInvocation={toolCall}
-              index={index}
-            />
+              name={toolCall.toolName}
+              status={toolCall.type === 'tool-call' ? 'running' : 'completed'}
+            >
+              <div className="flex flex-col gap-2">
+                {toolCall.args && Object.keys(toolCall.args).length > 0 ? (
+                  <pre className="text-xs bg-muted/50 p-2 rounded overflow-x-auto">
+                    {JSON.stringify(toolCall.args, null, 2)}
+                  </pre>
+                ) : null}
+                {toolCall.result != null ? (
+                  <pre className="text-xs bg-muted/50 p-2 rounded overflow-x-auto">
+                    {String(toolCall.result)}
+                  </pre>
+                ) : null}
+              </div>
+            </Tool>
           ))}
         </div>
       )}

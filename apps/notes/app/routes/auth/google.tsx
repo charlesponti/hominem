@@ -9,7 +9,7 @@ export async function loader({ request }: { request: Request }) {
   const returnTo =
     rawReturnTo && rawReturnTo.startsWith('/') && !rawReturnTo.startsWith('//')
       ? rawReturnTo
-      : '/calendar';
+      : '/notes';
   const redirectTo = `${url.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`;
 
   if (!user) {

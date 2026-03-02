@@ -10,22 +10,20 @@ export default [
 
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
-    route('workspace', 'routes/workspace.tsx'),
 
     // Chat Routes
     route('chat', 'routes/chat/index.tsx'),
     route('chat/:chatId', 'routes/chat/chat.$chatId.tsx'),
 
-    // Other Routes
+    // Notes Routes
     layout('routes/notes/layout.tsx', [
       route('notes', 'routes/notes/page.tsx'),
-      route('tasks', 'routes/tasks/page.tsx'),
+      route('notes/new', 'routes/notes/new.tsx'),
+      route('notes/:noteId', 'routes/notes/$noteId.tsx'),
+      route('notes/:noteId/edit', 'routes/notes/$noteId_.edit.tsx'),
+      route('notes/:noteId/chat', 'routes/notes/$noteId.chat.tsx'),
     ]),
-    route('/goals', 'routes/goals/page.tsx'),
-    route('/habits', 'routes/habits/page.tsx'),
-    route('/events', 'routes/events.tsx'),
-    route('/events/people', 'routes/events.people.tsx'),
-    route('/calendar', 'routes/calendar.tsx'),
+
     route('/account', 'routes/account.tsx'),
 
     // Auth Routes

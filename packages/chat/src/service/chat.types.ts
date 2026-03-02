@@ -14,6 +14,7 @@ import type { ChatOutput, ChatMessageOutput } from '@hominem/db/types/chats';
 export interface CreateChatParams {
   title: string;
   userId: string;
+  noteId?: string;
 }
 
 export interface SearchChatsParams {

@@ -1,11 +1,20 @@
 import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
-import { Textarea } from '@hominem/ui/textarea';
-import { LoaderCircle, Mic, Paperclip, Send } from 'lucide-react';
+import { Mic, Paperclip, FileText } from 'lucide-react';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
 
 import { useFileUpload } from '~/lib/hooks/use-file-upload';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
+
+import {
+  Suggestions,
+  Suggestion,
+  PromptInput,
+  PromptInputTextarea,
+  PromptInputSubmit,
+  PromptInputFooter,
+  PromptInputTools,
+} from '@hominem/ui/ai-elements';
 
 import { ChatModals } from './ChatModals';
 
@@ -17,10 +26,19 @@ interface ChatInputProps {
     status: 'idle' | 'submitted' | 'streaming' | 'error',
     error?: Error | null,
   ) => void;
+  onSaveAsNote?: () => void;
+  suggestions?: string[];
 }
 
+const DEFAULT_SUGGESTIONS = [
+  'Help me expand this note',
+  'Create an outline from this',
+  'Summarize the key points',
+  'Rewrite in a different style',
+];
+
 export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function ChatInput(
-  { chatId, onStatusChange },
+  { chatId, onStatusChange, onSaveAsNote, suggestions = DEFAULT_SUGGESTIONS },
   ref,
 ) {
   const [inputValue, setInputValue] = useState('');
@@ -28,63 +46,40 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Expose textarea ref to parent
   useImperativeHandle(ref, () => textareaRef.current!, []);
 
   const { userId } = useAuthContext();
 
   const sendMessage = useSendMessage({ chatId, ...(userId && { userId }) });
-  const { uploadState, clearAll } = useFileUpload();
+  const { clearAll } = useFileUpload();
 
   const characterCount = inputValue.length;
   const hasInput = inputValue.trim().length > 0;
   const isOverLimit = characterCount > MAX_MESSAGE_LENGTH;
   const canSubmit = hasInput && !isOverLimit;
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputValue(e.target.value);
-  }, []);
+  const handlePromptSubmit = useCallback(
+    async (message: { text: string }) => {
+      const trimmedValue = message.text.trim();
+      if (!trimmedValue) return;
 
-  const handleSubmit = useCallback(async () => {
-    if (!canSubmit && uploadState.uploadedFiles.length === 0) return;
+      try {
+        onStatusChange?.('streaming');
+        setInputValue('');
+        clearAll();
 
-    const trimmedValue = inputValue.trim();
-    try {
-      onStatusChange?.('streaming');
-      setInputValue(''); // Clear input immediately for better UX
-      clearAll();
+        await sendMessage.mutateAsync({
+          message: trimmedValue,
+          chatId,
+        });
 
-      await sendMessage.mutateAsync({
-        message: trimmedValue,
-        chatId,
-      });
-
-      onStatusChange?.('idle');
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      onStatusChange?.('error', error as Error);
-      // Could add error handling UI here
-    }
-  }, [
-    canSubmit,
-    inputValue,
-    sendMessage,
-    uploadState.uploadedFiles,
-    clearAll,
-    chatId,
-    onStatusChange,
-  ]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        if (canSubmit || uploadState.uploadedFiles.length > 0) {
-          handleSubmit();
-        }
+        onStatusChange?.('idle');
+      } catch (error) {
+        console.error('Failed to send message:', error);
+        onStatusChange?.('error', error as Error);
       }
     },
-    [canSubmit, handleSubmit, uploadState.uploadedFiles.length],
+    [chatId, sendMessage, clearAll, onStatusChange],
   );
 
   const handleFileUpload = useCallback(() => {
@@ -95,16 +90,11 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
     setShowAudioRecorder(true);
   }, []);
 
-  const handleFilesUploaded = useCallback((_files: unknown[]) => {
-    // Files are already uploaded by the FileUploader component
-    // The useFileUpload hook manages the state internally
-  }, []);
+  const handleFilesUploaded = useCallback(() => {}, []);
 
   const handleAudioTranscribed = useCallback(
     async (transcript: string) => {
-      if (!transcript.trim()) {
-        return;
-      }
+      if (!transcript.trim()) return;
 
       try {
         onStatusChange?.('streaming');
@@ -124,65 +114,89 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
 
   const isSubmitting = sendMessage.isPending;
 
+  const handleSuggestionClick = useCallback((suggestion: string) => {
+    setInputValue(suggestion);
+    textareaRef.current?.focus();
+  }, []);
+
   return (
     <>
       <div className="flex flex-col gap-2">
-        {/* Error message */}
-        {isOverLimit ? (
-          <div className="text-xs text-muted-foreground">
-            <span className="text-destructive">Message too long</span>
-          </div>
-        ) : null}
+        {/* Suggestions */}
+        {suggestions.length > 0 && !inputValue && !isSubmitting && (
+          <Suggestions>
+            {suggestions.map((suggestion) => (
+              <Suggestion
+                key={suggestion}
+                suggestion={suggestion}
+                onSuggestionClick={handleSuggestionClick}
+              />
+            ))}
+          </Suggestions>
+        )}
 
-        <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <Textarea
+        {/* Error message */}
+        {isOverLimit && (
+          <div className="text-xs text-destructive">Message too long</div>
+        )}
+
+        {/* PromptInput - AI Elements style */}
+        <PromptInput onSubmit={handlePromptSubmit}>
+          <div className="flex gap-2 items-end">
+            <PromptInputTextarea
               ref={textareaRef}
               value={inputValue}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
+              onValueChange={setInputValue}
               placeholder="Type your message..."
-              className="resize-none pr-12 touch-manipulation"
-              rows={1}
               disabled={isSubmitting}
+              className="flex-1"
             />
-
-            <div className="absolute bottom-3 right-2 text-xs text-muted-foreground/50">
-              {characterCount}/{MAX_MESSAGE_LENGTH}
-            </div>
+            <PromptInputSubmit status={isSubmitting ? 'streaming' : 'ready'} disabled={!canSubmit} />
           </div>
 
-          <Button
-            onClick={handleSubmit}
-            disabled={!canSubmit && uploadState.uploadedFiles.length === 0}
-            size="sm"
-            title="Send message"
-          >
-            {isSubmitting ? <LoaderCircle className="size-4" /> : <Send className="size-4" />}
-          </Button>
-        </div>
+          <PromptInputFooter>
+            <PromptInputTools>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleFileUpload}
+                disabled={isSubmitting}
+                title="Attach files"
+              >
+                <Paperclip className="size-4" />
+              </Button>
 
-        <div className="flex gap-2 flex-wrap items-center">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleFileUpload}
-            disabled={isSubmitting}
-            title="Attach files"
-          >
-            <Paperclip className="size-4" />
-          </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleAudioRecord}
+                disabled={isSubmitting}
+                title="Record audio"
+              >
+                <Mic className="size-4" />
+              </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleAudioRecord}
-            disabled={isSubmitting}
-            title="Record audio"
-          >
-            <Mic className="size-4" />
-          </Button>
-        </div>
+              {onSaveAsNote && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={isSubmitting}
+                  onClick={onSaveAsNote}
+                  title="Save as Note"
+                >
+                  <FileText className="size-4" />
+                </Button>
+              )}
+            </PromptInputTools>
+
+            <span className="text-xs text-muted-foreground">
+              {characterCount}/{MAX_MESSAGE_LENGTH}
+            </span>
+          </PromptInputFooter>
+        </PromptInput>
       </div>
 
       {/* File Upload and Audio Recording Modals */}

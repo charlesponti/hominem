@@ -8,7 +8,7 @@ import type { UploadedFile } from '~/lib/types/upload.js';
 
 import { emitVoiceEvent } from '~/lib/voice-events';
 
-import { SpeechInput } from '../ai-elements/speech-input.js';
+import { SpeechInput } from '@hominem/ui/ai-elements';
 import { FileUploader } from './FileUploader.js';
 
 interface ChatModalsProps {
@@ -129,7 +129,7 @@ export function ChatModals({
               <SpeechInput
                 aria-label="Record audio message"
                 onAudioRecorded={transcribeAudioBlob}
-                onTranscriptionChange={(text) => {
+                onTranscriptionChange={(text: string) => {
                   void handleVoiceTranscription(text);
                 }}
               />

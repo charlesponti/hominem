@@ -1,133 +1,66 @@
-import { cva, type VariantProps } from 'class-variance-authority';
-import { AlertCircle, CheckCircle, Info, XCircle } from 'lucide-react';
-import * as React from 'react';
+import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn } from '../../lib/utils';
+import { cn } from "../../lib/utils"
 
-export type AlertType = 'success' | 'error' | 'warning' | 'info';
-
-const alertVariants = cva('relative w-full border p-4', {
-  variants: {
-    variant: {
-      default: 'text-foreground',
-      destructive: 'text-destructive border-destructive/50 [&>svg]:text-destructive',
-      success: 'bg-muted border-border text-foreground [&>svg]:text-foreground',
-      warning:
-        'border-[var(--color-warning)]/50 text-[var(--color-warning)] [&>svg]:text-[var(--color-warning)]',
-      info: 'bg-muted border-border text-foreground [&>svg]:text-foreground',
+const alertVariants = cva(
+  "relative w-full rounded-lg border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current",
+  {
+    variants: {
+      variant: {
+        default: "bg-card text-card-foreground",
+        destructive:
+          "text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
+      },
     },
-  },
-  defaultVariants: {
-    variant: 'default',
-  },
-});
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
 
-export interface AlertProps
-  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
-  type?: AlertType | undefined;
-  dismissible?: boolean | undefined;
-  onDismiss?: (() => void) | undefined;
+function Alert({
+  className,
+  variant,
+  ...props
+}: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
+  return (
+    <div
+      data-slot="alert"
+      role="alert"
+      className={cn(alertVariants({ variant }), className)}
+      {...props}
+    />
+  )
 }
 
-const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
-  ({ className, variant, type, dismissible = false, onDismiss, children, ...props }, ref) => {
-    const [isVisible, setIsVisible] = React.useState(true);
+function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="alert-title"
+      className={cn(
+        "col-start-2 line-clamp-1 min-h-4 font-medium tracking-tight",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
-    const handleDismiss = () => {
-      setIsVisible(false);
-      onDismiss?.();
-    };
+function AlertDescription({
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="alert-description"
+      className={cn(
+        "text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed",
+        className
+      )}
+      {...props}
+    />
+  )
+}
 
-    // Determine variant from type if provided
-    const alertVariant =
-      variant ||
-      (type === 'error'
-        ? 'destructive'
-        : type === 'success'
-          ? 'success'
-          : type === 'warning'
-            ? 'warning'
-            : type === 'info'
-              ? 'info'
-              : 'default');
-
-    const getIcon = () => {
-      switch (type) {
-        case 'success':
-          return <CheckCircle size={20} />;
-        case 'error':
-          return <XCircle size={20} />;
-        case 'warning':
-          return <AlertCircle size={20} />;
-        case 'info':
-          return <Info size={20} />;
-        default:
-          return null;
-      }
-    };
-
-    const getIconColor = () => {
-      switch (type) {
-        case 'success':
-          return 'text-foreground';
-        case 'error':
-          return 'text-destructive';
-        case 'warning':
-          return 'text-[var(--color-warning)]';
-        case 'info':
-          return 'text-foreground';
-        default:
-          return '';
-      }
-    };
-
-    if (!isVisible) {
-      return null;
-    }
-
-    const icon = getIcon();
-    const iconColor = getIconColor();
-
-    return (
-      <div
-        ref={ref}
-        role="alert"
-        className={cn(alertVariants({ variant: alertVariant }), className)}
-        {...props}
-      >
-        <div className="flex items-start gap-3">
-          {icon && <div className={cn('shrink-0', iconColor)}>{icon}</div>}
-          <div className="flex-1 text-sm leading-relaxed">{children}</div>
-          {dismissible && (
-            <button
-              type="button"
-              className="shrink-0 p-1 opacity-70 hover:opacity-100 focus:outline-none"
-              onClick={handleDismiss}
-              aria-label="Dismiss alert"
-            >
-              <XCircle size={16} className={cn('text-current', iconColor)} />
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  },
-);
-Alert.displayName = 'Alert';
-
-const AlertTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
-  ({ className, ...props }, ref) => (
-    <h5 ref={ref} className={cn('mb-1 font-mono uppercase tracking-tight', className)} {...props} />
-  ),
-);
-AlertTitle.displayName = 'AlertTitle';
-
-const AlertDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('text-sm [&_p]:leading-relaxed', className)} {...props} />
-));
-AlertDescription.displayName = 'AlertDescription';
-
-export { Alert, AlertDescription, AlertTitle };
+export { Alert, AlertTitle, AlertDescription }

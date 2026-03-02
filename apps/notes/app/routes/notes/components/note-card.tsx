@@ -59,7 +59,6 @@ export function NoteCard({ note, onEdit, onDelete, onRemoveTag, className = '' }
 
   return (
     <Card
-      metadata={`CHAR_CT: ${note.content.length}`}
       className={`h-full flex flex-col overflow-hidden bg-card border border-border ${className}`}
     >
       <CardContent className="p-5 flex flex-col flex-1 min-h-0">
