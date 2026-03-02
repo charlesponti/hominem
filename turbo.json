@@ -30,7 +30,8 @@
       "cache": false
     },
     "dev": {
-      "cache": true,
+      "dependsOn": ["^dev"],
+      "cache": false,
       "persistent": true
     },
     "format": {

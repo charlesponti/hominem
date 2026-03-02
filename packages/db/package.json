@@ -35,6 +35,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "dev": "tsc --watch --preserveWatchOutput",
     "prepare": "bun run build",
     "clean": "rm -rf build",
     "db:generate": "bunx drizzle-kit generate",
