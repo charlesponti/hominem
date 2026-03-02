@@ -1,6 +1,7 @@
 import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import { foreignKey, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
+import { notes } from './notes.schema';
 import { users } from './users.schema';
 
 export const chat = pgTable(
@@ -9,6 +10,7 @@ export const chat = pgTable(
     id: uuid('id').primaryKey().notNull(),
     title: text('title').notNull(),
     userId: uuid('userId').notNull(),
+    noteId: uuid('noteId').references(() => notes.id, { onDelete: 'set null' }),
     createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   },

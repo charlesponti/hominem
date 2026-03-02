@@ -3,9 +3,8 @@ import type { UserOutput } from '@hominem/db/types/users';
 
 import { db, takeUniqueOrThrow } from '@hominem/db';
 import { and, eq, or } from '@hominem/db';
-import { list } from '@hominem/db/schema/lists';
-import { listInvite, userLists } from '@hominem/db/schema/lists';
-import { users } from '@hominem/db/schema/users';
+import { list, listInvite, userLists } from '@hominem/db/schema/tables';
+import { users } from '@hominem/db/schema/tables';
 import {
   ConflictError,
   NotFoundError,
@@ -199,7 +198,7 @@ export async function sendListInvite(params: SendListInviteParams): Promise<List
     ),
   });
 
-  if (existingInvite && !existingInvite.isAccepted) {
+  if (existingInvite && !existingInvite.accepted) {
     throw new ConflictError('An invite for this email address to this list already exists', {
       listId,
       email: normalizedInvitedEmail,
@@ -221,7 +220,7 @@ export async function sendListInvite(params: SendListInviteParams): Promise<List
         listId,
         invitedUserEmail: normalizedInvitedEmail,
         invitedUserId: invitedUserRecord?.id || null,
-        isAccepted: false,
+        accepted: false,
         userId: invitingUserId,
         token,
       })
@@ -284,7 +283,7 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
     throw new NotFoundError('Invite', { listId, token });
   }
 
-  if (invite.isAccepted) {
+  if (invite.accepted) {
     throw new ValidationError('Invite already accepted', {
       listId,
       token,
@@ -319,7 +318,7 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
       await tx
         .update(listInvite)
         .set({
-          isAccepted: true,
+          accepted: true,
           acceptedAt: new Date().toISOString(),
           invitedUserId: acceptingUserId,
           updatedAt: new Date().toISOString(),
@@ -389,7 +388,7 @@ export async function deleteListInvite(params: DeleteListInviteParams): Promise<
     throw new NotFoundError('Invite', { listId, email: normalizedEmail });
   }
 
-  if (invite.isAccepted) {
+  if (invite.accepted) {
     throw new ValidationError('Invite has already been accepted and cannot be deleted', {
       listId,
       email: normalizedEmail,

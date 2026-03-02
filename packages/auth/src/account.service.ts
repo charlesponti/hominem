@@ -10,7 +10,7 @@ interface AccountRecord {
   providerAccountId: string
   refreshToken: string | null
   accessToken: string | null
-  expiresAt: Date | null
+  expiresAt: string | null
   tokenType: string | null
   scope: string | null
   idToken: string | null
@@ -219,17 +219,16 @@ export async function createAccount(data: AccountInsert): Promise<AccountRecord 
     .insert(betterAuthAccount)
     .values({
       id: data.id ?? randomUUID(),
-      userId: identity.betterAuthUserId,
-      providerId: data.provider,
       accountId: data.providerAccountId,
+      providerId: data.provider,
+      userId: identity.betterAuthUserId,
       accessToken: data.accessToken ?? null,
       refreshToken: data.refreshToken ?? null,
       idToken: data.idToken ?? null,
-      accessTokenExpiresAt: data.expiresAt ?? null,
+      accessTokenExpiresAt: data.expiresAt ? data.expiresAt.toISOString() : null,
+      refreshTokenExpiresAt: null,
       scope: data.scope ?? null,
       password: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     })
     .returning()
 
@@ -250,10 +249,10 @@ export async function updateAccount(
       ...(updates.refreshToken !== undefined ? { refreshToken: updates.refreshToken } : {}),
       ...(updates.idToken !== undefined ? { idToken: updates.idToken } : {}),
       ...(updates.scope !== undefined ? { scope: updates.scope } : {}),
-      ...(updates.expiresAt !== undefined
-        ? { accessTokenExpiresAt: updates.expiresAt }
-        : {}),
-      updatedAt: new Date(),
+      ...(updates.expiresAt !== undefined && updates.expiresAt !== null
+        ? { accessTokenExpiresAt: updates.expiresAt.toISOString() }
+        : { accessTokenExpiresAt: null }),
+      updatedAt: new Date().toISOString(),
     })
     .where(eq(betterAuthAccount.id, id))
     .returning()
