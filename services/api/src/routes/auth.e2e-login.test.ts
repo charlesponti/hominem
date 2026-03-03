@@ -26,7 +26,7 @@ describe('mobile e2e login guard', () => {
         'content-type': 'application/json',
         'x-e2e-auth-secret': 'test-secret',
       },
-      body: JSON.stringify({ email: 'mobile-e2e@hominem.local' }),
+      body: JSON.stringify({ email: 'mobile-e2e@hominem.test' }),
     });
 
     expect(response.status).toBe(404);
@@ -45,7 +45,7 @@ describe('mobile e2e login guard', () => {
         'content-type': 'application/json',
         'x-e2e-auth-secret': 'wrong-secret',
       },
-      body: JSON.stringify({ email: 'mobile-e2e@hominem.local' }),
+      body: JSON.stringify({ email: 'mobile-e2e@hominem.test' }),
     });
 
     expect(response.status).toBe(403);

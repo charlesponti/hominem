@@ -5,13 +5,13 @@ import {
 
 import { serverEnv } from './env';
 
-export const authConfig = {
+const authConfig = {
   apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
 };
 
-export const getServerAuth = (request: Request) => sharedGetServerAuth(request, authConfig);
+const getServerAuth = (request: Request) => sharedGetServerAuth(request, authConfig);
 
-export const createServerAuthClient = (request: Request) =>
+const createServerAuthClient = (request: Request) =>
   sharedCreateServerAuthClient(request, authConfig);
 
 // Convenience wrappers - clients can use getServerAuth directly and destructure what they need

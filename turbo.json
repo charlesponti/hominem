@@ -30,9 +30,7 @@
       "cache": false
     },
     "dev": {
-      "dependsOn": ["^dev"],
-      "cache": false,
-      "persistent": true
+      "cache": false
     },
     "format": {
       "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],

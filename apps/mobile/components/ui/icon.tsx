@@ -14,7 +14,7 @@ interface IconProps {
   style?: TextStyle | TextStyle[]
 }
 
-export const MindsherpaIcon = ({ color = theme.colors.foreground, name, size, style }: IconProps) => {
+const MindsherpaIcon = ({ color = theme.colors.foreground, name, size, style }: IconProps) => {
   const icon = unicodeMap[name]
     ? String.fromCharCode(Number.parseInt(unicodeMap[name].slice(2), 16))
     : ''
@@ -22,7 +22,7 @@ export const MindsherpaIcon = ({ color = theme.colors.foreground, name, size, st
   return <Text style={[{ fontFamily: 'Font Awesome Regular', color, fontSize: size }, style]}>{icon}</Text>
 }
 
-export const AnimatedMindsherpaIcon = ({
+const AnimatedMindsherpaIcon = ({
   color = theme.colors.foreground,
   name,
   size,

@@ -20,16 +20,16 @@ export interface BudgetCategoryWithSpending extends BudgetCategory {
 }
 
 // Budget history data type
-export interface BudgetHistoryData {
+interface BudgetHistoryData {
   date: string;
   budgeted: number;
   actual: number;
 }
 
-export type TransactionsList = TransactionListOutput;
+type TransactionsList = TransactionListOutput;
 
 // Transaction categories analysis type
-export interface TransactionCategoryAnalysis {
+interface TransactionCategoryAnalysis {
   category: string;
   totalAmount: number;
   transactionCount: number;

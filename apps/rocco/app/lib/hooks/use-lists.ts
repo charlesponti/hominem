@@ -260,7 +260,7 @@ export const useDeleteList = (options?: HonoMutationOptions<ListDeleteOutput, Li
 /**
  * Delete item from list
  */
-export const useDeleteListItem = (
+const useDeleteListItem = (
   options?: HonoMutationOptions<ListDeleteItemOutput, ListDeleteItemInput>,
 ) => {
   const utils = useHonoUtils();

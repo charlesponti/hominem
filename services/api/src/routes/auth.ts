@@ -864,7 +864,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   }
 
   const payload = c.req.valid('json');
-  const email = payload.email ?? 'mobile-e2e@hominem.local';
+  const email = payload.email ?? 'mobile-e2e@hominem.test';
   const name = payload.name ?? 'Mobile E2E User';
   const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 16);
 

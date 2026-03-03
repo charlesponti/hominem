@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export interface ToastMessage {
+interface ToastMessage {
   id?: string;
   title: string;
   description?: string;

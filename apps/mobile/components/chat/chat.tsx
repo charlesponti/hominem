@@ -8,7 +8,7 @@ import ChatLoading from './chat-loading'
 import { loadMarkdown, renderMessage, type MarkdownComponent } from './chat-message'
 import { Text, theme } from '~/theme'
 
-export type ChatProps = {
+type ChatProps = {
   chatId: string
   onChatEnd: () => void
 }

@@ -2,7 +2,7 @@
 	# Development-specific global options
 	debug
 	local_certs
-	auto_https disable_redirects
+	# auto_https disable_redirects
 
 	servers {
 		# Timeouts
@@ -13,13 +13,25 @@
 			idle 60s
 		}
 	}
+
+	# Log to file for monitoring (user-writable location)
+	log {
+		output file /Users/charlesponti/.local/share/caddy/access.log {
+			roll_size 10mb
+			roll_keep 5
+			roll_keep_for 720h
+		}
+		level INFO
+	}
 }
 
 (common) {
+	# REMOVED: bind 127.0.0.1 (Let Caddy manage bindings)
+
 	# Security headers
 	header {
 		# CORS for local development
-		Access-Control-Allow-Origin "*"
+		# Access-Control-Allow-Origin "*"
 		# Security headers
 		Strict-Transport-Security "max-age=31536000;"
 		X-Content-Type-Options "nosniff"
@@ -30,25 +42,28 @@
 	# Enable compression
 	encode zstd gzip
 
-	# Basic logging for development
-	log {
-		output stdout
-		format console
-		level INFO
-	}
-
 	# Custom error pages
 	handle_errors {
 		respond "* {http.error.status_code} {http.error.status_text}"
 	}
 }
 
-api.hominem.localhost {
+api.hominem.test {
 	import common
-	reverse_proxy localhost:4040
+	reverse_proxy 127.0.0.1:4040
 }
 
-app.hominem.localhost {
+rocco.hominem.test {
 	import common
-	reverse_proxy localhost:4444
+	reverse_proxy 127.0.0.1:4446
+}
+
+finance.hominem.test {
+	import common
+	reverse_proxy 127.0.0.1:4444
+}
+
+notes.hominem.test {
+	import common
+	reverse_proxy 127.0.0.1:4445
 }

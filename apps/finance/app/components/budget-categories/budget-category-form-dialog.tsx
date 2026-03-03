@@ -39,7 +39,7 @@ interface BudgetCategoryFormDialogProps {
   categoryColors: string[];
 }
 
-export function BudgetCategoryFormDialog({
+function BudgetCategoryFormDialog({
   open,
   onOpenChange,
   editingCategory,

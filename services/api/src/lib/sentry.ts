@@ -60,7 +60,7 @@ export function sentryMiddleware() {
 }
 
 // Global error handler for Sentry - integrates with app.onError
-export function sentryErrorHandler() {
+function sentryErrorHandler() {
   return (error: Error, c: Context) => {
     Sentry.withScope((scope) => {
       scope.setTags({

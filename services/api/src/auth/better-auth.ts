@@ -28,6 +28,9 @@ function getTrustedOrigins() {
     env.FINANCE_URL,
     env.NOTES_URL,
     env.ROCCO_URL,
+    'http://localhost:4444',
+    'http://localhost:4445',
+    'http://localhost:4446',
     'hakumi://',
     'hakumi-dev://',
     'exp://',
@@ -86,7 +89,15 @@ function getAuthPlugins() {
     passkey({
       rpID: new URL(env.BETTER_AUTH_URL).hostname,
       rpName: 'Hominem',
-      origin: [env.BETTER_AUTH_URL, env.FINANCE_URL, env.NOTES_URL, env.ROCCO_URL],
+      origin: [
+        env.BETTER_AUTH_URL,
+        env.FINANCE_URL,
+        env.NOTES_URL,
+        env.ROCCO_URL,
+        'http://localhost:4444',
+        'http://localhost:4445',
+        'http://localhost:4446',
+      ],
       schema: {
         passkey: {
           modelName: 'betterAuthPasskey',

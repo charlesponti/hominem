@@ -7,7 +7,7 @@ interface EmptyStateProps {
   onAddCategory: () => void;
 }
 
-export function EmptyState({ transactionCategoriesCount, onAddCategory }: EmptyStateProps) {
+function EmptyState({ transactionCategoriesCount, onAddCategory }: EmptyStateProps) {
   const navigate = useNavigate();
   return (
     <div className="text-center py-12">

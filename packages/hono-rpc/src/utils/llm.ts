@@ -18,6 +18,6 @@ export function getLMStudioAdapter(): LanguageModelV1 {
 /**
  * Create OpenAI adapter
  */
-export function getOpenAIAdapter(): LanguageModelV1 {
+function getOpenAIAdapter(): LanguageModelV1 {
   return openai('gpt-4o');
 }

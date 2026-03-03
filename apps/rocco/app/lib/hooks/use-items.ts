@@ -12,7 +12,7 @@ import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-clien
 /**
  * Add item to list
  */
-export const useAddItemToList = () => {
+const useAddItemToList = () => {
   const utils = useHonoUtils();
   return useHonoMutation<ItemsAddToListOutput, ItemsAddToListInput>(
     async (client: HonoClient, variables: ItemsAddToListInput) => {
@@ -73,7 +73,7 @@ export const useAddItemToList = () => {
 /**
  * Remove item from list
  */
-export const useRemoveItemFromList = () => {
+const useRemoveItemFromList = () => {
   const utils = useHonoUtils();
   return useHonoMutation<ItemsRemoveFromListOutput, ItemsRemoveFromListInput>(
     async (client: HonoClient, variables: ItemsRemoveFromListInput) => {
@@ -121,7 +121,7 @@ export const useRemoveItemFromList = () => {
 /**
  * Get items in a list
  */
-export const useListItems = (listId: string | undefined) =>
+const useListItems = (listId: string | undefined) =>
   useHonoQuery<ItemsGetByListIdOutput>(
     ['items', 'by-list', listId],
     async (client: HonoClient) => {

@@ -39,7 +39,7 @@ export const toLocalFocusItem = (item: FocusItem): LocalFocusItem => ({
   payloadJson: JSON.stringify(item),
 })
 
-export const fromLocalFocusItem = (item: LocalFocusItem): FocusItem => {
+const fromLocalFocusItem = (item: LocalFocusItem): FocusItem => {
   if (item.payloadJson) {
     try {
       return JSON.parse(item.payloadJson) as FocusItem

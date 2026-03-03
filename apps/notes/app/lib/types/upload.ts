@@ -5,7 +5,7 @@
 /**
  * Processed file from server-side file processing
  */
-export interface ProcessedFile {
+interface ProcessedFile {
   id: string;
   originalName: string;
   type: 'image' | 'document' | 'audio' | 'video' | 'unknown';
@@ -22,7 +22,7 @@ export interface ProcessedFile {
 /**
  * File being uploaded (client-side state during upload process)
  */
-export interface FileUpload {
+interface FileUpload {
   id: string;
   name: string;
   type: string;

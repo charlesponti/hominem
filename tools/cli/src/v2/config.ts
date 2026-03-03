@@ -10,7 +10,7 @@ export function getConfigPath(): string {
   return path.join(getHominemHomeDir(), 'config.json');
 }
 
-export const configV2Schema = z.object({
+const configV2Schema = z.object({
   version: z.literal(2),
   auth: z
     .object({
@@ -56,7 +56,7 @@ export const configV2Schema = z.object({
     .default({ format: 'text' }),
 });
 
-export type ConfigV2 = z.infer<typeof configV2Schema>;
+type ConfigV2 = z.infer<typeof configV2Schema>;
 
 export const defaultConfigV2: ConfigV2 = configV2Schema.parse({ version: 2 });
 
@@ -77,7 +77,7 @@ export async function saveConfigV2(config: ConfigV2): Promise<void> {
   await fs.writeFile(configPath, JSON.stringify(parsed, null, 2), 'utf-8');
 }
 
-export function parsePathSelector(selector: string): string[] {
+function parsePathSelector(selector: string): string[] {
   return selector
     .split('.')
     .map((segment) => segment.trim())

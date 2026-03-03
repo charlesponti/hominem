@@ -1,0 +1,63 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    ".": {
+      "entry": [
+        "scripts/*.ts",
+        "scripts/*.js"
+      ],
+      "project": [
+        "scripts/**/*.{ts,js}"
+      ],
+      "ignore": [
+        "**/node_modules/**",
+        "**/.turbo/**",
+        "**/build/**",
+        "**/dist/**",
+        "**/coverage/**",
+        "**/*.d.ts"
+      ]
+    }
+  },
+  "ignore": [
+    "**/node_modules/**",
+    "**/.turbo/**",
+    "**/build/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/.react-router/**",
+    "**/drizzle/**",
+    "**/*.config.{ts,js,mjs}",
+    "**/*.d.ts",
+    "**/test/**",
+    "**/tests/**",
+    "**/__tests__/**",
+    "**/*.test.{ts,tsx}",
+    "**/*.spec.{ts,tsx}",
+    "**/vitest.setup.ts",
+    "**/vitest.config.ts",
+    "**/playwright.config.ts"
+  ],
+  "ignoreDependencies": [
+    "@types/node",
+    "typescript",
+    "vitest",
+    "@vitest/coverage-v8",
+    "msw",
+    "@playwright/test",
+    "eslint",
+    "prettier",
+    "@tailwindcss/vite",
+    "tailwindcss-animate",
+    "clsx",
+    "tailwind-merge"
+  ],
+  "ignoreBinaries": [
+    "docker",
+    "git",
+    "node",
+    "pnpm",
+    "npm",
+    "yarn"
+  ]
+}

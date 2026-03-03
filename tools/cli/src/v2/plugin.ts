@@ -2,14 +2,14 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
 
-export const pluginManifestSchema = z.object({
+const pluginManifestSchema = z.object({
   name: z.string(),
   version: z.string(),
   entry: z.string(),
   permissions: z.array(z.enum(['network', 'filesystem:read', 'filesystem:write'])).default([]),
 });
 
-export type PluginManifest = z.infer<typeof pluginManifestSchema>;
+type PluginManifest = z.infer<typeof pluginManifestSchema>;
 
 export async function loadPluginManifest(rootPath: string): Promise<PluginManifest> {
   const filePath = path.join(rootPath, 'hominem.plugin.json');

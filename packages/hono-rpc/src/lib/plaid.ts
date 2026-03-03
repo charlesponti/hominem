@@ -20,13 +20,13 @@ export const plaidClient = new PlaidApi(configuration);
 
 export const PLAID_PRODUCTS: Products[] = [Products.Transactions];
 export const PLAID_COUNTRY_CODES: CountryCode[] = [CountryCode.Us];
-export const PLAID_REDIRECT_URI = null;
+const PLAID_REDIRECT_URI = null;
 
 /**
  * Verify webhook signature from Plaid
  * @see https://plaid.com/docs/api/webhook-verification/
  */
-export function verifyPlaidWebhookSignature(
+function verifyPlaidWebhookSignature(
   headers: Record<string, string | string[] | undefined>,
   body: string,
 ): boolean {

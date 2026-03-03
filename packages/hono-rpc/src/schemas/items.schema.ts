@@ -4,7 +4,7 @@ import {
 } from '@hominem/db/schema/items';
 import * as z from 'zod';
 
-export const itemSchema = DbItemSchema.extend({});
+const itemSchema = DbItemSchema.extend({});
 
 export const itemsAddToListSchema = DbItemInsertSchema.pick({
   listId: true,

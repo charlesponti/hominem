@@ -32,7 +32,7 @@ export const listStyles = StyleSheet.create({
   },
 })
 
-export const voidPrimitives = StyleSheet.create({
+const voidPrimitives = StyleSheet.create({
   voidSurface: {
     backgroundColor: theme.colors.background,
   },

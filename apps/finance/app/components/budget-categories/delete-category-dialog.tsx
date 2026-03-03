@@ -18,7 +18,7 @@ interface DeleteCategoryDialogProps {
   isLoading: boolean;
 }
 
-export function DeleteCategoryDialog({
+function DeleteCategoryDialog({
   deletingCategory,
   onOpenChange,
   onDelete,

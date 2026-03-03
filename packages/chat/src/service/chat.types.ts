@@ -23,7 +23,7 @@ export interface SearchChatsParams {
   limit?: number;
 }
 
-export interface ChatStats {
+interface ChatStats {
   totalChats: number;
   totalMessages: number;
   averageMessagesPerChat: number;

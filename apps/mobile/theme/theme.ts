@@ -145,7 +145,7 @@ const theme = createTheme({
   },
 })
 
-export const Shadows = {
+const Shadows = {
   dark: {
     shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 0 },

@@ -22,12 +22,12 @@ import type { systemRoutes } from './routes/system';
  * Breaking the AppType into smaller domain types reduces TypeScript's
  * type depth computation and makes type checking faster.
  */
-export type VitalAppType = typeof vitalRoutes;
-export type KnowledgeAppType = typeof knowledgeRoutes;
-export type SocialAppType = typeof socialRoutes;
-export type EconomyAppType = typeof economyRoutes;
-export type WorldAppType = typeof worldRoutes;
-export type SystemAppType = typeof systemRoutes;
+type VitalAppType = typeof vitalRoutes;
+type KnowledgeAppType = typeof knowledgeRoutes;
+type SocialAppType = typeof socialRoutes;
+type EconomyAppType = typeof economyRoutes;
+type WorldAppType = typeof worldRoutes;
+type SystemAppType = typeof systemRoutes;
 
 /**
  * AppType - Type representing the entire API structure

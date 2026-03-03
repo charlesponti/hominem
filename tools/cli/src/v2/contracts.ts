@@ -31,7 +31,7 @@ export interface CommandFailure {
   requestId?: string;
 }
 
-export interface ProgressEvent {
+interface ProgressEvent {
   type: 'progress';
   command: string;
   timestamp: string;
@@ -39,7 +39,7 @@ export interface ProgressEvent {
   message: string;
 }
 
-export interface DiagnosticEvent {
+interface DiagnosticEvent {
   type: 'diagnostic';
   command: string;
   timestamp: string;

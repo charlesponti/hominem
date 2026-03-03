@@ -1,0 +1,64 @@
+$ turbo dev
+• turbo 2.8.11
+• Packages in scope: @hackefeller/type-audit, @hominem/api, @hominem/auth, @hominem/chat-services, @hominem/cli, @hominem/db, @hominem/env, @hominem/events-services, @hominem/finance, @hominem/finance-services, @hominem/health-services, @hominem/hono-client, @hominem/hono-rpc, @hominem/invites-services, @hominem/jobs-services, @hominem/lists-services, @hominem/mobile, @hominem/notes, @hominem/notes-services, @hominem/places-services, @hominem/rocco, @hominem/services, @hominem/ui, @hominem/utils, @hominem/workers
+• Running dev in 25 packages
+• Remote caching disabled
+@hominem/finance:dev: cache bypass, force executing 9c23a53954f7b6f9
+@hominem/api:dev: cache bypass, force executing 6b403b7a7cb84cf0
+@hominem/mobile:dev: cache bypass, force executing 0b1311aa67fd1554
+@hominem/db:dev: cache bypass, force executing a7c5474226535a62
+@hominem/notes:dev: cache bypass, force executing 7a8ccd523fc18625
+@hominem/workers:dev: cache bypass, force executing 62daba4581865374
+@hominem/rocco:dev: cache bypass, force executing 9727baa6d100331b
+@hominem/finance:dev: $ react-router dev
+@hominem/api:dev: $ lsof -ti:4040 | xargs kill -9 2>/dev/null; bun --watch src/index.ts
+@hominem/mobile:dev: $ NODE_ENV=development expo start --dev-client
+@hominem/db:dev: $ tsc --watch --preserveWatchOutput
+@hominem/notes:dev: $ react-router dev
+@hominem/workers:dev: $ bun --watch src/index.ts
+@hominem/rocco:dev: $ react-router dev
+@hominem/db:dev: 
+@hominem/db:dev: 7:42:14 PM - Starting compilation in watch mode...
+@hominem/db:dev: 
+@hominem/mobile:dev: env: load .env.development.local
+@hominem/mobile:dev: env: export EXPO_PUBLIC_API_BASE_URL EXPO_PUBLIC_SENTRY_DSN EXPO_PUBLIC_SENTRY_ENVIRONMENT EXPO_PUBLIC_E2E_TESTING
+@hominem/workers:dev: {"level":"info","time":1772509334572,"pid":65536,"hostname":"ponti-mac14","msg":"Google Calendar sync worker started"}
+@hominem/workers:dev: {"level":"info","time":1772509334589,"pid":65536,"hostname":"ponti-mac14","msg":"Place Photo Enrichment worker started"}
+@hominem/workers:dev: {"level":"info","time":1772509334618,"pid":65536,"hostname":"ponti-mac14","msg":"Plaid Sync Worker: Ready and healthy"}
+@hominem/workers:dev: {"level":"info","time":1772509334618,"pid":65536,"hostname":"ponti-mac14","msg":"Place Photo Enrichment Worker: Ready and healthy"}
+@hominem/workers:dev: {"level":"info","time":1772509334618,"pid":65536,"hostname":"ponti-mac14","msg":"Smart Input Worker: Ready and healthy"}
+@hominem/workers:dev: {"level":"info","time":1772509334618,"pid":65536,"hostname":"ponti-mac14","msg":"Google Calendar Sync Worker: Ready and healthy"}
+@hominem/workers:dev: {"level":"info","time":1772509334618,"pid":65536,"hostname":"ponti-mac14","msg":"Transaction Import Worker: Ready and healthy"}
+@hominem/rocco:dev:   ➜  Local:   http://localhost:4446/
+@hominem/rocco:dev:   ➜  Network: http://192.168.1.153:4446/
+@hominem/rocco:dev:   ➜  Network: http://192.168.1.63:4446/
+@hominem/rocco:dev:   ➜  Network: http://192.168.139.3:4446/
+@hominem/rocco:dev:   ➜  Network: http://192.168.97.0:4446/
+@hominem/mobile:dev: Starting project at /Users/charlesponti/Developer/hominem/apps/mobile
+@hominem/api:dev: Server is running on port 4040
+@hominem/api:dev: {"level":"info","time":1772509335141,"pid":65532,"hostname":"ponti-mac14","msg":"Redis client connected"}
+@hominem/api:dev: {"level":"info","time":1772509335145,"pid":65532,"hostname":"ponti-mac14","msg":"Redis client ready"}
+@hominem/finance:dev:   ➜  Local:   http://localhost:4444/
+@hominem/finance:dev:   ➜  Network: http://192.168.1.153:4444/
+@hominem/finance:dev:   ➜  Network: http://192.168.1.63:4444/
+@hominem/finance:dev:   ➜  Network: http://192.168.139.3:4444/
+@hominem/finance:dev:   ➜  Network: http://192.168.97.0:4444/
+@hominem/db:dev: 
+@hominem/db:dev: 7:42:15 PM - Found 0 errors. Watching for file changes.
+@hominem/notes:dev:   ➜  Local:   http://localhost:4445/
+@hominem/notes:dev:   ➜  Network: http://192.168.1.153:4445/
+@hominem/notes:dev:   ➜  Network: http://192.168.1.63:4445/
+@hominem/notes:dev:   ➜  Network: http://192.168.139.3:4445/
+@hominem/notes:dev:   ➜  Network: http://192.168.97.0:4445/
+@hominem/mobile:dev: Starting Metro Bundler
+@hominem/mobile:dev: Waiting on http://localhost:8081
+@hominem/mobile:dev: Logs for your project will appear below.
+@hominem/notes:dev: 🌐 i18next is maintained with support from Locize — consider powering your project with managed localization (AI, CDN, integrations): https://locize.com 💙
+@hominem/notes:dev: {"level":"error","time":1772509339931,"pid":65535,"hostname":"ponti-mac14","error":{},"msg":"[getServerAuth]"}
+@hominem/notes:dev: {"level":"error","time":1772509339932,"pid":65535,"hostname":"ponti-mac14","error":{},"msg":"[getServerAuth]"}
+@hominem/api:dev: <-- GET /api/auth/session
+@hominem/api:dev: --> GET /api/auth/session [32m200[0m 4ms
+@hominem/notes:dev: {"level":"error","time":1772509347766,"pid":65535,"hostname":"ponti-mac14","error":{},"msg":"[getServerAuth]"}
+@hominem/notes:dev: {"level":"error","time":1772509347767,"pid":65535,"hostname":"ponti-mac14","error":{},"msg":"[getServerAuth]"}
+@hominem/api:dev: <-- GET /api/auth/session
+@hominem/api:dev: --> GET /api/auth/session [32m200[0m 0ms

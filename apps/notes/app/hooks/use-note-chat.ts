@@ -19,7 +19,7 @@ export function useNoteChat(noteId: string) {
   );
 }
 
-export function useCreateNoteChat() {
+function useCreateNoteChat() {
   return useHonoMutation<Chat, { noteId: string; title?: string }>(
     async (client: HonoClient, variables: { noteId: string; title?: string }) => {
       const res = await client.api.chats.$post({

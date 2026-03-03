@@ -116,7 +116,7 @@ interface DeviceCodeResponse {
   interval?: number;
 }
 
-export async function migrateLegacyConfig(): Promise<void> {
+async function migrateLegacyConfig(): Promise<void> {
   const legacyConfig = getLegacyConfigPath();
   const legacyGoogle = getLegacyGooglePath();
   try {
@@ -590,7 +590,7 @@ export async function getAccessToken(params?: {
   }
 }
 
-export async function requireAccessToken() {
+async function requireAccessToken() {
   const token = await getAccessToken();
   if (!token) {
     throw new AuthError({
@@ -603,12 +603,12 @@ export async function requireAccessToken() {
   return token;
 }
 
-export async function getAuthToken() {
+async function getAuthToken() {
   return requireAccessToken();
 }
 
 // Helper function to create an authenticated axios client
-export async function getAuthenticatedClient(host = 'localhost', port = '4445') {
+async function getAuthenticatedClient(host = 'localhost', port = '4445') {
   const token = await requireAccessToken();
 
   const client = axios.create({

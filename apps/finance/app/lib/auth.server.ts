@@ -11,7 +11,7 @@ export const authConfig = {
 
 export const getServerAuth = (request: Request) => sharedGetServerAuth(request, authConfig);
 
-export const createServerAuthClient = (request: Request) =>
+const createServerAuthClient = (request: Request) =>
   sharedCreateServerAuthClient(request, authConfig);
 
 // Convenience wrappers - clients can use getServerAuth directly and destructure what they need
@@ -20,7 +20,7 @@ export const getServerSession = async (request: Request) => {
   return { user, session, headers };
 };
 
-export const getAuthState = async (request: Request) => {
+const getAuthState = async (request: Request) => {
   const { isAuthenticated, headers } = await getServerAuth(request);
   return { isAuthenticated, headers };
 };

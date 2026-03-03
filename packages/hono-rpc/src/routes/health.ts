@@ -8,11 +8,12 @@ import {
   type EventWithTagsAndPeople,
 } from '@hominem/events-services';
 import { NotFoundError, ValidationError } from '@hominem/services';
-import { zValidator } from '@hono/zod-validator';
+import { validator as zValidator } from 'hono-openapi';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+import { describeRoute, resolver } from 'hono-openapi';
 
 /**
  * Type predicate to check if an event is a Health activity owned by a specific user
@@ -63,7 +64,25 @@ type HealthActivityStatsResponse = Awaited<ReturnType<typeof getHealthActivitySt
  */
 export const healthRoutes = new Hono<AppContext>()
   // List health activities
-  .get('/', authMiddleware, zValidator('query', healthActivityListQuerySchema), async (c) => {
+  .get(
+    '/',
+    describeRoute({
+      description: 'List health activities',
+      tags: ['Health'],
+      responses: {
+        200: {
+          description: 'List of health activities',
+          content: {
+            'application/json': {
+              schema: resolver(healthActivityListQuerySchema),
+            },
+          },
+        },
+      },
+    }),
+    authMiddleware,
+    zValidator('query', healthActivityListQuerySchema),
+    async (c) => {
     const userId = c.get('userId')!;
     const query = c.req.valid('query');
 

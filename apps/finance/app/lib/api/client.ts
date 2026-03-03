@@ -1,5 +1,5 @@
 export {
-  useHonoClient,
+  
   useHonoQuery,
   useHonoMutation,
   useHonoUtils,

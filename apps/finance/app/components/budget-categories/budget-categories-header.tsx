@@ -7,7 +7,7 @@ interface BudgetCategoriesHeaderProps {
   onSetupFromTransactions: () => void;
 }
 
-export function BudgetCategoriesHeader({
+function BudgetCategoriesHeader({
   // transactionCategoriesCount,
   onAddCategory,
   // onSetupFromTransactions,

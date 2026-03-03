@@ -8,7 +8,7 @@ import type {
   GooglePlacesApiResponse,
 } from '~/lib/shared-types';
 
-export const getPlacePhotoUrl = (reference: string | null | undefined) => {
+const getPlacePhotoUrl = (reference: string | null | undefined) => {
   if (!reference) return null;
   return getHominemPhotoURL(reference);
 };

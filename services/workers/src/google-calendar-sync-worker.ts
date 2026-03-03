@@ -13,7 +13,7 @@ import { HealthService } from './health.service';
 // Configuration
 const CONCURRENCY = 2; // Lower concurrency for external API calls
 
-export interface GoogleCalendarSyncPayload {
+interface GoogleCalendarSyncPayload {
   userId: string;
   accessToken: string;
   refreshToken?: string;
@@ -125,4 +125,4 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 logger.info('Google Calendar sync worker started');
 
-export { googleCalendarWorker };
+;

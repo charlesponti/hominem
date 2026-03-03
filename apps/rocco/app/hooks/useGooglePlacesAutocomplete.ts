@@ -2,7 +2,7 @@ import { usePlacesAutocomplete } from '../lib/hooks/use-places';
 
 export type { GooglePlacePrediction } from '~/lib/types';
 
-export interface UseGooglePlacesAutocompleteOptions {
+interface UseGooglePlacesAutocompleteOptions {
   input: string;
   location?: { latitude: number; longitude: number } | undefined;
   radiusMeters?: number;

@@ -2,7 +2,7 @@ import type { OutputFormat } from './contracts';
 
 import { OUTPUT_FORMATS } from './contracts';
 
-export interface ParseResult {
+interface ParseResult {
   commandTokens: string[];
   args: string[];
   flags: Record<string, string | boolean>;

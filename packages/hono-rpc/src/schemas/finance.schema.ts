@@ -10,13 +10,13 @@ export const financeAccountSchema = DbFinanceAccountSchema.extend({});
 export const transactionSchema = DbTransactionSchema.extend({
   authorizedDate: z.string().nullable().optional(),
 });
-export const financialInstitutionSchema = DbFinancialInstitutionSchema.extend({});
-export const budgetCategorySchema = DbBudgetCategorySchema.extend({});
+const financialInstitutionSchema = DbFinancialInstitutionSchema.extend({});
+const budgetCategorySchema = DbBudgetCategorySchema.extend({});
 
-export type FinanceAccount = z.infer<typeof financeAccountSchema>;
-export type FinanceTransaction = z.infer<typeof transactionSchema>;
-export type FinancialInstitution = z.infer<typeof financialInstitutionSchema>;
-export type BudgetCategory = z.infer<typeof budgetCategorySchema>;
+type FinanceAccount = z.infer<typeof financeAccountSchema>;
+type FinanceTransaction = z.infer<typeof transactionSchema>;
+type FinancialInstitution = z.infer<typeof financialInstitutionSchema>;
+type BudgetCategory = z.infer<typeof budgetCategorySchema>;
 
 export const accountWithPlaidInfoSchema = financeAccountSchema.extend({
   institutionName: z.string().nullable(),

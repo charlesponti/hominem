@@ -6,7 +6,7 @@ import type { Worker } from 'bullmq';
  */
 import { logger } from '@hominem/utils/logger';
 
-export interface HealthMetrics {
+interface HealthMetrics {
   startTime: number;
   lastJobProcessed?: number;
   totalJobsProcessed: number;

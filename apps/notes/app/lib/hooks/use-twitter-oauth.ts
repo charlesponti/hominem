@@ -40,7 +40,7 @@ export function useTwitterAccounts() {
   };
 }
 
-export function useTwitterPost() {
+function useTwitterPost() {
   const { toast } = useToast();
 
   const mutation = useHonoMutation<TwitterPostOutput, TwitterPostInput>(

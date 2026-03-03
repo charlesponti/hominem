@@ -9,7 +9,7 @@ interface LoadingProps {
   fullScreen?: boolean;
 }
 
-export function Loading({
+function Loading({
   text = 'Loading...',
   size = 'md',
   className,

@@ -7,7 +7,7 @@ interface BudgetTrackingEmptyStateProps {
   selectedMonthYear?: string;
 }
 
-export function BudgetTrackingEmptyState({
+function BudgetTrackingEmptyState({
   type,
   selectedMonthYear,
 }: BudgetTrackingEmptyStateProps) {

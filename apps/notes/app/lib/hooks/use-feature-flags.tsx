@@ -1,7 +1,7 @@
 import { createContext, type ReactNode, useContext } from 'react';
 
 // Define available feature flags
-export interface FeatureFlags {
+interface FeatureFlags {
   twitterIntegration: boolean;
   aiSdkChatWeb: boolean;
   aiSdkChatMobile: boolean;
@@ -22,7 +22,7 @@ const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
 const FeatureFlagsContext = createContext<FeatureFlags>(DEFAULT_FEATURE_FLAGS);
 
 // Hook to use feature flags
-export function useFeatureFlags(): FeatureFlags {
+function useFeatureFlags(): FeatureFlags {
   const context = useContext(FeatureFlagsContext);
   if (context === undefined) {
     throw new Error('useFeatureFlags must be used within a FeatureFlagsProvider');
@@ -59,7 +59,7 @@ export function FeatureFlagsProvider({ children, flags = {} }: FeatureFlagsProvi
 }
 
 // Utility hook to get feature flags from environment variables
-export function useEnvironmentFeatureFlags(): Partial<FeatureFlags> {
+function useEnvironmentFeatureFlags(): Partial<FeatureFlags> {
   // Check environment variables for feature flags
   const twitterIntegration = import.meta.env.VITE_FEATURE_TWITTER_INTEGRATION === 'true';
   const aiSdkChatWeb = import.meta.env.VITE_FEATURE_AI_SDK_CHAT_WEB === 'true';

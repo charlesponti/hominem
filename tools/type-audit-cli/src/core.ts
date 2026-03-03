@@ -22,14 +22,14 @@ interface CompilerInvocation {
   label: string
 }
 
-export interface FileMetric {
+interface FileMetric {
   path: string
   checkMs: number
   instantiations: number
   suggestions: string[]
 }
 
-export interface ProjectAuditResult {
+interface ProjectAuditResult {
   name: string
   tsconfigPath: string
   ok: boolean
@@ -46,7 +46,7 @@ export interface ProjectAuditResult {
   }
 }
 
-export interface AuditSummary {
+interface AuditSummary {
   generatedAt: string
   projectRoot: string
   thresholdSec: number
@@ -57,7 +57,7 @@ export interface AuditSummary {
   results: ProjectAuditResult[]
 }
 
-export interface RunTypeAuditOptions {
+interface RunTypeAuditOptions {
   projectRoot: string
   thresholdSec: number
   traceDir?: string

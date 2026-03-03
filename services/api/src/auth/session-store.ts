@@ -51,7 +51,7 @@ async function cacheSessionState(sessionId: string, state: 'active' | 'revoked')
   }
 }
 
-export async function ensureAuthSession(input: {
+async function ensureAuthSession(input: {
   userId: string;
   sessionState?: string | undefined;
   amr?: string[] | undefined;
@@ -107,7 +107,7 @@ export async function ensureAuthSession(input: {
   return created;
 }
 
-export async function issueRefreshToken(input: {
+async function issueRefreshToken(input: {
   sessionId: string;
   familyId?: string | undefined;
   parentId?: string | undefined;
@@ -134,7 +134,7 @@ export async function issueRefreshToken(input: {
   return { rawToken: raw, record: created };
 }
 
-export async function revokeRefreshFamily(familyId: string) {
+async function revokeRefreshFamily(familyId: string) {
   await db
     .update(authRefreshTokens)
     .set({ revokedAt: nowIso() })

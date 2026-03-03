@@ -22,8 +22,8 @@ const serverSchema = z.object({
   VITE_FEATURE_AI_SDK_SPEECH: z.string().optional(),
 });
 
-export const clientEnv = createClientEnv(clientSchema, 'notesClient');
+const clientEnv = createClientEnv(clientSchema, 'notesClient');
 export const serverEnv = createServerEnv(serverSchema, 'notesServer');
 
-export type ClientEnv = z.infer<typeof clientSchema>;
-export type ServerEnv = z.infer<typeof serverSchema>;
+type ClientEnv = z.infer<typeof clientSchema>;
+type ServerEnv = z.infer<typeof serverSchema>;

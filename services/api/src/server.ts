@@ -6,8 +6,10 @@ import { isServiceError } from '@hominem/services';
 import { redis } from '@hominem/services/redis';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
+import { apiReference } from '@scalar/hono-api-reference';
 import { Queue } from 'bullmq';
 import { Hono } from 'hono';
+import { openAPIRouteHandler } from 'hono-openapi';
 import { cors } from 'hono/cors';
 import { logger as honoLogger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
@@ -82,7 +84,19 @@ export function createServer() {
   app.use(
     '*',
     cors({
-      origin: [env.API_URL, env.ROCCO_URL, env.NOTES_URL, env.FINANCE_URL],
+      origin: (origin) => {
+        const allowedOrigins = [
+          env.API_URL,
+          env.ROCCO_URL,
+          env.NOTES_URL,
+          env.FINANCE_URL,
+          'http://localhost:4444',
+          'http://localhost:4445',
+          'http://localhost:4446',
+          'https://auth.ponti.io',
+        ];
+        return allowedOrigins.includes(origin || '') ? origin : '';
+      },
       credentials: true,
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     }),
@@ -131,6 +145,67 @@ export function createServer() {
     });
   });
 
+  // OpenAPI 3.1 specification endpoint with security schemes
+  app.get(
+    '/openapi.json',
+    openAPIRouteHandler(app, {
+      documentation: {
+        openapi: '3.1.0',
+        info: {
+          title: 'Hominem API',
+          version: '1.0.0',
+          description: 'Personal productivity and life management API',
+          contact: {
+            name: 'Hominem Support',
+            email: 'code@hominem.io',
+          },
+        },
+        servers: [
+          {
+            url: env.API_URL,
+            description: 'Production API server',
+          },
+          {
+            url: 'http://localhost:4040',
+            description: 'Local development server',
+          },
+        ],
+        components: {
+          securitySchemes: {
+            bearerAuth: {
+              type: 'http',
+              scheme: 'bearer',
+              bearerFormat: 'JWT',
+              description: 'JWT token for authentication',
+            },
+          },
+        },
+        security: [
+          {
+            bearerAuth: [],
+          },
+        ],
+      },
+    }),
+  );
+
+  // Scalar API documentation UI
+  app.get(
+    '/docs',
+    apiReference({
+      theme: 'saturn',
+      url: '/openapi.json',
+      metaData: {
+        title: 'Hominem API Documentation',
+      },
+      layout: 'classic',
+      defaultHttpClient: {
+        targetKey: 'js',
+        clientKey: 'fetch',
+      },
+    }),
+  );
+
   // Global error handler - must be after routes
   app.onError((err, c) => {
     logger.error('[services/api] Error', { error: err });
@@ -157,7 +232,7 @@ export function createServer() {
   return app;
 }
 
-export async function startServer() {
+async function startServer() {
   // Initialize Sentry first
   initSentry();
 

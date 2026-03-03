@@ -11,7 +11,7 @@ const pdfParse = require('pdf-parse');
 
 const CHUNK_SIZE = 4096;
 
-export function splitIntoChunks(content: string) {
+function splitIntoChunks(content: string) {
   const chunks: string[] = [];
   for (let i = 0; i < content.length; i += CHUNK_SIZE) {
     chunks.push(content.slice(i, i + CHUNK_SIZE));
@@ -19,12 +19,12 @@ export function splitIntoChunks(content: string) {
   return chunks;
 }
 
-export async function getPDFData(content: Buffer): Promise<PDFParseResult> {
+async function getPDFData(content: Buffer): Promise<PDFParseResult> {
   const pdfData = await pdfParse(content);
   return pdfData;
 }
 
-export async function getAttachmentText(
+async function getAttachmentText(
   attachment: Attachment,
 ): Promise<{ text: string; pages: number }> {
   const { content } = attachment;
@@ -40,7 +40,7 @@ export async function getAttachmentText(
   return { text: content.toString('utf-8'), pages: 1 };
 }
 
-export async function processAttachment(attachment: Attachment): Promise<string | null> {
+async function processAttachment(attachment: Attachment): Promise<string | null> {
   const { filename } = attachment;
   if (!filename || !attachment.content) {
     return null;

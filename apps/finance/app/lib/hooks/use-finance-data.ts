@@ -18,7 +18,7 @@ export interface FilterArgs {
   description?: string | undefined;
 }
 
-export interface UseFinanceAccountsOptions {
+interface UseFinanceAccountsOptions {
   initialData?: AccountListOutput;
 }
 
@@ -103,7 +103,7 @@ export function useAccountById(id: string, options?: { initialData?: AccountGetO
   };
 }
 
-export interface UseFinanceTransactionsOptions {
+interface UseFinanceTransactionsOptions {
   filters?: FilterArgs;
   sortOptions?: SortOption[];
   page?: number;

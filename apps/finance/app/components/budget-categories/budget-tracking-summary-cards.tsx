@@ -9,7 +9,7 @@ interface BudgetTrackingSummaryCardsProps {
   totalActual: number;
 }
 
-export function BudgetTrackingSummaryCards({
+function BudgetTrackingSummaryCards({
   totalAllocated,
   totalActual,
 }: BudgetTrackingSummaryCardsProps) {

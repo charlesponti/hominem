@@ -21,7 +21,7 @@ export type Place = PlaceCreateOutput | PlaceGetDetailsByIdOutput;
 export type PlaceWithLists = Place & { lists: ListOutput[] };
 
 // Item type - app-specific shape for list items
-export type Item = {
+type Item = {
   id: string;
   listId: string;
   name: string;

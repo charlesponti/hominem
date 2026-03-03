@@ -36,7 +36,7 @@ const createOptimisticInvite = (variables: InvitesCreateInput): InvitesCreateOut
 /**
  * Get received invites
  */
-export const useReceivedInvites = (token?: string) =>
+const useReceivedInvites = (token?: string) =>
   useHonoQuery<InvitesGetReceivedOutput>(queryKeys.invites.received(token), async (client) => {
     const res = await client.api.invites.received.$post({ json: { token } });
     return res.json() as Promise<InvitesGetReceivedOutput>;
@@ -54,7 +54,7 @@ export const useSentInvites = () =>
 /**
  * Get invites for a specific list
  */
-export const useListInvites = (listId: string | undefined) =>
+const useListInvites = (listId: string | undefined) =>
   useHonoQuery<InvitesGetByListOutput>(
     queryKeys.invites.byList(listId || ''),
     async (client) => {
@@ -198,7 +198,7 @@ export const useAcceptInvite = () => {
 /**
  * Decline invite
  */
-export const useDeclineInvite = () => {
+const useDeclineInvite = () => {
   const utils = useHonoUtils();
   return useHonoMutation<InvitesDeclineOutput, InvitesDeclineInput>(
     async (client, variables: InvitesDeclineInput) => {

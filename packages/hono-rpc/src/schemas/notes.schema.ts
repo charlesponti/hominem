@@ -18,21 +18,21 @@ export const NoteContentTypeSchema = DbNoteContentTypeSchema.describe('NoteConte
 export const NoteStatusSchema = DbNoteStatusSchema.describe('NoteStatus');
 export const AllContentTypeSchema = DbAllContentTypeSchema.describe('AllContentType');
 export const ContentTagSchema = DbContentTagSchema.extend({});
-export const PublishingMetadataSchema = DbPublishingMetadataSchema.extend({});
+const PublishingMetadataSchema = DbPublishingMetadataSchema.extend({});
 export const NoteAnalysisSchema = DbNoteAnalysisSchema.extend({});
 export const TaskStatusSchema = DbTaskStatusSchema.describe('TaskStatus');
 export const TaskPrioritySchema = DbTaskPrioritySchema.describe('TaskPriority');
 
-export type NoteContentType = z.infer<typeof NoteContentTypeSchema>;
-export type NoteStatus = z.infer<typeof NoteStatusSchema>;
+type NoteContentType = z.infer<typeof NoteContentTypeSchema>;
+type NoteStatus = z.infer<typeof NoteStatusSchema>;
 export type AllContentType = z.infer<typeof AllContentTypeSchema>;
 export type ContentTag = z.infer<typeof ContentTagSchema>;
-export type PublishingMetadata = z.infer<typeof PublishingMetadataSchema>;
+type PublishingMetadata = z.infer<typeof PublishingMetadataSchema>;
 export type NoteAnalysis = z.infer<typeof NoteAnalysisSchema>;
 export type TaskStatus = z.infer<typeof TaskStatusSchema>;
 export type TaskPriority = z.infer<typeof TaskPrioritySchema>;
 
-export type JsonValue =
+type JsonValue =
   | string
   | number
   | boolean
@@ -51,12 +51,12 @@ const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
   ]),
 );
 
-export const NoteMentionSchema = z.object({
+const NoteMentionSchema = z.object({
   id: z.string(),
   name: z.string(),
 });
 
-export type NoteMention = z.infer<typeof NoteMentionSchema>;
+type NoteMention = z.infer<typeof NoteMentionSchema>;
 
 export const CreateNoteInputSchema = z.object({
   type: NoteContentTypeSchema.default('note'),
@@ -81,7 +81,7 @@ export const UpdateNoteInputSchema = z.object({
   analysis: NoteAnalysisSchema.optional().nullish(),
 });
 
-export const SyncNoteItemSchema = z.object({
+const SyncNoteItemSchema = z.object({
   id: z.string().uuid().optional(),
   type: NoteContentTypeSchema,
   status: NoteStatusSchema.optional(),

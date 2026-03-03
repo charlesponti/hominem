@@ -6,7 +6,7 @@ interface BudgetCategoriesGridProps {
   onDeleteCategory: (category: DisplayBudgetCategory) => void;
 }
 
-export function BudgetCategoriesGrid({
+function BudgetCategoriesGrid({
   categories,
   onEditCategory,
   onDeleteCategory,

@@ -43,7 +43,7 @@ export const useBudgetCategories = () => {
   return query;
 };
 
-export const useBudgetCategoriesWithSpending = (monthYear: string) => {
+const useBudgetCategoriesWithSpending = (monthYear: string) => {
   const query = useHonoQuery<BudgetCategoriesListWithSpendingOutput>(
     ['finance', 'budget', 'categories', 'list-with-spending', monthYear],
     async (client) => {
@@ -58,7 +58,7 @@ export const useBudgetCategoriesWithSpending = (monthYear: string) => {
   return query;
 };
 
-export const useBudgetCategory = (id: string) => {
+const useBudgetCategory = (id: string) => {
   const query = useHonoQuery<BudgetCategoryGetOutput>(
     ['finance', 'budget', 'categories', 'get', id],
     async (client) => {
@@ -73,7 +73,7 @@ export const useBudgetCategory = (id: string) => {
   return query;
 };
 
-export const useBudgetTracking = (monthYear: string) => {
+const useBudgetTracking = (monthYear: string) => {
   const query = useHonoQuery<BudgetTrackingOutput>(
     ['finance', 'budget', 'tracking', monthYear],
     async (client) => {
@@ -103,7 +103,7 @@ export const useBudgetHistory = (params: { months: number }) => {
 };
 
 // Mutation hooks
-export const useCreateBudgetCategory = () => {
+const useCreateBudgetCategory = () => {
   const utils = useHonoUtils();
 
   return useHonoMutation<BudgetCategoryCreateOutput, BudgetCategoryCreateInput>(
@@ -123,7 +123,7 @@ export const useCreateBudgetCategory = () => {
   );
 };
 
-export const useUpdateBudgetCategory = () => {
+const useUpdateBudgetCategory = () => {
   const utils = useHonoUtils();
 
   return useHonoMutation<BudgetCategoryUpdateOutput, BudgetCategoryUpdateInput>(
@@ -143,7 +143,7 @@ export const useUpdateBudgetCategory = () => {
   );
 };
 
-export const useDeleteBudgetCategory = () => {
+const useDeleteBudgetCategory = () => {
   const utils = useHonoUtils();
 
   return useHonoMutation<BudgetCategoryDeleteOutput, { id: string }>(
@@ -163,7 +163,7 @@ export const useDeleteBudgetCategory = () => {
   );
 };
 
-export const useBulkCreateBudgetCategories = () => {
+const useBulkCreateBudgetCategories = () => {
   const utils = useHonoUtils();
 
   return useHonoMutation<BudgetBulkCreateOutput, BudgetBulkCreateInput>(

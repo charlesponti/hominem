@@ -21,5 +21,5 @@ const serverSchema = z.object({
 export const clientEnv = createClientEnv(clientSchema, 'roccoClient');
 export const serverEnv = createServerEnv(serverSchema, 'roccoServer');
 
-export type ClientEnv = z.infer<typeof clientSchema>;
-export type ServerEnv = z.infer<typeof serverSchema>;
+type ClientEnv = z.infer<typeof clientSchema>;
+type ServerEnv = z.infer<typeof serverSchema>;

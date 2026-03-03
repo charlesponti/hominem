@@ -5,9 +5,4 @@
  */
 
 export { HonoProvider } from './provider';
-export {
-  useHonoClient,
-  useHonoUtils,
-  useHonoQuery,
-  useHonoMutation,
-} from '@hominem/hono-client/react';
+;

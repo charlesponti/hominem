@@ -12,11 +12,11 @@ import { type Candidates, CandidatesSchema, type SubmissionAttachment } from '..
 import { parseEmail, validateEmailBody } from '../services/email.service';
 import { processAttachments } from './smart-input.worker.utils';
 
-export interface SmartInputJobData {
+interface SmartInputJobData {
   emailContent: string;
 }
 
-export function mergeWriterData(writerData: Candidates, attachmentResults: SubmissionAttachment[]) {
+function mergeWriterData(writerData: Candidates, attachmentResults: SubmissionAttachment[]) {
   logger.info('Starting mergeWriterData', {
     writerCount: writerData.candidates.length,
     attachmentCount: attachmentResults.length,
@@ -78,7 +78,7 @@ export async function processSmartInputEmail(emailContent: string) {
   }
 }
 
-export async function processEmailBody(emailBody: string): Promise<Candidates> {
+async function processEmailBody(emailBody: string): Promise<Candidates> {
   logger.info('Processing email body', {
     bodyLength: emailBody.length,
   });

@@ -5,7 +5,7 @@ interface BudgetSummaryProps {
   totalSpent: number;
 }
 
-export function BudgetSummary({ totalBudget, totalSpent }: BudgetSummaryProps) {
+function BudgetSummary({ totalBudget, totalSpent }: BudgetSummaryProps) {
   const remaining = totalBudget - totalSpent;
   const spentPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
 

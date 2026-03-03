@@ -7,16 +7,16 @@ import { env } from '../env';
 import { cache } from './redis';
 
 // PKCE utilities
-export function generateCodeVerifier() {
+function generateCodeVerifier() {
   return randomBytes(32).toString('base64url');
 }
 
-export function generateCodeChallenge(verifier: string) {
+function generateCodeChallenge(verifier: string) {
   return createHash('sha256').update(verifier).digest('base64url');
 }
 
 // Redis-based PKCE store functions
-export async function storePkceVerifier(state: string, codeVerifier: string): Promise<void> {
+async function storePkceVerifier(state: string, codeVerifier: string): Promise<void> {
   // Store with 10 minute expiration (OAuth flows typically complete within 5-10 minutes)
   await cache.setex(`pkce:${state}`, 600, codeVerifier);
 }
@@ -33,18 +33,18 @@ export async function getPkceVerifier(state: string): Promise<string | null> {
 
 // Request schemas
 
-export const TwitterDisconnectSchema = z.object({
+const TwitterDisconnectSchema = z.object({
   accountId: z.string().min(1),
 });
 
-export const TwitterPostSchema = z.object({
+const TwitterPostSchema = z.object({
   text: z.string().min(1).max(280),
   contentId: z.uuid().optional(), // Optional: link to existing content
   saveAsContent: z.boolean().default(true), // Whether to save as content record
 });
 
 // Twitter API response types
-export interface TwitterTweetResponse {
+interface TwitterTweetResponse {
   data: {
     id: string;
     text: string;
@@ -52,7 +52,7 @@ export interface TwitterTweetResponse {
   };
 }
 
-export interface TwitterTweetsResponse {
+interface TwitterTweetsResponse {
   data: Array<{
     id: string;
     text: string;
@@ -117,12 +117,12 @@ export type TwitterUserResponse = {
   };
 };
 
-export type TwitterAccount = AccountRecord;
+type TwitterAccount = AccountRecord;
 
 /**
  * Checks if a Twitter token is expired or will expire soon
  */
-export function isTokenExpired(expiresAt: Date | null, bufferMinutes = 5): boolean {
+function isTokenExpired(expiresAt: Date | null, bufferMinutes = 5): boolean {
   if (!expiresAt) {
     return false;
   }
@@ -133,7 +133,7 @@ export function isTokenExpired(expiresAt: Date | null, bufferMinutes = 5): boole
 /**
  * Refreshes an expired Twitter access token using the refresh token
  */
-export async function refreshTwitterToken(twitterAccount: TwitterAccount): Promise<{
+async function refreshTwitterToken(twitterAccount: TwitterAccount): Promise<{
   accessToken: string;
   refreshToken: string | null;
   expiresAt: Date | null;
@@ -189,9 +189,10 @@ export async function refreshTwitterToken(twitterAccount: TwitterAccount): Promi
 /**
  * Gets a valid access token for a Twitter account, refreshing if necessary
  */
-export async function getValidTwitterToken(twitterAccount: TwitterAccount): Promise<string> {
+async function getValidTwitterToken(twitterAccount: TwitterAccount): Promise<string> {
   // Check if token is expired or will expire soon
-  if (isTokenExpired(twitterAccount.expiresAt)) {
+  const expiresAt = twitterAccount.expiresAt ? new Date(twitterAccount.expiresAt) : null;
+  if (isTokenExpired(expiresAt)) {
     const { accessToken } = await refreshTwitterToken(twitterAccount);
     return accessToken;
   }
@@ -237,7 +238,7 @@ export async function getValidTwitterToken(twitterAccount: TwitterAccount): Prom
  *   }
  * )
  */
-export async function makeTwitterApiRequest(
+async function makeTwitterApiRequest(
   twitterAccount: TwitterAccount,
   url: string,
   options: RequestInit = {},

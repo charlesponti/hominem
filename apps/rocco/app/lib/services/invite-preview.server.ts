@@ -9,7 +9,7 @@ import { createServerHonoClient } from '~/lib/api.server';
  * @param token - The invite token from the URL query parameter
  * @returns Preview data or null if invite not found
  */
-export type InvitePreview = InvitesPreviewOutput;
+type InvitePreview = InvitesPreviewOutput;
 
 export async function buildInvitePreview(
   token: string,

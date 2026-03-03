@@ -19,7 +19,7 @@ const maxConnections = env.DB_MAX_CONNECTIONS ?? 20;
 const idleTimeout = env.DB_IDLE_TIMEOUT ?? 30;
 const maxLifetime = env.DB_MAX_LIFETIME ?? 3600;
 
-export const pool = postgres(DATABASE_URL, {
+const pool = postgres(DATABASE_URL, {
   max: maxConnections,
   idle_timeout: idleTimeout,
   max_lifetime: maxLifetime,
@@ -59,10 +59,6 @@ export function getDatabaseUrl(): string {
   }
   return DATABASE_URL;
 }
-
-export const takeOne = <T>(values: T[]): T | undefined => {
-  return values[0];
-};
 
 export const takeUniqueOrThrow = <T>(values: T[]): T => {
   if (values.length === 0) {

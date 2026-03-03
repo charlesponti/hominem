@@ -22,7 +22,7 @@ export const assessMentalWellnessOutputSchema = z.object({
   positiveAffirmation: z.string(),
 });
 
-export class MentalHealthService {
+class MentalHealthService {
   async assess(_: z.infer<typeof assessMentalWellnessInputSchema>) {
     return {
       overallAssessment: 'OK',

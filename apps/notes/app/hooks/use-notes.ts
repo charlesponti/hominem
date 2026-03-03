@@ -110,7 +110,7 @@ export function useDeleteNote() {
   );
 }
 
-export function useSyncNotes() {
+function useSyncNotes() {
   const utils = useHonoUtils();
 
   return useHonoMutation<NotesSyncOutput, NotesSyncInput>(

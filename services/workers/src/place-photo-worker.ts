@@ -10,7 +10,7 @@ import { HealthService } from './health.service';
 
 const CONCURRENCY = 2;
 
-export interface PlacePhotoEnrichPayload {
+interface PlacePhotoEnrichPayload {
   placeId: string;
   forceFresh?: boolean;
 }
@@ -104,4 +104,4 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 logger.info('Place Photo Enrichment worker started');
 
-export { placeWorker };
+;

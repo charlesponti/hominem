@@ -71,7 +71,7 @@ const getCachedPlace = (
 /**
  * Create new place
  */
-export const useCreatePlace = (
+const useCreatePlace = (
   options?: HonoMutationOptions<PlaceCreateOutput, PlaceCreateInput>,
 ) => {
   const utils = useHonoUtils();
@@ -144,7 +144,7 @@ export const useCreatePlace = (
 /**
  * Update place
  */
-export const useUpdatePlace = (
+const useUpdatePlace = (
   options?: HonoMutationOptions<PlaceUpdateOutput, PlaceUpdateInput>,
 ) => {
   const utils = useHonoUtils();
@@ -223,7 +223,7 @@ export const useUpdatePlace = (
 /**
  * Delete place
  */
-export const useDeletePlace = (
+const useDeletePlace = (
   options?: HonoMutationOptions<PlaceDeleteOutput, PlaceDeleteInput>,
 ) => {
   const utils = useHonoUtils();
@@ -812,7 +812,7 @@ export const useDeletePlaceVisit = (
 /**
  * Get visit statistics
  */
-export const usePlaceVisitStats = (placeId: string | undefined) => {
+const usePlaceVisitStats = (placeId: string | undefined) => {
   if (!placeId) {
     // Return a disabled query when placeId is undefined
     return useHonoQuery<PlaceGetVisitStatsOutput>(

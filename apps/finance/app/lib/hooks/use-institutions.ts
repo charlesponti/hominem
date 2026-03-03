@@ -12,7 +12,7 @@ import { useHonoMutation, useHonoQuery, useHonoUtils } from '~/lib/api';
 /**
  * Hook for creating a new institution with automatic cache invalidation
  */
-export function useCreateInstitution() {
+function useCreateInstitution() {
   const utils = useHonoUtils();
   const mutation = useHonoMutation<InstitutionCreateOutput, InstitutionCreateInput>(
     async (client, variables) => {
@@ -40,7 +40,7 @@ export function useCreateInstitution() {
 }
 
 // Hook for getting accounts grouped by institution
-export function useAccountsByInstitution() {
+function useAccountsByInstitution() {
   const query = useHonoQuery<AccountsWithPlaidOutput>(
     ['finance', 'accounts', 'with-plaid'],
     async (client) => {
@@ -88,19 +88,19 @@ export function useAccountsByInstitution() {
 }
 
 // Export hooks for simple queries
-export const useInstitutionConnections = () =>
+const useInstitutionConnections = () =>
   useHonoQuery<AccountConnectionsOutput>(['finance', 'accounts', 'connections'], async (client) => {
     const res = await client.api.finance.accounts.connections.$post({ json: {} });
     return res.json() as unknown as Promise<AccountConnectionsOutput>;
   });
 
-export const useInstitutionAccounts = () =>
+const useInstitutionAccounts = () =>
   useHonoQuery<AccountsWithPlaidOutput>(['finance', 'accounts', 'with-plaid'], async (client) => {
     const res = await client.api.finance.accounts['with-plaid'].$post({ json: {} });
     return res.json() as unknown as Promise<AccountsWithPlaidOutput>;
   });
 
-export const useInstitutionAccountsByInstitution = (institutionId: string) =>
+const useInstitutionAccountsByInstitution = (institutionId: string) =>
   useHonoQuery<AccountInstitutionAccountsOutput>(
     ['finance', 'accounts', 'institution-accounts', institutionId],
     async (client) => {

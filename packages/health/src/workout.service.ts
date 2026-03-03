@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-export const ExerciseSchema = z.object({
+const ExerciseSchema = z.object({
   name: z.string(),
   sets: z.number(),
   reps: z.string(),
@@ -30,7 +30,7 @@ export const recommendWorkoutOutputSchema = z.object({
   notes: z.array(z.string()),
 });
 
-export class WorkoutService {
+class WorkoutService {
   async recommend(_: z.infer<typeof recommendWorkoutInputSchema>) {
     return { title: 'Quick Workout', duration: '30 minutes', exercises: [], notes: [] };
   }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-export type Location = {
+type Location = {
   latitude: number;
   longitude: number;
 };

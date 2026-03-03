@@ -25,12 +25,12 @@ export type GooglePlacesApiResponse = {
   priceLevel?: string | number | null;
 };
 
-export interface BaseModel {
+interface BaseModel {
   createdAt: string;
   updatedAt: string;
 }
 
-export type SearchPlace = {
+type SearchPlace = {
   address: string;
   googleMapsId: string;
   latitude: number;

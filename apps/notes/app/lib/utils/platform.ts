@@ -1,4 +1,4 @@
-export function getOS() {
+function getOS() {
   const userAgent = window.navigator.userAgent;
   const platform = window.navigator.platform;
   const macosPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];

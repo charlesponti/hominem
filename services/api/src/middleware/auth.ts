@@ -69,7 +69,7 @@ function setCachedUser(user: HominemUser) {
   });
 }
 
-export async function getHominemUserFromJwt(token: string): Promise<HominemUser | null> {
+async function getHominemUserFromJwt(token: string): Promise<HominemUser | null> {
   const claims = await verifyAccessToken(token);
   const cached = getCachedUser(claims.sub);
   if (cached) {

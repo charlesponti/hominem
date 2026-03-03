@@ -6,7 +6,7 @@ import {
   getAccountById,
 } from '@hominem/finance-services';
 import { NotFoundError } from '@hominem/services';
-import { zValidator } from '@hono/zod-validator';
+import { describeRoute, resolver, validator as zValidator } from 'hono-openapi';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
@@ -18,6 +18,7 @@ import type {
   TransactionUpdateOutput,
 } from '../types/finance.types';
 
+import { commonResponses } from '../components/responses/common';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
   transactionCreateSchema,
@@ -38,7 +39,25 @@ export const transactionsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
 
   // POST /list - Query transactions
-  .post('/list', zValidator('json', transactionListSchema), async (c) => {
+  .post(
+    '/list',
+    describeRoute({
+      description: 'Query and filter transactions',
+      tags: ['Finance', 'Transactions'],
+      responses: {
+        200: {
+          description: 'List of transactions matching the query',
+          content: {
+            'application/json': {
+              schema: resolver(transactionListSchema),
+            },
+          },
+        },
+        ...commonResponses,
+      },
+    }),
+    zValidator('json', transactionListSchema),
+    async (c) => {
     const input = c.req.valid('json') as z.infer<typeof transactionListSchema>;
     const userId = c.get('userId')!;
 

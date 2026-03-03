@@ -52,7 +52,6 @@
     "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@hono/zod-validator": "^0.7.6",
-    "@supabase/supabase-js": "2.88.0",
     "ai": "^4.3.0",
     "hono": "4.11.6",
     "plaid": "^28.0.0",

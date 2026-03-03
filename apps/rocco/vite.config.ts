@@ -8,34 +8,34 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     reactRouter(),
-      VitePWA({
-        registerType: 'prompt',
-        injectRegister: false,
-        devOptions: {
-          enabled: false,
-        },
-        manifest: {
-          name: 'Rocco',
-          short_name: 'Rocco',
-          description: 'Your personal place list',
-          theme_color: '#000000',
-          background_color: '#000000',
-          display: 'standalone',
-          start_url: '/',
-          icons: [
-            {
-              src: '/icons/favicon-196x196.png',
-              sizes: '196x196',
-              type: 'image/png',
-            },
-            {
-              src: '/icons/favicon-128.png',
-              sizes: '128x128',
-              type: 'image/png',
-            },
-          ],
-        },
-        workbox: {
+    VitePWA({
+      registerType: 'prompt',
+      injectRegister: false,
+      devOptions: {
+        enabled: false,
+      },
+      manifest: {
+        name: 'Rocco',
+        short_name: 'Rocco',
+        description: 'Your personal place list',
+        theme_color: '#000000',
+        background_color: '#000000',
+        display: 'standalone',
+        start_url: '/',
+        icons: [
+          {
+            src: '/icons/favicon-196x196.png',
+            sizes: '196x196',
+            type: 'image/png',
+          },
+          {
+            src: '/icons/favicon-128.png',
+            sizes: '128x128',
+            type: 'image/png',
+          },
+        ],
+      },
+      workbox: {
         skipWaiting: false,
         clientsClaim: false,
         cleanupOutdatedCaches: true,
@@ -91,7 +91,17 @@ export default defineConfig({
     rollupOptions: {},
   },
   server: {
-    port: 4446,
-    strictPort: true,
+    port: 4446, // Set this to the specific port for the app (4444, 4445, 4446)
+    host: '127.0.0.1', // Match the IPv4 address used in Caddyfile
+
+    // Crucial: Tell Vite to look for HMR via the Proxy URL
+    hmr: {
+      protocol: 'wss',
+      host: 'rocco.hominem.test', // Change this per app (e.g., finance.hominem.test)
+      clientPort: 443,
+    },
+
+    // We already removed strictPort per your "Issue 5" discovery
+    allowedHosts: ['.hominem.test'],
   },
 });

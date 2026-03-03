@@ -1,6 +1,6 @@
-export type TraceTags = Record<string, string | number | boolean | undefined>;
+type TraceTags = Record<string, string | number | boolean | undefined>;
 
-export type TraceEntry = {
+type TraceEntry = {
   name: string;
   start: number;
   duration: number;
@@ -53,8 +53,8 @@ export const endTrace = (handle: TraceHandle | null | undefined, extraTags?: Tra
   }
 };
 
-export const getTraceEntries = () => traces.slice();
+const getTraceEntries = () => traces.slice();
 
-export const clearTraceEntries = () => {
+const clearTraceEntries = () => {
   traces.length = 0;
 };

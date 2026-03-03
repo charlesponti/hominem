@@ -2,14 +2,14 @@ import { useCallback, useState } from 'react';
 
 import type { UploadedFile, UploadResponse } from '~/lib/types/upload.js';
 
-export interface UploadState {
+interface UploadState {
   isUploading: boolean;
   progress: number;
   uploadedFiles: UploadedFile[];
   errors: string[];
 }
 
-export interface UseFileUploadReturn {
+interface UseFileUploadReturn {
   uploadState: UploadState;
   uploadFiles: (files: FileList | File[]) => Promise<UploadedFile[]>;
   removeFile: (fileId: string) => void;
