@@ -1,3 +1,6 @@
+import { db } from '@hominem/db';
+import { and, desc, eq, or, type SQLWrapper, sql } from '@hominem/db';
+import { notes } from '@hominem/db/schema/notes';
 import type { NoteStatus } from '@hominem/db/types/notes';
 import type {
   NoteOutput,
@@ -6,12 +9,7 @@ import type {
   PublishingMetadata,
 } from '@hominem/db/types/notes';
 
-import { db } from '@hominem/db';
-import { and, desc, eq, or, type SQLWrapper, sql } from '@hominem/db';
-import { notes } from '@hominem/db/schema/notes';
-
 import type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput } from './types';
-
 import {
   CreateNoteInputSchema,
   ListNotesInputSchema,

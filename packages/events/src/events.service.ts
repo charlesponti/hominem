@@ -1,15 +1,15 @@
+import { db } from '@hominem/db';
+import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, like, lte, or } from '@hominem/db';
+import { type SQL } from '@hominem/db';
+import { events, eventsTags, eventsUsers } from '@hominem/db/schema/calendar';
+import { contacts } from '@hominem/db/schema/contacts';
+import { place } from '@hominem/db/schema/places';
+import { tags } from '@hominem/db/schema/tags';
 import type {
   EventOutput as DbEventOutput,
   EventInput as DbEventInput,
   EventTypeEnum,
 } from '@hominem/db/types/calendar';
-
-import { db } from '@hominem/db';
-import { and, asc, desc, eq, gte, inArray, isNotNull, isNull, like, lte, or } from '@hominem/db';
-import { events, eventsTags, eventsUsers } from '@hominem/db/schema/calendar';
-import { contacts } from '@hominem/db/schema/contacts';
-import { place } from '@hominem/db/schema/places';
-import { tags } from '@hominem/db/schema/tags';
 import {
   getPeopleForEvent,
   getPeopleForEvents,
@@ -23,7 +23,6 @@ import {
   removeTagsFromEvent,
   syncTagsForEvent,
 } from '@hominem/services/tags';
-import { type SQL } from '@hominem/db';
 
 export interface EventFilters {
   tagNames?: string[] | undefined;

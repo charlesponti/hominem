@@ -2,9 +2,8 @@ import { Button } from '@hominem/ui/button';
 import { Check, Link as LinkIcon, Mail } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
-import type { SentInvite } from '~/lib/types';
-
 import { clientEnv } from '~/lib/env';
+import type { SentInvite } from '~/lib/types';
 
 import UserAvatar from '../user-avatar';
 import DeleteInviteButton from './delete-invite-button';

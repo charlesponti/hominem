@@ -1,6 +1,5 @@
-import type { ComponentType } from 'react';
-
 import { screen, waitFor } from '@testing-library/react';
+import type { ComponentType } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 
 import Account from '~/routes/account';

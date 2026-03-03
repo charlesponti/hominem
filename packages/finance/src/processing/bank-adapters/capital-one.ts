@@ -1,6 +1,7 @@
+import crypto from 'node:crypto';
+
 import { type TransactionType, TransactionTypes } from '@hominem/db/schema/finance';
 import { type FinanceTransactionInput } from '@hominem/db/types/finance';
-import crypto from 'node:crypto';
 
 export interface CapitalOneTransaction {
   'Account Number': string;

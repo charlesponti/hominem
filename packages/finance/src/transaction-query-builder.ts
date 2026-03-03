@@ -12,12 +12,11 @@
  * - Uses generated search_vector column for fast full-text search
  */
 
-import type { TransactionType } from '@hominem/db/types/finance';
-import type { FinanceTransactionOutput } from '@hominem/db/types/finance';
-
 import { db, and, asc, desc, eq, gte, lte, like, sql, type SQL } from '@hominem/db';
 import { financeAccounts, transactions } from '@hominem/db/schema/finance';
 import { AccountMetadataSchema } from '@hominem/db/schema/shared';
+import type { TransactionType } from '@hominem/db/types/finance';
+import type { FinanceTransactionOutput } from '@hominem/db/types/finance';
 
 export interface TransactionQueryResult {
   data: Array<

@@ -1,4 +1,4 @@
-import type { ItemOutput } from '@hominem/db/types/items';
+import crypto from 'node:crypto';
 
 import { db } from '@hominem/db';
 import { and, desc, eq, inArray, sql } from '@hominem/db';
@@ -6,13 +6,12 @@ import { item } from '@hominem/db/schema/items';
 import { list, userLists } from '@hominem/db/schema/lists';
 import { place } from '@hominem/db/schema/places';
 import { users } from '@hominem/db/schema/users';
+import type { ItemOutput } from '@hominem/db/types/items';
 import { getHominemPhotoURL } from '@hominem/utils/images';
 import { logger } from '@hominem/utils/logger';
-import crypto from 'node:crypto';
-
-import type { ListPlace } from './types';
 
 import { getListOwnedByUser } from './list-queries.service';
+import type { ListPlace } from './types';
 
 /**
  * Fetches all places associated with a specific list

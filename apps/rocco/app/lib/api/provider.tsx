@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
+'use client';
 
 import { useAuthContext } from '@hominem/auth';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
 import { createHonoClient } from '@hominem/hono-rpc/client';
+import type { ReactNode } from 'react';
 
 /**
  * Hono Provider for Rocco App

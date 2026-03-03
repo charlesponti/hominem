@@ -9,9 +9,8 @@ import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
-import type { AppEnv } from '../../../server';
-
 import { plaidSyncQueue } from '../../../lib/queues';
+import type { AppEnv } from '../../../server';
 
 export const financePlaidSyncRoutes = new Hono<AppEnv>();
 

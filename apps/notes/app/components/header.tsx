@@ -1,3 +1,5 @@
+'use client';
+
 import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import {
@@ -6,13 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@hominem/ui/components/ui/dropdown-menu';
-import {
-  Bot,
-  LogOut,
-  MenuIcon,
-  Settings,
-  Sparkles,
-} from 'lucide-react';
+import { Bot, LogOut, MenuIcon, Settings, Sparkles } from 'lucide-react';
 import { useCallback } from 'react';
 import { href, Link, useNavigate } from 'react-router';
 

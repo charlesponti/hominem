@@ -1,5 +1,4 @@
 import type { ListPlace as DataListPlace } from '@hominem/lists-services';
-
 import { createElement } from 'react';
 import { vi } from 'vitest';
 

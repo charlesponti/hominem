@@ -1,12 +1,11 @@
+import { db } from '@hominem/db';
+import { and, eq, inArray, sql } from '@hominem/db';
+import { events } from '@hominem/db/schema/calendar';
 import type {
   EventInput as DbEventInput,
   EventOutput as DbEventOutput,
   EventSourceEnum,
 } from '@hominem/db/types/calendar';
-
-import { db } from '@hominem/db';
-import { and, eq, inArray, sql } from '@hominem/db';
-import { events } from '@hominem/db/schema/calendar';
 import { logger } from '@hominem/utils/logger';
 import { v7 as uuidv7 } from 'uuid';
 

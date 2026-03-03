@@ -1,5 +1,5 @@
-import { type LoaderFunctionArgs, redirect } from 'react-router';
 import { useRef, useState } from 'react';
+import { type LoaderFunctionArgs, redirect } from 'react-router';
 
 import { ChatInput } from '~/components/chat/ChatInput';
 import { ChatMessages } from '~/components/chat/ChatMessages';
@@ -48,20 +48,11 @@ export default function NoteChatPage({ loaderData }: { loaderData: { noteId: str
     <div className="flex flex-col size-full mx-auto text-foreground">
       <div className="flex-1" ref={messagesRef}>
         {chatId ? (
-          <ChatMessages
-            ref={messagesComponentRef}
-            chatId={chatId}
-            status={status}
-            error={error}
-          />
+          <ChatMessages ref={messagesComponentRef} chatId={chatId} status={status} error={error} />
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center p-4">
-            <p className="text-muted-foreground mb-4">
-              Start chatting about this note
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Note ID: {noteId}
-            </p>
+            <p className="text-muted-foreground mb-4">Start chatting about this note</p>
+            <p className="text-sm text-muted-foreground">Note ID: {noteId}</p>
           </div>
         )}
       </div>

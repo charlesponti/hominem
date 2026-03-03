@@ -20,7 +20,12 @@ interface SuggestionProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
   onSuggestionClick?: (suggestion: string) => void;
 }
 
-export function Suggestion({ suggestion, onSuggestionClick, className, ...props }: SuggestionProps) {
+export function Suggestion({
+  suggestion,
+  onSuggestionClick,
+  className,
+  ...props
+}: SuggestionProps) {
   return (
     <Button
       variant="outline"

@@ -1,3 +1,5 @@
+'use client';
+
 import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import {

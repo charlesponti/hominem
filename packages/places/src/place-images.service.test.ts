@@ -12,7 +12,6 @@ vi.mock('sharp', () => ({
 }));
 
 import type { StoredFile } from '@hominem/utils/supabase';
-
 import { placeImagesStorageService } from '@hominem/utils/supabase';
 
 import { isGooglePhotosUrl, savePlacePhoto } from './place-images.service';

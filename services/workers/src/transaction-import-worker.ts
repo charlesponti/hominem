@@ -1,11 +1,10 @@
 import './env.ts';
+import { processTransactionsFromCSVBuffer } from '@hominem/finance-services';
 import type {
   ImportTransactionsJob,
   ImportTransactionsQueuePayload,
   JobStats,
 } from '@hominem/jobs-services';
-
-import { processTransactionsFromCSVBuffer } from '@hominem/finance-services';
 import { redis } from '@hominem/services/redis';
 import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';

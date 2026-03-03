@@ -1,8 +1,7 @@
 'use client';
 
-import { forwardRef, useRef, useState, useEffect, type HTMLAttributes } from 'react';
-
 import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { forwardRef, useRef, useState, useEffect, type HTMLAttributes } from 'react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -120,7 +119,7 @@ export function AudioPlayer({
   return (
     <div className={cn('flex flex-col gap-2 p-3 rounded-lg border', className)} {...props}>
       {src && <audio ref={audioRef} src={src} />}
-      
+
       <div className="flex items-center gap-3">
         <Button type="button" variant="ghost" size="icon" onClick={() => skip(-10)}>
           <SkipBack className="size-4" />
@@ -168,11 +167,7 @@ interface AudioPlayerProgressProps extends HTMLAttributes<HTMLDivElement> {
   progress: number;
 }
 
-export function AudioPlayerProgress({
-  progress,
-  className,
-  ...props
-}: AudioPlayerProgressProps) {
+export function AudioPlayerProgress({ progress, className, ...props }: AudioPlayerProgressProps) {
   return (
     <div className={cn('h-1 bg-muted rounded-full overflow-hidden', className)} {...props}>
       <div

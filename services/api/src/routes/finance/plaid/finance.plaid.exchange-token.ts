@@ -6,10 +6,9 @@ import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import type { AppEnv } from '../../../server';
-
 import { plaidClient } from '../../../lib/plaid';
 import { plaidSyncQueue } from '../../../lib/queues';
+import type { AppEnv } from '../../../server';
 
 export const financePlaidExchangeTokenRoutes = new Hono<AppEnv>();
 

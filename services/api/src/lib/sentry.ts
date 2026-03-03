@@ -1,6 +1,5 @@
-import type { Context, Next } from 'hono';
-
 import * as Sentry from '@sentry/node';
+import type { Context, Next } from 'hono';
 
 function getEnv() {
   return {

@@ -1,5 +1,3 @@
-import type { SortField, SortOption } from '@hominem/ui/hooks';
-
 import { Button } from '@hominem/ui/button';
 import {
   DropdownMenu,
@@ -9,6 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@hominem/ui/components/ui/dropdown-menu';
+import type { SortField, SortOption } from '@hominem/ui/hooks';
 import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu';
 import { ListOrdered, PlusCircle } from 'lucide-react';
 

@@ -13,9 +13,8 @@ import {
 } from '@hominem/ui/components/ui/alert-dialog';
 import { RefreshCcw, Trash2 } from 'lucide-react';
 
-import type { Account } from '~/lib/types/account.types';
-
 import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid';
+import type { Account } from '~/lib/types/account.types';
 
 import { PlaidStatusBadge } from './plaid-status-badge';
 

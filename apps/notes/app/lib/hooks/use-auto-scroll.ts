@@ -1,5 +1,4 @@
 import type { Virtualizer } from '@tanstack/react-virtual';
-
 import { useEffect, useRef } from 'react';
 
 import { scrollToBottom } from '~/lib/utils/scroll';

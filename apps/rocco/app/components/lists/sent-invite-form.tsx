@@ -4,9 +4,8 @@ import { Input } from '@hominem/ui/input';
 import { Label } from '@hominem/ui/label';
 import { type SyntheticEvent, useCallback, useId, useState } from 'react';
 
-import type { SentInvite } from '~/lib/types';
-
 import { useCreateInvite } from '~/lib/hooks/use-invites';
+import type { SentInvite } from '~/lib/types';
 
 type SentInviteFormProps = {
   listId: string;

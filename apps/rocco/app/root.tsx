@@ -12,8 +12,8 @@ import {
 } from 'react-router';
 
 import type { Route } from './+types/root';
-
 import ErrorBoundary from './components/ErrorBoundary';
+
 import './globals.css';
 import { HonoProvider } from './lib/api';
 import { serverEnv } from './lib/env';

@@ -3,9 +3,8 @@ import { UnauthorizedError, NotFoundError, InternalError } from '@hominem/servic
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
-import type { AppEnv } from '../../../server';
-
 import { plaidClient } from '../../../lib/plaid';
+import type { AppEnv } from '../../../server';
 
 export const financePlaidDisconnectRoutes = new Hono<AppEnv>();
 

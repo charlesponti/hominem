@@ -2,11 +2,10 @@ import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { Progress } from '@hominem/ui/components/ui/progress';
 import { useMemo } from 'react';
 
-import type { BudgetCategoryWithSpending } from '~/lib/types/budget.types';
-
 import { useBudgetCategories } from '~/lib/hooks/use-budget';
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
 import { formatCurrency } from '~/lib/number.utils';
+import type { BudgetCategoryWithSpending } from '~/lib/types/budget.types';
 
 // Utility functions for budget calculations
 const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];

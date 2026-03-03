@@ -1,9 +1,7 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
-
-import { GripVertical, PanelLeftClose, PanelRightClose } from 'lucide-react';
-
 import { Button } from '@hominem/ui/button';
 import { cn } from '@hominem/ui/lib/utils';
+import { GripVertical, PanelLeftClose, PanelRightClose } from 'lucide-react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
 interface SplitPaneProps {
   leftPanel: ReactNode;

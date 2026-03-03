@@ -1,11 +1,11 @@
-import type { VectorDocumentInput, VectorDocumentOutput } from '@hominem/db/types/vector-documents';
+import { randomUUID } from 'node:crypto';
+import { Readable } from 'node:stream';
 
 import { and, desc, eq, sql } from '@hominem/db';
 import { vectorDocuments } from '@hominem/db/schema/vector-documents';
+import type { VectorDocumentInput, VectorDocumentOutput } from '@hominem/db/types/vector-documents';
 import { splitMarkdown, type Document } from '@hominem/utils/markdown';
 import csv from 'csv-parser';
-import { randomUUID } from 'node:crypto';
-import { Readable } from 'node:stream';
 import OpenAI from 'openai';
 
 import { env } from './env';

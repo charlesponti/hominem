@@ -1,6 +1,4 @@
 import type { TransactionType } from '@hominem/db/types/finance';
-import type { Job } from 'bullmq';
-
 import {
   getPlaidItemByUserAndItemId,
   upsertAccount,
@@ -15,6 +13,7 @@ import {
   getAccountByPlaidId,
 } from '@hominem/finance-services';
 import { logger } from '@hominem/utils/logger';
+import type { Job } from 'bullmq';
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
 
 import { env } from './env';

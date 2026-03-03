@@ -1,8 +1,9 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { NotFoundError, InternalError } from '@hominem/services';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 
 import type { AppEnv } from '../../server';
 

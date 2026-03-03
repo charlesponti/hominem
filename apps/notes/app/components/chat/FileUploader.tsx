@@ -12,9 +12,8 @@ import {
 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
-import type { UploadedFile } from '~/lib/types/upload.js';
-
 import { useFileUpload } from '~/lib/hooks/use-file-upload.js';
+import type { UploadedFile } from '~/lib/types/upload.js';
 
 interface FileUploaderProps {
   onFilesUploaded?: (files: UploadedFile[]) => void;

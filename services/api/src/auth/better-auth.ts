@@ -1,10 +1,9 @@
-import type { BetterAuthOptions } from 'better-auth';
-import type { BetterAuthPlugin } from 'better-auth';
-
 import { expo } from '@better-auth/expo';
 import { passkey } from '@better-auth/passkey';
 import { db } from '@hominem/db';
 import * as schema from '@hominem/db/schema/tables';
+import type { BetterAuthOptions } from 'better-auth';
+import type { BetterAuthPlugin } from 'better-auth';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import {
@@ -18,8 +17,6 @@ import {
 } from 'better-auth/plugins';
 
 import { env } from '../env';
-
-
 
 function getTrustedOrigins() {
   const origins = new Set([

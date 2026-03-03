@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
+
 import { describe, expect, test, vi } from 'vitest';
 
 const mockRedisStore = vi.hoisted(() => new Map<string, string>());

@@ -1,6 +1,5 @@
-import type { ReactNode } from 'react';
-
 import { Star } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
 import { buildImageUrl, cn } from '~/lib/utils';

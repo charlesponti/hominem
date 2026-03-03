@@ -1,12 +1,12 @@
+import crypto from 'node:crypto';
+
 import { db, takeUniqueOrThrow } from '@hominem/db';
 import { and, eq } from '@hominem/db';
 import { list } from '@hominem/db/schema/lists';
 import { logger } from '@hominem/utils/logger';
-import crypto from 'node:crypto';
-
-import type { ListOutput, ListPlace, ListUser, ListWithSpreadOwner } from './types';
 
 import { getListById } from './list-queries.service';
+import type { ListOutput, ListPlace, ListUser, ListWithSpreadOwner } from './types';
 
 /**
  * Format a list with places to match the ListOutput interface

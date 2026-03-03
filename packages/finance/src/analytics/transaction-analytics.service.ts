@@ -2,9 +2,8 @@ import { db } from '@hominem/db';
 import { count, desc, eq, type SQL, sql } from '@hominem/db';
 import { financeAccounts, transactions } from '@hominem/db/schema/finance';
 
-import type { QueryOptions, TopMerchant } from '../finance.types';
-
 import { buildWhereConditions } from '../finance.transactions.service';
+import type { QueryOptions, TopMerchant } from '../finance.types';
 
 const toFixed2 = (amount: number): string => {
   return (amount || 0).toFixed(2);

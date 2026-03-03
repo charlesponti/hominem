@@ -1,5 +1,6 @@
 'use client';
 
+import { Send, Sparkles, Paperclip, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   createContext,
   forwardRef,
@@ -13,8 +14,6 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-
-import { Send, Sparkles, Paperclip, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -116,9 +115,7 @@ export function PromptInputProvider({ children }: PromptInputProviderProps) {
   );
 
   return (
-    <PromptInputAttachmentsContext.Provider
-      value={{ files, add, remove, clear, openFileDialog }}
-    >
+    <PromptInputAttachmentsContext.Provider value={{ files, add, remove, clear, openFileDialog }}>
       {children}
       <input
         type="file"
@@ -245,19 +242,25 @@ export const PromptInput = forwardRef<HTMLFormElement, PromptInputProps>(functio
     }
   };
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    if (globalDrop) {
-      e.preventDefault();
-      setIsDragOver(true);
-    }
-  }, [globalDrop]);
+  const handleDragOver = useCallback(
+    (e: React.DragEvent) => {
+      if (globalDrop) {
+        e.preventDefault();
+        setIsDragOver(true);
+      }
+    },
+    [globalDrop],
+  );
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    if (globalDrop) {
-      e.preventDefault();
-      setIsDragOver(false);
-    }
-  }, [globalDrop]);
+  const handleDragLeave = useCallback(
+    (e: React.DragEvent) => {
+      if (globalDrop) {
+        e.preventDefault();
+        setIsDragOver(false);
+      }
+    },
+    [globalDrop],
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -378,7 +381,9 @@ export function PromptInputTools({ className, children, ...props }: PromptInputT
 }
 
 interface PromptInputButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  tooltip?: string | { content: string; shortcut?: string; side?: 'top' | 'right' | 'bottom' | 'left' };
+  tooltip?:
+    | string
+    | { content: string; shortcut?: string; side?: 'top' | 'right' | 'bottom' | 'left' };
 }
 
 export function PromptInputButton({
@@ -432,7 +437,11 @@ export function PromptInputSubmit({
       className={cn('size-9 shrink-0', className)}
       {...props}
     >
-      {status === 'streaming' ? <Sparkles className="size-4 animate-spin" /> : <Send className="size-4" />}
+      {status === 'streaming' ? (
+        <Sparkles className="size-4 animate-spin" />
+      ) : (
+        <Send className="size-4" />
+      )}
       {children}
     </Button>
   );
@@ -463,7 +472,13 @@ export function PromptInputActionMenuTrigger({
 }: PromptInputActionMenuTriggerProps) {
   return (
     <DropdownMenuTrigger asChild>
-      <Button type="button" variant="ghost" size="icon" className={cn('size-8', className)} {...props}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className={cn('size-8', className)}
+        {...props}
+      >
         {children || <Paperclip className="size-4" />}
       </Button>
     </DropdownMenuTrigger>
@@ -531,10 +546,7 @@ export function PromptInputHoverCard({
   ...props
 }: PromptInputHoverCardProps) {
   return (
-    <div
-      className={cn('relative inline-block', className)}
-      {...props}
-    >
+    <div className={cn('relative inline-block', className)} {...props}>
       {children}
     </div>
   );

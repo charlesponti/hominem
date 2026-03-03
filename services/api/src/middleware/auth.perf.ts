@@ -1,8 +1,9 @@
+import { performance } from 'node:perf_hooks';
+
 import { db, eq } from '@hominem/db';
 import { health } from '@hominem/db/schema/health';
 import { users } from '@hominem/db/schema/users';
 import { Hono } from 'hono';
-import { performance } from 'node:perf_hooks';
 
 import { createTokenPairForUser } from '../auth/session-store';
 import { authJwtMiddleware } from './auth';

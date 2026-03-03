@@ -1,8 +1,7 @@
-import type { ChatMessageInput, ChatMessageOutput } from '@hominem/db/types/chats';
-
 import { db } from '@hominem/db';
 import { and, desc, eq, gt } from '@hominem/db';
 import { chat, chatMessage } from '@hominem/db/schema/chats';
+import type { ChatMessageInput, ChatMessageOutput } from '@hominem/db/types/chats';
 import { logger } from '@hominem/utils/logger';
 
 import { ChatError } from './chat.service';

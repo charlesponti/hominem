@@ -1,7 +1,6 @@
-import type { ChatOutput } from '@hominem/db/types/chats';
-
 import { db, takeUniqueOrThrow, and, desc, eq } from '@hominem/db';
 import { chat, chatMessage } from '@hominem/db/schema/chats';
+import type { ChatOutput } from '@hominem/db/types/chats';
 
 import type { CreateChatParams } from './chat.types';
 
@@ -76,7 +75,10 @@ export async function getUserChatsQuery(userId: string, limit = 50): Promise<Cha
   return chats as ChatOutput[];
 }
 
-export async function getChatByNoteIdQuery(noteId: string, userId: string): Promise<ChatOutput | null> {
+export async function getChatByNoteIdQuery(
+  noteId: string,
+  userId: string,
+): Promise<ChatOutput | null> {
   const [chatData] = await db
     .select()
     .from(chat)

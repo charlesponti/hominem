@@ -1,12 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { Chat as ChatType } from '~/utils/local-store/types';
-
 import BlurredGradientBackground from '~/components/chat/blurred-background';
 import { Chat } from '~/components/chat/chat';
 import { LoadingFull } from '~/components/LoadingFull';
 import { Text } from '~/theme';
+import type { Chat as ChatType } from '~/utils/local-store/types';
 import { useActiveChat, useStartChat } from '~/utils/services/chat/use-chat-messages';
 
 export default function Sherpa() {

@@ -124,5 +124,3 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 logger.info('Google Calendar sync worker started');
-
-;

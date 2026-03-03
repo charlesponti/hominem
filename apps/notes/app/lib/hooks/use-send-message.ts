@@ -1,8 +1,7 @@
-import type { HonoClient } from '@hominem/hono-client';
-import type { ChatsSendInput } from '@hominem/hono-rpc/types/chat.types';
-
 import { useChat } from '@ai-sdk/react';
+import type { HonoClient } from '@hominem/hono-client';
 import { useHonoMutation, useHonoUtils } from '@hominem/hono-client/react';
+import type { ChatsSendInput } from '@hominem/hono-rpc/types/chat.types';
 import { useMemo } from 'react';
 
 import { useFeatureFlag } from './use-feature-flags';
@@ -25,7 +24,7 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
   // });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chat = useChat() as any;  // Type assertion to bypass type errors temporarily
+  const chat = useChat() as any; // Type assertion to bypass type errors temporarily
 
   const legacySend = useHonoMutation(
     async (client: HonoClient, variables: ChatsSendInput) => {

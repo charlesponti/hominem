@@ -17,14 +17,13 @@ import {
 import { LinkIcon, UnlinkIcon } from 'lucide-react';
 import { useState } from 'react';
 
-import type { Account } from '~/lib/types/account.types';
-
 import { useFinancialInstitutions } from '~/lib/hooks/use-finance-data';
 import {
   useLinkAccountToInstitution,
   useUnlinkAccountFromInstitution,
 } from '~/lib/hooks/use-plaid';
 import { usePlaidAccountsByInstitution } from '~/lib/hooks/use-plaid-accounts-by-institution';
+import type { Account } from '~/lib/types/account.types';
 
 interface AccountConnectionDialogProps {
   account: Account;

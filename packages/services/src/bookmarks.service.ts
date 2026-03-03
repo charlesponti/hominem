@@ -1,8 +1,7 @@
-import type { BookmarkInput, BookmarkOutput } from '@hominem/db/types/bookmarks';
-
 import { db } from '@hominem/db';
 import { and, desc, eq } from '@hominem/db';
 import { bookmark } from '@hominem/db/schema/bookmarks';
+import type { BookmarkInput, BookmarkOutput } from '@hominem/db/types/bookmarks';
 
 export type { BookmarkInput as BookmarkInsert, BookmarkOutput as BookmarkSelect };
 

@@ -1,8 +1,7 @@
 import type { HonoClient } from '@hominem/hono-client';
 import type { HonoMutationOptions } from '@hominem/hono-client/react';
-import type { UserDeleteAccountOutput } from '@hominem/hono-rpc/types/user.types';
-
 import { useHonoMutation, useHonoUtils } from '@hominem/hono-client/react';
+import type { UserDeleteAccountOutput } from '@hominem/hono-rpc/types/user.types';
 
 import { queryKeys } from '~/lib/query-keys';
 

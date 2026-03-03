@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { ConnectionOptions } from 'bullmq';
-
 import { QUEUE_NAMES } from '@hominem/utils/consts';
+import type { ConnectionOptions } from 'bullmq';
 import { Queue } from 'bullmq';
 
-import type { Queues } from './types';
-
 import { env } from './env';
+import type { Queues } from './types';
 
 let singleton: Queues | null = null;
 

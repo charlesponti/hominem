@@ -1,7 +1,7 @@
 import type { FinanceTransactionOutput } from '@hominem/db/types/finance';
-
 import { logger } from '@hominem/utils/logger';
 
+import { InstitutionService } from '../../core/institution.service';
 import type {
   AccountWithPlaidInfo,
   BalanceSummary,
@@ -11,8 +11,6 @@ import type {
   PlaidConnection,
   UpdateAccountInput,
 } from './accounts.domain';
-
-import { InstitutionService } from '../../core/institution.service';
 import { AccountsRepository } from './accounts.repository';
 
 /**

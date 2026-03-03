@@ -5,10 +5,9 @@ import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import type { AppEnv } from '../../../server';
-
-import { plaidSyncQueue } from '../../../lib/queues';
 import { verifyPlaidWebhookSignature } from '../../../lib/plaid';
+import { plaidSyncQueue } from '../../../lib/queues';
+import type { AppEnv } from '../../../server';
 
 const webhookSchema = z.object({
   webhook_type: z.string(),

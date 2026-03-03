@@ -2,9 +2,8 @@ import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { CheckCircleIcon } from 'lucide-react';
 
-import type { Account } from '~/lib/types/account.types';
-
 import { useAllInstitutions } from '~/lib/hooks/use-institutions';
+import type { Account } from '~/lib/types/account.types';
 
 import { AccountConnectionDialog } from './account-connection-dialog';
 

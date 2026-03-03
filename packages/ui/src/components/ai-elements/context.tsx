@@ -1,8 +1,7 @@
 'use client';
 
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
-
 import { BookOpen, ChevronDown, ChevronUp, Hash } from 'lucide-react';
+import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -72,12 +71,7 @@ interface InlineCitationProps extends HTMLAttributes<HTMLSpanElement> {
   onClick?: () => void;
 }
 
-export function InlineCitation({
-  index,
-  onClick,
-  className,
-  ...props
-}: InlineCitationProps) {
+export function InlineCitation({ index, onClick, className, ...props }: InlineCitationProps) {
   return (
     <button
       type="button"

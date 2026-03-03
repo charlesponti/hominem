@@ -1,7 +1,6 @@
-import type { ReactElement, ReactNode } from 'react';
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { type RenderOptions, type RenderResult, render } from '@testing-library/react';
+import type { ReactElement, ReactNode } from 'react';
 import { createRoutesStub } from 'react-router';
 import { vi } from 'vitest';
 

@@ -1,6 +1,7 @@
+import { Buffer } from 'node:buffer';
+
 import { openai } from '@ai-sdk/openai';
 import { experimental_transcribe } from 'ai';
-import { Buffer } from 'node:buffer';
 
 import { env } from './env';
 

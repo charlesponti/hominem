@@ -1,5 +1,4 @@
 import type { FileStatus } from '@hominem/jobs-services';
-
 import { XIcon } from 'lucide-react';
 import { memo } from 'react';
 

@@ -1,5 +1,3 @@
-import type { ListOutput as DbListOutput } from '@hominem/db/types/lists';
-
 import { db } from '@hominem/db';
 import { and, count, desc, eq, isNotNull, or, sql } from '@hominem/db';
 import { item } from '@hominem/db/schema/items';
@@ -7,12 +5,12 @@ import { list } from '@hominem/db/schema/lists';
 import { userLists } from '@hominem/db/schema/lists';
 import { place } from '@hominem/db/schema/places';
 import { users } from '@hominem/db/schema/users';
+import type { ListOutput as DbListOutput } from '@hominem/db/types/lists';
 import { logger } from '@hominem/utils/logger';
-
-import type { ListOutput, ListUser, ListWithSpreadOwner } from './types';
 
 import { formatList } from './list-crud.service';
 import { getListPlaces, getListPlacesMap } from './list-items.service';
+import type { ListOutput, ListUser, ListWithSpreadOwner } from './types';
 
 /**
  * Get lists that the user is explicitly a member of (shared with them)

@@ -9,7 +9,6 @@ import type {
   BudgetSummary,
   BudgetTrackingData,
 } from '../budget.types';
-
 import { getBudgetStatus, getChartColor, getStatusColor } from './budget.utils';
 
 /**

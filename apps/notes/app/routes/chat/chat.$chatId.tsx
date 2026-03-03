@@ -1,14 +1,14 @@
+import type { HonoClient } from '@hominem/hono-client';
+import { useHonoQuery } from '@hominem/hono-client/react';
+import type { ChatsGetMessagesOutput } from '@hominem/hono-rpc/types/chat.types';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { ChatInput } from '~/components/chat/ChatInput';
 import { ChatMessages } from '~/components/chat/ChatMessages';
+import { useCreateNote } from '~/hooks/use-notes';
 import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
-import { useCreateNote } from '~/hooks/use-notes';
-import { useHonoQuery } from '@hominem/hono-client/react';
-import type { HonoClient } from '@hominem/hono-client';
-import type { ChatsGetMessagesOutput } from '@hominem/hono-rpc/types/chat.types';
 
 import type { Route } from './+types/chat.$chatId';
 

@@ -1,10 +1,10 @@
-import type { TagOutput } from '@hominem/db/types/tags';
+import { randomUUID } from 'node:crypto';
 
 import { db } from '@hominem/db';
 import { and, asc, eq, inArray } from '@hominem/db';
 import { eventsTags } from '@hominem/db/schema/calendar';
 import { tags } from '@hominem/db/schema/tags';
-import { randomUUID } from 'node:crypto';
+import type { TagOutput } from '@hominem/db/types/tags';
 
 export interface TagInput {
   name: string;
@@ -87,10 +87,7 @@ export async function addTagsToEvent(eventId: string, tagIds: string[]) {
   return db.insert(eventsTags).values(relationships).returning();
 }
 
-export async function removeTagsFromEvent(
-  eventId: string,
-  tagIds?: string[],
-): Promise<void> {
+export async function removeTagsFromEvent(eventId: string, tagIds?: string[]): Promise<void> {
   if (tagIds && tagIds.length > 0) {
     await db
       .delete(eventsTags)

@@ -1,6 +1,5 @@
-import type { FinanceAccount, AccountType } from '@hominem/db/types/finance';
-
 import { AccountMetadataSchema } from '@hominem/db/schema/shared';
+import type { FinanceAccount, AccountType } from '@hominem/db/types/finance';
 import * as z from 'zod';
 
 /**

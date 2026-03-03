@@ -9,9 +9,8 @@ import {
 } from '@hominem/ui/components/ui/card';
 import { ArrowLeft, Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react';
 
-import type { Account } from '~/lib/types/account.types';
-
 import { RouteLink } from '~/components/route-link';
+import type { Account } from '~/lib/types/account.types';
 
 import { AccountConnectionDialog } from './account-connection-dialog';
 import { AccountStatusDisplay } from './account-status-display';

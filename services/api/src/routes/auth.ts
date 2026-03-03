@@ -1,15 +1,13 @@
-import type { Context } from 'hono';
+import { createHash, randomBytes } from 'node:crypto';
 
 import { and, db, eq, isNull } from '@hominem/db';
 import { authSubjects } from '@hominem/db/schema/auth';
 import { users } from '@hominem/db/schema/users';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
+import type { Context } from 'hono';
 import { Hono } from 'hono';
-import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
-
-import type { AppEnv } from '../server';
 
 import { betterAuthServer } from '../auth/better-auth';
 import { getJwks } from '../auth/key-store';
@@ -23,6 +21,7 @@ import {
 import { ensureOAuthSubjectUser } from '../auth/subjects';
 import { issueAccessToken, verifyAccessToken } from '../auth/tokens';
 import { env } from '../env';
+import type { AppEnv } from '../server';
 
 export const authRoutes = new Hono<AppEnv>();
 
@@ -1617,7 +1616,7 @@ authRoutes.post('/device/token', zValidator('json', deviceTokenSchema), async (c
     return deviceTokenRateLimit;
   }
 
-   try {
+  try {
     const response = await callBetterAuthPluginEndpoint({
       request: c.req.raw,
       path: '/device/token',
@@ -1659,10 +1658,13 @@ authRoutes.post('/mock/signin', async (c) => {
     const provider = createMockAuthProvider();
     const response = await provider.signIn();
 
-    return c.json({
-      user: response.user,
-      session: response.session,
-    }, 200);
+    return c.json(
+      {
+        user: response.user,
+        session: response.session,
+      },
+      200,
+    );
   } catch (err) {
     logger.error('Mock signin error:', err instanceof Error ? err : new Error(String(err)));
     return c.json({ error: 'Mock signin failed' }, 500);

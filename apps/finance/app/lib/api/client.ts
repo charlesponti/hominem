@@ -1,6 +1,1 @@
-export {
-  
-  useHonoQuery,
-  useHonoMutation,
-  useHonoUtils,
-} from '@hominem/hono-client/react';
+export { useHonoQuery, useHonoMutation, useHonoUtils } from '@hominem/hono-client/react';

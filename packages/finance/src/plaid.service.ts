@@ -16,6 +16,8 @@ type TransactionLocation = {
   lon: number;
 } | null;
 
+import { randomUUID } from 'node:crypto';
+
 import { db } from '@hominem/db';
 import { and, eq } from '@hominem/db';
 import {
@@ -25,7 +27,6 @@ import {
   transactions,
 } from '@hominem/db/schema/finance';
 import { logger } from '@hominem/utils/logger';
-import { randomUUID } from 'node:crypto';
 
 /**
  * Unified Plaid Service

@@ -1,11 +1,9 @@
-import type { ActionFunctionArgs } from 'react-router';
-
 import { FileProcessorService } from '@hominem/services/files';
 import { indexProcessedFile } from '@hominem/services/vector';
 import { fileStorageService } from '@hominem/utils/supabase';
+import type { ActionFunctionArgs } from 'react-router';
 
 import type { FailedUpload, UploadedFile, UploadResponse } from '~/lib/types/upload.js';
-
 import { jsonResponse } from '~/lib/utils/json-response';
 
 import { getServerAuth } from '../lib/auth.server';

@@ -1,7 +1,6 @@
 import { CreditCard, DollarSign, Tag } from 'lucide-react';
 
 import type { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
-
 import { cn } from '~/lib/utils';
 
 type TransactionFromAPI = ReturnType<typeof useFinanceTransactions>['transactions'][number];

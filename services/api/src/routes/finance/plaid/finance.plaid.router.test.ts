@@ -1,6 +1,7 @@
+import crypto from 'node:crypto';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { cleanupFinanceTestData, seedFinanceTestData } from '@hominem/db/test/utils';
-import crypto from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import {

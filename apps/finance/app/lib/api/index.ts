@@ -1,3 +1,2 @@
 export { HonoProvider } from './provider';
-export {  useHonoQuery, useHonoMutation, useHonoUtils } from './client';
-;
+export { useHonoQuery, useHonoMutation, useHonoUtils } from './client';

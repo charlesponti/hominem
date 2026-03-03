@@ -1,25 +1,23 @@
+import { useAuthContext } from '@hominem/auth';
 import type { HonoClient } from '@hominem/hono-client';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import type {
   ChatsGetMessagesOutput,
   MessagesDeleteOutput,
   MessagesUpdateOutput,
 } from '@hominem/hono-rpc/types/chat.types';
-import type React from 'react';
-
-import { useAuthContext } from '@hominem/auth';
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/components/ui/input';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, X } from 'lucide-react';
+import type React from 'react';
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
-
-import type { ExtendedMessage } from '~/lib/types/chat-message';
 
 import { useAutoScroll } from '~/lib/hooks/use-auto-scroll';
 import { useMessageSearch } from '~/lib/hooks/use-message-search';
 import { useScrollDetection } from '~/lib/hooks/use-scroll-detection';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
+import type { ExtendedMessage } from '~/lib/types/chat-message';
 import { findPreviousUserMessage } from '~/lib/utils/message';
 
 import { ChatMessage } from './ChatMessage';

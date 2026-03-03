@@ -1,15 +1,13 @@
 import type { HominemUser } from '@hominem/auth/server';
-import type { MiddlewareHandler } from 'hono';
-
 import { toHominemUser, UserAuthService } from '@hominem/auth/server';
 import { logger } from '@hominem/utils/logger';
-
-import type { AuthContextEnvelope } from '../auth/types';
+import type { MiddlewareHandler } from 'hono';
 
 import { betterAuthServer } from '../auth/better-auth';
 import { isSessionRevoked } from '../auth/session-store';
 import { ensureOAuthSubjectUser } from '../auth/subjects';
 import { verifyAccessToken } from '../auth/tokens';
+import type { AuthContextEnvelope } from '../auth/types';
 
 type AuthErrorCode =
   | 'invalid_token'

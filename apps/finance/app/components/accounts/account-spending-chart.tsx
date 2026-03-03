@@ -1,5 +1,4 @@
 import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types';
-
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import { subMonths } from 'date-fns';

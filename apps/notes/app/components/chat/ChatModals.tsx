@@ -1,14 +1,12 @@
 import type { VoiceErrorCode } from '@hominem/services';
-
+import { SpeechInput } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';
 import { Loader2, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import type { UploadedFile } from '~/lib/types/upload.js';
-
 import { emitVoiceEvent } from '~/lib/voice-events';
 
-import { SpeechInput } from '@hominem/ui/ai-elements';
 import { FileUploader } from './FileUploader.js';
 
 interface ChatModalsProps {

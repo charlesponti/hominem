@@ -1,6 +1,5 @@
-import type { AccountType } from '@hominem/db/types/finance';
-
 import { AccountMetadataSchema } from '@hominem/db/schema/shared';
+import type { AccountType } from '@hominem/db/types/finance';
 import * as z from 'zod';
 
 // Generic success response schema

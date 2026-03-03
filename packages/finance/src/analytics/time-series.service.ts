@@ -1,5 +1,4 @@
 import type { QueryOptions } from '../finance.types';
-
 import { formatCurrency } from './aggregation.service';
 import { summarizeByMonth } from './transaction-analytics.service';
 

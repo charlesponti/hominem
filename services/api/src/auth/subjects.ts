@@ -1,8 +1,9 @@
+import { randomUUID } from 'node:crypto';
+
 import { and, eq, isNull } from '@hominem/db';
 import { db } from '@hominem/db';
 import { authSubjects } from '@hominem/db/schema/auth';
 import { users } from '@hominem/db/schema/users';
-import { randomUUID } from 'node:crypto';
 
 type AuthProvider = 'apple' | 'google';
 

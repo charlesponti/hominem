@@ -1,7 +1,6 @@
 import type { HonoClient } from '@hominem/hono-client';
-import type { Chat } from '@hominem/hono-rpc/types/chat.types';
-
 import { useHonoMutation, useHonoQuery } from '@hominem/hono-client/react';
+import type { Chat } from '@hominem/hono-rpc/types/chat.types';
 
 export function useNoteChat(noteId: string) {
   return useHonoQuery<Chat>(

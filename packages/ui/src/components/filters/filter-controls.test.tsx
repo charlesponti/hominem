@@ -1,8 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
-import type { ActiveFilter } from './active-filters-bar';
-
 import { render, screen } from '../../test-utils';
+import type { ActiveFilter } from './active-filters-bar';
 import { FilterControls } from './filter-controls';
 
 describe('FilterControls', () => {

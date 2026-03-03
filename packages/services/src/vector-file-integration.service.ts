@@ -1,5 +1,4 @@
 import type { ProcessedFile } from './file-processor.service';
-
 import { VectorService } from './vector.service';
 
 export async function indexProcessedFile(

@@ -3,9 +3,8 @@ import { ArrowRight, ListCheck } from 'lucide-react';
 import { useCallback } from 'react';
 import { Link } from 'react-router';
 
-import type { ReceivedInvite } from '~/lib/types';
-
 import { useAcceptInvite } from '~/lib/hooks/use-invites';
+import type { ReceivedInvite } from '~/lib/types';
 
 type ReceivedInviteItemProps =
   | {

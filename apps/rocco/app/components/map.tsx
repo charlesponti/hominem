@@ -13,10 +13,9 @@ import {
 } from '@vis.gl/react-google-maps';
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { Place, PlaceLocation } from '~/lib/types';
-
 import { useMapInteraction } from '~/contexts/map-interaction-context';
 import { endTrace, startTrace } from '~/lib/performance/trace';
+import type { Place, PlaceLocation } from '~/lib/types';
 import { cn } from '~/lib/utils';
 
 import styles from './map.module.css';

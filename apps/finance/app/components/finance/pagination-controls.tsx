@@ -1,7 +1,6 @@
-import type { FC } from 'react';
-
 import { Button } from '@hominem/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { FC } from 'react';
 
 interface PaginationControlsProps {
   currentPage: number;
