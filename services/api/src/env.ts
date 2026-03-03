@@ -32,10 +32,6 @@ const serverSchema = z.object({
   AUTH_E2E_ENABLED: z.coerce.boolean().default(false),
   AUTH_E2E_SECRET: z.string().default(''),
 
-  SUPABASE_URL: isTest ? z.string().url().default('http://localhost:54321') : z.string().url(),
-  SUPABASE_SERVICE_ROLE_KEY: isTest ? z.string().default('test-service-key') : z.string(),
-  SUPABASE_ANON_KEY: isTest ? z.string().default('test-anon-key') : z.string(),
-
   R2_ENDPOINT: z.string().url().default(''),
   R2_BUCKET_NAME: z.string().default('hominem-storage'),
   R2_ACCESS_KEY_ID: z.string().default(''),

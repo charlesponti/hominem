@@ -14,12 +14,6 @@ vi.mock('zod', async (importOriginal) => {
 // Set NODE_ENV to test for environment variable defaults
 process.env.NODE_ENV = 'test'
 
-// Mock Supabase environment variables for tests
-process.env.SUPABASE_URL = 'https://example.supabase.co'
-process.env.SUPABASE_ANON_KEY = 'test-anon-key'
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
-process.env.SUPABASE_JWT_SECRET = 'test-jwt-secret'
-
 // Mock R2 environment variables for tests
 process.env.R2_ENDPOINT = 'https://test.r2.cloudflarestorage.com'
 process.env.R2_ACCESS_KEY_ID = 'test-access-key-id'

@@ -16,10 +16,6 @@ const envSchema = z.object({
   NOTES_URL: z.string().url().default('http://localhost:4445'),
   ROCCO_URL: z.string().url().default('http://localhost:4446'),
 
-  SUPABASE_URL: isTest ? z.string().url().default('http://localhost:54321') : z.string().url(),
-  SUPABASE_SERVICE_ROLE_KEY: isTest ? z.string().default('test-service-key') : z.string(),
-  SUPABASE_ANON_KEY: isTest ? z.string().default('test-anon-key') : z.string(),
-
   GOOGLE_API_KEY: z.string().default(''),
   OPENAI_API_KEY: isTest ? z.string().default('test-openai-key') : z.string(),
 
