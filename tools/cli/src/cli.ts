@@ -1,4 +1,4 @@
-import { runCli } from './v2/runtime';
+import { runCli } from './runtime';
 
 export async function main(argv?: string[]) {
   const result = await runCli(argv ?? process.argv.slice(2));

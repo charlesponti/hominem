@@ -42,7 +42,7 @@
       "inputs": [
         "src/**/*.{ts,tsx,js,jsx,json,md,css}",
         "app/**/*.{ts,tsx,js,jsx,json,md,css}",
-        "tools/stylelint-config-void.cjs"
+        "packages/ui/tools/stylelint-config-void.cjs"
       ],
       "outputs": []
     },

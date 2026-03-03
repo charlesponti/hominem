@@ -1,9 +1,9 @@
-# @hominem/cli (v2 runtime)
+# @hominem/cli
 
 Automation-first CLI for hominem, replatformed to a typed command graph runtime.
 
 ## Runtime Properties
-- Single framework execution host (`src/v2`)
+- Single framework execution host (`src`)
 - Lazy command loading via static registry
 - Structured output envelopes for `text`, `json`, and `ndjson`
 - Deterministic exit code taxonomy

@@ -6,7 +6,7 @@
 		"src/env.ts",
 		"src/utils/auth.ts",
 		"src/utils/secure-store.ts",
-		"src/v2/**/*.ts"
+		"src/**/*.ts"
 	],
 	"exclude": ["dist", "test", "src/commands/**/*", "src/agents/**/*", "src/core/**/*", "src/lib/**/*", "src/services/**/*"]
 }

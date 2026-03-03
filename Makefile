@@ -13,14 +13,9 @@ APPLE_KEY_PATH ?= $(CURDIR)/.auth/AuthKey_2438T5MGLH.p8
 APPLE_EXPIRES_DAYS ?= 150
 APPLE_KEY_ID ?= 2438T5MGLH
 CLOUDFLARED ?= cloudflared
-AUTH_BASE_URL ?= https://api.hominem.test
-AUTH_TUNNEL_TOKEN ?=
-AUTH_TUNNEL_NAME ?=
-CLOUDFLARED_TUNNEL_TOKEN ?= $(AUTH_TUNNEL_TOKEN)
-CLOUDFLARED_TUNNEL ?= $(AUTH_TUNNEL_NAME)
 
 # Phony targets
-.PHONY: install start dev build test lint format clean docker-up docker-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios tunnel-auth tunnel-auth-check
+.PHONY: install start dev build test lint format clean docker-up docker-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios
 
 # Install dependencies
 install:
@@ -116,12 +111,6 @@ mobile-test-e2e-preflight:
 
 mobile-build-dev-ios:
 	@bun run --filter @hominem/mobile build:dev:ios
-
-tunnel-auth:
-	@./scripts/tunnel.sh auth
-
-tunnel-auth-check:
-	@./scripts/tunnel.sh check
 
 lbt:
 	@echo "Running lint..."

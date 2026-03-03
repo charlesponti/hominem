@@ -1,5 +1,4 @@
 import {
-  createContext,
   type ReactNode,
   useCallback,
   useContext,
@@ -9,7 +8,7 @@ import {
 } from 'react';
 
 import type { AuthClient, AuthConfig, AuthContextType, HominemSession, HominemUser } from './types';
-
+import { AuthContext } from './AuthContext'
 type AuthEvent = 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED';
 
 interface SessionResponse {
@@ -166,22 +165,19 @@ function serializeAssertion(credential: PublicKeyCredential): SerializedPublicKe
   };
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
+export type AuthProviderProps = {
   children: ReactNode;
-  initialSession?: HominemSession | null;
   config: AuthConfig;
   onAuthEvent?: (event: AuthEvent) => void;
 }
 
 export function AuthProvider({
   children,
-  initialSession = null,
   config,
   onAuthEvent,
 }: AuthProviderProps) {
-  const [session, setSession] = useState<HominemSession | null>(initialSession);
+  const [session, setSession] = useState<HominemSession | null>(null);
   const [user, setUser] = useState<HominemUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -388,8 +384,21 @@ export function AuthProvider({
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuthContext() {
-  const context = useContext(AuthContext);
+/**
+ * Safe access to auth context which may be null during SSR or outside the
+ * provider. Use this in layout components or other places where absence of
+ * context is acceptable.
+ */
+export function useSafeAuth(): AuthContextType | null {
+  return useContext(AuthContext) ?? null;
+}
+
+/**
+ * Strict hook that throws if no provider is found. Kept for compatibility; new
+ * code should prefer `useSafeAuth` and handle the null case explicitly.
+ */
+export function useAuthContext(): AuthContextType {
+  const context = useSafeAuth();
   if (!context) {
     throw new Error('useAuthContext must be used within an AuthProvider');
   }

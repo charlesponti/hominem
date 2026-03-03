@@ -106,17 +106,6 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 
     server: {
       port: 4444, // Set this to the specific port for the app (4444, 4445, 4446)
-      host: '127.0.0.1', // Match the IPv4 address used in Caddyfile
-
-      // Crucial: Tell Vite to look for HMR via the Proxy URL
-      hmr: {
-        protocol: 'wss',
-        host: 'finance.hominem.test', // Change this per app (e.g., finance.hominem.test)
-        clientPort: 443,
-      },
-
-      // We already removed strictPort per your "Issue 5" discovery
-      allowedHosts: ['.hominem.test'],
     },
 
     build: {

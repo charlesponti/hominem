@@ -56,15 +56,7 @@ export function createServer() {
     '*',
     cors({
       origin: (origin) => {
-        const allowedOrigins = [
-          env.API_URL,
-          env.ROCCO_URL,
-          env.NOTES_URL,
-          env.FINANCE_URL,
-          'http://localhost:4444',
-          'http://localhost:4445',
-          'http://localhost:4446',
-        ];
+        const allowedOrigins = [env.API_URL, env.ROCCO_URL, env.NOTES_URL, env.FINANCE_URL];
         return allowedOrigins.includes(origin || '') ? origin : '';
       },
       credentials: true,

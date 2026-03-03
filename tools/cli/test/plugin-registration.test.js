@@ -15,7 +15,7 @@ assert(
   '@hominem/cli should define build:core for compiled binary output',
 );
 
-const registryPath = path.resolve(process.cwd(), 'src/v2/registry.ts');
+const registryPath = path.resolve(process.cwd(), 'src/registry.ts');
 const registryContent = fs.readFileSync(registryPath, 'utf-8');
 const expectedDomains = ['auth', 'ai', 'data', 'files', 'agent', 'system', 'config'];
 for (const domain of expectedDomains) {

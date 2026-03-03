@@ -89,7 +89,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 
   return (
-    <AuthProvider initialSession={session} config={authEnv} onAuthEvent={handleAuthEvent}>
+    <AuthProvider config={authEnv} onAuthEvent={handleAuthEvent}>
       <HonoProvider baseUrl={apiBaseUrl}>
         <UpdateGuard logo="/logo-finance.png" appName="Finance">
           <Outlet />

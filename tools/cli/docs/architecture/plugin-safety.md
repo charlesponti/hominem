@@ -8,5 +8,5 @@ Execution boundary is process isolation via child-process + JSON-RPC.
 - No implicit plugin scanning
 - Explicit trust and allow-listing
 - Isolated failure domain per plugin
-- Single-request JSON-RPC boundary over stdin/stdout (`src/v2/plugin-rpc.ts`)
+- Single-request JSON-RPC boundary over stdin/stdout (`src/plugin-rpc.ts`)
 - Entry path confinement to plugin root (`resolvePluginEntry(...)`)

@@ -1,4 +1,4 @@
-import { AuthContext, useAuthContext } from '@hominem/auth';
+import { useAuthContext, useSafeAuth } from '@hominem/auth';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
 import { createHonoClient } from '@hominem/hono-rpc/client';
 import { useCallback } from 'react';
@@ -58,7 +58,7 @@ function HonoProviderInner({ children, baseUrl }: HonoProviderProps) {
 
 export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
   // Check if AuthContext is available (client-side safe)
-  const authContext = useContext(AuthContext);
+  const authContext = useSafeAuth();
 
   if (!authContext) {
     // During SSR, render without auth token support

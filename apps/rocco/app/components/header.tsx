@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuthContext } from '@hominem/auth';
+import { useSafeAuth } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import {
   DropdownMenu,
@@ -16,7 +16,9 @@ const APP_NAME = 'Rocco';
 
 const NavigationMenu = () => {
   const navigate = useNavigate();
-  const { logout } = useAuthContext();
+  const authContext = useSafeAuth();
+  if (!authContext) return null;
+  const { logout } = authContext;
   const onLogoutClick = useCallback(async () => {
     await logout();
     navigate('/');
@@ -76,7 +78,25 @@ const NavigationMenu = () => {
 };
 
 function Header() {
-  const { isAuthenticated, isLoading, authClient } = useAuthContext();
+  const authContext = useSafeAuth();
+
+  if (!authContext) {
+    return (
+      <header
+        className="fixed top-0 left-0 z-50 w-full border-b border-border"
+        style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
+      >
+        <div className="flex px-4 py-2 items-center justify-between">
+          <Link to="/" prefetch="intent" className="flex items-center space-x-1">
+            <img src="/icons/favicon-96x96.png" alt={APP_NAME} className="size-3 mt-1" />
+            <span className="heading-4 lowercase text-primary">{APP_NAME}</span>
+          </Link>
+        </div>
+      </header>
+    );
+  }
+
+  const { isAuthenticated, isLoading, authClient } = authContext;
 
   return (
     <header

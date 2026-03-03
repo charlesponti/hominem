@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuthContext } from '@hominem/auth';
+import { useSafeAuth } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import {
   DropdownMenu,
@@ -29,7 +29,9 @@ const navItems = [
 
 const NavigationMenu = () => {
   const navigate = useNavigate();
-  const { logout } = useAuthContext();
+  const authContext = useSafeAuth();
+  if (!authContext) return null;
+  const { logout } = authContext;
   const onLogoutClick = useCallback(async () => {
     await logout();
     navigate('/');
@@ -78,7 +80,24 @@ const NavigationMenu = () => {
 };
 
 function Header() {
-  const { isAuthenticated, isLoading } = useAuthContext();
+  const authContext = useSafeAuth();
+  if (!authContext) {
+    // render minimal header during SSR/hydration
+    return (
+      <header
+        className="fixed top-0 left-0 z-50 w-full bg-background/10 backdrop-blur-md border-b border-border/50"
+        style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
+      >
+        <div className="flex px-2 py-4 md:px-8 items-center justify-between">
+          <Link to="/" prefetch="intent" className="flex items-center space-x-2 text-primary">
+            <Sparkles className="size-6" />
+            <span className="heading-2">{APP_NAME}</span>
+          </Link>
+        </div>
+      </header>
+    );
+  }
+  const { isAuthenticated, isLoading } = authContext;
 
   return (
     <header
@@ -103,7 +122,9 @@ function Header() {
 export default Header;
 
 const SignInButton = () => {
-  const { authClient } = useAuthContext();
+  const authContext = useSafeAuth();
+  if (!authContext) return null;
+  const { authClient } = authContext;
 
   const onSignInClick = useCallback(async () => {
     await authClient.auth.signInWithOAuth({
