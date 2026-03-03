@@ -79,10 +79,10 @@
 
 ## 11. Review and Cleanup
 
-- [ ] 11.1 Code review: mock auth provider implementation
-- [ ] 11.2 Code review: React context and hooks
-- [ ] 11.3 Code review: API endpoints
-- [ ] 11.4 Verify all tests pass: `bun run test`
-- [ ] 11.5 Verify typecheck passes: `bun run typecheck`
-- [ ] 11.6 Test manual flow: `bun run dev` → sign in → access protected route → sign out
-- [ ] 11.7 Cleanup: remove any debug logging or temporary code
+- [x] 11.1 Code review: mock auth provider implementation
+- [x] 11.2 Code review: React context and hooks
+- [x] 11.3 Code review: API endpoints
+- [x] 11.4 Verify all tests pass: `bun run test`
+- [x] 11.5 Verify typecheck passes: `bun run typecheck`
+- [x] 11.6 Test manual flow: `bun run dev` → sign in → access protected route → sign out
+- [x] 11.7 Cleanup: remove any debug logging or temporary code
