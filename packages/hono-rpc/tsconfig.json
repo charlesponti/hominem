@@ -3,7 +3,11 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.cache/tsc/.tsbuildinfo",
     "rootDir": "./src",
-    "outDir": "./build"
+    "outDir": "./build",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noImplicitAny": false
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "build", ".cache", "**/*.test.ts", "**/*.spec.ts"]
