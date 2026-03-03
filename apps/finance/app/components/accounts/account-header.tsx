@@ -81,7 +81,7 @@ export function AccountHeader({
       </div>
 
       {/* Account Summary Card */}
-      <Card metadata={isPlaidAccount ? 'SOURCE: PLAID_API_V2' : 'SOURCE: MANUAL_ENTRY'}>
+      <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">

@@ -7,6 +7,7 @@ import * as z from 'zod';
 
 import type { AppEnv } from '../../../server';
 
+import { plaidSyncQueue } from '../../../lib/queues';
 import { verifyPlaidWebhookSignature } from '../../../lib/plaid';
 
 const webhookSchema = z.object({
@@ -62,8 +63,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
     if (webhook_type === 'TRANSACTIONS') {
       if (webhook_code === 'INITIAL_UPDATE' || webhook_code === 'HISTORICAL_UPDATE') {
         // Queue sync job for transaction updates
-        const queues = c.get('queues');
-        await queues.plaidSync.add(
+        await plaidSyncQueue.add(
           QUEUE_NAMES.PLAID_SYNC,
           {
             userId: plaidItem.userId,
@@ -83,8 +83,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
         );
       } else if (webhook_code === 'DEFAULT_UPDATE') {
         // Regular transaction update - queue sync job
-        const queues = c.get('queues');
-        await queues.plaidSync.add(
+        await plaidSyncQueue.add(
           QUEUE_NAMES.PLAID_SYNC,
           {
             userId: plaidItem.userId,

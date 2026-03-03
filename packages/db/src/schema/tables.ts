@@ -998,9 +998,9 @@ export const betterAuthVerification = pgTable("better_auth_verification", {
 	id: text().primaryKey().notNull(),
 	identifier: text().notNull(),
 	value: text().notNull(),
-	expiresAt: timestamp("expires_at", { mode: 'string' }).notNull(),
-	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
+	expiresAt: timestamp("expires_at", { mode: 'date' }).notNull(),
+	createdAt: timestamp("created_at", { mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
 	index("better_auth_verification_identifier_idx").using("btree", table.identifier.asc().nullsLast().op("text_ops")),
 ]);

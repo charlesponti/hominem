@@ -49,6 +49,7 @@
     "@hominem/lists-services": "workspace:*",
     "@hominem/notes-services": "workspace:*",
     "@hominem/places-services": "workspace:*",
+    "@hominem/queues": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@hono/zod-validator": "^0.7.6",

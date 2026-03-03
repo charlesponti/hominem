@@ -118,7 +118,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
     <div className="space-y-4">
       <div className="flex-1 space-y-2">
         {error && (
-          <Alert type="error" dismissible>
+          <Alert variant="destructive">
             Error loading list updates: {error?.message}
           </Alert>
         )}

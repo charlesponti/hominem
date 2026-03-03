@@ -8,6 +8,7 @@ import {
   deletePlaidItem,
 } from '@hominem/finance-services';
 import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
+import { plaidSyncQueue } from '@hominem/queues';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
@@ -77,11 +78,6 @@ export const plaidRoutes = new Hono<AppContext>()
     async (c) => {
       const input = c.req.valid('json');
       const userId = c.get('userId')!;
-      const queues = c.get('queues');
-
-      if (!queues) {
-        throw new InternalError('Queues not available');
-      }
 
       // Exchange public token for access token
       const exchangeResponse = await plaidClient.itemPublicTokenExchange({
@@ -105,7 +101,7 @@ export const plaidRoutes = new Hono<AppContext>()
       });
 
       // Queue sync job
-      await queues.plaidSync.add(
+      await plaidSyncQueue.add(
         QUEUE_NAMES.PLAID_SYNC,
         {
           userId,
@@ -139,11 +135,6 @@ export const plaidRoutes = new Hono<AppContext>()
   .post('/sync-item', zValidator('json', z.object({ itemId: z.string() })), async (c) => {
     const input = c.req.valid('json');
     const userId = c.get('userId')!;
-    const queues = c.get('queues');
-
-    if (!queues) {
-      throw new InternalError('Queues not available');
-    }
 
     // Get the plaid item
     const plaidItem = await getPlaidItemById(input.itemId, userId);
@@ -153,7 +144,7 @@ export const plaidRoutes = new Hono<AppContext>()
     }
 
     // Queue sync job
-    await queues.plaidSync.add(
+    await plaidSyncQueue.add(
       QUEUE_NAMES.PLAID_SYNC,
       {
         userId,

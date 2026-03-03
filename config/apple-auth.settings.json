@@ -8,8 +8,8 @@
       "production": "com.pontistudios.hakumi"
     },
     "webAuth": {
-      "domain": "auth.ponti.io",
-      "returnUrl": "https://auth.ponti.io/api/auth/callback/apple"
+      "domain": "api.ponti.io",
+      "returnUrl": "https://api.ponti.io/api/auth/callback/apple"
     }
   },
   "expo": {

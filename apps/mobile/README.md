@@ -31,7 +31,7 @@ EXPO_PUBLIC_SENTRY_ENVIRONMENT="e2e"
 ### Production (`.env.production.local`)
 
 ```bash
-EXPO_PUBLIC_API_BASE_URL="https://auth.ponti.io"
+EXPO_PUBLIC_API_BASE_URL="https://api.ponti.io"
 EXPO_PUBLIC_E2E_TESTING="false"
 EXPO_PUBLIC_E2E_AUTH_SECRET=""
 EXPO_PUBLIC_SENTRY_ENVIRONMENT="production"

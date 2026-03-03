@@ -54,7 +54,7 @@ export default function ListInvites({ loaderData }: Route.ComponentProps) {
   }, [initialInvites, optimisticInvites]);
 
   if (!(list && initialInvites)) {
-    return <Alert type="error">We could not find this list.</Alert>;
+    return <Alert variant="destructive">We could not find this list.</Alert>;
   }
 
   const handleInviteSuccess = (_newInvite: SentInvite) => {

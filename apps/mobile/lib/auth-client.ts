@@ -12,7 +12,7 @@ const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'development') {
     return 'http://localhost:4040'
   }
-  return 'https://auth.ponti.io'
+  return 'https://api.ponti.io'
 }
 
 export const authClient = createAuthClient({

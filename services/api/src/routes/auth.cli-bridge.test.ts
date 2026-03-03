@@ -203,7 +203,7 @@ describe('CLI auth bridge routes', () => {
 
     const response = await app.request(
       `http://localhost/api/auth/authorize?provider=apple&redirect_uri=${encodeURIComponent(
-        'https://auth.ponti.io/api/auth/mobile/callback?flow_id=test-flow',
+        'https://api.ponti.io/api/auth/mobile/callback?flow_id=test-flow',
       )}`,
       {
         method: 'GET',

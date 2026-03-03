@@ -148,7 +148,7 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
                 </div>
               </form>
               {updateList.isError ? (
-                <Alert type="error">There was an issue editing your list. Try again later.</Alert>
+                <Alert variant="destructive">There was an issue editing your list. Try again later.</Alert>
               ) : null}
             </>
           ) : (

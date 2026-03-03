@@ -39,7 +39,7 @@ export interface ApiErrorResponse {
  * ```
  */
 export const errorMiddleware = createMiddleware<AppContext>(async (c, next) => {
-  const requestId = crypto.randomUUID().slice(0, 8);
+  const requestId = c.get('requestId') || crypto.randomUUID().slice(0, 8);
   const path = c.req.path;
   const method = c.req.method;
 

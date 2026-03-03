@@ -36,7 +36,7 @@ export default function PlacesList({ places, listId, canAdd = true }: PlacesList
     <>
       <AddPlaceControl listId={listId} canAdd={canAdd} />
       {deleteError && (
-        <Alert type="error" dismissible onDismiss={() => setDeleteError(null)}>
+        <Alert variant="destructive">
           {deleteError}
         </Alert>
       )}

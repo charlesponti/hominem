@@ -3,11 +3,8 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
 import { app as honoRpcApp } from '@hominem/hono-rpc';
 import { isServiceError } from '@hominem/services';
-import { redis } from '@hominem/services/redis';
-import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { apiReference } from '@scalar/hono-api-reference';
-import { Queue } from 'bullmq';
 import { Hono } from 'hono';
 import { openAPIRouteHandler } from 'hono-openapi';
 import { cors } from 'hono/cors';
@@ -21,6 +18,7 @@ import { getJwks } from './auth/key-store';
 import { env } from './env';
 import { initSentry, sentryMiddleware } from './lib/sentry';
 import { authJwtMiddleware } from './middleware/auth';
+import { blockMaliciousProbes } from './middleware/block-probes';
 import { aiRoutes } from './routes/ai';
 import { authRoutes } from './routes/auth';
 import { componentsRoutes } from './routes/components';
@@ -38,41 +36,16 @@ export type AppEnv = {
     userId?: string;
     user?: HominemUser;
     auth?: AuthContextEnvelope;
-    queues: {
-      plaidSync: Queue;
-      importTransactions: Queue;
-      placePhotoEnrich: Queue;
-    };
   };
 };
 
 export function createServer() {
   const app = new Hono<AppEnv>();
 
-  // Set up BullMQ queues using consistent queue names.
-  const plaidSyncQueue = new Queue(QUEUE_NAMES.PLAID_SYNC, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    connection: redis as any,
-  });
-  const importTransactionsQueue = new Queue(QUEUE_NAMES.IMPORT_TRANSACTIONS, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    connection: redis as any,
-  });
-
-  const placePhotoEnrichQueue = new Queue(QUEUE_NAMES.PLACE_PHOTO_ENRICH, {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    connection: redis as any,
-  });
-
-  // Add queues to the app context
-  app.use('*', async (c, next) => {
-    c.set('queues', {
-      plaidSync: plaidSyncQueue,
-      importTransactions: importTransactionsQueue,
-      placePhotoEnrich: placePhotoEnrichQueue,
-    });
-    await next();
-  });
+  // Block malicious probe requests before doing anything else.
+  // Placing this ahead of the logger keeps the noise out of our logs and
+  // prevents the request from traversing any further middleware.
+  app.use('*', blockMaliciousProbes());
 
   // Logger middleware
   app.use('*', honoLogger());
@@ -93,7 +66,6 @@ export function createServer() {
           'http://localhost:4444',
           'http://localhost:4445',
           'http://localhost:4446',
-          'https://auth.ponti.io',
         ];
         return allowedOrigins.includes(origin || '') ? origin : '';
       },

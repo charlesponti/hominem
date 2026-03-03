@@ -23,6 +23,7 @@ import {
   removeTagsFromEvent,
   syncTagsForEvent,
 } from '@hominem/services/tags';
+import { type SQL } from '@hominem/db';
 
 export interface EventFilters {
   tagNames?: string[] | undefined;
@@ -37,7 +38,7 @@ export interface EventWithTagsAndPeople extends DbEventOutput {
 }
 
 export async function getEvents(filters: EventFilters = {}): Promise<EventWithTagsAndPeople[]> {
-  const conditions = [];
+  const conditions: Array<SQL<unknown>> = [];
 
   if (filters.tagNames && filters.tagNames.length > 0) {
     const tagResults = await db

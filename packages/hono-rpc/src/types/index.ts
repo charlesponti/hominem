@@ -10,22 +10,23 @@
  */
 
 /* Core RPC type groups */
-export * from './admin.types';
-export * from './chat.types';
-export * from './events.types';
-export * from './finance.types';
-export * from './goals.types';
-export * from './invites.types';
-export * from './items.types';
-export * from './lists.types';
-export * from './mobile.types';
-export * from './notes.types';
-export * from './people.types';
-export * from './places.types';
-export * from './trips.types';
-export * from './tweet.types';
-export * from './twitter.types';
-export * from './user.types';
+export * from './admin.types'
+export * from './auth.types'
+export * from './chat.types'
+export * from './events.types'
+export * from './finance.types'
+export * from './goals.types'
+export * from './invites.types'
+export * from './items.types'
+export * from './lists.types'
+export * from './mobile.types'
+export * from './notes.types'
+export * from './people.types'
+export * from './places.types'
+export * from './trips.types'
+export * from './tweet.types'
+export * from './twitter.types'
+export * from './user.types'
 
 /* Utility types */
-export * from './utils';
+export * from './utils'

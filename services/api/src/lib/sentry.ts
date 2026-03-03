@@ -60,6 +60,7 @@ export function sentryMiddleware() {
 }
 
 // Global error handler for Sentry - integrates with app.onError
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function sentryErrorHandler() {
   return (error: Error, c: Context) => {
     Sentry.withScope((scope) => {

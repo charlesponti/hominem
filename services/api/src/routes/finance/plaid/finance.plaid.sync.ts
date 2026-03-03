@@ -11,6 +11,8 @@ import { Hono } from 'hono';
 
 import type { AppEnv } from '../../../server';
 
+import { plaidSyncQueue } from '../../../lib/queues';
+
 export const financePlaidSyncRoutes = new Hono<AppEnv>();
 
 // Manually trigger sync for a specific item
@@ -35,8 +37,7 @@ financePlaidSyncRoutes.post('/:itemId', async (c) => {
     }
 
     // Queue sync job
-    const queues = c.get('queues');
-    await queues.plaidSync.add(
+    await plaidSyncQueue.add(
       QUEUE_NAMES.PLAID_SYNC,
       {
         userId,

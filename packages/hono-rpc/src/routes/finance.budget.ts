@@ -294,7 +294,7 @@ export const budgetRoutes = new Hono<AppContext>()
         }
       }
 
-      const history = [];
+      const history: Array<{ date: string; budgeted: number; actual: number }> = [];
       for (let i = 0; i < months; i++) {
         const targetIterationDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
         const year = targetIterationDate.getFullYear();

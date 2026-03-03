@@ -449,6 +449,34 @@
       "when": 1772132256070,
       "tag": "0063_special_mindworm",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1772528159153,
+      "tag": "0064_fix_kuma_rls_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1772600000000,
+      "tag": "0065_kuma_rls_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1772700000000,
+      "tag": "0066_icy_hands",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1772800000000,
+      "tag": "0067_fix_better_auth_timestamps",
+      "breakpoints": true
     }
   ]
 }

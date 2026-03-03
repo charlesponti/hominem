@@ -1617,7 +1617,7 @@ authRoutes.post('/device/token', zValidator('json', deviceTokenSchema), async (c
     return deviceTokenRateLimit;
   }
 
-  try {
+   try {
     const response = await callBetterAuthPluginEndpoint({
       request: c.req.raw,
       path: '/device/token',
@@ -1628,5 +1628,89 @@ authRoutes.post('/device/token', zValidator('json', deviceTokenSchema), async (c
     return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401);
   } catch {
     return c.json({ error: 'device_token_failed' }, 400);
+  }
+});
+
+/**
+ * Mock Auth Endpoints
+ * These endpoints are for local development with VITE_USE_MOCK_AUTH=true
+ * They simulate the Apple Auth flow without requiring real Apple credentials
+ */
+
+// Check if mock auth is enabled
+function isMockAuthEnabled(): boolean {
+  return process.env.VITE_USE_MOCK_AUTH === 'true';
+}
+
+// Import mock auth types and provider
+import { createMockAuthProvider, type User, type Session } from '@hominem/auth/server-auth';
+
+/**
+ * POST /auth/mock/signin
+ * Mock sign-in endpoint for local development
+ * Returns a mock user and session token
+ */
+authRoutes.post('/mock/signin', async (c) => {
+  if (!isMockAuthEnabled()) {
+    return c.json({ error: 'Mock auth is not enabled' }, 400);
+  }
+
+  try {
+    const provider = createMockAuthProvider();
+    const response = await provider.signIn();
+
+    return c.json({
+      user: response.user,
+      session: response.session,
+    }, 200);
+  } catch (err) {
+    logger.error('Mock signin error:', err instanceof Error ? err : new Error(String(err)));
+    return c.json({ error: 'Mock signin failed' }, 500);
+  }
+});
+
+/**
+ * GET /auth/mock/session
+ * Get the current mock session (for testing session persistence)
+ */
+authRoutes.get('/mock/session', async (c) => {
+  if (!isMockAuthEnabled()) {
+    return c.json({ error: 'Mock auth is not enabled' }, 400);
+  }
+
+  try {
+    // In a real implementation, we'd validate the session token
+    // For mock auth, we just check if the request has valid format
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return c.json({ session: null }, 200);
+    }
+
+    // Mock implementation: just return success
+    // The client should handle session validation via the token
+    return c.json({ session: { valid: true } }, 200);
+  } catch (err) {
+    logger.error('Mock session error:', err instanceof Error ? err : new Error(String(err)));
+    return c.json({ error: 'Mock session check failed' }, 500);
+  }
+});
+
+/**
+ * POST /auth/mock/signout
+ * Mock sign-out endpoint
+ */
+authRoutes.post('/mock/signout', async (c) => {
+  if (!isMockAuthEnabled()) {
+    return c.json({ error: 'Mock auth is not enabled' }, 400);
+  }
+
+  try {
+    const provider = createMockAuthProvider();
+    await provider.signOut();
+
+    return c.json({ success: true }, 200);
+  } catch (err) {
+    logger.error('Mock signout error:', err instanceof Error ? err : new Error(String(err)));
+    return c.json({ error: 'Mock signout failed' }, 500);
   }
 });

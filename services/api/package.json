@@ -28,6 +28,7 @@
     "@hominem/hono-rpc": "workspace:*",
     "@hominem/jobs-services": "workspace:*",
     "@hominem/lists-services": "workspace:*",
+    "@hominem/queues": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@hono/node-server": "^1.19.2",

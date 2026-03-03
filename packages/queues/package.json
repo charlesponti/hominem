@@ -1,0 +1,16 @@
+{
+  "name": "@hominem/queues",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@hominem/services": "workspace:*",
+    "@hominem/utils": "workspace:*",
+    "bullmq": "^5.0.0"
+  }
+}

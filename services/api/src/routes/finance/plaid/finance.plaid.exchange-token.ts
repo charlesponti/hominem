@@ -9,6 +9,7 @@ import * as z from 'zod';
 import type { AppEnv } from '../../../server';
 
 import { plaidClient } from '../../../lib/plaid';
+import { plaidSyncQueue } from '../../../lib/queues';
 
 export const financePlaidExchangeTokenRoutes = new Hono<AppEnv>();
 
@@ -47,8 +48,7 @@ financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema
     });
 
     // Queue sync job
-    const queues = c.get('queues');
-    await queues.plaidSync.add(
+    await plaidSyncQueue.add(
       QUEUE_NAMES.PLAID_SYNC,
       {
         userId,

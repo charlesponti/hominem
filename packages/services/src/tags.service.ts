@@ -87,14 +87,18 @@ export async function addTagsToEvent(eventId: string, tagIds: string[]) {
   return db.insert(eventsTags).values(relationships).returning();
 }
 
-export async function removeTagsFromEvent(eventId: string, tagIds?: string[]) {
+export async function removeTagsFromEvent(
+  eventId: string,
+  tagIds?: string[],
+): Promise<void> {
   if (tagIds && tagIds.length > 0) {
-    return db
+    await db
       .delete(eventsTags)
       .where(and(eq(eventsTags.eventId, eventId), inArray(eventsTags.tagId, tagIds)));
+    return;
   }
 
-  return db.delete(eventsTags).where(eq(eventsTags.eventId, eventId));
+  await db.delete(eventsTags).where(eq(eventsTags.eventId, eventId));
 }
 
 export async function syncTagsForEvent(eventId: string, tagIds: string[]) {

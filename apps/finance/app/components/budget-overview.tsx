@@ -96,7 +96,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
   }
 
   return (
-    <Card metadata={`KPI_OBJ_CT: ${categories.length}`}>
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Target className="size-4" />

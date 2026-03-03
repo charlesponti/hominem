@@ -140,7 +140,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         ) : (
           <div className="space-y-3">
             {displayError && (
-              <Alert type="error" dismissible onDismiss={handleRetry}>
+              <Alert variant="destructive">
                 {displayError}
               </Alert>
             )}

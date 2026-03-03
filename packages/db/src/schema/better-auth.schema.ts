@@ -1,5 +1,13 @@
-import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm'
-import { boolean, index, integer, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core'
+import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 
 export const betterAuthUser = pgTable(
   'better_auth_user',
@@ -12,8 +20,8 @@ export const betterAuthUser = pgTable(
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
   },
-  (table) => [uniqueIndex('better_auth_user_email_uidx').on(table.email)]
-)
+  (table) => [uniqueIndex('better_auth_user_email_uidx').on(table.email)],
+);
 
 export const betterAuthSession = pgTable(
   'better_auth_session',
@@ -29,8 +37,11 @@ export const betterAuthSession = pgTable(
       .notNull()
       .references(() => betterAuthUser.id, { onDelete: 'cascade' }),
   },
-  (table) => [uniqueIndex('better_auth_session_token_uidx').on(table.token), index('better_auth_session_user_idx').on(table.userId)]
-)
+  (table) => [
+    uniqueIndex('better_auth_session_token_uidx').on(table.token),
+    index('better_auth_session_user_idx').on(table.userId),
+  ],
+);
 
 export const betterAuthAccount = pgTable(
   'better_auth_account',
@@ -54,8 +65,8 @@ export const betterAuthAccount = pgTable(
   (table) => [
     index('better_auth_account_user_idx').on(table.userId),
     uniqueIndex('better_auth_account_provider_account_uidx').on(table.providerId, table.accountId),
-  ]
-)
+  ],
+);
 
 export const betterAuthVerification = pgTable(
   'better_auth_verification',
@@ -67,8 +78,8 @@ export const betterAuthVerification = pgTable(
     createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
   },
-  (table) => [index('better_auth_verification_identifier_idx').on(table.identifier)]
-)
+  (table) => [index('better_auth_verification_identifier_idx').on(table.identifier)],
+);
 
 export const betterAuthPasskey = pgTable(
   'better_auth_passkey',
@@ -90,8 +101,8 @@ export const betterAuthPasskey = pgTable(
   (table) => [
     index('better_auth_passkey_user_idx').on(table.userId),
     uniqueIndex('better_auth_passkey_credential_uidx').on(table.credentialID),
-  ]
-)
+  ],
+);
 
 export const betterAuthApiKey = pgTable(
   'better_auth_api_key',
@@ -120,8 +131,11 @@ export const betterAuthApiKey = pgTable(
     permissions: text('permissions'),
     metadata: text('metadata'),
   },
-  (table) => [index('better_auth_api_key_key_idx').on(table.key), index('better_auth_api_key_user_idx').on(table.userId)]
-)
+  (table) => [
+    index('better_auth_api_key_key_idx').on(table.key),
+    index('better_auth_api_key_user_idx').on(table.userId),
+  ],
+);
 
 export const betterAuthDeviceCode = pgTable(
   'better_auth_device_code',
@@ -141,20 +155,20 @@ export const betterAuthDeviceCode = pgTable(
     uniqueIndex('better_auth_device_code_device_uidx').on(table.deviceCode),
     uniqueIndex('better_auth_device_code_user_uidx').on(table.userCode),
     index('better_auth_device_code_user_idx').on(table.userId),
-  ]
-)
+  ],
+);
 
-export type BetterAuthUser = InferSelectModel<typeof betterAuthUser>
-export type BetterAuthUserInsert = InferInsertModel<typeof betterAuthUser>
-export type BetterAuthSession = InferSelectModel<typeof betterAuthSession>
-export type BetterAuthSessionInsert = InferInsertModel<typeof betterAuthSession>
-export type BetterAuthAccount = InferSelectModel<typeof betterAuthAccount>
-export type BetterAuthAccountInsert = InferInsertModel<typeof betterAuthAccount>
-export type BetterAuthVerification = InferSelectModel<typeof betterAuthVerification>
-export type BetterAuthVerificationInsert = InferInsertModel<typeof betterAuthVerification>
-export type BetterAuthPasskey = InferSelectModel<typeof betterAuthPasskey>
-export type BetterAuthPasskeyInsert = InferInsertModel<typeof betterAuthPasskey>
-export type BetterAuthApiKey = InferSelectModel<typeof betterAuthApiKey>
-export type BetterAuthApiKeyInsert = InferInsertModel<typeof betterAuthApiKey>
-export type BetterAuthDeviceCode = InferSelectModel<typeof betterAuthDeviceCode>
-export type BetterAuthDeviceCodeInsert = InferInsertModel<typeof betterAuthDeviceCode>
+export type BetterAuthUser = InferSelectModel<typeof betterAuthUser>;
+export type BetterAuthUserInsert = InferInsertModel<typeof betterAuthUser>;
+export type BetterAuthSession = InferSelectModel<typeof betterAuthSession>;
+export type BetterAuthSessionInsert = InferInsertModel<typeof betterAuthSession>;
+export type BetterAuthAccount = InferSelectModel<typeof betterAuthAccount>;
+export type BetterAuthAccountInsert = InferInsertModel<typeof betterAuthAccount>;
+export type BetterAuthVerification = InferSelectModel<typeof betterAuthVerification>;
+export type BetterAuthVerificationInsert = InferInsertModel<typeof betterAuthVerification>;
+export type BetterAuthPasskey = InferSelectModel<typeof betterAuthPasskey>;
+export type BetterAuthPasskeyInsert = InferInsertModel<typeof betterAuthPasskey>;
+export type BetterAuthApiKey = InferSelectModel<typeof betterAuthApiKey>;
+export type BetterAuthApiKeyInsert = InferInsertModel<typeof betterAuthApiKey>;
+export type BetterAuthDeviceCode = InferSelectModel<typeof betterAuthDeviceCode>;
+export type BetterAuthDeviceCodeInsert = InferInsertModel<typeof betterAuthDeviceCode>;

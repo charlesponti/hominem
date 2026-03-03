@@ -20,6 +20,7 @@ import {
   type TwitterSyncOutput,
   type TwitterTweet,
 } from '../types/twitter.types';
+import type { Note } from '../types/notes.types';
 
 // Twitter OAuth and API utilities
 const TWITTER_SCOPES = 'tweet.read tweet.write users.read offline.access';
@@ -196,7 +197,7 @@ export const twitterRoutes = new Hono<AppContext>()
     const tweetData = (await tweetResponse.json()) as TwitterTweetResponse;
     const tweet = tweetData.data;
 
-    let noteRecord = null;
+    let noteRecord: Note | null = null;
 
     // Save or update note record if requested
     if (saveAsContent) {

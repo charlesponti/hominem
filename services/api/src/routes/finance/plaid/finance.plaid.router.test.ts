@@ -121,6 +121,7 @@ describe('Plaid Router', () => {
     test('handles plaid client error', async () => {
       // Get the mocked functions from the plaid module
       const plaid = await import('plaid');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockLinkTokenCreate = vi.mocked((plaid as any).mockLinkTokenCreate);
       mockLinkTokenCreate.mockRejectedValueOnce(new Error('Plaid API Error'));
 

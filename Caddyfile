@@ -14,13 +14,9 @@
 		}
 	}
 
-	# Log to file for monitoring (user-writable location)
+	# Logging to stdout instead of file to avoid permission issues
 	log {
-		output file /Users/charlesponti/.local/share/caddy/access.log {
-			roll_size 10mb
-			roll_keep 5
-			roll_keep_for 720h
-		}
+		output stdout
 		level INFO
 	}
 }
@@ -46,11 +42,6 @@
 	handle_errors {
 		respond "* {http.error.status_code} {http.error.status_text}"
 	}
-}
-
-api.hominem.test {
-	import common
-	reverse_proxy 127.0.0.1:4040
 }
 
 rocco.hominem.test {

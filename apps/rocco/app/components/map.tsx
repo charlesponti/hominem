@@ -266,7 +266,7 @@ const RoccoMap = ({
   );
 
   if (mapsLoadingState === 'FAILED') {
-    return <Alert type="error">The Maps Library could not be loaded.</Alert>;
+    return <Alert variant="destructive">The Maps Library could not be loaded.</Alert>;
   }
 
   if (mapsLoadingState === 'LOADING') {

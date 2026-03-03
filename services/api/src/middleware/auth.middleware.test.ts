@@ -1,4 +1,15 @@
 import { db, eq } from '@hominem/db';
+import { vi } from 'vitest';
+
+// same mocking strategy for server import
+vi.mock('@scalar/hono-api-reference', () => ({
+  apiReference: () => () => {
+    return async (c: unknown) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (c as any).text('docs-mock');
+    };
+  },
+}));
 import { users } from '@hominem/db/schema/users';
 import { SignJWT } from 'jose';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';

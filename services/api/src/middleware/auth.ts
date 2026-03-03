@@ -69,6 +69,7 @@ function setCachedUser(user: HominemUser) {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function getHominemUserFromJwt(token: string): Promise<HominemUser | null> {
   const claims = await verifyAccessToken(token);
   const cached = getCachedUser(claims.sub);

@@ -20,6 +20,7 @@ import {
   type PlaceInput,
 } from '@hominem/places-services';
 import { NotFoundError, InternalError, isServiceError } from '@hominem/services';
+import { placePhotoEnrichQueue } from '@hominem/queues';
 import { logger } from '@hominem/utils/logger';
 import { sanitizeStoredPhotos } from '@hominem/utils/images';
 import { zValidator } from '@hono/zod-validator';
@@ -182,7 +183,6 @@ export const placesRoutes = new Hono<AppContext>()
     try {
       const input = c.req.valid('json') as z.infer<typeof placeCreateSchema>;
       const userId = c.get('userId')!;
-      const queues = c.get('queues');
 
       const { listIds, ...placeInput } = input;
 
@@ -264,19 +264,17 @@ export const placesRoutes = new Hono<AppContext>()
 
       // Enqueue photo enrichment if needed
       try {
-        if (queues) {
-          const hasGooglePhotos = createdPlace.photos?.some((url: string) =>
-            isGooglePhotosUrl(url),
-          );
-          if (
-            (createdPlace.photos == null || createdPlace.photos.length === 0 || hasGooglePhotos) &&
-            createdPlace.googleMapsId
-          ) {
-            await queues.placePhotoEnrich.add('enrich', {
-              placeId: createdPlace.id,
-              forceFresh: true,
-            });
-          }
+        const hasGooglePhotos = createdPlace.photos?.some((url: string) =>
+          isGooglePhotosUrl(url),
+        );
+        if (
+          (createdPlace.photos == null || createdPlace.photos.length === 0 || hasGooglePhotos) &&
+          createdPlace.googleMapsId
+        ) {
+          await placePhotoEnrichQueue.add('enrich', {
+            placeId: createdPlace.id,
+            forceFresh: true,
+          });
         }
       } catch (err) {
         logger.warn('[places.create] Failed to enqueue photo enrichment', { error: err });
@@ -396,7 +394,6 @@ export const placesRoutes = new Hono<AppContext>()
   .post('/get', authMiddleware, zValidator('json', placeGetByIdSchema), async (c) => {
     try {
       const input = c.req.valid('json') as z.infer<typeof placeGetByIdSchema>;
-      const queues = c.get('queues');
 
       const dbPlace = await getPlaceById(input.id);
 
@@ -406,17 +403,15 @@ export const placesRoutes = new Hono<AppContext>()
 
       // Enqueue photo enrichment if needed
       try {
-        if (queues) {
-          const hasGooglePhotos = dbPlace.photos?.some((url: string) => isGooglePhotosUrl(url));
-          if (
-            (dbPlace.photos == null || dbPlace.photos.length === 0 || hasGooglePhotos) &&
-            dbPlace.googleMapsId
-          ) {
-            await queues.placePhotoEnrich.add('enrich', {
-              placeId: dbPlace.id,
-              forceFresh: true,
-            });
-          }
+        const hasGooglePhotos = dbPlace.photos?.some((url: string) => isGooglePhotosUrl(url));
+        if (
+          (dbPlace.photos == null || dbPlace.photos.length === 0 || hasGooglePhotos) &&
+          dbPlace.googleMapsId
+        ) {
+          await placePhotoEnrichQueue.add('enrich', {
+            placeId: dbPlace.id,
+            forceFresh: true,
+          });
         }
       } catch {
         // Non-fatal

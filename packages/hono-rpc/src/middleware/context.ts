@@ -1,7 +1,4 @@
-import type { Queues } from '@hominem/services';
-
 import { getServerAuth } from '@hominem/auth/server';
-import { getOrCreateQueues } from '@hominem/services/queues';
 import { logger } from '@hominem/utils/logger';
 import { createMiddleware } from 'hono/factory';
 
@@ -13,23 +10,10 @@ import type { AppContext } from './auth';
  * Runs on EVERY request to initialize context (similar to previous createContext patterns).
  * Sets up:
  * - User authentication from Better Auth session and bearer token material
- * - Queue system for background jobs
  * - Response headers for cookies
  */
 export const contextMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const responseHeaders = new Headers();
-
-  // Initialize queues (matching legacy RPC context)
-  const queues =
-    process.env.NODE_ENV === 'test'
-      ? {
-          plaidSync: undefined as unknown as Queues['plaidSync'],
-          importTransactions: undefined as unknown as Queues['importTransactions'],
-          placePhotoEnrich: undefined as unknown as Queues['placePhotoEnrich'],
-        }
-      : getOrCreateQueues();
-
-  c.set('queues', queues);
 
   // Test override for user (matching legacy RPC pattern)
   if (process.env.NODE_ENV === 'test') {

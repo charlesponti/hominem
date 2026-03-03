@@ -7,7 +7,7 @@ set -euo pipefail
 
 # allow overrides from environment or Makefile
 CLOUDFLARED=${CLOUDFLARED:-cloudflared}
-AUTH_BASE_URL=${AUTH_BASE_URL:-https://auth.ponti.io}
+AUTH_BASE_URL=${AUTH_BASE_URL:-https://api.hominem.test}
 CLOUDFLARED_TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN:-$AUTH_TUNNEL_TOKEN}
 CLOUDFLARED_TUNNEL=${CLOUDFLARED_TUNNEL:-$AUTH_TUNNEL_NAME}
 

@@ -8,7 +8,7 @@ interface JsonResponse {
 }
 
 function getBaseUrl() {
-  const baseUrl = process.env.AUTH_E2E_BASE_URL ?? 'https://auth.ponti.io'
+  const baseUrl = process.env.AUTH_E2E_BASE_URL ?? 'https://api.ponti.io'
   return baseUrl.replace(/\/+$/, '')
 }
 

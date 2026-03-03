@@ -3,7 +3,9 @@
   "compilerOptions": {
     "tsBuildInfoFile": "../../.cache/db.tsbuildinfo",
     "rootDir": "src",
-    "outDir": "./build"
+    "outDir": "./build",
+    "composite": false,
+    "disableSourceOfProjectReferenceRedirect": false
   },
   "include": ["src/**/*.ts"],
   "exclude": [
