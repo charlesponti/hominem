@@ -8,7 +8,6 @@ import * as schema from '@hominem/db/schema/tables';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import {
-  apiKey,
   bearer,
   captcha,
   deviceAuthorization,
@@ -120,26 +119,29 @@ function getAuthPlugins() {
         },
       },
     }),
-    apiKey({
-      defaultPrefix: 'hmn_',
-      requireName: true,
-      enableMetadata: true,
-      schema: {
-        apikey: {
-          modelName: 'betterAuthApiKey',
-        },
-      },
-      keyExpiration: {
-        defaultExpiresIn: 1000 * 60 * 60 * 24 * 90,
-        minExpiresIn: 1,
-        maxExpiresIn: 365,
-      },
-      rateLimit: {
-        enabled: true,
-        timeWindow: 1000 * 60 * 60,
-        maxRequests: 5000,
-      },
-    }),
+    // API key authentication is not currently available as a built-in plugin in better-auth@1.4.19
+    // The database schema (better_auth_api_key table) is prepared for future support.
+    // TODO: When better-auth adds native apiKey support, uncomment and configure below:
+    // apiKey({
+    //   defaultPrefix: 'hmn_',
+    //   requireName: true,
+    //   enableMetadata: true,
+    //   schema: {
+    //     apikey: {
+    //       modelName: 'betterAuthApiKey',
+    //     },
+    //   },
+    //   keyExpiration: {
+    //     defaultExpiresIn: 1000 * 60 * 60 * 24 * 90,
+    //     minExpiresIn: 1,
+    //     maxExpiresIn: 365,
+    //   },
+    //   rateLimit: {
+    //     enabled: true,
+    //     timeWindow: 1000 * 60 * 60,
+    //     maxRequests: 5000,
+    //   },
+    // }),
     openAPI({
       path: '/reference',
       theme: 'deepSpace',
