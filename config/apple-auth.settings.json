@@ -18,7 +18,7 @@
     "projectSlug": "hakumi"
   },
   "secretsNotStoredInRepo": {
-    "applePrivateKeyFile": ".auth/AuthKey_<KEY_ID>.p8",
+    "applePrivateKeyFile": ".auth/hominem.dev.p8",
     "appleClientSecretEnvVar": "APPLE_CLIENT_SECRET"
   }
 }
