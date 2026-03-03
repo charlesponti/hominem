@@ -29,9 +29,11 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@langchain/textsplitters": "^1.0.1",
     "@supabase/storage-js": "^2.7.3",
     "@supabase/supabase-js": "2.88.0",
     "date-fns": "^3.6.0",
+    "langchain": "^1.2.28",
     "pino": "^9.7.0",
     "zod": "4.3.6"
   },

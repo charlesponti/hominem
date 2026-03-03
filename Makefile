@@ -54,15 +54,7 @@ lint:
 
 # Clean build artifacts and dependencies
 clean:
-	find . -type d -name "node_modules" -exec rm -rf {} +
-	find . -type d -name "dist" -exec rm -rf {} +
-	find . -type d -name "build" -exec rm -rf {} +
-	find . -type d -name "logs" -exec rm -rf {} +
-	find . -type d -name "coverage" -exec rm -rf {} +
-	find . -type d -name ".next" -exec rm -rf {} +
-	find . -type d -name ".turbo" -exec rm -rf {} +
-	find . -name "bun.lock" -exec rm -rf {} +
-	find . -name '*.tsbuildinfo' -type f -not -path './node_modules/*' -delete
+	@./scripts/clean.sh
 
 # Stop Docker containers
 docker-down:
@@ -126,46 +118,10 @@ mobile-build-dev-ios:
 	@bun run --filter @hominem/mobile build:dev:ios
 
 tunnel-auth:
-	@command -v $(CLOUDFLARED) >/dev/null 2>&1 || { \
-		echo "ERROR: cloudflared is not installed. Install via: brew install cloudflared"; \
-		exit 1; \
-	}
-	@if [ -n "$(CLOUDFLARED_TUNNEL_TOKEN)" ]; then \
-		echo "Starting Cloudflare tunnel using CLOUDFLARED_TUNNEL_TOKEN..."; \
-		$(CLOUDFLARED) tunnel --no-autoupdate run --token "$(CLOUDFLARED_TUNNEL_TOKEN)"; \
-	elif [ -n "$(CLOUDFLARED_TUNNEL)" ]; then \
-		echo "Starting Cloudflare tunnel using named tunnel: $(CLOUDFLARED_TUNNEL)"; \
-		$(CLOUDFLARED) tunnel --no-autoupdate run "$(CLOUDFLARED_TUNNEL)"; \
-	else \
-		echo "ERROR: set CLOUDFLARED_TUNNEL_TOKEN or CLOUDFLARED_TUNNEL before running make tunnel-auth"; \
-		exit 1; \
-	fi
+	@./scripts/tunnel.sh auth
 
 tunnel-auth-check:
-	@echo "Checking $(AUTH_BASE_URL)/api/status"
-	@status_code=$$(curl -sS -o /tmp/hominem_auth_status.out -w "%{http_code}" "$(AUTH_BASE_URL)/api/status"); \
-	echo "status=$$status_code"; \
-	if [ "$$status_code" = "530" ] || [ "$$status_code" = "502" ]; then \
-		echo "ERROR: auth edge is unhealthy (HTTP $$status_code)."; \
-		echo "Response:"; \
-		head -c 300 /tmp/hominem_auth_status.out; \
-		echo; \
-		exit 1; \
-	fi
-	@echo "Checking mobile authorize edge path"
-	@status_code=$$(curl -sS -o /tmp/hominem_mobile_authorize.out -w "%{http_code}" \
-		-X POST "$(AUTH_BASE_URL)/api/auth/mobile/authorize" \
-		-H "content-type: application/json" \
-		--data '{"redirect_uri":"hakumi://auth/callback","code_challenge":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","state":"12345678"}'); \
-	echo "status=$$status_code"; \
-	if [ "$$status_code" = "530" ] || [ "$$status_code" = "502" ]; then \
-		echo "ERROR: mobile auth endpoint is still behind an unhealthy edge (HTTP $$status_code)."; \
-		echo "Response:"; \
-		head -c 300 /tmp/hominem_mobile_authorize.out; \
-		echo; \
-		exit 1; \
-	fi
-	@echo "Tunnel check passed."
+	@./scripts/tunnel.sh check
 
 lbt:
 	@echo "Running lint..."

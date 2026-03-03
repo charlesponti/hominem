@@ -146,16 +146,18 @@ export async function getPlacesByIds(ids: string[]): Promise<PlaceOutput[]> {
   if (ids.length === 0) {
     return [];
   }
-  return db.query.place.findMany({ where: inArray(place.id, ids) });
+  const results = await db.query.place.findMany({ where: inArray(place.id, ids) });
+  return results as unknown as PlaceOutput[];
 }
 
 export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise<PlaceOutput[]> {
   if (googleMapsIds.length === 0) {
     return [];
   }
-  return db.query.place.findMany({
+  const results = await db.query.place.findMany({
     where: inArray(place.googleMapsId, googleMapsIds),
   });
+  return results as unknown as PlaceOutput[];
 }
 
 /**
@@ -587,9 +589,10 @@ export async function updatePlacePhotos(placeId: string, photos: string[]): Prom
 }
 
 export async function listPlacesMissingPhotos(): Promise<PlaceOutput[]> {
-  return db.query.place.findMany({
+  const results = await db.query.place.findMany({
     where: and(isNotNull(place.googleMapsId), isNull(place.photos)),
   });
+  return results as unknown as PlaceOutput[];
 }
 
 export async function refreshAllPlaces() {

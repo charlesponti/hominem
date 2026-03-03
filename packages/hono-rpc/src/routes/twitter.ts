@@ -12,6 +12,7 @@ import { randomUUID } from 'node:crypto';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
   twitterPostSchema,
+  type TwitterAccount,
   type TwitterAccountsListOutput,
   type TwitterAuthorizeOutput,
   type TwitterDisconnectOutput,
@@ -85,7 +86,15 @@ export const twitterRoutes = new Hono<AppContext>()
   .get('/accounts', authMiddleware, async (c) => {
     const userId = c.get('userId')!;
     const accounts = await listAccountsByProvider(userId, 'twitter');
-    return c.json<TwitterAccountsListOutput>(accounts);
+    const twitterAccounts: TwitterAccountsListOutput = accounts.map(
+      (account: { id: string; provider: string; providerAccountId: string; expiresAt: string | null }): TwitterAccount => ({
+        id: account.id,
+        provider: account.provider,
+        providerAccountId: account.providerAccountId,
+        expiresAt: account.expiresAt ? new Date(account.expiresAt) : null,
+      }),
+    );
+    return c.json<TwitterAccountsListOutput>(twitterAccounts);
   })
 
   // Get Twitter authorization URL

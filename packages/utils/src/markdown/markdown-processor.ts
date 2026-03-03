@@ -1,7 +1,7 @@
 import {
   MarkdownTextSplitter,
   type RecursiveCharacterTextSplitterParams,
-} from 'langchain/text_splitter';
+} from '@langchain/textsplitters';
 
 // Document type from langchain
 export interface Document<Metadata extends Record<string, unknown> = Record<string, unknown>> {

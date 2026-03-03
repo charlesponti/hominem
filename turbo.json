@@ -17,7 +17,7 @@
     "REDIS_URL",
     "RESEND_API_KEY"
   ],
-  "concurrency": "18",
+  "concurrency": "4",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -30,14 +30,20 @@
       "cache": false
     },
     "dev": {
-      "cache": false
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^build"]
     },
     "format": {
       "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],
       "outputs": []
     },
     "lint": {
-      "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md,css}", "app/**/*.{ts,tsx,js,jsx,json,md,css}", "tools/stylelint-config-void.cjs"],
+      "inputs": [
+        "src/**/*.{ts,tsx,js,jsx,json,md,css}",
+        "app/**/*.{ts,tsx,js,jsx,json,md,css}",
+        "tools/stylelint-config-void.cjs"
+      ],
       "outputs": []
     },
     "start": {

@@ -164,7 +164,7 @@ export async function getTripById(
     .innerJoin(place, eq(item.itemId, place.id))
     .orderBy(tripItems.day, tripItems.order)) as TripItemWithPlace[];
 
-  return { ...trip, items };
+  return { ...trip, items } as TripOutput & { items: TripItemWithPlace[] };
 }
 
 /**

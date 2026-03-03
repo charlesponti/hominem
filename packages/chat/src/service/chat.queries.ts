@@ -1,7 +1,6 @@
 import type { ChatOutput } from '@hominem/db/types/chats';
 
-import { db, takeUniqueOrThrow } from '@hominem/db';
-import { and, desc, eq } from 'drizzle-orm';
+import { db, takeUniqueOrThrow, and, desc, eq } from '@hominem/db';
 import { chat, chatMessage } from '@hominem/db/schema/chats';
 
 import type { CreateChatParams } from './chat.types';

@@ -289,9 +289,10 @@ export async function getUserAccounts(
   userId: string,
   plaidItemId: string,
 ): Promise<FinanceAccountInput[]> {
-  return await db.query.financeAccounts.findMany({
+  const results = await db.query.financeAccounts.findMany({
     where: and(eq(financeAccounts.userId, userId), eq(financeAccounts.plaidItemId, plaidItemId)),
   });
+  return results as unknown as FinanceAccountInput[];
 }
 
 export async function getAccountByPlaidId(plaidAccountId: string) {
@@ -335,11 +336,10 @@ export async function insertTransaction(transactionData: {
 export async function getTransactionByPlaidId(
   plaidTransactionId: string,
 ): Promise<FinanceTransactionOutput | null> {
-  return (
-    (await db.query.transactions.findFirst({
-      where: eq(transactions.plaidTransactionId, plaidTransactionId),
-    })) ?? null
-  );
+  const result = await db.query.transactions.findFirst({
+    where: eq(transactions.plaidTransactionId, plaidTransactionId),
+  });
+  return result as unknown as FinanceTransactionOutput | null;
 }
 
 export async function updateTransaction(
