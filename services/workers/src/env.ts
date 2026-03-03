@@ -10,9 +10,11 @@ const envSchema = z.object({
   PLAID_CLIENT_ID: z.string().default(''),
   PLAID_API_KEY: z.string().default(''),
   PLAID_ENV: z.enum(['sandbox', 'development', 'production']).default('sandbox'),
-  // Supabase configuration for file storage
-  SUPABASE_URL: z.string().url(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string(),
+  // R2 configuration for file storage
+  R2_ENDPOINT: z.string().url(),
+  R2_BUCKET_NAME: z.string().default('hominem-storage'),
+  R2_ACCESS_KEY_ID: z.string(),
+  R2_SECRET_ACCESS_KEY: z.string(),
 });
 
 export const env = envSchema.parse(process.env);

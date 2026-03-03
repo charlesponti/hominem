@@ -1,6 +1,6 @@
 import { FileProcessorService } from '@hominem/services/files';
 import { indexProcessedFile } from '@hominem/services/vector';
-import { fileStorageService } from '@hominem/utils/supabase';
+import { fileStorageService } from '@hominem/utils/storage';
 import type { ActionFunctionArgs } from 'react-router';
 
 import type { FailedUpload, UploadedFile, UploadResponse } from '~/lib/types/upload.js';

@@ -2,7 +2,7 @@ import { env } from '@hominem/services/env';
 import { isValidGoogleHost } from '@hominem/utils/google';
 import { downloadImage } from '@hominem/utils/http';
 import { isGooglePlacesPhotoReference } from '@hominem/utils/images';
-import { placeImagesStorageService } from '@hominem/utils/supabase';
+import { placeImagesStorageService } from '@hominem/utils/storage';
 
 import { googlePlaces } from './google-places.service';
 

@@ -8,7 +8,7 @@ import type {
 import { redis } from '@hominem/services/redis';
 import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
-import { csvStorageService } from '@hominem/utils/supabase';
+import { csvStorageService } from '@hominem/utils/storage';
 import { type Job, Worker } from 'bullmq';
 import { Effect } from 'effect';
 

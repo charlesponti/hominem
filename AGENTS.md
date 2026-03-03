@@ -121,10 +121,6 @@ This runs automatically during `bun run check`.
 - Use Hono + tRPC patterns defined in [.github/instructions/api.instructions.md](.github/instructions/api.instructions.md).
 - Use `useHonoQuery` / `useHonoMutation` in client code.
 
-## Type Performance Tools
-
-- `npx @hackefeller/type-audit --project . --threshold 1.0`
-
 ## Imports
 
 - Use path aliases defined in each package/app `tsconfig.json` for internal packages.

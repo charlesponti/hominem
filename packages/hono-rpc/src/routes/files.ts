@@ -1,4 +1,4 @@
-import { fileStorageService } from '@hominem/utils/supabase';
+import { fileStorageService } from '@hominem/utils/storage';
 import { logger } from '@hominem/utils/logger';
 import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
 import { Hono } from 'hono';

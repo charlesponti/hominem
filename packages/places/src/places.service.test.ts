@@ -5,6 +5,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { googlePlaces } from './google-places.service';
 import { preparePlaceInsertData, refreshAllPlaces } from './places.service';
 
+// Mock place-images.service to prevent R2 storage import
+vi.mock('./place-images.service', () => ({
+  isGooglePhotosUrl: vi.fn(),
+  getPlaceImagesService: vi.fn(),
+}));
+
 // Mock googlePlaces
 vi.mock('./google-places.service', () => ({
   googlePlaces: {

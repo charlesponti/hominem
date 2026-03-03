@@ -18,15 +18,13 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       REDIS_URL: "redis://localhost:6379"
       RESEND_API_KEY: "SG.7Q9Z9ZQzQ9q"
-      SUPABASE_URL: "http://localhost:54321"
-      SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      SUPABASE_SERVICE_ROLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+      R2_ENDPOINT: "http://localhost:4567"
+      R2_ACCESS_KEY_ID: "test-key"
+      R2_SECRET_ACCESS_KEY: "test-secret"
       VITE_APP_BASE_URL: "https://example.com"
       VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       VITE_PUBLIC_API_URL: "http://localhost:4040"
-      VITE_SUPABASE_URL: "http://localhost:54321"
-      VITE_SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      VITE_SUPABASE_SERVICE_ROLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+      VITE_R2_DOMAIN: "test-domain"
     services:
       postgres:
         env:
@@ -94,8 +92,7 @@ jobs:
         run: bun run verify:mobile
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
-          EXPO_PUBLIC_SUPABASE_URL: "http://localhost:54321"
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+          EXPO_PUBLIC_R2_DOMAIN: "test-domain"
 
       - name: 🧱 Build hono-rpc package
         run: bun run --filter @hominem/hono-rpc build

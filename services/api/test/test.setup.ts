@@ -20,7 +20,48 @@ process.env.SUPABASE_ANON_KEY = 'test-anon-key'
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
 process.env.SUPABASE_JWT_SECRET = 'test-jwt-secret'
 
+// Mock R2 environment variables for tests
+process.env.R2_ENDPOINT = 'https://test.r2.cloudflarestorage.com'
+process.env.R2_ACCESS_KEY_ID = 'test-access-key-id'
+process.env.R2_SECRET_ACCESS_KEY = 'test-secret-access-key'
+process.env.R2_BUCKET_NAME = 'test-bucket'
+
 // Redis is running in Docker for tests - no mocking needed
+
+// Mock R2 storage service
+vi.mock('@hominem/utils/storage', () => ({
+  csvStorageService: {
+    uploadCsvFile: vi.fn().mockResolvedValue('test/path/file.csv'),
+    downloadCsvFile: vi.fn().mockResolvedValue('test,data\n'),
+    downloadCsvFileAsBuffer: vi.fn().mockResolvedValue(Buffer.from('test,data\n')),
+  },
+  fileStorageService: {
+    storeFile: vi.fn().mockResolvedValue({
+      id: 'test-id',
+      originalName: 'test.txt',
+      filename: 'test-id.txt',
+      mimetype: 'text/plain',
+      size: 100,
+      url: 'https://test.r2.cloudflarestorage.com/test/test-id.txt',
+      uploadedAt: new Date(),
+    }),
+    getFile: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
+    deleteFile: vi.fn().mockResolvedValue(true),
+    getFileUrl: vi.fn().mockResolvedValue('https://test.r2.cloudflarestorage.com/test/file.txt'),
+    listUserFiles: vi.fn().mockResolvedValue([]),
+  },
+  placeImagesStorageService: {
+    storeFile: vi.fn().mockResolvedValue({
+      id: 'test-id',
+      originalName: 'test.webp',
+      filename: 'places/place/test/test-id.webp',
+      mimetype: 'image/webp',
+      size: 100,
+      url: 'https://test.r2.cloudflarestorage.com/test/test-id.webp',
+      uploadedAt: new Date(),
+    }),
+  },
+}))
 
 vi.mock('resend', () => {
   const send = vi.fn()

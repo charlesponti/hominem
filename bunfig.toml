@@ -1,7 +1,5 @@
 [install]
 peer = false
-# Ensure dependencies are properly hoisted to avoid duplicate instances
-hoist = true
 
 [resolveExtensions]
 # Prevent peer dependencies from creating aliases

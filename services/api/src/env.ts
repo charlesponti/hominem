@@ -36,6 +36,11 @@ const serverSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: isTest ? z.string().default('test-service-key') : z.string(),
   SUPABASE_ANON_KEY: isTest ? z.string().default('test-anon-key') : z.string(),
 
+  R2_ENDPOINT: z.string().url().default(''),
+  R2_BUCKET_NAME: z.string().default('hominem-storage'),
+  R2_ACCESS_KEY_ID: z.string().default(''),
+  R2_SECRET_ACCESS_KEY: z.string().default(''),
+
   GOOGLE_API_KEY: z.string().default(''),
   OPENAI_API_KEY: isTest ? z.string().default('test-openai-key') : z.string(),
   AI_SDK_CHAT_WEB_ENABLED: z.coerce.boolean().default(false),
