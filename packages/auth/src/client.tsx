@@ -46,6 +46,36 @@ interface PasskeyAuthOptionsResponse {
   [key: string]: unknown;
 }
 
+interface PasskeyRegistrationOptionsResponse {
+  options?: PublicKeyCredentialCreationOptionsJSON | undefined;
+  [key: string]: unknown;
+}
+
+interface PublicKeyCredentialCreationOptionsJSON {
+  challenge: string;
+  rp: {
+    name: string;
+    id: string;
+  };
+  user: {
+    id: string;
+    name: string;
+    displayName: string;
+  };
+  pubKeyCredParams: Array<{
+    type: 'public-key';
+    alg: number;
+  }>;
+  timeout?: number | undefined;
+  excludeCredentials?: Array<{
+    id: string;
+    type: string;
+    transports?: string[] | undefined;
+  }> | undefined;
+  attestation?: string | undefined;
+  extensions?: Record<string, unknown> | undefined;
+}
+
 interface SerializedAuthenticatorAssertionResponse {
   clientDataJSON: string;
   authenticatorData: string;
@@ -94,7 +124,7 @@ async function fetchSession(apiBaseUrl: string): Promise<SessionResponse> {
 
 function buildAuthorizeUrl(
   apiBaseUrl: string,
-  provider: 'apple' | 'google',
+  provider: 'google',
   redirectTo?: string | undefined,
 ) {
   const redirectUri =
@@ -147,6 +177,38 @@ function normalizeRequestOptions(
   };
 }
 
+function normalizeCreationOptions(
+  options: PublicKeyCredentialCreationOptionsJSON,
+): PublicKeyCredentialCreationOptions {
+  const result: Record<string, unknown> = {
+    challenge: fromBase64Url(options.challenge),
+    rp: options.rp,
+    user: {
+      id: fromBase64Url(options.user.id),
+      name: options.user.name,
+      displayName: options.user.displayName,
+    },
+    pubKeyCredParams: options.pubKeyCredParams as PublicKeyCredentialParameters[],
+  };
+  if (options.timeout !== undefined) {
+    result.timeout = options.timeout;
+  }
+  if (options.excludeCredentials !== undefined) {
+    result.excludeCredentials = options.excludeCredentials.map((cred) => ({
+      id: fromBase64Url(cred.id),
+      type: cred.type as PublicKeyCredentialType,
+      ...(cred.transports ? { transports: cred.transports as AuthenticatorTransport[] } : {}),
+    }));
+  }
+  if (options.attestation !== undefined) {
+    result.attestation = options.attestation;
+  }
+  if (options.extensions !== undefined) {
+    result.extensions = options.extensions;
+  }
+  return result as unknown as PublicKeyCredentialCreationOptions;
+}
+
 function serializeAssertion(credential: PublicKeyCredential): SerializedPublicKeyCredential {
   const assertionResponse = credential.response as AuthenticatorAssertionResponse;
   return {
@@ -194,20 +256,137 @@ export function AuthProvider({
   }, [refreshAuth]);
 
   const startOAuth = useCallback(
-    async (provider: 'apple' | 'google', redirectTo?: string | undefined) => {
+    async (provider: 'google', redirectTo?: string | undefined) => {
       const url = buildAuthorizeUrl(config.apiBaseUrl, provider, redirectTo);
       window.location.href = url;
     },
     [config.apiBaseUrl],
   );
 
-  const signInWithApple = useCallback(async () => {
-    await startOAuth('apple', config.redirectTo);
-  }, [config.redirectTo, startOAuth]);
-
   const signIn = useCallback(async () => {
-    await signInWithApple();
-  }, [signInWithApple]);
+    // Default sign-in: redirect to email sign-in page
+    window.location.href = '/auth/email';
+  }, []);
+
+  const signInWithEmail = useCallback(async () => {
+    window.location.href = '/auth/email';
+  }, []);
+
+  const signInWithPasskey = useCallback(async () => {
+    if (typeof window === 'undefined' || !window.PublicKeyCredential) {
+      throw new Error('Passkeys are not available in this environment.');
+    }
+
+    const optionsRes = await fetch(
+      getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/passkey/auth/options'),
+      {
+        method: 'POST',
+        credentials: 'include',
+      },
+    );
+    if (!optionsRes.ok) {
+      throw new Error('Failed to request passkey authentication options.');
+    }
+
+    const optionsPayload = (await optionsRes.json()) as PasskeyAuthOptionsResponse;
+    const rawOptions =
+      optionsPayload.options && typeof optionsPayload.options === 'object'
+        ? optionsPayload.options
+        : optionsPayload.challenge && typeof optionsPayload.challenge === 'object'
+          ? optionsPayload.challenge
+          : null;
+
+    if (!rawOptions || typeof rawOptions.challenge !== 'string') {
+      throw new Error('Invalid passkey options response.');
+    }
+
+    const credential = (await navigator.credentials.get({
+      publicKey: normalizeRequestOptions(rawOptions),
+    })) as PublicKeyCredential | null;
+    if (!credential) {
+      throw new Error('Passkey authentication was cancelled.');
+    }
+
+    const verifyRes = await fetch(
+      getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/passkey/auth/verify'),
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          response: serializeAssertion(credential),
+        }),
+      },
+    );
+
+    if (!verifyRes.ok) {
+      throw new Error('Passkey sign-in failed.');
+    }
+
+    await refreshAuth();
+  }, [config.apiBaseUrl, refreshAuth]);
+
+  const addPasskey = useCallback(
+    async (name?: string) => {
+      if (typeof window === 'undefined' || !window.PublicKeyCredential) {
+        throw new Error('Passkeys are not available in this environment.');
+      }
+
+      const optionsRes = await fetch(
+        getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/passkey/register/options'),
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({ name: name ?? 'Default Device' }),
+        },
+      );
+      if (!optionsRes.ok) {
+        throw new Error('Failed to request passkey registration options.');
+      }
+
+      const optionsPayload = (await optionsRes.json()) as PasskeyRegistrationOptionsResponse;
+      const rawOptions: PublicKeyCredentialCreationOptionsJSON | null =
+        optionsPayload.options && typeof optionsPayload.options === 'object'
+          ? optionsPayload.options
+          : null;
+
+      if (!rawOptions || typeof rawOptions.challenge !== 'string') {
+        throw new Error('Invalid passkey options response.');
+      }
+
+      const credential = (await navigator.credentials.create({
+        publicKey: normalizeCreationOptions(rawOptions),
+      })) as PublicKeyCredential | null;
+      if (!credential) {
+        throw new Error('Passkey registration was cancelled.');
+      }
+
+      const verifyRes = await fetch(
+        getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/passkey/register/verify'),
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            response: serializeAssertion(credential),
+            name: name ?? 'Default Device',
+          }),
+        },
+      );
+
+      if (!verifyRes.ok) {
+        throw new Error('Passkey registration failed.');
+      }
+    },
+    [config.apiBaseUrl],
+  );
 
   const linkGoogle = useCallback(async () => {
     const redirectTo = config.redirectTo ?? `${window.location.origin}/account`;
@@ -312,6 +491,9 @@ export function AuthProvider({
       auth: {
         signInWithOAuth: async ({ provider, options }) => {
           try {
+            if (provider !== 'google') {
+              return { error: new Error('Only Google OAuth is supported') };
+            }
             await startOAuth(provider, options?.redirectTo);
             return { error: null };
           } catch (error) {
@@ -356,7 +538,9 @@ export function AuthProvider({
       isLoading,
       isAuthenticated: Boolean(user && session),
       signIn,
-      signInWithApple,
+      signInWithEmail,
+      signInWithPasskey,
+      addPasskey,
       linkGoogle,
       unlinkGoogle,
       signOut,
@@ -371,7 +555,9 @@ export function AuthProvider({
       session,
       isLoading,
       signIn,
-      signInWithApple,
+      signInWithEmail,
+      signInWithPasskey,
+      addPasskey,
       linkGoogle,
       unlinkGoogle,
       signOut,
@@ -386,16 +572,14 @@ export function AuthProvider({
 
 /**
  * Safe access to auth context which may be null during SSR or outside the
- * provider. Use this in layout components or other places where absence of
- * context is acceptable.
+ * provider. Use this in layout components or other places where context may not be available.
  */
 export function useSafeAuth(): AuthContextType | null {
   return useContext(AuthContext) ?? null;
 }
 
 /**
- * Strict hook that throws if no provider is found. Kept for compatibility; new
- * code should prefer `useSafeAuth` and handle the null case explicitly.
+ * Strict hook that throws if no provider is found.
  */
 export function useAuthContext(): AuthContextType {
   const context = useSafeAuth();

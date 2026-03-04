@@ -28,7 +28,7 @@ export interface HominemSession {
 export interface AuthClient {
   auth: {
     signInWithOAuth: (input: {
-      provider: 'apple' | 'google'
+      provider: 'google'
       options?: { redirectTo?: string | undefined } | undefined
     }) => Promise<{ error: Error | null }>
     signOut: () => Promise<{ error: Error | null }>
@@ -47,7 +47,9 @@ export interface AuthContextType {
   isLoading: boolean
   isAuthenticated: boolean
   signIn: () => Promise<void>
-  signInWithApple: () => Promise<void>
+  signInWithEmail: () => Promise<void>
+  signInWithPasskey: () => Promise<void>
+  addPasskey: (name?: string) => Promise<void>
   linkGoogle: () => Promise<void>
   unlinkGoogle: () => Promise<void>
   signOut: () => Promise<void>
