@@ -8,9 +8,9 @@
  * Base class for all DB service errors
  * 
  * Error contract:
- * - `list*` returns empty `[]` on no matches (never throws NotFound)
- * - `get*` returns `null` on not found (never throws NotFound)
- * - `create*/update*/delete*` throw typed errors for system failures
+ * - listX returns empty array on no matches (never throws NotFound)
+ * - getX returns null on not found (never throws NotFound)
+ * - create/update/delete operations throw typed errors for system failures
  * - Infrastructure errors (DB connection, constraint violations) throw with type info
  */
 export abstract class DbError extends Error {

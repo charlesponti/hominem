@@ -1,12 +1,234 @@
 /**
- * Persons service - manages person records and relationships
- * (Stub - implementation follows same pattern as tasks.service.ts)
+ * Persons service - manages person contacts and relationships
+ *
+ * Contract:
+ * - list* methods return arrays ([] when empty, never null)
+ * - get* methods return T | null
+ * - create/update/delete throw on system errors, return null/false for expected misses
+ * - All operations are user-scoped (userId filter)
  */
 
-export const PersonService = {
-  list: async () => [],
-  get: async () => null,
-  create: async () => ({}),
-  update: async () => null,
-  delete: async () => false,
+import { eq, and } from 'drizzle-orm'
+import type { Database } from './client'
+import { persons, userPersonRelations } from '../schema/persons'
+import type { UserId } from './_shared/ids'
+import { ForbiddenError } from './_shared/errors'
+
+// Local types for this service
+type Person = typeof persons.$inferSelect
+type PersonInsert = typeof persons.$inferInsert
+type PersonUpdate = Partial<Omit<PersonInsert, 'id' | 'ownerUserId' | 'createdAt' | 'updatedAt'>>
+
+type UserPersonRelation = typeof userPersonRelations.$inferSelect
+
+/**
+ * Internal helper: verify user ownership
+ * @throws ForbiddenError if person doesn't belong to user
+ */
+async function getPersonWithOwnershipCheck(db: Database, personId: string, userId: UserId): Promise<Person> {
+  const person = await db.query.persons.findFirst({
+    where: and(eq(persons.id, personId), eq(persons.ownerUserId, String(userId))),
+  })
+
+  if (!person) {
+    throw new ForbiddenError(`Person not found or access denied`, 'ownership')
+  }
+
+  return person
+}
+
+/**
+ * List user's persons
+ *
+ * @param userId - User ID (enforced in all queries)
+ * @param db - Database context
+ * @returns Array of persons (empty if none)
+ */
+export async function listPersons(
+  userId: UserId,
+  db?: Database
+): Promise<Person[]> {
+  const results = await db!.query.persons.findMany({
+    where: eq(persons.ownerUserId, String(userId)),
+    orderBy: persons.createdAt,
+  })
+
+  return results
+}
+
+/**
+ * Get a single person by ID
+ *
+ * @param personId - Person ID
+ * @param userId - User ID (enforces ownership)
+ * @param db - Database context
+ * @returns Person or null if not found
+ */
+export async function getPerson(
+  personId: string,
+  userId: UserId,
+  db?: Database
+): Promise<Person | null> {
+  const person = await db!.query.persons.findFirst({
+    where: and(eq(persons.id, personId), eq(persons.ownerUserId, String(userId))),
+  })
+
+  return person ?? null
+}
+
+/**
+ * Create a new person
+ *
+ * @param userId - User ID
+ * @param input - Person data
+ * @param db - Database context
+ * @throws Error if creation fails
+ * @returns Created person
+ */
+export async function createPerson(
+  userId: UserId,
+  input: {
+    personType: string
+    firstName?: string | null
+    lastName?: string | null
+    email?: string | null
+    phone?: string | null
+    notes?: string | null
+  },
+  db?: Database
+): Promise<Person> {
+  const result = await db!.insert(persons)
+    .values({
+      ownerUserId: String(userId),
+      personType: input.personType,
+      firstName: input.firstName ?? null,
+      lastName: input.lastName ?? null,
+      email: input.email ?? null,
+      phone: input.phone ?? null,
+      notes: input.notes ?? null,
+    })
+    .returning()
+
+  if (!result[0]) {
+    throw new Error('Failed to create person')
+  }
+
+  return result[0]
+}
+
+/**
+ * Update an existing person
+ *
+ * @param personId - Person ID
+ * @param userId - User ID (enforces ownership)
+ * @param input - Partial person data to update
+ * @param db - Database context
+ * @throws ForbiddenError if user doesn't own the person
+ * @returns Updated person or null if already deleted
+ */
+export async function updatePerson(
+  personId: string,
+  userId: UserId,
+  input: PersonUpdate,
+  db?: Database
+): Promise<Person | null> {
+  // Verify ownership first
+  await getPersonWithOwnershipCheck(db!, personId, userId)
+
+  const result = await db!.update(persons)
+    .set({ ...input, updatedAt: new Date().toISOString() })
+    .where(eq(persons.id, personId))
+    .returning()
+
+  return result[0] ?? null
+}
+
+/**
+ * Delete a person
+ *
+ * @param personId - Person ID
+ * @param userId - User ID (enforces ownership)
+ * @param db - Database context
+ * @throws ForbiddenError if user doesn't own the person
+ * @returns True if deleted, false if already deleted
+ */
+export async function deletePerson(
+  personId: string,
+  userId: UserId,
+  db?: Database
+): Promise<boolean> {
+  // Verify ownership first
+  await getPersonWithOwnershipCheck(db!, personId, userId)
+
+  // Delete relations first
+  await db!.delete(userPersonRelations)
+    .where(eq(userPersonRelations.personId, personId))
+
+  // Delete the person
+  const result = await db!.delete(persons)
+    .where(eq(persons.id, personId))
+    .returning()
+
+  return result.length > 0
+}
+
+/**
+ * Get relations for a person
+ *
+ * @param personId - Person ID
+ * @param userId - User ID (enforces ownership of person)
+ * @param db - Database context
+ * @throws ForbiddenError if user doesn't own the person
+ * @returns Array of relations
+ */
+export async function listPersonRelations(
+  personId: string,
+  userId: UserId,
+  db?: Database
+): Promise<UserPersonRelation[]> {
+  // Verify person ownership
+  await getPersonWithOwnershipCheck(db!, personId, userId)
+
+  const results = await db!.query.userPersonRelations.findMany({
+    where: eq(userPersonRelations.personId, personId),
+  })
+
+  return results
+}
+
+/**
+ * Add a relation for a person
+ *
+ * @param personId - Person ID
+ * @param relatedUserId - Related user ID
+ * @param relationshipType - Type of relationship
+ * @param userId - User ID (enforces ownership of person)
+ * @param db - Database context
+ * @throws ForbiddenError if user doesn't own the person
+ * @throws Error if relation add fails
+ * @returns Added relation
+ */
+export async function addPersonRelation(
+  personId: string,
+  relatedUserId: string,
+  relationshipType: string | null,
+  userId: UserId,
+  db?: Database
+): Promise<UserPersonRelation> {
+  // Verify person ownership
+  await getPersonWithOwnershipCheck(db!, personId, userId)
+
+  const result = await db!.insert(userPersonRelations)
+    .values({
+      personId,
+      userId: relatedUserId,
+      relationshipType,
+    })
+    .returning()
+
+  if (!result[0]) {
+    throw new Error('Failed to add person relation')
+  }
+
+  return result[0]
 }
