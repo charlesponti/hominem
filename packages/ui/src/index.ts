@@ -1,6 +1,8 @@
 import type { LinkDescriptor } from 'react-router';
 
 export * from './components/layout';
+export * from './header';
+export * from './components/email-sign-in';
 export * from './components/location-select';
 export * from './components/page-title';
 export * from './components/ui';

@@ -28,6 +28,7 @@ export default [
 
     // Auth Routes
     route('/auth/google', 'routes/auth/google.tsx'),
+    route('/auth/email', 'routes/auth.email.tsx'),
     route('/auth/callback', 'routes/auth.callback.tsx'),
 
     // Catch-all 404 route

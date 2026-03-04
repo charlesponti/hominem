@@ -1,6 +1,6 @@
 import type { HominemUser } from '@hominem/auth/server';
 import { app as honoRpcApp } from '@hominem/hono-rpc';
-import { isServiceError } from '@hominem/services';
+import { isServiceError } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { apiReference } from '@scalar/hono-api-reference';
 import { Hono } from 'hono';

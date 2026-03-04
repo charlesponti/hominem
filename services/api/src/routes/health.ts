@@ -5,7 +5,7 @@ import {
   listHealthRecords,
   updateHealthRecord,
 } from '@hominem/health-services';
-import { NotFoundError, InternalError } from '@hominem/services';
+import { NotFoundError, InternalError } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';

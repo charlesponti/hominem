@@ -1,8 +1,8 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-import { and, db, eq, isNull } from '@hominem/db';
 import { authSubjects } from '@hominem/db/schema/auth';
 import { users } from '@hominem/db/schema/users';
+import { and, db, eq, isNull } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import type { Context } from 'hono';

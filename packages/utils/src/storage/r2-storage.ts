@@ -8,6 +8,7 @@ import {
   HeadBucketCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
 import * as Types from './types';
 
 export type StoredFile = Types.StoredFile;
@@ -24,10 +25,7 @@ export class R2StorageService {
   private isPublic: boolean;
   private userScoped: boolean;
 
-  constructor(
-    category: StorageCategory,
-    options?: StorageOptions,
-  ) {
+  constructor(category: StorageCategory, options?: StorageOptions) {
     const endpoint = process.env.R2_ENDPOINT;
     const accessKeyId = process.env.R2_ACCESS_KEY_ID;
     const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
@@ -334,17 +332,50 @@ export class R2StorageService {
   }
 }
 
-export const csvStorageService = new R2StorageService('csvs', {
-  maxFileSize: 50 * 1024 * 1024,
-  isPublic: false,
+const createCsvStorageService = () =>
+  new R2StorageService('csvs', {
+    maxFileSize: 50 * 1024 * 1024,
+    isPublic: false,
+  });
+
+const createFileStorageService = () =>
+  new R2StorageService('chats', {
+    maxFileSize: 10 * 1024 * 1024,
+    isPublic: true,
+  });
+
+const createPlaceImagesStorageService = () =>
+  new R2StorageService('places', {
+    maxFileSize: 10 * 1024 * 1024,
+    isPublic: true,
+  });
+
+const throwNotConfigured = () => {
+  throw new Error(
+    'R2 storage not configured. Set R2_ENDPOINT, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY environment variables.',
+  );
+};
+
+export const csvStorageService: R2StorageService = new Proxy({} as R2StorageService, {
+  get(_target, prop) {
+    const service = createCsvStorageService();
+    Object.assign(csvStorageService, service);
+    return Reflect.get(csvStorageService, prop);
+  },
 });
 
-export const fileStorageService = new R2StorageService('chats', {
-  maxFileSize: 10 * 1024 * 1024,
-  isPublic: true,
+export const fileStorageService: R2StorageService = new Proxy({} as R2StorageService, {
+  get(_target, prop) {
+    const service = createFileStorageService();
+    Object.assign(fileStorageService, service);
+    return Reflect.get(fileStorageService, prop);
+  },
 });
 
-export const placeImagesStorageService = new R2StorageService('places', {
-  maxFileSize: 10 * 1024 * 1024,
-  isPublic: true,
+export const placeImagesStorageService: R2StorageService = new Proxy({} as R2StorageService, {
+  get(_target, prop) {
+    const service = createPlaceImagesStorageService();
+    Object.assign(placeImagesStorageService, service);
+    return Reflect.get(placeImagesStorageService, prop);
+  },
 });

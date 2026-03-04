@@ -5,6 +5,7 @@ export default [
 
   // Auth callback route (outside layout to avoid auth checks)
   route('auth/callback', './routes/auth.callback.tsx'),
+  route('auth/email', './routes/auth.email.tsx'),
 
   // Main layout with global UI elements
   layout('routes/layout.tsx', [

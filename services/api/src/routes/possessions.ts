@@ -9,7 +9,7 @@ import {
   UnauthorizedError,
   NotFoundError,
   InternalError,
-} from '@hominem/services';
+} from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';

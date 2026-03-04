@@ -1,4 +1,4 @@
-import { UnauthorizedError, InternalError } from '@hominem/services';
+import { UnauthorizedError, InternalError } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 

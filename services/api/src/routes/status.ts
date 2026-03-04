@@ -1,6 +1,6 @@
-import { db } from '@hominem/db';
 import { health } from '@hominem/db/schema/health';
-import { UnavailableError } from '@hominem/services';
+import { db } from '@hominem/hono-rpc';
+import { UnavailableError } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 

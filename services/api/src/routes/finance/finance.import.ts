@@ -1,10 +1,10 @@
-import type { ImportTransactionsQueuePayload } from '@hominem/jobs-services';
 import {
   UnauthorizedError,
   ValidationError,
   NotFoundError,
   InternalError,
-} from '@hominem/services';
+} from '@hominem/hono-rpc';
+import type { ImportTransactionsQueuePayload } from '@hominem/jobs-services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { csvStorageService } from '@hominem/utils/storage';
