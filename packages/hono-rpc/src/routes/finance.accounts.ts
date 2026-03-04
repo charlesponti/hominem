@@ -11,7 +11,7 @@ import {
   listPlaidConnectionsForUser,
   getAccountsForInstitution,
 } from '@hominem/finance-services';
-import { NotFoundError } from '@hominem/services';
+import { NotFoundError } from '../errors';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';

@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX "tags_name_unique" ON "tags" USING btree ("name");

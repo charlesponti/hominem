@@ -4,7 +4,7 @@ import {
   listAccountsByProvider,
 } from '@hominem/auth/server';
 import { NotesService } from '@hominem/notes-services';
-import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import { randomUUID } from 'node:crypto';

@@ -1,1 +1,0 @@
-ALTER TABLE "place" ADD CONSTRAINT "place_google_maps_id_unique" UNIQUE("google_maps_id");

@@ -4,8 +4,11 @@
     "tsBuildInfoFile": "../../.cache/db.tsbuildinfo",
     "rootDir": "src",
     "outDir": "./build",
-    "composite": false,
-    "disableSourceOfProjectReferenceRedirect": false
+    "assumeChangesOnlyAffectDirectDependencies": false,
+    "paths": {
+      "@hominem/db/schema/*": ["./src/migrations/schema.ts"],
+      "@hominem/db/services/*": ["./src/services/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": [

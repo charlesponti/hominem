@@ -6,7 +6,7 @@ import {
   removeUserFromList,
   updateList,
 } from '@hominem/lists-services';
-import { ForbiddenError, ValidationError, InternalError } from '@hominem/services';
+import { ForbiddenError, ValidationError, InternalError } from '../errors';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
@@ -146,7 +146,7 @@ export const listMutationRoutes = new Hono<AppContext>()
         if (statusCode === 403) {
           throw new ForbiddenError(String(result.error) || 'Operation failed');
         } else if (statusCode === 404) {
-          throw new (await import('@hominem/services')).NotFoundError(
+          throw new (await import('@hominem/hono-rpc')).NotFoundError(
             String(result.error) || 'Operation failed',
           );
         } else {

@@ -1,7 +1,7 @@
 import type { HominemUser } from '@hominem/auth/server';
 import type { AuthEnvelope } from '@hominem/auth/types';
 
-import { UnauthorizedError } from '@hominem/services';
+import { UnauthorizedError } from '../errors';
 import { createMiddleware } from 'hono/factory';
 
 /**

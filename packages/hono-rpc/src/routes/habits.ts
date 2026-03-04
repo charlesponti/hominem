@@ -9,7 +9,7 @@ import {
   updateHabit,
   type EventWithTagsAndPeople,
 } from '@hominem/events-services';
-import { NotFoundError, ValidationError } from '@hominem/services';
+import { NotFoundError, ValidationError } from '../errors';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';

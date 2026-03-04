@@ -7,7 +7,7 @@ import {
   deleteEvent,
   type EventWithTagsAndPeople,
 } from '@hominem/events-services';
-import { NotFoundError } from '@hominem/services';
+import { NotFoundError } from '../errors';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 

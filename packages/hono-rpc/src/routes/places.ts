@@ -19,7 +19,7 @@ import {
   removePlaceFromList,
   type PlaceInput,
 } from '@hominem/places-services';
-import { NotFoundError, InternalError, isServiceError } from '@hominem/services';
+import { NotFoundError, InternalError, isServiceError } from '../errors';
 import { placePhotoEnrichQueue } from '@hominem/queues';
 import { logger } from '@hominem/utils/logger';
 import { sanitizeStoredPhotos } from '@hominem/utils/images';

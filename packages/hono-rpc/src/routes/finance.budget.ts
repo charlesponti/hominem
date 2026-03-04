@@ -16,7 +16,7 @@ import {
   NotFoundError,
   ConflictError,
   InternalError,
-} from '@hominem/services';
+} from '../errors';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';

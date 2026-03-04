@@ -1,5 +1,5 @@
 import { deleteAllFinanceData } from '@hominem/finance-services';
-import { isServiceError, InternalError } from '@hominem/services';
+import { isServiceError, InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 

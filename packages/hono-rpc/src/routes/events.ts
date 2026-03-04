@@ -14,7 +14,7 @@ import {
   NotFoundError,
   ValidationError,
   UnauthorizedError,
-} from '@hominem/services';
+} from '../errors';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 

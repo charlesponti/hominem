@@ -1,4 +1,4 @@
-import { ValidationError, InternalError } from '@hominem/services';
+import { ValidationError, InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import * as z from 'zod';

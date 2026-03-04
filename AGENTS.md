@@ -150,3 +150,23 @@ rm -rf .turbo **/.turbo && bun run check
 ## Specialized Rules
 
 See `.github/instructions/` for scoped guidance.
+
+
+## FORBIDDEN
+*These are things you are not able to do.*
+- Create sql migration files.
+- Modify database schema directly without migrations.
+- Commit code without running `bun run check` first.
+- Use hardcoded credentials or secrets in code.
+- Bypass authentication/authorization checks.
+- Import database types in client applications.
+- Use `eval()` or dynamic code execution on user input.
+- Deploy without running the full test suite.
+- Modify production environment variables locally.
+- Create database transactions without proper error handling.
+- Use string concatenation for SQL queries.
+- Remove or weaken type safety with `any` types.
+- Log sensitive user data or API responses.
+- Deploy code that hasn't been type-checked.
+- Modify shared library APIs without updating all dependents.
+- Disable linting or security checks.

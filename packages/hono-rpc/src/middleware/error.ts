@@ -1,7 +1,6 @@
 import { createMiddleware } from 'hono/factory';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import { isServiceError } from '@hominem/services';
-import type { ErrorCode } from '@hominem/services';
+import { isServiceError, type ErrorCode } from '../errors';
 import { logger } from '@hominem/utils/logger';
 
 import type { AppContext } from './auth';

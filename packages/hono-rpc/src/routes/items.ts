@@ -1,5 +1,5 @@
 import { addItemToList, getItemsByListId, removeItemFromList } from '@hominem/lists-services';
-import { NotFoundError } from '@hominem/services'
+import { NotFoundError } from '@hominem/hono-rpc'
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 

@@ -5,7 +5,7 @@ import {
   deleteTransaction,
   getAccountById,
 } from '@hominem/finance-services';
-import { NotFoundError } from '@hominem/services';
+import { NotFoundError } from '../errors';
 import { describeRoute, resolver, validator as zValidator } from 'hono-openapi';
 import { Hono } from 'hono';
 import * as z from 'zod';

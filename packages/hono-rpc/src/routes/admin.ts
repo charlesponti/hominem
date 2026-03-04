@@ -1,4 +1,4 @@
-import { InternalError } from '@hominem/services';
+import { InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 

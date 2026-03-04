@@ -51,10 +51,6 @@ lint:
 clean:
 	@./scripts/clean.sh
 
-# Stop Docker containers
-docker-down:
-	$(DOCKER_COMPOSE) down
-
 # Run all tests and linting
 check: test lint
 
@@ -112,7 +108,7 @@ mobile-test-e2e-preflight:
 mobile-build-dev-ios:
 	@bun run --filter @hominem/mobile build:dev:ios
 
-lbt:
+blt:
 	@echo "Running lint..."
 	@bun run lint --force > /dev/null && echo "Lint passed" || echo "Lint failed"
 	@echo "Running build..."

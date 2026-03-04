@@ -7,7 +7,7 @@ import {
   upsertPlaidItem,
   deletePlaidItem,
 } from '@hominem/finance-services';
-import { NotFoundError, ValidationError, InternalError, isServiceError } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError, isServiceError } from '../errors';
 import { plaidSyncQueue } from '@hominem/queues';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';

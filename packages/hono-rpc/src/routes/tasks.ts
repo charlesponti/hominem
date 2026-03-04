@@ -1,4 +1,4 @@
-import { TasksService } from '@hominem/services'
+import { TasksService } from '@hominem/db'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 

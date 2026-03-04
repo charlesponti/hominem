@@ -1,2 +1,2 @@
-export * from '@hominem/services/google-calendar';
+export * from '@hominem/db';
 export * from './events.service';

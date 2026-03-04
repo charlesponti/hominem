@@ -1,0 +1,216 @@
+/**
+ * Tasks service - manages todo tasks, goals, and lists
+ * 
+ * Contract:
+ * - list* methods return arrays ([] when empty, never null)
+ * - get* methods return T | null
+ * - create/update/delete throw on system errors, return null/false for expected misses
+ * - All operations are user-scoped (userId filter)
+ */
+
+import { eq, and, desc, asc } from 'drizzle-orm'
+import type { Database } from './client'
+import { tasks, taskLists } from '../schema/tasks'
+import type { TaskId, UserId } from './_shared/ids'
+import { brandId } from './_shared/ids'
+import { NotFoundError, ForbiddenError } from './_shared/errors'
+import type { CursorPaginationParams } from './_shared/query'
+import { normalizePaginationParams, createCursor, decodeCursor } from './_shared/query'
+
+// Local types for this service
+type Task = typeof tasks.$inferSelect
+type TaskInsert = typeof tasks.$inferInsert
+type TaskUpdate = Partial<Omit<TaskInsert, 'id' | 'userId'>>
+
+/**
+ * Internal helper: verify user ownership
+ * @throws ForbiddenError if task doesn't belong to user
+ */
+async function getTaskWithOwnershipCheck(db: Database, taskId: TaskId, userId: UserId): Promise<Task> {
+  const task = await db.query.tasks.findFirst({
+    where: and(eq(tasks.id, String(taskId)), eq(tasks.userId, String(userId))),
+  })
+
+  if (!task) {
+    throw new ForbiddenError(`Task not found or access denied`, 'ownership')
+  }
+
+  return task
+}
+
+/**
+ * List user's tasks with pagination and filtering
+ *
+ * @param userId - User ID (enforced in all queries)
+ * @param query - Optional filters: status, priority, pagination
+ * @param db - Database context
+ * @returns Array of tasks (empty if none)
+ */
+export async function listTasks(
+  userId: UserId,
+  query?: {
+    status?: string
+    priority?: string
+    pagination?: CursorPaginationParams
+  },
+  db?: Database
+): Promise<Task[]> {
+  const paging = normalizePaginationParams(query?.pagination)
+
+  // Build filters
+  const filters: any[] = [eq(tasks.userId, String(userId))]
+
+  if (query?.status) {
+    filters.push(eq(tasks.status, query.status))
+  }
+  if (query?.priority) {
+    filters.push(eq(tasks.priority, query.priority))
+  }
+
+  // Handle cursor pagination
+  const cursor = decodeCursor(paging.cursor)
+  if (cursor) {
+    filters.push(asc(tasks.createdAt) ? desc(tasks.id) : asc(tasks.id))
+  }
+
+  // Query
+  const results = await db!.query.tasks.findMany({
+    where: and(...filters),
+    orderBy: [asc(tasks.createdAt), asc(tasks.id)],
+    limit: paging.limit + 1, // Fetch one extra to detect hasMore
+  })
+
+  // Return just the requested amount
+  return results.slice(0, paging.limit)
+}
+
+/**
+ * Get a single task by ID
+ *
+ * @param taskId - Task ID
+ * @param userId - User ID (enforces ownership)
+ * @param db - Database context
+ * @returns Task or null if not found
+ */
+export async function getTask(
+  taskId: TaskId,
+  userId: UserId,
+  db?: Database
+): Promise<Task | null> {
+  const task = await db!.query.tasks.findFirst({
+    where: and(eq(tasks.id, String(taskId)), eq(tasks.userId, String(userId))),
+  })
+
+  return task || null
+}
+
+/**
+ * Create a new task
+ *
+ * @param data - Task data (title required, userId inferred)
+ * @param userId - User ID
+ * @param db - Database context
+ * @returns Created task
+ * @throws Error if database constraint violated
+ */
+export async function createTask(
+  data: {
+    title: string
+    description?: string
+    status?: string
+    priority?: string
+    dueDate?: Date | null
+    listId?: string | null
+    parentId?: string | null
+  },
+  userId: UserId,
+  db?: Database
+): Promise<Task> {
+  try {
+    const [created] = await db!
+      .insert(tasks)
+      .values({
+        ...data,
+        userId: String(userId),
+        status: data.status || 'pending',
+        priority: data.priority || 'medium',
+      })
+      .returning()
+
+    return created
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * Update a task
+ *
+ * @param taskId - Task ID to update
+ * @param userId - User ID (enforces ownership)
+ * @param data - Fields to update
+ * @param db - Database context
+ * @returns Updated task or null if not found
+ * @throws ForbiddenError if not user's task
+ */
+export async function updateTask(
+  taskId: TaskId,
+  userId: UserId,
+  data: TaskUpdate,
+  db?: Database
+): Promise<Task | null> {
+  try {
+    await getTaskWithOwnershipCheck(db!, taskId, userId)
+
+    const [updated] = await db!
+      .update(tasks)
+      .set({
+        ...data,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(tasks.id, String(taskId)))
+      .returning()
+
+    return updated || null
+  } catch (error) {
+    if (error instanceof ForbiddenError) {
+      return null
+    }
+    throw error
+  }
+}
+
+/**
+ * Delete a task
+ *
+ * @param taskId - Task ID to delete
+ * @param userId - User ID (enforces ownership)
+ * @param db - Database context
+ * @returns true if deleted, false if not found
+ * @throws ForbiddenError if not user's task
+ */
+export async function deleteTask(taskId: TaskId, userId: UserId, db?: Database): Promise<boolean> {
+  try {
+    await getTaskWithOwnershipCheck(db!, taskId, userId)
+
+    const result = await db!.delete(tasks).where(eq(tasks.id, String(taskId)))
+
+    return result.rowCount > 0
+  } catch (error) {
+    if (error instanceof ForbiddenError) {
+      return false
+    }
+    throw error
+  }
+}
+
+/**
+ * Service exports (public API)
+ */
+export const TaskService = {
+  list: listTasks,
+  get: getTask,
+  create: createTask,
+  update: updateTask,
+  delete: deleteTask,
+}

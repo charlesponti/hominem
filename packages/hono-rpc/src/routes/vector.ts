@@ -1,5 +1,5 @@
-import { ValidationError, InternalError } from '@hominem/services';
-import { VectorService } from '@hominem/services/vector';
+import { ValidationError, InternalError } from '../errors';
+import { VectorService } from '@hominem/db';
 import { logger } from '@hominem/utils/logger';
 import { fileStorageService } from '@hominem/utils/storage';
 import { Hono } from 'hono';

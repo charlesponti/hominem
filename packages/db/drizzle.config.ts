@@ -12,7 +12,7 @@ const DATABASE_URL =
 assert(DATABASE_URL, 'Missing DATABASE_URL');
 
 export default defineConfig({
-  schema: ['./src/schema/tables.ts', './src/schema/relations.ts'],
+  schema: ['./src/migrations/schema.ts', './src/migrations/relations.ts'],
   out: './src/migrations',
   dialect: 'postgresql',
   dbCredentials: {

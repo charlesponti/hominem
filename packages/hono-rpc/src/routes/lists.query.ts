@@ -1,5 +1,5 @@
 import { getAllUserListsWithPlaces, getListById, getPlaceLists } from '@hominem/lists-services';
-import { NotFoundError } from '@hominem/services';
+import { NotFoundError } from '../errors';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 

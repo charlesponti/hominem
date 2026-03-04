@@ -24,7 +24,7 @@ import {
   ValidationError,
   UnauthorizedError,
   InternalError,
-} from '@hominem/services';
+} from '../errors';
 import { getHominemPhotoURL } from '@hominem/utils/images';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
