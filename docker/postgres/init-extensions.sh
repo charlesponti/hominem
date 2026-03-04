@@ -1,10 +1,12 @@
 #!/bin/bash
 set -e
 
-# WARNING: This script is for local/dev bootstrap only.
-# This script is only run on initial DB creation (empty data dir).
+# OPTIONAL: This script is for local dev convenience only.
+# It runs on initial DB creation (empty data dir).
+# For production, use migrations to manage extensions.
+# Mount ./docker/no-init over this directory to skip.
 
-# Create extensions if they do not exist
+# Create extensions
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
   CREATE EXTENSION IF NOT EXISTS pgcrypto;
   CREATE EXTENSION IF NOT EXISTS pg_trgm;
