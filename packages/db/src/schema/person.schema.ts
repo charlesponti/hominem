@@ -1,6 +1,7 @@
 import { type InferInsertModel, type InferSelectModel } from 'drizzle-orm';
 import {
   index,
+  integer,
   pgTable,
   text,
   timestamp,
@@ -30,8 +31,27 @@ export const person = pgTable(
     // Social/professional
     linkedin_url: text('linkedin_url'),
 
-    // Additional info
-    notes: text('notes'),
+    // Relationship information (from relationships table)
+    date_started: text('date_started'), // When relationship started
+    date_ended: text('date_ended'), // When relationship ended
+    location: text('location'), // Where they're from/based
+    profession: text('profession'),
+    education: text('education'),
+
+    // Lifestyle & preferences
+    diet: text('diet'),
+    age: integer('age'),
+
+    // Physical attributes & attraction
+    attractiveness_score: integer('attractiveness_score'), // 1-5 scale
+    
+    // Intimate details (encrypted or access-controlled in production)
+    kiss: integer('kiss'), // Scale or boolean
+    sex: integer('sex'), // Scale or boolean
+
+    // Additional notes
+    details: text('details'), // General notes/details about the person
+    notes: text('notes'), // Additional notes
 
     // Timestamps
     created_at: timestamp('created_at', { precision: 3, mode: 'string' })
@@ -50,6 +70,10 @@ export const person = pgTable(
     index('person_name_idx').on(table.first_name, table.last_name),
     // User queries
     index('person_user_id_idx').on(table.user_id),
+    // Profession/education queries
+    index('person_profession_idx').on(table.profession),
+    // Location queries
+    index('person_location_idx').on(table.location),
   ],
 );
 
