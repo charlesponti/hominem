@@ -10,7 +10,6 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
-import { betterAuthUser } from './better-auth.schema';
 
 export const users = pgTable(
   'users',
@@ -18,42 +17,31 @@ export const users = pgTable(
     // Primary key for foreign key relationships
     id: uuid('id').primaryKey().defaultRandom().notNull(),
 
-    // Legacy external auth integration. Optional during Better Auth cutover.
-    supabaseId: text('supabase_id').unique(),
-    primaryAuthSubjectId: uuid('primary_auth_subject_id'),
-    betterAuthUserId: text('better_auth_user_id').references(() => betterAuthUser.id, {
-      onDelete: 'set null',
-    }),
-
-    // User profile data (synced from Supabase)
+    // User profile data (canonical identity)
     email: text('email').notNull(),
     name: text('name'),
     image: text('image'),
-    photoUrl: text('photo_url'), // Keep for backward compatibility
 
-    // Admin status (can be overridden locally)
-    isAdmin: boolean('isAdmin').default(false).notNull(),
+    // Auth fields
+    email_verified: boolean('email_verified').default(false).notNull(),
+    password_hash: text('password_hash'), // nullable for OAuth-only users
 
-    // Timestamps
-    createdAt: timestamp('createdAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
-    updatedAt: timestamp('updatedAt', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+    // Admin status
+    is_admin: boolean('is_admin').default(false).notNull(),
 
-    // Optional fields (keep for backward compatibility)
+    // Timestamps (TIMESTAMP WITH TIME ZONE in migration)
+    created_at: timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+
+    // Optional fields
     birthday: text('birthday'),
-    emailVerified: timestamp('emailVerified', { precision: 3, mode: 'string' }),
   },
   (table) => [
-    // Primary index for Supabase ID lookups
-    index('supabase_id_idx').on(table.supabaseId),
-    index('users_primary_auth_subject_id_idx').on(table.primaryAuthSubjectId),
-    index('users_better_auth_user_id_idx').on(table.betterAuthUserId),
-
     // Email index for lookups
-    index('email_idx').on(table.email),
+    index('users_email_idx').on(table.email),
 
-    // Unique constraint on email (for migration scenarios)
-    uniqueIndex('User_email_key').using('btree', table.email.asc().nullsLast()),
-    uniqueIndex('users_better_auth_user_id_uidx').on(table.betterAuthUserId),
+    // Unique constraint on email
+    uniqueIndex('users_email_uidx').on(table.email),
   ],
 );
 export type User = InferSelectModel<typeof users>;

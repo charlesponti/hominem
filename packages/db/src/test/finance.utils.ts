@@ -35,7 +35,6 @@ export async function seedFinanceTestData({
     await createTestUser({
       id: userId,
       email: `test-${userId.slice(0, 8)}@example.com`,
-      supabaseId: `supabase-${userId}`,
     });
   } catch (error) {
     console.error('Failed to create user:', error);

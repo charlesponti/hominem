@@ -5,11 +5,12 @@ import * as schema from '@hominem/db/schema/tables';
 import type { BetterAuthOptions } from 'better-auth';
 import type { BetterAuthPlugin } from 'better-auth';
 import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import {
   bearer,
   captcha,
   deviceAuthorization,
+  emailOTP,
   jwt,
   multiSession,
   openAPI,
@@ -17,6 +18,7 @@ import {
 } from 'better-auth/plugins';
 
 import { env } from '../env';
+import { sendEmail } from '../lib/email';
 
 function getTrustedOrigins() {
   const origins = new Set([
@@ -96,8 +98,50 @@ function getAuthPlugins() {
       ],
       schema: {
         passkey: {
-          modelName: 'betterAuthPasskey',
+          modelName: 'userPasskey',
         },
+      },
+    }),
+    emailOTP({
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        const subject =
+          type === 'sign-in'
+            ? 'Your sign-in code'
+            : type === 'email-verification'
+              ? 'Verify your email'
+              : type === 'forget-password'
+                ? 'Reset your password'
+                : 'Your verification code';
+
+        const text = `Your verification code is: ${otp}. This code will expire in 5 minutes.`;
+
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 12px 12px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">Hominem</h1>
+  </div>
+  <div style="background: #ffffff; padding: 30px; border: 1px solid #e1e1e1; border-top: none; border-radius: 0 0 12px 12px;">
+    <p style="margin-top: 0;">Your verification code is:</p>
+    <div style="background: #f5f5f5; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; border-radius: 8px; margin: 20px 0;">
+      ${otp}
+    </div>
+    <p style="color: #666; font-size: 14px;">This code will expire in 5 minutes.</p>
+    <p style="color: #666; font-size: 14px;">If you didn't request this code, you can safely ignore this email.</p>
+  </div>
+</body>
+</html>`;
+
+        await sendEmail({
+          to: email,
+          subject,
+          text,
+          html,
+        });
       },
     }),
     jwt(),
@@ -112,7 +156,7 @@ function getAuthPlugins() {
       interval: '5s',
       schema: {
         deviceCode: {
-          modelName: 'betterAuthDeviceCode',
+          modelName: 'userDeviceCode',
         },
       },
     }),
@@ -169,19 +213,20 @@ const betterAuthOptions: BetterAuthOptions = {
   trustedOrigins: getTrustedOrigins(),
   advanced: getAdvancedOptions(),
   user: {
-    modelName: 'betterAuthUser',
+    modelName: 'users',
   },
   session: {
-    modelName: 'betterAuthSession',
+    modelName: 'userSession',
   },
   account: {
-    modelName: 'betterAuthAccount',
+    modelName: 'userAccount',
   },
   verification: {
-    modelName: 'betterAuthVerification',
+    modelName: 'userVerification',
   },
   emailAndPassword: {
-    enabled: false,
+    enabled: true,
+    requireEmailVerification: true,
   },
   socialProviders: getSocialProviders(),
   plugins: getAuthPlugins(),

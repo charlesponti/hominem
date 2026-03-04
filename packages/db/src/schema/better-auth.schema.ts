@@ -7,168 +7,169 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  uuid,
 } from 'drizzle-orm/pg-core';
+import { users } from './users.schema';
 
-export const betterAuthUser = pgTable(
-  'better_auth_user',
+export const userSession = pgTable(
+  'user_session',
   {
     id: text('id').primaryKey().notNull(),
-    name: text('name').notNull(),
-    email: text('email').notNull(),
-    emailVerified: boolean('email_verified').default(false).notNull(),
-    image: text('image'),
-    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
-  },
-  (table) => [uniqueIndex('better_auth_user_email_uidx').on(table.email)],
-);
-
-export const betterAuthSession = pgTable(
-  'better_auth_session',
-  {
-    id: text('id').primaryKey().notNull(),
-    expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
+    expiresAt: timestamp('expires_at', { precision: 3, mode: 'string' }).notNull(),
     token: text('token').notNull(),
-    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+    created_at: timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     ipAddress: text('ip_address'),
     userAgent: text('user_agent'),
-    userId: text('user_id')
+    user_id: uuid('user_id')
       .notNull()
-      .references(() => betterAuthUser.id, { onDelete: 'cascade' }),
+      .references(() => users.id, { onDelete: 'cascade' }),
   },
   (table) => [
-    uniqueIndex('better_auth_session_token_uidx').on(table.token),
-    index('better_auth_session_user_idx').on(table.userId),
+    uniqueIndex('user_session_token_uidx').on(table.token),
+    index('user_session_user_idx').on(table.user_id),
   ],
 );
 
-export const betterAuthAccount = pgTable(
-  'better_auth_account',
+export const userAccount = pgTable(
+  'user_account',
   {
     id: text('id').primaryKey().notNull(),
     accountId: text('account_id').notNull(),
     providerId: text('provider_id').notNull(),
-    userId: text('user_id')
+    user_id: uuid('user_id')
       .notNull()
-      .references(() => betterAuthUser.id, { onDelete: 'cascade' }),
+      .references(() => users.id, { onDelete: 'cascade' }),
     accessToken: text('access_token'),
     refreshToken: text('refresh_token'),
     idToken: text('id_token'),
-    accessTokenExpiresAt: timestamp('access_token_expires_at', { mode: 'date' }),
-    refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { mode: 'date' }),
+    accessTokenExpiresAt: timestamp('access_token_expires_at', { precision: 3, mode: 'string' }),
+    refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { precision: 3, mode: 'string' }),
     scope: text('scope'),
     password: text('password'),
-    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+    created_at: timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   },
   (table) => [
-    index('better_auth_account_user_idx').on(table.userId),
-    uniqueIndex('better_auth_account_provider_account_uidx').on(table.providerId, table.accountId),
+    index('user_account_user_idx').on(table.user_id),
+    uniqueIndex('user_account_provider_account_uidx').on(table.providerId, table.accountId),
   ],
 );
 
-export const betterAuthVerification = pgTable(
-  'better_auth_verification',
+export const userVerification = pgTable(
+  'user_verification',
   {
     id: text('id').primaryKey().notNull(),
     identifier: text('identifier').notNull(),
     value: text('value').notNull(),
-    expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
-    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+    expiresAt: timestamp('expires_at', { precision: 3, mode: 'string' }).notNull(),
+    created_at: timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
   },
-  (table) => [index('better_auth_verification_identifier_idx').on(table.identifier)],
+  (table) => [index('user_verification_identifier_idx').on(table.identifier)],
 );
 
-export const betterAuthPasskey = pgTable(
-  'better_auth_passkey',
+export const userPasskey = pgTable(
+  'user_passkey',
   {
     id: text('id').primaryKey().notNull(),
     name: text('name'),
     publicKey: text('public_key').notNull(),
-    userId: text('user_id')
+    user_id: uuid('user_id')
       .notNull()
-      .references(() => betterAuthUser.id, { onDelete: 'cascade' }),
+      .references(() => users.id, { onDelete: 'cascade' }),
     credentialID: text('credential_id').notNull(),
     counter: integer('counter').notNull(),
     deviceType: text('device_type').notNull(),
     backedUp: boolean('backed_up').notNull(),
     transports: text('transports'),
-    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+    created_at: timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     aaguid: text('aaguid'),
   },
   (table) => [
-    index('better_auth_passkey_user_idx').on(table.userId),
-    uniqueIndex('better_auth_passkey_credential_uidx').on(table.credentialID),
+    index('user_passkey_user_idx').on(table.user_id),
+    uniqueIndex('user_passkey_credential_uidx').on(table.credentialID),
   ],
 );
 
-export const betterAuthApiKey = pgTable(
-  'better_auth_api_key',
+export const userApiKey = pgTable(
+  'user_api_key',
   {
     id: text('id').primaryKey().notNull(),
     name: text('name'),
     start: text('start'),
     prefix: text('prefix'),
     key: text('key').notNull(),
-    userId: text('user_id')
+    user_id: uuid('user_id')
       .notNull()
-      .references(() => betterAuthUser.id, { onDelete: 'cascade' }),
+      .references(() => users.id, { onDelete: 'cascade' }),
     refillInterval: integer('refill_interval'),
     refillAmount: integer('refill_amount'),
-    lastRefillAt: timestamp('last_refill_at', { mode: 'date' }),
+    lastRefillAt: timestamp('last_refill_at', { precision: 3, mode: 'string' }),
     enabled: boolean('enabled').default(true).notNull(),
     rateLimitEnabled: boolean('rate_limit_enabled').default(true).notNull(),
     rateLimitTimeWindow: integer('rate_limit_time_window'),
     rateLimitMax: integer('rate_limit_max'),
     requestCount: integer('request_count').default(0).notNull(),
     remaining: integer('remaining'),
-    lastRequest: timestamp('last_request', { mode: 'date' }),
-    expiresAt: timestamp('expires_at', { mode: 'date' }),
-    createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
-    updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull(),
+    lastRequest: timestamp('last_request', { precision: 3, mode: 'string' }),
+    expiresAt: timestamp('expires_at', { precision: 3, mode: 'string' }),
+    created_at: timestamp('created_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
+    updated_at: timestamp('updated_at', { precision: 3, mode: 'string' }).defaultNow().notNull(),
     permissions: text('permissions'),
     metadata: text('metadata'),
   },
   (table) => [
-    index('better_auth_api_key_key_idx').on(table.key),
-    index('better_auth_api_key_user_idx').on(table.userId),
+    index('user_api_key_key_idx').on(table.key),
+    index('user_api_key_user_idx').on(table.user_id),
   ],
 );
 
-export const betterAuthDeviceCode = pgTable(
-  'better_auth_device_code',
+export const userDeviceCode = pgTable(
+  'user_device_code',
   {
     id: text('id').primaryKey().notNull(),
     deviceCode: text('device_code').notNull(),
     userCode: text('user_code').notNull(),
-    userId: text('user_id'),
-    expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
+    user_id: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { precision: 3, mode: 'string' }).notNull(),
     status: text('status').notNull(),
-    lastPolledAt: timestamp('last_polled_at', { mode: 'date' }),
+    lastPolledAt: timestamp('last_polled_at', { precision: 3, mode: 'string' }),
     pollingInterval: integer('polling_interval'),
     clientId: text('client_id'),
     scope: text('scope'),
   },
   (table) => [
-    uniqueIndex('better_auth_device_code_device_uidx').on(table.deviceCode),
-    uniqueIndex('better_auth_device_code_user_uidx').on(table.userCode),
-    index('better_auth_device_code_user_idx').on(table.userId),
+    uniqueIndex('user_device_code_device_uidx').on(table.deviceCode),
+    uniqueIndex('user_device_code_user_uidx').on(table.userCode),
+    index('user_device_code_user_idx').on(table.user_id),
   ],
 );
 
-export type BetterAuthUser = InferSelectModel<typeof betterAuthUser>;
-export type BetterAuthUserInsert = InferInsertModel<typeof betterAuthUser>;
-export type BetterAuthSession = InferSelectModel<typeof betterAuthSession>;
-export type BetterAuthSessionInsert = InferInsertModel<typeof betterAuthSession>;
-export type BetterAuthAccount = InferSelectModel<typeof betterAuthAccount>;
-export type BetterAuthAccountInsert = InferInsertModel<typeof betterAuthAccount>;
-export type BetterAuthVerification = InferSelectModel<typeof betterAuthVerification>;
-export type BetterAuthVerificationInsert = InferInsertModel<typeof betterAuthVerification>;
-export type BetterAuthPasskey = InferSelectModel<typeof betterAuthPasskey>;
-export type BetterAuthPasskeyInsert = InferInsertModel<typeof betterAuthPasskey>;
-export type BetterAuthApiKey = InferSelectModel<typeof betterAuthApiKey>;
-export type BetterAuthApiKeyInsert = InferInsertModel<typeof betterAuthApiKey>;
-export type BetterAuthDeviceCode = InferSelectModel<typeof betterAuthDeviceCode>;
-export type BetterAuthDeviceCodeInsert = InferInsertModel<typeof betterAuthDeviceCode>;
+export type UserSession = InferSelectModel<typeof userSession>;
+export type UserSessionInsert = InferInsertModel<typeof userSession>;
+export type UserAccount = InferSelectModel<typeof userAccount>;
+export type UserAccountInsert = InferInsertModel<typeof userAccount>;
+export type UserVerification = InferSelectModel<typeof userVerification>;
+export type UserVerificationInsert = InferInsertModel<typeof userVerification>;
+export type UserPasskey = InferSelectModel<typeof userPasskey>;
+export type UserPasskeyInsert = InferInsertModel<typeof userPasskey>;
+export type UserApiKey = InferSelectModel<typeof userApiKey>;
+export type UserApiKeyInsert = InferInsertModel<typeof userApiKey>;
+export type UserDeviceCode = InferSelectModel<typeof userDeviceCode>;
+export type UserDeviceCodeInsert = InferInsertModel<typeof userDeviceCode>;
+
+// Legacy type exports for backward compatibility (map to new table exports)
+export type BetterAuthUser = never; // Removed - use users.User instead
+export type BetterAuthSession = UserSession;
+export type BetterAuthSessionInsert = UserSessionInsert;
+export type BetterAuthAccount = UserAccount;
+export type BetterAuthAccountInsert = UserAccountInsert;
+export type BetterAuthVerification = UserVerification;
+export type BetterAuthVerificationInsert = UserVerificationInsert;
+export type BetterAuthPasskey = UserPasskey;
+export type BetterAuthPasskeyInsert = UserPasskeyInsert;
+export type BetterAuthApiKey = UserApiKey;
+export type BetterAuthApiKeyInsert = UserApiKeyInsert;
+export type BetterAuthDeviceCode = UserDeviceCode;
+export type BetterAuthDeviceCodeInsert = UserDeviceCodeInsert;

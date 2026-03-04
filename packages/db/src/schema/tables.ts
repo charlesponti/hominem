@@ -28,6 +28,38 @@ import {
   pgEnum,
 } from 'drizzle-orm/pg-core';
 
+// Re-export new consolidated schemas
+export { person, type Person, type PersonInsert, type PersonSelect } from './person.schema';
+export {
+  healthRecord,
+  healthRecordType,
+  healthMeasurementUnit,
+  type HealthRecord,
+  type HealthRecordInsert,
+  type HealthRecordSelect,
+} from './health-records.schema';
+export { log, logType, type Log, type LogInsert, type LogSelect } from './logs.schema';
+export {
+  userSession,
+  userAccount,
+  userVerification,
+  userPasskey,
+  userApiKey,
+  userDeviceCode,
+  type UserSession,
+  type UserSessionInsert,
+  type UserAccount,
+  type UserAccountInsert,
+  type UserVerification,
+  type UserVerificationInsert,
+  type UserPasskey,
+  type UserPasskeyInsert,
+  type UserApiKey,
+  type UserApiKeyInsert,
+  type UserDeviceCode,
+  type UserDeviceCodeInsert,
+} from './better-auth.schema';
+
 export const itemType = pgEnum('ItemType', ['FLIGHT', 'PLACE']);
 export const tokenType = pgEnum('TokenType', ['EMAIL', 'API']);
 export const accountType = pgEnum('account_type', [
