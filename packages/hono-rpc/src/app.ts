@@ -16,7 +16,7 @@ import { worldRoutes } from './routes/world';
  * Build the main application with all routes explicitly registered.
  *
  * Routes are organized into six archetypal domains:
- * - vitalRoutes: Health, habits, goals, events (Human life-force)
+ * - vitalRoutes: Health, habits, goals, calendar (Human life-force)
  * - knowledgeRoutes: Notes, content, files, bookmarks, twitter (Human mind)
  * - socialRoutes: People, chats, messages, invites (Human connection)
  * - economyRoutes: Finance, items, lists (Human resource management)

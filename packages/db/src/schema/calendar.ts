@@ -8,9 +8,54 @@ import { sql } from "drizzle-orm"
  * Do not edit manually.
  * 
  * Tables in this domain:
+ *   - users
+ *   - persons
  *   - calendarEvents
  *   - calendarAttendees
  */
+
+export const users = pgTable("users", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	email: text().notNull(),
+	name: text(),
+	avatarUrl: text("avatar_url"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	index("users_email_lower_idx").using("btree", sql`lower(email)`),
+	unique("users_email_key").on(table.email),
+	pgPolicy("users_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (id = app_current_user_id()))`  }),
+]);
+
+export const persons = pgTable("persons", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	ownerUserId: uuid("owner_user_id").notNull(),
+	personType: text("person_type").notNull(),
+	firstName: text("first_name"),
+	lastName: text("last_name"),
+	email: text(),
+	phone: text(),
+	avatarUrl: text("avatar_url"),
+	notes: text(),
+	metadata: jsonb().default({}),
+	dateStarted: timestamp("date_started", { withTimezone: true, mode: 'string' }),
+	dateEnded: timestamp("date_ended", { withTimezone: true, mode: 'string' }),
+	// TODO: failed to parse database type 'tsvector'
+	searchVector: text("search_vector").generatedAlwaysAs(sql`to_tsvector('simple'::regconfig, ((((((COALESCE(first_name, ''::text) || ' '::text) || COALESCE(last_name, ''::text)) || ' '::text) || COALESCE(email, ''::text)) || ' '::text) || COALESCE(phone, ''::text)))`),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	index("persons_email_idx").using("btree", table.ownerUserId.asc().nullsLast().op("uuid_ops"), table.email.asc().nullsLast().op("text_ops")),
+	index("persons_name_trgm_idx").using("gin", sql`(((COALESCE(first_name, ''::text) || ' '::text) || COALESCE(las`),
+	index("persons_owner_idx").using("btree", table.ownerUserId.asc().nullsLast().op("uuid_ops"), table.personType.asc().nullsLast().op("uuid_ops")),
+	index("persons_search_idx").using("gin", table.searchVector.asc().nullsLast().op("tsvector_ops")),
+	foreignKey({
+			columns: [table.ownerUserId],
+			foreignColumns: [users.id],
+			name: "persons_owner_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("persons_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (owner_user_id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (owner_user_id = app_current_user_id()))`  }),
+]);
 
 export const calendarEvents = pgTable("calendar_events", {
 	id: uuid().defaultRandom().primaryKey().notNull(),

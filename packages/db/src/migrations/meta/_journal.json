@@ -15,6 +15,20 @@
       "when": 1772606917495,
       "tag": "0001_core_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772658141624,
+      "tag": "0002_tranquil_sleeper",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772658465756,
+      "tag": "0003_fantastic_zarek",
+      "breakpoints": true
     }
   ]
 }

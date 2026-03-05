@@ -212,3 +212,13 @@ This ensures:
 3. Authentication middleware is already in place (authMiddleware working)
 4. Zod is preferred for HTTP validation (already in use)
 5. TypeScript `typeof table.$inferSelect` for types is available
+
+## Implementation Notes (2026-03-04)
+
+- Route implementations now exist for all six target domains and are attached to domain routers.
+- API route success payloads are standardized as `{ success: true, data: ... }`.
+- Route-level input validation is implemented with `zValidator` and domain schemas.
+- Service imports use explicit `.service` subpaths (example: `@hominem/db/services/tasks.service`) to align with package exports.
+- Hono RPC public types now include service-derived domain aliases (Task, Tag, CalendarEvent, Person, Bookmark, Possession, container and list variants).
+- Tests added under `packages/hono-rpc/tests/` cover error mapping, tasks CRUD flow, and authorization behavior.
+- Monorepo typecheck remains blocked by pre-existing cross-package db schema/type mismatches outside the Phase 2 route files.

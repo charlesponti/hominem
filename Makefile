@@ -15,7 +15,7 @@ APPLE_KEY_ID ?= 2438T5MGLH
 CLOUDFLARED ?= cloudflared
 
 # Phony targets
-.PHONY: install start dev build test lint format clean docker-up docker-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios
+.PHONY: install start dev build test lint format clean docker-up docker-up-full docker-down docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios
 
 # Install dependencies
 install:
@@ -115,6 +115,26 @@ blt:
 	@bun run build --force > /dev/null && echo "Build passed" || echo "Build failed"
 	@echo "Running typecheck..."
 	@bun run typecheck --force > /dev/null && echo "Typecheck passed" || echo "Typecheck failed"
+
+# Docker compose targets
+docker-up:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d
+
+docker-up-full:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml -f compose/monitoring.yml up -d
+
+docker-down:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down -v
+
+docker-test-up:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d test-db
+	@echo "Waiting for test database to be ready..."
+	@sleep 3
+	@cd packages/db && DATABASE_URL="postgres://postgres:postgres@localhost:4433/hominem-test" bun run db:migrate
+	@echo "Test database ready on port 4433"
+
+docker-test-down:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml stop test-db
 
 # Default target
 all: install build

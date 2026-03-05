@@ -19,7 +19,7 @@ function getDbInstance() {
  * Lazy initialization - only connects when actually used.
  *
  * Infrastructure exports only. Services are imported via subpaths:
- *   import { TaskService } from '@hominem/db/services/tasks'
+ *   import { listTasks } from '@hominem/db/services/tasks.service'
  *   NOT: import { TaskService } from '@hominem/db'
  */
 export const db = new Proxy({} as PostgresJsDatabase<typeof schema>, {
@@ -29,7 +29,7 @@ export const db = new Proxy({} as PostgresJsDatabase<typeof schema>, {
 })
 
 // Infrastructure exports only
-export { getDb } from './client'
+export { getDb, takeUniqueOrThrow } from './client'
 
 // Re-export commonly used drizzle-orm functions and types
 // This ensures all packages use the same drizzle-orm instance
@@ -63,7 +63,7 @@ export * from './services/_shared/query'
 /**
  * Note: Service modules are NOT re-exported from the root index.
  * Import services via subpaths instead:
- *   import { TaskService } from '@hominem/db/services/tasks'
- *   import { TagService } from '@hominem/db/services/tags'
+ *   import { listTasks } from '@hominem/db/services/tasks.service'
+ *   import { listTags } from '@hominem/db/services/tags.service'
  *   import { FinanceCategoryService } from '@hominem/db/services/finance/categories'
  */

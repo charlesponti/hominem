@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { Readable } from 'node:stream';
 
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { vectorDocuments } from '@hominem/db/schema/vector-documents';
-import type { VectorDocumentInput, VectorDocumentOutput } from '@hominem/db/types/vector-documents';
+import { vectorDocuments } from './schema/vector-documents';
+import type { VectorDocumentInput, VectorDocumentOutput } from './types/vector-documents';
 import { splitMarkdown, type Document } from '@hominem/utils/markdown';
 import csv from 'csv-parser';
 import OpenAI from 'openai';
@@ -143,7 +143,7 @@ export namespace VectorService {
         id: doc.id,
         content: doc.content,
         metadata: doc.metadata,
-        embedding: embeddings[index],
+        embedding: embeddings[index] ?? [],
         userId: userId,
         source: source,
         sourceType: 'csv',
@@ -216,7 +216,7 @@ export namespace VectorService {
         id: randomUUID(),
         content: doc.pageContent,
         metadata: JSON.stringify({ ...doc.metadata, ...metadata }),
-        embedding: embeddings[index],
+        embedding: embeddings[index] ?? [],
         userId: userId,
         source: 'notes',
         sourceType: 'markdown',

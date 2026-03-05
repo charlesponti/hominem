@@ -8,16 +8,18 @@ import { notesRoutes } from './notes'
 import { tasksRoutes } from './tasks'
 import { tweetRoutes } from './tweet'
 import { twitterRoutes } from './twitter'
+import { tagsRoutes } from './tags'
 
 /**
  * Knowledge Domain
  *
- * Cognitive output and information management: notes, files, and bookmarks.
+ * Cognitive output and information management: notes, tasks, files, bookmarks, and tags.
  */
 export const knowledgeRoutes = new Hono<AppContext>()
   .route('/notes', notesRoutes)
   .route('/tasks', tasksRoutes)
   .route('/files', filesRoutes)
   .route('/bookmarks', bookmarksRoutes)
+  .route('/tags', tagsRoutes)
   .route('/twitter', twitterRoutes)
   .route('/tweet', tweetRoutes)

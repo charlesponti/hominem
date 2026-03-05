@@ -1,5 +1,15 @@
 # AGENTS.md - Coding Guidelines for Hominem
 
+## Active Change Guardrail (MANDATORY)
+
+Before starting implementation work:
+
+1. Read `openspec/ACTIVE_CHANGE.md`.
+2. Confirm your edits map to the active change artifacts listed there.
+3. If a request implies a different change, ask for explicit re-activation before switching scope.
+
+Do not silently mix work across multiple OpenSpec changes.
+
 ## Core Workflow Commands
 
 Always run commands from the monorepo root. Do NOT `cd` into packages.
@@ -35,9 +45,13 @@ Always run commands from the monorepo root. Do NOT `cd` into packages.
 
 ### TypeScript
 
-- No `any` or `unknown`.
-- Use `import type { ... }` for type-only imports.
+**CRITICAL: No `any` or `unknown` types ever.**
+- Never use `as any`, `as unknown`, or `any` casts to escape type checking.
+- If you encounter a type mismatch, fix the root cause: correct the function signature, add proper generics, or refactor the constraint.
+- Do not use `any` to "make the compiler happy"—that defeats the entire purpose of TypeScript.
 - Use `interface` for object shapes, `type` for unions/primitives/intersections.
+- Use `import type { ... }` for type-only imports.
+- Generic functions and overloads are preferred over `any` for flexible APIs.
 
 ### Error Handling
 

@@ -19,32 +19,40 @@ import path from 'path'
 // Define domain mappings: which tables belong to each service domain
 const DOMAIN_SCHEMAS: Record<string, string[]> = {
   tasks: [
+    'users',
     'tasks',
     'goals',
     'keyResults',
     'taskLists',
   ],
   tags: [
+    'users',
     'tags',
     'taggedItems',
     'tagShares',
   ],
   calendar: [
+    'users',
+    'persons',
     'calendarEvents',
     'calendarAttendees',
   ],
   persons: [
+    'users',
     'persons',
     'userPersonRelations',
   ],
   bookmarks: [
+    'users',
     'bookmarks',
   ],
   possessions: [
+    'users',
     'possessions',
     'possessionContainers',
   ],
   finance: [
+    'users',
     'financeAccounts',
     'financeCategories',
     'financeTransactions2022',

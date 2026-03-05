@@ -10,6 +10,7 @@
 
 import { eq, and, asc, inArray } from 'drizzle-orm'
 import type { Database } from './client'
+import { db as defaultDb } from '../index'
 import { tags, taggedItems } from '../schema/tags'
 import type { TagId, UserId } from './_shared/ids'
 import { brandId } from './_shared/ids'
@@ -26,8 +27,9 @@ type TaggedItem = typeof taggedItems.$inferSelect
  * Internal helper: verify user ownership
  * @throws ForbiddenError if tag doesn't belong to user
  */
-async function getTagWithOwnershipCheck(db: Database, tagId: TagId, userId: UserId): Promise<Tag> {
-  const tag = await db.query.tags.findFirst({
+async function getTagWithOwnershipCheck(db: Database | undefined, tagId: TagId, userId: UserId): Promise<Tag> {
+  const database = db || (defaultDb as any as Database)
+  const tag = await database.query.tags.findFirst({
     where: and(eq(tags.id, String(tagId)), eq(tags.ownerId, String(userId))),
   })
 
@@ -49,7 +51,8 @@ export async function listTags(
   userId: UserId,
   db?: Database
 ): Promise<Tag[]> {
-  const results = await db!.query.tags.findMany({
+  const database = db || (defaultDb as any as Database)
+  const results = await database.query.tags.findMany({
     where: eq(tags.ownerId, String(userId)),
     orderBy: asc(tags.name),
   })
@@ -70,7 +73,8 @@ export async function getTag(
   userId: UserId,
   db?: Database
 ): Promise<Tag | null> {
-  const tag = await db!.query.tags.findFirst({
+  const database = db || (defaultDb as any as Database)
+  const tag = await database.query.tags.findFirst({
     where: and(eq(tags.id, String(tagId)), eq(tags.ownerId, String(userId))),
   })
 
@@ -91,7 +95,8 @@ export async function createTag(
   input: { name: string; color?: string | null; description?: string | null; emojiImageUrl?: string | null },
   db?: Database
 ): Promise<Tag> {
-  const result = await db!.insert(tags)
+  const database = db || (defaultDb as any as Database)
+  const result = await database.insert(tags)
     .values({
       ownerId: String(userId),
       name: input.name,
@@ -124,10 +129,11 @@ export async function updateTag(
   input: TagUpdate,
   db?: Database
 ): Promise<Tag | null> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getTagWithOwnershipCheck(db!, tagId, userId)
+  await getTagWithOwnershipCheck(database, tagId, userId)
 
-  const result = await db!.update(tags)
+  const result = await database.update(tags)
     .set(input)
     .where(eq(tags.id, String(tagId)))
     .returning()
@@ -149,14 +155,15 @@ export async function deleteTag(
   userId: UserId,
   db?: Database
 ): Promise<boolean> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getTagWithOwnershipCheck(db!, tagId, userId)
+  await getTagWithOwnershipCheck(database, tagId, userId)
 
   // Delete all tagged items first (cascade is on schema but be explicit)
-  await db!.delete(taggedItems).where(eq(taggedItems.tagId, String(tagId)))
+  await database.delete(taggedItems).where(eq(taggedItems.tagId, String(tagId)))
 
   // Delete the tag
-  const result = await db!.delete(tags).where(eq(tags.id, String(tagId))).returning()
+  const result = await database.delete(tags).where(eq(tags.id, String(tagId))).returning()
 
   return result.length > 0
 }
@@ -175,10 +182,11 @@ export async function listTaggedItems(
   userId: UserId,
   db?: Database
 ): Promise<TaggedItem[]> {
+  const database = db || (defaultDb as any as Database)
   // Verify tag ownership
-  await getTagWithOwnershipCheck(db!, tagId, userId)
+  await getTagWithOwnershipCheck(database, tagId, userId)
 
-  const results = await db!.query.taggedItems.findMany({
+  const results = await database.query.taggedItems.findMany({
     where: eq(taggedItems.tagId, String(tagId)),
   })
 
@@ -198,7 +206,8 @@ export async function listTagsForEntity(
   entityType: string,
   db?: Database
 ): Promise<Tag[]> {
-  const items = await db!.query.taggedItems.findMany({
+  const database = db || (defaultDb as any as Database)
+  const items = await database.query.taggedItems.findMany({
     where: and(eq(taggedItems.entityId, entityId), eq(taggedItems.entityType, entityType)),
   })
 
@@ -207,7 +216,7 @@ export async function listTagsForEntity(
   }
 
   const tagIds = items.map(item => item.tagId)
-  const results = await db!.query.tags.findMany({
+  const results = await database.query.tags.findMany({
     where: inArray(tags.id, tagIds),
   })
 
@@ -230,7 +239,8 @@ export async function tagEntity(
   entityType: string,
   db?: Database
 ): Promise<TaggedItem> {
-  const result = await db!.insert(taggedItems)
+  const database = db || (defaultDb as any as Database)
+  const result = await database.insert(taggedItems)
     .values({
       tagId: String(tagId),
       entityId,
@@ -260,7 +270,8 @@ export async function untagEntity(
   entityType: string,
   db?: Database
 ): Promise<boolean> {
-  const result = await db!.delete(taggedItems)
+  const database = db || (defaultDb as any as Database)
+  const result = await database.delete(taggedItems)
     .where(and(
       eq(taggedItems.tagId, String(tagId)),
       eq(taggedItems.entityId, entityId),
@@ -285,8 +296,9 @@ export async function syncEntityTags(
   tagIds: TagId[],
   db?: Database
 ): Promise<void> {
+  const database = db || (defaultDb as any as Database)
   // Remove all existing tags for this entity
-  await db!.delete(taggedItems)
+  await database.delete(taggedItems)
     .where(and(
       eq(taggedItems.entityId, entityId),
       eq(taggedItems.entityType, entityType)
@@ -294,7 +306,7 @@ export async function syncEntityTags(
 
   // Add new tags if any
   if (tagIds.length > 0) {
-    await db!.insert(taggedItems)
+    await database.insert(taggedItems)
       .values(
         tagIds.map(id => ({
           tagId: String(id),

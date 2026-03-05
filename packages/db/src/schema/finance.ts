@@ -8,6 +8,7 @@ import { sql } from "drizzle-orm"
  * Do not edit manually.
  * 
  * Tables in this domain:
+ *   - users
  *   - financeAccounts
  *   - financeCategories
  *   - financeTransactions2022
@@ -17,6 +18,19 @@ import { sql } from "drizzle-orm"
  *   - financeTransactions2026
  *   - financeTransactionsDefault
  */
+
+export const users = pgTable("users", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	email: text().notNull(),
+	name: text(),
+	avatarUrl: text("avatar_url"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	index("users_email_lower_idx").using("btree", sql`lower(email)`),
+	unique("users_email_key").on(table.email),
+	pgPolicy("users_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (id = app_current_user_id()))`  }),
+]);
 
 export const financeAccounts = pgTable("finance_accounts", {
 	id: uuid().defaultRandom().primaryKey().notNull(),

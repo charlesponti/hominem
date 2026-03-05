@@ -10,6 +10,7 @@
 
 import { eq, and, desc, asc } from 'drizzle-orm'
 import type { Database } from './client'
+import { getDb } from './client'
 import { tasks, taskLists } from '../schema/tasks'
 import type { TaskId, UserId } from './_shared/ids'
 import { brandId } from './_shared/ids'
@@ -26,8 +27,9 @@ type TaskUpdate = Partial<Omit<TaskInsert, 'id' | 'userId'>>
  * Internal helper: verify user ownership
  * @throws ForbiddenError if task doesn't belong to user
  */
-async function getTaskWithOwnershipCheck(db: Database, taskId: TaskId, userId: UserId): Promise<Task> {
-  const task = await db.query.tasks.findFirst({
+async function getTaskWithOwnershipCheck(db: Database | undefined, taskId: TaskId, userId: UserId): Promise<Task> {
+  const database = db || getDb()
+  const task = await (database as any).query.tasks.findFirst({
     where: and(eq(tasks.id, String(taskId)), eq(tasks.userId, String(userId))),
   })
 
@@ -55,6 +57,7 @@ export async function listTasks(
   },
   db?: Database
 ): Promise<Task[]> {
+  const database = db || getDb()
   const paging = normalizePaginationParams(query?.pagination)
 
   // Build filters
@@ -74,7 +77,7 @@ export async function listTasks(
   }
 
   // Query
-  const results = await db!.query.tasks.findMany({
+  const results = await (database as any).query.tasks.findMany({
     where: and(...filters),
     orderBy: [asc(tasks.createdAt), asc(tasks.id)],
     limit: paging.limit + 1, // Fetch one extra to detect hasMore
@@ -97,7 +100,8 @@ export async function getTask(
   userId: UserId,
   db?: Database
 ): Promise<Task | null> {
-  const task = await db!.query.tasks.findFirst({
+  const database = db || getDb()
+  const task = await (database as any).query.tasks.findFirst({
     where: and(eq(tasks.id, String(taskId)), eq(tasks.userId, String(userId))),
   })
 
@@ -126,8 +130,9 @@ export async function createTask(
   userId: UserId,
   db?: Database
 ): Promise<Task> {
+  const database = db || getDb()
   try {
-    const [created] = await db!
+    const [created] = await (database as any)
       .insert(tasks)
       .values({
         ...data,
@@ -159,10 +164,11 @@ export async function updateTask(
   data: TaskUpdate,
   db?: Database
 ): Promise<Task | null> {
+  const database = db || getDb()
   try {
-    await getTaskWithOwnershipCheck(db!, taskId, userId)
+    await getTaskWithOwnershipCheck(database, taskId, userId)
 
-    const [updated] = await db!
+    const [updated] = await (database as any)
       .update(tasks)
       .set({
         ...data,
@@ -190,12 +196,16 @@ export async function updateTask(
  * @throws ForbiddenError if not user's task
  */
 export async function deleteTask(taskId: TaskId, userId: UserId, db?: Database): Promise<boolean> {
+  const database = db || getDb()
   try {
-    await getTaskWithOwnershipCheck(db!, taskId, userId)
+    await getTaskWithOwnershipCheck(database, taskId, userId)
 
-    const result = await db!.delete(tasks).where(eq(tasks.id, String(taskId)))
+    const result = await database
+      .delete(tasks)
+      .where(eq(tasks.id, String(taskId)))
+      .returning({ id: tasks.id })
 
-    return result.rowCount > 0
+    return result.length > 0
   } catch (error) {
     if (error instanceof ForbiddenError) {
       return false

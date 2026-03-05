@@ -10,6 +10,7 @@
 
 import { eq, and } from 'drizzle-orm'
 import type { Database } from './client'
+import { db as defaultDb } from '../index'
 import { persons, userPersonRelations } from '../schema/persons'
 import type { UserId } from './_shared/ids'
 import { ForbiddenError } from './_shared/errors'
@@ -25,8 +26,9 @@ type UserPersonRelation = typeof userPersonRelations.$inferSelect
  * Internal helper: verify user ownership
  * @throws ForbiddenError if person doesn't belong to user
  */
-async function getPersonWithOwnershipCheck(db: Database, personId: string, userId: UserId): Promise<Person> {
-  const person = await db.query.persons.findFirst({
+async function getPersonWithOwnershipCheck(db: Database | undefined, personId: string, userId: UserId): Promise<Person> {
+  const database = db || (defaultDb as any as Database)
+  const person = await database.query.persons.findFirst({
     where: and(eq(persons.id, personId), eq(persons.ownerUserId, String(userId))),
   })
 
@@ -48,7 +50,8 @@ export async function listPersons(
   userId: UserId,
   db?: Database
 ): Promise<Person[]> {
-  const results = await db!.query.persons.findMany({
+  const database = db || (defaultDb as any as Database)
+  const results = await database.query.persons.findMany({
     where: eq(persons.ownerUserId, String(userId)),
     orderBy: persons.createdAt,
   })
@@ -69,7 +72,8 @@ export async function getPerson(
   userId: UserId,
   db?: Database
 ): Promise<Person | null> {
-  const person = await db!.query.persons.findFirst({
+  const database = db || (defaultDb as any as Database)
+  const person = await database.query.persons.findFirst({
     where: and(eq(persons.id, personId), eq(persons.ownerUserId, String(userId))),
   })
 
@@ -97,7 +101,8 @@ export async function createPerson(
   },
   db?: Database
 ): Promise<Person> {
-  const result = await db!.insert(persons)
+  const database = db || (defaultDb as any as Database)
+  const result = await database.insert(persons)
     .values({
       ownerUserId: String(userId),
       personType: input.personType,
@@ -132,10 +137,11 @@ export async function updatePerson(
   input: PersonUpdate,
   db?: Database
 ): Promise<Person | null> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getPersonWithOwnershipCheck(db!, personId, userId)
+  await getPersonWithOwnershipCheck(database, personId, userId)
 
-  const result = await db!.update(persons)
+  const result = await database.update(persons)
     .set({ ...input, updatedAt: new Date().toISOString() })
     .where(eq(persons.id, personId))
     .returning()
@@ -157,15 +163,16 @@ export async function deletePerson(
   userId: UserId,
   db?: Database
 ): Promise<boolean> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getPersonWithOwnershipCheck(db!, personId, userId)
+  await getPersonWithOwnershipCheck(database, personId, userId)
 
   // Delete relations first
-  await db!.delete(userPersonRelations)
+  await database.delete(userPersonRelations)
     .where(eq(userPersonRelations.personId, personId))
 
   // Delete the person
-  const result = await db!.delete(persons)
+  const result = await database.delete(persons)
     .where(eq(persons.id, personId))
     .returning()
 
@@ -186,10 +193,11 @@ export async function listPersonRelations(
   userId: UserId,
   db?: Database
 ): Promise<UserPersonRelation[]> {
+  const database = db || (defaultDb as any as Database)
   // Verify person ownership
-  await getPersonWithOwnershipCheck(db!, personId, userId)
+  await getPersonWithOwnershipCheck(database, personId, userId)
 
-  const results = await db!.query.userPersonRelations.findMany({
+  const results = await database.query.userPersonRelations.findMany({
     where: eq(userPersonRelations.personId, personId),
   })
 
@@ -215,10 +223,11 @@ export async function addPersonRelation(
   userId: UserId,
   db?: Database
 ): Promise<UserPersonRelation> {
+  const database = db || (defaultDb as any as Database)
   // Verify person ownership
-  await getPersonWithOwnershipCheck(db!, personId, userId)
+  await getPersonWithOwnershipCheck(database, personId, userId)
 
-  const result = await db!.insert(userPersonRelations)
+  const result = await database.insert(userPersonRelations)
     .values({
       personId,
       userId: relatedUserId,

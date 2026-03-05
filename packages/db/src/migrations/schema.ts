@@ -230,6 +230,29 @@ export const persons = pgTable("persons", {
 	pgPolicy("persons_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (owner_user_id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (owner_user_id = app_current_user_id()))`  }),
 ]);
 
+export const contacts = pgTable("contacts", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	firstName: text("first_name").notNull(),
+	lastName: text("last_name"),
+	email: text(),
+	phone: text(),
+	linkedinUrl: text("linkedin_url"),
+	title: text(),
+	notes: text(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	index("contact_email_idx").using("btree", table.email.asc().nullsLast().op("text_ops")),
+	index("contact_user_id_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "contacts_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("contacts_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`  }),
+]);
+
 export const userPersonRelations = pgTable("user_person_relations", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	userId: uuid("user_id").notNull(),
@@ -823,8 +846,19 @@ export const schools = pgTable("schools", {
 export const notes = pgTable("notes", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	userId: uuid("user_id").notNull(),
+	type: text().default('note').notNull(),
+	status: text().default('draft').notNull(),
 	title: text(),
 	content: text(),
+	excerpt: text(),
+	mentions: jsonb().default([]),
+	analysis: jsonb(),
+	publishingMetadata: jsonb("publishing_metadata"),
+	parentNoteId: uuid("parent_note_id"),
+	versionNumber: integer("version_number").default(1).notNull(),
+	isLatestVersion: boolean("is_latest_version").default(true).notNull(),
+	publishedAt: timestamp("published_at", { withTimezone: true, mode: 'string' }),
+	scheduledFor: timestamp("scheduled_for", { withTimezone: true, mode: 'string' }),
 	source: text(),
 	isLocked: boolean("is_locked").default(false),
 	folder: text(),
@@ -834,15 +868,51 @@ export const notes = pgTable("notes", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 }, (table) => [
+	index("notes_latest_idx").using("btree", table.isLatestVersion.asc().nullsLast().op("bool_ops")),
+	index("notes_parent_idx").using("btree", table.parentNoteId.asc().nullsLast().op("uuid_ops")),
+	index("notes_published_at_idx").using("btree", table.publishedAt.asc().nullsLast().op("timestamptz_ops")),
 	index("notes_search_idx").using("gin", table.searchVector.asc().nullsLast().op("tsvector_ops")),
+	index("notes_status_idx").using("btree", table.status.asc().nullsLast().op("text_ops")),
+	index("notes_type_idx").using("btree", table.type.asc().nullsLast().op("text_ops")),
 	index("notes_user_unlocked_idx").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.updatedAt.desc().nullsFirst().op("timestamptz_ops")).where(sql`(is_locked = false)`),
 	index("notes_user_updated_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops"), table.updatedAt.desc().nullsFirst().op("timestamptz_ops")),
+	index("notes_version_idx").using("btree", table.parentNoteId.asc().nullsLast().op("uuid_ops"), table.versionNumber.asc().nullsLast().op("int4_ops")),
+	foreignKey({
+			columns: [table.parentNoteId],
+			foreignColumns: [table.id],
+			name: "notes_parent_fk"
+		}).onDelete("cascade"),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [users.id],
 			name: "notes_user_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("notes_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`  }),
+]);
+
+export const noteTags = pgTable("note_tags", {
+	noteId: uuid("note_id").notNull(),
+	tagId: uuid("tag_id").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	primaryKey({ columns: [table.noteId, table.tagId], name: "note_tags_pkey"}),
+	index("note_tags_note_idx").using("btree", table.noteId.asc().nullsLast().op("uuid_ops")),
+	index("note_tags_tag_idx").using("btree", table.tagId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.noteId],
+			foreignColumns: [notes.id],
+			name: "note_tags_note_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.tagId],
+			foreignColumns: [tags.id],
+			name: "note_tags_tag_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("note_tags_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (EXISTS ( SELECT 1
+   FROM notes n
+  WHERE ((n.id = note_tags.note_id) AND (n.user_id = app_current_user_id())))))`, withCheck: sql`(app_is_service_role() OR (EXISTS ( SELECT 1
+   FROM notes n
+  WHERE ((n.id = note_tags.note_id) AND (n.user_id = app_current_user_id())))))`  }),
 ]);
 
 export const noteShares = pgTable("note_shares", {

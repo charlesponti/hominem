@@ -1,11 +1,10 @@
 import {
+  deleteHealthActivity,
+  getHealthActivityById,
   logHealthActivity,
   getHealthActivityStats,
   updateHealthActivity,
   getHealthActivitiesByUser,
-  getEventById,
-  deleteEvent,
-  type EventWithTagsAndPeople,
 } from '@hominem/events-services';
 import { NotFoundError, ValidationError } from '../errors';
 import { validator as zValidator } from 'hono-openapi';
@@ -19,10 +18,14 @@ import { describeRoute, resolver } from 'hono-openapi';
  * Type predicate to check if an event is a Health activity owned by a specific user
  */
 function isUserHealthActivity(
-  event: EventWithTagsAndPeople | null,
+  event: Awaited<ReturnType<typeof getHealthActivityById>>,
   userId: string,
-): event is EventWithTagsAndPeople & { type: 'Health'; userId: string } {
-  return event !== null && event.userId === userId && event.type === 'Health';
+): event is NonNullable<Awaited<ReturnType<typeof getHealthActivityById>>> {
+  const candidate = event as (NonNullable<Awaited<ReturnType<typeof getHealthActivityById>>> & {
+    userId?: string
+    type?: string
+  }) | null
+  return candidate !== null && candidate.userId === userId && candidate.type === 'Health'
 }
 
 /**
@@ -101,7 +104,7 @@ export const healthRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const activityId = c.req.param('id');
 
-    const activity = await getEventById(activityId);
+    const activity = await getHealthActivityById(activityId, userId);
     if (!isUserHealthActivity(activity, userId)) {
       throw new NotFoundError('Health activity not found');
     }
@@ -168,7 +171,7 @@ export const healthRoutes = new Hono<AppContext>()
     const activityId = c.req.param('id');
     const data = c.req.valid('json');
 
-    const activity = await getEventById(activityId);
+    const activity = await getHealthActivityById(activityId, userId);
     if (!isUserHealthActivity(activity, userId)) {
       throw new NotFoundError('Health activity not found');
     }
@@ -192,12 +195,12 @@ export const healthRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const activityId = c.req.param('id');
 
-    const activity = await getEventById(activityId);
+    const activity = await getHealthActivityById(activityId, userId);
     if (!isUserHealthActivity(activity, userId)) {
       throw new NotFoundError('Health activity not found');
     }
 
-    const deleted = await deleteEvent(activityId);
+    const deleted = await deleteHealthActivity(activityId, userId);
     if (!deleted) {
       throw new NotFoundError('Failed to delete health activity');
     }

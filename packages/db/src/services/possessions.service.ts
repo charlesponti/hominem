@@ -8,8 +8,9 @@
  * - All operations are user-scoped (userId filter)
  */
 
-import { eq, and } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
 import type { Database } from './client'
+import { db as defaultDb } from '../index'
 import { possessions, possessionContainers } from '../schema/possessions'
 import type { UserId } from './_shared/ids'
 import { ForbiddenError } from './_shared/errors'
@@ -25,8 +26,9 @@ type PossessionContainer = typeof possessionContainers.$inferSelect
  * Internal helper: verify user ownership of possession
  * @throws ForbiddenError if possession doesn't belong to user
  */
-async function getPossessionWithOwnershipCheck(db: Database, possessionId: string, userId: UserId): Promise<Possession> {
-  const possession = await db.query.possessions.findFirst({
+async function getPossessionWithOwnershipCheck(db: Database | undefined, possessionId: string, userId: UserId): Promise<Possession> {
+  const database = db || (defaultDb as any as Database)
+  const possession = await database.query.possessions.findFirst({
     where: and(eq(possessions.id, possessionId), eq(possessions.userId, String(userId))),
   })
 
@@ -41,8 +43,9 @@ async function getPossessionWithOwnershipCheck(db: Database, possessionId: strin
  * Internal helper: verify user ownership of container
  * @throws ForbiddenError if container doesn't belong to user
  */
-async function getContainerWithOwnershipCheck(db: Database, containerId: string, userId: UserId): Promise<PossessionContainer> {
-  const container = await db.query.possessionContainers.findFirst({
+async function getContainerWithOwnershipCheck(db: Database | undefined, containerId: string, userId: UserId): Promise<PossessionContainer> {
+  const database = db || (defaultDb as any as Database)
+  const container = await database.query.possessionContainers.findFirst({
     where: and(eq(possessionContainers.id, containerId), eq(possessionContainers.userId, String(userId))),
   })
 
@@ -66,13 +69,14 @@ export async function listPossessions(
   category?: string,
   db?: Database
 ): Promise<Possession[]> {
+  const database = db || (defaultDb as any as Database)
   const filters: any[] = [eq(possessions.userId, String(userId))]
 
   if (category) {
     filters.push(eq(possessions.category, category))
   }
 
-  const results = await db!.query.possessions.findMany({
+  const results = await database.query.possessions.findMany({
     where: and(...filters),
   })
 
@@ -92,7 +96,8 @@ export async function getPossession(
   userId: UserId,
   db?: Database
 ): Promise<Possession | null> {
-  const possession = await db!.query.possessions.findFirst({
+  const database = db || (defaultDb as any as Database)
+  const possession = await database.query.possessions.findFirst({
     where: and(eq(possessions.id, possessionId), eq(possessions.userId, String(userId))),
   })
 
@@ -120,7 +125,8 @@ export async function createPossession(
   },
   db?: Database
 ): Promise<Possession> {
-  const result = await db!.insert(possessions)
+  const database = db || (defaultDb as any as Database)
+  const result = await database.insert(possessions)
     .values({
       userId: String(userId),
       containerId: input.containerId ?? null,
@@ -155,10 +161,11 @@ export async function updatePossession(
   input: PossessionUpdate,
   db?: Database
 ): Promise<Possession | null> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getPossessionWithOwnershipCheck(db!, possessionId, userId)
+  await getPossessionWithOwnershipCheck(database, possessionId, userId)
 
-  const result = await db!.update(possessions)
+  const result = await database.update(possessions)
     .set(input)
     .where(eq(possessions.id, possessionId))
     .returning()
@@ -180,10 +187,11 @@ export async function deletePossession(
   userId: UserId,
   db?: Database
 ): Promise<boolean> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getPossessionWithOwnershipCheck(db!, possessionId, userId)
+  await getPossessionWithOwnershipCheck(database, possessionId, userId)
 
-  const result = await db!.delete(possessions)
+  const result = await database.delete(possessions)
     .where(eq(possessions.id, possessionId))
     .returning()
 
@@ -201,7 +209,8 @@ export async function listContainers(
   userId: UserId,
   db?: Database
 ): Promise<PossessionContainer[]> {
-  const results = await db!.query.possessionContainers.findMany({
+  const database = db || (defaultDb as any as Database)
+  const results = await database.query.possessionContainers.findMany({
     where: eq(possessionContainers.userId, String(userId)),
   })
 
@@ -221,7 +230,8 @@ export async function getContainer(
   userId: UserId,
   db?: Database
 ): Promise<PossessionContainer | null> {
-  const container = await db!.query.possessionContainers.findFirst({
+  const database = db || (defaultDb as any as Database)
+  const container = await database.query.possessionContainers.findFirst({
     where: and(eq(possessionContainers.id, containerId), eq(possessionContainers.userId, String(userId))),
   })
 
@@ -242,7 +252,8 @@ export async function createContainer(
   input: { name: string; description?: string | null },
   db?: Database
 ): Promise<PossessionContainer> {
-  const result = await db!.insert(possessionContainers)
+  const database = db || (defaultDb as any as Database)
+  const result = await database.insert(possessionContainers)
     .values({
       userId: String(userId),
       name: input.name,
@@ -273,10 +284,11 @@ export async function updateContainer(
   input: { name?: string; description?: string | null },
   db?: Database
 ): Promise<PossessionContainer | null> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getContainerWithOwnershipCheck(db!, containerId, userId)
+  await getContainerWithOwnershipCheck(database, containerId, userId)
 
-  const result = await db!.update(possessionContainers)
+  const result = await database.update(possessionContainers)
     .set(input)
     .where(eq(possessionContainers.id, containerId))
     .returning()
@@ -298,16 +310,17 @@ export async function deleteContainer(
   userId: UserId,
   db?: Database
 ): Promise<boolean> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getContainerWithOwnershipCheck(db!, containerId, userId)
+  await getContainerWithOwnershipCheck(database, containerId, userId)
 
   // Set possessions' containerIds to null
-  await db!.update(possessions)
+  await database.update(possessions)
     .set({ containerId: null })
     .where(eq(possessions.containerId, containerId))
 
   // Delete the container
-  const result = await db!.delete(possessionContainers)
+  const result = await database.delete(possessionContainers)
     .where(eq(possessionContainers.id, containerId))
     .returning()
 

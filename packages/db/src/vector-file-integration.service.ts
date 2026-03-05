@@ -10,7 +10,7 @@ export interface ProcessedFile {
   metadata?: Record<string, unknown>;
 }
 
-import { VectorService } from '@hominem/db';
+import { VectorService } from './vector.service';
 
 export async function indexProcessedFile(
   processedFile: ProcessedFile,

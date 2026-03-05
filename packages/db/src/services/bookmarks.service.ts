@@ -10,6 +10,7 @@
 
 import { eq, and, desc } from 'drizzle-orm'
 import type { Database } from './client'
+import { db as defaultDb } from '../index'
 import { bookmarks } from '../schema/bookmarks'
 import type { UserId } from './_shared/ids'
 import { ForbiddenError } from './_shared/errors'
@@ -23,8 +24,9 @@ type BookmarkUpdate = Partial<Omit<BookmarkInsert, 'id' | 'userId' | 'createdAt'
  * Internal helper: verify user ownership
  * @throws ForbiddenError if bookmark doesn't belong to user
  */
-async function getBookmarkWithOwnershipCheck(db: Database, bookmarkId: string, userId: UserId): Promise<Bookmark> {
-  const bookmark = await db.query.bookmarks.findFirst({
+async function getBookmarkWithOwnershipCheck(db: Database | undefined, bookmarkId: string, userId: UserId): Promise<Bookmark> {
+  const database = db || (defaultDb as any as Database)
+  const bookmark = await database.query.bookmarks.findFirst({
     where: and(eq(bookmarks.id, bookmarkId), eq(bookmarks.userId, String(userId))),
   })
 
@@ -48,13 +50,14 @@ export async function listBookmarks(
   folder?: string,
   db?: Database
 ): Promise<Bookmark[]> {
+  const database = db || (defaultDb as any as Database)
   const filters: any[] = [eq(bookmarks.userId, String(userId))]
 
   if (folder) {
     filters.push(eq(bookmarks.folder, folder))
   }
 
-  const results = await db!.query.bookmarks.findMany({
+  const results = await database.query.bookmarks.findMany({
     where: and(...filters),
     orderBy: desc(bookmarks.createdAt),
   })
@@ -75,7 +78,8 @@ export async function getBookmark(
   userId: UserId,
   db?: Database
 ): Promise<Bookmark | null> {
-  const bookmark = await db!.query.bookmarks.findFirst({
+  const database = db || (defaultDb as any as Database)
+  const bookmark = await database.query.bookmarks.findFirst({
     where: and(eq(bookmarks.id, bookmarkId), eq(bookmarks.userId, String(userId))),
   })
 
@@ -101,7 +105,8 @@ export async function createBookmark(
   },
   db?: Database
 ): Promise<Bookmark> {
-  const result = await db!.insert(bookmarks)
+  const database = db || (defaultDb as any as Database)
+  const result = await database.insert(bookmarks)
     .values({
       userId: String(userId),
       url: input.url,
@@ -134,10 +139,11 @@ export async function updateBookmark(
   input: BookmarkUpdate,
   db?: Database
 ): Promise<Bookmark | null> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getBookmarkWithOwnershipCheck(db!, bookmarkId, userId)
+  await getBookmarkWithOwnershipCheck(database, bookmarkId, userId)
 
-  const result = await db!.update(bookmarks)
+  const result = await database.update(bookmarks)
     .set(input)
     .where(eq(bookmarks.id, bookmarkId))
     .returning()
@@ -159,12 +165,12 @@ export async function deleteBookmark(
   userId: UserId,
   db?: Database
 ): Promise<boolean> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getBookmarkWithOwnershipCheck(db!, bookmarkId, userId)
+  await getBookmarkWithOwnershipCheck(database, bookmarkId, userId)
 
-  const result = await db!.delete(bookmarks)
-    .where(eq(bookmarks.id, bookmarkId))
-    .returning()
+  // Delete the bookmark
+  const result = await database.delete(bookmarks).where(eq(bookmarks.id, bookmarkId)).returning()
 
   return result.length > 0
 }

@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../index';
 import * as crypto from 'node:crypto';
 
-import { users } from '../schema/users.schema';
+import { users } from '../schema/tasks';
 
 export const createTestUser = async (overrides: Partial<typeof users.$inferInsert> = {}) => {
   // Generate an id if not provided
@@ -15,7 +15,6 @@ export const createTestUser = async (overrides: Partial<typeof users.$inferInser
   const user = {
     email: `test-${id}@example.com`,
     name: 'Test User',
-    is_admin: false,
     ...overrides,
     // Ensure id is set to what we calculated if it wasn't in overrides
     id,

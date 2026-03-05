@@ -7,14 +7,14 @@
  */
 
 import type { CoreMessage, ToolSet } from 'ai';
-import type { ChatMessageRole } from '@hominem/db/types/chats';
+import type { ChatMessageRole } from '@hominem/chat-services';
 
 /**
  * Convert a history message to CoreMessage format
  *
  * Our ChatMessageRole is compatible with AI SDK roles, but CoreMessage
  * is a discriminated union where the structure depends on the role.
- * We handle the three roles we use: 'user', 'assistant', and 'tool'.
+ * We handle user/system/assistant directly and provide a fallback for tool output.
  */
 export function toCoreMessage(message: {
   role: ChatMessageRole;
@@ -26,6 +26,11 @@ export function toCoreMessage(message: {
   if (message.role === 'user') {
     return {
       role: 'user',
+      content: message.content,
+    };
+  } else if (message.role === 'system') {
+    return {
+      role: 'system',
       content: message.content,
     };
   } else if (message.role === 'assistant') {

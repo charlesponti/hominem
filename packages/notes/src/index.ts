@@ -1,4 +1,6 @@
 export * from './notes.service';
+export * from './contracts';
+export * from './types';
 export {
   createNoteDef,
   createNoteServerForUser,

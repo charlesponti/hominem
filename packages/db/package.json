@@ -21,9 +21,24 @@
       "default": "./build/index.js"
     },
     "./schema/*": {
-      "types": "./build/schema/*.d.ts",
-      "import": "./build/schema/*.js",
-      "default": "./build/schema/*.js"
+      "types": "./build/schema/*.schema.d.ts",
+      "import": "./build/schema/*.schema.js",
+      "default": "./build/schema/*.schema.js"
+    },
+    "./schema/tables": {
+      "types": "./build/schema/tables.d.ts",
+      "import": "./build/schema/tables.js",
+      "default": "./build/schema/tables.js"
+    },
+    "./google-calendar.service": {
+      "types": "./build/google-calendar.service.d.ts",
+      "import": "./build/google-calendar.service.js",
+      "default": "./build/google-calendar.service.js"
+    },
+    "./types/*": {
+      "types": "./build/schema/*.types.d.ts",
+      "import": "./build/schema/*.types.js",
+      "default": "./build/schema/*.types.js"
     },
     "./services/*": {
       "types": "./build/services/*.d.ts",

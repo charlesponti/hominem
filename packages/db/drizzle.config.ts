@@ -6,8 +6,8 @@ import { env } from './src/env';
 
 const DATABASE_URL =
   env.NODE_ENV === 'test'
-    ? 'postgres://postgres:postgres@localhost:4433/hominem-test'
-    : env.DATABASE_URL;
+    ? 'postgres://postgres:postgres@localhost:4433/hominem-test?options=-c%20client_min_messages=warning'
+    : env.DATABASE_URL + '?options=-c%20client_min_messages=warning';
 
 assert(DATABASE_URL, 'Missing DATABASE_URL');
 

@@ -2,8 +2,19 @@
 title: "Phase 2: API Layer Rebuild"
 description: "Rebuild API routes and RPC handlers to use new database services from Phase 1"
 date_created: 2025-03-04
-status: active
+status: superseded
 ---
+
+> Superseded: This change is not the active implementation track. Follow `openspec/ACTIVE_CHANGE.md` (`update-db-schema-references`) unless explicitly re-activated.
+
+## Implementation Status (2026-03-04)
+
+- Completed: Sections 1-7 route/schema implementation across tasks, tags, calendar, people, bookmarks, and possessions.
+- Completed: Domain route registration updates in `knowledge.ts`, `vital.ts`, and `economy.ts`.
+- Completed: Service import alignment to package subpath exports using `@hominem/db/services/*.service`.
+- Completed: Section 8 (error mapping verification), Section 9 (type export surface), Section 10 (integration tests).
+- Validation: targeted tests in `packages/hono-rpc/tests/` pass for error mapping, task CRUD flow, and authorization checks.
+- Current blocker: workspace-wide `@hominem/db` type/build issues unrelated to Phase 2 route wiring prevent clean monorepo typecheck.
 
 ## Executive Summary
 

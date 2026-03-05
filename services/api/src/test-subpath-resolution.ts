@@ -8,9 +8,9 @@
  */
 
 // Verify services can be imported via subpaths
-import type { TaskId } from '@hominem/db/services/tasks'
-import type { TagId } from '@hominem/db/services/tags'
-import type { PersonId } from '@hominem/db/services/persons'
+import type { TaskId } from '@hominem/db/services/tasks.service'
+import type { TagId } from '@hominem/db/services/tags.service'
+import type { PersonId } from '@hominem/db/services/persons.service'
 
 // Just checking types compile
 type TestTypes = TaskId | TagId | PersonId

@@ -11,6 +11,213 @@ The following items are fixed for this change and should not vary during impleme
 - Ownership filters (`userId`/`ownerUserId`) on all user-scoped queries
 - Error contract (`null` or `[]` for expected misses, typed errors for system failures)
 - API boundary validation (Zod in API layer before calling DB services)
+- Testing philosophy and gate order (integration-first slice tests, then selective pure unit tests)
+- Domain contract ownership (`packages/<module>/src/contracts.ts`) and strict no-import rule for `@hominem/db/schema/<module>` and `@hominem/db/types/<module>` outside `packages/db`
+
+## Execution Order Lock (Authoritative)
+
+Implementation and stabilization must execute in this sequence:
+
+1. Restore hard gates for DB service layer (`validate-db-imports`, `@hominem/db` typecheck)
+2. Finalize shared test scaffolding to eliminate duplicate test wiring
+3. Run service-by-service RED-GREEN with real tests only
+4. Stabilize API and RPC consumers against new service contracts
+5. Verify app-layer RPC-only usage and remove contract violations
+6. Run full repo gates and performance validation
+
+No downstream phase begins while any upstream phase has red gate status.
+
+## Naming Lock (Calendar Is Canonical)
+
+- Calendar domain naming is canonical for scheduled-time entities.
+- `events` naming is legacy and must be retired as part of replacement, not preserved.
+- No alias/shim route, type, or package surface may keep `events` as a calendar synonym.
+
+## Testing Philosophy Lock (Integration-First Slice Testing)
+
+Testing is contract-first and integration-first:
+
+1. Primary RED-GREEN tests are DB-backed integration slice tests
+2. Slice tests must hit real service/query code paths with the test DB
+3. Assertions must include both flow outcomes and capability invariants (ownership, idempotency, deterministic ordering/pagination, conflict behavior)
+4. Pure unit tests are allowed only for isolated pure logic modules where DB integration adds no signal
+5. Unit tests must not duplicate already-covered integration behavior unless needed for fast failure localization
+
+Forbidden:
+
+- Test skeleton/placeholders without concrete arrange/act/assert
+- Mock-only service coverage when capability behavior depends on query/DB semantics
+- Declaring a module green without DB-backed contract tests for its capabilities
+
+### No-Shim Enforcement (Hard Requirement)
+
+During integration/cutover phases:
+
+- Legacy compatibility shims are forbidden
+- Legacy alias exports are forbidden
+- Wrapper modules preserving removed schema/service contracts are forbidden
+- Dual-path execution (legacy + new) is forbidden
+
+Cutover rule:
+
+- Each legacy module is replaced directly on new architecture interfaces and then deleted
+- Replaced surfaces must not reintroduce old contract names via aliases
+
+## Legacy Module Replacement Build Order (Strict)
+
+The remaining legacy surfaces must be replaced in this exact order:
+
+1. `auth`
+2. `chat`
+3. `notes`
+4. `calendar` (including deletion of legacy `events` calendar surfaces)
+5. `lists`
+6. `places`
+7. `finance`
+
+For each module, implementation order is fixed:
+
+1. Domain package internals (`packages/<module>/src/**`) on new DB service contracts
+2. RPC route integration (`packages/hono-rpc/src/routes/**`) on new domain package interfaces
+3. API route integration (`services/api/src/routes/**`) where applicable
+4. Module tests in strict order:
+   - DB-backed integration slice RED tests for modern contract
+   - GREEN implementation to pass those integration tests
+   - targeted pure unit tests only for isolated pure logic
+   - deletion of obsolete legacy files/imports in the same phase
+
+No module may advance to step N+1 while step N has failing tests or type errors.
+
+## Notes Baseline Blueprint (Authoritative for Remaining Modules)
+
+The completed notes refactor defines the canonical construction sequence for each remaining module.
+
+For module `<module>`:
+
+1. Create `packages/<module>/src/contracts.ts`
+  - Own all domain Zod schemas and exported domain types here
+  - RPC schemas/types must consume this module directly
+2. Refactor `packages/<module>/src/types.ts` and internal services to consume `./contracts`
+3. Refactor `packages/hono-rpc/src/schemas/<module>.schema.ts` and `packages/hono-rpc/src/types/<module>.types.ts` to consume `@hominem/<module>-services` contracts
+4. Replace denormalized JSON relationship storage with normalized join-table patterns where relational semantics exist
+5. Consolidate module tests into integration-first suite(s) and remove duplicated/legacy split tests
+6. Rebuild `@hominem/db` from clean output and verify stale generated artifacts for that module are absent
+
+Required invariant checks per module:
+
+- No import of `@hominem/db/schema/<module>` outside `packages/db`
+- No import of `@hominem/db/types/<module>` outside `packages/db`
+- Integration suite green against test DB
+- Module typecheck green
+- DB build outputs do not contain stale module-generated schema/type artifacts
+
+### Module File Order
+
+#### 1) auth
+
+1. `packages/auth/src/user-auth.service.ts`
+2. `packages/auth/src/account.service.ts`
+3. `packages/auth/src/user.ts`
+4. `packages/auth/src/types.ts`
+5. `packages/auth/src/auth.types.ts`
+6. `packages/auth/src/index.ts`
+7. `services/api/src/routes/auth.ts`
+
+#### 2) chat
+
+1. `packages/chat/src/service/chat.types.ts`
+2. `packages/chat/src/service/chat.queries.ts`
+3. `packages/chat/src/service/message.service.ts`
+4. `packages/chat/src/service/chat.service.ts`
+5. `packages/chat/src/index.ts`
+6. `packages/hono-rpc/src/routes/chats.ts`
+
+#### 3) notes
+
+1. `packages/notes/src/types.ts`
+2. `packages/notes/src/contracts.ts`
+3. `packages/notes/src/notes.service.ts`
+4. `packages/notes/src/notes.tool-def.ts`
+5. `packages/notes/src/index.ts`
+6. `packages/hono-rpc/src/schemas/notes.schema.ts`
+7. `packages/hono-rpc/src/types/notes.types.ts`
+8. `packages/hono-rpc/src/routes/notes.ts`
+
+#### 4) calendar
+
+1. `packages/db/src/services/calendar.service.ts`
+2. `packages/hono-rpc/src/schemas/calendar.schema.ts`
+3. `packages/hono-rpc/src/routes/calendar.ts`
+4. `packages/events/src/events.service.ts` (legacy surface decomposition/removal for calendar behaviors)
+5. `packages/hono-rpc/src/routes/events.ts` (legacy calendar surface removal)
+
+#### 5) lists
+
+1. `packages/lists/src/types.ts`
+2. `packages/lists/src/list-crud.service.ts`
+3. `packages/lists/src/list-queries.service.ts`
+4. `packages/lists/src/list-items.service.ts`
+5. `packages/lists/src/list-collaborators.service.ts`
+6. `packages/lists/src/list-invites.service.ts`
+7. `packages/lists/src/tools.ts`
+8. `packages/lists/src/index.ts`
+9. `packages/hono-rpc/src/routes/lists.query.ts`
+10. `packages/hono-rpc/src/routes/lists.mutation.ts`
+11. `packages/hono-rpc/src/routes/lists.ts`
+12. `services/api/src/routes/invites.incoming.ts`
+13. `services/api/src/routes/invites.outgoing.ts`
+14. `services/api/src/routes/invites/index.ts`
+
+#### 6) places
+
+1. `packages/places/src/place-cache.ts`
+2. `packages/places/src/google-places.service.ts`
+3. `packages/places/src/place-images.service.ts`
+4. `packages/places/src/places.service.ts`
+5. `packages/places/src/trips.service.ts`
+6. `packages/places/src/index.ts`
+7. `packages/hono-rpc/src/routes/places.ts`
+
+#### 7) finance (last)
+
+1. `packages/finance/src/features/accounts/accounts.domain.ts`
+2. `packages/finance/src/features/accounts/accounts.repository.ts`
+3. `packages/finance/src/features/accounts/accounts.service.ts`
+4. `packages/finance/src/core/budget-categories.service.ts`
+5. `packages/finance/src/core/budget-goals.service.ts`
+6. `packages/finance/src/core/budget-tracking.service.ts`
+7. `packages/finance/src/core/budget-analytics.service.ts`
+8. `packages/finance/src/core/institutions.repository.ts`
+9. `packages/finance/src/core/institution.service.ts`
+10. `packages/finance/src/core/runway.service.ts`
+11. `packages/finance/src/finance.transactions.service.ts`
+12. `packages/finance/src/finance.analytics.service.ts`
+13. `packages/finance/src/finance.calculators.service.ts`
+14. `packages/finance/src/plaid.service.ts`
+15. `packages/finance/src/cleanup.service.ts`
+16. `packages/finance/src/finance.schemas.ts`
+17. `packages/finance/src/finance.types.ts`
+18. `packages/finance/src/index.ts`
+19. `packages/hono-rpc/src/routes/finance.categories.ts`
+20. `packages/hono-rpc/src/routes/finance.accounts.ts`
+21. `packages/hono-rpc/src/routes/finance.transactions.ts`
+22. `packages/hono-rpc/src/routes/finance.budget.ts`
+23. `packages/hono-rpc/src/routes/finance.runway.ts`
+24. `packages/hono-rpc/src/routes/finance.institutions.ts`
+25. `packages/hono-rpc/src/routes/finance.plaid.ts`
+26. `packages/hono-rpc/src/routes/finance.data.ts`
+27. `packages/hono-rpc/src/routes/finance.analyze.ts`
+28. `packages/hono-rpc/src/routes/finance.export.ts`
+29. `packages/hono-rpc/src/routes/finance.ts`
+30. `services/api/src/routes/finance/finance.categories.ts`
+31. `services/api/src/routes/finance/finance.import.ts`
+32. `services/api/src/routes/finance/index.ts`
+33. `services/api/src/routes/finance/plaid/finance.plaid.create-link-token.ts`
+34. `services/api/src/routes/finance/plaid/finance.plaid.exchange-token.ts`
+35. `services/api/src/routes/finance/plaid/finance.plaid.sync.ts`
+36. `services/api/src/routes/finance/plaid/finance.plaid.disconnect.ts`
+37. `services/api/src/routes/finance/plaid/finance.plaid.webhook.ts`
+38. `services/api/src/routes/finance/plaid/index.ts`
 
 ## Target Directory Layout
 
@@ -452,6 +659,8 @@ Each service file gets a corresponding test file under `packages/db/src/test/ser
 - Implement only enough code to make those tests pass
 - Refactor only after GREEN while keeping tests passing
 - No test skeletons, placeholders, or TODO-only test cases are allowed
+- Each RED step must have an observable failure before GREEN implementation
+- Each GREEN step must include immediate refactor for duplication removal while preserving behavior
 
 For each service, minimum required tests:
 
@@ -477,6 +686,21 @@ Additional required tests:
   - ownership/tenant seed helpers
   - common assertions for not-found/forbidden/update-delete semantics
 - Service test files focus on behavior only; avoid repeating fixture wiring
+- If two service test files duplicate setup logic, that setup must be moved into `_shared/`
+- Shared helpers must remain deterministic (stable IDs, stable timestamps, seeded test data)
+
+### Real Test Requirement (No Skeleton Policy)
+
+- Forbidden:
+  - Empty test blocks
+  - Placeholder assertions (`expect(true).toBe(true)`)
+  - TODO-only tests
+  - Committed skipped tests as coverage stand-ins
+- Required:
+  - Assertions against real behavior and persisted state
+  - Ownership/tenant isolation checks on every user-scoped service
+  - Idempotency checks on replace/upsert behavior
+  - Error taxonomy checks where behavior maps to API status contracts
 
 ### Test Isolation Contract
 
@@ -534,4 +758,7 @@ Additional required tests:
 
 - `vector_documents` table/feature direction
 - `financial_institutions` and `plaid_items` direction
-- Whether to keep legacy non-service files during transition or delete immediately after parity is reached
+
+Resolved policy:
+
+- Legacy non-service files are not retained as compatibility layers; they are replaced and removed after parity tests pass

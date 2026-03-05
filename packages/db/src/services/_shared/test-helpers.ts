@@ -97,7 +97,7 @@ export function buildSeeds<T extends Record<string, Record<string, unknown>>>(
  */
 export function createFixtureLoader<T>(loader: (db: Database) => Promise<T>): {
   load: (db: Database) => Promise<T>
-  cached?: T
+  cached: T | undefined
   reset: () => void
 } {
   let cached: T | undefined

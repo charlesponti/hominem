@@ -80,16 +80,20 @@ export type GoalStatsOutput = {
   milestones?: { description: string; isCompleted: boolean }[] | null;
 };
 
-// Import EventWithTagsAndPeople for output types (this comes from events service)
-import type { EventWithTagsAndPeople } from '@hominem/events-services';
+import type {
+  createConsolidatedGoal,
+  getConsolidatedGoalsByUser,
+  getGoalById,
+  updateConsolidatedGoal,
+} from '@hominem/events-services';
 
-export type GoalListOutput = EventWithTagsAndPeople[];
-export type GoalGetOutput = EventWithTagsAndPeople;
-export type GoalCreateOutput = EventWithTagsAndPeople;
-export type GoalUpdateOutput = EventWithTagsAndPeople;
+export type GoalListOutput = Awaited<ReturnType<typeof getConsolidatedGoalsByUser>>;
+export type GoalGetOutput = NonNullable<Awaited<ReturnType<typeof getGoalById>>>;
+export type GoalCreateOutput = Awaited<ReturnType<typeof createConsolidatedGoal>>;
+export type GoalUpdateOutput = NonNullable<Awaited<ReturnType<typeof updateConsolidatedGoal>>>;
 export type GoalDeleteOutput = { success: true; id: string };
-export type GoalArchiveOutput = EventWithTagsAndPeople;
-export type GoalOutput = EventWithTagsAndPeople;
+export type GoalArchiveOutput = GoalGetOutput;
+export type GoalOutput = GoalGetOutput;
 
 /**
  * Alias for GoalOutput - used by frontend components

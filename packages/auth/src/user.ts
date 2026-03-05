@@ -9,9 +9,9 @@ export function toHominemUser(source: UserSelect): HominemUser {
     id: source.id,
     email: source.email,
     name: source.name || undefined,
-    image: source.image || source.photoUrl || undefined,
-    isAdmin: Boolean(source.isAdmin),
-    createdAt: source.createdAt.toString(),
-    updatedAt: source.updatedAt.toString(),
+    image: source.image || undefined,
+    isAdmin: Boolean(source.is_admin),
+    createdAt: source.created_at,
+    updatedAt: source.updated_at,
   }
 }

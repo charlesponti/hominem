@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { users, userSessions, userAccounts, taskLists, tasks, goals, userApiKeys, tags, taggedItems, tagShares, persons, userPersonRelations, musicTracks, musicAlbums, musicArtists, musicPlaylists, musicPlaylistTracks, musicLiked, videoChannels, videoSubscriptions, calendarEvents, calendarAttendees, keyResults, financeCategories, financeAccounts, places, travelTrips, travelFlights, travelHotels, careerCompanies, careerJobs, careerApplications, careerInterviews, schools, notes, noteShares, bookmarks, possessionContainers, possessions } from "./schema";
+import { users, userSessions, userAccounts, taskLists, tasks, goals, userApiKeys, tags, taggedItems, tagShares, persons, userPersonRelations, musicTracks, musicAlbums, musicArtists, musicPlaylists, musicPlaylistTracks, musicLiked, videoChannels, videoSubscriptions, calendarEvents, calendarAttendees, keyResults, financeCategories, financeAccounts, places, travelTrips, travelFlights, travelHotels, careerCompanies, careerJobs, careerApplications, careerInterviews, schools, notes, noteTags, noteShares, bookmarks, possessionContainers, possessions } from "./schema";
 
 export const userSessionsRelations = relations(userSessions, ({one}) => ({
 	user: one(users, {
@@ -99,6 +99,7 @@ export const tagsRelations = relations(tags, ({one, many}) => ({
 		references: [users.id]
 	}),
 	taggedItems: many(taggedItems),
+	noteTags: many(noteTags),
 	tagShares: many(tagShares),
 }));
 
@@ -349,7 +350,19 @@ export const notesRelations = relations(notes, ({one, many}) => ({
 		fields: [notes.userId],
 		references: [users.id]
 	}),
+	noteTags: many(noteTags),
 	noteShares: many(noteShares),
+}));
+
+export const noteTagsRelations = relations(noteTags, ({one}) => ({
+	note: one(notes, {
+		fields: [noteTags.noteId],
+		references: [notes.id]
+	}),
+	tag: one(tags, {
+		fields: [noteTags.tagId],
+		references: [tags.id]
+	}),
 }));
 
 export const noteSharesRelations = relations(noteShares, ({one}) => ({

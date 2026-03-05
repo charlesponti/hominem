@@ -50,6 +50,15 @@ export class ConflictError extends DbError {
   }
 }
 
+export class ValidationError extends DbError {
+  readonly code = 'VALIDATION_ERROR'
+  readonly statusCode = 400
+
+  constructor(message: string, public readonly details?: Record<string, unknown>) {
+    super(message)
+  }
+}
+
 /**
  * Thrown when the user lacks permission to perform an operation
  * Authorization failures at the DB service layer (ownership checks, scoping, etc.)
@@ -81,6 +90,10 @@ export class InternalError extends DbError {
  */
 export function isDbError(error: unknown): error is DbError {
   return error instanceof DbError
+}
+
+export function isServiceError(error: unknown): error is DbError {
+  return isDbError(error)
 }
 
 /**

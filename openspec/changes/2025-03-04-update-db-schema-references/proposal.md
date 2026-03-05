@@ -6,13 +6,13 @@ The database schema has been redesigned from scratch and is now solid and deploy
 
 This is a complete rebuild of the application layer working outward from the database:
 
-1. **Database layer (@hominem/db)** - Complete ✓
+1. **Database layer (@hominem/db)** - Mostly complete
   - Schema redesigned and deployed via `phased-db-redesign`
   - Single source of truth: `packages/db/src/migrations/schema.ts`
   - Schema slicer generator (✓ implemented, generates 7 domain modules)
   - Shared infrastructure: ID branding, error taxonomy, pagination utilities, test isolation helpers (✓ implemented)
 
-2. **Service layer (@hominem/db services)** - Complete ✓
+2. **Service layer (@hominem/db services)** - In stabilization
   - Rebuild all service files to use new schema
   - Use a fixed blueprint of file names, method signatures, contracts, and tests defined in `design.md`
   - Tasks, Tags, Calendar, Persons, Bookmarks, Possessions services (full implementation, ✓ complete)
@@ -20,14 +20,106 @@ This is a complete rebuild of the application layer working outward from the dat
   - Validation rules extended to prevent schema leakage (✓ implemented in validate-db-imports.js)
   - Root index updated to infra-only exports (✓ complete)
 
-3. **API layer (services/api, packages/hono-rpc)** - Pending
+3. **API layer (services/api, packages/hono-rpc)** - In progress
   - Rebuild routes to use new service signatures
   - Update RPC schemas and response types
   - Validate and normalize all external input at API boundaries
 
-4. **App layer (apps/*)** - Pending
+4. **App layer (apps/*)** - In progress
   - Rebuild UI data integration through RPC client only (`@hominem/hono-client`)
   - Remove any legacy direct database/service imports from apps
+
+## Verification Status (2026-03-04)
+
+Checklist completion and actual repo health are currently out of sync. Current truth snapshot:
+
+- `bun run --filter @hominem/db typecheck`: passing
+- `bun run validate-db-imports`: passing
+- `bun run --filter @hominem/hono-rpc typecheck`: failing across multiple legacy/compat modules (auth/chat/notes/calendar/lists/places/finance)
+
+Implication:
+- This change is not done yet.
+- Work priority is stabilization and correctness gates, not new feature expansion.
+- Close-out requires gate evidence (commands + outputs) in addition to checked checklist items.
+
+Module progress snapshot (2026-03-04):
+- `auth`: contract mapping and account-scope fixes implemented; package tests and typecheck green
+- `chat`: owner-scoped chat lifecycle contract updates implemented; package tests and typecheck green
+  - canonical chat domain contracts now owned by `packages/chat/src/contracts.ts`
+  - chat services no longer import `@hominem/db/schema/chats` or `@hominem/db/types/chats`
+  - RPC chat types and AI adapters now consume `@hominem/chat-services` contracts
+  - no-shim rule maintained: legacy DB chat type surface not reintroduced
+- `notes`: foundation pattern now locked and green:
+  - canonical notes contract module is owned by `packages/notes/src/contracts.ts` (not `@hominem/db/schema/notes`)
+  - service logic uses normalized `note_tags` join-table pattern (no JSON tags column dependence)
+  - unified integration-first suite (`notes.integration.test.ts`) is green against the test DB
+  - stale `@hominem/db` generated notes schema artifacts were removed by clean rebuild
+- `calendar` (legacy `events` surface): strict next module compile blockers were fixed (legacy root DB helper imports replaced), and integration suite now executes
+  - service pagination/ownership hardening started in `packages/db/src/services/calendar.service.ts` (safe DB fallback, limit/offset support)
+  - integration-first DB suite introduced at `packages/db/src/services/calendar.service.integration.test.ts` for CRUD/attendee/ownership/filter contracts
+  - attendee overwrite semantics implemented (`replaceEventAttendees`) and exposed in calendar RPC surface (`PUT /calendar/:id/attendees`)
+  - Google Calendar sync/status endpoints were moved from legacy `events` route to canonical `calendar` route
+  - calendar sync status now resolves via `GoogleCalendarService.getSyncStatus()` in the canonical calendar route (no `@hominem/events-services` dependency)
+  - `/vital/events` mount removed to avoid legacy aliasing of calendar behavior
+  - legacy RPC `events` surfaces removed (`packages/hono-rpc/src/routes/events.ts`, `packages/hono-rpc/src/types/events.types.ts`)
+  - legacy monolithic `packages/events/src/events.service.ts` branches were decomposed into focused services (`habits.service.ts`, `goals.service.ts`, `health.service.ts`, `visits.service.ts`)
+  - RPC habits/goals/health/places routes now consume domain-specific methods (`getHabitById/deleteHabit`, `getGoalById/deleteGoal`, `getHealthActivityById/deleteHealthActivity`, `createVisit/updateVisit/deleteVisit`) instead of generic legacy CRUD calls
+  - `@hominem/events-services` public index no longer exports generic `events.service.ts` surface
+  - residual internal `packages/events/src/events.service.ts` was deleted after decoupling; shared internals now live in `packages/events/src/event-core.service.ts` (non-exported)
+  - calendar DB integration suite is green; next blockers are outside calendar (lists/places/finance modernization and cross-package type-resolution debt)
+
+## Notes Baseline Pattern (Locked for Remaining Modules)
+
+The notes refactor is the required template for all remaining modules (`calendar`, `lists`, `places`, `finance`):
+
+1. Canonical contracts live in the domain package (`packages/<module>/src/contracts.ts`)
+2. API schemas/types import from domain contracts, not from `@hominem/db/schema/*` or `@hominem/db/types/*`
+3. DB services implement normalized relational models (join tables) rather than denormalized JSON storage when relational semantics exist
+4. Integration tests are the source of truth for capability behavior and run against the real test DB
+5. Legacy generated schema/type artifacts must be removed from active build outputs before module sign-off
+
+Hard rule:
+
+- Outside `packages/db`, importing `@hominem/db/schema/<module>` or `@hominem/db/types/<module>` for domain contract definition is forbidden.
+- Domain packages own their contract schemas/types; `@hominem/db` owns only DB schema/migration/runtime persistence concerns.
+
+## Migration Policy (No Shims Allowed)
+
+This change is a hard cutover to the new architecture. Compatibility shims are forbidden.
+
+- No legacy alias exports to preserve old module names or old symbol names
+- No temporary wrapper modules that mimic removed schema/service contracts
+- No adapter layers that translate old API shapes to new internals
+- No fallback dual-path logic (legacy path + new path)
+
+Required approach:
+
+- Replace legacy modules with direct implementations on the new DB services/RPC contracts
+- Update callers to the new interfaces rather than preserving legacy interfaces
+- Delete obsolete legacy code once replacements are green
+- Follow strict module and file replacement order defined in `design.md` ("Legacy Module Replacement Build Order (Strict)") and `tasks.md` Section 4
+
+## Capability Artifacts (Authoritative, Linked)
+
+Capability-first implementation source of truth (strict execution order):
+
+1. [Auth capabilities](./capabilities/auth.md)
+2. [Chat capabilities](./capabilities/chat.md)
+3. [Notes capabilities](./capabilities/notes.md)
+4. [Calendar capabilities](./capabilities/calendar.md)
+5. [Lists capabilities](./capabilities/lists.md)
+6. [Places capabilities](./capabilities/places.md)
+7. [Finance capabilities](./capabilities/finance.md)
+
+### Naming Lock (Calendar vs Events)
+
+- Canonical domain name is **calendar** for scheduled-time entities.
+- Legacy `events` naming is deprecated and must be removed during module cutover.
+- No alias/shim route or type surface may keep `events` as a calendar synonym.
+
+Testing philosophy is locked in each capability file:
+- "Required RED tests" are DB-backed integration slice tests by default.
+- Unit tests are supplemental for isolated pure logic and cannot replace capability integration coverage.
 
 ## Architecture Principles
 
@@ -154,6 +246,7 @@ export function useTasks() {
 **Constraints:**
 
 - No backward compatibility required
+- No shimming or legacy compatibility adapters; replace legacy modules with new architecture implementations
 - Local type definitions in each service file
 - Branded ID types for entity IDs
 - Factory pattern with singleton instance
@@ -162,16 +255,22 @@ export function useTasks() {
 - Service redesign follows the explicit file/method blueprint in `design.md`
 - Canonical field-level update DTO definitions are locked in `design.md`
 - RED-GREEN development with real failing tests first; no placeholder/skeleton tests
+- Integration-first slice testing is mandatory: capability tests run against the real test DB and real service/query wiring
+- Unit tests are optional and limited to isolated pure logic (state machines, deterministic mappers, pure validators)
 - Error taxonomy and API mapping contract are locked in `design.md`
 - Query contract (pagination/sorting/filter DTOs) is locked in `design.md`
 - Multi-table write transaction and idempotency policy is locked in `design.md`
 - Data normalization and shared ID branding utility contracts are locked in `design.md`
+- Domain contract ownership is mandatory: each module must define `src/contracts.ts` and RPC/schema layers must consume it
+- Module sign-off requires clean `@hominem/db` rebuild proving stale generated module artifacts are gone
 
 ## Acceptance Criteria
 
+Status note: checkmarks in this section record implementation artifacts, not current gate health. Final completion is defined only by the gate sequence in `tasks.md` Section 7 being green.
+
 ### Phase 1 Implementation Status (@hominem/db services)
 
-**✓ COMPLETE - All Phase 1 tasks (83/83) implemented**
+**In Progress - implementation exists, but stabilization gates are still red**
 
 #### Artifacts Created
 
@@ -210,7 +309,7 @@ export function useTasks() {
   - Forbids re-export wrappers (wrapper pattern enforcement)
 - ✓ Schema generator validates output doesn't import from migrations/schema.ts
 - ✓ CI drift check passes - generated schema files are up-to-date
-- ✓ `bun run validate-db-imports` passes with zero violations
+- Partial: `bun run validate-db-imports` currently fails and must be green before close-out
 
 #### Performance Baselines Captured
 
@@ -223,7 +322,8 @@ export function useTasks() {
 - Services compile with no legacy schema references
 - Service files, exports, and method signatures match `design.md` blueprint
 - Domain schema modules are physically segmented and contain no imports from `migrations/schema.ts`
-- Unit tests cover core CRUD and not-found behavior per service contract rules
+- Integration slice tests (test DB) cover core CRUD, ownership boundaries, idempotency, and deterministic pagination/query behavior per service contracts
+- Pure unit tests exist only where they provide isolated value for pure logic modules; no duplicate unit coverage for already-covered integration behavior
 - Service tests follow RED-GREEN and shared test utility conventions from `design.md`
 - Error mapping behavior is validated end-to-end (`Validation/NotFound/Conflict/Forbidden/Internal`)
 - Query contract behavior is validated (limit bounds, cursor stability, deterministic sorting)

@@ -1,5 +1,5 @@
 import { and, eq } from '@hominem/db'
-import { betterAuthAccount, betterAuthUser, users } from '@hominem/db/schema/tables'
+import { account } from '@hominem/db/schema/users'
 import { randomUUID } from 'node:crypto'
 
 interface AccountRecord {
@@ -32,153 +32,57 @@ interface AccountInsert {
   sessionState?: string | null
 }
 
-interface BetterAuthIdentity {
-  betterAuthUserId: string
-  domainUserId: string
-}
-
 function toCompatRecord(
-  row: typeof betterAuthAccount.$inferSelect,
-  domainUserId: string,
+  row: typeof account.$inferSelect,
 ): AccountRecord {
   return {
     id: row.id,
-    userId: domainUserId,
-    type: row.password ? 'credentials' : 'oauth',
-    provider: row.providerId,
-    providerAccountId: row.accountId,
+    userId: row.userId,
+    type: row.type,
+    provider: row.provider,
+    providerAccountId: row.providerAccountId,
     refreshToken: row.refreshToken,
     accessToken: row.accessToken,
-    expiresAt: row.accessTokenExpiresAt,
-    tokenType: null,
+    expiresAt: row.expiresAt ? row.expiresAt.toISOString() : null,
+    tokenType: row.tokenType,
     scope: row.scope,
     idToken: row.idToken,
-    sessionState: null,
+    sessionState: row.sessionState,
   }
-}
-
-async function resolveIdentityFromDomainUserId(userId: string): Promise<BetterAuthIdentity | null> {
-  const { db } = await import('@hominem/db')
-
-  const [linkedUser] = await db
-    .select({
-      domainUserId: users.id,
-      betterAuthUserId: users.betterAuthUserId,
-      email: users.email,
-    })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1)
-
-  if (!linkedUser) {
-    return null
-  }
-
-  if (linkedUser.betterAuthUserId) {
-    return {
-      betterAuthUserId: linkedUser.betterAuthUserId,
-      domainUserId: linkedUser.domainUserId,
-    }
-  }
-
-  const [matchedAuthUser] = await db
-    .select({ id: betterAuthUser.id })
-    .from(betterAuthUser)
-    .where(eq(betterAuthUser.email, linkedUser.email))
-    .limit(1)
-
-  if (!matchedAuthUser) {
-    return null
-  }
-
-  await db
-    .update(users)
-    .set({
-      betterAuthUserId: matchedAuthUser.id,
-      updatedAt: new Date().toISOString(),
-    })
-    .where(eq(users.id, linkedUser.domainUserId))
-
-  return {
-    betterAuthUserId: matchedAuthUser.id,
-    domainUserId: linkedUser.domainUserId,
-  }
-}
-
-async function resolveIdentityFromBetterAuthUserId(
-  betterAuthUserId: string,
-): Promise<BetterAuthIdentity | null> {
-  const { db } = await import('@hominem/db')
-  const [linkedUser] = await db
-    .select({
-      domainUserId: users.id,
-      betterAuthUserId: users.betterAuthUserId,
-    })
-    .from(users)
-    .where(eq(users.betterAuthUserId, betterAuthUserId))
-    .limit(1)
-
-  if (!linkedUser?.betterAuthUserId) {
-    return null
-  }
-
-  return {
-    betterAuthUserId: linkedUser.betterAuthUserId,
-    domainUserId: linkedUser.domainUserId,
-  }
-}
-
-async function resolveIdentity(userId: string): Promise<BetterAuthIdentity | null> {
-  const byDomainId = await resolveIdentityFromDomainUserId(userId)
-  if (byDomainId) {
-    return byDomainId
-  }
-
-  return resolveIdentityFromBetterAuthUserId(userId)
 }
 
 export async function listAccountsByProvider(userId: string, provider: string): Promise<AccountRecord[]> {
-  const identity = await resolveIdentity(userId)
-  if (!identity) {
-    return []
-  }
-
   const { db } = await import('@hominem/db')
   const records = await db
     .select()
-    .from(betterAuthAccount)
+    .from(account)
     .where(
       and(
-        eq(betterAuthAccount.userId, identity.betterAuthUserId),
-        eq(betterAuthAccount.providerId, provider),
+        eq(account.userId, userId),
+        eq(account.provider, provider),
       ),
     )
 
-  return records.map((row) => toCompatRecord(row, identity.domainUserId))
+  return records.map((row) => toCompatRecord(row))
 }
 
 export async function getAccountByUserAndProvider(
   userId: string,
   provider: string,
 ): Promise<AccountRecord | null> {
-  const identity = await resolveIdentity(userId)
-  if (!identity) {
-    return null
-  }
-
   const { db } = await import('@hominem/db')
   const [result] = await db
     .select()
-    .from(betterAuthAccount)
+    .from(account)
     .where(
       and(
-        eq(betterAuthAccount.userId, identity.betterAuthUserId),
-        eq(betterAuthAccount.providerId, provider),
+        eq(account.userId, userId),
+        eq(account.provider, provider),
       ),
     )
     .limit(1)
 
-  return result ? toCompatRecord(result, identity.domainUserId) : null
+  return result ? toCompatRecord(result) : null
 }
 
 export async function getAccountByProviderAccountId(
@@ -187,16 +91,12 @@ export async function getAccountByProviderAccountId(
 ): Promise<AccountRecord | null> {
   const { db } = await import('@hominem/db')
   const [result] = await db
-    .select({
-      account: betterAuthAccount,
-      domainUserId: users.id,
-    })
-    .from(betterAuthAccount)
-    .leftJoin(users, eq(users.betterAuthUserId, betterAuthAccount.userId))
+    .select()
+    .from(account)
     .where(
       and(
-        eq(betterAuthAccount.providerId, provider),
-        eq(betterAuthAccount.accountId, providerAccountId),
+        eq(account.provider, provider),
+        eq(account.providerAccountId, providerAccountId),
       ),
     )
     .limit(1)
@@ -205,34 +105,30 @@ export async function getAccountByProviderAccountId(
     return null
   }
 
-  return toCompatRecord(result.account, result.domainUserId ?? result.account.userId)
+  return toCompatRecord(result)
 }
 
 export async function createAccount(data: AccountInsert): Promise<AccountRecord | null> {
-  const identity = await resolveIdentity(data.userId)
-  if (!identity) {
-    return null
-  }
-
   const { db } = await import('@hominem/db')
   const [created] = await db
-    .insert(betterAuthAccount)
+    .insert(account)
     .values({
       id: data.id ?? randomUUID(),
-      accountId: data.providerAccountId,
-      providerId: data.provider,
-      userId: identity.betterAuthUserId,
+      userId: data.userId,
+      providerAccountId: data.providerAccountId,
+      provider: data.provider,
+      type: data.type ?? 'oauth',
       accessToken: data.accessToken ?? null,
       refreshToken: data.refreshToken ?? null,
       idToken: data.idToken ?? null,
-      accessTokenExpiresAt: data.expiresAt ? data.expiresAt.toISOString() : null,
-      refreshTokenExpiresAt: null,
+      expiresAt: data.expiresAt ?? null,
+      tokenType: data.tokenType ?? null,
       scope: data.scope ?? null,
-      password: null,
+      sessionState: data.sessionState ?? null,
     })
     .returning()
 
-  return created ? toCompatRecord(created, identity.domainUserId) : null
+  return created ? toCompatRecord(created) : null
 }
 
 export async function updateAccount(
@@ -241,33 +137,27 @@ export async function updateAccount(
 ): Promise<AccountRecord | null> {
   const { db } = await import('@hominem/db')
   const [updated] = await db
-    .update(betterAuthAccount)
+    .update(account)
     .set({
-      ...(updates.provider ? { providerId: updates.provider } : {}),
-      ...(updates.providerAccountId ? { accountId: updates.providerAccountId } : {}),
+      ...(updates.provider ? { provider: updates.provider } : {}),
+      ...(updates.providerAccountId ? { providerAccountId: updates.providerAccountId } : {}),
+      ...(updates.type ? { type: updates.type } : {}),
       ...(updates.accessToken !== undefined ? { accessToken: updates.accessToken } : {}),
       ...(updates.refreshToken !== undefined ? { refreshToken: updates.refreshToken } : {}),
       ...(updates.idToken !== undefined ? { idToken: updates.idToken } : {}),
+      ...(updates.tokenType !== undefined ? { tokenType: updates.tokenType } : {}),
+      ...(updates.sessionState !== undefined ? { sessionState: updates.sessionState } : {}),
       ...(updates.scope !== undefined ? { scope: updates.scope } : {}),
-      ...(updates.expiresAt !== undefined && updates.expiresAt !== null
-        ? { accessTokenExpiresAt: updates.expiresAt.toISOString() }
-        : { accessTokenExpiresAt: null }),
-      updatedAt: new Date().toISOString(),
+      ...(updates.expiresAt !== undefined ? { expiresAt: updates.expiresAt } : {}),
     })
-    .where(eq(betterAuthAccount.id, id))
+    .where(eq(account.id, id))
     .returning()
 
   if (!updated) {
     return null
   }
 
-  const [linkedUser] = await db
-    .select({ domainUserId: users.id })
-    .from(users)
-    .where(eq(users.betterAuthUserId, updated.userId))
-    .limit(1)
-
-  return toCompatRecord(updated, linkedUser?.domainUserId ?? updated.userId)
+  return toCompatRecord(updated)
 }
 
 export async function deleteAccountForUser(
@@ -275,22 +165,17 @@ export async function deleteAccountForUser(
   userId: string,
   provider: string,
 ): Promise<boolean> {
-  const identity = await resolveIdentity(userId)
-  if (!identity) {
-    return false
-  }
-
   const { db } = await import('@hominem/db')
   const result = await db
-    .delete(betterAuthAccount)
+    .delete(account)
     .where(
       and(
-        eq(betterAuthAccount.id, id),
-        eq(betterAuthAccount.userId, identity.betterAuthUserId),
-        eq(betterAuthAccount.providerId, provider),
+        eq(account.id, id),
+        eq(account.userId, userId),
+        eq(account.provider, provider),
       ),
     )
-    .returning({ id: betterAuthAccount.id })
+    .returning({ id: account.id })
 
   return result.length > 0
 }

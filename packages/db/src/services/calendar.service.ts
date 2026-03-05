@@ -8,8 +8,9 @@
  * - All operations are user-scoped (userId filter)
  */
 
-import { eq, and, desc, asc, gte, lte } from 'drizzle-orm'
+import { eq, and, asc, gte, lte, type SQL } from 'drizzle-orm'
 import type { Database } from './client'
+import { db as defaultDb } from '../index'
 import { calendarEvents, calendarAttendees } from '../schema/calendar'
 import type { UserId } from './_shared/ids'
 import { ForbiddenError } from './_shared/errors'
@@ -20,14 +21,43 @@ type CalendarEventInsert = typeof calendarEvents.$inferInsert
 type CalendarEventUpdate = Partial<Omit<CalendarEventInsert, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>
 
 type CalendarAttendee = typeof calendarAttendees.$inferSelect
-type CalendarAttendeeInsert = typeof calendarAttendees.$inferInsert
+
+export interface CalendarSyncStatus {
+  lastSyncedAt: string | null
+  syncError: string | null
+  eventCount: number
+}
+
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue }
+
+interface CalendarSyncMetadata {
+  lastSyncedAt?: string | null
+  syncError?: string | null
+}
+
+function parseCalendarSyncMetadata(value: CalendarEvent['metadata']): CalendarSyncMetadata {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {}
+  }
+
+  const metadata = value as Record<string, JsonValue>
+  const result: CalendarSyncMetadata = {}
+  if (typeof metadata.lastSyncedAt === 'string' || metadata.lastSyncedAt === null) {
+    result.lastSyncedAt = metadata.lastSyncedAt
+  }
+  if (typeof metadata.syncError === 'string' || metadata.syncError === null) {
+    result.syncError = metadata.syncError
+  }
+  return result
+}
 
 /**
  * Internal helper: verify user ownership of event
  * @throws ForbiddenError if event doesn't belong to user
  */
-async function getEventWithOwnershipCheck(db: Database, eventId: string, userId: UserId): Promise<CalendarEvent> {
-  const event = await db.query.calendarEvents.findFirst({
+async function getEventWithOwnershipCheck(db: Database | undefined, eventId: string, userId: UserId): Promise<CalendarEvent> {
+  const database = db || (defaultDb as any as Database)
+  const event = await database.query.calendarEvents.findFirst({
     where: and(eq(calendarEvents.id, eventId), eq(calendarEvents.userId, String(userId))),
   })
 
@@ -51,10 +81,13 @@ export async function listEvents(
   options?: {
     startTime?: string
     endTime?: string
+    limit?: number
+    offset?: number
   },
   db?: Database
 ): Promise<CalendarEvent[]> {
-  const filters: any[] = [eq(calendarEvents.userId, String(userId))]
+  const database = db || (defaultDb as any as Database)
+  const filters: SQL[] = [eq(calendarEvents.userId, String(userId))]
 
   if (options?.startTime) {
     filters.push(gte(calendarEvents.startTime, options.startTime))
@@ -63,9 +96,11 @@ export async function listEvents(
     filters.push(lte(calendarEvents.startTime, options.endTime))
   }
 
-  const results = await db!.query.calendarEvents.findMany({
+  const results = await database.query.calendarEvents.findMany({
     where: and(...filters),
     orderBy: [asc(calendarEvents.startTime)],
+    ...(options?.limit !== undefined ? { limit: options.limit } : {}),
+    ...(options?.offset !== undefined ? { offset: options.offset } : {}),
   })
 
   return results
@@ -84,7 +119,8 @@ export async function getEvent(
   userId: UserId,
   db?: Database
 ): Promise<CalendarEvent | null> {
-  const event = await db!.query.calendarEvents.findFirst({
+  const database = db || (defaultDb as any as Database)
+  const event = await database.query.calendarEvents.findFirst({
     where: and(eq(calendarEvents.id, eventId), eq(calendarEvents.userId, String(userId))),
   })
 
@@ -114,7 +150,8 @@ export async function createEvent(
   },
   db?: Database
 ): Promise<CalendarEvent> {
-  const result = await db!.insert(calendarEvents)
+  const database = db || (defaultDb as any as Database)
+  const result = await database.insert(calendarEvents)
     .values({
       userId: String(userId),
       eventType: input.eventType,
@@ -151,10 +188,11 @@ export async function updateEvent(
   input: CalendarEventUpdate,
   db?: Database
 ): Promise<CalendarEvent | null> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getEventWithOwnershipCheck(db!, eventId, userId)
+  await getEventWithOwnershipCheck(database, eventId, userId)
 
-  const result = await db!.update(calendarEvents)
+  const result = await database.update(calendarEvents)
     .set({ ...input, updatedAt: new Date().toISOString() })
     .where(eq(calendarEvents.id, eventId))
     .returning()
@@ -176,14 +214,15 @@ export async function deleteEvent(
   userId: UserId,
   db?: Database
 ): Promise<boolean> {
+  const database = db || (defaultDb as any as Database)
   // Verify ownership first
-  await getEventWithOwnershipCheck(db!, eventId, userId)
+  await getEventWithOwnershipCheck(database, eventId, userId)
 
   // Delete all attendees first
-  await db!.delete(calendarAttendees).where(eq(calendarAttendees.eventId, eventId))
+  await database.delete(calendarAttendees).where(eq(calendarAttendees.eventId, eventId))
 
   // Delete the event
-  const result = await db!.delete(calendarEvents).where(eq(calendarEvents.id, eventId)).returning()
+  const result = await database.delete(calendarEvents).where(eq(calendarEvents.id, eventId)).returning()
 
   return result.length > 0
 }
@@ -202,10 +241,11 @@ export async function listEventAttendees(
   userId: UserId,
   db?: Database
 ): Promise<CalendarAttendee[]> {
+  const database = db || (defaultDb as any as Database)
   // Verify event ownership
-  await getEventWithOwnershipCheck(db!, eventId, userId)
+  await getEventWithOwnershipCheck(database, eventId, userId)
 
-  const results = await db!.query.calendarAttendees.findMany({
+  const results = await database.query.calendarAttendees.findMany({
     where: eq(calendarAttendees.eventId, eventId),
   })
 
@@ -229,10 +269,11 @@ export async function addEventAttendee(
   userId: UserId,
   db?: Database
 ): Promise<CalendarAttendee> {
+  const database = db || (defaultDb as any as Database)
   // Verify event ownership
-  await getEventWithOwnershipCheck(db!, eventId, userId)
+  await getEventWithOwnershipCheck(database, eventId, userId)
 
-  const result = await db!.insert(calendarAttendees)
+  const result = await database.insert(calendarAttendees)
     .values({
       eventId,
       personId,
@@ -244,6 +285,53 @@ export async function addEventAttendee(
   }
 
   return result[0]
+}
+
+/**
+ * Replace attendee set for an event
+ *
+ * Full overwrite semantics:
+ * - Existing attendees are deleted
+ * - Provided person IDs are inserted as the complete new set
+ * - Duplicate IDs are deduplicated
+ *
+ * @param eventId - Event ID
+ * @param personIds - Full attendee person ID set
+ * @param userId - User ID (enforces ownership of event)
+ * @param db - Database context
+ * @throws ForbiddenError if user doesn't own the event
+ * @returns Final attendee list for event
+ */
+export async function replaceEventAttendees(
+  eventId: string,
+  personIds: string[],
+  userId: UserId,
+  db?: Database
+): Promise<CalendarAttendee[]> {
+  const database = db || (defaultDb as any as Database)
+  await getEventWithOwnershipCheck(database, eventId, userId)
+
+  const uniquePersonIds = Array.from(new Set(personIds))
+
+  return database.transaction(async (tx) => {
+    await tx.delete(calendarAttendees).where(eq(calendarAttendees.eventId, eventId))
+
+    if (uniquePersonIds.length > 0) {
+      await tx.insert(calendarAttendees).values(
+        uniquePersonIds.map((personId) => ({
+          eventId,
+          personId,
+        })),
+      )
+    }
+
+    const attendees = await tx.query.calendarAttendees.findMany({
+      where: eq(calendarAttendees.eventId, eventId),
+      orderBy: [asc(calendarAttendees.createdAt), asc(calendarAttendees.id)],
+    })
+
+    return attendees
+  })
 }
 
 /**
@@ -262,12 +350,42 @@ export async function removeEventAttendee(
   userId: UserId,
   db?: Database
 ): Promise<boolean> {
+  const database = db || (defaultDb as any as Database)
   // Verify event ownership
-  await getEventWithOwnershipCheck(db!, eventId, userId)
+  await getEventWithOwnershipCheck(database, eventId, userId)
 
-  const result = await db!.delete(calendarAttendees)
+  const result = await database.delete(calendarAttendees)
     .where(eq(calendarAttendees.id, attendeeId))
     .returning()
 
   return result.length > 0
+}
+
+export async function getSyncStatus(
+  userId: UserId,
+  db?: Database
+): Promise<CalendarSyncStatus> {
+  const database = db || (defaultDb as any as Database)
+  const syncedEvents = await database.query.calendarEvents.findMany({
+    where: and(eq(calendarEvents.userId, String(userId)), eq(calendarEvents.source, 'google_calendar')),
+  })
+  let latestSyncedAt: string | null = null
+  let latestSyncError: string | null = null
+
+  for (const event of syncedEvents) {
+    const metadata = parseCalendarSyncMetadata(event.metadata)
+    if (!metadata.lastSyncedAt) {
+      continue
+    }
+    if (!latestSyncedAt || metadata.lastSyncedAt > latestSyncedAt) {
+      latestSyncedAt = metadata.lastSyncedAt
+      latestSyncError = metadata.syncError ?? null
+    }
+  }
+
+  return {
+    lastSyncedAt: latestSyncedAt,
+    syncError: latestSyncError,
+    eventCount: syncedEvents.length,
+  }
 }

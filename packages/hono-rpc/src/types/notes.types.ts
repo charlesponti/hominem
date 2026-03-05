@@ -9,7 +9,7 @@ export type {
   NoteContentType,
   NoteStatus,
   PublishingMetadata,
-} from '@hominem/db/types/notes';
+} from '@hominem/notes-services';
 
 export type { NoteAnalysis } from '../schemas/notes.schema';
 
@@ -31,7 +31,13 @@ export {
 // API-Specific Types
 // ============================================================================
 
-import type { Note, NoteContentType, NoteStatus, NoteMention, PublishingMetadata } from '@hominem/db/types/notes';
+import type {
+  Note,
+  NoteContentType,
+  NoteStatus,
+  NoteMention,
+  PublishingMetadata,
+} from '@hominem/notes-services';
 import type { AllContentType, ContentTag, TaskPriority, TaskStatus, NoteAnalysis } from '../schemas/notes.schema';
 
 // Type alias for JSON values

@@ -1,8 +1,11 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 import { env } from './env';
 import * as schema from './migrations/schema';
+
+export type Database = PostgresJsDatabase<typeof schema>;
 
 let pool: postgres.Sql<{}> | null = null;
 
@@ -35,12 +38,12 @@ function getPool() {
 }
 
 // Deferred initialization to avoid expensive type checking at module load
-let mainDb: unknown = null;
-let testDbOverride: unknown = null;
+let mainDb: Database | null = null;
+let testDbOverride: Database | null = null;
 
 function initDb() {
   if (!mainDb) {
-    mainDb = drizzle(getPool(), { schema });
+    mainDb = drizzle(getPool(), { schema }) as Database;
   }
   return testDbOverride ?? mainDb;
 }
@@ -52,10 +55,10 @@ function initDb() {
  * schema type during client.ts import.
  */
 export function getDb() {
-  return initDb();
+  return initDb() as Database;
 }
 
-export function setTestDb(override: unknown): void {
+export function setTestDb(override: Database | null): void {
   testDbOverride = override;
 }
 

@@ -10,13 +10,13 @@ export type {
   ChatMessageToolCall,
   ChatMessageFile,
   ChatMessageRole,
-} from '@hominem/db/types/chats';
+} from '@hominem/chat-services';
 
 // ============================================================================
 // API-Specific Composition Types
 // ============================================================================
 
-import type { Chat, ChatMessage } from '@hominem/db/types/chats';
+import type { Chat, ChatMessage } from '@hominem/chat-services';
 
 export type ChatWithMessages = Chat & {
   messages: ChatMessage[];

@@ -1,6 +1,7 @@
 -- ============================================
 -- UTILITY: Auto-update updated_at
 -- ============================================
+SET client_min_messages = warning;
 
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
