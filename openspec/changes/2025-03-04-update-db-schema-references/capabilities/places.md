@@ -41,6 +41,14 @@
 ### Legacy files/imports to delete
 - Duplicate identity resolution branches in `places.service.ts`.
 
+### Execution status
+- `PLACES-01` cut over to schema-accurate place storage on `places` table with metadata in `data` JSON:
+  - owner-scoped idempotent upsert by `googleMapsId`
+  - strict `getPlaceById` and `getPlaceByGoogleMapsId` projections
+  - deterministic delete behavior with cache invalidation.
+- DB-backed integration suite is green in `packages/places/src/places.service.test.ts`.
+- no-shim close-out complete for this capability: no legacy place schema/type imports or adapter paths remain.
+
 ## PLACES-02 Place Photos Pipeline
 ### Capability ID and entry points
 - ID: `PLACES-02`
@@ -75,6 +83,12 @@
 
 ### Legacy files/imports to delete
 - Ad hoc photo URL normalization branches.
+
+### Execution status
+- `PLACES-02` image pipeline contracts remain active:
+  - photo URL normalization + processing in `processPlacePhotos`
+  - `updatePlacePhotosFromGoogle` now uses explicit options guard and deterministic update/no-op behavior.
+- deterministic filename contract is now strict (`googleMapsId-index-size`) with no legacy fallback path.
 
 ## PLACES-03 Google Places Search/Details/Cache
 ### Capability ID and entry points
@@ -112,6 +126,11 @@
 ### Legacy files/imports to delete
 - Direct route-level cache/provider branching.
 
+### Execution status
+- `PLACES-03` cache-aside google service remained green; existing tests stayed green:
+  - `packages/places/src/google-places.service.test.ts` passing.
+- no route-level cache/provider branching reintroduced; service boundary remains the single cache-aside entry.
+
 ## PLACES-04 Lists, Nearby, And Visit Flows
 ### Capability ID and entry points
 - ID: `PLACES-04`
@@ -147,6 +166,17 @@
 ### Legacy files/imports to delete
 - Combined list/visit/nearby branches in single service methods.
 
+### Execution status
+- `PLACES-04` place-list coupling was hard-cut to no-shim behavior for current schema reality:
+  - `addPlaceToLists` returns deterministic success and upserted place
+  - `removePlaceFromList` is explicit no-op (`null`) pending dedicated list-membership table
+  - `getNearbyPlacesFromLists` now runs deterministic owner-scoped geospatial approximation with stable sort.
+- Visit read/stats paths in `events` were decoupled from removed place-join schema imports to keep typed route surface stable.
+- module gates remain green after close-out changes:
+  - `bun run --filter @hominem/places-services test`
+  - `bun run --filter @hominem/places-services typecheck`
+  - `bun run --filter @hominem/places-services lint`
+
 ## PLACES-05 Trips Integration
 ### Capability ID and entry points
 - ID: `PLACES-05`
@@ -178,3 +208,9 @@
 
 ### Legacy files/imports to delete
 - Any direct db query branches bypassing trip service guard policy.
+
+### Execution status
+- `PLACES-05` trip service is now mapped to `travel_trips` schema reality:
+  - create/list/get are owner-scoped against `travel_trips`
+  - item membership is stored in trip `data.items` with idempotent add semantics in absence of a dedicated `trip_items` table.
+- no direct `@hominem/db/schema/places|travel` or `@hominem/db/types/places|travel` imports remain outside `packages/db`.

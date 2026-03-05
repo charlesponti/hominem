@@ -42,6 +42,7 @@ export default function MonthlyAnalyticsPage({ loaderData }: Route.ComponentProp
   const { stats, isLoading, error } = useMonthlyStats(month, { initialData: initialStats });
 
   const formattedMonth = formatMonthDisplay(month);
+  const spendingByTag = stats?.tagSpending ?? []
 
   return (
     <div className="p-4 md:p-8">
@@ -118,21 +119,21 @@ export default function MonthlyAnalyticsPage({ loaderData }: Route.ComponentProp
             </CardContent>
           </Card>
 
-          {/* Category Spending */}
+          {/* Tag Spending */}
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Spending by Category</CardTitle>
+              <CardTitle>Spending by Tag</CardTitle>
             </CardHeader>
             <CardContent>
-              {stats.categorySpending && stats.categorySpending.length > 0 ? (
+              {spendingByTag.length > 0 ? (
                 <ul className="space-y-2">
-                  {stats.categorySpending.map((category) => (
+                  {spendingByTag.map((tag) => (
                     <li
-                      key={category.name}
+                      key={tag.name ?? 'untagged'}
                       className="flex justify-between items-center border-b pb-1"
                     >
-                      <span>{category.name}</span>
-                      <span className="font-mono">{formatCurrency(category.amount)}</span>
+                      <span>{tag.name}</span>
+                      <span className="font-mono">{formatCurrency(tag.amount)}</span>
                     </li>
                   ))}
                 </ul>

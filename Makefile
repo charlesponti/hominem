@@ -13,9 +13,11 @@ APPLE_KEY_PATH ?= $(CURDIR)/.auth/AuthKey_2438T5MGLH.p8
 APPLE_EXPIRES_DAYS ?= 150
 APPLE_KEY_ID ?= 2438T5MGLH
 CLOUDFLARED ?= cloudflared
+DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5432/hominem
+TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install start dev build test lint format clean docker-up docker-up-full docker-down docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios
+.PHONY: install start dev build test lint format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all
 
 # Install dependencies
 install:
@@ -33,6 +35,43 @@ dev:
 run-redis:
 	@echo "Starting Redis..."
 	pm2 start bun --name="hominem-redis" -- run redis
+
+# Full local development setup (deps + infra + migrations)
+dev-setup: install dev-up db-migrate-all dev-status
+	@echo "Full dev setup complete"
+
+# Start required local infrastructure (redis + dev db + test db)
+dev-up:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d redis db test-db
+
+# Stop local development infrastructure and remove containers
+dev-down:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down
+
+# Reset local development infrastructure including volumes, then recreate + migrate
+dev-reset:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down -v
+	$(MAKE) dev-up
+	$(MAKE) db-migrate-all
+
+# Show local infrastructure status
+dev-status:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps
+
+# Run migrations against the local development database
+db-migrate:
+	@echo "Waiting for dev database to be ready..."
+	@until docker exec hominem-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
+	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bun run db:migrate
+
+# Run migrations against the local test database
+db-migrate-test:
+	@echo "Waiting for test database to be ready..."
+	@until docker exec hominem-test-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
+	@cd packages/db && DATABASE_URL="$(TEST_DATABASE_URL)" bun run db:migrate
+
+# Run all local database migrations required for development
+db-migrate-all: db-migrate db-migrate-test
 
 # Run tests
 test:
@@ -117,6 +156,10 @@ blt:
 	@bun run typecheck --force > /dev/null && echo "Typecheck passed" || echo "Typecheck failed"
 
 # Docker compose targets
+docker-start: docker-up
+
+docker-stop: docker-down
+
 docker-up:
 	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d
 

@@ -1,9 +1,15 @@
-import type { UserSelect } from '@hominem/db/types/users'
 import type { HominemUser } from './types'
 
-/**
- * Build canonical HominemUser from database user row.
- */
+export interface UserSelect {
+  id: string
+  email: string
+  name: string | null
+  image: string | null
+  is_admin: boolean | null
+  created_at: string | null
+  updated_at: string | null
+}
+
 export function toHominemUser(source: UserSelect): HominemUser {
   return {
     id: source.id,
@@ -11,7 +17,7 @@ export function toHominemUser(source: UserSelect): HominemUser {
     name: source.name || undefined,
     image: source.image || undefined,
     isAdmin: Boolean(source.is_admin),
-    createdAt: source.created_at,
-    updatedAt: source.updated_at,
+    createdAt: source.created_at ?? '',
+    updatedAt: source.updated_at ?? '',
   }
 }

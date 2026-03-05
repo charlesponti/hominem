@@ -61,7 +61,7 @@ type HabitStatsResponse = Awaited<ReturnType<typeof getHabitStats>>;
 /**
  * Habits Routes
  */
-export const habitsRoutes = new Hono<AppContext>()
+export const habitsRoutes: Hono<AppContext> = new Hono<AppContext>()
   // List habits
   .get('/', authMiddleware, zValidator('query', habitListQuerySchema), async (c) => {
     const userId = c.get('userId')!;

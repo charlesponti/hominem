@@ -1,54 +1,53 @@
-import { ItemSchema as DbItemSchema } from '@hominem/db/schema/items';
-import {
-  ListInsertSchema as DbListInsertSchema,
-  UserListsInsertSchema as DbUserListsInsertSchema,
-} from '@hominem/db/schema/lists';
-import * as z from 'zod';
+import * as z from 'zod'
 
-export const listSchema = DbListInsertSchema.extend({});
+export const listSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1),
+  description: z.string().nullable().default(null),
+  ownerId: z.string().uuid(),
+  isPublic: z.boolean().default(false),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
 
-export type ListRecord = z.infer<typeof listSchema>;
+export type ListRecord = z.infer<typeof listSchema>
 
 export const listGetAllSchema = z.object({
   itemType: z.string().optional(),
-});
+})
 
-export const listGetByIdSchema = DbListInsertSchema.pick({ id: true });
+export const listGetByIdSchema = z.object({
+  id: z.string().uuid(),
+})
 
-export const listCreateSchema = DbListInsertSchema.pick({
-  name: true,
-  description: true,
-  isPublic: true,
-}).extend({
-  isPublic: DbListInsertSchema.shape.isPublic.optional(),
-});
+export const listCreateSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  isPublic: z.boolean().optional(),
+})
 
-const listUpdateBaseSchema = DbListInsertSchema.pick({
-  id: true,
-  name: true,
-  description: true,
-  isPublic: true,
-});
+export const listUpdateSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1).optional(),
+  description: z.string().optional(),
+  isPublic: z.boolean().optional(),
+})
 
-export const listUpdateSchema = listUpdateBaseSchema.extend({
-  name: listUpdateBaseSchema.shape.name.optional(),
-  description: listUpdateBaseSchema.shape.description.optional(),
-  isPublic: listUpdateBaseSchema.shape.isPublic.optional(),
-});
+export const listDeleteSchema = z.object({
+  id: z.string().uuid(),
+})
 
-export const listDeleteSchema = DbListInsertSchema.pick({ id: true });
-
-export const listDeleteItemSchema = DbItemSchema.pick({
-  listId: true,
-  itemId: true,
-}).extend({});
+export const listDeleteItemSchema = z.object({
+  listId: z.string().uuid(),
+  itemId: z.string().uuid(),
+})
 
 export const listGetContainingPlaceSchema = z.object({
   placeId: z.string().uuid().optional(),
   googleMapsId: z.string().optional(),
-});
+})
 
-export const listRemoveCollaboratorSchema = DbUserListsInsertSchema.pick({
-  listId: true,
-  userId: true,
-}).extend({});
+export const listRemoveCollaboratorSchema = z.object({
+  listId: z.string().uuid(),
+  userId: z.string().uuid(),
+})

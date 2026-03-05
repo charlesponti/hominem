@@ -5,7 +5,28 @@ import { Hono } from 'hono';
 import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
-import { indexProcessedFile, type ProcessedFile } from '@hominem/db';
+
+type ProcessedFile = {
+  id: string;
+  originalName: string;
+  type: 'image' | 'document' | 'audio' | 'video' | 'unknown';
+  mimetype: string;
+  size: number;
+  textContent?: string;
+  content?: string;
+  thumbnail?: string;
+  metadata?: Record<string, unknown>;
+};
+
+async function indexProcessedFile(_file: ProcessedFile, _userId: string): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  return {
+    success: false,
+    message: 'File indexing is not available in the current DB architecture',
+  };
+}
 
 export const filesRoutes = new Hono<AppContext>()
   // ListOutput user files

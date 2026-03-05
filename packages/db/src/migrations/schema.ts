@@ -542,6 +542,76 @@ export const taskLists = pgTable("task_lists", {
 	pgPolicy("task_lists_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`  }),
 ]);
 
+export const taskListCollaborators = pgTable("task_list_collaborators", {
+	listId: uuid("list_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	addedByUserId: uuid("added_by_user_id"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	primaryKey({ columns: [table.listId, table.userId], name: "task_list_collaborators_pkey"}),
+	index("task_list_collaborators_list_idx").using("btree", table.listId.asc().nullsLast().op("uuid_ops")),
+	index("task_list_collaborators_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.addedByUserId],
+			foreignColumns: [users.id],
+			name: "task_list_collaborators_added_by_user_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.listId],
+			foreignColumns: [taskLists.id],
+			name: "task_list_collaborators_list_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "task_list_collaborators_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("task_list_collaborators_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (user_id = app_current_user_id()) OR (EXISTS ( SELECT 1
+   FROM task_lists tl
+  WHERE ((tl.id = task_list_collaborators.list_id) AND (tl.user_id = app_current_user_id())))))`, withCheck: sql`(app_is_service_role() OR (user_id = app_current_user_id()) OR (EXISTS ( SELECT 1
+   FROM task_lists tl
+  WHERE ((tl.id = task_list_collaborators.list_id) AND (tl.user_id = app_current_user_id())))))`  }),
+]);
+
+export const taskListInvites = pgTable("task_list_invites", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	listId: uuid("list_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	invitedUserEmail: text("invited_user_email").notNull(),
+	invitedUserId: uuid("invited_user_id"),
+	accepted: boolean().default(false).notNull(),
+	token: text().notNull(),
+	acceptedAt: timestamp("accepted_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	index("task_list_invites_invited_user_idx").using("btree", table.invitedUserId.asc().nullsLast().op("uuid_ops")),
+	index("task_list_invites_list_idx").using("btree", table.listId.asc().nullsLast().op("uuid_ops")),
+	index("task_list_invites_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
+	index("task_list_invites_email_lower_idx").using("btree", sql`lower(invited_user_email)`),
+	foreignKey({
+			columns: [table.invitedUserId],
+			foreignColumns: [users.id],
+			name: "task_list_invites_invited_user_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.listId],
+			foreignColumns: [taskLists.id],
+			name: "task_list_invites_list_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "task_list_invites_user_id_fkey"
+		}).onDelete("cascade"),
+	unique("task_list_invites_token_key").on(table.token),
+	pgPolicy("task_list_invites_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (user_id = app_current_user_id()) OR (invited_user_id = app_current_user_id()) OR (EXISTS ( SELECT 1
+   FROM task_lists tl
+  WHERE ((tl.id = task_list_invites.list_id) AND (tl.user_id = app_current_user_id())))))`, withCheck: sql`(app_is_service_role() OR (user_id = app_current_user_id()) OR (EXISTS ( SELECT 1
+   FROM task_lists tl
+  WHERE ((tl.id = task_list_invites.list_id) AND (tl.user_id = app_current_user_id())))))`  }),
+]);
+
 export const keyResults = pgTable("key_results", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	goalId: uuid("goal_id").notNull(),
@@ -563,31 +633,6 @@ export const keyResults = pgTable("key_results", {
   WHERE ((g.id = key_results.goal_id) AND (g.user_id = app_current_user_id())))))`, withCheck: sql`(app_is_service_role() OR (EXISTS ( SELECT 1
    FROM goals g
   WHERE ((g.id = key_results.goal_id) AND (g.user_id = app_current_user_id())))))`  }),
-]);
-
-export const financeCategories = pgTable("finance_categories", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	userId: uuid("user_id").notNull(),
-	name: text().notNull(),
-	parentId: uuid("parent_id"),
-	icon: text(),
-	color: text(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
-}, (table) => [
-	index("finance_categories_parent_idx").using("btree", table.parentId.asc().nullsLast().op("uuid_ops")),
-	index("finance_categories_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
-	foreignKey({
-			columns: [table.parentId],
-			foreignColumns: [table.id],
-			name: "finance_categories_parent_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "finance_categories_user_id_fkey"
-		}).onDelete("cascade"),
-	unique("finance_categories_user_id_name_key").on(table.name, table.userId),
-	pgPolicy("finance_categories_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`  }),
 ]);
 
 export const financeAccounts = pgTable("finance_accounts", {

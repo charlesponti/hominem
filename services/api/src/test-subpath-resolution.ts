@@ -8,13 +8,13 @@
  */
 
 // Verify services can be imported via subpaths
-import type { TaskId } from '@hominem/db/services/tasks.service'
-import type { TagId } from '@hominem/db/services/tags.service'
-import type { PersonId } from '@hominem/db/services/persons.service'
+import { listTasks } from '@hominem/db/services/tasks.service'
+import { listTags } from '@hominem/db/services/tags.service'
+import { listPersons } from '@hominem/db/services/persons.service'
 
-// Just checking types compile
-type TestTypes = TaskId | TagId | PersonId
+// Just checking symbols compile
+type TestTypes = typeof listTasks | typeof listTags | typeof listPersons
 
-const _test: TestTypes = 'test' as unknown as TestTypes
+const _test: TestTypes[] = [listTasks, listTags, listPersons]
 
 export { _test }

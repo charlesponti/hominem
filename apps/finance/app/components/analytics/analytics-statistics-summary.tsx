@@ -8,7 +8,7 @@ interface AnalyticsStatisticsSummaryProps {
   dateFrom?: Date | undefined;
   dateTo?: Date | undefined;
   selectedAccount?: string | undefined;
-  selectedCategory?: string | undefined;
+  selectedTag?: string | undefined;
   includeStats?: boolean | undefined;
 }
 
@@ -16,7 +16,7 @@ export function AnalyticsStatisticsSummary({
   dateFrom,
   dateTo,
   selectedAccount,
-  selectedCategory,
+  selectedTag,
   includeStats = true,
 }: AnalyticsStatisticsSummaryProps) {
   const {
@@ -27,7 +27,7 @@ export function AnalyticsStatisticsSummary({
     dateFrom,
     dateTo,
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    category: selectedCategory || undefined,
+    tag: selectedTag || undefined,
     includeStats,
     compareToPrevious: false,
     groupBy: 'month',

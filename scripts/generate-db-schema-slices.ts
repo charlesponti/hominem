@@ -54,7 +54,11 @@ const DOMAIN_SCHEMAS: Record<string, string[]> = {
   finance: [
     'users',
     'financeAccounts',
-    'financeCategories',
+    'budgetGoals',
+    'financialInstitutions',
+    'plaidItems',
+    'tags',
+    'taggedItems',
     'financeTransactions2022',
     'financeTransactions2023',
     'financeTransactions2024',

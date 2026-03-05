@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { users, userSessions, userAccounts, taskLists, tasks, goals, userApiKeys, tags, taggedItems, tagShares, persons, userPersonRelations, musicTracks, musicAlbums, musicArtists, musicPlaylists, musicPlaylistTracks, musicLiked, videoChannels, videoSubscriptions, calendarEvents, calendarAttendees, keyResults, financeCategories, financeAccounts, places, travelTrips, travelFlights, travelHotels, careerCompanies, careerJobs, careerApplications, careerInterviews, schools, notes, noteTags, noteShares, bookmarks, possessionContainers, possessions } from "./schema";
+import { users, userSessions, userAccounts, taskLists, tasks, goals, userApiKeys, tags, taggedItems, tagShares, persons, userPersonRelations, musicTracks, musicAlbums, musicArtists, musicPlaylists, musicPlaylistTracks, musicLiked, videoChannels, videoSubscriptions, calendarEvents, calendarAttendees, keyResults, financeAccounts, places, travelTrips, travelFlights, travelHotels, careerCompanies, careerJobs, careerApplications, careerInterviews, schools, notes, noteTags, noteShares, bookmarks, possessionContainers, possessions } from "./schema";
 
 export const userSessionsRelations = relations(userSessions, ({one}) => ({
 	user: one(users, {
@@ -27,7 +27,6 @@ export const usersRelations = relations(users, ({many}) => ({
 	videoSubscriptions: many(videoSubscriptions),
 	calendarEvents: many(calendarEvents),
 	taskLists: many(taskLists),
-	financeCategories: many(financeCategories),
 	financeAccounts: many(financeAccounts),
 	places: many(places),
 	travelTrips: many(travelTrips),
@@ -236,21 +235,6 @@ export const keyResultsRelations = relations(keyResults, ({one}) => ({
 	goal: one(goals, {
 		fields: [keyResults.goalId],
 		references: [goals.id]
-	}),
-}));
-
-export const financeCategoriesRelations = relations(financeCategories, ({one, many}) => ({
-	financeCategory: one(financeCategories, {
-		fields: [financeCategories.parentId],
-		references: [financeCategories.id],
-		relationName: "financeCategories_parentId_financeCategories_id"
-	}),
-	financeCategories: many(financeCategories, {
-		relationName: "financeCategories_parentId_financeCategories_id"
-	}),
-	user: one(users, {
-		fields: [financeCategories.userId],
-		references: [users.id]
 	}),
 }));
 

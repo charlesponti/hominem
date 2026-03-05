@@ -1,24 +1,22 @@
-import type { CategoryBreakdownItem } from '@hominem/hono-rpc/types/finance.types';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import { Skeleton } from '@hominem/ui/components/ui/skeleton';
 
-import { useCategoryBreakdown } from '~/lib/hooks/use-analytics';
+import { useTagBreakdown } from '~/lib/hooks/use-analytics';
 import { formatCurrency } from '~/lib/number.utils';
 
-interface TopCategoriesProps {
+interface TopTagsProps {
   dateFrom?: Date | undefined;
   dateTo?: Date | undefined;
   selectedAccount?: string | undefined;
-  selectedCategory?: string | undefined;
 }
 
-export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategoriesProps) {
+export function TopTags({ dateFrom, dateTo, selectedAccount }: TopTagsProps) {
   const {
     data: categoryBreakdown,
     isLoading,
     error,
-  } = useCategoryBreakdown({
+  } = useTagBreakdown({
     from: dateFrom,
     to: dateTo,
     account: selectedAccount,
@@ -30,7 +28,7 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategori
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Top Categories</CardTitle>
+        <CardTitle className="text-lg">Top Tags</CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -51,24 +49,31 @@ export function TopCategories({ dateFrom, dateTo, selectedAccount }: TopCategori
           </div>
         ) : error ? (
           <div className="text-destructive">
-            An unknown error occurred while fetching categories.
+            An unknown error occurred while fetching tags.
           </div>
         ) : Array.isArray(categoryBreakdown?.breakdown) &&
           categoryBreakdown.breakdown.length > 0 ? (
           <div className="space-y-3">
-            {categoryBreakdown.breakdown.map((cat: CategoryBreakdownItem) => (
-              <div key={cat.category} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
-                <Badge variant="secondary" className="w-12 justify-center">
-                  {cat.transactionCount}x
-                </Badge>
-                <span className="text-sm">{cat.category}</span>
-                <span className="text-sm font-mono text-right">{formatCurrency(cat.amount)}</span>
-              </div>
-            ))}
+            {categoryBreakdown.breakdown.map((cat: {
+              tag: string
+              amount: number
+              transactionCount: number
+            }) => {
+              const tagLabel = cat.tag
+              return (
+                <div key={tagLabel} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
+                  <Badge variant="secondary" className="w-12 justify-center">
+                    {cat.transactionCount}x
+                  </Badge>
+                  <span className="text-sm">{tagLabel}</span>
+                  <span className="text-sm font-mono text-right">{formatCurrency(cat.amount)}</span>
+                </div>
+              )
+            })}
           </div>
         ) : (
           <div className="text-center text-muted-foreground py-4">
-            No category data available for the selected period
+            No tag data available for the selected period
           </div>
         )}
       </CardContent>

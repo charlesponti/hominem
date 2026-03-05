@@ -1,9 +1,11 @@
+import type { EventTypeEnum } from '@hominem/db/types/calendar';
+
 import {
-  createVisit,
-  deleteVisit,
+  createEvent,
+  deleteEvent,
   getVisitsByPlace,
   getVisitsByUser,
-  updateVisit,
+  updateEvent,
 } from '@hominem/events-services';
 import {
   addPlaceToLists,
@@ -535,14 +537,14 @@ export const placesRoutes = new Hono<AppContext>()
 
       const dateValue = data.date ? new Date(data.date) : new Date();
 
-      const event = await createVisit({
+      const event = await createEvent({
         title: data.title ?? '',
         description: data.description ?? null,
         date: dateValue,
         dateStart: null,
         dateEnd: null,
         dateTime: null,
-        type: 'Events',
+        type: 'Events' as EventTypeEnum,
         placeId: data.placeId ?? null,
         userId: userId,
         source: 'manual',
@@ -656,7 +658,7 @@ export const placesRoutes = new Hono<AppContext>()
         }
       });
 
-      const updatedEvent = await updateVisit(id, updateData);
+      const updatedEvent = await updateEvent(id, updateData);
 
       if (!updatedEvent) {
         throw new NotFoundError('');
@@ -678,7 +680,7 @@ export const placesRoutes = new Hono<AppContext>()
     try {
       const input = c.req.valid('json') as z.infer<typeof placeDeleteVisitSchema>;
 
-      const success_ = await deleteVisit(input.id);
+      const success_ = await deleteEvent(input.id);
 
       if (!success_) {
         throw new NotFoundError('');

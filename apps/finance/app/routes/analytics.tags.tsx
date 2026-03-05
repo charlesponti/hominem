@@ -8,12 +8,18 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { TransactionFilters } from '~/components/finance/transaction-filters';
-import { useCategoryBreakdown } from '~/lib/hooks/use-analytics';
+import { useTagBreakdown } from '~/lib/hooks/use-analytics';
 import { type FilterArgs, useFinanceAccounts } from '~/lib/hooks/use-finance-data';
 import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
 import { formatCurrency } from '~/lib/number.utils';
 
-export default function CategoriesAnalyticsPage() {
+interface TagBreakdownRow {
+  tag: string
+  amount: number
+  transactionCount: number
+}
+
+export default function TagsAnalyticsPage() {
   const navigate = useNavigate();
   const { selectedAccount, setSelectedAccount } = useSelectedAccount();
 
@@ -54,31 +60,31 @@ export default function CategoriesAnalyticsPage() {
     isFetching,
     error,
     refetch: refetchBreakdown,
-  } = useCategoryBreakdown({
+  } = useTagBreakdown({
     from: debouncedFilters.dateFrom,
     to: debouncedFilters.dateTo,
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
     limit: 100,
   });
 
+  const tagRows = breakdown?.breakdown ?? [];
+
   // Calculate total spending for percentage calculations
   const totalSpending = useMemo(() => {
-    if (!Array.isArray(breakdown)) return 0;
-    return breakdown.reduce((sum, item) => sum + Number.parseFloat(item.total), 0);
-  }, [breakdown]);
+    if (typeof breakdown?.totalSpending === 'number') {
+      return breakdown.totalSpending;
+    }
+    return tagRows.reduce((sum, item) => sum + item.amount, 0);
+  }, [breakdown?.totalSpending, tagRows]);
 
   // Client-side filtering and sorting
-  const filteredAndSortedData = useMemo(() => {
-    if (!Array.isArray(breakdown)) {
-      return [];
-    }
-
-    let result = [...breakdown];
+  const filteredAndSortedData = useMemo<TagBreakdownRow[]>(() => {
+    let result = [...tagRows];
 
     // Apply search filter
     if (searchValue.trim()) {
       result = result.filter((item) =>
-        item.category.toLowerCase().includes(searchValue.toLowerCase()),
+        item.tag.toLowerCase().includes(searchValue.toLowerCase()),
       );
     }
 
@@ -90,15 +96,15 @@ export default function CategoriesAnalyticsPage() {
           let aValue: string | number;
           let bValue: string | number;
 
-          if (sort.field === 'category') {
-            aValue = a.category.toLowerCase();
-            bValue = b.category.toLowerCase();
-          } else if (sort.field === 'total') {
-            aValue = Number.parseFloat(a.total);
-            bValue = Number.parseFloat(b.total);
-          } else if (sort.field === 'count') {
-            aValue = a.count;
-            bValue = b.count;
+          if (sort.field === 'tag') {
+            aValue = a.tag.toLowerCase();
+            bValue = b.tag.toLowerCase();
+          } else if (sort.field === 'amount') {
+            aValue = a.amount;
+            bValue = b.amount;
+          } else if (sort.field === 'transactionCount') {
+            aValue = a.transactionCount;
+            bValue = b.transactionCount;
           } else {
             return 0;
           }
@@ -115,7 +121,7 @@ export default function CategoriesAnalyticsPage() {
     }
 
     return result;
-  }, [breakdown, searchValue, sortOptions]);
+  }, [tagRows, searchValue, sortOptions]);
 
   // Handle filter changes
   const handleFiltersChange = useCallback((newFilters: FilterArgs) => {
@@ -135,7 +141,7 @@ export default function CategoriesAnalyticsPage() {
 
   // Handle sort header click
   const handleSortHeaderClick = useCallback(
-    (field: 'category' | 'total' | 'count') => {
+    (field: 'tag' | 'amount' | 'transactionCount') => {
       const existingSort = sortOptions.find((s) => s.field === field);
       if (existingSort) {
         // Toggle direction if same field
@@ -209,7 +215,7 @@ export default function CategoriesAnalyticsPage() {
 
   return (
     <div className="container">
-      <h1 className="text-2xl font-bold mb-4">Categories Breakdown</h1>
+      <h1 className="text-2xl font-bold mb-4">Tags Breakdown</h1>
 
       {/* Transaction Filters */}
       <TransactionFilters
@@ -307,8 +313,8 @@ export default function CategoriesAnalyticsPage() {
         /* Empty State */
         <div className="p-8 text-center text-muted-foreground">
           {searchValue.trim() || activeFilters.length > 0
-            ? 'No categories found matching your filters.'
-            : 'No category data available for the selected period.'}
+            ? 'No tags found matching your filters.'
+            : 'No tag data available for the selected period.'}
         </div>
       ) : (
         /* Table with Data */
@@ -318,30 +324,30 @@ export default function CategoriesAnalyticsPage() {
               <LoadingSpinner size="md" />
             </div>
           )}
-          <table className="w-full text-sm" aria-label="Categories breakdown">
+          <table className="w-full text-sm" aria-label="Tags breakdown">
             <thead>
               <tr>
                 <th
                   className="text-left py-2"
                   aria-sort={
-                    getSortDirection('category') === 'asc'
+                    getSortDirection('tag') === 'asc'
                       ? 'ascending'
-                      : getSortDirection('category') === 'desc'
+                      : getSortDirection('tag') === 'desc'
                         ? 'descending'
                         : 'none'
                   }
                 >
                   <button
                     type="button"
-                    onClick={() => handleSortHeaderClick('category')}
+                    onClick={() => handleSortHeaderClick('tag')}
                     className="flex items-center gap-1 hover:text-foreground"
-                    aria-label="Sort by category"
+                    aria-label="Sort by tag"
                   >
-                    Category
-                    {getSortDirection('category') === 'asc' && (
+                    Tag
+                    {getSortDirection('tag') === 'asc' && (
                       <ArrowUp className="size-4" aria-hidden="true" />
                     )}
-                    {getSortDirection('category') === 'desc' && (
+                    {getSortDirection('tag') === 'desc' && (
                       <ArrowDown className="size-4" aria-hidden="true" />
                     )}
                   </button>
@@ -349,24 +355,24 @@ export default function CategoriesAnalyticsPage() {
                 <th
                   className="text-right py-2"
                   aria-sort={
-                    getSortDirection('total') === 'asc'
+                    getSortDirection('amount') === 'asc'
                       ? 'ascending'
-                      : getSortDirection('total') === 'desc'
+                      : getSortDirection('amount') === 'desc'
                         ? 'descending'
                         : 'none'
                   }
                 >
                   <button
                     type="button"
-                    onClick={() => handleSortHeaderClick('total')}
+                    onClick={() => handleSortHeaderClick('amount')}
                     className="flex items-center gap-1 justify-end hover:text-foreground ml-auto"
                     aria-label="Sort by total"
                   >
                     Total
-                    {getSortDirection('total') === 'asc' && (
+                    {getSortDirection('amount') === 'asc' && (
                       <ArrowUp className="size-4" aria-hidden="true" />
                     )}
-                    {getSortDirection('total') === 'desc' && (
+                    {getSortDirection('amount') === 'desc' && (
                       <ArrowDown className="size-4" aria-hidden="true" />
                     )}
                   </button>
@@ -375,44 +381,32 @@ export default function CategoriesAnalyticsPage() {
             </thead>
             <tbody>
               {filteredAndSortedData.map((item) => {
-                const itemTotal = Number.parseFloat(item.total);
-                const percentage = totalSpending > 0 ? (itemTotal / totalSpending) * 100 : 0;
+                const percentage = totalSpending > 0 ? (item.amount / totalSpending) * 100 : 0;
 
                 return (
                   <tr
-                    key={item.category}
+                    key={item.tag}
                     className="border-b border-border "
-                    onClick={() =>
-                      navigate(`/analytics/category/${encodeURIComponent(item.category)}`)
-                    }
+                    onClick={() => navigate(`/analytics/tag/${encodeURIComponent(item.tag)}`)}
                     tabIndex={0}
-                    aria-label={`View details for ${item.category}`}
+                    aria-label={`View details for ${item.tag}`}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
-                        navigate(`/analytics/category/${encodeURIComponent(item.category)}`);
+                        navigate(`/analytics/tag/${encodeURIComponent(item.tag)}`);
                       }
                     }}
                   >
                     <td className="py-3">
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary" className="w-12 justify-center">
-                          {item.count}x
+                          {item.transactionCount}x
                         </Badge>
-                        <span className="font-medium">{item.category}</span>
+                        <span className="font-medium">{item.tag}</span>
                       </div>
                     </td>
                     <td className="text-right py-3">
                       <div className="flex flex-col items-end gap-1">
-                        <div
-                          className="font-mono font-semibold"
-                          title={
-                            'average' in item && 'minimum' in item && 'maximum' in item
-                              ? `Average: ${formatCurrency(item.average)}\nMin: ${formatCurrency(item.minimum)}\nMax: ${formatCurrency(item.maximum)}`
-                              : undefined
-                          }
-                        >
-                          {formatCurrency(item.total)}
-                        </div>
+                        <div className="font-mono font-semibold">{formatCurrency(item.amount)}</div>
                         <div className="text-xs text-muted-foreground">
                           {percentage.toFixed(1)}%
                         </div>

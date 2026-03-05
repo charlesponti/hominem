@@ -161,11 +161,6 @@ export const ChatMessage = memo(function ChatMessage({
                     {JSON.stringify(toolCall.args, null, 2)}
                   </pre>
                 ) : null}
-                {toolCall.result != null ? (
-                  <pre className="text-xs bg-muted/50 p-2 rounded overflow-x-auto">
-                    {String(toolCall.result)}
-                  </pre>
-                ) : null}
               </div>
             </Tool>
           ))}

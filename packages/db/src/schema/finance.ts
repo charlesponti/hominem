@@ -10,7 +10,11 @@ import { sql } from "drizzle-orm"
  * Tables in this domain:
  *   - users
  *   - financeAccounts
- *   - financeCategories
+ *   (TODO) - budgetGoals
+ *   (TODO) - financialInstitutions
+ *   (TODO) - plaidItems
+ *   - tags
+ *   - taggedItems
  *   - financeTransactions2022
  *   - financeTransactions2023
  *   - financeTransactions2024
@@ -56,29 +60,46 @@ export const financeAccounts = pgTable("finance_accounts", {
 	pgPolicy("finance_accounts_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`  }),
 ]);
 
-export const financeCategories = pgTable("finance_categories", {
+export const tags = pgTable("tags", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
-	userId: uuid("user_id").notNull(),
+	ownerId: uuid("owner_id").notNull(),
+	groupId: text("group_id"),
 	name: text().notNull(),
-	parentId: uuid("parent_id"),
-	icon: text(),
+	emojiImageUrl: text("emoji_image_url"),
 	color: text(),
+	description: text(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 }, (table) => [
-	index("finance_categories_parent_idx").using("btree", table.parentId.asc().nullsLast().op("uuid_ops")),
-	index("finance_categories_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
+	index("tags_owner_id_idx").using("btree", table.ownerId.asc().nullsLast().op("uuid_ops")),
+	uniqueIndex("tags_owner_name_idx").using("btree", table.ownerId.asc().nullsLast().op("text_ops"), table.name.asc().nullsLast().op("text_ops")),
 	foreignKey({
-			columns: [table.parentId],
-			foreignColumns: [table.id],
-			name: "finance_categories_parent_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.userId],
+			columns: [table.ownerId],
 			foreignColumns: [users.id],
-			name: "finance_categories_user_id_fkey"
+			name: "tags_owner_id_fkey"
 		}).onDelete("cascade"),
-	unique("finance_categories_user_id_name_key").on(table.name, table.userId),
-	pgPolicy("finance_categories_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`  }),
+	pgPolicy("tags_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (owner_id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (owner_id = app_current_user_id()))`  }),
+]);
+
+export const taggedItems = pgTable("tagged_items", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	tagId: uuid("tag_id").notNull(),
+	entityType: text("entity_type").notNull(),
+	entityId: uuid("entity_id").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	index("tagged_items_entity_idx").using("btree", table.entityType.asc().nullsLast().op("text_ops"), table.entityId.asc().nullsLast().op("text_ops")),
+	index("tagged_items_tag_id_idx").using("btree", table.tagId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.tagId],
+			foreignColumns: [tags.id],
+			name: "tagged_items_tag_id_fkey"
+		}).onDelete("cascade"),
+	unique("tagged_items_tag_id_entity_type_entity_id_key").on(table.entityId, table.entityType, table.tagId),
+	pgPolicy("tagged_items_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (EXISTS ( SELECT 1
+   FROM tags t
+  WHERE ((t.id = tagged_items.tag_id) AND (t.owner_id = app_current_user_id())))))`, withCheck: sql`(app_is_service_role() OR (EXISTS ( SELECT 1
+   FROM tags t
+  WHERE ((t.id = tagged_items.tag_id) AND (t.owner_id = app_current_user_id())))))`  }),
 ]);
 
 export const financeTransactions2022 = pgTable("finance_transactions_2022", {

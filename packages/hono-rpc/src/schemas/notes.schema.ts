@@ -6,10 +6,6 @@ import {
   AllContentTypeSchema as NotesAllContentTypeSchema,
   ContentTagSchema as NotesContentTagSchema,
 } from '@hominem/notes-services';
-import {
-  TaskPrioritySchema as DbTaskPrioritySchema,
-  TaskStatusSchema as DbTaskStatusSchema,
-} from '@hominem/db/schema/tasks';
 import * as z from 'zod';
 
 export const NoteContentTypeSchema = NotesNoteContentTypeSchema.describe('NoteContentType');
@@ -18,8 +14,12 @@ export const AllContentTypeSchema = NotesAllContentTypeSchema.describe('AllConte
 export const ContentTagSchema = NotesContentTagSchema.extend({});
 const PublishingMetadataSchema = NotesPublishingMetadataSchema.extend({});
 export const NoteAnalysisSchema = NotesNoteAnalysisSchema.extend({});
-export const TaskStatusSchema = DbTaskStatusSchema.describe('TaskStatus');
-export const TaskPrioritySchema = DbTaskPrioritySchema.describe('TaskPriority');
+export const TaskStatusSchema = z
+  .enum(['todo', 'pending', 'in_progress', 'done', 'completed', 'cancelled'])
+  .describe('TaskStatus');
+export const TaskPrioritySchema = z
+  .enum(['low', 'medium', 'high', 'urgent'])
+  .describe('TaskPriority');
 
 type NoteContentType = z.infer<typeof NoteContentTypeSchema>;
 type NoteStatus = z.infer<typeof NoteStatusSchema>;

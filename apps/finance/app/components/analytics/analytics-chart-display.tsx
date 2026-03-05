@@ -28,7 +28,7 @@ interface AnalyticsChartDisplayProps {
   dateFrom?: Date | undefined;
   dateTo?: Date | undefined;
   selectedAccount?: string | undefined;
-  selectedCategory?: string | undefined;
+  selectedTag?: string | undefined;
   groupBy?: 'month' | 'week' | 'day' | undefined;
   compareToPrevious?: boolean | undefined;
 }
@@ -39,7 +39,7 @@ export function AnalyticsChartDisplay({
   dateFrom,
   dateTo,
   selectedAccount,
-  selectedCategory,
+  selectedTag,
   groupBy = 'month',
   compareToPrevious = false,
 }: AnalyticsChartDisplayProps) {
@@ -54,7 +54,7 @@ export function AnalyticsChartDisplay({
     dateFrom: adjustedDateFrom,
     dateTo: adjustedDateTo,
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    category: selectedCategory || undefined,
+    tag: selectedTag || undefined,
     includeStats: false,
     compareToPrevious,
     groupBy,

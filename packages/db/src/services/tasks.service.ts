@@ -18,6 +18,8 @@ import { NotFoundError, ForbiddenError } from './_shared/errors'
 import type { CursorPaginationParams } from './_shared/query'
 import { normalizePaginationParams, createCursor, decodeCursor } from './_shared/query'
 
+export type { TaskId }
+
 // Local types for this service
 type Task = typeof tasks.$inferSelect
 type TaskInsert = typeof tasks.$inferInsert

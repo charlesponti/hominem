@@ -66,7 +66,7 @@
 - [ ] 3.6 Possessions service:
   - include DB-backed container lifecycle + container deletion nullification behavior
 - [ ] 3.7 Finance services:
-  - categories/accounts/transactions full DB-backed RED-GREEN
+  - tags/accounts/transactions full DB-backed RED-GREEN
   - `(date,id)` partition-key point op behavior for transactions
 - [ ] 3.8 Validate transaction boundaries in all replace/multi-table writes
 - [ ] 3.9 Validate service error taxonomy behavior with real tests (`Validation/NotFound/Conflict/Forbidden/Internal`)
@@ -193,3 +193,274 @@
     - RPC generic CRUD dependencies were cut over to domain-specific service methods in habits/goals/health/places routes
     - `@hominem/events-services` package index no longer re-exports `events.service.ts` generic CRUD surface
     - residual internal `packages/events/src/events.service.ts` deleted; shared internals moved to non-exported `packages/events/src/event-core.service.ts`
+- [ ] 9.5 Lists module started (next strict order item):
+  - `LISTS-01` CRUD baseline rebuilt on `task_lists` ownership semantics (`createList/updateList/deleteList`)
+  - deterministic duplicate-name conflict behavior implemented per owner
+  - DB-backed integration suite added: `packages/lists/src/list-crud.integration.test.ts` (5 passing tests)
+  - `packages/hono-rpc/src/routes/lists.mutation.ts` update flow now returns modernized CRUD result directly (removed legacy `getListById` dependency in mutation path)
+  - `LISTS-02` query projections rebuilt on `task_lists/tasks` with stable ordering and strict owner-only visibility
+  - DB-backed query integration suite added: `packages/lists/src/lists.service.test.ts` (5 passing tests)
+  - `LISTS-03`/`LISTS-04`/`LISTS-05` services cut over to new-schema reality:
+    - removed legacy `@hominem/db/schema/*` and `@hominem/db/types/*` list-import dependencies from lists package
+    - persisted sharing model implemented on:
+      - `task_list_invites`
+      - `task_list_collaborators`
+    - invite lifecycle is now DB-backed (`create/query/accept/delete`) with deterministic guard behavior
+    - collaborator membership is now DB-backed (`owner + collaborator membership`, owner-scoped removal)
+    - shared visibility projections now return collaborator-accessible lists in query services
+  - DB-backed sharing integration suite added and green:
+    - `packages/lists/src/list-sharing.integration.test.ts` (3 passing tests)
+  - migration added and applied for test-db path:
+    - `packages/db/src/migrations/0004_modern_list_sharing.sql`
+  - `packages/hono-rpc/src/schemas/lists.schema.ts` replaced with local Zod schema contract (no legacy DB schema imports)
+  - package gates green for this phase:
+    - `bun run --filter @hominem/lists-services test`
+    - `bun run --filter @hominem/lists-services typecheck`
+    - `bun run --filter @hominem/hono-rpc typecheck`
+- [ ] 9.6 Places module started (next strict order item):
+  - `packages/places/src/places.service.ts` rebuilt on current schema (`places` table + metadata JSON)
+  - `packages/places/src/trips.service.ts` rebuilt on current schema (`travel_trips` table + trip data payload)
+  - DB-backed integration suite updated and green: `packages/places/src/places.service.test.ts` (5 passing tests)
+  - package gates green:
+    - `bun run --filter @hominem/places-services typecheck`
+    - `bun run --filter @hominem/places-services test`
+    - `bun run --filter @hominem/places-services lint`
+  - downstream RPC schema dependency cleanup completed for this phase:
+    - `packages/hono-rpc/src/schemas/items.schema.ts` rewritten to local Zod contract
+    - `packages/hono-rpc/src/schemas/tasks.schema.ts` rewritten to local Zod contract
+    - `packages/hono-rpc/src/schemas/notes.schema.ts` decoupled from DB task schema imports
+    - `packages/hono-rpc/src/types/goals.types.ts` decoupled from DB goals schema imports
+  - close-out verification for places phase completed:
+    - no legacy place/travel schema/type imports found outside `packages/db`
+    - no place-shim/adapter path kept for backward compatibility
+    - downstream gate green: `bun run --filter @hominem/hono-rpc typecheck`
+- [ ] 9.7 Finance module started (last strict order item):
+  - FIN-01 (accounts lifecycle) initial slice rebuilt on modern finance architecture:
+    - `packages/finance/src/modern-finance.ts` now provides DB-backed account CRUD
+      - `createAccount`
+      - `listAccounts`
+      - `getAccountById`
+      - `updateAccount` (owner-scoped via `userId`)
+      - `deleteAccount` (owner-scoped when `userId` provided)
+    - plaid account helpers now DB-backed:
+      - `upsertAccount` idempotent by `data.plaidAccountId` per owner
+      - `getUserAccounts`
+      - `getAccountByPlaidId`
+  - DB-backed RED→GREEN integration suite added and green:
+    - `packages/finance/src/modern-finance.accounts.integration.test.ts` (3 passing tests)
+  - package gate results for this slice:
+    - `bun run --filter @hominem/finance-services test`
+    - `bun run --filter @hominem/finance-services typecheck`
+    - `bun run --filter @hominem/workers typecheck`
+    - `bun run --filter @hominem/hono-rpc typecheck`
+  - finance test runner narrowed to modern-suite tests while legacy finance branches are being decomposed:
+    - `packages/finance/vitest.config.ts` include now targets `modern-finance*.test.ts`
+  - FIN-02 (transactions query/mutation) modernized and green:
+    - `queryTransactions` stable sorting contract locked on `(date desc, id desc)`
+    - owner-scoped mutation behavior locked on `createTransaction`/`updateTransaction`/`deleteTransaction`
+    - plaid transaction helpers now DB-backed (`insertTransaction`, `getTransactionByPlaidId`, `updatePlaidTransaction`, `deletePlaidTransaction`)
+    - integration suite green: `packages/finance/src/modern-finance.transactions.integration.test.ts` (3 passing tests)
+  - FIN-03 (budget categories/tracking baseline) modernized and green:
+    - category lifecycle and query functions now DB-backed on shared `tags` taxonomy
+    - tracking queries now DB-backed on `finance_transactions` (+ optional `budget_goals` when present)
+    - integration suite green: `packages/finance/src/modern-finance.budget.integration.test.ts` (3 passing tests)
+  - current finance modern test total: 11 passing integration tests across 4 active suites
+  - FIN-08 finance taxonomy schema rewrite is completed (tag-driven; `finance_categories` removed from active contracts)
+  - FIN-04 analytics consolidation completed in this phase:
+    - shared analytics dataset/query core added: `queryAnalyticsTransactionsByContract`
+    - shared derived calculators added:
+      - `getTagBreakdownByContract`
+      - `getTopMerchantsByContract`
+      - `getMonthlyStatsByContract`
+      - `getSpendingTimeSeriesByContract`
+    - route-local aggregation duplication removed from `packages/hono-rpc/src/routes/finance.analyze.ts`
+    - integration suite added and green:
+      - `packages/finance/src/modern-finance.analytics.integration.test.ts` (2 passing tests)
+  - FIN-05 partial implementation completed in this phase:
+    - plaid lookup/mutation functions in `modern-finance.ts` are DB-backed
+    - institution lifecycle functions are DB-backed
+    - integration suite added: `packages/finance/src/modern-finance.plaid.integration.test.ts`
+    - FIN-05 gate is now fully active (no table-gating skip):
+      - migration `0006_finance_runtime_tables.sql` provisions `financial_institutions`, `plaid_items`, and `budget_goals`
+      - follow-up migration `0007_budget_goals_nullable_category_id.sql` aligns budget-goal nullability contract
+      - plaid integration suite now runs as a hard gate (3 passing tests)
+  - updated finance modern test totals:
+    - 21 integration tests defined
+    - 21 passing
+    - 0 skipped
+  - FIN-06 completed:
+    - calculators/runway schemas centralized and reused across service + route layers
+    - runway transport routes implemented:
+      - `POST /finance/runway/calculate`
+      - `POST /finance/runway/budget-breakdown`
+      - `POST /finance/runway/savings-goal`
+      - `POST /finance/runway/loan-details`
+    - integration suite added and green:
+      - `packages/finance/src/modern-finance.calculators.integration.test.ts` (3 passing tests)
+  - FIN-07 completed:
+    - data-ops orchestration implemented in modern finance service:
+      - `exportFinanceData`
+      - `deleteAllFinanceDataWithSummary`
+    - transport routes implemented:
+      - `POST /finance/export/all`
+      - `POST /finance/data/delete-all` (`confirm: true` required)
+    - integration suites added and green:
+      - `packages/finance/src/modern-finance.data-ops.integration.test.ts` (2 passing tests)
+      - `services/api/src/routes/finance/finance.data.router.test.ts` (4 passing tests)
+  - FIN-05 transport hardening completed:
+    - replaced empty RPC stubs for accounts/institutions/plaid with modern service-backed routes:
+      - `packages/hono-rpc/src/routes/finance.accounts.ts`
+      - `packages/hono-rpc/src/routes/finance.institutions.ts`
+      - `packages/hono-rpc/src/routes/finance.plaid.ts`
+    - API integration suite added and green:
+      - `services/api/src/routes/finance/finance.accounts.router.test.ts` (4 passing tests)
+    - route contracts now validate auth and owner-scoped behavior for account mutation and plaid connection removal
+  - repo safety gate re-run after finance slice:
+    - `bun run check` passes (existing unrelated lint warnings only; no errors)
+
+## 10. Next Phase Plan (Finance Tags-Driven Rewrite, Locked)
+
+- [x] 10.1 Freeze finance tag-driven contract in `packages/finance/src/contracts.ts`
+  - no `finance_categories`-based classification DTOs
+  - transaction filters include tag criteria as first-class inputs
+- [x] 10.2 Update DB schema contract sources for finance taxonomy rewrite:
+  - `packages/db/src/schema/tags.ts`
+  - `packages/db/src/schema/finance.ts`
+  - ensure finance transaction tagging uses shared tagged-item model
+- [x] 10.3 Add migration for finance taxonomy rewrite:
+  - create/adjust indexes needed for tag-filtered transaction queries
+  - remove `finance_categories` dependency in finance path
+  - no compatibility category shim tables/views
+- [x] 10.4 Write RED integration tests (before implementation) for tag-driven finance behavior:
+  - transaction tag assignment/replacement idempotency and owner scope
+  - deterministic tag-filtered transaction query ordering/pagination
+  - tag-based analytics/budget aggregate determinism
+  - cross-tenant tag leakage rejection
+- [x] 10.5 GREEN implementation in strict file order:
+  1. `packages/db/src/services/tags.service.ts`
+  2. `packages/finance/src/modern-finance.ts`
+  3. `packages/hono-rpc/src/schemas/finance*.schema.ts`
+  4. `packages/hono-rpc/src/routes/finance.transactions.ts`
+  5. `packages/hono-rpc/src/routes/finance.tags.ts` (replace legacy `finance.categories.ts`)
+  6. `services/api/src/routes/finance/finance.tags.ts` (replace legacy `finance.categories.ts`)
+- [x] 10.6 Delete legacy category-specific finance surfaces in same phase
+  - no `finance_categories` compatibility wrappers/adapters
+  - no dual-path category + tag execution
+- [x] 10.7 Run gates for this phase:
+  - `bun run --filter @hominem/finance-services test`
+  - `bun run --filter @hominem/finance-services typecheck`
+  - `bun run --filter @hominem/hono-rpc typecheck`
+  - `bun run check`
+
+### 10.x Progress Snapshot (Started)
+
+- [x] 10.P1 Tag-driven contract foundation implemented:
+  - `packages/finance/src/contracts.ts` created and exported via `packages/finance/src/index.ts`
+- [x] 10.P2 Tag-driven service APIs implemented in `packages/finance/src/modern-finance.ts`:
+  - `queryTransactionsByContract`
+  - `replaceTransactionTags`
+  - `getTransactionTagIds`
+- [x] 10.P2b Category-surface service cutover to tags completed:
+  - `modern-finance.ts` no longer uses `finance_categories`
+  - budget/category query + mutation functions now operate on shared `tags`
+  - spending + tag breakdown now aggregate via `tags` + `tagged_items`
+- [x] 10.P2c Transport/schema partial cutover completed:
+  - `packages/hono-rpc/src/schemas/finance.transactions.schema.ts` now includes `tagIds`/`tagNames` filter contract and tag IDs for transaction insert payloads
+  - `services/api/src/routes/finance/finance.tags.ts` now resolves transaction taxonomy through `getTransactionTags`
+- [x] 10.P2d Legacy category transport surfaces removed (no-shim):
+  - deleted `packages/hono-rpc/src/routes/finance.categories.ts`; replaced with `packages/hono-rpc/src/routes/finance.tags.ts`
+  - deleted `services/api/src/routes/finance/finance.categories.ts`; replaced with `services/api/src/routes/finance/finance.tags.ts`
+  - finance app taxonomy hook now calls `client.api.finance.tags.list.$post`
+  - runtime grep gate: no remaining `finance_categories` references in `packages/finance`, `packages/hono-rpc`, `services/api`, `apps/finance`, or `packages/db/src/services`
+- [x] 10.P2e Finance transactions transport cutover started:
+  - `packages/hono-rpc/src/routes/finance.transactions.ts` now serves:
+    - `POST /finance/transactions/list`
+    - `POST /finance/transactions/create`
+    - `POST /finance/transactions/update`
+    - `POST /finance/transactions/delete`
+  - list endpoint is wired to `queryTransactionsByContract` with tag-driven filter support
+  - create/update support optional tag assignment via `replaceTransactionTags`
+- [x] 10.P2f Finance analytics transport cutover completed:
+  - `packages/hono-rpc/src/routes/finance.analyze.ts` now serves:
+    - `POST /finance/analyze/tag-breakdown`
+    - `POST /finance/analyze/top-merchants`
+    - `POST /finance/analyze/monthly-stats`
+    - `POST /finance/analyze/spending-time-series`
+  - handlers now delegate analytics logic to shared service-layer contracts:
+    - `getTagBreakdownByContract`
+    - `getTopMerchantsByContract`
+    - `getMonthlyStatsByContract`
+    - `getSpendingTimeSeriesByContract`
+  - route-local analytics aggregation duplication removed; filters still support tag-driven criteria (`tagIds`/`tagNames`)
+  - breakdown output contract is tag-first (`breakdown[].tag`)
+  - monthly stats output contract is tag-first (`topTag`, `tagSpending`)
+  - deleted residual legacy analytics implementation files in `packages/finance/src/analytics/*` and `packages/finance/src/finance.analytics.service.ts`
+  - finance analytics tags view fixed to canonical response shape (`breakdown[]` entries) and tag-first sorting/linking:
+    - `apps/finance/app/routes/analytics.tags.tsx`
+  - analytics naming sweep applied:
+    - `useCategoryBreakdown` -> `useTagBreakdown`
+    - `TopCategories` -> `TopTags`
+    - `CategoryBreakdown*` types -> `TagBreakdown*`
+    - endpoint path standardized: `/finance/analyze/category-breakdown` -> `/finance/analyze/tag-breakdown`
+    - modern finance service symbols standardized:
+      - `getCategoryBreakdownByContract` -> `getTagBreakdownByContract`
+      - `getCategoryBreakdown` -> `getTagBreakdown`
+      - `getTransactionCategoriesAnalysis` -> `getTransactionTagAnalysis`
+    - finance app analytics component path standardized:
+      - `apps/finance/app/components/analytics/top-categories.tsx` -> `apps/finance/app/components/analytics/top-tags.tsx`
+- [x] 10.P3 RED→GREEN integration tests added and passing:
+  - `packages/finance/src/modern-finance.tags.integration.test.ts` (2 tests)
+  - validates tag replacement idempotency, tag-filtered query behavior, and cross-tenant tag rejection
+- [x] 10.P3b Transport integration tests added and passing:
+  - `services/api/src/routes/finance/finance.transactions.router.test.ts` (6 tests)
+  - validates `create/list/update/delete` transport handlers, tag-driven list filtering, `/api/finance/tags`, and analyze endpoints (`tag-breakdown`, `top-merchants`, `spending-time-series`)
+- [x] 10.P4 Phase gates (current slice):
+  - `bun run --filter @hominem/finance-services test`
+  - `bun run --filter @hominem/finance-services typecheck`
+  - `bun run --filter @hominem/workers typecheck`
+  - `bun run --filter @hominem/hono-rpc typecheck`
+  - `bun run --filter @hominem/api typecheck`
+  - `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts`
+  - `bun run check`
+- [x] 10.P5 DB schema + migration cutover completed (finance tag-driven taxonomy):
+  - canonical migration schema no longer defines `finance_categories` (`packages/db/src/migrations/schema.ts`)
+  - relation graph no longer includes `financeCategories` (`packages/db/src/migrations/relations.ts`)
+  - generated finance schema slice now uses shared tag model (`tags`, `tagged_items`) and no `financeCategories` table
+  - residual finance legacy category branches removed to enforce no-shim cutover:
+    - deleted `packages/finance/src/core/budget-categories.service.ts`
+    - deleted `packages/finance/src/core/budget-tracking.service.ts`
+    - deleted `packages/finance/src/core/budget-analytics.service.ts`
+    - deleted `packages/finance/src/finance.tool-servers.ts`
+    - deleted legacy category unit suite `packages/finance/src/budget.test.ts`
+  - custom migration created via Drizzle: `packages/db/src/migrations/0005_finance_tags_taxonomy_rewrite.sql`
+    - drops `finance_categories`
+    - removes legacy `category_id` finance transaction indexes
+    - adds tag-driven transaction query indexes (`finance_transactions_*date_id`, `tagged_items` finance partial indexes)
+  - finance app analytics UI contract naming shifted to tag-first surface:
+    - `useFinanceCategories` -> `useFinanceTags` in `apps/finance/app/lib/hooks/use-analytics.ts`
+    - `CategorySelect` -> `TagSelect` in `apps/finance/app/components/category-select.tsx`
+    - analytics filter UI labels/chips now reference tags instead of categories
+    - analytics hooks now accept `tag` filter inputs and map to current transport payload fields:
+      - `apps/finance/app/lib/hooks/use-analytics.ts`
+      - `apps/finance/app/lib/hooks/use-finance-top-merchants.ts`
+      - `apps/finance/app/lib/hooks/use-time-series.ts`
+      - updated analytics consumers in chart/statistics/monthly/merchant components
+  - analyze transport input contract renamed from `category` -> `tag` (no compatibility mapping):
+    - `packages/hono-rpc/src/routes/finance.analyze.ts` validators now accept `tag`
+    - `packages/hono-rpc/src/types/finance/analytics.types.ts` analyze input types now use `tag`
+    - client hooks now send `tag` directly in request payloads (no `tag -> category` remap)
+    - API integration suite updated and green:
+      - `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts`
+  - analytics UX route naming shifted to tag-first:
+    - replaced `/analytics/category/:category` with `/analytics/tag/:tag`
+    - replaced `/analytics/categories` with `/analytics/tags`
+    - moved route file:
+      - `apps/finance/app/routes/analytics.category.$category.tsx` -> `apps/finance/app/routes/analytics.tag.$tag.tsx`
+      - `apps/finance/app/routes/analytics.categories.tsx` -> `apps/finance/app/routes/analytics.tags.tsx`
+    - updated analytics list-page deep links to `/analytics/tag/...`
+    - updated monthly analytics query links from `?category=...` to `?tag=...`
+    - active analytics UI state/prop names now use `selectedTag` / `setSelectedTag` across chart, summary, monthly, merchant, and filters components
+    - regenerated finance route types:
+      - `bun run --filter @hominem/finance typegen`
+  - test DB migration gate green:
+    - `bun run --filter @hominem/db db:migrate:test`

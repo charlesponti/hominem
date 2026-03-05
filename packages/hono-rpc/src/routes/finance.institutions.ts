@@ -1,48 +1,45 @@
-import { getAllInstitutions, createInstitution } from '@hominem/finance-services';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-import * as z from 'zod';
+import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
+import * as z from 'zod'
+import { createInstitution, getAllInstitutions } from '@hominem/finance-services'
+import { authMiddleware } from '../middleware/auth'
 
-import { authMiddleware, type AppContext } from '../middleware/auth';
-import { type InstitutionsListOutput, type InstitutionCreateOutput } from '../types/finance.types';
+import type { AppContext } from '../middleware/auth'
+import type {
+  InstitutionCreateOutput,
+  InstitutionsListOutput,
+} from '../types/finance/institutions.types'
 
-/**
- * Finance Institutions Routes
- */
+const emptyBodySchema = z.object({})
+
+const createInstitutionSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1),
+  logo: z.string().optional(),
+  url: z.string().optional(),
+  primaryColor: z.string().optional(),
+  country: z.string().optional(),
+})
+
 export const institutionsRoutes = new Hono<AppContext>()
-  .use('*', authMiddleware)
-
-  // POST /list - ListOutput institutions
-  .post('/list', async (c) => {
-    const result = await getAllInstitutions();
-    return c.json<InstitutionsListOutput>(result, 200);
+  .post('/list', authMiddleware, zValidator('json', emptyBodySchema), async (c) => {
+    const institutions = await getAllInstitutions()
+    return c.json<InstitutionsListOutput>(
+      institutions.map((item) => ({
+        id: item.id,
+        name: item.name,
+      })),
+      200,
+    )
   })
-
-  // POST /create - Create institution
-  .post(
-    '/create',
-    zValidator(
-      'json',
-      z.object({
-        id: z.string(),
-        name: z.string().min(1),
-        url: z.string().url().optional(),
-        logo: z.string().optional(),
-        primaryColor: z.string().optional(),
-        country: z.string().optional(),
-      }),
-    ),
-    async (c) => {
-      const input = c.req.valid('json');
-
-      const result = await createInstitution({
-        id: input.id,
-        name: input.name,
-        url: input.url ?? null,
-        logo: input.logo ?? null,
-        primaryColor: input.primaryColor ?? null,
-        country: input.country ?? null,
-      });
-      return c.json<InstitutionCreateOutput>(result, 201);
-    },
-  );
+  .post('/create', authMiddleware, zValidator('json', createInstitutionSchema), async (c) => {
+    const input = c.req.valid('json')
+    const created = await createInstitution(input.name)
+    return c.json<InstitutionCreateOutput>(
+      {
+        id: created.id,
+        name: created.name,
+      },
+      201,
+    )
+  })

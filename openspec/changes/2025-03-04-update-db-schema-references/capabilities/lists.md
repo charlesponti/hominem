@@ -41,6 +41,13 @@
 ### Legacy files/imports to delete
 - `@hominem/db/schema/tables` legacy list symbols.
 
+### Execution status
+- `LISTS-01` foundation implemented on `task_lists`-backed CRUD with owner-scoped create/update/delete behavior.
+- Deterministic duplicate-name handling implemented per owner in `createList`/`updateList`.
+- DB-backed integration suite added and green:
+  - `packages/lists/src/list-crud.integration.test.ts` (owner success, non-owner deny, duplicate conflict determinism).
+- `packages/hono-rpc/src/routes/lists.mutation.ts` update path now returns the modernized CRUD result directly (no legacy list query backfill call).
+
 ## LISTS-02 Query Projections And Counts
 ### Capability ID and entry points
 - ID: `LISTS-02`
@@ -75,6 +82,14 @@
 
 ### Legacy files/imports to delete
 - Ad hoc list projection helpers that bypass shared query contract.
+
+### Execution status
+- `LISTS-02` query service is now rebuilt on `task_lists` + `tasks` only:
+  - `getOwnedLists` and `getOwnedListsWithItemCount` use single-query projections with stable ordering (`created_at desc, id asc`).
+  - `getListById` now enforces strict owner visibility (anonymous/non-owner returns `null`).
+  - `getAllUserListsWithPlaces` projects owned lists only and returns shared as empty in the current schema.
+- DB-backed integration coverage added and green in `packages/lists/src/lists.service.test.ts`:
+  - owner-only visibility, deterministic counts, strict `getListById` guards, and containing-place projection behavior.
 
 ## LISTS-03 List Items And Place Membership
 ### Capability ID and entry points
@@ -111,6 +126,14 @@
 
 ### Legacy files/imports to delete
 - Route-level fallback mutations.
+
+### Execution status
+- `LISTS-03` service is migrated off legacy `items/lists/places` schema imports.
+- `list-items.service.ts` now uses `tasks` row ownership for list-item mutation semantics:
+  - owner-scoped `deleteListItem`
+  - owner-guarded `addItemToList`/`removeItemFromList`
+  - deterministic `getItemsByListId` ordering.
+- Place projection helpers are explicitly no-op in the current `task_lists` architecture (`[]`/`null`) until a dedicated place-membership table exists.
 
 ## LISTS-04 Invite Lifecycle
 ### Capability ID and entry points
@@ -149,6 +172,13 @@
 ### Legacy files/imports to delete
 - Old token helper signatures that accept string/object interchangeably.
 
+### Execution status
+- `LISTS-04` now runs on persisted `task_list_invites` storage (no placeholder behavior).
+- `sendListInvite` creates normalized-email pending invites with deterministic conflict checks.
+- `acceptListInvite` enforces strict token/list/user guards and performs accepted transition plus collaborator creation.
+- `getListInvites`, `getInvitesForUser`, `getOutboundInvites`, token lookup, and delete operations are DB-backed and deterministic.
+- DB-backed integration suite added and green in `packages/lists/src/list-sharing.integration.test.ts` (invite create/query/accept/remove lifecycle).
+
 ## LISTS-05 Collaborator Membership
 ### Capability ID and entry points
 - ID: `LISTS-05`
@@ -183,3 +213,13 @@
 
 ### Legacy files/imports to delete
 - Legacy query calls referencing old relational symbol names.
+
+### Execution status
+- `LISTS-05` now runs on persisted `task_list_collaborators` storage.
+- Membership contract:
+  - `isUserMemberOfList` checks owner or collaborator membership.
+  - `getUserListLinks` returns owner and collaborator links for each requested list.
+  - `removeUserFromList` enforces owner guard, rejects owner-removal, and performs real collaborator deletion.
+- Query projection behavior now includes shared visibility:
+  - `getUserLists`/`getUserListsWithItemCount` return owned + collaborator-accessible lists.
+  - `getAllUserListsWithPlaces` now splits owned vs shared projections deterministically.

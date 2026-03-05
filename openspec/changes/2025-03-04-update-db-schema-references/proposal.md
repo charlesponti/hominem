@@ -29,18 +29,33 @@ This is a complete rebuild of the application layer working outward from the dat
   - Rebuild UI data integration through RPC client only (`@hominem/hono-client`)
   - Remove any legacy direct database/service imports from apps
 
-## Verification Status (2026-03-04)
+5. **Next phase (finance schema improvement)** - In progress in this active change
+  - Replace finance category taxonomy with unified tags taxonomy
+  - Remove `finance_categories` as a finance classification dependency (schema + migration completed)
+  - Finance transaction categorization/filtering becomes tag-driven via the shared tags system
+  - Rewrite finance services and routes to use tags for classification and filters
+  - Delete finance category-specific legacy surfaces after tag-driven contract is green
+  - Added migration `packages/db/src/migrations/0005_finance_tags_taxonomy_rewrite.sql` and applied to test DB via `bun run --filter @hominem/db db:migrate:test`
+  - Added migration `packages/db/src/migrations/0006_finance_runtime_tables.sql` to provision `financial_institutions`, `plaid_items`, and `budget_goals`
+  - Added migration `packages/db/src/migrations/0007_budget_goals_nullable_category_id.sql` to align budget-goal contract semantics
+
+## Verification Status (2026-03-04, updated)
 
 Checklist completion and actual repo health are currently out of sync. Current truth snapshot:
 
 - `bun run --filter @hominem/db typecheck`: passing
 - `bun run validate-db-imports`: passing
-- `bun run --filter @hominem/hono-rpc typecheck`: failing across multiple legacy/compat modules (auth/chat/notes/calendar/lists/places/finance)
+- `bun run --filter @hominem/hono-rpc typecheck`: passing
+- `bun run --filter @hominem/finance-services test`: passing (21 passed, 0 skipped)
+- `bun run --filter @hominem/api test -- src/routes/finance/finance.data.router.test.ts`: passing (4 tests)
+- `bun run --filter @hominem/api test -- src/routes/finance/finance.accounts.router.test.ts`: passing (4 tests)
+- `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts`: passing (6 tests)
+- `bun run check`: passing (existing lint warnings only)
 
 Implication:
-- This change is not done yet.
-- Work priority is stabilization and correctness gates, not new feature expansion.
-- Close-out requires gate evidence (commands + outputs) in addition to checked checklist items.
+- This change is still in progress.
+- Finance FIN-08 schema/migration cutover is now implemented; remaining work is downstream finance contract completion and broader final gate closure.
+- Close-out still requires full gate evidence (commands + outputs) in addition to checked checklist items.
 
 Module progress snapshot (2026-03-04):
 - `auth`: contract mapping and account-scope fixes implemented; package tests and typecheck green
@@ -67,6 +82,30 @@ Module progress snapshot (2026-03-04):
   - `@hominem/events-services` public index no longer exports generic `events.service.ts` surface
   - residual internal `packages/events/src/events.service.ts` was deleted after decoupling; shared internals now live in `packages/events/src/event-core.service.ts` (non-exported)
   - calendar DB integration suite is green; next blockers are outside calendar (lists/places/finance modernization and cross-package type-resolution debt)
+- `finance`: module hardening continued and stubs removed from finance RPC surfaces
+  - canonical route surfaces now implemented:
+    - `packages/hono-rpc/src/routes/finance.accounts.ts`
+    - `packages/hono-rpc/src/routes/finance.institutions.ts`
+    - `packages/hono-rpc/src/routes/finance.plaid.ts`
+  - endpoints now run directly on modern finance services with owner-scoped guards (no shims)
+  - API integration coverage expanded:
+    - `services/api/src/routes/finance/finance.accounts.router.test.ts` (4 passing tests)
+    - `services/api/src/routes/finance/finance.data.router.test.ts` (4 passing tests)
+    - `services/api/src/routes/finance/finance.transactions.router.test.ts` (6 passing tests)
+  - analytics core consolidation completed on modern service architecture:
+    - shared dataset/query + derived analytics calculators now live in `packages/finance/src/modern-finance.ts`
+    - `packages/hono-rpc/src/routes/finance.analyze.ts` now delegates analytics computation to service-layer contracts (no route-local aggregation duplication)
+    - analyze endpoint path standardized to `POST /finance/analyze/tag-breakdown` (legacy category path removed)
+    - tag-breakdown response contract is now tag-first (`breakdown[].tag`)
+    - monthly-stats response contract is now tag-first (`topTag`, `tagSpending`)
+    - deleted legacy finance analytics branch files (`packages/finance/src/analytics/*`, `packages/finance/src/finance.analytics.service.ts`)
+    - `apps/finance/app/routes/analytics.tags.tsx` now uses the canonical tag-breakdown response shape directly (`breakdown[].tag/amount/transactionCount`)
+    - analytics naming cleanup now aligns symbols with tag-first contracts:
+      - `useTagBreakdown` hook in finance app
+      - `TopTags` analytics summary component export
+      - analytics component file moved to `apps/finance/app/components/analytics/top-tags.tsx`
+      - `TagBreakdown*` type names in RPC finance analytics types
+    - new DB-backed analytics suite is green: `packages/finance/src/modern-finance.analytics.integration.test.ts` (2 passing tests)
 
 ## Notes Baseline Pattern (Locked for Remaining Modules)
 
@@ -98,6 +137,11 @@ Required approach:
 - Update callers to the new interfaces rather than preserving legacy interfaces
 - Delete obsolete legacy code once replacements are green
 - Follow strict module and file replacement order defined in `design.md` ("Legacy Module Replacement Build Order (Strict)") and `tasks.md` Section 4
+
+Additional finance rule (locked):
+
+- No compatibility layer preserving `finance_categories` behavior is allowed.
+- Finance classification must cut over directly to tag-driven contracts on shared tagging infrastructure.
 
 ## Capability Artifacts (Authoritative, Linked)
 

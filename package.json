@@ -50,7 +50,6 @@
     "typecheck:workspace": "npx tsc -p tsconfig.json --noEmit",
     "update:turbo": "bunx @turbo/codemod@latest update",
     "validate-db-imports": "node scripts/validate-db-imports.js",
-    "generate:db-schema": "bun scripts/generate-db-schema-slices.ts",
     "verify:mobile:design": "bash scripts/verify-mobile-design.sh",
     "verify:mobile": "bunx tsc -p apps/mobile/tsconfig.json --noEmit && bun run verify:mobile:design && bun run --filter @hominem/hono-rpc typecheck",
     "build:types": "turbo run build --filter=@hominem/db --filter=@hominem/hono-rpc --filter=@hominem/services --filter=@hominem/auth"

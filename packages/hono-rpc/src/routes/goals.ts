@@ -40,7 +40,7 @@ function isUserGoal(event: Awaited<ReturnType<typeof getGoalById>>, userId: stri
  *
  * Consolidated goals management. All goals are stored as events with type='Goal'.
  */
-export const goalsRoutes = new Hono<AppContext>()
+export const goalsRoutes: Hono<AppContext> = new Hono<AppContext>()
   // List goals
   .get('/', authMiddleware, zValidator('query', GoalListQuerySchema), async (c) => {
     const userId = c.get('userId')!;

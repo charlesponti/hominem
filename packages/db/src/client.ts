@@ -3,7 +3,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 import { env } from './env';
-import * as schema from './migrations/schema';
+import * as schema from './all-schema';
 
 export type Database = PostgresJsDatabase<typeof schema>;
 

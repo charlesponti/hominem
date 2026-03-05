@@ -65,7 +65,7 @@ type HealthActivityStatsResponse = Awaited<ReturnType<typeof getHealthActivitySt
 /**
  * Health Activities Routes
  */
-export const healthRoutes = new Hono<AppContext>()
+export const healthRoutes: Hono<AppContext> = new Hono<AppContext>()
   // List health activities
   .get(
     '/',

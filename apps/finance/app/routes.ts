@@ -17,8 +17,8 @@ export default [
     // Analytics
     route('analytics', 'routes/analytics.tsx'),
     route('analytics/monthly/:month', 'routes/analytics.monthly.$month.tsx'),
-    route('analytics/category/:category', 'routes/analytics.category.$category.tsx'),
-    route('analytics/categories', 'routes/analytics.categories.tsx'),
+    route('analytics/tag/:tag', 'routes/analytics.tag.$tag.tsx'),
+    route('analytics/tags', 'routes/analytics.tags.tsx'),
 
     // Finance tools
     route('finance/runway', 'routes/finance.runway.tsx'),

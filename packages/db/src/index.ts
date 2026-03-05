@@ -1,6 +1,6 @@
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 
-import type * as schema from './migrations/schema'
+import type * as schema from './all-schema'
 
 import { getDb } from './client'
 

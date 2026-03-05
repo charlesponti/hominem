@@ -12,8 +12,10 @@ import { eq, and } from 'drizzle-orm'
 import type { Database } from './client'
 import { db as defaultDb } from '../index'
 import { persons, userPersonRelations } from '../schema/persons'
-import type { UserId } from './_shared/ids'
+import type { PersonId, UserId } from './_shared/ids'
 import { ForbiddenError } from './_shared/errors'
+
+export type { PersonId }
 
 // Local types for this service
 type Person = typeof persons.$inferSelect

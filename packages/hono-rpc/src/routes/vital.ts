@@ -12,7 +12,7 @@ import { calendarRoutes } from './calendar';
  *
  * Biological and behavioral self-management: health, habits, goals, and calendar.
  */
-export const vitalRoutes = new Hono<AppContext>()
+export const vitalRoutes: Hono<AppContext> = new Hono<AppContext>()
   .route('/health', healthRoutes)
   .route('/habits', habitsRoutes)
   .route('/goals', goalsRoutes)

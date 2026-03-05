@@ -1,6 +1,14 @@
-import { and, eq } from '@hominem/db'
-import { account } from '@hominem/db/schema/users'
 import { randomUUID } from 'node:crypto'
+
+import { db, sql } from '@hominem/db'
+
+interface AccountRow {
+  id: string
+  user_id: string
+  account_id: string
+  provider: string
+  created_at: string | null
+}
 
 interface AccountRecord {
   id: string
@@ -32,132 +40,111 @@ interface AccountInsert {
   sessionState?: string | null
 }
 
-function toCompatRecord(
-  row: typeof account.$inferSelect,
-): AccountRecord {
+function resultRows<T>(result: unknown): T[] {
+  if (Array.isArray(result)) {
+    return result as T[]
+  }
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows?: unknown }).rows
+    if (Array.isArray(rows)) {
+      return rows as T[]
+    }
+  }
+  return []
+}
+
+function toCompatRecord(row: AccountRow): AccountRecord {
   return {
     id: row.id,
-    userId: row.userId,
-    type: row.type,
+    userId: row.user_id,
+    type: 'oauth',
     provider: row.provider,
-    providerAccountId: row.providerAccountId,
-    refreshToken: row.refreshToken,
-    accessToken: row.accessToken,
-    expiresAt: row.expiresAt ? row.expiresAt.toISOString() : null,
-    tokenType: row.tokenType,
-    scope: row.scope,
-    idToken: row.idToken,
-    sessionState: row.sessionState,
+    providerAccountId: row.account_id,
+    refreshToken: null,
+    accessToken: null,
+    expiresAt: null,
+    tokenType: null,
+    scope: null,
+    idToken: null,
+    sessionState: null,
   }
 }
 
 export async function listAccountsByProvider(userId: string, provider: string): Promise<AccountRecord[]> {
-  const { db } = await import('@hominem/db')
-  const records = await db
-    .select()
-    .from(account)
-    .where(
-      and(
-        eq(account.userId, userId),
-        eq(account.provider, provider),
-      ),
-    )
+  const result = await db.execute(sql`
+    select id, user_id, account_id, provider, created_at
+    from user_accounts
+    where user_id = ${userId}
+      and provider = ${provider}
+    order by created_at desc nulls last, id asc
+  `)
 
-  return records.map((row) => toCompatRecord(row))
+  return resultRows<AccountRow>(result).map(toCompatRecord)
 }
 
 export async function getAccountByUserAndProvider(
   userId: string,
   provider: string,
 ): Promise<AccountRecord | null> {
-  const { db } = await import('@hominem/db')
-  const [result] = await db
-    .select()
-    .from(account)
-    .where(
-      and(
-        eq(account.userId, userId),
-        eq(account.provider, provider),
-      ),
-    )
-    .limit(1)
+  const result = await db.execute(sql`
+    select id, user_id, account_id, provider, created_at
+    from user_accounts
+    where user_id = ${userId}
+      and provider = ${provider}
+    order by created_at desc nulls last, id asc
+    limit 1
+  `)
 
-  return result ? toCompatRecord(result) : null
+  const row = resultRows<AccountRow>(result)[0] ?? null
+  return row ? toCompatRecord(row) : null
 }
 
 export async function getAccountByProviderAccountId(
   providerAccountId: string,
   provider: string,
 ): Promise<AccountRecord | null> {
-  const { db } = await import('@hominem/db')
-  const [result] = await db
-    .select()
-    .from(account)
-    .where(
-      and(
-        eq(account.provider, provider),
-        eq(account.providerAccountId, providerAccountId),
-      ),
-    )
-    .limit(1)
+  const result = await db.execute(sql`
+    select id, user_id, account_id, provider, created_at
+    from user_accounts
+    where account_id = ${providerAccountId}
+      and provider = ${provider}
+    order by created_at desc nulls last, id asc
+    limit 1
+  `)
 
-  if (!result) {
-    return null
-  }
-
-  return toCompatRecord(result)
+  const row = resultRows<AccountRow>(result)[0] ?? null
+  return row ? toCompatRecord(row) : null
 }
 
 export async function createAccount(data: AccountInsert): Promise<AccountRecord | null> {
-  const { db } = await import('@hominem/db')
-  const [created] = await db
-    .insert(account)
-    .values({
-      id: data.id ?? randomUUID(),
-      userId: data.userId,
-      providerAccountId: data.providerAccountId,
-      provider: data.provider,
-      type: data.type ?? 'oauth',
-      accessToken: data.accessToken ?? null,
-      refreshToken: data.refreshToken ?? null,
-      idToken: data.idToken ?? null,
-      expiresAt: data.expiresAt ?? null,
-      tokenType: data.tokenType ?? null,
-      scope: data.scope ?? null,
-      sessionState: data.sessionState ?? null,
-    })
-    .returning()
+  const accountId = data.id ?? randomUUID()
 
-  return created ? toCompatRecord(created) : null
+  const result = await db.execute(sql`
+    insert into user_accounts (id, user_id, account_id, provider)
+    values (${accountId}, ${data.userId}, ${data.providerAccountId}, ${data.provider})
+    on conflict (account_id, provider, user_id) do nothing
+    returning id, user_id, account_id, provider, created_at
+  `)
+
+  const row = resultRows<AccountRow>(result)[0] ?? null
+  return row ? toCompatRecord(row) : null
 }
 
 export async function updateAccount(
   id: string,
   updates: Partial<AccountInsert>,
 ): Promise<AccountRecord | null> {
-  const { db } = await import('@hominem/db')
-  const [updated] = await db
-    .update(account)
-    .set({
-      ...(updates.provider ? { provider: updates.provider } : {}),
-      ...(updates.providerAccountId ? { providerAccountId: updates.providerAccountId } : {}),
-      ...(updates.type ? { type: updates.type } : {}),
-      ...(updates.accessToken !== undefined ? { accessToken: updates.accessToken } : {}),
-      ...(updates.refreshToken !== undefined ? { refreshToken: updates.refreshToken } : {}),
-      ...(updates.idToken !== undefined ? { idToken: updates.idToken } : {}),
-      ...(updates.tokenType !== undefined ? { tokenType: updates.tokenType } : {}),
-      ...(updates.sessionState !== undefined ? { sessionState: updates.sessionState } : {}),
-      ...(updates.scope !== undefined ? { scope: updates.scope } : {}),
-      ...(updates.expiresAt !== undefined ? { expiresAt: updates.expiresAt } : {}),
-    })
-    .where(eq(account.id, id))
-    .returning()
+  const result = await db.execute(sql`
+    update user_accounts
+    set
+      account_id = coalesce(${updates.providerAccountId ?? null}, account_id),
+      provider = coalesce(${updates.provider ?? null}, provider)
+    where id = ${id}
+    returning id, user_id, account_id, provider, created_at
+  `)
 
-  if (!updated) {
-    return null
-  }
-
-  return toCompatRecord(updated)
+  const row = resultRows<AccountRow>(result)[0] ?? null
+  return row ? toCompatRecord(row) : null
 }
 
 export async function deleteAccountForUser(
@@ -165,19 +152,15 @@ export async function deleteAccountForUser(
   userId: string,
   provider: string,
 ): Promise<boolean> {
-  const { db } = await import('@hominem/db')
-  const result = await db
-    .delete(account)
-    .where(
-      and(
-        eq(account.id, id),
-        eq(account.userId, userId),
-        eq(account.provider, provider),
-      ),
-    )
-    .returning({ id: account.id })
+  const result = await db.execute(sql`
+    delete from user_accounts
+    where id = ${id}
+      and user_id = ${userId}
+      and provider = ${provider}
+    returning id
+  `)
 
-  return result.length > 0
+  return resultRows<{ id: string }>(result).length > 0
 }
 
 export type { AccountRecord, AccountInsert }

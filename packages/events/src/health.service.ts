@@ -1,27 +1,18 @@
-import { and, desc, eq, gte, isNotNull, isNull, lte } from '@hominem/db';
-import { db } from '@hominem/db';
-import { events } from '@hominem/db/schema/calendar';
-import type {
-  EventInput as DbEventInput,
-  EventTypeEnum,
-} from '@hominem/db/types/calendar';
-
 import {
   createEvent,
   deleteEvent,
   getEventById,
-  getPeopleForEvents,
-  getTagsForEvents,
+  getEvents,
   type EventWithTagsAndPeople,
   updateEvent,
-} from './event-core.service';
+} from './event-core.service'
 
 export interface HealthActivityStats {
-  totalActivities: number;
-  totalDuration: number;
-  totalCaloriesBurned: number;
-  averageCaloriesPerSession: number;
-  lastActivityDate: Date | null;
+  totalActivities: number
+  totalDuration: number
+  totalCaloriesBurned: number
+  averageCaloriesPerSession: number
+  lastActivityDate: Date | null
 }
 
 export async function getHealthActivityStats(
@@ -30,40 +21,32 @@ export async function getHealthActivityStats(
   startDate?: Date,
   endDate?: Date,
 ): Promise<HealthActivityStats> {
-  const conditions = [
-    eq(events.userId, userId),
-    eq(events.type, 'Health'),
-    isNull(events.deletedAt),
-    isNotNull(events.activityType),
-  ];
+  let activities = (await getEvents()).filter(
+    (event) => event.userId === userId && event.type === 'Health' && event.activityType !== null,
+  )
 
   if (activityType) {
-    conditions.push(eq(events.activityType, activityType));
+    activities = activities.filter((event) => event.activityType === activityType)
   }
 
   if (startDate) {
-    conditions.push(gte(events.date, startDate));
+    activities = activities.filter((event) => event.date !== null && event.date >= startDate)
   }
 
   if (endDate) {
-    conditions.push(lte(events.date, endDate));
+    activities = activities.filter((event) => event.date !== null && event.date <= endDate)
   }
 
-  const activities = await db
-    .select({
-      duration: events.duration,
-      caloriesBurned: events.caloriesBurned,
-      date: events.date,
-    })
-    .from(events)
-    .where(and(...conditions))
-    .orderBy(desc(events.date));
+  activities.sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0))
 
-  const totalActivities = activities.length;
-  const totalDuration = activities.reduce((sum, a) => sum + (a.duration || 0), 0);
-  const totalCaloriesBurned = activities.reduce((sum, a) => sum + (a.caloriesBurned || 0), 0);
-  const averageCaloriesPerSession = totalActivities > 0 ? totalCaloriesBurned / totalActivities : 0;
-  const lastActivityDate = activities[0]?.date || null;
+  const totalActivities = activities.length
+  const totalDuration = activities.reduce((sum, activity) => sum + (activity.duration ?? 0), 0)
+  const totalCaloriesBurned = activities.reduce(
+    (sum, activity) => sum + (activity.caloriesBurned ?? 0),
+    0,
+  )
+  const averageCaloriesPerSession = totalActivities > 0 ? totalCaloriesBurned / totalActivities : 0
+  const lastActivityDate = activities[0]?.date ?? null
 
   return {
     totalActivities,
@@ -71,135 +54,116 @@ export async function getHealthActivityStats(
     totalCaloriesBurned,
     averageCaloriesPerSession,
     lastActivityDate,
-  };
+  }
 }
 
 export async function logHealthActivity(
   userId: string,
   activity: {
-    title: string;
-    description?: string;
-    activityType: string;
-    duration: number;
-    caloriesBurned: number;
-    date?: Date;
-    tags?: string[];
+    title: string
+    description?: string
+    activityType: string
+    duration: number
+    caloriesBurned: number
+    date?: Date
+    tags?: string[]
   },
 ): Promise<EventWithTagsAndPeople> {
-  const healthEventInput = {
+  return createEvent({
     title: activity.title,
-    description: activity.description || null,
-    date: activity.date || new Date(),
-    type: 'Health' as EventTypeEnum,
+    description: activity.description ?? null,
+    date: activity.date ?? new Date(),
+    type: 'Health',
     userId,
     activityType: activity.activityType,
     duration: activity.duration,
     caloriesBurned: activity.caloriesBurned,
-    ...(activity.tags && { tags: activity.tags }),
-  };
-
-  return createEvent(
-    healthEventInput as Omit<DbEventInput, 'id'> & {
-      tags?: string[];
-      people?: string[];
-    },
-  );
+    ...(activity.tags !== undefined ? { tags: activity.tags } : {}),
+  })
 }
 
 export async function updateHealthActivity(
   activityId: string,
   userId: string,
   updates: {
-    duration?: number;
-    caloriesBurned?: number;
-    activityType?: string;
-    description?: string;
+    duration?: number
+    caloriesBurned?: number
+    activityType?: string
+    description?: string
   },
 ): Promise<EventWithTagsAndPeople | null> {
-  const activity = await getEventById(activityId);
+  const activity = await getEventById(activityId)
 
-  if (!activity || (activity as { userId?: string }).userId !== userId) {
-    return null;
+  if (!activity || activity.userId !== userId || activity.type !== 'Health') {
+    return null
   }
 
   return updateEvent(activityId, {
-    ...(updates.duration !== undefined && { duration: updates.duration }),
-    ...(updates.caloriesBurned !== undefined && { caloriesBurned: updates.caloriesBurned }),
-    ...(updates.activityType !== undefined && { activityType: updates.activityType }),
-    ...(updates.description !== undefined && { description: updates.description }),
-  });
+    ...(updates.duration !== undefined ? { duration: updates.duration } : {}),
+    ...(updates.caloriesBurned !== undefined ? { caloriesBurned: updates.caloriesBurned } : {}),
+    ...(updates.activityType !== undefined ? { activityType: updates.activityType } : {}),
+    ...(updates.description !== undefined ? { description: updates.description } : {}),
+  })
 }
 
 export async function getHealthActivitiesByUser(
   userId: string,
   filters?: {
-    activityType?: string;
-    startDate?: Date;
-    endDate?: Date;
-    sortBy?: 'date' | 'calories' | 'duration';
+    activityType?: string
+    startDate?: Date
+    endDate?: Date
+    sortBy?: 'date' | 'calories' | 'duration'
   },
 ): Promise<EventWithTagsAndPeople[]> {
-  const conditions = [
-    eq(events.userId, userId),
-    eq(events.type, 'Health'),
-    isNull(events.deletedAt),
-    isNotNull(events.activityType),
-  ];
+  let activities = (await getEvents()).filter(
+    (event) => event.userId === userId && event.type === 'Health' && event.activityType !== null,
+  )
 
   if (filters?.activityType) {
-    conditions.push(eq(events.activityType, filters.activityType));
+    activities = activities.filter((event) => event.activityType === filters.activityType)
   }
 
   if (filters?.startDate) {
-    conditions.push(gte(events.date, filters.startDate));
+    const startDate = filters.startDate
+    activities = activities.filter((event) => event.date !== null && event.date >= startDate)
   }
 
   if (filters?.endDate) {
-    conditions.push(lte(events.date, filters.endDate));
+    const endDate = filters.endDate
+    activities = activities.filter((event) => event.date !== null && event.date <= endDate)
   }
 
-  const orderByClause =
-    filters?.sortBy === 'calories'
-      ? desc(events.caloriesBurned)
-      : filters?.sortBy === 'duration'
-        ? desc(events.duration)
-        : desc(events.date);
+  switch (filters?.sortBy) {
+    case 'calories':
+      activities.sort((a, b) => (b.caloriesBurned ?? 0) - (a.caloriesBurned ?? 0))
+      break
+    case 'duration':
+      activities.sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0))
+      break
+    case 'date':
+    default:
+      activities.sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0))
+      break
+  }
 
-  const activitiesList = await db
-    .select()
-    .from(events)
-    .where(and(...conditions))
-    .orderBy(orderByClause);
-
-  const eventIds = activitiesList.map((event) => event.id);
-  const [peopleMap, tagsMap] = await Promise.all([
-    getPeopleForEvents(eventIds),
-    getTagsForEvents(eventIds),
-  ]);
-
-  return activitiesList.map((activityItem) => ({
-    ...activityItem,
-    tags: tagsMap.get(activityItem.id) || [],
-    people: peopleMap.get(activityItem.id) || [],
-  })) as unknown as EventWithTagsAndPeople[];
+  return activities
 }
 
 export async function getHealthActivityById(
   activityId: string,
   userId: string,
 ): Promise<EventWithTagsAndPeople | null> {
-  const activity = await getEventById(activityId);
-  const candidate = activity as (EventWithTagsAndPeople & { userId?: string; type?: string }) | null;
-  if (!candidate || candidate.userId !== userId || candidate.type !== 'Health') {
-    return null;
+  const activity = await getEventById(activityId)
+  if (!activity || activity.userId !== userId || activity.type !== 'Health') {
+    return null
   }
-  return candidate;
+  return activity
 }
 
 export async function deleteHealthActivity(activityId: string, userId: string): Promise<boolean> {
-  const activity = await getHealthActivityById(activityId, userId);
+  const activity = await getHealthActivityById(activityId, userId)
   if (!activity) {
-    return false;
+    return false
   }
-  return deleteEvent(activityId);
+  return deleteEvent(activityId)
 }

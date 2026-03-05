@@ -125,7 +125,7 @@ This runs automatically during `bun run check`.
 
 - Runtime: Bun (>=1.1.0), Node.js (>=20)
 - Web: React 19, React Router 7, Tailwind CSS
-- Server: Hono, tRPC, Supabase Auth
+- Server: Hono, tRPC, Better Auth
 - Database: Drizzle ORM, PostgreSQL
 - Validation: Zod
 - Tools: oxlint, oxfmt

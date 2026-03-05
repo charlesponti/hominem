@@ -13,6 +13,7 @@ The following items are fixed for this change and should not vary during impleme
 - API boundary validation (Zod in API layer before calling DB services)
 - Testing philosophy and gate order (integration-first slice tests, then selective pure unit tests)
 - Domain contract ownership (`packages/<module>/src/contracts.ts`) and strict no-import rule for `@hominem/db/schema/<module>` and `@hominem/db/types/<module>` outside `packages/db`
+- Finance taxonomy rule: no `finance_categories` dependency; finance classification/filtering is tag-driven on shared tags infrastructure
 
 ## Execution Order Lock (Authoritative)
 
@@ -198,7 +199,7 @@ Required invariant checks per module:
 16. `packages/finance/src/finance.schemas.ts`
 17. `packages/finance/src/finance.types.ts`
 18. `packages/finance/src/index.ts`
-19. `packages/hono-rpc/src/routes/finance.categories.ts`
+19. `packages/hono-rpc/src/routes/finance.tags.ts`
 20. `packages/hono-rpc/src/routes/finance.accounts.ts`
 21. `packages/hono-rpc/src/routes/finance.transactions.ts`
 22. `packages/hono-rpc/src/routes/finance.budget.ts`
@@ -209,7 +210,7 @@ Required invariant checks per module:
 27. `packages/hono-rpc/src/routes/finance.analyze.ts`
 28. `packages/hono-rpc/src/routes/finance.export.ts`
 29. `packages/hono-rpc/src/routes/finance.ts`
-30. `services/api/src/routes/finance/finance.categories.ts`
+30. `services/api/src/routes/finance/finance.tags.ts`
 31. `services/api/src/routes/finance/finance.import.ts`
 32. `services/api/src/routes/finance/index.ts`
 33. `services/api/src/routes/finance/plaid/finance.plaid.create-link-token.ts`
@@ -218,6 +219,39 @@ Required invariant checks per module:
 36. `services/api/src/routes/finance/plaid/finance.plaid.disconnect.ts`
 37. `services/api/src/routes/finance/plaid/finance.plaid.webhook.ts`
 38. `services/api/src/routes/finance/plaid/index.ts`
+
+### Finance Next Phase Lock: Tags-Driven Taxonomy Rewrite (No `finance_categories`)
+
+This is the next execution phase for finance inside this same active change.
+
+Hard rules:
+
+- `finance_categories` is not a long-term contract surface for finance classification.
+- Finance classification/filtering must use shared tags only.
+- No shim that preserves category-shaped APIs internally is allowed.
+
+#### Finance schema and service rewrite order (strict)
+
+1. `packages/finance/src/contracts.ts` (create/extend canonical tag-driven finance contracts)
+2. `packages/db/src/schema/tags.ts` (ensure finance transaction tagging contract support is explicit)
+3. `packages/db/src/schema/finance.ts` (remove `finance_categories` dependency from finance service-facing contract)
+4. `packages/db/src/migrations/<next_finance_tags_phase>.sql` (DDL for tag-driven finance contract, index strategy, category-surface removal)
+5. `packages/db/src/services/tags.service.ts` (lock idempotent replace/get APIs used by finance transaction tagging)
+6. `packages/finance/src/modern-finance.ts` (rewrite category/taxonomy queries and mutations to tags-based behavior)
+7. `packages/finance/src/modern-finance.*.integration.test.ts` (RED first for new tag-driven behavior, then GREEN)
+8. `packages/hono-rpc/src/schemas/finance*.schema.ts` (remove category DTOs, add tag-driven DTOs)
+9. `packages/hono-rpc/src/routes/finance.tags.ts` (replace legacy category route surface with tag surface)
+10. `packages/hono-rpc/src/routes/finance.transactions.ts` (tag-based filter/query behavior)
+11. `services/api/src/routes/finance/finance.tags.ts` (replace legacy category route surface; no category shim route)
+12. Delete legacy finance category-specific files/imports in same phase
+
+#### Finance tag-driven capability contract (locked)
+
+- Finance transaction classification: tags attached through shared tagged-item model
+- Finance filters: `tagIds`/`tagNames` + deterministic pagination/sort
+- Finance analytics: aggregate by tag (and optional tag groups), not by finance category table
+- Finance budgeting: budget targets reference tags (or explicit rule sets), not finance category rows
+- Cross-module consistency: same tag semantics used by notes/tasks/finance for filtering and organization
 
 ## Target Directory Layout
 
@@ -239,7 +273,6 @@ packages/db/src/
 │   ├── bookmarks.service.ts
 │   ├── possessions.service.ts
 │   └── finance/
-│       ├── categories.service.ts
 │       ├── accounts.service.ts
 │       └── transactions.service.ts
 ├── client.ts

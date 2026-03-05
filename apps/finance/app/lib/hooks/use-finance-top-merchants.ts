@@ -6,7 +6,7 @@ type UseFinanceTopMerchantsParams = {
   from?: string | undefined;
   to?: string | undefined;
   account?: string | undefined;
-  category?: string | undefined;
+  tag?: string | undefined;
   limit?: number | undefined;
 };
 
@@ -14,18 +14,18 @@ export function useFinanceTopMerchants({
   from,
   to,
   account,
-  category,
+  tag,
   limit,
 }: UseFinanceTopMerchantsParams) {
   return useHonoQuery<TopMerchantsOutput>(
-    ['finance', 'analyze', 'top-merchants', { from, to, account, category, limit }],
+    ['finance', 'analyze', 'top-merchants', { from, to, account, tag, limit }],
     async (client) => {
       const res = await client.api.finance.analyze['top-merchants'].$post({
         json: {
           from,
           to,
           account,
-          category,
+          tag,
           limit,
         },
       });

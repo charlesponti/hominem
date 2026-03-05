@@ -16,6 +16,8 @@ import type { TagId, UserId } from './_shared/ids'
 import { brandId } from './_shared/ids'
 import { NotFoundError, ForbiddenError } from './_shared/errors'
 
+export type { TagId }
+
 // Local types for this service
 type Tag = typeof tags.$inferSelect
 type TagInsert = typeof tags.$inferInsert

@@ -8,54 +8,54 @@ import {
 } from '@hominem/ui/components/ui/select';
 import { useId } from 'react';
 
-interface Category {
+interface TagOption {
   id: string;
   name: string;
 }
 
-interface CategorySelectProps {
-  selectedCategory: string;
-  onCategoryChange: (value: string) => void;
-  categories: Category[];
+interface TagSelectProps {
+  selectedTag: string;
+  onTagChange: (value: string) => void;
+  tags: TagOption[];
   isLoading?: boolean;
   placeholder?: string;
   label?: string;
   className?: string;
 }
 
-export function CategorySelect({
-  selectedCategory,
-  onCategoryChange,
-  categories,
+export function TagSelect({
+  selectedTag,
+  onTagChange,
+  tags,
   isLoading = false,
-  placeholder = 'All categories',
-  label = 'Category',
+  placeholder = 'All tags',
+  label = 'Tag',
   className,
-}: CategorySelectProps) {
+}: TagSelectProps) {
   const id = useId();
-  const safeCategories = categories || [];
+  const safeTags = tags || [];
 
   return (
     <div className={`space-y-2 ${className || ''}`}>
       <Label htmlFor={id}>{label}</Label>
-      <Select name="category" value={selectedCategory} onValueChange={onCategoryChange}>
+      <Select name="tag" value={selectedTag} onValueChange={onTagChange}>
         <SelectTrigger id={id}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All categories</SelectItem>
+          <SelectItem value="all">All tags</SelectItem>
           {isLoading ? (
             <SelectItem value="loading" disabled>
-              Loading categories...
+              Loading tags...
             </SelectItem>
-          ) : safeCategories.length === 0 ? (
-            <SelectItem value="no-categories" disabled>
-              No categories available
+          ) : safeTags.length === 0 ? (
+            <SelectItem value="no-tags" disabled>
+              No tags available
             </SelectItem>
           ) : (
-            safeCategories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
+            safeTags.map((tag) => (
+              <SelectItem key={tag.id} value={tag.id}>
+                {tag.name}
               </SelectItem>
             ))
           )}
