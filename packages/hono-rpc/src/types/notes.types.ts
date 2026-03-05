@@ -43,11 +43,6 @@ import type { AllContentType, ContentTag, TaskPriority, TaskStatus, NoteAnalysis
 // Type alias for JSON values
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
-// Backward compatibility alias
-export type NoteOutput = Note;
-
-export type { TaskPriority as Priority };
-
 // Task metadata helper type
 export type TaskMetadata = {
   status?: TaskStatus;

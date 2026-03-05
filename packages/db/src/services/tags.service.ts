@@ -14,7 +14,7 @@ import { db as defaultDb } from '../index'
 import { tags, taggedItems } from '../schema/tags'
 import type { TagId, UserId } from './_shared/ids'
 import { brandId } from './_shared/ids'
-import { NotFoundError, ForbiddenError } from './_shared/errors'
+import { ConflictError, InternalError, NotFoundError, ValidationError, ForbiddenError } from './_shared/errors'
 
 export type { TagId }
 
@@ -25,6 +25,19 @@ type TagUpdate = Partial<Omit<TagInsert, 'id' | 'ownerId' | 'createdAt'>>
 
 type TaggedItem = typeof taggedItems.$inferSelect
 
+function extractDbErrorCode(error: unknown): string | null {
+  if (!error || typeof error !== 'object') {
+    return null
+  }
+  if ('code' in error && typeof error.code === 'string') {
+    return error.code
+  }
+  if ('cause' in error && error.cause && typeof error.cause === 'object' && 'code' in error.cause && typeof error.cause.code === 'string') {
+    return error.cause.code
+  }
+  return null
+}
+
 /**
  * Internal helper: verify user ownership
  * @throws ForbiddenError if tag doesn't belong to user
@@ -32,11 +45,14 @@ type TaggedItem = typeof taggedItems.$inferSelect
 async function getTagWithOwnershipCheck(db: Database | undefined, tagId: TagId, userId: UserId): Promise<Tag> {
   const database = db || (defaultDb as any as Database)
   const tag = await database.query.tags.findFirst({
-    where: and(eq(tags.id, String(tagId)), eq(tags.ownerId, String(userId))),
+    where: eq(tags.id, String(tagId)),
   })
 
   if (!tag) {
-    throw new ForbiddenError(`Tag not found or access denied`, 'ownership')
+    throw new NotFoundError('Tag not found', 'tag', tagId)
+  }
+  if (tag.ownerId !== String(userId)) {
+    throw new ForbiddenError('Tag not found or access denied', 'ownership')
   }
 
   return tag
@@ -97,22 +113,37 @@ export async function createTag(
   input: { name: string; color?: string | null; description?: string | null; emojiImageUrl?: string | null },
   db?: Database
 ): Promise<Tag> {
-  const database = db || (defaultDb as any as Database)
-  const result = await database.insert(tags)
-    .values({
-      ownerId: String(userId),
-      name: input.name,
-      color: input.color ?? null,
-      description: input.description ?? null,
-      emojiImageUrl: input.emojiImageUrl ?? null,
-    })
-    .returning()
-
-  if (!result[0]) {
-    throw new Error('Failed to create tag')
+  if (!input.name.trim()) {
+    throw new ValidationError('Tag name is required')
   }
 
-  return result[0]
+  const database = db || (defaultDb as any as Database)
+  try {
+    const result = await database.insert(tags)
+      .values({
+        ownerId: String(userId),
+        name: input.name,
+        color: input.color ?? null,
+        description: input.description ?? null,
+        emojiImageUrl: input.emojiImageUrl ?? null,
+      })
+      .returning()
+
+    if (!result[0]) {
+      throw new InternalError('Failed to create tag')
+    }
+
+    return result[0]
+  } catch (error) {
+    if (error instanceof ValidationError || error instanceof NotFoundError || error instanceof ForbiddenError || error instanceof ConflictError || error instanceof InternalError) {
+      throw error
+    }
+    const code = extractDbErrorCode(error)
+    if (code === '23505') {
+      throw new ConflictError('Tag name already exists', 'tags_owner_name_idx')
+    }
+    throw new InternalError('Failed to create tag', error)
+  }
 }
 
 /**
@@ -158,16 +189,12 @@ export async function deleteTag(
   db?: Database
 ): Promise<boolean> {
   const database = db || (defaultDb as any as Database)
-  // Verify ownership first
-  await getTagWithOwnershipCheck(database, tagId, userId)
-
-  // Delete all tagged items first (cascade is on schema but be explicit)
-  await database.delete(taggedItems).where(eq(taggedItems.tagId, String(tagId)))
-
-  // Delete the tag
-  const result = await database.delete(tags).where(eq(tags.id, String(tagId))).returning()
-
-  return result.length > 0
+  return database.transaction(async (tx) => {
+    await getTagWithOwnershipCheck(tx as Database, tagId, userId)
+    await tx.delete(taggedItems).where(eq(taggedItems.tagId, String(tagId)))
+    const result = await tx.delete(tags).where(eq(tags.id, String(tagId))).returning()
+    return result.length > 0
+  })
 }
 
 /**
@@ -204,14 +231,23 @@ export async function listTaggedItems(
  * @returns Array of tags (empty if none)
  */
 export async function listTagsForEntity(
+  ownerId: UserId,
   entityId: string,
   entityType: string,
   db?: Database
 ): Promise<Tag[]> {
   const database = db || (defaultDb as any as Database)
-  const items = await database.query.taggedItems.findMany({
-    where: and(eq(taggedItems.entityId, entityId), eq(taggedItems.entityType, entityType)),
-  })
+  const items = await database
+    .select({ tagId: taggedItems.tagId })
+    .from(taggedItems)
+    .innerJoin(tags, eq(taggedItems.tagId, tags.id))
+    .where(
+      and(
+        eq(taggedItems.entityId, entityId),
+        eq(taggedItems.entityType, entityType),
+        eq(tags.ownerId, String(ownerId))
+      )
+    )
 
   if (items.length === 0) {
     return []
@@ -292,29 +328,64 @@ export async function untagEntity(
  * @param tagIds - List of tag IDs to apply
  * @param db - Database context
  */
-export async function syncEntityTags(
+export async function replaceEntityTags(
+  ownerId: UserId,
   entityId: string,
   entityType: string,
   tagIds: TagId[],
   db?: Database
 ): Promise<void> {
   const database = db || (defaultDb as any as Database)
-  // Remove all existing tags for this entity
-  await database.delete(taggedItems)
-    .where(and(
-      eq(taggedItems.entityId, entityId),
-      eq(taggedItems.entityType, entityType)
-    ))
+  const dedupedTagIds = [...new Set(tagIds.map(id => String(id)))]
 
-  // Add new tags if any
-  if (tagIds.length > 0) {
-    await database.insert(taggedItems)
-      .values(
-        tagIds.map(id => ({
-          tagId: String(id),
-          entityId,
-          entityType,
-        }))
+  await database.transaction(async (tx) => {
+    if (dedupedTagIds.length > 0) {
+      const ownedTags = await tx.query.tags.findMany({
+        columns: { id: true },
+        where: and(eq(tags.ownerId, String(ownerId)), inArray(tags.id, dedupedTagIds)),
+      })
+      if (ownedTags.length !== dedupedTagIds.length) {
+        throw new ForbiddenError('Tag not found or access denied', 'ownership')
+      }
+    }
+
+    const existingOwnedTagRows = await tx
+      .select({ tagId: taggedItems.tagId })
+      .from(taggedItems)
+      .innerJoin(tags, eq(taggedItems.tagId, tags.id))
+      .where(
+        and(
+          eq(taggedItems.entityId, entityId),
+          eq(taggedItems.entityType, entityType),
+          eq(tags.ownerId, String(ownerId))
+        )
       )
-  }
+
+    const existingOwnedTagIds = existingOwnedTagRows.map(row => row.tagId)
+
+    if (existingOwnedTagIds.length > 0) {
+      await tx
+        .delete(taggedItems)
+        .where(
+          and(
+            eq(taggedItems.entityId, entityId),
+            eq(taggedItems.entityType, entityType),
+            inArray(taggedItems.tagId, existingOwnedTagIds)
+          )
+        )
+    }
+
+    if (dedupedTagIds.length > 0) {
+      await tx
+        .insert(taggedItems)
+        .values(
+          dedupedTagIds.map(tagId => ({
+            tagId,
+            entityId,
+            entityType,
+          }))
+        )
+        .onConflictDoNothing()
+    }
+  })
 }

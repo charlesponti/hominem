@@ -103,4 +103,42 @@ describe.skipIf(!dbAvailable)('tasks.service integration', () => {
     expect(pending).toHaveLength(1)
     expect(pending[0]?.status).toBe('pending')
   })
+
+  it('clamps pagination limits to the allowed range', async () => {
+    for (let index = 0; index < 105; index += 1) {
+      await createTask({ title: `Clamp ${index}` }, ownerId)
+    }
+
+    const minimumClamped = await listTasks(ownerId, {
+      pagination: { limit: 0 },
+    })
+    expect(minimumClamped).toHaveLength(1)
+
+    const maximumClamped = await listTasks(ownerId, {
+      pagination: { limit: 999 },
+    })
+    expect(maximumClamped).toHaveLength(100)
+  })
+
+  it('applies deterministic cursor pagination on (createdAt,id) ordering', async () => {
+    await createTask({ title: 'Cursor A' }, ownerId)
+    await createTask({ title: 'Cursor B' }, ownerId)
+    await createTask({ title: 'Cursor C' }, ownerId)
+
+    const ordered = await listTasks(ownerId, {
+      pagination: { limit: 10 },
+    })
+    expect(ordered).toHaveLength(3)
+
+    const pivot = ordered[1]
+    expect(pivot).toBeDefined()
+    const cursor = Buffer.from(`${pivot?.createdAt}|${pivot?.id}`).toString('base64')
+
+    const afterPivot = await listTasks(ownerId, {
+      pagination: { limit: 10, cursor },
+    })
+
+    expect(afterPivot).toHaveLength(1)
+    expect(afterPivot[0]?.id).toBe(ordered[2]?.id)
+  })
 })

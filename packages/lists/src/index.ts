@@ -44,4 +44,4 @@ export {
   getUserLists,
   getUserListsWithItemCount,
 } from './list-queries.service';
-export type { ListOutput, ListPlace, ListRecord, ListUser, ListWithSpreadOwner } from './types';
+export type { ListOutput, ListPlace, ListRecord, ListUser, ListWithSpreadOwner } from './contracts';

@@ -88,6 +88,12 @@ export async function listEvents(
 ): Promise<CalendarEvent[]> {
   const database = db || (defaultDb as any as Database)
   const filters: SQL[] = [eq(calendarEvents.userId, String(userId))]
+  const clampedLimit = options?.limit === undefined
+    ? undefined
+    : Math.max(1, Math.min(100, Math.trunc(options.limit)))
+  const clampedOffset = options?.offset === undefined
+    ? undefined
+    : Math.max(0, Math.trunc(options.offset))
 
   if (options?.startTime) {
     filters.push(gte(calendarEvents.startTime, options.startTime))
@@ -99,8 +105,8 @@ export async function listEvents(
   const results = await database.query.calendarEvents.findMany({
     where: and(...filters),
     orderBy: [asc(calendarEvents.startTime)],
-    ...(options?.limit !== undefined ? { limit: options.limit } : {}),
-    ...(options?.offset !== undefined ? { offset: options.offset } : {}),
+    ...(clampedLimit !== undefined ? { limit: clampedLimit } : {}),
+    ...(clampedOffset !== undefined ? { offset: clampedOffset } : {}),
   })
 
   return results
@@ -215,16 +221,12 @@ export async function deleteEvent(
   db?: Database
 ): Promise<boolean> {
   const database = db || (defaultDb as any as Database)
-  // Verify ownership first
-  await getEventWithOwnershipCheck(database, eventId, userId)
-
-  // Delete all attendees first
-  await database.delete(calendarAttendees).where(eq(calendarAttendees.eventId, eventId))
-
-  // Delete the event
-  const result = await database.delete(calendarEvents).where(eq(calendarEvents.id, eventId)).returning()
-
-  return result.length > 0
+  return database.transaction(async (tx) => {
+    await getEventWithOwnershipCheck(tx as Database, eventId, userId)
+    await tx.delete(calendarAttendees).where(eq(calendarAttendees.eventId, eventId))
+    const result = await tx.delete(calendarEvents).where(eq(calendarEvents.id, eventId)).returning()
+    return result.length > 0
+  })
 }
 
 /**

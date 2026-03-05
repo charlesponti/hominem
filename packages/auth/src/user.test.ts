@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { UserSelect } from '@hominem/db/types/users'
-
+import type { UserSelect } from './contracts'
 import { toHominemUser } from './user'
 
 describe('toHominemUser', () => {
@@ -11,12 +10,9 @@ describe('toHominemUser', () => {
       email: 'user@example.com',
       name: 'User One',
       image: 'https://cdn.example.com/u_1.png',
-      email_verified: true,
-      password_hash: null,
       is_admin: true,
       created_at: '2026-03-04T01:00:00.000Z',
       updated_at: '2026-03-04T02:00:00.000Z',
-      birthday: null,
     }
 
     expect(toHominemUser(source)).toEqual({
@@ -36,12 +32,9 @@ describe('toHominemUser', () => {
       email: 'nullable@example.com',
       name: null,
       image: null,
-      email_verified: false,
-      password_hash: null,
       is_admin: false,
       created_at: '2026-03-04T03:00:00.000Z',
       updated_at: '2026-03-04T04:00:00.000Z',
-      birthday: null,
     }
 
     expect(toHominemUser(source)).toEqual({

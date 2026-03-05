@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { db, eq, sql } from '@hominem/db';
-import { authSubjects } from '@hominem/db/schema/auth';
-import { users } from '@hominem/db/schema/users';
+import { authSubjects, users } from '@hominem/db/all-schema';
 import { createTestUser } from '@hominem/db/test/fixtures';
 import { afterAll, describe, expect, test } from 'vitest';
 

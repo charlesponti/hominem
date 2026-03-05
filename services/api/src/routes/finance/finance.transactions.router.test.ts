@@ -1,7 +1,6 @@
 import crypto from 'node:crypto'
 
 import { db, sql } from '@hominem/db'
-import { tags } from '@hominem/db/schema/tags'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 
 import {
@@ -110,18 +109,12 @@ describe('Finance Transactions Router', () => {
       balance: '5000.00',
     })
 
-    await db.insert(tags).values([
-      {
-        id: foodTagId,
-        ownerId: testUserId,
-        name: 'Food',
-      },
-      {
-        id: travelTagId,
-        ownerId: testUserId,
-        name: 'Travel',
-      },
-    ])
+    await db.execute(sql`
+      insert into tags (id, owner_id, name)
+      values
+        (${foodTagId}, ${testUserId}, 'Food'),
+        (${travelTagId}, ${testUserId}, 'Travel')
+    `)
   })
 
   afterAll(async () => {

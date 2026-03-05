@@ -1,9 +1,7 @@
 import crypto from 'node:crypto'
 
-import { db, inArray, sql } from '@hominem/db'
+import { db, sql } from '@hominem/db'
 import { createTestUser } from '@hominem/db/test/fixtures'
-import { financeAccounts } from '@hominem/db/schema/finance'
-import { taggedItems, tags } from '@hominem/db/schema/tags'
 
 export interface FinanceUserPair {
   ownerId: string
@@ -36,23 +34,21 @@ export async function cleanupFinanceUserData(input: {
   if (userIds.length === 0) {
     return
   }
+  const userIdSql = sql.join(userIds.map((id) => sql`${id}`), sql`, `)
 
-  await db
-    .delete(taggedItems)
-    .where(sql`entity_type = 'finance_transaction' and entity_id in (select id from finance_transactions where user_id in (${sql.join(userIds.map((id) => sql`${id}`), sql`, `)}))`)
-    .catch(() => {})
-  await db.execute(sql`delete from finance_transactions where user_id in (${sql.join(userIds.map((id) => sql`${id}`), sql`, `)})`).catch(() => {})
-  await db.execute(sql`delete from plaid_items where user_id in (${sql.join(userIds.map((id) => sql`${id}`), sql`, `)})`).catch(() => {})
-  await db.execute(sql`delete from finance_accounts where user_id in (${sql.join(userIds.map((id) => sql`${id}`), sql`, `)})`).catch(() => {})
+  await db.execute(sql`delete from tagged_items where entity_type = 'finance_transaction' and entity_id in (select id from finance_transactions where user_id in (${userIdSql}))`).catch(() => {})
+  await db.execute(sql`delete from finance_transactions where user_id in (${userIdSql})`).catch(() => {})
+  await db.execute(sql`delete from plaid_items where user_id in (${userIdSql})`).catch(() => {})
+  await db.execute(sql`delete from finance_accounts where user_id in (${userIdSql})`).catch(() => {})
 
   const accountIds = input.accountIds?.filter((id) => id.length > 0) ?? []
   if (accountIds.length > 0) {
-    await db.delete(financeAccounts).where(inArray(financeAccounts.id, accountIds)).catch(() => {})
+    await db.execute(sql`delete from finance_accounts where id in (${sql.join(accountIds.map((id) => sql`${id}`), sql`, `)})`).catch(() => {})
   }
 
   const tagIds = input.tagIds?.filter((id) => id.length > 0) ?? []
   if (tagIds.length > 0) {
-    await db.delete(tags).where(inArray(tags.id, tagIds)).catch(() => {})
+    await db.execute(sql`delete from tags where id in (${sql.join(tagIds.map((id) => sql`${id}`), sql`, `)})`).catch(() => {})
   }
 
   const institutionIds = (input.institutionIds ?? []).filter((id): id is string => typeof id === 'string' && id.length > 0)
@@ -60,7 +56,7 @@ export async function cleanupFinanceUserData(input: {
     await db.execute(sql`delete from financial_institutions where id in (${sql.join(institutionIds.map((id) => sql`${id}`), sql`, `)})`).catch(() => {})
   }
 
-  await db.execute(sql`delete from users where id in (${sql.join(userIds.map((id) => sql`${id}`), sql`, `)})`).catch(() => {})
+  await db.execute(sql`delete from users where id in (${userIdSql})`).catch(() => {})
 }
 
 export async function createFinanceAccountFixture(input: {
@@ -73,16 +69,21 @@ export async function createFinanceAccountFixture(input: {
   institutionId?: string
   institutionName?: string
 }): Promise<void> {
-  await db.insert(financeAccounts).values({
-    id: input.id,
-    userId: input.userId,
-    name: input.name,
-    accountType: input.accountType ?? 'checking',
-    institutionId: input.institutionId ?? null,
-    institutionName: input.institutionName ?? null,
-    balance: input.balance ?? '0.00',
-    currency: input.currency ?? 'USD',
-    isActive: true,
-    data: {},
-  })
+  await db.execute(sql`
+    insert into finance_accounts (
+      id, user_id, name, account_type, institution_id, institution_name, balance, currency, is_active, data
+    )
+    values (
+      ${input.id},
+      ${input.userId},
+      ${input.name},
+      ${input.accountType ?? 'checking'},
+      ${input.institutionId ?? null},
+      ${input.institutionName ?? null},
+      ${input.balance ?? '0.00'},
+      ${input.currency ?? 'USD'},
+      true,
+      '{}'::jsonb
+    )
+  `)
 }

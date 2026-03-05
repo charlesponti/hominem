@@ -166,6 +166,32 @@ describe.skipIf(!dbAvailable)('calendar.service integration', () => {
     )
   })
 
+  it('rolls back attendee replacement when any inserted attendee is invalid', async () => {
+    const created = await createEvent(ownerId, {
+      eventType: 'meeting',
+      title: 'Transactional Replace',
+      startTime: '2026-03-04T14:00:00.000Z',
+    })
+
+    const validPerson = crypto.randomUUID()
+    await db.insert(persons).values({
+      id: validPerson,
+      ownerUserId: String(ownerId),
+      personType: 'contact',
+      firstName: 'Valid',
+    })
+
+    await replaceEventAttendees(created.id, [validPerson], ownerId)
+
+    await expect(
+      replaceEventAttendees(created.id, [crypto.randomUUID(), validPerson], ownerId),
+    ).rejects.toThrow()
+
+    const afterFailure = await listEventAttendees(created.id, ownerId)
+    expect(afterFailure).toHaveLength(1)
+    expect(afterFailure[0]?.personId).toBe(validPerson)
+  })
+
   it('applies start/end filters on startTime', async () => {
     await createEvent(ownerId, {
       eventType: 'meeting',
@@ -189,6 +215,23 @@ describe.skipIf(!dbAvailable)('calendar.service integration', () => {
     })
 
     expect(filtered.map((event) => event.title)).toEqual(['In Window'])
+  })
+
+  it('clamps limit and offset query controls', async () => {
+    await createEvent(ownerId, {
+      eventType: 'meeting',
+      title: 'Clamp 1',
+      startTime: '2026-03-04T07:00:00.000Z',
+    })
+    await createEvent(ownerId, {
+      eventType: 'meeting',
+      title: 'Clamp 2',
+      startTime: '2026-03-04T08:00:00.000Z',
+    })
+
+    const minimum = await listEvents(ownerId, { limit: 0, offset: -10 })
+    expect(minimum).toHaveLength(1)
+    expect(minimum[0]?.title).toBe('Clamp 1')
   })
 
   it('returns google sync status scoped to owner', async () => {

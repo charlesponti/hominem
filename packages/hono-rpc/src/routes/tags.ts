@@ -6,7 +6,7 @@ import {
   deleteTag,
   getTag,
   listTags,
-  syncEntityTags,
+  replaceEntityTags,
   tagEntity,
   untagEntity,
   updateTag,
@@ -137,10 +137,11 @@ export const tagsRoutes = new Hono<AppContext>()
       throw new NotFoundError('Tag not found or access denied')
     }
 
-    await syncEntityTags(
+    await replaceEntityTags(
+      userId as Parameters<typeof replaceEntityTags>[0],
       data.entityId,
       data.entityType,
-      data.tagIds as Parameters<typeof syncEntityTags>[2],
+      data.tagIds as Parameters<typeof replaceEntityTags>[3],
     )
 
     return c.json({ success: true, data: { id: tagId } })

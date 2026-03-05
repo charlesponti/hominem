@@ -1,16 +1,20 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
+import * as z from 'zod'
 
+import { brandId, type TaskId, type UserId } from '@hominem/db'
 import type { AppContext } from '../middleware/auth'
 import { authMiddleware } from '../middleware/auth'
 import {
   CreateTaskInputSchema,
   UpdateTaskInputSchema,
-  UpdateTaskStatusSchema,
 } from '../schemas/tasks.schema'
 import { listTasks, getTask, createTask, updateTask, deleteTask } from '@hominem/db/services/tasks.service'
 import { NotFoundError, ForbiddenError, ConflictError, InternalError } from '../errors'
-import { brandId } from '@hominem/db'
+
+const taskIdParamSchema = z.object({
+  id: z.uuid(),
+})
 
 export const tasksRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
@@ -20,11 +24,12 @@ export const tasksRoutes = new Hono<AppContext>()
       const userId = c.get('userId')!
       const status = c.req.query('status')
       const priority = c.req.query('priority')
+      const brandedUserId = brandId<UserId>(userId)
       const filters: { status?: string; priority?: string } = {}
       if (status !== undefined) filters.status = status
       if (priority !== undefined) filters.priority = priority
 
-      const tasks = await listTasks(userId as any, filters)
+      const tasks = await listTasks(brandedUserId, filters)
 
       return c.json({ success: true, data: tasks })
     } catch (error) {
@@ -35,12 +40,14 @@ export const tasksRoutes = new Hono<AppContext>()
     }
   })
   // Get single task
-  .get('/:id', async (c) => {
+  .get('/:id', zValidator('param', taskIdParamSchema), async (c) => {
     try {
       const userId = c.get('userId')!
-      const id = c.req.param('id')
+      const { id } = c.req.valid('param')
+      const brandedUserId = brandId<UserId>(userId)
+      const taskId = brandId<TaskId>(id)
 
-      const task = await getTask(id as any, userId as any)
+      const task = await getTask(taskId, brandedUserId)
       if (!task) {
         throw new NotFoundError('Task not found')
       }
@@ -57,6 +64,7 @@ export const tasksRoutes = new Hono<AppContext>()
     try {
       const userId = c.get('userId')!
       const data = c.req.valid('json')
+      const brandedUserId = brandId<UserId>(userId)
       const payload: {
         title: string
         description?: string
@@ -71,7 +79,7 @@ export const tasksRoutes = new Hono<AppContext>()
       if (data.priority !== undefined) payload.priority = data.priority
       if (data.dueDate !== undefined) payload.dueDate = data.dueDate ? new Date(data.dueDate) : null
 
-      const newTask = await createTask(payload, userId as any)
+      const newTask = await createTask(payload, brandedUserId)
 
       return c.json({ success: true, data: newTask }, 201)
     } catch (error) {
@@ -82,11 +90,13 @@ export const tasksRoutes = new Hono<AppContext>()
     }
   })
   // Update task
-  .patch('/:id', zValidator('json', UpdateTaskInputSchema), async (c) => {
+  .patch('/:id', zValidator('param', taskIdParamSchema), zValidator('json', UpdateTaskInputSchema), async (c) => {
     try {
       const userId = c.get('userId')!
-      const id = c.req.param('id')
+      const { id } = c.req.valid('param')
       const data = c.req.valid('json')
+      const brandedUserId = brandId<UserId>(userId)
+      const taskId = brandId<TaskId>(id)
 
       const updateData = {
         ...(data.title !== undefined ? { title: data.title } : {}),
@@ -96,7 +106,7 @@ export const tasksRoutes = new Hono<AppContext>()
         ...(data.dueDate !== undefined ? { dueDate: data.dueDate } : {}),
       }
 
-      const updatedTask = await updateTask(id as any, userId as any, updateData)
+      const updatedTask = await updateTask(taskId, brandedUserId, updateData)
       if (!updatedTask) {
         throw new NotFoundError('Task not found or access denied')
       }
@@ -109,12 +119,14 @@ export const tasksRoutes = new Hono<AppContext>()
     }
   })
   // Delete task
-  .delete('/:id', async (c) => {
+  .delete('/:id', zValidator('param', taskIdParamSchema), async (c) => {
     try {
       const userId = c.get('userId')!
-      const id = c.req.param('id')
+      const { id } = c.req.valid('param')
+      const brandedUserId = brandId<UserId>(userId)
+      const taskId = brandId<TaskId>(id)
 
-      const deleted = await deleteTask(id as any, userId as any)
+      const deleted = await deleteTask(taskId, brandedUserId)
       if (!deleted) {
         throw new NotFoundError('Task not found or access denied')
       }

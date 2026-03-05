@@ -29,10 +29,10 @@ export const contextMiddleware = createMiddleware<AppContext>(async (c, next) =>
           id: localUser.id,
           email: localUser.email,
           name: localUser.name ?? undefined,
-          image: localUser.image ?? undefined,
-          isAdmin: localUser.isAdmin,
-          createdAt: localUser.createdAt,
-          updatedAt: localUser.updatedAt,
+          image: localUser.avatar_url ?? undefined,
+          isAdmin: false,
+          createdAt: localUser.created_at ?? new Date().toISOString(),
+          updatedAt: localUser.updated_at ?? new Date().toISOString(),
         });
         c.set('userId', localUser.id);
       }

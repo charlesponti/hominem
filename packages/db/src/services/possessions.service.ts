@@ -311,18 +311,10 @@ export async function deleteContainer(
   db?: Database
 ): Promise<boolean> {
   const database = db || (defaultDb as any as Database)
-  // Verify ownership first
-  await getContainerWithOwnershipCheck(database, containerId, userId)
-
-  // Set possessions' containerIds to null
-  await database.update(possessions)
-    .set({ containerId: null })
-    .where(eq(possessions.containerId, containerId))
-
-  // Delete the container
-  const result = await database.delete(possessionContainers)
-    .where(eq(possessionContainers.id, containerId))
-    .returning()
-
-  return result.length > 0
+  return database.transaction(async (tx) => {
+    await getContainerWithOwnershipCheck(tx as Database, containerId, userId)
+    await tx.update(possessions).set({ containerId: null }).where(eq(possessions.containerId, containerId))
+    const result = await tx.delete(possessionContainers).where(eq(possessionContainers.id, containerId)).returning()
+    return result.length > 0
+  })
 }

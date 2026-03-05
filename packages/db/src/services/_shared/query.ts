@@ -91,14 +91,11 @@ export function normalizePaginationParams(
   params: CursorPaginationParams | undefined,
   maxLimit: number = QUERY_LIMITS.MAX
 ): Required<CursorPaginationParams> {
-  const limit = params?.limit ?? QUERY_LIMITS.DEFAULT
+  const rawLimit = params?.limit ?? QUERY_LIMITS.DEFAULT
+  const numericLimit = Number.isFinite(rawLimit) ? Math.trunc(rawLimit) : QUERY_LIMITS.DEFAULT
+  const limit = Math.max(QUERY_LIMITS.MIN, Math.min(maxLimit, numericLimit))
   const sortOrder = params?.sortOrder ?? 'asc'
   const cursor = params?.cursor
-
-  // Validate limit
-  if (limit < QUERY_LIMITS.MIN || limit > maxLimit) {
-    throw new Error(`Limit must be between ${QUERY_LIMITS.MIN} and ${maxLimit}`)
-  }
 
   return {
     limit,

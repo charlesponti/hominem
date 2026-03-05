@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 
 import { db, NotFoundError, sql } from '@hominem/db'
 import * as z from 'zod'
+import type { TripItemOutput, TripOutput } from './contracts'
 
 interface TripRow {
   id: string
@@ -11,25 +12,6 @@ interface TripRow {
   end_date: string | null
   created_at: string | null
   data: Record<string, unknown> | null
-}
-
-export interface TripOutput {
-  id: string
-  name: string
-  userId: string
-  startDate: string | null
-  endDate: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-export interface TripItemOutput {
-  id: string
-  tripId: string
-  itemId: string
-  day: number | null
-  order: number | null
-  createdAt: string
 }
 
 export const createTripSchema = z.object({

@@ -42,9 +42,9 @@ This is a complete rebuild of the application layer working outward from the dat
   - Added migration `packages/db/src/migrations/0006_finance_runtime_tables.sql` to provision `financial_institutions`, `plaid_items`, and `budget_goals`
   - Added migration `packages/db/src/migrations/0007_budget_goals_nullable_category_id.sql` to align budget-goal contract semantics
 
-## Verification Status (2026-03-04, updated)
+## Verification Status (2026-03-05, updated)
 
-Checklist completion and actual repo health are currently out of sync. Current truth snapshot:
+Current truth snapshot:
 
 - `bun run --filter @hominem/db typecheck`: passing
 - `bun run validate-db-imports`: passing
@@ -53,12 +53,14 @@ Checklist completion and actual repo health are currently out of sync. Current t
 - `bun run --filter @hominem/api test -- src/routes/finance/finance.data.router.test.ts`: passing (4 tests)
 - `bun run --filter @hominem/api test -- src/routes/finance/finance.accounts.router.test.ts`: passing (4 tests)
 - `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts`: passing (6 tests)
+- `bun run --filter @hominem/finance test`: passing (4 tests)
+- `bun run --filter @hominem/rocco test`: passing (45 tests)
 - `bun run check`: passing (existing lint warnings only)
+- Performance artifacts captured in `performance-validation.md` (typecheck medians, extended diagnostics, tsserver scenario latency)
 
 Implication:
-- This change is still in progress.
-- Finance FIN-08 schema/migration cutover is now implemented; remaining work is downstream finance contract completion and broader final gate closure.
-- Close-out still requires full gate evidence (commands + outputs) in addition to checked checklist items.
+- Module replacement, no-shim enforcement, and performance evidence are now captured in artifacts.
+- Remaining close-out is administrative archive/finalization workflow.
 
 Module progress snapshot (2026-03-04):
 - `auth`: contract mapping and account-scope fixes implemented; package tests and typecheck green

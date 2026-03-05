@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { db } from '@hominem/db';
 import { sql } from '@hominem/db';
 
-import type { ListOutput, ListPlace, ListUser, ListWithSpreadOwner } from './types';
+import type { ListOutput, ListPlace, ListUser, ListWithSpreadOwner } from './contracts';
 
 interface TaskListRow {
   id: string;

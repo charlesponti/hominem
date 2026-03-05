@@ -17,7 +17,7 @@ DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5432/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install start dev build test lint format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-schema-generate db-migration-generate db-migration-apply db-schema-new help-db
+.PHONY: install start dev build test lint format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-migration-generate db-migration-apply db-schema-update help-db
 
 # Install dependencies
 install:
@@ -74,26 +74,20 @@ db-migrate-test:
 db-migrate-all: db-migrate db-migrate-test
 
 # Database schema workflow targets
-# Step 1: After modifying packages/db/src/migrations/schema.ts, regenerate domain slices
-db-schema-generate:
-	@echo "Regenerating domain schema slices from migrations/schema.ts..."
-	bun scripts/generate-db-schema-slices.ts
-	@echo "✓ Schema slices generated at packages/db/src/schema/*.ts"
-
-# Step 2: Generate migration files from the updated schema
+# Step 1: Generate migration files from packages/db/src/migrations/schema.ts
 db-migration-generate:
 	@echo "Generating migration files..."
 	@cd packages/db && bun db:generate
 	@echo "✓ Migration files generated at packages/db/src/migrations/*.sql"
 
-# Step 3: Apply generated migrations to databases
+# Step 2: Apply generated migrations to databases
 db-migration-apply: db-migrate-all
 
-# Full workflow: add new table to schema.ts, then run this
-# Example: make db-schema-new
-db-schema-new: db-schema-generate db-migration-generate db-migration-apply
+# Full workflow: add new table to migrations/schema.ts, then run this
+# Example: make db-schema-update
+db-schema-update: db-migration-generate db-migration-apply
 	@echo "✓ Database schema updated and migrations applied"
-	@echo "Remember to commit: git add packages/db/src/"
+	@echo "Remember to commit: git add packages/db/src/migrations/"
 
 # Run tests
 test:
@@ -180,21 +174,22 @@ blt:
 # Database Operations Help
 help-db:
 	@echo ""
-	@echo "Database Schema Workflow:"
-	@echo "========================"
+	@echo "Database Schema Workflow (SIMPLIFIED):"
+	@echo "======================================"
 	@echo ""
 	@echo "To add a new table:"
 	@echo "  1. Edit packages/db/src/migrations/schema.ts"
-	@echo "  2. Run: make db-schema-new"
+	@echo "  2. Run: make db-schema-update"
 	@echo ""
-	@echo "Or run steps individually:"
-	@echo "  make db-schema-generate    # Regenerate domain slices from schema.ts"
-	@echo "  make db-migration-generate # Generate migration SQL files"
+	@echo "Individual Steps:"
+	@echo "  make db-migration-generate # Generate migration SQL from schema.ts"
 	@echo "  make db-migration-apply    # Apply migrations to dev + test databases"
 	@echo ""
-	@echo "Individual Database Commands:"
-	@echo "  make db-migrate            # Apply migrations to dev database only"
-	@echo "  make db-migrate-test       # Apply migrations to test database only"
+	@echo "Why simplified?"
+	@echo "  - Domain schema slices in packages/db/src/schema/ are now simple"
+	@echo "    re-exports from migrations/schema.ts"
+	@echo "  - No generated artifacts to maintain"
+	@echo "  - TypeScript server imports just re-export needed tables"
 	@echo ""
 
 # Docker compose targets

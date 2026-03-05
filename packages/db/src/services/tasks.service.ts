@@ -8,15 +8,14 @@
  * - All operations are user-scoped (userId filter)
  */
 
-import { eq, and, desc, asc } from 'drizzle-orm'
+import { eq, and, asc, gt, or } from 'drizzle-orm'
 import type { Database } from './client'
 import { getDb } from './client'
 import { tasks, taskLists } from '../schema/tasks'
 import type { TaskId, UserId } from './_shared/ids'
-import { brandId } from './_shared/ids'
-import { NotFoundError, ForbiddenError } from './_shared/errors'
+import { ForbiddenError } from './_shared/errors'
 import type { CursorPaginationParams } from './_shared/query'
-import { normalizePaginationParams, createCursor, decodeCursor } from './_shared/query'
+import { normalizePaginationParams, decodeCursor } from './_shared/query'
 
 export type { TaskId }
 
@@ -24,6 +23,28 @@ export type { TaskId }
 type Task = typeof tasks.$inferSelect
 type TaskInsert = typeof tasks.$inferInsert
 type TaskUpdate = Partial<Omit<TaskInsert, 'id' | 'userId'>>
+
+interface TaskCursor {
+  createdAt: string
+  id: string
+}
+
+function decodeTaskCursor(cursorValue: string): TaskCursor | null {
+  const decoded = decodeCursor(cursorValue)
+  if (!decoded) {
+    return null
+  }
+  const separator = decoded.indexOf('|')
+  if (separator <= 0) {
+    return null
+  }
+  const createdAt = decoded.slice(0, separator)
+  const id = decoded.slice(separator + 1)
+  if (!createdAt || !id) {
+    return null
+  }
+  return { createdAt, id }
+}
 
 /**
  * Internal helper: verify user ownership
@@ -63,7 +84,7 @@ export async function listTasks(
   const paging = normalizePaginationParams(query?.pagination)
 
   // Build filters
-  const filters: any[] = [eq(tasks.userId, String(userId))]
+  const filters = [eq(tasks.userId, String(userId))]
 
   if (query?.status) {
     filters.push(eq(tasks.status, query.status))
@@ -73,9 +94,14 @@ export async function listTasks(
   }
 
   // Handle cursor pagination
-  const cursor = decodeCursor(paging.cursor)
+  const cursor = decodeTaskCursor(paging.cursor)
   if (cursor) {
-    filters.push(asc(tasks.createdAt) ? desc(tasks.id) : asc(tasks.id))
+    filters.push(
+      or(
+        gt(tasks.createdAt, cursor.createdAt),
+        and(eq(tasks.createdAt, cursor.createdAt), gt(tasks.id, cursor.id)),
+      )!,
+    )
   }
 
   // Query

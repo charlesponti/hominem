@@ -47,11 +47,12 @@ export const itemsRoutes = new Hono<AppContext>()
   .post('/add', authMiddleware, zValidator('json', itemsAddToListSchema), async (c) => {
     const input = c.req.valid('json');
     const userId = c.get('userId')!;
+    const itemType = input.itemType === 'FLIGHT' ? 'FLIGHT' : 'PLACE'
 
     const newItem = await addItemToList({
       listId: input.listId,
       itemId: input.itemId,
-      itemType: input.itemType ?? 'FLIGHT',
+      itemType,
       userId: userId,
     });
 

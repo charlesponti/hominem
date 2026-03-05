@@ -1,4 +1,5 @@
 import { db, eq, sql } from '@hominem/db';
+import { users } from '@hominem/db/all-schema';
 import { vi } from 'vitest';
 
 // same mocking strategy for server import
@@ -10,7 +11,6 @@ vi.mock('@scalar/hono-api-reference', () => ({
     };
   },
 }));
-import { users } from '@hominem/db/schema/users';
 import { createTestUser } from '@hominem/db/test/fixtures';
 import { SignJWT } from 'jose';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';

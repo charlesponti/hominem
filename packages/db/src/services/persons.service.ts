@@ -166,19 +166,12 @@ export async function deletePerson(
   db?: Database
 ): Promise<boolean> {
   const database = db || (defaultDb as any as Database)
-  // Verify ownership first
-  await getPersonWithOwnershipCheck(database, personId, userId)
-
-  // Delete relations first
-  await database.delete(userPersonRelations)
-    .where(eq(userPersonRelations.personId, personId))
-
-  // Delete the person
-  const result = await database.delete(persons)
-    .where(eq(persons.id, personId))
-    .returning()
-
-  return result.length > 0
+  return database.transaction(async (tx) => {
+    await getPersonWithOwnershipCheck(tx as Database, personId, userId)
+    await tx.delete(userPersonRelations).where(eq(userPersonRelations.personId, personId))
+    const result = await tx.delete(persons).where(eq(persons.id, personId)).returning()
+    return result.length > 0
+  })
 }
 
 /**

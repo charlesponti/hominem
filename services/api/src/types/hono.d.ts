@@ -1,9 +1,11 @@
-import type { User } from '@hominem/db/types/users';
+import type { users } from '@hominem/db/all-schema';
 import type { Queues } from '@hominem/services';
 
 import type { AuthContextEnvelope } from '../auth/types';
 
 declare module 'hono' {
+  type User = typeof users.$inferSelect;
+
   interface ContextVariableMap {
     user?: User;
     userId?: string | null;

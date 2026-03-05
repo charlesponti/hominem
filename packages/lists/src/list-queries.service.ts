@@ -2,7 +2,7 @@ import { db } from '@hominem/db';
 import { sql } from '@hominem/db';
 
 import { formatList } from './list-crud.service';
-import type { ListOutput, ListRecord, ListWithSpreadOwner } from './types';
+import type { ListOutput, ListRecord, ListWithSpreadOwner } from './contracts';
 
 interface ListProjectionRow {
   id: string;

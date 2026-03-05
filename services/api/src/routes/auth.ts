@@ -1,7 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-import { authSubjects } from '@hominem/db/schema/auth';
-import { users } from '@hominem/db/schema/users';
+import { authSubjects, users } from '@hominem/db/all-schema';
 import { and, db, eq, isNull } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';

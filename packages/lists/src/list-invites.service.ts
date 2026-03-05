@@ -4,7 +4,7 @@ import { ConflictError, ForbiddenError, NotFoundError, ValidationError, db, sql 
 import * as z from 'zod'
 
 import { formatList } from './list-crud.service'
-import type { ListOutput } from './types'
+import type { ListOutput } from './contracts'
 
 interface ListInviteRow {
   id: string

@@ -1,14 +1,5 @@
 import type { HominemUser } from './types'
-
-export interface UserSelect {
-  id: string
-  email: string
-  name: string | null
-  image: string | null
-  is_admin: boolean | null
-  created_at: string | null
-  updated_at: string | null
-}
+import type { UserSelect } from './contracts'
 
 export function toHominemUser(source: UserSelect): HominemUser {
   return {

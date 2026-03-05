@@ -1,10 +1,7 @@
 import crypto from 'node:crypto'
 
 import { db } from '@hominem/db'
-import { eq, or, sql } from '@hominem/db'
-import { calendarAttendees, calendarEvents } from '@hominem/db/schema/calendar'
-import { persons } from '@hominem/db/schema/persons'
-import { tags } from '@hominem/db/schema/tags'
+import { sql } from '@hominem/db'
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
@@ -33,30 +30,11 @@ describe.skipIf(!dbAvailable)('events integration', () => {
     if (userIds.length === 0) {
       return
     }
-
-    if (userIds.length === 1) {
-      const userId = userIds[0]!
-      await db.delete(calendarEvents).where(eq(calendarEvents.userId, userId)).catch(() => {})
-      await db.delete(tags).where(eq(tags.ownerId, userId)).catch(() => {})
-      await db.delete(persons).where(eq(persons.ownerUserId, userId)).catch(() => {})
-      await db.execute(sql`delete from users where id = ${userId}`).catch(() => {})
-      return
-    }
-
-    const [firstUserId, secondUserId] = userIds
-    await db
-      .delete(calendarEvents)
-      .where(or(eq(calendarEvents.userId, firstUserId!), eq(calendarEvents.userId, secondUserId!)))
-      .catch(() => {})
-    await db
-      .delete(tags)
-      .where(or(eq(tags.ownerId, firstUserId!), eq(tags.ownerId, secondUserId!)))
-      .catch(() => {})
-    await db
-      .delete(persons)
-      .where(or(eq(persons.ownerUserId, firstUserId!), eq(persons.ownerUserId, secondUserId!)))
-      .catch(() => {})
-    await db.execute(sql`delete from users where id = ${firstUserId} or id = ${secondUserId}`).catch(() => {})
+    const userIdsSql = sql.join(userIds.map((id) => sql`${id}`), sql`, `)
+    await db.execute(sql`delete from calendar_events where user_id in (${userIdsSql})`).catch(() => {})
+    await db.execute(sql`delete from tags where owner_id in (${userIdsSql})`).catch(() => {})
+    await db.execute(sql`delete from persons where owner_user_id in (${userIdsSql})`).catch(() => {})
+    await db.execute(sql`delete from users where id in (${userIdsSql})`).catch(() => {})
   }
 
   beforeEach(async () => {
@@ -69,14 +47,10 @@ describe.skipIf(!dbAvailable)('events integration', () => {
     ])
 
     ownerContactId = nextUserId()
-    await db.insert(persons).values({
-      id: ownerContactId,
-      ownerUserId: ownerId,
-      personType: 'contact',
-      firstName: 'Companion',
-      lastName: 'One',
-      email: `${ownerContactId}@example.com`,
-    })
+    await db.execute(sql`
+      insert into persons (id, owner_user_id, person_type, first_name, last_name, email)
+      values (${ownerContactId}, ${ownerId}, 'contact', 'Companion', 'One', ${`${ownerContactId}@example.com`})
+    `)
   })
 
   it('creates and fetches an event with tags and people', async () => {
@@ -127,14 +101,14 @@ describe.skipIf(!dbAvailable)('events integration', () => {
     const deleted = await deleteEvent(created.id)
 
     const eventAfterDelete = await getEventById(created.id)
-    const peopleAfterDelete = await db
-      .select()
-      .from(calendarAttendees)
-      .where(eq(calendarAttendees.eventId, created.id))
+    const peopleAfterDelete = await db.execute(sql`
+      select id from calendar_attendees where event_id = ${created.id}
+    `)
 
     expect(deleted).toBe(true)
     expect(eventAfterDelete).toBeNull()
-    expect(peopleAfterDelete).toHaveLength(0)
+    const rows = Array.isArray(peopleAfterDelete) ? peopleAfterDelete : ('rows' in peopleAfterDelete ? peopleAfterDelete.rows : [])
+    expect(rows).toHaveLength(0)
   })
 
   it('returns visits scoped to requesting user only', async () => {

@@ -3,49 +3,10 @@ import crypto from 'node:crypto'
 import { db, sql } from '@hominem/db'
 import { normalizePhotoReference, sanitizeStoredPhotos } from '@hominem/utils/images'
 
+import type { PlaceInput, PlaceOutput } from './contracts'
 import { googlePlaces } from './google-places.service'
 import { placeCache } from './place-cache'
 import { isGooglePhotosUrl, type PlaceImagesService } from './place-images.service'
-
-export interface PlaceInput {
-  googleMapsId: string
-  name: string
-  description?: string | null
-  address?: string | null
-  latitude?: number | null
-  longitude?: number | null
-  location?: [number, number] | null
-  types?: string[] | null
-  rating?: number | null
-  websiteUri?: string | null
-  phoneNumber?: string | null
-  priceLevel?: number | null
-  photos?: string[] | null
-  imageUrl?: string | null
-  userId?: string
-}
-
-export interface PlaceOutput {
-  id: string
-  userId: string
-  name: string
-  description: string | null
-  address: string | null
-  latitude: number | null
-  longitude: number | null
-  imageUrl: string | null
-  googleMapsId: string
-  rating: number | null
-  priceLevel: number | null
-  photos: string[] | null
-  types: string[] | null
-  websiteUri: string | null
-  phoneNumber: string | null
-  businessStatus: string | null
-  openingHours: string | null
-  createdAt: string
-  updatedAt: string
-}
 
 interface PlaceRow {
   id: string

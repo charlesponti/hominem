@@ -1,4 +1,4 @@
-export * from '@hominem/db';
+export * from './contracts';
 export * from './habits.service';
 export * from './goals.service';
 export * from './health.service';
