@@ -1,8 +1,6 @@
 import crypto from 'node:crypto'
 
 import { db, sql } from '@hominem/db'
-import { createTestUser } from '@hominem/db/test/fixtures'
-import { financeAccounts } from '@hominem/db/schema/finance'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 
 import {
@@ -10,6 +8,11 @@ import {
   makeAuthenticatedRequest,
   useApiTestLifecycle,
 } from '@/test/api-test-utils'
+import {
+  cleanupFinanceUserData,
+  createFinanceAccountFixture,
+  createFinanceUserPair,
+} from '@/test/finance-test-harness'
 
 describe('Finance Data/Runway Router', () => {
   const { getServer } = useApiTestLifecycle()
@@ -20,42 +23,24 @@ describe('Finance Data/Runway Router', () => {
   let otherAccountId: string
 
   beforeAll(async () => {
-    ownerId = crypto.randomUUID()
-    otherUserId = crypto.randomUUID()
+    const pair = await createFinanceUserPair()
+    ownerId = pair.ownerId
+    otherUserId = pair.otherUserId
     ownerAccountId = crypto.randomUUID()
     otherAccountId = crypto.randomUUID()
 
-    await createTestUser({
-      id: ownerId,
-      email: `owner-${ownerId.slice(0, 8)}@example.com`,
+    await createFinanceAccountFixture({
+      id: ownerAccountId,
+      userId: ownerId,
+      name: 'Owner Account',
+      balance: '1200.00',
     })
-    await createTestUser({
-      id: otherUserId,
-      email: `other-${otherUserId.slice(0, 8)}@example.com`,
+    await createFinanceAccountFixture({
+      id: otherAccountId,
+      userId: otherUserId,
+      name: 'Other Account',
+      balance: '800.00',
     })
-
-    await db.insert(financeAccounts).values([
-      {
-        id: ownerAccountId,
-        userId: ownerId,
-        name: 'Owner Account',
-        accountType: 'checking',
-        balance: '1200.00',
-        currency: 'USD',
-        isActive: true,
-        data: {},
-      },
-      {
-        id: otherAccountId,
-        userId: otherUserId,
-        name: 'Other Account',
-        accountType: 'checking',
-        balance: '800.00',
-        currency: 'USD',
-        isActive: true,
-        data: {},
-      },
-    ])
 
     await db.execute(sql`
       insert into finance_transactions (id, user_id, account_id, amount, transaction_type, description, date)
@@ -66,9 +51,10 @@ describe('Finance Data/Runway Router', () => {
   })
 
   afterAll(async () => {
-    await db.execute(sql`delete from finance_transactions where user_id in (${ownerId}, ${otherUserId})`).catch(() => {})
-    await db.execute(sql`delete from finance_accounts where user_id in (${ownerId}, ${otherUserId})`).catch(() => {})
-    await db.execute(sql`delete from users where id in (${ownerId}, ${otherUserId})`).catch(() => {})
+    await cleanupFinanceUserData({
+      userIds: [ownerId, otherUserId],
+      accountIds: [ownerAccountId, otherAccountId],
+    })
   })
 
   test('returns export payload for authenticated user only', async () => {

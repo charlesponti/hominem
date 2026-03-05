@@ -6,6 +6,9 @@ The database schema has been redesigned from scratch and is now solid and deploy
 
 This is a complete rebuild of the application layer working outward from the database:
 
+- Post-completion execution roadmap: `openspec/changes/2025-03-04-update-db-schema-references/post-completion-roadmap.md`
+- Integration-first test foundation: `openspec/changes/2025-03-04-update-db-schema-references/testing-foundation.md`
+
 1. **Database layer (@hominem/db)** - Mostly complete
   - Schema redesigned and deployed via `phased-db-redesign`
   - Single source of truth: `packages/db/src/migrations/schema.ts`
@@ -867,3 +870,23 @@ Because `Task` type only lives in tasks.service.ts, we can change it without aff
 - `bun run check` passes at repo root
 - CI includes consumer package typecheck that imports services via `@hominem/db/services/*`
 - CI includes generator drift check for `packages/db/src/schema/*.ts`
+
+### Verification Status (2026-03-05)
+
+- Confirmed green:
+  - `bun run validate-db-imports`
+  - `bun scripts/check-schema-drift.ts`
+  - `bun run --filter @hominem/api typecheck`
+  - `bun run --filter @hominem/hono-rpc typecheck`
+  - `bun run --filter @hominem/events-services test`
+  - `bun run --filter @hominem/finance-services test`
+  - `bun run --filter @hominem/finance-services test -- src/modern-finance.accounts.integration.test.ts`
+  - `bun run --filter @hominem/lists-services test`
+  - `bun run --filter @hominem/notes-services test -- src/notes.integration.test.ts`
+  - `bun run --filter @hominem/places-services test`
+  - `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts src/routes/finance/finance.accounts.router.test.ts src/routes/finance/finance.data.router.test.ts`
+  - `bun run --filter @hominem/api test -- src/auth/subjects.constraint.test.ts src/middleware/auth.middleware.test.ts src/middleware/block-probes.test.ts src/routes/status.test.ts`
+  - `bun run test`
+  - `bun run check`
+- Remaining open:
+  - none

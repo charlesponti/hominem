@@ -1,9 +1,7 @@
 import crypto from 'node:crypto'
 
-import { and, db, eq, sql } from '@hominem/db'
-import { createTestUser } from '@hominem/db/test/fixtures'
-import { financeAccounts } from '@hominem/db/schema/finance'
-import { taggedItems, tags } from '@hominem/db/schema/tags'
+import { db, sql } from '@hominem/db'
+import { tags } from '@hominem/db/schema/tags'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 
 import {
@@ -11,6 +9,11 @@ import {
   makeAuthenticatedRequest,
   useApiTestLifecycle,
 } from '@/test/api-test-utils'
+import {
+  cleanupFinanceUserData,
+  createFinanceAccountFixture,
+  createFinanceUser,
+} from '@/test/finance-test-harness'
 
 interface TransactionListBody {
   data: Array<{
@@ -93,28 +96,18 @@ describe('Finance Transactions Router', () => {
   let travelTagId: string
 
   beforeAll(async () => {
-    testUserId = crypto.randomUUID()
+    testUserId = await createFinanceUser('test')
     testAccountId = crypto.randomUUID()
     testInstitutionId = crypto.randomUUID()
     foodTagId = crypto.randomUUID()
     travelTagId = crypto.randomUUID()
-
-    await createTestUser({
-      id: testUserId,
-      email: `test-${testUserId.slice(0, 8)}@example.com`,
-    })
-
-    await db.insert(financeAccounts).values({
+    await createFinanceAccountFixture({
       id: testAccountId,
       userId: testUserId,
       name: `Test Account ${testAccountId.slice(0, 8)}`,
-      accountType: 'checking',
-      institutionName: testInstitutionId,
       institutionId: testInstitutionId,
+      institutionName: testInstitutionId,
       balance: '5000.00',
-      currency: 'USD',
-      isActive: true,
-      data: {},
     })
 
     await db.insert(tags).values([
@@ -132,32 +125,11 @@ describe('Finance Transactions Router', () => {
   })
 
   afterAll(async () => {
-    await db
-      .delete(taggedItems)
-      .where(
-        and(
-          eq(taggedItems.entityType, 'finance_transaction'),
-          eq(taggedItems.tagId, foodTagId),
-        ),
-      )
-      .catch(() => {})
-
-    await db
-      .delete(taggedItems)
-      .where(
-        and(
-          eq(taggedItems.entityType, 'finance_transaction'),
-          eq(taggedItems.tagId, travelTagId),
-        ),
-      )
-      .catch(() => {})
-
-    await db.delete(tags).where(eq(tags.id, foodTagId)).catch(() => {})
-    await db.delete(tags).where(eq(tags.id, travelTagId)).catch(() => {})
-
-    await db.execute(sql`delete from finance_transactions where user_id = ${testUserId}`).catch(() => {})
-    await db.delete(financeAccounts).where(eq(financeAccounts.id, testAccountId)).catch(() => {})
-    await db.execute(sql`delete from users where id = ${testUserId}`).catch(() => {})
+    await cleanupFinanceUserData({
+      userIds: [testUserId],
+      accountIds: [testAccountId],
+      tagIds: [foodTagId, travelTagId],
+    })
   })
 
   test('creates transaction with tags and lists by tag filter', async () => {

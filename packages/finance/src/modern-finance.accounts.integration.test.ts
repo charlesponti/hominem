@@ -1,5 +1,8 @@
-import crypto from 'node:crypto'
-
+import {
+  createDeterministicIdFactory,
+  ensureIntegrationUsers,
+  isIntegrationDatabaseAvailable,
+} from '@hominem/db/test/utils'
 import { db, sql } from '@hominem/db'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -13,28 +16,12 @@ import {
   upsertAccount,
 } from './modern-finance'
 
-async function isDatabaseAvailable(): Promise<boolean> {
-  try {
-    await db.execute(sql`select 1`)
-    return true
-  } catch {
-    return false
-  }
-}
-
-const dbAvailable = await isDatabaseAvailable()
+const dbAvailable = await isIntegrationDatabaseAvailable()
+const nextUserId = createDeterministicIdFactory('finance.accounts.integration')
 
 describe.skipIf(!dbAvailable)('modern-finance accounts integration', () => {
   let ownerId: string
   let otherUserId: string
-
-  const createUser = async (id: string): Promise<void> => {
-    await db.execute(sql`
-      insert into users (id, email, name)
-      values (${id}, ${`${id}@example.com`}, ${'Finance User'})
-      on conflict (id) do nothing
-    `)
-  }
 
   const cleanupUser = async (userId: string): Promise<void> => {
     await db.execute(sql`delete from finance_accounts where user_id = ${userId}`).catch(() => {})
@@ -42,13 +29,15 @@ describe.skipIf(!dbAvailable)('modern-finance accounts integration', () => {
   }
 
   beforeEach(async () => {
-    ownerId = crypto.randomUUID()
-    otherUserId = crypto.randomUUID()
+    ownerId = nextUserId()
+    otherUserId = nextUserId()
 
     await cleanupUser(ownerId)
     await cleanupUser(otherUserId)
-    await createUser(ownerId)
-    await createUser(otherUserId)
+    await ensureIntegrationUsers([
+      { id: ownerId, name: 'Finance User' },
+      { id: otherUserId, name: 'Finance User' },
+    ])
   })
 
   it('creates, lists, and fetches accounts for owner', async () => {

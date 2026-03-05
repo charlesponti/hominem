@@ -20,9 +20,9 @@ interface AuthUserRecord {
   email: string;
   name: string | null;
   image: string | null;
-  is_admin: boolean;
-  created_at: string;
-  updated_at: string;
+  isAdmin: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export async function ensureOAuthSubjectUser(
@@ -35,9 +35,9 @@ export async function ensureOAuthSubjectUser(
       email: users.email,
       name: users.name,
       image: users.image,
-      is_admin: users.is_admin,
-      created_at: users.created_at,
-      updated_at: users.updated_at,
+      isAdmin: users.isAdmin,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
     })
     .from(authSubjects)
     .innerJoin(users, eq(users.id, authSubjects.userId))
@@ -61,9 +61,9 @@ export async function ensureOAuthSubjectUser(
       email: users.email,
       name: users.name,
       image: users.image,
-      is_admin: users.is_admin,
-      created_at: users.created_at,
-      updated_at: users.updated_at,
+      isAdmin: users.isAdmin,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
     })
     .from(users)
     .where(eq(users.email, input.email))
@@ -80,18 +80,18 @@ export async function ensureOAuthSubjectUser(
           email: input.email,
           name: input.name ?? null,
           image: input.image ?? null,
-          is_admin: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          isAdmin: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         })
         .returning({
           id: users.id,
           email: users.email,
           name: users.name,
           image: users.image,
-          is_admin: users.is_admin,
-          created_at: users.created_at,
-          updated_at: users.updated_at,
+          isAdmin: users.isAdmin,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
         })
     )[0];
 

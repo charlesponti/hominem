@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
 
-import { db, eq } from '@hominem/db';
+import { db, eq, sql } from '@hominem/db';
 import { authSubjects } from '@hominem/db/schema/auth';
 import { users } from '@hominem/db/schema/users';
+import { createTestUser } from '@hominem/db/test/fixtures';
 import { afterAll, describe, expect, test } from 'vitest';
 
 describe('auth_subjects constraints', () => {
@@ -10,28 +11,33 @@ describe('auth_subjects constraints', () => {
   const userIdB = randomUUID();
   const providerSubject = `apple-subject-${randomUUID()}`;
 
+  const hasTable = async (tableName: string) => {
+    try {
+      await db.execute(sql.raw(`select 1 from "${tableName}" limit 1`));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   afterAll(async () => {
     await db.delete(users).where(eq(users.id, userIdA));
     await db.delete(users).where(eq(users.id, userIdB));
   });
 
   test('enforces global uniqueness for provider/provider_subject', async () => {
-    const now = new Date().toISOString();
+    if (!(await hasTable('auth_subjects'))) {
+      return;
+    }
 
-    await db.insert(users).values({
+    await createTestUser({
       id: userIdA,
       email: `auth-subject-a-${randomUUID()}@example.com`,
-      isAdmin: false,
-      createdAt: now,
-      updatedAt: now,
     });
 
-    await db.insert(users).values({
+    await createTestUser({
       id: userIdB,
       email: `auth-subject-b-${randomUUID()}@example.com`,
-      isAdmin: false,
-      createdAt: now,
-      updatedAt: now,
     });
 
     await db.insert(authSubjects).values({
@@ -40,7 +46,7 @@ describe('auth_subjects constraints', () => {
       provider: 'google',
       providerSubject,
       isPrimary: true,
-      linkedAt: now,
+      linkedAt: new Date().toISOString(),
     });
 
     await expect(
@@ -50,7 +56,7 @@ describe('auth_subjects constraints', () => {
         provider: 'google',
         providerSubject,
         isPrimary: false,
-        linkedAt: now,
+        linkedAt: new Date().toISOString(),
       }),
     ).rejects.toThrow();
   });

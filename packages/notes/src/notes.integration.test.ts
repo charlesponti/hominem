@@ -1,24 +1,18 @@
-import crypto from 'node:crypto'
-
 import { db } from '@hominem/db'
 import { sql } from '@hominem/db'
+import {
+  createDeterministicIdFactory,
+  ensureIntegrationUsers,
+  isIntegrationDatabaseAvailable,
+} from '@hominem/db/test/utils'
 import type { NoteOutput } from './contracts'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { ConflictError } from './note.state.service'
 import { NotFoundError, NotesService } from './notes.service'
 
-async function isDatabaseAvailable(): Promise<boolean> {
-  try {
-    await db.execute(sql`select 1`)
-    return true
-  } catch {
-    console.warn('Database not available, skipping notes.integration tests. Start test DB on port 4433.')
-    return false
-  }
-}
-
-const dbAvailable = await isDatabaseAvailable()
+const dbAvailable = await isIntegrationDatabaseAvailable()
+const nextUserId = createDeterministicIdFactory('notes.integration')
 
 describe.skipIf(!dbAvailable)('notes integration', () => {
   const service = new NotesService()
@@ -61,18 +55,14 @@ describe.skipIf(!dbAvailable)('notes integration', () => {
     })
   }
 
-  const createUser = async (id: string, name: string): Promise<void> => {
-    await db.execute(
-      sql`insert into users (id, email, name) values (${id}, ${`${id}@example.com`}, ${name}) on conflict (id) do nothing`,
-    )
-  }
-
   beforeEach(async () => {
-    ownerId = crypto.randomUUID()
-    otherUserId = crypto.randomUUID()
+    ownerId = nextUserId()
+    otherUserId = nextUserId()
     await cleanupUsersAndNotes([ownerId, otherUserId])
-    await createUser(ownerId, 'Notes Owner')
-    await createUser(otherUserId, 'Notes Other User')
+    await ensureIntegrationUsers([
+      { id: ownerId, name: 'Notes Owner' },
+      { id: otherUserId, name: 'Notes Other User' },
+    ])
   })
 
   it('publishes a draft note', async () => {

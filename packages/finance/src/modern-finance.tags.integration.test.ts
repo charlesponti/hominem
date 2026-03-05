@@ -1,6 +1,9 @@
-import crypto from 'node:crypto'
-
 import { db, sql } from '@hominem/db'
+import {
+  createDeterministicIdFactory,
+  ensureIntegrationUsers,
+  isIntegrationDatabaseAvailable,
+} from '@hominem/db/test/utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -10,15 +13,6 @@ import {
   queryTransactionsByContract,
   replaceTransactionTags,
 } from './modern-finance'
-
-async function isDatabaseAvailable(): Promise<boolean> {
-  try {
-    await db.execute(sql`select 1`)
-    return true
-  } catch {
-    return false
-  }
-}
 
 async function hasTaggingTables(): Promise<boolean> {
   const result = await db.execute(sql`
@@ -34,8 +28,10 @@ async function hasTaggingTables(): Promise<boolean> {
   return Boolean(rows[0]?.tags_table && rows[0]?.tagged_items_table)
 }
 
-const dbAvailable = await isDatabaseAvailable()
+const dbAvailable = await isIntegrationDatabaseAvailable()
 const taggingTablesAvailable = dbAvailable ? await hasTaggingTables() : false
+const nextUserId = createDeterministicIdFactory('finance.tags.integration')
+const nextTagId = createDeterministicIdFactory('finance.tags.integration.tag')
 
 describe.skipIf(!dbAvailable || !taggingTablesAvailable)('modern-finance tags integration', () => {
   let ownerId: string
@@ -46,14 +42,6 @@ describe.skipIf(!dbAvailable || !taggingTablesAvailable)('modern-finance tags in
   let ownerFoodTagId: string
   let ownerTravelTagId: string
   let otherTagId: string
-
-  const createUser = async (id: string): Promise<void> => {
-    await db.execute(sql`
-      insert into users (id, email, name)
-      values (${id}, ${`${id}@example.com`}, ${'Finance Tags User'})
-      on conflict (id) do nothing
-    `)
-  }
 
   const cleanupUser = async (userId: string): Promise<void> => {
     await db.execute(sql`
@@ -68,16 +56,18 @@ describe.skipIf(!dbAvailable || !taggingTablesAvailable)('modern-finance tags in
   }
 
   beforeEach(async () => {
-    ownerId = crypto.randomUUID()
-    otherUserId = crypto.randomUUID()
-    ownerFoodTagId = crypto.randomUUID()
-    ownerTravelTagId = crypto.randomUUID()
-    otherTagId = crypto.randomUUID()
+    ownerId = nextUserId()
+    otherUserId = nextUserId()
+    ownerFoodTagId = nextTagId()
+    ownerTravelTagId = nextTagId()
+    otherTagId = nextTagId()
 
     await cleanupUser(ownerId)
     await cleanupUser(otherUserId)
-    await createUser(ownerId)
-    await createUser(otherUserId)
+    await ensureIntegrationUsers([
+      { id: ownerId, name: 'Finance Tags User' },
+      { id: otherUserId, name: 'Finance Tags User' },
+    ])
 
     await db.execute(sql`
       insert into tags (id, owner_id, name)

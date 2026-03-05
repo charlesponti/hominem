@@ -1,6 +1,9 @@
-import crypto from 'node:crypto'
-
 import { db, sql } from '@hominem/db'
+import {
+  createDeterministicIdFactory,
+  ensureIntegrationUsers,
+  isIntegrationDatabaseAvailable,
+} from '@hominem/db/test/utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -14,30 +17,15 @@ import {
   sendListInvite,
 } from './index'
 
-async function isDatabaseAvailable(): Promise<boolean> {
-  try {
-    await db.execute(sql`select 1`)
-    return true
-  } catch {
-    return false
-  }
-}
-
-const dbAvailable = await isDatabaseAvailable()
+const dbAvailable = await isIntegrationDatabaseAvailable()
+const nextUserId = createDeterministicIdFactory('lists.sharing.integration.user')
+const nextListId = createDeterministicIdFactory('lists.sharing.integration.list')
 
 describe.skipIf(!dbAvailable)('list sharing integration', () => {
   let ownerId: string
   let collaboratorId: string
   let listId: string
   let collaboratorEmail: string
-
-  const createUser = async (id: string, email: string): Promise<void> => {
-    await db.execute(sql`
-      insert into users (id, email, name)
-      values (${id}, ${email}, ${'List Sharing User'})
-      on conflict (id) do nothing
-    `)
-  }
 
   const cleanupForUsers = async (userIds: string[]): Promise<void> => {
     for (const userId of userIds) {
@@ -55,14 +43,16 @@ describe.skipIf(!dbAvailable)('list sharing integration', () => {
   }
 
   beforeEach(async () => {
-    ownerId = crypto.randomUUID()
-    collaboratorId = crypto.randomUUID()
-    listId = crypto.randomUUID()
+    ownerId = nextUserId()
+    collaboratorId = nextUserId()
+    listId = nextListId()
     collaboratorEmail = `${collaboratorId}@example.com`
 
     await cleanupForUsers([ownerId, collaboratorId])
-    await createUser(ownerId, `${ownerId}@example.com`)
-    await createUser(collaboratorId, collaboratorEmail)
+    await ensureIntegrationUsers([
+      { id: ownerId, name: 'List Sharing User', email: `${ownerId}@example.com` },
+      { id: collaboratorId, name: 'List Sharing User', email: collaboratorEmail },
+    ])
 
     await db.execute(sql`
       insert into task_lists (id, user_id, name)

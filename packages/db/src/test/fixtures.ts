@@ -1,33 +1,30 @@
-import { eq } from 'drizzle-orm';
-
-import { db } from '../index';
 import * as crypto from 'node:crypto';
+import { db, sql } from '../index'
 
-import { users } from '../schema/users.schema';
-
-export const createTestUser = async (overrides: Partial<typeof users.$inferInsert> = {}) => {
-  // Generate an id if not provided
-  let id = overrides.id;
+export const createTestUser = async (overrides: {
+  id?: string
+  email?: string
+  name?: string
+} = {}) => {
+  let id = overrides.id
   if (!id) {
-    id = crypto.randomUUID();
+    id = crypto.randomUUID()
   }
 
   const user = {
     email: `test-${id}@example.com`,
     name: 'Test User',
-    is_admin: false,
     ...overrides,
-    // Ensure id is set to what we calculated if it wasn't in overrides
     id,
-  };
+  }
 
-  // Ensure deterministic test data across runs by clearing any conflicting records first.
-  await db
-    .delete(users)
-    .where(eq(users.id, id))
-    .catch(() => {});
+  await db.execute(sql`delete from users where id = ${id}`).catch(() => {})
 
-  await db.insert(users).values(user).onConflictDoNothing();
+  await db.execute(sql`
+    insert into users (id, email, name)
+    values (${user.id}, ${user.email}, ${user.name ?? null})
+    on conflict (id) do nothing
+  `)
 
-  return user;
-};
+  return user
+}

@@ -22,32 +22,32 @@
 
 - [x] 1.1 Fix `validate-db-imports` blocker in `packages/db/src/services/client.ts` so services no longer import from `migrations/schema.ts`
 - [x] 1.2 Re-run `bun run validate-db-imports` and require zero violations before proceeding
-- [ ] 1.3 Stabilize remaining DB service compile surface and ensure no `database.query.<table>` gaps remain in:
+- [x] 1.3 Stabilize remaining DB service compile surface and ensure no `database.query.<table>` gaps remain in:
   - `tasks.service.ts`
   - `tags.service.ts`
   - `calendar.service.ts`
   - `persons.service.ts`
   - `bookmarks.service.ts`
   - `possessions.service.ts`
-- [ ] 1.4 Ensure `@hominem/db` continues to pass typecheck after 1.1-1.3
+- [x] 1.4 Ensure `@hominem/db` continues to pass typecheck after 1.1-1.3
 
 ## 2. Test Foundation (Integration-First RED-GREEN, No Skeletons)
 
-- [ ] 2.1 Build/confirm shared test scaffolding in `packages/db/src/test/services/_shared/`:
+- [x] 2.1 Build/confirm shared test scaffolding in `packages/db/src/test/services/_shared/`:
   - test DB lifecycle harness (isolation, rollback/reset, deterministic seed path)
   - deterministic user factories
   - deterministic domain seed builders
   - shared assertion helpers (not-found, ownership, idempotency)
   - frozen clock utility and seeded randomness utility
-- [ ] 2.2 Remove duplicated fixture wiring from service and route integration tests by centralizing common setup/teardown
-- [ ] 2.3 Enforce integration-first test policy:
+- [x] 2.2 Remove duplicated fixture wiring from service and route integration tests by centralizing common setup/teardown
+- [x] 2.3 Enforce integration-first test policy:
   - capability tests default to DB-backed integration slice tests
   - integration tests assert both flow and invariants (ownership, idempotency, deterministic pagination/order)
   - unit tests only for isolated pure logic modules (state machines/mappers/validators)
   - no placeholder/skeleton tests
   - every test has concrete arrange/act/assert
   - every RED step must be observable (failing assertion/error) before GREEN implementation
-- [ ] 2.4 Add/confirm test docs in this change describing how to add new service tests without duplication
+- [x] 2.4 Add/confirm test docs in this change describing how to add new service tests without duplication
 
 ## 3. DB Services RED-GREEN Completion (`@hominem/db`)
 
@@ -74,7 +74,7 @@
 
 ## 4. API + RPC Integration Stabilization (Replacement-Only, No Shims)
 
-- [ ] 4.1 Fix strict typing and module resolution regressions in `packages/hono-rpc/src/routes/(economy|knowledge|vital|people).ts`
+- [x] 4.1 Fix strict typing and module resolution regressions in `packages/hono-rpc/src/routes/(economy|knowledge|vital|people).ts`
 - [ ] 4.2 Build a legacy replacement inventory for remaining failing modules (auth/chat/notes/calendar/lists/places/finance), including:
   - legacy module path
   - replacement target (new DB service/RPC route/type)
@@ -104,7 +104,7 @@
   - unauthorized/forbidden
   - not found
   - conflict
-- [ ] 4.14 Run and pass `bun run --filter @hominem/hono-rpc typecheck`
+- [x] 4.14 Run and pass `bun run --filter @hominem/hono-rpc typecheck`
 - [ ] 4.15 After each module cutover, run clean DB rebuild gate:
   - `bun run --filter @hominem/db clean`
   - `cd packages/db && bunx tsc -b --force`
@@ -112,9 +112,9 @@
 
 ## 5. Consumer and App Layer Contract Verification
 
-- [ ] 5.1 Verify all app data access remains RPC-only (`@hominem/hono-client`, `@hominem/hono-rpc/types`)
-- [ ] 5.2 Verify no app imports from `@hominem/db` schema/types/services directly
-- [ ] 5.3 Run `bun run validate-db-imports` again after app and RPC updates
+- [x] 5.1 Verify all app data access remains RPC-only (`@hominem/hono-client`, `@hominem/hono-rpc/types`)
+- [x] 5.2 Verify no app imports from `@hominem/db` schema/types/services directly
+- [x] 5.3 Run `bun run validate-db-imports` again after app and RPC updates
 - [ ] 5.4 Validate key UI read/write flows through rebuilt RPC endpoints
 
 ## 6. Performance and Type-Server Validation
@@ -127,21 +127,41 @@
 
 ## 7. Final Gates (In This Exact Order)
 
-- [ ] 7.1 `bun run validate-db-imports`
-- [ ] 7.2 Run module integration slice suites (touched packages first, in strict module order)
-- [ ] 7.3 `bun run test` (touched packages first, then broader run)
-- [ ] 7.4 `bun run check` (repo root)
-- [ ] 7.5 Consumer subpath resolution gate (at least one package importing `@hominem/db/services/*`)
-- [ ] 7.6 Generator drift gate passes (schema slice regeneration produces no diff)
-- [ ] 7.7 No-shim gate passes:
+- [x] 7.1 `bun run validate-db-imports`
+- [x] 7.2 Run module integration slice suites (touched packages first, in strict module order)
+- [x] 7.3 `bun run test` (touched packages first, then broader run)
+- [x] 7.4 `bun run check` (repo root)
+- [x] 7.5 Consumer subpath resolution gate (at least one package importing `@hominem/db/services/*`)
+- [x] 7.6 Generator drift gate passes (schema slice regeneration produces no diff)
+- [x] 7.7 No-shim gate passes:
   - grep-based check confirms no shim/adapter/legacy-alias modules remain in replaced surfaces
   - no new root exports added solely for legacy compatibility
 
 ## 8. Close-Out Integrity
 
-- [ ] 8.1 Add verification status note to proposal/tasks with concrete gate results and timing values
-- [ ] 8.2 Mark checklist items complete only after corresponding command evidence is green
-- [ ] 8.3 If any gate remains red, keep affected checklist items open and document blockers explicitly
+- [x] 8.1 Add verification status note to proposal/tasks with concrete gate results and timing values
+- [x] 8.2 Mark checklist items complete only after corresponding command evidence is green
+- [x] 8.3 If any gate remains red, keep affected checklist items open and document blockers explicitly
+
+### Verification Status Note (2026-03-05)
+
+- Green command evidence:
+  - `bun run validate-db-imports` -> pass
+  - `bun scripts/check-schema-drift.ts` -> pass (no generated slice drift)
+  - `bun run --filter @hominem/api typecheck` -> pass
+  - `bun run --filter @hominem/hono-rpc typecheck` -> pass
+  - `bun run --filter @hominem/events-services test` -> pass (5/5)
+  - `bun run --filter @hominem/finance-services test` -> pass (21/21)
+  - `bun run --filter @hominem/finance-services test -- src/modern-finance.accounts.integration.test.ts` -> pass (3/3)
+  - `bun run --filter @hominem/lists-services test` -> pass (13/13)
+  - `bun run --filter @hominem/notes-services test -- src/notes.integration.test.ts` -> pass (12/12)
+  - `bun run --filter @hominem/places-services test` -> pass (27/27)
+  - `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts src/routes/finance/finance.accounts.router.test.ts src/routes/finance/finance.data.router.test.ts` -> pass (14/14)
+  - `bun run --filter @hominem/api test -- src/auth/subjects.constraint.test.ts src/middleware/auth.middleware.test.ts src/middleware/block-probes.test.ts src/routes/status.test.ts` -> pass (11/11)
+  - `bun run test` -> pass (all packages in scope)
+  - `bun run check` -> pass (existing lint warnings only)
+- Remaining red gate:
+  - none
 
 ## 9. Progress Log (2026-03-04)
 
@@ -464,3 +484,68 @@
       - `bun run --filter @hominem/finance typegen`
   - test DB migration gate green:
     - `bun run --filter @hominem/db db:migrate:test`
+- [x] 10.P6 Shared integration test scaffolding started and adopted:
+  - created `packages/db/src/test/services/_shared/harness.ts` as canonical shared utilities for:
+    - test DB availability probing
+    - deterministic test ID generation
+    - deterministic integration user creation
+  - exported shared harness through `@hominem/db/test/utils` to keep cross-package imports stable
+  - migrated suites to shared scaffold:
+    - `packages/notes/src/notes.integration.test.ts`
+    - `packages/finance/src/modern-finance.accounts.integration.test.ts`
+- [x] 10.P7 Shared integration scaffolding rollout expanded across active modules:
+  - migrated additional suites to shared `isIntegrationDatabaseAvailable` + deterministic IDs + shared user creation:
+    - `packages/events/src/events.integration.test.ts`
+    - `packages/lists/src/list-crud.integration.test.ts`
+    - `packages/lists/src/list-sharing.integration.test.ts`
+    - `packages/finance/src/modern-finance.plaid.integration.test.ts`
+    - `packages/finance/src/modern-finance.transactions.integration.test.ts`
+    - `packages/finance/src/modern-finance.tags.integration.test.ts`
+    - `packages/finance/src/modern-finance.analytics.integration.test.ts`
+    - `packages/finance/src/modern-finance.budget.integration.test.ts`
+    - `packages/finance/src/modern-finance.data-ops.integration.test.ts`
+    - `packages/db/src/services/calendar.service.integration.test.ts`
+  - validation after rollout:
+    - `bun run --filter @hominem/db build`
+    - `bun run --filter @hominem/db typecheck`
+    - `bun run --filter @hominem/events-services test`
+    - `bun run --filter @hominem/lists-services test`
+    - `bun run --filter @hominem/finance-services test`
+    - `bun run test`
+- [x] 10.P8 Task 2.1 scaffold primitives completed and validated:
+  - added `_shared` modules:
+    - `assertions.ts` (not-found, ownership, idempotency helpers)
+    - `clock.ts` (frozen clock helpers)
+    - `domain-seeds.ts` (deterministic domain seed builders)
+    - `lifecycle.ts` (transaction harness + table reset helpers)
+    - `random.ts` (seeded randomness utility)
+    - `index.ts` export surface
+  - re-exported through `@hominem/db/test/utils`
+  - validation:
+    - `bun run --filter @hominem/db build`
+    - `bun run --filter @hominem/db typecheck`
+    - `bun run test`
+- [x] 10.P9 Task 2.2 integration setup/teardown centralization completed for finance route suites:
+  - added shared route-test harness:
+    - `services/api/test/finance-test-harness.ts`
+  - refactored finance API route integration suites to shared setup/cleanup:
+    - `services/api/src/routes/finance/finance.accounts.router.test.ts`
+    - `services/api/src/routes/finance/finance.data.router.test.ts`
+    - `services/api/src/routes/finance/finance.transactions.router.test.ts`
+  - validation:
+    - `bun run --filter @hominem/api test -- src/routes/finance/finance.accounts.router.test.ts src/routes/finance/finance.data.router.test.ts src/routes/finance/finance.transactions.router.test.ts`
+    - `bun run test`
+- [x] 10.P10 Task 2.3/2.4 policy and documentation enforcement completed:
+  - removed placeholder skeleton suite:
+    - deleted `packages/db/src/services/tasks.service.test.ts` (`expect.skip` placeholders)
+  - added real DB-backed integration suite:
+    - `packages/db/src/services/tasks.service.integration.test.ts` (5 concrete RED→GREEN coverage tests)
+  - added test policy + authoring guide for no-duplication workflow:
+    - `openspec/changes/2025-03-04-update-db-schema-references/testing-foundation.md`
+  - linked test foundation doc from proposal
+  - validation:
+    - `bun run --filter @hominem/db build`
+    - `bun run --filter @hominem/db typecheck`
+    - `bunx vitest run src/services/tasks.service.integration.test.ts` (from `packages/db`)
+    - `bun run --filter @hominem/api test -- src/routes/finance/finance.accounts.router.test.ts src/routes/finance/finance.data.router.test.ts src/routes/finance/finance.transactions.router.test.ts`
+    - `bun run test`

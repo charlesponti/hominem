@@ -1062,6 +1062,42 @@ export const possessions = pgTable("possessions", {
 	pgPolicy("possessions_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`  }),
 ]);
 
+export const possessionsUsage = pgTable("possessions_usage", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	possessionId: uuid("possession_id").notNull(),
+	containerId: uuid("container_id"),
+	type: text(),
+	timestamp: timestamp("timestamp", { withTimezone: true, mode: 'string' }),
+	amount: numeric("amount", { precision: 10, scale: 2 }),
+	amountUnit: text("amount_unit"),
+	method: text(),
+	startDate: date("start_date"),
+	endDate: date("end_date"),
+	data: jsonb().default({}),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow(),
+}, (table) => [
+	index("possessions_usage_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
+	index("possessions_usage_possession_idx").using("btree", table.possessionId.asc().nullsLast().op("uuid_ops")),
+	index("possessions_usage_container_idx").using("btree", table.containerId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+		columns: [table.userId],
+		foreignColumns: [users.id],
+		name: "possessions_usage_user_id_fkey"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.possessionId],
+		foreignColumns: [possessions.id],
+		name: "possessions_usage_possession_id_fkey"
+	}).onDelete("cascade"),
+	foreignKey({
+		columns: [table.containerId],
+		foreignColumns: [possessionContainers.id],
+		name: "possessions_usage_container_id_fkey"
+	}).onDelete("set null"),
+	pgPolicy("possessions_usage_tenant_policy", { as: "permissive", for: "all", to: ["public"], using: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`, withCheck: sql`(app_is_service_role() OR (user_id = app_current_user_id()))`  }),
+]);
+
 export const searches2025Q1 = pgTable("searches_2025_q1", {
 	id: uuid().defaultRandom().notNull(),
 	userId: uuid("user_id").notNull(),

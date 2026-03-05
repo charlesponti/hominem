@@ -4,6 +4,11 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { db, eq, inArray, sql } from '../index'
 import { calendarAttendees, calendarEvents, persons } from '../schema/calendar'
+import {
+  createDeterministicIdFactory,
+  ensureIntegrationUsers,
+  isIntegrationDatabaseAvailable,
+} from '../test/services/_shared/harness'
 import { ForbiddenError } from './_shared/errors'
 import type { UserId } from './_shared/ids'
 import { brandId } from './_shared/ids'
@@ -20,26 +25,12 @@ import {
   updateEvent,
 } from './calendar.service'
 
-async function isDatabaseAvailable(): Promise<boolean> {
-  try {
-    await db.execute(sql`select 1`)
-    return true
-  } catch {
-    return false
-  }
-}
-
-const dbAvailable = await isDatabaseAvailable()
+const dbAvailable = await isIntegrationDatabaseAvailable()
+const nextUserId = createDeterministicIdFactory('db.calendar.integration')
 
 describe.skipIf(!dbAvailable)('calendar.service integration', () => {
   let ownerId: UserId
   let otherUserId: UserId
-
-  const createUser = async (id: string): Promise<void> => {
-    await db.execute(
-      sql`insert into users (id, email, name) values (${id}, ${`${id}@example.com`}, ${'Calendar User'}) on conflict (id) do nothing`,
-    )
-  }
 
   const cleanupForUsers = async (userIds: string[]): Promise<void> => {
     if (userIds.length === 0) {
@@ -54,11 +45,13 @@ describe.skipIf(!dbAvailable)('calendar.service integration', () => {
   }
 
   beforeEach(async () => {
-    ownerId = brandId<UserId>(crypto.randomUUID())
-    otherUserId = brandId<UserId>(crypto.randomUUID())
+    ownerId = brandId<UserId>(nextUserId())
+    otherUserId = brandId<UserId>(nextUserId())
     await cleanupForUsers([String(ownerId), String(otherUserId)])
-    await createUser(String(ownerId))
-    await createUser(String(otherUserId))
+    await ensureIntegrationUsers([
+      { id: String(ownerId), name: 'Calendar User' },
+      { id: String(otherUserId), name: 'Calendar User' },
+    ])
   })
 
   it('lists only owner events ordered by startTime asc with deterministic pagination', async () => {

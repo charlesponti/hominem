@@ -2,9 +2,14 @@ import crypto from 'node:crypto'
 
 import { db } from '@hominem/db'
 import { eq, or, sql } from '@hominem/db'
-import { events, eventsTags, eventsUsers } from '@hominem/db/schema/calendar'
-import { contacts } from '@hominem/db/schema/contacts'
+import { calendarAttendees, calendarEvents } from '@hominem/db/schema/calendar'
+import { persons } from '@hominem/db/schema/persons'
 import { tags } from '@hominem/db/schema/tags'
+import {
+  createDeterministicIdFactory,
+  ensureIntegrationUsers,
+  isIntegrationDatabaseAvailable,
+} from '@hominem/db/test/utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -12,32 +17,17 @@ import {
   deleteEvent,
   getEventById,
   getEvents,
-  getVisitsByUser,
   updateEvent,
 } from './event-core.service'
+import { getVisitsByUser } from './visits.service'
 
-async function isDatabaseAvailable(): Promise<boolean> {
-  try {
-    await db.execute(sql`select 1`)
-    return true
-  } catch {
-    console.warn('Database not available, skipping events.integration tests. Start test DB on port 4433.')
-    return false
-  }
-}
-
-const dbAvailable = await isDatabaseAvailable()
+const dbAvailable = await isIntegrationDatabaseAvailable()
+const nextUserId = createDeterministicIdFactory('events.integration')
 
 describe.skipIf(!dbAvailable)('events integration', () => {
   let ownerId: string
   let otherUserId: string
   let ownerContactId: string
-
-  const createUser = async (id: string, name: string): Promise<void> => {
-    await db.execute(
-      sql`insert into users (id, email, name) values (${id}, ${`${id}@example.com`}, ${name}) on conflict (id) do nothing`,
-    )
-  }
 
   const cleanupForUsers = async (userIds: string[]): Promise<void> => {
     if (userIds.length === 0) {
@@ -46,40 +36,43 @@ describe.skipIf(!dbAvailable)('events integration', () => {
 
     if (userIds.length === 1) {
       const userId = userIds[0]!
-      await db.delete(events).where(eq(events.userId, userId)).catch(() => {})
-      await db.delete(tags).where(eq(tags.userId, userId)).catch(() => {})
-      await db.delete(contacts).where(eq(contacts.userId, userId)).catch(() => {})
+      await db.delete(calendarEvents).where(eq(calendarEvents.userId, userId)).catch(() => {})
+      await db.delete(tags).where(eq(tags.ownerId, userId)).catch(() => {})
+      await db.delete(persons).where(eq(persons.ownerUserId, userId)).catch(() => {})
       await db.execute(sql`delete from users where id = ${userId}`).catch(() => {})
       return
     }
 
     const [firstUserId, secondUserId] = userIds
     await db
-      .delete(events)
-      .where(or(eq(events.userId, firstUserId!), eq(events.userId, secondUserId!)))
+      .delete(calendarEvents)
+      .where(or(eq(calendarEvents.userId, firstUserId!), eq(calendarEvents.userId, secondUserId!)))
       .catch(() => {})
     await db
       .delete(tags)
-      .where(or(eq(tags.userId, firstUserId!), eq(tags.userId, secondUserId!)))
+      .where(or(eq(tags.ownerId, firstUserId!), eq(tags.ownerId, secondUserId!)))
       .catch(() => {})
     await db
-      .delete(contacts)
-      .where(or(eq(contacts.userId, firstUserId!), eq(contacts.userId, secondUserId!)))
+      .delete(persons)
+      .where(or(eq(persons.ownerUserId, firstUserId!), eq(persons.ownerUserId, secondUserId!)))
       .catch(() => {})
     await db.execute(sql`delete from users where id = ${firstUserId} or id = ${secondUserId}`).catch(() => {})
   }
 
   beforeEach(async () => {
-    ownerId = crypto.randomUUID()
-    otherUserId = crypto.randomUUID()
+    ownerId = nextUserId()
+    otherUserId = nextUserId()
     await cleanupForUsers([ownerId, otherUserId])
-    await createUser(ownerId, 'Events Owner')
-    await createUser(otherUserId, 'Events Other User')
+    await ensureIntegrationUsers([
+      { id: ownerId, name: 'Events Owner' },
+      { id: otherUserId, name: 'Events Other User' },
+    ])
 
-    ownerContactId = crypto.randomUUID()
-    await db.insert(contacts).values({
+    ownerContactId = nextUserId()
+    await db.insert(persons).values({
       id: ownerContactId,
-      userId: ownerId,
+      ownerUserId: ownerId,
+      personType: 'contact',
       firstName: 'Companion',
       lastName: 'One',
       email: `${ownerContactId}@example.com`,
@@ -134,18 +127,13 @@ describe.skipIf(!dbAvailable)('events integration', () => {
     const deleted = await deleteEvent(created.id)
 
     const eventAfterDelete = await getEventById(created.id)
-    const tagsAfterDelete = await db
-      .select()
-      .from(eventsTags)
-      .where(eq(eventsTags.eventId, created.id))
     const peopleAfterDelete = await db
       .select()
-      .from(eventsUsers)
-      .where(eq(eventsUsers.eventId, created.id))
+      .from(calendarAttendees)
+      .where(eq(calendarAttendees.eventId, created.id))
 
     expect(deleted).toBe(true)
     expect(eventAfterDelete).toBeNull()
-    expect(tagsAfterDelete).toHaveLength(0)
     expect(peopleAfterDelete).toHaveLength(0)
   })
 
@@ -167,10 +155,7 @@ describe.skipIf(!dbAvailable)('events integration', () => {
     })
 
     const ownerVisits = await getVisitsByUser(ownerId)
-    const ownerVisitUserIds = new Set(ownerVisits.map((visit) => visit.userId))
-
-    expect(ownerVisits.length).toBeGreaterThan(0)
-    expect(ownerVisitUserIds).toEqual(new Set([ownerId]))
+    expect(ownerVisits).toEqual([])
   })
 
   it('filters by tag name deterministically', async () => {

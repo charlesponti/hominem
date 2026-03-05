@@ -1,6 +1,9 @@
-import crypto from 'node:crypto'
-
 import { db, sql } from '@hominem/db'
+import {
+  createDeterministicIdFactory,
+  ensureIntegrationUsers,
+  isIntegrationDatabaseAvailable,
+} from '@hominem/db/test/utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { createList, deleteList, updateList } from './list-crud.service'
@@ -18,28 +21,12 @@ function resultRows<T>(result: unknown): T[] {
   return []
 }
 
-async function isDatabaseAvailable(): Promise<boolean> {
-  try {
-    await db.execute(sql`select 1`)
-    return true
-  } catch {
-    return false
-  }
-}
-
-const dbAvailable = await isDatabaseAvailable()
+const dbAvailable = await isIntegrationDatabaseAvailable()
+const nextUserId = createDeterministicIdFactory('lists.crud.integration')
 
 describe.skipIf(!dbAvailable)('list-crud integration', () => {
   let ownerId: string
   let otherUserId: string
-
-  const createUser = async (id: string): Promise<void> => {
-    await db.execute(sql`
-      insert into users (id, email, name)
-      values (${id}, ${`${id}@example.com`}, ${'List User'})
-      on conflict (id) do nothing
-    `)
-  }
 
   const cleanupForUsers = async (userIds: string[]): Promise<void> => {
     if (userIds.length === 0) {
@@ -53,12 +40,14 @@ describe.skipIf(!dbAvailable)('list-crud integration', () => {
   }
 
   beforeEach(async () => {
-    ownerId = crypto.randomUUID()
-    otherUserId = crypto.randomUUID()
+    ownerId = nextUserId()
+    otherUserId = nextUserId()
 
     await cleanupForUsers([ownerId, otherUserId])
-    await createUser(ownerId)
-    await createUser(otherUserId)
+    await ensureIntegrationUsers([
+      { id: ownerId, name: 'List User' },
+      { id: otherUserId, name: 'List User' },
+    ])
   })
 
   it('creates a list for owner', async () => {

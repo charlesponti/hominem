@@ -1,6 +1,11 @@
 import crypto from 'node:crypto'
 
 import { db, sql } from '@hominem/db'
+import {
+  createDeterministicIdFactory,
+  ensureIntegrationUsers,
+  isIntegrationDatabaseAvailable,
+} from '@hominem/db/test/utils'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
@@ -13,30 +18,14 @@ import {
   upsertPlaidItem,
 } from './modern-finance'
 
-async function isDatabaseAvailable(): Promise<boolean> {
-  try {
-    await db.execute(sql`select 1`)
-    return true
-  } catch {
-    return false
-  }
-}
-
-const dbAvailable = await isDatabaseAvailable()
+const dbAvailable = await isIntegrationDatabaseAvailable()
+const nextUserId = createDeterministicIdFactory('finance.data-ops.integration')
 
 describe.skipIf(!dbAvailable)('modern-finance data ops integration', () => {
   let ownerId: string
   let otherUserId: string
   let ownerAccountId: string
   let otherAccountId: string
-
-  const createUser = async (id: string): Promise<void> => {
-    await db.execute(sql`
-      insert into users (id, email, name)
-      values (${id}, ${`${id}@example.com`}, ${'Finance DataOps User'})
-      on conflict (id) do nothing
-    `)
-  }
 
   const cleanupUser = async (userId: string): Promise<void> => {
     await db.execute(sql`delete from tagged_items where entity_type = ${'finance_transaction'} and entity_id in (select id from finance_transactions where user_id = ${userId})`).catch(() => {})
@@ -49,13 +38,15 @@ describe.skipIf(!dbAvailable)('modern-finance data ops integration', () => {
   }
 
   beforeEach(async () => {
-    ownerId = crypto.randomUUID()
-    otherUserId = crypto.randomUUID()
+    ownerId = nextUserId()
+    otherUserId = nextUserId()
 
     await cleanupUser(ownerId)
     await cleanupUser(otherUserId)
-    await createUser(ownerId)
-    await createUser(otherUserId)
+    await ensureIntegrationUsers([
+      { id: ownerId, name: 'Finance DataOps User' },
+      { id: otherUserId, name: 'Finance DataOps User' },
+    ])
 
     const ownerAccount = await createAccount({
       userId: ownerId,

@@ -1,7 +1,5 @@
 import crypto from 'node:crypto'
 
-import { db, sql } from '@hominem/db'
-import { createTestUser } from '@hominem/db/test/fixtures'
 import { afterAll, beforeAll, describe, expect, test } from 'vitest'
 
 import {
@@ -9,6 +7,7 @@ import {
   makeAuthenticatedRequest,
   useApiTestLifecycle,
 } from '@/test/api-test-utils'
+import { cleanupFinanceUserData, createFinanceUserPair } from '@/test/finance-test-harness'
 
 describe('Finance Accounts/Institutions/Plaid Router', () => {
   const { getServer } = useApiTestLifecycle()
@@ -19,24 +18,16 @@ describe('Finance Accounts/Institutions/Plaid Router', () => {
   let createdItemId: string | null = null
 
   beforeAll(async () => {
-    ownerId = crypto.randomUUID()
-    otherUserId = crypto.randomUUID()
-
-    await createTestUser({
-      id: ownerId,
-      email: `owner-${ownerId.slice(0, 8)}@example.com`,
-    })
-    await createTestUser({
-      id: otherUserId,
-      email: `other-${otherUserId.slice(0, 8)}@example.com`,
-    })
+    const pair = await createFinanceUserPair()
+    ownerId = pair.ownerId
+    otherUserId = pair.otherUserId
   })
 
   afterAll(async () => {
-    await db.execute(sql`delete from plaid_items where user_id in (${ownerId}, ${otherUserId})`).catch(() => {})
-    await db.execute(sql`delete from finance_accounts where user_id in (${ownerId}, ${otherUserId})`).catch(() => {})
-    await db.execute(sql`delete from financial_institutions where id = ${createdInstitutionId}`).catch(() => {})
-    await db.execute(sql`delete from users where id in (${ownerId}, ${otherUserId})`).catch(() => {})
+    await cleanupFinanceUserData({
+      userIds: [ownerId, otherUserId],
+      institutionIds: [createdInstitutionId],
+    })
   })
 
   test('account CRUD endpoints enforce owner scope', async () => {
@@ -181,7 +172,7 @@ describe('Finance Accounts/Institutions/Plaid Router', () => {
     expect(syncBody.success).toBe(true)
 
     const removeDenied = await makeAuthenticatedRequest(getServer(), {
-      method: 'DELETE',
+      method: 'POST',
       url: '/api/finance/plaid/remove-connection',
       payload: {
         itemId: createdItemId,
@@ -193,7 +184,7 @@ describe('Finance Accounts/Institutions/Plaid Router', () => {
     await assertErrorResponse(removeDenied, 404)
 
     const removeAllowed = await makeAuthenticatedRequest(getServer(), {
-      method: 'DELETE',
+      method: 'POST',
       url: '/api/finance/plaid/remove-connection',
       payload: {
         itemId: createdItemId,
