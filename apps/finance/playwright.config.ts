@@ -27,7 +27,7 @@ export default defineConfig({
         PORT: '4040',
         API_URL: 'http://localhost:4040',
         BETTER_AUTH_URL: 'http://localhost:4040',
-        FINANCE_URL: 'http://localhost:3000',
+        FINANCE_URL: 'http://localhost:4444',
         NOTES_URL: 'http://localhost:4445',
         ROCCO_URL: 'http://localhost:4446',
         DATABASE_URL: 'postgres://postgres:postgres@localhost:4433/hominem-test',
