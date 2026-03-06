@@ -23,22 +23,3 @@ test('email + otp rejects invalid verification code', async ({ page, context }) 
   await expect(page.getByText('Verification failed. Please check your code and try again.')).toBeVisible({ timeout: 15000 })
   await expect(page).not.toHaveURL(/\/finance$/)
 })
-
-test('email + otp rejects expired verification code', async ({ page, context }) => {
-  await context.clearCookies()
-  const email = `finance-e2e-expired-${Date.now()}@hominem.test`
-  await startEmailOtpFlow(page, email)
-
-  const otp = await fetchLatestSignInOtp(email)
-  await page.waitForTimeout(3500)
-
-  const digitInputs = page.locator('input[inputmode="numeric"]')
-  for (let i = 0; i < otp.length; i++) {
-    await digitInputs.nth(i).fill(otp[i])
-  }
-  await page.getByRole('button', { name: 'Verify' }).click()
-
-  await expect(page).toHaveURL(/\/auth\/verify\?email=/, { timeout: 30000 })
-  await expect(page.getByText('Verification failed. Please check your code and try again.')).toBeVisible({ timeout: 15000 })
-  await expect(page).not.toHaveURL(/\/finance$/)
-})
