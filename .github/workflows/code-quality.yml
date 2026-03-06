@@ -103,7 +103,7 @@ jobs:
         run: bun run --filter @hominem/hono-rpc build
 
       - name: ⚙️ apply database migrations
-        run: bun run db:migrate
+        run: bun run --filter @hominem/db db:migrate
 
       - name: 🧪 Unit tests
         run: bun run test

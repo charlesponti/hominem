@@ -41,6 +41,11 @@ jobs:
       - name: Install Postgres and Redis
         run: brew install postgresql@17 redis
 
+      - name: Add Homebrew binaries to PATH
+        run: |
+          echo "$(brew --prefix postgresql@17)/bin" >> "$GITHUB_PATH"
+          echo "$(brew --prefix redis)/bin" >> "$GITHUB_PATH"
+
       - name: Start Postgres and Redis
         run: |
           brew services start postgresql@17
@@ -67,7 +72,7 @@ jobs:
         run: bun run build:types && bun run --filter @hominem/hono-rpc build
 
       - name: Apply database migrations
-        run: bun run db:migrate
+        run: bun run --filter @hominem/db db:migrate
 
       - name: Start API server
         run: bun run --filter @hominem/api dev > /tmp/hominem-api.log 2>&1 &
