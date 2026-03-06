@@ -104,19 +104,10 @@ financePlaidWebhookRoutes.post('/', async (c) => {
     } else if (webhook_type === 'ITEM') {
       if (webhook_code === 'ERROR') {
         // Update item status to error
-        await updatePlaidItemStatusByItemId(item_id, {
-          status: 'error',
-          error: webhookError
-            ? `${webhookError.error_code}: ${webhookError.error_message}`
-            : 'Unknown error',
-          updatedAt: new Date().toISOString(),
-        });
+        await updatePlaidItemStatusByItemId(plaidItem.userId, item_id, 'error');
       } else if (webhook_code === 'PENDING_EXPIRATION') {
         // Update item status to pending expiration
-        await updatePlaidItemStatusByItemId(item_id, {
-          status: 'pending_expiration',
-          updatedAt: new Date().toISOString(),
-        });
+        await updatePlaidItemStatusByItemId(plaidItem.userId, item_id, 'pending_expiration');
       }
     }
 

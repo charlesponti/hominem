@@ -16,7 +16,7 @@ export function ManualInstitutionStatus({
 }) {
   const institutionsQuery = useAllInstitutions();
   const institution = Array.isArray(institutionsQuery.data)
-    ? institutionsQuery.data.find((inst) => inst.id === account.institutionId)
+    ? institutionsQuery.data.find((inst) => inst.name === account.institutionName)
     : undefined;
   return (
     <div className="flex items-center space-x-2">

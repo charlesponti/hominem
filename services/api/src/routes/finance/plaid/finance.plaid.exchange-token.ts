@@ -35,13 +35,14 @@ financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema
     const accessToken = exchangeResponse.data.access_token;
     const itemId = exchangeResponse.data.item_id;
 
-    await ensureInstitutionExists(institutionId, institutionName);
+    const institution = await ensureInstitutionExists(institutionName);
 
     await upsertPlaidItem({
+      id: crypto.randomUUID(),
       userId,
       itemId,
       accessToken,
-      institutionId,
+      institutionId: institution.id || institutionId,
       status: 'active',
       lastSyncedAt: null,
     });

@@ -26,6 +26,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './app/test/test.setup.tsx',
     clearMocks: true,
-    exclude: ['**/node_modules/**', '**/dist/**', '**/cypress/**'],
+    include: ['app/**/*.test.{ts,tsx}'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/cypress/**', 'tests/**', '**/*.spec.ts'],
   },
 });

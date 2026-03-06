@@ -1,0 +1,1 @@
+ALTER TABLE "auth_subjects" ADD CONSTRAINT "auth_subjects_provider_provider_subject_key" UNIQUE("provider","provider_subject");

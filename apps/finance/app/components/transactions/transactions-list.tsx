@@ -43,12 +43,10 @@ function TransactionMetadata({
           <span>{account.name}</span>
         </div>
       )}
-      {transaction.category && (
-        <div className="flex items-center gap-1">
-          <Tag className="size-3" />
-          <span>{transaction.category}</span>
-        </div>
-      )}
+      <div className="flex items-center gap-1">
+        <Tag className="size-3" />
+        <span>{transaction.type}</span>
+      </div>
     </div>
   );
 }

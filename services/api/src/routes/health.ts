@@ -56,7 +56,7 @@ const healthQuerySchema = z.object({
 
 const healthDataSchema = z.object({
   userId: z.string(),
-  date: z.string().transform((str) => new Date(str)),
+  date: z.string(),
   activityType: z.string(),
   duration: z.number(),
   caloriesBurned: z.number(),
@@ -64,10 +64,7 @@ const healthDataSchema = z.object({
 });
 
 const updateHealthDataSchema = z.object({
-  date: z
-    .string()
-    .transform((str) => new Date(str))
-    .optional(),
+  date: z.string().optional(),
   activityType: z.string().optional(),
   duration: z.number().optional(),
   caloriesBurned: z.number().optional(),

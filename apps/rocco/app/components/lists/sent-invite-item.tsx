@@ -42,7 +42,6 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
   );
 
   const isCopied = copiedToken === token;
-  const profilePhoto = user_invitedUserId?.photoUrl || user_invitedUserId?.image;
   const userName: string = user_invitedUserId?.name || invitedUserEmail.split('@')[0] || 'U';
 
   return (
@@ -52,7 +51,7 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
           <UserAvatar
             name={userName ?? undefined}
             email={invitedUserEmail}
-            image={profilePhoto}
+            image={null}
             size="sm"
           />
         ) : (

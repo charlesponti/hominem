@@ -1951,6 +1951,7 @@ export const authSubjectsTable = pgTable("auth_subjects", {
 	linkedAt: timestamp("linked_at", { withTimezone: true, mode: 'string' }).defaultNow(),
 	unlinkedAt: timestamp("unlinked_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
+	unique("auth_subjects_provider_provider_subject_key").on(table.provider, table.providerSubject),
 	foreignKey({
 		columns: [table.userId],
 		foreignColumns: [users.id],

@@ -1,15 +1,21 @@
 import { sql } from 'drizzle-orm'
-import { pgTable, text, timestamp, uuid, boolean, jsonb, integer, index } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, uuid, boolean, jsonb, integer, index, unique } from 'drizzle-orm/pg-core'
 
-export const authSubjects = pgTable('auth_subjects', {
-  id: uuid().defaultRandom().primaryKey().notNull(),
-  userId: uuid('user_id').notNull(),
-  provider: text().notNull(),
-  providerSubject: text('provider_subject').notNull(),
-  isPrimary: boolean('is_primary').default(false),
-  linkedAt: timestamp('linked_at', { withTimezone: true, mode: 'string' }).defaultNow(),
-  unlinkedAt: timestamp('unlinked_at', { withTimezone: true, mode: 'string' }),
-})
+export const authSubjects = pgTable(
+  'auth_subjects',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    userId: uuid('user_id').notNull(),
+    provider: text().notNull(),
+    providerSubject: text('provider_subject').notNull(),
+    isPrimary: boolean('is_primary').default(false),
+    linkedAt: timestamp('linked_at', { withTimezone: true, mode: 'string' }).defaultNow(),
+    unlinkedAt: timestamp('unlinked_at', { withTimezone: true, mode: 'string' }),
+  },
+  (table) => [
+    unique('auth_subjects_provider_provider_subject_key').on(table.provider, table.providerSubject),
+  ],
+)
 
 export const authSessions = pgTable('auth_sessions', {
   id: uuid().defaultRandom().primaryKey().notNull(),
