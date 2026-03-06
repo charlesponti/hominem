@@ -38,11 +38,19 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Start Postgres
-        run: docker run -d --name hominem-postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=hominem_test -p 5432:5432 ghcr.io/charlesponti/hominem/pontistudios-postgres:latest
+      - name: Install Postgres and Redis
+        run: brew install postgresql@17 redis
 
-      - name: Start Redis
-        run: docker run -d --name hominem-redis -p 6379:6379 redis
+      - name: Start Postgres and Redis
+        run: |
+          brew services start postgresql@17
+          brew services start redis
+
+      - name: Prepare database
+        run: |
+          psql postgres -c "CREATE ROLE postgres WITH LOGIN SUPERUSER PASSWORD 'postgres';" || true
+          psql postgres -c "ALTER ROLE postgres WITH PASSWORD 'postgres';"
+          createdb -O postgres hominem_test || true
 
       - name: Wait for services
         run: |
