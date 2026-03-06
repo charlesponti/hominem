@@ -112,7 +112,7 @@ jobs:
         run: bun run test:e2e:auth:api
 
       - name: 🌐 Install Playwright browsers
-        run: bun --cwd apps/finance x playwright install --with-deps chromium && bun --cwd apps/notes x playwright install chromium && bun --cwd apps/rocco x playwright install chromium
+        run: bun x --cwd apps/finance playwright install --with-deps chromium && bun x --cwd apps/notes playwright install chromium && bun x --cwd apps/rocco playwright install chromium
 
       - name: 📱 Mobile auth unit/integration/screen tests
         run: bun run --filter @hominem/mobile test:unit:auth && bun run --filter @hominem/mobile test:integration:auth && bun run --filter @hominem/mobile test:screens:auth
