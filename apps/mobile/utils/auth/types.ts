@@ -3,6 +3,8 @@ export type AuthStatus =
   | 'signed_out'
   | 'otp_requested'
   | 'verifying_otp'
+  | 'minting_api_token'
+  | 'syncing_profile'
   | 'signed_in'
   | 'signing_out'
   | 'degraded'
@@ -29,6 +31,8 @@ export type AuthEvent =
   | { type: 'OTP_REQUESTED' }
   | { type: 'OTP_REQUEST_FAILED'; error: Error }
   | { type: 'OTP_VERIFICATION_STARTED' }
+  | { type: 'API_TOKEN_MINT_STARTED' }
+  | { type: 'PROFILE_SYNC_STARTED' }
   | { type: 'OTP_VERIFICATION_FAILED'; error: Error }
   | { type: 'SIGN_OUT_REQUESTED' }
   | { type: 'SIGN_OUT_SUCCESS' }
@@ -92,6 +96,22 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
       return {
         ...state,
         status: 'verifying_otp',
+        error: null,
+        isLoading: true,
+      }
+
+    case 'API_TOKEN_MINT_STARTED':
+      return {
+        ...state,
+        status: 'minting_api_token',
+        error: null,
+        isLoading: true,
+      }
+
+    case 'PROFILE_SYNC_STARTED':
+      return {
+        ...state,
+        status: 'syncing_profile',
         error: null,
         isLoading: true,
       }

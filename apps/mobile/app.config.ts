@@ -50,6 +50,10 @@ function getAppVariant(): AppVariant {
   throw new Error(`Unsupported APP_VARIANT: ${rawVariant}`)
 }
 
+function allowsLocalNetworking(appVariant: AppVariant) {
+  return appVariant !== 'production'
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const appVariant = getAppVariant()
   const variantConfig = APP_VARIANTS[appVariant]
@@ -61,11 +65,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       {
         ios: {
           infoPlist: {
-            NSAppTransportSecurity: {
-              NSAllowsArbitraryLoads: false,
-              NSAllowsLocalNetworking: false,
-              NSExceptionDomains: {
-                'railway.app': {
+              NSAppTransportSecurity: {
+                NSAllowsArbitraryLoads: false,
+                NSAllowsLocalNetworking: allowsLocalNetworking(appVariant),
+                NSExceptionDomains: {
+                  'railway.app': {
                   NSExceptionRequiresForwardSecrecy: true,
                   NSIncludesSubdomains: true,
                 },
@@ -87,7 +91,18 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           './assets/fonts/GeistMono-Regular.ttf',
           './assets/fonts/GeistMono-Medium.ttf',
           './assets/fonts/GeistMono-SemiBold.ttf',
+          './assets/fonts/icons/fa-brands-400.ttf',
+          './assets/fonts/icons/fa-duotone-900.ttf',
+          './assets/fonts/icons/fa-light-300.ttf',
           './assets/fonts/icons/fa-regular-400.ttf',
+          './assets/fonts/icons/fa-sharp-duotone-solid-900.ttf',
+          './assets/fonts/icons/fa-sharp-light-300.ttf',
+          './assets/fonts/icons/fa-sharp-regular-400.ttf',
+          './assets/fonts/icons/fa-sharp-solid-900.ttf',
+          './assets/fonts/icons/fa-sharp-thin-100.ttf',
+          './assets/fonts/icons/fa-solid-900.ttf',
+          './assets/fonts/icons/fa-thin-100.ttf',
+          './assets/fonts/icons/fa-v4compatibility.ttf',
         ],
       },
     ],

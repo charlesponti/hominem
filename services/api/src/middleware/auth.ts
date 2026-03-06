@@ -3,7 +3,6 @@ import { toHominemUser, UserAuthService } from '@hominem/auth/server';
 import { logger } from '@hominem/utils/logger';
 import type { MiddlewareHandler } from 'hono';
 
-import { betterAuthServer } from '../auth/better-auth';
 import { isSessionRevoked } from '../auth/session-store';
 import { verifyAccessToken } from '../auth/tokens';
 import type { AuthContextEnvelope } from '../auth/types';
@@ -126,6 +125,13 @@ function authErrorResponse(code: AuthErrorCode) {
 
 export const authJwtMiddleware = (): MiddlewareHandler => {
   return async (c, next) => {
+    const path = c.req.path;
+    if (path.startsWith('/api/auth') || path.startsWith('/api/better-auth')) {
+      return await next();
+    }
+
+    let bearerAuthError: AuthErrorCode | null = null;
+
     if (process.env.NODE_ENV === 'test') {
       const testUserId = c.req.header('x-user-id');
       if (testUserId) {
@@ -207,41 +213,14 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
         });
       } catch (error) {
         const authError = mapBearerError(error);
-        c.set('authError', authError);
+        bearerAuthError = authError;
         logger.warn('[authJwtMiddleware] invalid bearer token', { authError, error });
-        return c.json(authErrorResponse(authError), 401);
       }
     }
 
-    if (!c.get('user')) {
-      try {
-        const session = await betterAuthServer.api.getSession({
-          headers: c.req.raw.headers,
-        });
-
-        if (session?.user?.id && session.user.email) {
-          const fullUser = await UserAuthService.findByIdOrEmail({
-            id: session.user.id,
-            email: session.user.email,
-          });
-          if (fullUser) {
-            const user = toHominemUser(fullUser);
-            setCachedUser(user);
-            c.set('user', user);
-            c.set('userId', fullUser.id);
-            c.set('auth', {
-              sub: fullUser.id,
-              sid: session.session?.id ?? crypto.randomUUID(),
-              scope: ['api:read', 'api:write'],
-              role: user.isAdmin ? 'admin' : 'user',
-              amr: ['oauth'],
-              authTime: Math.floor(Date.now() / 1000),
-            });
-          }
-        }
-      } catch (error) {
-        logger.debug('[authJwtMiddleware] session resolution failed', { error });
-      }
+    if (bearerAuthError) {
+      c.set('authError', bearerAuthError);
+      return c.json(authErrorResponse(bearerAuthError), 401);
     }
 
     return await next();

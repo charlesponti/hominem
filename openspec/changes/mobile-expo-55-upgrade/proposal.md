@@ -15,9 +15,11 @@ The mobile app at `apps/mobile` is on Expo SDK 54 and React Native 0.81.5 while 
 - **Typed Routes Hygiene**: maintain route typing and regenerate `.expo/types` as part of checks
 - **Web and Native Output Stability**: keep existing web/static strategy and ensure variant prebuild parity
 - **Operational Safety Net**: add explicit pre-upgrade and post-upgrade validation gates (`expo-doctor`, typecheck, lint, E2E smoke)
+- **Navigation Modernization**: migrate from Drawer + Tabs to native Tab Bar using Expo Router's native tabs (UITabBarController on iOS, BottomTabNavigator on Android)
 - **Architecture Alignment**: re-structure the app around Expo Router and Apple design-system primitives, replacing legacy layout patterns where possible
 - **Design System Modernization**: migrate UI foundations to Apple HIG-compatible tokens, symbols, and navigation semantics while preserving product behavior
 - **State + Network Layer Clarity**: separate presentation, orchestration, and integration boundaries for easier testing and incremental delivery
+- **Tab-Based Feature Organization**: organize chat, notes, focus, and account into primary tab structure with optional deep nesting for detail views
 - **Theming**: defer full restyle-to-custom migration; document a compatibility shim approach so behavior is preserved
 
 ## Capabilities
@@ -25,6 +27,7 @@ The mobile app at `apps/mobile` is on Expo SDK 54 and React Native 0.81.5 while 
 ### New Capabilities
 
 - `expo-55-migration`: Full migration of mobile app to Expo SDK 55 with all dependency updates, configuration changes, and architectural improvements
+- `native-tab-navigation`: Migrate from Drawer + Tabs to iOS-native Tab Bar interface, reorganizing chat/notes/focus/account as primary tabs
 - `expo-apple-architecture`: Reorganize mobile app architecture around Expo Router composition, feature-sliced domains, and Apple HIG-aligned primitives
 - `apple-design-system`: Establish a foundational Apple design system layer for typography, spacing, color, and navigation controls
 

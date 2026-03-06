@@ -122,19 +122,6 @@ async function fetchSession(apiBaseUrl: string): Promise<SessionResponse> {
   return (await res.json()) as SessionResponse;
 }
 
-function buildAuthorizeUrl(
-  apiBaseUrl: string,
-  provider: 'google',
-  redirectTo?: string | undefined,
-) {
-  const redirectUri =
-    redirectTo ?? `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`;
-  const url = new URL('/api/auth/authorize', apiBaseUrl);
-  url.searchParams.set('provider', provider);
-  url.searchParams.set('redirect_uri', redirectUri);
-  return url.toString();
-}
-
 function toBase64Url(buffer: ArrayBuffer) {
   const bytes = new Uint8Array(buffer);
   let binary = '';
@@ -254,14 +241,6 @@ export function AuthProvider({
   useEffect(() => {
     void refreshAuth();
   }, [refreshAuth]);
-
-  const startOAuth = useCallback(
-    async (provider: 'google', redirectTo?: string | undefined) => {
-      const url = buildAuthorizeUrl(config.apiBaseUrl, provider, redirectTo);
-      window.location.href = url;
-    },
-    [config.apiBaseUrl],
-  );
 
   const signIn = useCallback(async () => {
     // Default sign-in: redirect to email sign-in page
@@ -389,11 +368,8 @@ export function AuthProvider({
   );
 
   const linkGoogle = useCallback(async () => {
-    const redirectTo = config.redirectTo ?? `${window.location.origin}/account`;
-    const url = new URL('/api/auth/link/google/start', config.apiBaseUrl);
-    url.searchParams.set('redirect_uri', redirectTo);
-    window.location.href = url.toString();
-  }, [config.apiBaseUrl, config.redirectTo]);
+    throw new Error('OAuth account linking is disabled.');
+  }, []);
 
   const requireStepUp = useCallback(
     async (action: string) => {
@@ -454,22 +430,8 @@ export function AuthProvider({
   );
 
   const unlinkGoogle = useCallback(async () => {
-    await requireStepUp('google_unlink');
-    const response = await fetch(
-      getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/link/google/unlink'),
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({}),
-      },
-    );
-    if (!response.ok) {
-      throw new Error('Failed to unlink Google account.');
-    }
-  }, [config.apiBaseUrl, requireStepUp]);
+    throw new Error('OAuth account linking is disabled.');
+  }, []);
 
   const signOut = useCallback(async () => {
     await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/logout'), {
@@ -491,11 +453,9 @@ export function AuthProvider({
       auth: {
         signInWithOAuth: async ({ provider, options }) => {
           try {
-            if (provider !== 'google') {
-              return { error: new Error('Only Google OAuth is supported') };
-            }
-            await startOAuth(provider, options?.redirectTo);
-            return { error: null };
+            void provider;
+            void options;
+            return { error: new Error('OAuth sign-in is disabled. Use email OTP or passkey.') };
           } catch (error) {
             return { error: error instanceof Error ? error : new Error('OAuth redirect failed') };
           }
@@ -521,7 +481,7 @@ export function AuthProvider({
         },
       },
     }),
-    [getSession, signOut, startOAuth],
+    [getSession, signOut],
   );
 
   useEffect(() => {

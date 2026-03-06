@@ -67,26 +67,6 @@ function getAdvancedOptions() {
   };
 }
 
-function getSocialProviders() {
-  const providers: Record<string, { clientId: string; clientSecret: string }> = {};
-
-  if (env.APPLE_CLIENT_ID && env.APPLE_CLIENT_SECRET) {
-    providers.apple = {
-      clientId: env.APPLE_CLIENT_ID,
-      clientSecret: env.APPLE_CLIENT_SECRET,
-    };
-  }
-
-  if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
-    providers.google = {
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-    };
-  }
-
-  return providers;
-}
-
 function getAuthPlugins() {
   const plugins: BetterAuthPlugin[] = [
     expo(),
@@ -246,7 +226,6 @@ const betterAuthOptions: BetterAuthOptions = {
     enabled: true,
     requireEmailVerification: true,
   },
-  socialProviders: getSocialProviders(),
   plugins: getAuthPlugins(),
 };
 

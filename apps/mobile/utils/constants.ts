@@ -15,7 +15,28 @@ const extra = (Constants.expoConfig?.extra ?? {}) as {
 const hostUri = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoClient?.hostUri
 const localHost = hostUri ? hostUri.split(':').shift() : null
 
-const configuredApiBaseUrl = extra.apiBaseUrl || process.env.EXPO_PUBLIC_API_BASE_URL || ''
+function toDeviceReachableApiBaseUrl(baseUrl: string, host: string | null) {
+  if (!baseUrl || !host) {
+    return baseUrl
+  }
+
+  try {
+    const parsed = new URL(baseUrl)
+    const isLocalHost =
+      parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '::1'
+    if (!isLocalHost) {
+      return baseUrl
+    }
+
+    parsed.hostname = host
+    return parsed.toString().replace(/\/$/, '')
+  } catch {
+    return baseUrl
+  }
+}
+
+const configuredApiBaseUrlRaw = extra.apiBaseUrl || process.env.EXPO_PUBLIC_API_BASE_URL || ''
+const configuredApiBaseUrl = toDeviceReachableApiBaseUrl(configuredApiBaseUrlRaw, localHost ?? null)
 const fallbackApiBaseUrl = localHost ? `http://${localHost}:3000` : 'http://localhost:3000'
 const appVariant = extra.appVariant ?? process.env.APP_VARIANT ?? 'dev'
 const isProductionRuntime = appVariant === 'production'

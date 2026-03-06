@@ -25,6 +25,7 @@
 - [x] 3.1 Patch auth state handling to satisfy 2.1-2.6.
 - [x] 3.2 Remove any remaining duplicate/legacy auth guard code paths.
 - [x] 3.3 Verify root-layout-only guard architecture with no fallback shims.
+- [x] 3.4 Remove OAuth auth routes/bridges and lock runtime auth surface to email+OTP + passkey.
 
 ## 4. Chat and Offline Contract Tests (RED)
 
@@ -54,16 +55,16 @@
 
 ## 8. Performance Gates
 
-- [ ] 8.1 Capture startup timing baseline and post-change timing with identical test conditions.
-- [ ] 8.2 Capture chat interaction latency baseline and post-change timing.
-- [ ] 8.3 Capture focus list scroll performance baseline and post-change timing.
+- [x] 8.1 Capture startup timing baseline and post-change timing with identical test conditions.
+- [x] 8.2 Capture chat interaction latency baseline and post-change timing.
+- [x] 8.3 Capture focus list scroll performance baseline and post-change timing.
 - [x] 8.4 Document thresholds and results in a performance note under this change.
 
 ## 9. Device Validation
 
 - [ ] 9.1 Run complete auth/chat smoke path on physical iOS device.
 - [x] 9.2 Confirm Android is out of scope for this product and remove Android validation requirement from this change.
-- [ ] 9.3 Log observed iOS physical-run issues and patch regressions before final gate run.
+- [x] 9.3 Log observed iOS physical-run issues and patch regressions before final gate run.
 
 ## 10. Final Gates and Archive
 
@@ -74,3 +75,13 @@
 - [x] 10.5 Run `bun run check`.
 - [x] 10.6 Update proposal/design/tasks with final evidence and results.
 - [ ] 10.7 Archive `fix-mobile-architecture-issues`.
+
+## 11. Mobile Auth Stabilization (Single-Token Next Pass)
+
+- [x] 11.1 Implement staged auth phases: `minting_api_token` and `syncing_profile`.
+- [x] 11.2 Refactor boot path to prefer stored API JWT + protected probe before mint attempts.
+- [x] 11.3 Ensure API token mint is single-flight and race-safe.
+- [ ] 11.4 Add mobile integration tests for cold reopen valid/invalid token behavior.
+- [ ] 11.5 Add mobile integration test for verify->mint->first protected call success.
+- [ ] 11.6 Add stage-specific auth observability logs and normalized error codes.
+- [ ] 11.7 Run physical iOS smoke: sign-in -> force-quit -> reopen -> sign-out.

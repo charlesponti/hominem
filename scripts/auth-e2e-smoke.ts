@@ -97,37 +97,6 @@ async function run() {
     console.log('[auth-e2e] /api/auth/email-otp/send route probe ok');
   }
 
-  {
-    const { response, payload } = await requestJson('/api/auth/cli/authorize', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        redirect_uri: 'http://127.0.0.1:53123/callback',
-        code_challenge: '7yl2Ra2fULrFBPFBqXBT4xDoq5f2k5hQk6M6xq8W0tQ',
-        code_challenge_method: 'S256',
-        state: 'auth-e2e-state',
-      }),
-    });
-
-    assert(
-      response.status === 200,
-      `Expected /api/auth/cli/authorize to return 200, received ${response.status}`,
-    );
-    assert(
-      typeof payload.flow_id === 'string' && payload.flow_id.length > 0,
-      'Expected flow_id in CLI authorize response',
-    );
-    assert(
-      typeof payload.authorization_url === 'string',
-      'Expected authorization_url to be a string in CLI authorize response',
-    );
-    const authorizationUrl = new URL(payload.authorization_url as string);
-    assert(authorizationUrl.pathname.length > 0, 'Expected non-empty CLI authorization URL path');
-    console.log('[auth-e2e] /api/auth/cli/authorize ok');
-  }
-
   console.log('[auth-e2e] all checks passed');
 }
 

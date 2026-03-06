@@ -28,6 +28,7 @@ The mobile app architecture still has risk hotspots in auth flow orchestration, 
 
 9. Remove stale/legacy mobile paths and superseded abstractions in the same change.
 10. Remove rollout tasks that assume dual-path feature flags for unreleased mobile architecture.
+11. Remove OAuth-based auth entrypoints and keep only email+OTP and passkey authentication flows.
 
 ## Capabilities
 
@@ -84,3 +85,16 @@ No data migration requirement is expected. Any remaining legacy code paths are r
 - `bun run lint --parallel` passed (workspace warnings present outside this change, no lint errors).
 - `bun run check` passed.
 - Performance evidence captured in `performance-validation.md` for startup and auth flow timing.
+- Focus traversal benchmark evidence captured in `performance-validation.md`.
+- `bun run test:e2e:auth:live:local` passed with email+OTP/passkey surface checks only (OAuth probes removed).
+- Physical iOS validation issue log maintained in `ios-physical-validation.md`.
+
+## Auth Scope Lock
+
+- OAuth sign-in/linking paths are removed from the active auth surface.
+- Supported auth methods are email+OTP and passkey.
+
+## Active Stabilization Plan
+
+- Mobile auth token contract and cold-reopen stabilization details are tracked in:
+  - `openspec/changes/fix-mobile-architecture-issues/mobile-auth-next-pass.md`

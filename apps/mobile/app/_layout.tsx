@@ -65,7 +65,7 @@ function InnerRootLayout() {
       {E2E_TESTING ? (
         <>
           {authStatus === 'booting' ? <View testID="auth-state-booting" style={styles.e2eIndicator} /> : null}
-          {authStatus === 'signed_out' || authStatus === 'otp_requested' || authStatus === 'verifying_otp' || authStatus === 'degraded' ? (
+          {authStatus === 'signed_out' || authStatus === 'otp_requested' || authStatus === 'verifying_otp' || authStatus === 'minting_api_token' || authStatus === 'syncing_profile' || authStatus === 'degraded' ? (
             <View testID="auth-state-signed-out" style={styles.e2eIndicator} />
           ) : null}
           {authStatus === 'signed_in' || authStatus === 'signing_out' ? (

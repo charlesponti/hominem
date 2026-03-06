@@ -30,7 +30,6 @@ Current state:
 **Non-Goals:**
 - Rewrite authentication logic or API contracts
 - Change database schema or app domain rules
-- Remove drawer/tab navigation topology
 - Add new end-user features in this release
 
 ## Decisions
@@ -59,25 +58,37 @@ Current state:
 - Immediate full visual migration: high churn and higher regression risk
 - No migration now: misses long-term accessibility, consistency, and parity gains
 
-### D3: Best-practice navigation contract
+### D3: Native Tab Bar navigation
 
-**Decision:** Keep existing drawer + tabs but enforce one source of truth for layout and route-level providers.
+**Decision:** Replace Drawer + Tabs with iOS-native Tab Bar (UITabBarController / BottomTabNavigator) organized as: Chat, Notes, Focus, Account.
 
-**Rationale:** Existing flows remain stable, while nested route providers and guards become explicit and testable.
+**Rationale:** Chat-based note app benefits from quick tab access and iOS-native feel. Simpler than drawer for mobile-first UX. Aligns with Expo 55 native tabs capability and template patterns. Reduces code complexity.
 
 **Alternatives Considered:**
-- Keep current route and provider placement as-is: easier but harder to maintain as scale grows
-- Drop drawer and migrate to native tabs only: user-impacting and out of scope
+- Keep drawer + tabs: legacy pattern, adds JS complexity and drawer state management
+- Stack-only navigation: loses quick access pattern
+- Split tabs differently (e.g. Chat | All | Focus | Settings): current structure is already well-organized by domain
 
-### D4: Data/state separation
+**Tab structure:**
+- **Chat**: Conversations (threads, recent, search)
+- **Notes**: All notes, collections, and quick-capture
+- **Focus**: Focus sessions, insights, and history
+- **Account**: Profile, settings, help, sign out
 
-**Decision:** Continue `@tanstack/react-query` for remote state; isolate feature-specific query hooks under `feature/*/data` and keep local UI state in feature-local providers.
+### D4: Data/state separation (2026 standard)
 
-**Rationale:** This aligns with 2026 guidance to avoid state mixing and accidental prop drilling at app level.
+**Decision:** Adopt the 2026 standard pattern:
+- `@tanstack/react-query` for server state
+- `zustand` for feature-local state
+- Context API for root providers only (theme, auth, queries)
+- **Avoid Redux** for this scope
+
+**Rationale:** This three-layer pattern reduces coupling, improves testability, and matches industry consensus. React Query eliminates boilerplate, Zustand keeps local state simple, and Context remains for global concerns.
 
 **Alternatives Considered:**
 - Centralized global state for everything: simpler short-term, brittle long-term
-- Rebuild with Redux or another heavy global store: unnecessary complexity for current scope
+- Rebuild with Redux: unnecessary complexity for app scope
+- MobX: Zustand is lighter and more widely adopted
 
 ### D5: Apple-native primitives in platform-adaptive code
 
@@ -89,9 +100,28 @@ Current state:
 - Web-first styling only: lower fidelity on iOS, weaker usability in long-term app reviews
 - Native-first only: less efficient across platforms for web and e2e parity
 
+### D6: Advanced Expo Router patterns (2026 features)
+
+**Decision:** Adopt advanced Expo Router capabilities:
+- **Route Protection** via guarded groups for auth/onboarding flows
+- **Server Components (RSC)** for secure API integration
+- **Deep Linking + Native Intent** for app-level routing and deferred deep links
+- **Groups and Array Syntax** for feature reuse across routes
+- **Custom Tab Layouts** (headless mode) for advanced styling needs
+- **Bottom Sheets** with native presentation form sheet
+- **Static Rendering (SSG)** for marketing pages and web SEO
+
+**Rationale:** These patterns reduce boilerplate, improve native feel, and enable server-side logic without backend infrastructure. They're production-ready in Expo 55+.
+
+**Alternatives Considered:**
+- Stick with basic navigation: misses native UX patterns and server-side safety
+- Custom implementations: unnecessary complexity, Expo Router now handles this
+
 ## Risks / Trade-offs
 
 [Risk: Scope explosion] → [Mitigation: enforce phased execution with explicit pass criteria per phase]
+
+[Risk: Tab navigation routing regressions] → [Mitigation: validate deep linking and tab persistence in each feature smoke test]
 
 [Risk: Visual behavior drift] → [Mitigation: define component-level visual acceptance criteria before each migration batch]
 
@@ -101,28 +131,159 @@ Current state:
 
 [Risk: Variant/build drift] → [Mitigation: prebuild diff review and release-profile gating]
 
+[Risk: Tab icon/label consistency] → [Mitigation: use shared design-system tab primitives and validate across platforms]
+
+[Risk: Accessibility regression] → [Mitigation: run axe-core and manual screen reader testing on all migrated screens]
+
+[Risk: Performance degradation] → [Mitigation: capture pre/post metrics for startup, memory, and frame rate]
+
+## Advanced Expo Router Patterns (2026)
+
+Your app will leverage these production-ready features:
+
+### 1. **Route Protection (Guarded Groups)**
+- Protected auth routes via route groups
+- Cleaner than manual middleware
+- Onboarding flow using guarded groups
+
+### 2. **Server Components (RSC)**
+- Server-side rendering for data fetching
+- Safe handling of API keys and secrets
+- Reduced client bundle size
+
+### 3. **Deep Linking + Native Intent**
+- Rewrite incoming deep links via `+native-intent` file
+- Trigger app-specific actions
+- Deferred deep links (handle before UI renders)
+
+### 4. **Route Groups + Array Syntax**
+- Feature reuse across routes (e.g., shared profile)
+- Group-level layout wrapping
+- Cleaner feature domain organization
+
+### 5. **Bottom Sheets**
+- Native presentation form sheet on iOS
+- Smooth animations
+- Shared across feature domains
+
+### 6. **Link Preview (iOS)**
+- Long-press link preview
+- Customizable context menu
+- Native UILinkPreview integration
+
+### 7. **Unstable Native Tabs**
+- More polished than custom tab UI
+- Native feel on iOS and Android
+- Your primary navigation approach
+
+### 8. **Custom Tab Layouts (Headless)**
+- Fallback for advanced styling needs
+- Full control over tab UI
+- Route-aware tab state management
+
+### 9. **Static Rendering (SSG)**
+- Marketing pages and web content
+- SEO benefits
+- Combined with dynamic routes
+
+## 2026 Standards Alignment
+
+### State Management (Standard Pattern)
+```
+Root Providers (app-shell)
+├─ QueryClientProvider (@tanstack/react-query)
+├─ ThemeProvider
+├─ AuthProvider (better-auth)
+└─ Navigation
+
+Feature Domains
+├─ useQuery() - server state via React Query
+├─ useShallow() - local state via Zustand
+└─ Local Context - feature-specific only
+```
+
+**Your adoption:**
+- ✓ Continuing React Query for server state
+- 🔄 Adding Zustand for feature-local state
+- ✓ Context API for root providers
+- ✓ No Redux (appropriate for app scope)
+
+### UI/UX Standards
+- ✓ Native tab bar (UITabBarController / BottomTabNavigator)
+- ✓ SF Symbols (iOS) + Material Icons (Android)
+- ✓ Safe area awareness and inset handling
+- ✓ Platform-specific conventions and haptics
+
+### Performance Standards
+- ✓ New Architecture enabled
+- ✓ React Compiler enabled (`experiments.reactCompiler: true`)
+- ✓ Hermes engine (default for Expo 55)
+- 🔄 expo-image for optimized image loading
+- 🔄 Code splitting by route via Expo Router
+
+### Testing Standards
+- Unit: Vitest + React Testing Library (target 80%+)
+- E2E: Detox (mobile smoke tests)
+- 🔄 E2E: Playwright (web smoke tests)
+- 🔄 Visual: Percy or similar for regressions
+- 🔄 Accessibility: axe-core automated + manual screen reader testing
+
+### Accessibility (WCAG 2.1 AA)
+- Touch targets: ≥44pt (iOS) / 48dp (Android)
+- VoiceOver (iOS) + TalkBack (Android) support
+- Color contrast: 4.5:1 for text, 3:1 for graphics
+- Reduced motion: Animations can be disabled via system settings
+
+### Library Ecosystem
+**Already using:**
+- ✓ `@tanstack/react-query` - server state
+- ✓ `better-auth` - authentication
+- ✓ `react-native-reanimated` v4.2.1 - animations
+
+**Adopting this migration:**
+- 🔄 `zustand` - feature-local state management
+- 🔄 `zod` - runtime validation at API boundaries
+- ✓ SF Symbols / Material Icons - native iconography
+
+### Deployment & Release
+- Multi-variant configs: dev, e2e, preview, production
+- OTA updates via `eas update` for rapid iteration
+- TestFlight/Play Internal for QA validation
+- App Store/Play Store releases with OTA fallback
+
 ## Migration Plan
 
 1. **Architecture baseline (no behavior change)**
    - Capture current component inventory, route map, feature ownership, and startup/auth behavior
    - Define canonical layer boundaries and migration contracts
-2. **Foundation layer first**
+2. **Native Tab structure implementation**
+   - Create new tab navigation shell using Expo Router native tabs
+   - Map existing screens to Chat | Notes | Focus | Account tabs
+   - Ensure tab-level provider hierarchy is stable (query, RPC, auth, theme)
+3. **Foundation layer first**
    - Add `src/shared/ui/primitives` and `src/shared/system` with HIG-aware tokens
+   - Add tab bar label and icon primitives (SF Symbols / Material Icons)
    - Add `src/infra` boundaries for rpc, storage, and diagnostics
-3. **Shell and routing stabilization**
+4. **Shell and routing stabilization**
    - Move route wrappers and provider composition to explicit app-shell modules
    - Ensure auth and onboarding routing logic remains functionally identical
-4. **Feature extraction passes**
-   - Migrate one feature slice at a time (for example onboarding, account, focus, chat)
+   - Add deep-link validation for all tab-accessible screens
+5. **Feature extraction passes**
+   - Migrate one feature slice at a time (chat, notes, focus, account)
    - Keep parity tests and smoke checks for each pass
-5. **Animation and motion hardening**
+   - Validate tab switching does not lose local UI state
+6. **Animation and motion hardening**
    - Align animated components to updated reanimated/worklet contracts
-   - Replace bespoke ad-hoc patterns with shared motion primitives where possible
-6. **Apple primitives adoption**
+   - Validate tab transition animations are smooth on native
+   - Replace bespoke ad-hoc patterns with shared motion primitives
+7. **Apple primitives adoption**
    - Replace legacy UI primitives selectively with shared design-system components
-   - Validate safe areas, typography scales, iconography, and spacing tokens
-7. **Release and validation gate**
-   - Run full variant smoke and full QA checklist before rollout
+   - Validate safe areas, tab spacing, and badge indicators
+   - Use SF Symbols for tab icons and prioritize native feel
+8. **Release and validation gate**
+   - Run full variant smoke including tab switching and deep link flows
+   - Validate tab persistence and state retention across app backgrounding
+   - Full QA checklist before rollout
 
 Rollback strategy:
 - Keep checkpoints at each phase boundary

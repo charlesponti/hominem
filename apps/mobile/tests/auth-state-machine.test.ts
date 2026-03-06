@@ -59,6 +59,24 @@ describe('authStateMachine', () => {
     expect(state.isLoading).toBe(true)
   })
 
+  it('moves to minting_api_token after OTP verification and before profile sync', () => {
+    const state = authStateMachine(
+      { ...initialAuthState, status: 'verifying_otp', isLoading: true },
+      { type: 'API_TOKEN_MINT_STARTED' },
+    )
+    expect(state.status).toBe('minting_api_token')
+    expect(state.isLoading).toBe(true)
+  })
+
+  it('moves to syncing_profile before entering signed_in', () => {
+    const state = authStateMachine(
+      { ...initialAuthState, status: 'minting_api_token', isLoading: true },
+      { type: 'PROFILE_SYNC_STARTED' },
+    )
+    expect(state.status).toBe('syncing_profile')
+    expect(state.isLoading).toBe(true)
+  })
+
   it('returns to otp_requested on OTP verification failure', () => {
     const error = new Error('invalid code')
     const state = authStateMachine(

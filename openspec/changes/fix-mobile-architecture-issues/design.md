@@ -10,6 +10,7 @@ This design preserves existing migration constraints: no backward compatibility 
 ## Core Constraints (Non-Negotiable)
 
 - App remains iOS-only; Android remains out of scope for this active change.
+- Auth surface is email+OTP and passkey only; OAuth sign-in/linking routes are out of scope and removed.
 - No user-visible feature expansion; we only stabilize existing product flows.
 - Direct cutover only: no dual-path runtime, no legacy architecture shims.
 - Unreleased app semantics stay intact: backward compatibility adapters are not required.
