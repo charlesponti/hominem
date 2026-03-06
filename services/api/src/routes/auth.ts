@@ -75,6 +75,7 @@ const deviceTokenSchema = z.object({
 const mobileE2eLoginSchema = z.object({
   email: z.string().email().optional(),
   name: z.string().min(1).max(128).optional(),
+  amr: z.array(z.string()).optional(),
 });
 const testOtpQuerySchema = z.object({
   email: z.string().email(),
@@ -105,6 +106,11 @@ interface MobileE2eLoginResponse {
   session_id: string;
   refresh_family_id: string;
   provider: 'better-auth';
+  user: {
+    id: string;
+    email: string;
+    name?: string | null;
+  };
 }
 
 function getHeaderCarrier(c: { req: { raw: Request } }) {
@@ -314,6 +320,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   const payload = c.req.valid('json');
   const email = payload.email ?? 'mobile-e2e@hominem.test';
   const name = payload.name ?? 'Mobile E2E User';
+  const amr = payload.amr && payload.amr.length > 0 ? payload.amr : ['e2e', 'mobile']
   const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 16);
 
   const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
@@ -343,7 +350,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
     sid: crypto.randomUUID(),
     scope: ['api:read', 'api:write'],
     role: user.isAdmin ? 'admin' : 'user',
-    amr: ['e2e', 'mobile'],
+    amr,
   });
   const refreshToken = randomBytes(32).toString('base64url');
   const sessionId = crypto.randomUUID();
@@ -365,6 +372,11 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
     session_id: sessionId,
     refresh_family_id: refreshFamilyId,
     provider: 'better-auth',
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    },
   };
 
   return c.json(response);
@@ -480,126 +492,6 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
     }
   } catch {
     return c.json({ error: 'email_otp_verify_failed' }, 400);
-  }
-});
-
-authRoutes.post('/sign-in/email-otp', zValidator('json', emailOtpVerifySchema), async (c) => {
-  try {
-    const payload = c.req.valid('json');
-    const response = await callBetterAuthPluginEndpoint({
-      request: c.req.raw,
-      path: '/sign-in/email-otp',
-      method: 'POST',
-      body: payload as Record<string, unknown>,
-    });
-    const body = await response.text();
-
-    if (!response.ok) {
-      return new Response(body, {
-        status: response.status,
-        headers: new Headers(response.headers),
-      });
-    }
-
-    try {
-      const parsed = JSON.parse(body) as { user?: { id?: string; email?: string; name?: string } };
-      const userId = parsed.user?.id;
-      
-      if (!userId) {
-        return c.json({ error: 'user_id_missing' }, 400);
-      }
-
-      const dbUser = await db.query.users.findFirst({
-        where: eq(users.id, userId),
-      });
-      
-      if (!dbUser) {
-        return c.json({ error: 'user_not_found' }, 400);
-      }
-
-      // Issue token pair with full session tracking
-      try {
-        const tokenPair = await createTokenPairForUser({
-          userId,
-          role: dbUser.isAdmin ? 'admin' : 'user',
-          amr: ['email_otp'],
-        });
-
-        return c.json({
-          user: {
-            id: dbUser.id,
-            email: dbUser.email,
-            ...(dbUser.name ? { name: dbUser.name } : {}),
-          },
-          accessToken: tokenPair.accessToken,
-          refreshToken: tokenPair.refreshToken,
-          expiresIn: tokenPair.expiresIn,
-          tokenType: tokenPair.tokenType,
-        });
-      } catch (sessionError) {
-        // Fallback: If session table is not available, issue access token only
-        logger.warn('[auth:sign-in:email-otp] session creation failed, issuing access token only', { sessionError });
-        
-        const token = await issueAccessToken({
-          sub: userId,
-          sid: crypto.randomUUID(),
-          scope: ['api:read', 'api:write'],
-          role: dbUser.isAdmin ? 'admin' : 'user',
-          amr: ['email_otp'],
-        });
-
-        return c.json({
-          user: {
-            id: dbUser.id,
-            email: dbUser.email,
-            ...(dbUser.name ? { name: dbUser.name } : {}),
-          },
-          accessToken: token.accessToken,
-          refreshToken: '',  // Empty string indicates no refresh capability in this mode
-          expiresIn: token.expiresIn,
-          tokenType: token.tokenType,
-        });
-      }
-    } catch (error) {
-      logger.error('[auth:sign-in:email-otp] sign-in failed', { error });
-      return c.json({ error: 'sign_in_failed' }, 500);
-    }
-  } catch {
-    return c.json({ error: 'email_otp_verify_failed' }, 400);
-  }
-});
-
-authRoutes.get('/get-session', async (c) => {
-  try {
-    const response = await callBetterAuthPluginEndpoint({
-      request: c.req.raw,
-      path: '/get-session',
-      method: 'GET',
-    });
-    const body = await response.text();
-    return new Response(body, {
-      status: response.status,
-      headers: new Headers(response.headers),
-    });
-  } catch {
-    return c.json({ error: 'session_fetch_failed' }, 400);
-  }
-});
-
-authRoutes.post('/sign-out', async (c) => {
-  try {
-    const response = await callBetterAuthPluginEndpoint({
-      request: c.req.raw,
-      path: '/sign-out',
-      method: 'POST',
-    });
-    const body = await response.text();
-    return new Response(body, {
-      status: response.status,
-      headers: new Headers(response.headers),
-    });
-  } catch {
-    return c.json({ error: 'sign_out_failed' }, 400);
   }
 });
 
@@ -827,44 +719,6 @@ authRoutes.post('/token', async (c) => {
     refresh_family_id: rotated.refreshFamilyId,
     provider: 'better-auth' as const,
   });
-});
-
-authRoutes.post('/refresh-token', zValidator('json', refreshTokenSchema), async (c) => {
-  const refreshToken = c.req.valid('json').refresh_token;
-  const refreshTokenRateLimit = await enforceAuthRateLimit(c, {
-    bucket: 'refresh-token-legacy',
-    identifier: `${getClientIp(c)}:${refreshToken.slice(0, 16)}`,
-    windowSec: AUTH_REFRESH_LIMIT_WINDOW_SECONDS,
-    max: AUTH_REFRESH_LIMIT_MAX,
-  });
-  if (refreshTokenRateLimit) {
-    return refreshTokenRateLimit;
-  }
-
-  const rotated = await rotateRefreshToken(refreshToken);
-  if (!rotated.ok) {
-    return c.json({ error: rotated.error }, 401);
-  }
-
-  return c.json({
-    access_token: rotated.accessToken,
-    refresh_token: rotated.refreshToken,
-    token_type: rotated.tokenType,
-    expires_in: rotated.expiresIn,
-    session_id: rotated.sessionId,
-    refresh_family_id: rotated.refreshFamilyId,
-    provider: 'better-auth' as const,
-  });
-});
-
-authRoutes.post('/revoke', zValidator('json', revokeTokenSchema), async (c) => {
-  const { token, token_type_hint: tokenTypeHint } = c.req.valid('json');
-  if (tokenTypeHint && tokenTypeHint !== 'refresh_token') {
-    return c.json({ revoked: false, error: 'unsupported_token_type' }, 400);
-  }
-
-  const revoked = await revokeByRefreshToken(token);
-  return c.json({ revoked });
 });
 
 authRoutes.post('/token-from-session', async (c) => {

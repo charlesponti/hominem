@@ -32,7 +32,7 @@ export interface Session {
  * Request payload for sign-in endpoints
  */
 export interface AuthRequest {
-  provider: 'apple' | 'mock'
+  provider: 'google' | 'passkey' | 'email_otp' | 'mock'
   // For mock auth, optional user ID to specify which mock user to sign in as
   mockUserId?: string
 }
@@ -57,6 +57,6 @@ export interface SignOutRequest {
  */
 export interface MockAuthConfig {
   useMockAuth: boolean
-  appleAuthEnabled: boolean
+  oauthEnabled: boolean
   apiBaseUrl?: string
 }

@@ -259,15 +259,17 @@ export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          id: credential.id,
-          rawId: arrayBufferToBase64Url(credential.rawId),
-          type: credential.type,
           response: {
-            clientDataJSON: arrayBufferToBase64Url(attestationResponse.clientDataJSON),
-            attestationObject: arrayBufferToBase64Url(attestationResponse.attestationObject),
-            transports: attestationResponse.getTransports
-              ? attestationResponse.getTransports()
-              : [],
+            id: credential.id,
+            rawId: arrayBufferToBase64Url(credential.rawId),
+            type: credential.type,
+            response: {
+              clientDataJSON: arrayBufferToBase64Url(attestationResponse.clientDataJSON),
+              attestationObject: arrayBufferToBase64Url(attestationResponse.attestationObject),
+              transports: attestationResponse.getTransports
+                ? attestationResponse.getTransports()
+                : [],
+            },
           },
         }),
       })

@@ -10,11 +10,11 @@ import type { MockAuthConfig } from './auth.types'
  */
 export function getAuthConfig(): MockAuthConfig {
   const useMockAuth = process.env.VITE_USE_MOCK_AUTH === 'true'
-  const appleAuthEnabled = process.env.VITE_APPLE_AUTH_ENABLED === 'true'
+  const oauthEnabled = process.env.VITE_GOOGLE_AUTH_ENABLED === 'true'
 
   return {
     useMockAuth,
-    appleAuthEnabled,
+    oauthEnabled,
     apiBaseUrl: process.env.VITE_API_BASE_URL || 'http://localhost:5000',
   }
 }
@@ -27,15 +27,15 @@ export function isMockAuthEnabled(): boolean {
 }
 
 /**
- * Check if real Apple authentication is enabled
+ * Check if OAuth authentication is enabled
  */
-export function isAppleAuthEnabled(): boolean {
-  return getAuthConfig().appleAuthEnabled
+export function isOAuthEnabled(): boolean {
+  return getAuthConfig().oauthEnabled
 }
 
 /**
  * Get the current auth provider name for logging/debugging
  */
-export function getCurrentAuthProvider(): 'mock' | 'apple' {
-  return isMockAuthEnabled() ? 'mock' : 'apple'
+export function getCurrentAuthProvider(): 'mock' | 'google' {
+  return isMockAuthEnabled() ? 'mock' : 'google'
 }

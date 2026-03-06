@@ -1,3 +1,4 @@
+import { resolveSafeAuthRedirect } from '@hominem/auth/server'
 import { redirect } from 'react-router'
 
 interface PasskeyCallbackPayload {
@@ -24,7 +25,8 @@ export async function action({ request }: { request: Request }) {
     return new Response(JSON.stringify({ error: 'invalid_json' }), { status: 400 })
   }
 
-  const { accessToken, next = '/finance' } = payload
+  const next = resolveSafeAuthRedirect(payload.next, '/finance')
+  const { accessToken } = payload
 
   if (!accessToken) {
     return new Response(JSON.stringify({ error: 'missing_access_token' }), { status: 400 })

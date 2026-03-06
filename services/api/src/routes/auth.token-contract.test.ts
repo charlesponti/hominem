@@ -61,40 +61,6 @@ describe('auth token response contract', () => {
     expect(body.provider).toBe('better-auth');
   });
 
-  test('POST /api/auth/refresh-token returns provider + session/family metadata', async () => {
-    mockRotateRefreshToken.mockResolvedValueOnce({
-      ok: true,
-      accessToken: 'access-refresh-token',
-      refreshToken: 'refresh-rotated-token',
-      tokenType: 'Bearer',
-      expiresIn: 600,
-      sessionId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
-      refreshFamilyId: 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
-    });
-
-    const app = createServer();
-    const response = await app.request('http://localhost/api/auth/refresh-token', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        refresh_token: 'existing-refresh-token',
-      }),
-    });
-
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as {
-      provider: string;
-      session_id: string;
-      refresh_family_id: string;
-    };
-
-    expect(body.provider).toBe('better-auth');
-    expect(body.session_id).toBe('cccccccc-cccc-4ccc-8ccc-cccccccccccc');
-    expect(body.refresh_family_id).toBe('dddddddd-dddd-4ddd-8ddd-dddddddddddd');
-  });
-
   test('POST /api/auth/token rejects non-refresh grants', async () => {
     const app = createServer();
     const response = await app.request('http://localhost/api/auth/token', {

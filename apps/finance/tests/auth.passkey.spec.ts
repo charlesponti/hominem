@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import type { BrowserContext, Page } from '@playwright/test'
 import { setupVirtualPasskey, teardownVirtualPasskey } from './auth.passkey-helpers'
-import { createAuthTestEmail, signInWithEmailOtp } from './auth.flow-helpers'
+import { createAuthTestEmail, fetchLatestSignInOtp, signInWithEmailOtp } from './auth.flow-helpers'
 
 const AUTH_API_BASE_URL = 'http://localhost:4040'
 
@@ -275,6 +275,45 @@ test('web passkey registration and sign-in flow reaches authenticated finance vi
   } finally {
     await teardownVirtualPasskey(context, page, passkeyHandle)
   }
+})
+
+test('web auth falls back from passkey entry to email otp successfully', async ({ page, context }) => {
+  const email = createAuthTestEmail('finance-passkey-fallback')
+
+  await context.clearCookies()
+  await page.goto('http://localhost:4444/auth')
+
+  const passkeyButton = page.getByRole('button', { name: /passkey/i })
+  await passkeyButton.waitFor({ state: 'visible', timeout: 20000 })
+  await passkeyButton.click()
+
+  const emailInput = page.getByLabel('Email address')
+  await expect(async () => {
+    await emailInput.fill(email)
+    await expect(emailInput).toHaveValue(email)
+  }).toPass({ timeout: 20000 })
+
+  await page.getByRole('button', { name: 'Continue' }).click()
+  await expect(page).toHaveURL(/\/auth\/verify\?email=/, { timeout: 30000 })
+
+  const otp = await fetchLatestSignInOtp(email)
+  const digitInputs = page.locator('input[inputmode="numeric"]')
+  for (let i = 0; i < otp.length; i++) {
+    await digitInputs.nth(i).fill(otp[i])
+  }
+
+  await page.getByRole('button', { name: 'Verify' }).click()
+  await expect(page).toHaveURL(/\/finance$/, { timeout: 30000 })
+})
+
+test('finance authenticated surfaces expose passkey enrollment controls', async ({ page }) => {
+  const email = createAuthTestEmail('finance-passkey-surface')
+
+  await signInWithEmailOtp(page, email)
+  await expect(page).toHaveURL(/\/finance$/)
+
+  await page.goto('/settings/security')
+  await expect(page.getByRole('button', { name: /add a passkey/i })).toBeVisible({ timeout: 15000 })
 })
 
 test('boot flow with valid credentials keeps user signed in', async ({ page }) => {

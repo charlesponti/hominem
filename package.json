@@ -41,7 +41,7 @@
     "prerelease": "bun run test",
     "test": "turbo run test",
     "test:e2e:auth:api": "bun run --filter @hominem/api test:auth",
-    "test:e2e:auth:app": "bun run --filter @hominem/finance test:e2e -- tests/auth.email-otp.spec.ts tests/auth.passkey.spec.ts",
+    "test:e2e:auth:app": "bun run --filter @hominem/finance test:e2e -- tests/auth.email-otp.spec.ts tests/auth.passkey.spec.ts && bun run --filter @hominem/notes test:e2e -- tests/auth.spec.ts && bun run --filter @hominem/rocco test:e2e -- tests/auth.spec.ts",
     "test:e2e:auth:mobile": "bun run --filter @hominem/mobile test:e2e:auth:mobile",
     "test:e2e:auth:live": "bun scripts/auth-e2e-smoke.ts",
     "test:e2e:auth:live:local": "AUTH_E2E_BASE_URL=http://localhost:4040 bun scripts/auth-e2e-smoke.ts",

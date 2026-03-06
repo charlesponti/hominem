@@ -5,6 +5,7 @@ import { AuthScreen } from '../../app/(auth)/index'
 import { VerifyScreen } from '../../app/(auth)/verify'
 
 const mockReplace = jest.fn()
+const mockCompletePasskeySignIn = jest.fn()
 const mockRequestEmailOtp = jest.fn()
 const mockVerifyEmailOtp = jest.fn()
 const mockPasskeySignIn = jest.fn()
@@ -19,6 +20,7 @@ jest.mock('expo-router', () => ({
 jest.mock('../../utils/auth-provider', () => ({
   useAuth: () => ({
     isSignedIn: false,
+    completePasskeySignIn: mockCompletePasskeySignIn,
     requestEmailOtp: mockRequestEmailOtp,
     verifyEmailOtp: mockVerifyEmailOtp,
   }),
@@ -182,7 +184,16 @@ describe('auth rendered screens', () => {
   })
 
   it('shows passkey CTA when supported and invokes passkey sign-in', async () => {
-    mockPasskeySignIn.mockResolvedValue({ success: true })
+    mockPasskeySignIn.mockResolvedValue({
+      accessToken: 'passkey-access-token',
+      refreshToken: 'passkey-refresh-token',
+      expiresIn: 600,
+      tokenType: 'Bearer',
+      user: {
+        id: 'passkey-user',
+        email: 'passkey-user@hominem.test',
+      },
+    })
 
     render(<AuthScreen />)
 
@@ -190,6 +201,7 @@ describe('auth rendered screens', () => {
 
     await waitFor(() => {
       expect(mockPasskeySignIn).toHaveBeenCalledTimes(1)
+      expect(mockCompletePasskeySignIn).toHaveBeenCalledTimes(1)
     })
   })
 })

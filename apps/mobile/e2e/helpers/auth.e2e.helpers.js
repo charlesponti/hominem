@@ -186,6 +186,16 @@ async function triggerOtpRequest(timeout = 20000) {
   throw new Error(lastError ?? 'Timed out triggering OTP request')
 }
 
+async function triggerPasskeySuccess() {
+  await waitFor(element(by.id('auth-e2e-passkey-success'))).toBeVisible().withTimeout(5000)
+  await element(by.id('auth-e2e-passkey-success')).tap()
+}
+
+async function triggerPasskeyCancel() {
+  await waitFor(element(by.id('auth-e2e-passkey-cancel'))).toBeVisible().withTimeout(5000)
+  await element(by.id('auth-e2e-passkey-cancel')).tap()
+}
+
 module.exports = {
   dismissKeyboard,
   fetchLatestOtp,
@@ -193,6 +203,8 @@ module.exports = {
   resetToSignedOut,
   signOutViaContractControl,
   stopMobileAppSync,
+  triggerPasskeyCancel,
+  triggerPasskeySuccess,
   triggerOtpRequest,
   waitForAuthState,
   waitForOtpStep,

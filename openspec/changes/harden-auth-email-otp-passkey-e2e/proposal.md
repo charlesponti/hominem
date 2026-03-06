@@ -93,17 +93,21 @@ Authentication behavior is currently inconsistent across API and apps: email OTP
 - ✅ Mobile rendered auth screen tests added with `jest-expo` + React Native Testing Library
 - ✅ Mobile auth integration/state-machine coverage expanded for degraded state, fallback, refresh failure, and sign-out transitions
 - ✅ Critical mobile Detox auth suite green: OTP success, invalid OTP rejection, session restore after cold start
+- ✅ Deterministic mobile passkey device strategy implemented: guarded E2E-only passkey success/cancel bridge exercises real mobile auth state transition, token persistence, fallback behavior, and relaunch survival without relying on flaky simulator-owned system dialogs
 - ✅ API auth proxy fixed to inject trusted origin for native mobile OTP requests without `Origin` header
 - ✅ API auth contract coverage added for native-style OTP requests without origin
+- ✅ API passkey contract coverage added for register success/unauthorized, auth success/malformed assertion, and method-agnostic auth resolution
+- ✅ Shared web passkey client updated to match API registration payload contract
+- ✅ Notes and Rocco browser auth suites added for OTP success and invalid-code rejection
+- ✅ Finance browser fallback coverage added for passkey-to-OTP recovery
+- ✅ Notes and Rocco browser fallback coverage added for passkey-to-OTP recovery
+- ✅ Shared auth typing updated to remove stale Apple-only provider assumptions in active auth surfaces
+- ✅ Shared server auth now forwards upstream auth cookies more consistently and app passkey callback routes validate redirect targets
+- ✅ Unused legacy auth aliases removed from API without breaking active auth clients or CLI refresh flow
+- ✅ Finance, Notes, and Rocco authenticated surfaces now verify passkey management/enrollment entry points in browser coverage
 - ✅ GitHub workflows updated so auth layers run in CI (API auth contract, mobile auth lower layers, web auth E2E, mobile critical Detox)
 
 ### Not Yet Started (Sections 3-8)
-- 📋 3.1-3.5: Browser RED auth journeys for Finance, Notes, Rocco
-- 📋 Add passkey-specific integration and contract coverage that is still missing
-- 📋 Add one deterministic mobile passkey-native-critical device scenario once simulator/runtime strategy is defined
-- 📋 4.1-4.4: GREEN API/Auth core implementation
-- 📋 5.1-5.3: GREEN shared auth package implementation
-- 📋 6.1-6.5: GREEN app route and UX cutover
 - 📋 7.1-7.3: No-shim cleanup
 - 📋 8.1-8.4: Final verification gates
 

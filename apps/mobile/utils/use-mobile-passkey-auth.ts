@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store'
 import { getCookie } from '@better-auth/expo/client'
 
 import { authClient } from '~/lib/auth-client'
-import { API_BASE_URL } from '~/utils/constants'
+import { API_BASE_URL, E2E_AUTH_SECRET, E2E_TESTING } from '~/utils/constants'
 
 // The expo client stores Better Auth cookies under this key in SecureStore.
 // Must match the storagePrefix used in auth-client.ts.
@@ -13,6 +13,7 @@ interface PasskeySignInResult {
   accessToken: string
   refreshToken: string
   expiresIn: number
+  tokenType: 'Bearer'
   user: {
     id: string
     email: string
@@ -21,7 +22,7 @@ interface PasskeySignInResult {
 }
 
 interface UseMobilePasskeyAuthReturn {
-  signIn: () => Promise<PasskeySignInResult | null>
+  signIn: (mode?: 'real' | 'e2e-success' | 'e2e-cancel') => Promise<PasskeySignInResult | null>
   addPasskey: (name?: string) => Promise<{ success: boolean; error?: string }>
   listPasskeys: () => Promise<{ id: string; name: string }[]>
   deletePasskey: (id: string) => Promise<{ success: boolean; error?: string }>
@@ -36,11 +37,63 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
 
   const isSupported = true // better-auth/expo handles platform detection
 
-  const signIn = useCallback(async (): Promise<PasskeySignInResult | null> => {
+  const signIn = useCallback(async (mode: 'real' | 'e2e-success' | 'e2e-cancel' = 'real'): Promise<PasskeySignInResult | null> => {
     setIsLoading(true)
     setError(null)
 
     try {
+      if (E2E_TESTING && mode !== 'real') {
+        if (mode === 'e2e-cancel') {
+          const message = 'Passkey sign-in was cancelled'
+          setError(message)
+          return null
+        }
+
+        const email = `mobile-passkey-${Date.now()}@hominem.test`
+        const response = await fetch(new URL('/api/auth/mobile/e2e/login', API_BASE_URL).toString(), {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-e2e-auth-secret': E2E_AUTH_SECRET,
+          },
+          body: JSON.stringify({
+            email,
+            name: 'Mobile Passkey E2E User',
+            amr: ['passkey', 'e2e', 'mobile'],
+          }),
+        })
+
+        if (!response.ok) {
+          const body = (await response.json()) as { error?: string }
+          setError(body.error || 'Failed to complete E2E passkey sign-in')
+          return null
+        }
+
+        const payload = (await response.json()) as {
+          access_token: string
+          refresh_token: string
+          expires_in: number
+          token_type: 'Bearer'
+          user?: {
+            id: string
+            email: string
+            name?: string
+          }
+        }
+
+        return {
+          accessToken: payload.access_token,
+          refreshToken: payload.refresh_token,
+          expiresIn: payload.expires_in,
+          tokenType: payload.token_type,
+          user: payload.user ?? {
+            id: `mobile-passkey-${Date.now()}`,
+            email,
+            name: 'Mobile Passkey E2E User',
+          },
+        }
+      }
+
       // Step 1: Sign in with passkey via Better Auth (handles native platform credential APIs).
       // On iOS this triggers the system passkey prompt. expoClient stores the
       // resulting Better Auth session in SecureStore automatically.

@@ -10,9 +10,10 @@ import { isValidEmail, normalizeEmail } from '~/utils/auth/validation';
 import { Button } from '~/components/Button';
 import TextInput from '~/components/text-input';
 import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
+import { E2E_TESTING } from '~/utils/constants';
 
 export function AuthScreen() {
-  const { isSignedIn, requestEmailOtp } = useAuth();
+  const { isSignedIn, completePasskeySignIn, requestEmailOtp } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,8 +54,7 @@ export function AuthScreen() {
       setAuthError(null);
       const result = await signInWithPasskey();
       if (result) {
-        // Auth provider will automatically update state on successful sign-in
-        // The better-auth session will be detected by the auth provider on next boot
+        await completePasskeySignIn(result)
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Passkey sign-in failed.';
@@ -62,7 +62,7 @@ export function AuthScreen() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [signInWithPasskey]);
+  }, [completePasskeySignIn, signInWithPasskey]);
 
   if (isSignedIn) {
     return <Redirect href="/(drawer)/(tabs)/start" />;
@@ -130,6 +130,42 @@ export function AuthScreen() {
                   </Text>
                 </TouchableOpacity>
               )}
+              {E2E_TESTING ? (
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      setIsSubmitting(true)
+                      setAuthError(null)
+                      const result = await signInWithPasskey('e2e-success')
+                      if (result) {
+                        await completePasskeySignIn(result)
+                      }
+                    } catch (error: unknown) {
+                      const message = error instanceof Error ? error.message : 'Passkey sign-in failed.'
+                      setAuthError(message)
+                    } finally {
+                      setIsSubmitting(false)
+                    }
+                  }}
+                  style={styles.e2ePasskeyAction}
+                  testID="auth-e2e-passkey-success"
+                />
+              ) : null}
+              {E2E_TESTING ? (
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      setIsSubmitting(true)
+                      setAuthError(null)
+                      await signInWithPasskey('e2e-cancel')
+                    } finally {
+                      setIsSubmitting(false)
+                    }
+                  }}
+                  style={styles.e2ePasskeyActionAlt}
+                  testID="auth-e2e-passkey-cancel"
+                />
+              ) : null}
             </View>
           </Box>
         </ScrollView>
@@ -233,6 +269,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '600',
+  },
+  e2ePasskeyAction: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 16,
+    height: 16,
+    opacity: 0.02,
+  },
+  e2ePasskeyActionAlt: {
+    position: 'absolute',
+    top: 20,
+    right: 0,
+    width: 16,
+    height: 16,
+    opacity: 0.02,
   },
 });
 

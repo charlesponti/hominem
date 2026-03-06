@@ -95,6 +95,7 @@ type AuthContextType = {
   currentUser: LocalUserProfile | null
   requestEmailOtp: (email: string) => Promise<void>
   verifyEmailOtp: (input: { email: string; otp: string; name?: string }) => Promise<void>
+  completePasskeySignIn: (input: SignInResponse) => Promise<void>
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
   updateProfile: (updates: Partial<LocalUserProfile>) => Promise<LocalUserProfile>
@@ -378,6 +379,38 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     [setApiTokens],
   )
 
+  const completePasskeySignIn = useCallback(
+    async (input: SignInResponse) => {
+      dispatch({ type: 'PASSKEY_AUTH_STARTED' })
+
+      try {
+        if (!input.accessToken || !input.refreshToken || !input.user) {
+          throw new Error('Invalid passkey sign-in response from API')
+        }
+
+        await setApiTokens(input.accessToken, input.refreshToken)
+
+        const localUser = fromSignInUser(input.user)
+        const saved = await LocalStore.upsertUserProfile(localUser)
+        if (!saved) {
+          throw new Error('Failed to save passkey user profile')
+        }
+
+        const userProfile = toAuthUserProfile(saved)
+        if (!userProfile) {
+          throw new Error('Failed to create passkey user profile')
+        }
+
+        dispatch({ type: 'SESSION_LOADED', user: userProfile })
+      } catch (error) {
+        const resolvedError = error instanceof Error ? error : new Error('Passkey sign-in failed')
+        dispatch({ type: 'PASSKEY_AUTH_FAILED', error: resolvedError })
+        throw resolvedError
+      }
+    },
+    [setApiTokens],
+  )
+
   const signOut = useCallback(async () => {
     try {
       // Call API sign-out to revoke tokens server-side
@@ -480,6 +513,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     currentUser,
     requestEmailOtp,
     verifyEmailOtp,
+    completePasskeySignIn,
     signOut,
     deleteAccount,
     updateProfile,
