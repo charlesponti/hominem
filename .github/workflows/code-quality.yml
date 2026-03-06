@@ -111,6 +111,9 @@ jobs:
       - name: 🔐 API auth contract tests
         run: bun run test:e2e:auth:api
 
+      - name: 🌐 Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
       - name: 📱 Mobile auth unit/integration/screen tests
         run: bun run --filter @hominem/mobile test:unit:auth && bun run --filter @hominem/mobile test:integration:auth && bun run --filter @hominem/mobile test:screens:auth
         env:
