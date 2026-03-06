@@ -116,7 +116,7 @@ Alternatives considered:
 
 Rollback strategy:
 - Revert the change branch as a unit; do not preserve partial dual-path behavior.
-- Because no schema migration is required for this auth contract change, rollback is code-level and immediate.
+- This change now includes a schema migration enforcing `auth_subjects(provider, provider_subject)` uniqueness. Rollback requires reverting both code and that migration in a coordinated database-safe way.
 
 ## Open Questions
 

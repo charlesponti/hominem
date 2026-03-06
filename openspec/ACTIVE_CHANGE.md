@@ -1,12 +1,12 @@
 # Active OpenSpec Change
 
-active_change: harden-auth-email-otp-passkey-e2e
+active_change: none
 
 ## Canonical Artifacts
 
-- Proposal: `openspec/changes/harden-auth-email-otp-passkey-e2e/proposal.md`
-- Design: `openspec/changes/harden-auth-email-otp-passkey-e2e/design.md`
-- Tasks: `openspec/changes/harden-auth-email-otp-passkey-e2e/tasks.md`
+- Proposal: none
+- Design: none
+- Tasks: none
 
 ## Enforcement
 

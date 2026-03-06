@@ -82,11 +82,11 @@ Authentication behavior is currently inconsistent across API and apps: email OTP
 - ✅ **Email controls**: `SEND_EMAILS` flag prevents accidental emails in dev/test
 - ✅ **Test data isolation**: Unique email format with timestamps
 
-### In Progress (Layered verification alignment)
+### Completed (Layered verification alignment)
 - ✅ Proposal/design/tasks now reflect the layered 2026 testing model.
 - ✅ Web auth E2E is thin and passing.
 - ✅ Mobile auth now has unit, integration, rendered screen, API contract, and critical Detox OTP/session coverage in place.
-- 🟡 The remaining top-layer gap is one deterministic passkey-native mobile device scenario.
+- ✅ Deterministic mobile passkey-native device scenario is implemented and passing in the critical mobile suite.
 
 ### Completed Since Reactivation
 - ✅ Modern mobile OTP UX implemented: six visual slots, single hidden input, paste normalization, Apple one-time-code hints
@@ -106,10 +106,16 @@ Authentication behavior is currently inconsistent across API and apps: email OTP
 - ✅ Unused legacy auth aliases removed from API without breaking active auth clients or CLI refresh flow
 - ✅ Finance, Notes, and Rocco authenticated surfaces now verify passkey management/enrollment entry points in browser coverage
 - ✅ GitHub workflows updated so auth layers run in CI (API auth contract, mobile auth lower layers, web auth E2E, mobile critical Detox)
+- ✅ `auth_subjects(provider, provider_subject)` uniqueness is enforced at the schema level via generated Drizzle migration
+- ✅ Full repo quality gates pass: `bun run build`, `bun run test`, and `bun run check`
 
-### Not Yet Started (Sections 3-8)
-- 📋 7.1-7.3: No-shim cleanup
-- 📋 8.1-8.4: Final verification gates
+### Final Verification Evidence
+- `bun run build` passed
+- `bun run test` passed
+- `bun run check` passed
+- Web auth coverage passed across Finance, Notes, and Rocco for OTP, passkey, and fallback journeys
+- Mobile auth coverage passed across unit, integration, screen, and critical device-level flows including deterministic passkey success/cancel
+- API auth contract suites passed, including email OTP, passkey register/auth, native mobile origin handling, and auth subject uniqueness enforcement
 
 ## Capabilities
 

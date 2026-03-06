@@ -39,7 +39,7 @@
 ## 6. GREEN API/Auth Core Implementation
 
 - [x] 6.1 Implement OTP verification completion path needed by app flows and session establishment contract
-- [ ] 6.2 Refactor generic session mapping paths to remove provider-hardcoded assumptions
+- [x] 6.2 Refactor generic session mapping paths to remove provider-hardcoded assumptions
 - [x] 6.3 Align passkey route behavior with contract requirements and error semantics
 - [x] 6.4 Ensure auth middleware/session endpoints consistently represent authenticated state across methods
 
@@ -59,13 +59,13 @@
 
 ## 9. No-Shim Cleanup
 
-- [ ] 9.1 Remove in-scope legacy/duplicate auth flow branches replaced by the new contract
-- [ ] 9.2 Remove alias/wrapper/dual-path auth logic introduced as temporary compatibility patterns
-- [ ] 9.3 Verify no provider-specific assumptions remain in generic auth/session resolution paths
+- [x] 9.1 Remove in-scope legacy/duplicate auth flow branches replaced by the new contract
+- [x] 9.2 Remove alias/wrapper/dual-path auth logic introduced as temporary compatibility patterns
+- [x] 9.3 Verify no provider-specific assumptions remain in generic auth/session resolution paths
 
 ## 10. Final Verification Gates
 
 - [x] 10.1 Run auth-focused unit, integration, and contract suites and fix remaining failures
 - [x] 10.2 Run app browser and mobile device auth suites and fix remaining failures
-- [ ] 10.3 Run monorepo check gates (`bun run validate-db-imports`, `bun run test`, `bun run typecheck`, `bun run check`)
-- [ ] 10.4 Record final verification evidence and update change artifacts for apply/close readiness
+- [x] 10.3 Run monorepo check gates (`bun run validate-db-imports`, `bun run test`, `bun run typecheck`, `bun run check`)
+- [x] 10.4 Record final verification evidence and update change artifacts for apply/close readiness
