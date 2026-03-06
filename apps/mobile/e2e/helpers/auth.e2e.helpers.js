@@ -10,6 +10,30 @@ async function waitForVisible(matcher, timeout = 5000) {
   }
 }
 
+async function readVisibleText(testId, timeout = 500) {
+  const isVisible = await waitForVisible(by.id(testId), timeout)
+  if (!isVisible) {
+    return null
+  }
+
+  try {
+    const attributes = await element(by.id(testId)).getAttributes()
+    if (typeof attributes.text === 'string' && attributes.text.length > 0) {
+      return attributes.text
+    }
+    if (typeof attributes.label === 'string' && attributes.label.length > 0) {
+      return attributes.label
+    }
+    if (typeof attributes.value === 'string' && attributes.value.length > 0) {
+      return attributes.value
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
 async function waitForAuthState(state, timeout = 30000) {
   const matcher =
     state === 'signed_in'
@@ -72,7 +96,16 @@ async function dismissBlockingAlertIfPresent() {
 
 async function dismissKeyboard() {
   await dismissBlockingAlertIfPresent()
-  await element(by.id('auth-screen')).tapAtPoint({ x: 16, y: 16 })
+  // Try to dismiss keyboard by tapping on either auth screen
+  try {
+    await element(by.id('auth-screen')).tapAtPoint({ x: 16, y: 16 })
+  } catch {
+    try {
+      await element(by.id('auth-verify-screen')).tapAtPoint({ x: 16, y: 16 })
+    } catch {
+      // If neither screen is available, just continue (keyboard might already be dismissed)
+    }
+  }
 }
 
 async function resetToSignedOut() {
@@ -98,7 +131,8 @@ async function waitForOtpStep(timeout = 20000) {
 
     const hasAuthError = await waitForVisible(by.id('auth-error-text'), 1200)
     if (hasAuthError) {
-      throw new Error('OTP request failed in app UI')
+      const errorText = await readVisibleText('auth-error-text')
+      throw new Error(`OTP request failed in app UI${errorText ? `: ${errorText}` : ''}`)
     }
 
     await new Promise((resolve) => setTimeout(resolve, 400))
@@ -109,6 +143,8 @@ async function waitForOtpStep(timeout = 20000) {
 
 async function triggerOtpRequest(timeout = 20000) {
   const startedAt = Date.now()
+  let lastError = null
+
   while (Date.now() - startedAt < timeout) {
     await dismissBlockingAlertIfPresent()
     await waitFor(element(by.id('auth-send-otp'))).toBeVisible().withTimeout(5000)
@@ -130,11 +166,24 @@ async function triggerOtpRequest(timeout = 20000) {
 
     const hasAuthError = await waitForVisible(by.id('auth-error-text'), 1200)
     if (hasAuthError) {
-      throw new Error('OTP request failed in app UI')
+      const errorText = await readVisibleText('auth-error-text')
+      lastError = errorText ? `OTP request failed in app UI: ${errorText}` : 'OTP request failed in app UI'
+
+      const hasEmailInput = await waitForVisible(by.id('auth-email-input'), 400)
+      if (hasEmailInput) {
+        try {
+          await element(by.id('auth-email-input')).tap()
+        } catch {}
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 700))
+      continue
     }
+
+    await new Promise((resolve) => setTimeout(resolve, 300))
   }
 
-  throw new Error('Timed out triggering OTP request')
+  throw new Error(lastError ?? 'Timed out triggering OTP request')
 }
 
 module.exports = {

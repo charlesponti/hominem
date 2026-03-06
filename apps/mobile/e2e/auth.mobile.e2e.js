@@ -1,36 +1,30 @@
 const {
   dismissKeyboard,
   fetchLatestOtp,
-  launchMobileApp,
   resetToSignedOut,
   signOutViaContractControl,
-  stopMobileAppSync,
   triggerOtpRequest,
   waitForAuthState,
   waitForOtpStep,
 } = require('./helpers/auth.e2e.helpers')
 
 describe('Mobile auth', () => {
-  beforeAll(async () => {
+  beforeEach(async () => {
+    // Fresh app state for each test - critical for Detox stability
     await device.clearKeychain()
-    await launchMobileApp()
+    await device.launchApp({ newInstance: true })
+    await device.disableSynchronization()
     await resetToSignedOut()
   })
 
-  afterAll(async () => {
-    await stopMobileAppSync()
-  })
-
-  it('signs in and signs out using email otp flow', async () => {
-    const email = `mobile-e2e-${Date.now()}@hominem.test`
-
-    await resetToSignedOut()
+  it('should sign in and sign out using email OTP flow', async () => {
+    const email = `mobile-e2e-${Date.now()}-signin@hominem.test`
 
     await waitFor(element(by.id('auth-email-input')))
       .toBeVisible()
       .withTimeout(10000)
     await element(by.id('auth-email-input')).tap()
-    await element(by.id('auth-email-input')).replaceText(email)
+    await element(by.id('auth-email-input')).typeText(email)
     await expect(element(by.id('auth-email-input'))).toHaveText(email)
     await dismissKeyboard()
     await triggerOtpRequest()
@@ -38,7 +32,7 @@ describe('Mobile auth', () => {
 
     const otp = await fetchLatestOtp(email)
     await element(by.id('auth-otp-input')).tap()
-    await element(by.id('auth-otp-input')).replaceText(otp)
+    await element(by.id('auth-otp-input')).typeText(otp)
     await dismissKeyboard()
     await waitFor(element(by.id('auth-verify-otp')))
       .toBeVisible()
@@ -50,5 +44,66 @@ describe('Mobile auth', () => {
     await waitFor(element(by.id('auth-send-otp')))
       .toBeVisible()
       .withTimeout(10000)
+  })
+
+  it('should reject invalid OTP code', async () => {
+    const email = `mobile-e2e-${Date.now()}-invalid@hominem.test`
+
+    await waitFor(element(by.id('auth-email-input')))
+      .toBeVisible()
+      .withTimeout(10000)
+    await element(by.id('auth-email-input')).tap()
+    await element(by.id('auth-email-input')).typeText(email)
+    await dismissKeyboard()
+    await triggerOtpRequest()
+    await waitForOtpStep(5000)
+
+    const invalidOtp = '000000'
+    await element(by.id('auth-otp-input')).tap()
+    await element(by.id('auth-otp-input')).typeText(invalidOtp)
+    await dismissKeyboard()
+    await waitFor(element(by.id('auth-verify-otp')))
+      .toBeVisible()
+      .withTimeout(10000)
+    await element(by.id('auth-verify-otp')).tap()
+
+    await waitFor(element(by.id('auth-error-text')))
+      .toBeVisible()
+      .withTimeout(10000)
+    await waitFor(element(by.id('auth-otp-input')))
+      .toBeVisible()
+      .withTimeout(10000)
+  })
+
+  it('should restore session after cold start', async () => {
+    const email = `mobile-e2e-${Date.now()}-session@hominem.test`
+
+    await waitFor(element(by.id('auth-email-input')))
+      .toBeVisible()
+      .withTimeout(10000)
+    await element(by.id('auth-email-input')).tap()
+    await element(by.id('auth-email-input')).typeText(email)
+    await dismissKeyboard()
+    await triggerOtpRequest()
+    await waitForOtpStep(5000)
+
+    const otp = await fetchLatestOtp(email)
+    await element(by.id('auth-otp-input')).tap()
+    await element(by.id('auth-otp-input')).typeText(otp)
+    await dismissKeyboard()
+    await waitFor(element(by.id('auth-verify-otp')))
+      .toBeVisible()
+      .withTimeout(10000)
+    await element(by.id('auth-verify-otp')).tap()
+
+    await waitForAuthState('signed_in')
+
+    // Simulate cold start - kill and relaunch app
+    await device.terminateApp()
+    await device.launchApp({ newInstance: true })
+    await device.disableSynchronization()
+
+    // Should restore signed-in state
+    await waitForAuthState('signed_in', 15000)
   })
 })

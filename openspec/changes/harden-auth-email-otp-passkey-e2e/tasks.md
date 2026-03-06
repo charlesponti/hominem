@@ -5,52 +5,67 @@
 - [x] 1.3 Build shared passkey integration harness utilities (virtual authenticator setup/teardown helpers)
 - [x] 1.4 Add auth test environment docs and commands for local/CI (test DB, Redis, required env vars)
 
-## 2. API RED Contract Suites
+## 2. Auth Unit And Integration Safety Net
 
-- [x] 2.1 Add RED integration tests for email OTP request contract (success, invalid input, rate-limit behavior)
-- [x] 2.2 Add RED integration tests for OTP verification contract (success, invalid OTP, expired OTP, no session on failure)
-- [ ] 2.3 Add RED integration tests for passkey register contract (unauthorized rejection, authenticated success path)
-- [ ] 2.4 Add RED integration tests for passkey auth contract (success, malformed assertion failure)
-- [ ] 2.5 Add RED integration tests for method-agnostic session-subject mapping (email OTP and passkey)
+- [x] 2.1 Add unit tests for auth validation/helpers/state transitions in shared auth code
+- [x] 2.2 Add mobile screen/integration tests for email entry, OTP verify, resend, loading, and error states
+- [x] 2.3 Add integration tests for passkey prompt visibility, skip behavior, and fallback to OTP
+- [x] 2.4 Add integration tests for signed-in/signed-out shell transitions and auth redirects
 
-## 3. Browser RED Auth Journeys
+## 3. API RED Contract Suites
 
-- [ ] 3.1 Add Finance browser integration suite for email OTP journey and logout
-- [ ] 3.2 Add Notes browser integration suite for email OTP journey and logout
-- [ ] 3.3 Add Rocco browser integration suite for email OTP journey and logout
-- [ ] 3.4 Add browser integration cases for passkey enrollment and passkey sign-in
-- [ ] 3.5 Add browser integration fallback cases from passkey path to email OTP path
+- [x] 3.1 Add RED integration tests for email OTP request contract (success, invalid input, rate-limit behavior)
+- [x] 3.2 Add RED integration tests for OTP verification contract (success, invalid OTP, expired OTP, no session on failure)
+- [ ] 3.3 Add RED integration tests for passkey register contract (unauthorized rejection, authenticated success path)
+- [ ] 3.4 Add RED integration tests for passkey auth contract (success, malformed assertion failure)
+- [ ] 3.5 Add RED integration tests for method-agnostic session-subject mapping (email OTP and passkey)
 
-## 4. GREEN API/Auth Core Implementation
+## 4. Browser RED Auth Journeys
 
-- [ ] 4.1 Implement OTP verification completion path needed by app flows and session establishment contract
-- [ ] 4.2 Refactor generic session mapping paths to remove provider-hardcoded assumptions
-- [ ] 4.3 Align passkey route behavior with contract requirements and error semantics
-- [ ] 4.4 Ensure auth middleware/session endpoints consistently represent authenticated state across methods
+- [ ] 4.1 Add Finance browser integration suite for email OTP journey and logout
+- [ ] 4.2 Add Notes browser integration suite for email OTP journey and logout
+- [ ] 4.3 Add Rocco browser integration suite for email OTP journey and logout
+- [ ] 4.4 Add browser integration cases for passkey enrollment and passkey sign-in
+- [ ] 4.5 Add browser integration fallback cases from passkey path to email OTP path
 
-## 5. GREEN Shared Auth Package Implementation
+## 5. Mobile Device E2E Critical Paths
 
-- [ ] 5.1 Align auth client/provider typing with supported auth methods and remove stale provider constraints
-- [ ] 5.2 Standardize shared auth client methods used by apps for OTP/passkey journeys
-- [ ] 5.3 Ensure shared auth server utilities preserve consistent auth/session headers and state handling
+- [x] 5.1 Add one mobile device test for email + OTP success path with fresh app state per test
+- [x] 5.2 Add one mobile device test for invalid OTP rejection / unauthenticated persistence
+- [x] 5.3 Add one mobile device test for session restore after terminate/relaunch
+- [ ] 5.4 Add one mobile device test for passkey happy path or passkey fallback, whichever provides the highest native-confidence signal first
+- [x] 5.5 Ensure mobile device tests are thin, independent, and do not share app state across specs
 
-## 6. GREEN App Route And UX Cutover
+## 6. GREEN API/Auth Core Implementation
 
-- [ ] 6.1 Implement complete email OTP UX flow in Finance (request + verify + authenticated redirect)
-- [ ] 6.2 Implement complete email OTP UX flow in Notes (request + verify + authenticated redirect)
-- [ ] 6.3 Implement complete email OTP UX flow in Rocco (request + verify + authenticated redirect)
-- [ ] 6.4 Add passkey enrollment and passkey sign-in entry points in app auth surfaces
-- [ ] 6.5 Standardize auth entry and callback route semantics across all three apps
+- [ ] 6.1 Implement OTP verification completion path needed by app flows and session establishment contract
+- [ ] 6.2 Refactor generic session mapping paths to remove provider-hardcoded assumptions
+- [ ] 6.3 Align passkey route behavior with contract requirements and error semantics
+- [ ] 6.4 Ensure auth middleware/session endpoints consistently represent authenticated state across methods
 
-## 7. No-Shim Cleanup
+## 7. GREEN Shared Auth Package Implementation
 
-- [ ] 7.1 Remove in-scope legacy/duplicate auth flow branches replaced by the new contract
-- [ ] 7.2 Remove alias/wrapper/dual-path auth logic introduced as temporary compatibility patterns
-- [ ] 7.3 Verify no provider-specific assumptions remain in generic auth/session resolution paths
+- [ ] 7.1 Align auth client/provider typing with supported auth methods and remove stale provider constraints
+- [ ] 7.2 Standardize shared auth client methods used by apps for OTP/passkey journeys
+- [ ] 7.3 Ensure shared auth server utilities preserve consistent auth/session headers and state handling
 
-## 8. Final Verification Gates
+## 8. GREEN App Route And UX Cutover
 
-- [ ] 8.1 Run auth-focused API integration suites and fix remaining failures
-- [ ] 8.2 Run app browser auth integration suites and fix remaining failures
-- [ ] 8.3 Run monorepo check gates (`bun run validate-db-imports`, `bun run test`, `bun run typecheck`, `bun run check`)
-- [ ] 8.4 Record final verification evidence and update change artifacts for apply/close readiness
+- [ ] 8.1 Implement complete email OTP UX flow in Finance (request + verify + authenticated redirect)
+- [ ] 8.2 Implement complete email OTP UX flow in Notes (request + verify + authenticated redirect)
+- [ ] 8.3 Implement complete email OTP UX flow in Rocco (request + verify + authenticated redirect)
+- [ ] 8.4 Add passkey enrollment and passkey sign-in entry points in app auth surfaces
+- [ ] 8.5 Standardize auth entry and callback route semantics across all three apps
+
+## 9. No-Shim Cleanup
+
+- [ ] 9.1 Remove in-scope legacy/duplicate auth flow branches replaced by the new contract
+- [ ] 9.2 Remove alias/wrapper/dual-path auth logic introduced as temporary compatibility patterns
+- [ ] 9.3 Verify no provider-specific assumptions remain in generic auth/session resolution paths
+
+## 10. Final Verification Gates
+
+- [x] 10.1 Run auth-focused unit, integration, and contract suites and fix remaining failures
+- [x] 10.2 Run app browser and mobile device auth suites and fix remaining failures
+- [ ] 10.3 Run monorepo check gates (`bun run validate-db-imports`, `bun run test`, `bun run typecheck`, `bun run check`)
+- [ ] 10.4 Record final verification evidence and update change artifacts for apply/close readiness

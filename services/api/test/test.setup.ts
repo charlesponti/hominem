@@ -19,6 +19,12 @@ process.env.R2_ENDPOINT = 'https://test.r2.cloudflarestorage.com'
 process.env.R2_ACCESS_KEY_ID = 'test-access-key-id'
 process.env.R2_SECRET_ACCESS_KEY = 'test-secret-access-key'
 process.env.R2_BUCKET_NAME = 'test-bucket'
+process.env.RESEND_API_KEY = process.env.RESEND_API_KEY || 're_test_key'
+process.env.RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@hominem.test'
+process.env.RESEND_FROM_NAME = process.env.RESEND_FROM_NAME || 'Hominem Test'
+process.env.SEND_EMAILS = process.env.SEND_EMAILS || 'false'
+process.env.AUTH_TEST_OTP_ENABLED = process.env.AUTH_TEST_OTP_ENABLED || 'true'
+process.env.AUTH_E2E_SECRET = process.env.AUTH_E2E_SECRET || 'otp-secret'
 
 // Redis is running in Docker for tests - no mocking needed
 

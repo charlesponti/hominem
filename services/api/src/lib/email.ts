@@ -15,7 +15,36 @@ function getFromEmail(): string {
   return from;
 }
 
+function shouldSendEmails(): boolean {
+  // Send emails if explicitly enabled via flag
+  if (env.SEND_EMAILS === 'true') {
+    return true;
+  }
+
+  // Don't send emails in test environment
+  if (env.NODE_ENV === 'test') {
+    return false;
+  }
+
+  // Don't send emails in development unless explicitly enabled
+  if (env.NODE_ENV === 'development') {
+    return false;
+  }
+
+  // Send emails in production by default
+  if (env.NODE_ENV === 'production') {
+    return true;
+  }
+
+  return false;
+}
+
 export async function sendEmail({ to, subject, text, html }: SendEmailParams): Promise<void> {
+  if (!shouldSendEmails()) {
+    console.log(`[Email] Skipped sending to ${to} (${subject}) - SEND_EMAILS not enabled or running in ${env.NODE_ENV}`);
+    return;
+  }
+
   const from = env.RESEND_FROM_NAME
     ? `${env.RESEND_FROM_NAME} <${getFromEmail()}>`
     : getFromEmail();

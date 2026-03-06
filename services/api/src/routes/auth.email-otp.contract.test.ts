@@ -40,6 +40,20 @@ async function requestOtp(app: AppRequester, email: string) {
   })
 }
 
+async function requestOtpWithoutOrigin(app: AppRequester, email: string) {
+  const request = new Request('http://localhost/api/auth/email-otp/send', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      type: 'sign-in',
+    }),
+  })
+
+  request.headers.delete('origin')
+  return app.request(request)
+}
+
 async function fetchOtp(app: AppRequester, email: string) {
   const response = await app.request(
     `http://localhost/api/auth/test/otp/latest?email=${encodeURIComponent(email)}&type=sign-in`,
@@ -76,6 +90,18 @@ describe('auth email otp contract', () => {
     const invalidResponse = await requestOtp(app, 'not-an-email')
     expect(invalidResponse.status).toBeGreaterThanOrEqual(400)
     expect(invalidResponse.status).toBeLessThan(500)
+  }, 15000)
+
+  test('2.1 native-style requests without origin still send otp successfully', async () => {
+    const createServer = await importServer()
+    const app = createServer()
+    const email = `otp-native-${Date.now()}@hominem.test`
+
+    const response = await requestOtpWithoutOrigin(app, email)
+    expect(response.status).toBe(200)
+
+    const otp = await fetchOtp(app, email)
+    expect(otp.otp.length).toBeGreaterThanOrEqual(4)
   }, 15000)
 
   test('2.1 burst requests are handled without server errors', async () => {

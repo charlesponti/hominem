@@ -11,7 +11,7 @@ import { Button } from '~/components/Button';
 import TextInput from '~/components/text-input';
 import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
 
-function Auth() {
+export function AuthScreen() {
   const { isSignedIn, requestEmailOtp } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
 
 const AuthWithErrorBoundary = () => (
   <FeatureErrorBoundary featureName="Auth">
-    <Auth />
+    <AuthScreen />
   </FeatureErrorBoundary>
 )
 

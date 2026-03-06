@@ -1,12 +1,12 @@
 # Active OpenSpec Change
 
-active_change: unify-app-auth-system
+active_change: harden-auth-email-otp-passkey-e2e
 
 ## Canonical Artifacts
 
-- Proposal: `openspec/changes/unify-app-auth-system/proposal.md`
-- Design: `openspec/changes/unify-app-auth-system/design.md`
-- Tasks: `openspec/changes/unify-app-auth-system/tasks.md`
+- Proposal: `openspec/changes/harden-auth-email-otp-passkey-e2e/proposal.md`
+- Design: `openspec/changes/harden-auth-email-otp-passkey-e2e/design.md`
+- Tasks: `openspec/changes/harden-auth-email-otp-passkey-e2e/tasks.md`
 
 ## Enforcement
 

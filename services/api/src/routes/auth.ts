@@ -240,6 +240,15 @@ function buildBetterAuthUrl(input: {
   return targetUrl;
 }
 
+function ensureTrustedOrigin(headers: Headers) {
+  const existingOrigin = headers.get('origin')
+  if (existingOrigin && existingOrigin.length > 0) {
+    return
+  }
+
+  headers.set('origin', env.BETTER_AUTH_URL)
+}
+
 async function callBetterAuthPluginEndpoint(input: {
   request: Request;
   path: string;
@@ -255,6 +264,7 @@ async function callBetterAuthPluginEndpoint(input: {
     targetUrl: url.toString(),
   });
   const headers = new Headers(input.request.headers);
+  ensureTrustedOrigin(headers)
   if (input.body) {
     headers.set('content-type', 'application/json');
   }

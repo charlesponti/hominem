@@ -3,7 +3,7 @@ export function normalizeEmail(value: string): string {
 }
 
 export function normalizeOtp(value: string): string {
-  return value.trim()
+  return value.replace(/\D/g, '').slice(0, 6)
 }
 
 export function isValidEmail(value: string): boolean {

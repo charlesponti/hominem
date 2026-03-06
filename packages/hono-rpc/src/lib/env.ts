@@ -30,6 +30,7 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().default(''),
   RESEND_FROM_EMAIL: z.string().default(''),
   RESEND_FROM_NAME: z.string().default(''),
+  SEND_EMAILS: z.enum(['true', 'false']).default('false').describe('Whether to actually send emails via Resend'),
 })
 
 export const env = createServerEnv(envSchema, 'honoRpc')
