@@ -84,7 +84,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-font',
       {
         fonts: [
-          './assets/fonts/Plus_Jakarta_Sans.ttf',
           './assets/fonts/GeistMono-Regular.ttf',
           './assets/fonts/GeistMono-Medium.ttf',
           './assets/fonts/GeistMono-SemiBold.ttf',

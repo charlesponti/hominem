@@ -1,5 +1,4 @@
 import { ThemeProvider } from '@shopify/restyle';
-import { useFonts } from 'expo-font';
 import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
 import { View } from 'react-native';
@@ -25,40 +24,23 @@ function InnerRootLayout() {
   const router = useRouter();
   const segments = useSegments();
   const { authStatus, isSignedIn } = useAuth();
-  const [fontLoadTimedOut, setFontLoadTimedOut] = React.useState(false);
-
-  const [loaded, error] = useFonts({
-    'Font Awesome Regular': require('../assets/fonts/icons/fa-regular-400.ttf'),
-    'Geist Mono': require('../assets/fonts/GeistMono-Regular.ttf'),
-    'Geist Mono Medium': require('../assets/fonts/GeistMono-Medium.ttf'),
-    'Geist Mono SemiBold': require('../assets/fonts/GeistMono-SemiBold.ttf'),
-    'Plus Jakarta Sans': require('../assets/fonts/Plus_Jakarta_Sans.ttf'),
-  });
+  const [isReady, setIsReady] = React.useState(false);
 
   useEffect(() => {
-    if (loaded || error || fontLoadTimedOut) {
-      SplashScreen.hideAsync();
-    }
-    if (error) {
-      console.warn('Failed to load fonts', error);
-    }
-  }, [loaded, error, fontLoadTimedOut]);
-
-  useEffect(() => {
-    if (loaded || error) {
-      setFontLoadTimedOut(false);
-      return;
-    }
-
     const timeout = setTimeout(() => {
-      setFontLoadTimedOut(true);
-    }, 5000);
+      setIsReady(true);
+    }, 3000);
 
     return () => clearTimeout(timeout);
-  }, [loaded, error]);
+  }, []);
+
+  useEffect(() => {
+    if (isReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [isReady]);
 
   const shouldBlockForAuth = authStatus === 'booting';
-  const shouldBlockForFonts = !loaded && !error && !fontLoadTimedOut;
 
   useEffect(() => {
     if (shouldBlockForAuth) return;
@@ -73,10 +55,6 @@ function InnerRootLayout() {
       router.replace('/(drawer)/(tabs)/start');
     }
   }, [shouldBlockForAuth, isSignedIn, segments, router]);
-
-  if (shouldBlockForFonts) {
-    return <AppBootstrap />;
-  }
 
   if (shouldBlockForAuth) {
     return <AppBootstrap />;
