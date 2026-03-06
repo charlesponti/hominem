@@ -31,6 +31,9 @@ const serverSchema = z.object({
   AUTH_CAPTCHA_SECRET_KEY: z.string().default(''),
   AUTH_E2E_ENABLED: z.coerce.boolean().default(false),
   AUTH_E2E_SECRET: z.string().default(''),
+  AUTH_TEST_OTP_ENABLED: isTest ? z.coerce.boolean().default(true) : z.coerce.boolean().default(false),
+  AUTH_TEST_OTP_TTL_SECONDS: z.coerce.number().int().positive().default(300),
+  AUTH_EMAIL_OTP_EXPIRES_SECONDS: z.coerce.number().int().positive().default(300),
 
   R2_ENDPOINT: z.string().url().default(''),
   R2_BUCKET_NAME: z.string().default('hominem-storage'),

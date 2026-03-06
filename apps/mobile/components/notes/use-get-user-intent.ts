@@ -1,6 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
 
-import { captureException } from '@sentry/react-native'
 import { useHonoClient } from '@hominem/hono-client/react'
 import type { MobileIntentDeriveOutputV1 } from '@hominem/hono-rpc/types/mobile.types'
 import { useAudioTranscribe } from '../media/use-audio-transcribe'
@@ -110,7 +109,6 @@ export const useGetUserIntent = ({
     },
     onSuccess,
     onError: (error) => {
-      captureException(error)
       onError?.(error)
     },
   })
@@ -119,7 +117,6 @@ export const useGetUserIntent = ({
     mutationFn: async (content: string) => deriveFromText(content),
     onSuccess,
     onError: (error) => {
-      captureException(error)
       onError?.(error)
     },
   })

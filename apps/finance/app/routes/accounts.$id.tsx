@@ -23,11 +23,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   }
 
   const authResult = await requireAuth(request);
-  if (!authResult.user) {
-    return redirect('/auth/signin');
-  }
-
-  const client = createServerHonoClient(authResult.user.id, request);
+  const client = createServerHonoClient(authResult.session?.access_token, request);
 
   const [accountRes, transactionsRes] = await Promise.all([
     client.api.finance.accounts.get.$post({ json: { id } }),

@@ -2,39 +2,54 @@
 
 This app is the iOS mobile client for Hominem, built with Expo Router and Better Auth-backed API flows.
 
+## Variant Model
+
+The mobile app uses explicit runtime variants. `APP_VARIANT` controls app identity, native generation, and local env loading.
+
+| Variant | Purpose | Dev Client | OTA Updates | Primary Command |
+| --- | --- | --- | --- | --- |
+| `dev` | local feature development | yes | development channel | `bun run start` |
+| `e2e` | deterministic Detox runtime | no | disabled | `bun run test:e2e:build:ios` |
+| `preview` | internal QA / release candidate | no | preview channel | `bun run build:preview:ios` |
+| `production` | App Store / TestFlight | no | production channel | `bun run build:production:ios` |
+
 ## Runtime Scope
 
 - Production target: iOS only
-- Authentication: Apple Sign-In primary; mobile token bootstrap via Better Auth API
+- Authentication: Email + OTP via Better Auth API
 - API: `@hominem/hono-rpc` via authenticated HTTP requests
 
 ## Environment Variables
 
-### Development (`.env.development.local`)
+### Development (`.env.development.local`, `APP_VARIANT=dev`)
 
 ```bash
 EXPO_PUBLIC_API_BASE_URL="http://localhost:4040"
 EXPO_PUBLIC_E2E_TESTING="false"
 EXPO_PUBLIC_E2E_AUTH_SECRET=""
-EXPO_PUBLIC_SENTRY_ENVIRONMENT="development"
 ```
 
-### E2E (`.env.e2e.local`)
+### E2E (`.env.e2e.local`, `APP_VARIANT=e2e`)
 
 ```bash
 EXPO_PUBLIC_API_BASE_URL="http://localhost:4040"
 EXPO_PUBLIC_E2E_TESTING="true"
 EXPO_PUBLIC_E2E_AUTH_SECRET="<shared-non-prod-secret>"
-EXPO_PUBLIC_SENTRY_ENVIRONMENT="e2e"
 ```
 
-### Production (`.env.production.local`)
+### Preview (`.env.preview.local`, `APP_VARIANT=preview`)
+
+```bash
+EXPO_PUBLIC_API_BASE_URL="https://api.hominem.test"
+EXPO_PUBLIC_E2E_TESTING="false"
+```
+
+### Production (`.env.production.local`, `APP_VARIANT=production`)
 
 ```bash
 EXPO_PUBLIC_API_BASE_URL="https://api.ponti.io"
 EXPO_PUBLIC_E2E_TESTING="false"
 EXPO_PUBLIC_E2E_AUTH_SECRET=""
-EXPO_PUBLIC_SENTRY_ENVIRONMENT="production"
 ```
 
 ## Development
@@ -45,47 +60,55 @@ From monorepo root:
 bun run dev --filter @hominem/mobile
 ```
 
-From mobile app directory:
+From mobile app directory (`dev` variant):
 
 ```bash
 bun run start
 ```
 
-## Maestro E2E
+### Variant-specific prebuild
+
+```bash
+bun run prebuild:dev
+bun run prebuild:e2e
+```
+
+## Detox E2E
 
 ### Prerequisites
 
-- Java 17+ available in PATH
-- Maestro CLI installed (`curl -Ls https://get.maestro.mobile.dev | bash`)
-- Booted iOS simulator or connected iOS device
+- Xcode command line tools
+- iOS simulator available (`iPhone 17 Pro`)
+- `applesimutils` installed (`brew tap wix/brew && brew install applesimutils`)
 - API server running and configured for non-production E2E auth (`AUTH_E2E_ENABLED=true`)
-
-### Recommended shell setup
-
-```bash
-export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH:$HOME/.maestro/bin"
-export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
-```
 
 ### Run E2E
 
 ```bash
-# all flows
+# build clean simulator binary (no dev client)
+bun run test:e2e:build:ios
+
+# full mobile auth e2e
 bun run test:e2e
 
-# targeted
+# targeted smoke
 bun run test:e2e:smoke
-bun run test:e2e:auth
-bun run test:e2e:focus
-bun run test:e2e:chat
-bun run test:e2e:recording
 ```
 
 ### Auth model in E2E
 
-- In E2E mode (`EXPO_PUBLIC_E2E_TESTING=true`), tapping `[CONTINUE_WITH_APPLE]` uses deterministic non-production token bootstrap via `/api/auth/mobile/e2e/login`.
-- The endpoint requires `x-e2e-auth-secret` matching `AUTH_E2E_SECRET` on API.
-- This bypass is disabled in production (`NODE_ENV=production` or `AUTH_E2E_ENABLED=false`).
+- Mobile auth is email + OTP across development and E2E.
+- E2E tests request OTP via `/api/auth/email-otp/send` and fetch deterministic OTP via `/api/auth/test/otp/latest`.
+- OTP lookup requires `x-e2e-auth-secret` matching `AUTH_E2E_SECRET` on API.
+- Test OTP retrieval remains disabled in production.
+- Detox selectors are `testID`-driven:
+  - `auth-screen`
+  - `auth-email-input`
+  - `auth-send-otp`
+  - `auth-otp-input`
+  - `auth-verify-otp`
+  - `account-screen`
+  - `account-sign-out`
 
 ## EAS Builds
 
@@ -108,11 +131,11 @@ eas credentials
 ### Build Commands
 
 ```bash
-# simulator
-bun run build:simulator:ios
-
 # development build (device)
 bun run build:dev:ios
+
+# dedicated e2e build
+bun run build:e2e:ios
 
 # preview/production
 bun run build:preview:ios
@@ -134,15 +157,22 @@ eas submit --platform ios --latest
 ## Device Auth Smoke Checklist
 
 1. Install the development build on iPhone (`bun run build:dev:ios`).
-2. Launch app and complete Apple sign-in.
+2. Launch app and complete email + OTP sign-in.
 3. Verify protected data screen loads from API without auth error.
 4. Sign out and verify app returns to signed-out state.
 5. Relaunch app and verify refresh-token session restore works.
 
 ## iOS IDs
 
-- Dev bundle ID: `com.pontistudios.mindsherpa.dev`
+- Dev bundle ID: `com.pontistudios.hakumi.dev`
+- E2E bundle ID: `com.pontistudios.hakumi.e2e`
+- Preview bundle ID: `com.pontistudios.hakumi.preview`
 - Prod bundle ID: `com.pontistudios.hakumi`
+- Schemes:
+  - `hakumi-dev`
+  - `hakumi-e2e`
+  - `hakumi-preview`
+  - `hakumi`
 - Shared Apple/Expo non-secret identifiers: `config/apple-auth.settings.json`
 
 ## Live Auth Smoke Diagnostics

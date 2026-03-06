@@ -16,11 +16,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   }
 
   const authResult = await requireAuth(request);
-  if (!authResult.user) {
-    return redirect('/auth/signin');
-  }
-
-  const client = createServerHonoClient(authResult.user.id, request);
+  const client = createServerHonoClient(authResult.session?.access_token, request);
 
   const res = await client.api.finance.analyze['monthly-stats'].$post({ json: { month } });
   const stats = res.ok ? await res.json() : null;

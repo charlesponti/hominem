@@ -7,6 +7,8 @@ const extra = (Constants.expoConfig?.extra ?? {}) as {
   aiSdkTranscribeEnabled?: string
   aiSdkSpeechEnabled?: string
   e2eAuthSecret?: string
+  appVariant?: string
+  appScheme?: string
 }
 
 const hostUri = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoClient?.hostUri
@@ -14,7 +16,8 @@ const localHost = hostUri ? hostUri.split(':').shift() : null
 
 const configuredApiBaseUrl = extra.apiBaseUrl || process.env.EXPO_PUBLIC_API_BASE_URL || ''
 const fallbackApiBaseUrl = localHost ? `http://${localHost}:3000` : 'http://localhost:3000'
-const isProductionRuntime = process.env.NODE_ENV === 'production'
+const appVariant = extra.appVariant ?? process.env.APP_VARIANT ?? 'dev'
+const isProductionRuntime = appVariant === 'production'
 
 if (!configuredApiBaseUrl && isProductionRuntime) {
   throw new Error(
@@ -23,6 +26,8 @@ if (!configuredApiBaseUrl && isProductionRuntime) {
 }
 
 export const API_BASE_URL = configuredApiBaseUrl || fallbackApiBaseUrl
+export const APP_VARIANT = appVariant
+export const APP_SCHEME = extra.appScheme || 'hakumi'
 
 const toBooleanFlag = (value: string | undefined) => value === 'true'
 

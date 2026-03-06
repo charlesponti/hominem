@@ -4,7 +4,6 @@ import { useChat, type Message } from '@ai-sdk/react';
 import { useHonoClient } from '@hominem/hono-client/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import { captureException } from '@sentry/react-native';
 import { useMutation, useQuery, type MutationOptions } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useEffect, useState } from 'react';
@@ -132,7 +131,7 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
     fetch: createMobileChatFetch(getAccessToken),
     onError: (error) => {
       setSendChatError(true);
-      captureException(error);
+      console.error('[chat] stream error', error);
     },
     onFinish: async () => {
       await syncMessages(client, chatId);
@@ -201,7 +200,7 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
       onError: (error) => {
         setSendChatError(true);
         log('Error sending chat message:', error);
-        captureException(error);
+        console.error('[chat] send failed', error);
       },
     });
 
@@ -250,7 +249,7 @@ export const useStartChat = ({
         try {
           await startRemoteChat(client, queuedPayload.user_message);
         } catch (error) {
-          captureException(error);
+          console.error('[chat] queued start failed', error);
         }
       }
     });

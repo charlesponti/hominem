@@ -14,7 +14,6 @@ import { betterAuthServer } from './auth/better-auth';
 import { getJwks } from './auth/key-store';
 import type { AuthContextEnvelope } from './auth/types';
 import { env } from './env';
-import { initSentry, sentryMiddleware } from './lib/sentry';
 import { authJwtMiddleware } from './middleware/auth';
 import { blockMaliciousProbes } from './middleware/block-probes';
 import { aiRoutes } from './routes/ai';
@@ -66,9 +65,6 @@ export function createServer() {
 
   // Authentication middleware
   app.use('*', authJwtMiddleware());
-
-  // Sentry request tracking
-  app.use('*', sentryMiddleware());
 
   // RPC routes deprecated - using Hono RPC instead
 
@@ -195,9 +191,6 @@ export function createServer() {
 }
 
 async function startServer() {
-  // Initialize Sentry first
-  initSentry();
-
   const app = createServer();
   if (!app) {
     logger.error('Failed to create server');

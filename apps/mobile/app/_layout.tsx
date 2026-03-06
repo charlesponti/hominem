@@ -1,8 +1,8 @@
-import * as Sentry from '@sentry/react-native';
 import { ThemeProvider } from '@shopify/restyle';
 import { useFonts } from 'expo-font';
-import { Slot, SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
+import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
+import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -15,10 +15,15 @@ import { initObservability } from '~/utils/observability';
 
 SplashScreen.preventAutoHideAsync();
 
+function AppBootstrap() {
+  return <View testID="app-bootstrap" style={{ flex: 1, backgroundColor: theme.colors.background }} />
+}
+
 function InnerRootLayout() {
   const router = useRouter();
   const segments = useSegments();
-  const { isLoadingAuth, isSignedIn } = useAuth();
+  const { authStatus, isSignedIn } = useAuth();
+  const [fontLoadTimedOut, setFontLoadTimedOut] = React.useState(false);
 
   const [loaded, error] = useFonts({
     'Font Awesome Regular': require('../assets/fonts/icons/fa-regular-400.ttf'),
@@ -29,16 +34,32 @@ function InnerRootLayout() {
   });
 
   useEffect(() => {
-    if (loaded || error) {
+    if (loaded || error || fontLoadTimedOut) {
       SplashScreen.hideAsync();
     }
     if (error) {
       console.warn('Failed to load fonts', error);
     }
-  }, [loaded, error]);
+  }, [loaded, error, fontLoadTimedOut]);
 
   useEffect(() => {
-    if (isLoadingAuth) return;
+    if (loaded || error) {
+      setFontLoadTimedOut(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setFontLoadTimedOut(true);
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [loaded, error]);
+
+  const shouldBlockForAuth = authStatus === 'booting';
+  const shouldBlockForFonts = !loaded && !error && !fontLoadTimedOut;
+
+  useEffect(() => {
+    if (shouldBlockForAuth) return;
 
     const inProtectedGroup = segments[0] === '(drawer)';
     if (!isSignedIn && inProtectedGroup) {
@@ -49,10 +70,14 @@ function InnerRootLayout() {
     if (isSignedIn && !inProtectedGroup) {
       router.replace('/(drawer)/(tabs)/start');
     }
-  }, [isLoadingAuth, isSignedIn, segments, router]);
+  }, [shouldBlockForAuth, isSignedIn, segments, router]);
 
-  if (isLoadingAuth) {
-    return <Slot />;
+  if (shouldBlockForFonts) {
+    return <AppBootstrap />;
+  }
+
+  if (shouldBlockForAuth) {
+    return <AppBootstrap />;
   }
 
   const showInputDock = isSignedIn && segments[0] === '(drawer)';
@@ -92,4 +117,4 @@ function RootLayout() {
   );
 }
 
-export default Sentry.withErrorBoundary(RootLayout, { showDialog: true });
+export default RootLayout;

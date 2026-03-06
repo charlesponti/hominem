@@ -1,4 +1,5 @@
 import { EmailSignIn, type EmailSignInProps } from '@hominem/ui';
+import { redirect } from 'react-router';
 import { serverEnv } from '~/lib/env';
 
 export async function loader() {
@@ -13,14 +14,11 @@ export async function action({ request }: { request: Request; formData: () => Pr
     return { error: 'Email is required' };
   }
 
-  const requestUrl = new URL(request.url);
-  const callbackUrl = requestUrl.origin;
-
   try {
-    const response = await fetch(`${serverEnv.VITE_PUBLIC_API_URL}/api/better-auth/sign-in/email-otp`, {
+    const response = await fetch(`${serverEnv.VITE_PUBLIC_API_URL}/api/auth/email-otp/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, callbackURL: callbackUrl }),
+      body: JSON.stringify({ email, type: 'sign-in' }),
     });
 
     if (!response.ok) {
@@ -28,7 +26,7 @@ export async function action({ request }: { request: Request; formData: () => Pr
       return { error: error.message || 'Failed to send verification email' };
     }
 
-    return { success: true, message: 'Check your email for the verification code' };
+    return redirect(`/auth/email/verify?email=${encodeURIComponent(email)}`);
   } catch {
     return { error: 'Failed to send verification email' };
   }

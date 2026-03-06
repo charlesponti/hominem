@@ -1,30 +1,36 @@
-import { describe, expect, test, mock } from 'bun:test'
+import { afterEach, describe, expect, mock, test } from 'bun:test'
 
-// Mock expo-constants
-mock.module('expo-constants', () => ({
-  default: {
-    expoConfig: {
-      extra: {
-        apiBaseUrl: 'https://test-api.example.com',
-      },
-    },
-  },
-}))
+process.env.EXPO_PUBLIC_API_BASE_URL = 'https://test-api.example.com'
+process.env.APP_VARIANT = 'e2e'
 
-// Mock expo-secure-store
 mock.module('expo-secure-store', () => ({
   setItemAsync: async () => {},
   getItemAsync: async () => null,
   deleteItemAsync: async () => {},
 }))
 
-// Mock @better-auth/expo/client
+mock.module('expo-constants', () => ({
+  default: {
+    expoConfig: {
+      extra: {
+        apiBaseUrl: 'https://test-api.example.com',
+        appScheme: 'hakumi-e2e',
+        appVariant: 'e2e',
+      },
+    },
+  },
+}))
+
 mock.module('@better-auth/expo/client', () => ({
   expoClient: (config: unknown) => ({
     name: 'expoClient',
     config,
   }),
 }))
+
+afterEach(() => {
+  mock.restore()
+})
 
 describe('authClient', () => {
   test('creates auth client with expoClient plugin', async () => {
@@ -33,11 +39,13 @@ describe('authClient', () => {
     expect(typeof authClient.signIn).toBe('function')
   })
 
-  test('uses correct scheme (hakumi) for OAuth redirect', async () => {
-    expect(true).toBe(true)
+  test('uses variant scheme for OAuth redirect', async () => {
+    const { APP_SCHEME } = await import('~/utils/constants')
+    expect(APP_SCHEME).toBe('hakumi-e2e')
   })
 
   test('configures secure storage with hominem prefix', async () => {
-    expect(true).toBe(true)
+    const { API_BASE_URL } = await import('~/utils/constants')
+    expect(API_BASE_URL).toBe('https://test-api.example.com')
   })
 })

@@ -136,12 +136,61 @@
 - [x] 7.7 No-shim gate passes:
   - grep-based check confirms no shim/adapter/legacy-alias modules remain in replaced surfaces
   - no new root exports added solely for legacy compatibility
+- [x] 7.8 App-auth E2E gate:
+  - `bun run test:e2e:auth:app`
 
 ## 8. Close-Out Integrity
 
 - [x] 8.1 Add verification status note to proposal/tasks with concrete gate results and timing values
 - [x] 8.2 Mark checklist items complete only after corresponding command evidence is green
 - [x] 8.3 If any gate remains red, keep affected checklist items open and document blockers explicitly
+
+## 10. App Auth E2E Completion (Email + OTP + Passkey)
+
+- [x] 10.0 Add first web app auth E2E spec (finance) for OTP request + verify contract
+  - `apps/finance/tests/auth.email-otp.spec.ts`
+  - root gate command added: `bun run test:e2e:auth:app`
+  - local run green for this spec
+- [x] 10.1 Add web app auth E2E suite for email+OTP success path
+  - app-driven sign-in (not direct API-call-only)
+  - assert authenticated app state and protected view access
+  - implemented in `apps/finance/tests/auth.email-otp.spec.ts`
+  - validated protected route access (`/finance`) after OTP verify
+- [x] 10.2 Add web app auth E2E suite for OTP rejection paths
+  - invalid OTP rejected
+  - expired OTP rejected
+  - session remains unauthenticated
+  - validated in `apps/finance/tests/auth.email-otp.spec.ts` via `bun run test:e2e:auth:app` (3/3 passing on 2026-03-05)
+- [x] 10.3 Add web passkey app E2E suite
+  - passkey registration flow
+  - passkey sign-in flow
+  - authenticated app state assertion
+  - implemented in `apps/finance/tests/auth.passkey.spec.ts`
+  - passkey wrappers now forward Better Auth `Set-Cookie` headers to preserve challenge/session continuity
+  - validated by `bun run test:e2e:auth:app` (4/4 passing on 2026-03-05)
+- [ ] 10.4 Add mobile auth app E2E suite (existing mobile E2E harness)
+  - email+OTP sign-in flow
+  - passkey flow where supported by target runtime
+  - authenticated app state assertion
+  - runtime note: current mobile app auth UX is Apple-only with deterministic E2E bootstrap path (no mobile email-OTP or passkey UX exposed yet)
+  - implemented deterministic Detox flow: `apps/mobile/e2e/auth.mobile.e2e.js`
+  - command added: `bun run test:e2e:auth:mobile`
+  - mobile runtime hardening in progress:
+    - replace `NODE_ENV` runtime selection with explicit `APP_VARIANT`
+    - generate dedicated `hakumie2e` native target/scheme via prebuild
+    - exclude `expo-dev-client` from E2E native pod graph
+    - use stable `testID` selectors in Detox assertions
+  - architecture hardening completed in app runtime:
+    - `AuthProvider` now exposes explicit auth state machine (`booting|signed_out|signed_in|degraded`)
+    - provider no longer performs navigation side effects
+    - root route guard consumes provider auth state instead of raw `useSession().isPending`
+    - `getAccessToken` no longer returns `session.user.id` pseudo-token
+  - current blocker (still open):
+    - Detox cannot consistently resolve initial shell state (`auth-screen` or `WHERE SHOULD WE START?`) in e2e runtime
+    - latest run: `bun run test:e2e:auth:mobile` failed with `Timed out waiting for a resolved app shell state`
+- [x] 10.5 Add a single app-auth E2E gate command at repo root scripts (deterministic run order)
+- [x] 10.6 Add app-auth E2E gate to final verification sequence documentation for this proposal
+- [x] 10.7 Run app-auth E2E gate on local test stack and record results in verification status note
 
 ### Verification Status Note (2026-03-05)
 
@@ -159,13 +208,15 @@
   - `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts src/routes/finance/finance.accounts.router.test.ts src/routes/finance/finance.data.router.test.ts` -> pass (14/14)
   - `bun run --filter @hominem/api test -- src/auth/subjects.constraint.test.ts src/middleware/auth.middleware.test.ts src/middleware/block-probes.test.ts src/routes/status.test.ts` -> pass (11/11)
   - `bun run --filter @hominem/finance test` -> pass (4/4)
+  - `bun run test:e2e:auth:app` -> pass (4/4; includes OTP success/rejection and passkey register+sign-in)
+  - `bun run test:e2e:auth:app` -> pass (4/4 on rerun after auth provider refactor)
   - `bun run --filter @hominem/rocco test` -> pass (45/45)
   - `bun run test` -> pass (all packages in scope)
   - `bun run check` -> pass (existing lint warnings only)
   - performance artifacts captured:
     - `openspec/changes/2025-03-04-update-db-schema-references/performance-validation.md`
 - Remaining red gate:
-  - none
+  - `bun run test:e2e:auth:mobile` -> failing in Detox bootstrap stage (`Timed out waiting for a resolved app shell state`)
 
 ## 9. Progress Log (2026-03-04)
 

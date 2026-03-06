@@ -1,4 +1,3 @@
-import { captureException } from '@sentry/react-native'
 import type { Audio } from 'expo-av'
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -71,7 +70,9 @@ export function useMobileAudioRecorder({
     try {
       setRecorderState('REQUESTING_PERMISSION')
       const { Audio } = await import('expo-av')
-      activateKeepAwakeAsync().catch((error: Error) => captureException(error))
+      activateKeepAwakeAsync().catch((error: Error) =>
+        console.error('[audio-recorder] keep-awake activation failed', error),
+      )
 
       const permission = await Audio.requestPermissionsAsync()
       if (permission.status !== 'granted') {
@@ -104,7 +105,7 @@ export function useMobileAudioRecorder({
       setRecorderState('RECORDING')
       emitVoiceEvent('voice_record_started', { platform: 'mobile-ios' })
     } catch (error) {
-      captureException(error)
+      console.error('[audio-recorder] start failed', error)
       if (isMountedRef.current) setRecorderState('IDLE')
       onError?.()
     }
@@ -153,10 +154,12 @@ export function useMobileAudioRecorder({
     const durationMs = recordingStatus?.durationMillis
 
     await recording.stopAndUnloadAsync().catch((reason: Error) => {
-      captureException(reason)
+      console.error('[audio-recorder] stop failed', reason)
     })
 
-    deactivateKeepAwake().catch((error: Error) => captureException(error))
+    deactivateKeepAwake().catch((error: Error) =>
+      console.error('[audio-recorder] keep-awake deactivation failed', error),
+    )
 
     if (!isMountedRef.current) return
 

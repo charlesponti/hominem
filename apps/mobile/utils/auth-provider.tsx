@@ -1,6 +1,4 @@
 import * as SecureStore from 'expo-secure-store'
-import * as WebBrowser from 'expo-web-browser'
-import { useRouter } from 'expo-router'
 import React, {
   createContext,
   useCallback,
@@ -14,18 +12,26 @@ import React, {
 import { authClient } from '../lib/auth-client'
 import { LocalStore } from './local-store'
 import type { UserProfile } from './local-store/types'
-import { signInWithE2eCredentials } from './auth-e2e'
-import { E2E_TESTING } from './constants'
-
-WebBrowser.maybeCompleteAuthSession()
+import { API_BASE_URL } from './constants'
 
 const LOCAL_MIGRATION_KEY = 'hominem_mobile_local_migration_v1'
+const AUTH_BOOT_TIMEOUT_MS = 6000
+
+type AuthStatus = 'booting' | 'signed_out' | 'signed_in' | 'degraded'
+type SessionWithToken = {
+  session?: {
+    token?: string | null
+    accessToken?: string | null
+  } | null
+}
 
 type AuthContextType = {
+  authStatus: AuthStatus
   isLoadingAuth: boolean
   isSignedIn: boolean
   currentUser: UserProfile | null
-  signInWithApple: () => Promise<void>
+  requestEmailOtp: (email: string) => Promise<void>
+  verifyEmailOtp: (input: { email: string; otp: string; name?: string }) => Promise<void>
   signOut: () => Promise<void>
   deleteAccount: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<UserProfile>
@@ -76,58 +82,129 @@ async function clearLegacyLocalDataOnce() {
 }
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
-  const router = useRouter()
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('booting')
 
-  const { data: session, isPending: isLoadingAuth } = authClient.useSession()
+  const { data: session, isPending: isSessionPending } = authClient.useSession()
+  const sessionUser = session?.user ?? null
+  const sessionFingerprint = sessionUser
+    ? `${sessionUser.id}|${sessionUser.email ?? ''}|${sessionUser.name ?? ''}|${String(sessionUser.updatedAt ?? '')}`
+    : 'none'
 
-  const syncUserFromSession = useCallback(async () => {
-    if (!session?.user) {
-      setCurrentUser(null)
-      return null
-    }
-
+  const syncUserFromSession = useCallback(async (user: NonNullable<typeof sessionUser>) => {
     await clearLegacyLocalDataOnce()
 
     const local = await LocalStore.getUserProfile()
     const merged: UserProfile = {
-      ...toUserProfile(session.user),
+      ...toUserProfile(user),
       ...local,
-      id: session.user.id,
-      email: session.user.email ?? null,
-      name: session.user.name ?? null,
+      id: user.id,
+      email: user.email ?? null,
+      name: user.name ?? null,
       updatedAt: nowIso(),
     }
 
     const saved = await LocalStore.upsertUserProfile(merged)
     setCurrentUser(saved)
     return saved
-  }, [session])
+  }, [])
 
   useEffect(() => {
-    if (session?.user) {
-      void syncUserFromSession()
-    } else if (!session && !isLoadingAuth) {
-      setCurrentUser(null)
-    }
-  }, [session, isLoadingAuth, syncUserFromSession])
+    let isCancelled = false
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
 
-  const signInWithApple = useCallback(async () => {
-    if (E2E_TESTING) {
-      await signInWithE2eCredentials()
-      router.replace('/(drawer)/(tabs)/start')
-      return
+    const run = async () => {
+      if (isSessionPending) {
+        setAuthStatus('booting')
+        timeoutId = setTimeout(() => {
+          if (!isCancelled) {
+            setAuthStatus('degraded')
+          }
+        }, AUTH_BOOT_TIMEOUT_MS)
+        return
+      }
+
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+
+      if (!sessionUser) {
+        setCurrentUser(null)
+        setAuthStatus('signed_out')
+        return
+      }
+
+      try {
+        await syncUserFromSession(sessionUser)
+        if (!isCancelled) {
+          setAuthStatus('signed_in')
+        }
+      } catch (error) {
+        console.error('[mobile-auth] session sync failed', error)
+        if (!isCancelled) {
+          setCurrentUser(null)
+          setAuthStatus('degraded')
+        }
+      }
     }
-    await authClient.signIn.social({
-      provider: 'apple',
-      callbackURL: '/',
+
+    void run()
+
+    return () => {
+      isCancelled = true
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
+  }, [isSessionPending, sessionFingerprint, sessionUser, syncUserFromSession])
+
+  const requestEmailOtp = useCallback(async (email: string) => {
+    const response = await fetch(new URL('/api/auth/email-otp/send', API_BASE_URL).toString(), {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        type: 'sign-in',
+      }),
     })
-  }, [router])
+
+    if (!response.ok) {
+      let message = 'Unable to send verification code.'
+      try {
+        const payload = (await response.json()) as { message?: string; error?: string }
+        if (payload.message) {
+          message = payload.message
+        } else if (payload.error) {
+          message = payload.error
+        }
+      } catch {}
+      throw new Error(message)
+    }
+  }, [])
+
+  const verifyEmailOtp = useCallback(async (input: { email: string; otp: string; name?: string }) => {
+    const result = await authClient.signIn.emailOtp({
+      email: input.email,
+      otp: input.otp,
+      ...(input.name ? { name: input.name } : {}),
+    })
+
+    if (result.error) {
+      const message =
+        typeof result.error.message === 'string'
+          ? result.error.message
+          : 'Unable to verify code.'
+      throw new Error(message)
+    }
+  }, [])
 
   const signOut = useCallback(async () => {
     await authClient.signOut()
     await LocalStore.clearAllData()
     setCurrentUser(null)
+    setAuthStatus('signed_out')
   }, [])
 
   const deleteAccount = useCallback(async () => {
@@ -155,25 +232,41 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     if (!session?.user) {
       return null
     }
-    return session.user.id
+    const maybeSession = session as SessionWithToken | null
+    const accessToken = maybeSession?.session?.accessToken
+    if (typeof accessToken === 'string' && accessToken.length > 0) {
+      return accessToken
+    }
+    const token = maybeSession?.session?.token
+    if (typeof token === 'string' && token.length > 0) {
+      return token
+    }
+    return null
   }, [session])
+
+  const isLoadingAuth = authStatus === 'booting'
+  const isSignedIn = authStatus === 'signed_in'
 
   const value = useMemo(
     () => ({
+      authStatus,
       isLoadingAuth,
-      isSignedIn: Boolean(session?.user && currentUser),
+      isSignedIn,
       currentUser,
-      signInWithApple,
+      requestEmailOtp,
+      verifyEmailOtp,
       signOut,
       deleteAccount,
       updateProfile,
       getAccessToken,
     }),
     [
+      authStatus,
       isLoadingAuth,
-      session,
+      isSignedIn,
       currentUser,
-      signInWithApple,
+      requestEmailOtp,
+      verifyEmailOtp,
       signOut,
       deleteAccount,
       updateProfile,

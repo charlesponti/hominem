@@ -5,6 +5,7 @@ export const users = pgTable('users', {
   email: text().notNull(),
   name: text(),
   image: text(),
+  emailVerified: boolean('email_verified').notNull().default(false),
   avatarUrl: text('avatar_url'),
   isAdmin: boolean('is_admin').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),

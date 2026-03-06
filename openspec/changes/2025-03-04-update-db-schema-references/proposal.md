@@ -60,7 +60,9 @@ Current truth snapshot:
 
 Implication:
 - Module replacement, no-shim enforcement, and performance evidence are now captured in artifacts.
-- Remaining close-out is administrative archive/finalization workflow.
+- Remaining close-out is mobile auth E2E stabilization:
+  - `bun run test:e2e:auth:mobile` still fails in Detox bootstrap shell detection.
+  - app auth provider architecture was refactored to explicit auth states and route-guard ownership; this reduced one class of startup hangs but did not fully resolve Detox bootstrap nondeterminism.
 
 Module progress snapshot (2026-03-04):
 - `auth`: contract mapping and account-scope fixes implemented; package tests and typecheck green
@@ -169,6 +171,74 @@ Capability-first implementation source of truth (strict execution order):
 Testing philosophy is locked in each capability file:
 - "Required RED tests" are DB-backed integration slice tests by default.
 - Unit tests are supplemental for isolated pure logic and cannot replace capability integration coverage.
+
+Auth deep-dive documents for this change:
+- `./auth-email-otp.md`
+- `./auth-web-passkey.md`
+- `./auth-mobile.md`
+
+## App Authentication E2E Next Steps (Added 2026-03-05)
+
+Current status:
+- API-level auth contract/integration coverage is active and green for email-OTP flows.
+- Live auth smoke probes exist (`scripts/auth-e2e-smoke.ts`) for endpoint/routing and provider redirect health.
+- Full app-driven E2E authentication coverage is not yet complete for web/mobile clients.
+
+Required next steps in this active change:
+
+1. Add web app authentication E2E coverage (Playwright)
+  - start from app UI and execute email + OTP sign-in
+  - assert post-auth app state (authenticated session + protected view access)
+  - include invalid OTP and expired OTP rejection paths
+2. Add passkey app E2E coverage (Playwright + virtual WebAuthn authenticator)
+  - register passkey and authenticate with passkey from app flow
+  - assert authenticated app state and expected auth/session contracts
+3. Add mobile app authentication E2E coverage (existing mobile E2E harness)
+  - email-OTP app flow
+  - passkey app flow where platform support exists
+4. Add unified auth app E2E gate command
+  - add a single top-level command that runs app-auth E2E suites in deterministic order
+5. Wire auth app E2E command into final verification gate sequence for this proposal
+
+Progress update (2026-03-05):
+- First app-auth E2E spec is implemented and green in finance app:
+  - `apps/finance/tests/auth.email-otp.spec.ts`
+  - validates app-driven OTP request + OTP verification contract
+  - validates post-auth protected route access (`/finance`)
+  - validates OTP rejection paths (invalid code and expired code remain unauthenticated)
+- Web passkey app E2E spec is implemented and green in finance app:
+  - `apps/finance/tests/auth.passkey.spec.ts`
+  - validates passkey registration, session reset, and passkey sign-in back to protected `/finance`
+  - passkey auth wrappers forward Better Auth `Set-Cookie` headers to preserve challenge/session continuity
+- Mobile auth E2E flow is implemented in Detox harness:
+  - `apps/mobile/e2e/auth.mobile.e2e.js`
+  - validates deterministic non-production sign-in path and authenticated app-shell access + sign-out return path
+  - mobile Expo runtime is now being hardened around explicit variants:
+    - `APP_VARIANT=dev` for developer builds with `expo-dev-client`
+    - `APP_VARIANT=e2e` for dedicated Detox binary with OTA disabled
+    - `APP_VARIANT=preview` for internal QA
+    - `APP_VARIANT=production` for release
+  - remaining hardening item: ensure `expo-dev-client` is excluded from the native E2E pod graph during prebuild
+  - auth provider architecture hardened:
+    - explicit auth state machine (`booting|signed_out|signed_in|degraded`)
+    - provider no longer performs route navigation side effects
+    - route guard consumes provider auth state
+    - `getAccessToken()` no longer returns user-id pseudo token
+  - active blocker:
+    - Detox e2e runtime intermittently fails to resolve initial shell state (`auth-screen` or `WHERE SHOULD WE START?`)
+    - latest `bun run test:e2e:auth:mobile` exits with `Timed out waiting for a resolved app shell state`
+- Root command added:
+  - `bun run test:e2e:auth:app`
+
+Success criteria:
+- App-originated email+OTP and passkey flows are validated end-to-end (not API-only)
+- Deterministic assertions verify authenticated app state and rejection paths
+- Gate command is documented and executable in CI/local with the test stack
+- Mobile Expo runtime model is explicit and environment-safe:
+  - no `NODE_ENV`-driven app identity selection
+  - dedicated non-dev-client E2E runtime
+  - variant-specific bundle IDs and schemes documented and enforced
+  - auth bootstrap is deterministic and cannot block app shell indefinitely
 
 ## Architecture Principles
 
@@ -888,7 +958,8 @@ Because `Task` type only lives in tasks.service.ts, we can change it without aff
   - `bun run --filter @hominem/places-services test`
   - `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts src/routes/finance/finance.accounts.router.test.ts src/routes/finance/finance.data.router.test.ts`
   - `bun run --filter @hominem/api test -- src/auth/subjects.constraint.test.ts src/middleware/auth.middleware.test.ts src/middleware/block-probes.test.ts src/routes/status.test.ts`
+  - `bun run test:e2e:auth:app`
   - `bun run test`
   - `bun run check`
 - Remaining open:
-  - none
+  - `bun run test:e2e:auth:mobile` fails in Detox startup shell resolution (`Timed out waiting for a resolved app shell state`)

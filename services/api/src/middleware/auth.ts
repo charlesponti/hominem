@@ -5,7 +5,6 @@ import type { MiddlewareHandler } from 'hono';
 
 import { betterAuthServer } from '../auth/better-auth';
 import { isSessionRevoked } from '../auth/session-store';
-import { ensureOAuthSubjectUser } from '../auth/subjects';
 import { verifyAccessToken } from '../auth/tokens';
 import type { AuthContextEnvelope } from '../auth/types';
 
@@ -155,7 +154,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
             sub: testUser.id,
             sid: crypto.randomUUID(),
             scope: ['api:read', 'api:write'],
-            role: testUser.isAdmin ? 'admin' : 'user',
+            role: user.isAdmin ? 'admin' : 'user',
             amr: ['test-header'],
             authTime: Math.floor(Date.now() / 1000),
           });
@@ -221,15 +220,10 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
         });
 
         if (session?.user?.id && session.user.email) {
-          const dbUser = await ensureOAuthSubjectUser({
-            provider: 'apple',
-            providerSubject: session.user.id,
+          const fullUser = await UserAuthService.findByIdOrEmail({
+            id: session.user.id,
             email: session.user.email,
-            ...(session.user.name !== undefined ? { name: session.user.name } : {}),
-            ...(session.user.image !== undefined ? { image: session.user.image } : {}),
           });
-
-          const fullUser = await UserAuthService.getUserById(dbUser.id);
           if (fullUser) {
             const user = toHominemUser(fullUser);
             setCachedUser(user);
@@ -239,7 +233,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
               sub: fullUser.id,
               sid: session.session?.id ?? crypto.randomUUID(),
               scope: ['api:read', 'api:write'],
-              role: fullUser.isAdmin ? 'admin' : 'user',
+              role: user.isAdmin ? 'admin' : 'user',
               amr: ['oauth'],
               authTime: Math.floor(Date.now() / 1000),
             });

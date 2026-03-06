@@ -15,27 +15,27 @@ import { getServerAuth } from '~/lib/auth.server';
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user, headers } = await getServerAuth(request);
 
-  if (!user) {
-    return redirect('/', { headers });
+  if (user) {
+    return redirect('/finance', { headers });
   }
 
-  return data({ user }, { headers });
+  return data({ user: null }, { headers });
 }
 
 export default function SignInPage() {
   const { authClient, isLoading } = useAuthContext();
   const [error, setError] = useState('');
 
-  const handleAppleLogin = useCallback(async () => {
+  const handleGoogleLogin = useCallback(async () => {
     try {
       await authClient.auth.signInWithOAuth({
-        provider: 'apple',
+        provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
         },
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Apple sign-in failed');
+      setError(err instanceof Error ? err.message : 'Google sign-in failed');
     }
   }, [authClient.auth]);
 
@@ -55,12 +55,12 @@ export default function SignInPage() {
             <div className="space-y-4">
               <Button
                 type="button"
-                onClick={handleAppleLogin}
+                onClick={handleGoogleLogin}
                 disabled={isLoading}
                 className="w-full"
                 size="lg"
               >
-                {isLoading ? 'Loading...' : 'Continue with Apple'}
+                {isLoading ? 'Loading...' : 'Continue with Google'}
               </Button>
             </div>
           </CardContent>

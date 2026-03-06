@@ -10,14 +10,15 @@ import { z } from 'zod';
 
 import { betterAuthServer } from '../auth/better-auth';
 import { getJwks } from '../auth/key-store';
+import { UserAuthService } from '@hominem/auth/server';
 import {
-  createE2eTokenPairForUser,
   createTokenPairForUser,
   revokeByRefreshToken,
   revokeSession,
   rotateRefreshToken,
 } from '../auth/session-store';
 import { ensureOAuthSubjectUser } from '../auth/subjects';
+import { getLatestTestOtp, isTestOtpStoreEnabled } from '../auth/test-otp-store';
 import { issueAccessToken, verifyAccessToken } from '../auth/tokens';
 import { env } from '../env';
 import type { AppEnv } from '../server';
@@ -49,6 +50,16 @@ const passkeyAuthVerifySchema = z.object({
   response: z.any(),
   action: z.string().min(1).optional(),
 });
+const emailOtpRequestSchema = z.object({
+  email: z.string().email(),
+  type: z.enum(['sign-in', 'change-email', 'email-verification', 'forget-password']).default('sign-in'),
+});
+const emailOtpVerifySchema = z.object({
+  email: z.string().email(),
+  otp: z.string().min(4).max(12),
+  name: z.string().min(1).max(128).optional(),
+  image: z.string().url().optional(),
+});
 
 const deviceCodeSchema = z.object({
   client_id: z.string().min(1),
@@ -77,6 +88,10 @@ const mobileE2eLoginSchema = z.object({
   email: z.string().email().optional(),
   name: z.string().min(1).max(128).optional(),
 });
+const testOtpQuerySchema = z.object({
+  email: z.string().email(),
+  type: z.string().min(1).optional(),
+});
 
 const cliAuthorizeSchema = z.object({
   redirect_uri: z.string().url(),
@@ -95,8 +110,9 @@ const MOBILE_FLOW_PREFIX = 'auth:mobile:flow:';
 const MOBILE_EXCHANGE_PREFIX = 'auth:mobile:exchange:';
 const MOBILE_ALLOWED_REDIRECT_URI_PREFIXES = [
   'hakumi://auth/callback',
-  'mindsherpa://auth/callback',
-  'com.pontistudios.mindsherpa.dev://auth/callback',
+  'hakumi-dev://auth/callback',
+  'hakumi-e2e://auth/callback',
+  'hakumi-preview://auth/callback',
 ];
 const MOBILE_FLOW_TTL_SECONDS = 10 * 60;
 const MOBILE_EXCHANGE_TTL_SECONDS = 2 * 60;
@@ -265,6 +281,10 @@ function parseCliScopes(scope: string | undefined) {
 
 function isE2eAuthEnabled() {
   return env.AUTH_E2E_ENABLED && env.NODE_ENV !== 'production';
+}
+
+function isTestOtpRetrievalEnabled() {
+  return isTestOtpStoreEnabled();
 }
 
 function appendQueryParams(baseUrl: string, params: Record<string, string>) {
@@ -646,9 +666,26 @@ authRoutes.get('/mobile/callback', async (c) => {
     );
   }
 
-  const session = await betterAuthServer.api.getSession({
-    ...getHeaderCarrier(c),
-  });
+  let session: Awaited<ReturnType<typeof betterAuthServer.api.getSession>> | null = null;
+  try {
+    session = await betterAuthServer.api.getSession({
+      ...getHeaderCarrier(c),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error('[auth:session] failed to resolve better-auth session', { error, message });
+    return c.json(
+      {
+        isAuthenticated: false,
+        user: null,
+        auth: null,
+        accessToken: null,
+        expiresIn: null,
+        ...(env.NODE_ENV === 'test' ? { debug: message } : {}),
+      },
+      200,
+    );
+  }
 
   if (!session?.user) {
     logger.warn('[auth:mobile] callback could not establish authenticated session', {
@@ -888,30 +925,130 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
     return c.json({ error: 'e2e_user_create_failed' }, 500);
   }
 
-  const tokenPair = await createE2eTokenPairForUser({
-    userId: user.id,
+  const accessToken = await issueAccessToken({
+    sub: user.id,
+    sid: crypto.randomUUID(),
+    scope: ['api:read', 'api:write'],
     role: user.isAdmin ? 'admin' : 'user',
+    amr: ['e2e', 'mobile'],
   });
+  const refreshToken = randomBytes(32).toString('base64url');
+  const sessionId = crypto.randomUUID();
+  const refreshFamilyId = crypto.randomUUID();
 
   logger.info('[auth:e2e:mobile] issued token pair', {
     clientIp,
     emailHash,
     userId: user.id,
-    sessionId: tokenPair.sessionId,
-    refreshFamilyId: tokenPair.refreshFamilyId,
+    sessionId,
+    refreshFamilyId,
   });
 
   const response: MobileE2eLoginResponse = {
-    access_token: tokenPair.accessToken,
-    refresh_token: tokenPair.refreshToken,
-    token_type: tokenPair.tokenType,
-    expires_in: tokenPair.expiresIn,
-    session_id: tokenPair.sessionId,
-    refresh_family_id: tokenPair.refreshFamilyId,
+    access_token: accessToken.accessToken,
+    refresh_token: refreshToken,
+    token_type: accessToken.tokenType,
+    expires_in: accessToken.expiresIn,
+    session_id: sessionId,
+    refresh_family_id: refreshFamilyId,
     provider: 'better-auth',
   };
 
   return c.json(response);
+});
+
+authRoutes.post('/email-otp/send', zValidator('json', emailOtpRequestSchema), async (c) => {
+  try {
+    const payload = c.req.valid('json');
+    const response = await callBetterAuthPluginEndpoint({
+      request: c.req.raw,
+      path: '/email-otp/send-verification-otp',
+      method: 'POST',
+      body: payload as Record<string, unknown>,
+    });
+    const body = await response.text();
+    return new Response(body, {
+      status: response.status,
+      headers: new Headers(response.headers),
+    });
+  } catch {
+    return c.json({ error: 'email_otp_send_failed' }, 400);
+  }
+});
+
+authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), async (c) => {
+  try {
+    const payload = c.req.valid('json');
+    const response = await callBetterAuthPluginEndpoint({
+      request: c.req.raw,
+      path: '/sign-in/email-otp',
+      method: 'POST',
+      body: payload as Record<string, unknown>,
+    });
+    const body = await response.text();
+    let responseBody = body;
+
+    if (response.ok) {
+      try {
+        const parsed = JSON.parse(body) as { user?: { id?: string } };
+        const userId = parsed.user?.id;
+        if (userId) {
+          const dbUser = await db.query.users.findFirst({
+            where: eq(users.id, userId),
+          });
+          const token = await issueAccessToken({
+            sub: userId,
+            sid: crypto.randomUUID(),
+            scope: ['api:read', 'api:write'],
+            role: dbUser?.isAdmin ? 'admin' : 'user',
+            amr: ['email_otp'],
+          });
+          responseBody = JSON.stringify({
+            ...parsed,
+            token: token.accessToken,
+            accessToken: token.accessToken,
+            expiresIn: token.expiresIn,
+          });
+        }
+      } catch {}
+    }
+
+    return new Response(responseBody, {
+      status: response.status,
+      headers: new Headers(response.headers),
+    });
+  } catch {
+    return c.json({ error: 'email_otp_verify_failed' }, 400);
+  }
+});
+
+authRoutes.get('/test/otp/latest', zValidator('query', testOtpQuerySchema), async (c) => {
+  if (!isTestOtpRetrievalEnabled()) {
+    return c.json({ error: 'not_found' }, 404);
+  }
+
+  const providedSecret = c.req.header('x-e2e-auth-secret');
+  if (!providedSecret || providedSecret !== env.AUTH_E2E_SECRET) {
+    return c.json({ error: 'forbidden' }, 403);
+  }
+
+  const query = c.req.valid('query');
+  const record = getLatestTestOtp({
+    email: query.email,
+    ...(query.type ? { type: query.type } : {}),
+  });
+
+  if (!record) {
+    return c.json({ error: 'otp_not_found' }, 404);
+  }
+
+  return c.json({
+    email: record.email,
+    otp: record.otp,
+    type: record.type,
+    createdAt: record.createdAt,
+    expiresAt: record.expiresAt,
+  });
 });
 
 authRoutes.post('/cli/authorize', zValidator('json', cliAuthorizeSchema), async (c) => {
@@ -1027,9 +1164,23 @@ authRoutes.get('/cli/callback', async (c) => {
     );
   }
 
-  const session = await betterAuthServer.api.getSession({
-    ...getHeaderCarrier(c),
-  });
+  let session: Awaited<ReturnType<typeof betterAuthServer.api.getSession>> | null = null;
+  try {
+    session = await betterAuthServer.api.getSession({
+      ...getHeaderCarrier(c),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error('[auth:session] failed to resolve better-auth session', { error, message });
+    return c.json({
+      isAuthenticated: false,
+      user: null,
+      auth: null,
+      accessToken: null,
+      expiresIn: null,
+      ...(env.NODE_ENV === 'test' ? { debug: message } : {}),
+    });
+  }
 
   if (!session?.user) {
     return c.redirect(
@@ -1211,9 +1362,23 @@ authRoutes.get('/session', async (c) => {
     });
   }
 
-  const session = await betterAuthServer.api.getSession({
-    ...getHeaderCarrier(c),
-  });
+  let session: Awaited<ReturnType<typeof betterAuthServer.api.getSession>> | null = null;
+  try {
+    session = await betterAuthServer.api.getSession({
+      ...getHeaderCarrier(c),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error('[auth:session] failed to resolve better-auth session', { error, message });
+    return c.json({
+      isAuthenticated: false,
+      user: null,
+      auth: null,
+      accessToken: null,
+      expiresIn: null,
+      ...(env.NODE_ENV === 'test' ? { debug: message } : {}),
+    });
+  }
 
   if (!session?.user) {
     return c.json({
@@ -1226,17 +1391,21 @@ authRoutes.get('/session', async (c) => {
   }
 
   const sid = session.session?.id ?? crypto.randomUUID();
-  const dbUser = await ensureOAuthSubjectUser({
-    provider: 'apple',
-    providerSubject: session.user.id,
+  const userRecord = await UserAuthService.findByIdOrEmail({
+    id: session.user.id,
     email: session.user.email,
-    ...(session.user.name !== undefined ? { name: session.user.name } : {}),
-    ...(session.user.image !== undefined ? { image: session.user.image } : {}),
   });
-
-  if (!dbUser) {
+  if (!userRecord) {
     return c.json({ error: 'session_user_not_found' }, 401);
   }
+  const dbUser = {
+    id: userRecord.id,
+    email: userRecord.email,
+    ...(userRecord.name ? { name: userRecord.name } : {}),
+    isAdmin: false,
+    ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
+    ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
+  };
 
   const token = await issueAccessToken({
     sub: dbUser.id,
@@ -1251,11 +1420,10 @@ authRoutes.get('/session', async (c) => {
     user: {
       id: dbUser.id,
       email: dbUser.email,
-      name: dbUser.name ?? undefined,
-      image: dbUser.image ?? undefined,
-      isAdmin: dbUser.isAdmin,
-      createdAt: dbUser.createdAt,
-      updatedAt: dbUser.updatedAt,
+      ...(dbUser.name ? { name: dbUser.name } : {}),
+      isAdmin: dbUser.isAdmin ?? false,
+      ...(dbUser.createdAt ? { createdAt: dbUser.createdAt } : {}),
+      ...(dbUser.updatedAt ? { updatedAt: dbUser.updatedAt } : {}),
     },
     auth: {
       sub: dbUser.id,
@@ -1512,8 +1680,11 @@ authRoutes.post('/passkey/register/options', async (c) => {
       path: '/passkey/generate-register-options',
       method: 'GET',
     });
-    const payload = await response.json();
-    return c.json(payload as Record<string, unknown>, response.status as 200 | 400 | 401);
+    const body = await response.text();
+    return new Response(body, {
+      status: response.status,
+      headers: copyHeadersWithSetCookie(response.headers),
+    });
   } catch {
     return c.json({ error: 'passkey_options_failed' }, 400);
   }
@@ -1534,8 +1705,11 @@ authRoutes.post(
         method: 'POST',
         body: c.req.valid('json') as Record<string, unknown>,
       });
-      const payload = await response.json();
-      return c.json(payload as Record<string, unknown>, response.status as 200 | 400 | 401);
+      const body = await response.text();
+      return new Response(body, {
+        status: response.status,
+        headers: copyHeadersWithSetCookie(response.headers),
+      });
     } catch {
       return c.json({ error: 'passkey_registration_failed' }, 400);
     }
@@ -1549,8 +1723,11 @@ authRoutes.post('/passkey/auth/options', async (c) => {
       path: '/passkey/generate-authenticate-options',
       method: 'GET',
     });
-    const payload = await response.json();
-    return c.json(payload as Record<string, unknown>, response.status as 200 | 400 | 401);
+    const body = await response.text();
+    return new Response(body, {
+      status: response.status,
+      headers: copyHeadersWithSetCookie(response.headers),
+    });
   } catch {
     return c.json({ error: 'passkey_options_failed' }, 400);
   }
@@ -1565,13 +1742,16 @@ authRoutes.post('/passkey/auth/verify', zValidator('json', passkeyAuthVerifySche
       method: 'POST',
       body: { response: body.response },
     });
-    const responseBody = await response.json();
+    const responseText = await response.text();
     const userId = c.get('userId');
     const requestedAction = body.action;
     if (response.status >= 200 && response.status < 300 && userId && requestedAction) {
       await grantStepUp(userId, requestedAction).catch(() => null);
     }
-    return c.json(responseBody as Record<string, unknown>, response.status as 200 | 400 | 401);
+    return new Response(responseText, {
+      status: response.status,
+      headers: copyHeadersWithSetCookie(response.headers),
+    });
   } catch {
     return c.json({ error: 'passkey_authentication_failed' }, 401);
   }

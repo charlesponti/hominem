@@ -50,6 +50,7 @@ function Account() {
 
   return (
     <View
+      testID="account-screen"
       style={{
         flex: 1,
         paddingHorizontal: 12,
@@ -98,7 +99,7 @@ function Account() {
           rowGap: 12,
         }}
       >
-        <Button title="[SIGN_OUT]" onPress={onLogoutPress} />
+        <Button testID="account-sign-out" title="[SIGN_OUT]" onPress={onLogoutPress} />
         <Button
           title="[DELETE_ACCOUNT]"
           onPress={onDeleteAccountPress}

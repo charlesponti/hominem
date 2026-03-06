@@ -13,14 +13,11 @@ export async function action({ request }: { request: Request; formData: () => Pr
     return { error: 'Email is required' };
   }
 
-  const requestUrl = new URL(request.url);
-  const callbackUrl = requestUrl.origin;
-
   try {
-    const response = await fetch(`${serverEnv.VITE_PUBLIC_API_URL}/api/better-auth/sign-in/email-otp`, {
+    const response = await fetch(`${serverEnv.VITE_PUBLIC_API_URL}/api/auth/email-otp/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, callbackURL: callbackUrl }),
+      body: JSON.stringify({ email, type: 'sign-in' }),
     });
 
     if (!response.ok) {

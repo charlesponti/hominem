@@ -19,6 +19,7 @@ import {
 
 import { env } from '../env';
 import { sendEmail } from '../lib/email';
+import { recordTestOtp } from './test-otp-store';
 
 function getTrustedOrigins() {
   const origins = new Set([
@@ -31,6 +32,8 @@ function getTrustedOrigins() {
     'http://localhost:4446',
     'hakumi://',
     'hakumi-dev://',
+    'hakumi-e2e://',
+    'hakumi-preview://',
     'exp://',
   ]);
   return [...origins];
@@ -43,6 +46,9 @@ function getAdvancedOptions() {
     env.NODE_ENV === 'production' || new URL(env.BETTER_AUTH_URL).protocol === 'https:';
 
   return {
+    database: {
+      generateId: 'uuid' as const,
+    },
     useSecureCookies,
     ...(crossSubDomainEnabled
       ? {
@@ -103,7 +109,13 @@ function getAuthPlugins() {
       },
     }),
     emailOTP({
+      expiresIn: env.AUTH_EMAIL_OTP_EXPIRES_SECONDS,
       sendVerificationOTP: async ({ email, otp, type }) => {
+        recordTestOtp({ email, otp, type });
+        if (env.NODE_ENV === 'test' && !env.RESEND_FROM_EMAIL) {
+          return;
+        }
+
         const subject =
           type === 'sign-in'
             ? 'Your sign-in code'
@@ -144,7 +156,13 @@ function getAuthPlugins() {
         });
       },
     }),
-    jwt(),
+    jwt({
+      schema: {
+        jwks: {
+          modelName: 'userJwks',
+        },
+      },
+    }),
     bearer({ requireSignature: true }),
     multiSession({ maximumSessions: 8 }),
     oneTimeToken({
@@ -213,7 +231,7 @@ const betterAuthOptions: BetterAuthOptions = {
   trustedOrigins: getTrustedOrigins(),
   advanced: getAdvancedOptions(),
   user: {
-    modelName: 'users',
+    modelName: 'authUser',
   },
   session: {
     modelName: 'userSession',

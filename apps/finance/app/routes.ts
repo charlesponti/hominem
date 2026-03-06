@@ -25,6 +25,7 @@ export default [
     route('/account', 'routes/account.tsx'),
     route('/auth/signin', 'routes/auth/signin.tsx'),
     route('/auth/email', 'routes/auth/email.tsx'),
+    route('/auth/email/verify', 'routes/auth/email.verify.tsx'),
     route('/auth/callback', 'routes/auth.callback.tsx'),
     route('/auth/cli', 'routes/auth.cli.tsx'),
 

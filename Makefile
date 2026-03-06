@@ -17,7 +17,7 @@ DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5432/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install start dev build test lint format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-migration-generate db-migration-apply db-schema-update help-db
+.PHONY: install start dev build test lint format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-migration-generate db-migration-apply db-schema-update help-db auth-test-up auth-test-down auth-test-status
 
 # Install dependencies
 install:
@@ -156,6 +156,18 @@ auth-e2e-live:
 
 auth-e2e-live-local:
 	@bun run test:e2e:auth:live:local
+
+auth-test-up:
+	$(MAKE) dev-up
+	$(MAKE) db-migrate-test
+	@echo "Auth test infra ready (db + test-db + redis)"
+
+auth-test-down:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml stop redis db test-db
+	@echo "Auth test infra stopped"
+
+auth-test-status:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps redis db test-db
 
 mobile-test-e2e-preflight:
 	@bun run --filter @hominem/mobile test:e2e:preflight

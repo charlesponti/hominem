@@ -14,7 +14,7 @@ const fs = require('node:fs')
 const path = process.argv[1]
 const raw = fs.readFileSync(path, 'utf8')
 const cfg = JSON.parse(raw)
-const requiredProfiles = ['development', 'simulator', 'production']
+const requiredProfiles = ['development', 'e2e', 'preview', 'production']
 for (const profile of requiredProfiles) {
   if (!cfg.build || !cfg.build[profile]) {
     throw new Error('Missing build profile: ' + profile)
@@ -23,14 +23,26 @@ for (const profile of requiredProfiles) {
 if (cfg.build.development.channel !== 'development') {
   throw new Error('development profile must use channel=development')
 }
-if (cfg.build.simulator.ios?.simulator !== true) {
-  throw new Error('simulator profile must set ios.simulator=true')
+if (cfg.build.development.developmentClient !== true) {
+  throw new Error('development profile must enable developmentClient')
+}
+if (cfg.build.e2e.ios?.simulator !== true) {
+  throw new Error('e2e profile must set ios.simulator=true')
+}
+if (cfg.build.e2e.developmentClient === true) {
+  throw new Error('e2e profile must not enable developmentClient')
+}
+if (cfg.build.e2e.env?.APP_VARIANT !== 'e2e') {
+  throw new Error('e2e profile must define APP_VARIANT=e2e')
+}
+if (cfg.build.preview.env?.APP_VARIANT !== 'preview') {
+  throw new Error('preview profile must define APP_VARIANT=preview')
 }
 if (cfg.build.production.channel !== 'production') {
   throw new Error('production profile must use channel=production')
 }
-if (!cfg.build.development.env?.EXPO_PUBLIC_API_BASE_URL) {
-  throw new Error('development env must define EXPO_PUBLIC_API_BASE_URL')
+if (cfg.build.production.env?.APP_VARIANT !== 'production') {
+  throw new Error('production profile must define APP_VARIANT=production')
 }
 console.log('EAS profile validation passed')
 " "${EAS_FILE}"

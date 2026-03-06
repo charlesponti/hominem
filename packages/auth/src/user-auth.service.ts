@@ -4,7 +4,9 @@ interface UserRow {
   id: string
   email: string
   name: string | null
+  image: string | null
   avatar_url: string | null
+  is_admin: boolean | null
   created_at: string | null
   updated_at: string | null
 }
@@ -31,7 +33,7 @@ export class UserAuthService {
 
     if (id && email) {
       const result = await db.execute(sql`
-        select id, email, name, avatar_url, created_at, updated_at
+        select id, email, name, image, avatar_url, is_admin, created_at, updated_at
         from users
         where id = ${id}
            or email = ${email}
@@ -42,7 +44,7 @@ export class UserAuthService {
 
     if (id) {
       const result = await db.execute(sql`
-        select id, email, name, avatar_url, created_at, updated_at
+        select id, email, name, image, avatar_url, is_admin, created_at, updated_at
         from users
         where id = ${id}
         limit 1
@@ -51,7 +53,7 @@ export class UserAuthService {
     }
 
     const result = await db.execute(sql`
-      select id, email, name, avatar_url, created_at, updated_at
+      select id, email, name, image, avatar_url, is_admin, created_at, updated_at
       from users
       where email = ${email!}
       limit 1
@@ -61,7 +63,7 @@ export class UserAuthService {
 
   static async getUserByEmail(email: string) {
     const result = await db.execute(sql`
-      select id, email, name, avatar_url, created_at, updated_at
+      select id, email, name, image, avatar_url, is_admin, created_at, updated_at
       from users
       where email = ${email}
       limit 1
@@ -71,7 +73,7 @@ export class UserAuthService {
 
   static async getUserById(id: string) {
     const result = await db.execute(sql`
-      select id, email, name, avatar_url, created_at, updated_at
+      select id, email, name, image, avatar_url, is_admin, created_at, updated_at
       from users
       where id = ${id}
       limit 1

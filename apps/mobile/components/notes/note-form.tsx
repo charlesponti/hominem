@@ -1,4 +1,3 @@
-import { captureException } from '@sentry/react-native'
 import type { PropsWithChildren } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native'
@@ -40,7 +39,6 @@ export const NoteForm = (props: NoteFormProps) => {
     },
     onError: (error) => {
       console.error('Error generating intent:', error)
-      captureException(error)
       setGenerateError(true)
     },
   })
