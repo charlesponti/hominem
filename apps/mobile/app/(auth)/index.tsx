@@ -3,6 +3,7 @@ import React from 'react';
 import { Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FeatureErrorBoundary } from '~/components/error-boundary';
 import LoginSheet from '~/components/authentication/login-sheet';
 import { Box, Text } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
@@ -81,4 +82,10 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Auth;
+const AuthWithErrorBoundary = () => (
+  <FeatureErrorBoundary featureName="Auth">
+    <Auth />
+  </FeatureErrorBoundary>
+)
+
+export default AuthWithErrorBoundary

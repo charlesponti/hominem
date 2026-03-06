@@ -1,15 +1,7 @@
-import { Redirect, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import React from 'react';
 
-import { useAuth } from '~/utils/auth-provider';
-
 const DrawerLayout = () => {
-  const { isSignedIn } = useAuth();
-
-  if (!isSignedIn) {
-    return <Redirect href="/(auth)" />;
-  }
-
   return (
     <Stack initialRouteName="(tabs)">
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />

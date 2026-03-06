@@ -22,9 +22,10 @@ import MindsherpaIcon, { type MindsherpaIconName } from '../ui/icon'
 
 const SWIPE_THRESHOLD = 80
 
-function removeFocusItem(item: FocusItem) {
-  queryClient.setQueryData(['focusItems'], (old: FocusItem[]) =>
-    old.filter((focusItem) => focusItem.id !== item.id)
+// Memoized cache update function to prevent recreating on every render
+const removeFocusItem = (itemId: string) => {
+  queryClient.setQueryData(['focusItems'], (old: FocusItem[] | undefined) =>
+    (old || []).filter((focusItem) => focusItem.id !== itemId)
   )
 }
 
@@ -87,7 +88,7 @@ export const FocusListItem = ({
   const deleteFocusItem = useDeleteFocus({
     onSuccess: async (deletedItemId) => {
       await queryClient.cancelQueries({ queryKey: ['focusItems'] })
-      removeFocusItem(item)
+      removeFocusItem(item.id)
       isMutating.value = false
     },
     onError: () => {
@@ -105,7 +106,7 @@ export const FocusListItem = ({
       iconBackgroundColor.value = withTiming(theme.colors.green, {
         duration: VOID_MOTION_DURATION_STANDARD,
       })
-      removeFocusItem(item)
+      removeFocusItem(item.id)
       isMutating.value = false
     },
     onError: () => {

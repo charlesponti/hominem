@@ -6,12 +6,14 @@ import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { RootErrorBoundary } from '~/components/error-boundary/root-error-boundary';
 import { InputProvider } from '~/components/input/input-context';
 import { InputDock } from '~/components/input/input-dock';
 import { theme } from '~/theme';
 import { ApiProvider } from '~/utils/api-provider';
 import { AuthProvider, useAuth } from '~/utils/auth-provider';
 import { initObservability } from '~/utils/observability';
+import { logError } from '~/utils/error-boundary/log-error';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -83,7 +85,7 @@ function InnerRootLayout() {
   const showInputDock = isSignedIn && segments[0] === '(drawer)';
 
   return (
-    <>
+    <RootErrorBoundary onError={(error, errorInfo) => logError(error, errorInfo, { route: segments.join('/') })}>
       <Stack>
         <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
@@ -93,7 +95,7 @@ function InnerRootLayout() {
           <InputDock />
         </InputProvider>
       ) : null}
-    </>
+    </RootErrorBoundary>
   );
 }
 

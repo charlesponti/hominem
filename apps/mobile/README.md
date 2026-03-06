@@ -162,6 +162,85 @@ eas submit --platform ios --latest
 4. Sign out and verify app returns to signed-out state.
 5. Relaunch app and verify refresh-token session restore works.
 
+## Architecture
+
+### Auth State Machine
+
+The app uses a deterministic state machine for authentication state management (`utils/auth/types.ts`):
+
+```
+BOOTING → AUTHENTICATED/UNAUTHENTICATED/ERROR
+   ↑           ↓
+   └────── SIGN_IN/SIGN_OUT events
+```
+
+**Benefits:**
+- Eliminates race conditions in auth flow
+- Predictable state transitions
+- Proper async operation cancellation via AbortController
+- Easy to test and debug
+
+**Key Files:**
+- `utils/auth/types.ts` - State machine types and reducer
+- `utils/auth-provider.tsx` - Auth provider using state machine
+
+### Error Boundaries
+
+Three-tier error handling system:
+
+1. **Root Error Boundary** (`components/error-boundary/root-error-boundary.tsx`)
+   - Catches unhandled errors at app level
+   - Provides recovery options
+
+2. **Feature Error Boundaries** (`components/error-boundary/feature-error-boundary.tsx`)
+   - Wraps individual features (Chat, Focus, Auth)
+   - Allows partial functionality when one feature fails
+
+3. **Error Logging** (`utils/error-boundary/log-error.ts`)
+   - Centralized error tracking
+   - Contextual information for debugging
+
+### State Consolidation
+
+**Chat State:** Single source of truth with React Query
+- Removed triple-state architecture (AI SDK + React Query + SQLite)
+- React Query cache is the active state
+- SQLite is persistence layer only
+- Optimistic updates with automatic rollback
+
+**Focus Items:** Server state with local fallback
+- React Query for server state
+- SQLite for offline persistence
+- Automatic refetch when online
+
+### Runtime Validation
+
+Zod schemas for type-safe API responses (`utils/validation/schemas.ts`):
+- `ChatMessageSchema` - Chat message validation
+- `FocusItemSchema` - Focus item validation  
+- `UserProfileSchema` - User profile validation
+- `NoteSchema` - Note validation
+
+Replaces unsafe `as Type` assertions with runtime validation.
+
+### Performance Optimizations
+
+1. **FlashList Optimization** (`components/focus/focus-list.tsx`)
+   - Memoized render items
+   - Stable key extractor
+   - `removeClippedSubviews` for memory efficiency
+
+2. **Query Client Tuning** (`utils/query-client.ts`)
+   - `staleTime: 60s` - Reduce unnecessary refetches
+   - `gcTime: 10min` - Keep data in memory longer
+   - Exponential backoff for retries
+   - NetInfo integration for offline detection
+
+3. **Effect Cleanup**
+   - AbortController pattern for async operations
+   - Proper timer/timeout cleanup
+   - No memory leaks from abandoned promises
+
 ## iOS IDs
 
 - Dev bundle ID: `com.pontistudios.hakumi.dev`

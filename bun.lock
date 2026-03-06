@@ -119,6 +119,7 @@
         "react-native-web": "~0.20.0",
         "react-native-worklets": "0.5.1",
         "zeego": "3.0.6",
+        "zod": "^4.3.6",
       },
       "devDependencies": {
         "@babel/core": "^7.26.0",

@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQuery, type MutationOptions } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { Chat as LocalChat, ChatMessage as LocalChatMessage } from '~/utils/local-store/types';
 
@@ -77,22 +77,22 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
   const [isLoadingLocal, setIsLoadingLocal] = useState(true);
 
   useEffect(() => {
-    let isMounted = true;
+    const abortController = new AbortController();
     if (!chatId) return;
 
     setIsLoadingLocal(true);
     LocalStore.listMessages(chatId)
       .then((messages) => {
-        if (!isMounted) return;
+        if (abortController.signal.aborted) return;
         setLocalMessages(messages.map(toLocalMessageOutput));
       })
       .catch(() => undefined)
       .finally(() => {
-        if (isMounted) setIsLoadingLocal(false);
+        if (!abortController.signal.aborted) setIsLoadingLocal(false);
       });
 
     return () => {
-      isMounted = false;
+      abortController.abort();
     };
   }, [chatId]);
 
