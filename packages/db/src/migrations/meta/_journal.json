@@ -78,6 +78,13 @@
       "when": 1745708665719,
       "tag": "0071_wealthy_jetstream",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1772802569134,
+      "tag": "0011_auth_token_tables",
+      "breakpoints": true
     }
   ]
 }

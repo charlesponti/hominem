@@ -1,10 +1,13 @@
 export type AuthStatus =
   | 'booting'
   | 'signed_out'
+  | 'requesting_otp'
   | 'otp_requested'
   | 'verifying_otp'
   | 'minting_api_token'
   | 'syncing_profile'
+  | 'authenticating_passkey'
+  | 'refreshing_session'
   | 'signed_in'
   | 'signing_out'
   | 'degraded'
@@ -28,12 +31,18 @@ export interface AuthState {
 export type AuthEvent =
   | { type: 'SESSION_LOADED'; user: UserProfile }
   | { type: 'SESSION_EXPIRED' }
+  | { type: 'OTP_REQUEST_STARTED' }
   | { type: 'OTP_REQUESTED' }
   | { type: 'OTP_REQUEST_FAILED'; error: Error }
   | { type: 'OTP_VERIFICATION_STARTED' }
-  | { type: 'API_TOKEN_MINT_STARTED' }
-  | { type: 'PROFILE_SYNC_STARTED' }
   | { type: 'OTP_VERIFICATION_FAILED'; error: Error }
+  | { type: 'API_TOKEN_MINT_STARTED' }
+  | { type: 'API_TOKEN_MINT_FAILED'; error: Error }
+  | { type: 'PROFILE_SYNC_STARTED' }
+  | { type: 'PASSKEY_AUTH_STARTED' }
+  | { type: 'PASSKEY_AUTH_FAILED'; error: Error }
+  | { type: 'REFRESH_STARTED' }
+  | { type: 'REFRESH_FAILED'; error: Error }
   | { type: 'SIGN_OUT_REQUESTED' }
   | { type: 'SIGN_OUT_SUCCESS' }
   | { type: 'SYNC_STARTED' }
@@ -76,6 +85,14 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         isLoading: false,
       }
 
+    case 'OTP_REQUEST_STARTED':
+      return {
+        ...state,
+        status: 'requesting_otp',
+        isLoading: true,
+        error: null,
+      }
+
     case 'OTP_REQUESTED':
       return {
         ...state,
@@ -108,12 +125,52 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         isLoading: true,
       }
 
+    case 'API_TOKEN_MINT_FAILED':
+      return {
+        ...state,
+        status: 'degraded',
+        error: event.error,
+        isLoading: false,
+      }
+
     case 'PROFILE_SYNC_STARTED':
       return {
         ...state,
         status: 'syncing_profile',
         error: null,
         isLoading: true,
+      }
+
+    case 'REFRESH_STARTED':
+      return {
+        ...state,
+        status: 'refreshing_session',
+        error: null,
+        isLoading: true,
+      }
+
+    case 'REFRESH_FAILED':
+      return {
+        ...state,
+        status: 'signed_out',
+        error: event.error,
+        isLoading: false,
+      }
+
+    case 'PASSKEY_AUTH_STARTED':
+      return {
+        ...state,
+        status: 'authenticating_passkey',
+        error: null,
+        isLoading: true,
+      }
+
+    case 'PASSKEY_AUTH_FAILED':
+      return {
+        ...state,
+        status: 'degraded',
+        error: event.error,
+        isLoading: false,
       }
 
     case 'OTP_VERIFICATION_FAILED':

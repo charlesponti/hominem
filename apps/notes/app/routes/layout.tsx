@@ -1,9 +1,9 @@
 'use client';
 
-import { useToast } from '@hominem/ui';
+import { PasskeyEnrollmentBanner, usePasskeyAuth, useToast } from '@hominem/ui';
 import { AppLayout } from '@hominem/ui/components/layout/app-layout';
 import { Toaster } from '@hominem/ui/components/ui/toaster';
-import { Suspense, useEffect } from 'react';
+import { Suspense, useCallback, useEffect } from 'react';
 import { Outlet, useSearchParams } from 'react-router';
 
 import Header from '~/components/header';
@@ -12,6 +12,8 @@ import { LoadingScreen } from '~/components/loading';
 export default function Layout() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
+  const { register } = usePasskeyAuth()
+  const handleEnroll = useCallback(async () => { await register() }, [register])
 
   useEffect(() => {
     const error = searchParams.get('error');
@@ -36,6 +38,7 @@ export default function Layout() {
 
   return (
     <>
+      <PasskeyEnrollmentBanner onEnroll={handleEnroll} />
       <AppLayout navigation={<Header />}>
         <Suspense fallback={<LoadingScreen />}>
           <Outlet />

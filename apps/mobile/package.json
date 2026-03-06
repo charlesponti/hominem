@@ -12,7 +12,6 @@
     "prebuild:dev": "bash scripts/run-variant.sh dev expo prebuild",
     "prebuild:e2e": "bash scripts/run-variant.sh e2e expo prebuild --platform ios --clean",
     "build:development": "bun run validate:eas:profiles && eas build --profile development --platform ios",
-    "build:dev": "bun run build:development:ios",
     "build:e2e": "bun run validate:eas:profiles && eas build --profile e2e --platform ios",
     "build:preview": "bun run validate:eas:profiles && eas build --profile preview --platform ios",
     "build:production": "bun run validate:eas:profiles && eas build --profile production --platform ios",
@@ -29,7 +28,9 @@
   },
   "dependencies": {
     "@ai-sdk/react": "^1.2.12",
+    "@better-auth/passkey": "^1.5.4",
     "@expo/vector-icons": "^14.0.0",
+    "@hominem/auth": "workspace:*",
     "@hominem/hono-client": "workspace:*",
     "@hominem/hono-rpc": "workspace:*",
     "@react-native-async-storage/async-storage": "2.2.0",

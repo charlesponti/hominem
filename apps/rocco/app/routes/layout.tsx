@@ -1,6 +1,7 @@
+import { PasskeyEnrollmentBanner, usePasskeyAuth } from '@hominem/ui';
 import { AppLayout } from '@hominem/ui/components/layout/app-layout';
 import { LoadingScreen } from '@hominem/ui/loading';
-import { Suspense } from 'react';
+import { Suspense, useCallback } from 'react';
 import { data, Outlet } from 'react-router';
 
 import ErrorBoundary from '~/components/ErrorBoundary';
@@ -32,14 +33,20 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Layout() {
+  const { register } = usePasskeyAuth()
+  const handleEnroll = useCallback(async () => { await register() }, [register])
+
   return (
-    <AppLayout navigation={<Header />}>
-      <Suspense fallback={<LoadingScreen />}>
-        <div className="max-w-4xl mx-auto">
-          <Outlet />
-        </div>
-      </Suspense>
-    </AppLayout>
+    <>
+      <PasskeyEnrollmentBanner onEnroll={handleEnroll} />
+      <AppLayout navigation={<Header />}>
+        <Suspense fallback={<LoadingScreen />}>
+          <div className="max-w-4xl mx-auto">
+            <Outlet />
+          </div>
+        </Suspense>
+      </AppLayout>
+    </>
   );
 }
 

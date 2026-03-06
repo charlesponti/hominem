@@ -4,6 +4,7 @@ import { Input } from '@hominem/ui/input';
 import { Loading } from '@hominem/ui/loading';
 import { PlusCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 import { useCreateList } from '~/lib/lists';
 import { cn } from '~/lib/utils';
@@ -17,7 +18,8 @@ export default function ListForm() {
   const [status, setStatus] = useState<FormStatus>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { authClient, isAuthenticated } = useAuthContext();
+  const { isAuthenticated } = useAuthContext();
+  const navigate = useNavigate();
 
   const { mutate: createList } = useCreateList({
     onSuccess: (_result) => {
@@ -87,13 +89,7 @@ export default function ListForm() {
           localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: name.trim() }));
         } catch {}
 
-        await authClient.auth.signInWithOAuth({
-          provider: 'apple',
-          options: {
-            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/lists')}`,
-          },
-        });
-
+        navigate('/auth');
         return;
       }
 
@@ -104,7 +100,7 @@ export default function ListForm() {
         isPublic: false,
       });
     },
-    [name, isAuthenticated, authClient, createList],
+    [name, isAuthenticated, navigate, createList],
   );
 
   const isOverlayVisible = status === 'submitting' || status === 'success';

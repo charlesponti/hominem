@@ -2,7 +2,7 @@ import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { ArrowRight } from 'lucide-react';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 
 export function meta() {
@@ -17,7 +17,7 @@ export function meta() {
 }
 
 export default function Home() {
-  const { user, isLoading, authClient } = useAuthContext();
+  const { user, isLoading } = useAuthContext();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,15 +25,6 @@ export default function Home() {
       navigate('/finance', { replace: true });
     }
   }, [isLoading, user, navigate]);
-
-  const handleSignIn = useCallback(async () => {
-    await authClient.auth.signInWithOAuth({
-      provider: 'apple',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
-      },
-    });
-  }, [authClient.auth]);
 
   if (isLoading) {
     return (
@@ -65,7 +56,7 @@ export default function Home() {
 
           {/* CTA Button */}
           <div className="mb-16">
-            <Button onClick={handleSignIn} size="lg" className="py-8 px-12 text-xl">
+            <Button onClick={() => navigate('/auth')} size="lg" className="py-8 px-12 text-xl">
               Get Started Free
               <ArrowRight className="inline-block ml-2 size-6" />
             </Button>

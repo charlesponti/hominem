@@ -4,7 +4,7 @@ import { List } from '@hominem/ui/list';
 import { Loading } from '@hominem/ui/loading';
 import { Mail } from 'lucide-react';
 import { useCallback } from 'react';
-import { data } from 'react-router';
+import { data, useNavigate } from 'react-router';
 
 import ReceivedInviteItem from '~/components/ReceivedInviteItem';
 import { createServerHonoClient } from '~/lib/api.server';
@@ -165,20 +165,13 @@ export function HydrateFallback() {
 
 export default function Invites({ loaderData }: Route.ComponentProps) {
   const { invites, tokenMismatch, requiresAuth, preview } = loaderData;
-  const { isAuthenticated, user, authClient } = useAuthContext();
+  const { isAuthenticated, user } = useAuthContext();
+  const navigate = useNavigate();
   const currentUserEmail = user?.email?.toLowerCase();
 
-  const onSignIn = useCallback(async () => {
-    const redirectPath = window.location.pathname + window.location.search;
-
-    await authClient.auth.signInWithOAuth({
-      provider: 'apple',
-      options: {
-        // Add query params directly to redirectTo URL (like notes app does)
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
-      },
-    });
-  }, [authClient]);
+  const onSignIn = useCallback(() => {
+    navigate('/auth');
+  }, [navigate]);
 
   return (
     <div className="space-y-8 pb-8">

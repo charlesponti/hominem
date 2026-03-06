@@ -23,10 +23,11 @@ export default [
     // Finance tools
     route('finance/runway', 'routes/finance.runway.tsx'),
     route('/account', 'routes/account.tsx'),
-    route('/auth/signin', 'routes/auth/signin.tsx'),
-    route('/auth/email', 'routes/auth/email.tsx'),
-    route('/auth/email/verify', 'routes/auth/email.verify.tsx'),
-    route('/auth/callback', 'routes/auth.callback.tsx'),
+    route('/auth', 'routes/auth/index.tsx'),
+    route('/auth/verify', 'routes/auth/verify.tsx'),
+    route('/auth/logout', 'routes/auth/logout.tsx'),
+    route('/auth/passkey/callback', 'routes/auth/passkey.callback.tsx'),
+    route('/settings/security', 'routes/settings.security.tsx'),
     route('/auth/cli', 'routes/auth.cli.tsx'),
 
     // Catch-all 404 route

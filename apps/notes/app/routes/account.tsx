@@ -39,7 +39,7 @@ export default function AccountPage() {
   }
 
   if (!userId) {
-    return <Navigate to="/auth/signin" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   return (

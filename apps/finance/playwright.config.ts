@@ -3,11 +3,13 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+const reuseExistingServer = process.env.REUSE_SERVERS === 'true' || !process.env.CI
 
 export default defineConfig({
   testDir: './tests',
   timeout: 30_000,
   retries: 1,
+  globalSetup: './tests/global-setup.ts',
   use: {
     baseURL: 'http://localhost:4444',
     trace: 'on-first-retry',
@@ -17,8 +19,9 @@ export default defineConfig({
     {
       command: 'bun run --filter @hominem/db build && make db-migrate-test && bun run --filter @hominem/api dev',
       cwd: workspaceRoot,
-      port: 4040,
-      reuseExistingServer: false,
+      url: 'http://localhost:4040/',
+      reuseExistingServer,
+      timeout: 120_000,
       env: {
         NODE_ENV: 'test',
         PORT: '4040',
@@ -36,8 +39,9 @@ export default defineConfig({
     },
     {
       command: 'bun dev',
-      port: 4444,
-      reuseExistingServer: !process.env.CI,
+      url: 'http://localhost:4444/',
+      reuseExistingServer,
+      timeout: 60_000,
     },
   ],
 })

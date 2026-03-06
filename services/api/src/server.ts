@@ -56,7 +56,7 @@ export function createServer() {
     cors({
       origin: (origin) => {
         const allowedOrigins = [env.API_URL, env.ROCCO_URL, env.NOTES_URL, env.FINANCE_URL];
-        return allowedOrigins.includes(origin || '') ? origin : '';
+        return allowedOrigins.includes(origin || '') ? origin : null;
       },
       credentials: true,
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -188,26 +188,4 @@ export function createServer() {
   });
 
   return app;
-}
-
-async function startServer() {
-  const app = createServer();
-  if (!app) {
-    logger.error('Failed to create server');
-    process.exit(1);
-  }
-
-  try {
-    const { serve } = await import('@hono/node-server');
-    const port = Number.parseInt(env.PORT, 10);
-
-    serve({
-      fetch: app.fetch,
-      port,
-      hostname: '0.0.0.0',
-    });
-  } catch (err) {
-    logger.error('Failed to start server', { error: err });
-    process.exit(1);
-  }
 }

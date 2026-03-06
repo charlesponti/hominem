@@ -13,6 +13,7 @@ import { getJwks } from '../auth/key-store';
 import { UserAuthService } from '@hominem/auth/server';
 import {
   createTokenPairForUser,
+  isSessionRevoked,
   revokeByRefreshToken,
   revokeSession,
   rotateRefreshToken,
@@ -110,6 +111,37 @@ function getHeaderCarrier(c: { req: { raw: Request } }) {
   return {
     headers: c.req.raw.headers,
   };
+}
+
+/**
+ * Resolve the authenticated user ID for /api/auth routes.
+ * The standard JWT middleware skips /api/auth paths so these routes must
+ * check auth themselves.  We support three mechanisms (in priority order):
+ *   1. Middleware-set context variable (set for non-/api/auth routes)
+ *   2. Bearer token in the Authorization header (canonical app token)
+ *   3. Better Auth session cookie (for direct browser calls to the API)
+ */
+async function resolveAuthUserId(c: { get: (key: string) => string | null; req: { raw: Request; header: (name: string) => string | undefined } }): Promise<string | null> {
+  // 1. Middleware already resolved it
+  const fromMiddleware = c.get('userId')
+  if (fromMiddleware) return fromMiddleware
+
+  // 2. Bearer token
+  const authHeader = c.req.header('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const claims = await verifyAccessToken(authHeader.slice(7))
+      if (claims?.sub) return claims.sub
+    } catch {
+      // invalid token — fall through
+    }
+  }
+
+  // 3. Better Auth session cookie
+  const session = await betterAuthServer.api.getSession(getHeaderCarrier(c))
+  if (session?.user?.id) return session.user.id
+
+  return null
 }
 
 function isE2eAuthEnabled() {
@@ -389,21 +421,29 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
           amr: ['email_otp'],
         });
 
-        return c.json({
-          user: {
-            id: dbUser.id,
-            email: dbUser.email,
-            ...(dbUser.name ? { name: dbUser.name } : {}),
-          },
-          accessToken: tokenPair.accessToken,
-          refreshToken: tokenPair.refreshToken,
-          expiresIn: tokenPair.expiresIn,
-          tokenType: tokenPair.tokenType,
-        });
+        // Forward Better Auth session cookies so passkey enrollment works after OTP sign-in
+        const betterAuthCookies = copyHeadersWithSetCookie(response.headers)
+        const responseHeaders = new Headers(betterAuthCookies)
+        responseHeaders.set('content-type', 'application/json')
+
+        return new Response(
+          JSON.stringify({
+            user: {
+              id: dbUser.id,
+              email: dbUser.email,
+              ...(dbUser.name ? { name: dbUser.name } : {}),
+            },
+            accessToken: tokenPair.accessToken,
+            refreshToken: tokenPair.refreshToken,
+            expiresIn: tokenPair.expiresIn,
+            tokenType: tokenPair.tokenType,
+          }),
+          { status: 200, headers: responseHeaders },
+        )
       } catch (sessionError) {
         // Fallback: If session table is not available, issue access token only
         logger.warn('[auth:email-otp] session creation failed, issuing access token only', { sessionError });
-        
+
         const token = await issueAccessToken({
           sub: userId,
           sid: crypto.randomUUID(),
@@ -595,42 +635,60 @@ authRoutes.post('/logout', async (c) => {
 });
 
 authRoutes.get('/session', async (c) => {
-  // PHASE 1: Identity-only endpoint
-  // Accepts Bearer token via middleware validation
-  // Returns user identity information ONLY - no token minting
-  
-  const auth = c.get('auth');
-  
-  if (!auth) {
-    return c.json({
-      isAuthenticated: false,
-      user: null,
-    }, 401);
+  // Identity-only endpoint.
+  // The JWT middleware bypasses all /api/auth/* routes, so we validate the
+  // Bearer token directly here. The token may arrive via:
+  //   1. Authorization: Bearer <token> header (standard API client usage)
+  //   2. hominem_access_token cookie (web app SSR loader usage)
+
+  const authHeader = c.req.header('authorization') ?? ''
+  let bearerToken: string | null = authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7)
+    : null
+
+  if (!bearerToken) {
+    const cookieHeader = c.req.header('cookie') ?? ''
+    const match = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/)
+    const rawValue = match?.[1]
+    if (rawValue) {
+      try {
+        bearerToken = decodeURIComponent(rawValue)
+      } catch {
+        bearerToken = rawValue
+      }
+    }
   }
-  
-  // User must exist in DB
-  const userRecord = await UserAuthService.findByIdOrEmail({
-    id: auth.sub,
-  });
-  
-  if (!userRecord) {
-    return c.json({
-      isAuthenticated: false,
-      user: null,
-    }, 401);
+
+  if (!bearerToken) {
+    return c.json({ isAuthenticated: false, user: null }, 401)
   }
-  
-  return c.json({
-    isAuthenticated: true,
-    user: {
-      id: userRecord.id,
-      email: userRecord.email,
-      ...(userRecord.name ? { name: userRecord.name } : {}),
-      isAdmin: userRecord.is_admin ?? false,
-      ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
-      ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
-    },
-  });
+
+  try {
+    const claims = await verifyAccessToken(bearerToken)
+    const revoked = await isSessionRevoked(claims.sid)
+    if (revoked) {
+      return c.json({ isAuthenticated: false, user: null }, 401)
+    }
+
+    const userRecord = await UserAuthService.findByIdOrEmail({ id: claims.sub })
+    if (!userRecord) {
+      return c.json({ isAuthenticated: false, user: null }, 401)
+    }
+
+    return c.json({
+      isAuthenticated: true,
+      user: {
+        id: userRecord.id,
+        email: userRecord.email,
+        ...(userRecord.name ? { name: userRecord.name } : {}),
+        isAdmin: userRecord.is_admin ?? false,
+        ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
+        ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
+      },
+    })
+  } catch {
+    return c.json({ isAuthenticated: false, user: null }, 401)
+  }
 });
 
 authRoutes.post('/refresh', zValidator('json', refreshTokenSchema), async (c) => {
@@ -799,9 +857,57 @@ authRoutes.post('/revoke', zValidator('json', revokeTokenSchema), async (c) => {
   return c.json({ revoked });
 });
 
+authRoutes.post('/token-from-session', async (c) => {
+  // Exchange a valid Better Auth session for canonical Hominem app tokens.
+  // Used by mobile after passkey sign-in (where Better Auth session is set
+  // natively via expoClient) to obtain the app token pair.
+  try {
+    const session = await betterAuthServer.api.getSession({
+      ...getHeaderCarrier(c),
+    })
+
+    if (!session?.user?.id) {
+      return c.json({ error: 'no_valid_session' }, 401)
+    }
+
+    const userId = session.user.id
+
+    const dbUser = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    })
+
+    if (!dbUser) {
+      return c.json({ error: 'user_not_found' }, 400)
+    }
+
+    const tokenPair = await createTokenPairForUser({
+      userId,
+      role: dbUser.isAdmin ? 'admin' : 'user',
+      amr: ['passkey'],
+    })
+
+    return c.json({
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        ...(dbUser.name ? { name: dbUser.name } : {}),
+      },
+      accessToken: tokenPair.accessToken,
+      refreshToken: tokenPair.refreshToken,
+      expiresIn: tokenPair.expiresIn,
+      tokenType: tokenPair.tokenType,
+    })
+  } catch (err) {
+    logger.error('[auth:token-from-session] failed', { err })
+    return c.json({ error: 'token_exchange_failed' }, 500)
+  }
+})
+
+
 authRoutes.post('/passkey/register/options', async (c) => {
-  if (!c.get('userId')) {
-    return c.json({ error: 'unauthorized' }, 401);
+  const userId = await resolveAuthUserId(c)
+  if (!userId) {
+    return c.json({ error: 'unauthorized' }, 401)
   }
 
   try {
@@ -824,8 +930,9 @@ authRoutes.post(
   '/passkey/register/verify',
   zValidator('json', passkeyRegisterVerifySchema),
   async (c) => {
-    if (!c.get('userId')) {
-      return c.json({ error: 'unauthorized' }, 401);
+    const userId = await resolveAuthUserId(c)
+    if (!userId) {
+      return c.json({ error: 'unauthorized' }, 401)
     }
 
     try {
@@ -845,6 +952,47 @@ authRoutes.post(
     }
   },
 );
+
+authRoutes.get('/passkeys', async (c) => {
+  // Returns the list of passkeys registered to the authenticated user.
+  // Used by clients to decide whether to show the passkey enrollment prompt.
+  if (!c.get('userId')) {
+    return c.json({ error: 'unauthorized' }, 401)
+  }
+
+  try {
+    const response = await callBetterAuthPluginEndpoint({
+      request: c.req.raw,
+      path: '/passkey/list-user-passkeys',
+      method: 'GET',
+    })
+    const body = await response.json() as unknown
+    return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401)
+  } catch {
+    return c.json({ error: 'passkey_list_failed' }, 400)
+  }
+})
+
+authRoutes.delete('/passkey/delete', zValidator('json', z.object({ id: z.string() })), async (c) => {
+  // Deletes a passkey for the authenticated user.
+  if (!c.get('userId')) {
+    return c.json({ error: 'unauthorized' }, 401)
+  }
+
+  try {
+    const { id } = c.req.valid('json')
+    const response = await callBetterAuthPluginEndpoint({
+      request: c.req.raw,
+      path: '/passkey/delete-user-passkey',
+      method: 'POST',
+      body: { id },
+    })
+    const body = await response.json() as unknown
+    return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401)
+  } catch {
+    return c.json({ error: 'passkey_delete_failed' }, 400)
+  }
+})
 
 authRoutes.post('/passkey/auth/options', async (c) => {
   try {
@@ -873,15 +1021,78 @@ authRoutes.post('/passkey/auth/verify', zValidator('json', passkeyAuthVerifySche
       body: { response: body.response },
     });
     const responseText = await response.text();
-    const userId = c.get('userId');
-    const requestedAction = body.action;
-    if (response.status >= 200 && response.status < 300 && userId && requestedAction) {
-      await grantStepUp(userId, requestedAction).catch(() => null);
+
+    if (!response.ok) {
+      return new Response(responseText, {
+        status: response.status,
+        headers: copyHeadersWithSetCookie(response.headers),
+      });
     }
-    return new Response(responseText, {
-      status: response.status,
-      headers: copyHeadersWithSetCookie(response.headers),
-    });
+
+    // Handle step-up action grant (for authenticated users doing re-auth)
+    const existingUserId = c.get('userId');
+    const requestedAction = body.action;
+    if (existingUserId && requestedAction) {
+      await grantStepUp(existingUserId, requestedAction).catch(() => null);
+      // Step-up flows just return the Better Auth response (no new tokens needed)
+      return new Response(responseText, {
+        status: response.status,
+        headers: copyHeadersWithSetCookie(response.headers),
+      });
+    }
+
+     // Sign-in flow: mint canonical app token pair, same contract as OTP verify
+     try {
+       const parsed = JSON.parse(responseText) as { user?: { id?: string; email?: string; name?: string }; session?: { userId?: string } }
+       // Better Auth passkey endpoint returns { session: { userId, ... } }, not { user: { id, ... } }
+       const userId = parsed.user?.id || parsed.session?.userId
+
+       if (!userId) {
+         logger.warn('[auth:passkey] verify-authentication succeeded but no user.id or session.userId in response', { parsed })
+         // Fall through: return Better Auth response without app tokens
+         return new Response(responseText, {
+           status: response.status,
+           headers: copyHeadersWithSetCookie(response.headers),
+         })
+       }
+
+      const dbUser = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      })
+
+      if (!dbUser) {
+        return c.json({ error: 'user_not_found' }, 400)
+      }
+
+      const tokenPair = await createTokenPairForUser({
+        userId,
+        role: dbUser.isAdmin ? 'admin' : 'user',
+        amr: ['passkey'],
+      })
+
+      // Forward Better Auth session cookies so enrollment/management features work
+      const betterAuthCookies = copyHeadersWithSetCookie(response.headers)
+      const responseHeaders = new Headers(betterAuthCookies)
+      responseHeaders.set('content-type', 'application/json')
+
+      return new Response(
+        JSON.stringify({
+          user: {
+            id: dbUser.id,
+            email: dbUser.email,
+            ...(dbUser.name ? { name: dbUser.name } : {}),
+          },
+          accessToken: tokenPair.accessToken,
+          refreshToken: tokenPair.refreshToken,
+          expiresIn: tokenPair.expiresIn,
+          tokenType: tokenPair.tokenType,
+        }),
+        { status: 200, headers: responseHeaders },
+      )
+    } catch (mintError) {
+      logger.error('[auth:passkey] token minting failed', { mintError })
+      return c.json({ error: 'token_mint_failed' }, 500)
+    }
   } catch {
     return c.json({ error: 'passkey_authentication_failed' }, 401);
   }

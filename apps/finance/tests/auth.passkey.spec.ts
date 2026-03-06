@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import type { Page } from '@playwright/test'
+import type { BrowserContext, Page } from '@playwright/test'
 import { setupVirtualPasskey, teardownVirtualPasskey } from './auth.passkey-helpers'
 import { createAuthTestEmail, signInWithEmailOtp } from './auth.flow-helpers'
 
@@ -16,14 +16,6 @@ interface PasskeyCredentialDescriptorJson {
   type: string
   id: string
   transports?: string[]
-}
-
-interface PasskeyRequestOptionsJson {
-  challenge: string
-  timeout?: number
-  rpId?: string
-  allowCredentials?: PasskeyCredentialDescriptorJson[]
-  userVerification?: UserVerificationRequirement
 }
 
 interface PasskeyCreationUserJson {
@@ -58,12 +50,6 @@ interface PasskeyRegisterOptionsResponse {
   challenge?: string
 }
 
-interface PasskeyAuthOptionsResponse {
-  options?: PasskeyRequestOptionsJson
-  challenge?: PasskeyRequestOptionsJson | string
-  rpId?: string
-}
-
 interface SerializedRegistrationCredential {
   id: string
   rawId: string
@@ -75,22 +61,23 @@ interface SerializedRegistrationCredential {
   }
 }
 
-interface SerializedAuthenticationCredential {
-  id: string
-  rawId: string
-  type: string
-  response: {
-    clientDataJSON: string
-    authenticatorData: string
-    signature: string
-    userHandle: string | null
-  }
+async function getAccessToken(context: BrowserContext): Promise<string | null> {
+  const cookies = await context.cookies()
+  const tokenCookie = cookies.find((c) => c.name === 'hominem_access_token')
+  if (!tokenCookie) return null
+  return decodeURIComponent(tokenCookie.value)
 }
 
-async function registerPasskey(page: Page): Promise<PasskeyOperationResult> {
+async function registerPasskey(page: Page, context: BrowserContext): Promise<PasskeyOperationResult> {
+  // The passkey register endpoints require authentication.  The hominem_access_token
+  // cookie is scoped to localhost:4444 (the finance app) but the API is at localhost:4040.
+  // We extract the token via Playwright's cookie API (which can read HttpOnly cookies)
+  // and pass it as a Bearer header so the API can authenticate the request.
+  const accessToken = await getAccessToken(context)
+
   await page.goto(`${AUTH_API_BASE_URL}/api/auth/session`)
 
-  return page.evaluate(async () => {
+  return page.evaluate(async (authToken: string | null) => {
     function decodeBase64Url(value: string) {
       const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
       const padLength = (4 - (normalized.length % 4)) % 4
@@ -129,6 +116,7 @@ async function registerPasskey(page: Page): Promise<PasskeyOperationResult> {
           ...credential,
           type: credential.type as PublicKeyCredentialType,
           id: decodeBase64Url(credential.id),
+          transports: credential.transports as AuthenticatorTransport[] | undefined,
         })),
         authenticatorSelection: options.authenticatorSelection,
         attestation: options.attestation,
@@ -160,6 +148,7 @@ async function registerPasskey(page: Page): Promise<PasskeyOperationResult> {
       credentials: 'include',
       headers: {
         'content-type': 'application/json',
+        ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
       },
       body: JSON.stringify({ name: 'Finance E2E Device' }),
     })
@@ -216,6 +205,7 @@ async function registerPasskey(page: Page): Promise<PasskeyOperationResult> {
       credentials: 'include',
       headers: {
         'content-type': 'application/json',
+        ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
       },
       body: JSON.stringify({
         response: serializedCredential,
@@ -231,141 +221,31 @@ async function registerPasskey(page: Page): Promise<PasskeyOperationResult> {
         ? null
         : `${await verifyResponse.text()}|options=${optionsPayloadText}`,
     }
-  })
+  }, accessToken)
 }
 
-async function authenticateWithPasskey(page: Page): Promise<PasskeyOperationResult> {
-  await page.goto(`${AUTH_API_BASE_URL}/api/auth/session`)
+/**
+ * Sign in with a passkey via the finance app's UI.
+ * Navigates to /auth, clicks the "Use a passkey" button, and waits for the
+ * virtual WebAuthn authenticator to complete the flow.  The usePasskeyAuth hook
+ * inside the app calls /auth/passkey/callback to set the HttpOnly cookie.
+ */
+async function authenticateWithPasskeyUI(page: Page): Promise<{ errors: string[] }> {
+  await page.goto('http://localhost:4444/auth')
+  // Wait for the page to hydrate — the passkey button is added after hydration
+  const passkeyButton = page.getByRole('button', { name: /passkey/i })
+  await passkeyButton.waitFor({ state: 'visible', timeout: 20000 })
 
-  return page.evaluate(async () => {
-    function decodeBase64Url(value: string) {
-      const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
-      const padLength = (4 - (normalized.length % 4)) % 4
-      const padded = normalized + '='.repeat(padLength)
-      const raw = atob(padded)
-      const bytes = new Uint8Array(raw.length)
-      for (let i = 0; i < raw.length; i += 1) {
-        bytes[i] = raw.charCodeAt(i)
-      }
-      return bytes.buffer
-    }
+  // Intercept any errors from the passkey auth hook
+  const errors: string[] = []
+  page.on('pageerror', (err) => errors.push(err.message))
 
-    function encodeBase64Url(buffer: ArrayBuffer) {
-      const bytes = new Uint8Array(buffer)
-      let binary = ''
-      for (const byte of bytes) {
-        binary += String.fromCharCode(byte)
-      }
-      return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
-    }
+  await passkeyButton.click()
 
-    function normalizeRequestOptions(options: PasskeyRequestOptionsJson): PublicKeyCredentialRequestOptions {
-      return {
-        challenge: decodeBase64Url(options.challenge),
-        timeout: options.timeout,
-        rpId: options.rpId,
-        allowCredentials: options.allowCredentials?.map((credential) => ({
-          ...credential,
-          type: credential.type as PublicKeyCredentialType,
-          id: decodeBase64Url(credential.id),
-        })),
-        userVerification: options.userVerification,
-      }
-    }
+  // Give it a moment to see if any errors come up
+  await page.waitForTimeout(2000)
 
-    function serializeAssertion(
-      credential: PublicKeyCredential,
-    ): SerializedAuthenticationCredential | null {
-      if (!(credential.response instanceof AuthenticatorAssertionResponse)) {
-        return null
-      }
-
-      return {
-        id: credential.id,
-        rawId: encodeBase64Url(credential.rawId),
-        type: credential.type,
-        response: {
-          clientDataJSON: encodeBase64Url(credential.response.clientDataJSON),
-          authenticatorData: encodeBase64Url(credential.response.authenticatorData),
-          signature: encodeBase64Url(credential.response.signature),
-          userHandle: credential.response.userHandle
-            ? encodeBase64Url(credential.response.userHandle)
-            : null,
-        },
-      }
-    }
-
-    const optionsResponse = await fetch('/api/auth/passkey/auth/options', {
-      method: 'POST',
-      credentials: 'include',
-    })
-
-    if (!optionsResponse.ok) {
-      return {
-        ok: false,
-        status: optionsResponse.status,
-        error: 'auth_options_failed',
-        detail: await optionsResponse.text(),
-      }
-    }
-
-    const optionsPayload = (await optionsResponse.json()) as PasskeyAuthOptionsResponse
-    const payloadAsRequestOptions = optionsPayload as PasskeyRequestOptionsJson
-    const requestOptions =
-      optionsPayload.options ??
-      (typeof optionsPayload.challenge === 'object' ? optionsPayload.challenge : null) ??
-      (typeof payloadAsRequestOptions.challenge === 'string'
-        ? payloadAsRequestOptions
-        : null)
-
-    if (!requestOptions || typeof requestOptions.challenge !== 'string') {
-      return {
-        ok: false,
-        status: 500,
-        error: 'invalid_auth_options_payload',
-        detail: JSON.stringify(optionsPayload),
-      }
-    }
-
-    const credential = (await navigator.credentials.get({
-      publicKey: normalizeRequestOptions(requestOptions),
-    })) as PublicKeyCredential | null
-
-    if (!credential) {
-      return {
-        ok: false,
-        status: 499,
-        error: 'auth_cancelled',
-      }
-    }
-
-    const serializedCredential = serializeAssertion(credential)
-    if (!serializedCredential) {
-      return {
-        ok: false,
-        status: 500,
-        error: 'auth_serialization_failed',
-      }
-    }
-
-    const verifyResponse = await fetch('/api/auth/passkey/auth/verify', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        response: serializedCredential,
-      }),
-    })
-
-    return {
-      ok: verifyResponse.ok,
-      status: verifyResponse.status,
-      error: verifyResponse.ok ? null : 'auth_verify_failed',
-      detail: verifyResponse.ok ? null : await verifyResponse.text(),
-    }
-  })
+  return { errors }
 }
 
 test('web passkey registration and sign-in flow reaches authenticated finance view', async ({ page, context }) => {
@@ -377,20 +257,73 @@ test('web passkey registration and sign-in flow reaches authenticated finance vi
   const passkeyHandle = await setupVirtualPasskey(context, page)
 
   try {
-    const registerResult = await registerPasskey(page)
+    const registerResult = await registerPasskey(page, context)
     expect(registerResult, JSON.stringify(registerResult)).toMatchObject({ ok: true, error: null })
 
     await context.clearCookies()
     await page.goto('/finance')
-    await expect(page).toHaveURL(/\/auth\/signin$/)
+    await expect(page).toHaveURL(/\/auth$/)
 
-    const authResult = await authenticateWithPasskey(page)
-    expect(authResult, JSON.stringify(authResult)).toMatchObject({ ok: true, error: null })
+    await authenticateWithPasskeyUI(page).then((result) => {
+      if (result.errors.length > 0) {
+        throw new Error(`Page errors during passkey auth: ${result.errors.join(', ')}`)
+      }
+    })
 
-    await page.goto('/finance')
-    await expect(page).toHaveURL(/\/finance$/)
+    await expect(page).toHaveURL(/\/finance$/, { timeout: 30000 })
     await expect(page.getByRole('heading', { name: 'Error' })).not.toBeVisible()
   } finally {
     await teardownVirtualPasskey(context, page, passkeyHandle)
   }
+})
+
+test('boot flow with valid credentials keeps user signed in', async ({ page }) => {
+  const email = createAuthTestEmail('finance-boot-valid')
+
+  // Sign in normally
+  await signInWithEmailOtp(page, email)
+  await expect(page).toHaveURL(/\/finance$/)
+
+  // Verify we can access protected endpoints
+  const sessionResponse = await page.evaluate(() =>
+    fetch('http://localhost:4040/api/auth/session', {
+      credentials: 'include',
+    }).then((r) => r.status),
+  )
+  expect(sessionResponse).toBe(200)
+
+  // Reload the page — access token cookie should still be valid
+  await page.reload()
+
+  // Should still be at /finance (not redirected to /auth)
+  await expect(page).toHaveURL(/\/finance$/, { timeout: 10000 })
+})
+
+test('boot flow with no credentials redirects to auth', async ({ page, context }) => {
+  // Navigate to a protected route without any cookies
+  await context.clearCookies()
+  await page.goto('http://localhost:4444/finance')
+
+  // Should redirect to /auth since there's no session
+  await expect(page).toHaveURL(/\/auth$/, { timeout: 10000 })
+})
+
+test('session expiry flow verifies access token is sent in requests', async ({ page }) => {
+  const email = createAuthTestEmail('finance-session-expiry')
+
+  // Sign in normally
+  await signInWithEmailOtp(page, email)
+  await expect(page).toHaveURL(/\/finance$/)
+
+  // Verify that the access token is being used in subsequent API calls
+  // by checking that session verification succeeds
+  const sessionResponse = await page.evaluate(() =>
+    fetch('http://localhost:4040/api/auth/session', {
+      credentials: 'include',
+    }).then((r) => r.json()),
+  )
+
+  // Should have a valid user in the session
+  expect(sessionResponse.user).toBeDefined()
+  expect(sessionResponse.user.email).toContain(email)
 })

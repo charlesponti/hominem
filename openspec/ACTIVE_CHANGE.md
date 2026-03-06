@@ -1,12 +1,12 @@
 # Active OpenSpec Change
 
-active_change: fix-mobile-architecture-issues
+active_change: unify-app-auth-system
 
 ## Canonical Artifacts
 
-- Proposal: `openspec/changes/fix-mobile-architecture-issues/proposal.md`
-- Design: `openspec/changes/fix-mobile-architecture-issues/design.md`
-- Tasks: `openspec/changes/fix-mobile-architecture-issues/tasks.md`
+- Proposal: `openspec/changes/unify-app-auth-system/proposal.md`
+- Design: `openspec/changes/unify-app-auth-system/design.md`
+- Tasks: `openspec/changes/unify-app-auth-system/tasks.md`
 
 ## Enforcement
 

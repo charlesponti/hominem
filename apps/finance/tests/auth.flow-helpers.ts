@@ -12,10 +12,25 @@ export function createAuthTestEmail(prefix: string) {
 }
 
 export async function startEmailOtpFlow(page: Page, email: string) {
-  await page.goto('/auth/email')
-  await page.getByLabel('Email address').fill(email)
-  await page.getByRole('button', { name: 'Send Verification Code' }).click()
-  await expect(page).toHaveURL(/\/auth\/email\/verify\?email=/)
+  await page.goto('/auth')
+
+  // Wait for full React hydration: in Vite dev mode, React may still be
+  // reconciling the SSR HTML when the page appears ready. A fill before
+  // hydration is complete will be wiped when React takes over the DOM.
+  // Retry until the fill value sticks — this is the reliable hydration signal.
+  const emailInput = page.getByLabel('Email address')
+  await emailInput.waitFor({ state: 'visible' })
+  await expect(async () => {
+    await emailInput.fill(email)
+    await expect(emailInput).toHaveValue(email)
+  }).toPass({ timeout: 20000 })
+
+  const continueButton = page.getByRole('button', { name: 'Continue' })
+  await expect(continueButton).toBeEnabled()
+  await continueButton.click()
+
+  // Wait for navigation to /auth/verify after the action redirects
+  await expect(page).toHaveURL(/\/auth\/verify\?email=/, { timeout: 30000 })
 }
 
 export async function fetchLatestSignInOtp(email: string) {
@@ -38,7 +53,11 @@ export async function fetchLatestSignInOtp(email: string) {
 export async function signInWithEmailOtp(page: Page, email: string) {
   await startEmailOtpFlow(page, email)
   const otp = await fetchLatestSignInOtp(email)
-  await page.getByLabel('Verification code').fill(otp)
-  await page.getByRole('button', { name: 'Verify and Sign In' }).click()
-  await expect(page).toHaveURL(/\/finance$/)
+  // Fill each digit input individually
+  const digitInputs = page.locator('input[inputmode="numeric"]')
+  for (let i = 0; i < otp.length; i++) {
+    await digitInputs.nth(i).fill(otp[i])
+  }
+  await page.getByRole('button', { name: 'Verify' }).click()
+  await expect(page).toHaveURL(/\/finance$/, { timeout: 30000 })
 }

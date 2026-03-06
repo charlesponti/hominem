@@ -1,5 +1,6 @@
 import { expoClient } from '@better-auth/expo/client'
 import { emailOTPClient } from 'better-auth/client/plugins'
+import { passkeyClient } from '@better-auth/passkey/client'
 import { createAuthClient } from 'better-auth/react'
 import * as SecureStore from 'expo-secure-store'
 
@@ -14,5 +15,6 @@ export const authClient = createAuthClient({
       storagePrefix: 'hominem',
     }),
     emailOTPClient(),
+    passkeyClient(),
   ],
 })
