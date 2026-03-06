@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Alert, Platform, StyleSheet, TouchableOpacity, View } from 'react-native'
 
 import { Button } from '~/components/Button'
 import TextInput from '~/components/text-input'
 import { Text } from '~/theme'
+import { isValidEmail, isValidOtp, normalizeEmail, normalizeOtp } from '~/utils/auth/validation'
 import { useAuth } from '~/utils/auth-provider'
 
 const LoginSheet = () => {
@@ -16,14 +17,19 @@ const LoginSheet = () => {
   const primaryButtonTitle = useMemo(() => (isOtpRequested ? '[VERIFY_CODE]' : '[SEND_CODE]'), [isOtpRequested])
 
   const onRequestOtp = useCallback(async () => {
-    if (!email.trim()) {
+    const normalizedEmail = normalizeEmail(email)
+    if (!normalizedEmail) {
       setAuthError('Email is required.')
+      return
+    }
+    if (!isValidEmail(normalizedEmail)) {
+      setAuthError('Enter a valid email address.')
       return
     }
 
     try {
       setIsSubmitting(true)
-      await requestEmailOtp(email.trim())
+      await requestEmailOtp(normalizedEmail)
       setIsOtpRequested(true)
       setAuthError(null)
     } catch (error: unknown) {
@@ -37,20 +43,30 @@ const LoginSheet = () => {
   }, [email, requestEmailOtp])
 
   const onVerifyOtp = useCallback(async () => {
-    if (!email.trim()) {
+    const normalizedEmail = normalizeEmail(email)
+    const normalizedOtp = normalizeOtp(otp)
+    if (!normalizedEmail) {
       setAuthError('Email is required.')
       return
     }
-    if (!otp.trim()) {
+    if (!isValidEmail(normalizedEmail)) {
+      setAuthError('Enter a valid email address.')
+      return
+    }
+    if (!normalizedOtp) {
       setAuthError('Code is required.')
+      return
+    }
+    if (!isValidOtp(normalizedOtp)) {
+      setAuthError('Code must be 6 digits.')
       return
     }
 
     try {
       setIsSubmitting(true)
       await verifyEmailOtp({
-        email: email.trim(),
-        otp: otp.trim(),
+        email: normalizedEmail,
+        otp: normalizedOtp,
       })
       setAuthError(null)
     } catch (error: unknown) {
@@ -83,8 +99,8 @@ const LoginSheet = () => {
         {isOtpRequested ? 'Enter the code we sent to your email.' : 'Use your email to receive a one-time code.'}
       </Text>
       {authError ? (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{authError.toUpperCase()}</Text>
+        <View testID="auth-error-banner" style={styles.errorContainer}>
+          <Text testID="auth-error-text" style={styles.errorText}>{authError.toUpperCase()}</Text>
         </View>
       ) : null}
       <View style={styles.formContainer}>
@@ -159,21 +175,21 @@ const styles = StyleSheet.create({
   heading: {
     color: '#F5F5F5',
     fontSize: 18,
-    fontFamily: 'Geist Mono',
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '700',
   },
   subheading: {
     color: '#A1A1AA',
     fontSize: 13,
     lineHeight: 18,
-    fontFamily: 'Geist Mono',
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '500',
   },
   errorText: {
     color: '#FF0000',
     textAlign: 'left',
     fontSize: 14,
-    fontFamily: 'Geist Mono',
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '600',
   },
   primaryButton: {
@@ -182,7 +198,7 @@ const styles = StyleSheet.create({
   secondaryAction: {
     color: '#E4E4E7',
     fontSize: 12,
-    fontFamily: 'Geist Mono',
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '600',
   },
 })

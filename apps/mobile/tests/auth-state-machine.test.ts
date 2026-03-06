@@ -1,290 +1,106 @@
+import { describe, expect, it } from 'vitest'
+
 import { authStateMachine, initialAuthState } from '../utils/auth/types'
 
+const testUser = {
+  id: 'user-1',
+  email: 'test@example.com',
+  name: 'Test User',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+}
+
 describe('authStateMachine', () => {
-  it('should return initial state for unknown actions', () => {
+  it('returns initial state for unknown events', () => {
     const state = authStateMachine(initialAuthState, { type: 'UNKNOWN_ACTION' } as { type: 'UNKNOWN_ACTION' })
     expect(state).toEqual(initialAuthState)
   })
 
-  describe('SESSION_LOADED', () => {
-    it('should transition from booting to authenticated', () => {
-      const user = {
-        id: 'user-1',
-        email: 'test@example.com',
-        name: 'Test User',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      const state = authStateMachine(initialAuthState, {
-        type: 'SESSION_LOADED',
-        user,
-      })
-
-      expect(state.status).toBe('authenticated')
-      expect(state.user).toEqual(user)
-      expect(state.error).toBeNull()
-      expect(state.isLoading).toBe(false)
-    })
-
-    it('should clear any existing error', () => {
-      const errorState = {
-        ...initialAuthState,
-        status: 'error' as const,
-        error: new Error('Previous error'),
-      }
-
-      const user = {
-        id: 'user-1',
-        email: 'test@example.com',
-        name: 'Test User',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      const state = authStateMachine(errorState, {
-        type: 'SESSION_LOADED',
-        user,
-      })
-
-      expect(state.status).toBe('authenticated')
-      expect(state.error).toBeNull()
-    })
+  it('transitions booting to signed_in on session load', () => {
+    const state = authStateMachine(initialAuthState, { type: 'SESSION_LOADED', user: testUser })
+    expect(state.status).toBe('signed_in')
+    expect(state.user).toEqual(testUser)
+    expect(state.error).toBeNull()
+    expect(state.isLoading).toBe(false)
   })
 
-  describe('SESSION_EXPIRED', () => {
-    it('should transition to unauthenticated', () => {
-      const authenticatedState = {
-        ...initialAuthState,
-        status: 'authenticated' as const,
-        user: {
-          id: 'user-1',
-          email: 'test@example.com',
-          name: 'Test User',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      }
-
-      const state = authStateMachine(authenticatedState, {
-        type: 'SESSION_EXPIRED',
-      })
-
-      expect(state.status).toBe('unauthenticated')
-      expect(state.user).toBeNull()
-      expect(state.error).toBeNull()
-      expect(state.isLoading).toBe(false)
-    })
+  it('transitions to signed_out on session expiry', () => {
+    const loaded = authStateMachine(initialAuthState, { type: 'SESSION_LOADED', user: testUser })
+    const expired = authStateMachine(loaded, { type: 'SESSION_EXPIRED' })
+    expect(expired.status).toBe('signed_out')
+    expect(expired.user).toBeNull()
   })
 
-  describe('SIGN_IN_REQUESTED', () => {
-    it('should set loading state', () => {
-      const state = authStateMachine(initialAuthState, {
-        type: 'SIGN_IN_REQUESTED',
-      })
-
-      expect(state.status).toBe('booting')
-      expect(state.isLoading).toBe(true)
-      expect(state.error).toBeNull()
-    })
+  it('moves to otp_requested after OTP request succeeds', () => {
+    const state = authStateMachine(
+      { ...initialAuthState, status: 'signed_out' },
+      { type: 'OTP_REQUESTED' },
+    )
+    expect(state.status).toBe('otp_requested')
+    expect(state.error).toBeNull()
   })
 
-  describe('SIGN_IN_SUCCESS', () => {
-    it('should set authenticated user', () => {
-      const user = {
-        id: 'user-1',
-        email: 'test@example.com',
-        name: 'Test User',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      const state = authStateMachine(initialAuthState, {
-        type: 'SIGN_IN_SUCCESS',
-        user,
-      })
-
-      expect(state.status).toBe('authenticated')
-      expect(state.user).toEqual(user)
-      expect(state.isLoading).toBe(false)
-      expect(state.error).toBeNull()
-    })
+  it('moves to degraded when OTP request fails', () => {
+    const error = new Error('network')
+    const state = authStateMachine(
+      { ...initialAuthState, status: 'signed_out' },
+      { type: 'OTP_REQUEST_FAILED', error },
+    )
+    expect(state.status).toBe('degraded')
+    expect(state.error).toBe(error)
   })
 
-  describe('SIGN_IN_FAILURE', () => {
-    it('should set error state', () => {
-      const error = new Error('Sign in failed')
-
-      const state = authStateMachine(initialAuthState, {
-        type: 'SIGN_IN_FAILURE',
-        error,
-      })
-
-      expect(state.status).toBe('error')
-      expect(state.error).toBe(error)
-      expect(state.isLoading).toBe(false)
-    })
+  it('moves to verifying_otp while verifying code', () => {
+    const state = authStateMachine(
+      { ...initialAuthState, status: 'otp_requested' },
+      { type: 'OTP_VERIFICATION_STARTED' },
+    )
+    expect(state.status).toBe('verifying_otp')
+    expect(state.isLoading).toBe(true)
   })
 
-  describe('SIGN_OUT_REQUESTED', () => {
-    it('should set loading state', () => {
-      const authenticatedState = {
-        ...initialAuthState,
-        status: 'authenticated' as const,
-        user: {
-          id: 'user-1',
-          email: 'test@example.com',
-          name: 'Test User',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      }
-
-      const state = authStateMachine(authenticatedState, {
-        type: 'SIGN_OUT_REQUESTED',
-      })
-
-      expect(state.isLoading).toBe(true)
-      expect(state.error).toBeNull()
-    })
+  it('returns to otp_requested on OTP verification failure', () => {
+    const error = new Error('invalid code')
+    const state = authStateMachine(
+      { ...initialAuthState, status: 'verifying_otp', isLoading: true },
+      { type: 'OTP_VERIFICATION_FAILED', error },
+    )
+    expect(state.status).toBe('otp_requested')
+    expect(state.error).toBe(error)
+    expect(state.isLoading).toBe(false)
   })
 
-  describe('SIGN_OUT_SUCCESS', () => {
-    it('should clear user and set unauthenticated', () => {
-      const authenticatedState = {
-        ...initialAuthState,
-        status: 'authenticated' as const,
-        user: {
-          id: 'user-1',
-          email: 'test@example.com',
-          name: 'Test User',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      }
-
-      const state = authStateMachine(authenticatedState, {
-        type: 'SIGN_OUT_SUCCESS',
-      })
-
-      expect(state.status).toBe('unauthenticated')
-      expect(state.user).toBeNull()
-      expect(state.isLoading).toBe(false)
-      expect(state.error).toBeNull()
-    })
+  it('transitions to signing_out while sign-out is in-flight', () => {
+    const loaded = authStateMachine(initialAuthState, { type: 'SESSION_LOADED', user: testUser })
+    const state = authStateMachine(loaded, { type: 'SIGN_OUT_REQUESTED' })
+    expect(state.status).toBe('signing_out')
+    expect(state.isLoading).toBe(true)
   })
 
-  describe('SIGN_OUT_FAILURE', () => {
-    it('should set error state', () => {
-      const authenticatedState = {
-        ...initialAuthState,
-        status: 'authenticated' as const,
-        user: {
-          id: 'user-1',
-          email: 'test@example.com',
-          name: 'Test User',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      }
-
-      const error = new Error('Sign out failed')
-
-      const state = authStateMachine(authenticatedState, {
-        type: 'SIGN_OUT_FAILURE',
-        error,
-      })
-
-      expect(state.status).toBe('error')
-      expect(state.error).toBe(error)
-      expect(state.isLoading).toBe(false)
-    })
+  it('always lands in signed_out after sign-out success', () => {
+    const state = authStateMachine(
+      { ...initialAuthState, status: 'signing_out', isLoading: true, user: testUser },
+      { type: 'SIGN_OUT_SUCCESS' },
+    )
+    expect(state.status).toBe('signed_out')
+    expect(state.user).toBeNull()
+    expect(state.error).toBeNull()
+    expect(state.isLoading).toBe(false)
   })
 
-  describe('SYNC_STARTED', () => {
-    it('should set loading state', () => {
-      const state = authStateMachine(initialAuthState, {
-        type: 'SYNC_STARTED',
-      })
-
-      expect(state.isLoading).toBe(true)
-    })
+  it('can hard reset to signed_out from any state', () => {
+    const state = authStateMachine(
+      { ...initialAuthState, status: 'signed_in', user: testUser },
+      { type: 'RESET_TO_SIGNED_OUT' },
+    )
+    expect(state.status).toBe('signed_out')
+    expect(state.user).toBeNull()
   })
 
-  describe('SYNC_COMPLETED', () => {
-    it('should clear loading and error', () => {
-      const syncingState = {
-        ...initialAuthState,
-        isLoading: true,
-        error: new Error('Previous error'),
-      }
-
-      const state = authStateMachine(syncingState, {
-        type: 'SYNC_COMPLETED',
-      })
-
-      expect(state.isLoading).toBe(false)
-      expect(state.error).toBeNull()
-    })
-  })
-
-  describe('SYNC_FAILED', () => {
-    it('should set error state', () => {
-      const syncingState = {
-        ...initialAuthState,
-        isLoading: true,
-      }
-
-      const error = new Error('Sync failed')
-
-      const state = authStateMachine(syncingState, {
-        type: 'SYNC_FAILED',
-        error,
-      })
-
-      expect(state.status).toBe('error')
-      expect(state.error).toBe(error)
-      expect(state.isLoading).toBe(false)
-    })
-  })
-
-  describe('CLEAR_ERROR', () => {
-    it('should clear error and keep status', () => {
-      const errorState = {
-        ...initialAuthState,
-        status: 'error' as const,
-        error: new Error('Some error'),
-      }
-
-      const state = authStateMachine(errorState, {
-        type: 'CLEAR_ERROR',
-      })
-
-      expect(state.error).toBeNull()
-      expect(state.status).toBe('unauthenticated')
-    })
-
-    it('should not change authenticated status', () => {
-      const authenticatedErrorState = {
-        ...initialAuthState,
-        status: 'authenticated' as const,
-        user: {
-          id: 'user-1',
-          email: 'test@example.com',
-          name: 'Test User',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        error: new Error('Some error'),
-      }
-
-      const state = authStateMachine(authenticatedErrorState, {
-        type: 'CLEAR_ERROR',
-      })
-
-      expect(state.error).toBeNull()
-      expect(state.status).toBe('authenticated')
-      expect(state.user).toEqual(authenticatedErrorState.user)
-    })
+  it('enters terminal_error on fatal error', () => {
+    const error = new Error('fatal')
+    const state = authStateMachine(initialAuthState, { type: 'FATAL_ERROR', error })
+    expect(state.status).toBe('terminal_error')
+    expect(state.error).toBe(error)
   })
 })

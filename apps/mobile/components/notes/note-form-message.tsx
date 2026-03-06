@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { Pressable, View } from 'react-native'
 import { Text, theme } from '~/theme'
-import { useStartChat } from '~/utils/services/chat/use-chat-messages'
+import { useStartChat } from '~/utils/services/chat'
 import { FeedbackBlock } from '../feedback-block'
 
 type NoteFormMessageProps = {

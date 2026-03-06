@@ -1,6 +1,12 @@
-// Auth State Machine Types
-
-export type AuthStatus = 'booting' | 'authenticated' | 'unauthenticated' | 'error'
+export type AuthStatus =
+  | 'booting'
+  | 'signed_out'
+  | 'otp_requested'
+  | 'verifying_otp'
+  | 'signed_in'
+  | 'signing_out'
+  | 'degraded'
+  | 'terminal_error'
 
 export interface UserProfile {
   id: string
@@ -20,15 +26,17 @@ export interface AuthState {
 export type AuthEvent =
   | { type: 'SESSION_LOADED'; user: UserProfile }
   | { type: 'SESSION_EXPIRED' }
-  | { type: 'SIGN_IN_REQUESTED' }
-  | { type: 'SIGN_IN_SUCCESS'; user: UserProfile }
-  | { type: 'SIGN_IN_FAILURE'; error: Error }
+  | { type: 'OTP_REQUESTED' }
+  | { type: 'OTP_REQUEST_FAILED'; error: Error }
+  | { type: 'OTP_VERIFICATION_STARTED' }
+  | { type: 'OTP_VERIFICATION_FAILED'; error: Error }
   | { type: 'SIGN_OUT_REQUESTED' }
   | { type: 'SIGN_OUT_SUCCESS' }
-  | { type: 'SIGN_OUT_FAILURE'; error: Error }
   | { type: 'SYNC_STARTED' }
   | { type: 'SYNC_COMPLETED' }
   | { type: 'SYNC_FAILED'; error: Error }
+  | { type: 'RESET_TO_SIGNED_OUT' }
+  | { type: 'FATAL_ERROR'; error: Error }
   | { type: 'CLEAR_ERROR' }
 
 export interface AuthContext {
@@ -44,13 +52,12 @@ export const initialAuthState: AuthState = {
   isLoading: false,
 }
 
-// State machine reducer
 export function authStateMachine(state: AuthState, event: AuthEvent): AuthState {
   switch (event.type) {
     case 'SESSION_LOADED':
       return {
         ...state,
-        status: 'authenticated',
+        status: 'signed_in',
         user: event.user,
         error: null,
         isLoading: false,
@@ -59,33 +66,40 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
     case 'SESSION_EXPIRED':
       return {
         ...state,
-        status: 'unauthenticated',
+        status: 'signed_out',
         user: null,
         error: null,
         isLoading: false,
       }
 
-    case 'SIGN_IN_REQUESTED':
+    case 'OTP_REQUESTED':
       return {
         ...state,
-        status: 'booting',
-        isLoading: true,
+        status: 'otp_requested',
+        isLoading: false,
         error: null,
       }
 
-    case 'SIGN_IN_SUCCESS':
+    case 'OTP_REQUEST_FAILED':
       return {
         ...state,
-        status: 'authenticated',
-        user: event.user,
-        error: null,
+        status: 'degraded',
+        error: event.error,
         isLoading: false,
       }
 
-    case 'SIGN_IN_FAILURE':
+    case 'OTP_VERIFICATION_STARTED':
       return {
         ...state,
-        status: 'error',
+        status: 'verifying_otp',
+        error: null,
+        isLoading: true,
+      }
+
+    case 'OTP_VERIFICATION_FAILED':
+      return {
+        ...state,
+        status: 'otp_requested',
         error: event.error,
         isLoading: false,
       }
@@ -93,6 +107,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
     case 'SIGN_OUT_REQUESTED':
       return {
         ...state,
+        status: 'signing_out',
         isLoading: true,
         error: null,
       }
@@ -100,17 +115,9 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
     case 'SIGN_OUT_SUCCESS':
       return {
         ...state,
-        status: 'unauthenticated',
+        status: 'signed_out',
         user: null,
         error: null,
-        isLoading: false,
-      }
-
-    case 'SIGN_OUT_FAILURE':
-      return {
-        ...state,
-        status: 'error',
-        error: event.error,
         isLoading: false,
       }
 
@@ -130,7 +137,24 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
     case 'SYNC_FAILED':
       return {
         ...state,
-        status: 'error',
+        status: 'degraded',
+        error: event.error,
+        isLoading: false,
+      }
+
+    case 'RESET_TO_SIGNED_OUT':
+      return {
+        ...state,
+        status: 'signed_out',
+        user: null,
+        error: null,
+        isLoading: false,
+      }
+
+    case 'FATAL_ERROR':
+      return {
+        ...state,
+        status: 'terminal_error',
         error: event.error,
         isLoading: false,
       }
@@ -139,7 +163,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
       return {
         ...state,
         error: null,
-        status: state.status === 'error' ? 'unauthenticated' : state.status,
+        status: state.status === 'degraded' ? 'signed_out' : state.status,
       }
 
     default:

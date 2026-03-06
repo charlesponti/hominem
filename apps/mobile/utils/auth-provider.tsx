@@ -13,10 +13,13 @@ import React, {
 import { authClient } from '../lib/auth-client'
 import { LocalStore } from './local-store'
 import type { UserProfile as LocalUserProfile } from './local-store/types'
-import { API_BASE_URL } from './constants'
+import { API_BASE_URL, E2E_TESTING } from './constants'
 import { authStateMachine, initialAuthState, type AuthState } from './auth/types'
+import { extractSessionAccessToken, mapAuthStatus, resolveIsLoadingAuth, type AuthStatusCompat } from './auth/provider-utils'
 
 const LOCAL_MIGRATION_KEY = 'hominem_mobile_local_migration_v1'
+const OTP_REQUEST_TIMEOUT_MS = 12000
+const AUTH_BOOT_TIMEOUT_MS = 8000
 
 // Map local store type to auth state machine type
 function toAuthUserProfile(localProfile: LocalUserProfile | null): AuthState['user'] {
@@ -63,8 +66,6 @@ async function clearLegacyLocalDataOnce() {
   await SecureStore.setItemAsync(LOCAL_MIGRATION_KEY, '1')
 }
 
-type AuthStatusCompat = 'booting' | 'authenticated' | 'unauthenticated' | 'error' | 'signed_out' | 'signed_in'
-
 type AuthContextType = {
   authStatus: AuthStatusCompat
   isLoadingAuth: boolean
@@ -77,6 +78,7 @@ type AuthContextType = {
   updateProfile: (updates: Partial<LocalUserProfile>) => Promise<LocalUserProfile>
   getAccessToken: () => Promise<string | null>
   clearError: () => void
+  resetAuthForE2E: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -171,17 +173,51 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }
   }, [isSessionPending, sessionUser?.id, sessionUser?.email, sessionUser?.name])
 
+  useEffect(() => {
+    if (!isSessionPending || state.status !== 'booting') {
+      return
+    }
+
+    const timeout = setTimeout(() => {
+      dispatch({ type: 'SESSION_EXPIRED' })
+    }, AUTH_BOOT_TIMEOUT_MS)
+
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [isSessionPending, state.status])
+
   const requestEmailOtp = useCallback(async (email: string) => {
-    const response = await fetch(new URL('/api/auth/email-otp/send', API_BASE_URL).toString(), {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        type: 'sign-in',
-      }),
-    })
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+    }, OTP_REQUEST_TIMEOUT_MS)
+
+    let response: Response
+    try {
+      response = await fetch(new URL('/api/auth/email-otp/send', API_BASE_URL).toString(), {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          type: 'sign-in',
+        }),
+        signal: controller.signal,
+      })
+    } catch (error) {
+      const resolvedError =
+        error instanceof Error && error.name === 'AbortError'
+          ? new Error('Request timed out. Please try again.')
+          : error instanceof Error
+            ? error
+            : new Error('Unable to send verification code.')
+      dispatch({ type: 'OTP_REQUEST_FAILED', error: resolvedError })
+      throw resolvedError
+    } finally {
+      clearTimeout(timeoutId)
+    }
 
     if (!response.ok) {
       let message = 'Unable to send verification code.'
@@ -193,12 +229,16 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           message = payload.error
         }
       } catch {}
-      throw new Error(message)
+      const resolvedError = new Error(message)
+      dispatch({ type: 'OTP_REQUEST_FAILED', error: resolvedError })
+      throw resolvedError
     }
+
+    dispatch({ type: 'OTP_REQUESTED' })
   }, [])
 
   const verifyEmailOtp = useCallback(async (input: { email: string; otp: string; name?: string }) => {
-    dispatch({ type: 'SIGN_IN_REQUESTED' })
+    dispatch({ type: 'OTP_VERIFICATION_STARTED' })
     
     try {
       const result = await authClient.signIn.emailOtp({
@@ -218,7 +258,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       // Session will update via useSession hook, which triggers the sync effect
     } catch (error) {
       dispatch({ 
-        type: 'SIGN_IN_FAILURE', 
+        type: 'OTP_VERIFICATION_FAILED', 
         error: error instanceof Error ? error : new Error('Sign in failed')
       })
       throw error
@@ -227,18 +267,20 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const signOut = useCallback(async () => {
     dispatch({ type: 'SIGN_OUT_REQUESTED' })
-    
-    try {
-      await authClient.signOut()
-      await LocalStore.clearAllData()
-      dispatch({ type: 'SIGN_OUT_SUCCESS' })
-    } catch (error) {
-      dispatch({ 
-        type: 'SIGN_OUT_FAILURE', 
-        error: error instanceof Error ? error : new Error('Sign out failed')
-      })
-      throw error
+
+    await authClient.signOut().catch(() => undefined)
+    await LocalStore.clearAllData().catch(() => undefined)
+    dispatch({ type: 'SIGN_OUT_SUCCESS' })
+  }, [])
+
+  const resetAuthForE2E = useCallback(async () => {
+    if (!E2E_TESTING) {
+      throw new Error('E2E reset is not available outside E2E runtime')
     }
+
+    await authClient.signOut().catch(() => undefined)
+    await LocalStore.clearAllData().catch(() => undefined)
+    dispatch({ type: 'RESET_TO_SIGNED_OUT' })
   }, [])
 
   const deleteAccount = useCallback(async () => {
@@ -273,38 +315,19 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     if (!session?.user) {
       return null
     }
-    const maybeSession = session as { session?: { accessToken?: string; token?: string } } | null
-    const accessToken = maybeSession?.session?.accessToken
-    if (typeof accessToken === 'string' && accessToken.length > 0) {
-      return accessToken
-    }
-    const token = maybeSession?.session?.token
-    if (typeof token === 'string' && token.length > 0) {
-      return token
-    }
-    return null
+
+    return extractSessionAccessToken(session)
   }, [session])
 
   const clearError = useCallback(() => {
     dispatch({ type: 'CLEAR_ERROR' })
   }, [])
 
-  // Map state machine status to backward-compatible status
-  const authStatus = useMemo((): AuthStatusCompat => {
-    switch (state.status) {
-      case 'authenticated':
-        return 'signed_in'
-      case 'unauthenticated':
-        return 'signed_out'
-      default:
-        return state.status
-    }
-  }, [state.status])
+  const authStatus = useMemo((): AuthStatusCompat => mapAuthStatus(state.status), [state.status])
 
-  const isLoadingAuth = state.isLoading || state.status === 'booting'
-  const isSignedIn = state.status === 'authenticated'
-  
-  // Convert auth user to local user profile for backward compatibility
+  const isLoadingAuth = resolveIsLoadingAuth(state)
+  const isSignedIn = state.status === 'signed_in' || state.status === 'signing_out'
+
   const currentUser = useMemo((): LocalUserProfile | null => {
     if (!state.user) return null
     return {
@@ -329,6 +352,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       updateProfile,
       getAccessToken,
       clearError,
+      resetAuthForE2E,
     }),
     [
       authStatus,
@@ -342,6 +366,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       updateProfile,
       getAccessToken,
       clearError,
+      resetAuthForE2E,
     ]
   )
 

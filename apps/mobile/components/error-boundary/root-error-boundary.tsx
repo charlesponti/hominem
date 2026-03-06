@@ -1,6 +1,12 @@
 import React, { Component, type ReactNode } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Text, theme } from '~/theme'
+import {
+  createBoundaryStateFromError,
+  createRootFallbackMessage,
+  resetBoundaryState,
+  type BoundaryState,
+} from '~/utils/error-boundary/contracts'
 
 interface Props {
   children: ReactNode
@@ -8,10 +14,7 @@ interface Props {
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void
 }
 
-interface State {
-  hasError: boolean
-  error: Error | null
-}
+type State = BoundaryState
 
 export class RootErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
@@ -20,7 +23,7 @@ export class RootErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return createBoundaryStateFromError(error)
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -29,7 +32,7 @@ export class RootErrorBoundary extends Component<Props, State> {
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null })
+    this.setState(resetBoundaryState())
   }
 
   render() {
@@ -44,7 +47,7 @@ export class RootErrorBoundary extends Component<Props, State> {
             Something went wrong
           </Text>
           <Text variant="body" color="mutedForeground" style={styles.message}>
-            {this.state.error?.message || 'An unexpected error occurred'}
+            {createRootFallbackMessage(this.state.error)}
           </Text>
           <View style={styles.button} onTouchEnd={this.handleReset}>
             <Text variant="label" color="white">

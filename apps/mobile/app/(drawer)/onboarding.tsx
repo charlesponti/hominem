@@ -9,7 +9,7 @@ import { Text, theme } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 
 const Onboarding = () => {
-  const { isSignedIn, currentUser, updateProfile } = useAuth();
+  const { isSignedIn, currentUser, updateProfile, signOut } = useAuth();
   const [name, setName] = useState('');
   const [hasError, setHasError] = useState(false);
 
@@ -71,6 +71,7 @@ const Onboarding = () => {
           onChange={(e) => setName(e.nativeEvent.text)}
         />
         <Button title="Create profile" onPress={onButtonPress} />
+        <Button testID="onboarding-sign-out" title="[SIGN_OUT]" onPress={signOut} />
         {hasError ? (
           <FeedbackBlock error>
             <Text variant="body" color="destructive">

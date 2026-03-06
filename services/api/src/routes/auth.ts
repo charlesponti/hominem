@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-import { authSubjects, users } from '@hominem/db/all-schema';
-import { and, db, eq, isNull } from '@hominem/hono-rpc';
+import { users } from '@hominem/db/all-schema';
+import { db, eq } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import type { Context } from 'hono';
@@ -17,7 +17,6 @@ import {
   revokeSession,
   rotateRefreshToken,
 } from '../auth/session-store';
-import { ensureOAuthSubjectUser } from '../auth/subjects';
 import { getLatestTestOtp, isTestOtpStoreEnabled } from '../auth/test-otp-store';
 import { issueAccessToken, verifyAccessToken } from '../auth/tokens';
 import { env } from '../env';
@@ -72,18 +71,6 @@ const deviceTokenSchema = z.object({
   client_id: z.string().min(1),
 });
 
-const mobileAuthorizeSchema = z.object({
-  redirect_uri: z.string().url(),
-  code_challenge: z.string().min(43).max(128),
-  state: z.string().min(8).max(256),
-});
-
-const mobileExchangeSchema = z.object({
-  code: z.string().min(16),
-  code_verifier: z.string().min(43).max(128),
-  redirect_uri: z.string().url(),
-});
-
 const mobileE2eLoginSchema = z.object({
   email: z.string().email().optional(),
   name: z.string().min(1).max(128).optional(),
@@ -93,41 +80,6 @@ const testOtpQuerySchema = z.object({
   type: z.string().min(1).optional(),
 });
 
-const cliAuthorizeSchema = z.object({
-  redirect_uri: z.string().url(),
-  code_challenge: z.string().min(43).max(128),
-  state: z.string().min(8).max(256),
-  scope: z.string().optional(),
-});
-
-const cliExchangeSchema = z.object({
-  code: z.string().min(16),
-  code_verifier: z.string().min(43).max(128),
-  redirect_uri: z.string().url(),
-});
-
-const MOBILE_FLOW_PREFIX = 'auth:mobile:flow:';
-const MOBILE_EXCHANGE_PREFIX = 'auth:mobile:exchange:';
-const MOBILE_ALLOWED_REDIRECT_URI_PREFIXES = [
-  'hakumi://auth/callback',
-  'hakumi-dev://auth/callback',
-  'hakumi-e2e://auth/callback',
-  'hakumi-preview://auth/callback',
-];
-const MOBILE_FLOW_TTL_SECONDS = 10 * 60;
-const MOBILE_EXCHANGE_TTL_SECONDS = 2 * 60;
-const CLI_FLOW_PREFIX = 'auth:cli:flow:';
-const CLI_EXCHANGE_PREFIX = 'auth:cli:exchange:';
-const CLI_FLOW_TTL_SECONDS = 10 * 60;
-const CLI_EXCHANGE_TTL_SECONDS = 2 * 60;
-const CLI_ALLOWED_SCOPE_SET = new Set(['cli:read', 'cli:write']);
-const CLI_DEFAULT_SCOPES = ['cli:read'];
-const AUTH_AUTHORIZE_LIMIT_WINDOW_SECONDS = 60;
-const AUTH_AUTHORIZE_LIMIT_MAX = 30;
-const AUTH_MOBILE_AUTHORIZE_LIMIT_WINDOW_SECONDS = 60;
-const AUTH_MOBILE_AUTHORIZE_LIMIT_MAX = 20;
-const AUTH_CLI_AUTHORIZE_LIMIT_WINDOW_SECONDS = 60;
-const AUTH_CLI_AUTHORIZE_LIMIT_MAX = 20;
 const AUTH_REFRESH_LIMIT_WINDOW_SECONDS = 60;
 const AUTH_REFRESH_LIMIT_MAX = 25;
 const AUTH_DEVICE_CODE_LIMIT_WINDOW_SECONDS = 10 * 60;
@@ -144,26 +96,6 @@ interface AuthRateLimitInput {
   max: number;
 }
 
-interface MobileFlowPayload {
-  redirectUri: string;
-  codeChallenge: string;
-  state: string;
-}
-
-interface MobileExchangePayload {
-  redirectUri: string;
-  codeChallenge: string;
-  state: string;
-  token: {
-    accessToken: string;
-    refreshToken: string;
-    tokenType: string;
-    expiresIn: number;
-    sessionId: string;
-    refreshFamilyId: string;
-  };
-}
-
 interface MobileE2eLoginResponse {
   access_token: string;
   refresh_token: string;
@@ -174,28 +106,6 @@ interface MobileE2eLoginResponse {
   provider: 'better-auth';
 }
 
-interface CliFlowPayload {
-  redirectUri: string;
-  codeChallenge: string;
-  state: string;
-  scope: string[];
-}
-
-interface CliExchangePayload {
-  redirectUri: string;
-  codeChallenge: string;
-  state: string;
-  scope: string[];
-  token: {
-    accessToken: string;
-    refreshToken: string;
-    tokenType: string;
-    expiresIn: number;
-    sessionId: string;
-    refreshFamilyId: string;
-  };
-}
-
 function getHeaderCarrier(c: { req: { raw: Request } }) {
   return {
     headers: c.req.raw.headers,
@@ -204,79 +114,6 @@ function getHeaderCarrier(c: { req: { raw: Request } }) {
 
 function createOpaqueCode(size = 32) {
   return randomBytes(size).toString('base64url');
-}
-
-function hashPkceVerifier(verifier: string) {
-  return createHash('sha256').update(verifier).digest('base64url');
-}
-
-function getMobileFlowKey(flowId: string) {
-  return `${MOBILE_FLOW_PREFIX}${flowId}`;
-}
-
-function getMobileExchangeKey(code: string) {
-  return `${MOBILE_EXCHANGE_PREFIX}${code}`;
-}
-
-function getCliFlowKey(flowId: string) {
-  return `${CLI_FLOW_PREFIX}${flowId}`;
-}
-
-function getCliExchangeKey(code: string) {
-  return `${CLI_EXCHANGE_PREFIX}${code}`;
-}
-
-function isAllowedMobileRedirectUri(redirectUri: string) {
-  return MOBILE_ALLOWED_REDIRECT_URI_PREFIXES.some((prefix) => redirectUri.startsWith(prefix));
-}
-
-function isAllowedCliRedirectUri(redirectUri: string) {
-  try {
-    const url = new URL(redirectUri);
-    if (url.protocol !== 'http:') {
-      return false;
-    }
-    if (!(url.hostname === '127.0.0.1' || url.hostname === 'localhost')) {
-      return false;
-    }
-    if (!url.port) {
-      return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-const TRUSTED_WEB_REDIRECT_ORIGINS = new Set(
-  [env.BETTER_AUTH_URL, env.FINANCE_URL, env.NOTES_URL, env.ROCCO_URL].map(
-    (url) => new URL(url).origin,
-  ),
-);
-
-function isAllowedWebRedirectUri(redirectUri: string) {
-  try {
-    return TRUSTED_WEB_REDIRECT_ORIGINS.has(new URL(redirectUri).origin);
-  } catch {
-    return false;
-  }
-}
-
-function parseCliScopes(scope: string | undefined) {
-  if (!scope || !scope.trim()) {
-    return CLI_DEFAULT_SCOPES;
-  }
-
-  const requested = scope
-    .split(/\s+/)
-    .map((token) => token.trim())
-    .filter((token) => token.length > 0);
-
-  const filtered = requested.filter((token) => CLI_ALLOWED_SCOPE_SET.has(token));
-  if (filtered.length === 0) {
-    return CLI_DEFAULT_SCOPES;
-  }
-  return [...new Set(filtered)];
 }
 
 function isE2eAuthEnabled() {
@@ -1019,6 +856,86 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
     });
   } catch {
     return c.json({ error: 'email_otp_verify_failed' }, 400);
+  }
+});
+
+authRoutes.post('/sign-in/email-otp', zValidator('json', emailOtpVerifySchema), async (c) => {
+  try {
+    const payload = c.req.valid('json');
+    const response = await callBetterAuthPluginEndpoint({
+      request: c.req.raw,
+      path: '/sign-in/email-otp',
+      method: 'POST',
+      body: payload as Record<string, unknown>,
+    });
+    const body = await response.text();
+    let responseBody = body;
+
+    if (response.ok) {
+      try {
+        const parsed = JSON.parse(body) as { user?: { id?: string } };
+        const userId = parsed.user?.id;
+        if (userId) {
+          const dbUser = await db.query.users.findFirst({
+            where: eq(users.id, userId),
+          });
+          const token = await issueAccessToken({
+            sub: userId,
+            sid: crypto.randomUUID(),
+            scope: ['api:read', 'api:write'],
+            role: dbUser?.isAdmin ? 'admin' : 'user',
+            amr: ['email_otp'],
+          });
+          responseBody = JSON.stringify({
+            ...parsed,
+            token: token.accessToken,
+            accessToken: token.accessToken,
+            expiresIn: token.expiresIn,
+          });
+        }
+      } catch {}
+    }
+
+    return new Response(responseBody, {
+      status: response.status,
+      headers: new Headers(response.headers),
+    });
+  } catch {
+    return c.json({ error: 'email_otp_verify_failed' }, 400);
+  }
+});
+
+authRoutes.get('/get-session', async (c) => {
+  try {
+    const response = await callBetterAuthPluginEndpoint({
+      request: c.req.raw,
+      path: '/get-session',
+      method: 'GET',
+    });
+    const body = await response.text();
+    return new Response(body, {
+      status: response.status,
+      headers: new Headers(response.headers),
+    });
+  } catch {
+    return c.json({ error: 'session_fetch_failed' }, 400);
+  }
+});
+
+authRoutes.post('/sign-out', async (c) => {
+  try {
+    const response = await callBetterAuthPluginEndpoint({
+      request: c.req.raw,
+      path: '/sign-out',
+      method: 'POST',
+    });
+    const body = await response.text();
+    return new Response(body, {
+      status: response.status,
+      headers: new Headers(response.headers),
+    });
+  } catch {
+    return c.json({ error: 'sign_out_failed' }, 400);
   }
 });
 

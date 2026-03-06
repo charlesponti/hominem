@@ -1,6 +1,6 @@
 import { Redirect } from 'expo-router';
 import React from 'react';
-import { Image, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary';
@@ -18,27 +18,25 @@ function Auth() {
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-          <ScrollView
-            keyboardDismissMode="on-drag"
-            keyboardShouldPersistTaps="handled"
-            bounces={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            <Box flex={1} testID="auth-screen" style={styles.screen}>
-              <View style={styles.hero}>
-                <Image source={require('~/assets/icon.png')} style={styles.logo} />
-                <Text variant="header" color="foreground">
-                  WELCOME
-                </Text>
-                <Text variant="body" color="mutedForeground" style={styles.subtitle}>
-                  Sign in with your email and one-time code.
-                </Text>
-              </View>
-              <LoginSheet />
-            </Box>
-          </ScrollView>
-        </TouchableWithoutFeedback>
+        <ScrollView
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="always"
+          bounces={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <Box flex={1} testID="auth-screen" style={styles.screen}>
+            <View style={styles.hero}>
+              <Image source={require('~/assets/icon.png')} style={styles.logo} />
+              <Text variant="header" color="foreground" style={styles.title}>
+                WELCOME
+              </Text>
+              <Text variant="body" color="mutedForeground" style={styles.subtitle}>
+                Sign in with your email and one-time code.
+              </Text>
+            </View>
+            <LoginSheet />
+          </Box>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -79,6 +77,10 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: 'center',
     maxWidth: 280,
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
+  },
+  title: {
+    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
   },
 });
 

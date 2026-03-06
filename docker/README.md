@@ -35,7 +35,7 @@ POSTGRES_PASSWORD=your-secure-password docker-compose -f compose/base.yml -f com
 
 | Service | Port | Purpose |
 |---------|------|---------|
-| db | 5432 | Main PostgreSQL database |
+| db | 5434 | Main PostgreSQL database |
 | test-db | 4433 | Ephemeral test database |
 | grafana-db | 5433 | Grafana's database |
 | redis | 6379 | Cache/sessions |

@@ -1,311 +1,158 @@
-## Context
+## Purpose
 
-The mobile app (`apps/mobile`) is built with Expo and React Native, using:
-- **Navigation**: Expo Router with file-based routing
-- **State**: React Query (TanStack Query) for server state
-- **Auth**: Better Auth with email OTP
-- **Storage**: SQLite via expo-sqlite for local persistence
-- **UI**: React Native with Reanimated for gestures
+Replace the previous implementation draft with a completion plan that moves mobile architecture toward two explicit targets:
 
-### Current Problems
+- iOS-native UI composition using Apple design primitives and motion conventions.
+- Expo best-practice project structure for deterministic startup, stable route typing, and predictable evolution.
 
-**1. Auth State Machine Issues**
-The auth provider uses a complex effect-based boot sequence with:
-- 6-second timeout that races with session polling
-- `sessionFingerprint` string that changes on every render
-- No proper cleanup for async operations
-- Duplicate auth checks in both root and drawer layouts
+This design preserves existing migration constraints: no backward compatibility adapter layer, no feature-flag beta rollout, and no data migration work in this change.
 
-**2. Triple Chat State Architecture**
-Chat manages state across three sources:
-- AI SDK (`useChat` hook) for streaming
-- React Query (`useQuery`/`useMutation`) for server sync
-- SQLite (`LocalStore`) for persistence
+## Core Constraints (Non-Negotiable)
 
-These compete and create synchronization bugs.
+- App remains iOS-only; Android remains out of scope for this active change.
+- No user-visible feature expansion; we only stabilize existing product flows.
+- Direct cutover only: no dual-path runtime, no legacy architecture shims.
+- Unreleased app semantics stay intact: backward compatibility adapters are not required.
+- Contract-driven testing and measurable quality gates remain mandatory for auth, chat, and navigation.
+- Type safety remains strict (`no any`, no unsafe casts).
 
-**3. Type Safety Violations**
-Multiple `as Type` assertions on API responses with no runtime validation.
+## Design Goal
 
-**4. No Error Boundaries**
-App crashes completely on any render error.
+Create a single, modernized mobile architecture that is easier to maintain and test without changing external behavior:
 
-### Constraints
+1. Deterministic auth resolution and route guarding with zero-loop navigation.
+2. Single-source-of-truth chat/state flows across online and offline transitions.
+3. Predictable failure containment with scoped error boundaries.
+4. Intentional design system foundation using reusable Apple-style primitives.
+5. Stable Expo folder and provider structure aligned with official routing and config patterns.
 
-- Must maintain existing UI/UX (no user-facing changes)
-- Must preserve offline capability
-- Must work with existing Expo/React Native setup
-- No new dependencies (use existing Zod, React Query)
+## Apple Design Primitive Layer (UI)
 
-## Goals / Non-Goals
+### Guiding principles
 
-**Goals:**
-1. Eliminate auth race conditions with proper state machine
-2. Consolidate chat state to single source (React Query)
-3. Add runtime type validation for all API responses
-4. Implement error boundaries for graceful failures
-5. Fix all memory leaks in effects
-6. Standardize effect cleanup patterns
+- Use semantic, HIG-aligned tokens before component-level styling.
+- Prefer composition: primitives define behavior and spacing; screens compose them.
+- Keep motion minimal, meaningful, and consistent with system conventions.
 
-**Non-Goals:**
-- No changes to UI/UX design
-- No changes to API contracts
-- No new features (pure refactoring)
-- No changes to build/deployment process
-- No migration of existing user data required
+### Required primitives
+
+- Layout tokens: baseline spacing scale, safe-area-aware rhythm, inset and corner tokens.
+- Typography tokens: platform defaults (`SF Pro Text`, fallback chain), semantic roles.
+- Surface tokens: elevated card, grouped list row, divider, and separator styles.
+- Iconography: `expo-symbols` for status/action/iconography in priority paths.
+- Controls: `apple-style` primary/secondary actions with disabled, loading, and danger variants.
+- Motion patterns: enter/leave staging for route-level screens, optimistic send transitions, and focused error recovery.
+
+### Scope of UI migration
+
+- Existing screens are migrated to primitives in bounded slices by domain:
+  - auth and onboarding
+  - focus list and focus detail screens
+  - chat compose/thread/stream surfaces
+  - account screens
+- Migration can proceed screen-by-screen, but each migrated slice must use only tokens from the new primitive layer.
+
+## Expo Best-Practice Architecture
+
+### Structural direction
+
+Treat `app/` as routing and presentation entry points only; push reusable logic into a disciplined source tree:
+
+- `app/` remains route ownership for navigation and shell composition.
+- `src/` (or equivalent new source root under `apps/mobile`) hosts providers, services, tests helpers, and feature logic.
+- `components/` contains Apple primitives + reusable composition modules.
+- `state/` contains auth/chat/store contracts and transition contracts.
+- `providers/` centralizes `QueryClient`, API context, auth session context, and error-boundary wiring.
+- `services/` owns integration points for RPC, local storage fallbacks, and offline adapters.
+- `utils/` is reduced to adapter utilities that do not own architecture control.
+
+### Provider graph policy
+
+- Single global provider tree in root layout:
+  - theme + insets + query + session + error boundary.
+- Feature boundaries use hooks into that graph only; no ad-hoc provider instances in leaf screens.
+- Feature entry points must be testable with the shared integration harness.
+
+### Route and navigation policy
+
+- Preserve protected/public route groups where behavior is already established.
+- Keep route guards deterministic:
+  - one auth decision per boot cycle
+  - no repeated re-evaluation loops on redirects
+  - deeplink handling under unresolved auth state has explicit outcomes
 
 ## Decisions
 
-### Decision 1: Auth State Machine Pattern
+### D1: Rearchitecture Order
 
-**Chosen**: Use explicit state machine with `useReducer` instead of multiple `useState` + `useEffect`.
+- Complete integration contracts first, then apply architecture refactors behind those contracts (RED→GREEN).
+- This avoids visual churn and reduces risk while still allowing full UI rewrite sequencing.
 
-```
-States: BOOTING → AUTHENTICATING → AUTHENTICATED | UNAUTHENTICATED | ERROR
+### D2: Apple Primitives Are Canonical, Not Optional
 
-Events:
-- SESSION_LOADED (from Better Auth)
-- SESSION_EXPIRED
-- SIGN_IN_REQUESTED
-- SIGN_OUT_REQUESTED
-- SYNC_COMPLETED
-- SYNC_FAILED
-```
+- All newly touched screens and shared components must use the new primitive layer.
+- Existing screens may adopt in the same change where touched by migration tasks.
 
-**Rationale**: 
-- Eliminates race conditions by serializing state transitions
-- Makes all state changes explicit and testable
-- Removes need for timeout-based logic
-- Single source of truth for auth status
+### D3: Expo Structure Is the Default for New Modules
 
-**Alternative Considered**: Keep useEffect but add better guards. Rejected because effects are inherently prone to race conditions with async operations.
+- New modules must follow the new `app` + `src` boundary.
+- New features should avoid adding deep coupling inside `app/` route files.
 
-### Decision 2: Single Navigation Guard
+### D4: Persistence Strategy Remains Explicitly Centralized
 
-**Chosen**: Remove auth check from `(drawer)/_layout.tsx`, keep only in root `_layout.tsx`.
+- Keep the current explicit persistence decision for this phase (as previously documented).
+- No additional persisted caches are introduced until a future architecture change defines durability goals.
 
-**Rationale**:
-- Multiple guards create race conditions
-- Root layout is the proper place for global auth routing
-- Simpler mental model: one check, one redirect
+### D5: Performance Is a Design Requirement
 
-### Decision 3: Chat State Consolidation
+- Baselines must be captured again after full primitive migration.
+- Threshold breaches are blockers for merge, not refactor comments.
 
-**Chosen**: React Query as single source of truth, SQLite as persistence layer.
+## Migration Constraints to Preserve
 
-```
-Before (Triple State):
-┌──────────┐   ┌──────────┐   ┌──────────┐
-│ AI SDK   │   │  RQ      │   │  SQLite  │
-│ (active) │   │ (sync)   │   │ (persist)│
-└────┬─────┘   └────┬─────┘   └────┬─────┘
-     │              │              │
-     └──────────────┴──────────────┘
-                    │
-              ┌──────────┐
-              │  UI      │  (confused)
-              └──────────┘
+- No data migration path is required; this change is app-architecture and UI foundation only.
+- No migration shim required for auth/chat behavior; direct replacement is expected.
+- Existing external integration contracts (RPC + navigation contracts already under test) remain unchanged.
+- Rollback criteria stays limited to release gating (test suite + perf + typed checks), not runtime compatibility scaffolding.
 
-After (Single State):
-┌─────────────────────────────────┐
-│      React Query (Single)       │
-│  ┌──────────┐   ┌──────────┐   │
-│  │ Messages │   │  Chat    │   │
-│  │  Query   │   │Mutation  │   │
-│  └──────────┘   └──────────┘   │
-└─────────────────────────────────┘
-              │
-     ┌────────┴────────┐
-     ▼                 ▼
-┌──────────┐     ┌──────────┐
-│  AI SDK  │     │  SQLite  │
-│(streaming│     │(persist) │
-│ adapter) │     │          │
-└──────────┘     └──────────┘
-```
+## Risks and Mitigations
 
-**Implementation**:
-- Create custom hook `useStreamingMessages` that wraps AI SDK but updates React Query cache
-- SQLite persists on successful mutations only
-- No active reads from SQLite (only hydration on app start)
+- `auth loop` risk: strict guard contract tests plus boot de-duplication in provider layer.
+- `chat rendering drift`: contract tests for stream ordering and optimistic transitions prevent silent visual/state divergence.
+- `primitive migration churn`: slice-by-slice rollout with feature-level exit criteria.
+- `expo-structure drift`: lint checks plus file-structure checklist in CI review.
 
-**Rationale**:
-- React Query has built-in caching, background refetch, and optimistic updates
-- Single state source eliminates synchronization bugs
-- Easier to test and reason about
+## Execution Plan
 
-**Alternative Considered**: Keep triple state but add better sync logic. Rejected because complexity grows exponentially with each state source.
+### Phase A: Design-System Foundations
 
-### Decision 4: Zod for Runtime Validation
+1. Freeze the Apple primitive API (tokens, primitives, motion primitives, icon policy).
+2. Add/complete migration notes for screen-by-screen adoption checkpoints.
+3. Update integration harness to cover UI-layer test fixtures for updated primitives.
 
-**Chosen**: Validate all API responses with Zod schemas before use.
+### Phase B: Architecture Replatforming
 
-```typescript
-const ChatMessageSchema = z.object({
-  id: z.string(),
-  role: z.enum(['user', 'assistant', 'system']),
-  content: z.string(),
-  createdAt: z.string().datetime(),
-  // ...
-})
+1. Normalize provider graph in root layout and remove parallel provider paths.
+2. Move shared non-route logic behind clear service/state boundaries.
+3. Finalize auth and guard contracts for route transitions and deeplink behavior.
 
-const response = await client.api.chats[":id"].messages.$get({ param: { id } })
-const data = ChatMessageSchema.array().parse(await response.json())
-```
+### Phase C: Domain Migration
 
-**Rationale**:
-- Catches API contract violations early
-- Provides clear error messages
-- Type inference gives us TypeScript types for free
+1. Migrate auth and chat interaction screens to primitive components.
+2. Migrate focus and account surfaces to the same tokenized patterns.
+3. Keep behavior contracts green at each domain slice.
 
-**Alternative Considered**: Type guards with manual checks. Rejected because Zod is already in the monorepo and provides better DX.
+### Phase D: Consolidation and Gates
 
-### Decision 5: Error Boundary Strategy
+1. Remove stale legacy architecture references in touched domains.
+2. Re-run full integration/e2e/performance gates with documented thresholds.
+3. Archive final evidence and confirm migration constraints were preserved.
 
-**Chosen**: Three-tier error boundary system.
+## Acceptance Gates
 
-```
-┌─────────────────────────────────────────┐
-│   Root Error Boundary (App-level)       │
-│   - Full-screen error fallback          │
-│   - Recovery: Restart app option        │
-└─────────────────────────────────────────┘
-                    │
-     ┌──────────────┼──────────────┐
-     ▼              ▼              ▼
-┌──────────┐  ┌──────────┐  ┌──────────┐
-│ Feature  │  │ Feature  │  │ Feature  │
-│Boundary  │  │Boundary  │  │Boundary  │
-│(Chat)    │  │(Focus)   │  │(Auth)    │
-│- Inline  │  │- Inline  │  │- Inline  │
-│fallback  │  │fallback  │  │fallback  │
-└──────────┘  └──────────┘  └──────────┘
-```
-
-**Rationale**:
-- Prevents total app crash on component errors
-- Feature boundaries allow partial functionality
-- Root boundary catches everything else
-
-### Decision 6: Effect Cleanup Pattern
-
-**Chosen**: Standardize on AbortController for async operations in effects.
-
-```typescript
-useEffect(() => {
-  const abortController = new AbortController()
-  
-  const fetchData = async () => {
-    try {
-      const result = await api.fetch({ signal: abortController.signal })
-      if (!abortController.signal.aborted) {
-        setData(result)
-      }
-    } catch (error) {
-      if (!abortController.signal.aborted) {
-        setError(error)
-      }
-    }
-  }
-  
-  fetchData()
-  
-  return () => {
-    abortController.abort()
-  }
-}, [dependency])
-```
-
-**Rationale**:
-- Native browser/JS API, no custom flags needed
-- Properly cancels in-flight requests
-- Works with fetch, React Query, and most async libraries
-
-**Alternative Considered**: `isMounted` boolean flag. Rejected because it doesn't actually cancel operations, just ignores results.
-
-### Decision 7: Simplified Storage Abstraction
-
-**Chosen**: Remove MSCCloudStore, use SQLite exclusively.
-
-**Rationale**:
-- MSCCloudStore was iOS-only and added complexity
-- SQLite is cross-platform and well-tested
-- Single implementation reduces bug surface
-- E2E tests can mock SQLite or use in-memory
-
-**Trade-off**: Slight performance difference (native vs SQLite), but negligible for our data volumes.
-
-## Risks / Trade-offs
-
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| **Auth state regression** | Medium | High | Comprehensive unit tests for state machine; feature flag to rollback |
-| **Chat data loss during migration** | Low | High | Maintain old implementation behind flag; gradual rollout; backup before migrate |
-| **Performance degradation** | Low | Medium | Benchmark before/after; SQLite is fast enough for our scale |
-| **New bugs in error boundaries** | Low | Medium | Test error boundaries explicitly; fallback to current behavior if boundary fails |
-| **Type validation performance** | Very Low | Low | Zod is fast; schemas are small; validate at boundaries only |
-| **Offline sync issues** | Medium | High | Extensive testing of offline scenarios; maintain optimistic updates |
-
-### Key Trade-offs
-
-1. **Complexity vs. Reliability**: Adding state machine and validation increases code volume but dramatically improves reliability.
-
-2. **Consistency vs. Performance**: Single state source is slightly slower than triple-state (one less cache layer) but eliminates entire class of bugs.
-
-3. **Strictness vs. Flexibility**: Runtime validation will catch some edge cases that were previously silently ignored. This might surface latent bugs.
-
-## Migration Plan
-
-### Phase 1: Foundation (Week 1)
-1. Create new auth state machine hook (parallel to existing)
-2. Create error boundary components
-3. Add Zod schemas for API types
-4. Set up unit testing infrastructure
-
-### Phase 2: Auth Migration (Week 1-2)
-1. Replace auth provider implementation
-2. Remove duplicate navigation guards
-3. Test auth flows extensively
-4. Feature flag for rollback
-
-### Phase 3: Chat State Consolidation (Week 2-3)
-1. Create new chat hooks with single state
-2. Update chat components
-3. Migration script for existing chat data (if needed)
-4. Test offline scenarios
-
-### Phase 4: Validation & Polish (Week 3)
-1. Add runtime validation to all queries
-2. Add error boundaries to features
-3. Fix any memory leaks found
-4. Full regression testing
-
-### Rollback Strategy
-
-Each phase is behind a feature flag:
-```typescript
-const FEATURE_FLAGS = {
-  NEW_AUTH_STATE: process.env.FF_NEW_AUTH === 'true',
-  NEW_CHAT_STATE: process.env.FF_NEW_CHAT === 'true',
-  RUNTIME_VALIDATION: process.env.FF_VALIDATION === 'true',
-}
-```
-
-If issues arise, disable flag and revert to old implementation.
-
-## Open Questions
-
-1. **Should we maintain offline queue for chat starts?**
-   Current implementation queues chat starts in AsyncStorage. With consolidated state, should we keep this or rely on React Query's retry mechanism?
-
-2. **Do we need analytics on error boundary catches?**
-   Should we track when error boundaries are triggered for monitoring?
-
-3. **What's the performance budget for Zod validation?**
-   Validate all API responses or just critical ones?
-
-4. **Should auth state machine be generic?**
-   Could this pattern be extracted for use in other apps?
-
-5. **How do we test the state machine thoroughly?**
-   Unit tests are clear, but what about integration testing of auth flows?
+- Integration auth contract suite passes.
+- Chat offline + stream + optimistic flow suite passes.
+- Error boundary contract suite passes under recovery scenarios.
+- Typecheck + lint + full mobile test suites pass from repo root commands.
+- Startup/chat/scroll baselines are captured and remain within acceptance thresholds.
+- No legacy dual-path or back-compat wrappers remain in the scope of this change.

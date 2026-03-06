@@ -1,6 +1,12 @@
 import React, { Component, type ReactNode } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Text, theme } from '~/theme'
+import {
+  createBoundaryStateFromError,
+  createFeatureFallbackLabel,
+  resetBoundaryState,
+  type BoundaryState,
+} from '~/utils/error-boundary/contracts'
 
 interface Props {
   children: ReactNode
@@ -9,10 +15,7 @@ interface Props {
   featureName?: string
 }
 
-interface State {
-  hasError: boolean
-  error: Error | null
-}
+type State = BoundaryState
 
 export class FeatureErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
@@ -21,7 +24,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return createBoundaryStateFromError(error)
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -30,7 +33,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null })
+    this.setState(resetBoundaryState())
   }
 
   render() {
@@ -42,7 +45,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
       return (
         <View style={styles.container}>
           <Text variant="body" color="mutedForeground">
-            {this.props.featureName || 'Feature'} is unavailable
+            {createFeatureFallbackLabel(this.props.featureName)}
           </Text>
           <View style={styles.button} onTouchEnd={this.handleReset}>
             <Text variant="small" color="foreground">

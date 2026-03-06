@@ -1,108 +1,86 @@
 ## Why
 
-The mobile app has accumulated critical architectural debt that causes race conditions, state management conflicts, and potential crashes in production. Auth boot logic has timing issues that can leave users stuck, the chat system manages state across three competing sources (React Query, AI SDK, SQLite), and type safety violations create runtime crash risks. These issues block reliable feature delivery and create a poor user experience.
+The mobile app architecture still has risk hotspots in auth flow orchestration, chat state synchronization, and failure handling. We already landed core refactors, but the remaining work is currently scoped with stale assumptions (feature-flag dual path, staged beta rollout, and backward-compat posture). The app is unreleased, so we should complete this change with a direct cutover approach that optimizes for correctness, performance, and maintainability.
 
 ## What Changes
 
-### Critical Fixes
+### Core Architecture Completion
 
-**1. Centralize Auth State Machine**
-- Replace timeout-based boot logic with proper state machine
-- Single auth guard in root layout (remove duplicate checks)
-- Eliminate race conditions in session synchronization
-- Add proper cleanup for async operations
+1. Finalize auth state machine behavior under concurrent and edge navigation conditions.
+2. Complete chat state consolidation to a single source of truth and remove parallel/legacy paths.
+3. Complete error-boundary behavior validation and graceful degradation guarantees.
+4. Finalize storage/query behavior for offline-first reliability without duplicative state layers.
 
-**2. Consolidate Chat State Management**
-- Remove triple-state architecture (AI SDK + React Query + SQLite)
-- Implement single source of truth with React Query
-- SQLite becomes persistence layer only, not active state
-- Add proper optimistic updates and rollback
+### Testing Philosophy Completion
 
-**3. Add Runtime Type Safety**
-- Replace all `as Type` assertions with Zod validation
-- Validate all API responses before use
-- Add type guards for local storage data
+5. Adopt integration-first RED→GREEN testing as the default:
+   - tests cover full user flows and module contracts
+   - assertions verify internal state invariants at critical checkpoints
+   - focused unit tests remain only for pure reducers/parsers/helpers
+6. Build shared mobile test scaffolding to remove duplication across auth/chat/offline integration suites.
 
-**4. Implement Error Boundaries**
-- Add global error boundary in root layout
-- Add feature-level error boundaries for chat, focus, auth
-- Create reusable error fallback components
+### Performance and Reliability Completion
 
-**5. Fix Memory Leaks**
-- Audit all effects for proper cleanup
-- Standardize on `isMounted` pattern or AbortController
-- Fix timer/timeout cleanup in auth provider
+7. Measure and enforce startup/chat/list performance baselines.
+8. Validate on simulator and physical devices with deterministic test setup.
 
-### Secondary Improvements
+### Cleanup and Cutover
 
-**6. Optimize Query Client Configuration**
-- Integrate with NetInfo for network-aware caching
-- Add proper retry strategies with backoff
-- Configure gcTime appropriately for mobile constraints
-
-**7. Refactor Storage Abstraction**
-- Simplify LocalStore to single implementation (SQLite)
-- Remove platform-specific branching logic
-- Add data validation on read
-
-**8. Add Unit Testing Infrastructure**
-- Set up testing utilities for hooks
-- Add tests for critical auth and chat logic
-- Create testing patterns for React Query hooks
+9. Remove stale/legacy mobile paths and superseded abstractions in the same change.
+10. Remove rollout tasks that assume dual-path feature flags for unreleased mobile architecture.
 
 ## Capabilities
 
 ### New Capabilities
 
-- `mobile-auth-state-machine`: Centralized authentication state management with proper lifecycle
-- `mobile-error-boundaries`: Error boundary system for graceful failure handling
-- `mobile-state-consolidation`: Unified state management patterns for complex features
+- `mobile-auth-state-machine`: Deterministic auth state transitions and routing guard behavior.
+- `mobile-error-boundaries`: Scoped crash containment with recoverable feature failure states.
+- `mobile-state-consolidation`: Single-state-source architecture for chat and related mobile data flows.
 
 ### Modified Capabilities
 
-None. This is a refactoring change that improves implementation without changing requirements.
+None. This change is architecture and test rigor modernization without new end-user features.
 
 ## Impact
 
-### Affected Files
+### Affected Files (Primary)
 
-**Core Architecture:**
-- `app/_layout.tsx` - Root layout with providers
-- `app/(drawer)/_layout.tsx` - Remove duplicate auth check
-- `utils/auth-provider.tsx` - Rewrite state machine
-- `utils/api-provider.tsx` - Minor adjustments
+- `apps/mobile/app/_layout.tsx`
+- `apps/mobile/app/(drawer)/_layout.tsx`
+- `apps/mobile/utils/auth/*`
+- `apps/mobile/utils/query-client.ts`
+- `apps/mobile/utils/local-store/*`
+- `apps/mobile/utils/services/chat/*`
+- `apps/mobile/components/error-boundary/*`
+- `apps/mobile/tests/**/*`
 
-**State Management:**
-- `utils/query-client.ts` - Enhanced configuration
-- `utils/services/chat/use-chat-messages.ts` - Consolidate state
-- `utils/services/notes/use-focus-query.ts` - Add validation
+### Backward Compatibility
 
-**Storage:**
-- `utils/local-store/index.ts` - Simplify abstraction
-- `utils/local-store/sqlite.ts` - Add validation
+Not required for this mobile architecture change because the app is unreleased. We prefer direct replacement over adapters/shims.
 
-**Components:**
-- `components/chat/chat.tsx` - Add error boundary
-- `components/focus/focus-list.tsx` - Performance optimization
-- `components/error-boundary.tsx` - New file
+### Platform Scope
 
-### Breaking Changes
-
-None. All changes are internal refactoring with no API or behavior changes visible to users.
+This mobile application is iOS-only. Android support is explicitly out of scope.
 
 ### Dependencies
 
-No new dependencies. Using existing:
-- Zod (already in monorepo)
-- React Query (already installed)
-- Expo modules (already installed)
+No new architecture dependency is required by default. Existing Expo, React Query, and Zod stack remains the baseline.
 
 ### Testing Strategy
 
-- Unit tests for auth state machine
-- Integration tests for chat state consolidation
-- E2E tests continue to work (no user-facing changes)
+- Integration-first suites for auth, chat, offline transitions, and navigation/deeplink behavior.
+- Contract-driven E2E for user-critical flows (sign-in/sign-out, guarded navigation, chat send/stream/persist).
+- Targeted unit tests only for deterministic pure logic.
 
 ### Migration
 
-No migration needed. Changes are drop-in replacements.
+No data migration requirement is expected. Any remaining legacy code paths are removed in-place during completion.
+
+## Validation Snapshot (2026-03-06)
+
+- `bun run --filter @hominem/mobile test` passed (unit + integration suites).
+- `bun run test:e2e:auth:mobile` passed once local API infra was started.
+- `bun run typecheck` passed.
+- `bun run lint --parallel` passed (workspace warnings present outside this change, no lint errors).
+- `bun run check` passed.
+- Performance evidence captured in `performance-validation.md` for startup and auth flow timing.

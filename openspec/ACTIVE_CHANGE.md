@@ -1,12 +1,12 @@
 # Active OpenSpec Change
 
-active_change: update-db-schema-references
+active_change: fix-mobile-architecture-issues
 
 ## Canonical Artifacts
 
-- Proposal: `openspec/changes/2025-03-04-update-db-schema-references/proposal.md`
-- Design: `openspec/changes/2025-03-04-update-db-schema-references/design.md`
-- Tasks: `openspec/changes/2025-03-04-update-db-schema-references/tasks.md`
+- Proposal: `openspec/changes/fix-mobile-architecture-issues/proposal.md`
+- Design: `openspec/changes/fix-mobile-architecture-issues/design.md`
+- Tasks: `openspec/changes/fix-mobile-architecture-issues/tasks.md`
 
 ## Enforcement
 

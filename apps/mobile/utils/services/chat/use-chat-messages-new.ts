@@ -4,23 +4,19 @@ import { useHonoClient } from '@hominem/hono-client/react'
 import NetInfo from '@react-native-community/netinfo'
 import { useMutation, useQuery, useQueryClient, type MutationOptions } from '@tanstack/react-query'
 import { randomUUID } from 'expo-crypto'
+import { useState } from 'react'
 
 import type { Chat as LocalChat } from '~/utils/local-store/types'
 import { LocalStore } from '~/utils/local-store'
 import { validateChatMessagesResponse, type ChatMessage } from '~/utils/validation/schemas'
 
 import { log } from '../../logger'
-
-export type MessageOutput = {
-  id: string
-  role: 'user' | 'assistant' | 'system'
-  message: string
-  created_at: string
-  chat_id: string
-  profile_id: string
-  focus_ids: string[] | null
-  focus_items: Array<{ id: string; text: string }> | null
-}
+import {
+  createOptimisticMessage,
+  getChatRetryDelayMs,
+  reconcileMessagesAfterSend,
+  type MessageOutput,
+} from './chat-contract'
 
 type SendChatMessageOutput = {
   messages: MessageOutput[]
@@ -77,8 +73,10 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
 export const useSendMessage = ({ chatId }: { chatId: string }) => {
   const client = useHonoClient()
   const queryClient = useQueryClient()
+  const [message, setMessage] = useState('')
+  const [sendChatError, setSendChatError] = useState(false)
 
-  return useMutation<SendChatMessageOutput, Error, string, { previousMessages: MessageOutput[] }>({
+  const mutation = useMutation<SendChatMessageOutput, Error, string, { previousMessages: MessageOutput[] }>({
     mutationKey: ['sendChatMessage', chatId],
     
     // Optimistic update
@@ -90,16 +88,7 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
       const previousMessages = queryClient.getQueryData<MessageOutput[]>(['chatMessages', chatId]) || []
       
       // Optimistically add user message
-      const optimisticMessage: MessageOutput = {
-        id: generateId(),
-        role: 'user',
-        message: messageText,
-        created_at: new Date().toISOString(),
-        chat_id: chatId,
-        profile_id: '',
-        focus_ids: null,
-        focus_items: null,
-      }
+      const optimisticMessage = createOptimisticMessage(chatId, messageText, generateId())
       
       queryClient.setQueryData(['chatMessages', chatId], [...previousMessages, optimisticMessage])
       
@@ -141,25 +130,44 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
     
     // On success, update cache with server data
     onSuccess: (data) => {
+      setSendChatError(false)
       queryClient.setQueryData(['chatMessages', chatId], (old: MessageOutput[] | undefined) => {
-        if (!old) return data.messages
-        
-        // Replace optimistic message with server messages
-        const withoutOptimistic = old.filter((msg) => msg.role !== 'user' || data.messages.some((m) => m.id === msg.id))
-        const newMessages = data.messages.filter((m) => !withoutOptimistic.some((old) => old.id === m.id))
-        
-        return [...withoutOptimistic, ...newMessages]
+        if (!old) {
+          return data.messages
+        }
+        return reconcileMessagesAfterSend(old, data.messages)
       })
     },
     
     // Rollback on error
     onError: (error, _variables, context) => {
       log('Error sending chat message:', error)
+      setSendChatError(true)
       if (context?.previousMessages) {
         queryClient.setQueryData(['chatMessages', chatId], context.previousMessages)
       }
     },
   })
+
+  return {
+    message,
+    setMessage,
+    sendChatError,
+    setSendChatError,
+    isChatSending: mutation.isPending,
+    sendChatMessage: async () => {
+      const text = message.trim()
+      if (!text) {
+        return {
+          messages: [],
+          function_calls: [],
+        }
+      }
+      const result = await mutation.mutateAsync(text)
+      setMessage('')
+      return result
+    },
+  }
 }
 
 // Simplified start chat - uses React Query retry instead of custom queue
@@ -181,7 +189,7 @@ export const useStartChat = ({
   return useMutation<LocalChat, Error, void>({
     mutationKey: ['startChat'],
     retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retryDelay: getChatRetryDelayMs,
     
     mutationFn: async () => {
       const status = await NetInfo.fetch()

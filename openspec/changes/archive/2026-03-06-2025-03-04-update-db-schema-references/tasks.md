@@ -168,11 +168,11 @@
   - implemented in `apps/finance/tests/auth.passkey.spec.ts`
   - passkey wrappers now forward Better Auth `Set-Cookie` headers to preserve challenge/session continuity
   - validated by `bun run test:e2e:auth:app` (4/4 passing on 2026-03-05)
-- [ ] 10.4 Add mobile auth app E2E suite (existing mobile E2E harness)
+- [x] 10.4 Add mobile auth app E2E suite (existing mobile E2E harness)
+  - execute against `openspec/changes/2025-03-04-update-db-schema-references/mobile-auth-state-contract.md` (state invariants, routing invariants, deterministic e2e controls)
   - email+OTP sign-in flow
   - passkey flow where supported by target runtime
   - authenticated app state assertion
-  - runtime note: current mobile app auth UX is Apple-only with deterministic E2E bootstrap path (no mobile email-OTP or passkey UX exposed yet)
   - implemented deterministic Detox flow: `apps/mobile/e2e/auth.mobile.e2e.js`
   - command added: `bun run test:e2e:auth:mobile`
   - mobile runtime hardening in progress:
@@ -185,14 +185,33 @@
     - provider no longer performs navigation side effects
     - root route guard consumes provider auth state instead of raw `useSession().isPending`
     - `getAccessToken` no longer returns `session.user.id` pseudo-token
-  - current blocker (still open):
-    - Detox cannot consistently resolve initial shell state (`auth-screen` or `WHERE SHOULD WE START?`) in e2e runtime
-    - latest run: `bun run test:e2e:auth:mobile` failed with `Timed out waiting for a resolved app shell state`
+    - protected runtime providers moved into `apps/mobile/app/(drawer)/_layout.tsx`:
+      - `ApiProvider`
+      - `InputProvider`
+      - `InputDock`
+    - root layout no longer mounts authenticated-only providers for signed-out/auth routes
+    - startup splash gating reduced to immediate hide + fallback timeout (no fixed 3s boot delay)
+  - unit-first hardening completed before next e2e attempts:
+    - added isolated mobile Vitest config: `apps/mobile/vitest.config.ts`
+    - added auth callback parser suite: `apps/mobile/tests/mobile-auth-callback.test.ts`
+    - added auth provider helper suite: `apps/mobile/tests/auth-provider-utils.test.ts`
+    - added auth route guard suite: `apps/mobile/tests/auth-route-guard.test.ts`
+    - added startup metric budget suite: `apps/mobile/tests/startup-metrics.test.ts`
+    - added auth input validation suite: `apps/mobile/tests/auth-validation.test.ts`
+    - expanded state-machine suite for sign-in/loading transition regressions: `apps/mobile/tests/auth-state-machine.test.ts`
+    - command: `bun run --filter @hominem/mobile test:unit:auth` (38 passing tests)
+  - first-principles stabilization implemented:
+    - deterministic auth state indicators exposed in e2e runtime (`auth-state-booting|signed-out|signed-in`)
+    - deterministic e2e auth controls exposed in e2e runtime (`auth-e2e-reset`, `auth-e2e-sign-out`)
+    - latest run: `bun run test:e2e:auth:mobile` passes with local API stack running
+  - first-principles stabilization policy (locked):
+    - do not patch selectors heuristically
+    - implement deterministic auth state indicators and deterministic e2e reset controls per the mobile auth state contract
 - [x] 10.5 Add a single app-auth E2E gate command at repo root scripts (deterministic run order)
 - [x] 10.6 Add app-auth E2E gate to final verification sequence documentation for this proposal
 - [x] 10.7 Run app-auth E2E gate on local test stack and record results in verification status note
 
-### Verification Status Note (2026-03-05)
+### Verification Status Note (2026-03-06)
 
 - Green command evidence:
   - `bun run validate-db-imports` -> pass
@@ -213,10 +232,17 @@
   - `bun run --filter @hominem/rocco test` -> pass (45/45)
   - `bun run test` -> pass (all packages in scope)
   - `bun run check` -> pass (existing lint warnings only)
-  - performance artifacts captured:
-    - `openspec/changes/2025-03-04-update-db-schema-references/performance-validation.md`
-- Remaining red gate:
-  - `bun run test:e2e:auth:mobile` -> failing in Detox bootstrap stage (`Timed out waiting for a resolved app shell state`)
+  - `bun run validate-db-imports` -> pass (2026-03-06 rerun)
+  - `bun scripts/check-schema-drift.ts` -> pass (2026-03-06 rerun, no drift)
+  - `bun run --filter @hominem/hono-rpc typecheck` -> pass (2026-03-06 rerun)
+  - `bun run test:e2e:auth:app` -> pass (4/4 on 2026-03-06 after freeing occupied port 4040)
+  - `bun run --filter @hominem/mobile test:e2e:build:ios` -> pass (2026-03-06)
+  - `bun run --filter @hominem/mobile test:e2e:smoke` -> pass (2026-03-06)
+  - `bun run --filter @hominem/mobile test:e2e:auth:mobile` -> pass (2026-03-06, with local API stack running)
+- performance artifacts captured:
+  - `openspec/changes/2025-03-04-update-db-schema-references/performance-validation.md`
+- Remaining precondition for mobile auth E2E:
+  - local API stack must be running and reachable at `http://localhost:4040` for OTP request/verify path
 
 ## 9. Progress Log (2026-03-04)
 

@@ -31,7 +31,7 @@ services:
     <<: *postgres-build
     container_name: hominem-postgres
     ports:
-      - "5432:5432"
+      - "5434:5432"
     environment:
       <<: *postgres-defaults
       POSTGRES_DB: hominem

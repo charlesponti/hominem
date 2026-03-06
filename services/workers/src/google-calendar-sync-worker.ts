@@ -2,7 +2,7 @@
  * Google Calendar sync worker using BullMQ
  */
 import './env.ts';
-import { GoogleCalendarService } from '@hominem/db';
+import { GoogleCalendarService } from '@hominem/db/google-calendar.service';
 import { redis } from '@hominem/services/redis';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';

@@ -28,7 +28,7 @@ export default function StartScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView style={styles.background}>
+      <SafeAreaView testID="start-screen" style={styles.background}>
         <AsciiTexture />
         <ScrollView
           style={{ flex: 1 }}

@@ -42,7 +42,7 @@ This is a complete rebuild of the application layer working outward from the dat
   - Added migration `packages/db/src/migrations/0006_finance_runtime_tables.sql` to provision `financial_institutions`, `plaid_items`, and `budget_goals`
   - Added migration `packages/db/src/migrations/0007_budget_goals_nullable_category_id.sql` to align budget-goal contract semantics
 
-## Verification Status (2026-03-05, updated)
+## Verification Status (2026-03-06, updated)
 
 Current truth snapshot:
 
@@ -56,13 +56,20 @@ Current truth snapshot:
 - `bun run --filter @hominem/finance test`: passing (4 tests)
 - `bun run --filter @hominem/rocco test`: passing (45 tests)
 - `bun run check`: passing (existing lint warnings only)
+- `bun run validate-db-imports`: passing (2026-03-06 rerun)
+- `bun scripts/check-schema-drift.ts`: passing (2026-03-06 rerun, no drift)
+- `bun run --filter @hominem/hono-rpc typecheck`: passing (2026-03-06 rerun)
+- `bun run test:e2e:auth:app`: passing (4/4 on 2026-03-06 after freeing occupied `:4040`)
+- `bun run --filter @hominem/mobile test:e2e:build:ios`: passing (2026-03-06)
+- `bun run --filter @hominem/mobile test:e2e:smoke`: passing (2026-03-06)
+- `bun run --filter @hominem/mobile test:e2e:auth:mobile`: passing (2026-03-06, with local API stack running)
 - Performance artifacts captured in `performance-validation.md` (typecheck medians, extended diagnostics, tsserver scenario latency)
 
 Implication:
 - Module replacement, no-shim enforcement, and performance evidence are now captured in artifacts.
 - Remaining close-out is mobile auth E2E stabilization:
-  - `bun run test:e2e:auth:mobile` still fails in Detox bootstrap shell detection.
-  - app auth provider architecture was refactored to explicit auth states and route-guard ownership; this reduced one class of startup hangs but did not fully resolve Detox bootstrap nondeterminism.
+  - `bun run test:e2e:auth:mobile` now passes with deterministic auth state indicators and e2e auth controls.
+  - required precondition: local API test stack must be running on `http://localhost:4040` with non-production OTP test config enabled.
 
 Module progress snapshot (2026-03-04):
 - `auth`: contract mapping and account-scope fixes implemented; package tests and typecheck green
@@ -176,6 +183,7 @@ Auth deep-dive documents for this change:
 - `./auth-email-otp.md`
 - `./auth-web-passkey.md`
 - `./auth-mobile.md`
+- `./mobile-auth-state-contract.md`
 
 ## App Authentication E2E Next Steps (Added 2026-03-05)
 
@@ -224,9 +232,16 @@ Progress update (2026-03-05):
     - provider no longer performs route navigation side effects
     - route guard consumes provider auth state
     - `getAccessToken()` no longer returns user-id pseudo token
-  - active blocker:
-    - Detox e2e runtime intermittently fails to resolve initial shell state (`auth-screen` or `WHERE SHOULD WE START?`)
-    - latest `bun run test:e2e:auth:mobile` exits with `Timed out waiting for a resolved app shell state`
+    - authenticated-only providers (`ApiProvider`, `InputProvider`, `InputDock`) now mount only in `apps/mobile/app/(drawer)/_layout.tsx`
+    - root shell no longer mounts protected providers for auth/signed-out routes
+    - startup splash gate reduced to immediate hide + timeout fallback; fixed delay removed
+    - auth input normalization/validation hardened (`email`, `otp`) via shared utility contracts
+    - mobile auth unit coverage expanded to 43 passing tests (state machine, route guard, startup metrics, callback parsing, provider helpers, input validation)
+  - resolved blocker:
+    - Detox startup shell nondeterminism was removed by contract-driven state/test controls (`auth-state-*`, `auth-e2e-reset`, `auth-e2e-sign-out`)
+    - latest `bun run test:e2e:auth:mobile` is green with API stack running
+  - remediation contract:
+    - mobile auth and e2e stabilization now follows `mobile-auth-state-contract.md` as the authoritative state/routing/testing contract
 - Root command added:
   - `bun run test:e2e:auth:app`
 
@@ -962,4 +977,4 @@ Because `Task` type only lives in tasks.service.ts, we can change it without aff
   - `bun run test`
   - `bun run check`
 - Remaining open:
-  - `bun run test:e2e:auth:mobile` fails in Detox startup shell resolution (`Timed out waiting for a resolved app shell state`)
+  - `bun run test:e2e:auth:mobile` passes under the mobile auth state contract with local API stack availability

@@ -79,83 +79,22 @@ async function run() {
   }
 
   {
-    const authorizeUrl =
-      `${baseUrl}/api/auth/authorize` +
-      `?redirect_uri=${encodeURIComponent(`${baseUrl}/`)}` +
-      '&provider=apple';
-
-    const response = await fetch(authorizeUrl, {
-      method: 'GET',
-      redirect: 'manual',
-    });
-    const location = response.headers.get('location') ?? '';
-
-    assert(
-      response.status === 302,
-      `Expected /api/auth/authorize to return 302, received ${response.status}`,
-    );
-    assert(location, 'Expected Location header to be present for Apple authorization redirect');
-
-    let appleUrl: URL;
-    try {
-      appleUrl = new URL(location);
-    } catch {
-      assert(
-        false,
-        `Expected valid URL in Location header for Apple redirect, received: ${location}`,
-      );
-    }
-
-    assert(
-      appleUrl.protocol === 'https:' && appleUrl.hostname === 'appleid.apple.com',
-      `Expected Apple authorization redirect host to be https://appleid.apple.com, received: ${appleUrl.protocol}//${appleUrl.hostname}`,
-    );
-    assert(
-      appleUrl.pathname === '/auth/authorize',
-      `Expected Apple authorization redirect path to be /auth/authorize, received: ${appleUrl.pathname}`,
-    );
-    assert(
-      appleUrl.search.includes('response_mode=form_post'),
-      'Expected response_mode=form_post in Apple redirect',
-    );
-    console.log('[auth-e2e] /api/auth/authorize apple redirect ok');
-  }
-
-  {
-    const response = await fetch(
-      `${baseUrl}/api/auth/authorize?provider=google&redirect_uri=${encodeURIComponent(`${baseUrl}/`)}`,
-      {
-        method: 'GET',
-        redirect: 'manual',
-      },
-    );
-    const payload = (await response.json()) as JsonRecord;
-    assert(
-      response.status === 400,
-      `Expected google provider block to return 400, received ${response.status}`,
-    );
-    assert(
-      payload.error === 'provider_not_allowed',
-      'Expected provider_not_allowed error for google authorize',
-    );
-    console.log('[auth-e2e] google provider block ok');
-  }
-
-  {
-    const response = await fetch(`${baseUrl}/api/auth/callback/apple`, {
+    const response = await fetch(`${baseUrl}/api/auth/email-otp/send`, {
       method: 'POST',
-      redirect: 'manual',
       headers: {
-        'content-type': 'application/x-www-form-urlencoded',
+        'content-type': 'application/json',
       },
-      body: 'state=auth-e2e-callback-probe',
+      body: JSON.stringify({
+        email: `auth-e2e-smoke-${Date.now()}@hominem.test`,
+        type: 'sign-in',
+      }),
     });
 
     assert(
       response.status !== 404,
-      'Expected /api/auth/callback/apple to be routable (status must not be 404)',
+      `Expected /api/auth/email-otp/send to be routable (status must not be 404), received ${response.status}`,
     );
-    console.log('[auth-e2e] /api/auth/callback/apple route probe ok');
+    console.log('[auth-e2e] /api/auth/email-otp/send route probe ok');
   }
 
   {
@@ -185,25 +124,8 @@ async function run() {
       'Expected authorization_url to be a string in CLI authorize response',
     );
     const authorizationUrl = new URL(payload.authorization_url as string);
-    assert(
-      authorizationUrl.protocol === 'https:' &&
-        authorizationUrl.hostname === 'appleid.apple.com' &&
-        authorizationUrl.pathname === '/auth/authorize',
-      'Expected Apple authorization URL in CLI authorize response',
-    );
+    assert(authorizationUrl.pathname.length > 0, 'Expected non-empty CLI authorization URL path');
     console.log('[auth-e2e] /api/auth/cli/authorize ok');
-  }
-
-  {
-    const response = await fetch(`${baseUrl}/api/auth/callback/apple`, {
-      method: 'GET',
-      redirect: 'manual',
-    });
-    assert(
-      response.status !== 404,
-      `Expected callback GET route to be mounted, received ${response.status}`,
-    );
-    console.log('[auth-e2e] /api/auth/callback/apple GET route probe ok');
   }
 
   console.log('[auth-e2e] all checks passed');

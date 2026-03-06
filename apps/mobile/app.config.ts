@@ -156,6 +156,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       appScheme: variantConfig.appScheme,
       isDevClient: String(variantConfig.usesDevClient),
       apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
+      e2eTesting: process.env.EXPO_PUBLIC_E2E_TESTING,
       e2eAuthSecret: process.env.EXPO_PUBLIC_E2E_AUTH_SECRET,
       aiSdkChatWebEnabled: process.env.EXPO_PUBLIC_AI_SDK_CHAT_WEB_ENABLED,
       aiSdkChatMobileEnabled: process.env.EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED,

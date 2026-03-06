@@ -34,6 +34,7 @@
     "@hominem/utils": "workspace:*",
     "@hono/node-server": "^1.19.2",
     "@hono/zod-validator": "^0.7.6",
+    "@sentry/node": "^8.54.0",
     "ai": "^4.3.16",
     "better-auth": "^1.4.19",
     "bullmq": "5.66.4",

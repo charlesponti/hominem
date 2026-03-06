@@ -4,7 +4,7 @@ import { FlashList } from '@shopify/flash-list'
 
 import { FeatureErrorBoundary } from '~/components/error-boundary'
 import queryClient from '~/utils/query-client'
-import { useChatMessages, useEndChat } from '~/utils/services/chat/use-chat-messages'
+import { useChatMessages, useEndChat } from '~/utils/services/chat'
 import ChatLoading from './chat-loading'
 import { loadMarkdown, renderMessage, type MarkdownComponent } from './chat-message'
 import { Text, theme } from '~/theme'

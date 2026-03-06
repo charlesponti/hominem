@@ -2,7 +2,7 @@ import { useCallback, useState, type PropsWithChildren } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 
 import { Text, theme } from '~/theme'
-import { useSendMessage } from '~/utils/services/chat/use-chat-messages'
+import { useSendMessage } from '~/utils/services/chat'
 import { FeedbackBlock } from '../feedback-block'
 import { FormSubmitButton } from '../notes/note-form-submit-button'
 import AutoGrowingInput from '../text-input-autogrow'

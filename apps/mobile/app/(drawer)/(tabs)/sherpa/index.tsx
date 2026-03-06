@@ -6,7 +6,7 @@ import { Chat } from '~/components/chat/chat';
 import { LoadingFull } from '~/components/LoadingFull';
 import { Text } from '~/theme';
 import type { Chat as ChatType } from '~/utils/local-store/types';
-import { useActiveChat, useStartChat } from '~/utils/services/chat/use-chat-messages';
+import { useActiveChat, useStartChat } from '~/utils/services/chat';
 
 export default function Sherpa() {
   const router = useRouter();
