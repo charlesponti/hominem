@@ -88,6 +88,12 @@ export interface ImportTransactionsQueuePayload {
   batchSize: number;
   batchDelay: number;
   userId: string;
+  /**
+   * Optional account ID. If provided, transactions will be associated with this account.
+   * If not provided, an empty string is used and transactions are created without
+   * a specific account linkage.
+   */
+  accountId?: string;
   status: JobStatus; // Should be 'queued' when initially added
   createdAt: number; // Timestamp of when the job data was prepared
   type: 'import-transactions';

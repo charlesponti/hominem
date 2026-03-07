@@ -41,21 +41,14 @@ type MonthlySpendingCompat = {
 }
 
 function getBudgetAmount(category: BudgetCategoryData): number {
-  const withBudget = category as BudgetCategoryData & { averageMonthlyExpense?: string | number | null }
-  const value = withBudget.averageMonthlyExpense
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : 0
-  }
-  if (typeof value === 'string') {
-    const parsed = Number.parseFloat(value)
-    return Number.isFinite(parsed) ? parsed : 0
-  }
-  return 0
+  const value = category.averageMonthlyExpense
+  if (!value) return 0
+  const parsed = Number.parseFloat(value)
+  return Number.isFinite(parsed) ? parsed : 0
 }
 
-function getCategoryColor(category: BudgetCategoryData): string | null {
-  const withColor = category as BudgetCategoryData & { color?: string | null }
-  return withColor.color ?? null
+function getCategoryColor(category: BudgetCategoryData): string | undefined {
+  return category.color
 }
 
 export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetailsProps) {

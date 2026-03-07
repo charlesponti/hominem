@@ -1,7 +1,7 @@
 export type InstitutionData = {
   id: string
   name: string
-  logo?: string | null
+  logo?: string
 }
 
 export type BudgetCategoryData = {
@@ -17,17 +17,14 @@ export type BudgetCategoryData = {
    * Optional colour associated with the category. Stored on the
    * underlying `tags` row and surfaced by most budget endpoints.
    */
-  color?: string | null
+  color?: string
   /**
-   * User-provided monthly budget amount. Historically this field has
-   * lived on the category object in the client, but we now persist
-   * budget goals separately. The field is still exposed here because
-   * most UI components currently read it directly and the create/update
-   * RPC inputs accept it. Keeping it optional allows existing APIs to
-   * continue working while server handlers gradually start to populate
-   * it from `budget_goals`.
+   * User-provided monthly budget amount as a string. Stored as numeric in
+   * the database to preserve decimal precision for monetary values. Returned
+   * as a string to avoid JavaScript number precision loss. Components parse
+   * to number only when needed for calculations.
    */
-  averageMonthlyExpense?: string | number | null
+  averageMonthlyExpense?: string
 }
 
 export type AccountType = 'checking' | 'savings' | 'credit' | 'investment' | 'cash' | 'other'

@@ -9,6 +9,7 @@
     "./storage": "./src/storage/index.ts",
     "./consts": "./src/consts.ts",
     "./dates": "./src/dates.ts",
+    "./headers": "./src/headers.ts",
     "./images": "./src/images.ts",
     "./google": "./src/google.ts",
     "./http": "./src/http.ts",

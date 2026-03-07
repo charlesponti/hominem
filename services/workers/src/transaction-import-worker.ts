@@ -89,7 +89,7 @@ const processImportTransactionsJob = async (
     const imported = await processTransactionsFromCSVBuffer({
       csvBuffer: fileBuffer,
       userId: job.data.userId,
-      accountId: (job.data as ImportTransactionsQueuePayload & { accountId?: string }).accountId ?? '',
+      accountId: job.data.accountId || '',
     })
 
     const results = Array.from({ length: imported.imported + imported.skipped }, (_, index) => {

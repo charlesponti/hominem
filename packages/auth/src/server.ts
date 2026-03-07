@@ -1,4 +1,5 @@
 import { logger } from '@hominem/utils/logger'
+import { getSetCookieHeaders } from '@hominem/utils/headers'
 
 import type { AuthConfig, HominemSession, HominemUser, ServerAuthResult } from './types'
 
@@ -67,9 +68,9 @@ export async function getServerAuth(
       headers: upstreamHeaders,
     })
 
-    const getSetCookie = (res.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie
-    if (typeof getSetCookie === 'function') {
-      for (const value of getSetCookie.call(res.headers)) {
+    const setCookieValues = getSetCookieHeaders(res.headers)
+    if (setCookieValues.length > 0) {
+      for (const value of setCookieValues) {
         headers.append('set-cookie', value)
       }
     } else {

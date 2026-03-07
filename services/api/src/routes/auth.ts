@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 
 import { users } from '@hominem/db/all-schema';
 import { db, eq } from '@hominem/hono-rpc';
+import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import type { Context } from 'hono';
@@ -217,8 +218,7 @@ async function grantStepUp(userId: string, action: string) {
 
 function copyHeadersWithSetCookie(headers: Headers) {
   const copied = new Headers(headers);
-  const getSetCookie = (headers as Headers & { getSetCookie?: () => string[] }).getSetCookie;
-  const setCookies = typeof getSetCookie === 'function' ? getSetCookie.call(headers) : [];
+  const setCookies = getSetCookieHeaders(headers);
 
   if (setCookies.length > 0) {
     copied.delete('set-cookie');

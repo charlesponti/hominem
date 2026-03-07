@@ -1,6 +1,7 @@
 import { redirect, useActionData, useLoaderData, useLocation } from 'react-router'
 
 import { AuthScaffold, OtpVerificationForm } from '@hominem/ui'
+import { getSetCookieHeaders } from '@hominem/utils/headers'
 import { getServerAuth } from '~/lib/auth.server'
 import { serverEnv } from '~/lib/env'
 
@@ -55,9 +56,9 @@ export async function action({ request }: { request: Request }) {
 
   const headers = new Headers()
 
-  const getSetCookie = (response.headers as Headers & { getSetCookie?: () => string[] }).getSetCookie
-  if (typeof getSetCookie === 'function') {
-    for (const value of getSetCookie.call(response.headers)) {
+  const setCookieValues = getSetCookieHeaders(response.headers)
+  if (setCookieValues.length > 0) {
+    for (const value of setCookieValues) {
       headers.append('set-cookie', value)
     }
   } else {
