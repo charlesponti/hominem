@@ -12,3 +12,10 @@
 
 export { db, healthCheck, pool } from './db'
 export type { Database } from './types/database'
+
+// Shared service utilities (used by RPC handlers)
+export { brandId, unbrandId } from './services/_shared/ids'
+export type { TaskId, TagId, CalendarEventId, PersonId, BookmarkId, PossessionId, FinanceCategoryId, FinanceAccountId, FinanceTransactionId, UserId } from './services/_shared/ids'
+
+export { NotFoundError, ConflictError, ValidationError, ForbiddenError, InternalError, isDbError, isServiceError, getErrorResponse } from './services/_shared/errors'
+export type { DbError } from './services/_shared/errors'

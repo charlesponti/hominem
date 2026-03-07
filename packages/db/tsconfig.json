@@ -23,7 +23,10 @@
     "**/__tests__",
     "**/__mocks__",
     "*.tsbuildinfo",
+    "src/_old/**",
     "src/_old_services/**",
-    "src/_old_test/**"
+    "src/_old_test/**",
+    "src/_services_backup/**",
+    "src/_test_backup/**"
   ]
 }
