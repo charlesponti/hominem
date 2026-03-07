@@ -5,7 +5,6 @@ import './env.ts';
 import './plaid-worker';
 import './transaction-import-worker';
 import './smart-input/smart-input.worker.ts';
-import './google-calendar-sync-worker';
 import './place-photo-worker';
 
 // Production-ready process management
