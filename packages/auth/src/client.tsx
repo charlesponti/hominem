@@ -313,22 +313,14 @@ export function AuthProvider({
         throw new Error('Passkeys are not available in this environment.');
       }
 
-      // Include the access token as a Bearer header so the API can authenticate
-      // the request even when the Better Auth session cookie is on a different
-      // origin (e.g. finance app at :4444 calling API at :4040 in dev/test).
-      const authHeaders: Record<string, string> = {
-        'content-type': 'application/json',
-        ...(session?.access_token
-          ? { authorization: `Bearer ${session.access_token}` }
-          : {}),
-      }
-
       const optionsRes = await fetch(
         getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/passkey/register/options'),
         {
           method: 'POST',
           credentials: 'include',
-          headers: authHeaders,
+          headers: {
+            'content-type': 'application/json',
+          },
           body: JSON.stringify({ name: name ?? 'Default Device' }),
         },
       );
@@ -358,7 +350,9 @@ export function AuthProvider({
         {
           method: 'POST',
           credentials: 'include',
-          headers: authHeaders,
+          headers: {
+            'content-type': 'application/json',
+          },
           body: JSON.stringify({
             response: serializeAssertion(credential),
             name: name ?? 'Default Device',
@@ -370,7 +364,7 @@ export function AuthProvider({
         throw new Error('Passkey registration failed.');
       }
     },
-    [config.apiBaseUrl, session],
+    [config.apiBaseUrl],
   );
 
   const linkGoogle = useCallback(async () => {
