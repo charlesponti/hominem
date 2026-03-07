@@ -1,14 +1,7 @@
-import {
-  type ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import { AuthContext } from './AuthContext';
 import type { AuthClient, AuthConfig, AuthContextType, HominemSession, HominemUser } from './types';
-import { AuthContext } from './AuthContext'
 type AuthEvent = 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED';
 
 interface SessionResponse {
@@ -67,11 +60,13 @@ interface PublicKeyCredentialCreationOptionsJSON {
     alg: number;
   }>;
   timeout?: number | undefined;
-  excludeCredentials?: Array<{
-    id: string;
-    type: string;
-    transports?: string[] | undefined;
-  }> | undefined;
+  excludeCredentials?:
+    | Array<{
+        id: string;
+        type: string;
+        transports?: string[] | undefined;
+      }>
+    | undefined;
   attestation?: string | undefined;
   extensions?: Record<string, unknown> | undefined;
 }
@@ -214,18 +209,13 @@ function serializeAssertion(credential: PublicKeyCredential): SerializedPublicKe
   };
 }
 
-
 export type AuthProviderProps = {
   children: ReactNode;
   config: AuthConfig;
   onAuthEvent?: (event: AuthEvent) => void;
-}
+};
 
-export function AuthProvider({
-  children,
-  config,
-  onAuthEvent,
-}: AuthProviderProps) {
+export function AuthProvider({ children, config, onAuthEvent }: AuthProviderProps) {
   const [session, setSession] = useState<HominemSession | null>(null);
   const [user, setUser] = useState<HominemUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -244,11 +234,11 @@ export function AuthProvider({
 
   const signIn = useCallback(async () => {
     // Default sign-in: redirect to email sign-in page
-    window.location.href = '/auth/email';
+    window.location.href = '/auth';
   }, []);
 
   const signInWithEmail = useCallback(async () => {
-    window.location.href = '/auth/email';
+    window.location.href = '/auth';
   }, []);
 
   const signInWithPasskey = useCallback(async () => {
