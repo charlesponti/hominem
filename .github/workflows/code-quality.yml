@@ -103,7 +103,7 @@ jobs:
         run: bun run --filter @hominem/hono-rpc build
 
       - name: ⚙️ apply database schema
-        run: bun run --filter @hominem/db atlas schema apply --auto-approve -u "postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable"
+        run: bunx atlas schema apply --auto-approve -u "postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable" --to "file://packages/db/schema.sql"
 
       - name: 🧪 Unit tests
         run: bun run test
