@@ -52,9 +52,9 @@
 
 ## 8. Testing
 
-- [ ] 8.1 Test email OTP signup flow end-to-end
-- [ ] 8.2 Test passkey registration after signup
-- [ ] 8.3 Test passkey sign-in
-- [ ] 8.4 Test email OTP sign-in (fallback)
-- [ ] 8.5 Test account recovery flow
-- [ ] 8.6 Test on localhost with real device biometrics
+- [x] 8.1 Test email OTP signup flow end-to-end
+- [x] 8.2 Test passkey registration after signup
+- [x] 8.3 Test passkey sign-in
+- [x] 8.4 Test email OTP sign-in (fallback)
+- [x] 8.5 Test account recovery flow
+- [x] 8.6 Test on localhost with real device biometrics
