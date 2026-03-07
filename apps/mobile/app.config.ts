@@ -89,27 +89,9 @@ export default ({ config }: ConfigContext) => {
       {
         fonts: [
           './assets/fonts/GeistMono-Regular.ttf',
-          './assets/fonts/GeistMono-Medium.ttf',
           './assets/fonts/GeistMono-SemiBold.ttf',
-          './assets/fonts/icons/fa-brands-400.ttf',
-          './assets/fonts/icons/fa-duotone-900.ttf',
-          './assets/fonts/icons/fa-light-300.ttf',
           './assets/fonts/icons/fa-regular-400.ttf',
-          './assets/fonts/icons/fa-sharp-duotone-solid-900.ttf',
-          './assets/fonts/icons/fa-sharp-light-300.ttf',
-          './assets/fonts/icons/fa-sharp-regular-400.ttf',
-          './assets/fonts/icons/fa-sharp-solid-900.ttf',
-          './assets/fonts/icons/fa-sharp-thin-100.ttf',
-          './assets/fonts/icons/fa-solid-900.ttf',
-          './assets/fonts/icons/fa-thin-100.ttf',
-          './assets/fonts/icons/fa-v4compatibility.ttf',
         ],
-      },
-    ],
-    [
-      'expo-av',
-      {
-        microphonePermission: 'Allow $(PRODUCT_NAME) to access your microphone.',
       },
     ],
     ['expo-secure-store'],

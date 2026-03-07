@@ -117,9 +117,7 @@
     },
     "doctor": {
       "reactNativeDirectoryCheck": {
-        "exclude": [
-          "expo-av"
-        ],
+        "exclude": [],
         "listUnknownPackages": [
           "@biomejs/biome"
         ]
