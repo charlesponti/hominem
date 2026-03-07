@@ -187,5 +187,10 @@ export function createServer() {
     );
   });
 
+  // 404 handler for unsupported routes
+  app.notFound((c) => {
+    return c.text('玉をなめろ');
+  });
+
   return app;
 }

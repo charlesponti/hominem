@@ -41,7 +41,7 @@ const configuration = new Configuration({
   },
 });
 
-const plaidClient = new PlaidApi(configuration);
+export const plaidClient = new PlaidApi(configuration);
 
 /**
  * Process Plaid sync jobs
@@ -58,9 +58,14 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
     initialSync,
   });
 
+  // We'll keep a reference to the DB record so that if something fails we can
+  // update the error column using the UUID instead of the external Plaid
+  // itemId (which is not a UUID and was previously causing PG errors).
+  let plaidItem: Awaited<ReturnType<typeof getPlaidItemByUserAndItemId>> | null = null;
+
   try {
     // Get the Plaid item from database to make sure it exists and is valid
-    const plaidItem = await getPlaidItemByUserAndItemId(userId, itemId);
+    plaidItem = await getPlaidItemByUserAndItemId(userId, itemId);
 
     if (!plaidItem) {
       throw new Error(`Plaid item ${itemId} not found for user ${userId}`);
@@ -84,8 +89,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
         isoCurrencyCode: account.balances.iso_currency_code || 'USD',
         plaidAccountId: account.account_id,
         plaidItemId: plaidItem.id,
-        institutionId:
-          'institutionId' in plaidItem ? (plaidItem.institutionId ?? null) : null,
+        institutionId: 'institutionId' in plaidItem ? (plaidItem.institutionId ?? null) : null,
         lastUpdated: new Date(),
         userId,
       };
@@ -95,8 +99,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
 
     // 2. Fetch and store transactions using transactions/sync endpoint
     let hasMore = true;
-    let cursor =
-      'transactionsCursor' in plaidItem ? (plaidItem.transactionsCursor ?? null) : null;
+    let cursor = 'transactionsCursor' in plaidItem ? (plaidItem.transactionsCursor ?? null) : null;
     const batchSize = 500;
     let totalTransactions = 0;
 
@@ -293,8 +296,21 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    // Update item status on error
-    await updatePlaidItemError(itemId, error instanceof Error ? error.message : String(error));
+    // Update item status on error if we were able to look it up. Note that the
+    // Plaid `itemId` is not a UUID and cannot be used directly in our finance
+    // helpers. In earlier versions we blindly passed the external ID which
+    // resulted in a Postgres 22P02 when the string failed to parse.  Only update
+    // if we have the database row's UUID.
+    if (plaidItem && plaidItem.id) {
+      await updatePlaidItemError(
+        plaidItem.id,
+        error instanceof Error ? error.message : String(error),
+      );
+    } else {
+      logger.warn('Skipping error update because Plaid item was not found', {
+        itemId,
+      });
+    }
 
     throw error;
   }
