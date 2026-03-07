@@ -33,7 +33,7 @@ interface AccountInsert {
   sessionState?: string | null
 }
 
-function toCompatRecord(row: UserAccounts): AccountRecord {
+function toCompatRecord(row: any): AccountRecord {
   return {
     id: row.id,
     userId: row.user_id,
@@ -121,7 +121,7 @@ export async function updateAccount(
   id: string,
   updates: Partial<AccountInsert>
 ): Promise<AccountRecord | null> {
-  const updateData: Partial<UserAccounts> = {}
+  const updateData: any = {}
 
   if (updates.providerAccountId !== undefined) {
     updateData.account_id = updates.providerAccountId
