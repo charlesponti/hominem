@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import path from 'node:path';
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { processSmartInputEmail } from './smart-input.worker';
@@ -8,15 +9,15 @@ vi.mock('pdf-parse', () => ({
   default: vi.fn().mockResolvedValue({ text: 'test' }),
 }));
 
-vi.mock('@hominem/utils/supabase', () => ({
-  SupabaseStorageService: vi.fn().mockImplementation(() => ({
+vi.mock('@hominem/utils/storage', () => ({
+  R2StorageService: vi.fn().mockImplementation(() => ({
     storeFile: vi.fn().mockResolvedValue({
       id: 'test-id',
       originalName: 'test.txt',
       filename: 'system-attachments/test-id.txt',
       mimetype: 'application/octet-stream',
       size: 100,
-      url: 'https://storage.supabase.co/test-bucket/test-id.txt',
+      url: 'https://storage.example.com/test-bucket/test-id.txt',
       uploadedAt: new Date(),
     }),
     downloadCsvFileAsBuffer: vi.fn().mockResolvedValue(Buffer.from('test content')),
@@ -55,8 +56,8 @@ describe.skip('smart-input-worker', () => {
     const result = await processSmartInputEmail(emailContent);
 
     expect(result).toBeDefined();
-    const { SupabaseStorageService } = await import('@hominem/utils/supabase');
-    const storageInstance = new SupabaseStorageService('test-bucket');
+    const { R2StorageService } = await import('@hominem/utils/storage');
+    const storageInstance = new R2StorageService('chats');
     expect(storageInstance.storeFile).toHaveBeenCalled();
   });
 });

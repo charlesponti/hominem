@@ -1,6 +1,5 @@
-import type { ActionFunctionArgs } from 'react-router';
-
 import { VoiceTranscriptionError, transcribeVoiceBuffer } from '@hominem/services';
+import type { ActionFunctionArgs } from 'react-router';
 
 import { getServerSession } from '~/lib/auth.server';
 import { jsonResponse } from '~/lib/utils/json-response';

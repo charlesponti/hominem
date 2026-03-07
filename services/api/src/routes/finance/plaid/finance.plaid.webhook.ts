@@ -1,13 +1,13 @@
 import { getPlaidItemByItemId, updatePlaidItemStatusByItemId } from '@hominem/finance-services';
-import { UnauthorizedError, ValidationError, InternalError } from '@hominem/services';
+import { UnauthorizedError, ValidationError, InternalError } from '@hominem/hono-rpc';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import type { AppEnv } from '../../../server';
-
 import { verifyPlaidWebhookSignature } from '../../../lib/plaid';
+import { plaidSyncQueue } from '../../../lib/queues';
+import type { AppEnv } from '../../../server';
 
 const webhookSchema = z.object({
   webhook_type: z.string(),
@@ -62,8 +62,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
     if (webhook_type === 'TRANSACTIONS') {
       if (webhook_code === 'INITIAL_UPDATE' || webhook_code === 'HISTORICAL_UPDATE') {
         // Queue sync job for transaction updates
-        const queues = c.get('queues');
-        await queues.plaidSync.add(
+        await plaidSyncQueue.add(
           QUEUE_NAMES.PLAID_SYNC,
           {
             userId: plaidItem.userId,
@@ -83,8 +82,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
         );
       } else if (webhook_code === 'DEFAULT_UPDATE') {
         // Regular transaction update - queue sync job
-        const queues = c.get('queues');
-        await queues.plaidSync.add(
+        await plaidSyncQueue.add(
           QUEUE_NAMES.PLAID_SYNC,
           {
             userId: plaidItem.userId,
@@ -106,19 +104,10 @@ financePlaidWebhookRoutes.post('/', async (c) => {
     } else if (webhook_type === 'ITEM') {
       if (webhook_code === 'ERROR') {
         // Update item status to error
-        await updatePlaidItemStatusByItemId(item_id, {
-          status: 'error',
-          error: webhookError
-            ? `${webhookError.error_code}: ${webhookError.error_message}`
-            : 'Unknown error',
-          updatedAt: new Date().toISOString(),
-        });
+        await updatePlaidItemStatusByItemId(plaidItem.userId, item_id, 'error');
       } else if (webhook_code === 'PENDING_EXPIRATION') {
         // Update item status to pending expiration
-        await updatePlaidItemStatusByItemId(item_id, {
-          status: 'pending_expiration',
-          updatedAt: new Date().toISOString(),
-        });
+        await updatePlaidItemStatusByItemId(plaidItem.userId, item_id, 'pending_expiration');
       }
     }
 

@@ -1,9 +1,8 @@
 import { jwtVerify, SignJWT } from 'jose';
 
-import type { AccessTokenClaims } from './types';
-
 import { env } from '../env';
 import { getSigningKey } from './key-store';
+import type { AccessTokenClaims } from './types';
 
 const ACCESS_TOKEN_TTL_SECONDS = 10 * 60;
 

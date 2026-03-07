@@ -13,9 +13,8 @@ import {
 } from '@hominem/ui/components/ui/alert-dialog';
 import { RefreshCcw, Trash2 } from 'lucide-react';
 
-import type { Account } from '~/lib/types/account.types';
-
 import { useRemovePlaidConnection, useSyncPlaidItem } from '~/lib/hooks/use-plaid';
+import type { Account } from '~/lib/types/account.types';
 
 import { PlaidStatusBadge } from './plaid-status-badge';
 
@@ -75,32 +74,18 @@ export function PlaidAccountStatus({
     <div className="p-4 bg-muted border border-border">
       <div className="flex items-center justify-between mb-3">
         <div className="font-medium text-foreground">Plaid Connection</div>
-        <PlaidStatusBadge status={plaidAccount.plaidItemStatus ?? null} />
+        <PlaidStatusBadge status={plaidAccount.plaidItemId ? 'active' : null} />
       </div>
       <div className="space-y-2 text-sm text-muted-foreground">
         {plaidAccount.institutionName && <div>Institution: {plaidAccount.institutionName}</div>}
-        {plaidAccount.plaidLastSyncedAt && (
-          <div>
-            Last synced:{' '}
-            {new Date(plaidAccount.plaidLastSyncedAt).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </div>
-        )}
-        {plaidAccount.plaidItemError ? (
-          <div className="text-destructive">Error: {String(plaidAccount.plaidItemError)}</div>
-        ) : null}
+        <div>Connected account sync is available via Plaid.</div>
       </div>
       <div className="flex gap-2 mt-4">
         <Button
           variant="outline"
           size="sm"
           onClick={handleSync}
-          disabled={syncItemMutation.isLoading || plaidAccount.plaidItemStatus === 'revoked'}
+          disabled={syncItemMutation.isLoading}
         >
           {syncItemMutation.isLoading ? (
             <RefreshCcw className="size-4 mr-2" />

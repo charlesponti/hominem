@@ -5,13 +5,4 @@
  * defined in ~/lib/api/hooks/use-lists.ts
  */
 
-export {
-  
-  
-  useCreateList,
-  useUpdateList,
-  useDeleteList,
-  
-  
-  
-} from './hooks/use-lists';
+export { useCreateList, useUpdateList, useDeleteList } from './hooks/use-lists';

@@ -15,4 +15,3 @@ i18n.init({
     escapeValue: false,
   },
 });
-

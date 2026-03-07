@@ -1,6 +1,6 @@
 import { Pressable, View } from 'react-native'
 import { Text, theme } from '~/theme'
-import type { MessageOutput } from '~/utils/services/chat/use-chat-messages'
+import type { MessageOutput } from '~/utils/services/chat'
 import MindsherpaIcon from '../ui/icon'
 
 export const ChatMessageActions = ({ message }: { message: MessageOutput }) => {

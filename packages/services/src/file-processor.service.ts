@@ -1,5 +1,6 @@
-import mammoth from 'mammoth';
 import { Buffer } from 'node:buffer';
+
+import mammoth from 'mammoth';
 import OpenAI from 'openai';
 import PDFParser from 'pdf2json';
 

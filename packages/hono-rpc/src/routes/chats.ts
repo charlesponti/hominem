@@ -1,5 +1,5 @@
 import { ChatService, MessageService } from '@hominem/chat-services';
-import { NotFoundError, InternalError, ValidationError } from '@hominem/services';
+import { NotFoundError, InternalError, ValidationError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { convertToCoreMessages, streamText, type CoreMessage, type Message } from 'ai';

@@ -1,5 +1,5 @@
 import { formatGeocodeFeatures, type Geocoding, LAYERS } from '@hominem/utils/location';
-import { ValidationError, InternalError } from '@hominem/services';
+import { ValidationError, InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 

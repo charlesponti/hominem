@@ -1,6 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
 
-import { captureException } from '@sentry/react-native'
 import { useAudioTranscribe } from './use-audio-transcribe'
 
 import type { GeneratedIntentsResponse } from '~/components/notes/use-get-user-intent'
@@ -30,7 +29,7 @@ export const useAudioUpload = ({
     },
     onSuccess,
     onError: (error) => {
-      captureException(error)
+      console.error('[audio-upload] upload failed', error)
       onError?.()
     },
   })

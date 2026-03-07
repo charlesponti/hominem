@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { vi } from 'vitest';
 
-import type { List, Place } from '~/lib/types';
-import type { MockMutationResult } from '~/test/utils';
-
 import { useLists, useListById, useUpdateList } from '~/lib/hooks/use-lists';
 import {
   useNearbyPlaces,
@@ -12,6 +9,8 @@ import {
   useAddPlaceToLists,
 } from '~/lib/hooks/use-places';
 import { useDeleteAccount } from '~/lib/hooks/use-user';
+import type { List, Place } from '~/lib/types';
+import type { MockMutationResult } from '~/test/utils';
 
 export class RoccoMocker {
   mockListsGetAll(data: List[] | undefined, isLoading = false, error: Error | null = null) {

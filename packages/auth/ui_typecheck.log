@@ -1,3 +1,0 @@
-$ tsc --noEmit "--filter=@hominem/ui"
-error TS5023: Unknown compiler option '--filter=@hominem/ui'.
-error: script "typecheck" exited with code 1

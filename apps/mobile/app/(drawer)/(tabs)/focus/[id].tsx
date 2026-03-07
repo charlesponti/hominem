@@ -5,14 +5,13 @@ import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 
-import type { FocusItem } from '~/utils/services/notes/types';
-
 import { Button } from '~/components/Button';
 import TextInput from '~/components/text-input';
 import MindsherpaIcon from '~/components/ui/icon';
 import { Text, theme } from '~/theme';
 import { getTimezone } from '~/utils/dates';
 import queryClient from '~/utils/query-client';
+import type { FocusItem } from '~/utils/services/notes/types';
 import {
   useUpdateFocusItem,
   type UpdateFocusItemInput,

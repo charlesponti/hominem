@@ -2,11 +2,11 @@ import { LoadingSpinner } from '@hominem/ui/components/ui/loading-spinner';
 import { Progress } from '@hominem/ui/components/ui/progress';
 import { useMemo } from 'react';
 
-import type { BudgetCategoryWithSpending } from '~/lib/types/budget.types';
-
 import { useBudgetCategories } from '~/lib/hooks/use-budget';
 import { useMonthlyStats } from '~/lib/hooks/use-monthly-stats';
 import { formatCurrency } from '~/lib/number.utils';
+import type { BudgetCategoryWithSpending } from '~/lib/types/budget.types';
+import type { BudgetCategoryData } from '@hominem/hono-rpc/types/finance.types';
 
 // Utility functions for budget calculations
 const CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
@@ -36,6 +36,21 @@ interface BudgetCategoryDetailsProps {
   selectedMonthYear: string;
 }
 
+type MonthlySpendingCompat = {
+  tagSpending?: Array<{ name: string | null; amount: number }>
+}
+
+function getBudgetAmount(category: BudgetCategoryData): number {
+  const value = category.averageMonthlyExpense
+  if (!value) return 0
+  const parsed = Number.parseFloat(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function getCategoryColor(category: BudgetCategoryData): string | undefined {
+  return category.color
+}
+
 export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetailsProps) {
   const {
     data: categoriesResult,
@@ -51,24 +66,23 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
 
   const categories = categoriesResult || [];
   const stats = statsResult || null;
+  const spendingByTag = stats ? ((stats as MonthlySpendingCompat).tagSpending ?? []) : []
 
   const budgetDataWithActuals: BudgetCategoryWithSpending[] = useMemo(() => {
     if (!categories.length || !stats) return [];
 
     // Calculate total expenses for allocation percentage (only expense categories)
-    const totalExpenses = categories
-      .filter((category) => category.type === 'expense')
-      .reduce((sum, category) => {
-        return sum + Number(category.averageMonthlyExpense || 0);
-      }, 0);
+    const totalExpenses = categories.reduce((sum, category) => {
+      return sum + getBudgetAmount(category)
+    }, 0);
 
     return categories.map((category, index) => {
       const actualSpending =
-        stats.categorySpending?.find(
+        spendingByTag.find(
           (cat) => cat.name?.toLowerCase() === category.name.toLowerCase(),
         )?.amount || 0;
 
-      const budgetAmount = Number(category.averageMonthlyExpense || 0);
+      const budgetAmount = getBudgetAmount(category)
       const percentageSpent = budgetAmount > 0 ? (actualSpending / budgetAmount) * 100 : 0;
       const allocationPercentage = totalExpenses > 0 ? (budgetAmount / totalExpenses) * 100 : 0;
       const variance = budgetAmount - actualSpending;
@@ -76,19 +90,19 @@ export function BudgetCategoryDetails({ selectedMonthYear }: BudgetCategoryDetai
 
       return {
         ...category,
-        type: category.type as 'income' | 'expense',
+        type: 'expense',
         actualSpending,
         percentageSpent,
         budgetAmount,
         allocationPercentage,
         variance,
         remaining: variance,
-        color: category.color || getChartColor(index),
+        color: getCategoryColor(category) || getChartColor(index),
         status,
         statusColor: getStatusColor(status),
       };
     });
-  }, [categories, stats]);
+  }, [categories, spendingByTag, stats]);
 
   if (isLoadingCategories || isLoadingStats) {
     return (

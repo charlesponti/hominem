@@ -15,7 +15,7 @@ This skill orchestrates a suite of specialized agents to ensure code meets the h
 
 To perform the audit, launch the following tasks **in parallel** using the `Task` tool:
 
-- **Type Performance**: Use `npx @hackefeller/type-audit --project . --threshold 1.0` for portable type-check performance auditing.
+- **Type Performance**: Use `npx tsc -b --verbose` to check incremental build times or `npx tsc --generateTrace` + https://ts-ast-viewer.com for detailed analysis.
 - **Security Audit**: Use the `security-sentinel` agent to scan the current changes for vulnerabilities, hardcoded secrets, and OWASP compliance.
 - **Simplicity Review**: Use the `code-simplicity-reviewer` agent to ensure the changes are as minimal as possible and avoid over-engineering.
 

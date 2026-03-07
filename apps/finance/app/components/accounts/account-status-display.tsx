@@ -18,7 +18,7 @@ export function AccountStatusDisplay({
   if (account.plaidItemId) {
     return <PlaidAccountStatus account={account} onRefresh={onRefresh} />;
   }
-  if (account.institutionId) {
+  if (account.institutionName) {
     return <ManualInstitutionStatus account={account} showDialog={showDialog} />;
   }
   return <NotConnectedStatus account={account} showDialog={showDialog} />;

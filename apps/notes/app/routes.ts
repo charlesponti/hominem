@@ -27,8 +27,12 @@ export default [
     route('/account', 'routes/account.tsx'),
 
     // Auth Routes
+    route('/auth', 'routes/auth/index.tsx'),
+    route('/auth/verify', 'routes/auth/verify.tsx'),
+    route('/auth/logout', 'routes/auth/logout.tsx'),
+    route('/auth/passkey/callback', 'routes/auth/passkey.callback.tsx'),
     route('/auth/google', 'routes/auth/google.tsx'),
-    route('/auth/callback', 'routes/auth.callback.tsx'),
+    route('/settings/security', 'routes/settings.security.tsx'),
 
     // Catch-all 404 route
     route('*', 'routes/$.tsx'),

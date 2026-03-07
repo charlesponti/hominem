@@ -1,7 +1,7 @@
 # ADR: CLI v2 Command Runtime
 
 ## Decision
-Adopt a single, typed command graph runtime (`src/v2`) with lazy command module loading.
+Adopt a single, typed command graph runtime (`src`) with lazy command module loading.
 
 ## Rationale
 - Deterministic automation behavior with explicit error/output contracts

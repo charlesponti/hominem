@@ -1,14 +1,16 @@
-import { QueryClient } from '@tanstack/react-query'
+import { QueryClient, onlineManager } from '@tanstack/react-query'
+import NetInfo from '@react-native-community/netinfo'
+import { mobileQueryDefaultOptions } from './query-client-config'
+
+// Configure React Query to use NetInfo for online status
+onlineManager.setEventListener((setOnline) => {
+  return NetInfo.addEventListener((state) => {
+    setOnline(!!state.isConnected)
+  })
+})
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      staleTime: 30_000,
-      gcTime: 5 * 60_000,
-      retry: 2,
-    },
-  },
+  defaultOptions: mobileQueryDefaultOptions,
 })
 
 export default queryClient

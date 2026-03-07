@@ -1,15 +1,15 @@
-import { type LoaderFunctionArgs, redirect } from 'react-router';
 import { useRef, useState } from 'react';
+import { type LoaderFunctionArgs, redirect } from 'react-router';
 
 import { ChatInput } from '~/components/chat/ChatInput';
 import { ChatMessages } from '~/components/chat/ChatMessages';
+import { useNoteChat } from '~/hooks/use-note-chat';
+import { useNote } from '~/hooks/use-notes';
 import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
-import { useNote } from '~/hooks/use-notes';
-import { useNoteChat } from '~/hooks/use-note-chat';
 
-import { SplitPane } from './components/split-pane';
 import { NoteEditor } from './components/note-editor';
+import { SplitPane } from './components/split-pane';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   await requireAuth(request);
@@ -77,27 +77,16 @@ export default function NoteSplitView({ loaderData }: { loaderData: { noteId: st
     <div className="flex flex-col h-full">
       <div className="flex-1" ref={messagesRef}>
         {chat ? (
-          <ChatMessages
-            ref={messagesComponentRef}
-            chatId={chat.id}
-            status={status}
-            error={error}
-          />
+          <ChatMessages ref={messagesComponentRef} chatId={chat.id} status={status} error={error} />
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center p-4">
-            <p className="text-muted-foreground">
-              Chat not available
-            </p>
+            <p className="text-muted-foreground">Chat not available</p>
           </div>
         )}
       </div>
       {chat && (
         <div className="border-t p-4 pb-[calc(env(safe-area-inset-bottom)+8px)]">
-          <ChatInput
-            ref={inputRef}
-            chatId={chat.id}
-            onStatusChange={handleMessageStatusChange}
-          />
+          <ChatInput ref={inputRef} chatId={chat.id} onStatusChange={handleMessageStatusChange} />
         </div>
       )}
     </div>

@@ -1,11 +1,9 @@
-import type { EventTypeEnum } from '@hominem/db/types/calendar';
-
 import {
-  createEvent,
-  deleteEvent,
+  createVisit,
+  deleteVisit,
   getVisitsByPlace,
   getVisitsByUser,
-  updateEvent,
+  updateVisit,
 } from '@hominem/events-services';
 import {
   addPlaceToLists,
@@ -19,7 +17,8 @@ import {
   removePlaceFromList,
   type PlaceInput,
 } from '@hominem/places-services';
-import { NotFoundError, InternalError, isServiceError } from '@hominem/services';
+import { NotFoundError, InternalError, isServiceError } from '../errors';
+import { placePhotoEnrichQueue } from '@hominem/queues';
 import { logger } from '@hominem/utils/logger';
 import { sanitizeStoredPhotos } from '@hominem/utils/images';
 import { zValidator } from '@hono/zod-validator';
@@ -182,7 +181,6 @@ export const placesRoutes = new Hono<AppContext>()
     try {
       const input = c.req.valid('json') as z.infer<typeof placeCreateSchema>;
       const userId = c.get('userId')!;
-      const queues = c.get('queues');
 
       const { listIds, ...placeInput } = input;
 
@@ -256,7 +254,7 @@ export const placesRoutes = new Hono<AppContext>()
         imageUrl:
           placeInput.imageUrl ??
           (placeInput.photos && placeInput.photos.length > 0
-            ? placeInput.photos[0]
+            ? (placeInput.photos[0] ?? null)
             : (fetchedImageUrl ?? null)),
       };
 
@@ -264,19 +262,17 @@ export const placesRoutes = new Hono<AppContext>()
 
       // Enqueue photo enrichment if needed
       try {
-        if (queues) {
-          const hasGooglePhotos = createdPlace.photos?.some((url: string) =>
-            isGooglePhotosUrl(url),
-          );
-          if (
-            (createdPlace.photos == null || createdPlace.photos.length === 0 || hasGooglePhotos) &&
-            createdPlace.googleMapsId
-          ) {
-            await queues.placePhotoEnrich.add('enrich', {
-              placeId: createdPlace.id,
-              forceFresh: true,
-            });
-          }
+        const hasGooglePhotos = createdPlace.photos?.some((url: string) =>
+          isGooglePhotosUrl(url),
+        );
+        if (
+          (createdPlace.photos == null || createdPlace.photos.length === 0 || hasGooglePhotos) &&
+          createdPlace.googleMapsId
+        ) {
+          await placePhotoEnrichQueue.add('enrich', {
+            placeId: createdPlace.id,
+            forceFresh: true,
+          });
         }
       } catch (err) {
         logger.warn('[places.create] Failed to enqueue photo enrichment', { error: err });
@@ -396,7 +392,6 @@ export const placesRoutes = new Hono<AppContext>()
   .post('/get', authMiddleware, zValidator('json', placeGetByIdSchema), async (c) => {
     try {
       const input = c.req.valid('json') as z.infer<typeof placeGetByIdSchema>;
-      const queues = c.get('queues');
 
       const dbPlace = await getPlaceById(input.id);
 
@@ -406,17 +401,15 @@ export const placesRoutes = new Hono<AppContext>()
 
       // Enqueue photo enrichment if needed
       try {
-        if (queues) {
-          const hasGooglePhotos = dbPlace.photos?.some((url: string) => isGooglePhotosUrl(url));
-          if (
-            (dbPlace.photos == null || dbPlace.photos.length === 0 || hasGooglePhotos) &&
-            dbPlace.googleMapsId
-          ) {
-            await queues.placePhotoEnrich.add('enrich', {
-              placeId: dbPlace.id,
-              forceFresh: true,
-            });
-          }
+        const hasGooglePhotos = dbPlace.photos?.some((url: string) => isGooglePhotosUrl(url));
+        if (
+          (dbPlace.photos == null || dbPlace.photos.length === 0 || hasGooglePhotos) &&
+          dbPlace.googleMapsId
+        ) {
+          await placePhotoEnrichQueue.add('enrich', {
+            placeId: dbPlace.id,
+            forceFresh: true,
+          });
         }
       } catch {
         // Non-fatal
@@ -492,7 +485,7 @@ export const placesRoutes = new Hono<AppContext>()
         const userId = c.get('userId')!;
 
         await removePlaceFromList({
-          placeIdentifier: input.placeId,
+          placeId: input.placeId,
           listId: input.listId,
           userId,
         });
@@ -542,56 +535,29 @@ export const placesRoutes = new Hono<AppContext>()
 
       const dateValue = data.date ? new Date(data.date) : new Date();
 
-      const event = await createEvent({
+      const event = await createVisit({
         title: data.title ?? '',
         description: data.description ?? null,
         date: dateValue,
-        dateStart: null,
-        dateEnd: null,
-        dateTime: null,
-        type: 'Events' as EventTypeEnum,
+        type: 'Events',
         placeId: data.placeId ?? null,
         userId: userId,
         source: 'manual',
-        externalId: null,
-        calendarId: null,
-        lastSyncedAt: null,
-        syncError: null,
         visitNotes: data.visitNotes ?? null,
         visitRating: data.visitRating ?? null,
         visitReview: data.visitReview ?? null,
-        visitPeople: null,
-        interval: null,
-        recurrenceRule: null,
-        score: null,
-        priority: null,
-        reminderSettings: null,
-        dependencies: null,
-        resources: null,
-        milestones: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        deletedAt: null,
-        // Default values for new fields
-        currentValue: 0,
-        streakCount: 0,
-        totalCompletions: 0,
-        completedInstances: 0,
-        isCompleted: false,
-        isTemplate: false,
         status: 'active',
-        // Nullable fields
         goalCategory: null,
         targetValue: null,
+        currentValue: 0,
         unit: null,
-        lastCompletedAt: null,
-        expiresInDays: null,
-        reminderTime: null,
-        parentEventId: null,
+        isCompleted: false,
+        streakCount: 0,
+        completedInstances: 0,
         activityType: null,
         duration: null,
         caloriesBurned: null,
-        nextOccurrence: null,
+        milestones: null,
         ...(data.tags && { tags: data.tags }),
         ...(data.people && { people: data.people }),
       });
@@ -663,7 +629,7 @@ export const placesRoutes = new Hono<AppContext>()
         }
       });
 
-      const updatedEvent = await updateEvent(id, updateData);
+      const updatedEvent = await updateVisit(id, updateData);
 
       if (!updatedEvent) {
         throw new NotFoundError('');
@@ -685,7 +651,7 @@ export const placesRoutes = new Hono<AppContext>()
     try {
       const input = c.req.valid('json') as z.infer<typeof placeDeleteVisitSchema>;
 
-      const success_ = await deleteEvent(input.id);
+      const success_ = await deleteVisit(input.id);
 
       if (!success_) {
         throw new NotFoundError('');

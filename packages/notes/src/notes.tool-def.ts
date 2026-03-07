@@ -1,4 +1,3 @@
-import { NoteContentTypeSchema } from '@hominem/db/schema/notes';
 import { toolDefinition } from '@tanstack/ai';
 import * as z from 'zod';
 
@@ -9,6 +8,7 @@ import {
   notesService,
   type CreateNoteInput,
 } from './notes.service';
+import { NoteContentTypeSchema } from './types'
 
 // Define output schema for a single note
 const NoteOutputSchema = z.object({
@@ -31,7 +31,13 @@ export const createNoteDef = toolDefinition({
 export const createNoteServerForUser =
   (userId: string) =>
   async (input: CreateNoteInput): Promise<z.infer<typeof NoteOutputSchema>> => {
-    const result = await notesService.create({ ...input, userId });
+    const result = await notesService.create({
+      userId,
+      title: input.title,
+      content: input.content,
+      ...(input.type ? { type: input.type } : {}),
+      ...(input.tags ? { tags: input.tags } : {}),
+    });
     return {
       id: result.id,
       title: result.title,

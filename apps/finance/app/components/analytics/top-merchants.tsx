@@ -1,5 +1,4 @@
 import type { Merchant } from '@hominem/hono-rpc/types/finance.types';
-
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
 import { Skeleton } from '@hominem/ui/components/ui/skeleton';
@@ -11,14 +10,14 @@ interface TopMerchantsProps {
   dateFrom?: Date | undefined;
   dateTo?: Date | undefined;
   selectedAccount?: string | undefined;
-  selectedCategory?: string | undefined;
+  selectedTag?: string | undefined;
 }
 
 export function TopMerchants({
   dateFrom,
   dateTo,
   selectedAccount,
-  selectedCategory,
+  selectedTag,
 }: TopMerchantsProps) {
   const {
     data: topMerchants,
@@ -28,7 +27,7 @@ export function TopMerchants({
     from: dateFrom?.toISOString().split('T')[0],
     to: dateTo?.toISOString().split('T')[0],
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
-    category: selectedCategory || undefined,
+    tag: selectedTag || undefined,
     limit: 5,
   });
 

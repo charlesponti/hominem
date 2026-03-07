@@ -1,15 +1,14 @@
 import {
   createHabit,
+  deleteHabit,
+  getHabitById,
   markHabitComplete,
   resetHabitStreak,
   getHabitStats,
   getHabitsByUser,
-  getEventById,
-  deleteEvent,
   updateHabit,
-  type EventWithTagsAndPeople,
 } from '@hominem/events-services';
-import { NotFoundError, ValidationError } from '@hominem/services';
+import { NotFoundError, ValidationError } from '../errors';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
@@ -20,10 +19,14 @@ import { authMiddleware, type AppContext } from '../middleware/auth';
  * Type predicate to check if an event is a Habit owned by a specific user
  */
 function isUserHabit(
-  event: EventWithTagsAndPeople | null,
+  event: Awaited<ReturnType<typeof getHabitById>>,
   userId: string,
-): event is EventWithTagsAndPeople & { type: 'Habit'; userId: string } {
-  return event !== null && event.userId === userId && event.type === 'Habit';
+): event is NonNullable<Awaited<ReturnType<typeof getHabitById>>> {
+  const candidate = event as (NonNullable<Awaited<ReturnType<typeof getHabitById>>> & {
+    userId?: string
+    type?: string
+  }) | null
+  return candidate !== null && candidate.userId === userId && candidate.type === 'Habit'
 }
 
 /**
@@ -58,7 +61,7 @@ type HabitStatsResponse = Awaited<ReturnType<typeof getHabitStats>>;
 /**
  * Habits Routes
  */
-export const habitsRoutes = new Hono<AppContext>()
+export const habitsRoutes: Hono<AppContext> = new Hono<AppContext>()
   // List habits
   .get('/', authMiddleware, zValidator('query', habitListQuerySchema), async (c) => {
     const userId = c.get('userId')!;
@@ -77,7 +80,7 @@ export const habitsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const habitId = c.req.param('id');
 
-    const habit = await getEventById(habitId);
+    const habit = await getHabitById(habitId, userId);
     if (!isUserHabit(habit, userId)) {
       throw new NotFoundError('Habit not found');
     }
@@ -90,7 +93,7 @@ export const habitsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const habitId = c.req.param('id');
 
-    const habit = await getEventById(habitId);
+    const habit = await getHabitById(habitId, userId);
     if (!isUserHabit(habit, userId)) {
       throw new NotFoundError('Habit not found');
     }
@@ -125,7 +128,7 @@ export const habitsRoutes = new Hono<AppContext>()
     const habitId = c.req.param('id');
     const data = c.req.valid('json');
 
-    const habit = await getEventById(habitId);
+    const habit = await getHabitById(habitId, userId);
     if (!isUserHabit(habit, userId)) {
       throw new NotFoundError('Habit not found');
     }
@@ -169,12 +172,12 @@ export const habitsRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const habitId = c.req.param('id');
 
-    const habit = await getEventById(habitId);
+    const habit = await getHabitById(habitId, userId);
     if (!isUserHabit(habit, userId)) {
       throw new NotFoundError('Habit not found');
     }
 
-    const deleted = await deleteEvent(habitId);
+    const deleted = await deleteHabit(habitId, userId);
     if (!deleted) {
       throw new NotFoundError('Failed to delete habit');
     }

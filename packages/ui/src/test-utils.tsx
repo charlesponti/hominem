@@ -1,5 +1,3 @@
-import type { ReactElement, ReactNode } from 'react';
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   type RenderOptions,
@@ -7,6 +5,7 @@ import {
   render,
   renderHook as rtlRenderHook,
 } from '@testing-library/react';
+import type { ReactElement, ReactNode } from 'react';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 
 interface AllTheProvidersProps {

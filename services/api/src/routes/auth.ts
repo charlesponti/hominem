@@ -1,28 +1,28 @@
-import type { Context } from 'hono';
+import { createHash, randomBytes } from 'node:crypto';
 
-import { and, db, eq, isNull } from '@hominem/db';
-import { authSubjects } from '@hominem/db/schema/auth';
-import { users } from '@hominem/db/schema/users';
+import { users } from '@hominem/db/all-schema';
+import { db, eq } from '@hominem/hono-rpc';
+import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
+import type { Context } from 'hono';
 import { Hono } from 'hono';
-import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
-
-import type { AppEnv } from '../server';
 
 import { betterAuthServer } from '../auth/better-auth';
 import { getJwks } from '../auth/key-store';
+import { UserAuthService } from '@hominem/auth/server';
 import {
-  createE2eTokenPairForUser,
   createTokenPairForUser,
+  isSessionRevoked,
   revokeByRefreshToken,
   revokeSession,
   rotateRefreshToken,
 } from '../auth/session-store';
-import { ensureOAuthSubjectUser } from '../auth/subjects';
+import { getLatestTestOtp, isTestOtpStoreEnabled } from '../auth/test-otp-store';
 import { issueAccessToken, verifyAccessToken } from '../auth/tokens';
 import { env } from '../env';
+import type { AppEnv } from '../server';
 
 export const authRoutes = new Hono<AppEnv>();
 
@@ -51,6 +51,16 @@ const passkeyAuthVerifySchema = z.object({
   response: z.any(),
   action: z.string().min(1).optional(),
 });
+const emailOtpRequestSchema = z.object({
+  email: z.string().email(),
+  type: z.enum(['sign-in', 'change-email', 'email-verification', 'forget-password']).default('sign-in'),
+});
+const emailOtpVerifySchema = z.object({
+  email: z.string().email(),
+  otp: z.string().min(4).max(12),
+  name: z.string().min(1).max(128).optional(),
+  image: z.string().url().optional(),
+});
 
 const deviceCodeSchema = z.object({
   client_id: z.string().min(1),
@@ -63,57 +73,16 @@ const deviceTokenSchema = z.object({
   client_id: z.string().min(1),
 });
 
-const mobileAuthorizeSchema = z.object({
-  redirect_uri: z.string().url(),
-  code_challenge: z.string().min(43).max(128),
-  state: z.string().min(8).max(256),
-});
-
-const mobileExchangeSchema = z.object({
-  code: z.string().min(16),
-  code_verifier: z.string().min(43).max(128),
-  redirect_uri: z.string().url(),
-});
-
 const mobileE2eLoginSchema = z.object({
   email: z.string().email().optional(),
   name: z.string().min(1).max(128).optional(),
+  amr: z.array(z.string()).optional(),
+});
+const testOtpQuerySchema = z.object({
+  email: z.string().email(),
+  type: z.string().min(1).optional(),
 });
 
-const cliAuthorizeSchema = z.object({
-  redirect_uri: z.string().url(),
-  code_challenge: z.string().min(43).max(128),
-  state: z.string().min(8).max(256),
-  scope: z.string().optional(),
-});
-
-const cliExchangeSchema = z.object({
-  code: z.string().min(16),
-  code_verifier: z.string().min(43).max(128),
-  redirect_uri: z.string().url(),
-});
-
-const MOBILE_FLOW_PREFIX = 'auth:mobile:flow:';
-const MOBILE_EXCHANGE_PREFIX = 'auth:mobile:exchange:';
-const MOBILE_ALLOWED_REDIRECT_URI_PREFIXES = [
-  'hakumi://auth/callback',
-  'mindsherpa://auth/callback',
-  'com.pontistudios.mindsherpa.dev://auth/callback',
-];
-const MOBILE_FLOW_TTL_SECONDS = 10 * 60;
-const MOBILE_EXCHANGE_TTL_SECONDS = 2 * 60;
-const CLI_FLOW_PREFIX = 'auth:cli:flow:';
-const CLI_EXCHANGE_PREFIX = 'auth:cli:exchange:';
-const CLI_FLOW_TTL_SECONDS = 10 * 60;
-const CLI_EXCHANGE_TTL_SECONDS = 2 * 60;
-const CLI_ALLOWED_SCOPE_SET = new Set(['cli:read', 'cli:write']);
-const CLI_DEFAULT_SCOPES = ['cli:read'];
-const AUTH_AUTHORIZE_LIMIT_WINDOW_SECONDS = 60;
-const AUTH_AUTHORIZE_LIMIT_MAX = 30;
-const AUTH_MOBILE_AUTHORIZE_LIMIT_WINDOW_SECONDS = 60;
-const AUTH_MOBILE_AUTHORIZE_LIMIT_MAX = 20;
-const AUTH_CLI_AUTHORIZE_LIMIT_WINDOW_SECONDS = 60;
-const AUTH_CLI_AUTHORIZE_LIMIT_MAX = 20;
 const AUTH_REFRESH_LIMIT_WINDOW_SECONDS = 60;
 const AUTH_REFRESH_LIMIT_MAX = 25;
 const AUTH_DEVICE_CODE_LIMIT_WINDOW_SECONDS = 10 * 60;
@@ -130,26 +99,6 @@ interface AuthRateLimitInput {
   max: number;
 }
 
-interface MobileFlowPayload {
-  redirectUri: string;
-  codeChallenge: string;
-  state: string;
-}
-
-interface MobileExchangePayload {
-  redirectUri: string;
-  codeChallenge: string;
-  state: string;
-  token: {
-    accessToken: string;
-    refreshToken: string;
-    tokenType: string;
-    expiresIn: number;
-    sessionId: string;
-    refreshFamilyId: string;
-  };
-}
-
 interface MobileE2eLoginResponse {
   access_token: string;
   refresh_token: string;
@@ -158,27 +107,10 @@ interface MobileE2eLoginResponse {
   session_id: string;
   refresh_family_id: string;
   provider: 'better-auth';
-}
-
-interface CliFlowPayload {
-  redirectUri: string;
-  codeChallenge: string;
-  state: string;
-  scope: string[];
-}
-
-interface CliExchangePayload {
-  redirectUri: string;
-  codeChallenge: string;
-  state: string;
-  scope: string[];
-  token: {
-    accessToken: string;
-    refreshToken: string;
-    tokenType: string;
-    expiresIn: number;
-    sessionId: string;
-    refreshFamilyId: string;
+  user: {
+    id: string;
+    email: string;
+    name?: string | null;
   };
 }
 
@@ -188,93 +120,43 @@ function getHeaderCarrier(c: { req: { raw: Request } }) {
   };
 }
 
-function createOpaqueCode(size = 32) {
-  return randomBytes(size).toString('base64url');
-}
+/**
+ * Resolve the authenticated user ID for /api/auth routes.
+ * The standard JWT middleware skips /api/auth paths so these routes must
+ * check auth themselves.  We support three mechanisms (in priority order):
+ *   1. Middleware-set context variable (set for non-/api/auth routes)
+ *   2. Bearer token in the Authorization header (canonical app token)
+ *   3. Better Auth session cookie (for direct browser calls to the API)
+ */
+async function resolveAuthUserId(c: { get: (key: string) => string | null; req: { raw: Request; header: (name: string) => string | undefined } }): Promise<string | null> {
+  // 1. Middleware already resolved it
+  const fromMiddleware = c.get('userId')
+  if (fromMiddleware) return fromMiddleware
 
-function hashPkceVerifier(verifier: string) {
-  return createHash('sha256').update(verifier).digest('base64url');
-}
-
-function getMobileFlowKey(flowId: string) {
-  return `${MOBILE_FLOW_PREFIX}${flowId}`;
-}
-
-function getMobileExchangeKey(code: string) {
-  return `${MOBILE_EXCHANGE_PREFIX}${code}`;
-}
-
-function getCliFlowKey(flowId: string) {
-  return `${CLI_FLOW_PREFIX}${flowId}`;
-}
-
-function getCliExchangeKey(code: string) {
-  return `${CLI_EXCHANGE_PREFIX}${code}`;
-}
-
-function isAllowedMobileRedirectUri(redirectUri: string) {
-  return MOBILE_ALLOWED_REDIRECT_URI_PREFIXES.some((prefix) => redirectUri.startsWith(prefix));
-}
-
-function isAllowedCliRedirectUri(redirectUri: string) {
-  try {
-    const url = new URL(redirectUri);
-    if (url.protocol !== 'http:') {
-      return false;
+  // 2. Bearer token
+  const authHeader = c.req.header('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const claims = await verifyAccessToken(authHeader.slice(7))
+      if (claims?.sub) return claims.sub
+    } catch {
+      // invalid token — fall through
     }
-    if (!(url.hostname === '127.0.0.1' || url.hostname === 'localhost')) {
-      return false;
-    }
-    if (!url.port) {
-      return false;
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-const TRUSTED_WEB_REDIRECT_ORIGINS = new Set(
-  [env.BETTER_AUTH_URL, env.FINANCE_URL, env.NOTES_URL, env.ROCCO_URL].map(
-    (url) => new URL(url).origin,
-  ),
-);
-
-function isAllowedWebRedirectUri(redirectUri: string) {
-  try {
-    return TRUSTED_WEB_REDIRECT_ORIGINS.has(new URL(redirectUri).origin);
-  } catch {
-    return false;
-  }
-}
-
-function parseCliScopes(scope: string | undefined) {
-  if (!scope || !scope.trim()) {
-    return CLI_DEFAULT_SCOPES;
   }
 
-  const requested = scope
-    .split(/\s+/)
-    .map((token) => token.trim())
-    .filter((token) => token.length > 0);
+  // 3. Better Auth session cookie
+  const session = await betterAuthServer.api.getSession(getHeaderCarrier(c))
+  if (session?.user?.id) return session.user.id
 
-  const filtered = requested.filter((token) => CLI_ALLOWED_SCOPE_SET.has(token));
-  if (filtered.length === 0) {
-    return CLI_DEFAULT_SCOPES;
-  }
-  return [...new Set(filtered)];
+  return null
 }
 
 function isE2eAuthEnabled() {
   return env.AUTH_E2E_ENABLED && env.NODE_ENV !== 'production';
 }
 
-function appendQueryParams(baseUrl: string, params: Record<string, string>) {
-  const url = new URL(baseUrl);
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, value);
-  }
-  return url.toString();
+function isTestOtpRetrievalEnabled() {
+  return isTestOtpStoreEnabled();
 }
 
 async function getRedis() {
@@ -334,21 +216,9 @@ async function grantStepUp(userId: string, action: string) {
   await redis.set(getStepUpKey(userId, action), '1', 'EX', STEP_UP_TTL_SECONDS);
 }
 
-async function consumeStepUp(userId: string, action: string) {
-  const { redis } = await import('@hominem/services/redis');
-  const key = getStepUpKey(userId, action);
-  const granted = await redis.get(key);
-  if (granted !== '1') {
-    return false;
-  }
-  await redis.del(key);
-  return true;
-}
-
 function copyHeadersWithSetCookie(headers: Headers) {
   const copied = new Headers(headers);
-  const getSetCookie = (headers as Headers & { getSetCookie?: () => string[] }).getSetCookie;
-  const setCookies = typeof getSetCookie === 'function' ? getSetCookie.call(headers) : [];
+  const setCookies = getSetCookieHeaders(headers);
 
   if (setCookies.length > 0) {
     copied.delete('set-cookie');
@@ -358,27 +228,6 @@ function copyHeadersWithSetCookie(headers: Headers) {
   }
 
   return copied;
-}
-
-function normalizeRedirectResponse(response: Response) {
-  const location = response.headers.get('location');
-  if (!location) {
-    return response;
-  }
-
-  if (response.status >= 300 && response.status < 400) {
-    return response;
-  }
-
-  const headers = copyHeadersWithSetCookie(response.headers);
-  headers.set('location', location);
-  headers.delete('content-type');
-  headers.delete('content-length');
-
-  return new Response(null, {
-    status: 302,
-    headers,
-  });
 }
 
 function buildBetterAuthUrl(input: {
@@ -397,6 +246,15 @@ function buildBetterAuthUrl(input: {
   return targetUrl;
 }
 
+function ensureTrustedOrigin(headers: Headers) {
+  const existingOrigin = headers.get('origin')
+  if (existingOrigin && existingOrigin.length > 0) {
+    return
+  }
+
+  headers.set('origin', env.BETTER_AUTH_URL)
+}
+
 async function callBetterAuthPluginEndpoint(input: {
   request: Request;
   path: string;
@@ -407,11 +265,12 @@ async function callBetterAuthPluginEndpoint(input: {
     request: input.request,
     path: input.path,
   });
-  logger.debug('[auth:oauth] forwarding Better Auth plugin endpoint', {
+  logger.debug('[auth:plugin] forwarding Better Auth endpoint', {
     method: input.method,
     targetUrl: url.toString(),
   });
   const headers = new Headers(input.request.headers);
+  ensureTrustedOrigin(headers)
   if (input.body) {
     headers.set('content-type', 'application/json');
   }
@@ -425,413 +284,8 @@ async function callBetterAuthPluginEndpoint(input: {
   );
 }
 
-async function proxyBetterAuthRequest(input: { request: Request }) {
-  const url = buildBetterAuthUrl({
-    request: input.request,
-    preserveQuery: true,
-  });
-  logger.debug('[auth:oauth] proxying Better Auth request', {
-    method: input.request.method,
-    targetUrl: url.toString(),
-  });
-  return betterAuthServer.handler(new Request(url.toString(), input.request));
-}
-
 authRoutes.get('/jwks', async (c) => {
   return c.json(await getJwks());
-});
-
-async function handleProviderCallback(c: Context<AppEnv>, provider: 'apple' | 'google') {
-  const callbackUrl = new URL(c.req.url);
-  logger.info('[auth:oauth] received provider callback', {
-    provider,
-    method: c.req.method,
-    hasCode: callbackUrl.searchParams.has('code'),
-    hasState: callbackUrl.searchParams.has('state'),
-    hasError: callbackUrl.searchParams.has('error'),
-  });
-
-  return proxyBetterAuthRequest({
-    request: c.req.raw,
-  });
-}
-
-authRoutes.get('/callback/apple', async (c) => handleProviderCallback(c, 'apple'));
-authRoutes.post('/callback/apple', async (c) => handleProviderCallback(c, 'apple'));
-authRoutes.get('/callback/google', async (c) => handleProviderCallback(c, 'google'));
-authRoutes.post('/callback/google', async (c) => handleProviderCallback(c, 'google'));
-
-authRoutes.get('/authorize', async (c) => {
-  const authorizeRateLimit = await enforceAuthRateLimit(c, {
-    bucket: 'authorize',
-    identifier: getClientIp(c),
-    windowSec: AUTH_AUTHORIZE_LIMIT_WINDOW_SECONDS,
-    max: AUTH_AUTHORIZE_LIMIT_MAX,
-  });
-  if (authorizeRateLimit) {
-    return authorizeRateLimit;
-  }
-
-  const providerParam = c.req.query('provider');
-  if (providerParam && providerParam !== 'apple') {
-    return c.json(
-      {
-        error: 'provider_not_allowed',
-        message:
-          'Primary sign-in only supports Apple. Use /api/auth/link/google/start after login.',
-      },
-      400,
-    );
-  }
-
-  const redirectUri = c.req.query('redirect_uri') ?? `${new URL(c.req.url).origin}/`;
-  const clientIp = getClientIp(c);
-
-  logger.info('[auth:oauth] handling authorize request', {
-    clientIp,
-    redirectUri,
-  });
-
-  const response = await callBetterAuthPluginEndpoint({
-    request: c.req.raw,
-    path: '/sign-in/social',
-    method: 'POST',
-    body: {
-      provider: 'apple',
-      callbackURL: redirectUri,
-      disableRedirect: false,
-    },
-  });
-
-  const normalized = normalizeRedirectResponse(response);
-  logger.info('[auth:oauth] completed authorize request', {
-    clientIp,
-    status: normalized.status,
-    hasLocation: Boolean(normalized.headers.get('location')),
-  });
-
-  return normalized;
-});
-
-authRoutes.post('/mobile/authorize', zValidator('json', mobileAuthorizeSchema), async (c) => {
-  const mobileAuthorizeRateLimit = await enforceAuthRateLimit(c, {
-    bucket: 'mobile-authorize',
-    identifier: getClientIp(c),
-    windowSec: AUTH_MOBILE_AUTHORIZE_LIMIT_WINDOW_SECONDS,
-    max: AUTH_MOBILE_AUTHORIZE_LIMIT_MAX,
-  });
-  if (mobileAuthorizeRateLimit) {
-    return mobileAuthorizeRateLimit;
-  }
-
-  const { redirect_uri: redirectUri, code_challenge: codeChallenge, state } = c.req.valid('json');
-  const clientIp = getClientIp(c);
-
-  if (!isAllowedMobileRedirectUri(redirectUri)) {
-    logger.warn('[auth:mobile] rejected authorize request due to redirect URI allowlist mismatch', {
-      clientIp,
-      redirectUri,
-    });
-    return c.json(
-      {
-        error: 'invalid_redirect_uri',
-        message: 'Mobile redirect URI is not on the allowlist.',
-      },
-      400,
-    );
-  }
-
-  const flowId = createOpaqueCode(24);
-  const callbackUrl = new URL('/api/auth/mobile/callback', env.BETTER_AUTH_URL);
-  callbackUrl.searchParams.set('flow_id', flowId);
-
-  try {
-    const redis = await getRedis();
-    const payload: MobileFlowPayload = {
-      redirectUri,
-      codeChallenge,
-      state,
-    };
-    await redis.set(
-      getMobileFlowKey(flowId),
-      JSON.stringify(payload),
-      'EX',
-      MOBILE_FLOW_TTL_SECONDS,
-    );
-  } catch (error) {
-    logger.error('[auth:mobile] failed to persist mobile authorize flow', {
-      clientIp,
-      flowId,
-      redirectUri,
-      error: error instanceof Error ? error.message : 'unknown',
-    });
-    return c.json({ error: 'flow_unavailable' }, 503);
-  }
-
-  const startUrl = new URL('/api/auth/authorize', env.BETTER_AUTH_URL);
-  startUrl.searchParams.set('provider', 'apple');
-  startUrl.searchParams.set('redirect_uri', callbackUrl.toString());
-
-  logger.info('[auth:mobile] created mobile authorize flow', {
-    clientIp,
-    flowId,
-  });
-
-  return c.json({
-    authorization_url: startUrl.toString(),
-    flow_id: flowId,
-  });
-});
-
-authRoutes.get('/mobile/callback', async (c) => {
-  const flowId = c.req.query('flow_id');
-  const clientIp = getClientIp(c);
-  if (!flowId) {
-    logger.warn('[auth:mobile] callback missing flow ID', {
-      clientIp,
-    });
-    return c.text('Missing flow id', 400);
-  }
-
-  let flow: MobileFlowPayload | null = null;
-  try {
-    const redis = await getRedis();
-    const rawFlow = await redis.get(getMobileFlowKey(flowId));
-    if (!rawFlow) {
-      logger.warn('[auth:mobile] callback flow is invalid or expired', {
-        clientIp,
-        flowId,
-      });
-      return c.text('Authorization flow expired', 400);
-    }
-    await redis.del(getMobileFlowKey(flowId));
-    flow = z
-      .object({
-        redirectUri: z.string().url(),
-        codeChallenge: z.string().min(43).max(128),
-        state: z.string().min(8).max(256),
-      })
-      .parse(JSON.parse(rawFlow));
-  } catch (error) {
-    logger.error('[auth:mobile] failed to resume callback flow', {
-      clientIp,
-      flowId,
-      error: error instanceof Error ? error.message : 'unknown',
-    });
-    return c.text('Failed to resume authorization flow', 503);
-  }
-
-  if (!flow || !isAllowedMobileRedirectUri(flow.redirectUri)) {
-    logger.warn('[auth:mobile] callback payload failed validation', {
-      clientIp,
-      flowId,
-      redirectUri: flow?.redirectUri ?? null,
-    });
-    return c.text('Invalid mobile flow payload', 400);
-  }
-
-  const errorParam = c.req.query('error');
-  if (errorParam) {
-    const errorDescription = c.req.query('error_description') ?? 'Apple sign-in failed';
-    logger.warn('[auth:mobile] provider callback returned OAuth error', {
-      clientIp,
-      flowId,
-      error: errorParam,
-      errorDescription,
-    });
-    return c.redirect(
-      appendQueryParams(flow.redirectUri, {
-        error: errorParam,
-        error_description: errorDescription,
-        state: flow.state,
-      }),
-    );
-  }
-
-  const session = await betterAuthServer.api.getSession({
-    ...getHeaderCarrier(c),
-  });
-
-  if (!session?.user) {
-    logger.warn('[auth:mobile] callback could not establish authenticated session', {
-      clientIp,
-      flowId,
-    });
-    return c.redirect(
-      appendQueryParams(flow.redirectUri, {
-        error: 'session_not_found',
-        error_description: 'Unable to establish authenticated session after callback.',
-        state: flow.state,
-      }),
-    );
-  }
-
-  const dbUser = await ensureOAuthSubjectUser({
-    provider: 'apple',
-    providerSubject: session.user.id,
-    email: session.user.email,
-    ...(session.user.name !== undefined ? { name: session.user.name } : {}),
-    ...(session.user.image !== undefined ? { image: session.user.image } : {}),
-  });
-
-  if (!dbUser) {
-    logger.error('[auth:mobile] callback could not map provider user to internal user', {
-      clientIp,
-      flowId,
-    });
-    return c.redirect(
-      appendQueryParams(flow.redirectUri, {
-        error: 'session_user_not_found',
-        error_description: 'Unable to map authenticated subject to an internal user record.',
-        state: flow.state,
-      }),
-    );
-  }
-
-  const tokenPair = await createTokenPairForUser({
-    userId: dbUser.id,
-    role: dbUser.isAdmin ? 'admin' : 'user',
-    scope: ['api:read', 'api:write'],
-    amr: ['oauth', 'mobile'],
-  });
-
-  const exchangeCode = createOpaqueCode(24);
-  const exchangePayload: MobileExchangePayload = {
-    redirectUri: flow.redirectUri,
-    codeChallenge: flow.codeChallenge,
-    state: flow.state,
-    token: {
-      accessToken: tokenPair.accessToken,
-      refreshToken: tokenPair.refreshToken,
-      tokenType: tokenPair.tokenType,
-      expiresIn: tokenPair.expiresIn,
-      sessionId: tokenPair.sessionId,
-      refreshFamilyId: tokenPair.refreshFamilyId,
-    },
-  };
-
-  try {
-    const redis = await getRedis();
-    await redis.set(
-      getMobileExchangeKey(exchangeCode),
-      JSON.stringify(exchangePayload),
-      'EX',
-      MOBILE_EXCHANGE_TTL_SECONDS,
-    );
-  } catch (error) {
-    logger.error('[auth:mobile] failed to persist mobile exchange payload', {
-      clientIp,
-      flowId,
-      error: error instanceof Error ? error.message : 'unknown',
-    });
-    return c.redirect(
-      appendQueryParams(flow.redirectUri, {
-        error: 'exchange_unavailable',
-        error_description: 'Unable to persist secure mobile exchange payload.',
-        state: flow.state,
-      }),
-    );
-  }
-
-  return c.redirect(
-    appendQueryParams(flow.redirectUri, {
-      code: exchangeCode,
-      state: flow.state,
-    }),
-  );
-});
-
-authRoutes.post('/mobile/exchange', zValidator('json', mobileExchangeSchema), async (c) => {
-  const { code, code_verifier: codeVerifier, redirect_uri: redirectUri } = c.req.valid('json');
-  const clientIp = getClientIp(c);
-
-  if (!isAllowedMobileRedirectUri(redirectUri)) {
-    logger.warn('[auth:mobile] rejected exchange due to redirect URI allowlist mismatch', {
-      clientIp,
-      redirectUri,
-    });
-    return c.json({ error: 'invalid_redirect_uri' }, 400);
-  }
-
-  let exchange: MobileExchangePayload | null = null;
-  try {
-    const redis = await getRedis();
-    const rawExchange = await redis.get(getMobileExchangeKey(code));
-    if (!rawExchange) {
-      logger.warn('[auth:mobile] exchange code is invalid or expired', {
-        clientIp,
-      });
-      return c.json(
-        { error: 'invalid_grant', message: 'Exchange code is invalid or expired.' },
-        400,
-      );
-    }
-    await redis.del(getMobileExchangeKey(code));
-
-    const parsed = z
-      .object({
-        redirectUri: z.string().url(),
-        codeChallenge: z.string().min(43).max(128),
-        state: z.string().min(8).max(256),
-        token: z.object({
-          accessToken: z.string().min(16),
-          refreshToken: z.string().min(16),
-          tokenType: z.string().min(3),
-          expiresIn: z.number().int().positive(),
-          sessionId: z.string().uuid(),
-          refreshFamilyId: z.string().uuid(),
-        }),
-      })
-      .safeParse(JSON.parse(rawExchange));
-
-    if (!parsed.success) {
-      logger.warn('[auth:mobile] exchange payload validation failed', {
-        clientIp,
-      });
-      return c.json({ error: 'invalid_grant', message: 'Malformed exchange payload.' }, 400);
-    }
-
-    exchange = parsed.data;
-  } catch (error) {
-    logger.error('[auth:mobile] exchange lookup failed', {
-      clientIp,
-      error: error instanceof Error ? error.message : 'unknown',
-    });
-    return c.json({ error: 'exchange_unavailable' }, 503);
-  }
-
-  if (!exchange) {
-    logger.warn('[auth:mobile] exchange payload missing after lookup', {
-      clientIp,
-    });
-    return c.json({ error: 'invalid_grant' }, 400);
-  }
-
-  if (exchange.redirectUri !== redirectUri) {
-    logger.warn('[auth:mobile] exchange redirect URI mismatch', {
-      clientIp,
-      requestRedirectUri: redirectUri,
-      storedRedirectUri: exchange.redirectUri,
-    });
-    return c.json({ error: 'invalid_grant', message: 'Redirect URI mismatch.' }, 400);
-  }
-
-  const computedChallenge = hashPkceVerifier(codeVerifier);
-  if (computedChallenge !== exchange.codeChallenge) {
-    logger.warn('[auth:mobile] exchange PKCE verification failed', {
-      clientIp,
-    });
-    return c.json({ error: 'invalid_grant', message: 'PKCE verifier mismatch.' }, 400);
-  }
-
-  return c.json({
-    access_token: exchange.token.accessToken,
-    refresh_token: exchange.token.refreshToken,
-    token_type: exchange.token.tokenType,
-    expires_in: exchange.token.expiresIn,
-    session_id: exchange.token.sessionId,
-    refresh_family_id: exchange.token.refreshFamilyId,
-  });
 });
 
 authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), async (c) => {
@@ -866,6 +320,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   const payload = c.req.valid('json');
   const email = payload.email ?? 'mobile-e2e@hominem.test';
   const name = payload.name ?? 'Mobile E2E User';
+  const amr = payload.amr && payload.amr.length > 0 ? payload.amr : ['e2e', 'mobile']
   const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 16);
 
   const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
@@ -890,295 +345,185 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
     return c.json({ error: 'e2e_user_create_failed' }, 500);
   }
 
-  const tokenPair = await createE2eTokenPairForUser({
-    userId: user.id,
+  const accessToken = await issueAccessToken({
+    sub: user.id,
+    sid: crypto.randomUUID(),
+    scope: ['api:read', 'api:write'],
     role: user.isAdmin ? 'admin' : 'user',
+    amr,
   });
+  const refreshToken = randomBytes(32).toString('base64url');
+  const sessionId = crypto.randomUUID();
+  const refreshFamilyId = crypto.randomUUID();
 
   logger.info('[auth:e2e:mobile] issued token pair', {
     clientIp,
     emailHash,
     userId: user.id,
-    sessionId: tokenPair.sessionId,
-    refreshFamilyId: tokenPair.refreshFamilyId,
+    sessionId,
+    refreshFamilyId,
   });
 
   const response: MobileE2eLoginResponse = {
-    access_token: tokenPair.accessToken,
-    refresh_token: tokenPair.refreshToken,
-    token_type: tokenPair.tokenType,
-    expires_in: tokenPair.expiresIn,
-    session_id: tokenPair.sessionId,
-    refresh_family_id: tokenPair.refreshFamilyId,
+    access_token: accessToken.accessToken,
+    refresh_token: refreshToken,
+    token_type: accessToken.tokenType,
+    expires_in: accessToken.expiresIn,
+    session_id: sessionId,
+    refresh_family_id: refreshFamilyId,
     provider: 'better-auth',
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    },
   };
 
   return c.json(response);
 });
 
-authRoutes.post('/cli/authorize', zValidator('json', cliAuthorizeSchema), async (c) => {
-  const cliAuthorizeRateLimit = await enforceAuthRateLimit(c, {
-    bucket: 'cli-authorize',
-    identifier: getClientIp(c),
-    windowSec: AUTH_CLI_AUTHORIZE_LIMIT_WINDOW_SECONDS,
-    max: AUTH_CLI_AUTHORIZE_LIMIT_MAX,
-  });
-  if (cliAuthorizeRateLimit) {
-    return cliAuthorizeRateLimit;
-  }
-
-  const {
-    redirect_uri: redirectUri,
-    code_challenge: codeChallenge,
-    state,
-    scope,
-  } = c.req.valid('json');
-  const clientIp = getClientIp(c);
-
-  if (!isAllowedCliRedirectUri(redirectUri)) {
-    logger.warn('[auth:cli] rejected authorize request due to non-loopback redirect URI', {
-      clientIp,
-      redirectUri,
-    });
-    return c.json(
-      {
-        error: 'invalid_redirect_uri',
-        message: 'CLI redirect URI must target localhost/127.0.0.1 loopback.',
-      },
-      400,
-    );
-  }
-
-  const flowId = createOpaqueCode(24);
-  const callbackUrl = new URL('/api/auth/cli/callback', env.BETTER_AUTH_URL);
-  callbackUrl.searchParams.set('flow_id', flowId);
-
+authRoutes.post('/email-otp/send', zValidator('json', emailOtpRequestSchema), async (c) => {
   try {
-    const redis = await getRedis();
-    const payload: CliFlowPayload = {
-      redirectUri,
-      codeChallenge,
-      state,
-      scope: parseCliScopes(scope),
-    };
-    await redis.set(getCliFlowKey(flowId), JSON.stringify(payload), 'EX', CLI_FLOW_TTL_SECONDS);
-  } catch (error) {
-    logger.error('[auth:cli] failed to persist cli authorize flow', {
-      clientIp,
-      flowId,
-      redirectUri,
-      error: error instanceof Error ? error.message : 'unknown',
+    const payload = c.req.valid('json');
+    const response = await callBetterAuthPluginEndpoint({
+      request: c.req.raw,
+      path: '/email-otp/send-verification-otp',
+      method: 'POST',
+      body: payload as Record<string, unknown>,
     });
-    return c.json({ error: 'flow_unavailable' }, 503);
+    const body = await response.text();
+    return new Response(body, {
+      status: response.status,
+      headers: new Headers(response.headers),
+    });
+  } catch {
+    return c.json({ error: 'email_otp_send_failed' }, 400);
   }
-
-  const startUrl = new URL('/api/auth/authorize', env.BETTER_AUTH_URL);
-  startUrl.searchParams.set('provider', 'apple');
-  startUrl.searchParams.set('redirect_uri', callbackUrl.toString());
-
-  logger.info('[auth:cli] created cli authorize flow', {
-    clientIp,
-    flowId,
-  });
-
-  return c.json({
-    authorization_url: startUrl.toString(),
-    flow_id: flowId,
-  });
 });
 
-authRoutes.get('/cli/callback', async (c) => {
-  const flowId = c.req.query('flow_id');
-  if (!flowId) {
-    return c.text('Missing flow id', 400);
-  }
-
-  let flow: CliFlowPayload | null = null;
+authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), async (c) => {
   try {
-    const redis = await getRedis();
-    const rawFlow = await redis.get(getCliFlowKey(flowId));
-    if (!rawFlow) {
-      return c.text('Authorization flow expired', 400);
+    const payload = c.req.valid('json');
+    const response = await callBetterAuthPluginEndpoint({
+      request: c.req.raw,
+      path: '/sign-in/email-otp',
+      method: 'POST',
+      body: payload as Record<string, unknown>,
+    });
+    const body = await response.text();
+
+    if (!response.ok) {
+      return new Response(body, {
+        status: response.status,
+        headers: new Headers(response.headers),
+      });
     }
-    await redis.del(getCliFlowKey(flowId));
-    flow = z
-      .object({
-        redirectUri: z.string().url(),
-        codeChallenge: z.string().min(43).max(128),
-        state: z.string().min(8).max(256),
-        scope: z.array(z.string()).default(CLI_DEFAULT_SCOPES),
-      })
-      .parse(JSON.parse(rawFlow));
+
+    try {
+      const parsed = JSON.parse(body) as { user?: { id?: string; email?: string; name?: string } };
+      const userId = parsed.user?.id;
+      
+      if (!userId) {
+        return c.json({ error: 'user_id_missing' }, 400);
+      }
+
+      const dbUser = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      });
+      
+      if (!dbUser) {
+        return c.json({ error: 'user_not_found' }, 400);
+      }
+
+      // Issue token pair with full session tracking
+      try {
+        const tokenPair = await createTokenPairForUser({
+          userId,
+          role: dbUser.isAdmin ? 'admin' : 'user',
+          amr: ['email_otp'],
+        });
+
+        // Forward Better Auth session cookies so passkey enrollment works after OTP sign-in
+        const betterAuthCookies = copyHeadersWithSetCookie(response.headers)
+        const responseHeaders = new Headers(betterAuthCookies)
+        responseHeaders.set('content-type', 'application/json')
+
+        return new Response(
+          JSON.stringify({
+            user: {
+              id: dbUser.id,
+              email: dbUser.email,
+              ...(dbUser.name ? { name: dbUser.name } : {}),
+            },
+            accessToken: tokenPair.accessToken,
+            refreshToken: tokenPair.refreshToken,
+            expiresIn: tokenPair.expiresIn,
+            tokenType: tokenPair.tokenType,
+          }),
+          { status: 200, headers: responseHeaders },
+        )
+      } catch (sessionError) {
+        // Fallback: If session table is not available, issue access token only
+        logger.warn('[auth:email-otp] session creation failed, issuing access token only', { sessionError });
+
+        const token = await issueAccessToken({
+          sub: userId,
+          sid: crypto.randomUUID(),
+          scope: ['api:read', 'api:write'],
+          role: dbUser.isAdmin ? 'admin' : 'user',
+          amr: ['email_otp'],
+        });
+
+        return c.json({
+          user: {
+            id: dbUser.id,
+            email: dbUser.email,
+            ...(dbUser.name ? { name: dbUser.name } : {}),
+          },
+          accessToken: token.accessToken,
+          refreshToken: '',  // Empty string indicates no refresh capability in this mode
+          expiresIn: token.expiresIn,
+          tokenType: token.tokenType,
+        });
+      }
+    } catch (error) {
+      logger.error('[auth:email-otp] sign-in failed', { error });
+      return c.json({ error: 'sign_in_failed' }, 500);
+    }
   } catch {
-    return c.text('Failed to resume authorization flow', 503);
+    return c.json({ error: 'email_otp_verify_failed' }, 400);
   }
-
-  if (!flow || !isAllowedCliRedirectUri(flow.redirectUri)) {
-    return c.text('Invalid cli flow payload', 400);
-  }
-
-  const errorParam = c.req.query('error');
-  if (errorParam) {
-    const errorDescription = c.req.query('error_description') ?? 'Apple sign-in failed';
-    return c.redirect(
-      appendQueryParams(flow.redirectUri, {
-        error: errorParam,
-        error_description: errorDescription,
-        state: flow.state,
-      }),
-    );
-  }
-
-  const session = await betterAuthServer.api.getSession({
-    ...getHeaderCarrier(c),
-  });
-
-  if (!session?.user) {
-    return c.redirect(
-      appendQueryParams(flow.redirectUri, {
-        error: 'session_not_found',
-        error_description: 'Unable to establish authenticated session after callback.',
-        state: flow.state,
-      }),
-    );
-  }
-
-  const dbUser = await ensureOAuthSubjectUser({
-    provider: 'apple',
-    providerSubject: session.user.id,
-    email: session.user.email,
-    ...(session.user.name !== undefined ? { name: session.user.name } : {}),
-    ...(session.user.image !== undefined ? { image: session.user.image } : {}),
-  });
-
-  if (!dbUser) {
-    return c.redirect(
-      appendQueryParams(flow.redirectUri, {
-        error: 'session_user_not_found',
-        error_description: 'Unable to map authenticated subject to an internal user record.',
-        state: flow.state,
-      }),
-    );
-  }
-
-  const tokenPair = await createTokenPairForUser({
-    userId: dbUser.id,
-    role: dbUser.isAdmin ? 'admin' : 'user',
-    scope: flow.scope,
-    amr: ['oauth', 'cli'],
-  });
-
-  const exchangeCode = createOpaqueCode(24);
-  const exchangePayload: CliExchangePayload = {
-    redirectUri: flow.redirectUri,
-    codeChallenge: flow.codeChallenge,
-    state: flow.state,
-    scope: flow.scope,
-    token: {
-      accessToken: tokenPair.accessToken,
-      refreshToken: tokenPair.refreshToken,
-      tokenType: tokenPair.tokenType,
-      expiresIn: tokenPair.expiresIn,
-      sessionId: tokenPair.sessionId,
-      refreshFamilyId: tokenPair.refreshFamilyId,
-    },
-  };
-
-  try {
-    const redis = await getRedis();
-    await redis.set(
-      getCliExchangeKey(exchangeCode),
-      JSON.stringify(exchangePayload),
-      'EX',
-      CLI_EXCHANGE_TTL_SECONDS,
-    );
-  } catch {
-    return c.redirect(
-      appendQueryParams(flow.redirectUri, {
-        error: 'exchange_unavailable',
-        error_description: 'Unable to persist secure cli exchange payload.',
-        state: flow.state,
-      }),
-    );
-  }
-
-  return c.redirect(
-    appendQueryParams(flow.redirectUri, {
-      code: exchangeCode,
-      state: flow.state,
-    }),
-  );
 });
 
-authRoutes.post('/cli/exchange', zValidator('json', cliExchangeSchema), async (c) => {
-  const { code, code_verifier: codeVerifier, redirect_uri: redirectUri } = c.req.valid('json');
-
-  if (!isAllowedCliRedirectUri(redirectUri)) {
-    return c.json({ error: 'invalid_redirect_uri' }, 400);
+authRoutes.get('/test/otp/latest', zValidator('query', testOtpQuerySchema), async (c) => {
+  if (!isTestOtpRetrievalEnabled()) {
+    return c.json({ error: 'not_found' }, 404);
   }
 
-  let exchange: CliExchangePayload | null = null;
-  try {
-    const redis = await getRedis();
-    const rawExchange = await redis.get(getCliExchangeKey(code));
-    if (!rawExchange) {
-      return c.json(
-        { error: 'invalid_grant', message: 'Exchange code is invalid or expired.' },
-        400,
-      );
-    }
-    await redis.del(getCliExchangeKey(code));
-
-    const parsed = z
-      .object({
-        redirectUri: z.string().url(),
-        codeChallenge: z.string().min(43).max(128),
-        state: z.string().min(8).max(256),
-        scope: z.array(z.string()).default(CLI_DEFAULT_SCOPES),
-        token: z.object({
-          accessToken: z.string().min(16),
-          refreshToken: z.string().min(16),
-          tokenType: z.string().min(3),
-          expiresIn: z.number().int().positive(),
-          sessionId: z.string().uuid(),
-          refreshFamilyId: z.string().uuid(),
-        }),
-      })
-      .safeParse(JSON.parse(rawExchange));
-
-    if (!parsed.success) {
-      return c.json({ error: 'invalid_grant', message: 'Malformed exchange payload.' }, 400);
-    }
-
-    exchange = parsed.data;
-  } catch {
-    return c.json({ error: 'exchange_unavailable' }, 503);
+  const providedSecret = c.req.header('x-e2e-auth-secret');
+  if (!providedSecret || providedSecret !== env.AUTH_E2E_SECRET) {
+    return c.json({ error: 'forbidden' }, 403);
   }
 
-  if (!exchange) {
-    return c.json({ error: 'invalid_grant' }, 400);
-  }
+  const query = c.req.valid('query');
+  const record = getLatestTestOtp({
+    email: query.email,
+    ...(query.type ? { type: query.type } : {}),
+  });
 
-  if (exchange.redirectUri !== redirectUri) {
-    return c.json({ error: 'invalid_grant', message: 'Redirect URI mismatch.' }, 400);
-  }
-
-  const computedChallenge = hashPkceVerifier(codeVerifier);
-  if (computedChallenge !== exchange.codeChallenge) {
-    return c.json({ error: 'invalid_grant', message: 'PKCE verifier mismatch.' }, 400);
+  if (!record) {
+    return c.json({ error: 'otp_not_found' }, 404);
   }
 
   return c.json({
-    access_token: exchange.token.accessToken,
-    refresh_token: exchange.token.refreshToken,
-    token_type: exchange.token.tokenType,
-    expires_in: exchange.token.expiresIn,
-    session_id: exchange.token.sessionId,
-    refresh_family_id: exchange.token.refreshFamilyId,
-    scope: exchange.scope.join(' '),
-    provider: 'better-auth' as const,
+    email: record.email,
+    otp: record.otp,
+    type: record.type,
+    createdAt: record.createdAt,
+    expiresAt: record.expiresAt,
   });
 });
+
 
 authRoutes.post('/logout', async (c) => {
   const auth = c.get('auth');
@@ -1192,83 +537,103 @@ authRoutes.post('/logout', async (c) => {
 });
 
 authRoutes.get('/session', async (c) => {
-  const user = c.get('user');
-  const auth = c.get('auth');
+  // Identity-only endpoint.
+  // The JWT middleware bypasses all /api/auth/* routes, so we validate the
+  // Bearer token directly here. The token may arrive via:
+  //   1. Authorization: Bearer <token> header (standard API client usage)
+  //   2. hominem_access_token cookie (web app SSR loader usage)
 
-  if (user && auth) {
-    const token = await issueAccessToken({
-      sub: auth.sub,
-      sid: auth.sid,
-      scope: auth.scope,
-      role: auth.role,
-      amr: auth.amr,
-    });
+  const authHeader = c.req.header('authorization') ?? ''
+  let bearerToken: string | null = authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7)
+    : null
+
+  if (!bearerToken) {
+    const cookieHeader = c.req.header('cookie') ?? ''
+    const match = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/)
+    const rawValue = match?.[1]
+    if (rawValue) {
+      try {
+        bearerToken = decodeURIComponent(rawValue)
+      } catch {
+        bearerToken = rawValue
+      }
+    }
+  }
+
+  if (!bearerToken) {
+    return c.json({ isAuthenticated: false, user: null }, 401)
+  }
+
+  try {
+    const claims = await verifyAccessToken(bearerToken)
+    const revoked = await isSessionRevoked(claims.sid)
+    if (revoked) {
+      return c.json({ isAuthenticated: false, user: null }, 401)
+    }
+
+    const userRecord = await UserAuthService.findByIdOrEmail({ id: claims.sub })
+    if (!userRecord) {
+      return c.json({ isAuthenticated: false, user: null }, 401)
+    }
 
     return c.json({
       isAuthenticated: true,
-      user,
-      auth,
-      accessToken: token.accessToken,
-      expiresIn: token.expiresIn,
+      user: {
+        id: userRecord.id,
+        email: userRecord.email,
+        ...(userRecord.name ? { name: userRecord.name } : {}),
+        isAdmin: userRecord.is_admin ?? false,
+        ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
+        ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
+      },
+    })
+  } catch {
+    return c.json({ isAuthenticated: false, user: null }, 401)
+  }
+});
+
+authRoutes.post('/refresh', zValidator('json', refreshTokenSchema), async (c) => {
+  // Clean refresh endpoint matching the single-path architecture spec
+  // POST /api/auth/refresh
+  // Input: { refreshToken }
+  // Output: { accessToken, refreshToken, expiresIn }
+  
+  const { refresh_token: refreshToken } = c.req.valid('json');
+  
+  const refreshRateLimit = await enforceAuthRateLimit(c, {
+    bucket: 'refresh-token-standard',
+    identifier: `${getClientIp(c)}:${refreshToken.slice(0, 16)}`,
+    windowSec: AUTH_REFRESH_LIMIT_WINDOW_SECONDS,
+    max: AUTH_REFRESH_LIMIT_MAX,
+  });
+  if (refreshRateLimit) {
+    return refreshRateLimit;
+  }
+
+  const rotated = await rotateRefreshToken(refreshToken);
+  
+  if (!rotated.ok) {
+    logger.warn('[auth:refresh] token rotation failed', {
+      error: rotated.error,
+      clientIp: getClientIp(c),
     });
+    return c.json(
+      {
+        error: rotated.error,
+        message: rotated.error === 'expired_refresh_token' 
+          ? 'Refresh token expired. Please sign in again.'
+          : 'Invalid or revoked refresh token. Please sign in again.',
+      },
+      401,
+    );
   }
-
-  const session = await betterAuthServer.api.getSession({
-    ...getHeaderCarrier(c),
-  });
-
-  if (!session?.user) {
-    return c.json({
-      isAuthenticated: false,
-      user: null,
-      auth: null,
-      accessToken: null,
-      expiresIn: null,
-    });
-  }
-
-  const sid = session.session?.id ?? crypto.randomUUID();
-  const dbUser = await ensureOAuthSubjectUser({
-    provider: 'apple',
-    providerSubject: session.user.id,
-    email: session.user.email,
-    ...(session.user.name !== undefined ? { name: session.user.name } : {}),
-    ...(session.user.image !== undefined ? { image: session.user.image } : {}),
-  });
-
-  if (!dbUser) {
-    return c.json({ error: 'session_user_not_found' }, 401);
-  }
-
-  const token = await issueAccessToken({
-    sub: dbUser.id,
-    sid,
-    role: dbUser.isAdmin ? 'admin' : 'user',
-    scope: ['api:read', 'api:write'],
-    amr: ['oauth'],
-  });
 
   return c.json({
-    isAuthenticated: true,
-    user: {
-      id: dbUser.id,
-      email: dbUser.email,
-      name: dbUser.name ?? undefined,
-      image: dbUser.image ?? undefined,
-      isAdmin: dbUser.isAdmin,
-      createdAt: dbUser.createdAt,
-      updatedAt: dbUser.updatedAt,
-    },
-    auth: {
-      sub: dbUser.id,
-      sid,
-      scope: ['api:read', 'api:write'],
-      role: dbUser.isAdmin ? 'admin' : 'user',
-      amr: ['oauth'],
-      authTime: Math.floor(Date.now() / 1000),
-    },
-    accessToken: token.accessToken,
-    expiresIn: token.expiresIn,
+    accessToken: rotated.accessToken,
+    refreshToken: rotated.refreshToken,
+    expiresIn: rotated.expiresIn,
+    tokenType: rotated.tokenType,
   });
 });
 
@@ -1356,156 +721,57 @@ authRoutes.post('/token', async (c) => {
   });
 });
 
-authRoutes.post('/refresh-token', zValidator('json', refreshTokenSchema), async (c) => {
-  const refreshToken = c.req.valid('json').refresh_token;
-  const refreshTokenRateLimit = await enforceAuthRateLimit(c, {
-    bucket: 'refresh-token-legacy',
-    identifier: `${getClientIp(c)}:${refreshToken.slice(0, 16)}`,
-    windowSec: AUTH_REFRESH_LIMIT_WINDOW_SECONDS,
-    max: AUTH_REFRESH_LIMIT_MAX,
-  });
-  if (refreshTokenRateLimit) {
-    return refreshTokenRateLimit;
-  }
+authRoutes.post('/token-from-session', async (c) => {
+  // Exchange a valid Better Auth session for canonical Hominem app tokens.
+  // Used by mobile after passkey sign-in (where Better Auth session is set
+  // natively via expoClient) to obtain the app token pair.
+  try {
+    const session = await betterAuthServer.api.getSession({
+      ...getHeaderCarrier(c),
+    })
 
-  const rotated = await rotateRefreshToken(refreshToken);
-  if (!rotated.ok) {
-    return c.json({ error: rotated.error }, 401);
-  }
+    if (!session?.user?.id) {
+      return c.json({ error: 'no_valid_session' }, 401)
+    }
 
-  return c.json({
-    access_token: rotated.accessToken,
-    refresh_token: rotated.refreshToken,
-    token_type: rotated.tokenType,
-    expires_in: rotated.expiresIn,
-    session_id: rotated.sessionId,
-    refresh_family_id: rotated.refreshFamilyId,
-    provider: 'better-auth' as const,
-  });
-});
+    const userId = session.user.id
 
-authRoutes.post('/revoke', zValidator('json', revokeTokenSchema), async (c) => {
-  const { token, token_type_hint: tokenTypeHint } = c.req.valid('json');
-  if (tokenTypeHint && tokenTypeHint !== 'refresh_token') {
-    return c.json({ revoked: false, error: 'unsupported_token_type' }, 400);
-  }
+    const dbUser = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+    })
 
-  const revoked = await revokeByRefreshToken(token);
-  return c.json({ revoked });
-});
+    if (!dbUser) {
+      return c.json({ error: 'user_not_found' }, 400)
+    }
 
-authRoutes.post('/link/google/start', async (c) => {
-  const userId = c.get('userId');
-  const clientIp = getClientIp(c);
-  if (!userId) {
-    return c.json({ error: 'unauthorized' }, 401);
-  }
-
-  const redirectUri =
-    c.req.query('redirect_uri') ?? new URL('/account', env.BETTER_AUTH_URL).toString();
-
-  if (!isAllowedWebRedirectUri(redirectUri)) {
-    logger.warn('[auth:link-google] rejected link start due to redirect URI allowlist mismatch', {
-      clientIp,
+    const tokenPair = await createTokenPairForUser({
       userId,
-      redirectUri,
-    });
-    return c.json(
-      {
-        error: 'invalid_redirect_uri',
-        message: 'Google link redirect URI is not on the allowlist.',
+      role: dbUser.isAdmin ? 'admin' : 'user',
+      amr: ['passkey'],
+    })
+
+    return c.json({
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        ...(dbUser.name ? { name: dbUser.name } : {}),
       },
-      400,
-    );
+      accessToken: tokenPair.accessToken,
+      refreshToken: tokenPair.refreshToken,
+      expiresIn: tokenPair.expiresIn,
+      tokenType: tokenPair.tokenType,
+    })
+  } catch (err) {
+    logger.error('[auth:token-from-session] failed', { err })
+    return c.json({ error: 'token_exchange_failed' }, 500)
   }
+})
 
-  const response = await callBetterAuthPluginEndpoint({
-    request: c.req.raw,
-    path: '/link-social',
-    method: 'POST',
-    body: {
-      provider: 'google',
-      callbackURL: redirectUri,
-      disableRedirect: false,
-    },
-  });
-
-  const normalized = normalizeRedirectResponse(response);
-  if (!normalized.headers.get('location')) {
-    logger.warn('[auth:link-google] link start did not return redirect location', {
-      clientIp,
-      userId,
-      redirectUri,
-      status: normalized.status,
-    });
-    return c.json({ error: 'link_failed' }, 400);
-  }
-
-  logger.info('[auth:link-google] started google account linking flow', {
-    clientIp,
-    userId,
-    redirectUri,
-  });
-
-  return normalized;
-});
-
-authRoutes.get('/link/google/status', async (c) => {
-  const userId = c.get('userId');
-  if (!userId) {
-    return c.json({ error: 'unauthorized' }, 401);
-  }
-
-  const [linkedGoogleSubject] = await db
-    .select({ id: authSubjects.id })
-    .from(authSubjects)
-    .where(
-      and(
-        eq(authSubjects.userId, userId),
-        eq(authSubjects.provider, 'google'),
-        isNull(authSubjects.unlinkedAt),
-      ),
-    )
-    .limit(1);
-
-  return c.json({
-    isLinked: Boolean(linkedGoogleSubject),
-  });
-});
-
-authRoutes.post('/link/google/unlink', async (c) => {
-  const userId = c.get('userId');
-  if (!userId) {
-    return c.json({ error: 'unauthorized' }, 401);
-  }
-
-  const stepUpGranted = await consumeStepUp(userId, 'google_unlink').catch(() => false);
-  if (!stepUpGranted) {
-    return c.json(
-      {
-        error: 'step_up_required',
-        message: 'Passkey step-up is required before unlinking Google.',
-        action: 'google_unlink',
-      },
-      403,
-    );
-  }
-
-  const body = (await c.req.json().catch(() => ({}))) as { accountId?: string };
-  await betterAuthServer.api.unlinkAccount({
-    body: {
-      providerId: 'google',
-      ...(body.accountId ? { accountId: body.accountId } : {}),
-    },
-    ...getHeaderCarrier(c),
-  });
-
-  return c.json({ success: true });
-});
 
 authRoutes.post('/passkey/register/options', async (c) => {
-  if (!c.get('userId')) {
-    return c.json({ error: 'unauthorized' }, 401);
+  const userId = await resolveAuthUserId(c)
+  if (!userId) {
+    return c.json({ error: 'unauthorized' }, 401)
   }
 
   try {
@@ -1514,8 +780,11 @@ authRoutes.post('/passkey/register/options', async (c) => {
       path: '/passkey/generate-register-options',
       method: 'GET',
     });
-    const payload = await response.json();
-    return c.json(payload as Record<string, unknown>, response.status as 200 | 400 | 401);
+    const body = await response.text();
+    return new Response(body, {
+      status: response.status,
+      headers: copyHeadersWithSetCookie(response.headers),
+    });
   } catch {
     return c.json({ error: 'passkey_options_failed' }, 400);
   }
@@ -1525,8 +794,9 @@ authRoutes.post(
   '/passkey/register/verify',
   zValidator('json', passkeyRegisterVerifySchema),
   async (c) => {
-    if (!c.get('userId')) {
-      return c.json({ error: 'unauthorized' }, 401);
+    const userId = await resolveAuthUserId(c)
+    if (!userId) {
+      return c.json({ error: 'unauthorized' }, 401)
     }
 
     try {
@@ -1536,13 +806,57 @@ authRoutes.post(
         method: 'POST',
         body: c.req.valid('json') as Record<string, unknown>,
       });
-      const payload = await response.json();
-      return c.json(payload as Record<string, unknown>, response.status as 200 | 400 | 401);
+      const body = await response.text();
+      return new Response(body, {
+        status: response.status,
+        headers: copyHeadersWithSetCookie(response.headers),
+      });
     } catch {
       return c.json({ error: 'passkey_registration_failed' }, 400);
     }
   },
 );
+
+authRoutes.get('/passkeys', async (c) => {
+  // Returns the list of passkeys registered to the authenticated user.
+  // Used by clients to decide whether to show the passkey enrollment prompt.
+  if (!c.get('userId')) {
+    return c.json({ error: 'unauthorized' }, 401)
+  }
+
+  try {
+    const response = await callBetterAuthPluginEndpoint({
+      request: c.req.raw,
+      path: '/passkey/list-user-passkeys',
+      method: 'GET',
+    })
+    const body = await response.json() as unknown
+    return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401)
+  } catch {
+    return c.json({ error: 'passkey_list_failed' }, 400)
+  }
+})
+
+authRoutes.delete('/passkey/delete', zValidator('json', z.object({ id: z.string() })), async (c) => {
+  // Deletes a passkey for the authenticated user.
+  if (!c.get('userId')) {
+    return c.json({ error: 'unauthorized' }, 401)
+  }
+
+  try {
+    const { id } = c.req.valid('json')
+    const response = await callBetterAuthPluginEndpoint({
+      request: c.req.raw,
+      path: '/passkey/delete-user-passkey',
+      method: 'POST',
+      body: { id },
+    })
+    const body = await response.json() as unknown
+    return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401)
+  } catch {
+    return c.json({ error: 'passkey_delete_failed' }, 400)
+  }
+})
 
 authRoutes.post('/passkey/auth/options', async (c) => {
   try {
@@ -1551,8 +865,11 @@ authRoutes.post('/passkey/auth/options', async (c) => {
       path: '/passkey/generate-authenticate-options',
       method: 'GET',
     });
-    const payload = await response.json();
-    return c.json(payload as Record<string, unknown>, response.status as 200 | 400 | 401);
+    const body = await response.text();
+    return new Response(body, {
+      status: response.status,
+      headers: copyHeadersWithSetCookie(response.headers),
+    });
   } catch {
     return c.json({ error: 'passkey_options_failed' }, 400);
   }
@@ -1567,13 +884,79 @@ authRoutes.post('/passkey/auth/verify', zValidator('json', passkeyAuthVerifySche
       method: 'POST',
       body: { response: body.response },
     });
-    const responseBody = await response.json();
-    const userId = c.get('userId');
-    const requestedAction = body.action;
-    if (response.status >= 200 && response.status < 300 && userId && requestedAction) {
-      await grantStepUp(userId, requestedAction).catch(() => null);
+    const responseText = await response.text();
+
+    if (!response.ok) {
+      return new Response(responseText, {
+        status: response.status,
+        headers: copyHeadersWithSetCookie(response.headers),
+      });
     }
-    return c.json(responseBody as Record<string, unknown>, response.status as 200 | 400 | 401);
+
+    // Handle step-up action grant (for authenticated users doing re-auth)
+    const existingUserId = c.get('userId');
+    const requestedAction = body.action;
+    if (existingUserId && requestedAction) {
+      await grantStepUp(existingUserId, requestedAction).catch(() => null);
+      // Step-up flows just return the Better Auth response (no new tokens needed)
+      return new Response(responseText, {
+        status: response.status,
+        headers: copyHeadersWithSetCookie(response.headers),
+      });
+    }
+
+     // Sign-in flow: mint canonical app token pair, same contract as OTP verify
+     try {
+       const parsed = JSON.parse(responseText) as { user?: { id?: string; email?: string; name?: string }; session?: { userId?: string } }
+       // Better Auth passkey endpoint returns { session: { userId, ... } }, not { user: { id, ... } }
+       const userId = parsed.user?.id || parsed.session?.userId
+
+       if (!userId) {
+         logger.warn('[auth:passkey] verify-authentication succeeded but no user.id or session.userId in response', { parsed })
+         // Fall through: return Better Auth response without app tokens
+         return new Response(responseText, {
+           status: response.status,
+           headers: copyHeadersWithSetCookie(response.headers),
+         })
+       }
+
+      const dbUser = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+      })
+
+      if (!dbUser) {
+        return c.json({ error: 'user_not_found' }, 400)
+      }
+
+      const tokenPair = await createTokenPairForUser({
+        userId,
+        role: dbUser.isAdmin ? 'admin' : 'user',
+        amr: ['passkey'],
+      })
+
+      // Forward Better Auth session cookies so enrollment/management features work
+      const betterAuthCookies = copyHeadersWithSetCookie(response.headers)
+      const responseHeaders = new Headers(betterAuthCookies)
+      responseHeaders.set('content-type', 'application/json')
+
+      return new Response(
+        JSON.stringify({
+          user: {
+            id: dbUser.id,
+            email: dbUser.email,
+            ...(dbUser.name ? { name: dbUser.name } : {}),
+          },
+          accessToken: tokenPair.accessToken,
+          refreshToken: tokenPair.refreshToken,
+          expiresIn: tokenPair.expiresIn,
+          tokenType: tokenPair.tokenType,
+        }),
+        { status: 200, headers: responseHeaders },
+      )
+    } catch (mintError) {
+      logger.error('[auth:passkey] token minting failed', { mintError })
+      return c.json({ error: 'token_mint_failed' }, 500)
+    }
   } catch {
     return c.json({ error: 'passkey_authentication_failed' }, 401);
   }
@@ -1628,5 +1011,92 @@ authRoutes.post('/device/token', zValidator('json', deviceTokenSchema), async (c
     return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401);
   } catch {
     return c.json({ error: 'device_token_failed' }, 400);
+  }
+});
+
+/**
+ * Mock Auth Endpoints
+ * These endpoints are for local development with VITE_USE_MOCK_AUTH=true
+ * They simulate the Apple Auth flow without requiring real Apple credentials
+ */
+
+// Check if mock auth is enabled
+function isMockAuthEnabled(): boolean {
+  return process.env.VITE_USE_MOCK_AUTH === 'true';
+}
+
+// Import mock auth types and provider
+import { createMockAuthProvider, type User, type Session } from '@hominem/auth/server-auth';
+
+/**
+ * POST /auth/mock/signin
+ * Mock sign-in endpoint for local development
+ * Returns a mock user and session token
+ */
+authRoutes.post('/mock/signin', async (c) => {
+  if (!isMockAuthEnabled()) {
+    return c.json({ error: 'Mock auth is not enabled' }, 400);
+  }
+
+  try {
+    const provider = createMockAuthProvider();
+    const response = await provider.signIn();
+
+    return c.json(
+      {
+        user: response.user,
+        session: response.session,
+      },
+      200,
+    );
+  } catch (err) {
+    logger.error('Mock signin error:', err instanceof Error ? err : new Error(String(err)));
+    return c.json({ error: 'Mock signin failed' }, 500);
+  }
+});
+
+/**
+ * GET /auth/mock/session
+ * Get the current mock session (for testing session persistence)
+ */
+authRoutes.get('/mock/session', async (c) => {
+  if (!isMockAuthEnabled()) {
+    return c.json({ error: 'Mock auth is not enabled' }, 400);
+  }
+
+  try {
+    // In a real implementation, we'd validate the session token
+    // For mock auth, we just check if the request has valid format
+    const authHeader = c.req.header('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return c.json({ session: null }, 200);
+    }
+
+    // Mock implementation: just return success
+    // The client should handle session validation via the token
+    return c.json({ session: { valid: true } }, 200);
+  } catch (err) {
+    logger.error('Mock session error:', err instanceof Error ? err : new Error(String(err)));
+    return c.json({ error: 'Mock session check failed' }, 500);
+  }
+});
+
+/**
+ * POST /auth/mock/signout
+ * Mock sign-out endpoint
+ */
+authRoutes.post('/mock/signout', async (c) => {
+  if (!isMockAuthEnabled()) {
+    return c.json({ error: 'Mock auth is not enabled' }, 400);
+  }
+
+  try {
+    const provider = createMockAuthProvider();
+    await provider.signOut();
+
+    return c.json({ success: true }, 200);
+  } catch (err) {
+    logger.error('Mock signout error:', err instanceof Error ? err : new Error(String(err)));
+    return c.json({ error: 'Mock signout failed' }, 500);
   }
 });

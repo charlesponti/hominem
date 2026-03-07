@@ -2,9 +2,8 @@ import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { CheckCircleIcon } from 'lucide-react';
 
-import type { Account } from '~/lib/types/account.types';
-
 import { useAllInstitutions } from '~/lib/hooks/use-institutions';
+import type { Account } from '~/lib/types/account.types';
 
 import { AccountConnectionDialog } from './account-connection-dialog';
 
@@ -17,7 +16,7 @@ export function ManualInstitutionStatus({
 }) {
   const institutionsQuery = useAllInstitutions();
   const institution = Array.isArray(institutionsQuery.data)
-    ? institutionsQuery.data.find((inst) => inst.id === account.institutionId)
+    ? institutionsQuery.data.find((inst) => inst.name === account.institutionName)
     : undefined;
   return (
     <div className="flex items-center space-x-2">

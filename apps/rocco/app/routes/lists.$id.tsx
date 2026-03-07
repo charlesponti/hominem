@@ -1,13 +1,10 @@
-import type { ListUser } from '@hominem/hono-rpc/types/lists.types';
-
 import { useAuthContext } from '@hominem/auth';
+import type { ListUser } from '@hominem/hono-rpc/types/lists.types';
 import { Alert, PageTitle } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
 import { UserPlus } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link, redirect, useViewTransitionState } from 'react-router';
-
-import type { PlaceLocation } from '~/lib/types';
 
 import ErrorBoundary from '~/components/ErrorBoundary';
 import ListEditButton from '~/components/lists/list-edit-button';
@@ -19,6 +16,7 @@ import { useGeolocation } from '~/hooks/useGeolocation';
 import { createServerHonoClient } from '~/lib/api.server';
 import { requireAuth } from '~/lib/guards';
 import { useListById } from '~/lib/hooks/use-lists';
+import type { PlaceLocation } from '~/lib/types';
 
 import type { Route } from './+types/lists.$id';
 
@@ -117,11 +115,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   return (
     <div className="space-y-4">
       <div className="flex-1 space-y-2">
-        {error && (
-          <Alert type="error" dismissible>
-            Error loading list updates: {error?.message}
-          </Alert>
-        )}
+        {error && <Alert variant="destructive">Error loading list updates: {error?.message}</Alert>}
         <div
           className="flex justify-between items-center"
           style={{ viewTransitionName: `list-title-${list.id}` }}

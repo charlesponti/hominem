@@ -13,7 +13,7 @@
     "build:agent": "bun build src/services/agent-server/index.ts --outdir dist/agent --target bun",
     "start:agent": "bun run src/services/agent-server/index.ts",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
-    "test": "bun test && node ./test/plugin-registration.test.js",
+    "test": "bun test test/**/*.test.ts src/**/*.test.ts && bun ./test/plugin-registration.test.js",
     "lint": "oxlint --tsconfig tsconfig.json \"src/**/*.{ts,tsx,js,jsx}\" \"test/**/*.{ts,tsx,js,jsx}\"",
     "format": "oxfmt src test"
   },

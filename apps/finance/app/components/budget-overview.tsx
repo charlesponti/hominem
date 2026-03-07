@@ -27,15 +27,20 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
   const categories = categoriesResult || [];
   const stats = statsResult || null;
 
-  // Calculate total budgeted amount from categories
+  // Calculate total budgeted amount from categories. The API now
+  // exposes `averageMonthlyExpense` and `type` directly on the category
+  // object (both optional), so we no longer need to cast.
   const totalBudgeted = useMemo(() => {
     if (categories.length === 0) {
       return 0;
     }
 
     return categories
-      .filter((category) => category.type === 'expense')
-      .reduce((sum, category) => sum + Number(category.averageMonthlyExpense || 0), 0);
+      .filter((category) => category.type !== 'income')
+      .reduce((sum, category) => {
+        const num = Number(category.averageMonthlyExpense || 0);
+        return sum + (Number.isFinite(num) ? num : 0);
+      }, 0);
   }, [categories]);
 
   // Get actual spending from stats
@@ -96,7 +101,7 @@ export function BudgetOverview({ selectedMonthYear }: BudgetOverviewProps) {
   }
 
   return (
-    <Card metadata={`KPI_OBJ_CT: ${categories.length}`}>
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Target className="size-4" />

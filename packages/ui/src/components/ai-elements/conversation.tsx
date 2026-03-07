@@ -1,8 +1,8 @@
+import { ChevronDown, Download, MessageSquare } from 'lucide-react';
 import { type ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
-import { ChevronDown, Download, MessageSquare } from 'lucide-react';
 
 interface ConversationProps {
   children: ReactNode;
@@ -51,7 +51,12 @@ interface ConversationScrollButtonProps {
 
 export function ConversationScrollButton({ onClick, className }: ConversationScrollButtonProps) {
   return (
-    <Button variant="outline" size="icon" className={cn('size-8 rounded-full shadow-md', className)} onClick={onClick}>
+    <Button
+      variant="outline"
+      size="icon"
+      className={cn('size-8 rounded-full shadow-md', className)}
+      onClick={onClick}
+    >
       <ChevronDown className="size-4" />
     </Button>
   );

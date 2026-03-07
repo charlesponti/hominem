@@ -1,5 +1,4 @@
 import type { SpendingTimeSeriesOutput } from '@hominem/hono-rpc/types/finance.types';
-
 import { format } from 'date-fns';
 
 import { useHonoQuery } from '~/lib/api';
@@ -8,7 +7,7 @@ interface TimeSeriesParams {
   dateFrom?: Date | undefined;
   dateTo?: Date | undefined;
   account?: string | undefined;
-  category?: string | undefined;
+  tag?: string | undefined;
   includeStats?: boolean | undefined;
   compareToPrevious?: boolean | undefined;
   groupBy?: 'month' | 'week' | 'day' | undefined;
@@ -22,7 +21,7 @@ export function useTimeSeriesData({
   dateFrom,
   dateTo,
   account,
-  category,
+  tag,
   includeStats = true,
   compareToPrevious = true,
   groupBy = 'month',
@@ -37,7 +36,7 @@ export function useTimeSeriesData({
         dateFrom: dateFrom?.toISOString(),
         dateTo: dateTo?.toISOString(),
         account,
-        category,
+        tag,
         includeStats,
         compareToPrevious,
         groupBy,
@@ -49,7 +48,7 @@ export function useTimeSeriesData({
           from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : undefined,
           to: dateTo ? format(dateTo, 'yyyy-MM-dd') : undefined,
           account: account && account !== 'all' ? account : undefined,
-          category,
+          tag,
           includeStats,
           compareToPrevious,
           groupBy,

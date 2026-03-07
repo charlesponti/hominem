@@ -9,7 +9,6 @@ import {
 import { Edit3, Trash2 } from 'lucide-react';
 
 import type { BudgetCategory } from '~/lib/types/budget.types';
-
 import { cn } from '~/lib/utils';
 
 // Derive from BudgetCategory type and add UI-specific properties

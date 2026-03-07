@@ -1,1 +1,0 @@
-ALTER TABLE "list" ADD COLUMN "isPublic" boolean DEFAULT false NOT NULL;

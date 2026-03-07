@@ -1,7 +1,6 @@
 import { CreditCard, DollarSign, Tag } from 'lucide-react';
 
 import type { useFinanceAccounts, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
-
 import { cn } from '~/lib/utils';
 
 type TransactionFromAPI = ReturnType<typeof useFinanceTransactions>['transactions'][number];
@@ -44,12 +43,10 @@ function TransactionMetadata({
           <span>{account.name}</span>
         </div>
       )}
-      {transaction.category && (
-        <div className="flex items-center gap-1">
-          <Tag className="size-3" />
-          <span>{transaction.category}</span>
-        </div>
-      )}
+      <div className="flex items-center gap-1">
+        <Tag className="size-3" />
+        <span>{transaction.type}</span>
+      </div>
     </div>
   );
 }

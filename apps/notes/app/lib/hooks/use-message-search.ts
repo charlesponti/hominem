@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { ExtendedMessage } from '~/lib/types/chat-message';
-
 import { filterMessagesByQuery } from '~/lib/utils/message';
 import { isMac } from '~/lib/utils/platform';
 

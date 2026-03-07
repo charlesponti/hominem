@@ -1,10 +1,9 @@
+import type { Note, NotesCreateInput } from '@hominem/hono-rpc/types/notes.types';
 import { Button } from '@hominem/ui/button';
 import { Textarea } from '@hominem/ui/components/ui/textarea';
 import { Input } from '@hominem/ui/input';
 import { RefreshCw, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-
-import type { Note, NotesCreateInput } from '@hominem/hono-rpc/types/notes.types';
 
 import { useCreateNote, useUpdateNote } from '~/hooks/use-notes';
 

@@ -1,8 +1,7 @@
 'use client';
 
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
-
 import { Check, ChevronRight, ListOrdered, Circle } from 'lucide-react';
+import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -25,12 +24,7 @@ interface PlanHeaderProps extends HTMLAttributes<HTMLDivElement> {
   title?: string;
 }
 
-export function PlanHeader({
-  title = 'Plan',
-  className,
-  children,
-  ...props
-}: PlanHeaderProps) {
+export function PlanHeader({ title = 'Plan', className, children, ...props }: PlanHeaderProps) {
   return (
     <div className={cn('flex items-center gap-2 px-3 py-2 border-b', className)} {...props}>
       <ListOrdered className="size-4 text-muted-foreground" />
@@ -103,7 +97,10 @@ interface PlanFooterProps extends HTMLAttributes<HTMLDivElement> {
 
 export function PlanFooter({ children, className, ...props }: PlanFooterProps) {
   return (
-    <div className={cn('flex items-center justify-end gap-2 px-3 py-2 border-t', className)} {...props}>
+    <div
+      className={cn('flex items-center justify-end gap-2 px-3 py-2 border-t', className)}
+      {...props}
+    >
       {children}
     </div>
   );

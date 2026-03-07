@@ -1,407 +1,509 @@
-import type { ListInviteOutput, ListOutput } from '@hominem/db/types/lists';
-import type { UserOutput } from '@hominem/db/types/users';
+import crypto from 'node:crypto'
 
-import { db, takeUniqueOrThrow } from '@hominem/db';
-import { and, eq, or } from '@hominem/db';
-import { list, listInvite, userLists } from '@hominem/db/schema/tables';
-import { users } from '@hominem/db/schema/tables';
-import {
-  ConflictError,
-  NotFoundError,
-  ValidationError,
-  InternalError,
-  isServiceError,
-} from '@hominem/services';
-import { sendInviteEmail } from '@hominem/services/emails';
-import { logger } from '@hominem/utils/logger';
-import crypto from 'node:crypto';
-import * as z from 'zod';
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError, db, sql } from '@hominem/db'
+import * as z from 'zod'
 
-/**
- * Input validation schema for sendListInvite
- */
+import { formatList } from './list-crud.service'
+import type { ListOutput } from './contracts'
+
+interface ListInviteRow {
+  id: string
+  list_id: string
+  user_id: string
+  invited_user_email: string
+  invited_user_id: string | null
+  accepted: boolean
+  token: string
+  accepted_at: string | null
+  created_at: string | null
+  updated_at: string | null
+  list_name?: string | null
+  list_owner_id?: string | null
+  list_owner_email?: string | null
+  list_owner_name?: string | null
+  inviting_user_id?: string | null
+  inviting_user_email?: string | null
+  inviting_user_name?: string | null
+}
+
+export interface ListInviteOutput {
+  id: string
+  listId: string
+  userId: string
+  invitedUserEmail: string
+  invitedUserId: string | null
+  accepted: boolean
+  token: string
+  acceptedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface UserOutput {
+  id: string
+  email: string
+  name: string | null
+}
+
 export const sendListInviteSchema = z.object({
   listId: z.string().uuid('Invalid list ID'),
   invitedUserEmail: z.string().email('Invalid email format'),
   invitingUserId: z.string().uuid('Invalid user ID'),
   baseUrl: z.string().url('Invalid base URL'),
-});
+})
 
-export type SendListInviteParams = z.infer<typeof sendListInviteSchema>;
+export type SendListInviteParams = z.infer<typeof sendListInviteSchema>
 
-/**
- * Input validation schema for acceptListInvite
- */
 export const acceptListInviteSchema = z.object({
   listId: z.string().uuid('Invalid list ID'),
   acceptingUserId: z.string().uuid('Invalid user ID'),
   token: z.string().min(1, 'Token required'),
-});
+})
 
-export type AcceptListInviteParams = z.infer<typeof acceptListInviteSchema>;
+export type AcceptListInviteParams = z.infer<typeof acceptListInviteSchema>
 
-/**
- * Input validation schema for deleteListInvite
- */
 export const deleteListInviteSchema = z.object({
   listId: z.string().uuid('Invalid list ID'),
   invitedUserEmail: z.string().email('Invalid email format'),
   userId: z.string().uuid('Invalid user ID'),
-});
+})
 
-export type DeleteListInviteParams = z.infer<typeof deleteListInviteSchema>;
+export type DeleteListInviteParams = z.infer<typeof deleteListInviteSchema>
 
-/**
- * Gets all invites for a specific list
- * @param listId - The ID of the list
- * @returns Array of list invites with user data for accepted invites
- */
+function resultRows<T>(result: unknown): T[] {
+  if (Array.isArray(result)) {
+    return result as T[]
+  }
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows?: unknown }).rows
+    if (Array.isArray(rows)) {
+      return rows as T[]
+    }
+  }
+  return []
+}
+
+function toOutput(row: ListInviteRow): ListInviteOutput {
+  const createdAt = row.created_at ?? new Date().toISOString()
+  const updatedAt = row.updated_at ?? createdAt
+  return {
+    id: row.id,
+    listId: row.list_id,
+    userId: row.user_id,
+    invitedUserEmail: row.invited_user_email,
+    invitedUserId: row.invited_user_id,
+    accepted: row.accepted,
+    token: row.token,
+    acceptedAt: row.accepted_at,
+    createdAt,
+    updatedAt,
+  }
+}
+
+function toListOutput(row: ListInviteRow): ListOutput | null {
+  if (!row.list_name || !row.list_owner_id || !row.list_owner_email) {
+    return null
+  }
+  const createdAt = row.created_at ?? new Date().toISOString()
+  return formatList(
+    {
+      id: row.list_id,
+      name: row.list_name,
+      description: null,
+      ownerId: row.list_owner_id,
+      isPublic: false,
+      createdAt,
+      updatedAt: createdAt,
+      owner: {
+        id: row.list_owner_id,
+        email: row.list_owner_email,
+        name: row.list_owner_name ?? null,
+      },
+    },
+    [],
+    false,
+    true,
+  )
+}
+
+function toInvitingUserOutput(row: ListInviteRow): UserOutput | null {
+  if (!row.inviting_user_id || !row.inviting_user_email) {
+    return null
+  }
+  return {
+    id: row.inviting_user_id,
+    email: row.inviting_user_email,
+    name: row.inviting_user_name ?? null,
+  }
+}
+
+async function getUserByEmail(email: string): Promise<{ id: string } | null> {
+  const result = await db.execute(sql`
+    select id
+    from users
+    where lower(email) = lower(${email})
+    limit 1
+  `)
+  return resultRows<{ id: string }>(result)[0] ?? null
+}
+
+async function ensureListOwner(listId: string, ownerId: string): Promise<void> {
+  const result = await db.execute(sql`
+    select id
+    from task_lists
+    where id = ${listId}
+      and user_id = ${ownerId}
+    limit 1
+  `)
+  if (!(resultRows<{ id: string }>(result)[0])) {
+    throw new ForbiddenError("You don't have permission to invite users to this list")
+  }
+}
+
+async function getInviteRowByToken(token: string): Promise<ListInviteRow | null> {
+  const result = await db.execute(sql`
+    select
+      li.id,
+      li.list_id,
+      li.user_id,
+      li.invited_user_email,
+      li.invited_user_id,
+      li.accepted,
+      li.token,
+      li.accepted_at,
+      li.created_at,
+      li.updated_at,
+      tl.name as list_name,
+      tl.user_id as list_owner_id,
+      u_owner.email as list_owner_email,
+      u_owner.name as list_owner_name,
+      u_inviter.id as inviting_user_id,
+      u_inviter.email as inviting_user_email,
+      u_inviter.name as inviting_user_name
+    from task_list_invites li
+    join task_lists tl on tl.id = li.list_id
+    join users u_owner on u_owner.id = tl.user_id
+    join users u_inviter on u_inviter.id = li.user_id
+    where li.token = ${token}
+    limit 1
+  `)
+  return resultRows<ListInviteRow>(result)[0] ?? null
+}
+
 export async function getListInvites(
   listId: string,
 ): Promise<
   (ListInviteOutput & { list: ListOutput | null; user_invitedUserId: UserOutput | null })[]
 > {
-  try {
-    return await db.query.listInvite.findMany({
-      where: eq(listInvite.listId, listId),
-      with: {
-        list: true,
-        user_invitedUserId: true,
-      },
-    });
-  } catch (error) {
-    logger.error('Error fetching invites for list', {
-      listId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return [];
-  }
+  const result = await db.execute(sql`
+    select
+      li.id,
+      li.list_id,
+      li.user_id,
+      li.invited_user_email,
+      li.invited_user_id,
+      li.accepted,
+      li.token,
+      li.accepted_at,
+      li.created_at,
+      li.updated_at,
+      tl.name as list_name,
+      tl.user_id as list_owner_id,
+      u_owner.email as list_owner_email,
+      u_owner.name as list_owner_name,
+      u_inviter.id as inviting_user_id,
+      u_inviter.email as inviting_user_email,
+      u_inviter.name as inviting_user_name
+    from task_list_invites li
+    join task_lists tl on tl.id = li.list_id
+    join users u_owner on u_owner.id = tl.user_id
+    join users u_inviter on u_inviter.id = li.user_id
+    where li.list_id = ${listId}
+    order by li.created_at desc, li.id asc
+  `)
+
+  return resultRows<ListInviteRow>(result).map((row) => ({
+    ...toOutput(row),
+    list: toListOutput(row),
+    user_invitedUserId: toInvitingUserOutput(row),
+  }))
 }
 
-/**
- * Gets invites for a user by ID or email
- */
 export async function getInvitesForUser(
   userId: string,
   normalizedEmail?: string | null,
 ): Promise<(ListInviteOutput & { list: ListOutput | null })[]> {
-  const ownershipClause = normalizedEmail
-    ? or(eq(listInvite.invitedUserId, userId), eq(listInvite.invitedUserEmail, normalizedEmail))
-    : eq(listInvite.invitedUserId, userId);
+  const email = normalizedEmail?.toLowerCase() ?? null
+  const result = await db.execute(sql`
+    select
+      li.id,
+      li.list_id,
+      li.user_id,
+      li.invited_user_email,
+      li.invited_user_id,
+      li.accepted,
+      li.token,
+      li.accepted_at,
+      li.created_at,
+      li.updated_at,
+      tl.name as list_name,
+      tl.user_id as list_owner_id,
+      u_owner.email as list_owner_email,
+      u_owner.name as list_owner_name
+    from task_list_invites li
+    join task_lists tl on tl.id = li.list_id
+    join users u_owner on u_owner.id = tl.user_id
+    where li.invited_user_id = ${userId}
+       or (${email}::text is not null and lower(li.invited_user_email) = ${email})
+    order by li.created_at desc, li.id asc
+  `)
 
-  return db.query.listInvite.findMany({
-    where: ownershipClause,
-    with: { list: true },
-  });
+  return resultRows<ListInviteRow>(result).map((row) => ({
+    ...toOutput(row),
+    list: toListOutput(row),
+  }))
 }
 
-/**
- * Gets an invite by token, including associated list
- * @throws NotFoundError if invite not found
- */
 export async function getInviteByToken(
   token: string,
 ): Promise<ListInviteOutput & { list: ListOutput | null }> {
-  const invite = await db.query.listInvite.findFirst({
-    where: eq(listInvite.token, token),
-    with: { list: true },
-  });
-
-  if (!invite) {
-    throw new NotFoundError('Invite', { token });
+  const row = await getInviteRowByToken(token)
+  if (!row) {
+    throw new NotFoundError(`Invite not found for token: ${token}`)
   }
-
-  return invite;
+  return {
+    ...toOutput(row),
+    list: toListOutput(row),
+  }
 }
 
-/**
- * Gets an invite by list ID and token
- * @throws NotFoundError if invite not found
- */
 export async function getInviteByListAndToken(params: {
-  listId: string;
-  token: string;
+  listId: string
+  token: string
 }): Promise<ListInviteOutput> {
-  const { listId, token } = params;
-
-  const invite = await db.query.listInvite.findFirst({
-    where: and(eq(listInvite.listId, listId), eq(listInvite.token, token)),
-  });
-
-  if (!invite) {
-    throw new NotFoundError('Invite', { listId, token });
+  const result = await db.execute(sql`
+    select
+      id,
+      list_id,
+      user_id,
+      invited_user_email,
+      invited_user_id,
+      accepted,
+      token,
+      accepted_at,
+      created_at,
+      updated_at
+    from task_list_invites
+    where list_id = ${params.listId}
+      and token = ${params.token}
+    limit 1
+  `)
+  const row = resultRows<ListInviteRow>(result)[0] ?? null
+  if (!row) {
+    throw new NotFoundError(`Invite not found for listId ${params.listId}`)
   }
-
-  return invite;
+  return toOutput(row)
 }
 
-/**
- * Deletes an invite by list ID and token
- */
 export async function deleteInviteByListAndToken(params: {
-  listId: string;
-  token: string;
+  listId: string
+  token: string
 }): Promise<boolean> {
-  const { listId, token } = params;
-  const deletedInvite = await db
-    .delete(listInvite)
-    .where(and(eq(listInvite.listId, listId), eq(listInvite.token, token)))
-    .returning();
-
-  return deletedInvite.length > 0;
+  const result = await db.execute(sql`
+    delete from task_list_invites
+    where list_id = ${params.listId}
+      and token = ${params.token}
+    returning id
+  `)
+  return Boolean(resultRows<{ id: string }>(result)[0])
 }
 
-/**
- * Gets all outbound invites sent by a user
- */
 export async function getOutboundInvites(
   userId: string,
 ): Promise<(ListInviteOutput & { list: ListOutput; user_invitedUserId: UserOutput | null })[]> {
-  return db.query.listInvite.findMany({
-    where: eq(listInvite.userId, userId),
-    with: {
-      list: true,
-      user_invitedUserId: true,
-    },
-  });
+  const result = await db.execute(sql`
+    select
+      li.id,
+      li.list_id,
+      li.user_id,
+      li.invited_user_email,
+      li.invited_user_id,
+      li.accepted,
+      li.token,
+      li.accepted_at,
+      li.created_at,
+      li.updated_at,
+      tl.name as list_name,
+      tl.user_id as list_owner_id,
+      u_owner.email as list_owner_email,
+      u_owner.name as list_owner_name,
+      u_inviter.id as inviting_user_id,
+      u_inviter.email as inviting_user_email,
+      u_inviter.name as inviting_user_name
+    from task_list_invites li
+    join task_lists tl on tl.id = li.list_id
+    join users u_owner on u_owner.id = tl.user_id
+    join users u_inviter on u_inviter.id = li.user_id
+    where li.user_id = ${userId}
+    order by li.created_at desc, li.id asc
+  `)
+
+  return resultRows<ListInviteRow>(result).map((row) => ({
+    ...toOutput(row),
+    list: toListOutput(row) as ListOutput,
+    user_invitedUserId: toInvitingUserOutput(row),
+  }))
 }
 
-/**
- * Sends a new list invite to a user email
- *
- * @param params - Parameters including listId, invitedUserEmail, invitingUserId, baseUrl
- * @returns The created ListInviteOutput
- * @throws ValidationError if email format is invalid
- * @throws NotFoundError if list does not exist
- * @throws ConflictError if invite already exists for this email
- * @throws InternalError if database operation fails
- */
 export async function sendListInvite(params: SendListInviteParams): Promise<ListInviteOutput> {
-  const { listId, invitedUserEmail, invitingUserId, baseUrl } = params;
+  const normalizedEmail = params.invitedUserEmail.toLowerCase()
+  await ensureListOwner(params.listId, params.invitingUserId)
 
-  const normalizedInvitedEmail = invitedUserEmail.toLowerCase();
-
-  // Check if list exists
-  const listRecord = await db.query.list.findFirst({
-    where: eq(list.id, listId),
-  });
-
-  if (!listRecord) {
-    throw new NotFoundError('ListOutput', { listId });
+  const invitee = await getUserByEmail(normalizedEmail)
+  if (invitee && invitee.id === params.invitingUserId) {
+    throw new ValidationError('You cannot invite yourself to a list')
   }
 
-  // Check if invite already exists
-  const existingInvite = await db.query.listInvite.findFirst({
-    where: and(
-      eq(listInvite.listId, listId),
-      eq(listInvite.invitedUserEmail, normalizedInvitedEmail),
-    ),
-  });
-
-  if (existingInvite && !existingInvite.accepted) {
-    throw new ConflictError('An invite for this email address to this list already exists', {
-      listId,
-      email: normalizedInvitedEmail,
-    });
+  const pendingResult = await db.execute(sql`
+    select id
+    from task_list_invites
+    where list_id = ${params.listId}
+      and lower(invited_user_email) = ${normalizedEmail}
+      and accepted = false
+    limit 1
+  `)
+  if (resultRows<{ id: string }>(pendingResult)[0]) {
+    throw new ConflictError('A pending invite already exists for this user')
   }
 
-  // Generate invite token
-  const token = crypto.randomBytes(32).toString('hex');
-
-  // Check if user exists with this email
-  const invitedUserRecord = await db.query.users.findFirst({
-    where: eq(users.email, normalizedInvitedEmail),
-  });
-
-  try {
-    const createdInvite = await db
-      .insert(listInvite)
-      .values({
-        listId,
-        invitedUserEmail: normalizedInvitedEmail,
-        invitedUserId: invitedUserRecord?.id || null,
-        accepted: false,
-        userId: invitingUserId,
-        token,
-      })
-      .returning()
-      .then(takeUniqueOrThrow);
-
-    // Send invite email
-    const inviteLink = `${baseUrl.replace(/\/$/, '')}/invites?token=${token}&listId=${listId}`;
-
-    try {
-      await sendInviteEmail({
-        to: normalizedInvitedEmail,
-        listName: listRecord.name,
-        inviteLink,
-      });
-    } catch (error) {
-      logger.error('Invite email failed to send', {
-        listId,
-        invitedUserEmail: normalizedInvitedEmail,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      // Continue - invite was created even if email failed
+  if (invitee) {
+    const membershipResult = await db.execute(sql`
+      select list_id
+      from task_list_collaborators
+      where list_id = ${params.listId}
+        and user_id = ${invitee.id}
+      limit 1
+    `)
+    if (resultRows<{ list_id: string }>(membershipResult)[0]) {
+      throw new ConflictError('This user is already a member of this list')
     }
-
-    return createdInvite;
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message.includes('duplicate key value violates unique constraint')
-    ) {
-      throw new ConflictError('Invite already exists or conflicts with an existing record', {
-        listId,
-        email: normalizedInvitedEmail,
-      });
-    }
-
-    throw new InternalError('Failed to create invite', {
-      originalError: error instanceof Error ? error.message : String(error),
-    });
-  }
-}
-
-/**
- * Accepts a list invite
- *
- * @param params - Parameters including listId, acceptingUserId, token
- * @returns The list that was invited to
- * @throws NotFoundError if invite or list not found
- * @throws ValidationError if invite was already accepted or conditions not met
- * @throws InternalError if database operation fails
- */
-export async function acceptListInvite(params: AcceptListInviteParams): Promise<ListOutput> {
-  const { listId, acceptingUserId, token } = params;
-
-  const invite = await db.query.listInvite.findFirst({
-    where: and(eq(listInvite.listId, listId), eq(listInvite.token, token)),
-  });
-
-  if (!invite) {
-    throw new NotFoundError('Invite', { listId, token });
   }
 
-  if (invite.accepted) {
-    throw new ValidationError('Invite already accepted', {
-      listId,
+  const token = crypto.randomBytes(24).toString('hex')
+  const insertResult = await db.execute(sql`
+    insert into task_list_invites (
+      list_id,
+      user_id,
+      invited_user_email,
+      invited_user_id,
+      accepted,
+      token
+    )
+    values (
+      ${params.listId},
+      ${params.invitingUserId},
+      ${normalizedEmail},
+      ${invitee?.id ?? null},
+      false,
+      ${token}
+    )
+    returning
+      id,
+      list_id,
+      user_id,
+      invited_user_email,
+      invited_user_id,
+      accepted,
       token,
-    });
+      accepted_at,
+      created_at,
+      updated_at
+  `)
+
+  const row = resultRows<ListInviteRow>(insertResult)[0] ?? null
+  if (!row) {
+    throw new ValidationError('Failed to create list invite')
   }
 
-  const listRecord = await db.query.list.findFirst({
-    where: eq(list.id, invite.listId),
-  });
-
-  if (!listRecord) {
-    throw new NotFoundError('ListOutput', { listId: invite.listId });
-  }
-
-  if (listRecord.ownerId === acceptingUserId) {
-    throw new ValidationError('Cannot accept an invite to a list you own', {
-      listId,
-      acceptingUserId,
-    });
-  }
-
-  const acceptingUser = await db.query.users.findFirst({
-    where: eq(users.id, acceptingUserId),
-  });
-
-  if (!acceptingUser) {
-    throw new NotFoundError('User', { userId: acceptingUserId });
-  }
-
-  try {
-    const acceptedList = await db.transaction(async (tx) => {
-      await tx
-        .update(listInvite)
-        .set({
-          accepted: true,
-          acceptedAt: new Date().toISOString(),
-          invitedUserId: acceptingUserId,
-          updatedAt: new Date().toISOString(),
-        })
-        .where(and(eq(listInvite.listId, invite.listId), eq(listInvite.token, invite.token)));
-
-      await tx
-        .insert(userLists)
-        .values({
-          userId: acceptingUserId,
-          listId: invite.listId,
-        })
-        .onConflictDoNothing();
-
-      const l = await tx.query.list.findFirst({
-        where: eq(list.id, invite.listId),
-      });
-
-      if (!l) {
-        throw new InternalError('ListOutput not found after accepting invite');
-      }
-
-      return l;
-    });
-
-    return acceptedList;
-  } catch (error) {
-    if (isServiceError(error)) {
-      throw error;
-    }
-
-    throw new InternalError('Failed to accept invite', {
-      originalError: error instanceof Error ? error.message : String(error),
-    });
-  }
+  return toOutput(row)
 }
 
-/**
- * Deletes a pending invite (for list owner)
- *
- * @param params - Parameters including listId, invitedUserEmail, userId (owner)
- * @returns void (throws on error)
- * @throws ValidationError if invite was already accepted
- * @throws NotFoundError if list or invite not found
- * @throws ForbiddenError if user does not own the list
- * @throws InternalError if database operation fails
- */
-export async function deleteListInvite(params: DeleteListInviteParams): Promise<void> {
-  const { listId, invitedUserEmail, userId } = params;
-
-  const normalizedEmail = invitedUserEmail.toLowerCase();
-
-  // Ensure the requester owns the list
-  const listRecord = await db.query.list.findFirst({
-    where: and(eq(list.id, listId), eq(list.ownerId, userId)),
-  });
-
-  if (!listRecord) {
-    throw new NotFoundError('ListOutput', { listId });
+export async function acceptListInvite(params: AcceptListInviteParams): Promise<ListOutput> {
+  const invite = await getInviteRowByToken(params.token)
+  if (!invite || invite.list_id !== params.listId) {
+    throw new NotFoundError('Invite not found')
   }
-
-  const invite = await db.query.listInvite.findFirst({
-    where: and(eq(listInvite.listId, listId), eq(listInvite.invitedUserEmail, normalizedEmail)),
-  });
-
-  if (!invite) {
-    throw new NotFoundError('Invite', { listId, email: normalizedEmail });
+  if (invite.user_id === params.acceptingUserId) {
+    throw new ValidationError('Owner cannot accept own invite')
   }
-
+  if (invite.invited_user_id && invite.invited_user_id !== params.acceptingUserId) {
+    throw new ForbiddenError('This invite belongs to a different user')
+  }
   if (invite.accepted) {
-    throw new ValidationError('Invite has already been accepted and cannot be deleted', {
-      listId,
-      email: normalizedEmail,
-    });
+    throw new ConflictError('Invite already accepted')
   }
 
-  try {
-    await db
-      .delete(listInvite)
-      .where(and(eq(listInvite.listId, listId), eq(listInvite.invitedUserEmail, normalizedEmail)));
-  } catch (error) {
-    throw new InternalError('Failed to delete invite', {
-      originalError: error instanceof Error ? error.message : String(error),
-    });
+  const membershipResult = await db.execute(sql`
+    insert into task_list_collaborators (list_id, user_id, added_by_user_id)
+    values (${invite.list_id}, ${params.acceptingUserId}, ${invite.user_id})
+    on conflict (list_id, user_id) do nothing
+    returning list_id
+  `)
+  const createdMembership = resultRows<{ list_id: string }>(membershipResult)[0]
+  if (!createdMembership) {
+    const existingMembership = await db.execute(sql`
+      select list_id
+      from task_list_collaborators
+      where list_id = ${invite.list_id}
+        and user_id = ${params.acceptingUserId}
+      limit 1
+    `)
+    if (!resultRows<{ list_id: string }>(existingMembership)[0]) {
+      throw new ConflictError('Failed to create list membership')
+    }
+  }
+
+  await db.execute(sql`
+    update task_list_invites
+    set
+      invited_user_id = ${params.acceptingUserId},
+      accepted = true,
+      accepted_at = now(),
+      updated_at = now()
+    where id = ${invite.id}
+  `)
+
+  const listResult = await db.execute(sql`
+    select
+      tl.id as list_id,
+      tl.name as list_name,
+      tl.user_id as list_owner_id,
+      u_owner.email as list_owner_email,
+      u_owner.name as list_owner_name,
+      tl.created_at
+    from task_lists tl
+    join users u_owner on u_owner.id = tl.user_id
+    where tl.id = ${invite.list_id}
+    limit 1
+  `)
+  const row = resultRows<ListInviteRow>(listResult)[0] ?? null
+  if (!row) {
+    throw new NotFoundError('List not found')
+  }
+
+  return toListOutput(row) as ListOutput
+}
+
+export async function deleteListInvite(params: DeleteListInviteParams): Promise<void> {
+  await ensureListOwner(params.listId, params.userId)
+  const normalizedEmail = params.invitedUserEmail.toLowerCase()
+  const result = await db.execute(sql`
+    delete from task_list_invites
+    where list_id = ${params.listId}
+      and lower(invited_user_email) = ${normalizedEmail}
+    returning id
+  `)
+  if (!resultRows<{ id: string }>(result)[0]) {
+    throw new NotFoundError('Invite not found')
   }
 }

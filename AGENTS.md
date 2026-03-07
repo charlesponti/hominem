@@ -1,5 +1,15 @@
 # AGENTS.md - Coding Guidelines for Hominem
 
+## Active Change Guardrail (MANDATORY)
+
+Before starting implementation work:
+
+1. Read `openspec/ACTIVE_CHANGE.md`.
+2. Confirm your edits map to the active change artifacts listed there.
+3. If a request implies a different change, ask for explicit re-activation before switching scope.
+
+Do not silently mix work across multiple OpenSpec changes.
+
 ## Core Workflow Commands
 
 Always run commands from the monorepo root. Do NOT `cd` into packages.
@@ -35,9 +45,13 @@ Always run commands from the monorepo root. Do NOT `cd` into packages.
 
 ### TypeScript
 
-- No `any` or `unknown`.
-- Use `import type { ... }` for type-only imports.
+**CRITICAL: No `any` or `unknown` types ever.**
+- Never use `as any`, `as unknown`, or `any` casts to escape type checking.
+- If you encounter a type mismatch, fix the root cause: correct the function signature, add proper generics, or refactor the constraint.
+- Do not use `any` to "make the compiler happy"—that defeats the entire purpose of TypeScript.
 - Use `interface` for object shapes, `type` for unions/primitives/intersections.
+- Use `import type { ... }` for type-only imports.
+- Generic functions and overloads are preferred over `any` for flexible APIs.
 
 ### Error Handling
 
@@ -111,7 +125,7 @@ This runs automatically during `bun run check`.
 
 - Runtime: Bun (>=1.1.0), Node.js (>=20)
 - Web: React 19, React Router 7, Tailwind CSS
-- Server: Hono, tRPC, Supabase Auth
+- Server: Hono, tRPC, Better Auth
 - Database: Drizzle ORM, PostgreSQL
 - Validation: Zod
 - Tools: oxlint, oxfmt
@@ -120,10 +134,6 @@ This runs automatically during `bun run check`.
 
 - Use Hono + tRPC patterns defined in [.github/instructions/api.instructions.md](.github/instructions/api.instructions.md).
 - Use `useHonoQuery` / `useHonoMutation` in client code.
-
-## Type Performance Tools
-
-- `npx @hackefeller/type-audit --project . --threshold 1.0`
 
 ## Imports
 
@@ -154,3 +164,23 @@ rm -rf .turbo **/.turbo && bun run check
 ## Specialized Rules
 
 See `.github/instructions/` for scoped guidance.
+
+
+## FORBIDDEN
+*These are things you are not able to do.*
+- Create sql migration files.
+- Modify database schema directly without migrations.
+- Commit code without running `bun run check` first.
+- Use hardcoded credentials or secrets in code.
+- Bypass authentication/authorization checks.
+- Import database types in client applications.
+- Use `eval()` or dynamic code execution on user input.
+- Deploy without running the full test suite.
+- Modify production environment variables locally.
+- Create database transactions without proper error handling.
+- Use string concatenation for SQL queries.
+- Remove or weaken type safety with `any` types.
+- Log sensitive user data or API responses.
+- Deploy code that hasn't been type-checked.
+- Modify shared library APIs without updating all dependents.
+- Disable linting or security checks.

@@ -2,9 +2,8 @@ import { Button } from '@hominem/ui/button';
 import { Check, Link as LinkIcon, Mail } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
-import type { SentInvite } from '~/lib/types';
-
 import { clientEnv } from '~/lib/env';
+import type { SentInvite } from '~/lib/types';
 
 import UserAvatar from '../user-avatar';
 import DeleteInviteButton from './delete-invite-button';
@@ -43,7 +42,6 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
   );
 
   const isCopied = copiedToken === token;
-  const profilePhoto = user_invitedUserId?.photoUrl || user_invitedUserId?.image;
   const userName: string = user_invitedUserId?.name || invitedUserEmail.split('@')[0] || 'U';
 
   return (
@@ -53,7 +51,7 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
           <UserAvatar
             name={userName ?? undefined}
             email={invitedUserEmail}
-            image={profilePhoto}
+            image={null}
             size="sm"
           />
         ) : (

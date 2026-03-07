@@ -182,7 +182,7 @@ function PlacesAutocomplete({
         </div>
       )}
 
-      {error && <Alert type="error">{error.message}</Alert>}
+      {error && <Alert variant="destructive">{error.message}</Alert>}
     </div>
   );
 }

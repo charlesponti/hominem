@@ -24,7 +24,7 @@ import {
   ValidationError,
   UnauthorizedError,
   InternalError,
-} from '@hominem/services';
+} from '../errors';
 import { getHominemPhotoURL } from '@hominem/utils/images';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
@@ -57,6 +57,9 @@ import {
  */
 function transformInviteToApiFormat(dbInvite: unknown): Invite {
   const typedInvite = dbInvite as Record<string, unknown>;
+  const isAccepted = Boolean(
+    (typedInvite.isAccepted as boolean | undefined) ?? (typedInvite.accepted as boolean | undefined),
+  );
   return {
     id: typedInvite.token as string,
     listId: typedInvite.listId as string,
@@ -64,7 +67,7 @@ function transformInviteToApiFormat(dbInvite: unknown): Invite {
     invitedUserId: typedInvite.invitedUserId as string | null,
     invitedUserEmail: typedInvite.invitedUserEmail as string | null,
     token: typedInvite.token as string,
-    status: typedInvite.isAccepted ? 'accepted' : typedInvite.acceptedAt ? 'declined' : 'pending',
+    status: isAccepted ? 'accepted' : typedInvite.acceptedAt ? 'declined' : 'pending',
     createdAt: typedInvite.createdAt as string,
     updatedAt: typedInvite.updatedAt as string,
     ...(typedInvite.list ? { list: typedInvite.list } : {}),
@@ -76,6 +79,14 @@ function transformInviteToApiFormat(dbInvite: unknown): Invite {
       }
     } : {}),
   } as Invite;
+}
+
+interface InviteListPreview {
+  itemId?: string;
+  name?: string | null;
+  description?: string | null;
+  imageUrl?: string | null;
+  photoUrl?: string | null;
 }
 
 // ============================================================================
@@ -97,13 +108,12 @@ export const invitesRoutes = new Hono<AppContext>()
     let firstItemName: string | null | undefined;
 
     if (list?.id) {
-      const firstPlace = await getPlaceListPreview(list.id);
+      const firstPlace: InviteListPreview | null = await getPlaceListPreview(list.id);
 
       if (firstPlace) {
         firstItemName = firstPlace.name ?? firstPlace.description ?? null;
 
-        // Prefer server-provided resolved photo URL when available
-        coverPhoto = (firstPlace as { photoUrl?: string }).photoUrl ?? firstPlace.imageUrl;
+        coverPhoto = firstPlace.photoUrl ?? firstPlace.imageUrl;
 
         // Fall back to fetching by place photo id and resolve on the server
         if (!coverPhoto && firstPlace.itemId) {

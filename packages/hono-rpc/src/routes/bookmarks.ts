@@ -1,203 +1,126 @@
+import { zValidator } from '@hono/zod-validator'
+import { Hono } from 'hono'
+
+import type { AppContext } from '../middleware/auth'
+import { authMiddleware } from '../middleware/auth'
 import {
-  createBookmarkForUser,
-  deleteBookmarkForUser,
-  listBookmarksByUser,
-  updateBookmarkForUser,
-  NotFoundError,
-  ValidationError,
-  InternalError,
-} from '@hominem/services';
-import { logger } from '@hominem/utils/logger';
-import { Hono } from 'hono';
-import * as z from 'zod';
-
-import { authMiddleware, type AppContext } from '../middleware/auth';
-
-// OpenGraph helper functions (simplified inline)
-async function getOpenGraphData({ url }: { url: string }) {
-  const response = await fetch(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Hominem/1.0)' },
-  });
-  const html = await response.text();
-
-  const getMetaContent = (property: string): string => {
-    const match =
-      html.match(
-        new RegExp(`<meta[^>]*property=["']${property}["'][^>]*content=["']([^"']*)["']`, 'i'),
-      ) ||
-      html.match(
-        new RegExp(`<meta[^>]*content=["']([^"']*)["'][^>]*property=["']${property}["']`, 'i'),
-      );
-    return match?.[1] || '';
-  };
-
-  return {
-    ogTitle: getMetaContent('og:title') || html.match(/<title>([^<]*)<\/title>/i)?.[1] || '',
-    ogDescription: getMetaContent('og:description'),
-    ogImage: getMetaContent('og:image'),
-    ogSiteName: getMetaContent('og:site_name'),
-    ogImageWidth: getMetaContent('og:image:width'),
-    ogImageHeight: getMetaContent('og:image:height'),
-  };
-}
-
-function convertOGContentToBookmark({
-  url,
-  ogContent,
-}: {
-  url: string;
-  ogContent: {
-    ogTitle?: string;
-    ogDescription?: string;
-    ogImage?: string;
-    ogSiteName?: string;
-    ogImageWidth?: string;
-    ogImageHeight?: string;
-  };
-}) {
-  return {
-    url,
-    title: ogContent.ogTitle || new URL(url).hostname,
-    description: ogContent.ogDescription || '',
-    image: ogContent.ogImage || '',
-    siteName: ogContent.ogSiteName || new URL(url).hostname,
-    imageWidth: ogContent.ogImageWidth || '',
-    imageHeight: ogContent.ogImageHeight || '',
-  };
-}
-
-const createBookmarkSchema = z.object({
-  url: z.string().url(),
-});
-
-const updateBookmarkSchema = z.object({
-  url: z.string().url(),
-});
+  CreateBookmarkInputSchema,
+  UpdateBookmarkInputSchema,
+  ListBookmarksFilterSchema,
+} from '../schemas/bookmarks.schema'
+import {
+  listBookmarks,
+  getBookmark,
+  createBookmark,
+  updateBookmark,
+  deleteBookmark,
+} from '@hominem/db/services/bookmarks.service'
+import { NotFoundError, ForbiddenError } from '../errors'
 
 export const bookmarksRoutes = new Hono<AppContext>()
-  // ListOutput bookmarks
-  .get('/', authMiddleware, async (c) => {
+  .use('*', authMiddleware)
+  // List bookmarks
+  .get('/', zValidator('query', ListBookmarksFilterSchema), async (c) => {
     try {
-      const userId = c.get('userId')!;
-      const bookmarks = await listBookmarksByUser(userId);
-      return c.json(bookmarks);
-    } catch (err) {
-      logger.error('[bookmarks.list] error', { error: err });
-      throw new InternalError('Failed to list bookmarks');
+      const userId = c.get('userId')!
+      const query = c.req.valid('query')
+
+      const bookmarks = await listBookmarks(userId as any, query.folder)
+      return c.json({ success: true, data: bookmarks })
+    } catch (error) {
+      if (error instanceof ForbiddenError) {
+        throw error
+      }
+      throw error
     }
   })
+  // Get single bookmark
+  .get('/:id', async (c) => {
+    try {
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
 
+      const bookmark = await getBookmark(id, userId as any)
+      if (!bookmark) {
+        throw new NotFoundError('Bookmark not found')
+      }
+      return c.json({ success: true, data: bookmark })
+    } catch (error) {
+      if (error instanceof ForbiddenError) {
+        throw error
+      }
+      throw error
+    }
+  })
   // Create bookmark
-  .post('/', authMiddleware, async (c) => {
+  .post('/', zValidator('json', CreateBookmarkInputSchema), async (c) => {
     try {
-      const userId = c.get('userId')!;
-      const body = await c.req.json();
-      const parsed = createBookmarkSchema.safeParse(body);
-
-      if (!parsed.success) {
-        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
+      const userId = c.get('userId')!
+      const data = c.req.valid('json')
+      const payload: {
+        url: string
+        title?: string | null
+        description?: string | null
+        folder?: string | null
+      } = {
+        url: data.url,
       }
+      if (data.title !== undefined) payload.title = data.title
+      if (data.description !== undefined) payload.description = data.description
+      if (data.folder !== undefined) payload.folder = data.folder
 
-      const { url } = parsed.data;
+      const newBookmark = await createBookmark(userId as any, payload)
 
-      let converted: {
-        url: string;
-        title: string;
-        description: string;
-        image: string;
-        siteName: string;
-        imageWidth: string;
-        imageHeight: string;
-      };
-
-      try {
-        const ogContent = await getOpenGraphData({ url });
-        converted = convertOGContentToBookmark({ url, ogContent });
-      } catch (ogError) {
-        // Fallback to basic URL data if OpenGraph fails
-        logger.warn('OpenGraph fetch failed, using fallback data', { error: ogError });
-        converted = {
-          url,
-          title: new URL(url).hostname,
-          description: '',
-          image: '',
-          siteName: new URL(url).hostname,
-          imageWidth: '',
-          imageHeight: '',
-        };
-      }
-
-      const bookmark = await createBookmarkForUser(userId, converted);
-      return c.json(bookmark, 201);
-    } catch (err) {
-      logger.error('[bookmarks.create] error', { error: err });
-      throw new InternalError('Failed to create bookmark');
+      return c.json({ success: true, data: newBookmark }, 201)
+    } catch (error) {
+      throw error
     }
   })
-
   // Update bookmark
-  .patch('/:id', authMiddleware, async (c) => {
+  .patch('/:id', zValidator('json', UpdateBookmarkInputSchema), async (c) => {
     try {
-      const userId = c.get('userId')!;
-      const id = c.req.param('id');
-      const body = await c.req.json();
-      const parsed = updateBookmarkSchema.safeParse(body);
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
+      const data = c.req.valid('json')
 
-      if (!parsed.success) {
-        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Validation failed');
-      }
+      const updateData: {
+        url?: string
+        title?: string | null
+        description?: string | null
+        folder?: string | null
+      } = {}
+      if (data.url !== undefined) updateData.url = data.url
+      if (data.title !== undefined) updateData.title = data.title
+      if (data.description !== undefined) updateData.description = data.description
+      if (data.folder !== undefined) updateData.folder = data.folder
 
-      const { url } = parsed.data;
-
-      let converted: {
-        url: string;
-        title: string;
-        description: string;
-        image: string;
-        siteName: string;
-        imageWidth: string;
-        imageHeight: string;
-      };
-
-      try {
-        const ogContent = await getOpenGraphData({ url });
-        converted = convertOGContentToBookmark({ url, ogContent });
-      } catch (ogError) {
-        logger.warn('OpenGraph fetch failed, using fallback data', { error: ogError });
-        converted = {
-          url,
-          title: new URL(url).hostname,
-          description: '',
-          image: '',
-          siteName: new URL(url).hostname,
-          imageWidth: '',
-          imageHeight: '',
-        };
-      }
-
-      const updatedBookmark = await updateBookmarkForUser(id, userId, converted);
-
+      const updatedBookmark = await updateBookmark(id, userId as any, updateData)
       if (!updatedBookmark) {
-        throw new NotFoundError('Bookmark not found or not owned by user');
+        throw new NotFoundError('Bookmark not found or access denied')
       }
-
-      return c.json(updatedBookmark);
-    } catch (err) {
-      logger.error('[bookmarks.update] error', { error: err });
-      throw new InternalError('Failed to update bookmark');
+      return c.json({ success: true, data: updatedBookmark })
+    } catch (error) {
+      if (error instanceof ForbiddenError) {
+        throw error
+      }
+      throw error
     }
   })
-
   // Delete bookmark
-  .delete('/:id', authMiddleware, async (c) => {
+  .delete('/:id', async (c) => {
     try {
-      const userId = c.get('userId')!;
-      const id = c.req.param('id');
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
 
-      const deleted = await deleteBookmarkForUser(id, userId);
-      return c.json({ success: deleted });
-    } catch (err) {
-      logger.error('[bookmarks.delete] error', { error: err });
-      throw new InternalError('Failed to delete bookmark');
+      const deleted = await deleteBookmark(id, userId as any)
+      if (!deleted) {
+        throw new NotFoundError('Bookmark not found or access denied')
+      }
+      return c.json({ success: true, data: { id } })
+    } catch (error) {
+      if (error instanceof ForbiddenError) {
+        throw error
+      }
+      throw error
     }
-  });
+  })

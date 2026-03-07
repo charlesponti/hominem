@@ -97,16 +97,9 @@ export class ChatService {
     }
   }
 
-  async updateChatTitle(chatId: string, title: string, userId?: string): Promise<ChatOutput> {
+  async updateChatTitle(chatId: string, title: string, userId: string): Promise<ChatOutput> {
     try {
-      if (userId) {
-        const existingChat = await this.getChatById(chatId, userId);
-        if (!existingChat) {
-          throw new ChatError('CHAT_NOT_FOUND', 'Chat not found');
-        }
-      }
-
-      const updatedChat = await updateChatTitleQuery(chatId, title);
+      const updatedChat = await updateChatTitleQuery(chatId, title, userId);
       if (!updatedChat) {
         throw new ChatError('CHAT_NOT_FOUND', 'Chat not found');
       }
@@ -122,10 +115,11 @@ export class ChatService {
 
   async updateChatTitleFromConversation(
     chatId: string,
+    userId: string,
     messages: ChatMessageOutput[],
   ): Promise<ChatOutput | null> {
     try {
-      const currentChat = await getChatByIdQuery(chatId, ''); // userId is not needed here
+      const currentChat = await getChatByIdQuery(chatId, userId);
       if (!currentChat || !currentChat.title.startsWith('New Chat')) {
         return currentChat;
       }
@@ -136,7 +130,7 @@ export class ChatService {
         const title =
           messageSummary.length > 50 ? `${messageSummary.slice(0, 47)}...` : messageSummary;
 
-        const updatedChat = await updateChatTitleQuery(chatId, title);
+        const updatedChat = await updateChatTitleQuery(chatId, title, userId);
         logger.info(`Chat title auto-updated: ${chatId} - "${title}"`);
         return updatedChat || null;
       }
@@ -147,21 +141,16 @@ export class ChatService {
     return null;
   }
 
-  async deleteChat(chatId: string, userId?: string): Promise<boolean> {
+  async deleteChat(chatId: string, userId: string): Promise<boolean> {
     try {
-      if (userId) {
-        const existingChat = await this.getChatById(chatId, userId);
-        if (!existingChat) {
-          throw new ChatError('CHAT_NOT_FOUND', 'Chat not found');
-        }
-      }
-
-      await deleteChatQuery(chatId);
+      await deleteChatQuery(chatId, userId);
       logger.info(`Chat deleted: ${chatId}`);
       return true;
     } catch (error) {
       logger.error(`Failed to delete chat:: ${error}`);
-      if (error instanceof ChatError) throw error;
+      if (error instanceof ChatError) {
+        throw error;
+      }
       return false;
     }
   }
@@ -176,21 +165,16 @@ export class ChatService {
     }
   }
 
-  async clearChatMessages(chatId: string, userId?: string): Promise<boolean> {
+  async clearChatMessages(chatId: string, userId: string): Promise<boolean> {
     try {
-      if (userId) {
-        const existingChat = await this.getChatById(chatId, userId);
-        if (!existingChat) {
-          throw new ChatError('CHAT_NOT_FOUND', 'Chat not found');
-        }
-      }
-
-      await clearChatMessagesQuery(chatId);
+      await clearChatMessagesQuery(chatId, userId);
       logger.info(`Chat messages cleared: ${chatId}`);
       return true;
     } catch (error) {
       logger.error(`Failed to clear chat messages:: ${error}`);
-      if (error instanceof ChatError) throw error;
+      if (error instanceof ChatError) {
+        throw error;
+      }
       return false;
     }
   }

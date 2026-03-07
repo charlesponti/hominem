@@ -1,30 +1,87 @@
-import type { UserListsOutput } from '@hominem/db/types/lists';
-
 import { db } from '@hominem/db';
-import { and, eq, inArray } from '@hominem/db';
-import { list } from '@hominem/db/schema/lists';
-import { listInvite, userLists } from '@hominem/db/schema/lists';
+import { sql } from '@hominem/db';
+
+interface MembershipRow {
+  id: string;
+}
+
+interface LinkRow {
+  list_id: string;
+  user_id: string;
+}
+
+interface OwnedListRow {
+  id: string;
+  user_id: string;
+}
+
+export interface ListMembershipLink {
+  listId: string;
+  userId: string;
+}
+
+function resultRows<T>(result: unknown): T[] {
+  if (Array.isArray(result)) {
+    return result as T[];
+  }
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows?: unknown }).rows;
+    if (Array.isArray(rows)) {
+      return rows as T[];
+    }
+  }
+  return [];
+}
 
 export async function isUserMemberOfList(listId: string, userId: string): Promise<boolean> {
-  const membership = await db.query.userLists.findFirst({
-    where: and(eq(userLists.listId, listId), eq(userLists.userId, userId)),
-  });
-  return Boolean(membership);
+  const result = await db.execute(sql`
+    select id from (
+      select tl.id
+      from task_lists tl
+      where tl.id = ${listId}
+        and tl.user_id = ${userId}
+      union all
+      select tl.id
+      from task_lists tl
+      join task_list_collaborators tlc on tlc.list_id = tl.id
+      where tl.id = ${listId}
+        and tlc.user_id = ${userId}
+    ) membership
+    limit 1
+  `);
+
+  return Boolean(resultRows<MembershipRow>(result)[0]);
 }
 
-export async function getUserListLinks(listIds: string[]): Promise<UserListsOutput[]> {
-  return db.query.userLists.findMany({
-    where: inArray(userLists.listId, listIds),
-  });
+export async function getUserListLinks(listIds: string[]): Promise<ListMembershipLink[]> {
+  if (listIds.length === 0) {
+    return [];
+  }
+
+  const listIdValues = sql.join(
+    listIds.map((listId) => sql`${listId}`),
+    sql`, `,
+  );
+
+  const result = await db.execute(sql`
+    select list_id, user_id from (
+      select tl.id as list_id, tl.user_id
+      from task_lists tl
+      where tl.id in (${listIdValues})
+      union all
+      select tlc.list_id, tlc.user_id
+      from task_list_collaborators tlc
+      where tlc.list_id in (${listIdValues})
+    ) links
+    order by list_id asc, user_id asc
+  `);
+
+  return resultRows<LinkRow>(result).map((row) => ({
+    listId: row.list_id,
+    userId: row.user_id,
+  }));
 }
 
-/**
- * Remove a user from a list (remove their collaboration access)
- * @param listId - The ID of the list
- * @param userIdToRemove - The ID of the user to remove from the list
- * @param ownerId - The ID of the list owner (requester)
- * @returns Object with success status or error message
- */
 export async function removeUserFromList({
   listId,
   userIdToRemove,
@@ -34,70 +91,38 @@ export async function removeUserFromList({
   userIdToRemove: string;
   ownerId: string;
 }) {
-  try {
-    // Ensure the requester owns the list
-    const listRecord = await db.query.list.findFirst({
-      where: and(eq(list.id, listId), eq(list.ownerId, ownerId)),
-    });
+  const listResult = await db.execute(sql`
+    select id, user_id
+    from task_lists
+    where id = ${listId}
+    limit 1
+  `);
 
-    if (!listRecord) {
-      return {
-        error: 'ListOutput not found or you do not own this list.',
-        status: 403,
-      };
-    }
+  const listRow = resultRows<OwnedListRow>(listResult)[0] ?? null;
 
-    // Prevent removing the owner
-    if (userIdToRemove === ownerId) {
-      return { error: 'Cannot remove the list owner.', status: 400 };
-    }
-
-    // Check if the user is actually a collaborator (has user_lists record)
-    const userListRecord = await db.query.userLists.findFirst({
-      where: and(eq(userLists.listId, listId), eq(userLists.userId, userIdToRemove)),
-    });
-
-    // Check if there's an accepted invite for this user (even if no user_lists record exists)
-    const acceptedInvite = await db.query.listInvite.findFirst({
-      where: and(
-        eq(listInvite.listId, listId),
-        eq(listInvite.invitedUserId, userIdToRemove),
-        eq(listInvite.isAccepted, true),
-      ),
-    });
-
-    // If neither exists, the user is not a collaborator
-    if (!(userListRecord || acceptedInvite)) {
-      return { error: 'User is not a collaborator on this list.', status: 404 };
-    }
-
-    // Remove the user from the list (if user_lists record exists)
-    if (userListRecord) {
-      await db
-        .delete(userLists)
-        .where(and(eq(userLists.listId, listId), eq(userLists.userId, userIdToRemove)));
-    }
-
-    // Also delete or update the accepted invite if it exists
-    // This handles the edge case where invite is accepted but user_lists wasn't created
-    if (acceptedInvite) {
-      await db
-        .delete(listInvite)
-        .where(
-          and(
-            eq(listInvite.listId, listId),
-            eq(listInvite.invitedUserId, userIdToRemove),
-            eq(listInvite.isAccepted, true),
-          ),
-        );
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error(
-      `Error removing user ${userIdToRemove} from list ${listId} by owner ${ownerId}:`,
-      error,
-    );
-    return { error: 'Failed to remove user from list.', status: 500 };
+  if (!listRow) {
+    return { error: 'List not found.', status: 404 };
   }
+
+  if (listRow.user_id !== ownerId) {
+    return { error: 'List not found or you do not own this list.', status: 403 };
+  }
+
+  if (userIdToRemove === ownerId) {
+    return { error: 'Cannot remove the list owner.', status: 400 };
+  }
+
+  const removedResult = await db.execute(sql`
+    delete from task_list_collaborators
+    where list_id = ${listId}
+      and user_id = ${userIdToRemove}
+    returning list_id
+  `);
+
+  const removed = resultRows<{ list_id: string }>(removedResult)[0] ?? null;
+  if (!removed) {
+    return { error: 'User is not a collaborator on this list.', status: 404 };
+  }
+
+  return { success: true };
 }

@@ -4,11 +4,10 @@ import { Alert, PageTitle } from '@hominem/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useRevalidator } from 'react-router';
 
-import type { SentInvite } from '~/lib/types';
-
 import ErrorBoundary from '~/components/ErrorBoundary';
 import SentInviteForm from '~/components/lists/sent-invite-form';
 import SentInvites from '~/components/lists/sent-invites';
+import type { SentInvite } from '~/lib/types';
 
 import type { Route } from './+types/lists.$id.invites';
 
@@ -54,7 +53,7 @@ export default function ListInvites({ loaderData }: Route.ComponentProps) {
   }, [initialInvites, optimisticInvites]);
 
   if (!(list && initialInvites)) {
-    return <Alert type="error">We could not find this list.</Alert>;
+    return <Alert variant="destructive">We could not find this list.</Alert>;
   }
 
   const handleInviteSuccess = (_newInvite: SentInvite) => {

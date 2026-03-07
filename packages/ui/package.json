@@ -55,6 +55,7 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.575.0",
+    "radix-ui": "^1.4.3",
     "react": "19.1.0",
     "react-day-picker": "8.10.1",
     "react-hook-form": "^7.70.0",

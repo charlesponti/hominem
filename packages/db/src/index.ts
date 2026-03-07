@@ -1,8 +1,35 @@
-// Re-export for backward compatibility and main DB interface
-export {
-  getDb,
-  takeUniqueOrThrow,
-} from './client';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
+
+import type * as schema from './all-schema'
+
+import { getDb } from './client'
+
+let _db: PostgresJsDatabase<typeof schema> | null = null
+
+function getDbInstance() {
+  if (!_db) {
+    _db = getDb() as PostgresJsDatabase<typeof schema>
+  }
+  return _db
+}
+
+/**
+ * Main database instance
+ *
+ * Lazy initialization - only connects when actually used.
+ *
+ * Infrastructure exports only. Services are imported via subpaths:
+ *   import { listTasks } from '@hominem/db/services/tasks.service'
+ *   NOT: import { TaskService } from '@hominem/db'
+ */
+export const db = new Proxy({} as PostgresJsDatabase<typeof schema>, {
+  get(_, prop) {
+    return getDbInstance()[prop as keyof PostgresJsDatabase<typeof schema>]
+  },
+})
+
+// Infrastructure exports only
+export { getDb, takeUniqueOrThrow } from './client'
 
 // Re-export commonly used drizzle-orm functions and types
 // This ensures all packages use the same drizzle-orm instance
@@ -26,38 +53,17 @@ export {
   count,
   type SQL,
   type SQLWrapper,
-} from 'drizzle-orm';
+} from 'drizzle-orm'
+
+// Shared utilities (no service exports from root)
+export * from './services/_shared/errors'
+export * from './services/_shared/ids'
+export * from './services/_shared/query'
 
 /**
- * Validation Schemas (Zod validators)
- *
- * ⚠️  IMPORTANT: These are VALUE exports, not TYPE exports
- *
- * Prefer importing from '@hominem/db/schema/validations' instead:
- *   import { TransactionSchema } from '@hominem/db/schema/validations';
- *
- * This export is provided here for backward compatibility and for services
- * that need direct access without importing from schema submodules.
- * However, the canonical location is schema/validations.ts.
+ * Note: Service modules are NOT re-exported from the root index.
+ * Import services via subpaths instead:
+ *   import { listTasks } from '@hominem/db/services/tasks.service'
+ *   import { listTags } from '@hominem/db/services/tags.service'
+ *   import { FinanceCategoryService } from '@hominem/db/services/finance/categories'
  */
-export {
-  UserSchema,
-  FinanceAccountSchema,
-  FinanceAccountInsertSchema,
-  TransactionSchema,
-  TransactionInsertSchema,
-} from './schema/validations';
-
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-
-import type * as schema from './schema/tables';
-
-import { getDb } from './client';
-
-/**
- * Main database instance
- *
- * Type is explicitly declared here rather than inferred to prevent
- * the expensive schema type computation from affecting every importer.
- */
-export const db = getDb() as PostgresJsDatabase<typeof schema>;

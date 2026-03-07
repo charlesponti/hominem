@@ -1,5 +1,4 @@
 import type { PlaceCreateInput } from '@hominem/hono-rpc/types/places.types';
-
 import { getHominemPhotoURL, sanitizeStoredPhotos } from '@hominem/utils/images';
 
 import type {

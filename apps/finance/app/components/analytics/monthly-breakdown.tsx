@@ -1,5 +1,4 @@
 import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types';
-
 import { Card, CardContent } from '@hominem/ui/components/ui/card';
 import { Skeleton } from '@hominem/ui/components/ui/skeleton';
 import { Link, useNavigate } from 'react-router';
@@ -12,10 +11,9 @@ interface MonthlyBreakdownProps {
   dateFrom?: Date | undefined;
   dateTo?: Date | undefined;
   selectedAccount?: string | undefined;
-  selectedCategory?: string | undefined;
+  selectedTag?: string | undefined;
   compareToPrevious?: boolean | undefined;
   groupBy?: 'month' | 'week' | 'day' | undefined;
-  category?: string | undefined;
   title: string;
 }
 
@@ -104,15 +102,15 @@ interface MonthItemProps {
   item: TimeSeriesDataPoint;
   compareToPrevious: boolean;
   formatDateLabel: (dateStr: string) => string;
-  category: string | undefined;
+  selectedTag: string | undefined;
 }
 
-function MonthTableRow({ item, compareToPrevious, formatDateLabel, category }: MonthItemProps) {
+function MonthTableRow({ item, compareToPrevious, formatDateLabel, selectedTag }: MonthItemProps) {
   const navigate = useNavigate();
 
-  // Build the link to monthly analysis filtered by category
-  const monthlyAnalyticsUrl = category
-    ? `/analytics/monthly/${item.date}?category=${encodeURIComponent(category)}`
+  // Build the link to monthly analysis filtered by tag
+  const monthlyAnalyticsUrl = selectedTag
+    ? `/analytics/monthly/${item.date}?tag=${encodeURIComponent(selectedTag)}`
     : `/analytics/monthly/${item.date}`;
 
   return (
@@ -152,12 +150,12 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel, category }: M
   );
 }
 
-function MonthMobileItem({ item, compareToPrevious, formatDateLabel, category }: MonthItemProps) {
+function MonthMobileItem({ item, compareToPrevious, formatDateLabel, selectedTag }: MonthItemProps) {
   const navigate = useNavigate();
 
-  // Build the link to monthly analysis filtered by category
-  const monthlyAnalyticsUrl = category
-    ? `/analytics/monthly/${item.date}?category=${encodeURIComponent(category)}`
+  // Build the link to monthly analysis filtered by tag
+  const monthlyAnalyticsUrl = selectedTag
+    ? `/analytics/monthly/${item.date}?tag=${encodeURIComponent(selectedTag)}`
     : `/analytics/monthly/${item.date}`;
 
   return (
@@ -216,17 +214,16 @@ export function MonthlyBreakdown({
   dateFrom,
   dateTo,
   selectedAccount,
-  selectedCategory,
+  selectedTag,
   compareToPrevious = false,
   groupBy = 'month',
-  category,
   title,
 }: MonthlyBreakdownProps) {
   const { data, isLoading, error, formatDateLabel } = useTimeSeriesData({
     dateFrom,
     dateTo,
     account: selectedAccount,
-    category: selectedCategory,
+    tag: selectedTag,
     compareToPrevious,
     groupBy,
   });
@@ -275,8 +272,8 @@ export function MonthlyBreakdown({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">{title}</h3>
-            {category && (
-              <span className="text-sm text-muted-foreground">Filtered by: {category}</span>
+            {selectedTag && (
+              <span className="text-sm text-muted-foreground">Filtered by: {selectedTag}</span>
             )}
           </div>
 
@@ -308,7 +305,7 @@ export function MonthlyBreakdown({
                     item={item}
                     compareToPrevious={compareToPrevious}
                     formatDateLabel={formatDateLabel}
-                    category={category}
+                    selectedTag={selectedTag}
                   />
                 ))}
               </tbody>
@@ -323,7 +320,7 @@ export function MonthlyBreakdown({
                 item={item}
                 compareToPrevious={compareToPrevious}
                 formatDateLabel={formatDateLabel}
-                category={category}
+                selectedTag={selectedTag}
               />
             ))}
           </div>

@@ -6,10 +6,10 @@ describe('extractSuccessfulAuthCallbackUrl', () => {
   test('returns callback URL for successful browser result', () => {
     const callbackUrl = extractSuccessfulAuthCallbackUrl({
       type: 'success',
-      url: 'mindsherpa://auth/callback?state=abc&code=token',
+      url: 'hakumi-dev://auth/callback?state=abc&code=token',
     })
 
-    expect(callbackUrl).toBe('mindsherpa://auth/callback?state=abc&code=token')
+    expect(callbackUrl).toBe('hakumi-dev://auth/callback?state=abc&code=token')
   })
 
   test('throws cancellable error on cancel or dismiss', () => {

@@ -1,74 +1,93 @@
-import * as Sentry from '@sentry/react-native';
 import { ThemeProvider } from '@shopify/restyle';
-import { useFonts } from 'expo-font';
-import { Slot, SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
+import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
 import React, { useEffect } from 'react';
+import { Pressable, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { InputProvider } from '~/components/input/input-context';
-import { InputDock } from '~/components/input/input-dock';
+import { RootErrorBoundary } from '~/components/error-boundary/root-error-boundary';
 import { theme } from '~/theme';
-import { ApiProvider } from '~/utils/api-provider';
 import { AuthProvider, useAuth } from '~/utils/auth-provider';
+import { E2E_TESTING } from '~/utils/constants';
+import { resolveAuthRedirect } from '~/utils/navigation/auth-route-guard';
 import { initObservability } from '~/utils/observability';
+import { markStartupPhase } from '~/utils/performance/startup-metrics';
+import { logError } from '~/utils/error-boundary/log-error';
 
 SplashScreen.preventAutoHideAsync();
+markStartupPhase('app_start');
 
 function InnerRootLayout() {
   const router = useRouter();
   const segments = useSegments();
-  const { isLoadingAuth, isSignedIn } = useAuth();
-
-  const [loaded, error] = useFonts({
-    'Font Awesome Regular': require('../assets/fonts/icons/fa-regular-400.ttf'),
-    'Geist Mono': require('../assets/fonts/GeistMono-Regular.ttf'),
-    'Geist Mono Medium': require('../assets/fonts/GeistMono-Medium.ttf'),
-    'Geist Mono SemiBold': require('../assets/fonts/GeistMono-SemiBold.ttf'),
-    'Plus Jakarta Sans': require('../assets/fonts/Plus_Jakarta_Sans.ttf'),
-  });
+  const { authStatus, isSignedIn, resetAuthForE2E, signOut } = useAuth();
+  const hasMarkedShellReady = React.useRef(false);
 
   useEffect(() => {
-    if (loaded || error) {
-      SplashScreen.hideAsync();
-    }
-    if (error) {
-      console.warn('Failed to load fonts', error);
-    }
-  }, [loaded, error]);
+    markStartupPhase('root_layout_mounted');
+
+    let hasHidden = false;
+    const hide = () => {
+      if (hasHidden) {
+        return;
+      }
+      hasHidden = true;
+      SplashScreen.hideAsync().catch(() => undefined);
+    };
+
+    hide();
+    const timeout = setTimeout(hide, 1500);
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
-    if (isLoadingAuth) return;
-
-    const inProtectedGroup = segments[0] === '(drawer)';
-    if (!isSignedIn && inProtectedGroup) {
-      router.replace('/(auth)');
-      return;
+    if (!hasMarkedShellReady.current && authStatus !== 'booting') {
+      markStartupPhase('shell_ready');
+      hasMarkedShellReady.current = true;
     }
 
-    if (isSignedIn && !inProtectedGroup) {
-      router.replace('/(drawer)/(tabs)/start');
+    const target = resolveAuthRedirect({
+      authStatus,
+      isSignedIn,
+      segments,
+    });
+    if (target) {
+      router.replace(target);
     }
-  }, [isLoadingAuth, isSignedIn, segments, router]);
-
-  if (isLoadingAuth) {
-    return <Slot />;
-  }
-
-  const showInputDock = isSignedIn && segments[0] === '(drawer)';
+  }, [authStatus, isSignedIn, segments, router]);
 
   return (
-    <>
+    <RootErrorBoundary onError={(error, errorInfo) => logError(error, errorInfo, { route: segments.join('/') })}>
       <Stack>
         <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack>
-      {showInputDock ? (
-        <InputProvider>
-          <InputDock />
-        </InputProvider>
+      {E2E_TESTING ? (
+        <>
+          {authStatus === 'booting' ? <View testID="auth-state-booting" style={styles.e2eIndicator} /> : null}
+          {authStatus === 'signed_out' || authStatus === 'otp_requested' || authStatus === 'verifying_otp' || authStatus === 'degraded' ? (
+            <View testID="auth-state-signed-out" style={styles.e2eIndicator} />
+          ) : null}
+          {authStatus === 'signed_in' || authStatus === 'signing_out' ? (
+            <View testID="auth-state-signed-in" style={styles.e2eIndicator} />
+          ) : null}
+          <Pressable
+            testID="auth-e2e-reset"
+            style={styles.e2eAction}
+            onPress={() => {
+              void resetAuthForE2E()
+            }}
+          />
+          <Pressable
+            testID="auth-e2e-sign-out"
+            style={styles.e2eActionAlt}
+            onPress={() => {
+              void signOut()
+            }}
+          />
+        </>
       ) : null}
-    </>
+    </RootErrorBoundary>
   );
 }
 
@@ -82,9 +101,7 @@ function RootLayout() {
       <SafeAreaProvider>
         <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.colors.background }}>
           <AuthProvider>
-            <ApiProvider>
-              <InnerRootLayout />
-            </ApiProvider>
+            <InnerRootLayout />
           </AuthProvider>
         </GestureHandlerRootView>
       </SafeAreaProvider>
@@ -92,4 +109,31 @@ function RootLayout() {
   );
 }
 
-export default Sentry.withErrorBoundary(RootLayout, { showDialog: true });
+export default RootLayout;
+
+const styles = {
+  e2eIndicator: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    width: 2,
+    height: 2,
+    opacity: 0.02,
+  },
+  e2eAction: {
+    position: 'absolute' as const,
+    top: 2,
+    right: 2,
+    width: 16,
+    height: 16,
+    opacity: 0.02,
+  },
+  e2eActionAlt: {
+    position: 'absolute' as const,
+    top: 22,
+    right: 2,
+    width: 16,
+    height: 16,
+    opacity: 0.02,
+  },
+}

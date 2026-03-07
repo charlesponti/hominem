@@ -1,14 +1,11 @@
+import { FileProcessorService } from '@hominem/services/files';
+import { fileStorageService } from '@hominem/utils/storage';
 import type { ActionFunctionArgs } from 'react-router';
 
-import { FileProcessorService } from '@hominem/services/files';
-import { indexProcessedFile } from '@hominem/services/vector';
-import { fileStorageService } from '@hominem/utils/supabase';
-
+import { createServerHonoClient } from '~/lib/api.server';
+import { getServerSession } from '~/lib/auth.server';
 import type { FailedUpload, UploadedFile, UploadResponse } from '~/lib/types/upload.js';
-
 import { jsonResponse } from '~/lib/utils/json-response';
-
-import { getServerAuth } from '../lib/auth.server';
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
@@ -17,8 +14,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
   try {
     // Get authentication
-    const { user } = await getServerAuth(request);
-    if (!user) {
+    const { user, session } = await getServerSession(request);
+    if (!user || !session) {
       return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -28,6 +25,9 @@ export async function action({ request }: ActionFunctionArgs) {
     if (!files.length) {
       return jsonResponse({ error: 'No files provided' }, { status: 400 });
     }
+
+    // Create RPC client for vector indexing
+    const client = createServerHonoClient(session.access_token, request);
 
     // Process each file
     const results = await Promise.allSettled(
@@ -59,8 +59,13 @@ export async function action({ request }: ActionFunctionArgs) {
         // Index the file in the vector store if file has text content
         let vectorIds: string[] = [];
         if (processedFile.textContent || processedFile.content) {
-          const indexResult = await indexProcessedFile(processedFile, user.id);
-          vectorIds = indexResult.vectorIds;
+          const res = await client.api.files.index.$post({
+            json: processedFile,
+          });
+          if (res.ok) {
+            const data = await res.json();
+            vectorIds = data.vectorIds;
+          }
         }
 
         return {

@@ -1,5 +1,6 @@
-import { logger } from '@hominem/utils/logger';
 import crypto from 'node:crypto';
+
+import { logger } from '@hominem/utils/logger';
 import { Configuration, CountryCode, PlaidApi, PlaidEnvironments, Products } from 'plaid';
 
 import { env } from '../env';

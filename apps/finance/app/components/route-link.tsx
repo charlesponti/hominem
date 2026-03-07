@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-
 import { type MouseEvent, useCallback } from 'react';
 import { Link, type LinkProps } from 'react-router';
 

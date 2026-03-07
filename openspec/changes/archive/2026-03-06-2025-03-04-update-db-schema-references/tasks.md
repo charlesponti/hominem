@@ -1,0 +1,817 @@
+## 0. Reality Reset (Must Be True Before Any New Work)
+
+- [x] 0.1 Re-read canonical artifacts (`proposal.md`, `design.md`, `tasks.md`) and lock scope to this change only
+- [x] 0.2 Re-run health snapshot on 2026-03-04:
+  - `bun run validate-db-imports` (passes)
+  - `bun run --filter @hominem/db typecheck` (passes)
+  - `bun run --filter @hominem/hono-rpc typecheck` (fails)
+- [x] 0.3 Re-open checklist items whose gates are currently red so task status matches repo reality
+- [x] 0.4 Create capability artifact directory: `openspec/changes/archive/2025-03-04-update-db-schema-references/capabilities/`
+- [x] 0.5 Create module capability modernization artifacts (in strict order): `auth.md`, `chat.md`, `notes.md`, `calendar.md`, `lists.md`, `places.md`, `finance.md`
+- [x] 0.6 For every capability entry, include required fields:
+  - capability ID + entry points
+  - current IO + guards
+  - current failure modes
+  - modernization review (options, selected, rejected)
+  - final target contract
+  - required RED tests
+  - required GREEN tasks
+  - legacy deletions
+
+## 1. Hard Blockers First (Compile + Import Contract)
+
+- [x] 1.1 Fix `validate-db-imports` blocker in `packages/db/src/services/client.ts` so services no longer import from `migrations/schema.ts`
+- [x] 1.2 Re-run `bun run validate-db-imports` and require zero violations before proceeding
+- [x] 1.3 Stabilize remaining DB service compile surface and ensure no `database.query.<table>` gaps remain in:
+  - `tasks.service.ts`
+  - `tags.service.ts`
+  - `calendar.service.ts`
+  - `persons.service.ts`
+  - `bookmarks.service.ts`
+  - `possessions.service.ts`
+- [x] 1.4 Ensure `@hominem/db` continues to pass typecheck after 1.1-1.3
+
+## 2. Test Foundation (Integration-First RED-GREEN, No Skeletons)
+
+- [x] 2.1 Build/confirm shared test scaffolding in `packages/db/src/test/services/_shared/`:
+  - test DB lifecycle harness (isolation, rollback/reset, deterministic seed path)
+  - deterministic user factories
+  - deterministic domain seed builders
+  - shared assertion helpers (not-found, ownership, idempotency)
+  - frozen clock utility and seeded randomness utility
+- [x] 2.2 Remove duplicated fixture wiring from service and route integration tests by centralizing common setup/teardown
+- [x] 2.3 Enforce integration-first test policy:
+  - capability tests default to DB-backed integration slice tests
+  - integration tests assert both flow and invariants (ownership, idempotency, deterministic pagination/order)
+  - unit tests only for isolated pure logic modules (state machines/mappers/validators)
+  - no placeholder/skeleton tests
+  - every test has concrete arrange/act/assert
+  - every RED step must be observable (failing assertion/error) before GREEN implementation
+- [x] 2.4 Add/confirm test docs in this change describing how to add new service tests without duplication
+
+## 3. DB Services RED-GREEN Completion (`@hominem/db`)
+
+- [x] 3.1 Tasks service:
+  - write failing DB-backed integration behavior tests
+  - implement minimal GREEN code
+  - refactor while keeping tests green
+- [x] 3.2 Tags service:
+  - include DB-backed `replaceEntityTags` idempotency and ownership tests
+- [x] 3.3 Calendar service:
+  - include DB-backed attendee replacement overwrite semantics and cross-tenant tests
+- [x] 3.4 Persons service:
+  - include DB-backed exact optional update field semantics
+- [x] 3.5 Bookmarks service:
+  - include DB-backed folder filter and ownership checks
+- [x] 3.6 Possessions service:
+  - include DB-backed container lifecycle + container deletion nullification behavior
+- [x] 3.7 Finance services:
+  - tags/accounts/transactions full DB-backed RED-GREEN
+  - `(date,id)` partition-key point op behavior for transactions
+- [x] 3.8 Validate transaction boundaries in all replace/multi-table writes
+- [x] 3.9 Validate service error taxonomy behavior with real tests (`Validation/NotFound/Conflict/Forbidden/Internal`)
+- [x] 3.10 Validate query contract behavior with real tests (limit clamping, stable cursor sorting, deterministic pagination)
+
+## 4. API + RPC Integration Stabilization (Replacement-Only, No Shims)
+
+- [x] 4.1 Fix strict typing and module resolution regressions in `packages/hono-rpc/src/routes/(economy|knowledge|vital|people).ts`
+- [x] 4.2 Build a legacy replacement inventory for remaining failing modules (auth/chat/notes/calendar/lists/places/finance), including:
+  - legacy module path
+  - replacement target (new DB service/RPC route/type)
+  - owner/timeline for deletion of legacy module
+- [x] 4.3 Replace `auth` files in strict order (from `design.md`), then run module tests + typecheck
+- [x] 4.4 Replace `chat` files in strict order (from `design.md`), then run module tests + typecheck
+- [x] 4.5 Replace `notes` files in strict order (from `design.md`), then run module tests + typecheck
+- [x] 4.6 Replace `calendar` files in strict order (from `design.md`), then run module tests + typecheck and remove legacy `events` calendar surfaces
+- [x] 4.7 Replace `lists` files in strict order (from `design.md`), then run module tests + typecheck
+- [x] 4.8 Replace `places` files in strict order (from `design.md`), then run module tests + typecheck
+- [x] 4.9 Replace `finance` files in strict order (from `design.md`), then run module tests + typecheck
+- [x] 4.10 For each module in 4.3-4.9:
+  - write/update DB-backed integration slice tests for new contract behavior (RED first)
+  - implement GREEN on new architecture interfaces only
+  - add targeted pure unit tests only when logic is isolated and non-DB
+  - delete legacy module implementation and imports in the same phase
+  - create `packages/<module>/src/contracts.ts` and route all domain schema/type imports through it
+  - forbid `@hominem/db/schema/<module>` and `@hominem/db/types/<module>` imports outside `packages/db`
+- [x] 4.11 Enforce no-shim policy after each module cutover:
+  - no alias exports for legacy symbols
+  - no adapter/wrapper modules preserving legacy contract names
+  - no dual-path execution
+- [x] 4.12 Ensure API boundary validation remains Zod-first with branded IDs applied only after validation
+- [x] 4.13 Add/expand API and RPC tests that prove:
+  - success path
+  - validation failure
+  - unauthorized/forbidden
+  - not found
+  - conflict
+- [x] 4.14 Run and pass `bun run --filter @hominem/hono-rpc typecheck`
+- [x] 4.15 After each module cutover, run clean DB rebuild gate:
+  - `bun run --filter @hominem/db clean`
+  - `cd packages/db && bunx tsc -b --force`
+  - verify stale module artifacts are absent from `packages/db/build/schema`
+
+## 5. Consumer and App Layer Contract Verification
+
+- [x] 5.1 Verify all app data access remains RPC-only (`@hominem/hono-client`, `@hominem/hono-rpc/types`)
+- [x] 5.2 Verify no app imports from `@hominem/db` schema/types/services directly
+- [x] 5.3 Run `bun run validate-db-imports` again after app and RPC updates
+- [x] 5.4 Validate key UI read/write flows through rebuilt RPC endpoints
+
+## 6. Performance and Type-Server Validation
+
+- [x] 6.1 Clear turbo cache; capture post-change `bun run typecheck` 3x and median
+- [x] 6.2 Capture post-change `bun run --filter @hominem/db typecheck -- --extendedDiagnostics`
+- [x] 6.3 Capture post-change tsserver latency scenario logs and median
+- [x] 6.4 Compare against baseline and enforce <=10% regression threshold
+- [x] 6.5 Attach timing/diagnostic artifacts to change notes
+
+## 7. Final Gates (In This Exact Order)
+
+- [x] 7.1 `bun run validate-db-imports`
+- [x] 7.2 Run module integration slice suites (touched packages first, in strict module order)
+- [x] 7.3 `bun run test` (touched packages first, then broader run)
+- [x] 7.4 `bun run check` (repo root)
+- [x] 7.5 Consumer subpath resolution gate (at least one package importing `@hominem/db/services/*`)
+- [x] 7.6 Generator drift gate passes (schema slice regeneration produces no diff)
+- [x] 7.7 No-shim gate passes:
+  - grep-based check confirms no shim/adapter/legacy-alias modules remain in replaced surfaces
+  - no new root exports added solely for legacy compatibility
+- [x] 7.8 App-auth E2E gate:
+  - `bun run test:e2e:auth:app`
+
+## 8. Close-Out Integrity
+
+- [x] 8.1 Add verification status note to proposal/tasks with concrete gate results and timing values
+- [x] 8.2 Mark checklist items complete only after corresponding command evidence is green
+- [x] 8.3 If any gate remains red, keep affected checklist items open and document blockers explicitly
+
+## 10. App Auth E2E Completion (Email + OTP + Passkey)
+
+- [x] 10.0 Add first web app auth E2E spec (finance) for OTP request + verify contract
+  - `apps/finance/tests/auth.email-otp.spec.ts`
+  - root gate command added: `bun run test:e2e:auth:app`
+  - local run green for this spec
+- [x] 10.1 Add web app auth E2E suite for email+OTP success path
+  - app-driven sign-in (not direct API-call-only)
+  - assert authenticated app state and protected view access
+  - implemented in `apps/finance/tests/auth.email-otp.spec.ts`
+  - validated protected route access (`/finance`) after OTP verify
+- [x] 10.2 Add web app auth E2E suite for OTP rejection paths
+  - invalid OTP rejected
+  - expired OTP rejected
+  - session remains unauthenticated
+  - validated in `apps/finance/tests/auth.email-otp.spec.ts` via `bun run test:e2e:auth:app` (3/3 passing on 2026-03-05)
+- [x] 10.3 Add web passkey app E2E suite
+  - passkey registration flow
+  - passkey sign-in flow
+  - authenticated app state assertion
+  - implemented in `apps/finance/tests/auth.passkey.spec.ts`
+  - passkey wrappers now forward Better Auth `Set-Cookie` headers to preserve challenge/session continuity
+  - validated by `bun run test:e2e:auth:app` (4/4 passing on 2026-03-05)
+- [x] 10.4 Add mobile auth app E2E suite (existing mobile E2E harness)
+  - execute against `openspec/changes/2025-03-04-update-db-schema-references/mobile-auth-state-contract.md` (state invariants, routing invariants, deterministic e2e controls)
+  - email+OTP sign-in flow
+  - passkey flow where supported by target runtime
+  - authenticated app state assertion
+  - implemented deterministic Detox flow: `apps/mobile/e2e/auth.mobile.e2e.js`
+  - command added: `bun run test:e2e:auth:mobile`
+  - mobile runtime hardening in progress:
+    - replace `NODE_ENV` runtime selection with explicit `APP_VARIANT`
+    - generate dedicated `hakumie2e` native target/scheme via prebuild
+    - exclude `expo-dev-client` from E2E native pod graph
+    - use stable `testID` selectors in Detox assertions
+  - architecture hardening completed in app runtime:
+    - `AuthProvider` now exposes explicit auth state machine (`booting|signed_out|signed_in|degraded`)
+    - provider no longer performs navigation side effects
+    - root route guard consumes provider auth state instead of raw `useSession().isPending`
+    - `getAccessToken` no longer returns `session.user.id` pseudo-token
+    - protected runtime providers moved into `apps/mobile/app/(drawer)/_layout.tsx`:
+      - `ApiProvider`
+      - `InputProvider`
+      - `InputDock`
+    - root layout no longer mounts authenticated-only providers for signed-out/auth routes
+    - startup splash gating reduced to immediate hide + fallback timeout (no fixed 3s boot delay)
+  - unit-first hardening completed before next e2e attempts:
+    - added isolated mobile Vitest config: `apps/mobile/vitest.config.ts`
+    - added auth callback parser suite: `apps/mobile/tests/mobile-auth-callback.test.ts`
+    - added auth provider helper suite: `apps/mobile/tests/auth-provider-utils.test.ts`
+    - added auth route guard suite: `apps/mobile/tests/auth-route-guard.test.ts`
+    - added startup metric budget suite: `apps/mobile/tests/startup-metrics.test.ts`
+    - added auth input validation suite: `apps/mobile/tests/auth-validation.test.ts`
+    - expanded state-machine suite for sign-in/loading transition regressions: `apps/mobile/tests/auth-state-machine.test.ts`
+    - command: `bun run --filter @hominem/mobile test:unit:auth` (38 passing tests)
+  - first-principles stabilization implemented:
+    - deterministic auth state indicators exposed in e2e runtime (`auth-state-booting|signed-out|signed-in`)
+    - deterministic e2e auth controls exposed in e2e runtime (`auth-e2e-reset`, `auth-e2e-sign-out`)
+    - latest run: `bun run test:e2e:auth:mobile` passes with local API stack running
+  - first-principles stabilization policy (locked):
+    - do not patch selectors heuristically
+    - implement deterministic auth state indicators and deterministic e2e reset controls per the mobile auth state contract
+- [x] 10.5 Add a single app-auth E2E gate command at repo root scripts (deterministic run order)
+- [x] 10.6 Add app-auth E2E gate to final verification sequence documentation for this proposal
+- [x] 10.7 Run app-auth E2E gate on local test stack and record results in verification status note
+
+### Verification Status Note (2026-03-06)
+
+- Green command evidence:
+  - `bun run validate-db-imports` -> pass
+  - `bun scripts/check-schema-drift.ts` -> pass (no generated slice drift)
+  - `bun run --filter @hominem/api typecheck` -> pass
+  - `bun run --filter @hominem/hono-rpc typecheck` -> pass
+  - `bun run --filter @hominem/events-services test` -> pass (5/5)
+  - `bun run --filter @hominem/finance-services test` -> pass (21/21)
+  - `bun run --filter @hominem/finance-services test -- src/modern-finance.accounts.integration.test.ts` -> pass (3/3)
+  - `bun run --filter @hominem/lists-services test` -> pass (13/13)
+  - `bun run --filter @hominem/notes-services test -- src/notes.integration.test.ts` -> pass (12/12)
+  - `bun run --filter @hominem/places-services test` -> pass (27/27)
+  - `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts src/routes/finance/finance.accounts.router.test.ts src/routes/finance/finance.data.router.test.ts` -> pass (14/14)
+  - `bun run --filter @hominem/api test -- src/auth/subjects.constraint.test.ts src/middleware/auth.middleware.test.ts src/middleware/block-probes.test.ts src/routes/status.test.ts` -> pass (11/11)
+  - `bun run --filter @hominem/finance test` -> pass (4/4)
+  - `bun run test:e2e:auth:app` -> pass (4/4; includes OTP success/rejection and passkey register+sign-in)
+  - `bun run test:e2e:auth:app` -> pass (4/4 on rerun after auth provider refactor)
+  - `bun run --filter @hominem/rocco test` -> pass (45/45)
+  - `bun run test` -> pass (all packages in scope)
+  - `bun run check` -> pass (existing lint warnings only)
+  - `bun run validate-db-imports` -> pass (2026-03-06 rerun)
+  - `bun scripts/check-schema-drift.ts` -> pass (2026-03-06 rerun, no drift)
+  - `bun run --filter @hominem/hono-rpc typecheck` -> pass (2026-03-06 rerun)
+  - `bun run test:e2e:auth:app` -> pass (4/4 on 2026-03-06 after freeing occupied port 4040)
+  - `bun run --filter @hominem/mobile test:e2e:build:ios` -> pass (2026-03-06)
+  - `bun run --filter @hominem/mobile test:e2e:smoke` -> pass (2026-03-06)
+  - `bun run --filter @hominem/mobile test:e2e:auth:mobile` -> pass (2026-03-06, with local API stack running)
+- performance artifacts captured:
+  - `openspec/changes/2025-03-04-update-db-schema-references/performance-validation.md`
+- Remaining precondition for mobile auth E2E:
+  - local API stack must be running and reachable at `http://localhost:4040` for OTP request/verify path
+
+## 9. Progress Log (2026-03-04)
+
+- [x] 9.1 Auth module modernization step executed:
+  - user mapper contract tests added
+  - account service updated to new schema contract
+  - `@hominem/auth` tests + typecheck passing
+- [x] 9.2 Chat module modernization step executed:
+  - owner-scoped lifecycle behavior enforced in service/query layer
+  - chat contract tests added
+  - canonical chat contracts added at `packages/chat/src/contracts.ts`
+  - chat service/query layer moved to local table mapping (no `@hominem/db/schema|types/chats` imports)
+  - RPC chat types + AI adapters rewired to `@hominem/chat-services` contracts
+  - `@hominem/chat-services` tests + typecheck passing
+- [x] 9.3 Notes module modernization step executed:
+  - canonical domain contracts added at `packages/notes/src/contracts.ts`
+  - notes service and note state logic consume local contracts (no `@hominem/db/schema|types/notes`)
+  - split state/service suites replaced with unified integration-first suite `notes.integration.test.ts`
+  - join-table tag architecture enforced (`note_tags`) and legacy JSON-tag dependence removed from service behavior
+  - RPC notes schema/types now consume `@hominem/notes-services` contracts
+  - clean `@hominem/db` rebuild removed stale generated notes module artifacts
+  - `@hominem/notes-services` tests + typecheck passing
+- [x] 9.4 Calendar module started (strict next order item; legacy `events` decomposition in same phase):
+  - replace legacy `@hominem/db` root helper imports with explicit modern query helpers
+  - then add DB-backed integration slice tests for calendar contract invariants
+  - calendar service contract hardened:
+    - `listEvents` now supports deterministic `limit/offset` pagination
+    - `removeEventAttendee` no longer relies on unsafe nullable DB context access
+    - `replaceEventAttendees` added with transactional full-overwrite semantics and deduplication
+  - calendar RPC surface updated:
+    - `PUT /calendar/:id/attendees` added for full attendee-set replacement
+    - calendar query schema now coercively validates `limit` and `offset` query parameters
+    - Google Calendar sync/status endpoints moved to calendar canonical route surface
+      - `GET /calendar/google/calendars`
+      - `POST /calendar/google/sync`
+      - `GET /calendar/sync/status`
+      - calendar sync status lookup now comes from `GoogleCalendarService.getSyncStatus()` in the calendar route (no `@hominem/events-services` dependency)
+      - legacy `getSyncStatus` branch removed from `packages/events/src/events.service.ts`
+    - `/vital/events` mount removed; vital calendar behavior now exposed via `/vital/calendar`
+    - legacy `events` RPC surfaces removed:
+      - `packages/hono-rpc/src/routes/events.ts` deleted
+      - `packages/hono-rpc/src/types/events.types.ts` deleted
+      - `packages/hono-rpc/src/types/index.ts` no longer re-exports `events.types`
+  - calendar integration-first suite added at `packages/db/src/services/calendar.service.integration.test.ts`
+    - verified green with 5 passing tests (ownership, ordering/pagination, attendee lifecycle, replace semantics, time filters)
+  - blocker discovered when integration suites were executed against running test DB:
+    - `notes` table in test DB is legacy shape (missing `type/status/...` columns expected by `@hominem/db/schema/notes`)
+    - legacy multipurpose branches in `packages/events/src/events.service.ts` were decomposed into focused services (`habits/goals/health/visits`)
+    - RPC generic CRUD dependencies were cut over to domain-specific service methods in habits/goals/health/places routes
+    - `@hominem/events-services` package index no longer re-exports `events.service.ts` generic CRUD surface
+    - residual internal `packages/events/src/events.service.ts` deleted; shared internals moved to non-exported `packages/events/src/event-core.service.ts`
+- [x] 9.5 Lists module started (next strict order item):
+  - `LISTS-01` CRUD baseline rebuilt on `task_lists` ownership semantics (`createList/updateList/deleteList`)
+  - deterministic duplicate-name conflict behavior implemented per owner
+  - DB-backed integration suite added: `packages/lists/src/list-crud.integration.test.ts` (5 passing tests)
+  - `packages/hono-rpc/src/routes/lists.mutation.ts` update flow now returns modernized CRUD result directly (removed legacy `getListById` dependency in mutation path)
+  - `LISTS-02` query projections rebuilt on `task_lists/tasks` with stable ordering and strict owner-only visibility
+  - DB-backed query integration suite added: `packages/lists/src/lists.service.test.ts` (5 passing tests)
+  - `LISTS-03`/`LISTS-04`/`LISTS-05` services cut over to new-schema reality:
+    - removed legacy `@hominem/db/schema/*` and `@hominem/db/types/*` list-import dependencies from lists package
+    - persisted sharing model implemented on:
+      - `task_list_invites`
+      - `task_list_collaborators`
+    - invite lifecycle is now DB-backed (`create/query/accept/delete`) with deterministic guard behavior
+    - collaborator membership is now DB-backed (`owner + collaborator membership`, owner-scoped removal)
+    - shared visibility projections now return collaborator-accessible lists in query services
+  - DB-backed sharing integration suite added and green:
+    - `packages/lists/src/list-sharing.integration.test.ts` (3 passing tests)
+  - migration added and applied for test-db path:
+    - `packages/db/src/migrations/0004_modern_list_sharing.sql`
+  - `packages/hono-rpc/src/schemas/lists.schema.ts` replaced with local Zod schema contract (no legacy DB schema imports)
+  - package gates green for this phase:
+    - `bun run --filter @hominem/lists-services test`
+    - `bun run --filter @hominem/lists-services typecheck`
+    - `bun run --filter @hominem/hono-rpc typecheck`
+- [x] 9.6 Places module started (next strict order item):
+  - `packages/places/src/places.service.ts` rebuilt on current schema (`places` table + metadata JSON)
+  - `packages/places/src/trips.service.ts` rebuilt on current schema (`travel_trips` table + trip data payload)
+  - DB-backed integration suite updated and green: `packages/places/src/places.service.test.ts` (5 passing tests)
+  - package gates green:
+    - `bun run --filter @hominem/places-services typecheck`
+    - `bun run --filter @hominem/places-services test`
+    - `bun run --filter @hominem/places-services lint`
+  - downstream RPC schema dependency cleanup completed for this phase:
+    - `packages/hono-rpc/src/schemas/items.schema.ts` rewritten to local Zod contract
+    - `packages/hono-rpc/src/schemas/tasks.schema.ts` rewritten to local Zod contract
+    - `packages/hono-rpc/src/schemas/notes.schema.ts` decoupled from DB task schema imports
+    - `packages/hono-rpc/src/types/goals.types.ts` decoupled from DB goals schema imports
+  - close-out verification for places phase completed:
+    - no legacy place/travel schema/type imports found outside `packages/db`
+    - no place-shim/adapter path kept for backward compatibility
+    - downstream gate green: `bun run --filter @hominem/hono-rpc typecheck`
+- [x] 9.7 Finance module started (last strict order item):
+  - FIN-01 (accounts lifecycle) initial slice rebuilt on modern finance architecture:
+    - `packages/finance/src/modern-finance.ts` now provides DB-backed account CRUD
+      - `createAccount`
+      - `listAccounts`
+      - `getAccountById`
+      - `updateAccount` (owner-scoped via `userId`)
+      - `deleteAccount` (owner-scoped when `userId` provided)
+    - plaid account helpers now DB-backed:
+      - `upsertAccount` idempotent by `data.plaidAccountId` per owner
+      - `getUserAccounts`
+      - `getAccountByPlaidId`
+  - DB-backed RED→GREEN integration suite added and green:
+    - `packages/finance/src/modern-finance.accounts.integration.test.ts` (3 passing tests)
+  - package gate results for this slice:
+    - `bun run --filter @hominem/finance-services test`
+    - `bun run --filter @hominem/finance-services typecheck`
+    - `bun run --filter @hominem/workers typecheck`
+    - `bun run --filter @hominem/hono-rpc typecheck`
+  - finance test runner narrowed to modern-suite tests while legacy finance branches are being decomposed:
+    - `packages/finance/vitest.config.ts` include now targets `modern-finance*.test.ts`
+  - FIN-02 (transactions query/mutation) modernized and green:
+    - `queryTransactions` stable sorting contract locked on `(date desc, id desc)`
+    - owner-scoped mutation behavior locked on `createTransaction`/`updateTransaction`/`deleteTransaction`
+    - plaid transaction helpers now DB-backed (`insertTransaction`, `getTransactionByPlaidId`, `updatePlaidTransaction`, `deletePlaidTransaction`)
+    - integration suite green: `packages/finance/src/modern-finance.transactions.integration.test.ts` (3 passing tests)
+  - FIN-03 (budget categories/tracking baseline) modernized and green:
+    - category lifecycle and query functions now DB-backed on shared `tags` taxonomy
+    - tracking queries now DB-backed on `finance_transactions` (+ optional `budget_goals` when present)
+    - integration suite green: `packages/finance/src/modern-finance.budget.integration.test.ts` (3 passing tests)
+  - current finance modern test total: 11 passing integration tests across 4 active suites
+  - FIN-08 finance taxonomy schema rewrite is completed (tag-driven; `finance_categories` removed from active contracts)
+  - FIN-04 analytics consolidation completed in this phase:
+    - shared analytics dataset/query core added: `queryAnalyticsTransactionsByContract`
+    - shared derived calculators added:
+      - `getTagBreakdownByContract`
+      - `getTopMerchantsByContract`
+      - `getMonthlyStatsByContract`
+      - `getSpendingTimeSeriesByContract`
+    - route-local aggregation duplication removed from `packages/hono-rpc/src/routes/finance.analyze.ts`
+    - integration suite added and green:
+      - `packages/finance/src/modern-finance.analytics.integration.test.ts` (2 passing tests)
+  - FIN-05 partial implementation completed in this phase:
+    - plaid lookup/mutation functions in `modern-finance.ts` are DB-backed
+    - institution lifecycle functions are DB-backed
+    - integration suite added: `packages/finance/src/modern-finance.plaid.integration.test.ts`
+    - FIN-05 gate is now fully active (no table-gating skip):
+      - migration `0006_finance_runtime_tables.sql` provisions `financial_institutions`, `plaid_items`, and `budget_goals`
+      - follow-up migration `0007_budget_goals_nullable_category_id.sql` aligns budget-goal nullability contract
+      - plaid integration suite now runs as a hard gate (3 passing tests)
+  - updated finance modern test totals:
+    - 21 integration tests defined
+    - 21 passing
+    - 0 skipped
+  - FIN-06 completed:
+    - calculators/runway schemas centralized and reused across service + route layers
+    - runway transport routes implemented:
+      - `POST /finance/runway/calculate`
+      - `POST /finance/runway/budget-breakdown`
+      - `POST /finance/runway/savings-goal`
+      - `POST /finance/runway/loan-details`
+    - integration suite added and green:
+      - `packages/finance/src/modern-finance.calculators.integration.test.ts` (3 passing tests)
+  - FIN-07 completed:
+    - data-ops orchestration implemented in modern finance service:
+      - `exportFinanceData`
+      - `deleteAllFinanceDataWithSummary`
+    - transport routes implemented:
+      - `POST /finance/export/all`
+      - `POST /finance/data/delete-all` (`confirm: true` required)
+    - integration suites added and green:
+      - `packages/finance/src/modern-finance.data-ops.integration.test.ts` (2 passing tests)
+      - `services/api/src/routes/finance/finance.data.router.test.ts` (4 passing tests)
+  - FIN-05 transport hardening completed:
+    - replaced empty RPC stubs for accounts/institutions/plaid with modern service-backed routes:
+      - `packages/hono-rpc/src/routes/finance.accounts.ts`
+      - `packages/hono-rpc/src/routes/finance.institutions.ts`
+      - `packages/hono-rpc/src/routes/finance.plaid.ts`
+    - API integration suite added and green:
+      - `services/api/src/routes/finance/finance.accounts.router.test.ts` (4 passing tests)
+    - route contracts now validate auth and owner-scoped behavior for account mutation and plaid connection removal
+  - repo safety gate re-run after finance slice:
+    - `bun run check` passes (existing unrelated lint warnings only; no errors)
+
+## 10. Next Phase Plan (Finance Tags-Driven Rewrite, Locked)
+
+- [x] 10.1 Freeze finance tag-driven contract in `packages/finance/src/contracts.ts`
+  - no `finance_categories`-based classification DTOs
+  - transaction filters include tag criteria as first-class inputs
+- [x] 10.2 Update DB schema contract sources for finance taxonomy rewrite:
+  - `packages/db/src/schema/tags.ts`
+  - `packages/db/src/schema/finance.ts`
+  - ensure finance transaction tagging uses shared tagged-item model
+- [x] 10.3 Add migration for finance taxonomy rewrite:
+  - create/adjust indexes needed for tag-filtered transaction queries
+  - remove `finance_categories` dependency in finance path
+  - no compatibility category shim tables/views
+- [x] 10.4 Write RED integration tests (before implementation) for tag-driven finance behavior:
+  - transaction tag assignment/replacement idempotency and owner scope
+  - deterministic tag-filtered transaction query ordering/pagination
+  - tag-based analytics/budget aggregate determinism
+  - cross-tenant tag leakage rejection
+- [x] 10.5 GREEN implementation in strict file order:
+  1. `packages/db/src/services/tags.service.ts`
+  2. `packages/finance/src/modern-finance.ts`
+  3. `packages/hono-rpc/src/schemas/finance*.schema.ts`
+  4. `packages/hono-rpc/src/routes/finance.transactions.ts`
+  5. `packages/hono-rpc/src/routes/finance.tags.ts` (replace legacy `finance.categories.ts`)
+  6. `services/api/src/routes/finance/finance.tags.ts` (replace legacy `finance.categories.ts`)
+- [x] 10.6 Delete legacy category-specific finance surfaces in same phase
+  - no `finance_categories` compatibility wrappers/adapters
+  - no dual-path category + tag execution
+- [x] 10.7 Run gates for this phase:
+  - `bun run --filter @hominem/finance-services test`
+  - `bun run --filter @hominem/finance-services typecheck`
+  - `bun run --filter @hominem/hono-rpc typecheck`
+  - `bun run check`
+
+### 10.x Progress Snapshot (Started)
+
+- [x] 10.P1 Tag-driven contract foundation implemented:
+  - `packages/finance/src/contracts.ts` created and exported via `packages/finance/src/index.ts`
+- [x] 10.P2 Tag-driven service APIs implemented in `packages/finance/src/modern-finance.ts`:
+  - `queryTransactionsByContract`
+  - `replaceTransactionTags`
+  - `getTransactionTagIds`
+- [x] 10.P2b Category-surface service cutover to tags completed:
+  - `modern-finance.ts` no longer uses `finance_categories`
+  - budget/category query + mutation functions now operate on shared `tags`
+  - spending + tag breakdown now aggregate via `tags` + `tagged_items`
+- [x] 10.P2c Transport/schema partial cutover completed:
+  - `packages/hono-rpc/src/schemas/finance.transactions.schema.ts` now includes `tagIds`/`tagNames` filter contract and tag IDs for transaction insert payloads
+  - `services/api/src/routes/finance/finance.tags.ts` now resolves transaction taxonomy through `getTransactionTags`
+- [x] 10.P2d Legacy category transport surfaces removed (no-shim):
+  - deleted `packages/hono-rpc/src/routes/finance.categories.ts`; replaced with `packages/hono-rpc/src/routes/finance.tags.ts`
+  - deleted `services/api/src/routes/finance/finance.categories.ts`; replaced with `services/api/src/routes/finance/finance.tags.ts`
+  - finance app taxonomy hook now calls `client.api.finance.tags.list.$post`
+  - runtime grep gate: no remaining `finance_categories` references in `packages/finance`, `packages/hono-rpc`, `services/api`, `apps/finance`, or `packages/db/src/services`
+- [x] 10.P2e Finance transactions transport cutover started:
+  - `packages/hono-rpc/src/routes/finance.transactions.ts` now serves:
+    - `POST /finance/transactions/list`
+    - `POST /finance/transactions/create`
+    - `POST /finance/transactions/update`
+    - `POST /finance/transactions/delete`
+  - list endpoint is wired to `queryTransactionsByContract` with tag-driven filter support
+  - create/update support optional tag assignment via `replaceTransactionTags`
+- [x] 10.P2f Finance analytics transport cutover completed:
+  - `packages/hono-rpc/src/routes/finance.analyze.ts` now serves:
+    - `POST /finance/analyze/tag-breakdown`
+    - `POST /finance/analyze/top-merchants`
+    - `POST /finance/analyze/monthly-stats`
+    - `POST /finance/analyze/spending-time-series`
+  - handlers now delegate analytics logic to shared service-layer contracts:
+    - `getTagBreakdownByContract`
+    - `getTopMerchantsByContract`
+    - `getMonthlyStatsByContract`
+    - `getSpendingTimeSeriesByContract`
+  - route-local analytics aggregation duplication removed; filters still support tag-driven criteria (`tagIds`/`tagNames`)
+  - breakdown output contract is tag-first (`breakdown[].tag`)
+  - monthly stats output contract is tag-first (`topTag`, `tagSpending`)
+  - deleted residual legacy analytics implementation files in `packages/finance/src/analytics/*` and `packages/finance/src/finance.analytics.service.ts`
+  - finance analytics tags view fixed to canonical response shape (`breakdown[]` entries) and tag-first sorting/linking:
+    - `apps/finance/app/routes/analytics.tags.tsx`
+  - analytics naming sweep applied:
+    - `useCategoryBreakdown` -> `useTagBreakdown`
+    - `TopCategories` -> `TopTags`
+    - `CategoryBreakdown*` types -> `TagBreakdown*`
+    - endpoint path standardized: `/finance/analyze/category-breakdown` -> `/finance/analyze/tag-breakdown`
+    - modern finance service symbols standardized:
+      - `getCategoryBreakdownByContract` -> `getTagBreakdownByContract`
+      - `getCategoryBreakdown` -> `getTagBreakdown`
+      - `getTransactionCategoriesAnalysis` -> `getTransactionTagAnalysis`
+    - finance app analytics component path standardized:
+      - `apps/finance/app/components/analytics/top-categories.tsx` -> `apps/finance/app/components/analytics/top-tags.tsx`
+- [x] 10.P3 RED→GREEN integration tests added and passing:
+  - `packages/finance/src/modern-finance.tags.integration.test.ts` (2 tests)
+  - validates tag replacement idempotency, tag-filtered query behavior, and cross-tenant tag rejection
+- [x] 10.P3b Transport integration tests added and passing:
+  - `services/api/src/routes/finance/finance.transactions.router.test.ts` (6 tests)
+  - validates `create/list/update/delete` transport handlers, tag-driven list filtering, `/api/finance/tags`, and analyze endpoints (`tag-breakdown`, `top-merchants`, `spending-time-series`)
+- [x] 10.P4 Phase gates (current slice):
+  - `bun run --filter @hominem/finance-services test`
+  - `bun run --filter @hominem/finance-services typecheck`
+  - `bun run --filter @hominem/workers typecheck`
+  - `bun run --filter @hominem/hono-rpc typecheck`
+  - `bun run --filter @hominem/api typecheck`
+  - `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts`
+  - `bun run check`
+- [x] 10.P5 DB schema + migration cutover completed (finance tag-driven taxonomy):
+  - canonical migration schema no longer defines `finance_categories` (`packages/db/src/migrations/schema.ts`)
+  - relation graph no longer includes `financeCategories` (`packages/db/src/migrations/relations.ts`)
+  - generated finance schema slice now uses shared tag model (`tags`, `tagged_items`) and no `financeCategories` table
+  - residual finance legacy category branches removed to enforce no-shim cutover:
+    - deleted `packages/finance/src/core/budget-categories.service.ts`
+    - deleted `packages/finance/src/core/budget-tracking.service.ts`
+    - deleted `packages/finance/src/core/budget-analytics.service.ts`
+    - deleted `packages/finance/src/finance.tool-servers.ts`
+    - deleted legacy category unit suite `packages/finance/src/budget.test.ts`
+  - custom migration created via Drizzle: `packages/db/src/migrations/0005_finance_tags_taxonomy_rewrite.sql`
+    - drops `finance_categories`
+    - removes legacy `category_id` finance transaction indexes
+    - adds tag-driven transaction query indexes (`finance_transactions_*date_id`, `tagged_items` finance partial indexes)
+  - finance app analytics UI contract naming shifted to tag-first surface:
+    - `useFinanceCategories` -> `useFinanceTags` in `apps/finance/app/lib/hooks/use-analytics.ts`
+    - `CategorySelect` -> `TagSelect` in `apps/finance/app/components/category-select.tsx`
+    - analytics filter UI labels/chips now reference tags instead of categories
+    - analytics hooks now accept `tag` filter inputs and map to current transport payload fields:
+      - `apps/finance/app/lib/hooks/use-analytics.ts`
+      - `apps/finance/app/lib/hooks/use-finance-top-merchants.ts`
+      - `apps/finance/app/lib/hooks/use-time-series.ts`
+      - updated analytics consumers in chart/statistics/monthly/merchant components
+  - analyze transport input contract renamed from `category` -> `tag` (no compatibility mapping):
+    - `packages/hono-rpc/src/routes/finance.analyze.ts` validators now accept `tag`
+    - `packages/hono-rpc/src/types/finance/analytics.types.ts` analyze input types now use `tag`
+    - client hooks now send `tag` directly in request payloads (no `tag -> category` remap)
+    - API integration suite updated and green:
+      - `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts`
+  - analytics UX route naming shifted to tag-first:
+    - replaced `/analytics/category/:category` with `/analytics/tag/:tag`
+    - replaced `/analytics/categories` with `/analytics/tags`
+    - moved route file:
+      - `apps/finance/app/routes/analytics.category.$category.tsx` -> `apps/finance/app/routes/analytics.tag.$tag.tsx`
+      - `apps/finance/app/routes/analytics.categories.tsx` -> `apps/finance/app/routes/analytics.tags.tsx`
+    - updated analytics list-page deep links to `/analytics/tag/...`
+    - updated monthly analytics query links from `?category=...` to `?tag=...`
+    - active analytics UI state/prop names now use `selectedTag` / `setSelectedTag` across chart, summary, monthly, merchant, and filters components
+    - regenerated finance route types:
+      - `bun run --filter @hominem/finance typegen`
+  - test DB migration gate green:
+    - `bun run --filter @hominem/db db:migrate:test`
+- [x] 10.P6 Shared integration test scaffolding started and adopted:
+  - created `packages/db/src/test/services/_shared/harness.ts` as canonical shared utilities for:
+    - test DB availability probing
+    - deterministic test ID generation
+    - deterministic integration user creation
+  - exported shared harness through `@hominem/db/test/utils` to keep cross-package imports stable
+  - migrated suites to shared scaffold:
+    - `packages/notes/src/notes.integration.test.ts`
+    - `packages/finance/src/modern-finance.accounts.integration.test.ts`
+- [x] 10.P7 Shared integration scaffolding rollout expanded across active modules:
+  - migrated additional suites to shared `isIntegrationDatabaseAvailable` + deterministic IDs + shared user creation:
+    - `packages/events/src/events.integration.test.ts`
+    - `packages/lists/src/list-crud.integration.test.ts`
+    - `packages/lists/src/list-sharing.integration.test.ts`
+    - `packages/finance/src/modern-finance.plaid.integration.test.ts`
+    - `packages/finance/src/modern-finance.transactions.integration.test.ts`
+    - `packages/finance/src/modern-finance.tags.integration.test.ts`
+    - `packages/finance/src/modern-finance.analytics.integration.test.ts`
+    - `packages/finance/src/modern-finance.budget.integration.test.ts`
+    - `packages/finance/src/modern-finance.data-ops.integration.test.ts`
+    - `packages/db/src/services/calendar.service.integration.test.ts`
+  - validation after rollout:
+    - `bun run --filter @hominem/db build`
+    - `bun run --filter @hominem/db typecheck`
+    - `bun run --filter @hominem/events-services test`
+    - `bun run --filter @hominem/lists-services test`
+    - `bun run --filter @hominem/finance-services test`
+    - `bun run test`
+- [x] 10.P8 Task 2.1 scaffold primitives completed and validated:
+  - added `_shared` modules:
+    - `assertions.ts` (not-found, ownership, idempotency helpers)
+    - `clock.ts` (frozen clock helpers)
+    - `domain-seeds.ts` (deterministic domain seed builders)
+    - `lifecycle.ts` (transaction harness + table reset helpers)
+    - `random.ts` (seeded randomness utility)
+    - `index.ts` export surface
+  - re-exported through `@hominem/db/test/utils`
+  - validation:
+    - `bun run --filter @hominem/db build`
+    - `bun run --filter @hominem/db typecheck`
+    - `bun run test`
+- [x] 10.P9 Task 2.2 integration setup/teardown centralization completed for finance route suites:
+  - added shared route-test harness:
+    - `services/api/test/finance-test-harness.ts`
+  - refactored finance API route integration suites to shared setup/cleanup:
+    - `services/api/src/routes/finance/finance.accounts.router.test.ts`
+    - `services/api/src/routes/finance/finance.data.router.test.ts`
+    - `services/api/src/routes/finance/finance.transactions.router.test.ts`
+  - validation:
+    - `bun run --filter @hominem/api test -- src/routes/finance/finance.accounts.router.test.ts src/routes/finance/finance.data.router.test.ts src/routes/finance/finance.transactions.router.test.ts`
+    - `bun run test`
+- [x] 10.P10 Task 2.3/2.4 policy and documentation enforcement completed:
+  - removed placeholder skeleton suite:
+    - deleted `packages/db/src/services/tasks.service.test.ts` (`expect.skip` placeholders)
+  - added real DB-backed integration suite:
+    - `packages/db/src/services/tasks.service.integration.test.ts` (5 concrete RED→GREEN coverage tests)
+  - added test policy + authoring guide for no-duplication workflow:
+    - `openspec/changes/2025-03-04-update-db-schema-references/testing-foundation.md`
+  - linked test foundation doc from proposal
+  - validation:
+    - `bun run --filter @hominem/db build`
+    - `bun run --filter @hominem/db typecheck`
+    - `bunx vitest run src/services/tasks.service.integration.test.ts` (from `packages/db`)
+    - `bun run --filter @hominem/api test -- src/routes/finance/finance.accounts.router.test.ts src/routes/finance/finance.data.router.test.ts src/routes/finance/finance.transactions.router.test.ts`
+    - `bun run test`
+- [x] 10.P11 DB service integration RED→GREEN expansion completed for Task 3.2-3.6:
+  - tags service modern contract implemented and adopted:
+    - `replaceEntityTags(ownerId, entityId, entityType, tagIds)` added with:
+      - owner-only tag validation
+      - transactional full-overwrite semantics
+      - idempotent duplicate handling
+    - `listTagsForEntity` updated to owner-scoped contract
+    - RPC tags route updated to call `replaceEntityTags` (no legacy sync call path)
+  - new DB-backed integration suites added:
+    - `packages/db/src/services/tags.service.integration.test.ts` (4 tests)
+    - `packages/db/src/services/persons.service.integration.test.ts` (3 tests)
+    - `packages/db/src/services/bookmarks.service.integration.test.ts` (2 tests)
+    - `packages/db/src/services/possessions.service.integration.test.ts` (3 tests)
+  - existing calendar suite already covers attendee overwrite + cross-tenant reject behavior in `replaceEventAttendees`
+  - schema slices regenerated from canonical source:
+    - `bun scripts/generate-db-schema-slices.ts`
+    - `cd packages/db && bunx tsc -b --force`
+  - validation:
+    - `bun run --filter @hominem/db typecheck`
+    - `bunx vitest run --config packages/db/vitest.config.ts packages/db/src/services/tasks.service.integration.test.ts packages/db/src/services/tags.service.integration.test.ts packages/db/src/services/calendar.service.integration.test.ts packages/db/src/services/persons.service.integration.test.ts packages/db/src/services/bookmarks.service.integration.test.ts packages/db/src/services/possessions.service.integration.test.ts`
+- [x] 10.P12 Transaction-boundary hardening started for replace flows (Task 3.8 in progress):
+  - `replaceEntityTags` now performs owner-tag validation inside transaction before delete/insert write set
+  - added rollback-safety integration test:
+    - `tags.service integration` verifies failed ownership replacement keeps prior tagged state unchanged
+  - added rollback-safety integration test for calendar attendee replacement:
+    - `calendar.service integration` verifies failed insert (invalid attendee FK) rolls back and preserves prior attendee set
+  - validation:
+    - `bun run --filter @hominem/db typecheck`
+    - `bunx vitest run --config packages/db/vitest.config.ts packages/db/src/services/tags.service.integration.test.ts packages/db/src/services/calendar.service.integration.test.ts`
+- [x] 10.P13 Finance DB service stubs replaced with real integration-backed services (Task 3.7):
+  - replaced stubs in:
+    - `packages/db/src/services/finance/accounts.service.ts`
+    - `packages/db/src/services/finance/transactions.service.ts`
+  - accounts service now provides owner-scoped CRUD:
+    - `listFinanceAccounts`
+    - `getFinanceAccount`
+    - `createFinanceAccount`
+    - `updateFinanceAccount`
+    - `deleteFinanceAccount`
+  - transactions service now provides parent-partition-table operations:
+    - `listTransactionsByDateRange`
+    - `listTransactionsByAccount`
+    - `getFinanceTransactionByDateId`
+    - `createFinanceTransaction`
+    - `updateFinanceTransactionByDateId`
+    - `deleteFinanceTransactionByDateId`
+  - `(date,id)` point-operation behavior verified by integration test contract
+  - added DB-backed integration suites:
+    - `packages/db/src/services/finance/accounts.service.integration.test.ts` (2 tests)
+    - `packages/db/src/services/finance/transactions.service.integration.test.ts` (2 tests)
+  - fixed finance test isolation to clean partitioned data via parent table (`finance_transactions`) to prevent duplicate bleed across reruns
+  - validation:
+    - `bun run --filter @hominem/db typecheck`
+    - `bunx vitest run --config packages/db/vitest.config.ts packages/db/src/services/finance/accounts.service.integration.test.ts packages/db/src/services/finance/transactions.service.integration.test.ts`
+    - `bunx vitest run --config packages/db/vitest.config.ts packages/db/src/services/tasks.service.integration.test.ts packages/db/src/services/tags.service.integration.test.ts packages/db/src/services/calendar.service.integration.test.ts packages/db/src/services/persons.service.integration.test.ts packages/db/src/services/bookmarks.service.integration.test.ts packages/db/src/services/possessions.service.integration.test.ts packages/db/src/services/finance/accounts.service.integration.test.ts packages/db/src/services/finance/transactions.service.integration.test.ts`
+- [x] 10.P14 Transaction-boundary hardening completed for multi-table writes (Task 3.8):
+  - service write paths converted to transaction-scoped execution:
+    - `deleteTag` (`tags` + `tagged_items`)
+    - `deleteEvent` (`calendar_events` + `calendar_attendees`)
+    - `deletePerson` (`persons` + `user_person_relations`)
+    - `deleteContainer` (`possession_containers` + `possessions` nullification)
+  - rollback safety tests in place for replace operations:
+    - tags replace failure preserves prior state
+    - calendar attendee replace failure preserves prior attendee set
+  - validation:
+    - `bun run --filter @hominem/db typecheck`
+    - `bunx vitest run --config packages/db/vitest.config.ts packages/db/src/services/tasks.service.integration.test.ts packages/db/src/services/tags.service.integration.test.ts packages/db/src/services/calendar.service.integration.test.ts packages/db/src/services/persons.service.integration.test.ts packages/db/src/services/bookmarks.service.integration.test.ts packages/db/src/services/possessions.service.integration.test.ts packages/db/src/services/finance/accounts.service.integration.test.ts packages/db/src/services/finance/transactions.service.integration.test.ts`
+- [x] 10.P15 Query-limit clamp coverage added (Task 3.10 partial):
+  - clamped pagination normalization implemented in shared query utility:
+    - `packages/db/src/services/_shared/query.ts`
+  - clamped `limit/offset` behavior enforced in calendar list queries:
+    - `packages/db/src/services/calendar.service.ts`
+  - integration coverage added:
+    - `tasks.service integration` verifies min/max clamp (`0 -> 1`, `999 -> 100`)
+    - `calendar.service integration` verifies `limit=0` and negative `offset` clamping
+  - note: cursor-contract validation completed in 10.P17
+- [x] 10.P16 Error-taxonomy integration coverage expanded (Task 3.9 partial):
+  - `tags.service` now emits typed service errors for core failure classes:
+    - `ValidationError` for invalid tag input (blank name)
+    - `ConflictError` for owner-scope duplicate tag names (unique constraint)
+    - `NotFoundError` for missing tag ID on mutating operations
+    - `ForbiddenError` for cross-tenant mutation attempts
+    - unclassified failures mapped to `InternalError` in create path
+  - taxonomy assertions added to DB-backed integration suite:
+    - `packages/db/src/services/tags.service.integration.test.ts`
+  - validation:
+    - `bun run --filter @hominem/db typecheck`
+    - `bunx vitest run --config packages/db/vitest.config.ts packages/db/src/services/tags.service.integration.test.ts`
+  - note: explicit `InternalError` assertion completed in 10.P17
+- [x] 10.P17 Closed remaining Task 3.9 and 3.10 gaps:
+  - query contract completion:
+    - `tasks.service` cursor behavior now enforces deterministic continuation on `(createdAt,id)` ordering
+    - integration assertion added for cursor-based continuation in:
+      - `packages/db/src/services/tasks.service.integration.test.ts`
+  - error taxonomy completion:
+    - `tags.service` now maps:
+      - blank names -> `ValidationError`
+      - missing tag mutation target -> `NotFoundError`
+      - cross-tenant mutation -> `ForbiddenError`
+      - duplicate owner tag name -> `ConflictError`
+      - unexpected database failures -> `InternalError`
+    - taxonomy assertions are covered in:
+      - `packages/db/src/services/tags.service.integration.test.ts`
+  - validation:
+    - `bun run --filter @hominem/db typecheck`
+    - `bunx vitest run --config packages/db/vitest.config.ts packages/db/src/services/tasks.service.integration.test.ts`
+    - `bunx vitest run --config packages/db/vitest.config.ts packages/db/src/services/tags.service.integration.test.ts`
+    - `bunx vitest run --config packages/db/vitest.config.ts packages/db/src/services/tasks.service.integration.test.ts packages/db/src/services/tags.service.integration.test.ts packages/db/src/services/calendar.service.integration.test.ts packages/db/src/services/persons.service.integration.test.ts packages/db/src/services/bookmarks.service.integration.test.ts packages/db/src/services/possessions.service.integration.test.ts packages/db/src/services/finance/accounts.service.integration.test.ts packages/db/src/services/finance/transactions.service.integration.test.ts`
+- [x] 10.P18 Legacy replacement inventory completed (Task 4.2):
+  - created inventory artifact:
+    - `openspec/changes/2025-03-04-update-db-schema-references/legacy-replacement-inventory.md`
+  - includes required fields for each module (`auth/chat/notes/calendar/lists/places/finance`):
+    - legacy module path
+    - replacement target
+    - owner
+    - deletion timeline
+  - enforces no-shim closeout rules in the same artifact
+- [x] 10.P19 RPC typecheck stabilization pass completed:
+  - resolved current strict typing regressions in:
+    - `packages/hono-rpc/src/middleware/context.ts`
+    - `packages/hono-rpc/src/routes/items.ts`
+    - `packages/hono-rpc/src/routes/trips.ts`
+  - restored green gate:
+    - `bun run --filter @hominem/hono-rpc typecheck`
+  - repo boundary gate re-verified:
+    - `bun run validate-db-imports`
+- [x] 10.P20 Strict module-order verification pass completed for Task 4.3-4.9:
+  - command evidence (all green):
+    - `bun run --filter @hominem/auth typecheck`
+    - `bun run --filter @hominem/auth test`
+    - `bun run --filter @hominem/chat-services typecheck`
+    - `bun run --filter @hominem/chat-services test`
+    - `bun run --filter @hominem/notes-services typecheck`
+    - `bun run --filter @hominem/notes-services test -- src/notes.integration.test.ts`
+    - `bun run --filter @hominem/events-services typecheck`
+    - `bun run --filter @hominem/events-services test`
+    - `bun run --filter @hominem/lists-services typecheck`
+    - `bun run --filter @hominem/lists-services test`
+    - `bun run --filter @hominem/places-services typecheck`
+    - `bun run --filter @hominem/places-services test`
+    - `bun run --filter @hominem/finance-services typecheck`
+    - `bun run --filter @hominem/finance-services test`
+- [x] 10.P21 Clean DB rebuild gate executed and green (Task 4.15):
+  - `bun run --filter @hominem/db clean`
+  - `cd packages/db && bunx tsc -b --force`
+  - `packages/db/build/schema` verified to contain only canonical schema slices (`auth|bookmarks|calendar|finance|health|lists|persons|possessions|tags|tasks|users|vector-documents`)
+- [x] 10.P22 Full repo safety gate re-validated on current state:
+  - `bun run check` -> pass
+  - status: typecheck gates green, lint warnings only (no lint errors)
+- [x] 10.P23 Module contract-boundary and no-shim closeout completed (Tasks 4.10, 4.11, 4.12):
+  - created canonical contracts for remaining modules:
+    - `packages/auth/src/contracts.ts`
+    - `packages/events/src/contracts.ts`
+    - `packages/lists/src/contracts.ts`
+    - `packages/places/src/contracts.ts`
+  - rewired module internals to consume local contracts:
+    - auth: `user.ts` + `user.test.ts` now consume `./contracts` (no `@hominem/db/types/users`)
+    - events/calendar: event domain types moved to `contracts.ts`, consumed by `event-core.service.ts`
+    - lists: list service type imports routed through `./contracts`
+    - places: place/trip IO contracts centralized and consumed by service files
+  - no-shim cutover hardening:
+    - removed legacy root compatibility export from events package (`export * from '@hominem/db'`)
+    - removed notes backward-compatibility type alias exports from `packages/hono-rpc/src/types/notes.types.ts`
+  - strict module import-boundary proof:
+    - grep check confirms no `@hominem/db/schema/<module>` or `@hominem/db/types/<module>` imports remain outside `packages/db` for `auth|chat|notes|calendar(events)|lists|places|finance`
+  - API boundary validation hardening:
+    - `packages/hono-rpc/src/routes/tasks.ts` now validates `:id` via Zod params before branded-ID conversion (`brandId<TaskId/UserId>`)
+- [x] 10.P24 API/RPC and consumer-flow proof completed (Tasks 4.13, 5.4):
+  - API/RPC behavior coverage verified:
+    - `bun run --filter @hominem/api test -- src/routes/finance/finance.transactions.router.test.ts`
+    - `bun run --filter @hominem/api test -- src/auth/subjects.constraint.test.ts src/middleware/auth.middleware.test.ts src/routes/auth.token-contract.test.ts`
+    - `bun run --filter @hominem/hono-rpc typecheck`
+    - `bun run --filter @hominem/api typecheck`
+  - key UI flow verification via rebuilt RPC endpoints:
+    - `bun run --filter @hominem/finance test` (`use-finance-data` flow tests green)
+    - `bun run --filter @hominem/rocco test` (list/place read-write UI flow tests green)
+  - no direct module schema/type imports retained in these paths.
+- [x] 10.P25 Performance/type-server validation artifacts attached (Tasks 6.1-6.5):
+  - artifact added:
+    - `openspec/changes/2025-03-04-update-db-schema-references/performance-validation.md`
+  - includes:
+    - post-change `bun run typecheck` runs and medians
+    - `@hominem/db` extended diagnostics snapshot
+    - tsserver scenario latency results + median (`.tmp/tsserver.log`, `.tmp/tsserver-latency.txt`)
+    - baseline comparison and regression-threshold decision

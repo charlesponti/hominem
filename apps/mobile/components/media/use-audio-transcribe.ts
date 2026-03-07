@@ -1,8 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { useCallback, useRef } from 'react'
 
-import { captureException } from '@sentry/react-native'
-
 import { useAuth } from '~/utils/auth-provider'
 import { API_BASE_URL } from '~/utils/constants'
 import { emitVoiceEvent } from '~/utils/voice-events'
@@ -97,7 +95,7 @@ export const useAudioTranscribe = ({
     onSuccess,
     onError: (error) => {
       if (error.name === 'AbortError') return
-      captureException(error)
+      console.error('[voice-transcribe] mutation failed', error)
       onError?.()
     },
   })

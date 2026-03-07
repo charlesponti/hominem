@@ -1,5 +1,5 @@
+import { UnauthorizedError, InternalError } from '@hominem/hono-rpc';
 import { getInvitesForUser } from '@hominem/lists-services';
-import { UnauthorizedError, InternalError } from '@hominem/services';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 

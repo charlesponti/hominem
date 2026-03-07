@@ -4,9 +4,8 @@ import { Input } from '@hominem/ui/input';
 import { Label } from '@hominem/ui/label';
 import { type SyntheticEvent, useCallback, useId, useState } from 'react';
 
-import type { SentInvite } from '~/lib/types';
-
 import { useCreateInvite } from '~/lib/hooks/use-invites';
+import type { SentInvite } from '~/lib/types';
 
 type SentInviteFormProps = {
   listId: string;
@@ -35,7 +34,7 @@ export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps
 
   return (
     <div className="flex flex-col gap-3">
-      {mutation.error && <Alert type="error">{mutation.error.message}</Alert>}
+      {mutation.error && <Alert variant="destructive">{mutation.error.message}</Alert>}
 
       <form className="flex items-center gap-1" onSubmit={onFormSubmit}>
         <Label htmlFor={emailId} className="sr-only">

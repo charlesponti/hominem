@@ -4,7 +4,7 @@ import {
   getAllTrips,
   getTripById,
 } from '@hominem/places-services';
-import { NotFoundError } from '@hominem/services';
+import { NotFoundError } from '../errors';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
@@ -20,12 +20,14 @@ import {
 } from '../types/trips.types';
 
 // Types for database results (with Date objects that need serialization)
-type TripDbRow = {
+type SerializableDate = Date | string | null
+
+type TripRow = {
   id: string;
   name: string;
   userId: string;
-  startDate: Date | null;
-  endDate: Date | null;
+  startDate: SerializableDate;
+  endDate: SerializableDate;
   createdAt: Date | string;
   updatedAt: Date | string;
 };
@@ -42,7 +44,7 @@ type TripItemDbRow = {
 /**
  * Serialize dates to ISO strings for JSON responses
  */
-function serializeTrip(trip: TripDbRow) {
+function serializeTrip(trip: TripRow) {
   return {
     id: trip.id,
     name: trip.name,

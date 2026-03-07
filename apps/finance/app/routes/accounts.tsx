@@ -32,11 +32,7 @@ import type { Route } from './+types/accounts';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const authResult = await requireAuth(request);
-  if (!authResult.user) {
-    return redirect('/auth/signin');
-  }
-
-  const client = createServerHonoClient(authResult.user.id, request);
+  const client = createServerHonoClient(authResult.session?.access_token, request);
 
   const res = await client.api.finance.accounts.all.$post({ json: {} });
   const data = res.ok ? await res.json() : { accounts: [], connections: [] };
@@ -51,7 +47,7 @@ function AccountCard({
   account: ReturnType<typeof useAllAccounts>['accounts'][number];
 }) {
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
-  const isPlaidAccount = account.isPlaidConnected || false;
+  const isPlaidAccount = Boolean(account.plaidItemId);
 
   const getAccountTypeIcon = (type: string) => {
     switch (type.toLowerCase()) {
@@ -74,13 +70,13 @@ function AccountCard({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-1.5 bg-muted">{getAccountTypeIcon(account.type)}</div>
+            <div className="p-1.5 bg-muted">{getAccountTypeIcon(account.accountType)}</div>
             <div>
               <CardTitle className="text-lg">{account.name}</CardTitle>
               <CardDescription>
                 {account.institutionName && isPlaidAccount
-                  ? `${account.institutionName}${account.mask ? ` •••• ${account.mask}` : ''}`
-                  : `${account.type.charAt(0).toUpperCase() + account.type.slice(1)}`}
+                  ? account.institutionName
+                  : `${account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1)}`}
               </CardDescription>
             </div>
           </div>
@@ -158,8 +154,8 @@ export default function AccountsPage({ loaderData }: Route.ComponentProps) {
 
   // Sort accounts to show Plaid-connected accounts first, then manual accounts
   const sortedAccounts = (allAccountsQuery.accounts || []).sort((a, b) => {
-    if (a.isPlaidConnected && !b.isPlaidConnected) return -1;
-    if (!a.isPlaidConnected && b.isPlaidConnected) return 1;
+    if (a.plaidItemId && !b.plaidItemId) return -1;
+    if (!a.plaidItemId && b.plaidItemId) return 1;
     return a.name.localeCompare(b.name);
   });
 

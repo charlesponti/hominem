@@ -1,6 +1,5 @@
-import { type HTMLAttributes, type ReactNode, useState } from 'react';
-
 import { ChevronDown, ChevronUp, Loader2, Wrench } from 'lucide-react';
+import { type HTMLAttributes, type ReactNode, useState } from 'react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -79,7 +78,10 @@ export function ToolInput({ children, className, ...props }: ToolInputProps) {
   if (!children) return null;
 
   return (
-    <pre className={cn('mt-2 overflow-x-auto rounded bg-muted/50 p-2 text-xs font-mono', className)} {...props}>
+    <pre
+      className={cn('mt-2 overflow-x-auto rounded bg-muted/50 p-2 text-xs font-mono', className)}
+      {...props}
+    >
       {children}
     </pre>
   );
@@ -94,7 +96,14 @@ export function ToolOutput({ children, isError = false, className, ...props }: T
   if (!children) return null;
 
   return (
-    <pre className={cn('mt-2 overflow-x-auto rounded bg-muted/50 p-2 text-xs font-mono', isError && 'text-red-500', className)} {...props}>
+    <pre
+      className={cn(
+        'mt-2 overflow-x-auto rounded bg-muted/50 p-2 text-xs font-mono',
+        isError && 'text-red-500',
+        className,
+      )}
+      {...props}
+    >
       {children}
     </pre>
   );

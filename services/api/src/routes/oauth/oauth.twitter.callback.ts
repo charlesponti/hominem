@@ -1,11 +1,10 @@
+import { randomUUID } from 'node:crypto';
+
 import { createAccount, getAccountByProviderAccountId, updateAccount } from '@hominem/auth/server';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { randomUUID } from 'node:crypto';
 import * as z from 'zod';
-
-import type { AppEnv } from '../../server';
 
 import { env } from '../../env';
 import {
@@ -14,6 +13,7 @@ import {
   type TwitterTokenResponse,
   type TwitterUserResponse,
 } from '../../lib/oauth.twitter.utils';
+import type { AppEnv } from '../../server';
 
 // Twitter OAuth configuration
 const TWITTER_CLIENT_ID = env.TWITTER_CLIENT_ID;

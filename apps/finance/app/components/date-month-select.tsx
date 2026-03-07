@@ -71,4 +71,3 @@ export const getCurrentMonthYear = () => {
 };
 
 // Export the MonthOption type for use in other components
-;

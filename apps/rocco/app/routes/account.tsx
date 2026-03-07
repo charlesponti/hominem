@@ -50,7 +50,7 @@ function DeleteAccount() {
   return (
     <>
       {isError && (
-        <Alert type="error">
+        <Alert variant="destructive">
           <span data-testid="delete-account-error">Account delete failed. Retry.</span>
         </Alert>
       )}

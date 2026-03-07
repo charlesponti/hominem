@@ -6,9 +6,10 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
-    "./supabase": "./src/supabase/index.ts",
+    "./storage": "./src/storage/index.ts",
     "./consts": "./src/consts.ts",
     "./dates": "./src/dates.ts",
+    "./headers": "./src/headers.ts",
     "./images": "./src/images.ts",
     "./google": "./src/google.ts",
     "./http": "./src/http.ts",
@@ -29,9 +30,12 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@supabase/storage-js": "^2.7.3",
-    "@supabase/supabase-js": "2.88.0",
+    "@aws-sdk/client-s3": "^3.529.0",
+    "@aws-sdk/s3-request-presigner": "^3.529.0",
+    "@langchain/core": "^1.1.29",
+    "@langchain/textsplitters": "^1.0.1",
     "date-fns": "^3.6.0",
+    "langchain": "^1.2.28",
     "pino": "^9.7.0",
     "zod": "4.3.6"
   },

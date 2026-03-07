@@ -50,4 +50,29 @@ describe('mobile e2e login guard', () => {
 
     expect(response.status).toBe(403);
   }, 15000);
+
+  test('accepts passkey AMR for deterministic mobile passkey e2e flows', async () => {
+    process.env.NODE_ENV = 'development';
+    process.env.AUTH_E2E_ENABLED = 'true';
+    process.env.AUTH_E2E_SECRET = 'test-secret';
+
+    const createServer = await importServer();
+    const app = createServer();
+    const response = await app.request('http://localhost/api/auth/mobile/e2e/login', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-e2e-auth-secret': 'test-secret',
+      },
+      body: JSON.stringify({
+        email: 'mobile-passkey-e2e@hominem.test',
+        amr: ['passkey', 'e2e', 'mobile'],
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = await response.json() as { access_token: string; provider: string }
+    expect(body.access_token.length).toBeGreaterThan(10)
+    expect(body.provider).toBe('better-auth')
+  }, 15000);
 });

@@ -2,11 +2,10 @@ import {
   createList,
   deleteList,
   deleteListItem,
-  getListById,
   removeUserFromList,
   updateList,
 } from '@hominem/lists-services';
-import { ForbiddenError, ValidationError, InternalError } from '@hominem/services';
+import { ForbiddenError, ValidationError, InternalError } from '../errors';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 
@@ -89,13 +88,7 @@ export const listMutationRoutes = new Hono<AppContext>()
       throw new ForbiddenError("You don't have permission to update this list");
     }
 
-    // Fetch full list with all relations to match API contract
-    const fullList = await getListById(input.id, userId);
-    if (!fullList) {
-      throw new InternalError('Failed to fetch updated list');
-    }
-
-    return c.json<ListUpdateOutput>(transformListToApiFormat(fullList), 200);
+    return c.json<ListUpdateOutput>(transformListToApiFormat(updatedList), 200);
   })
 
   // Delete list
@@ -143,10 +136,12 @@ export const listMutationRoutes = new Hono<AppContext>()
 
       if ('error' in result) {
         const statusCode = result.status ?? 500;
-        if (statusCode === 403) {
+        if (statusCode === 400) {
+          throw new ValidationError(String(result.error) || 'Operation failed');
+        } else if (statusCode === 403) {
           throw new ForbiddenError(String(result.error) || 'Operation failed');
         } else if (statusCode === 404) {
-          throw new (await import('@hominem/services')).NotFoundError(
+          throw new (await import('@hominem/hono-rpc')).NotFoundError(
             String(result.error) || 'Operation failed',
           );
         } else {

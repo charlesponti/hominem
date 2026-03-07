@@ -156,6 +156,77 @@ function checkDbPackageExports() {
   return 0;
 }
 
+// Check that DB services do not import from migrations/schema.ts (Task 3.1)
+function checkDbServiceImports() {
+  const servicesDir = path.join(process.cwd(), 'packages', 'db', 'src', 'services');
+  if (!fs.existsSync(servicesDir)) return 0;
+  
+  const files = findFiles(servicesDir);
+  let violationCount = 0;
+  
+  for (const file of files) {
+    const content = fs.readFileSync(file, 'utf-8');
+    const lines = content.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // Check for imports from migrations/schema.ts
+      if (/from\s+['"][^'"]*migrations\/schema['"]/.test(line)) {
+        if (violationCount === 0) {
+          console.error('❌ Rule violated: DB services must not import from migrations/schema.ts\n');
+        }
+        violationCount++;
+        const relPath = path.relative(process.cwd(), file);
+        console.error(`   ${relPath}:${i + 1}`);
+        console.error(`   ${line.trim()}\n`);
+      }
+    }
+  }
+  
+  if (violationCount > 0) {
+    console.error('   Services should import from packages/db/src/schema/<domain>.ts instead.\n');
+    return 1;
+  }
+  
+  return 0;
+}
+
+// Check that schema domain files are not re-export wrappers (Task 3.2)
+function checkSchemaWrappers() {
+  const schemaDir = path.join(process.cwd(), 'packages', 'db', 'src', 'schema');
+  if (!fs.existsSync(schemaDir)) return 0;
+  
+  const files = findFiles(schemaDir);
+  let violationCount = 0;
+  
+  for (const file of files) {
+    const content = fs.readFileSync(file, 'utf-8');
+    const lines = content.split('\n');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // Check for re-exports from migrations/schema.ts
+      if (/export\s+[\s\S]*from\s+['"][^'"]*migrations\/schema['"]/.test(line) ||
+          /import\s+\*\s+as\s+\w+\s+from\s+['"][^'"]*migrations\/schema['"]/.test(line)) {
+        if (violationCount === 0) {
+          console.error('❌ Rule violated: Schema domain files must not be re-export wrappers of migrations/schema.ts\n');
+        }
+        violationCount++;
+        const relPath = path.relative(process.cwd(), file);
+        console.error(`   ${relPath}:${i + 1}`);
+        console.error(`   ${line.trim()}\n`);
+      }
+    }
+  }
+  
+  if (violationCount > 0) {
+    console.error('   Schema files must be physically generated from migrations/schema.ts using the generator.\n');
+    return 1;
+  }
+  
+  return 0;
+}
+
 // Run validation
-const exitCode = validate() || checkDbPackageExports();
+const exitCode = validate() || checkDbPackageExports() || checkDbServiceImports() || checkSchemaWrappers();
 process.exit(exitCode);

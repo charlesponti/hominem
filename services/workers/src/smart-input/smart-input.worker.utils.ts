@@ -1,9 +1,8 @@
-import type { Attachment } from 'mailparser';
-import type { Result as PDFParseResult } from 'pdf-parse';
-
 import { openai } from '@ai-sdk/openai';
 import { logger } from '@hominem/utils/logger';
 import { generateObject, generateText } from 'ai';
+import type { Attachment } from 'mailparser';
+import type { Result as PDFParseResult } from 'pdf-parse';
 
 import { type SubmissionAttachment, SubmissionAttachmentSchema } from '../lib/writer.schema';
 
@@ -24,9 +23,7 @@ async function getPDFData(content: Buffer): Promise<PDFParseResult> {
   return pdfData;
 }
 
-async function getAttachmentText(
-  attachment: Attachment,
-): Promise<{ text: string; pages: number }> {
+async function getAttachmentText(attachment: Attachment): Promise<{ text: string; pages: number }> {
   const { content } = attachment;
   if (!content) {
     return { text: '', pages: 0 };

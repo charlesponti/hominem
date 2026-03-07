@@ -1,22 +1,23 @@
-import {
-  ItemSchema as DbItemSchema,
-  ItemInsertSchema as DbItemInsertSchema,
-} from '@hominem/db/schema/items';
-import * as z from 'zod';
+import * as z from 'zod'
 
-const itemSchema = DbItemSchema.extend({});
+export const itemSchema = z.object({
+  id: z.string().uuid(),
+  listId: z.string().uuid(),
+  itemId: z.string().uuid(),
+  itemType: z.enum(['PLACE', 'FLIGHT', 'TASK']).default('TASK'),
+})
 
-export const itemsAddToListSchema = DbItemInsertSchema.pick({
+export const itemsAddToListSchema = itemSchema.pick({
   listId: true,
   itemId: true,
   itemType: true,
-}).extend({});
+})
 
-export const itemsRemoveFromListSchema = DbItemSchema.pick({
+export const itemsRemoveFromListSchema = itemSchema.pick({
   listId: true,
   itemId: true,
-}).extend({});
+})
 
 export const itemsGetByListIdSchema = z.object({
   listId: z.string().uuid(),
-});
+})

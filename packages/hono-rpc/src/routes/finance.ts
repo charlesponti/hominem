@@ -5,12 +5,12 @@ import type { AppContext } from '../middleware/auth';
 import { accountsRoutes } from './finance.accounts';
 import { analyzeRoutes } from './finance.analyze';
 import { budgetRoutes } from './finance.budget';
-import { categoriesRoutes } from './finance.categories';
 import { dataRoutes } from './finance.data';
 import { exportRoutes } from './finance.export';
 import { institutionsRoutes } from './finance.institutions';
 import { plaidRoutes } from './finance.plaid';
 import { runwayRoutes } from './finance.runway';
+import { tagsRoutes } from './finance.tags';
 import { transactionsRoutes } from './finance.transactions';
 
 /**
@@ -22,7 +22,7 @@ import { transactionsRoutes } from './finance.transactions';
  * - /transactions/* - Transaction operations
  * - /accounts/* - Account operations
  * - /analyze/* - Analytics and reporting
- * - /categories/* - Category operations
+ * - /tags/* - Tag taxonomy operations
  * - /plaid/* - Plaid integration
  * - /budget/* - Budget management
  * - /institutions/* - Financial institutions
@@ -41,7 +41,7 @@ export const financeRoutes = new Hono<AppContext>()
   .route('/transactions', transactionsRoutes)
   .route('/accounts', accountsRoutes)
   .route('/analyze', analyzeRoutes)
-  .route('/categories', categoriesRoutes)
+  .route('/tags', tagsRoutes)
   .route('/plaid', plaidRoutes)
   .route('/budget', budgetRoutes)
   .route('/institutions', institutionsRoutes)

@@ -1,5 +1,4 @@
 import type { GeocodeFeature } from '@hominem/utils/location';
-
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 

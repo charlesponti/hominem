@@ -11,15 +11,22 @@ vi.mock('sharp', () => ({
   }),
 }));
 
-import type { StoredFile } from '@hominem/utils/supabase';
+// Mock R2 storage service
+vi.mock('@hominem/utils/storage', () => ({
+  placeImagesStorageService: {
+    storeFile: vi.fn(),
+  },
+}));
 
-import { placeImagesStorageService } from '@hominem/utils/supabase';
+import type { StoredFile } from '@hominem/utils/storage';
+import { placeImagesStorageService } from '@hominem/utils/storage';
 
 import { isGooglePhotosUrl, savePlacePhoto } from './place-images.service';
 
 describe('savePlacePhoto', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.mocked(placeImagesStorageService.storeFile).mockReset();
   });
 
   it('uploads full and thumb with deterministic filenames', async () => {
@@ -32,12 +39,11 @@ describe('savePlacePhoto', () => {
     const fullUrl = 'https://cdn/full.webp';
     const thumbUrl = 'https://cdn/thumb.webp';
 
-    const storeSpy = vi
-      .spyOn(placeImagesStorageService, 'storeFile')
+    vi.mocked(placeImagesStorageService.storeFile)
       .mockResolvedValueOnce({
         id: 'mock-id-1',
         originalName: baseFullFilename,
-        filename: `places/${googleMapsId}/${fullFilename}`,
+        filename: `places/place/${googleMapsId}/${fullFilename}`,
         mimetype: 'image/webp',
         size: Buffer.from(fullFilename).length,
         url: fullUrl,
@@ -46,7 +52,7 @@ describe('savePlacePhoto', () => {
       .mockResolvedValueOnce({
         id: 'mock-id-2',
         originalName: baseThumbFilename,
-        filename: `places/${googleMapsId}/${thumbFilename}`,
+        filename: `places/place/${googleMapsId}/${thumbFilename}`,
         mimetype: 'image/webp',
         size: Buffer.from(thumbFilename).length,
         url: thumbUrl,
@@ -55,10 +61,10 @@ describe('savePlacePhoto', () => {
 
     const res = await savePlacePhoto(googleMapsId, buffer, 0);
 
-    expect(storeSpy).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(placeImagesStorageService.storeFile)).toHaveBeenCalledTimes(2);
 
-    const firstCall = storeSpy.mock.calls[0];
-    const secondCall = storeSpy.mock.calls[1];
+    const firstCall = vi.mocked(placeImagesStorageService.storeFile).mock.calls[0];
+    const secondCall = vi.mocked(placeImagesStorageService.storeFile).mock.calls[1];
 
     // First call = full image
     expect(firstCall?.[1]).toBe('image/webp');
@@ -81,12 +87,11 @@ describe('savePlacePhoto', () => {
     const baseFullFilename = `${googleMapsId}-0-full`;
     const fullFilename = `${baseFullFilename}.webp`;
 
-    const storeSpy = vi
-      .spyOn(placeImagesStorageService, 'storeFile')
+    vi.mocked(placeImagesStorageService.storeFile)
       .mockResolvedValueOnce({
         id: 'mock-id-3',
         originalName: baseFullFilename,
-        filename: `places/${googleMapsId}/${fullFilename}`,
+        filename: `places/place/${googleMapsId}/${fullFilename}`,
         mimetype: 'image/webp',
         size: Buffer.from(fullFilename).length,
         url: 'https://cdn/full2.webp',
@@ -98,7 +103,7 @@ describe('savePlacePhoto', () => {
 
     const res = await savePlacePhoto(googleMapsId, buffer, 0);
 
-    expect(storeSpy).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(placeImagesStorageService.storeFile)).toHaveBeenCalledTimes(2);
     expect(res.fullUrl).toBe('https://cdn/full2.webp');
     expect(res.thumbUrl).toBeNull();
 

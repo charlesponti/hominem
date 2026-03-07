@@ -1,11 +1,10 @@
 import { getPlaidItemByUserAndItemId, updatePlaidItemStatusById } from '@hominem/finance-services';
-import { UnauthorizedError, NotFoundError, InternalError } from '@hominem/services';
+import { UnauthorizedError, NotFoundError, InternalError } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
-import type { AppEnv } from '../../../server';
-
 import { plaidClient } from '../../../lib/plaid';
+import type { AppEnv } from '../../../server';
 
 export const financePlaidDisconnectRoutes = new Hono<AppEnv>();
 
@@ -28,19 +27,17 @@ financePlaidDisconnectRoutes.delete('/:itemId', async (c) => {
 
     // Remove the item from Plaid
     try {
-      await plaidClient.itemRemove({
-        access_token: plaidItem.accessToken,
-      });
+      if (plaidItem.accessToken) {
+        await plaidClient.itemRemove({
+          access_token: plaidItem.accessToken,
+        });
+      }
     } catch (plaidError) {
       logger.warn(`Failed to remove item from Plaid (continuing anyway)`, { error: plaidError });
     }
 
     // Mark as disconnected in our database
-    await updatePlaidItemStatusById(plaidItem.id, {
-      status: 'error', // Using 'error' status to indicate disconnected
-      error: 'Disconnected by user',
-      updatedAt: new Date().toISOString(),
-    });
+      await updatePlaidItemStatusById(plaidItem.id, userId, 'error');
 
     return c.json({
       message: 'Successfully disconnected account',

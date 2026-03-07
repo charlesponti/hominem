@@ -8,8 +8,6 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "oxfmt.oxfmt",
   },
-  "deno.enablePaths": ["supabase/functions"],
-  "deno.lint": true,
   "editor.defaultFormatter": "oxfmt.oxfmt",
   "editor.codeActionsOnSave": {
     "source.sortImports": "always",

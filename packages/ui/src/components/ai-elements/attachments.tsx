@@ -1,31 +1,12 @@
 'use client';
 
-import {
-  forwardRef,
-  useState,
-  type HTMLAttributes,
-  type ReactNode,
-} from 'react';
-
-import {
-  AudioLines,
-  FileText,
-  Film,
-  Image,
-  Paperclip,
-  X,
-} from 'lucide-react';
+import { AudioLines, FileText, Film, Image, Paperclip, X } from 'lucide-react';
+import { forwardRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
 
-type MediaCategory =
-  | 'image'
-  | 'video'
-  | 'audio'
-  | 'document'
-  | 'source'
-  | 'unknown';
+type MediaCategory = 'image' | 'video' | 'audio' | 'document' | 'source' | 'unknown';
 
 interface FileUIPart {
   type: 'file';
@@ -55,11 +36,7 @@ export function getMediaCategory(data: AttachmentData): MediaCategory {
   if (mimeType.startsWith('image/')) return 'image';
   if (mimeType.startsWith('video/')) return 'video';
   if (mimeType.startsWith('audio/')) return 'audio';
-  if (
-    mimeType.includes('pdf') ||
-    mimeType.includes('document') ||
-    mimeType.includes('text')
-  ) {
+  if (mimeType.includes('pdf') || mimeType.includes('document') || mimeType.includes('text')) {
     return 'document';
   }
 
@@ -183,11 +160,7 @@ interface AttachmentRemoveProps extends HTMLAttributes<HTMLButtonElement> {
   label?: string;
 }
 
-export function AttachmentRemove({
-  label = 'Remove',
-  className,
-  ...props
-}: AttachmentRemoveProps) {
+export function AttachmentRemove({ label = 'Remove', className, ...props }: AttachmentRemoveProps) {
   return (
     <Button
       type="button"
@@ -261,7 +234,13 @@ interface AttachmentEmptyProps extends HTMLAttributes<HTMLDivElement> {}
 
 export function AttachmentEmpty({ className, ...props }: AttachmentEmptyProps) {
   return (
-    <div className={cn('flex flex-col items-center justify-center p-4 text-muted-foreground', className)} {...props}>
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center p-4 text-muted-foreground',
+        className,
+      )}
+      {...props}
+    >
       <Paperclip className="size-8 mb-2" />
       <span className="text-sm">No attachments</span>
     </div>

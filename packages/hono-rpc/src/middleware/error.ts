@@ -1,7 +1,6 @@
 import { createMiddleware } from 'hono/factory';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import { isServiceError } from '@hominem/services';
-import type { ErrorCode } from '@hominem/services';
+import { isServiceError, type ErrorCode } from '../errors';
 import { logger } from '@hominem/utils/logger';
 
 import type { AppContext } from './auth';
@@ -39,7 +38,7 @@ export interface ApiErrorResponse {
  * ```
  */
 export const errorMiddleware = createMiddleware<AppContext>(async (c, next) => {
-  const requestId = crypto.randomUUID().slice(0, 8);
+  const requestId = c.get('requestId') || crypto.randomUUID().slice(0, 8);
   const path = c.req.path;
   const method = c.req.method;
 

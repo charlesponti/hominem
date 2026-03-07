@@ -1,18 +1,15 @@
 import './env.ts';
+import { processTransactionsFromCSVBuffer } from '@hominem/finance-services';
 import type {
   ImportTransactionsJob,
   ImportTransactionsQueuePayload,
   JobStats,
 } from '@hominem/jobs-services';
-
-import { processTransactionsFromCSVBuffer } from '@hominem/finance-services';
 import { redis } from '@hominem/services/redis';
 import { QUEUE_NAMES, REDIS_CHANNELS } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
-import { csvStorageService } from '@hominem/utils/supabase';
+import { csvStorageService } from '@hominem/utils/storage';
 import { type Job, Worker } from 'bullmq';
-import { Effect } from 'effect';
-
 import { HealthService } from './health.service';
 
 const CONCURRENCY = process.env.WORKER_CONCURRENCY
@@ -47,9 +44,7 @@ const processImportTransactionsJob = async (
     throw new Error(`CSV file path not found in job ${job.id}`);
   }
 
-  const fileBuffer = await csvStorageService.downloadCsvFileAsBuffer(
-    job.data.csvFilePath as string,
-  );
+  const fileBuffer = await csvStorageService.downloadCsvFileAsBuffer(job.data.csvFilePath as string);
   if (!fileBuffer || fileBuffer.length === 0) {
     throw new Error('Downloaded CSV file is empty');
   }
@@ -91,12 +86,19 @@ const processImportTransactionsJob = async (
   jobData.stats.total = 0;
 
   try {
-    const results = (await Effect.runPromise(
-      processTransactionsFromCSVBuffer({
-        csvBuffer: fileBuffer,
-        userId: job.data.userId,
-      }),
-    )) as Array<{ action?: string }>;
+    const imported = await processTransactionsFromCSVBuffer({
+      csvBuffer: fileBuffer,
+      userId: job.data.userId,
+      accountId: job.data.accountId || '',
+    })
+
+    const results = Array.from({ length: imported.imported + imported.skipped }, (_, index) => {
+      if (index < imported.imported) {
+        return { action: 'created' }
+      }
+
+      return { action: 'skipped' }
+    }) as Array<{ action?: string }>
 
     for (const result of results) {
       processedCount++;

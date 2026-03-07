@@ -22,7 +22,8 @@
     "test:coverage:view": "npx vite preview --outDir coverage/lcov-report",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "typegen": "react-router typegen"
+    "typegen": "react-router typegen",
+    "test:e2e": "playwright test --config playwright.config.ts"
   },
   "dependencies": {
     "@hominem/auth": "workspace:*",

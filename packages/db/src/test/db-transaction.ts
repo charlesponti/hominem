@@ -2,7 +2,7 @@ import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 import { getDatabaseUrl, setTestDb } from '../client';
-import * as schema from '../schema/tables';
+import * as schema from '../all-schema';
 
 export interface TestTransaction {
   db: PostgresJsDatabase<typeof schema>;

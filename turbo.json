@@ -2,11 +2,11 @@
   "$schema": "https://turbo.build/schema.json",
   "globalDependencies": ["package.json", "bun.lock", ".env.local", "**/.env.*local"],
   "globalEnv": [
-    "SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
+    "R2_ENDPOINT",
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
     "VITE_APP_BASE_URL",
-    "VITE_SUPABASE_URL",
-    "VITE_SUPABASE_ANON_KEY",
+    "VITE_R2_DOMAIN",
     "DATABASE_URL",
     "GITHUB_TOKEN",
     "GOOGLE_CLIENT_ID",
@@ -17,7 +17,7 @@
     "REDIS_URL",
     "RESEND_API_KEY"
   ],
-  "concurrency": "18",
+  "concurrency": "8",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -30,14 +30,20 @@
       "cache": false
     },
     "dev": {
-      "cache": false
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^build"]
     },
     "format": {
       "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md}", "app/**/*.{ts,tsx,js,jsx,json,md}"],
       "outputs": []
     },
     "lint": {
-      "inputs": ["src/**/*.{ts,tsx,js,jsx,json,md,css}", "app/**/*.{ts,tsx,js,jsx,json,md,css}", "tools/stylelint-config-void.cjs"],
+      "inputs": [
+        "src/**/*.{ts,tsx,js,jsx,json,md,css}",
+        "app/**/*.{ts,tsx,js,jsx,json,md,css}",
+        "packages/ui/tools/stylelint-config-void.cjs"
+      ],
       "outputs": []
     },
     "start": {

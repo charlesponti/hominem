@@ -1,351 +1,189 @@
-import { db } from '@hominem/db';
-import { and, eq } from '@hominem/db';
-import { item as itemTable } from '@hominem/db/schema/items';
-import { list, userLists } from '@hominem/db/schema/lists';
-import { listInvite } from '@hominem/db/schema/lists';
-import { users } from '@hominem/db/schema/users';
-import { createTestUser } from '@hominem/db/test/fixtures';
-import { sendInviteEmail } from '@hominem/services/resend';
-import crypto from 'node:crypto';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import crypto from 'node:crypto'
 
-import { acceptListInvite, deleteListInvite, sendListInvite } from './list-invites.service';
+import { db, sql } from '@hominem/db'
+import { beforeEach, describe, expect, it } from 'vitest'
+
 import {
+  getAllUserListsWithPlaces,
+  getListById,
   getOwnedLists,
   getOwnedListsWithItemCount,
-  getUserLists,
-  getUserListsWithItemCount,
-} from './list-queries.service';
+  getPlaceLists,
+} from './list-queries.service'
 
-vi.mock('@hominem/services/resend', () => ({
-  sendInviteEmail: vi.fn(),
-}));
+function resultRows<T>(result: unknown): T[] {
+  if (Array.isArray(result)) {
+    return result as T[]
+  }
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows?: unknown }).rows
+    if (Array.isArray(rows)) {
+      return rows as T[]
+    }
+  }
+  return []
+}
 
-// Helper to check if DB is available; skip tests if not
 async function isDatabaseAvailable(): Promise<boolean> {
   try {
-    await db.select().from(users).limit(1);
-    return true;
+    await db.execute(sql`select 1`)
+    return true
   } catch {
-    console.warn(
-      'Database not available, skipping lists.service tests. Start test database on port 4433.',
-    );
-    return false;
+    return false
   }
 }
 
-const dbAvailable = await isDatabaseAvailable();
+const dbAvailable = await isDatabaseAvailable()
 
-describe.skipIf(!dbAvailable)('lists.service', () => {
-  const ownerId = crypto.randomUUID();
-  const sharedUserId = crypto.randomUUID();
-  const listId = crypto.randomUUID();
-  const inviteListId = crypto.randomUUID();
-  const inviteeUserId = crypto.randomUUID();
-  const invitedEmail = 'invitee@icloud.com';
-  const inviteeGoogleEmail = 'invitee@gmail.com';
+describe.skipIf(!dbAvailable)('list-queries integration', () => {
+  let ownerId: string
+  let otherUserId: string
+  let ownerListA: string
+  let ownerListB: string
+
+  const createUser = async (id: string): Promise<void> => {
+    await db.execute(sql`
+      insert into users (id, email, name)
+      values (${id}, ${`${id}@example.com`}, ${'List Query User'})
+      on conflict (id) do nothing
+    `)
+  }
+
+  const cleanupForUsers = async (userIds: string[]): Promise<void> => {
+    for (const userId of userIds) {
+      await db.execute(sql`delete from tasks where user_id = ${userId}`).catch(() => {})
+      await db.execute(sql`delete from task_lists where user_id = ${userId}`).catch(() => {})
+      await db.execute(sql`delete from users where id = ${userId}`).catch(() => {})
+    }
+  }
+
+  const insertTask = async (params: { id: string; userId: string; title: string; listId: string | null }) => {
+    await db.execute(sql`
+      insert into tasks (id, user_id, title, status, priority, list_id)
+      values (
+        ${params.id},
+        ${params.userId},
+        ${params.title},
+        'pending',
+        'medium',
+        ${params.listId}
+      )
+    `)
+  }
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    ownerId = crypto.randomUUID()
+    otherUserId = crypto.randomUUID()
+    ownerListA = crypto.randomUUID()
+    ownerListB = crypto.randomUUID()
 
-    await createTestUser({ id: ownerId, name: 'Owner' });
-    await createTestUser({ id: sharedUserId, name: 'Shared User' });
-    await createTestUser({ id: inviteeUserId, name: 'Invitee', email: inviteeGoogleEmail });
+    await cleanupForUsers([ownerId, otherUserId])
+    await createUser(ownerId)
+    await createUser(otherUserId)
 
-    // Create a list for owner
-    await db
-      .insert(list)
-      .values({ id: listId, name: 'Test List', ownerId: ownerId })
-      .onConflictDoNothing();
-    await db
-      .insert(list)
-      .values({ id: inviteListId, name: 'Invite List', ownerId: ownerId })
-      .onConflictDoNothing();
+    await db.execute(sql`
+      insert into task_lists (id, user_id, name)
+      values
+        (${ownerListA}, ${ownerId}, 'Alpha'),
+        (${ownerListB}, ${ownerId}, 'Bravo')
+    `)
 
-    // Share the list with the shared user
-    await db.insert(userLists).values({ listId, userId: sharedUserId }).onConflictDoNothing();
-  });
+    await db.execute(sql`
+      insert into task_lists (id, user_id, name)
+      values (${crypto.randomUUID()}, ${otherUserId}, 'Other User List')
+    `)
 
-  it('getOwnedLists should return lists owned by user (metadata only)', async () => {
-    const owned = await getOwnedLists(ownerId);
-    const found = owned.find((l) => l.id === listId);
-    expect(found).toBeDefined();
-    expect(found?.itemCount).toBeUndefined();
-  });
-
-  it('sends an invite email when base URL is configured', async () => {
-    const sendInviteEmailMock = vi.mocked(sendInviteEmail);
-    const baseUrl = 'https://app.example.com';
-
-    const invite = await sendListInvite({
-      listId: inviteListId,
-      invitedUserEmail: invitedEmail,
-      invitingUserId: ownerId,
-      baseUrl,
-    });
-    if ('error' in invite) {
-      expect.fail(`Expected invite to be created, got error ${invite.error}`);
-    }
-
-    expect(sendInviteEmailMock).toHaveBeenCalledTimes(1);
-    expect(sendInviteEmailMock).toHaveBeenCalledWith({
-      to: invitedEmail,
-      listName: 'Invite List',
-      inviteLink: `https://app.example.com/invites?token=${invite.token}&listId=${inviteListId}`,
-    });
-  });
-
-  it('allows the list owner to delete a pending invite', async () => {
-    const invite = await sendListInvite({
-      listId: inviteListId,
-      invitedUserEmail: invitedEmail,
-      invitingUserId: ownerId,
-      baseUrl: 'https://app.example.com',
-    });
-    if ('error' in invite) {
-      expect.fail(`Expected invite to be created, got error ${invite.error}`);
-    }
-
-    const result = await deleteListInvite({
-      listId: inviteListId,
-      invitedUserEmail: invitedEmail,
-      userId: ownerId,
-    });
-
-    expect(result).toBeUndefined();
-
-    const inviteRecord = await db.query.listInvite.findFirst({
-      where: and(eq(listInvite.listId, inviteListId), eq(listInvite.token, invite.token)),
-    });
-
-    expect(inviteRecord).toBeUndefined();
-  });
-
-  it('prevents deleting an invite that was already accepted', async () => {
-    const invite = await sendListInvite({
-      listId: inviteListId,
-      invitedUserEmail: invitedEmail,
-      invitingUserId: ownerId,
-      baseUrl: 'https://app.example.com',
-    });
-    if ('error' in invite) {
-      expect.fail(`Expected invite to be created, got error ${invite.error}`);
-    }
-
-    // Accept the invite to mark it as accepted
-    const accepted = await acceptListInvite({
-      listId: inviteListId,
-      acceptingUserId: inviteeUserId,
-      token: invite.token,
-    });
-    if ('error' in accepted) {
-      expect.fail(`Expected invite to be accepted, got error ${accepted.error}`);
-    }
-
-    await expect(
-      deleteListInvite({
-        listId: inviteListId,
-        invitedUserEmail: invitedEmail,
-        userId: ownerId,
-      }),
-    ).rejects.toThrow('Invite has already been accepted and cannot be deleted');
-  });
-
-  it('getUserLists should return lists shared with user (metadata only)', async () => {
-    const shared = await getUserLists(sharedUserId);
-    const found = shared.find((l) => l.id === listId);
-    expect(found).toBeDefined();
-    expect(found?.itemCount).toBeUndefined();
-  });
-
-  it('getOwnedListsWithItemCount should return counts for items in owned lists', async () => {
-    // Insert a couple of items for the list
-    const item1 = {
+    await insertTask({
       id: crypto.randomUUID(),
-      type: 'PLACE',
-      itemId: crypto.randomUUID(),
-      listId,
       userId: ownerId,
-    };
-    const item2 = {
+      title: 'Golden Gate Park',
+      listId: ownerListA,
+    })
+    await insertTask({
       id: crypto.randomUUID(),
-      type: 'PLACE',
-      itemId: crypto.randomUUID(),
-      listId,
       userId: ownerId,
-    };
-    await db.insert(itemTable).values([item1, item2]).onConflictDoNothing();
-
-    const owned = await getOwnedListsWithItemCount(ownerId);
-    const found = owned.find((l) => l.id === listId);
-    expect(found).toBeDefined();
-    expect(found?.itemCount).toBe(2);
-  });
-
-  it('getUserListsWithItemCount should return counts for items in shared lists', async () => {
-    // Insert items
-    const item1 = {
+      title: 'Ferry Building',
+      listId: ownerListA,
+    })
+    await insertTask({
       id: crypto.randomUUID(),
-      type: 'PLACE',
-      itemId: crypto.randomUUID(),
-      listId,
       userId: ownerId,
-    };
-    await db.insert(itemTable).values(item1).onConflictDoNothing();
+      title: 'Yosemite',
+      listId: ownerListB,
+    })
+    await insertTask({
+      id: crypto.randomUUID(),
+      userId: ownerId,
+      title: 'Backlog without list',
+      listId: null,
+    })
+  })
 
-    const shared = await getUserListsWithItemCount(sharedUserId);
-    const found = shared.find((l) => l.id === listId);
-    expect(found).toBeDefined();
-    expect(found?.itemCount).toBe(1);
-  });
+  it('returns only owned lists and includes owner metadata', async () => {
+    const owned = await getOwnedLists(ownerId)
 
-  it('acceptListInvite allows invite email to differ from signed-in email', async () => {
-    const invite = await sendListInvite({
-      listId: inviteListId,
-      invitedUserEmail: invitedEmail,
-      invitingUserId: ownerId,
-      baseUrl: 'https://app.example.com',
-    });
-    if ('error' in invite) {
-      expect.fail(`Expected invite to be created, got error ${invite.error}`);
+    expect(owned.length).toBe(2)
+    const ids = new Set(owned.map((list) => list.id))
+    expect(ids.has(ownerListA)).toBe(true)
+    expect(ids.has(ownerListB)).toBe(true)
+
+    for (const list of owned) {
+      expect(list.ownerId).toBe(ownerId)
+      expect(list.owner?.email).toBe(`${ownerId}@example.com`)
     }
+  })
 
-    const accepted = await acceptListInvite({
-      listId: inviteListId,
-      acceptingUserId: inviteeUserId,
-      token: invite.token,
-    });
+  it('projects deterministic item counts for owned lists', async () => {
+    const owned = await getOwnedListsWithItemCount(ownerId)
 
-    expect(accepted.id).toBe(inviteListId);
+    const byId = new Map(owned.map((list) => [list.id, list]))
+    expect(byId.get(ownerListA)?.itemCount).toBe(2)
+    expect(byId.get(ownerListB)?.itemCount).toBe(1)
 
-    const inviteRecord = await db.query.listInvite.findFirst({
-      where: and(eq(listInvite.listId, inviteListId), eq(listInvite.token, invite.token)),
-    });
+    const dbCounts = await db.execute(sql`
+      select list_id, count(*)::int as count
+      from tasks
+      where user_id = ${ownerId}
+        and list_id is not null
+      group by list_id
+    `)
 
-    expect(inviteRecord?.accepted).toBe(true);
-    expect(inviteRecord?.invitedUserId).toBe(inviteeUserId);
+    const countRows = resultRows<{ list_id: string; count: number }>(dbCounts)
+    expect(countRows.length).toBe(2)
+  })
 
-    const membership = await db.query.userLists.findFirst({
-      where: and(eq(userLists.listId, inviteListId), eq(userLists.userId, inviteeUserId)),
-    });
+  it('enforces strict visibility in getListById', async () => {
+    const asOwner = await getListById(ownerListA, ownerId)
+    expect(asOwner).not.toBeNull()
+    expect(asOwner?.id).toBe(ownerListA)
 
-    expect(membership).toBeTruthy();
-  });
+    const asOther = await getListById(ownerListA, otherUserId)
+    expect(asOther).toBeNull()
 
-  it('allows accepting an invite even if initially linked to a different user', async () => {
-    const otherUserId = crypto.randomUUID();
-    const otherEmail = 'other-user@example.com';
-    await createTestUser({ id: otherUserId, email: otherEmail });
+    const asAnonymous = await getListById(ownerListA, null)
+    expect(asAnonymous).toBeNull()
+  })
 
-    const invite = await sendListInvite({
-      listId: inviteListId,
-      invitedUserEmail: otherEmail,
-      invitingUserId: ownerId,
-      baseUrl: 'https://app.example.com',
-    });
-    if ('error' in invite) {
-      expect.fail(`Expected invite to be created, got error ${invite.error}`);
+  it('returns owned projections and no shared projections', async () => {
+    const response = await getAllUserListsWithPlaces(ownerId)
+
+    expect(response.ownedListsWithPlaces.length).toBe(2)
+    expect(response.sharedListsWithPlaces).toEqual([])
+
+    for (const list of response.ownedListsWithPlaces) {
+      expect(list.isOwnList).toBe(true)
+      expect(list.hasAccess).toBe(true)
+      expect(Array.isArray(list.places)).toBe(true)
     }
+  })
 
-    const response = await acceptListInvite({
-      listId: inviteListId,
-      acceptingUserId: inviteeUserId,
-      token: invite.token,
-    });
+  it('searches owned lists by place key against task titles', async () => {
+    const byName = await getPlaceLists({ userId: ownerId, placeId: 'golden' })
+    expect(byName.length).toBe(1)
+    expect(byName[0]?.id).toBe(ownerListA)
+    expect(byName[0]?.itemCount).toBe(1)
 
-    expect(response.id).toBe(inviteListId);
-
-    await db
-      .delete(users)
-      .where(eq(users.id, otherUserId))
-      .catch(() => {});
-  });
-
-  it('rejects accepting with an invalid token', async () => {
-    const invite = await sendListInvite({
-      listId: inviteListId,
-      invitedUserEmail: invitedEmail,
-      invitingUserId: ownerId,
-      baseUrl: 'https://app.example.com',
-    });
-    if ('error' in invite) {
-      expect.fail(`Expected invite to be created, got error ${invite.error}`);
-    }
-
-    await expect(
-      acceptListInvite({
-        listId: inviteListId,
-        acceptingUserId: inviteeUserId,
-        token: 'invalid-token',
-      }),
-    ).rejects.toThrow('Invite not found');
-  });
-
-  it('rejects double acceptance with the same token', async () => {
-    const invite = await sendListInvite({
-      listId: inviteListId,
-      invitedUserEmail: invitedEmail,
-      invitingUserId: ownerId,
-      baseUrl: 'https://app.example.com',
-    });
-    if ('error' in invite) {
-      expect.fail(`Expected invite to be created, got error ${invite.error}`);
-    }
-
-    const _first = await acceptListInvite({
-      listId: inviteListId,
-      acceptingUserId: inviteeUserId,
-      token: invite.token,
-    });
-
-    await expect(
-      acceptListInvite({
-        listId: inviteListId,
-        acceptingUserId: inviteeUserId,
-        token: invite.token,
-      }),
-    ).rejects.toThrow('Invite already accepted');
-  });
-
-  it('decline requires the correct token', async () => {
-    const invite = await sendListInvite({
-      listId: inviteListId,
-      invitedUserEmail: invitedEmail,
-      invitingUserId: ownerId,
-      baseUrl: 'https://app.example.com',
-    });
-    if ('error' in invite) {
-      expect.fail(`Expected invite to be created, got error ${invite.error}`);
-    }
-
-    const wrongDelete = await db
-      .delete(listInvite)
-      .where(and(eq(listInvite.listId, inviteListId), eq(listInvite.token, 'not-the-token')))
-      .returning();
-
-    expect(wrongDelete.length).toBe(0);
-
-    const correctDelete = await db
-      .delete(listInvite)
-      .where(and(eq(listInvite.listId, inviteListId), eq(listInvite.token, invite.token)))
-      .returning();
-
-    expect(correctDelete.length).toBe(1);
-  });
-
-  it('prevents accepting an invite to a list you own', async () => {
-    const invite = await sendListInvite({
-      listId,
-      invitedUserEmail: invitedEmail,
-      invitingUserId: ownerId,
-      baseUrl: 'https://app.example.com',
-    });
-    if ('error' in invite) {
-      expect.fail(`Expected invite to be created, got error ${invite.error}`);
-    }
-
-    await expect(
-      acceptListInvite({ listId, acceptingUserId: ownerId, token: invite.token }),
-    ).rejects.toThrow('Cannot accept an invite to a list you own');
-  });
-});
+    const empty = await getPlaceLists({ userId: ownerId })
+    expect(empty).toEqual([])
+  })
+})

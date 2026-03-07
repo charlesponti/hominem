@@ -2,7 +2,7 @@ import { env } from '@hominem/services/env';
 import { isValidGoogleHost } from '@hominem/utils/google';
 import { downloadImage } from '@hominem/utils/http';
 import { isGooglePlacesPhotoReference } from '@hominem/utils/images';
-import { placeImagesStorageService } from '@hominem/utils/supabase';
+import { placeImagesStorageService } from '@hominem/utils/storage';
 
 import { googlePlaces } from './google-places.service';
 
@@ -189,16 +189,10 @@ export async function savePlacePhoto(
  */
 export function generatePlaceImageFilename(
   googleMapsId: string,
-  index?: number,
-  size?: 'full' | 'thumb',
+  index: number,
+  size: 'full' | 'thumb',
 ): string {
-  // Deterministic when index and size are provided
-  if (typeof index === 'number' && index >= 0 && size) {
-    return `${googleMapsId}-${index}-${size}`;
-  }
-
-  // Fallback for legacy callers: keep previous unique behavior
-  return `${googleMapsId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  return `${googleMapsId}-${index}-${size}`;
 }
 
 /**

@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GooglePlacePrediction } from '../types';
-
 import { createPlaceFromPrediction } from '../places';
+import type { GooglePlacePrediction } from '../types';
 
 describe('createPlaceFromPrediction', () => {
   it('uses address as address if available', async () => {

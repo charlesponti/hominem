@@ -1,5 +1,5 @@
 import { NotesService } from '@hominem/notes-services'
-import { NotFoundError } from '@hominem/services'
+import { NotFoundError } from '@hominem/hono-rpc'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 
@@ -127,10 +127,18 @@ export const notesRoutes = new Hono<AppContext>()
     const data = c.req.valid('json')
 
     const noteData = {
-      ...data,
       userId,
-      tags: data.tags || [],
-      mentions: data.mentions || [],
+      type: data.type,
+      status: data.status ?? 'draft',
+      content: data.content,
+      tags: data.tags ?? [],
+      mentions: data.mentions ?? [],
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.excerpt !== undefined ? { excerpt: data.excerpt } : {}),
+      ...(data.publishingMetadata !== undefined
+        ? { publishingMetadata: data.publishingMetadata }
+        : {}),
+      ...(data.analysis !== undefined ? { analysis: data.analysis } : {}),
     }
     const newNote = await notesService.create(noteData)
     return c.json<NotesCreateOutput>(newNote, 201)

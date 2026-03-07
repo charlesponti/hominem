@@ -1,5 +1,4 @@
 import type { GeocodeFeature } from '@hominem/utils/location';
-
 import { Building, MapIcon } from 'lucide-react';
 import * as React from 'react';
 

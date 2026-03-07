@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import type { GooglePlaceDetailsResponse } from './types';
-
 import {
   extractPhotoReferences,
   mapGooglePlaceToPrediction,
   parsePriceLevel,
   transformGooglePlaceToPlaceInsert,
 } from './places-utils';
+import type { GooglePlaceDetailsResponse } from './types';
 
 describe('places-utils', () => {
   describe('extractPhotoReferences', () => {

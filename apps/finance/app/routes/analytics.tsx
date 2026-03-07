@@ -6,7 +6,7 @@ import { AnalyticsChartDisplay } from '~/components/analytics/analytics-chart-di
 import { AnalyticsFilters } from '~/components/analytics/analytics-filters';
 import { AnalyticsStatisticsSummary } from '~/components/analytics/analytics-statistics-summary';
 import { MonthlyBreakdown } from '~/components/analytics/monthly-breakdown';
-import { TopCategories } from '~/components/analytics/top-categories';
+import { TopTags } from '~/components/analytics/top-tags';
 import { TopMerchants } from '~/components/analytics/top-merchants';
 import { BudgetHistoryChart } from '~/components/budget-categories';
 import { BudgetOverview } from '~/components/budget-overview';
@@ -15,7 +15,7 @@ export default function FinanceAnalyticsPage() {
   const [dateFrom, setDateFrom] = useState<Date | undefined>(subMonths(new Date(), 6));
   const [dateTo, setDateTo] = useState<Date | undefined>(new Date());
   const [selectedAccount, setSelectedAccount] = useState<string>('all');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedTag, setSelectedTag] = useState<string>('');
   const [includeStats, setIncludeStats] = useState<boolean>(true);
   const [compareToPrevious, setCompareToPrevious] = useState<boolean>(true);
   const [groupBy, setGroupBy] = useState<'month' | 'week' | 'day'>('month');
@@ -38,8 +38,8 @@ export default function FinanceAnalyticsPage() {
           setDateTo={setDateTo}
           selectedAccount={selectedAccount}
           setSelectedAccount={setSelectedAccount}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
+          selectedTag={selectedTag}
+          setSelectedTag={setSelectedTag}
           groupBy={groupBy}
           setGroupBy={setGroupBy}
           includeStats={includeStats}
@@ -54,7 +54,7 @@ export default function FinanceAnalyticsPage() {
             dateFrom={dateFrom}
             dateTo={dateTo}
             selectedAccount={selectedAccount}
-            selectedCategory={selectedCategory}
+            selectedTag={selectedTag}
             includeStats={includeStats}
           />
           <BudgetOverview selectedMonthYear={lastMonthYear} />
@@ -66,7 +66,7 @@ export default function FinanceAnalyticsPage() {
           dateFrom={dateFrom}
           dateTo={dateTo}
           selectedAccount={selectedAccount}
-          selectedCategory={selectedCategory}
+          selectedTag={selectedTag}
           groupBy={groupBy}
           compareToPrevious={compareToPrevious}
         />
@@ -76,23 +76,22 @@ export default function FinanceAnalyticsPage() {
           dateFrom={dateFrom}
           dateTo={dateTo}
           selectedAccount={selectedAccount}
-          selectedCategory={selectedCategory}
+          selectedTag={selectedTag}
           compareToPrevious={compareToPrevious}
           groupBy={groupBy}
         />
 
-        <TopCategories
+        <TopTags
           dateFrom={dateFrom}
           dateTo={dateTo}
           selectedAccount={selectedAccount}
-          selectedCategory={selectedCategory}
         />
 
         <TopMerchants
           dateFrom={dateFrom}
           dateTo={dateTo}
           selectedAccount={selectedAccount}
-          selectedCategory={selectedCategory}
+          selectedTag={selectedTag}
         />
 
         <BudgetHistoryChart />

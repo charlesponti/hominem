@@ -11,11 +11,11 @@ export type Merchant = {
 };
 
 // ============================================================================
-// Named Types for CategoryBreakdownOutput
+// Named Types for TagBreakdownOutput
 // ============================================================================
 
-export type CategoryBreakdownItem = {
-  category: string;
+export type TagBreakdownItem = {
+  tag: string;
   amount: number;
   percentage: number;
   transactionCount: number;
@@ -37,7 +37,7 @@ export type TransactionStats = {
 // Named Types for MonthlyStatsOutput
 // ============================================================================
 
-export type CategorySpendingItem = {
+export type TagSpendingItem = {
   name: string | null;
   amount: number;
 };
@@ -86,7 +86,7 @@ export type SpendingTimeSeriesInput = {
   from?: string;
   to?: string;
   account?: string;
-  category?: string;
+  tag?: string;
   limit?: number;
   groupBy?: 'month' | 'week' | 'day';
   includeStats?: boolean;
@@ -102,7 +102,7 @@ export type TopMerchantsInput = {
   from?: string;
   to?: string;
   account?: string;
-  category?: string;
+  tag?: string;
   limit?: number;
 };
 
@@ -110,15 +110,15 @@ export type TopMerchantsOutput = {
   merchants: Merchant[];
 };
 
-export type CategoryBreakdownInput = {
+export type TagBreakdownInput = {
   from?: string;
   to?: string;
-  category?: string;
+  tag?: string;
   limit?: number;
 };
 
-export type CategoryBreakdownOutput = {
-  breakdown: CategoryBreakdownItem[];
+export type TagBreakdownOutput = {
+  breakdown: TagBreakdownItem[];
   totalSpending: number;
   averagePerDay: number;
 };
@@ -126,7 +126,7 @@ export type CategoryBreakdownOutput = {
 export type CalculateTransactionsInput = {
   from?: string;
   to?: string;
-  category?: string;
+  tag?: string;
   account?: string;
   type?: 'income' | 'expense' | 'credit' | 'debit' | 'transfer' | 'investment';
   calculationType?: 'sum' | 'average' | 'count' | 'stats';
@@ -155,7 +155,7 @@ export type MonthlyStatsOutput = {
   net: number;
   transactionCount: number;
   averageTransaction: number;
-  topCategory: string;
+  topTag: string;
   topMerchant: string;
   formattedIncome: string;
   formattedExpenses: string;
@@ -164,7 +164,7 @@ export type MonthlyStatsOutput = {
   totalIncome?: number;
   totalExpenses?: number;
   netIncome?: number;
-  categorySpending?: CategorySpendingItem[];
+  tagSpending?: TagSpendingItem[];
   startDate?: string;
   endDate?: string;
 };

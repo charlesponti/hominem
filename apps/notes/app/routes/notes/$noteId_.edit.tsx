@@ -1,7 +1,7 @@
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
-import { requireAuth } from '~/lib/guards';
 import { useNote } from '~/hooks/use-notes';
+import { requireAuth } from '~/lib/guards';
 
 import { NoteEditor } from './components/note-editor';
 

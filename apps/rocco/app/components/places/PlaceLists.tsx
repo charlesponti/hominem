@@ -2,11 +2,10 @@ import { useAuthContext } from '@hominem/auth';
 import { List } from '@hominem/ui/list';
 import { memo } from 'react';
 
-import type { PlaceWithLists } from '~/lib/types';
-
 import { ListRow } from '~/components/lists/list-row';
 import AddPlaceToList from '~/components/places/add-to-list-control';
 import { useListsContainingPlace } from '~/lib/hooks/use-lists';
+import type { PlaceWithLists } from '~/lib/types';
 
 type Props = {
   place: PlaceWithLists;

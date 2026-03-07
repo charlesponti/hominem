@@ -1,5 +1,3 @@
-import type { ListOutput as DbListOutput } from '@hominem/db/types/lists';
-
 export interface ListUser {
   id?: string | undefined;
   email?: string | undefined;
@@ -7,12 +5,22 @@ export interface ListUser {
   image?: string | null | undefined;
 }
 
-export interface ListWithSpreadOwner extends DbListOutput {
+export interface ListRecord {
+  id: string;
+  name: string;
+  description: string | null;
+  ownerId: string;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ListWithSpreadOwner extends ListRecord {
   owner: { id: string; email: string; name: string | null } | null;
   itemCount?: number;
 }
 
-export interface ListOutput extends DbListOutput {
+export interface ListOutput extends ListRecord {
   createdBy: { id: string; email: string; name: string | null } | null;
   isOwnList?: boolean | undefined;
   hasAccess?: boolean | undefined;

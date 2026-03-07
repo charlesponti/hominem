@@ -1,21 +1,25 @@
+import { createHash, randomBytes } from 'node:crypto';
+
 import { type AccountRecord, updateAccount } from '@hominem/auth/server';
 import { logger } from '@hominem/utils/logger';
-import { createHash, randomBytes } from 'node:crypto';
 import * as z from 'zod';
 
 import { env } from '../env';
 import { cache } from './redis';
 
 // PKCE utilities
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function generateCodeVerifier() {
   return randomBytes(32).toString('base64url');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function generateCodeChallenge(verifier: string) {
   return createHash('sha256').update(verifier).digest('base64url');
 }
 
 // Redis-based PKCE store functions
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function storePkceVerifier(state: string, codeVerifier: string): Promise<void> {
   // Store with 10 minute expiration (OAuth flows typically complete within 5-10 minutes)
   await cache.setex(`pkce:${state}`, 600, codeVerifier);
@@ -33,10 +37,12 @@ export async function getPkceVerifier(state: string): Promise<string | null> {
 
 // Request schemas
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const TwitterDisconnectSchema = z.object({
   accountId: z.string().min(1),
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const TwitterPostSchema = z.object({
   text: z.string().min(1).max(280),
   contentId: z.uuid().optional(), // Optional: link to existing content
@@ -44,6 +50,7 @@ const TwitterPostSchema = z.object({
 });
 
 // Twitter API response types
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface TwitterTweetResponse {
   data: {
     id: string;
@@ -52,6 +59,7 @@ interface TwitterTweetResponse {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface TwitterTweetsResponse {
   data: Array<{
     id: string;
@@ -238,6 +246,7 @@ async function getValidTwitterToken(twitterAccount: TwitterAccount): Promise<str
  *   }
  * )
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function makeTwitterApiRequest(
   twitterAccount: TwitterAccount,
   url: string,

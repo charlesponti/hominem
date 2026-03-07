@@ -1,9 +1,9 @@
+import { Button } from '@hominem/ui/button';
 import { type LoaderFunctionArgs } from 'react-router';
 import { useNavigate } from 'react-router';
 
-import { Button } from '@hominem/ui/button';
-import { requireAuth } from '~/lib/guards';
 import { useCreateNote } from '~/hooks/use-notes';
+import { requireAuth } from '~/lib/guards';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireAuth(request);

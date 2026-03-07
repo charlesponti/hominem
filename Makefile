@@ -13,14 +13,11 @@ APPLE_KEY_PATH ?= $(CURDIR)/.auth/AuthKey_2438T5MGLH.p8
 APPLE_EXPIRES_DAYS ?= 150
 APPLE_KEY_ID ?= 2438T5MGLH
 CLOUDFLARED ?= cloudflared
-AUTH_BASE_URL ?= https://auth.ponti.io
-AUTH_TUNNEL_TOKEN ?=
-AUTH_TUNNEL_NAME ?=
-CLOUDFLARED_TUNNEL_TOKEN ?= $(AUTH_TUNNEL_TOKEN)
-CLOUDFLARED_TUNNEL ?= $(AUTH_TUNNEL_NAME)
+DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
+TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install start dev build test lint format clean docker-up docker-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios tunnel-auth tunnel-auth-check
+.PHONY: install start dev build test lint format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-migration-generate db-migration-apply db-schema-update help-db auth-test-up auth-test-down auth-test-status
 
 # Install dependencies
 install:
@@ -39,6 +36,59 @@ run-redis:
 	@echo "Starting Redis..."
 	pm2 start bun --name="hominem-redis" -- run redis
 
+# Full local development setup (deps + infra + migrations)
+dev-setup: install dev-up db-migrate-all dev-status
+	@echo "Full dev setup complete"
+
+# Start required local infrastructure (redis + dev db + test db)
+dev-up:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d redis db test-db
+
+# Stop local development infrastructure and remove containers
+dev-down:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down
+
+# Reset local development infrastructure including volumes, then recreate + migrate
+dev-reset:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down -v
+	$(MAKE) dev-up
+	$(MAKE) db-migrate-all
+
+# Show local infrastructure status
+dev-status:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps
+
+# Run migrations against the local development database
+db-migrate:
+	@echo "Waiting for dev database to be ready..."
+	@until docker exec hominem-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
+	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bun run db:migrate
+
+# Run migrations against the local test database
+db-migrate-test:
+	@echo "Waiting for test database to be ready..."
+	@until docker exec hominem-test-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
+	@cd packages/db && DATABASE_URL="$(TEST_DATABASE_URL)" bun run db:migrate
+
+# Run all local database migrations required for development
+db-migrate-all: db-migrate db-migrate-test
+
+# Database schema workflow targets
+# Step 1: Generate migration files from packages/db/src/migrations/schema.ts
+db-migration-generate:
+	@echo "Generating migration files..."
+	@cd packages/db && bun db:generate
+	@echo "✓ Migration files generated at packages/db/src/migrations/*.sql"
+
+# Step 2: Apply generated migrations to databases
+db-migration-apply: db-migrate-all
+
+# Full workflow: add new table to migrations/schema.ts, then run this
+# Example: make db-schema-update
+db-schema-update: db-migration-generate db-migration-apply
+	@echo "✓ Database schema updated and migrations applied"
+	@echo "Remember to commit: git add packages/db/src/migrations/"
+
 # Run tests
 test:
 	bun run test
@@ -54,19 +104,7 @@ lint:
 
 # Clean build artifacts and dependencies
 clean:
-	find . -type d -name "node_modules" -exec rm -rf {} +
-	find . -type d -name "dist" -exec rm -rf {} +
-	find . -type d -name "build" -exec rm -rf {} +
-	find . -type d -name "logs" -exec rm -rf {} +
-	find . -type d -name "coverage" -exec rm -rf {} +
-	find . -type d -name ".next" -exec rm -rf {} +
-	find . -type d -name ".turbo" -exec rm -rf {} +
-	find . -name "bun.lock" -exec rm -rf {} +
-	find . -name '*.tsbuildinfo' -type f -not -path './node_modules/*' -delete
-
-# Stop Docker containers
-docker-down:
-	$(DOCKER_COMPOSE) down
+	@./scripts/clean.sh
 
 # Run all tests and linting
 check: test lint
@@ -119,61 +157,76 @@ auth-e2e-live:
 auth-e2e-live-local:
 	@bun run test:e2e:auth:live:local
 
+auth-test-up:
+	$(MAKE) dev-up
+	$(MAKE) db-migrate-test
+	@echo "Auth test infra ready (db + test-db + redis)"
+
+auth-test-down:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml stop redis db test-db
+	@echo "Auth test infra stopped"
+
+auth-test-status:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps redis db test-db
+
 mobile-test-e2e-preflight:
 	@bun run --filter @hominem/mobile test:e2e:preflight
 
 mobile-build-dev-ios:
 	@bun run --filter @hominem/mobile build:dev:ios
 
-tunnel-auth:
-	@command -v $(CLOUDFLARED) >/dev/null 2>&1 || { \
-		echo "ERROR: cloudflared is not installed. Install via: brew install cloudflared"; \
-		exit 1; \
-	}
-	@if [ -n "$(CLOUDFLARED_TUNNEL_TOKEN)" ]; then \
-		echo "Starting Cloudflare tunnel using CLOUDFLARED_TUNNEL_TOKEN..."; \
-		$(CLOUDFLARED) tunnel --no-autoupdate run --token "$(CLOUDFLARED_TUNNEL_TOKEN)"; \
-	elif [ -n "$(CLOUDFLARED_TUNNEL)" ]; then \
-		echo "Starting Cloudflare tunnel using named tunnel: $(CLOUDFLARED_TUNNEL)"; \
-		$(CLOUDFLARED) tunnel --no-autoupdate run "$(CLOUDFLARED_TUNNEL)"; \
-	else \
-		echo "ERROR: set CLOUDFLARED_TUNNEL_TOKEN or CLOUDFLARED_TUNNEL before running make tunnel-auth"; \
-		exit 1; \
-	fi
-
-tunnel-auth-check:
-	@echo "Checking $(AUTH_BASE_URL)/api/status"
-	@status_code=$$(curl -sS -o /tmp/hominem_auth_status.out -w "%{http_code}" "$(AUTH_BASE_URL)/api/status"); \
-	echo "status=$$status_code"; \
-	if [ "$$status_code" = "530" ] || [ "$$status_code" = "502" ]; then \
-		echo "ERROR: auth edge is unhealthy (HTTP $$status_code)."; \
-		echo "Response:"; \
-		head -c 300 /tmp/hominem_auth_status.out; \
-		echo; \
-		exit 1; \
-	fi
-	@echo "Checking mobile authorize edge path"
-	@status_code=$$(curl -sS -o /tmp/hominem_mobile_authorize.out -w "%{http_code}" \
-		-X POST "$(AUTH_BASE_URL)/api/auth/mobile/authorize" \
-		-H "content-type: application/json" \
-		--data '{"redirect_uri":"hakumi://auth/callback","code_challenge":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","state":"12345678"}'); \
-	echo "status=$$status_code"; \
-	if [ "$$status_code" = "530" ] || [ "$$status_code" = "502" ]; then \
-		echo "ERROR: mobile auth endpoint is still behind an unhealthy edge (HTTP $$status_code)."; \
-		echo "Response:"; \
-		head -c 300 /tmp/hominem_mobile_authorize.out; \
-		echo; \
-		exit 1; \
-	fi
-	@echo "Tunnel check passed."
-
-lbt:
+blt:
 	@echo "Running lint..."
 	@bun run lint --force > /dev/null && echo "Lint passed" || echo "Lint failed"
 	@echo "Running build..."
 	@bun run build --force > /dev/null && echo "Build passed" || echo "Build failed"
 	@echo "Running typecheck..."
 	@bun run typecheck --force > /dev/null && echo "Typecheck passed" || echo "Typecheck failed"
+
+# Database Operations Help
+help-db:
+	@echo ""
+	@echo "Database Schema Workflow (SIMPLIFIED):"
+	@echo "======================================"
+	@echo ""
+	@echo "To add a new table:"
+	@echo "  1. Edit packages/db/src/migrations/schema.ts"
+	@echo "  2. Run: make db-schema-update"
+	@echo ""
+	@echo "Individual Steps:"
+	@echo "  make db-migration-generate # Generate migration SQL from schema.ts"
+	@echo "  make db-migration-apply    # Apply migrations to dev + test databases"
+	@echo ""
+	@echo "Why simplified?"
+	@echo "  - Domain schema slices in packages/db/src/schema/ are now simple"
+	@echo "    re-exports from migrations/schema.ts"
+	@echo "  - No generated artifacts to maintain"
+	@echo "  - TypeScript server imports just re-export needed tables"
+	@echo ""
+
+# Docker compose targets
+docker-start: docker-up
+
+docker-stop: docker-down
+
+docker-up:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d
+
+docker-up-full:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml -f compose/monitoring.yml up -d
+
+docker-down:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down -v
+
+docker-test-up:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d test-db
+	@echo "Waiting for test database to be ready..."
+	@sleep 3
+	@cd packages/db && DATABASE_URL="postgres://postgres:postgres@localhost:4433/hominem-test" bun run db:migrate
+	@echo "Test database ready on port 4433"
+
+docker-test-down:
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml stop test-db
 
 # Default target
 all: install build

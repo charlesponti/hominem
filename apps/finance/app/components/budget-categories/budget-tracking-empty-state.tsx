@@ -7,10 +7,7 @@ interface BudgetTrackingEmptyStateProps {
   selectedMonthYear?: string;
 }
 
-function BudgetTrackingEmptyState({
-  type,
-  selectedMonthYear,
-}: BudgetTrackingEmptyStateProps) {
+function BudgetTrackingEmptyState({ type, selectedMonthYear }: BudgetTrackingEmptyStateProps) {
   if (type === 'no-categories') {
     return (
       <div className="text-center py-12">

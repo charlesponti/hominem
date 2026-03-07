@@ -1,24 +1,42 @@
-import type { ChatMessageInput, ChatMessageOutput } from '@hominem/db/types/chats';
-
 import { db } from '@hominem/db';
 import { and, desc, eq, gt } from '@hominem/db';
-import { chat, chatMessage } from '@hominem/db/schema/chats';
+import { jsonb, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { logger } from '@hominem/utils/logger';
 
-import { ChatError } from './chat.service';
+import type { ChatMessageInput, ChatMessageOutput } from '../contracts';
+import { ChatError } from './chat.types';
+
+const chatMessageRoleEnum = pgEnum('chat_message_role', ['system', 'user', 'assistant', 'tool']);
+
+const chatsTable = pgTable('chat', {
+  id: uuid('id').primaryKey().notNull(),
+  title: text('title').notNull(),
+  userId: uuid('user_id').notNull(),
+  noteId: uuid('note_id'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+});
+
+const chatMessagesTable = pgTable('chat_message', {
+  id: uuid('id').primaryKey().notNull(),
+  chatId: uuid('chat_id').notNull(),
+  userId: uuid('user_id').notNull(),
+  role: chatMessageRoleEnum('role').notNull(),
+  content: text('content').notNull(),
+  files: jsonb('files'),
+  toolCalls: jsonb('tool_calls'),
+  reasoning: text('reasoning'),
+  parentMessageId: uuid('parent_message_id'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+});
 
 export type CreateMessageParams = {
   chatId: ChatMessageOutput['chatId'];
   userId: ChatMessageOutput['userId'];
   role: ChatMessageOutput['role'];
   content: ChatMessageOutput['content'];
-  files?: Array<{
-    type: 'image' | 'file';
-    filename?: string;
-    mimeType?: string;
-    size?: number;
-    [key: string]: unknown;
-  }>;
+  files?: ChatMessageOutput['files'];
   toolCalls?: ChatMessageOutput['toolCalls'];
   reasoning?: string;
   parentMessageId?: string | null;
@@ -36,7 +54,7 @@ export class MessageService {
       const messageId = crypto.randomUUID();
 
       const [newMessage] = await db
-        .insert(chatMessage)
+        .insert(chatMessagesTable)
         .values({
           id: messageId,
           chatId: params.chatId,
@@ -55,11 +73,11 @@ export class MessageService {
       }
 
       await db
-        .update(chat)
+        .update(chatsTable)
         .set({ updatedAt: new Date().toISOString() })
-        .where(eq(chat.id, params.chatId));
+        .where(eq(chatsTable.id, params.chatId));
 
-      return newMessage;
+      return newMessage as ChatMessageOutput;
     } catch (error) {
       logger.error(`Failed to add message: ${error}`);
       throw new ChatError('DATABASE_ERROR', 'Failed to add message to conversation');
@@ -76,14 +94,16 @@ export class MessageService {
     try {
       const query = db
         .select()
-        .from(chatMessage)
-        .where(eq(chatMessage.chatId, chatId))
+        .from(chatMessagesTable)
+        .where(eq(chatMessagesTable.chatId, chatId))
         .limit(options.limit ?? 50)
         .offset(options.offset ?? 0)
-        .orderBy(options.orderBy === 'desc' ? desc(chatMessage.createdAt) : chatMessage.createdAt);
+        .orderBy(
+          options.orderBy === 'desc' ? desc(chatMessagesTable.createdAt) : chatMessagesTable.createdAt,
+        );
 
       const results = await query;
-      return results;
+      return results as ChatMessageOutput[];
     } catch (error) {
       logger.error(`Failed to get chat messages: ${error}`);
       return [];
@@ -95,14 +115,14 @@ export class MessageService {
    */
   async getMessageById(messageId: string, userId: string): Promise<ChatMessageOutput | null> {
     try {
-      const whereClause = and(eq(chatMessage.id, messageId), eq(chatMessage.userId, userId));
-      const [message] = await db.select().from(chatMessage).where(whereClause).limit(1);
+      const whereClause = and(eq(chatMessagesTable.id, messageId), eq(chatMessagesTable.userId, userId));
+      const [message] = await db.select().from(chatMessagesTable).where(whereClause).limit(1);
 
       if (!message) {
         throw new ChatError('AUTH_ERROR', 'Message not found or access denied');
       }
 
-      return message;
+      return message as ChatMessageOutput;
     } catch (error) {
       logger.error(`Failed to get message by ID: ${error}`);
       return null;
@@ -123,20 +143,20 @@ export class MessageService {
   }): Promise<ChatMessageOutput | null> {
     try {
       const [updatedMessage] = await db
-        .update(chatMessage)
+        .update(chatMessagesTable)
         .set({
           content,
           toolCalls,
           updatedAt: new Date().toISOString(),
         })
-        .where(eq(chatMessage.id, messageId))
+        .where(eq(chatMessagesTable.id, messageId))
         .returning();
 
       if (!updatedMessage) {
         throw new ChatError('DATABASE_ERROR', 'Failed to update message - no record returned');
       }
 
-      return updatedMessage;
+      return updatedMessage as ChatMessageOutput;
     } catch (error) {
       logger.error(`Failed to update message: ${error}`);
       return null;
@@ -149,8 +169,8 @@ export class MessageService {
   async deleteMessage(messageId: string, userId: string): Promise<boolean> {
     try {
       await db
-        .delete(chatMessage)
-        .where(and(eq(chatMessage.id, messageId), eq(chatMessage.userId, userId)));
+        .delete(chatMessagesTable)
+        .where(and(eq(chatMessagesTable.id, messageId), eq(chatMessagesTable.userId, userId)));
 
       return true;
     } catch (error) {
@@ -171,8 +191,8 @@ export class MessageService {
       // Verify chat ownership first
       const [chatData] = await db
         .select()
-        .from(chat)
-        .where(and(eq(chat.id, chatId), eq(chat.userId, userId)))
+        .from(chatsTable)
+        .where(and(eq(chatsTable.id, chatId), eq(chatsTable.userId, userId)))
         .limit(1);
 
       if (!chatData) {
@@ -181,8 +201,8 @@ export class MessageService {
 
       // Delete all messages created after the timestamp
       const deletedMessages = await db
-        .delete(chatMessage)
-        .where(and(eq(chatMessage.chatId, chatId), gt(chatMessage.createdAt, afterTimestamp)))
+        .delete(chatMessagesTable)
+        .where(and(eq(chatMessagesTable.chatId, chatId), gt(chatMessagesTable.createdAt, afterTimestamp)))
         .returning();
 
       const deletedCount = deletedMessages.length;

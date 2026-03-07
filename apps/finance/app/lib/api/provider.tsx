@@ -1,8 +1,43 @@
-import type { ReactNode } from 'react';
-
-import { useAuthContext } from '@hominem/auth';
+import { useAuthContext, useSafeAuth } from '@hominem/auth';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
 import { createHonoClient } from '@hominem/hono-rpc/client';
+import { useCallback, useContext } from 'react';
+import type { ReactNode } from 'react';
+
+/**
+ * Hono RPC Provider Inner for Finance App
+ */
+function HonoProviderInner({ children, baseUrl }: HonoProviderProps) {
+  const { authClient } = useAuthContext();
+
+  const getAuthToken = useCallback(async () => {
+    try {
+      const {
+        data: { session },
+      } = await authClient.auth.getSession();
+
+      return session?.access_token || null;
+    } catch (error) {
+      console.error('Failed to get auth token:', error);
+      return null;
+    }
+  }, [authClient]);
+
+  return (
+    <BaseHonoProvider
+      config={{
+        baseUrl,
+        createClient: createHonoClient,
+        getAuthToken,
+        onError: (error) => {
+          console.error('Hono RPC Error:', error);
+        },
+      }}
+    >
+      {children}
+    </BaseHonoProvider>
+  );
+}
 
 /**
  * Hono RPC Provider for Finance App
@@ -16,26 +51,24 @@ interface HonoProviderProps {
 }
 
 export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
-  const { authClient } = useAuthContext();
+  const authContext = useSafeAuth();
 
-  return (
-    <BaseHonoProvider
-      config={{
-        baseUrl,
-        createClient: createHonoClient,
-        getAuthToken: async () => {
-          const {
-            data: { session },
-          } = await authClient.auth.getSession();
+  if (!authContext) {
+    return (
+      <BaseHonoProvider
+        config={{
+          baseUrl,
+          createClient: createHonoClient,
+          getAuthToken: async () => null,
+          onError: (error) => {
+            console.error('Hono RPC Error:', error);
+          },
+        }}
+      >
+        {children}
+      </BaseHonoProvider>
+    );
+  }
 
-          return session?.access_token || null;
-        },
-        onError: (error) => {
-          console.error('Hono RPC Error:', error);
-        },
-      }}
-    >
-      {children}
-    </BaseHonoProvider>
-  );
+  return <HonoProviderInner baseUrl={baseUrl}>{children}</HonoProviderInner>;
 }

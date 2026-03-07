@@ -4,7 +4,7 @@ import {
   listAccountsByProvider,
 } from '@hominem/auth/server';
 import { NotesService } from '@hominem/notes-services';
-import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import { randomUUID } from 'node:crypto';
@@ -12,6 +12,7 @@ import { randomUUID } from 'node:crypto';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
   twitterPostSchema,
+  type TwitterAccount,
   type TwitterAccountsListOutput,
   type TwitterAuthorizeOutput,
   type TwitterDisconnectOutput,
@@ -19,6 +20,7 @@ import {
   type TwitterSyncOutput,
   type TwitterTweet,
 } from '../types/twitter.types';
+import type { Note } from '../types/notes.types';
 
 // Twitter OAuth and API utilities
 const TWITTER_SCOPES = 'tweet.read tweet.write users.read offline.access';
@@ -85,7 +87,15 @@ export const twitterRoutes = new Hono<AppContext>()
   .get('/accounts', authMiddleware, async (c) => {
     const userId = c.get('userId')!;
     const accounts = await listAccountsByProvider(userId, 'twitter');
-    return c.json<TwitterAccountsListOutput>(accounts);
+    const twitterAccounts: TwitterAccountsListOutput = accounts.map(
+      (account: { id: string; provider: string; providerAccountId: string; expiresAt: string | null }): TwitterAccount => ({
+        id: account.id,
+        provider: account.provider,
+        providerAccountId: account.providerAccountId,
+        expiresAt: account.expiresAt ? new Date(account.expiresAt) : null,
+      }),
+    );
+    return c.json<TwitterAccountsListOutput>(twitterAccounts);
   })
 
   // Get Twitter authorization URL
@@ -187,7 +197,7 @@ export const twitterRoutes = new Hono<AppContext>()
     const tweetData = (await tweetResponse.json()) as TwitterTweetResponse;
     const tweet = tweetData.data;
 
-    let noteRecord = null;
+    let noteRecord: Note | null = null;
 
     // Save or update note record if requested
     if (saveAsContent) {

@@ -1,6 +1,5 @@
-import { useState, type HTMLAttributes } from 'react';
-
 import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, type HTMLAttributes } from 'react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -30,7 +29,9 @@ export function Sources({ sources, className, children, ...props }: SourcesProps
         <div className="flex items-center gap-2">
           <BookOpen className="size-4" />
           <span className="text-sm font-medium">
-            {sources?.length ? `${sources.length} source${sources.length > 1 ? 's' : ''}` : 'Sources'}
+            {sources?.length
+              ? `${sources.length} source${sources.length > 1 ? 's' : ''}`
+              : 'Sources'}
           </span>
         </div>
         {isOpen ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}

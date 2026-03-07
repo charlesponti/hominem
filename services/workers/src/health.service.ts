@@ -1,10 +1,9 @@
-import type { Worker } from 'bullmq';
-
 /**
  * Production-ready health monitoring service for workers
  * Uses event-driven approach instead of polling intervals
  */
 import { logger } from '@hominem/utils/logger';
+import type { Worker } from 'bullmq';
 
 interface HealthMetrics {
   startTime: number;

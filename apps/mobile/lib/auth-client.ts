@@ -1,27 +1,20 @@
-import Constants from 'expo-constants'
-import * as SecureStore from 'expo-secure-store'
-import { createAuthClient } from 'better-auth/react'
 import { expoClient } from '@better-auth/expo/client'
+import { emailOTPClient } from 'better-auth/client/plugins'
+import { passkeyClient } from '@better-auth/passkey/client'
+import { createAuthClient } from 'better-auth/react'
+import * as SecureStore from 'expo-secure-store'
 
-const getBaseUrl = () => {
-  const extra = Constants.expoConfig?.extra as Record<string, string> | undefined
-  if (extra?.apiBaseUrl) {
-    return extra.apiBaseUrl
-  }
-  // Fallback for development
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:4040'
-  }
-  return 'https://auth.ponti.io'
-}
+import { API_BASE_URL, APP_SCHEME } from '~/utils/constants'
 
 export const authClient = createAuthClient({
-  baseURL: getBaseUrl(),
+  baseURL: API_BASE_URL,
   plugins: [
     expoClient({
-      scheme: 'hakumi',
+      scheme: APP_SCHEME,
       storage: SecureStore,
       storagePrefix: 'hominem',
     }),
+    emailOTPClient(),
+    passkeyClient(),
   ],
 })

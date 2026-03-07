@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
-
-import { useAuthContext } from '@hominem/auth';
+import { useAuthContext, useSafeAuth } from '@hominem/auth';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
 import { createHonoClient } from '@hominem/hono-rpc/client';
+import { useCallback } from 'react';
+import type { ReactNode } from 'react';
+import { useContext } from 'react';
 
 import { getQueryClient } from '~/lib/get-query-client';
 
@@ -20,9 +21,23 @@ interface HonoProviderProps {
   baseUrl: string;
 }
 
-export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
+function HonoProviderInner({ children, baseUrl }: HonoProviderProps) {
   const { authClient } = useAuthContext();
   const queryClient = getQueryClient();
+
+  const getAuthToken = useCallback(async () => {
+    try {
+      const { data } = await authClient.auth.getSession();
+      return data?.session?.access_token || null;
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Failed to get auth token:', error.message);
+      } else {
+        console.error('Failed to get auth token:', error);
+      }
+      return null;
+    }
+  }, [authClient]);
 
   return (
     <BaseHonoProvider
@@ -30,19 +45,7 @@ export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
       config={{
         baseUrl,
         createClient: createHonoClient,
-        getAuthToken: async () => {
-          try {
-            const { data } = await authClient.auth.getSession();
-            return data?.session?.access_token || null;
-          } catch (error) {
-            if (error instanceof Error) {
-              console.error('Failed to get auth token:', error.message);
-            } else {
-              console.error('Failed to get auth token:', error);
-            }
-            return null;
-          }
-        },
+        getAuthToken,
         onError: (error) => {
           console.error('Hono API error:', error);
         },
@@ -51,4 +54,31 @@ export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
       {children}
     </BaseHonoProvider>
   );
+}
+
+export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
+  // Check if AuthContext is available (client-side safe)
+  const authContext = useSafeAuth();
+
+  if (!authContext) {
+    // During SSR, render without auth token support
+    return (
+      <BaseHonoProvider
+        queryClient={getQueryClient()}
+        config={{
+          baseUrl,
+          createClient: createHonoClient,
+          getAuthToken: async () => null,
+          onError: (error) => {
+            console.error('Hono API error:', error);
+          },
+        }}
+      >
+        {children}
+      </BaseHonoProvider>
+    );
+  }
+
+  // On client-side, use auth token
+  return <HonoProviderInner baseUrl={baseUrl}>{children}</HonoProviderInner>;
 }

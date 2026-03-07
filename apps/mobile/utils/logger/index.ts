@@ -1,4 +1,5 @@
-// ! TODO - Implement Sentry logger
-export const log = (...args: any[]) => {
+type LogArg = string | number | boolean | object | null | undefined
+
+export const log = (...args: LogArg[]) => {
   console.log(...args);
 };

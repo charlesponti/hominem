@@ -9,9 +9,8 @@ import {
 } from '@hominem/ui/components/ui/card';
 import { ArrowLeft, Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react';
 
-import type { Account } from '~/lib/types/account.types';
-
 import { RouteLink } from '~/components/route-link';
+import type { Account } from '~/lib/types/account.types';
 
 import { AccountConnectionDialog } from './account-connection-dialog';
 import { AccountStatusDisplay } from './account-status-display';
@@ -81,16 +80,16 @@ export function AccountHeader({
       </div>
 
       {/* Account Summary Card */}
-      <Card metadata={isPlaidAccount ? 'SOURCE: PLAID_API_V2' : 'SOURCE: MANUAL_ENTRY'}>
+      <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-muted">{getAccountTypeIcon(account.type)}</div>
+              <div className="p-2 bg-muted">{getAccountTypeIcon(account.accountType)}</div>
               <div>
                 <CardTitle className="text-xl">{account.name}</CardTitle>
                 <CardDescription className="flex items-center space-x-2">
-                  <Badge variant="outline" className={getAccountTypeColor(account.type)}>
-                    {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
+                  <Badge variant="outline" className={getAccountTypeColor(account.accountType)}>
+                    {account.accountType.charAt(0).toUpperCase() + account.accountType.slice(1)}
                   </Badge>
                   {isPlaidAccount && <Badge variant="secondary">Connected via Plaid</Badge>}
                 </CardDescription>

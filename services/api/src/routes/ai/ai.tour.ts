@@ -1,11 +1,12 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
 import { openai } from '@ai-sdk/openai';
-import { UnauthorizedError, ValidationError, InternalError } from '@hominem/services';
+import { UnauthorizedError, ValidationError, InternalError } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { generateObject } from 'ai';
 import { Hono } from 'hono';
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import * as z from 'zod';
 
 import type { AppEnv } from '../../server';

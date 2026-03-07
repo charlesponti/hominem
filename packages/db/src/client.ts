@@ -1,38 +1,49 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 import { env } from './env';
-import * as schema from './schema/tables';
+import * as schema from './all-schema';
 
-const DATABASE_URL =
-  env.NODE_ENV === 'test'
-    ? 'postgres://postgres:postgres@localhost:4433/hominem-test'
-    : env.DATABASE_URL;
+export type Database = PostgresJsDatabase<typeof schema>;
 
-if (!DATABASE_URL) {
-  throw new Error(
-    'DATABASE_URL not provided. Set DATABASE_URL environment variable or NODE_ENV=test for test database.',
-  );
+let pool: postgres.Sql<{}> | null = null;
+
+function getPool() {
+  if (pool) return pool;
+
+  const DATABASE_URL =
+    env.NODE_ENV === 'test'
+      ? 'postgres://postgres:postgres@localhost:4433/hominem-test'
+      : env.DATABASE_URL;
+
+  if (!DATABASE_URL) {
+    throw new Error(
+      'DATABASE_URL not provided. Set DATABASE_URL environment variable or NODE_ENV=test for test database.',
+    );
+  }
+
+  const maxConnections = env.DB_MAX_CONNECTIONS ?? 20;
+  const idleTimeout = env.DB_IDLE_TIMEOUT ?? 30;
+  const maxLifetime = env.DB_MAX_LIFETIME ?? 3600;
+
+  pool = postgres(DATABASE_URL, {
+    max: maxConnections,
+    idle_timeout: idleTimeout,
+    max_lifetime: maxLifetime,
+    connect_timeout: 10,
+  });
+
+  return pool;
 }
 
-const maxConnections = env.DB_MAX_CONNECTIONS ?? 20;
-const idleTimeout = env.DB_IDLE_TIMEOUT ?? 30;
-const maxLifetime = env.DB_MAX_LIFETIME ?? 3600;
-
-const pool = postgres(DATABASE_URL, {
-  max: maxConnections,
-  idle_timeout: idleTimeout,
-  max_lifetime: maxLifetime,
-  connect_timeout: 10,
-});
-
 // Deferred initialization to avoid expensive type checking at module load
-let mainDb: unknown = null;
-let testDbOverride: unknown = null;
+let mainDb: Database | null = null;
+let testDbOverride: Database | null = null;
 
 function initDb() {
   if (!mainDb) {
-    mainDb = drizzle(pool, { schema });
+    mainDb = drizzle(getPool(), { schema }) as Database;
   }
   return testDbOverride ?? mainDb;
 }
@@ -44,14 +55,19 @@ function initDb() {
  * schema type during client.ts import.
  */
 export function getDb() {
-  return initDb();
+  return initDb() as Database;
 }
 
-export function setTestDb(override: unknown): void {
+export function setTestDb(override: Database | null): void {
   testDbOverride = override;
 }
 
 export function getDatabaseUrl(): string {
+  const DATABASE_URL =
+    env.NODE_ENV === 'test'
+      ? 'postgres://postgres:postgres@localhost:4433/hominem-test'
+      : env.DATABASE_URL;
+
   if (!DATABASE_URL) {
     throw new Error(
       'DATABASE_URL not provided. Set DATABASE_URL environment variable or NODE_ENV=test for test database.',

@@ -4,9 +4,8 @@ import { redirect } from 'react-router';
 
 import { useRefreshGooglePlaces } from '~/lib/hooks/use-admin';
 
-import type { Route } from './+types/admin';
-
 import { getServerSession } from '../lib/auth.server';
+import type { Route } from './+types/admin';
 
 type RefreshResult = {
   updatedCount: number;

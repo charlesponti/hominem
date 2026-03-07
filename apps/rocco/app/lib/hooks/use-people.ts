@@ -1,11 +1,10 @@
 import type { HonoClient } from '@hominem/hono-client';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import type {
   PeopleListOutput,
   PeopleCreateInput,
   PeopleCreateOutput,
 } from '@hominem/hono-rpc/types/people.types';
-
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 
 import { queryKeys } from '~/lib/query-keys';
 

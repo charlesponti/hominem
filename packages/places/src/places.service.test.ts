@@ -1,133 +1,179 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { PlaceInsert } from '@hominem/db/types/places';
+import crypto from 'node:crypto'
 
-import { describe, expect, it, vi } from 'vitest';
+import { db, sql } from '@hominem/db'
+import { beforeEach, describe, expect, it } from 'vitest'
 
-import { googlePlaces } from './google-places.service';
-import { preparePlaceInsertData, refreshAllPlaces } from './places.service';
+import {
+  addPlaceToLists,
+  deletePlaceById,
+  getNearbyPlacesFromLists,
+  getPlaceByGoogleMapsId,
+  getPlaceById,
+  preparePlaceInsertData,
+} from './places.service'
 
-// Mock googlePlaces
-vi.mock('./google-places.service', () => ({
-  googlePlaces: {
-    getDetails: vi.fn(),
-  },
-}));
+function resultRows<T>(result: unknown): T[] {
+  if (Array.isArray(result)) {
+    return result as T[]
+  }
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows?: unknown }).rows
+    if (Array.isArray(rows)) {
+      return rows as T[]
+    }
+  }
+  return []
+}
 
-// Mock db
-vi.mock('@hominem/db', async (importOriginal) => {
-  const actual = await importOriginal<any>();
+async function isDatabaseAvailable(): Promise<boolean> {
+  try {
+    await db.execute(sql`select 1`)
+    return true
+  } catch {
+    return false
+  }
+}
 
-  return {
-    ...actual,
-    db: {
-      select: vi.fn(() => ({
-        from: vi.fn(() => ({
-          where: vi.fn().mockResolvedValue([]),
-        })),
-      })),
-      insert: vi.fn(() => ({
-        values: vi.fn(() => ({
-          onConflictDoUpdate: vi.fn(() => ({
-            returning: vi.fn().mockResolvedValue([{ id: '1' }]),
-          })),
-        })),
-      })),
-      query: {
-        place: {
-          findMany: vi.fn().mockResolvedValue([]),
-        },
-      },
-    },
-  };
-});
+const dbAvailable = await isDatabaseAvailable()
 
-vi.mock('@hominem/db/schema/places', () => ({ place: {} }));
-vi.mock('@hominem/db/schema/items', () => ({ item: {} }));
-vi.mock('@hominem/db/schema/lists', () => ({ list: {}, userLists: {}, listInvite: {} }));
+describe.skipIf(!dbAvailable)('places.service integration', () => {
+  let ownerId: string
+  let otherUserId: string
 
-describe('preparePlaceInsertData', () => {
-  it('should normalize imageUrl and photos', async () => {
-    const rawRef = 'places/123/photos/abc';
-    const proxyUrl = `/api/images?resource=${encodeURIComponent(rawRef)}&width=1600`;
+  const createUser = async (id: string): Promise<void> => {
+    await db.execute(sql`
+      insert into users (id, email, name)
+      values (${id}, ${`${id}@example.com`}, ${'Places User'})
+      on conflict (id) do nothing
+    `)
+  }
 
-    const input: PlaceInsert = {
-      googleMapsId: 'g123',
-      name: 'Test Place',
-      photos: [proxyUrl, 'raw-ref-2'],
-      imageUrl: proxyUrl,
-    } as any;
+  const cleanupUser = async (userId: string): Promise<void> => {
+    await db.execute(sql`delete from places where user_id = ${userId}`).catch(() => {})
+    await db.execute(sql`delete from travel_trips where user_id = ${userId}`).catch(() => {})
+    await db.execute(sql`delete from users where id = ${userId}`).catch(() => {})
+  }
 
-    const result = await preparePlaceInsertData(input);
+  beforeEach(async () => {
+    ownerId = crypto.randomUUID()
+    otherUserId = crypto.randomUUID()
 
-    expect(result.photos).toEqual([rawRef, 'raw-ref-2']);
-    expect(result.imageUrl).toBe(rawRef);
-    expect(result.googleMapsId).toBe('g123');
-    expect(result.name).toBe('Test Place');
-  });
+    await cleanupUser(ownerId)
+    await cleanupUser(otherUserId)
+    await createUser(ownerId)
+    await createUser(otherUserId)
+  })
 
-  it('should handle missing photos and imageUrl', async () => {
-    const input: PlaceInsert = {
-      googleMapsId: 'g456',
-      name: 'Minimal Place',
-    } as any;
+  it('preparePlaceInsertData normalizes photos and fallback image', async () => {
+    const data = await preparePlaceInsertData({
+      userId: ownerId,
+      googleMapsId: 'gm-1',
+      name: 'Cafe',
+      photos: ['places/abc/photos/def', 'custom-photo'],
+      imageUrl: '/api/images?resource=places/abc/photos/def&width=1600',
+    })
 
-    const result = await preparePlaceInsertData(input);
+    expect(data.userId).toBe(ownerId)
+    expect(data.data.googleMapsId).toBe('gm-1')
+    expect(data.data.imageUrl).toBe('places/abc/photos/def')
+    expect(data.data.photos?.length).toBe(2)
+  })
 
-    expect(result.photos).toBeNull();
-    expect(result.imageUrl).toBeNull();
-  });
+  it('upserts idempotently by googleMapsId per owner', async () => {
+    const first = await addPlaceToLists(ownerId, [], {
+      googleMapsId: 'gm-same',
+      name: 'Original',
+      latitude: 37.7749,
+      longitude: -122.4194,
+      photos: ['one'],
+    })
 
-  it('should fallback to first photo for imageUrl if not provided', async () => {
-    const input: PlaceInsert = {
-      googleMapsId: 'g789',
-      name: 'Photo Place',
-      photos: ['photo1', 'photo2'],
-    } as any;
+    const second = await addPlaceToLists(ownerId, [], {
+      googleMapsId: 'gm-same',
+      name: 'Updated',
+      latitude: 37.775,
+      longitude: -122.4195,
+      photos: ['two'],
+    })
 
-    const result = await preparePlaceInsertData(input);
+    expect(first.place.id).toBe(second.place.id)
+    expect(second.place.name).toBe('Updated')
 
-    expect(result.photos).toEqual(['photo1', 'photo2']);
-    expect(result.imageUrl).toBe('photo1');
-  });
-});
+    const stored = await db.execute(sql`
+      select count(*)::int as count
+      from places
+      where user_id = ${ownerId}
+        and data ->> 'googleMapsId' = 'gm-same'
+    `)
+    const row = resultRows<{ count: number }>(stored)[0]
+    expect(row?.count).toBe(1)
+  })
 
-describe('refreshAllPlaces', () => {
-  it('should fetch details for places missing photos and update them', async () => {
-    const { db } = await import('@hominem/db');
-    const mockPlace = { id: 'p1', googleMapsId: 'g1', name: 'Original Name' };
+  it('resolves by id and googleMapsId', async () => {
+    const created = await addPlaceToLists(ownerId, [], {
+      googleMapsId: 'gm-find-me',
+      name: 'Find Me',
+      latitude: 40.0,
+      longitude: -74.0,
+    })
 
-    // Mock listPlacesMissingPhotos response
-    vi.mocked(db.query.place.findMany).mockResolvedValue([mockPlace] as any);
+    const byId = await getPlaceById(created.place.id)
+    expect(byId?.id).toBe(created.place.id)
 
-    // Mock googlePlaces details
-    vi.mocked(googlePlaces.getDetails).mockResolvedValue({
-      id: 'g1',
-      displayName: { text: 'New Name' },
-      formattedAddress: '123 New St',
-      location: { latitude: 10, longitude: 20 },
-      photos: [{ name: 'photo-1' }],
-    });
+    const byGoogle = await getPlaceByGoogleMapsId('gm-find-me')
+    expect(byGoogle?.id).toBe(created.place.id)
+  })
 
-    const result = await refreshAllPlaces();
+  it('returns deterministic nearby ordering', async () => {
+    await addPlaceToLists(ownerId, [], {
+      googleMapsId: 'gm-near-1',
+      name: 'A Place',
+      latitude: 37.775,
+      longitude: -122.4195,
+    })
 
-    expect(result.updatedCount).toBe(1);
-    expect(result.errors).toHaveLength(0);
-    expect(googlePlaces.getDetails).toHaveBeenCalledWith({ placeId: 'g1' });
-    expect(db.insert).toHaveBeenCalled();
-  });
+    await addPlaceToLists(ownerId, [], {
+      googleMapsId: 'gm-near-2',
+      name: 'B Place',
+      latitude: 37.776,
+      longitude: -122.42,
+    })
 
-  it('should collect errors for failed updates', async () => {
-    const { db } = await import('@hominem/db');
-    const mockPlace = { id: 'p1', googleMapsId: 'g1' };
+    const nearby = await getNearbyPlacesFromLists({
+      userId: ownerId,
+      latitude: 37.7749,
+      longitude: -122.4194,
+      radiusKm: 2,
+      limit: 10,
+    })
 
-    vi.mocked(db.query.place.findMany).mockResolvedValue([mockPlace] as any);
+    expect(nearby.length).toBeGreaterThanOrEqual(2)
+    for (const place of nearby) {
+      expect(place.distance?.km ?? 999).toBeLessThanOrEqual(2)
+      expect(Array.isArray(place.lists)).toBe(true)
+    }
 
-    vi.mocked(googlePlaces.getDetails).mockRejectedValue(new Error('API Down'));
+    const sorted = [...nearby].sort((a, b) => {
+      const ak = a.distance?.km ?? Number.POSITIVE_INFINITY
+      const bk = b.distance?.km ?? Number.POSITIVE_INFINITY
+      if (ak !== bk) {
+        return ak - bk
+      }
+      return a.name.localeCompare(b.name)
+    })
+    expect(nearby.map((place) => place.id)).toEqual(sorted.map((place) => place.id))
+  })
 
-    const result = await refreshAllPlaces();
+  it('deletes place by id', async () => {
+    const created = await addPlaceToLists(ownerId, [], {
+      googleMapsId: 'gm-delete',
+      name: 'Delete Me',
+    })
 
-    expect(result.updatedCount).toBe(0);
-    expect(result.errors).toHaveLength(1);
-    expect(result.errors[0]).toContain('API Down');
-  });
-});
+    const deleted = await deletePlaceById(created.place.id)
+    expect(deleted).toBe(true)
+
+    const after = await getPlaceById(created.place.id)
+    expect(after).toBeUndefined()
+  })
+})

@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Text, theme } from '~/theme'
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { useAuth } from '~/utils/auth-provider'
-import { useStartChat } from '~/utils/services/chat/use-chat-messages'
+import { useStartChat } from '~/utils/services/chat'
 import MindsherpaIcon from '../ui/icon'
 import { useInputContext } from './input-context'
 

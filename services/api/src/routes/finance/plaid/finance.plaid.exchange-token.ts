@@ -1,14 +1,14 @@
 import { ensureInstitutionExists, upsertPlaidItem } from '@hominem/finance-services';
-import { UnauthorizedError, InternalError } from '@hominem/services';
+import { UnauthorizedError, InternalError } from '@hominem/hono-rpc';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import type { AppEnv } from '../../../server';
-
 import { plaidClient } from '../../../lib/plaid';
+import { plaidSyncQueue } from '../../../lib/queues';
+import type { AppEnv } from '../../../server';
 
 export const financePlaidExchangeTokenRoutes = new Hono<AppEnv>();
 
@@ -35,20 +35,20 @@ financePlaidExchangeTokenRoutes.post('/', zValidator('json', exchangeTokenSchema
     const accessToken = exchangeResponse.data.access_token;
     const itemId = exchangeResponse.data.item_id;
 
-    await ensureInstitutionExists(institutionId, institutionName);
+    const institution = await ensureInstitutionExists(institutionName);
 
     await upsertPlaidItem({
+      id: crypto.randomUUID(),
       userId,
       itemId,
       accessToken,
-      institutionId,
+      institutionId: institution.id || institutionId,
       status: 'active',
       lastSyncedAt: null,
     });
 
     // Queue sync job
-    const queues = c.get('queues');
-    await queues.plaidSync.add(
+    await plaidSyncQueue.add(
       QUEUE_NAMES.PLAID_SYNC,
       {
         userId,

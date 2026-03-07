@@ -5,7 +5,11 @@
     "outDir": "./build",
     "rootDir": "./src"
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/index.ts",
+    "src/modern-finance.ts",
+    "src/contracts.ts"
+  ],
   "exclude": [
     "node_modules",
     "build",

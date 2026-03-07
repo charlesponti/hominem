@@ -1,5 +1,4 @@
-import type { NoteOutput as Note } from '@hominem/hono-rpc/types/notes.types';
-
+import type { Note } from '@hominem/hono-rpc/types/notes.types';
 import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Edit, Trash2, X, Maximize2, List, RefreshCw } from 'lucide-react';

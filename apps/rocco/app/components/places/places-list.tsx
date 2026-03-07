@@ -1,5 +1,4 @@
 import type { ListPlace } from '@hominem/lists-services';
-
 import { Alert } from '@hominem/ui';
 import { List } from '@hominem/ui/list';
 import { useCallback, useState } from 'react';
@@ -35,11 +34,7 @@ export default function PlacesList({ places, listId, canAdd = true }: PlacesList
   return (
     <>
       <AddPlaceControl listId={listId} canAdd={canAdd} />
-      {deleteError && (
-        <Alert type="error" dismissible onDismiss={() => setDeleteError(null)}>
-          {deleteError}
-        </Alert>
-      )}
+      {deleteError && <Alert variant="destructive">{deleteError}</Alert>}
       {places.length === 0 ? (
         <div className="flex flex-col gap-2 items-center justify-center p-6">
           <div className="flex flex-col items-center">

@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { ConnectionOptions } from 'bullmq';
-
 import { QUEUE_NAMES } from '@hominem/utils/consts';
+import type { ConnectionOptions } from 'bullmq';
 import { Queue } from 'bullmq';
 
-import type { Queues } from './types';
-
 import { env } from './env';
+import type { Queues } from './types';
 
 let singleton: Queues | null = null;
 
@@ -23,18 +21,19 @@ export function getOrCreateQueues(): Queues {
   // Construct connection options from REDIS_URL to avoid ioredis type mismatch
   const redisUrl = env.REDIS_URL;
   const url = new URL(redisUrl);
-  const connectionOptions: ConnectionOptions = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const connectionOptions: any = {
     host: url.hostname,
     port: url.port ? Number(url.port) : 6379,
   };
   if (url.password) {
-    (connectionOptions as ConnectionOptions & { password?: string }).password = url.password;
+    connectionOptions.password = url.password;
   }
   if (url.username) {
-    (connectionOptions as ConnectionOptions & { username?: string }).username = url.username;
+    connectionOptions.username = url.username;
   }
   if (url.protocol === 'rediss:') {
-    (connectionOptions as ConnectionOptions & { tls?: unknown }).tls = {};
+    connectionOptions.tls = {};
   }
 
   const plaidSync = new Queue(QUEUE_NAMES.PLAID_SYNC, { connection: connectionOptions });

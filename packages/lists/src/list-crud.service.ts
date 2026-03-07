@@ -1,16 +1,44 @@
-import { db, takeUniqueOrThrow } from '@hominem/db';
-import { and, eq } from '@hominem/db';
-import { list } from '@hominem/db/schema/lists';
-import { logger } from '@hominem/utils/logger';
 import crypto from 'node:crypto';
 
-import type { ListOutput, ListPlace, ListUser, ListWithSpreadOwner } from './types';
+import { db } from '@hominem/db';
+import { sql } from '@hominem/db';
 
-import { getListById } from './list-queries.service';
+import type { ListOutput, ListPlace, ListUser, ListWithSpreadOwner } from './contracts';
 
-/**
- * Format a list with places to match the ListOutput interface
- */
+interface TaskListRow {
+  id: string;
+  user_id: string;
+  name: string;
+  created_at: string | null;
+}
+
+function resultRows<T>(result: unknown): T[] {
+  if (Array.isArray(result)) {
+    return result as T[];
+  }
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows?: unknown }).rows;
+    if (Array.isArray(rows)) {
+      return rows as T[];
+    }
+  }
+  return [];
+}
+
+function toOutputRecord(row: TaskListRow): ListOutput {
+  return {
+    id: row.id,
+    name: row.name,
+    description: null,
+    ownerId: row.user_id,
+    isPublic: false,
+    createdAt: row.created_at ?? new Date().toISOString(),
+    updatedAt: row.created_at ?? new Date().toISOString(),
+    createdBy: null,
+    places: [],
+  };
+}
+
 export function formatList(
   listData: ListWithSpreadOwner,
   places: ListPlace[],
@@ -40,110 +68,121 @@ export function formatList(
   };
 }
 
-/**
- * Creates a new list
- * @param name - The name of the list
- * @param userId - The ID of the user creating the list
- * @returns The created list object or null if creation failed
- */
-export async function createList(name: string, userId: string): Promise<ListOutput | null> {
-  try {
-    const start = Date.now();
-    logger.info('[lists.service] createList start', { start, name, userId });
+async function hasNameConflict(userId: string, name: string, excludeListId?: string): Promise<boolean> {
+  const result = await db.execute(sql`
+    select id
+    from task_lists
+    where user_id = ${userId}
+      and name = ${name}
+    limit 1
+  `);
+  const existing = resultRows<{ id: string }>(result)[0] ?? null;
 
-    const insertStart = Date.now();
-    const rawCreatedList = await db
-      .insert(list)
-      .values({
-        id: crypto.randomUUID(),
-        name,
-        ownerId: userId,
-        // description and isPublic will use DB defaults or be null
-      })
-      .returning()
-      .then(takeUniqueOrThrow);
-    const insertEnd = Date.now();
-    logger.info('[lists.service] createList insert done', {
-      insertStart,
-      insertEnd,
-      durationMs: insertEnd - insertStart,
-      name,
-      userId,
-    });
-
-    const fetchStart = Date.now();
-    const result = await getListById(rawCreatedList.id, userId);
-    const fetchEnd = Date.now();
-    logger.info('[lists.service] createList fetch done', {
-      fetchStart,
-      fetchEnd,
-      durationMs: fetchEnd - fetchStart,
-      name,
-      userId,
-    });
-
-    const end = Date.now();
-    logger.info('[lists.service] createList total duration', {
-      start,
-      end,
-      durationMs: end - start,
-      name,
-      userId,
-    });
-    return result;
-  } catch (error) {
-    logger.error('Failed to create list', {
-      service: 'lists.service',
-      function: 'createList',
-      userId,
-      input: { name },
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return null;
+  if (!existing) {
+    return false;
   }
+
+  if (excludeListId && existing.id === excludeListId) {
+    return false;
+  }
+
+  return true;
 }
 
-/**
- * Updates an existing list
- * @param id - The ID of the list to update
- * @param name - The new name for the list
- * @param userId - The ID of the user performing the update (must be the owner)
- * @returns The updated list object or null if update failed, list not found, or user doesn't have permission
- */
+export async function createList(name: string, userId: string): Promise<ListOutput | null> {
+  const normalizedName = name.trim();
+  if (!normalizedName) {
+    return null;
+  }
+
+  const nameConflict = await hasNameConflict(userId, normalizedName);
+  if (nameConflict) {
+    return null;
+  }
+
+  const listId = crypto.randomUUID();
+  await db.execute(sql`
+    insert into task_lists (id, user_id, name)
+    values (${listId}, ${userId}, ${normalizedName})
+  `);
+
+  const [created] = await db
+    .execute(sql`
+      select id, user_id, name, created_at
+      from task_lists
+      where id = ${listId}
+      limit 1
+    `)
+    .then((res) => resultRows<TaskListRow>(res));
+
+  if (!created) {
+    return null;
+  }
+
+  return toOutputRecord(created);
+}
+
 export async function updateList(
   id: string,
   name: string,
   userId: string,
-): Promise<typeof list.$inferSelect | null> {
-  try {
-    const updatedList = await db
-      .update(list)
-      .set({ name })
-      .where(and(eq(list.id, id), eq(list.ownerId, userId)))
-      .returning()
-      .then((rows) => rows[0] ?? null);
-    return updatedList;
-  } catch (error) {
-    console.error(`Error updating list ${id}:`, error);
+): Promise<ListOutput | null> {
+  const normalizedName = name.trim();
+  if (!normalizedName) {
     return null;
   }
+
+  const owned = await db
+    .execute(sql`
+      select id
+      from task_lists
+      where id = ${id}
+        and user_id = ${userId}
+      limit 1
+    `)
+    .then((res) => resultRows<{ id: string }>(res)[0] ?? null);
+
+  if (!owned) {
+    return null;
+  }
+
+  const conflict = await hasNameConflict(userId, normalizedName, id);
+  if (conflict) {
+    return null;
+  }
+
+  await db.execute(sql`
+    update task_lists
+    set name = ${normalizedName}
+    where id = ${id}
+      and user_id = ${userId}
+  `);
+
+  const [updated] = await db
+    .execute(sql`
+      select id, user_id, name, created_at
+      from task_lists
+      where id = ${id}
+      limit 1
+    `)
+    .then((res) => resultRows<TaskListRow>(res));
+
+  if (!updated) {
+    return null;
+  }
+
+  return toOutputRecord(updated);
 }
 
-/**
- * Deletes a list
- * @param id - The ID of the list to delete
- * @param userId - The ID of the user performing the deletion (must be the owner)
- * @returns True if deletion was successful, false otherwise
- */
 export async function deleteList(id: string, userId: string): Promise<boolean> {
-  try {
-    const result = await db
-      .delete(list)
-      .where(and(eq(list.id, id), eq(list.ownerId, userId)))
-      .returning({ id: list.id });
-    return result.length > 0; // Check if any row was actually deleted
-  } catch (error) {
-    console.error(`Error deleting list ${id} for user ${userId}:`, error);
-    return false;
-  }
+  const result = await db
+    .execute(sql`
+      delete from task_lists
+      where id = ${id}
+        and user_id = ${userId}
+      returning id
+    `)
+    .then((res) => resultRows<{ id: string }>(res));
+
+  return result.length > 0;
 }

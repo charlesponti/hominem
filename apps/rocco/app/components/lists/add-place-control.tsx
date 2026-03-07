@@ -5,9 +5,8 @@ import { Loading } from '@hominem/ui/loading';
 import { CheckCircle2, PlusCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete';
-
 import PlacesAutocomplete from '~/components/places/places-autocomplete';
+import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete';
 import { createPlaceFromPrediction, useAddPlaceToList } from '~/lib/places';
 
 interface AddPlaceControlProps {
@@ -139,11 +138,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
           </div>
         ) : (
           <div className="space-y-3">
-            {displayError && (
-              <Alert type="error" dismissible onDismiss={handleRetry}>
-                {displayError}
-              </Alert>
-            )}
+            {displayError && <Alert variant="destructive">{displayError}</Alert>}
             <PlacesAutocomplete setSelected={handlePlaceSelect} />
           </div>
         )}

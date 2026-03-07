@@ -1,11 +1,4 @@
 import { useAuthContext } from '@hominem/auth';
-import { Button } from '@hominem/ui/button';
-import { Mic, Paperclip, FileText } from 'lucide-react';
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
-
-import { useFileUpload } from '~/lib/hooks/use-file-upload';
-import { useSendMessage } from '~/lib/hooks/use-send-message';
-
 import {
   Suggestions,
   Suggestion,
@@ -15,6 +8,12 @@ import {
   PromptInputFooter,
   PromptInputTools,
 } from '@hominem/ui/ai-elements';
+import { Button } from '@hominem/ui/button';
+import { Mic, Paperclip, FileText } from 'lucide-react';
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+
+import { useFileUpload } from '~/lib/hooks/use-file-upload';
+import { useSendMessage } from '~/lib/hooks/use-send-message';
 
 import { ChatModals } from './ChatModals';
 
@@ -136,9 +135,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
         )}
 
         {/* Error message */}
-        {isOverLimit && (
-          <div className="text-xs text-destructive">Message too long</div>
-        )}
+        {isOverLimit && <div className="text-xs text-destructive">Message too long</div>}
 
         {/* PromptInput - AI Elements style */}
         <PromptInput onSubmit={handlePromptSubmit}>
@@ -151,7 +148,10 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
               disabled={isSubmitting}
               className="flex-1"
             />
-            <PromptInputSubmit status={isSubmitting ? 'streaming' : 'ready'} disabled={!canSubmit} />
+            <PromptInputSubmit
+              status={isSubmitting ? 'streaming' : 'ready'}
+              disabled={!canSubmit}
+            />
           </div>
 
           <PromptInputFooter>

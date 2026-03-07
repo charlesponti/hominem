@@ -8,34 +8,36 @@
       "channel": "development",
       "developmentClient": true,
       "distribution": "internal",
+      "environment": "development",
       "env": {
-        "NODE_ENV": "development",
-        "EXPO_PUBLIC_API_BASE_URL": "https://auth.ponti.io",
-        "EXPO_PUBLIC_E2E_TESTING": "false"
+        "APP_VARIANT": "dev"
       }
     },
-    "simulator": {
-      "channel": "development",
-      "developmentClient": true,
+    "e2e": {
+      "channel": "e2e",
+      "distribution": "internal",
+      "developmentClient": false,
+      "environment": "development",
       "env": {
-        "NODE_ENV": "development",
-        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:4040",
-        "EXPO_PUBLIC_E2E_TESTING": "true"
+        "APP_VARIANT": "e2e"
       },
-      "extends": "development",
       "ios": {
         "simulator": true
       }
     },
     "preview": {
       "channel": "preview",
-      "distribution": "internal"
+      "distribution": "internal",
+      "environment": "preview",
+      "env": {
+        "APP_VARIANT": "preview"
+      }
     },
     "production": {
       "channel": "production",
+      "environment": "production",
       "env": {
-        "NODE_ENV": "production",
-        "EXPO_PUBLIC_API_BASE_URL": "https://auth.ponti.io"
+        "APP_VARIANT": "production"
       },
       "ios": {
         "enterpriseProvisioning": "universal"

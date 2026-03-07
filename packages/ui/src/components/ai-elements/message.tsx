@@ -15,20 +15,14 @@ export const Message = forwardRef<HTMLDivElement, MessageProps>(function Message
   return (
     <div
       ref={ref}
-      className={cn(
-        'flex w-full gap-4 p-4',
-        isUser ? 'flex-row-reverse' : 'flex-row',
-        className,
-      )}
+      className={cn('flex w-full gap-4 p-4', isUser ? 'flex-row-reverse' : 'flex-row', className)}
       {...props}
     >
       <div className={cn('flex flex-col gap-1 max-w-[80%]', isUser && 'items-end')}>
         <div
           className={cn(
             'rounded-2xl px-4 py-3 text-sm',
-            isUser
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted',
+            isUser ? 'bg-primary text-primary-foreground' : 'bg-muted',
           )}
         >
           {children}

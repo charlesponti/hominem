@@ -1,7 +1,6 @@
-import type React from 'react';
-
 import { AuthProvider } from '@hominem/auth';
 import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
+import type React from 'react';
 import { useCallback } from 'react';
 import {
   data,
@@ -15,10 +14,10 @@ import {
 } from 'react-router';
 
 import type { Route } from './+types/root';
-
 import { HonoProvider } from './lib/api';
 import { authConfig, getServerSession } from './lib/auth.server';
 import { serverEnv } from './lib/env';
+
 import './globals.css';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -90,7 +89,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 
   return (
-    <AuthProvider initialSession={session} config={authEnv} onAuthEvent={handleAuthEvent}>
+    <AuthProvider config={authEnv} onAuthEvent={handleAuthEvent}>
       <HonoProvider baseUrl={apiBaseUrl}>
         <UpdateGuard logo="/logo-finance.png" appName="Finance">
           <Outlet />

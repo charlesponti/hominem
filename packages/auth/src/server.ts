@@ -1,6 +1,23 @@
 import { logger } from '@hominem/utils/logger'
+import { getSetCookieHeaders } from '@hominem/utils/headers'
 
 import type { AuthConfig, HominemSession, HominemUser, ServerAuthResult } from './types'
+
+export function resolveSafeAuthRedirect(next: string | null | undefined, fallback: string): string {
+  if (!next || next.length === 0) {
+    return fallback
+  }
+
+  if (!next.startsWith('/')) {
+    return fallback
+  }
+
+  if (next.startsWith('//')) {
+    return fallback
+  }
+
+  return next
+}
 
 interface ServerSessionPayload {
   isAuthenticated: boolean
@@ -50,6 +67,18 @@ export async function getServerAuth(
       method: 'GET',
       headers: upstreamHeaders,
     })
+
+    const setCookieValues = getSetCookieHeaders(res.headers)
+    if (setCookieValues.length > 0) {
+      for (const value of setCookieValues) {
+        headers.append('set-cookie', value)
+      }
+    } else {
+      const setCookie = res.headers.get('set-cookie')
+      if (setCookie) {
+        headers.append('set-cookie', setCookie)
+      }
+    }
 
     if (!res.ok) {
       return {

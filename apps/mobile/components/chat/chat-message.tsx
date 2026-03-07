@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import { Text, theme } from '~/theme'
-import type { MessageOutput } from '~/utils/services/chat/use-chat-messages'
+import type { MessageOutput } from '~/utils/services/chat'
 
 export type MarkdownComponent = React.ComponentType<{
   children: React.ReactNode

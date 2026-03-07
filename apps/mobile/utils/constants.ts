@@ -6,15 +6,40 @@ const extra = (Constants.expoConfig?.extra ?? {}) as {
   aiSdkChatMobileEnabled?: string
   aiSdkTranscribeEnabled?: string
   aiSdkSpeechEnabled?: string
+  e2eTesting?: string
   e2eAuthSecret?: string
+  appVariant?: string
+  appScheme?: string
 }
 
 const hostUri = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoClient?.hostUri
 const localHost = hostUri ? hostUri.split(':').shift() : null
 
-const configuredApiBaseUrl = extra.apiBaseUrl || process.env.EXPO_PUBLIC_API_BASE_URL || ''
+function toDeviceReachableApiBaseUrl(baseUrl: string, host: string | null) {
+  if (!baseUrl || !host) {
+    return baseUrl
+  }
+
+  try {
+    const parsed = new URL(baseUrl)
+    const isLocalHost =
+      parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '::1'
+    if (!isLocalHost) {
+      return baseUrl
+    }
+
+    parsed.hostname = host
+    return parsed.toString().replace(/\/$/, '')
+  } catch {
+    return baseUrl
+  }
+}
+
+const configuredApiBaseUrlRaw = extra.apiBaseUrl || process.env.EXPO_PUBLIC_API_BASE_URL || ''
+const configuredApiBaseUrl = toDeviceReachableApiBaseUrl(configuredApiBaseUrlRaw, localHost ?? null)
 const fallbackApiBaseUrl = localHost ? `http://${localHost}:3000` : 'http://localhost:3000'
-const isProductionRuntime = process.env.NODE_ENV === 'production'
+const appVariant = extra.appVariant ?? process.env.APP_VARIANT ?? 'dev'
+const isProductionRuntime = appVariant === 'production'
 
 if (!configuredApiBaseUrl && isProductionRuntime) {
   throw new Error(
@@ -23,6 +48,8 @@ if (!configuredApiBaseUrl && isProductionRuntime) {
 }
 
 export const API_BASE_URL = configuredApiBaseUrl || fallbackApiBaseUrl
+export const APP_VARIANT = appVariant
+export const APP_SCHEME = extra.appScheme || 'hakumi'
 
 const toBooleanFlag = (value: string | undefined) => value === 'true'
 
@@ -40,7 +67,7 @@ const AI_SDK_SPEECH_ENABLED = toBooleanFlag(
 )
 
 export const E2E_TESTING = toBooleanFlag(
-  process.env.EXPO_PUBLIC_E2E_TESTING,
+  extra.e2eTesting || process.env.EXPO_PUBLIC_E2E_TESTING,
 )
 
 export const E2E_AUTH_SECRET = extra.e2eAuthSecret || process.env.EXPO_PUBLIC_E2E_AUTH_SECRET || ''

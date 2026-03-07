@@ -1,9 +1,32 @@
-import { fileStorageService } from '@hominem/utils/supabase';
+import { fileStorageService } from '@hominem/utils/storage';
 import { logger } from '@hominem/utils/logger';
-import { NotFoundError, ValidationError, InternalError } from '@hominem/services';
+import { NotFoundError, ValidationError, InternalError } from '../errors';
 import { Hono } from 'hono';
+import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+
+type ProcessedFile = {
+  id: string;
+  originalName: string;
+  type: 'image' | 'document' | 'audio' | 'video' | 'unknown';
+  mimetype: string;
+  size: number;
+  textContent?: string;
+  content?: string;
+  thumbnail?: string;
+  metadata?: Record<string, unknown>;
+};
+
+async function indexProcessedFile(_file: ProcessedFile, _userId: string): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  return {
+    success: false,
+    message: 'File indexing is not available in the current DB architecture',
+  };
+}
 
 export const filesRoutes = new Hono<AppContext>()
   // ListOutput user files
@@ -94,4 +117,45 @@ export const filesRoutes = new Hono<AppContext>()
       logger.error('[files.remove] error', { error: err });
       throw new InternalError('Failed to delete file');
     }
+  })
+
+  // Index file for vector search
+  .post('/index', authMiddleware, async (c) => {
+    try {
+      const userId = c.get('userId')!;
+      const body = await c.req.json();
+
+      const parsed = processedFileSchema.safeParse(body);
+      if (!parsed.success) {
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Invalid file data');
+      }
+
+      const result = await indexProcessedFile(parsed.data, userId);
+      return c.json(result);
+    } catch (err) {
+      logger.error('[files.index] error', { error: err });
+      throw new InternalError('Failed to index file');
+    }
+  });
+
+const processedFileSchema = z
+  .object({
+    id: z.string(),
+    originalName: z.string(),
+    type: z.enum(['image', 'document', 'audio', 'video', 'unknown']),
+    mimetype: z.string(),
+    size: z.number(),
+    textContent: z.string().optional(),
+    content: z.string().optional(),
+    thumbnail: z.string().optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  })
+  .transform((data) => {
+    return {
+      ...data,
+      textContent: data.textContent ?? undefined,
+      content: data.content ?? undefined,
+      thumbnail: data.thumbnail ?? undefined,
+      metadata: data.metadata ?? undefined,
+    } as ProcessedFile;
   });

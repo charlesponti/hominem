@@ -1,53 +1,65 @@
-import type {
-  CategoryBreakdownOutput,
-  CategoriesListOutput,
-} from '@hominem/hono-rpc/types/finance.types';
-
 import { format } from 'date-fns';
 
 import { useHonoQuery } from '~/lib/api';
 
-interface CategoryBreakdownParams {
+type FinanceTagOption = {
+  id: string
+  name: string
+}
+
+type FinanceTagsOutput = Array<string | FinanceTagOption>
+type TagBreakdownOutput = {
+  breakdown: Array<{
+    tag: string
+    amount: number
+    percentage: number
+    transactionCount: number
+  }>
+  totalSpending: number
+  averagePerDay: number
+}
+
+interface TagBreakdownParams {
   from?: Date | undefined;
   to?: Date | undefined;
   account?: string | undefined;
-  category?: string | undefined;
+  tag?: string | undefined;
   limit?: number | undefined;
 }
 
 /**
- * Hook for fetching category breakdown analytics
+ * Hook for fetching tag breakdown analytics
  */
-export function useCategoryBreakdown({
+export function useTagBreakdown({
   from,
   to,
   account,
-  category,
+  tag,
   limit = 5,
-}: CategoryBreakdownParams) {
-  return useHonoQuery<CategoryBreakdownOutput>(
+}: TagBreakdownParams) {
+  return useHonoQuery<TagBreakdownOutput>(
     [
       'finance',
       'analyze',
-      'category-breakdown',
+      'tag-breakdown',
       {
         from: from?.toISOString(),
         to: to?.toISOString(),
         account,
-        category,
+        tag,
         limit,
       },
     ],
     async (client) => {
-      const res = await client.api.finance.analyze['category-breakdown'].$post({
+      const res = await client.api.finance.analyze['tag-breakdown'].$post({
         json: {
           from: from ? format(from, 'yyyy-MM-dd') : undefined,
           to: to ? format(to, 'yyyy-MM-dd') : undefined,
-          category,
+          tag,
           limit: limit.toString(),
         },
       });
-      return res.json() as Promise<CategoryBreakdownOutput>;
+      return res.json() as Promise<TagBreakdownOutput>;
     },
     {
       staleTime: 5 * 60 * 1000, // 5 minutes
@@ -56,19 +68,19 @@ export function useCategoryBreakdown({
 }
 
 /**
- * Hook for fetching list of finance categories
+ * Hook for fetching list of finance tags
  */
-export function useFinanceCategories() {
-  return useHonoQuery<CategoriesListOutput>(
-    ['finance', 'categories', 'list'],
+export function useFinanceTags() {
+  return useHonoQuery<FinanceTagsOutput>(
+    ['finance', 'tags', 'list'],
     async (client) => {
-      const res = await client.api.finance.categories.list.$post({
+      const res = await client.api.finance.tags.list.$post({
         json: {},
       });
-      return res.json() as unknown as Promise<CategoriesListOutput>;
+      return res.json() as Promise<FinanceTagsOutput>;
     },
     {
-      staleTime: 10 * 60 * 1000, // 10 minutes - categories don't change often
+      staleTime: 10 * 60 * 1000, // 10 minutes - tags don't change often
     },
   );
 }

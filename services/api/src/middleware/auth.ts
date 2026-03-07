@@ -1,15 +1,11 @@
 import type { HominemUser } from '@hominem/auth/server';
-import type { MiddlewareHandler } from 'hono';
-
 import { toHominemUser, UserAuthService } from '@hominem/auth/server';
 import { logger } from '@hominem/utils/logger';
+import type { MiddlewareHandler } from 'hono';
 
-import type { AuthContextEnvelope } from '../auth/types';
-
-import { betterAuthServer } from '../auth/better-auth';
 import { isSessionRevoked } from '../auth/session-store';
-import { ensureOAuthSubjectUser } from '../auth/subjects';
 import { verifyAccessToken } from '../auth/tokens';
+import type { AuthContextEnvelope } from '../auth/types';
 
 type AuthErrorCode =
   | 'invalid_token'
@@ -69,6 +65,7 @@ function setCachedUser(user: HominemUser) {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function getHominemUserFromJwt(token: string): Promise<HominemUser | null> {
   const claims = await verifyAccessToken(token);
   const cached = getCachedUser(claims.sub);
@@ -128,6 +125,13 @@ function authErrorResponse(code: AuthErrorCode) {
 
 export const authJwtMiddleware = (): MiddlewareHandler => {
   return async (c, next) => {
+    const path = c.req.path;
+    if (path.startsWith('/api/auth') || path.startsWith('/api/better-auth')) {
+      return await next();
+    }
+
+    let bearerAuthError: AuthErrorCode | null = null;
+
     if (process.env.NODE_ENV === 'test') {
       const testUserId = c.req.header('x-user-id');
       if (testUserId) {
@@ -156,7 +160,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
             sub: testUser.id,
             sid: crypto.randomUUID(),
             scope: ['api:read', 'api:write'],
-            role: testUser.isAdmin ? 'admin' : 'user',
+            role: user.isAdmin ? 'admin' : 'user',
             amr: ['test-header'],
             authTime: Math.floor(Date.now() / 1000),
           });
@@ -209,46 +213,14 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
         });
       } catch (error) {
         const authError = mapBearerError(error);
-        c.set('authError', authError);
+        bearerAuthError = authError;
         logger.warn('[authJwtMiddleware] invalid bearer token', { authError, error });
-        return c.json(authErrorResponse(authError), 401);
       }
     }
 
-    if (!c.get('user')) {
-      try {
-        const session = await betterAuthServer.api.getSession({
-          headers: c.req.raw.headers,
-        });
-
-        if (session?.user?.id && session.user.email) {
-          const dbUser = await ensureOAuthSubjectUser({
-            provider: 'apple',
-            providerSubject: session.user.id,
-            email: session.user.email,
-            ...(session.user.name !== undefined ? { name: session.user.name } : {}),
-            ...(session.user.image !== undefined ? { image: session.user.image } : {}),
-          });
-
-          const fullUser = await UserAuthService.getUserById(dbUser.id);
-          if (fullUser) {
-            const user = toHominemUser(fullUser);
-            setCachedUser(user);
-            c.set('user', user);
-            c.set('userId', fullUser.id);
-            c.set('auth', {
-              sub: fullUser.id,
-              sid: session.session?.id ?? crypto.randomUUID(),
-              scope: ['api:read', 'api:write'],
-              role: fullUser.isAdmin ? 'admin' : 'user',
-              amr: ['oauth'],
-              authTime: Math.floor(Date.now() / 1000),
-            });
-          }
-        }
-      } catch (error) {
-        logger.debug('[authJwtMiddleware] session resolution failed', { error });
-      }
+    if (bearerAuthError) {
+      c.set('authError', bearerAuthError);
+      return c.json(authErrorResponse(bearerAuthError), 401);
     }
 
     return await next();

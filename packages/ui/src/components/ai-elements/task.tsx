@@ -1,8 +1,7 @@
 'use client';
 
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
-
 import { Check, Circle, Clock, Flag } from 'lucide-react';
+import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -68,7 +67,10 @@ export function Task({
             {title}
           </h4>
           {priority && (
-            <Flag className={cn('size-3', priorityColors[priority])} fill={priority === 'high' ? 'currentColor' : 'none'} />
+            <Flag
+              className={cn('size-3', priorityColors[priority])}
+              fill={priority === 'high' ? 'currentColor' : 'none'}
+            />
           )}
         </div>
         {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
@@ -115,7 +117,11 @@ export function TaskStatusBadge({ status, className, ...props }: TaskStatusBadge
 
   return (
     <span
-      className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs', statusColors[status], className)}
+      className={cn(
+        'inline-flex items-center px-2 py-0.5 rounded-full text-xs',
+        statusColors[status],
+        className,
+      )}
       {...props}
     >
       {statusLabels[status]}

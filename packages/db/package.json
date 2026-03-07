@@ -9,8 +9,14 @@
       ".": [
         "build/index.d.ts"
       ],
+      "schema/*": [
+        "build/schema/*.d.ts"
+      ],
       "types/*": [
-        "build/schema/*.types.d.ts"
+        "build/schema/*.d.ts"
+      ],
+      "test/*": [
+        "build/test/*.d.ts"
       ]
     }
   },
@@ -20,17 +26,40 @@
       "import": "./build/index.js",
       "default": "./build/index.js"
     },
-    "./schema/*": "./build/schema/*.schema.js",
-    "./schema/validations": "./build/schema/validations.js",
-    "./schema/tables": "./build/schema/tables.js",
-    "./schema/relations": "./build/schema/relations.js",
-    "./schema/calendar.enums": "./build/schema/calendar.enums.js",
-    "./test/fixtures": "./build/test/fixtures.js",
-    "./test/utils": "./build/test/utils.js",
-    "./test/db-transaction": "./build/test/db-transaction.js",
+    "./schema/*": {
+      "types": "./build/schema/*.d.ts",
+      "import": "./build/schema/*.js",
+      "default": "./build/schema/*.js"
+    },
+    "./all-schema": {
+      "types": "./build/all-schema.d.ts",
+      "import": "./build/all-schema.js",
+      "default": "./build/all-schema.js"
+    },
+    "./google-calendar.service": {
+      "types": "./build/google-calendar.service.d.ts",
+      "import": "./build/google-calendar.service.js",
+      "default": "./build/google-calendar.service.js"
+    },
     "./types/*": {
-      "types": "./build/schema/*.types.d.ts",
-      "import": "./build/schema/*.types.js"
+      "types": "./build/schema/*.d.ts",
+      "import": "./build/schema/*.js",
+      "default": "./build/schema/*.js"
+    },
+    "./services/*": {
+      "types": "./build/services/*.d.ts",
+      "import": "./build/services/*.js",
+      "default": "./build/services/*.js"
+    },
+    "./services/finance/*": {
+      "types": "./build/services/finance/*.d.ts",
+      "import": "./build/services/finance/*.js",
+      "default": "./build/services/finance/*.js"
+    },
+    "./test/*": {
+      "types": "./build/test/*.d.ts",
+      "import": "./build/test/*.js",
+      "default": "./build/test/*.js"
     }
   },
   "scripts": {
@@ -46,9 +75,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hominem/utils": "workspace:*",
+    "csv-parser": "^3.2.0",
     "drizzle-orm": "0.45.1",
     "drizzle-zod": "^0.7.0",
+    "openai": "4.83.0",
     "postgres": "^3.4.5",
+    "uuid": "^11.1.0",
     "zod": "4.3.6"
   },
   "devDependencies": {

@@ -12,8 +12,8 @@ import {
 } from 'react-router';
 
 import type { Route } from './+types/root';
-
 import ErrorBoundary from './components/ErrorBoundary';
+
 import './globals.css';
 import { HonoProvider } from './lib/api';
 import { serverEnv } from './lib/env';
@@ -85,7 +85,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Links />
       </head>
       <body>
-        <AuthProvider initialSession={session} config={authConfig} onAuthEvent={handleAuthEvent}>
+        <AuthProvider config={authConfig} onAuthEvent={handleAuthEvent}>
           <HonoProvider baseUrl={apiBaseUrl}>
             <UpdateGuard logo="/icons/apple-touch-icon-152x152.png" appName="Rocco">
               <Outlet />

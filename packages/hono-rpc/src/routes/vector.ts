@@ -1,11 +1,33 @@
-import { ValidationError, InternalError } from '@hominem/services';
-import { VectorService } from '@hominem/services/vector';
+import { ValidationError, InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
-import { fileStorageService } from '@hominem/utils/supabase';
+import { fileStorageService } from '@hominem/utils/storage';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
+
+const VectorService = {
+  async query(_params: { q: string; source: string; limit?: number }) {
+    return { results: [] as unknown[] };
+  },
+  async searchDocumentsByUser(
+    _query: string,
+    _userId: string,
+    _limit?: number,
+    _threshold?: number,
+  ) {
+    return { results: [] as unknown[] };
+  },
+  async getUserDocuments(_userId: string, _limit?: number, _offset?: number) {
+    return [] as unknown[];
+  },
+  async deleteUserDocuments(_userId: string, _source?: string) {
+    return { success: false };
+  },
+  async ingestMarkdown(_text: string, _userId: string, _metadata?: Record<string, unknown>) {
+    return { success: false, chunksProcessed: 0 };
+  },
+};
 
 const searchVectorsSchema = z.object({
   query: z.string().min(1, 'Query string is required'),

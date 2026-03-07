@@ -4,11 +4,12 @@ import {
   NotFoundError,
   ValidationError,
   InternalError,
-} from '@hominem/services';
+} from '@hominem/hono-rpc';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
+import { plaidSyncQueue } from '../../../lib/queues';
 import type { AppEnv } from '../../../server';
 
 export const financePlaidSyncRoutes = new Hono<AppEnv>();
@@ -35,8 +36,7 @@ financePlaidSyncRoutes.post('/:itemId', async (c) => {
     }
 
     // Queue sync job
-    const queues = c.get('queues');
-    await queues.plaidSync.add(
+    await plaidSyncQueue.add(
       QUEUE_NAMES.PLAID_SYNC,
       {
         userId,

@@ -3,6 +3,8 @@ import { Hono } from 'hono';
 import type { AppContext } from './middleware/auth';
 
 import { errorMiddleware } from './middleware/error';
+import { validationErrorMiddleware } from './middleware/validation';
+import { requestIdMiddleware } from './middleware/auth';
 import { economyRoutes } from './routes/economy';
 import { knowledgeRoutes } from './routes/knowledge';
 import { socialRoutes } from './routes/social';
@@ -14,7 +16,7 @@ import { worldRoutes } from './routes/world';
  * Build the main application with all routes explicitly registered.
  *
  * Routes are organized into six archetypal domains:
- * - vitalRoutes: Health, habits, goals, events (Human life-force)
+ * - vitalRoutes: Health, habits, goals, calendar (Human life-force)
  * - knowledgeRoutes: Notes, content, files, bookmarks, twitter (Human mind)
  * - socialRoutes: People, chats, messages, invites (Human connection)
  * - economyRoutes: Finance, items, lists (Human resource management)
@@ -26,8 +28,10 @@ import { worldRoutes } from './routes/world';
  *
  * @see packages/hono-rpc/src/app.type.ts for the AppType definition
  */
-function buildApp() {
+function buildApp(): Hono<AppContext> {
   return new Hono<AppContext>()
+    .use(requestIdMiddleware)
+    .use(validationErrorMiddleware)
     .use(errorMiddleware)
     .basePath('/api')
     .route('', vitalRoutes)
@@ -47,4 +51,4 @@ function buildApp() {
  * NOTE: AppType inference is deferred to app.type.ts to prevent
  * expensive type computation during routine type checking.
  */
-export const app = buildApp();
+export const app: Hono<AppContext> = buildApp()

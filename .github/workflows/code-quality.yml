@@ -18,15 +18,18 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       REDIS_URL: "redis://localhost:6379"
       RESEND_API_KEY: "SG.7Q9Z9ZQzQ9q"
-      SUPABASE_URL: "http://localhost:54321"
-      SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      SUPABASE_SERVICE_ROLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+      RESEND_FROM_EMAIL: "noreply@hominem.test"
+      RESEND_FROM_NAME: "Hominem CI"
+      SEND_EMAILS: "false"
+      AUTH_TEST_OTP_ENABLED: "true"
+      AUTH_E2E_SECRET: "otp-secret"
+      R2_ENDPOINT: "http://localhost:4567"
+      R2_ACCESS_KEY_ID: "test-key"
+      R2_SECRET_ACCESS_KEY: "test-secret"
       VITE_APP_BASE_URL: "https://example.com"
       VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       VITE_PUBLIC_API_URL: "http://localhost:4040"
-      VITE_SUPABASE_URL: "http://localhost:54321"
-      VITE_SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      VITE_SUPABASE_SERVICE_ROLE_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+      VITE_R2_DOMAIN: "test-domain"
     services:
       postgres:
         env:
@@ -94,17 +97,35 @@ jobs:
         run: bun run verify:mobile
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
-          EXPO_PUBLIC_SUPABASE_URL: "http://localhost:54321"
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+          EXPO_PUBLIC_R2_DOMAIN: "test-domain"
 
       - name: 🧱 Build hono-rpc package
         run: bun run --filter @hominem/hono-rpc build
 
       - name: ⚙️ apply database migrations
-        run: bun run db:migrate
+        run: bun run --filter @hominem/db db:migrate
 
       - name: 🧪 Unit tests
         run: bun run test
+
+      - name: 🔐 API auth contract tests
+        run: bun run test:e2e:auth:api
+
+      - name: 🌐 Install Playwright browsers
+        run: (cd apps/finance && bunx playwright install --with-deps chromium) && (cd apps/notes && bunx playwright install chromium) && (cd apps/rocco && bunx playwright install chromium)
+
+      - name: 📱 Mobile auth unit/integration/screen tests
+        run: bun run --filter @hominem/mobile test:unit:auth && bun run --filter @hominem/mobile test:integration:auth && bun run --filter @hominem/mobile test:screens:auth
+        env:
+          EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
+          EXPO_PUBLIC_R2_DOMAIN: "test-domain"
+
+      - name: 🌐 Web auth E2E tests
+        run: bun run test:e2e:auth:app
+        env:
+          AUTH_TEST_OTP_ENABLED: "true"
+          AUTH_E2E_SECRET: "otp-secret"
+          SEND_EMAILS: "false"
 
   analyze:
     name: Analyze

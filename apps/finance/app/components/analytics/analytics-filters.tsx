@@ -10,9 +10,9 @@ import { Filter, X } from 'lucide-react';
 import { type Dispatch, type SetStateAction, useId, useState } from 'react';
 
 import { AccountSelect } from '~/components/account-select';
-import { CategorySelect } from '~/components/category-select';
+import { TagSelect } from '~/components/category-select';
 import { GroupBySelect } from '~/components/group-by-select';
-import { useFinanceCategories } from '~/lib/hooks/use-analytics';
+import { useFinanceTags } from '~/lib/hooks/use-analytics';
 import { useFinanceAccounts } from '~/lib/hooks/use-finance-data';
 
 interface AnalyticsFiltersProps {
@@ -22,8 +22,8 @@ interface AnalyticsFiltersProps {
   setDateTo: Dispatch<SetStateAction<Date | undefined>>;
   selectedAccount: string;
   setSelectedAccount: Dispatch<SetStateAction<string>>;
-  selectedCategory: string;
-  setSelectedCategory: Dispatch<SetStateAction<string>>;
+  selectedTag: string;
+  setSelectedTag: Dispatch<SetStateAction<string>>;
   groupBy: 'month' | 'week' | 'day';
   setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>;
   includeStats: boolean;
@@ -39,8 +39,8 @@ interface FilterChipsProps {
   setDateTo: Dispatch<SetStateAction<Date | undefined>>;
   selectedAccount: string;
   setSelectedAccount: Dispatch<SetStateAction<string>>;
-  selectedCategory: string;
-  setSelectedCategory: Dispatch<SetStateAction<string>>;
+  selectedTag: string;
+  setSelectedTag: Dispatch<SetStateAction<string>>;
   groupBy: 'month' | 'week' | 'day';
   setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>;
   includeStats: boolean;
@@ -48,7 +48,7 @@ interface FilterChipsProps {
   compareToPrevious: boolean;
   setCompareToPrevious: Dispatch<SetStateAction<boolean>>;
   accounts: Array<{ id: string; name: string }>;
-  categories: { id: string; name: string }[];
+  tags: { id: string; name: string }[];
   isLoading: boolean;
 }
 
@@ -59,8 +59,8 @@ function FilterChips({
   setDateTo,
   selectedAccount,
   setSelectedAccount,
-  selectedCategory,
-  setSelectedCategory,
+  selectedTag,
+  setSelectedTag,
   groupBy,
   setGroupBy,
   includeStats,
@@ -68,7 +68,7 @@ function FilterChips({
   compareToPrevious,
   setCompareToPrevious,
   accounts,
-  categories,
+  tags,
   isLoading,
 }: FilterChipsProps) {
   if (isLoading) {
@@ -100,13 +100,12 @@ function FilterChips({
       onRemove: () => setSelectedAccount('all'),
     });
   }
-  if (selectedCategory && selectedCategory !== 'all') {
-    const categoryLabel =
-      categories.find((c) => c.id === selectedCategory)?.name || selectedCategory;
+  if (selectedTag && selectedTag !== 'all') {
+    const tagLabel = tags.find((t) => t.id === selectedTag)?.name || selectedTag;
     chips.push({
-      key: 'category',
-      label: categoryLabel,
-      onRemove: () => setSelectedCategory('all'),
+      key: 'tag',
+      label: tagLabel,
+      onRemove: () => setSelectedTag('all'),
     });
   }
   if (groupBy !== 'month') {
@@ -167,8 +166,8 @@ export function AnalyticsFilters({
   setDateTo,
   selectedAccount,
   setSelectedAccount,
-  selectedCategory,
-  setSelectedCategory,
+  selectedTag,
+  setSelectedTag,
   groupBy,
   setGroupBy,
   includeStats,
@@ -177,11 +176,13 @@ export function AnalyticsFilters({
   setCompareToPrevious,
 }: AnalyticsFiltersProps) {
   const accountsQuery = useFinanceAccounts();
-  const categoriesQuery = useFinanceCategories();
-  const categories = Array.isArray(categoriesQuery.data) ? categoriesQuery.data : [];
-  const categoriesLoading = categoriesQuery.isLoading;
+  const tagsQuery = useFinanceTags();
+  const tags = (Array.isArray(tagsQuery.data) ? tagsQuery.data : []) as Array<
+    string | { id: string; name: string }
+  >;
+  const tagsLoading = tagsQuery.isLoading;
 
-  const isLoading = accountsQuery.isLoading || categoriesLoading;
+  const isLoading = accountsQuery.isLoading || tagsLoading;
   const dateFromId = useId();
   const dateToId = useId();
   const includeStatsId = useId();
@@ -191,12 +192,12 @@ export function AnalyticsFilters({
   const safeAccounts: Array<{ id: string; name: string }> = (
     Array.isArray(accountsQuery.data) ? accountsQuery.data : []
   ).map((acc) => ({ id: acc.id, name: acc.name }));
-  const safeCategories = categories
-    .map((category) => ({
-      id: category || '',
-      name: category || '',
+  const safeTags = tags
+    .map((tag) => ({
+      id: typeof tag === 'string' ? tag : tag.id,
+      name: typeof tag === 'string' ? tag : tag.name,
     }))
-    .filter((cat) => cat.id && cat.name);
+    .filter((tag) => tag.id && tag.name);
 
   const [open, setOpen] = useState(false);
 
@@ -239,7 +240,7 @@ export function AnalyticsFilters({
                       </div>
                     </div>
 
-                    {/* Account and Category Filters */}
+                    {/* Account and Tag Filters */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <AccountSelect
                         selectedAccount={selectedAccount}
@@ -247,10 +248,10 @@ export function AnalyticsFilters({
                         isLoading={isLoading}
                         showLabel={true}
                       />
-                      <CategorySelect
-                        selectedCategory={selectedCategory}
-                        onCategoryChange={setSelectedCategory}
-                        categories={safeCategories}
+                      <TagSelect
+                        selectedTag={selectedTag}
+                        onTagChange={setSelectedTag}
+                        tags={safeTags}
                         isLoading={isLoading}
                       />
                     </div>
@@ -311,8 +312,8 @@ export function AnalyticsFilters({
               setDateTo={setDateTo}
               selectedAccount={selectedAccount}
               setSelectedAccount={setSelectedAccount}
-              selectedCategory={selectedCategory}
-              setSelectedCategory={setSelectedCategory}
+              selectedTag={selectedTag}
+              setSelectedTag={setSelectedTag}
               groupBy={groupBy}
               setGroupBy={setGroupBy}
               includeStats={includeStats}
@@ -320,7 +321,7 @@ export function AnalyticsFilters({
               compareToPrevious={compareToPrevious}
               setCompareToPrevious={setCompareToPrevious}
               accounts={safeAccounts}
-              categories={safeCategories}
+              tags={safeTags}
               isLoading={isLoading}
             />
           </div>

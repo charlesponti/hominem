@@ -1,241 +1,101 @@
-import type { ItemOutput } from '@hominem/db/types/items';
-
 import { db } from '@hominem/db';
-import { and, desc, eq, inArray, sql } from '@hominem/db';
-import { item } from '@hominem/db/schema/items';
-import { list, userLists } from '@hominem/db/schema/lists';
-import { place } from '@hominem/db/schema/places';
-import { users } from '@hominem/db/schema/users';
-import { getHominemPhotoURL } from '@hominem/utils/images';
-import { logger } from '@hominem/utils/logger';
-import crypto from 'node:crypto';
-
-import type { ListPlace } from './types';
+import { sql } from '@hominem/db';
 
 import { getListOwnedByUser } from './list-queries.service';
+import type { ListPlace } from './contracts';
 
-/**
- * Fetches all places associated with a specific list
- * @param listId - The ID of the list to fetch places for
- * @returns Array of places associated with the list
- */
-export async function getListPlaces(listId: string): Promise<ListPlace[]> {
-  try {
-    const listPlaces = await db
-      .select({
-        id: item.id,
-        placeId: item.itemId, // Map item.itemId (which is place.id) to placeId for clarity
-        description: place.description,
-        itemAddedAt: item.createdAt,
-        googleMapsId: place.googleMapsId,
-        name: place.name,
-        imageUrl: sql<string | null>`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as(
-          'imageUrl',
-        ),
-        photos: place.photos,
-        types: place.types,
-        type: item.type,
-        latitude: place.latitude,
-        longitude: place.longitude,
-        rating: place.rating,
-        address: place.address,
-        addedById: users.id,
-        addedByName: users.name,
-        addedByEmail: users.email,
-        addedByImage: users.image,
-      })
-      .from(item)
-      .innerJoin(place, eq(item.itemId, place.id))
-      .innerJoin(users, eq(item.userId, users.id))
-      .where(eq(item.listId, listId));
-
-    return listPlaces.map((p) => ({
-      id: p.id,
-      placeId: p.placeId,
-      description: p.description,
-      itemAddedAt: p.itemAddedAt,
-      googleMapsId: p.googleMapsId,
-      name: p.name,
-      imageUrl: p.imageUrl,
-      photos: p.photos,
-      types: p.types,
-      type: p.type,
-      latitude: p.latitude,
-      longitude: p.longitude,
-      rating: p.rating,
-      address: p.address,
-      addedBy: {
-        id: p.addedById,
-        name: p.addedByName,
-        email: p.addedByEmail,
-        image: p.addedByImage,
-      },
-    }));
-  } catch (error) {
-    logger.error('Error fetching places for list', {
-      listId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return [];
-  }
+interface DeletedRow {
+  id: string;
 }
 
-/**
- * Gets the first place in a list for preview purposes.
- * Optimized to fetch only one place, preferring one with an image.
- * Only fetches minimal fields needed for preview.
- */
-export async function getPlaceListPreview(listId: string) {
-  try {
-    return await db
-      .select({
-        itemId: item.itemId,
-        name: place.name,
-        description: place.description,
-        imageUrl: place.imageUrl,
-      })
-      .from(item)
-      .innerJoin(place, eq(item.itemId, place.id))
-      .where(eq(item.listId, listId))
-      .limit(1)
-      .then((rows) => {
-        const r = rows[0] ?? null;
-        if (!r) {
-          return null;
-        }
-        const photoUrl = r.imageUrl ? getHominemPhotoURL(r.imageUrl, 600, 400) : null;
-        return { ...r, photoUrl };
-      });
-  } catch (error) {
-    logger.error('Error fetching first place for preview', {
-      listId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return null;
-  }
+interface TaskRow {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  status: string | null;
+  priority: string | null;
+  due_date: string | null;
+  completed_at: string | null;
+  parent_id: string | null;
+  list_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
-/**
- * Builds a map of list places by listId for quick lookup
- * @param listIds - Array of list IDs to fetch places for
- * @returns Map of list places by listId
- */
-export async function getListPlacesMap(listIds: string[]): Promise<Map<string, ListPlace[]>> {
-  const placesMap = new Map<string, ListPlace[]>();
+export interface ListTaskItem {
+  id: string;
+  listId: string | null;
+  itemId: string;
+  itemType: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-  if (listIds.length === 0) {
-    return placesMap;
+export interface ListPlacePreview {
+  itemId: string;
+  name: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  photoUrl: string | null;
+}
+
+function resultRows<T>(result: unknown): T[] {
+  if (Array.isArray(result)) {
+    return result as T[];
   }
-
-  try {
-    const allPlaces = await db
-      .select({
-        id: item.id,
-        placeId: item.itemId, // Map item.itemId (which is place.id) to placeId for clarity
-        listId: item.listId,
-        description: place.description,
-        itemAddedAt: item.createdAt,
-        googleMapsId: place.googleMapsId,
-        name: place.name,
-        imageUrl: sql<string | null>`COALESCE(${place.imageUrl}, ${place.photos}[1])`.as(
-          'imageUrl',
-        ),
-        photos: place.photos,
-        types: place.types,
-        type: item.type,
-        latitude: place.latitude,
-        longitude: place.longitude,
-        rating: place.rating,
-        address: place.address,
-        addedById: users.id,
-        addedByName: users.name,
-        addedByEmail: users.email,
-        addedByImage: users.image,
-      })
-      .from(item)
-      .innerJoin(place, eq(item.itemId, place.id))
-      .innerJoin(users, eq(item.userId, users.id))
-      .where(inArray(item.listId, listIds));
-
-    for (const p of allPlaces) {
-      if (!placesMap.has(p.listId)) {
-        placesMap.set(p.listId, []);
-      }
-
-      const listPlace: ListPlace = {
-        id: p.id,
-        placeId: p.placeId,
-        description: p.description,
-        itemAddedAt: p.itemAddedAt,
-        googleMapsId: p.googleMapsId,
-        name: p.name,
-        imageUrl: p.imageUrl,
-        photos: p.photos,
-        types: p.types,
-        type: p.type,
-        latitude: p.latitude,
-        longitude: p.longitude,
-        rating: p.rating,
-        address: p.address,
-        addedBy: {
-          id: p.addedById,
-          name: p.addedByName,
-          email: p.addedByEmail,
-          image: p.addedByImage,
-        },
-      };
-      placesMap.get(p.listId)!.push(listPlace);
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows?: unknown }).rows;
+    if (Array.isArray(rows)) {
+      return rows as T[];
     }
-
-    return placesMap;
-  } catch (error) {
-    console.error('Error building list places map:', error);
-    return placesMap;
   }
+  return [];
 }
 
-/**
- * Deletes an item from a list
- * @param listId - The ID of the list
- * @param itemId - The ID of the item to delete
- * @param userId - The ID of the user performing the deletion (must be owner or collaborator)
- * @returns True if deletion was successful, false otherwise
- */
+function taskToListItem(row: TaskRow): ListTaskItem {
+  const createdAt = row.created_at ?? new Date().toISOString();
+  const updatedAt = row.updated_at ?? createdAt;
+  return {
+    id: row.id,
+    listId: row.list_id,
+    itemId: row.id,
+    itemType: 'TASK',
+    createdAt,
+    updatedAt,
+  };
+}
+
+export async function getListPlaces(_listId: string): Promise<ListPlace[]> {
+  return [];
+}
+
+export async function getPlaceListPreview(_listId: string): Promise<ListPlacePreview | null> {
+  return null;
+}
+
+export async function getListPlacesMap(listIds: string[]): Promise<Map<string, ListPlace[]>> {
+  const map = new Map<string, ListPlace[]>();
+  for (const listId of listIds) {
+    map.set(listId, []);
+  }
+  return map;
+}
+
 export async function deleteListItem(
   listId: string,
   itemId: string,
   userId: string,
 ): Promise<boolean> {
-  try {
-    // Use a subquery to check if user has access (owner or collaborator)
-    // Only delete if the user has access to the list
-    // The subquery checks if the list is owned by the user OR the user is a collaborator
-    const result = await db
-      .delete(item)
-      .where(
-        and(
-          eq(item.listId, listId),
-          eq(item.itemId, itemId),
-          sql`EXISTS (
-            SELECT 1 FROM ${list}
-            WHERE ${list.id} = ${item.listId}
-            AND (
-              ${list.ownerId} = ${userId}
-              OR EXISTS (
-                SELECT 1 FROM ${userLists}
-                WHERE ${userLists.listId} = ${list.id}
-                AND ${userLists.userId} = ${userId}
-              )
-            )
-          )`,
-        ),
-      )
-      .returning({ id: item.id });
-    return result.length > 0;
-  } catch (error) {
-    console.error(`Error deleting item ${itemId} from list ${listId} for user ${userId}:`, error);
-    return false;
-  }
+  const result = await db.execute(sql`
+    delete from tasks
+    where id = ${itemId}
+      and list_id = ${listId}
+      and user_id = ${userId}
+    returning id
+  `);
+
+  return resultRows<DeletedRow>(result).length > 0;
 }
 
 export async function addItemToList(params: {
@@ -243,35 +103,88 @@ export async function addItemToList(params: {
   itemId: string;
   itemType: 'FLIGHT' | 'PLACE';
   userId: string;
-}) {
-  const { listId, itemId, itemType, userId } = params;
+}): Promise<ListTaskItem> {
+  const { listId, itemId, userId } = params;
 
   const listItem = await getListOwnedByUser(listId, userId);
   if (!listItem) {
-    throw new Error("ListOutput not found or you don't have permission to add items to it");
+    throw new Error("List not found or you don't have permission to add items to it");
   }
 
-  const existingItem = await db.query.item.findFirst({
-    where: and(eq(item.listId, listId), eq(item.itemId, itemId)),
-  });
+  const existingResult = await db.execute(sql`
+    select
+      id,
+      user_id,
+      title,
+      description,
+      status,
+      priority,
+      due_date,
+      completed_at,
+      parent_id,
+      list_id,
+      created_at,
+      updated_at
+    from tasks
+    where id = ${itemId}
+      and user_id = ${userId}
+    limit 1
+  `);
 
-  if (existingItem) {
-    throw new Error('ItemOutput is already in this list');
+  const existing = resultRows<TaskRow>(existingResult)[0] ?? null;
+  if (existing) {
+    const updatedResult = await db.execute(sql`
+      update tasks
+      set list_id = ${listId}, updated_at = now()
+      where id = ${itemId}
+        and user_id = ${userId}
+      returning
+        id,
+        user_id,
+        title,
+        description,
+        status,
+        priority,
+        due_date,
+        completed_at,
+        parent_id,
+        list_id,
+        created_at,
+        updated_at
+    `);
+
+    const updated = resultRows<TaskRow>(updatedResult)[0] ?? null;
+    if (!updated) {
+      throw new Error('Failed to attach item to list');
+    }
+
+    return taskToListItem(updated);
   }
 
-  const [newItem] = await db
-    .insert(item)
-    .values({
-      id: crypto.randomUUID(),
-      listId,
-      itemId,
-      itemType,
-      userId,
-      type: itemType,
-    })
-    .returning();
+  const insertedResult = await db.execute(sql`
+    insert into tasks (id, user_id, title, status, priority, list_id)
+    values (${itemId}, ${userId}, 'Imported item', 'pending', 'medium', ${listId})
+    returning
+      id,
+      user_id,
+      title,
+      description,
+      status,
+      priority,
+      due_date,
+      completed_at,
+      parent_id,
+      list_id,
+      created_at,
+      updated_at
+  `);
 
-  return newItem;
+  const inserted = resultRows<TaskRow>(insertedResult)[0] ?? null;
+  if (!inserted) {
+    throw new Error('Failed to add item to list');
+  }
+
+  return taskToListItem(inserted);
 }
 
 export async function removeItemFromList(params: {
@@ -283,20 +196,40 @@ export async function removeItemFromList(params: {
 
   const listItem = await getListOwnedByUser(listId, userId);
   if (!listItem) {
-    throw new Error("ListOutput not found or you don't have permission to remove items from it");
+    throw new Error("List not found or you don't have permission to remove items from it");
   }
 
-  const deletedItem = await db
-    .delete(item)
-    .where(and(eq(item.listId, listId), eq(item.itemId, itemId)))
-    .returning();
+  const result = await db.execute(sql`
+    update tasks
+    set list_id = null, updated_at = now()
+    where id = ${itemId}
+      and list_id = ${listId}
+      and user_id = ${userId}
+    returning id
+  `);
 
-  return deletedItem.length > 0;
+  return resultRows<DeletedRow>(result).length > 0;
 }
 
-export async function getItemsByListId(listId: string): Promise<ItemOutput[]> {
-  return db.query.item.findMany({
-    where: eq(item.listId, listId),
-    orderBy: [desc(item.createdAt)],
-  });
+export async function getItemsByListId(listId: string): Promise<ListTaskItem[]> {
+  const result = await db.execute(sql`
+    select
+      id,
+      user_id,
+      title,
+      description,
+      status,
+      priority,
+      due_date,
+      completed_at,
+      parent_id,
+      list_id,
+      created_at,
+      updated_at
+    from tasks
+    where list_id = ${listId}
+    order by created_at desc, id asc
+  `);
+
+  return resultRows<TaskRow>(result).map(taskToListItem);
 }

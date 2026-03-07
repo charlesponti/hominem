@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, type HTMLAttributes, type ReactNode } from 'react';
-
 import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
+import { useState, type HTMLAttributes, type ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -12,7 +11,12 @@ interface ReasoningProps extends HTMLAttributes<HTMLDivElement> {
   isOpen?: boolean;
 }
 
-export function Reasoning({ children, isOpen: defaultOpen = false, className, ...props }: ReasoningProps) {
+export function Reasoning({
+  children,
+  isOpen: defaultOpen = false,
+  className,
+  ...props
+}: ReasoningProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -32,9 +36,7 @@ export function Reasoning({ children, isOpen: defaultOpen = false, className, ..
 
       {isOpen && (
         <div className="px-3 pb-3">
-          <div className="text-sm whitespace-pre-wrap leading-relaxed opacity-80">
-            {children}
-          </div>
+          <div className="text-sm whitespace-pre-wrap leading-relaxed opacity-80">{children}</div>
         </div>
       )}
     </div>

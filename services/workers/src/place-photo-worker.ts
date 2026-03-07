@@ -103,5 +103,3 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 logger.info('Place Photo Enrichment worker started');
-
-;

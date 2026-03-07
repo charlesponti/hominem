@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useHonoClient } from '@hominem/hono-client/react'
 
 import { LocalStore } from '~/utils/local-store'
+import { validateNotesResponse } from '~/utils/validation/schemas'
 import type { FocusItems, FocusResponse } from './types'
 import { fromLocalFocusItems, noteToFocusItem, toLocalFocusItem } from './local-focus'
 
@@ -28,7 +29,8 @@ export const useFocusQuery = ({
           },
         })
 
-        const payload = (await response.json()) as { notes: Parameters<typeof noteToFocusItem>[0][] }
+        const rawPayload = await response.json()
+        const payload = validateNotesResponse(rawPayload)
         const mapped = payload.notes.map(noteToFocusItem)
 
         await Promise.all(mapped.map((item) => LocalStore.upsertFocusItem(toLocalFocusItem(item))))

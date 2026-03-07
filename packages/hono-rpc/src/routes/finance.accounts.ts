@@ -1,21 +1,28 @@
-import type { AccountType } from '@hominem/db/types/finance';
-
+import { Hono } from 'hono'
+import { zValidator } from '@hono/zod-validator'
+import * as z from 'zod'
 import {
-  listAccounts,
-  getAccountWithPlaidInfo,
-  listAccountsWithRecentTransactions,
   createAccount,
-  updateAccount,
   deleteAccount,
+  getAccountById,
+  getAccountsForInstitution,
+  listAccounts,
   listAccountsWithPlaidInfo,
   listPlaidConnectionsForUser,
-  getAccountsForInstitution,
-} from '@hominem/finance-services';
-import { NotFoundError } from '@hominem/services';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-import * as z from 'zod';
+  queryTransactionsByContract,
+  updateAccount,
+} from '@hominem/finance-services'
 
+import type { AppContext } from '../middleware/auth'
+import { authMiddleware } from '../middleware/auth'
+import {
+  accountCreateSchema,
+  accountDeleteSchema,
+  accountGetSchema,
+  accountListSchema,
+  accountUpdateSchema,
+  institutionAccountsSchema,
+} from '../schemas/finance.accounts.schema'
 import type {
   AccountAllOutput,
   AccountConnectionsOutput,
@@ -26,173 +33,217 @@ import type {
   AccountListOutput,
   AccountUpdateOutput,
   AccountsWithPlaidOutput,
-} from '../types/finance.types';
+} from '../types/finance/accounts.types'
+import type { AccountData, AccountType, PlaidConnection, TransactionData } from '../types/finance/shared.types'
+import type { TransactionType } from '../types/finance/shared.types'
+import { NotFoundError } from '../errors'
 
-import { authMiddleware, type AppContext } from '../middleware/auth';
-import {
-  accountCreateSchema,
-  accountDeleteSchema,
-  accountGetSchema,
-  accountListSchema,
-  accountUpdateSchema,
-  institutionAccountsSchema,
-} from '../schemas/finance.accounts.schema';
+const emptyBodySchema = z.object({})
 
-/**
- * No serialization helpers needed!
- * Database types are returned directly - timestamps already as strings.
- */
+function normalizeAccountType(value: string): AccountType {
+  if (
+    value === 'checking' ||
+    value === 'savings' ||
+    value === 'credit' ||
+    value === 'investment' ||
+    value === 'cash' ||
+    value === 'other'
+  ) {
+    return value
+  }
+  return 'other'
+}
 
-/**
- * Finance Accounts Routes
- */
+function toAccountData(input: {
+  id: string
+  userId: string
+  name: string
+  type: string
+  balance: number
+}): AccountData {
+  return {
+    id: input.id,
+    userId: input.userId,
+    name: input.name,
+    accountType: normalizeAccountType(input.type),
+    balance: input.balance,
+  }
+}
+
+function toTransactionData(input: {
+  id: string
+  userId: string
+  accountId: string
+  amount: number
+  description: string | null
+  date: string
+}): TransactionData {
+  return {
+    id: input.id,
+    userId: input.userId,
+    accountId: input.accountId,
+    amount: input.amount,
+    description: input.description ?? '',
+    date: input.date,
+    type: (input.amount < 0 ? 'expense' : 'income') as TransactionType,
+  }
+}
+
 export const accountsRoutes = new Hono<AppContext>()
-  .use('*', authMiddleware)
-
-  // POST /list - ListOutput accounts
-  .post('/list', zValidator('json', accountListSchema), async (c) => {
-    const userId = c.get('userId')!;
-    const accounts = await listAccounts(userId);
-    return c.json<AccountListOutput>(accounts, 200);
+  .post('/list', authMiddleware, zValidator('json', accountListSchema), async (c) => {
+    const userId = c.get('userId')!
+    const accounts = await listAccounts(userId)
+    return c.json<AccountListOutput>(accounts.map(toAccountData), 200)
   })
-
-  // POST /get - Get single account
-  .post('/get', zValidator('json', accountGetSchema), async (c) => {
-    const input = c.req.valid('json') as z.infer<typeof accountGetSchema>;
-    const userId = c.get('userId')!;
-
-    const account = await getAccountWithPlaidInfo(input.id, userId);
-
+  .post('/get', authMiddleware, zValidator('json', accountGetSchema), async (c) => {
+    const userId = c.get('userId')!
+    const input = c.req.valid('json')
+    const account = await getAccountById(input.id, userId)
     if (!account) {
-      throw new NotFoundError('Account not found');
+      throw new NotFoundError('Account not found')
     }
-
-    const accountWithTransactions = await listAccountsWithRecentTransactions(userId, 5);
-    const accountData = accountWithTransactions.find((acc) => acc.id === account.id);
-
-    const result = {
-      ...account,
-      transactions: accountData?.transactions || [],
-    };
-
-    return c.json<AccountGetOutput>(result, 200);
+    const transactions = await queryTransactionsByContract({
+      userId,
+      accountId: input.id,
+      limit: 200,
+      offset: 0,
+    })
+    return c.json<AccountGetOutput>({
+      ...toAccountData(account),
+      institutionName: null,
+      plaidAccountId: account.plaidAccountId ?? null,
+      plaidItemId: null,
+      transactions: transactions.map(toTransactionData),
+    })
   })
-
-  // POST /create - Create account
-  .post('/create', zValidator('json', accountCreateSchema), async (c) => {
-    const input = c.req.valid('json') as z.infer<typeof accountCreateSchema>;
-    const userId = c.get('userId')!;
-
-    const result = await createAccount({
+  .post('/create', authMiddleware, zValidator('json', accountCreateSchema), async (c) => {
+    const userId = c.get('userId')!
+    const input = c.req.valid('json')
+    const created = await createAccount({
       userId,
       name: input.name,
-      type: input.type as AccountType,
-      balance: input.balance?.toString() || '0',
-      institutionId: input.institution ?? input.institutionId ?? null,
-      isoCurrencyCode: 'USD',
-      meta: null,
-    });
-
-    return c.json<AccountCreateOutput>(result, 201);
+      type: input.type,
+      balance: input.balance === undefined ? 0 : Number(input.balance),
+    })
+    return c.json<AccountCreateOutput>(toAccountData(created), 201)
   })
-
-  // POST /update - Update account
-  .post('/update', zValidator('json', accountUpdateSchema), async (c) => {
-    const input = c.req.valid('json') as z.infer<typeof accountUpdateSchema>;
-    const userId = c.get('userId')!;
-    const { id, ...updates } = input;
-
-    const result = await updateAccount(id, userId, {
-      ...updates,
-      balance: updates.balance?.toString(),
-      institutionId: updates.institution ?? updates.institutionId,
-      type: updates.type as AccountType | undefined,
-    });
-
-    if (!result) {
-      throw new NotFoundError('Account not found');
+  .post('/update', authMiddleware, zValidator('json', accountUpdateSchema), async (c) => {
+    const userId = c.get('userId')!
+    const input = c.req.valid('json')
+    const updated = await updateAccount({
+      id: input.id,
+      userId,
+      ...(input.name !== undefined ? { name: input.name } : {}),
+      ...(input.type !== undefined ? { type: input.type } : {}),
+      ...(input.balance !== undefined ? { balance: Number(input.balance) } : {}),
+    })
+    if (!updated) {
+      throw new NotFoundError('Account not found')
     }
-
-    return c.json<AccountUpdateOutput>(result, 200);
+    return c.json<AccountUpdateOutput>(toAccountData(updated), 200)
   })
-
-  // POST /delete - Delete account
-  .post('/delete', zValidator('json', accountDeleteSchema), async (c) => {
-    const input = c.req.valid('json') as z.infer<typeof accountDeleteSchema>;
-    const userId = c.get('userId')!;
-
-    await deleteAccount(input.id, userId);
-    return c.json<AccountDeleteOutput>({ success: true }, 200);
+  .post('/delete', authMiddleware, zValidator('json', accountDeleteSchema), async (c) => {
+    const userId = c.get('userId')!
+    const input = c.req.valid('json')
+    const deleted = await deleteAccount(input.id, userId)
+    if (!deleted) {
+      throw new NotFoundError('Account not found')
+    }
+    return c.json<AccountDeleteOutput>({ success: true }, 200)
   })
-
-  // POST /all - Get all accounts with connections
-  .post('/all', async (c) => {
-    const userId = c.get('userId')!;
-
-    const allAccounts = await listAccountsWithPlaidInfo(userId);
-
-    // Get recent transactions for each account
-    const accountsWithRecentTransactions = await listAccountsWithRecentTransactions(userId, 5);
-    const transactionsMap = new Map(
-      accountsWithRecentTransactions.map((acc) => [acc.id, acc.transactions || []]),
-    );
-
-    const accountsWithTransactions = allAccounts.map((account) => ({
-      ...account,
-      transactions: transactionsMap.get(account.id) || [],
-    }));
-
-    // Get Plaid connections
-    const plaidConnections = await listPlaidConnectionsForUser(userId);
-
-    const result = {
-      accounts: accountsWithTransactions,
-      connections: plaidConnections.map((conn) => ({
-        id: conn.id,
-        institutionId: conn.institutionId || '',
-        institutionName: conn.institutionName || 'Unknown',
-        institutionLogo: null,
-        status: (conn.status || 'active') as 'active' | 'error' | 'disconnected',
-        lastSynced: conn.lastSyncedAt ?? '',
-        accounts: 0,
-      })),
-    };
-
-    return c.json<AccountAllOutput>(result, 200);
-  })
-
-  // POST /with-plaid - Get accounts with Plaid info
-  .post('/with-plaid', async (c) => {
-    const userId = c.get('userId')!;
-
-    const result = await listAccountsWithPlaidInfo(userId);
-    return c.json<AccountsWithPlaidOutput>(result, 200);
-  })
-
-  // POST /connections - Get institution connections
-  .post('/connections', async (c) => {
-    const userId = c.get('userId')!;
-
-    const result = await listPlaidConnectionsForUser(userId);
-    return c.json<AccountConnectionsOutput>(
-      result.map((conn) => ({
-        id: conn.id,
-        institutionId: conn.institutionId || '',
-        institutionName: conn.institutionName || 'Unknown',
-        institutionLogo: null,
-        status: (conn.status || 'active') as 'active' | 'error' | 'disconnected',
-        lastSynced: conn.lastSyncedAt ?? '',
-        accounts: 0,
+  .post('/with-plaid', authMiddleware, zValidator('json', emptyBodySchema), async (c) => {
+    const userId = c.get('userId')!
+    const accounts = await listAccountsWithPlaidInfo(userId)
+    return c.json<AccountsWithPlaidOutput>(
+      accounts.map((account) => ({
+        ...toAccountData(account),
+        institutionName: null,
+        plaidAccountId: account.plaidAccountId ?? null,
+        plaidItemId: null,
       })),
       200,
-    );
+    )
   })
+  .post('/connections', authMiddleware, zValidator('json', emptyBodySchema), async (c) => {
+    const userId = c.get('userId')!
+    const [connections, institutions] = await Promise.all([
+      listPlaidConnectionsForUser(userId),
+      listAccountsWithPlaidInfo(userId),
+    ])
 
-  // POST /institution-accounts - Get accounts for institution
-  .post('/institution-accounts', zValidator('json', institutionAccountsSchema), async (c) => {
-    const input = c.req.valid('json') as z.infer<typeof institutionAccountsSchema>;
-    const userId = c.get('userId')!;
+    const institutionNames = new Map<string, string>()
+    for (const account of institutions) {
+      if (account.id && account.name) {
+        institutionNames.set(account.id, account.name)
+      }
+    }
 
-    const result = await getAccountsForInstitution(userId, input.institutionId);
-    return c.json<AccountInstitutionAccountsOutput>(result, 200);
-  });
+    const result: AccountConnectionsOutput = connections.map((connection): PlaidConnection => ({
+      id: connection.id,
+      institutionId: connection.institutionId ?? '',
+      institutionName: connection.institutionId
+        ? institutionNames.get(connection.institutionId) ?? 'Institution'
+        : 'Institution',
+      institutionLogo: null,
+      status:
+        connection.status === 'error'
+          ? 'error'
+          : connection.status === 'disconnected'
+            ? 'disconnected'
+            : 'active',
+      lastSynced: connection.lastSyncedAt ?? new Date(0).toISOString(),
+      accounts: 0,
+    }))
+
+    return c.json<AccountConnectionsOutput>(result, 200)
+  })
+  .post(
+    '/institution-accounts',
+    authMiddleware,
+    zValidator('json', institutionAccountsSchema),
+    async (c) => {
+      const userId = c.get('userId')!
+      const input = c.req.valid('json')
+      const accounts = await getAccountsForInstitution(input.institutionId, userId)
+      return c.json<AccountInstitutionAccountsOutput>(
+        accounts.map((account) => ({
+          ...toAccountData(account),
+          institutionName: null,
+          plaidAccountId: account.plaidAccountId ?? null,
+          plaidItemId: null,
+        })),
+        200,
+      )
+    },
+  )
+  .post('/all', authMiddleware, zValidator('json', emptyBodySchema), async (c) => {
+    const userId = c.get('userId')!
+    const [accounts, connections] = await Promise.all([
+      listAccountsWithPlaidInfo(userId),
+      listPlaidConnectionsForUser(userId),
+    ])
+    const payload: AccountAllOutput = {
+      accounts: accounts.map((account) => ({
+        ...toAccountData(account),
+        institutionName: null,
+        plaidAccountId: account.plaidAccountId ?? null,
+        plaidItemId: null,
+        transactions: [],
+      })),
+      connections: connections.map((connection) => ({
+        id: connection.id,
+        institutionId: connection.institutionId ?? '',
+        institutionName: 'Institution',
+        institutionLogo: null,
+        status:
+          connection.status === 'error'
+            ? 'error'
+            : connection.status === 'disconnected'
+              ? 'disconnected'
+              : 'active',
+        lastSynced: connection.lastSyncedAt ?? new Date(0).toISOString(),
+        accounts: 0,
+      })),
+    }
+    return c.json<AccountAllOutput>(payload, 200)
+  })

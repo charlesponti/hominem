@@ -17,14 +17,13 @@ import {
 import { LinkIcon, UnlinkIcon } from 'lucide-react';
 import { useState } from 'react';
 
-import type { Account } from '~/lib/types/account.types';
-
 import { useFinancialInstitutions } from '~/lib/hooks/use-finance-data';
 import {
   useLinkAccountToInstitution,
   useUnlinkAccountFromInstitution,
 } from '~/lib/hooks/use-plaid';
 import { usePlaidAccountsByInstitution } from '~/lib/hooks/use-plaid-accounts-by-institution';
+import type { Account } from '~/lib/types/account.types';
 
 interface AccountConnectionDialogProps {
   account: Account;
@@ -42,8 +41,8 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
   const unlinkMutation = useUnlinkAccountFromInstitution();
 
   const institutions = Array.isArray(institutionsQuery.data) ? institutionsQuery.data : [];
-  const isLinked = !!account.institutionId;
-  const linkedInstitution = institutions.find((inst) => inst.id === account.institutionId);
+  const isLinked = !!account.institutionName;
+  const linkedInstitution = institutions.find((inst) => inst.name === account.institutionName);
   const linkedPlaidAccount = plaidAccountsQuery.accounts?.find(
     (plaidAcc) => plaidAcc.id === account.plaidItemId,
   );
@@ -114,7 +113,7 @@ export function AccountConnectionDialog({ account, trigger }: AccountConnectionD
             <h4 className="text-sm font-medium mb-2">Account Details</h4>
             <div className="p-3 bg-muted">
               <div className="font-medium">{account.name}</div>
-              <div className="text-sm text-muted-foreground">{account.type}</div>
+              <div className="text-sm text-muted-foreground">{account.accountType}</div>
               {account.balance && (
                 <div className="text-sm">Balance: ${Number(account.balance).toLocaleString()}</div>
               )}

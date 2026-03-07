@@ -1,8 +1,8 @@
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
+
 import { and, eq, isNull } from '@hominem/db';
 import { db } from '@hominem/db';
-import { authRefreshTokens, authSessions } from '@hominem/db/schema/auth';
-import { users } from '@hominem/db/schema/users';
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { authRefreshTokens, authSessions, users } from '@hominem/db/all-schema';
 
 import { env } from '../env';
 import { issueAccessToken } from './tokens';

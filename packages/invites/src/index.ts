@@ -1,27 +1,27 @@
-import type { ListInviteSelect as ListInvite, ListSelect } from '@hominem/db/types/lists';
-import type { UserSelect } from '@hominem/db/types/users';
+import { getInvitesForUser, getListInvites } from '@hominem/lists-services'
+import type { ListInviteOutput, ListOutput, UserOutput } from '@hominem/lists-services'
 
-import { getInvitesForUser, getListInvites } from '@hominem/lists-services';
+type ListInvite = ListInviteOutput
 
 export type SentInvite = ListInvite & {
-  list: ListSelect | null;
-  user_invitedUserId: UserSelect | null;
-};
+  list: ListOutput | null
+  user_invitedUserId: UserOutput | null
+}
 export type ReceivedInvite = ListInvite & {
-  list: ListSelect | null;
-  belongsToAnotherUser?: boolean;
-};
+  list: ListOutput | null
+  belongsToAnotherUser?: boolean
+}
 
 export const invitesService = {
   getByList: ({ listId }: { listId: string }) => getListInvites(listId),
   getReceived: async (userId: string, options?: { token?: string }) => {
-    const invites = await getInvitesForUser(userId);
+    const invites = await getInvitesForUser(userId)
     const result = options?.token
       ? invites.filter((invite) => invite.token === options.token)
-      : invites;
+      : invites
     return result.map((invite) => ({
       ...invite,
       belongsToAnotherUser: invite.invitedUserId !== userId,
-    }));
+    }))
   },
-};
+}

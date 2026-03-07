@@ -1,8 +1,7 @@
 'use client';
 
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
-
 import { AlertTriangle, CheckCircle, HelpCircle, Info } from 'lucide-react';
+import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 import {
@@ -47,9 +46,7 @@ export function Confirmation({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction>
-            {confirmText}
-          </AlertDialogAction>
+          <AlertDialogAction>{confirmText}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -60,11 +57,7 @@ interface ConfirmationTriggerProps extends HTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
-export function ConfirmationTrigger({
-  children,
-  className,
-  ...props
-}: ConfirmationTriggerProps) {
+export function ConfirmationTrigger({ children, className, ...props }: ConfirmationTriggerProps) {
   return (
     <AlertDialogTrigger asChild>
       <button type="button" className={cn('', className)} {...props}>
@@ -78,11 +71,7 @@ interface ConfirmationContentProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
 }
 
-export function ConfirmationContent({
-  children,
-  className,
-  ...props
-}: ConfirmationContentProps) {
+export function ConfirmationContent({ children, className, ...props }: ConfirmationContentProps) {
   return (
     <AlertDialogContent className={cn('', className)} {...props}>
       {children}
@@ -130,7 +119,10 @@ export function ConfirmationBanner({
   };
 
   return (
-    <div className={cn('flex items-start gap-3 p-4 rounded-lg border', typeStyles[type], className)} {...props}>
+    <div
+      className={cn('flex items-start gap-3 p-4 rounded-lg border', typeStyles[type], className)}
+      {...props}
+    >
       <div className="mt-0.5">{icons[type]}</div>
       <div className="flex-1">
         <h4 className="text-sm font-medium">{title}</h4>

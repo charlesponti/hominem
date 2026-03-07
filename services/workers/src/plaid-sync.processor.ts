@@ -1,20 +1,18 @@
-import type { TransactionType } from '@hominem/db/types/finance';
-import type { Job } from 'bullmq';
-
 import {
   getPlaidItemByUserAndItemId,
   upsertAccount,
   getUserAccounts,
   getTransactionByPlaidId,
   insertTransaction,
-  updatePlaidTransaction,
-  deletePlaidTransaction,
+  updateTransaction,
+  deleteTransaction,
   updatePlaidItemCursor,
   updatePlaidItemSyncStatus,
   updatePlaidItemError,
   getAccountByPlaidId,
 } from '@hominem/finance-services';
 import { logger } from '@hominem/utils/logger';
+import type { Job } from 'bullmq';
 import { Configuration, PlaidApi, PlaidEnvironments } from 'plaid';
 
 import { env } from './env';
@@ -86,7 +84,8 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
         isoCurrencyCode: account.balances.iso_currency_code || 'USD',
         plaidAccountId: account.account_id,
         plaidItemId: plaidItem.id,
-        institutionId: plaidItem.institutionId,
+        institutionId:
+          'institutionId' in plaidItem ? (plaidItem.institutionId ?? null) : null,
         lastUpdated: new Date(),
         userId,
       };
@@ -96,7 +95,8 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
 
     // 2. Fetch and store transactions using transactions/sync endpoint
     let hasMore = true;
-    let cursor = plaidItem.transactionsCursor || null;
+    let cursor =
+      'transactionsCursor' in plaidItem ? (plaidItem.transactionsCursor ?? null) : null;
     const batchSize = 500;
     let totalTransactions = 0;
 
@@ -117,23 +117,29 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
       // Process added transactions
       if (added.length > 0) {
         // Get all accounts for this user to map Plaid account IDs to our account IDs
-        const userAccounts = await getUserAccounts(userId, plaidItem.id);
-
+        const userAccounts = await getUserAccounts(userId);
         const accountMap = new Map(
-          userAccounts.map((account) => [account.plaidAccountId, account.id]),
+          userAccounts.flatMap((account) => {
+            if ('plaidAccountId' in account && account.plaidAccountId) {
+              return [[account.plaidAccountId, account.id] as const];
+            }
+            return [];
+          }),
         );
 
         for (const transaction of added) {
-          // Skip if we can't map to one of our accounts
-          if (!accountMap.has(transaction.account_id)) {
-            logger.warn('Cannot find matching account for transaction', {
-              plaidAccountId: transaction.account_id,
-              transactionId: transaction.transaction_id,
-            });
-            continue;
+          let accountId = accountMap.get(transaction.account_id);
+          if (!accountId) {
+            const account = await getAccountByPlaidId(transaction.account_id);
+            if (!account) {
+              logger.warn('Cannot find matching account for transaction', {
+                plaidAccountId: transaction.account_id,
+                transactionId: transaction.transaction_id,
+              });
+              continue;
+            }
+            accountId = account.id;
           }
-
-          const accountId = accountMap.get(transaction.account_id);
 
           // Check if transaction already exists
           const existingTransaction = await getTransactionByPlaidId(transaction.transaction_id);
@@ -145,12 +151,12 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
 
           // Insert new transaction
           await insertTransaction({
-            type: determineTransactionType(transaction.amount) as TransactionType,
-            amount: Math.abs(transaction.amount).toFixed(2),
-            date: new Date(transaction.date),
+            type: determineTransactionType(transaction.amount),
+            amount: Math.abs(transaction.amount),
+            date: transaction.date,
             description: transaction.name,
             merchantName: transaction.merchant_name ?? null,
-            accountId: accountId as string,
+            accountId,
             category: transaction.category
               ? (transaction.category[transaction.category.length - 1] ?? null)
               : null,
@@ -191,9 +197,9 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
 
             // Insert the transaction
             await insertTransaction({
-              type: determineTransactionType(transaction.amount) as TransactionType,
-              amount: Math.abs(transaction.amount).toFixed(2),
-              date: new Date(transaction.date),
+              type: determineTransactionType(transaction.amount),
+              amount: Math.abs(transaction.amount),
+              date: transaction.date,
               description: transaction.name,
               merchantName: transaction.merchant_name ?? null,
               accountId: account.id,
@@ -215,20 +221,10 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             });
           } else {
             // Update the existing transaction
-            await updatePlaidTransaction(existingTransaction.id, {
-              type: determineTransactionType(transaction.amount) as TransactionType,
-              amount: Math.abs(transaction.amount).toFixed(2),
-              date: new Date(transaction.date),
+            await updateTransaction(existingTransaction.id, userId, {
+              amount: Math.abs(transaction.amount),
+              date: transaction.date,
               description: transaction.name,
-              merchantName: transaction.merchant_name ?? null,
-              category: transaction.category
-                ? (transaction.category[transaction.category.length - 1] ?? null)
-                : null,
-              parentCategory:
-                transaction.category && transaction.category.length > 1
-                  ? (transaction.category[0] ?? null)
-                  : null,
-              pending: transaction.pending,
             });
           }
         }
@@ -245,7 +241,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
             continue;
           }
 
-          await deletePlaidTransaction(removed_transaction.transaction_id);
+          await deleteTransaction(removed_transaction.transaction_id, userId);
         }
       }
 
@@ -265,7 +261,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
     }
 
     // 3. Update the last synced timestamp for this Plaid item
-    await updatePlaidItemSyncStatus(plaidItem.id, 'active', null);
+    await updatePlaidItemSyncStatus(plaidItem.id, 'active');
 
     logger.info('Completed Plaid sync job', {
       jobId: job.id,

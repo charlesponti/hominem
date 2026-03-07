@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
 
+import { FeatureErrorBoundary } from '~/components/error-boundary'
 import queryClient from '~/utils/query-client'
-import { useChatMessages, useEndChat } from '~/utils/services/chat/use-chat-messages'
+import { useChatMessages, useEndChat } from '~/utils/services/chat'
 import ChatLoading from './chat-loading'
 import { loadMarkdown, renderMessage, type MarkdownComponent } from './chat-message'
 import { Text, theme } from '~/theme'
@@ -23,20 +24,24 @@ export const Chat = (props: ChatProps) => {
     },
   })
   const [Markdown, setMarkdown] = useState<MarkdownComponent | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const formattedMessages = useMemo(() => (messages && messages.length > 0 ? messages : []), [messages])
 
   useEffect(() => {
-    let isMounted = true
+    abortControllerRef.current = new AbortController()
+    const signal = abortControllerRef.current.signal
+    
     loadMarkdown()
       .then((component) => {
-        if (isMounted) setMarkdown(() => component)
+        if (!signal.aborted) setMarkdown(() => component)
       })
       .catch(() => {
-        if (isMounted) setMarkdown(null)
+        if (!signal.aborted) setMarkdown(null)
       })
+      
     return () => {
-      isMounted = false
+      abortControllerRef.current?.abort()
     }
   }, [])
 
@@ -90,3 +95,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 })
+
+// Wrapped export with error boundary
+export const ChatWithErrorBoundary = (props: ChatProps) => (
+  <FeatureErrorBoundary featureName="Chat">
+    <Chat {...props} />
+  </FeatureErrorBoundary>
+)

@@ -1,129 +1,33 @@
-import { NativeModules, Platform } from 'react-native'
 import type { Chat, ChatMessage, FocusItem, Media, Settings, UserProfile } from './types'
-import { E2E_TESTING } from '~/utils/constants'
-import { createSQLiteStore, migrateInMemoryToSQLite } from './sqlite'
+import { createSQLiteStore } from './sqlite'
+import {
+  UserProfileSchema,
+  ChatSchema,
+  ChatMessageSchema,
+  SettingsSchema,
+  MediaSchema,
+} from '../validation/schemas'
+import { z } from 'zod'
 
-const { MSCCloudStore } = NativeModules
+let store: Awaited<ReturnType<typeof createSQLiteStore>> | null = null
+let initializationPromise: Promise<boolean> | null = null
 
-type MSCCloudStoreShape = {
-  initialize: () => Promise<boolean>
-  getUserProfile: () => Promise<UserProfile | null>
-  upsertUserProfile: (profile: UserProfile) => Promise<UserProfile>
-  createChat: (chat: Chat) => Promise<Chat>
-  listChats: () => Promise<Chat[]>
-  endChat: (chatId: string, endedAt: string) => Promise<Chat>
-  addMessage: (message: ChatMessage) => Promise<ChatMessage>
-  listMessages: (chatId: string) => Promise<ChatMessage[]>
-  upsertFocusItem: (item: FocusItem) => Promise<FocusItem>
-  listFocusItems: () => Promise<FocusItem[]>
-  deleteFocusItem: (id: string) => Promise<string>
-  upsertSettings: (settings: Settings) => Promise<Settings>
-  getSettings: () => Promise<Settings | null>
-  upsertMedia: (media: Media) => Promise<Media>
-  listMedia: () => Promise<Media[]>
-  clearAllData: () => Promise<boolean>
+async function getStore() {
+  if (store) return store
+  
+  if (!initializationPromise) {
+    initializationPromise = initializeStore()
+  }
+  
+  await initializationPromise
+  return store!
 }
 
-const createInMemoryStore = () => {
-  let userProfile: UserProfile | null = null
-  let settings: Settings | null = null
-  const chats: Chat[] = []
-  const messages: ChatMessage[] = []
-  const focusItems: FocusItem[] = []
-  const mediaItems: Media[] = []
-
-  const store: MSCCloudStoreShape = {
-    initialize: async () => true,
-    getUserProfile: async () => userProfile,
-    upsertUserProfile: async (profile) => {
-      userProfile = profile
-      return profile
-    },
-    createChat: async (chat) => {
-      chats.push(chat)
-      return chat
-    },
-    listChats: async () => [...chats],
-    endChat: async (chatId, endedAt) => {
-      const index = chats.findIndex((chat) => chat.id === chatId)
-      if (index >= 0) {
-        const updated = { ...chats[index], endedAt }
-        chats[index] = updated
-        return updated
-      }
-      return { id: chatId, createdAt: endedAt, endedAt }
-    },
-    addMessage: async (message) => {
-      messages.push(message)
-      return message
-    },
-    listMessages: async (chatId) => messages.filter((message) => message.chatId === chatId),
-    upsertFocusItem: async (item) => {
-      const index = focusItems.findIndex((existing) => existing.id === item.id)
-      if (index >= 0) {
-        focusItems[index] = item
-        return item
-      }
-      focusItems.push(item)
-      return item
-    },
-    listFocusItems: async () => [...focusItems],
-    deleteFocusItem: async (id) => {
-      const index = focusItems.findIndex((item) => item.id === id)
-      if (index >= 0) {
-        focusItems.splice(index, 1)
-      }
-      return id
-    },
-    upsertSettings: async (nextSettings) => {
-      settings = nextSettings
-      return nextSettings
-    },
-    getSettings: async () => settings,
-    upsertMedia: async (media) => {
-      const index = mediaItems.findIndex((item) => item.id === media.id)
-      if (index >= 0) {
-        mediaItems[index] = media
-        return media
-      }
-      mediaItems.push(media)
-      return media
-    },
-    listMedia: async () => [...mediaItems],
-    clearAllData: async () => {
-      userProfile = null
-      settings = null
-      chats.splice(0, chats.length)
-      messages.splice(0, messages.length)
-      focusItems.splice(0, focusItems.length)
-      mediaItems.splice(0, mediaItems.length)
-      return true
-    },
-  }
-
-  return {
-    store,
-    snapshot: () => ({
-      userProfile,
-      settings,
-      chats: [...chats],
-      messages: [...messages],
-      focusItems: [...focusItems],
-      mediaItems: [...mediaItems],
-    }),
-  }
-}
-
-const isNativeStoreAvailable = Boolean(MSCCloudStore)
-const inMemory = createInMemoryStore()
-let store: MSCCloudStoreShape = inMemory.store
-
-const useSQLite = __DEV__ || E2E_TESTING || Platform.OS === 'ios'
-
-if (isNativeStoreAvailable) {
-  store = MSCCloudStore
-} else if (!useSQLite && !__DEV__ && !E2E_TESTING) {
-  throw new Error('MSCCloudStore native module not found. Ensure iOS module is linked.')
+async function initializeStore(): Promise<boolean> {
+  if (store) return true
+  
+  store = await createSQLiteStore()
+  return true
 }
 
 const normalizeNull = <T>(value: T | null): T | null => {
@@ -139,41 +43,114 @@ const normalizeNull = <T>(value: T | null): T | null => {
   return value
 }
 
+// Validation wrapper with error handling
+function validateOrNull<T>(schema: z.ZodType<T>, data: unknown): T | null {
+  try {
+    return schema.parse(data)
+  } catch (error) {
+    console.warn('[LocalStore] Validation failed:', error)
+    return null
+  }
+}
+
+function validateOrThrow<T>(schema: z.ZodType<T>, data: unknown): T {
+  return schema.parse(data)
+}
+
 export const LocalStore = {
   initialize: async (): Promise<boolean> => {
-    if (!isNativeStoreAvailable && useSQLite) {
-      const sqliteStore = await createSQLiteStore()
-      await migrateInMemoryToSQLite(sqliteStore, inMemory.snapshot())
-      store = sqliteStore
-    }
-    return store.initialize()
+    return initializeStore()
   },
 
-  getUserProfile: async (): Promise<UserProfile | null> =>
-    normalizeNull<UserProfile>(await store.getUserProfile()),
-  upsertUserProfile: async (profile: UserProfile): Promise<UserProfile> =>
-    store.upsertUserProfile(profile),
+  getUserProfile: async (): Promise<UserProfile | null> => {
+    const s = await getStore()
+    const result = normalizeNull<UserProfile>(await s.getUserProfile())
+    return result ? validateOrNull(UserProfileSchema, result) : null
+  },
+  
+  upsertUserProfile: async (profile: UserProfile): Promise<UserProfile> => {
+    const s = await getStore()
+    const result = await s.upsertUserProfile(profile)
+    return validateOrThrow(UserProfileSchema, result)
+  },
 
-  createChat: async (chat: Chat): Promise<Chat> => store.createChat(chat),
-  listChats: async (): Promise<Chat[]> => store.listChats(),
-  endChat: async (chatId: string, endedAt: string): Promise<Chat> =>
-    store.endChat(chatId, endedAt),
+  createChat: async (chat: Chat): Promise<Chat> => {
+    const s = await getStore()
+    const result = await s.createChat(chat)
+    return validateOrThrow(ChatSchema, result)
+  },
+  
+  listChats: async (): Promise<Chat[]> => {
+    const s = await getStore()
+    const results = await s.listChats()
+    return results
+      .map((chat) => validateOrNull(ChatSchema, chat))
+      .filter((chat): chat is NonNullable<typeof chat> => chat !== null) as Chat[]
+  },
+  
+  endChat: async (chatId: string, endedAt: string): Promise<Chat> => {
+    const s = await getStore()
+    const result = await s.endChat(chatId, endedAt)
+    return validateOrThrow(ChatSchema, result)
+  },
 
-  addMessage: async (message: ChatMessage): Promise<ChatMessage> =>
-    store.addMessage(message),
-  listMessages: async (chatId: string): Promise<ChatMessage[]> => store.listMessages(chatId),
+  addMessage: async (message: ChatMessage): Promise<ChatMessage> => {
+    const s = await getStore()
+    const result = await s.addMessage(message)
+    return validateOrThrow(ChatMessageSchema, result)
+  },
+  
+  listMessages: async (chatId: string): Promise<ChatMessage[]> => {
+    const s = await getStore()
+    const results = await s.listMessages(chatId)
+    return results
+      .map((msg) => validateOrNull(ChatMessageSchema, msg))
+      .filter((msg): msg is NonNullable<typeof msg> => msg !== null) as ChatMessage[]
+  },
 
-  upsertFocusItem: async (item: FocusItem): Promise<FocusItem> =>
-    store.upsertFocusItem(item),
-  listFocusItems: async (): Promise<FocusItem[]> => store.listFocusItems(),
-  deleteFocusItem: async (id: string): Promise<string> => store.deleteFocusItem(id),
+  upsertFocusItem: async (item: FocusItem): Promise<FocusItem> => {
+    const s = await getStore()
+    return s.upsertFocusItem(item)
+  },
+  
+  listFocusItems: async (): Promise<FocusItem[]> => {
+    const s = await getStore()
+    return s.listFocusItems()
+  },
+  
+  deleteFocusItem: async (id: string): Promise<string> => {
+    const s = await getStore()
+    return s.deleteFocusItem(id)
+  },
 
-  upsertSettings: async (settings: Settings): Promise<Settings> =>
-    store.upsertSettings(settings),
-  getSettings: async (): Promise<Settings | null> =>
-    normalizeNull<Settings>(await store.getSettings()),
+  upsertSettings: async (settings: Settings): Promise<Settings> => {
+    const s = await getStore()
+    const result = await s.upsertSettings(settings)
+    return validateOrThrow(SettingsSchema, result)
+  },
+  
+  getSettings: async (): Promise<Settings | null> => {
+    const s = await getStore()
+    const result = normalizeNull<Settings>(await s.getSettings())
+    return result ? validateOrNull(SettingsSchema, result) : null
+  },
 
-  upsertMedia: async (media: Media): Promise<Media> => store.upsertMedia(media),
-  listMedia: async (): Promise<Media[]> => store.listMedia(),
-  clearAllData: async (): Promise<boolean> => store.clearAllData(),
+  upsertMedia: async (media: Media): Promise<Media> => {
+    const s = await getStore()
+    const result = await s.upsertMedia(media)
+    return validateOrThrow(MediaSchema, result)
+  },
+  
+  listMedia: async (): Promise<Media[]> => {
+    const s = await getStore()
+    const results = await s.listMedia()
+    return results
+      .map((media) => validateOrNull(MediaSchema, media))
+      .filter((media): media is NonNullable<typeof media> => media !== null) as Media[]
+  },
+  
+  clearAllData: async (): Promise<boolean> => {
+    const s = await getStore()
+    return s.clearAllData()
+  },
 }

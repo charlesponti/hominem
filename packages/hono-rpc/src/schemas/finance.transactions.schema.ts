@@ -1,53 +1,21 @@
-import { TransactionInsertSchema } from '@hominem/db/schema/finance';
-import * as z from 'zod';
+import * as z from 'zod'
 
-import { transactionSchema } from './finance.schema';
+export const TransactionInsertSchema = z.object({
+  userId: z.string().uuid(),
+  accountId: z.string().uuid(),
+  amount: z.number(),
+  description: z.string().min(1),
+  date: z.string(),
+  type: z.enum(['income', 'expense', 'transfer']).optional(),
+  tagIds: z.array(z.string().uuid()).optional(),
+})
 
-export const transactionListSchema = z.object({
+export const TransactionQueryFiltersSchema = z.object({
+  accountId: z.string().uuid().optional(),
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
-  category: z.string().optional(),
-  amountMin: z.number().optional(),
-  amountMax: z.number().optional(),
-  account: z.string().optional(),
-  limit: z.number().int().min(1).max(100).default(50),
+  limit: z.number().int().min(1).max(200).default(50),
   offset: z.number().int().min(0).default(0),
-  description: z.string().optional(),
-  search: z.string().optional(),
-  sortBy: z.string().optional(),
-  sortDirection: z.enum(['asc', 'desc']).optional(),
-});
-
-export const transactionCreateSchema = TransactionInsertSchema.pick({
-  accountId: true,
-  amount: true,
-  description: true,
-  type: true,
-  category: true,
-}).extend({
-  date: z.string().optional(),
-});
-
-const transactionUpdateDataSchema = transactionSchema
-  .pick({
-    accountId: true,
-    amount: true,
-    description: true,
-    category: true,
-    date: true,
-    merchantName: true,
-    note: true,
-    tags: true,
-    excluded: true,
-    recurring: true,
-  })
-  .partial();
-
-export const transactionUpdateSchema = z.object({
-  id: z.string().uuid(),
-  data: transactionUpdateDataSchema,
-});
-
-export const transactionDeleteSchema = transactionSchema.pick({
-  id: true,
-});
+  tagIds: z.array(z.string().uuid()).optional(),
+  tagNames: z.array(z.string().min(1)).optional(),
+})

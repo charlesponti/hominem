@@ -1,22 +1,21 @@
-import type { ImportTransactionsQueuePayload } from '@hominem/jobs-services';
-import type { Job } from 'bullmq';
-
 import {
   UnauthorizedError,
   ValidationError,
   NotFoundError,
   InternalError,
-} from '@hominem/services';
+} from '@hominem/hono-rpc';
+import type { ImportTransactionsQueuePayload } from '@hominem/jobs-services';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
-import { csvStorageService } from '@hominem/utils/supabase';
+import { csvStorageService } from '@hominem/utils/storage';
 import { zValidator } from '@hono/zod-validator';
+import type { Job } from 'bullmq';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
-import type { AppEnv } from '../../server';
-
+import { importTransactionsQueue } from '../../lib/queues';
 import { handleFileUploadBuffer } from '../../middleware/file-upload';
+import type { AppEnv } from '../../server';
 
 export const financeImportRoutes = new Hono<AppEnv>();
 
@@ -59,8 +58,7 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
     );
 
     // Check if a job with the same filename already exists for this user
-    const queues = c.get('queues');
-    const activeJobs = await queues.importTransactions.getJobs(['active', 'waiting', 'delayed']);
+    const activeJobs = await importTransactionsQueue.getJobs(['active', 'waiting', 'delayed']);
     const existingJob = activeJobs.find(
       (job: Job<ImportTransactionsQueuePayload>) =>
         job.data.fileName === uploadedFile.filename && job.data.userId === userId,
@@ -76,7 +74,7 @@ financeImportRoutes.post('/', zValidator('query', ImportTransactionsParamsSchema
     }
 
     // Add import job to BullMQ
-    const job = await queues.importTransactions.add(
+    const job = await importTransactionsQueue.add(
       QUEUE_NAMES.IMPORT_TRANSACTIONS,
       {
         csvFilePath,
@@ -124,9 +122,7 @@ financeImportRoutes.get('/active', async (c) => {
   }
 
   try {
-    const queues = c.get('queues');
-
-    const activeJobs = await queues.importTransactions.getJobs(['active', 'waiting', 'delayed']);
+    const activeJobs = await importTransactionsQueue.getJobs(['active', 'waiting', 'delayed']);
 
     const userJobs = activeJobs
       .filter((job: Job<ImportTransactionsQueuePayload>) => job.data.userId === userId)
@@ -157,9 +153,7 @@ financeImportRoutes.get('/:jobId', zValidator('param', JobIdParamsSchema), async
   const { jobId } = c.req.valid('param');
 
   try {
-    const queues = c.get('queues');
-
-    const job = await queues.importTransactions.getJob(jobId);
+    const job = await importTransactionsQueue.getJob(jobId);
     if (!job) {
       throw new NotFoundError('Import job not found');
     }

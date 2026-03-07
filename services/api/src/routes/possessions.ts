@@ -1,23 +1,25 @@
-import type { PossessionOutput } from '@hominem/db/types/possessions';
-
+import {
+  type UserId,
+  brandId,
+  ForbiddenError,
+  InternalError,
+  NotFoundError,
+} from '@hominem/db'
 import {
   createPossession,
   deletePossession,
   listPossessions,
   updatePossession,
-  UnauthorizedError,
-  NotFoundError,
-  InternalError,
-} from '@hominem/services';
-import { logger } from '@hominem/utils/logger';
+} from '@hominem/db/services/possessions.service'
+import { logger } from '@hominem/utils/logger'
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import crypto from 'node:crypto';
 import * as z from 'zod';
 
 import type { AppEnv } from '../server';
 
 export const possessionsRoutes = new Hono<AppEnv>();
+type PossessionOutput = Awaited<ReturnType<typeof listPossessions>>[number]
 
 // Serialize possession Date objects to ISO strings
 function serializePossession(possession: PossessionOutput) {
@@ -28,10 +30,8 @@ function serializePossession(possession: PossessionOutput) {
 
   return {
     ...possession,
-    dateAcquired: dateToString(possession.dateAcquired),
-    dateSold: dateToString(possession.dateSold),
+    purchaseDate: dateToString(possession.purchaseDate),
     createdAt: dateToString(possession.createdAt),
-    updatedAt: dateToString(possession.updatedAt),
   };
 }
 
@@ -59,11 +59,11 @@ const possessionIdParamSchema = z.object({
 possessionsRoutes.get('/', async (c) => {
   const userId = c.get('userId');
   if (!userId) {
-    throw new UnauthorizedError('Unauthorized');
+    throw new ForbiddenError('Unauthorized');
   }
 
   try {
-    const items = await listPossessions(userId);
+    const items = await listPossessions(brandId<UserId>(userId));
     return c.json(items.map(serializePossession));
   } catch (err) {
     logger.error('Error fetching possessions', { error: err });
@@ -77,24 +77,21 @@ possessionsRoutes.get('/', async (c) => {
 possessionsRoutes.post('/', zValidator('json', createPossessionSchema), async (c) => {
   const user = c.get('user');
   if (!user) {
-    throw new UnauthorizedError('Unauthorized');
+    throw new ForbiddenError('Unauthorized');
   }
 
   const userId = c.get('userId');
   if (!userId) {
-    throw new UnauthorizedError('Unauthorized');
+    throw new ForbiddenError('Unauthorized');
   }
 
   try {
     const data = c.req.valid('json');
 
-    const created = await createPossession({
-      ...data,
-      id: crypto.randomUUID ? crypto.randomUUID() : 'generated-id',
-      userId,
-      dateAcquired: new Date(data.dateAcquired),
-      tags: [],
-      dateSold: null,
+    const created = await createPossession(brandId<UserId>(userId), {
+      name: data.name,
+      ...(data.description !== undefined ? { description: data.description } : {}),
+      category: data.categoryId,
     });
 
     return c.json(serializePossession(created), 201);
@@ -114,22 +111,22 @@ possessionsRoutes.put(
   async (c) => {
     const userId = c.get('userId');
     if (!userId) {
-      throw new UnauthorizedError('Unauthorized');
+      throw new ForbiddenError('Unauthorized');
     }
 
     try {
       const { id } = c.req.valid('param');
       const data = c.req.valid('json');
 
-      const updated = await updatePossession({
+      const updated = await updatePossession(
         id,
-        userId,
+        brandId<UserId>(userId),
+        {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.description !== undefined && { description: data.description }),
-        ...(data.dateAcquired !== undefined && { dateAcquired: new Date(data.dateAcquired) }),
-        ...(data.purchasePrice !== undefined && { purchasePrice: data.purchasePrice }),
-        ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
-      });
+        ...(data.categoryId !== undefined && { category: data.categoryId }),
+      },
+      );
 
       if (!updated) {
         throw new NotFoundError('Possession not found');
@@ -149,18 +146,18 @@ possessionsRoutes.put(
 possessionsRoutes.delete('/:id', zValidator('param', possessionIdParamSchema), async (c) => {
   const user = c.get('user');
   if (!user) {
-    throw new UnauthorizedError('Unauthorized');
+    throw new ForbiddenError('Unauthorized');
   }
 
   const userId = c.get('userId');
   if (!userId) {
-    throw new UnauthorizedError('Unauthorized');
+    throw new ForbiddenError('Unauthorized');
   }
 
   try {
     const { id } = c.req.valid('param');
 
-    await deletePossession(id, userId);
+    await deletePossession(id, brandId<UserId>(userId));
 
     return c.json({ deleted: true });
   } catch (err) {

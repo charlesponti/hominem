@@ -9,17 +9,9 @@ import type { GooglePlacePrediction } from '~/hooks/useGooglePlacesAutocomplete'
 
 import type { Place } from './types';
 
-;
-
-;
-
 // Aliases for backward compatibility
 export { useAddPlaceToLists as useAddPlaceToList } from './hooks/use-places';
 export { useRemovePlaceFromList as useRemoveListItem } from './hooks/use-places';
-;
-;
-;
-;
 
 export async function createPlaceFromPrediction(prediction: GooglePlacePrediction): Promise<Place> {
   /**

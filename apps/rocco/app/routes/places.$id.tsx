@@ -2,8 +2,6 @@ import { PageTitle } from '@hominem/ui';
 import { redirect } from 'react-router';
 import z from 'zod';
 
-import type { PlaceWithLists } from '~/lib/types';
-
 import ErrorBoundary from '~/components/ErrorBoundary';
 import PlaceTypes from '~/components/places/place-types';
 import PlaceAddress from '~/components/places/PlaceAddress';
@@ -18,6 +16,7 @@ import PlaceWebsite from '~/components/places/PlaceWebsite';
 import { VisitHistory } from '~/components/places/VisitHistory';
 import { createServerHonoClient } from '~/lib/api.server';
 import { requireAuth } from '~/lib/guards';
+import type { PlaceWithLists } from '~/lib/types';
 
 import type { Route } from './+types/places.$id';
 

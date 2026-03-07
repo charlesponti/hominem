@@ -1,4 +1,5 @@
 import { getServerAuth } from './auth.server';
+import { redirect } from 'react-router';
 
 /**
  * Require authentication - throws 401 if not authenticated
@@ -8,8 +9,8 @@ export async function requireAuth(request: Request) {
   const auth = await getServerAuth(request);
 
   if (!auth.user) {
-    throw new Response('Unauthorized', { status: 401 });
+    throw redirect('/auth');
   }
 
-  return { user: auth.user, headers: auth.headers };
+  return { user: auth.user, headers: auth.headers, session: auth.session };
 }

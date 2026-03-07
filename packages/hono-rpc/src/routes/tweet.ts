@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google';
-import { ValidationError } from '@hominem/services';
+import { ValidationError } from '../errors';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
 

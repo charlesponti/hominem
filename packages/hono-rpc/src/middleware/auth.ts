@@ -1,8 +1,7 @@
 import type { HominemUser } from '@hominem/auth/server';
-import type { Queues } from '@hominem/services';
 import type { AuthEnvelope } from '@hominem/auth/types';
 
-import { UnauthorizedError } from '@hominem/services';
+import { UnauthorizedError } from '../errors';
 import { createMiddleware } from 'hono/factory';
 
 /**
@@ -24,7 +23,7 @@ export interface AppContext {
       | 'disallowed_kid'
       | 'revoked_session'
       | 'insufficient_scope';
-    queues?: Queues;
+    requestId?: string;
   };
   Bindings: Record<string, unknown>;
 }
@@ -55,5 +54,17 @@ export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
  */
 export const publicMiddleware = createMiddleware<AppContext>(async (c, next) => {
   // Public routes - no auth check
+  return await next();
+});
+
+/**
+ * Request ID Middleware
+ *
+ * Generates and propagates a unique request ID for tracing.
+ * Useful for correlating logs across the request lifecycle.
+ */
+export const requestIdMiddleware = createMiddleware<AppContext>(async (c, next) => {
+  const requestId = crypto.randomUUID().slice(0, 8);
+  c.set('requestId', requestId);
   return await next();
 });

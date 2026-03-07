@@ -1,90 +1,166 @@
+import { zValidator } from '@hono/zod-validator'
+import { Hono } from 'hono'
+
+import type { AppContext } from '../middleware/auth'
+import { authMiddleware } from '../middleware/auth'
 import {
+  CreatePersonInputSchema,
+  UpdatePersonInputSchema,
+  AddPersonRelationInputSchema,
+} from '../schemas/persons.schema'
+import {
+  listPersons,
+  getPerson,
   createPerson,
-  getPeople,
   updatePerson,
   deletePerson,
-  type PersonInput,
-  NotFoundError,
-} from '@hominem/services';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-
-import { authMiddleware, type AppContext } from '../middleware/auth';
-import {
-  peopleCreateSchema,
-  peopleUpdateSchema,
-  type PeopleListOutput,
-  type PeopleCreateOutput,
-  type PeopleUpdateOutput,
-  type PeopleDeleteOutput,
-} from '../types/people.types';
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
-
-// ============================================================================
-// Routes
-// ============================================================================
+  listPersonRelations,
+  addPersonRelation,
+} from '@hominem/db/services/persons.service'
+import { NotFoundError, ForbiddenError } from '../errors'
 
 export const peopleRoutes = new Hono<AppContext>()
-  // ListOutput all people
-  .post('/list', authMiddleware, async (c) => {
-    const userId = c.get('userId')!;
-
-    const people = await getPeople({ userId });
-    return c.json<PeopleListOutput>(people, 200);
+  .use('*', authMiddleware)
+  // List persons
+  .get('/', async (c) => {
+    try {
+      const userId = c.get('userId')!
+      const persons = await listPersons(userId as any)
+      return c.json({ success: true, data: persons })
+    } catch (error) {
+      if (error instanceof ForbiddenError) {
+        throw error
+      }
+      throw error
+    }
   })
+  // Get single person
+  .get('/:id', async (c) => {
+    try {
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
 
+      const person = await getPerson(id, userId as any)
+      if (!person) {
+        throw new NotFoundError('Person not found')
+      }
+      return c.json({ success: true, data: person })
+    } catch (error) {
+      if (error instanceof ForbiddenError) {
+        throw error
+      }
+      throw error
+    }
+  })
   // Create person
-  .post('/create', authMiddleware, zValidator('json', peopleCreateSchema), async (c) => {
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
+  .post('/', zValidator('json', CreatePersonInputSchema), async (c) => {
+    try {
+      const userId = c.get('userId')!
+      const data = c.req.valid('json')
 
-    const personInput: PersonInput = {
-      userId: userId,
-      ...(input.firstName && { firstName: input.firstName }),
-      ...(input.lastName && { lastName: input.lastName }),
-      ...(input.email && { email: input.email }),
-      ...(input.phone && { phone: input.phone }),
-    };
+      const payload: {
+        personType: 'individual' | 'organization' | 'household'
+        firstName?: string | null
+        lastName?: string | null
+        email?: string | null
+        phone?: string | null
+        notes?: string | null
+      } = {
+        personType: data.personType,
+      }
+      if (data.firstName !== undefined) payload.firstName = data.firstName
+      if (data.lastName !== undefined) payload.lastName = data.lastName
+      if (data.email !== undefined) payload.email = data.email
+      if (data.phone !== undefined) payload.phone = data.phone
+      if (data.notes !== undefined) payload.notes = data.notes
 
-    const newPerson = await createPerson(personInput);
-    return c.json<PeopleCreateOutput>(newPerson, 201);
+      const newPerson = await createPerson(userId as any, payload)
+
+      return c.json({ success: true, data: newPerson }, 201)
+    } catch (error) {
+      throw error
+    }
   })
-
   // Update person
-  .post('/:id/update', authMiddleware, zValidator('json', peopleUpdateSchema), async (c) => {
-    const id = c.req.param('id');
-    const input = c.req.valid('json');
-    const userId = c.get('userId')!;
+  .patch('/:id', zValidator('json', UpdatePersonInputSchema), async (c) => {
+    try {
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
+      const data = c.req.valid('json')
 
-    const personInput: PersonInput = {
-      userId: userId,
-      ...(input.firstName !== undefined && { firstName: input.firstName }),
-      ...(input.lastName !== undefined && { lastName: input.lastName }),
-      ...(input.email !== undefined && { email: input.email }),
-      ...(input.phone !== undefined && { phone: input.phone }),
-    };
+      const updateData: {
+        personType?: 'individual' | 'organization' | 'household'
+        firstName?: string | null
+        lastName?: string | null
+        email?: string | null
+        phone?: string | null
+        notes?: string | null
+      } = {}
+      if (data.personType !== undefined) updateData.personType = data.personType
+      if (data.firstName !== undefined) updateData.firstName = data.firstName
+      if (data.lastName !== undefined) updateData.lastName = data.lastName
+      if (data.email !== undefined) updateData.email = data.email
+      if (data.phone !== undefined) updateData.phone = data.phone
+      if (data.notes !== undefined) updateData.notes = data.notes
 
-    const updatedPerson = await updatePerson(id, personInput);
-
-    if (!updatedPerson) {
-      throw new NotFoundError('Person not found');
+      const updatedPerson = await updatePerson(id, userId as any, updateData)
+      if (!updatedPerson) {
+        throw new NotFoundError('Person not found or access denied')
+      }
+      return c.json({ success: true, data: updatedPerson })
+    } catch (error) {
+      if (error instanceof ForbiddenError) {
+        throw error
+      }
+      throw error
     }
-
-    return c.json<PeopleUpdateOutput>(updatedPerson, 200);
   })
-
   // Delete person
-  .post('/:id/delete', authMiddleware, async (c) => {
-    const id = c.req.param('id');
+  .delete('/:id', async (c) => {
+    try {
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
 
-    const result = await deletePerson(id);
-
-    if (!result) {
-      throw new NotFoundError('Person not found');
+      const deleted = await deletePerson(id, userId as any)
+      if (!deleted) {
+        throw new NotFoundError('Person not found or access denied')
+      }
+      return c.json({ success: true, data: { id } })
+    } catch (error) {
+      if (error instanceof ForbiddenError) {
+        throw error
+      }
+      throw error
     }
+  })
+  // List person relations
+  .get('/:id/relations', async (c) => {
+    try {
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
 
-    return c.json<PeopleDeleteOutput>({ success: true }, 200);
-  });
+      const relations = await listPersonRelations(id, userId as any)
+      return c.json({ success: true, data: relations })
+    } catch (error) {
+      if (error instanceof ForbiddenError) {
+        throw error
+      }
+      throw error
+    }
+  })
+  // Add person relation
+  .post('/:id/relations', zValidator('json', AddPersonRelationInputSchema), async (c) => {
+    try {
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
+      const data = c.req.valid('json')
+
+      const relation = await addPersonRelation(id, data.relatedPersonId, data.relationType, userId as any)
+      return c.json({ success: true, data: relation }, 201)
+    } catch (error) {
+      if (error instanceof ForbiddenError) {
+        throw error
+      }
+      throw error
+    }
+  })

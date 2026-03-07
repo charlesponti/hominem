@@ -5,4 +5,3 @@
  */
 
 export { HonoProvider } from './provider';
-;

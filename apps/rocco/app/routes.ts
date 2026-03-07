@@ -3,8 +3,12 @@ import { index, layout, type RouteConfig, route } from '@react-router/dev/routes
 export default [
   route('api/images', './routes/api/images.ts'),
 
-  // Auth callback route (outside layout to avoid auth checks)
-  route('auth/callback', './routes/auth.callback.tsx'),
+  // Auth routes
+  route('auth', './routes/auth/index.tsx'),
+  route('auth/verify', './routes/auth/verify.tsx'),
+  route('auth/logout', './routes/auth/logout.tsx'),
+  route('auth/passkey/callback', './routes/auth/passkey.callback.tsx'),
+  route('settings/security', './routes/settings.security.tsx'),
 
   // Main layout with global UI elements
   layout('routes/layout.tsx', [

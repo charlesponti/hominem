@@ -1,0 +1,61 @@
+# Production environment
+# Usage: docker-compose -f compose/base.yml -f compose/prod.yml up
+# Note: In production, use external database services (Cloud SQL, RDS, etc.)
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: hominem-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - hominem-redis:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 128M
+    networks:
+      - hominem
+    restart: unless-stopped
+
+  # Production typically uses cloud DB, but included for reference
+  db:
+    <<: *postgres-build
+    container_name: hominem-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Please set POSTGRES_PASSWORD}
+      POSTGRES_DB: hominem
+    volumes:
+      - hominem-postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hominem"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    networks:
+      - hominem
+    restart: unless-stopped
+    # Production: consider external DB, RLS, SSL, backups
+
+x-postgres-build: &postgres-build
+  build:
+    context: ../..
+    dockerfile: docker/postgres/Dockerfile
+  platform: linux/amd64

@@ -62,14 +62,14 @@ function useAccountsByInstitution() {
       }
     >
   >((acc, account) => {
-    const institutionId = account.institutionId || 'unlinked';
+    const institutionId = account.institutionName || 'unlinked';
     const institutionName = account.institutionName || 'Unlinked Accounts';
 
     if (!acc[institutionId]) {
       acc[institutionId] = {
         institutionId,
         institutionName,
-        institutionLogo: account.institutionLogo ?? null,
+        institutionLogo: null,
         accounts: [],
       };
     }

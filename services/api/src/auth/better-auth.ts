@@ -1,17 +1,16 @@
-import type { BetterAuthOptions } from 'better-auth';
-import type { BetterAuthPlugin } from 'better-auth';
-
 import { expo } from '@better-auth/expo';
 import { passkey } from '@better-auth/passkey';
 import { db } from '@hominem/db';
-import * as schema from '@hominem/db/schema/tables';
+import * as schema from '@hominem/db/all-schema';
+import type { BetterAuthOptions } from 'better-auth';
+import type { BetterAuthPlugin } from 'better-auth';
 import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import {
-  apiKey,
   bearer,
   captcha,
   deviceAuthorization,
+  emailOTP,
   jwt,
   multiSession,
   openAPI,
@@ -19,8 +18,8 @@ import {
 } from 'better-auth/plugins';
 
 import { env } from '../env';
-
-
+import { sendEmail } from '../lib/email';
+import { recordTestOtp } from './test-otp-store';
 
 function getTrustedOrigins() {
   const origins = new Set([
@@ -33,6 +32,8 @@ function getTrustedOrigins() {
     'http://localhost:4446',
     'hakumi://',
     'hakumi-dev://',
+    'hakumi-e2e://',
+    'hakumi-preview://',
     'exp://',
   ]);
   return [...origins];
@@ -45,6 +46,9 @@ function getAdvancedOptions() {
     env.NODE_ENV === 'production' || new URL(env.BETTER_AUTH_URL).protocol === 'https:';
 
   return {
+    database: {
+      generateId: 'uuid' as const,
+    },
     useSecureCookies,
     ...(crossSubDomainEnabled
       ? {
@@ -61,26 +65,6 @@ function getAdvancedOptions() {
       secure: useSecureCookies,
     },
   };
-}
-
-function getSocialProviders() {
-  const providers: Record<string, { clientId: string; clientSecret: string }> = {};
-
-  if (env.APPLE_CLIENT_ID && env.APPLE_CLIENT_SECRET) {
-    providers.apple = {
-      clientId: env.APPLE_CLIENT_ID,
-      clientSecret: env.APPLE_CLIENT_SECRET,
-    };
-  }
-
-  if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
-    providers.google = {
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
-    };
-  }
-
-  return providers;
 }
 
 function getAuthPlugins() {
@@ -100,11 +84,65 @@ function getAuthPlugins() {
       ],
       schema: {
         passkey: {
-          modelName: 'betterAuthPasskey',
+          modelName: 'userPasskey',
         },
       },
     }),
-    jwt(),
+    emailOTP({
+      expiresIn: env.AUTH_EMAIL_OTP_EXPIRES_SECONDS,
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        recordTestOtp({ email, otp, type });
+        if (env.NODE_ENV === 'test' && !env.RESEND_FROM_EMAIL) {
+          return;
+        }
+
+        const subject =
+          type === 'sign-in'
+            ? 'Your sign-in code'
+            : type === 'email-verification'
+              ? 'Verify your email'
+              : type === 'forget-password'
+                ? 'Reset your password'
+                : 'Your verification code';
+
+        const text = `Your verification code is: ${otp}. This code will expire in 5 minutes.`;
+
+        const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 12px 12px 0 0;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">Hominem</h1>
+  </div>
+  <div style="background: #ffffff; padding: 30px; border: 1px solid #e1e1e1; border-top: none; border-radius: 0 0 12px 12px;">
+    <p style="margin-top: 0;">Your verification code is:</p>
+    <div style="background: #f5f5f5; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; border-radius: 8px; margin: 20px 0;">
+      ${otp}
+    </div>
+    <p style="color: #666; font-size: 14px;">This code will expire in 5 minutes.</p>
+    <p style="color: #666; font-size: 14px;">If you didn't request this code, you can safely ignore this email.</p>
+  </div>
+</body>
+</html>`;
+
+        await sendEmail({
+          to: email,
+          subject,
+          text,
+          html,
+        });
+      },
+    }),
+    jwt({
+      schema: {
+        jwks: {
+          modelName: 'userJwks',
+        },
+      },
+    }),
     bearer({ requireSignature: true }),
     multiSession({ maximumSessions: 8 }),
     oneTimeToken({
@@ -116,30 +154,33 @@ function getAuthPlugins() {
       interval: '5s',
       schema: {
         deviceCode: {
-          modelName: 'betterAuthDeviceCode',
+          modelName: 'userDeviceCode',
         },
       },
     }),
-    apiKey({
-      defaultPrefix: 'hmn_',
-      requireName: true,
-      enableMetadata: true,
-      schema: {
-        apikey: {
-          modelName: 'betterAuthApiKey',
-        },
-      },
-      keyExpiration: {
-        defaultExpiresIn: 1000 * 60 * 60 * 24 * 90,
-        minExpiresIn: 1,
-        maxExpiresIn: 365,
-      },
-      rateLimit: {
-        enabled: true,
-        timeWindow: 1000 * 60 * 60,
-        maxRequests: 5000,
-      },
-    }),
+    // API key authentication is not currently available as a built-in plugin in better-auth@1.4.19
+    // The database schema (better_auth_api_key table) is prepared for future support.
+    // TODO: When better-auth adds native apiKey support, uncomment and configure below:
+    // apiKey({
+    //   defaultPrefix: 'hmn_',
+    //   requireName: true,
+    //   enableMetadata: true,
+    //   schema: {
+    //     apikey: {
+    //       modelName: 'betterAuthApiKey',
+    //     },
+    //   },
+    //   keyExpiration: {
+    //     defaultExpiresIn: 1000 * 60 * 60 * 24 * 90,
+    //     minExpiresIn: 1,
+    //     maxExpiresIn: 365,
+    //   },
+    //   rateLimit: {
+    //     enabled: true,
+    //     timeWindow: 1000 * 60 * 60,
+    //     maxRequests: 5000,
+    //   },
+    // }),
     openAPI({
       path: '/reference',
       theme: 'deepSpace',
@@ -170,21 +211,21 @@ const betterAuthOptions: BetterAuthOptions = {
   trustedOrigins: getTrustedOrigins(),
   advanced: getAdvancedOptions(),
   user: {
-    modelName: 'betterAuthUser',
+    modelName: 'authUser',
   },
   session: {
-    modelName: 'betterAuthSession',
+    modelName: 'userSession',
   },
   account: {
-    modelName: 'betterAuthAccount',
+    modelName: 'userAccount',
   },
   verification: {
-    modelName: 'betterAuthVerification',
+    modelName: 'userVerification',
   },
   emailAndPassword: {
-    enabled: false,
+    enabled: true,
+    requireEmailVerification: true,
   },
-  socialProviders: getSocialProviders(),
   plugins: getAuthPlugins(),
 };
 

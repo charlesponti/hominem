@@ -52,21 +52,12 @@ export function ShimmerMessage({
 
   return (
     <div
-      className={cn(
-        'flex w-full gap-4 p-4',
-        isUser ? 'flex-row-reverse' : 'flex-row',
-        className,
-      )}
+      className={cn('flex w-full gap-4 p-4', isUser ? 'flex-row-reverse' : 'flex-row', className)}
       {...props}
     >
       <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
       <div className={cn('flex flex-col gap-1 max-w-[80%]', isUser && 'items-end')}>
-        <div
-          className={cn(
-            'rounded-2xl px-4 py-3 space-y-2',
-            isUser ? 'bg-primary' : 'bg-muted',
-          )}
-        >
+        <div className={cn('rounded-2xl px-4 py-3 space-y-2', isUser ? 'bg-primary' : 'bg-muted')}>
           <div className="h-4 w-48 rounded bg-muted-foreground/20 animate-pulse" />
           <div className="h-4 w-32 rounded bg-muted-foreground/20 animate-pulse" />
         </div>

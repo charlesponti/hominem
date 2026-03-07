@@ -1,10 +1,8 @@
-import { useCallback, useState } from 'react';
-
 import type { Note } from '@hominem/hono-rpc/types/notes.types';
-
 import { Button } from '@hominem/ui/button';
 import { Textarea } from '@hominem/ui/components/ui/textarea';
 import { Sparkles, Save, Trash2, Loader2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
 import { useDeleteNote, useUpdateNote } from '~/hooks/use-notes';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
@@ -64,26 +62,29 @@ export function NoteEditor({ note, chatId, onAIAction }: NoteEditorProps) {
     }
   }, [note.id, deleteNote]);
 
-  const handleAIAction = useCallback(async (action: string) => {
-    if (!chatId || !content.trim()) return;
+  const handleAIAction = useCallback(
+    async (action: string) => {
+      if (!chatId || !content.trim()) return;
 
-    const prompt = AI_PROMPTS[action] || `Process the following note:`;
-    const message = `${prompt}\n\n---\n${content}`;
+      const prompt = AI_PROMPTS[action] || `Process the following note:`;
+      const message = `${prompt}\n\n---\n${content}`;
 
-    setIsAIAction(true);
+      setIsAIAction(true);
 
-    try {
-      await sendMessage.mutateAsync({
-        message,
-        chatId,
-      });
-      onAIAction?.(action, message);
-    } catch (error) {
-      console.error('AI action failed:', error);
-    } finally {
-      setIsAIAction(false);
-    }
-  }, [chatId, content, sendMessage, onAIAction]);
+      try {
+        await sendMessage.mutateAsync({
+          message,
+          chatId,
+        });
+        onAIAction?.(action, message);
+      } catch (error) {
+        console.error('AI action failed:', error);
+      } finally {
+        setIsAIAction(false);
+      }
+    },
+    [chatId, content, sendMessage, onAIAction],
+  );
 
   const aiActions = [
     { id: 'expand', label: 'Expand' },
@@ -147,15 +148,9 @@ export function NoteEditor({ note, chatId, onAIAction }: NoteEditorProps) {
 
       {/* Metadata */}
       <div className="mt-4 text-xs text-muted-foreground">
-        <p>
-          Created: {new Date(note.createdAt).toLocaleString()}
-        </p>
-        <p>
-          Updated: {new Date(note.updatedAt).toLocaleString()}
-        </p>
-        {note.versionNumber > 1 && (
-          <p>Version: {note.versionNumber}</p>
-        )}
+        <p>Created: {new Date(note.createdAt).toLocaleString()}</p>
+        <p>Updated: {new Date(note.updatedAt).toLocaleString()}</p>
+        {note.versionNumber > 1 && <p>Version: {note.versionNumber}</p>}
       </div>
     </div>
   );

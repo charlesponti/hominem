@@ -1,4 +1,5 @@
 import type { Note } from '@hominem/hono-rpc/types'
+import type { Note as ValidatedNote } from '~/utils/validation/schemas'
 
 import type { FocusItem, FocusItems } from './types'
 import type { FocusItem as LocalFocusItem } from '~/utils/local-store/types'
@@ -12,11 +13,11 @@ function parseNoteDate(dateValue?: string | null) {
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString()
 }
 
-export function noteToFocusItem(note: Note): FocusItem {
+export function noteToFocusItem(note: Note | ValidatedNote): FocusItem {
   return {
     id: note.id,
     text: note.title || note.excerpt || note.content.slice(0, 120),
-    type: note.type || 'task',
+    type: (note.type || 'task') as FocusItem['type'],
     category: note.type || null,
     due_date: parseNoteDate(note.scheduledFor),
     state: note.status === 'archived' ? 'completed' : 'active',
@@ -26,7 +27,7 @@ export function noteToFocusItem(note: Note): FocusItem {
     profile_id: '',
     created_at: note.createdAt,
     updated_at: note.updatedAt,
-    source_note: note,
+    source_note: note as Note,
   }
 }
 

@@ -1,114 +1,34 @@
-import { useAuthContext } from '@hominem/auth';
-import { Button } from '@hominem/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@hominem/ui/dropdown';
-import { Globe2Icon, List, LogOut, MoreHorizontal, Settings, UserPlus } from 'lucide-react';
-import { useCallback } from 'react';
-import { href, Link, useNavigate } from 'react-router';
+'use client';
+
+import { Header, type NavItem } from '@hominem/ui';
+import { Globe2Icon, List, UserPlus } from 'lucide-react';
 
 const APP_NAME = 'Rocco';
 
-const NavigationMenu = () => {
-  const navigate = useNavigate();
-  const { logout } = useAuthContext();
-  const onLogoutClick = useCallback(async () => {
-    await logout();
-    navigate('/');
-  }, [logout, navigate]);
+const navItems: NavItem[] = [
+  {
+    title: 'Explore',
+    url: '/',
+    icon: Globe2Icon,
+  },
+  {
+    title: 'Lists',
+    url: '/lists',
+    icon: List,
+  },
+  {
+    title: 'Invites',
+    url: '/invites',
+    icon: UserPlus,
+  },
+];
 
+export default function RoccoHeader() {
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="p-0.5">
-          <MoreHorizontal className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-56"
-        align="end"
-        sideOffset={8}
-        avoidCollisions={true}
-        side="bottom"
-      >
-        <DropdownMenuItem asChild className=" py-2">
-          <Link to={href('/')} prefetch="intent" className="flex items-center space-x-2">
-            <Globe2Icon className="size-4" />
-            <span>Explore</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className=" py-2">
-          <Link to={href('/lists')} prefetch="intent" className="flex items-center space-x-2">
-            <List className="size-4" />
-            <span>Lists</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className=" py-2">
-          <Link to={href('/invites')} prefetch="intent" className="flex items-center space-x-2">
-            <UserPlus className="size-4" />
-            <span>Invites</span>
-          </Link>
-        </DropdownMenuItem>
-        {/* <DropdownMenuItem asChild className=" py-2">
-          <Link to={href('/trips')} className="flex items-center space-x-2">
-            <MapPin className="size-4" />
-            <span>Trips</span>
-          </Link>
-        </DropdownMenuItem> */}
-        <DropdownMenuItem asChild className=" py-2">
-          <Link to={href('/account')} prefetch="intent" className="flex items-center space-x-2">
-            <Settings className="size-4" />
-            <span>Account</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem className=" py-2 flex items-center space-x-2" onClick={onLogoutClick}>
-          <LogOut className="size-4" />
-          <span>Log out</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-};
-
-function Header() {
-  const { isAuthenticated, isLoading, authClient } = useAuthContext();
-
-  return (
-    <header
-      className="fixed top-0 left-0 z-50 w-full border-b border-border"
-      style={{ paddingRight: 'var(--removed-body-scroll-bar-size, 0px)' }}
-    >
-      <div className="flex px-4 py-2 items-center justify-between">
-        <Link to="/" prefetch="intent" className="flex items-center space-x-1">
-          <img src="/icons/favicon-96x96.png" alt={APP_NAME} className="size-3 mt-1" />
-          <span className="heading-4 lowercase text-primary">{APP_NAME}</span>
-        </Link>
-        {!isLoading && (
-          <div className="flex items-center space-x-2">
-            {isAuthenticated ? (
-              <NavigationMenu />
-            ) : (
-              <Button
-                onClick={() =>
-                  authClient.auth.signInWithOAuth({
-                    provider: 'apple',
-                    options: {
-                      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/')}`,
-                    },
-                  })
-                }
-              >
-                Sign in
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-    </header>
+    <Header
+      brandName={APP_NAME}
+      brandIcon={<img src="/icons/favicon-96x96.png" alt={APP_NAME} className="size-6" />}
+      navItems={navItems}
+    />
   );
 }
-
-export default Header;

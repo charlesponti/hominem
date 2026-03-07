@@ -2,7 +2,7 @@
  * Note Validation Schemas
  *
  * Only validation schemas are defined here.
- * Import actual types directly from @hominem/db/types/notes
+ * Import actual types directly from ./contracts
  */
 
 import {
@@ -10,7 +10,7 @@ import {
   NoteStatusSchema,
   NoteAnalysisSchema,
   PublishingMetadataSchema,
-} from '@hominem/db/schema/notes';
+} from './contracts';
 import * as z from 'zod';
 
 const noteTagSchema = z.object({ value: z.string() });
@@ -66,3 +66,10 @@ export const ListNotesOutputSchema = z.object({
 export type CreateNoteInput = z.infer<typeof CreateNoteInputSchema>;
 export type ListNotesInput = z.infer<typeof ListNotesInputSchema>;
 export type ListNotesOutput = z.infer<typeof ListNotesOutputSchema>;
+
+export {
+  NoteContentTypeSchema,
+  NoteStatusSchema,
+  NoteAnalysisSchema,
+  PublishingMetadataSchema,
+} from './contracts';

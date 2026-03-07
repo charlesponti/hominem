@@ -1,8 +1,7 @@
 'use client';
 
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
-
 import { Mic, Speaker, User } from 'lucide-react';
+import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 
@@ -79,11 +78,7 @@ interface TranscriptionContentProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
 }
 
-export function TranscriptionContent({
-  children,
-  className,
-  ...props
-}: TranscriptionContentProps) {
+export function TranscriptionContent({ children, className, ...props }: TranscriptionContentProps) {
   return (
     <div className={cn('p-3', className)} {...props}>
       {children}

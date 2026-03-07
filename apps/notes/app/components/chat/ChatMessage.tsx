@@ -1,5 +1,5 @@
 import type { ChatMessageToolCall } from '@hominem/hono-rpc/types/chat.types';
-
+import { Reasoning, Tool } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';
 import {
   DropdownMenu,
@@ -13,13 +13,11 @@ import { formatMessageTimestamp } from '@hominem/utils/dates';
 import { Check, Copy, Edit2, MoreVertical, RotateCcw, Save, Trash2, X } from 'lucide-react';
 import { memo, useState } from 'react';
 
-import type { ExtendedMessage } from '~/lib/types/chat-message';
-
 import { useMessageEdit } from '~/lib/hooks/use-message-edit';
+import type { ExtendedMessage } from '~/lib/types/chat-message';
 import { cn } from '~/lib/utils';
 import { copyToClipboard } from '~/lib/utils/clipboard';
 
-import { Reasoning, Tool } from '@hominem/ui/ai-elements';
 import { MarkdownContent } from './MarkdownContent';
 
 interface ChatMessageProps {
@@ -161,11 +159,6 @@ export const ChatMessage = memo(function ChatMessage({
                 {toolCall.args && Object.keys(toolCall.args).length > 0 ? (
                   <pre className="text-xs bg-muted/50 p-2 rounded overflow-x-auto">
                     {JSON.stringify(toolCall.args, null, 2)}
-                  </pre>
-                ) : null}
-                {toolCall.result != null ? (
-                  <pre className="text-xs bg-muted/50 p-2 rounded overflow-x-auto">
-                    {String(toolCall.result)}
                   </pre>
                 ) : null}
               </div>

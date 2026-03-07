@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { PulsingCircle } from '~/components/animated/pulsing-circle';
+import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { FeedbackBlock } from '~/components/feedback-block';
 import { FocusHeader } from '~/components/focus/focus-header';
 import { FocusList } from '~/components/focus/focus-list';
@@ -160,7 +161,13 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FocusView;
+const FocusViewWithErrorBoundary = () => (
+  <FeatureErrorBoundary featureName="Focus">
+    <FocusView />
+  </FeatureErrorBoundary>
+)
+
+export default FocusViewWithErrorBoundary
 
 const FocusLoadingError = React.memo(() => {
   return (

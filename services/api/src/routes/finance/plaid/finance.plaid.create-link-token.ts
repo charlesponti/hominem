@@ -1,11 +1,10 @@
-import { UnauthorizedError, InternalError } from '@hominem/services';
+import { UnauthorizedError, InternalError } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
-import type { AppEnv } from '../../../server';
-
 import { env } from '../../../env';
 import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../../../lib/plaid';
+import type { AppEnv } from '../../../server';
 
 export const financePlaidCreateLinkTokenRoutes = new Hono<AppEnv>();
 

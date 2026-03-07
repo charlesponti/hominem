@@ -9,7 +9,7 @@ export default function NotesLayout() {
   }
 
   if (!userId) {
-    return <Navigate to="/auth/signin" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   return (
