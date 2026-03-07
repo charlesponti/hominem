@@ -26,9 +26,6 @@
     "clean": {
       "cache": false
     },
-    "db:migrate": {
-      "cache": false
-    },
     "dev": {
       "cache": false,
       "persistent": true,

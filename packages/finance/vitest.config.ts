@@ -4,6 +4,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/modern-finance*.test.ts', 'src/modern-finance.*.test.ts'],
+    include: ['src/finance*.test.ts', 'src/finance.*.test.ts'],
   },
 })

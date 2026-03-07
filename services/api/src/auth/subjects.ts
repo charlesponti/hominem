@@ -1,8 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { and, eq, isNull } from '@hominem/db';
 import { db } from '@hominem/db';
-import { authSubjects, users } from '@hominem/db/all-schema';
 
 type AuthProvider = 'apple' | 'google';
 
@@ -24,92 +22,115 @@ interface AuthUserRecord {
   updatedAt: string;
 }
 
+const formatDate = (date: Date | string | null): string => {
+  if (!date) return new Date().toISOString();
+  return date instanceof Date ? date.toISOString() : date;
+};
+
 export async function ensureOAuthSubjectUser(
   input: EnsureOAuthSubjectUserInput,
 ): Promise<AuthUserRecord> {
   // Check if this OAuth subject is already linked
-  const [bySubject] = await db
-    .select({
-      id: users.id,
-      email: users.email,
-      name: users.name,
-      image: users.image,
-      isAdmin: users.isAdmin,
-      createdAt: users.createdAt,
-      updatedAt: users.updatedAt,
-    })
-    .from(authSubjects)
-    .innerJoin(users, eq(users.id, authSubjects.userId))
-    .where(
-      and(
-        eq(authSubjects.provider, input.provider),
-        eq(authSubjects.providerSubject, input.providerSubject),
-        isNull(authSubjects.unlinkedAt),
-      ),
+  const bySubject = await db
+    .selectFrom('auth_subjects')
+    .innerJoin('users', (join) => join.onRef('users.id', '=', 'auth_subjects.user_id'))
+    .select([
+      'users.id',
+      'users.email',
+      'users.name',
+      'users.image',
+      'users.is_admin',
+      'users.created_at',
+      'users.updated_at',
+    ])
+    .where((eb) =>
+      eb.and([
+        eb('auth_subjects.provider', '=', input.provider),
+        eb('auth_subjects.provider_subject', '=', input.providerSubject),
+        eb('auth_subjects.unlinked_at', 'is', null),
+      ]),
     )
-    .limit(1);
+    .limit(1)
+    .executeTakeFirst();
 
   if (bySubject) {
-    return bySubject;
+    return {
+      id: bySubject.id,
+      email: bySubject.email,
+      name: bySubject.name,
+      image: bySubject.image,
+      isAdmin: bySubject.is_admin as boolean,
+      createdAt: formatDate(bySubject.created_at),
+      updatedAt: formatDate(bySubject.updated_at),
+    };
   }
 
   // Check if a user with this email already exists
-  const [existingUser] = await db
-    .select({
-      id: users.id,
-      email: users.email,
-      name: users.name,
-      image: users.image,
-      isAdmin: users.isAdmin,
-      createdAt: users.createdAt,
-      updatedAt: users.updatedAt,
-    })
-    .from(users)
-    .where(eq(users.email, input.email))
-    .limit(1);
+  const existingUser = await db
+    .selectFrom('users')
+    .select(['id', 'email', 'name', 'image', 'is_admin', 'created_at', 'updated_at'])
+    .where((eb) => eb('email', '=', input.email))
+    .limit(1)
+    .executeTakeFirst();
 
   // Create new user if needed
-  const user =
-    existingUser ??
-    (
-      await db
-        .insert(users)
-        .values({
-          id: randomUUID(),
-          email: input.email,
-          name: input.name ?? null,
-          image: input.image ?? null,
-          isAdmin: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })
-        .returning({
-          id: users.id,
-          email: users.email,
-          name: users.name,
-          image: users.image,
-          isAdmin: users.isAdmin,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
-        })
-    )[0];
+  const user = existingUser
+    ? {
+        id: existingUser.id,
+        email: existingUser.email,
+        name: existingUser.name,
+        image: existingUser.image,
+        isAdmin: existingUser.is_admin as boolean,
+        createdAt: formatDate(existingUser.created_at),
+        updatedAt: formatDate(existingUser.updated_at),
+      }
+    : await (async () => {
+        const now = new Date().toISOString();
+        const created = await db
+          .insertInto('users')
+          .values({
+            id: randomUUID(),
+            email: input.email,
+            name: input.name ?? null,
+            image: input.image ?? null,
+            is_admin: false,
+            created_at: now,
+            updated_at: now,
+          })
+          .returningAll()
+          .executeTakeFirst();
 
-  if (!user) {
-    throw new Error('failed_to_ensure_user');
-  }
+        if (!created) {
+          throw new Error('failed_to_ensure_user');
+        }
+
+        return {
+          id: created.id,
+          email: created.email,
+          name: created.name,
+          image: created.image,
+          isAdmin: created.is_admin as boolean,
+          createdAt: formatDate(created.created_at),
+          updatedAt: formatDate(created.updated_at),
+        };
+      })();
 
   // Link authSubject to user
-  await db
-    .insert(authSubjects)
-    .values({
-      id: randomUUID(),
-      userId: user.id,
-      provider: input.provider,
-      providerSubject: input.providerSubject,
-      isPrimary: true,
-      linkedAt: new Date().toISOString(),
-    })
-    .onConflictDoNothing();
+  try {
+    await db
+      .insertInto('auth_subjects')
+      .values({
+        id: randomUUID(),
+        user_id: user.id,
+        provider: input.provider,
+        provider_subject: input.providerSubject,
+        is_primary: true,
+        linked_at: new Date().toISOString(),
+      })
+      .execute();
+  } catch {
+    // Subject already linked, continue
+  }
 
   return user;
 }

@@ -5,7 +5,6 @@ import type { AppContext } from '../middleware/auth';
 import { financeRoutes } from './finance';
 import { itemsRoutes } from './items';
 import { listsRoutes } from './lists';
-import { possessionsRoutes } from './possessions';
 
 /**
  * Economy Domain
@@ -16,4 +15,3 @@ export const economyRoutes = new Hono<AppContext>()
   .route('/finance', financeRoutes)
   .route('/items', itemsRoutes)
   .route('/lists', listsRoutes)
-  .route('/possessions', possessionsRoutes);

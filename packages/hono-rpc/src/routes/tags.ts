@@ -1,16 +1,7 @@
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 
-import {
-  createTag,
-  deleteTag,
-  getTag,
-  listTags,
-  replaceEntityTags,
-  tagEntity,
-  untagEntity,
-  updateTag,
-} from '@hominem/db/services/tags.service'
+import { db, ForbiddenError, NotFoundError } from '@hominem/db'
 import type { AppContext } from '../middleware/auth'
 import { authMiddleware } from '../middleware/auth'
 import {
@@ -19,53 +10,82 @@ import {
   TagSyncInputSchema,
   UpdateTagInputSchema,
 } from '../schemas/tags.schema'
-import { ForbiddenError, NotFoundError } from '../errors'
+
+async function getTagWithOwnershipCheck(id: string, userId: string) {
+  const tag = await db
+    .selectFrom('tags')
+    .selectAll()
+    .where('id', '=', id)
+    .where('owner_id', '=', userId)
+    .executeTakeFirst()
+
+  if (!tag) {
+    throw new ForbiddenError('Tag not found or access denied')
+  }
+  return tag
+}
 
 export const tagsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
   .get('/', async (c) => {
-    const userId = c.get('userId') as Parameters<typeof listTags>[0]
-    const tags = await listTags(userId)
+    const userId = c.get('userId')!
+    const tags = await db
+      .selectFrom('tags')
+      .selectAll()
+      .where('owner_id', '=', userId)
+      .orderBy('name', 'asc')
+      .execute()
     return c.json({ success: true, data: tags })
   })
   .get('/:id', async (c) => {
-    const userId = c.get('userId') as Parameters<typeof getTag>[1]
-    const id = c.req.param('id') as Parameters<typeof getTag>[0]
+    const userId = c.get('userId')!
+    const id = c.req.param('id')
 
-    const tag = await getTag(id, userId)
-    if (!tag) {
-      throw new NotFoundError('Tag not found')
-    }
+    const tag = await getTagWithOwnershipCheck(id, userId)
     return c.json({ success: true, data: tag })
   })
   .post('/', zValidator('json', CreateTagInputSchema), async (c) => {
-    const userId = c.get('userId') as Parameters<typeof createTag>[0]
+    const userId = c.get('userId')!
     const data = c.req.valid('json')
 
-    const newTag = await createTag(userId, {
-      name: data.name,
-      ...(data.color !== undefined ? { color: data.color } : {}),
-      ...(data.description !== undefined ? { description: data.description } : {}),
-      ...(data.emojiImageUrl !== undefined ? { emojiImageUrl: data.emojiImageUrl } : {}),
-    })
+    const newTag = await db
+      .insertInto('tags')
+      .values({
+        owner_id: userId,
+        name: data.name,
+        color: data.color ?? null,
+        description: data.description ?? null,
+        emoji_image_url: data.emojiImageUrl ?? null,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow()
 
     return c.json({ success: true, data: newTag }, 201)
   })
   .patch('/:id', zValidator('json', UpdateTagInputSchema), async (c) => {
     try {
-      const userId = c.get('userId') as Parameters<typeof updateTag>[1]
-      const id = c.req.param('id') as Parameters<typeof updateTag>[0]
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
       const data = c.req.valid('json')
 
-      const updateData: Parameters<typeof updateTag>[2] = {}
-      if (data.name !== undefined) updateData.name = data.name
-      if (data.color !== undefined) updateData.color = data.color
-      if (data.description !== undefined) updateData.description = data.description
-      if (data.emojiImageUrl !== undefined) updateData.emojiImageUrl = data.emojiImageUrl
+      // Verify ownership
+      await getTagWithOwnershipCheck(id, userId)
 
-      const updatedTag = await updateTag(id, userId, updateData)
+      const updateData: any = {}
+      if (data.name !== undefined) updateData.name = data.name
+      if (data.color !== undefined) updateData.color = data.color ?? null
+      if (data.description !== undefined) updateData.description = data.description ?? null
+      if (data.emojiImageUrl !== undefined) updateData.emoji_image_url = data.emojiImageUrl ?? null
+
+      const updatedTag = await db
+        .updateTable('tags')
+        .set(updateData)
+        .where('id', '=', id)
+        .returningAll()
+        .executeTakeFirst()
+
       if (!updatedTag) {
-        throw new NotFoundError('Tag not found or access denied')
+        throw new NotFoundError('Tag not found')
       }
       return c.json({ success: true, data: updatedTag })
     } catch (error) {
@@ -77,12 +97,19 @@ export const tagsRoutes = new Hono<AppContext>()
   })
   .delete('/:id', async (c) => {
     try {
-      const userId = c.get('userId') as Parameters<typeof deleteTag>[1]
-      const id = c.req.param('id') as Parameters<typeof deleteTag>[0]
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
 
-      const deleted = await deleteTag(id, userId)
-      if (!deleted) {
-        throw new NotFoundError('Tag not found or access denied')
+      // Verify ownership
+      await getTagWithOwnershipCheck(id, userId)
+
+      const result = await db
+        .deleteFrom('tags')
+        .where('id', '=', id)
+        .executeTakeFirst()
+
+      if ((result.numDeletedRows ?? 0n) === 0n) {
+        throw new NotFoundError('Tag not found')
       }
       return c.json({ success: true, data: { id } })
     } catch (error) {
@@ -93,21 +120,28 @@ export const tagsRoutes = new Hono<AppContext>()
     }
   })
   .post('/:id/tag', zValidator('json', TaggingInputSchema), async (c) => {
-    const userId = c.get('userId') as Parameters<typeof getTag>[1]
-    const tagId = c.req.param('id') as Parameters<typeof getTag>[0]
+    const userId = c.get('userId')!
+    const tagId = c.req.param('id')
     const data = c.req.valid('json')
 
-    const tag = await getTag(tagId, userId)
-    if (!tag) {
-      throw new NotFoundError('Tag not found or access denied')
-    }
+    // Verify tag exists and user owns it
+    const tag = await getTagWithOwnershipCheck(tagId, userId)
 
-    const result = await tagEntity(tagId, data.entityId, data.entityType)
+    const result = await db
+      .insertInto('tagged_items')
+      .values({
+        tag_id: tagId,
+        entity_id: data.entityId,
+        entity_type: data.entityType,
+      })
+      .returningAll()
+      .executeTakeFirst()
+
     return c.json({ success: true, data: result }, 201)
   })
   .delete('/:id/tag/:entityId', async (c) => {
-    const userId = c.get('userId') as Parameters<typeof getTag>[1]
-    const tagId = c.req.param('id') as Parameters<typeof getTag>[0]
+    const userId = c.get('userId')!
+    const tagId = c.req.param('id')
     const entityId = c.req.param('entityId')
     const entityType = c.req.query('entityType')
 
@@ -115,34 +149,50 @@ export const tagsRoutes = new Hono<AppContext>()
       throw new Error('entityType query parameter required')
     }
 
-    const tag = await getTag(tagId, userId)
-    if (!tag) {
-      throw new NotFoundError('Tag not found or access denied')
-    }
+    // Verify tag exists and user owns it
+    await getTagWithOwnershipCheck(tagId, userId)
 
-    const result = await untagEntity(tagId, entityId, entityType)
-    if (!result) {
+    const result = await db
+      .deleteFrom('tagged_items')
+      .where('tag_id', '=', tagId)
+      .where('entity_id', '=', entityId)
+      .where('entity_type', '=', entityType)
+      .executeTakeFirst()
+
+    if ((result.numDeletedRows ?? 0n) === 0n) {
       throw new NotFoundError('Tagging not found')
     }
 
     return c.json({ success: true, data: { id: tagId } })
   })
   .put('/:id/sync', zValidator('json', TagSyncInputSchema), async (c) => {
-    const userId = c.get('userId') as Parameters<typeof getTag>[1]
-    const tagId = c.req.param('id') as Parameters<typeof getTag>[0]
+    const userId = c.get('userId')!
+    const tagId = c.req.param('id')
     const data = c.req.valid('json')
 
-    const tag = await getTag(tagId, userId)
-    if (!tag) {
-      throw new NotFoundError('Tag not found or access denied')
-    }
+    // Verify tag exists and user owns it
+    await getTagWithOwnershipCheck(tagId, userId)
 
-    await replaceEntityTags(
-      userId as Parameters<typeof replaceEntityTags>[0],
-      data.entityId,
-      data.entityType,
-      data.tagIds as Parameters<typeof replaceEntityTags>[3],
-    )
+    // Delete all current tagged items for this entity
+    await db
+      .deleteFrom('tagged_items')
+      .where('entity_id', '=', data.entityId)
+      .where('entity_type', '=', data.entityType)
+      .execute()
+
+    // Insert new tagged items
+    if (data.tagIds && data.tagIds.length > 0) {
+      await db
+        .insertInto('tagged_items')
+        .values(
+          data.tagIds.map((tid) => ({
+            tag_id: tid,
+            entity_id: data.entityId,
+            entity_type: data.entityType,
+          }))
+        )
+        .execute()
+    }
 
     return c.json({ success: true, data: { id: tagId } })
   })

@@ -17,8 +17,7 @@
   },
   "dependencies": {
     "@hominem/db": "workspace:*",
-    "@hominem/utils": "workspace:*",
-    "drizzle-orm": "0.45.1"
+    "@hominem/utils": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.18.13",

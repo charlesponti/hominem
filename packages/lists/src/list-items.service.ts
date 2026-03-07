@@ -1,27 +1,10 @@
 import { db } from '@hominem/db';
-import { sql } from '@hominem/db';
+import type { Selectable, Database } from '@hominem/db';
 
 import type { ListPlace } from './contracts';
 import { getListOwnedByUser } from './list-queries.service';
 
-interface DeletedRow {
-  id: string;
-}
-
-interface TaskRow {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string | null;
-  status: string | null;
-  priority: string | null;
-  due_date: string | null;
-  completed_at: string | null;
-  parent_id: string | null;
-  list_id: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-}
+type TaskRow = Selectable<Database['tasks']>;
 
 export interface ListTaskItem {
   id: string;
@@ -40,22 +23,9 @@ export interface ListPlacePreview {
   photoUrl: string | null;
 }
 
-function resultRows<T>(result: unknown): T[] {
-  if (Array.isArray(result)) {
-    return result as T[];
-  }
-  if (result && typeof result === 'object' && 'rows' in result) {
-    const rows = (result as { rows?: unknown }).rows;
-    if (Array.isArray(rows)) {
-      return rows as T[];
-    }
-  }
-  return [];
-}
-
 function taskToListItem(row: TaskRow): ListTaskItem {
-  const createdAt = row.created_at ?? new Date().toISOString();
-  const updatedAt = row.updated_at ?? createdAt;
+  const createdAt = typeof row.created_at === 'string' ? row.created_at : new Date().toISOString();
+  const updatedAt = typeof row.updated_at === 'string' ? row.updated_at : createdAt;
   return {
     id: row.id,
     listId: row.list_id,
@@ -87,15 +57,15 @@ export async function deleteListItem(
   itemId: string,
   userId: string,
 ): Promise<boolean> {
-  const result = await db.execute(sql`
-    delete from tasks
-    where id = ${itemId}
-      and list_id = ${listId}
-      and user_id = ${userId}
-    returning id
-  `);
+  const result = await db
+    .deleteFrom('tasks')
+    .where((eb) =>
+      eb.and([eb('id', '=', itemId), eb('list_id', '=', listId), eb('user_id', '=', userId)]),
+    )
+    .returningAll()
+    .execute();
 
-  return resultRows<DeletedRow>(result).length > 0;
+  return result.length > 0;
 }
 
 export async function addItemToList(params: {
@@ -111,49 +81,23 @@ export async function addItemToList(params: {
     throw new Error("List not found or you don't have permission to add items to it");
   }
 
-  const existingResult = await db.execute(sql`
-    select
-      id,
-      user_id,
-      title,
-      description,
-      status,
-      priority,
-      due_date,
-      completed_at,
-      parent_id,
-      list_id,
-      created_at,
-      updated_at
-    from tasks
-    where id = ${itemId}
-      and user_id = ${userId}
-    limit 1
-  `);
+  const existing = await db
+    .selectFrom('tasks')
+    .selectAll()
+    .where((eb) => eb.and([eb('id', '=', itemId), eb('user_id', '=', userId)]))
+    .executeTakeFirst();
 
-  const existing = resultRows<TaskRow>(existingResult)[0] ?? null;
   if (existing) {
-    const updatedResult = await db.execute(sql`
-      update tasks
-      set list_id = ${listId}, updated_at = now()
-      where id = ${itemId}
-        and user_id = ${userId}
-      returning
-        id,
-        user_id,
-        title,
-        description,
-        status,
-        priority,
-        due_date,
-        completed_at,
-        parent_id,
-        list_id,
-        created_at,
-        updated_at
-    `);
+    const updated = await db
+      .updateTable('tasks')
+      .set({
+        list_id: listId,
+        updated_at: new Date().toISOString(),
+      })
+      .where((eb) => eb.and([eb('id', '=', itemId), eb('user_id', '=', userId)]))
+      .returningAll()
+      .executeTakeFirst();
 
-    const updated = resultRows<TaskRow>(updatedResult)[0] ?? null;
     if (!updated) {
       throw new Error('Failed to attach item to list');
     }
@@ -161,25 +105,19 @@ export async function addItemToList(params: {
     return taskToListItem(updated);
   }
 
-  const insertedResult = await db.execute(sql`
-    insert into tasks (id, user_id, title, status, priority, list_id)
-    values (${itemId}, ${userId}, 'Imported item', 'pending', 'medium', ${listId})
-    returning
-      id,
-      user_id,
-      title,
-      description,
-      status,
-      priority,
-      due_date,
-      completed_at,
-      parent_id,
-      list_id,
-      created_at,
-      updated_at
-  `);
+  const inserted = await db
+    .insertInto('tasks')
+    .values({
+      id: itemId,
+      user_id: userId,
+      title: 'Imported item',
+      status: 'pending',
+      priority: 'medium',
+      list_id: listId,
+    })
+    .returningAll()
+    .executeTakeFirst();
 
-  const inserted = resultRows<TaskRow>(insertedResult)[0] ?? null;
   if (!inserted) {
     throw new Error('Failed to add item to list');
   }
@@ -199,37 +137,29 @@ export async function removeItemFromList(params: {
     throw new Error("List not found or you don't have permission to remove items from it");
   }
 
-  const result = await db.execute(sql`
-    update tasks
-    set list_id = null, updated_at = now()
-    where id = ${itemId}
-      and list_id = ${listId}
-      and user_id = ${userId}
-    returning id
-  `);
+  const result = await db
+    .updateTable('tasks')
+    .set({
+      list_id: null,
+      updated_at: new Date().toISOString(),
+    })
+    .where((eb) =>
+      eb.and([eb('id', '=', itemId), eb('list_id', '=', listId), eb('user_id', '=', userId)]),
+    )
+    .returningAll()
+    .execute();
 
-  return resultRows<DeletedRow>(result).length > 0;
+  return result.length > 0;
 }
 
 export async function getItemsByListId(listId: string): Promise<ListTaskItem[]> {
-  const result = await db.execute(sql`
-    select
-      id,
-      user_id,
-      title,
-      description,
-      status,
-      priority,
-      due_date,
-      completed_at,
-      parent_id,
-      list_id,
-      created_at,
-      updated_at
-    from tasks
-    where list_id = ${listId}
-    order by created_at desc, id asc
-  `);
+  const result = await db
+    .selectFrom('tasks')
+    .selectAll()
+    .where('list_id', '=', listId)
+    .orderBy('created_at', 'desc')
+    .orderBy('id', 'asc')
+    .execute();
 
-  return resultRows<TaskRow>(result).map(taskToListItem);
+  return result.map(taskToListItem);
 }

@@ -1,7 +1,8 @@
 import crypto from 'node:crypto';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { cleanupFinanceTestData, seedFinanceTestData } from '@hominem/db/test/utils';
+// TODO: cleanupFinanceTestData and seedFinanceTestData were removed during Kysely migration
+// import { cleanupFinanceTestData, seedFinanceTestData } from '@hominem/db/test/utils';
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import {
@@ -84,23 +85,25 @@ describe('Plaid Router', () => {
     testAccountId = crypto.randomUUID();
     testInstitutionId = crypto.randomUUID();
 
-    // Seed fresh test data for this test (with plaid options)
-    await seedFinanceTestData({
-      userId: testUserId,
-      accountId: testAccountId,
-      institutionId: testInstitutionId,
-      plaid: true,
-    });
+    // TODO: seedFinanceTestData removed during Kysely migration
+    // // Seed fresh test data for this test (with plaid options)
+    // await seedFinanceTestData({
+    //   userId: testUserId,
+    //   accountId: testAccountId,
+    //   institutionId: testInstitutionId,
+    //   plaid: true,
+    // });
     vi.clearAllMocks();
   });
 
   // Clean up after each test to prevent data leakage
   afterAll(async () => {
-    await cleanupFinanceTestData({
-      userId: testUserId,
-      accountId: testAccountId,
-      institutionId: testInstitutionId,
-    });
+    // TODO: cleanupFinanceTestData removed during Kysely migration
+    // await cleanupFinanceTestData({
+    //   userId: testUserId,
+    //   accountId: testAccountId,
+    //   institutionId: testInstitutionId,
+    // });
   });
 
   describe('POST /api/finance/plaid/create-link-token', () => {

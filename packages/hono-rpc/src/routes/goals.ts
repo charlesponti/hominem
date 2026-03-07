@@ -52,7 +52,7 @@ export const goalsRoutes: Hono<AppContext> = new Hono<AppContext>()
       ...(query.sortBy && { sortBy: query.sortBy }),
     });
 
-    return c.json<GoalListOutput>(goals as unknown as GoalListOutput);
+    return c.json<GoalListOutput>(goals);
   })
 
   // Get goal by ID
@@ -65,7 +65,7 @@ export const goalsRoutes: Hono<AppContext> = new Hono<AppContext>()
       throw new NotFoundError('Goal not found');
     }
 
-    return c.json<GoalGetOutput>(goal as unknown as GoalGetOutput);
+    return c.json<GoalGetOutput>(goal);
   })
 
   // Get goal statistics
@@ -99,7 +99,7 @@ export const goalsRoutes: Hono<AppContext> = new Hono<AppContext>()
       ...(data.tags && { tags: data.tags }),
     });
 
-    return c.json<GoalCreateOutput>(goal as unknown as GoalCreateOutput, 201);
+    return c.json<GoalCreateOutput>(goal, 201);
   })
 
   // Update goal
@@ -125,7 +125,7 @@ export const goalsRoutes: Hono<AppContext> = new Hono<AppContext>()
       throw new NotFoundError('Failed to update goal');
     }
 
-    return c.json<GoalUpdateOutput>(updated as unknown as GoalUpdateOutput);
+    return c.json<GoalUpdateOutput>(updated);
   })
 
   // Delete goal
