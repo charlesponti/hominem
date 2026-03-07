@@ -26,7 +26,7 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "check": "bun run validate-db-imports && bun run build:types && bun run typecheck && bun run lint",
+    "check": "bun run validate-db-imports && bun run typecheck && bun run lint",
     "check:tsconfig": "bun run typecheck:graph && bun run typecheck:editor",
     "clean": "turbo run clean",
     "dev": "turbo dev",
