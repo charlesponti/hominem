@@ -54,7 +54,7 @@ function allowsLocalNetworking(appVariant: AppVariant) {
   return appVariant !== 'production'
 }
 
-export default ({ config }: ConfigContext): ExpoConfig => {
+export default ({ config }: ConfigContext) => {
   const appVariant = getAppVariant()
   const variantConfig = APP_VARIANTS[appVariant]
   const plugins: ExpoConfig['plugins'] = [
