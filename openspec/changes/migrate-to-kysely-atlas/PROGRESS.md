@@ -250,7 +250,14 @@ Updated npm scripts to prevent cache bypass issues:
    - `typecheck:graph` already generates `.d.ts` files, so separate build was redundant
    - Saves ~100ms per check run
 
-**Key Learning**: The error where Kysely migration type issues weren't caught by `bun run check` but were caught by `bun run check:tsconfig` revealed that incremental Turbo builds can cache away errors. Now strict checks always run fresh.
+4. **Consolidated typecheck scripts**
+   - Merged `check:tsconfig` functionality into main `typecheck` command
+   - `typecheck` now runs: `typecheck:graph` + `typecheck:editor` + `turbo run typecheck`
+   - Provides comprehensive checking: graph-based TSC + editor config + package checks
+   - Removed confusing dual-script pattern for better UX
+   - Updated CI to use consolidated `typecheck`
+
+**Key Learning**: The error where Kysely migration type issues weren't caught by `bun run check` revealed that incremental Turbo builds can cache away errors. Solution: consolidated typecheck scripts to always run strict graph-based checking first, disabled caching on critical commands, and unified the script interface for clarity.
 
 ## Conclusion
 
