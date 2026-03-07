@@ -1,19 +1,27 @@
-import crypto from 'node:crypto'
+import crypto from 'node:crypto';
+
 import type {
   EventFilters,
   EventInput,
   EventOutput,
   EventWithTagsAndPeople,
   UpdateEventInput,
-} from './contracts'
-export type { EventFilters, EventInput, EventOutput, EventTypeEnum, EventWithTagsAndPeople, UpdateEventInput } from './contracts'
+} from './contracts';
+export type {
+  EventFilters,
+  EventInput,
+  EventOutput,
+  EventTypeEnum,
+  EventWithTagsAndPeople,
+  UpdateEventInput,
+} from './contracts';
 
 type EventStoreRecord = EventOutput & {
-  tagNames: string[]
-  peopleIds: string[]
-}
+  tagNames: string[];
+  peopleIds: string[];
+};
 
-const eventsStore = new Map<string, EventStoreRecord>()
+const eventsStore = new Map<string, EventStoreRecord>();
 
 function toWithRelations(event: EventStoreRecord): EventWithTagsAndPeople {
   return {
@@ -29,88 +37,91 @@ function toWithRelations(event: EventStoreRecord): EventWithTagsAndPeople {
       firstName: 'Person',
       lastName: null,
     })),
-  }
+  };
 }
 
 export async function getPeopleForEvent(eventId: string) {
-  const event = eventsStore.get(eventId)
+  const event = eventsStore.get(eventId);
   if (!event) {
-    return []
+    return [];
   }
-  return event.peopleIds.map((id) => ({ id, firstName: 'Person', lastName: null }))
+  return event.peopleIds.map((id) => ({ id, firstName: 'Person', lastName: null }));
 }
 
 export async function getPeopleForEvents(eventIds: string[]) {
-  const map = new Map<string, Array<{ id: string; firstName: string; lastName: string | null }>>()
+  const map = new Map<string, Array<{ id: string; firstName: string; lastName: string | null }>>();
   for (const id of eventIds) {
-    map.set(id, await getPeopleForEvent(id))
+    map.set(id, await getPeopleForEvent(id));
   }
-  return map
+  return map;
 }
 
 export async function getTagsForEvent(eventId: string) {
-  const event = eventsStore.get(eventId)
+  const event = eventsStore.get(eventId);
   if (!event) {
-    return []
+    return [];
   }
-  return event.tagNames.map((name) => ({ id: name, name, color: null, description: null }))
+  return event.tagNames.map((name) => ({ id: name, name, color: null, description: null }));
 }
 
 export async function getTagsForEvents(eventIds: string[]) {
-  const map = new Map<string, Array<{ id: string; name: string; color: string | null; description: string | null }>>()
+  const map = new Map<
+    string,
+    Array<{ id: string; name: string; color: string | null; description: string | null }>
+  >();
   for (const id of eventIds) {
-    map.set(id, await getTagsForEvent(id))
+    map.set(id, await getTagsForEvent(id));
   }
-  return map
+  return map;
 }
 
 export async function removeTagsFromEvent(eventId: string, tagIds?: string[]): Promise<void> {
-  const event = eventsStore.get(eventId)
+  const event = eventsStore.get(eventId);
   if (!event) {
-    return
+    return;
   }
   if (!tagIds || tagIds.length === 0) {
-    event.tagNames = []
+    event.tagNames = [];
   } else {
-    const remove = new Set(tagIds)
-    event.tagNames = event.tagNames.filter((name) => !remove.has(name))
+    const remove = new Set(tagIds);
+    event.tagNames = event.tagNames.filter((name) => !remove.has(name));
   }
-  event.updatedAt = new Date().toISOString()
-  eventsStore.set(eventId, event)
+  event.updatedAt = new Date().toISOString();
+  eventsStore.set(eventId, event);
 }
 
 export async function getEvents(filters: EventFilters = {}): Promise<EventWithTagsAndPeople[]> {
-  let rows = Array.from(eventsStore.values())
+  let rows = Array.from(eventsStore.values());
 
   if (filters.tagNames && filters.tagNames.length > 0) {
-    const required = new Set(filters.tagNames)
-    rows = rows.filter((event) => event.tagNames.some((name) => required.has(name)))
+    const required = new Set(filters.tagNames);
+    rows = rows.filter((event) => event.tagNames.some((name) => required.has(name)));
   }
 
   switch (filters.sortBy) {
     case 'date-asc':
-      rows.sort((a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0))
-      break
+      rows.sort((a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0));
+      break;
     case 'summary':
-      rows.sort((a, b) => a.title.localeCompare(b.title))
-      break
+      rows.sort((a, b) => a.title.localeCompare(b.title));
+      break;
     case 'date-desc':
     default:
-      rows.sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0))
-      break
+      rows.sort((a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0));
+      break;
   }
 
-  return rows.map(toWithRelations)
+  return rows.map(toWithRelations);
 }
 
 export async function createEvent(
   event: Omit<EventInput, 'id'> & {
-    tags?: string[]
-    people?: string[]
+    tags?: string[];
+    people?: string[];
   },
 ): Promise<EventWithTagsAndPeople> {
-  const now = new Date().toISOString()
-  const id = crypto.randomUUID()
+  const now = new Date().toISOString();
+  const id = crypto.randomUUID();
 
   const record: EventStoreRecord = {
     id,
@@ -148,19 +159,19 @@ export async function createEvent(
     updatedAt: now,
     tagNames: event.tags ?? [],
     peopleIds: event.people ?? [],
-  }
+  };
 
-  eventsStore.set(id, record)
-  return toWithRelations(record)
+  eventsStore.set(id, record);
+  return toWithRelations(record);
 }
 
 export async function updateEvent(
   id: string,
   event: UpdateEventInput,
 ): Promise<EventWithTagsAndPeople | null> {
-  const existing = eventsStore.get(id)
+  const existing = eventsStore.get(id);
   if (!existing) {
-    return null
+    return null;
   }
 
   const next: EventStoreRecord = {
@@ -193,19 +204,19 @@ export async function updateEvent(
     ...(event.tags !== undefined ? { tagNames: event.tags } : {}),
     ...(event.people !== undefined ? { peopleIds: event.people } : {}),
     updatedAt: new Date().toISOString(),
-  }
+  };
 
-  eventsStore.set(id, next)
-  return toWithRelations(next)
+  eventsStore.set(id, next);
+  return toWithRelations(next);
 }
 
 export async function deleteEvent(id: string): Promise<boolean> {
-  return eventsStore.delete(id)
+  return eventsStore.delete(id);
 }
 
 export async function getEventById(id: string): Promise<EventWithTagsAndPeople | null> {
-  const event = eventsStore.get(id)
-  return event ? toWithRelations(event) : null
+  const event = eventsStore.get(id);
+  return event ? toWithRelations(event) : null;
 }
 
 export async function getEventByExternalId(
@@ -214,8 +225,8 @@ export async function getEventByExternalId(
 ): Promise<EventWithTagsAndPeople | null> {
   for (const event of eventsStore.values()) {
     if (event.externalId === externalId && event.calendarId === calendarId) {
-      return toWithRelations(event)
+      return toWithRelations(event);
     }
   }
-  return null
+  return null;
 }

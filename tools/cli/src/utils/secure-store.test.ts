@@ -47,7 +47,7 @@ interface SecureStoreModule {
 
 async function importSecureStore(): Promise<SecureStoreModule> {
   const suffix = Date.now().toString();
-  const extension = import.meta.url.endsWith('.js') ? 'js' : 'ts'
+  const extension = import.meta.url.endsWith('.js') ? 'js' : 'ts';
   return (await import(`./secure-store.${extension}?test=${suffix}`)) as SecureStoreModule;
 }
 

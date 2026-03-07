@@ -1,8 +1,8 @@
 import { db } from '@hominem/db';
 import { sql } from '@hominem/db';
 
-import { getListOwnedByUser } from './list-queries.service';
 import type { ListPlace } from './contracts';
+import { getListOwnedByUser } from './list-queries.service';
 
 interface DeletedRow {
   id: string;

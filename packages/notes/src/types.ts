@@ -5,13 +5,14 @@
  * Import actual types directly from ./contracts
  */
 
+import * as z from 'zod';
+
 import {
   NoteContentTypeSchema,
   NoteStatusSchema,
   NoteAnalysisSchema,
   PublishingMetadataSchema,
 } from './contracts';
-import * as z from 'zod';
 
 const noteTagSchema = z.object({ value: z.string() });
 const noteTagsSchema = z.array(noteTagSchema);

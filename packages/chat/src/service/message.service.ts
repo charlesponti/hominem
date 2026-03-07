@@ -1,7 +1,7 @@
 import { db } from '@hominem/db';
 import { and, desc, eq, gt } from '@hominem/db';
-import { jsonb, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { logger } from '@hominem/utils/logger';
+import { jsonb, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import type { ChatMessageInput, ChatMessageOutput } from '../contracts';
 import { ChatError } from './chat.types';
@@ -99,7 +99,9 @@ export class MessageService {
         .limit(options.limit ?? 50)
         .offset(options.offset ?? 0)
         .orderBy(
-          options.orderBy === 'desc' ? desc(chatMessagesTable.createdAt) : chatMessagesTable.createdAt,
+          options.orderBy === 'desc'
+            ? desc(chatMessagesTable.createdAt)
+            : chatMessagesTable.createdAt,
         );
 
       const results = await query;
@@ -115,7 +117,10 @@ export class MessageService {
    */
   async getMessageById(messageId: string, userId: string): Promise<ChatMessageOutput | null> {
     try {
-      const whereClause = and(eq(chatMessagesTable.id, messageId), eq(chatMessagesTable.userId, userId));
+      const whereClause = and(
+        eq(chatMessagesTable.id, messageId),
+        eq(chatMessagesTable.userId, userId),
+      );
       const [message] = await db.select().from(chatMessagesTable).where(whereClause).limit(1);
 
       if (!message) {
@@ -202,7 +207,12 @@ export class MessageService {
       // Delete all messages created after the timestamp
       const deletedMessages = await db
         .delete(chatMessagesTable)
-        .where(and(eq(chatMessagesTable.chatId, chatId), gt(chatMessagesTable.createdAt, afterTimestamp)))
+        .where(
+          and(
+            eq(chatMessagesTable.chatId, chatId),
+            gt(chatMessagesTable.createdAt, afterTimestamp),
+          ),
+        )
         .returning();
 
       const deletedCount = deletedMessages.length;

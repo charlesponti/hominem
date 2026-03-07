@@ -37,7 +37,7 @@ financePlaidDisconnectRoutes.delete('/:itemId', async (c) => {
     }
 
     // Mark as disconnected in our database
-      await updatePlaidItemStatusById(plaidItem.id, userId, 'error');
+    await updatePlaidItemStatusById(plaidItem.id, userId, 'error');
 
     return c.json({
       message: 'Successfully disconnected account',

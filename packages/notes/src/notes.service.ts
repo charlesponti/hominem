@@ -2,8 +2,14 @@ import { db } from '@hominem/db';
 import { and, desc, eq, inArray, or, type SQLWrapper, sql } from '@hominem/db';
 import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-import type { NoteStatus, NoteOutput, NoteInput, NoteSyncItem, PublishingMetadata } from './contracts';
-
+import type {
+  NoteStatus,
+  NoteOutput,
+  NoteInput,
+  NoteSyncItem,
+  PublishingMetadata,
+} from './contracts';
+import { assertAllowedTransition, ConflictError } from './note.state.service';
 import type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput } from './types';
 import {
   CreateNoteInputSchema,
@@ -11,7 +17,6 @@ import {
   ListNotesOutputSchema,
   UpdateNoteZodSchema,
 } from './types';
-import { assertAllowedTransition, ConflictError } from './note.state.service';
 
 const notesTable = pgTable('notes', {
   id: uuid('id').defaultRandom().primaryKey().notNull(),
@@ -80,7 +85,11 @@ export class NotesService {
     return Array.from(normalized);
   }
 
-  private async syncNoteTags(noteId: string, userId: string, tags: Array<{ value: string }> | null): Promise<void> {
+  private async syncNoteTags(
+    noteId: string,
+    userId: string,
+    tags: Array<{ value: string }> | null,
+  ): Promise<void> {
     if (tags === null) {
       await db.execute(sql`delete from note_tags where note_id = ${noteId}`);
       return;
@@ -181,7 +190,10 @@ export class NotesService {
       throw new ForbiddenError('Not authorized to create note');
     }
 
-    const [resultRow] = await db.insert(notesTable).values(this.buildInsertValues(input)).returning();
+    const [resultRow] = await db
+      .insert(notesTable)
+      .values(this.buildInsertValues(input))
+      .returning();
     const result = this.requireRow(resultRow, 'Failed to create note');
     await this.syncNoteTags(result.id, input.userId, input.tags ?? []);
     const [hydrated] = await this.hydrateTags([result], input.userId);
@@ -220,7 +232,9 @@ export class NotesService {
 
     // Status filtering
     if (filters?.status && filters.status.length > 0) {
-      const statusFilters: SQLWrapper[] = filters.status.map((status) => eq(notesTable.status, status));
+      const statusFilters: SQLWrapper[] = filters.status.map((status) =>
+        eq(notesTable.status, status),
+      );
       conditions.push(or(...statusFilters) as SQLWrapper);
     }
 
@@ -365,7 +379,9 @@ export class NotesService {
     const [item] = await db
       .update(notesTable)
       .set(updateData)
-      .where(and(eq(notesTable.id, validatedInput.id), eq(notesTable.userId, validatedInput.userId)))
+      .where(
+        and(eq(notesTable.id, validatedInput.id), eq(notesTable.userId, validatedInput.userId)),
+      )
       .returning();
     if (!item) {
       throw new NotFoundError('Note not found or not authorized to update');
@@ -646,7 +662,10 @@ export class NotesService {
       throw new ForbiddenError('Not authorized to query notes');
     }
 
-    const conditions: SQLWrapper[] = [eq(notesTable.userId, userId), eq(notesTable.isLatestVersion, true)];
+    const conditions: SQLWrapper[] = [
+      eq(notesTable.userId, userId),
+      eq(notesTable.isLatestVersion, true),
+    ];
 
     // Type filtering
     if (filters?.types && filters.types.length > 0) {
@@ -658,7 +677,9 @@ export class NotesService {
 
     // Status filtering
     if (filters?.status && filters.status.length > 0) {
-      const statusFilters: SQLWrapper[] = filters.status.map((status) => eq(notesTable.status, status));
+      const statusFilters: SQLWrapper[] = filters.status.map((status) =>
+        eq(notesTable.status, status),
+      );
       conditions.push(or(...statusFilters) as SQLWrapper);
     }
 

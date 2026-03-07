@@ -17,7 +17,25 @@
       "Bash(done)",
       "Bash(npx tsc:*)",
       "Bash(openspec archive:*)",
-      "Bash(npx expo-doctor:*)"
+      "Bash(npx expo-doctor:*)",
+      "Bash(npx expo:*)",
+      "Bash(npm view:*)",
+      "Bash(bun install:*)",
+      "Bash(APP_VARIANT=dev npx expo-doctor:*)",
+      "Bash(APP_VARIANT=dev npx:*)",
+      "Bash(xargs sed:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(node:*)",
+      "Bash(bun add:*)",
+      "Bash(bun remove:*)",
+      "Bash(xcrun simctl:*)",
+      "Bash(pkill:*)",
+      "WebFetch(domain:expo.dev)",
+      "WebFetch(domain:docs.expo.dev)",
+      "WebFetch(domain:github.com)",
+      "Bash(xcodebuild:*)",
+      "Bash(head:*)"
     ]
   }
 }

@@ -1,14 +1,11 @@
-import { Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react';
 
 interface AuthLoadingStateProps {
-  message?: string
-  className?: string
+  message?: string;
+  className?: string;
 }
 
-export function AuthLoadingState({
-  message = 'Loading...',
-  className,
-}: AuthLoadingStateProps) {
+export function AuthLoadingState({ message = 'Loading...', className }: AuthLoadingStateProps) {
   return (
     <div
       className={`
@@ -20,5 +17,5 @@ export function AuthLoadingState({
       <Loader2 className="w-6 h-6 animate-spin" />
       <span className="text-sm">{message}</span>
     </div>
-  )
+  );
 }

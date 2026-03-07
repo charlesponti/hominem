@@ -71,8 +71,8 @@ describe('mobile e2e login guard', () => {
     });
 
     expect(response.status).toBe(200);
-    const body = await response.json() as { access_token: string; provider: string }
-    expect(body.access_token.length).toBeGreaterThan(10)
-    expect(body.provider).toBe('better-auth')
+    const body = (await response.json()) as { access_token: string; provider: string };
+    expect(body.access_token.length).toBeGreaterThan(10);
+    expect(body.provider).toBe('better-auth');
   }, 15000);
 });

@@ -1,9 +1,9 @@
-import { resolveSafeAuthRedirect } from '@hominem/auth/server'
-import { redirect } from 'react-router'
+import { resolveSafeAuthRedirect } from '@hominem/auth/server';
+import { redirect } from 'react-router';
 
 interface PasskeyCallbackPayload {
-  accessToken: string
-  next?: string
+  accessToken: string;
+  next?: string;
 }
 
 /**
@@ -18,25 +18,25 @@ interface PasskeyCallbackPayload {
  *   server: set cookie → redirect to app
  */
 export async function action({ request }: { request: Request }) {
-  let payload: PasskeyCallbackPayload
+  let payload: PasskeyCallbackPayload;
   try {
-    payload = (await request.json()) as PasskeyCallbackPayload
+    payload = (await request.json()) as PasskeyCallbackPayload;
   } catch {
-    return new Response(JSON.stringify({ error: 'invalid_json' }), { status: 400 })
+    return new Response(JSON.stringify({ error: 'invalid_json' }), { status: 400 });
   }
 
-  const next = resolveSafeAuthRedirect(payload.next, '/finance')
-  const { accessToken } = payload
+  const next = resolveSafeAuthRedirect(payload.next, '/finance');
+  const { accessToken } = payload;
 
   if (!accessToken) {
-    return new Response(JSON.stringify({ error: 'missing_access_token' }), { status: 400 })
+    return new Response(JSON.stringify({ error: 'missing_access_token' }), { status: 400 });
   }
 
-  const headers = new Headers()
+  const headers = new Headers();
   headers.append(
     'set-cookie',
     `hominem_access_token=${encodeURIComponent(accessToken)}; Path=/; HttpOnly; SameSite=Lax`,
-  )
+  );
 
-  return redirect(next, { headers })
+  return redirect(next, { headers });
 }

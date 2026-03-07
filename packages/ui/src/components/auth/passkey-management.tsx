@@ -1,10 +1,10 @@
-import { KeyRound, Plus, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { KeyRound, Plus, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface Passkey {
-  id: string
-  name?: string
-  createdAt?: string
+  id: string;
+  name?: string;
+  createdAt?: string;
 }
 
 interface PasskeyManagementProps {
@@ -12,12 +12,12 @@ interface PasskeyManagementProps {
    * Base API URL (e.g. https://api.example.com).
    * Defaults to VITE_PUBLIC_API_URL env var.
    */
-  apiUrl?: string
+  apiUrl?: string;
   /**
    * Called when the user wants to add a new passkey.
    * Should invoke the platform WebAuthn registration flow.
    */
-  onAdd: () => Promise<boolean>
+  onAdd: () => Promise<boolean>;
 }
 
 /**
@@ -25,79 +25,79 @@ interface PasskeyManagementProps {
  * delete them. Designed to be embedded in a `/settings/security` page.
  */
 export function PasskeyManagement({ apiUrl, onAdd }: PasskeyManagementProps) {
-  const [passkeys, setPasskeys] = useState<Passkey[]>([])
-  const [loading, setLoading] = useState(true)
-  const [adding, setAdding] = useState(false)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [passkeys, setPasskeys] = useState<Passkey[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const base =
     apiUrl ??
     (typeof import.meta !== 'undefined'
       ? (import.meta.env.VITE_PUBLIC_API_URL as string | undefined)
       : undefined) ??
-    ''
+    '';
 
   const fetchPasskeys = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`${base}/api/auth/passkeys`, {
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
-      })
-      if (!res.ok) throw new Error('Failed to load passkeys')
-      const data = (await res.json()) as Passkey[]
-      setPasskeys(Array.isArray(data) ? data : [])
+      });
+      if (!res.ok) throw new Error('Failed to load passkeys');
+      const data = (await res.json()) as Passkey[];
+      setPasskeys(Array.isArray(data) ? data : []);
     } catch {
-      setError('Could not load passkeys. Please try again.')
+      setError('Could not load passkeys. Please try again.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [base])
+  }, [base]);
 
   useEffect(() => {
-    void fetchPasskeys()
-  }, [fetchPasskeys])
+    void fetchPasskeys();
+  }, [fetchPasskeys]);
 
   const handleAdd = useCallback(async () => {
-    setAdding(true)
-    setError(null)
+    setAdding(true);
+    setError(null);
     try {
-      const success = await onAdd()
+      const success = await onAdd();
       if (success) {
-        await fetchPasskeys()
+        await fetchPasskeys();
       } else {
-        setError('Passkey registration was cancelled or failed.')
+        setError('Passkey registration was cancelled or failed.');
       }
     } catch {
-      setError('An error occurred during passkey registration.')
+      setError('An error occurred during passkey registration.');
     } finally {
-      setAdding(false)
+      setAdding(false);
     }
-  }, [onAdd, fetchPasskeys])
+  }, [onAdd, fetchPasskeys]);
 
   const handleDelete = useCallback(
     async (id: string) => {
-      setDeletingId(id)
-      setError(null)
+      setDeletingId(id);
+      setError(null);
       try {
         const res = await fetch(`${base}/api/auth/passkey/delete`, {
           method: 'DELETE',
           credentials: 'include',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ id }),
-        })
-        if (!res.ok) throw new Error('Failed to delete passkey')
-        setPasskeys((prev) => prev.filter((p) => p.id !== id))
+        });
+        if (!res.ok) throw new Error('Failed to delete passkey');
+        setPasskeys((prev) => prev.filter((p) => p.id !== id));
       } catch {
-        setError('Could not delete passkey. Please try again.')
+        setError('Could not delete passkey. Please try again.');
       } finally {
-        setDeletingId(null)
+        setDeletingId(null);
       }
     },
     [base],
-  )
+  );
 
   return (
     <section aria-labelledby="passkey-heading" className="space-y-4">
@@ -167,5 +167,5 @@ export function PasskeyManagement({ apiUrl, onAdd }: PasskeyManagementProps) {
         </ul>
       )}
     </section>
-  )
+  );
 }

@@ -1,18 +1,13 @@
-import { Lock } from 'lucide-react'
+import { Lock } from 'lucide-react';
 
 interface AuthScaffoldProps {
-  children: React.ReactNode
-  title: string
-  description?: string
-  className?: string
+  children: React.ReactNode;
+  title: string;
+  description?: string;
+  className?: string;
 }
 
-export function AuthScaffold({
-  children,
-  title,
-  description,
-  className,
-}: AuthScaffoldProps) {
+export function AuthScaffold({ children, title, description, className }: AuthScaffoldProps) {
   return (
     <div
       className={`
@@ -28,15 +23,11 @@ export function AuthScaffold({
             <Lock className="w-6 h-6 text-primary" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-          {description && (
-            <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-          )}
+          {description && <p className="mt-2 text-sm text-muted-foreground">{description}</p>}
         </div>
 
-        <div className="bg-card border rounded-xl p-6 shadow-sm">
-          {children}
-        </div>
+        <div className="bg-card border rounded-xl p-6 shadow-sm">{children}</div>
       </div>
     </div>
-  )
+  );
 }

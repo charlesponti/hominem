@@ -8,14 +8,14 @@ export type BudgetCategory = BudgetCategoryData;
 
 // Define the UI-specific type that includes calculated properties
 export interface BudgetCategoryWithSpending extends BudgetCategory {
-  actualSpending: number
-  percentageSpent: number
-  budgetAmount: number
-  allocationPercentage: number
-  variance: number
-  remaining: number
-  color: string
-  status: 'on-track' | 'warning' | 'over-budget'
-  statusColor: string
+  actualSpending: number;
+  percentageSpent: number;
+  budgetAmount: number;
+  allocationPercentage: number;
+  variance: number;
+  remaining: number;
+  color: string;
+  status: 'on-track' | 'warning' | 'over-budget';
+  statusColor: string;
 }
-export type BudgetTransactions = TransactionListOutput
+export type BudgetTransactions = TransactionListOutput;

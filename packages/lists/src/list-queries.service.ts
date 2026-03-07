@@ -1,8 +1,8 @@
 import { db } from '@hominem/db';
 import { sql } from '@hominem/db';
 
-import { formatList } from './list-crud.service';
 import type { ListOutput, ListRecord, ListWithSpreadOwner } from './contracts';
+import { formatList } from './list-crud.service';
 
 interface ListProjectionRow {
   id: string;
@@ -66,7 +66,10 @@ function toListWithOwner(row: ListProjectionRow): ListWithSpreadOwner {
   return output;
 }
 
-async function queryOwnedListRows(userId: string, withCount: boolean): Promise<ListProjectionRow[]> {
+async function queryOwnedListRows(
+  userId: string,
+  withCount: boolean,
+): Promise<ListProjectionRow[]> {
   if (withCount) {
     const result = await db.execute(sql`
       select

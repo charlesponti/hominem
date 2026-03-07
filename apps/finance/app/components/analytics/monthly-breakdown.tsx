@@ -150,7 +150,12 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel, selectedTag }
   );
 }
 
-function MonthMobileItem({ item, compareToPrevious, formatDateLabel, selectedTag }: MonthItemProps) {
+function MonthMobileItem({
+  item,
+  compareToPrevious,
+  formatDateLabel,
+  selectedTag,
+}: MonthItemProps) {
   const navigate = useNavigate();
 
   // Build the link to monthly analysis filtered by tag

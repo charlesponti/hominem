@@ -12,8 +12,10 @@ import { LoadingScreen } from '~/components/loading';
 export default function Layout() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
-  const { register } = usePasskeyAuth()
-  const handleEnroll = useCallback(async () => { await register() }, [register])
+  const { register } = usePasskeyAuth();
+  const handleEnroll = useCallback(async () => {
+    await register();
+  }, [register]);
 
   useEffect(() => {
     const error = searchParams.get('error');

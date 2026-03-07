@@ -1,51 +1,54 @@
-import { and, db, eq, gte, lte } from '@hominem/db'
-import { health } from '@hominem/db/schema/health'
+import { and, db, eq, gte, lte } from '@hominem/db';
+import { health } from '@hominem/db/schema/health';
 
-type HealthInsert = typeof health.$inferInsert
+type HealthInsert = typeof health.$inferInsert;
 
 export async function listHealthRecords(filters: {
-  userId?: string
-  startDate?: Date
-  endDate?: Date
-  activityType?: string
+  userId?: string;
+  startDate?: Date;
+  endDate?: Date;
+  activityType?: string;
 }) {
-  const conditions = []
+  const conditions = [];
   if (filters.userId) {
-    conditions.push(eq(health.userId, filters.userId))
+    conditions.push(eq(health.userId, filters.userId));
   }
   if (filters.startDate) {
-    conditions.push(gte(health.date, filters.startDate.toISOString()))
+    conditions.push(gte(health.date, filters.startDate.toISOString()));
   }
   if (filters.endDate) {
-    conditions.push(lte(health.date, filters.endDate.toISOString()))
+    conditions.push(lte(health.date, filters.endDate.toISOString()));
   }
   if (filters.activityType) {
-    conditions.push(eq(health.activityType, filters.activityType))
+    conditions.push(eq(health.activityType, filters.activityType));
   }
 
   if (conditions.length === 0) {
-    return db.select().from(health)
+    return db.select().from(health);
   }
 
-  return db.select().from(health).where(and(...conditions))
+  return db
+    .select()
+    .from(health)
+    .where(and(...conditions));
 }
 
 export async function getHealthRecord(id: string) {
-  const result = await db.select().from(health).where(eq(health.id, id)).limit(1)
-  return result[0] ?? null
+  const result = await db.select().from(health).where(eq(health.id, id)).limit(1);
+  return result[0] ?? null;
 }
 
 export async function createHealthRecord(data: HealthInsert) {
-  const [record] = await db.insert(health).values(data).returning()
-  return record
+  const [record] = await db.insert(health).values(data).returning();
+  return record;
 }
 
 export async function updateHealthRecord(id: string, updates: Partial<HealthInsert>) {
-  const [record] = await db.update(health).set(updates).where(eq(health.id, id)).returning()
-  return record ?? null
+  const [record] = await db.update(health).set(updates).where(eq(health.id, id)).returning();
+  return record ?? null;
 }
 
 export async function deleteHealthRecord(id: string) {
-  const deleted = await db.delete(health).where(eq(health.id, id)).returning()
-  return deleted.length > 0
+  const deleted = await db.delete(health).where(eq(health.id, id)).returning();
+  return deleted.length > 0;
 }

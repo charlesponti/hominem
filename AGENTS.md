@@ -14,15 +14,15 @@ Do not silently mix work across multiple OpenSpec changes.
 
 Always run commands from the monorepo root. Do NOT `cd` into packages.
 
-| Task | Command |
+| Task             | Command                                      |
 | :--------------- | :------------------------------------------- |
-| **Install** | `bun install` |
-| **Dev** | `bun run dev` (or `--filter <package>`) |
-| **Build** | `bun run build` |
-| **Test** | `bun run test` (or `--filter <package>`) |
-| **Typecheck** | `bun run typecheck` |
-| **Lint/Format** | `bun run lint --parallel` / `bun run format` |
-| **Safety Check** | `bun run check` |
+| **Install**      | `bun install`                                |
+| **Dev**          | `bun run dev` (or `--filter <package>`)      |
+| **Build**        | `bun run build`                              |
+| **Test**         | `bun run test` (or `--filter <package>`)     |
+| **Typecheck**    | `bun run typecheck`                          |
+| **Lint/Format**  | `bun run lint --parallel` / `bun run format` |
+| **Safety Check** | `bun run check`                              |
 
 ## Project Structure
 
@@ -46,6 +46,7 @@ Always run commands from the monorepo root. Do NOT `cd` into packages.
 ### TypeScript
 
 **CRITICAL: No `any` or `unknown` types ever.**
+
 - Never use `as any`, `as unknown`, or `any` casts to escape type checking.
 - If you encounter a type mismatch, fix the root cause: correct the function signature, add proper generics, or refactor the constraint.
 - Do not use `any` to "make the compiler happy"—that defeats the entire purpose of TypeScript.
@@ -71,20 +72,23 @@ Always run commands from the monorepo root. Do NOT `cd` into packages.
 - Only the RPC server can access the database (`@hominem/db`)
 - Apps must use the RPC client (`@hominem/hono-client`) for data access.
 
-### For Applications (apps/*)
+### For Applications (apps/\*)
 
 **ALLOWED:**
+
 - `@hominem/hono-client` - For RPC queries/mutations
 - `@hominem/hono-rpc` - For types and client configuration
 - `@hominem/hono-rpc/types` - For API input/output types only (never DB structure)
 
 **FORBIDDEN:**
+
 - `import { db } from '@hominem/db'` - Direct DB access
 - `import * from '@hominem/db/schema/*'` - Database schema types
 - `import * from '@hominem/db/types/*'` - Database structure types
 - Any import of database-internal types or structure
 
 **Example - Correct Pattern:**
+
 ```typescript
 // ✅ Good - Using RPC client for data access
 import { useHonoQuery } from '@hominem/hono-client/react';
@@ -99,6 +103,7 @@ export function useTasks() {
 ```
 
 **Example - Incorrect Pattern:**
+
 ```typescript
 // ❌ Bad - Direct DB access in apps
 import { db } from '@hominem/db';
@@ -112,6 +117,7 @@ export async function getTasks() {
 ### For API Layer (services/api, packages/hono-rpc)
 
 Direct DB access is permitted and expected. Services should:
+
 1. Import `db` from `@hominem/db`
 2. Throw typed errors (NotFoundError, etc.)
 3. Let error middleware handle HTTP responses
@@ -145,17 +151,20 @@ This runs automatically during `bun run check`.
 After modifying database schema (especially in `@hominem/db`), the standard commands now handle rebuilding types automatically:
 
 ### Standard workflow:
+
 ```bash
 bun run check    # Rebuilds types, then runs full check suite
 bun run test     # Tests with fresh builds
 ```
 
 ### Why this matters:
+
 - **.d.ts files** in `build/` directories must be rebuilt for other packages to see new types
 - **Stale types** can cause `Type 'X' is not assignable to type 'Y'` errors
 - The `check` script now runs `build:types` first to ensure downstream packages have fresh type definitions
 
 ### If you encounter weird type errors:
+
 ```bash
 # Clear turbo cache and rebuild everything
 rm -rf .turbo **/.turbo && bun run check
@@ -165,11 +174,12 @@ rm -rf .turbo **/.turbo && bun run check
 
 See `.github/instructions/` for scoped guidance.
 
-
 ## FORBIDDEN
-*These are things you are not able to do.*
+
+_These are things you are not able to do._
+
 - Create sql migration files.
-- Modify database schema directly without migrations.
+- Modify database schema using `psql` or other direct calls.
 - Commit code without running `bun run check` first.
 - Use hardcoded credentials or secrets in code.
 - Bypass authentication/authorization checks.

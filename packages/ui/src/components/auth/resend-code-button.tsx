@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react';
 
-import { Button } from '../ui/button'
+import { Button } from '../ui/button';
 
 interface ResendCodeButtonProps {
-  onResend: () => void
-  isLoading?: boolean
-  cooldownSeconds?: number
-  className?: string
+  onResend: () => void;
+  isLoading?: boolean;
+  cooldownSeconds?: number;
+  className?: string;
 }
 
 export function ResendCodeButton({
@@ -15,23 +15,23 @@ export function ResendCodeButton({
   cooldownSeconds = 30,
   className,
 }: ResendCodeButtonProps) {
-  const [cooldown, setCooldown] = useState(0)
+  const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
-    if (cooldown <= 0) return
+    if (cooldown <= 0) return;
 
     const timer = setTimeout(() => {
-      setCooldown(cooldown - 1)
-    }, 1000)
+      setCooldown(cooldown - 1);
+    }, 1000);
 
-    return () => clearTimeout(timer)
-  }, [cooldown])
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   const handleResend = useCallback(() => {
-    if (cooldown > 0 || isLoading) return
-    onResend()
-    setCooldown(cooldownSeconds)
-  }, [cooldown, isLoading, onResend, cooldownSeconds])
+    if (cooldown > 0 || isLoading) return;
+    onResend();
+    setCooldown(cooldownSeconds);
+  }, [cooldown, isLoading, onResend, cooldownSeconds]);
 
   return (
     <div className={`flex items-center gap-2 ${className ?? ''}`}>
@@ -45,5 +45,5 @@ export function ResendCodeButton({
         {isLoading ? 'Sending...' : cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
       </Button>
     </div>
-  )
+  );
 }

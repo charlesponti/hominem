@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 
+import { UserAuthService } from '@hominem/auth/server';
 import { users } from '@hominem/db/all-schema';
 import { db, eq } from '@hominem/hono-rpc';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
@@ -11,7 +12,6 @@ import { z } from 'zod';
 
 import { betterAuthServer } from '../auth/better-auth';
 import { getJwks } from '../auth/key-store';
-import { UserAuthService } from '@hominem/auth/server';
 import {
   createTokenPairForUser,
   isSessionRevoked,
@@ -53,7 +53,9 @@ const passkeyAuthVerifySchema = z.object({
 });
 const emailOtpRequestSchema = z.object({
   email: z.string().email(),
-  type: z.enum(['sign-in', 'change-email', 'email-verification', 'forget-password']).default('sign-in'),
+  type: z
+    .enum(['sign-in', 'change-email', 'email-verification', 'forget-password'])
+    .default('sign-in'),
 });
 const emailOtpVerifySchema = z.object({
   email: z.string().email(),
@@ -128,27 +130,30 @@ function getHeaderCarrier(c: { req: { raw: Request } }) {
  *   2. Bearer token in the Authorization header (canonical app token)
  *   3. Better Auth session cookie (for direct browser calls to the API)
  */
-async function resolveAuthUserId(c: { get: (key: string) => string | null; req: { raw: Request; header: (name: string) => string | undefined } }): Promise<string | null> {
+async function resolveAuthUserId(c: {
+  get: (key: string) => string | null;
+  req: { raw: Request; header: (name: string) => string | undefined };
+}): Promise<string | null> {
   // 1. Middleware already resolved it
-  const fromMiddleware = c.get('userId')
-  if (fromMiddleware) return fromMiddleware
+  const fromMiddleware = c.get('userId');
+  if (fromMiddleware) return fromMiddleware;
 
   // 2. Bearer token
-  const authHeader = c.req.header('authorization')
+  const authHeader = c.req.header('authorization');
   if (authHeader?.startsWith('Bearer ')) {
     try {
-      const claims = await verifyAccessToken(authHeader.slice(7))
-      if (claims?.sub) return claims.sub
+      const claims = await verifyAccessToken(authHeader.slice(7));
+      if (claims?.sub) return claims.sub;
     } catch {
       // invalid token — fall through
     }
   }
 
   // 3. Better Auth session cookie
-  const session = await betterAuthServer.api.getSession(getHeaderCarrier(c))
-  if (session?.user?.id) return session.user.id
+  const session = await betterAuthServer.api.getSession(getHeaderCarrier(c));
+  if (session?.user?.id) return session.user.id;
 
-  return null
+  return null;
 }
 
 function isE2eAuthEnabled() {
@@ -247,12 +252,12 @@ function buildBetterAuthUrl(input: {
 }
 
 function ensureTrustedOrigin(headers: Headers) {
-  const existingOrigin = headers.get('origin')
+  const existingOrigin = headers.get('origin');
   if (existingOrigin && existingOrigin.length > 0) {
-    return
+    return;
   }
 
-  headers.set('origin', env.BETTER_AUTH_URL)
+  headers.set('origin', env.BETTER_AUTH_URL);
 }
 
 async function callBetterAuthPluginEndpoint(input: {
@@ -270,7 +275,7 @@ async function callBetterAuthPluginEndpoint(input: {
     targetUrl: url.toString(),
   });
   const headers = new Headers(input.request.headers);
-  ensureTrustedOrigin(headers)
+  ensureTrustedOrigin(headers);
   if (input.body) {
     headers.set('content-type', 'application/json');
   }
@@ -320,7 +325,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   const payload = c.req.valid('json');
   const email = payload.email ?? 'mobile-e2e@hominem.test';
   const name = payload.name ?? 'Mobile E2E User';
-  const amr = payload.amr && payload.amr.length > 0 ? payload.amr : ['e2e', 'mobile']
+  const amr = payload.amr && payload.amr.length > 0 ? payload.amr : ['e2e', 'mobile'];
   const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 16);
 
   const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
@@ -422,7 +427,7 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
     try {
       const parsed = JSON.parse(body) as { user?: { id?: string; email?: string; name?: string } };
       const userId = parsed.user?.id;
-      
+
       if (!userId) {
         return c.json({ error: 'user_id_missing' }, 400);
       }
@@ -430,7 +435,7 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
       const dbUser = await db.query.users.findFirst({
         where: eq(users.id, userId),
       });
-      
+
       if (!dbUser) {
         return c.json({ error: 'user_not_found' }, 400);
       }
@@ -444,9 +449,9 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
         });
 
         // Forward Better Auth session cookies so passkey enrollment works after OTP sign-in
-        const betterAuthCookies = copyHeadersWithSetCookie(response.headers)
-        const responseHeaders = new Headers(betterAuthCookies)
-        responseHeaders.set('content-type', 'application/json')
+        const betterAuthCookies = copyHeadersWithSetCookie(response.headers);
+        const responseHeaders = new Headers(betterAuthCookies);
+        responseHeaders.set('content-type', 'application/json');
 
         return new Response(
           JSON.stringify({
@@ -461,10 +466,12 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
             tokenType: tokenPair.tokenType,
           }),
           { status: 200, headers: responseHeaders },
-        )
+        );
       } catch (sessionError) {
         // Fallback: If session table is not available, issue access token only
-        logger.warn('[auth:email-otp] session creation failed, issuing access token only', { sessionError });
+        logger.warn('[auth:email-otp] session creation failed, issuing access token only', {
+          sessionError,
+        });
 
         const token = await issueAccessToken({
           sub: userId,
@@ -481,7 +488,7 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
             ...(dbUser.name ? { name: dbUser.name } : {}),
           },
           accessToken: token.accessToken,
-          refreshToken: '',  // Empty string indicates no refresh capability in this mode
+          refreshToken: '', // Empty string indicates no refresh capability in this mode
           expiresIn: token.expiresIn,
           tokenType: token.tokenType,
         });
@@ -524,7 +531,6 @@ authRoutes.get('/test/otp/latest', zValidator('query', testOtpQuerySchema), asyn
   });
 });
 
-
 authRoutes.post('/logout', async (c) => {
   const auth = c.get('auth');
   if (auth?.sid) {
@@ -543,38 +549,36 @@ authRoutes.get('/session', async (c) => {
   //   1. Authorization: Bearer <token> header (standard API client usage)
   //   2. hominem_access_token cookie (web app SSR loader usage)
 
-  const authHeader = c.req.header('authorization') ?? ''
-  let bearerToken: string | null = authHeader.startsWith('Bearer ')
-    ? authHeader.slice(7)
-    : null
+  const authHeader = c.req.header('authorization') ?? '';
+  let bearerToken: string | null = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
   if (!bearerToken) {
-    const cookieHeader = c.req.header('cookie') ?? ''
-    const match = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/)
-    const rawValue = match?.[1]
+    const cookieHeader = c.req.header('cookie') ?? '';
+    const match = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/);
+    const rawValue = match?.[1];
     if (rawValue) {
       try {
-        bearerToken = decodeURIComponent(rawValue)
+        bearerToken = decodeURIComponent(rawValue);
       } catch {
-        bearerToken = rawValue
+        bearerToken = rawValue;
       }
     }
   }
 
   if (!bearerToken) {
-    return c.json({ isAuthenticated: false, user: null }, 401)
+    return c.json({ isAuthenticated: false, user: null }, 401);
   }
 
   try {
-    const claims = await verifyAccessToken(bearerToken)
-    const revoked = await isSessionRevoked(claims.sid)
+    const claims = await verifyAccessToken(bearerToken);
+    const revoked = await isSessionRevoked(claims.sid);
     if (revoked) {
-      return c.json({ isAuthenticated: false, user: null }, 401)
+      return c.json({ isAuthenticated: false, user: null }, 401);
     }
 
-    const userRecord = await UserAuthService.findByIdOrEmail({ id: claims.sub })
+    const userRecord = await UserAuthService.findByIdOrEmail({ id: claims.sub });
     if (!userRecord) {
-      return c.json({ isAuthenticated: false, user: null }, 401)
+      return c.json({ isAuthenticated: false, user: null }, 401);
     }
 
     return c.json({
@@ -587,9 +591,9 @@ authRoutes.get('/session', async (c) => {
         ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
         ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
       },
-    })
+    });
   } catch {
-    return c.json({ isAuthenticated: false, user: null }, 401)
+    return c.json({ isAuthenticated: false, user: null }, 401);
   }
 });
 
@@ -598,9 +602,9 @@ authRoutes.post('/refresh', zValidator('json', refreshTokenSchema), async (c) =>
   // POST /api/auth/refresh
   // Input: { refreshToken }
   // Output: { accessToken, refreshToken, expiresIn }
-  
+
   const { refresh_token: refreshToken } = c.req.valid('json');
-  
+
   const refreshRateLimit = await enforceAuthRateLimit(c, {
     bucket: 'refresh-token-standard',
     identifier: `${getClientIp(c)}:${refreshToken.slice(0, 16)}`,
@@ -612,7 +616,7 @@ authRoutes.post('/refresh', zValidator('json', refreshTokenSchema), async (c) =>
   }
 
   const rotated = await rotateRefreshToken(refreshToken);
-  
+
   if (!rotated.ok) {
     logger.warn('[auth:refresh] token rotation failed', {
       error: rotated.error,
@@ -621,9 +625,10 @@ authRoutes.post('/refresh', zValidator('json', refreshTokenSchema), async (c) =>
     return c.json(
       {
         error: rotated.error,
-        message: rotated.error === 'expired_refresh_token' 
-          ? 'Refresh token expired. Please sign in again.'
-          : 'Invalid or revoked refresh token. Please sign in again.',
+        message:
+          rotated.error === 'expired_refresh_token'
+            ? 'Refresh token expired. Please sign in again.'
+            : 'Invalid or revoked refresh token. Please sign in again.',
       },
       401,
     );
@@ -728,27 +733,27 @@ authRoutes.post('/token-from-session', async (c) => {
   try {
     const session = await betterAuthServer.api.getSession({
       ...getHeaderCarrier(c),
-    })
+    });
 
     if (!session?.user?.id) {
-      return c.json({ error: 'no_valid_session' }, 401)
+      return c.json({ error: 'no_valid_session' }, 401);
     }
 
-    const userId = session.user.id
+    const userId = session.user.id;
 
     const dbUser = await db.query.users.findFirst({
       where: eq(users.id, userId),
-    })
+    });
 
     if (!dbUser) {
-      return c.json({ error: 'user_not_found' }, 400)
+      return c.json({ error: 'user_not_found' }, 400);
     }
 
     const tokenPair = await createTokenPairForUser({
       userId,
       role: dbUser.isAdmin ? 'admin' : 'user',
       amr: ['passkey'],
-    })
+    });
 
     return c.json({
       user: {
@@ -760,18 +765,17 @@ authRoutes.post('/token-from-session', async (c) => {
       refreshToken: tokenPair.refreshToken,
       expiresIn: tokenPair.expiresIn,
       tokenType: tokenPair.tokenType,
-    })
+    });
   } catch (err) {
-    logger.error('[auth:token-from-session] failed', { err })
-    return c.json({ error: 'token_exchange_failed' }, 500)
+    logger.error('[auth:token-from-session] failed', { err });
+    return c.json({ error: 'token_exchange_failed' }, 500);
   }
-})
-
+});
 
 authRoutes.post('/passkey/register/options', async (c) => {
-  const userId = await resolveAuthUserId(c)
+  const userId = await resolveAuthUserId(c);
   if (!userId) {
-    return c.json({ error: 'unauthorized' }, 401)
+    return c.json({ error: 'unauthorized' }, 401);
   }
 
   try {
@@ -794,9 +798,9 @@ authRoutes.post(
   '/passkey/register/verify',
   zValidator('json', passkeyRegisterVerifySchema),
   async (c) => {
-    const userId = await resolveAuthUserId(c)
+    const userId = await resolveAuthUserId(c);
     if (!userId) {
-      return c.json({ error: 'unauthorized' }, 401)
+      return c.json({ error: 'unauthorized' }, 401);
     }
 
     try {
@@ -820,9 +824,9 @@ authRoutes.post(
 authRoutes.get('/passkeys', async (c) => {
   // Returns the list of passkeys registered to the authenticated user.
   // Used by clients to decide whether to show the passkey enrollment prompt.
-  const userId = await resolveAuthUserId(c)
+  const userId = await resolveAuthUserId(c);
   if (!userId) {
-    return c.json({ error: 'unauthorized' }, 401)
+    return c.json({ error: 'unauthorized' }, 401);
   }
 
   try {
@@ -830,35 +834,39 @@ authRoutes.get('/passkeys', async (c) => {
       request: c.req.raw,
       path: '/passkey/list-user-passkeys',
       method: 'GET',
-    })
-    const body = await response.json() as unknown
-    return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401)
+    });
+    const body = (await response.json()) as unknown;
+    return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401);
   } catch {
-    return c.json({ error: 'passkey_list_failed' }, 400)
+    return c.json({ error: 'passkey_list_failed' }, 400);
   }
-})
+});
 
-authRoutes.delete('/passkey/delete', zValidator('json', z.object({ id: z.string() })), async (c) => {
-  // Deletes a passkey for the authenticated user.
-  const userId = await resolveAuthUserId(c)
-  if (!userId) {
-    return c.json({ error: 'unauthorized' }, 401)
-  }
+authRoutes.delete(
+  '/passkey/delete',
+  zValidator('json', z.object({ id: z.string() })),
+  async (c) => {
+    // Deletes a passkey for the authenticated user.
+    const userId = await resolveAuthUserId(c);
+    if (!userId) {
+      return c.json({ error: 'unauthorized' }, 401);
+    }
 
-  try {
-    const { id } = c.req.valid('json')
-    const response = await callBetterAuthPluginEndpoint({
-      request: c.req.raw,
-      path: '/passkey/delete-user-passkey',
-      method: 'POST',
-      body: { id },
-    })
-    const body = await response.json() as unknown
-    return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401)
-  } catch {
-    return c.json({ error: 'passkey_delete_failed' }, 400)
-  }
-})
+    try {
+      const { id } = c.req.valid('json');
+      const response = await callBetterAuthPluginEndpoint({
+        request: c.req.raw,
+        path: '/passkey/delete-user-passkey',
+        method: 'POST',
+        body: { id },
+      });
+      const body = (await response.json()) as unknown;
+      return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401);
+    } catch {
+      return c.json({ error: 'passkey_delete_failed' }, 400);
+    }
+  },
+);
 
 authRoutes.post('/passkey/auth/options', async (c) => {
   try {
@@ -907,39 +915,45 @@ authRoutes.post('/passkey/auth/verify', zValidator('json', passkeyAuthVerifySche
       });
     }
 
-     // Sign-in flow: mint canonical app token pair, same contract as OTP verify
-     try {
-       const parsed = JSON.parse(responseText) as { user?: { id?: string; email?: string; name?: string }; session?: { userId?: string } }
-       // Better Auth passkey endpoint returns { session: { userId, ... } }, not { user: { id, ... } }
-       const userId = parsed.user?.id || parsed.session?.userId
+    // Sign-in flow: mint canonical app token pair, same contract as OTP verify
+    try {
+      const parsed = JSON.parse(responseText) as {
+        user?: { id?: string; email?: string; name?: string };
+        session?: { userId?: string };
+      };
+      // Better Auth passkey endpoint returns { session: { userId, ... } }, not { user: { id, ... } }
+      const userId = parsed.user?.id || parsed.session?.userId;
 
-       if (!userId) {
-         logger.warn('[auth:passkey] verify-authentication succeeded but no user.id or session.userId in response', { parsed })
-         // Fall through: return Better Auth response without app tokens
-         return new Response(responseText, {
-           status: response.status,
-           headers: copyHeadersWithSetCookie(response.headers),
-         })
-       }
+      if (!userId) {
+        logger.warn(
+          '[auth:passkey] verify-authentication succeeded but no user.id or session.userId in response',
+          { parsed },
+        );
+        // Fall through: return Better Auth response without app tokens
+        return new Response(responseText, {
+          status: response.status,
+          headers: copyHeadersWithSetCookie(response.headers),
+        });
+      }
 
       const dbUser = await db.query.users.findFirst({
         where: eq(users.id, userId),
-      })
+      });
 
       if (!dbUser) {
-        return c.json({ error: 'user_not_found' }, 400)
+        return c.json({ error: 'user_not_found' }, 400);
       }
 
       const tokenPair = await createTokenPairForUser({
         userId,
         role: dbUser.isAdmin ? 'admin' : 'user',
         amr: ['passkey'],
-      })
+      });
 
       // Forward Better Auth session cookies so enrollment/management features work
-      const betterAuthCookies = copyHeadersWithSetCookie(response.headers)
-      const responseHeaders = new Headers(betterAuthCookies)
-      responseHeaders.set('content-type', 'application/json')
+      const betterAuthCookies = copyHeadersWithSetCookie(response.headers);
+      const responseHeaders = new Headers(betterAuthCookies);
+      responseHeaders.set('content-type', 'application/json');
 
       return new Response(
         JSON.stringify({
@@ -954,10 +968,10 @@ authRoutes.post('/passkey/auth/verify', zValidator('json', passkeyAuthVerifySche
           tokenType: tokenPair.tokenType,
         }),
         { status: 200, headers: responseHeaders },
-      )
+      );
     } catch (mintError) {
-      logger.error('[auth:passkey] token minting failed', { mintError })
-      return c.json({ error: 'token_mint_failed' }, 500)
+      logger.error('[auth:passkey] token minting failed', { mintError });
+      return c.json({ error: 'token_mint_failed' }, 500);
     }
   } catch {
     return c.json({ error: 'passkey_authentication_failed' }, 401);

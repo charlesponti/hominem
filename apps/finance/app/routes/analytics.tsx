@@ -6,8 +6,8 @@ import { AnalyticsChartDisplay } from '~/components/analytics/analytics-chart-di
 import { AnalyticsFilters } from '~/components/analytics/analytics-filters';
 import { AnalyticsStatisticsSummary } from '~/components/analytics/analytics-statistics-summary';
 import { MonthlyBreakdown } from '~/components/analytics/monthly-breakdown';
-import { TopTags } from '~/components/analytics/top-tags';
 import { TopMerchants } from '~/components/analytics/top-merchants';
+import { TopTags } from '~/components/analytics/top-tags';
 import { BudgetOverview } from '~/components/budget-overview';
 
 export default function FinanceAnalyticsPage() {
@@ -80,11 +80,7 @@ export default function FinanceAnalyticsPage() {
           groupBy={groupBy}
         />
 
-        <TopTags
-          dateFrom={dateFrom}
-          dateTo={dateTo}
-          selectedAccount={selectedAccount}
-        />
+        <TopTags dateFrom={dateFrom} dateTo={dateTo} selectedAccount={selectedAccount} />
 
         <TopMerchants
           dateFrom={dateFrom}

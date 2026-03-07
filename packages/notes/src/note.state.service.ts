@@ -1,9 +1,9 @@
-import type { NoteStatus } from './contracts'
+import type { NoteStatus } from './contracts';
 
 export class ConflictError extends Error {
   constructor(message: string) {
-    super(message)
-    this.name = 'ConflictError'
+    super(message);
+    this.name = 'ConflictError';
   }
 }
 
@@ -11,7 +11,7 @@ const TRANSITIONS: Record<NoteStatus, ReadonlyArray<NoteStatus>> = {
   draft: ['published'],
   published: ['archived', 'draft'],
   archived: ['published'],
-}
+};
 
 export function assertAllowedTransition(
   currentStatus: NoteStatus,
@@ -19,11 +19,11 @@ export function assertAllowedTransition(
   action: string,
 ): void {
   if (currentStatus === nextStatus) {
-    return
+    return;
   }
 
-  const allowed = TRANSITIONS[currentStatus]
+  const allowed = TRANSITIONS[currentStatus];
   if (!allowed.includes(nextStatus)) {
-    throw new ConflictError(`Cannot ${action} note from ${currentStatus} to ${nextStatus}`)
+    throw new ConflictError(`Cannot ${action} note from ${currentStatus} to ${nextStatus}`);
   }
 }

@@ -3,9 +3,9 @@ import type { MonthlyStatsOutput } from '@hominem/hono-rpc/types/finance.types';
 import { useHonoQuery } from '~/lib/api';
 
 export type MonthlyStatsContract = MonthlyStatsOutput & {
-  topTag?: string
-  tagSpending?: Array<{ name: string | null; amount: number }>
-}
+  topTag?: string;
+  tagSpending?: Array<{ name: string | null; amount: number }>;
+};
 
 /**
  * Custom hook to fetch monthly finance statistics using Hono RPC

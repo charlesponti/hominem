@@ -48,28 +48,26 @@ export function TopTags({ dateFrom, dateTo, selectedAccount }: TopTagsProps) {
             {error.message || 'Categories unavailable. Retry later.'}
           </div>
         ) : error ? (
-          <div className="text-destructive">
-            An unknown error occurred while fetching tags.
-          </div>
+          <div className="text-destructive">An unknown error occurred while fetching tags.</div>
         ) : Array.isArray(categoryBreakdown?.breakdown) &&
           categoryBreakdown.breakdown.length > 0 ? (
           <div className="space-y-3">
-            {categoryBreakdown.breakdown.map((cat: {
-              tag: string
-              amount: number
-              transactionCount: number
-            }) => {
-              const tagLabel = cat.tag
-              return (
-                <div key={tagLabel} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
-                  <Badge variant="secondary" className="w-12 justify-center">
-                    {cat.transactionCount}x
-                  </Badge>
-                  <span className="text-sm">{tagLabel}</span>
-                  <span className="text-sm font-mono text-right">{formatCurrency(cat.amount)}</span>
-                </div>
-              )
-            })}
+            {categoryBreakdown.breakdown.map(
+              (cat: { tag: string; amount: number; transactionCount: number }) => {
+                const tagLabel = cat.tag;
+                return (
+                  <div key={tagLabel} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center">
+                    <Badge variant="secondary" className="w-12 justify-center">
+                      {cat.transactionCount}x
+                    </Badge>
+                    <span className="text-sm">{tagLabel}</span>
+                    <span className="text-sm font-mono text-right">
+                      {formatCurrency(cat.amount)}
+                    </span>
+                  </div>
+                );
+              },
+            )}
           </div>
         ) : (
           <div className="text-center text-muted-foreground py-4">

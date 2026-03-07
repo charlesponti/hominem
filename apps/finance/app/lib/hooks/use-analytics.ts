@@ -3,21 +3,21 @@ import { format } from 'date-fns';
 import { useHonoQuery } from '~/lib/api';
 
 type FinanceTagOption = {
-  id: string
-  name: string
-}
+  id: string;
+  name: string;
+};
 
-type FinanceTagsOutput = Array<string | FinanceTagOption>
+type FinanceTagsOutput = Array<string | FinanceTagOption>;
 type TagBreakdownOutput = {
   breakdown: Array<{
-    tag: string
-    amount: number
-    percentage: number
-    transactionCount: number
-  }>
-  totalSpending: number
-  averagePerDay: number
-}
+    tag: string;
+    amount: number;
+    percentage: number;
+    transactionCount: number;
+  }>;
+  totalSpending: number;
+  averagePerDay: number;
+};
 
 interface TagBreakdownParams {
   from?: Date | undefined;
@@ -30,13 +30,7 @@ interface TagBreakdownParams {
 /**
  * Hook for fetching tag breakdown analytics
  */
-export function useTagBreakdown({
-  from,
-  to,
-  account,
-  tag,
-  limit = 5,
-}: TagBreakdownParams) {
+export function useTagBreakdown({ from, to, account, tag, limit = 5 }: TagBreakdownParams) {
   return useHonoQuery<TagBreakdownOutput>(
     [
       'finance',

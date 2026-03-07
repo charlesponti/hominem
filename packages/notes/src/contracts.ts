@@ -1,4 +1,4 @@
-import * as z from 'zod'
+import * as z from 'zod';
 
 export const NoteContentTypeSchema = z.enum([
   'note',
@@ -10,13 +10,13 @@ export const NoteContentTypeSchema = z.enum([
   'essay',
   'blog_post',
   'social_post',
-])
+]);
 
-export const AllContentTypeSchema = NoteContentTypeSchema
+export const AllContentTypeSchema = NoteContentTypeSchema;
 
-export const NoteStatusSchema = z.enum(['draft', 'published', 'archived'])
+export const NoteStatusSchema = z.enum(['draft', 'published', 'archived']);
 
-export const ContentTagSchema = z.object({ value: z.string() })
+export const ContentTagSchema = z.object({ value: z.string() });
 
 export const NoteAnalysisSchema = z.object({
   readingTimeMinutes: z.number().optional(),
@@ -24,7 +24,7 @@ export const NoteAnalysisSchema = z.object({
   keywords: z.array(z.string()).optional(),
   sentiment: z.enum(['positive', 'neutral', 'negative']).optional(),
   language: z.string().optional(),
-})
+});
 
 export const PublishingMetadataSchema = z.object({
   platform: z.string().optional(),
@@ -54,67 +54,67 @@ export const PublishingMetadataSchema = z.object({
   scheduledFor: z.string().optional(),
   importedAt: z.string().optional(),
   importedFrom: z.string().optional(),
-})
+});
 
 export const NoteMentionSchema = z.object({
   id: z.string(),
   name: z.string(),
-})
+});
 
-export type NoteContentType = z.infer<typeof NoteContentTypeSchema>
-export type AllContentType = z.infer<typeof AllContentTypeSchema>
-export type NoteStatus = z.infer<typeof NoteStatusSchema>
-export type ContentTag = z.infer<typeof ContentTagSchema>
-export type NoteAnalysis = z.infer<typeof NoteAnalysisSchema>
-export type PublishingMetadata = z.infer<typeof PublishingMetadataSchema>
-export type NoteMention = z.infer<typeof NoteMentionSchema>
+export type NoteContentType = z.infer<typeof NoteContentTypeSchema>;
+export type AllContentType = z.infer<typeof AllContentTypeSchema>;
+export type NoteStatus = z.infer<typeof NoteStatusSchema>;
+export type ContentTag = z.infer<typeof ContentTagSchema>;
+export type NoteAnalysis = z.infer<typeof NoteAnalysisSchema>;
+export type PublishingMetadata = z.infer<typeof PublishingMetadataSchema>;
+export type NoteMention = z.infer<typeof NoteMentionSchema>;
 
 export interface Note {
-  id: string
-  userId: string
-  type: NoteContentType
-  status: NoteStatus
-  title: string | null
-  content: string
-  excerpt: string | null
-  tags: ContentTag[]
-  mentions: NoteMention[] | null
-  analysis: NoteAnalysis | null
-  publishingMetadata: PublishingMetadata | null
-  parentNoteId: string | null
-  versionNumber: number
-  isLatestVersion: boolean
-  publishedAt: string | null
-  scheduledFor: string | null
-  createdAt: string
-  updatedAt: string
+  id: string;
+  userId: string;
+  type: NoteContentType;
+  status: NoteStatus;
+  title: string | null;
+  content: string;
+  excerpt: string | null;
+  tags: ContentTag[];
+  mentions: NoteMention[] | null;
+  analysis: NoteAnalysis | null;
+  publishingMetadata: PublishingMetadata | null;
+  parentNoteId: string | null;
+  versionNumber: number;
+  isLatestVersion: boolean;
+  publishedAt: string | null;
+  scheduledFor: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface NoteInsert {
-  id?: string
-  userId: string
-  type?: NoteContentType
-  status?: NoteStatus
-  title?: string | null
-  content: string
-  excerpt?: string | null
-  tags?: ContentTag[]
-  mentions?: NoteMention[] | null
-  analysis?: NoteAnalysis | null
-  publishingMetadata?: PublishingMetadata | null
-  parentNoteId?: string | null
-  versionNumber?: number
-  isLatestVersion?: boolean
-  publishedAt?: string | null
-  scheduledFor?: string | null
-  createdAt?: string
-  updatedAt?: string
+  id?: string;
+  userId: string;
+  type?: NoteContentType;
+  status?: NoteStatus;
+  title?: string | null;
+  content: string;
+  excerpt?: string | null;
+  tags?: ContentTag[];
+  mentions?: NoteMention[] | null;
+  analysis?: NoteAnalysis | null;
+  publishingMetadata?: PublishingMetadata | null;
+  parentNoteId?: string | null;
+  versionNumber?: number;
+  isLatestVersion?: boolean;
+  publishedAt?: string | null;
+  scheduledFor?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export type NoteOutput = Note
-export type NoteInput = NoteInsert
+export type NoteOutput = Note;
+export type NoteInput = NoteInsert;
 export type NoteSyncItem = Omit<Note, 'id' | 'createdAt' | 'updatedAt'> & {
-  id?: string
-  createdAt?: string
-  updatedAt?: string
-}
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};

@@ -1,20 +1,19 @@
-import { useState } from 'react'
-import { Form, useNavigation } from 'react-router'
+import { useState } from 'react';
+import { Form, useNavigation } from 'react-router';
 
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
-
-import { AuthErrorBanner } from './auth-error-banner'
-import { PasskeyButton } from './passkey-button'
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { AuthErrorBanner } from './auth-error-banner';
+import { PasskeyButton } from './passkey-button';
 
 interface EmailEntryFormProps {
-  action: string
-  method?: 'post' | 'get'
-  error?: string
-  onPasskeyClick?: () => void | Promise<void>
-  loadingMessage?: string
-  className?: string
+  action: string;
+  method?: 'post' | 'get';
+  error?: string;
+  onPasskeyClick?: () => void | Promise<void>;
+  loadingMessage?: string;
+  className?: string;
 }
 
 export function EmailEntryForm({
@@ -25,10 +24,10 @@ export function EmailEntryForm({
   loadingMessage = 'Sending...',
   className,
 }: EmailEntryFormProps) {
-  const navigation = useNavigation()
-  const isSubmitting = navigation.state === 'submitting' && navigation.formAction === action
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state === 'submitting' && navigation.formAction === action;
 
-  const hasPasskey = onPasskeyClick !== undefined
+  const hasPasskey = onPasskeyClick !== undefined;
 
   return (
     <Form method={method} action={action} className={className}>
@@ -69,5 +68,5 @@ export function EmailEntryForm({
         We&apos;ll send a one-time code to your email.
       </p>
     </Form>
-  )
+  );
 }

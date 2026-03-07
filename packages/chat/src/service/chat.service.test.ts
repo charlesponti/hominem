@@ -1,8 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ChatOutput } from '../contracts'
-
-import { ChatService } from './chat.service'
+import type { ChatOutput } from '../contracts';
 import {
   clearChatMessagesQuery,
   createChatQuery,
@@ -12,7 +10,8 @@ import {
   getOrCreateActiveChatQuery,
   getUserChatsQuery,
   updateChatTitleQuery,
-} from './chat.queries'
+} from './chat.queries';
+import { ChatService } from './chat.service';
 
 vi.mock('./chat.queries', () => ({
   createChatQuery: vi.fn(),
@@ -23,7 +22,7 @@ vi.mock('./chat.queries', () => ({
   deleteChatQuery: vi.fn(),
   clearChatMessagesQuery: vi.fn(),
   getChatByNoteIdQuery: vi.fn(),
-}))
+}));
 
 const buildChat = (overrides: Partial<ChatOutput> = {}): ChatOutput => ({
   id: overrides.id ?? 'chat_1',
@@ -32,90 +31,90 @@ const buildChat = (overrides: Partial<ChatOutput> = {}): ChatOutput => ({
   noteId: overrides.noteId ?? null,
   createdAt: overrides.createdAt ?? '2026-03-04T00:00:00.000Z',
   updatedAt: overrides.updatedAt ?? '2026-03-04T00:00:00.000Z',
-})
+});
 
 describe('ChatService', () => {
-  const service = new ChatService()
+  const service = new ChatService();
 
   beforeEach(() => {
-    vi.clearAllMocks()
-  })
+    vi.clearAllMocks();
+  });
 
   it('passes caller scope to getOrCreateActiveChat query', async () => {
-    const chat = buildChat()
-    vi.mocked(getOrCreateActiveChatQuery).mockResolvedValue(chat)
+    const chat = buildChat();
+    vi.mocked(getOrCreateActiveChatQuery).mockResolvedValue(chat);
 
-    const result = await service.getOrCreateActiveChat('user_1', 'chat_1')
+    const result = await service.getOrCreateActiveChat('user_1', 'chat_1');
 
-    expect(result).toEqual(chat)
-    expect(getOrCreateActiveChatQuery).toHaveBeenCalledWith('user_1', 'chat_1')
-  })
+    expect(result).toEqual(chat);
+    expect(getOrCreateActiveChatQuery).toHaveBeenCalledWith('user_1', 'chat_1');
+  });
 
   it('applies ownership scope when updating chat title', async () => {
-    const chat = buildChat({ title: 'Renamed' })
-    vi.mocked(updateChatTitleQuery).mockResolvedValue(chat)
+    const chat = buildChat({ title: 'Renamed' });
+    vi.mocked(updateChatTitleQuery).mockResolvedValue(chat);
 
-    const result = await service.updateChatTitle('chat_1', 'Renamed', 'user_1')
+    const result = await service.updateChatTitle('chat_1', 'Renamed', 'user_1');
 
-    expect(result.title).toBe('Renamed')
-    expect(updateChatTitleQuery).toHaveBeenCalledWith('chat_1', 'Renamed', 'user_1')
-  })
+    expect(result.title).toBe('Renamed');
+    expect(updateChatTitleQuery).toHaveBeenCalledWith('chat_1', 'Renamed', 'user_1');
+  });
 
   it('treats delete as idempotent when scoped chat does not exist', async () => {
-    vi.mocked(deleteChatQuery).mockResolvedValue(false)
+    vi.mocked(deleteChatQuery).mockResolvedValue(false);
 
-    const result = await service.deleteChat('chat_1', 'user_1')
+    const result = await service.deleteChat('chat_1', 'user_1');
 
-    expect(result).toBe(true)
-    expect(deleteChatQuery).toHaveBeenCalledWith('chat_1', 'user_1')
-  })
+    expect(result).toBe(true);
+    expect(deleteChatQuery).toHaveBeenCalledWith('chat_1', 'user_1');
+  });
 
   it('treats clear messages as idempotent when scoped chat does not exist', async () => {
-    vi.mocked(clearChatMessagesQuery).mockResolvedValue(false)
+    vi.mocked(clearChatMessagesQuery).mockResolvedValue(false);
 
-    const result = await service.clearChatMessages('chat_1', 'user_1')
+    const result = await service.clearChatMessages('chat_1', 'user_1');
 
-    expect(result).toBe(true)
-    expect(clearChatMessagesQuery).toHaveBeenCalledWith('chat_1', 'user_1')
-  })
+    expect(result).toBe(true);
+    expect(clearChatMessagesQuery).toHaveBeenCalledWith('chat_1', 'user_1');
+  });
 
   it('keeps search scoped to caller-owned chats', async () => {
     vi.mocked(getUserChatsQuery).mockResolvedValue([
       buildChat({ id: 'chat_1', title: 'Project Alpha' }),
       buildChat({ id: 'chat_2', title: 'Weekly Notes' }),
-    ])
+    ]);
 
     const result = await service.searchChats({
       userId: 'user_1',
       query: 'project',
       limit: 20,
-    })
+    });
 
-    expect(result.map((chat) => chat.id)).toEqual(['chat_1'])
-  })
+    expect(result.map((chat) => chat.id)).toEqual(['chat_1']);
+  });
 
   it('creates note chat with caller ownership when none exists', async () => {
-    const created = buildChat({ id: 'chat_note_1', noteId: 'note_1' })
-    vi.mocked(getChatByNoteIdQuery).mockResolvedValue(null)
-    vi.mocked(createChatQuery).mockResolvedValue(created)
+    const created = buildChat({ id: 'chat_note_1', noteId: 'note_1' });
+    vi.mocked(getChatByNoteIdQuery).mockResolvedValue(null);
+    vi.mocked(createChatQuery).mockResolvedValue(created);
 
-    const result = await service.getOrCreateChatForNote('note_1', 'user_1')
+    const result = await service.getOrCreateChatForNote('note_1', 'user_1');
 
-    expect(result).toEqual(created)
+    expect(result).toEqual(created);
     expect(createChatQuery).toHaveBeenCalledWith({
       title: 'Note Chat',
       userId: 'user_1',
       noteId: 'note_1',
-    })
-  })
+    });
+  });
 
   it('loads chat by id with caller ownership scope', async () => {
-    const chat = buildChat()
-    vi.mocked(getChatByIdQuery).mockResolvedValue(chat)
+    const chat = buildChat();
+    vi.mocked(getChatByIdQuery).mockResolvedValue(chat);
 
-    const result = await service.getChatById('chat_1', 'user_1')
+    const result = await service.getChatById('chat_1', 'user_1');
 
-    expect(result).toEqual(chat)
-    expect(getChatByIdQuery).toHaveBeenCalledWith('chat_1', 'user_1')
-  })
-})
+    expect(result).toEqual(chat);
+    expect(getChatByIdQuery).toHaveBeenCalledWith('chat_1', 'user_1');
+  });
+});

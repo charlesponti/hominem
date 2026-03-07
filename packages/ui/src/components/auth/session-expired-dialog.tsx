@@ -1,6 +1,6 @@
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router';
 
-import { Button } from '../ui/button'
+import { Button } from '../ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,20 +8,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog'
+} from '../ui/dialog';
 
 interface SessionExpiredDialogProps {
-  open: boolean
-  onSignIn: () => void
+  open: boolean;
+  onSignIn: () => void;
 }
 
 export function SessionExpiredDialog({ open, onSignIn }: SessionExpiredDialogProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleSignIn = () => {
-    onSignIn()
-    navigate('/auth')
-  }
+    onSignIn();
+    navigate('/auth');
+  };
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleSignIn()}>
@@ -37,5 +37,5 @@ export function SessionExpiredDialog({ open, onSignIn }: SessionExpiredDialogPro
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

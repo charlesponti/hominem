@@ -14,9 +14,9 @@ import { useSelectedAccount } from '~/lib/hooks/use-selected-account';
 import { formatCurrency } from '~/lib/number.utils';
 
 interface TagBreakdownRow {
-  tag: string
-  amount: number
-  transactionCount: number
+  tag: string;
+  amount: number;
+  transactionCount: number;
 }
 
 export default function TagsAnalyticsPage() {
@@ -83,9 +83,7 @@ export default function TagsAnalyticsPage() {
 
     // Apply search filter
     if (searchValue.trim()) {
-      result = result.filter((item) =>
-        item.tag.toLowerCase().includes(searchValue.toLowerCase()),
-      );
+      result = result.filter((item) => item.tag.toLowerCase().includes(searchValue.toLowerCase()));
     }
 
     // Apply sort

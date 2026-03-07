@@ -33,8 +33,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function Layout() {
-  const { register } = usePasskeyAuth()
-  const handleEnroll = useCallback(async () => { await register() }, [register])
+  const { register } = usePasskeyAuth();
+  const handleEnroll = useCallback(async () => {
+    await register();
+  }, [register]);
 
   return (
     <>

@@ -1,23 +1,22 @@
-import { useState } from 'react'
-import { Form, useFetcher, useNavigation, useSearchParams } from 'react-router'
+import { useState } from 'react';
+import { Form, useFetcher, useNavigation, useSearchParams } from 'react-router';
 
-import { Button } from '../ui/button'
-
-import { AuthErrorBanner } from './auth-error-banner'
-import { OtpCodeInput } from './otp-code-input'
-import { PasskeyButton } from './passkey-button'
-import { ResendCodeButton } from './resend-code-button'
+import { Button } from '../ui/button';
+import { AuthErrorBanner } from './auth-error-banner';
+import { OtpCodeInput } from './otp-code-input';
+import { PasskeyButton } from './passkey-button';
+import { ResendCodeButton } from './resend-code-button';
 
 interface OtpVerificationFormProps {
-  action: string
-  sendAction?: string
-  email: string
-  defaultNext?: string
-  error?: string | undefined
-  onChangeEmail?: () => void
-  onPasskeyClick?: () => void
-  loadingMessage?: string
-  className?: string
+  action: string;
+  sendAction?: string;
+  email: string;
+  defaultNext?: string;
+  error?: string | undefined;
+  onChangeEmail?: () => void;
+  onPasskeyClick?: () => void;
+  loadingMessage?: string;
+  className?: string;
 }
 
 export function OtpVerificationForm({
@@ -31,22 +30,22 @@ export function OtpVerificationForm({
   loadingMessage = 'Verifying...',
   className,
 }: OtpVerificationFormProps) {
-  const navigation = useNavigation()
-  const resendFetcher = useFetcher()
-  const [searchParams] = useSearchParams()
-  const isSubmitting = navigation.state === 'submitting' && navigation.formAction === action
+  const navigation = useNavigation();
+  const resendFetcher = useFetcher();
+  const [searchParams] = useSearchParams();
+  const isSubmitting = navigation.state === 'submitting' && navigation.formAction === action;
 
-  const [otp, setOtp] = useState('')
-  const resolvedEmail = searchParams.get('email') ?? email
-  const next = searchParams.get('next') ?? defaultNext
-  const maskedEmail = resolvedEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3')
+  const [otp, setOtp] = useState('');
+  const resolvedEmail = searchParams.get('email') ?? email;
+  const next = searchParams.get('next') ?? defaultNext;
+  const maskedEmail = resolvedEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3');
 
   // Resend is via fetcher since it doesn't need a redirect
   const handleResend = () => {
-    const formData = new FormData()
-    formData.append('email', resolvedEmail)
-    resendFetcher.submit(formData, { method: 'post', action: sendAction })
-  }
+    const formData = new FormData();
+    formData.append('email', resolvedEmail);
+    resendFetcher.submit(formData, { method: 'post', action: sendAction });
+  };
 
   return (
     <Form method="post" action={action} className={className}>
@@ -61,12 +60,7 @@ export function OtpVerificationForm({
           </p>
         </div>
 
-        <OtpCodeInput
-          value={otp}
-          onChange={setOtp}
-          disabled={isSubmitting}
-          autoFocus
-        />
+        <OtpCodeInput value={otp} onChange={setOtp} disabled={isSubmitting} autoFocus />
 
         <AuthErrorBanner error={error ?? null} />
 
@@ -99,5 +93,5 @@ export function OtpVerificationForm({
         </div>
       </div>
     </Form>
-  )
+  );
 }

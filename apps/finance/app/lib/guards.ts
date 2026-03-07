@@ -1,5 +1,6 @@
-import { getServerAuth } from './auth.server';
 import { redirect } from 'react-router';
+
+import { getServerAuth } from './auth.server';
 
 /**
  * Require authentication - throws 401 if not authenticated

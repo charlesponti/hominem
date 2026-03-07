@@ -1,17 +1,11 @@
-import {
-  type UserId,
-  brandId,
-  ForbiddenError,
-  InternalError,
-  NotFoundError,
-} from '@hominem/db'
+import { type UserId, brandId, ForbiddenError, InternalError, NotFoundError } from '@hominem/db';
 import {
   createPossession,
   deletePossession,
   listPossessions,
   updatePossession,
-} from '@hominem/db/services/possessions.service'
-import { logger } from '@hominem/utils/logger'
+} from '@hominem/db/services/possessions.service';
+import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
@@ -19,7 +13,7 @@ import * as z from 'zod';
 import type { AppEnv } from '../server';
 
 export const possessionsRoutes = new Hono<AppEnv>();
-type PossessionOutput = Awaited<ReturnType<typeof listPossessions>>[number]
+type PossessionOutput = Awaited<ReturnType<typeof listPossessions>>[number];
 
 // Serialize possession Date objects to ISO strings
 function serializePossession(possession: PossessionOutput) {
@@ -118,15 +112,11 @@ possessionsRoutes.put(
       const { id } = c.req.valid('param');
       const data = c.req.valid('json');
 
-      const updated = await updatePossession(
-        id,
-        brandId<UserId>(userId),
-        {
+      const updated = await updatePossession(id, brandId<UserId>(userId), {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.description !== undefined && { description: data.description }),
         ...(data.categoryId !== undefined && { category: data.categoryId }),
-      },
-      );
+      });
 
       if (!updated) {
         throw new NotFoundError('Possession not found');

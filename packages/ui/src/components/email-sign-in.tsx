@@ -1,11 +1,13 @@
 import { useFetcher } from 'react-router';
 
 export interface EmailSignInProps {
-  actionData: {
-    error?: string;
-    success?: boolean;
-    message?: string;
-  } | undefined;
+  actionData:
+    | {
+        error?: string;
+        success?: boolean;
+        message?: string;
+      }
+    | undefined;
 }
 
 export function EmailSignIn({ actionData }: EmailSignInProps) {
@@ -40,7 +42,10 @@ export function EmailSignIn({ actionData }: EmailSignInProps) {
           <p style={{ color: '#9ca3af' }}>Enter your email to receive a verification code</p>
         </div>
 
-        <fetcher.Form method="post" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <fetcher.Form
+          method="post"
+          style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+        >
           <div>
             <label
               htmlFor="email"

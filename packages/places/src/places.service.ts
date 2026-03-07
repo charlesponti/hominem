@@ -1,84 +1,84 @@
-import crypto from 'node:crypto'
+import crypto from 'node:crypto';
 
-import { db, sql } from '@hominem/db'
-import { normalizePhotoReference, sanitizeStoredPhotos } from '@hominem/utils/images'
+import { db, sql } from '@hominem/db';
+import { normalizePhotoReference, sanitizeStoredPhotos } from '@hominem/utils/images';
 
-import type { PlaceInput, PlaceOutput } from './contracts'
-import { googlePlaces } from './google-places.service'
-import { placeCache } from './place-cache'
-import { isGooglePhotosUrl, type PlaceImagesService } from './place-images.service'
+import type { PlaceInput, PlaceOutput } from './contracts';
+import { googlePlaces } from './google-places.service';
+import { placeCache } from './place-cache';
+import { isGooglePhotosUrl, type PlaceImagesService } from './place-images.service';
 
 interface PlaceRow {
-  id: string
-  user_id: string
-  name: string
-  address: string | null
-  latitude: string | number | null
-  longitude: string | number | null
-  place_type: string | null
-  rating: string | number | null
-  data: Record<string, unknown> | null
-  created_at: string | null
+  id: string;
+  user_id: string;
+  name: string;
+  address: string | null;
+  latitude: string | number | null;
+  longitude: string | number | null;
+  place_type: string | null;
+  rating: string | number | null;
+  data: Record<string, unknown> | null;
+  created_at: string | null;
 }
 
 interface PlaceMeta {
-  googleMapsId: string
-  description: string | null
-  imageUrl: string | null
-  photos: string[] | null
-  types: string[] | null
-  websiteUri: string | null
-  phoneNumber: string | null
-  priceLevel: number | null
-  businessStatus: string | null
-  openingHours: string | null
+  googleMapsId: string;
+  description: string | null;
+  imageUrl: string | null;
+  photos: string[] | null;
+  types: string[] | null;
+  websiteUri: string | null;
+  phoneNumber: string | null;
+  priceLevel: number | null;
+  businessStatus: string | null;
+  openingHours: string | null;
 }
 
-export type ListSummary = { id: string; name: string }
+export type ListSummary = { id: string; name: string };
 
 function resultRows<T>(result: unknown): T[] {
   if (Array.isArray(result)) {
-    return result as T[]
+    return result as T[];
   }
   if (result && typeof result === 'object' && 'rows' in result) {
-    const rows = (result as { rows?: unknown }).rows
+    const rows = (result as { rows?: unknown }).rows;
     if (Array.isArray(rows)) {
-      return rows as T[]
+      return rows as T[];
     }
   }
-  return []
+  return [];
 }
 
 function toNumber(value: string | number | null): number | null {
   if (value === null) {
-    return null
+    return null;
   }
   if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : null
+    return Number.isFinite(value) ? value : null;
   }
-  const parsed = Number.parseFloat(value)
-  return Number.isFinite(parsed) ? parsed : null
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function toMeta(data: Record<string, unknown> | null, fallbackGoogleMapsId: string): PlaceMeta {
-  const payload = data ?? {}
-  const photosRaw = payload.photos
+  const payload = data ?? {};
+  const photosRaw = payload.photos;
   const photos =
     Array.isArray(photosRaw) && photosRaw.every((photo) => typeof photo === 'string')
       ? photosRaw
-      : null
+      : null;
 
-  const typesRaw = payload.types
+  const typesRaw = payload.types;
   const types =
-    Array.isArray(typesRaw) && typesRaw.every((item) => typeof item === 'string') ? typesRaw : null
+    Array.isArray(typesRaw) && typesRaw.every((item) => typeof item === 'string') ? typesRaw : null;
 
-  const priceLevelRaw = payload.priceLevel
+  const priceLevelRaw = payload.priceLevel;
   const priceLevel =
     typeof priceLevelRaw === 'number'
       ? priceLevelRaw
       : typeof priceLevelRaw === 'string'
         ? Number.parseFloat(priceLevelRaw)
-        : null
+        : null;
 
   return {
     googleMapsId:
@@ -94,12 +94,12 @@ function toMeta(data: Record<string, unknown> | null, fallbackGoogleMapsId: stri
     priceLevel: Number.isFinite(priceLevel ?? Number.NaN) ? (priceLevel as number) : null,
     businessStatus: typeof payload.businessStatus === 'string' ? payload.businessStatus : null,
     openingHours: typeof payload.openingHours === 'string' ? payload.openingHours : null,
-  }
+  };
 }
 
 function rowToPlaceOutput(row: PlaceRow): PlaceOutput {
-  const meta = toMeta(row.data, row.id)
-  const createdAt = row.created_at ?? new Date().toISOString()
+  const meta = toMeta(row.data, row.id);
+  const createdAt = row.created_at ?? new Date().toISOString();
 
   return {
     id: row.id,
@@ -121,47 +121,47 @@ function rowToPlaceOutput(row: PlaceRow): PlaceOutput {
     openingHours: meta.openingHours,
     createdAt,
     updatedAt: createdAt,
-  }
+  };
 }
 
 function toLocationTuple(latitude?: number | null, longitude?: number | null): [number, number] {
-  return latitude != null && longitude != null ? [longitude, latitude] : [0, 0]
+  return latitude != null && longitude != null ? [longitude, latitude] : [0, 0];
 }
 
 function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const radians = (degrees: number): number => (degrees * Math.PI) / 180
-  const earthRadiusKm = 6371
-  const dLat = radians(lat2 - lat1)
-  const dLon = radians(lon2 - lon1)
+  const radians = (degrees: number): number => (degrees * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const dLat = radians(lat2 - lat1);
+  const dLon = radians(lon2 - lon1);
   const a =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLon / 2) ** 2
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return earthRadiusKm * c
+    Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
 }
 
 export function getPlaceImageUrl(place: Pick<PlaceOutput, 'imageUrl' | 'photos'>): string | null {
-  return place.imageUrl ?? place.photos?.[0] ?? null
+  return place.imageUrl ?? place.photos?.[0] ?? null;
 }
 
 function updateCacheForPlace(place: PlaceOutput): void {
-  placeCache.set(`place:id:${place.id}`, place, placeCache.TTL_SHORT_MS)
-  placeCache.set(`place:googleMapsId:${place.googleMapsId}`, place, placeCache.TTL_SHORT_MS)
+  placeCache.set(`place:id:${place.id}`, place, placeCache.TTL_SHORT_MS);
+  placeCache.set(`place:googleMapsId:${place.googleMapsId}`, place, placeCache.TTL_SHORT_MS);
 }
 
 export async function preparePlaceInsertData(data: PlaceInput): Promise<{
-  id: string
-  userId: string
-  name: string
-  address: string | null
-  latitude: number | null
-  longitude: number | null
-  placeType: string | null
-  rating: number | null
-  data: PlaceMeta
+  id: string;
+  userId: string;
+  name: string;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  placeType: string | null;
+  rating: number | null;
+  data: PlaceMeta;
 }> {
-  const processedPhotos = data.photos ? sanitizeStoredPhotos(data.photos) : null
-  const imageUrl = data.imageUrl ? normalizePhotoReference(data.imageUrl) : null
+  const processedPhotos = data.photos ? sanitizeStoredPhotos(data.photos) : null;
+  const imageUrl = data.imageUrl ? normalizePhotoReference(data.imageUrl) : null;
 
   return {
     id: crypto.randomUUID(),
@@ -175,7 +175,7 @@ export async function preparePlaceInsertData(data: PlaceInput): Promise<{
     data: {
       googleMapsId: data.googleMapsId,
       description: data.description ?? null,
-      imageUrl: imageUrl ?? (processedPhotos?.[0] ?? null),
+      imageUrl: imageUrl ?? processedPhotos?.[0] ?? null,
       photos: processedPhotos,
       types: data.types ?? null,
       websiteUri: data.websiteUri ?? null,
@@ -184,19 +184,19 @@ export async function preparePlaceInsertData(data: PlaceInput): Promise<{
       businessStatus: null,
       openingHours: null,
     },
-  }
+  };
 }
 
 export async function getPlacePhotoById(id: string): Promise<string | undefined> {
-  const place = await getPlaceById(id)
-  return place?.photos?.[0]
+  const place = await getPlaceById(id);
+  return place?.photos?.[0];
 }
 
 export async function getPlaceById(id: string): Promise<PlaceOutput | undefined> {
-  const cacheKey = `place:id:${id}`
-  const cached = placeCache.get(cacheKey)
+  const cacheKey = `place:id:${id}`;
+  const cached = placeCache.get(cacheKey);
   if (cached) {
-    return cached as PlaceOutput
+    return cached as PlaceOutput;
   }
 
   const result = await db.execute(sql`
@@ -204,25 +204,25 @@ export async function getPlaceById(id: string): Promise<PlaceOutput | undefined>
     from places
     where id = ${id}
     limit 1
-  `)
+  `);
 
-  const row = resultRows<PlaceRow>(result)[0] ?? null
+  const row = resultRows<PlaceRow>(result)[0] ?? null;
   if (!row) {
-    return undefined
+    return undefined;
   }
 
-  const output = rowToPlaceOutput(row)
-  updateCacheForPlace(output)
-  return output
+  const output = rowToPlaceOutput(row);
+  updateCacheForPlace(output);
+  return output;
 }
 
 export async function getPlaceByGoogleMapsId(
   googleMapsId: string,
 ): Promise<PlaceOutput | undefined> {
-  const cacheKey = `place:googleMapsId:${googleMapsId}`
-  const cached = placeCache.get(cacheKey)
+  const cacheKey = `place:googleMapsId:${googleMapsId}`;
+  const cached = placeCache.get(cacheKey);
   if (cached) {
-    return cached as PlaceOutput
+    return cached as PlaceOutput;
   }
 
   const result = await db.execute(sql`
@@ -231,16 +231,16 @@ export async function getPlaceByGoogleMapsId(
     where data ->> 'googleMapsId' = ${googleMapsId}
     order by created_at desc, id asc
     limit 1
-  `)
+  `);
 
-  const row = resultRows<PlaceRow>(result)[0] ?? null
+  const row = resultRows<PlaceRow>(result)[0] ?? null;
   if (!row) {
-    return undefined
+    return undefined;
   }
 
-  const output = rowToPlaceOutput(row)
-  updateCacheForPlace(output)
-  return output
+  const output = rowToPlaceOutput(row);
+  updateCacheForPlace(output);
+  return output;
 }
 
 async function getPlaceByGoogleMapsIdForUser(
@@ -254,15 +254,15 @@ async function getPlaceByGoogleMapsIdForUser(
       and data ->> 'googleMapsId' = ${googleMapsId}
     order by created_at desc, id asc
     limit 1
-  `)
+  `);
 
-  const row = resultRows<PlaceRow>(result)[0] ?? null
-  return row ? rowToPlaceOutput(row) : undefined
+  const row = resultRows<PlaceRow>(result)[0] ?? null;
+  return row ? rowToPlaceOutput(row) : undefined;
 }
 
 export async function getPlacesByIds(ids: string[]): Promise<PlaceOutput[]> {
   if (ids.length === 0) {
-    return []
+    return [];
   }
 
   const result = await db.execute(sql`
@@ -270,14 +270,14 @@ export async function getPlacesByIds(ids: string[]): Promise<PlaceOutput[]> {
     from places
     where id = any(${ids}::uuid[])
     order by created_at desc, id asc
-  `)
+  `);
 
-  return resultRows<PlaceRow>(result).map(rowToPlaceOutput)
+  return resultRows<PlaceRow>(result).map(rowToPlaceOutput);
 }
 
 export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise<PlaceOutput[]> {
   if (googleMapsIds.length === 0) {
-    return []
+    return [];
   }
 
   const result = await db.execute(sql`
@@ -285,9 +285,9 @@ export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise
     from places
     where data ->> 'googleMapsId' = any(${googleMapsIds}::text[])
     order by created_at desc, id asc
-  `)
+  `);
 
-  return resultRows<PlaceRow>(result).map(rowToPlaceOutput)
+  return resultRows<PlaceRow>(result).map(rowToPlaceOutput);
 }
 
 export async function processPlacePhotos(
@@ -296,30 +296,34 @@ export async function processPlacePhotos(
   placeImagesService?: PlaceImagesService,
 ): Promise<string[]> {
   if (photos.length === 0) {
-    return photos
+    return photos;
   }
 
   return Promise.all(
     photos.map(async (photoUrl, index) => {
       if (!isGooglePhotosUrl(photoUrl)) {
-        return photoUrl
+        return photoUrl;
       }
       if (!placeImagesService) {
-        return photoUrl
+        return photoUrl;
       }
-      const stored = await placeImagesService.downloadAndStorePlaceImage(googleMapsId, photoUrl, index)
-      return stored ?? photoUrl
+      const stored = await placeImagesService.downloadAndStorePlaceImage(
+        googleMapsId,
+        photoUrl,
+        index,
+      );
+      return stored ?? photoUrl;
     }),
-  )
+  );
 }
 
 export async function upsertPlace({ data }: { data: PlaceInput }): Promise<PlaceOutput> {
   if (!data.userId) {
-    throw new Error('upsertPlace requires data.userId')
+    throw new Error('upsertPlace requires data.userId');
   }
 
-  const insertValues = await preparePlaceInsertData(data)
-  const existing = await getPlaceByGoogleMapsIdForUser(data.userId, data.googleMapsId)
+  const insertValues = await preparePlaceInsertData(data);
+  const existing = await getPlaceByGoogleMapsIdForUser(data.userId, data.googleMapsId);
 
   if (existing) {
     const result = await db.execute(sql`
@@ -334,16 +338,16 @@ export async function upsertPlace({ data }: { data: PlaceInput }): Promise<Place
         data = ${JSON.stringify(insertValues.data)}::jsonb
       where id = ${existing.id}
       returning id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
-    `)
+    `);
 
-    const row = resultRows<PlaceRow>(result)[0] ?? null
+    const row = resultRows<PlaceRow>(result)[0] ?? null;
     if (!row) {
-      throw new Error('Failed to update place')
+      throw new Error('Failed to update place');
     }
 
-    const output = rowToPlaceOutput(row)
-    updateCacheForPlace(output)
-    return output
+    const output = rowToPlaceOutput(row);
+    updateCacheForPlace(output);
+    return output;
   }
 
   const result = await db.execute(sql`
@@ -360,16 +364,16 @@ export async function upsertPlace({ data }: { data: PlaceInput }): Promise<Place
       ${JSON.stringify(insertValues.data)}::jsonb
     )
     returning id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
-  `)
+  `);
 
-  const row = resultRows<PlaceRow>(result)[0] ?? null
+  const row = resultRows<PlaceRow>(result)[0] ?? null;
   if (!row) {
-    throw new Error('Failed to insert place')
+    throw new Error('Failed to insert place');
   }
 
-  const output = rowToPlaceOutput(row)
-  updateCacheForPlace(output)
-  return output
+  const output = rowToPlaceOutput(row);
+  updateCacheForPlace(output);
+  return output;
 }
 
 export async function createOrUpdatePlace(
@@ -392,9 +396,9 @@ export async function createOrUpdatePlace(
     >
   > & { location?: [number, number] },
 ): Promise<PlaceOutput | undefined> {
-  const existing = await getPlaceById(id)
+  const existing = await getPlaceById(id);
   if (!existing) {
-    return undefined
+    return undefined;
   }
 
   const merged: PlaceInput = {
@@ -405,7 +409,12 @@ export async function createOrUpdatePlace(
     address: updates.address ?? existing.address,
     latitude: updates.latitude ?? existing.latitude,
     longitude: updates.longitude ?? existing.longitude,
-    location: updates.location ?? toLocationTuple(updates.latitude ?? existing.latitude, updates.longitude ?? existing.longitude),
+    location:
+      updates.location ??
+      toLocationTuple(
+        updates.latitude ?? existing.latitude,
+        updates.longitude ?? existing.longitude,
+      ),
     types: updates.types ?? existing.types,
     rating: updates.rating ?? existing.rating,
     websiteUri: updates.websiteUri ?? existing.websiteUri,
@@ -413,45 +422,51 @@ export async function createOrUpdatePlace(
     priceLevel: updates.priceLevel ?? existing.priceLevel,
     photos: updates.photos ?? existing.photos,
     imageUrl: updates.imageUrl ?? existing.imageUrl,
-  }
+  };
 
-  const updated = await upsertPlace({ data: merged })
+  const updated = await upsertPlace({ data: merged });
   if (updated.id !== id) {
-    await db.execute(sql`delete from places where id = ${id}`)
+    await db.execute(sql`delete from places where id = ${id}`);
   }
-  return { ...updated, id }
+  return { ...updated, id };
 }
 
-export async function addPlaceToLists(userId: string, listIds: string[], placeData: PlaceInput): Promise<{
-  place: PlaceOutput
-  success: boolean
-  addedToLists: number
+export async function addPlaceToLists(
+  userId: string,
+  listIds: string[],
+  placeData: PlaceInput,
+): Promise<{
+  place: PlaceOutput;
+  success: boolean;
+  addedToLists: number;
 }> {
-  const place = await upsertPlace({ data: { ...placeData, userId } })
+  const place = await upsertPlace({ data: { ...placeData, userId } });
   return {
     place,
     success: true,
     addedToLists: listIds.length,
-  }
+  };
 }
 
 export async function removePlaceFromList(_params: {
-  placeId: string
-  listId: string
-  userId: string
+  placeId: string;
+  listId: string;
+  userId: string;
 }): Promise<null> {
-  return null
+  return null;
 }
 
 export async function getNearbyPlacesFromLists(params: {
-  userId: string
-  latitude: number
-  longitude: number
-  radiusKm?: number
-  limit?: number
-}): Promise<Array<PlaceOutput & { distance: { km: number; miles: number } | null; lists: ListSummary[] }>> {
-  const radiusKm = params.radiusKm ?? 50
-  const limit = params.limit ?? 20
+  userId: string;
+  latitude: number;
+  longitude: number;
+  radiusKm?: number;
+  limit?: number;
+}): Promise<
+  Array<PlaceOutput & { distance: { km: number; miles: number } | null; lists: ListSummary[] }>
+> {
+  const radiusKm = params.radiusKm ?? 50;
+  const limit = params.limit ?? 20;
 
   const result = await db.execute(sql`
     select id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
@@ -459,27 +474,27 @@ export async function getNearbyPlacesFromLists(params: {
     where user_id = ${params.userId}
       and latitude is not null
       and longitude is not null
-  `)
+  `);
 
   const nearby = resultRows<PlaceRow>(result)
     .map((row) => rowToPlaceOutput(row))
     .map((place) => {
       if (place.latitude === null || place.longitude === null) {
-        return { place, distanceKm: Number.POSITIVE_INFINITY }
+        return { place, distanceKm: Number.POSITIVE_INFINITY };
       }
       return {
         place,
         distanceKm: distanceKm(params.latitude, params.longitude, place.latitude, place.longitude),
-      }
+      };
     })
     .filter((entry) => Number.isFinite(entry.distanceKm) && entry.distanceKm <= radiusKm)
     .sort((a, b) => {
       if (a.distanceKm !== b.distanceKm) {
-        return a.distanceKm - b.distanceKm
+        return a.distanceKm - b.distanceKm;
       }
-      return a.place.name.localeCompare(b.place.name)
+      return a.place.name.localeCompare(b.place.name);
     })
-    .slice(0, limit)
+    .slice(0, limit);
 
   return nearby.map((entry) => ({
     ...entry.place,
@@ -488,7 +503,7 @@ export async function getNearbyPlacesFromLists(params: {
       miles: entry.distanceKm * 0.621371,
     },
     lists: [],
-  }))
+  }));
 }
 
 export async function deletePlaceById(id: string): Promise<boolean> {
@@ -496,12 +511,12 @@ export async function deletePlaceById(id: string): Promise<boolean> {
     delete from places
     where id = ${id}
     returning id
-  `)
-  const deleted = resultRows<{ id: string }>(result).length > 0
+  `);
+  const deleted = resultRows<{ id: string }>(result).length > 0;
   if (deleted) {
-    placeCache.delete(`place:id:${id}`)
+    placeCache.delete(`place:id:${id}`);
   }
-  return deleted
+  return deleted;
 }
 
 export async function refreshAllPlaces(): Promise<{ updatedCount: number; errors: string[] }> {
@@ -509,21 +524,24 @@ export async function refreshAllPlaces(): Promise<{ updatedCount: number; errors
     select id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
     from places
     where data ->> 'googleMapsId' is not null
-  `)
+  `);
 
-  const rows = resultRows<PlaceRow>(result)
-  let updatedCount = 0
-  const errors: string[] = []
+  const rows = resultRows<PlaceRow>(result);
+  let updatedCount = 0;
+  const errors: string[] = [];
 
   for (const row of rows) {
-    const place = rowToPlaceOutput(row)
+    const place = rowToPlaceOutput(row);
     try {
-      const details = await googlePlaces.getDetails({ placeId: place.googleMapsId, forceFresh: true })
+      const details = await googlePlaces.getDetails({
+        placeId: place.googleMapsId,
+        forceFresh: true,
+      });
       const photos = Array.isArray(details.photos)
         ? details.photos
             .map((photo) => photo?.name)
             .filter((name): name is string => typeof name === 'string' && name.length > 0)
-        : []
+        : [];
 
       await upsertPlace({
         data: {
@@ -543,38 +561,38 @@ export async function refreshAllPlaces(): Promise<{ updatedCount: number; errors
           photos: photos.length > 0 ? photos : place.photos,
           imageUrl: place.imageUrl,
         },
-      })
-      updatedCount += 1
+      });
+      updatedCount += 1;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      errors.push(`Failed to refresh place ${place.id}: ${message}`)
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(`Failed to refresh place ${place.id}: ${message}`);
     }
   }
 
-  return { updatedCount, errors }
+  return { updatedCount, errors };
 }
 
 export async function updatePlacePhotosFromGoogle(
   placeId: string,
   options?: {
-    forceFresh?: boolean | undefined
-    placeImagesService?: PlaceImagesService | undefined
-    googleApiKey?: string | undefined
+    forceFresh?: boolean | undefined;
+    placeImagesService?: PlaceImagesService | undefined;
+    googleApiKey?: string | undefined;
   },
 ): Promise<boolean> {
-  const existing = await getPlaceById(placeId)
+  const existing = await getPlaceById(placeId);
   if (!existing?.googleMapsId) {
-    return false
+    return false;
   }
 
   if (!(options?.placeImagesService && options?.googleApiKey)) {
-    throw new Error('updatePlacePhotosFromGoogle requires placeImagesService and googleApiKey')
+    throw new Error('updatePlacePhotosFromGoogle requires placeImagesService and googleApiKey');
   }
 
   const details = await googlePlaces.getDetails({
     placeId: existing.googleMapsId,
     ...(options.forceFresh !== undefined ? { forceFresh: options.forceFresh } : {}),
-  })
+  });
 
   const photoRefs = Array.isArray(details.photos)
     ? details.photos
@@ -584,32 +602,32 @@ export async function updatePlacePhotosFromGoogle(
           (name) =>
             `https://places.googleapis.com/v1/${name}/media?key=${options.googleApiKey}&maxHeightPx=1600&maxWidthPx=1600`,
         )
-    : []
+    : [];
 
   if (photoRefs.length === 0) {
-    return false
+    return false;
   }
 
   const processed = await processPlacePhotos(
     existing.googleMapsId,
     photoRefs,
     options.placeImagesService,
-  )
+  );
 
   if (processed.length === 0) {
-    return false
+    return false;
   }
 
-  const current = existing.photos ?? []
-  const changed = JSON.stringify(current) !== JSON.stringify(processed)
+  const current = existing.photos ?? [];
+  const changed = JSON.stringify(current) !== JSON.stringify(processed);
   if (!changed) {
-    return false
+    return false;
   }
 
   await createOrUpdatePlace(existing.id, {
     photos: processed,
     imageUrl: processed[0] ?? null,
-  })
+  });
 
-  return true
+  return true;
 }

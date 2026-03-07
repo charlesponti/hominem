@@ -8,7 +8,7 @@ import {
   notesService,
   type CreateNoteInput,
 } from './notes.service';
-import { NoteContentTypeSchema } from './types'
+import { NoteContentTypeSchema } from './types';
 
 // Define output schema for a single note
 const NoteOutputSchema = z.object({

@@ -1,12 +1,12 @@
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle } from 'lucide-react';
 
 interface AuthErrorBannerProps {
-  error?: string | null
-  className?: string
+  error?: string | null;
+  className?: string;
 }
 
 export function AuthErrorBanner({ error, className }: AuthErrorBannerProps) {
-  if (!error) return null
+  if (!error) return null;
 
   return (
     <div
@@ -21,5 +21,5 @@ export function AuthErrorBanner({ error, className }: AuthErrorBannerProps) {
       <AlertCircle className="w-4 h-4 flex-shrink-0" />
       <span>{error}</span>
     </div>
-  )
+  );
 }

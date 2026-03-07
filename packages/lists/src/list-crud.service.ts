@@ -68,7 +68,11 @@ export function formatList(
   };
 }
 
-async function hasNameConflict(userId: string, name: string, excludeListId?: string): Promise<boolean> {
+async function hasNameConflict(
+  userId: string,
+  name: string,
+  excludeListId?: string,
+): Promise<boolean> {
   const result = await db.execute(sql`
     select id
     from task_lists

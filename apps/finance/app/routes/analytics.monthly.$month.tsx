@@ -38,7 +38,7 @@ export default function MonthlyAnalyticsPage({ loaderData }: Route.ComponentProp
   const { stats, isLoading, error } = useMonthlyStats(month, { initialData: initialStats });
 
   const formattedMonth = formatMonthDisplay(month);
-  const spendingByTag = stats?.tagSpending ?? []
+  const spendingByTag = stats?.tagSpending ?? [];
 
   return (
     <div className="p-4 md:p-8">

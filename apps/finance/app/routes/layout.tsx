@@ -1,4 +1,4 @@
-import { PasskeyEnrollmentBanner, usePasskeyAuth } from '@hominem/ui'
+import { PasskeyEnrollmentBanner, usePasskeyAuth } from '@hominem/ui';
 import { AppLayout } from '@hominem/ui/components/layout/app-layout';
 import { Toaster } from '@hominem/ui/components/ui/toaster';
 import { useCallback, Suspense } from 'react';
@@ -8,8 +8,10 @@ import Header from '../components/header';
 import { LoadingScreen } from '../components/loading';
 
 export default function Layout() {
-  const { register } = usePasskeyAuth()
-  const handleEnroll = useCallback(async () => { await register() }, [register])
+  const { register } = usePasskeyAuth();
+  const handleEnroll = useCallback(async () => {
+    await register();
+  }, [register]);
 
   return (
     <>

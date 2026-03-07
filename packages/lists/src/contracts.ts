@@ -1,1 +1,1 @@
-export type { ListOutput, ListPlace, ListRecord, ListUser, ListWithSpreadOwner } from './types'
+export type { ListOutput, ListPlace, ListRecord, ListUser, ListWithSpreadOwner } from './types';
