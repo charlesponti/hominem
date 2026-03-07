@@ -27,7 +27,6 @@
   "scripts": {
     "build": "turbo run build",
     "check": "bun run validate-db-imports && bun run typecheck && bun run lint",
-    "check:tsconfig": "bun run typecheck:graph && bun run typecheck:editor",
     "clean": "turbo run clean",
     "dev": "turbo dev",
     "dev:doctor": "bun scripts/dev-doctor.ts",
@@ -43,7 +42,7 @@
     "test:e2e:auth:live": "bun scripts/auth-e2e-smoke.ts",
     "test:e2e:auth:live:local": "AUTH_E2E_BASE_URL=http://localhost:4040 bun scripts/auth-e2e-smoke.ts",
     "test:e2e:auth:mobile": "bun run --filter @hominem/mobile test:e2e:auth:mobile",
-    "typecheck": "bun run typecheck:graph && turbo run typecheck --concurrency=4 --continue --no-cache",
+    "typecheck": "bun run typecheck:graph && bun run typecheck:editor && turbo run typecheck --concurrency=4 --continue --no-cache",
     "typecheck:editor": "bunx tsc -p tsconfig.editor.json --pretty false",
     "typecheck:graph": "bunx tsc -b tsconfig.json --pretty false",
     "update:turbo": "bunx @turbo/codemod@latest update",
