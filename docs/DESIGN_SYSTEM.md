@@ -659,6 +659,233 @@ For app-specific customizations, create an override file:
 
 ---
 
+## Advanced Component Patterns
+
+### Data Tables
+
+```tsx
+export function DataTable({ data, columns }) {
+  return (
+    <div className="w-full overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b border-border-subtle">
+            {columns.map((col) => (
+              <th key={col.id} className="text-left p-4 text-xs font-semibold text-secondary">
+                {col.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, idx) => (
+            <tr
+              key={idx}
+              className="border-b border-border-subtle transition-colors hover:bg-bg-elevated-1"
+            >
+              {columns.map((col) => (
+                <td key={col.id} className="p-4 text-sm text-primary">
+                  {row[col.id]}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+```
+
+### Modal Dialog
+
+```tsx
+export function Modal({ open, title, children, onClose }) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="card w-full max-w-md shadow-high">
+        <div className="flex items-center justify-between border-b border-border-subtle p-4">
+          <h2 className="heading-3 text-primary">{title}</h2>
+          <button
+            onClick={onClose}
+            className="text-secondary transition-colors hover:text-primary"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="p-4">{children}</div>
+      </div>
+    </div>
+  );
+}
+```
+
+### Form with Validation
+
+```tsx
+export function LoginForm({ onSubmit, isLoading }) {
+  const [errors, setErrors] = useState({});
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // Validation logic...
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-primary mb-2">
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          className={`input w-full ${errors.email ? 'input-error' : ''}`}
+          placeholder="you@example.com"
+        />
+        {errors.email && <p className="text-xs text-error mt-1">{errors.email}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-primary mb-2">
+          Password
+        </label>
+        <input
+          id="password"
+          type="password"
+          className={`input w-full ${errors.password ? 'input-error' : ''}`}
+          placeholder="••••••••"
+        />
+        {errors.password && <p className="text-xs text-error mt-1">{errors.password}</p>}
+      </div>
+
+      <button type="submit" className="btn btn-primary w-full" disabled={isLoading}>
+        {isLoading ? 'Signing in...' : 'Sign In'}
+      </button>
+    </form>
+  );
+}
+```
+
+### Sidebar Navigation
+
+```tsx
+export function Sidebar({ items, activeId, onItemClick }) {
+  return (
+    <nav className="h-screen w-64 bg-bg-elevated-1 border-r border-border-subtle p-4 overflow-y-auto">
+      <div className="space-y-1">
+        {items.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => onItemClick(item.id)}
+            className={`w-full text-left px-4 py-2 rounded-md transition-colors ${
+              activeId === item.id
+                ? 'bg-accent text-bg-base'
+                : 'text-primary hover:bg-bg-elevated-2'
+            }`}
+          >
+            {item.icon && <span className="mr-2">{item.icon}</span>}
+            {item.label}
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+}
+```
+
+### Dropdown Menu
+
+```tsx
+export function DropdownMenu({ trigger, items }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative inline-block">
+      <button
+        onClick={() => setOpen(!open)}
+        className="text-primary hover:text-accent transition-colors"
+      >
+        {trigger}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-2 w-48 bg-bg-elevated-2 rounded-md shadow-high border border-border-subtle py-2 z-40">
+          {items.map((item, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                item.onClick();
+                setOpen(false);
+              }}
+              className="block w-full text-left px-4 py-2 text-sm text-primary hover:bg-bg-elevated-3 transition-colors"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+### Alert/Toast Component
+
+```tsx
+export function Alert({ type = 'info', title, message, onClose }) {
+  const bgClass = {
+    info: 'bg-bg-elevated-1 border-info/30',
+    success: 'bg-bg-elevated-1 border-success/30',
+    warning: 'bg-bg-elevated-1 border-warning/30',
+    error: 'bg-bg-elevated-1 border-error/30',
+  }[type];
+
+  const textClass = {
+    info: 'text-info',
+    success: 'text-success',
+    warning: 'text-warning',
+    error: 'text-error',
+  }[type];
+
+  return (
+    <div className={`rounded-md border p-4 ${bgClass}`}>
+      <div className="flex items-start justify-between">
+        <div>
+          {title && <p className={`font-medium ${textClass}`}>{title}</p>}
+          {message && <p className="text-sm text-secondary mt-1">{message}</p>}
+        </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="text-secondary hover:text-primary transition-colors"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
 ## Quick Reference Card
 
 ```
