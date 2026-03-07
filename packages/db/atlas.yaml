@@ -2,6 +2,8 @@
 env:
   dev:
     url: postgresql://postgres:postgres@localhost:5432/hominem_dev?sslmode=disable
+  test:
+    url: postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable
   prod:
     url: ${DATABASE_URL}
 
