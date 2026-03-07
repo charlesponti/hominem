@@ -24,7 +24,7 @@ export const Chat = (props: ChatProps) => {
       onChatEnd()
     },
   })
-  const { mutate: sendMessage, isPending: isSendingMessage } = useSendMessage({ chatId })
+  const { sendChatMessage, isChatSending } = useSendMessage({ chatId })
   const [message, setMessage] = useState('')
   const [Markdown, setMarkdown] = useState<MarkdownComponent | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -54,9 +54,9 @@ export const Chat = (props: ChatProps) => {
 
   const handleSendMessage = useCallback((messageText: string) => {
     if (!messageText.trim()) return
-    sendMessage(messageText)
+    void sendChatMessage()
     setMessage('')
-  }, [sendMessage])
+  }, [sendChatMessage])
 
   const renderItem = useCallback(
     ({ item }: { item: (typeof formattedMessages)[number] }) => renderMessage(item, Markdown),
@@ -80,7 +80,7 @@ export const Chat = (props: ChatProps) => {
             message={message}
             onMessageChange={setMessage}
             onSendMessage={handleSendMessage}
-            isPending={isSendingMessage}
+            isPending={isChatSending}
           />
         </>
       )}
