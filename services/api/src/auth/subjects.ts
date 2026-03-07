@@ -22,8 +22,8 @@ interface AuthUserRecord {
   updatedAt: string;
 }
 
-const formatDate = (date: any): string => {
-  const dateStr = date instanceof Date ? date.toISOString() : date;
+const formatDate = (date: unknown): string => {
+  const dateStr = date instanceof Date ? date.toISOString() : String(date);
   return dateStr || new Date().toISOString();
 };
 

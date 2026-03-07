@@ -4,6 +4,7 @@ import {
   getHealthRecord,
   listHealthRecords,
   updateHealthRecord,
+  type HealthRecordRow,
 } from '@hominem/health-services';
 import { NotFoundError, InternalError } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
@@ -14,7 +15,7 @@ import * as z from 'zod';
 import type { AppEnv } from '../server';
 
 // Helper to get timestamp as milliseconds for sorting/comparison
-function getTimestamp(date: any): number {
+function getTimestamp(date: unknown): number {
   if (!date) return 0;
   if (typeof date === 'string') return new Date(date).getTime();
   if (date instanceof Date) return date.getTime();
@@ -23,8 +24,8 @@ function getTimestamp(date: any): number {
 
 // Serialize health record timestamps to ISO strings
 // Handles both Date objects (legacy) and string timestamps (new schema with precision: 3)
-function serializeHealthRecord(record: any) {
-  const serializeDate = (date: any): string | null => {
+function serializeHealthRecord(record: HealthRecordRow) {
+  const serializeDate = (date: unknown): string | null => {
     if (!date) return null;
     if (typeof date === 'string') return date;
     if (date instanceof Date) return date.toISOString();
@@ -117,8 +118,14 @@ healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
     const validated = c.req.valid('json');
 
     const result = await createHealthRecord({
-      ...validated,
-    } as any);
+      user_id: validated.userId,
+      record_type: validated.activityType,
+      recorded_at: validated.date,
+      value: validated.duration,
+      unit: 'minutes',
+      source: null,
+      metadata: validated.notes ? { notes: validated.notes } : null,
+    });
     if (!result) {
       throw new InternalError('Failed to create health record');
     }
@@ -136,13 +143,13 @@ healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) =
 
     const validated = c.req.valid('json');
 
-    const result = await updateHealthRecord(id, {
-      ...(validated.date !== undefined && { recorded_at: validated.date }),
-      ...(validated.activityType !== undefined && { record_type: validated.activityType }),
-      ...(validated.duration !== undefined && { duration: validated.duration }),
-      ...(validated.caloriesBurned !== undefined && { caloriesBurned: validated.caloriesBurned }),
-      ...(validated.notes !== undefined && { notes: validated.notes }),
-    } as any);
+    const updates: Partial<Omit<HealthRecordRow, 'id' | 'created_at'>> = {};
+    if (validated.date !== undefined) updates.recorded_at = validated.date;
+    if (validated.activityType !== undefined) updates.record_type = validated.activityType;
+    if (validated.duration !== undefined) updates.value = validated.duration;
+    if (validated.notes !== undefined) updates.metadata = { notes: validated.notes };
+
+    const result = await updateHealthRecord(id, updates);
 
     if (!result) {
       throw new NotFoundError('Health record not found');
