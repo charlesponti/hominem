@@ -81,7 +81,37 @@
 - [x] 11.1 Implement staged auth phases: `minting_api_token` and `syncing_profile`.
 - [x] 11.2 Refactor boot path to prefer stored API JWT + protected probe before mint attempts.
 - [x] 11.3 Ensure API token mint is single-flight and race-safe.
-- [ ] 11.4 Add mobile integration tests for cold reopen valid/invalid token behavior.
-- [ ] 11.5 Add mobile integration test for verify->mint->first protected call success.
-- [ ] 11.6 Add stage-specific auth observability logs and normalized error codes.
+- [x] 11.4 Extract `bootSession` into a testable `runAuthBoot(deps)` pure async function. Add vitest unit tests: (a) valid stored token + 200 probe → SESSION_LOADED, (b) 401 probe → tokens cleared → SESSION_EXPIRED, (c) network error → tokens preserved → SESSION_EXPIRED, (d) timeout → SESSION_EXPIRED.
+- [x] 11.5 Fix staged event dispatch: `verifyEmailOtp` emits API_TOKEN_MINT_STARTED → PROFILE_SYNC_STARTED → SESSION_LOADED; OTP_VERIFICATION_FAILED on error (not SYNC_FAILED). `signOut` dispatches SIGN_OUT_REQUESTED before async ops. `completePasskeySignIn` emits PROFILE_SYNC_STARTED before SESSION_LOADED.
+- [x] 11.6 Create `utils/auth/auth-event-log.ts`: structured in-process event recorder (`{ event, phase, timestamp, durationMs }`). Wire into `auth-provider.tsx` at each phase transition. Add `auth_boot_start` / `auth_boot_resolved` marks to startup-metrics. Add budget tests: stored-token path < 500ms, cold path < 100ms.
 - [ ] 11.7 Run physical iOS smoke: sign-in -> force-quit -> reopen -> sign-out.
+
+## 12. Auth Provider Performance
+
+- [x] 12.1 Parallelize `SecureStore.getItemAsync` calls at boot with `Promise.all([getItemAsync(ACCESS_KEY), getItemAsync(REFRESH_KEY), getItemAsync(EXPIRES_AT_KEY)])`.
+- [x] 12.2 Apply `AUTH_BOOT_TIMEOUT_MS` (8000ms) to `bootSession` via `setTimeout` + `AbortController`. Dispatch `SESSION_EXPIRED` on timeout.
+- [x] 12.3 Add synchronous `isBootingRef` flag set before the first `await` in `bootSession` to prevent concurrent boot invocations (fixes TOCTOU race).
+- [x] 12.4 Remove `authClient.useSession()` and the `isSessionPending` dependency from `AuthProvider`. Boot path uses stored-token probe only.
+- [x] 12.5 Store `expiresAt = Date.now() + expiresIn * 1000` in SecureStore alongside tokens at sign-in time. In `getAccessToken`, check expiry: if token expires within 60s attempt refresh; dispatch REFRESH_STARTED / REFRESH_FAILED / SESSION_LOADED accordingly.
+
+## 13. Auth Provider Correctness
+
+- [x] 13.1 Fix `resolveAuthRedirect`: add `signing_out` to the no-redirect guard (same treatment as `booting`).
+- [x] 13.2 Fix `useMobilePasskeyAuth`: replace hardcoded `isSupported = true` with real capability detection (iOS 16+).
+- [x] 13.3 Remove `deleteAccount` from `AuthContextType` and `AuthProvider` value.
+- [x] 13.4 Remove `Alert.alert('Sign in failed', ...)` from `verify.tsx`. Inline `authError` state is the sole error feedback path.
+- [x] 13.5 Remove dead code: `mapAuthStatus` (identity function), `extractSessionAccessToken` (unreachable from provider). Remove the corresponding no-op unit tests.
+
+## 14. Test Coverage
+
+- [x] 14.1 Add route guard unit tests for all intermediate states: `signing_out` → no redirect; `verifying_otp` / `minting_api_token` / `syncing_profile` on protected group → redirect to `/(auth)`; `degraded` / `terminal_error` on protected group → redirect; `degraded` on auth group → no redirect.
+- [x] 14.2 Add screen test for OTP verify failure: rejected `verifyEmailOtp` → inline error shown, submit button re-enabled.
+- [x] 14.3 Add screen tests asserting submit button is disabled during in-flight `requestEmailOtp` and `verifyEmailOtp` calls.
+- [x] 14.4 Fix `isValidOtp('1234567')` test: split into explicit normalization-contract test.
+- [x] 14.5 Add `test:integration` script running all `tests/integration/` files. Updated `test:auth` to use it in the PR gate.
+
+## 15. E2E Quality
+
+- [x] 15.1 Replace `setTimeout` polling loop in `fetchLatestOtp` with exponential backoff helper (50ms → 100ms → 200ms → ... capped at 2000ms).
+- [x] 15.2 Apply backoff helper to `waitForOtpStep`, `triggerOtpRequest`, and `dismissBlockingAlertIfPresent`. Remove all bare `setTimeout` polling.
+- [x] 15.3 Rewrite smoke test as single deterministic assertion: clean install → `waitForAuthState('signed_out', 5000)`.

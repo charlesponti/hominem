@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(openspec instructions:*)",
+      "Bash(bun run:*)",
+      "Bash(npx vitest:*)",
+      "Bash(chmod +x:*)",
+      "Bash(bash:*)",
+      "Bash(grep:*)",
+      "Bash(psql:*)"
+    ]
+  }
+}

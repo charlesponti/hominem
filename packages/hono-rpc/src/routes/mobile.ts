@@ -12,7 +12,7 @@ import type {
   MobileVoiceTranscriptionErrorOutput,
   MobileVoiceTranscriptionOutput,
 } from '../types/mobile.types'
-import { getLMStudioAdapter } from '../utils/llm'
+import { getOpenAIAdapter } from '../utils/llm'
 
 const DEFAULT_SUGGESTIONS: MobileIntentSuggestionsOutput['suggestions'] = [
   {
@@ -108,7 +108,7 @@ export const mobileRoutes = new Hono<AppContext>()
     const { content } = c.req.valid('json')
 
     const response = await generateObject<z.infer<typeof deriveOutputSchema>>({
-      model: getLMStudioAdapter(),
+      model: getOpenAIAdapter(),
       schema: deriveOutputSchema,
       prompt: `Extract user intent from this message and return structured output.\n\nMessage:\n${content}`,
     })

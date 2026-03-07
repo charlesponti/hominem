@@ -1,6 +1,16 @@
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:4040'
 const AUTH_E2E_SECRET = process.env.EXPO_PUBLIC_E2E_AUTH_SECRET ?? 'otp-secret'
 
+/**
+ * Exponential backoff delay. Returns a promise that resolves after the
+ * calculated delay, capped at maxMs. Use instead of fixed setTimeout sleeps.
+ * Sequence: 50 → 100 → 200 → 400 → 800 → 1600 → 2000 (capped)
+ */
+async function backoffDelay(attempt, maxMs = 2000) {
+  const ms = Math.min(50 * 2 ** attempt, maxMs)
+  await new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 async function waitForVisible(matcher, timeout = 5000) {
   try {
     await waitFor(element(matcher)).toBeVisible().withTimeout(timeout)
@@ -78,7 +88,7 @@ async function fetchLatestOtp(email) {
       throw new Error(`OTP lookup failed (${response.status}): ${body}`)
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await backoffDelay(attempt)
   }
 
   throw new Error('Timed out waiting for OTP')
@@ -90,7 +100,7 @@ async function dismissBlockingAlertIfPresent() {
     return false
   }
   await element(by.text('OK')).tap()
-  await new Promise((resolve) => setTimeout(resolve, 200))
+  await backoffDelay(1) // ~100ms for UI to settle after dismissing alert
   return true
 }
 
@@ -123,6 +133,7 @@ async function signOutViaContractControl() {
 
 async function waitForOtpStep(timeout = 20000) {
   const startedAt = Date.now()
+  let attempt = 0
   while (Date.now() - startedAt < timeout) {
     const hasOtpInput = await waitForVisible(by.id('auth-otp-input'), 1200)
     if (hasOtpInput) {
@@ -135,7 +146,7 @@ async function waitForOtpStep(timeout = 20000) {
       throw new Error(`OTP request failed in app UI${errorText ? `: ${errorText}` : ''}`)
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 400))
+    await backoffDelay(attempt++)
   }
 
   throw new Error('Timed out waiting for OTP step')
@@ -144,6 +155,7 @@ async function waitForOtpStep(timeout = 20000) {
 async function triggerOtpRequest(timeout = 20000) {
   const startedAt = Date.now()
   let lastError = null
+  let attempt = 0
 
   while (Date.now() - startedAt < timeout) {
     await dismissBlockingAlertIfPresent()
@@ -176,11 +188,11 @@ async function triggerOtpRequest(timeout = 20000) {
         } catch {}
       }
 
-      await new Promise((resolve) => setTimeout(resolve, 700))
+      await backoffDelay(attempt++)
       continue
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 300))
+    await backoffDelay(attempt++)
   }
 
   throw new Error(lastError ?? 'Timed out triggering OTP request')

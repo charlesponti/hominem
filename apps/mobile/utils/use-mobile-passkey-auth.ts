@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import { Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import { getCookie } from '@better-auth/expo/client'
 
@@ -35,7 +36,8 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const isSupported = true // better-auth/expo handles platform detection
+  // Passkeys require iOS 16+. Earlier versions and non-iOS platforms are not supported.
+  const isSupported = Platform.OS === 'ios' && Number.parseInt(Platform.Version as string, 10) >= 16
 
   const signIn = useCallback(async (mode: 'real' | 'e2e-success' | 'e2e-cancel' = 'real'): Promise<PasskeySignInResult | null> => {
     setIsLoading(true)

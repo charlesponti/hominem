@@ -10,20 +10,24 @@ import React, {
   type PropsWithChildren,
 } from 'react'
 
-import { authClient } from '../lib/auth-client'
 import { LocalStore } from './local-store'
 import type { UserProfile as LocalUserProfile } from './local-store/types'
 import { API_BASE_URL, E2E_TESTING } from './constants'
 import { authStateMachine, initialAuthState, type AuthState } from './auth/types'
-import { extractSessionAccessToken, mapAuthStatus, resolveIsLoadingAuth, type AuthStatusCompat } from './auth/provider-utils'
+import { resolveIsLoadingAuth, type AuthStatusCompat } from './auth/provider-utils'
+import { runAuthBoot } from './auth/boot'
+import { markAuthPhaseStart, recordAuthEvent } from './auth/auth-event-log'
+import { markStartupPhase } from './performance/startup-metrics'
 
 const LOCAL_MIGRATION_KEY = 'hominem_mobile_local_migration_v1'
 const API_ACCESS_TOKEN_KEY = 'hominem_mobile_api_access_token_v1'
 const API_REFRESH_TOKEN_KEY = 'hominem_mobile_api_refresh_token_v1'
+const API_EXPIRES_AT_KEY = 'hominem_mobile_api_expires_at_v1'
 const OTP_REQUEST_TIMEOUT_MS = 12000
+const OTP_VERIFY_TIMEOUT_MS = 20000
 const AUTH_BOOT_TIMEOUT_MS = 8000
+const TOKEN_REFRESH_BUFFER_MS = 60_000
 
-// Single-path architecture: tokens are issued at sign-in time only
 interface SignInResponse {
   user: {
     id: string
@@ -52,7 +56,6 @@ interface RefreshResponse {
   tokenType: 'Bearer'
 }
 
-// Map local store type to auth state machine type
 function toAuthUserProfile(localProfile: LocalUserProfile | null): AuthState['user'] {
   if (!localProfile) return null
   return {
@@ -80,10 +83,7 @@ function fromSignInUser(user: {
 
 async function clearLegacyLocalDataOnce() {
   const migrationFlag = await SecureStore.getItemAsync(LOCAL_MIGRATION_KEY)
-  if (migrationFlag === '1') {
-    return
-  }
-
+  if (migrationFlag === '1') return
   await LocalStore.clearAllData()
   await SecureStore.setItemAsync(LOCAL_MIGRATION_KEY, '1')
 }
@@ -97,7 +97,6 @@ type AuthContextType = {
   verifyEmailOtp: (input: { email: string; otp: string; name?: string }) => Promise<void>
   completePasskeySignIn: (input: SignInResponse) => Promise<void>
   signOut: () => Promise<void>
-  deleteAccount: () => Promise<void>
   updateProfile: (updates: Partial<LocalUserProfile>) => Promise<LocalUserProfile>
   getAccessToken: () => Promise<string | null>
   clearError: () => void
@@ -117,163 +116,141 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const abortControllerRef = useRef<AbortController | null>(null)
   const apiAccessTokenRef = useRef<string | null>(null)
   const apiRefreshTokenRef = useRef<string | null>(null)
+  const apiExpiresAtRef = useRef<number | null>(null)
   const hasBootstrappedRef = useRef(false)
-  const syncGenerationRef = useRef(0)
+  // Set synchronously before first await to prevent TOCTOU race on concurrent boot invocations
+  const isBootingRef = useRef(false)
 
-  const { data: session, isPending: isSessionPending } = authClient.useSession()
-  const sessionUser = session?.user ?? null
-
-  const setApiTokens = useCallback(async (accessToken: string | null, refreshToken: string | null) => {
+  const setApiTokens = useCallback(async (
+    accessToken: string | null,
+    refreshToken: string | null,
+    expiresIn?: number,
+  ) => {
     apiAccessTokenRef.current = accessToken
     apiRefreshTokenRef.current = refreshToken
+    apiExpiresAtRef.current = expiresIn != null ? Date.now() + expiresIn * 1000 : null
 
     if (accessToken && refreshToken) {
-      await SecureStore.setItemAsync(API_ACCESS_TOKEN_KEY, accessToken)
-      await SecureStore.setItemAsync(API_REFRESH_TOKEN_KEY, refreshToken)
+      const expiresAt = apiExpiresAtRef.current
+      await Promise.all([
+        SecureStore.setItemAsync(API_ACCESS_TOKEN_KEY, accessToken),
+        SecureStore.setItemAsync(API_REFRESH_TOKEN_KEY, refreshToken),
+        expiresAt != null
+          ? SecureStore.setItemAsync(API_EXPIRES_AT_KEY, String(expiresAt))
+          : SecureStore.deleteItemAsync(API_EXPIRES_AT_KEY),
+      ])
       return
     }
 
-    await SecureStore.deleteItemAsync(API_ACCESS_TOKEN_KEY)
-    await SecureStore.deleteItemAsync(API_REFRESH_TOKEN_KEY)
+    await Promise.all([
+      SecureStore.deleteItemAsync(API_ACCESS_TOKEN_KEY),
+      SecureStore.deleteItemAsync(API_REFRESH_TOKEN_KEY),
+      SecureStore.deleteItemAsync(API_EXPIRES_AT_KEY),
+    ])
   }, [])
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
-      }
+      abortControllerRef.current?.abort()
     }
   }, [])
 
   useEffect(() => {
-    abortControllerRef.current = new AbortController()
-    const signal = abortControllerRef.current.signal
-    const generation = syncGenerationRef.current + 1
-    syncGenerationRef.current = generation
-
-    const isStale = () => signal.aborted || generation !== syncGenerationRef.current
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+    const signal = controller.signal
 
     const bootSession = async () => {
-      // Only run once per app lifetime (or until explicitly reset)
-      if (hasBootstrappedRef.current) {
-        return
-      }
+      // Synchronous double-check prevents concurrent boot invocations
+      if (hasBootstrappedRef.current || isBootingRef.current) return
+      isBootingRef.current = true
 
-      if (isSessionPending) {
-        return
-      }
+      markStartupPhase('auth_boot_start')
+      markAuthPhaseStart('boot')
+      recordAuthEvent('auth_boot_start', 'boot')
+
+      const timeoutId = setTimeout(() => controller.abort(), AUTH_BOOT_TIMEOUT_MS)
 
       try {
-        await clearLegacyLocalDataOnce()
-        if (isStale()) return
-
-        // Phase 1: Check if we have stored API tokens from a prior session
-        const storedAccessToken = await SecureStore.getItemAsync(API_ACCESS_TOKEN_KEY)
-        const storedRefreshToken = await SecureStore.getItemAsync(API_REFRESH_TOKEN_KEY)
-
-        if (storedAccessToken) {
-          apiAccessTokenRef.current = storedAccessToken
-          apiRefreshTokenRef.current = storedRefreshToken
-          if (isStale()) return
-
-          // Phase 2: Validate stored token by checking identity
-          try {
-            const sessionResponse = await fetch(new URL('/api/auth/session', API_BASE_URL).toString(), {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${storedAccessToken}`,
-              },
-            })
-
-            if (isStale()) return
-
-            if (sessionResponse.ok) {
-              const sessionData = (await sessionResponse.json()) as SessionResponse
-
-              if (sessionData.isAuthenticated && sessionData.user) {
-                // Token is valid! Load user and enter signed_in state
-                const localUser = fromSignInUser(sessionData.user)
-                const saved = await LocalStore.upsertUserProfile(localUser)
-                if (isStale()) return
-
-                if (saved) {
-                  const userProfile = toAuthUserProfile(saved)
-                  if (userProfile) {
-                    dispatch({ type: 'SESSION_LOADED', user: userProfile })
-                    hasBootstrappedRef.current = true
-                    return
-                  }
-                }
-              }
+        const result = await runAuthBoot({
+          getStoredTokens: async () => {
+            const [accessToken, refreshToken, expiresAtStr] = await Promise.all([
+              SecureStore.getItemAsync(API_ACCESS_TOKEN_KEY),
+              SecureStore.getItemAsync(API_REFRESH_TOKEN_KEY),
+              SecureStore.getItemAsync(API_EXPIRES_AT_KEY),
+            ])
+            return { accessToken, refreshToken, expiresAtStr }
+          },
+          probeSession: async (token, sig) => {
+            const response = await fetch(
+              new URL('/api/auth/session', API_BASE_URL).toString(),
+              { method: 'GET', headers: { Authorization: `Bearer ${token}` }, signal: sig },
+            )
+            if (response.ok) {
+              const data = (await response.json()) as SessionResponse
+              return data.isAuthenticated && data.user ? data.user : null
             }
+            if (response.status === 401) return null
+            throw new Error(`session probe failed: ${response.status}`)
+          },
+          clearTokens: () => setApiTokens(null, null),
+          upsertProfile: async (user) => {
+            const saved = await LocalStore.upsertUserProfile(fromSignInUser(user))
+            return toAuthUserProfile(saved)
+          },
+          clearLegacyData: clearLegacyLocalDataOnce,
+          signal,
+        })
 
-            // Token validation failed (401, etc)
-            if (sessionResponse.status === 401) {
-              // Stored token is invalid - clear it
-              await setApiTokens(null, null)
-              if (isStale()) return
-            }
-          } catch (error) {
-            console.error('[mobile-auth] token validation error', error)
-            // Network error - don't clear tokens, just continue to signed_out
-          }
-        }
-
-        // Phase 3: No valid stored token - check if Better Auth session exists
-        // (This only happens after first boot or after explicit sign-out)
-        if (!sessionUser) {
-          // No Better Auth session and no stored tokens = signed out
-          if (isStale()) return
+        if (result.type === 'SESSION_LOADED') {
+          apiAccessTokenRef.current = result.tokens.accessToken
+          apiRefreshTokenRef.current = result.tokens.refreshToken
+          apiExpiresAtRef.current = result.tokens.expiresAtStr
+            ? Number(result.tokens.expiresAtStr)
+            : null
+          dispatch({ type: 'SESSION_LOADED', user: result.user })
+          recordAuthEvent('auth_boot_resolved:session_loaded', 'boot')
+        } else {
           dispatch({ type: 'SESSION_EXPIRED' })
-          hasBootstrappedRef.current = true
-          return
+          recordAuthEvent('auth_boot_resolved:session_expired', 'boot')
         }
 
-        // There's a Better Auth session but no API tokens
-        // This can happen if:
-        // 1. User just signed in via browser and switched to mobile
-        // 2. App was reinstalled
-        // In this case, we should NOT automatically mint tokens from Better Auth
-        // Instead, we guide user back through sign-in flow
-        if (isStale()) return
-        dispatch({ type: 'SESSION_EXPIRED' })
+        markStartupPhase('auth_boot_resolved')
         hasBootstrappedRef.current = true
-      } catch (error) {
-        console.error('[mobile-auth] boot session failed', error)
-        if (!isStale()) {
-          dispatch({
-            type: 'SYNC_FAILED',
-            error: error instanceof Error ? error : new Error('Boot failed'),
-          })
+      } catch {
+        // Handles timeout (AbortError), network errors, and unexpected throws.
+        // Always resolve boot to a stable state so the app never hangs.
+        if (!hasBootstrappedRef.current) {
+          dispatch({ type: 'SESSION_EXPIRED' })
+          recordAuthEvent('auth_boot_resolved:error', 'boot')
+          markStartupPhase('auth_boot_resolved')
+          hasBootstrappedRef.current = true
         }
+      } finally {
+        clearTimeout(timeoutId)
+        isBootingRef.current = false
       }
     }
 
     void bootSession()
 
     return () => {
-      abortControllerRef.current?.abort()
+      controller.abort()
     }
-  }, [isSessionPending, setApiTokens])
+  }, [setApiTokens])
 
   const requestEmailOtp = useCallback(async (email: string) => {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => {
-      controller.abort()
-    }, OTP_REQUEST_TIMEOUT_MS)
+    const timeoutId = setTimeout(() => controller.abort(), OTP_REQUEST_TIMEOUT_MS)
+
+    dispatch({ type: 'OTP_REQUEST_STARTED' })
 
     let response: Response
     try {
       response = await fetch(new URL('/api/auth/email-otp/send', API_BASE_URL).toString(), {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          type: 'sign-in',
-        }),
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, type: 'sign-in' }),
         signal: controller.signal,
       })
     } catch (error) {
@@ -283,7 +260,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           : error instanceof Error
             ? error
             : new Error('Unable to send verification code.')
-      dispatch({ type: 'OTP_REQUEST_FAILED', error: resolvedError as Error })
+      dispatch({ type: 'OTP_REQUEST_FAILED', error: resolvedError })
       throw resolvedError
     } finally {
       clearTimeout(timeoutId)
@@ -293,11 +270,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       let message = 'Unable to send verification code.'
       try {
         const payload = (await response.json()) as { message?: string; error?: string }
-        if (payload.message) {
-          message = payload.message
-        } else if (payload.error) {
-          message = payload.error
-        }
+        message = payload.message ?? payload.error ?? message
       } catch {}
       const error = new Error(message)
       dispatch({ type: 'OTP_REQUEST_FAILED', error })
@@ -310,23 +283,15 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const verifyEmailOtp = useCallback(
     async (input: { email: string; otp: string; name?: string }) => {
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => {
-        controller.abort()
-      }, OTP_REQUEST_TIMEOUT_MS)
+      const timeoutId = setTimeout(() => controller.abort(), OTP_VERIFY_TIMEOUT_MS)
+
+      dispatch({ type: 'OTP_VERIFICATION_STARTED' })
 
       try {
-        dispatch({ type: 'OTP_VERIFICATION_STARTED' })
-
         const response = await fetch(new URL('/api/auth/email-otp/verify', API_BASE_URL).toString(), {
           method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: input.email,
-            otp: input.otp,
-            name: input.name,
-          }),
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email: input.email, otp: input.otp, name: input.name }),
           signal: controller.signal,
         })
 
@@ -334,43 +299,30 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           let message = 'Verification failed. Please try again.'
           try {
             const payload = (await response.json()) as { message?: string; error?: string }
-            if (payload.message) {
-              message = payload.message
-            } else if (payload.error) {
-              message = payload.error
-            }
+            message = payload.message ?? payload.error ?? message
           } catch {}
           throw new Error(message)
         }
 
-        // Single-path: API returns complete credential structure
         const signInData = (await response.json()) as SignInResponse
 
         if (!signInData.accessToken || !signInData.refreshToken || !signInData.user) {
           throw new Error('Invalid sign-in response from API')
         }
 
-        // Store tokens
-        await setApiTokens(signInData.accessToken, signInData.refreshToken)
+        dispatch({ type: 'API_TOKEN_MINT_STARTED' })
+        await setApiTokens(signInData.accessToken, signInData.refreshToken, signInData.expiresIn)
 
-        // Store user profile locally
+        dispatch({ type: 'PROFILE_SYNC_STARTED' })
         const localUser = fromSignInUser(signInData.user)
         const saved = await LocalStore.upsertUserProfile(localUser)
-
-        if (!saved) {
-          throw new Error('Failed to save user profile')
-        }
-
-        // Transition to signed_in
         const userProfile = toAuthUserProfile(saved)
-        if (!userProfile) {
-          throw new Error('Failed to create user profile')
-        }
+        if (!userProfile) throw new Error('Failed to create user profile')
+
         dispatch({ type: 'SESSION_LOADED', user: userProfile })
       } catch (error) {
         const resolvedError = error instanceof Error ? error : new Error('Sign-in failed')
-        console.error('[mobile-auth] OTP verify failed', resolvedError)
-        dispatch({ type: 'SYNC_FAILED', error: resolvedError })
+        dispatch({ type: 'OTP_VERIFICATION_FAILED', error: resolvedError })
         throw resolvedError
       } finally {
         clearTimeout(timeoutId)
@@ -388,18 +340,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           throw new Error('Invalid passkey sign-in response from API')
         }
 
-        await setApiTokens(input.accessToken, input.refreshToken)
+        await setApiTokens(input.accessToken, input.refreshToken, input.expiresIn)
 
+        dispatch({ type: 'PROFILE_SYNC_STARTED' })
         const localUser = fromSignInUser(input.user)
         const saved = await LocalStore.upsertUserProfile(localUser)
-        if (!saved) {
-          throw new Error('Failed to save passkey user profile')
-        }
-
         const userProfile = toAuthUserProfile(saved)
-        if (!userProfile) {
-          throw new Error('Failed to create passkey user profile')
-        }
+        if (!userProfile) throw new Error('Failed to create passkey user profile')
 
         dispatch({ type: 'SESSION_LOADED', user: userProfile })
       } catch (error) {
@@ -412,98 +359,106 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   )
 
   const signOut = useCallback(async () => {
+    dispatch({ type: 'SIGN_OUT_REQUESTED' })
+
     try {
-      // Call API sign-out to revoke tokens server-side
       const accessToken = apiAccessTokenRef.current
       if (accessToken) {
         await fetch(new URL('/api/auth/logout', API_BASE_URL).toString(), {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
+          headers: { Authorization: `Bearer ${accessToken}` },
         }).catch(() => {
-          // Ignore network errors - we'll clear locally anyway
+          // Best-effort server revocation — clear locally regardless
         })
       }
-    } catch {
-      // Best effort
     } finally {
-      // Clear local state
       await setApiTokens(null, null)
       await LocalStore.clearAllData()
       dispatch({ type: 'SIGN_OUT_SUCCESS' })
     }
   }, [setApiTokens])
 
-  const deleteAccount = useCallback(async () => {
-    throw new Error('deleteAccount not yet implemented')
+  const updateProfile = useCallback(async (updates: Partial<LocalUserProfile>) => {
+    const current = await LocalStore.getUserProfile()
+    if (!current) throw new Error('No user profile to update')
+
+    const merged: LocalUserProfile = {
+      ...current,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    }
+
+    const saved = await LocalStore.upsertUserProfile(merged)
+    if (!saved) throw new Error('Failed to update profile')
+
+    return saved
   }, [])
-
-  const updateProfile = useCallback(
-    async (updates: Partial<LocalUserProfile>) => {
-      const current = await LocalStore.getUserProfile()
-      if (!current) {
-        throw new Error('No user profile to update')
-      }
-
-      const merged: LocalUserProfile = {
-        ...current,
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      }
-
-      const saved = await LocalStore.upsertUserProfile(merged)
-      if (!saved) {
-        throw new Error('Failed to update profile')
-      }
-
-      return saved
-    },
-    [],
-  )
 
   const getAccessToken = useCallback(async () => {
     const token = apiAccessTokenRef.current
+    if (!token) return null
 
-    if (!token) {
-      return null
+    const expiresAt = apiExpiresAtRef.current
+    if (expiresAt != null && Date.now() + TOKEN_REFRESH_BUFFER_MS > expiresAt) {
+      const refreshToken = apiRefreshTokenRef.current
+      if (refreshToken) {
+        try {
+          dispatch({ type: 'REFRESH_STARTED' })
+          const response = await fetch(new URL('/api/auth/refresh', API_BASE_URL).toString(), {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ refreshToken }),
+          })
+
+          if (response.ok) {
+            const data = (await response.json()) as RefreshResponse
+            await setApiTokens(data.accessToken, data.refreshToken, data.expiresIn)
+            const profile = await LocalStore.getUserProfile()
+            const userProfile = toAuthUserProfile(profile)
+            if (userProfile) dispatch({ type: 'SESSION_LOADED', user: userProfile })
+            return data.accessToken
+          }
+
+          dispatch({ type: 'REFRESH_FAILED', error: new Error('Token refresh failed') })
+          return null
+        } catch (error) {
+          dispatch({
+            type: 'REFRESH_FAILED',
+            error: error instanceof Error ? error : new Error('Token refresh failed'),
+          })
+          return null
+        }
+      }
     }
 
-    // If we have a refresh token, try to refresh if expired
-    // For now, just return the token
-    // Client-side token expiry check can be added here if needed
     return token
-  }, [])
+  }, [setApiTokens])
 
   const clearError = useCallback(() => {
     dispatch({ type: 'CLEAR_ERROR' })
   }, [])
 
   const resetAuthForE2E = useCallback(async () => {
-    if (!E2E_TESTING) {
-      return
-    }
-
+    if (!E2E_TESTING) return
     await LocalStore.clearAllData()
     await setApiTokens(null, null)
     dispatch({ type: 'RESET_TO_SIGNED_OUT' })
     hasBootstrappedRef.current = false
+    isBootingRef.current = false
   }, [setApiTokens])
 
-  const authStatus = useMemo(() => mapAuthStatus(state.status), [state.status])
+  const authStatus = state.status
   const isLoadingAuth = useMemo(() => resolveIsLoadingAuth(state), [state])
   const isSignedIn = state.status === 'signed_in'
   const currentUser = useMemo(() => {
-    if (state.user) {
-      return {
-        id: state.user.id,
-        email: state.user.email,
-        name: state.user.name,
-        createdAt: state.user.createdAt,
-        updatedAt: state.user.updatedAt,
-      }
+    if (!state.user) return null
+    return {
+      id: state.user.id,
+      email: state.user.email,
+      name: state.user.name,
+      createdAt: state.user.createdAt,
+      updatedAt: state.user.updatedAt,
     }
-    return null
   }, [state.user])
 
   const value: AuthContextType = {
@@ -515,7 +470,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     verifyEmailOtp,
     completePasskeySignIn,
     signOut,
-    deleteAccount,
     updateProfile,
     getAccessToken,
     clearError,

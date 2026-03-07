@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Alert, Pressable, TextInput as RNTextInput } from 'react-native';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Pressable, TextInput as RNTextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link } from 'expo-router';
 
@@ -55,9 +55,8 @@ export function VerifyScreen() {
       });
       setAuthError(null);
     } catch (error: unknown) {
-      console.error('[mobile-auth] Email OTP verification failed', error);
-      Alert.alert('Sign in failed', 'Unable to authenticate. Please try again.');
-      setAuthError('There was a problem signing in. Our team is working on it.');
+      const message = error instanceof Error ? error.message : 'There was a problem signing in. Our team is working on it.';
+      setAuthError(message);
     } finally {
       setIsSubmitting(false);
     }

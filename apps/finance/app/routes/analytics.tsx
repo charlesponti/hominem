@@ -8,7 +8,6 @@ import { AnalyticsStatisticsSummary } from '~/components/analytics/analytics-sta
 import { MonthlyBreakdown } from '~/components/analytics/monthly-breakdown';
 import { TopTags } from '~/components/analytics/top-tags';
 import { TopMerchants } from '~/components/analytics/top-merchants';
-import { BudgetHistoryChart } from '~/components/budget-categories';
 import { BudgetOverview } from '~/components/budget-overview';
 
 export default function FinanceAnalyticsPage() {
@@ -93,8 +92,6 @@ export default function FinanceAnalyticsPage() {
           selectedAccount={selectedAccount}
           selectedTag={selectedTag}
         />
-
-        <BudgetHistoryChart />
       </div>
     </div>
   );

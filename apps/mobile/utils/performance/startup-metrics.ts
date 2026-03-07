@@ -1,4 +1,4 @@
-type StartupPhase = 'app_start' | 'root_layout_mounted' | 'shell_ready'
+type StartupPhase = 'app_start' | 'root_layout_mounted' | 'shell_ready' | 'auth_boot_start' | 'auth_boot_resolved'
 
 interface StartupMetric {
   phase: StartupPhase

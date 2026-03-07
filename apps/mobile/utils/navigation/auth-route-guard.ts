@@ -8,8 +8,10 @@ interface ResolveAuthRedirectInput {
 
 export type AuthRedirectTarget = '/(auth)' | '/(drawer)/(tabs)/start'
 
+const NO_REDIRECT_STATUSES = new Set(['booting', 'signing_out'])
+
 export function resolveAuthRedirect(input: ResolveAuthRedirectInput): AuthRedirectTarget | null {
-  if (input.authStatus === 'booting') {
+  if (NO_REDIRECT_STATUSES.has(input.authStatus)) {
     return null
   }
 

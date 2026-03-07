@@ -183,6 +183,48 @@ describe('auth rendered screens', () => {
     expect(await screen.findByTestId('auth-resend-message')).toHaveTextContent('A new code is on the way.')
   })
 
+  it('shows inline error and re-enables submit on OTP verify failure', async () => {
+    mockVerifyEmailOtp.mockRejectedValue(new Error('Invalid or expired code.'))
+
+    render(<VerifyScreen />)
+
+    fireEvent.changeText(screen.getByTestId('auth-otp-input'), '123456')
+    fireEvent.press(screen.getByTestId('auth-verify-otp'))
+
+    expect(await screen.findByTestId('auth-error-text')).toHaveTextContent('INVALID OR EXPIRED CODE.')
+
+    // Button must be re-enabled after rejection so the user can retry
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-verify-otp')).not.toBeDisabled()
+    })
+  })
+
+  it('disables send-code button while OTP request is in-flight', async () => {
+    let resolveOtp!: () => void
+    mockRequestEmailOtp.mockReturnValue(new Promise<void>((res) => { resolveOtp = res }))
+
+    render(<AuthScreen />)
+    fireEvent.changeText(screen.getByTestId('auth-email-input'), 'user@example.com')
+    fireEvent.press(screen.getByTestId('auth-send-otp'))
+
+    expect(screen.getByTestId('auth-send-otp')).toBeDisabled()
+
+    resolveOtp()
+  })
+
+  it('disables verify button while OTP verify is in-flight', async () => {
+    let resolveVerify!: () => void
+    mockVerifyEmailOtp.mockReturnValue(new Promise<void>((res) => { resolveVerify = res }))
+
+    render(<VerifyScreen />)
+    fireEvent.changeText(screen.getByTestId('auth-otp-input'), '123456')
+    fireEvent.press(screen.getByTestId('auth-verify-otp'))
+
+    expect(screen.getByTestId('auth-verify-otp')).toBeDisabled()
+
+    resolveVerify()
+  })
+
   it('shows passkey CTA when supported and invokes passkey sign-in', async () => {
     mockPasskeySignIn.mockResolvedValue({
       accessToken: 'passkey-access-token',

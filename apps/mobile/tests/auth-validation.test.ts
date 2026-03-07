@@ -21,7 +21,13 @@ describe('auth validation', () => {
     expect(isValidOtp('123456')).toBe(true)
     expect(isValidOtp('12345')).toBe(false)
     expect(isValidOtp('12 34-56')).toBe(true)
-    expect(isValidOtp('1234567')).toBe(true)
     expect(isValidOtp('abcdef')).toBe(false)
+  })
+
+  it('accepts over-length input because isValidOtp normalizes (truncates) before testing', () => {
+    // normalizeOtp truncates to 6 digits first, so '1234567' → '123456' → valid
+    expect(isValidOtp('1234567')).toBe(true)
+    // callers should always normalize before calling isValidOtp; this documents the contract
+    expect(normalizeOtp('1234567')).toBe('123456')
   })
 })

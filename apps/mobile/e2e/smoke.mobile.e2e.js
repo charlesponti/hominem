@@ -2,7 +2,6 @@ const {
   launchMobileApp,
   stopMobileAppSync,
   waitForAuthState,
-  waitForVisible,
 } = require('./helpers/auth.e2e.helpers')
 
 describe('Mobile smoke', () => {
@@ -14,19 +13,10 @@ describe('Mobile smoke', () => {
     await stopMobileAppSync()
   })
 
-  it('resolves to an auth state contract indicator', async () => {
-    const bootingVisible = await waitForVisible(by.id('auth-state-booting'), 5000)
-
-    if (bootingVisible) {
-      await waitForAuthState('signed_out', 30000)
-      return
-    }
-
-    const signedOutVisible = await waitForVisible(by.id('auth-state-signed-out'), 10000)
-    if (signedOutVisible) {
-      return
-    }
-
-    await waitForAuthState('signed_in', 10000)
+  it('resolves to signed_out within 5 seconds on a clean install', async () => {
+    // Clean install means no stored tokens → boot must settle to signed_out
+    // within the AUTH_BOOT_TIMEOUT_MS budget (8s). We assert 5s to give a
+    // meaningful margin: if this flakes, investigate boot perf not the test.
+    await waitForAuthState('signed_out', 5000)
   })
 })

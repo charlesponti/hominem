@@ -11,9 +11,6 @@ export default [
     route('accounts', 'routes/accounts.tsx'),
     route('accounts/:id', 'routes/accounts.$id.tsx'),
 
-    // Budget
-    route('budget', 'routes/budget.tsx'),
-
     // Analytics
     route('analytics', 'routes/analytics.tsx'),
     route('analytics/monthly/:month', 'routes/analytics.monthly.$month.tsx'),
