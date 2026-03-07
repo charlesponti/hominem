@@ -26,32 +26,36 @@ import type {
   NotesVersionsOutput,
 } from '../types/notes.types'
 
-import type { Note, PublishingMetadata, ContentTag } from '@hominem/notes-services'
+import type { Note, PublishingMetadata, ContentTag, NoteMention, NoteAnalysis } from '@hominem/notes-services'
+import type { Selectable } from 'kysely'
+import type { Database } from '@hominem/db'
 
 import { authMiddleware, type AppContext } from '../middleware/auth'
 
+type NoteRow = Selectable<Database['notes']>
+
 // Helper to convert database row to Note type
-function dbToNote(row: any): Note {
+function dbToNote(row: NoteRow): Note {
   return {
     id: row.id,
     userId: row.user_id,
-    type: row.type,
-    status: row.status,
+    type: row.type as Note['type'],
+    status: row.status as Note['status'],
     title: row.title,
-    content: row.content,
+    content: row.content || '',
     excerpt: row.excerpt,
-    tags: Array.isArray(row.tags) ? row.tags : [],
-    mentions: row.mentions,
-    analysis: row.analysis,
-    publishingMetadata: row.publishing_metadata,
+    tags: [],
+    mentions: row.mentions as NoteMention[] | null,
+    analysis: row.analysis as NoteAnalysis | null,
+    publishingMetadata: row.publishing_metadata as PublishingMetadata | null,
     parentNoteId: row.parent_note_id,
     versionNumber: row.version_number,
     isLatestVersion: row.is_latest_version,
     publishedAt: row.published_at,
     scheduledFor: row.scheduled_for,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  } as unknown as Note
+    createdAt: row.created_at || new Date().toISOString(),
+    updatedAt: row.updated_at || new Date().toISOString(),
+  }
 }
 
 // Helper to get note with ownership check
@@ -83,11 +87,11 @@ async function hydrateNoteTags(notes: Note[]): Promise<void> {
 
   const tagsByNoteId = new Map<string, ContentTag[]>()
   for (const row of rows) {
-    const noteId = (row as any).note_id
+    const noteId = row.note_id
     if (!tagsByNoteId.has(noteId)) {
       tagsByNoteId.set(noteId, [])
     }
-    tagsByNoteId.get(noteId)!.push({ value: (row as any).name })
+    tagsByNoteId.get(noteId)!.push({ value: row.name })
   }
 
   for (const note of notes) {
@@ -181,7 +185,7 @@ export const notesRoutes = new Hono<AppContext>()
 
     // Filter by types
     if (types && types.length > 0) {
-      query = query.where('type', 'in', types as any[])
+      query = query.where('type', 'in', types)
     }
 
     // Filter by status
@@ -196,7 +200,7 @@ export const notesRoutes = new Hono<AppContext>()
 
     // Filter by created_at if since is provided
     if (queryParams.since) {
-      query = query.where('created_at', '>=', queryParams.since as any)
+      query = query.where('created_at', '>=', queryParams.since)
     }
 
     // Filter by content or title if query is provided
@@ -226,7 +230,7 @@ export const notesRoutes = new Hono<AppContext>()
           )
           .execute()
 
-        tagged.forEach((t: any) => notesWithTags.add(t.note_id))
+        tagged.forEach((t) => notesWithTags.add(t.note_id))
       }
       results = results.filter((n) => notesWithTags.has(n.id))
     }
@@ -333,9 +337,9 @@ export const notesRoutes = new Hono<AppContext>()
         content: data.content,
         title: data.title || null,
         excerpt: data.excerpt || null,
-        mentions: (data.mentions || null) as any,
-        analysis: (data.analysis || null) as any,
-        publishing_metadata: (data.publishingMetadata || null) as any,
+        mentions: data.mentions || null,
+        analysis: data.analysis || null,
+        publishing_metadata: data.publishingMetadata || null,
         created_at: now,
         updated_at: now,
       })
@@ -362,15 +366,26 @@ export const notesRoutes = new Hono<AppContext>()
     await getNoteWithOwnershipCheck(id, userId)
 
     // Build update object
-    const updateValues: Record<string, any> = { updated_at: now }
+    interface UpdateValues {
+      updated_at: string
+      type?: string
+      status?: string
+      title?: string | null
+      content?: string
+      excerpt?: string | null
+      analysis?: NoteAnalysis | null
+      publishing_metadata?: PublishingMetadata | null
+    }
+
+    const updateValues: UpdateValues = { updated_at: now }
 
     if (data.type !== undefined) updateValues.type = data.type
     if (data.status !== undefined) updateValues.status = data.status
     if (data.title !== undefined) updateValues.title = data.title
     if (data.content !== undefined) updateValues.content = data.content
     if (data.excerpt !== undefined) updateValues.excerpt = data.excerpt
-    if (data.analysis !== undefined) updateValues.analysis = data.analysis as any
-    if (data.publishingMetadata !== undefined) updateValues.publishing_metadata = data.publishingMetadata as any
+    if (data.analysis !== undefined) updateValues.analysis = data.analysis
+    if (data.publishingMetadata !== undefined) updateValues.publishing_metadata = data.publishingMetadata
 
     await db.updateTable('notes').set(updateValues).where('id', '=', id).execute()
 
@@ -413,7 +428,7 @@ export const notesRoutes = new Hono<AppContext>()
     const note = await getNoteWithOwnershipCheck(id, userId)
 
     // Build updated publishing metadata
-    const currentMetadata = (note.publishingMetadata || {}) as PublishingMetadata
+    const currentMetadata: PublishingMetadata = note.publishingMetadata || {}
     const newMetadata: PublishingMetadata = {
       ...currentMetadata,
       ...(data.platform && { platform: data.platform }),
@@ -426,7 +441,7 @@ export const notesRoutes = new Hono<AppContext>()
       .updateTable('notes')
       .set({
         status: 'published',
-        publishing_metadata: newMetadata as any,
+        publishing_metadata: newMetadata,
         published_at: now,
         updated_at: now,
       })
@@ -534,18 +549,29 @@ export const notesRoutes = new Hono<AppContext>()
             .where((eb) => eb.and([eb('id', '=', noteId), eb('user_id', '=', userId)]))
             .executeTakeFirst()
 
-          if (existing) {
-            // Update
-            const updateValues: Record<string, any> = { updated_at: now }
+           if (existing) {
+             // Update
+             interface BatchUpdateValues {
+               updated_at: string
+               type?: string
+               status?: string
+               title?: string | null
+               content?: string
+               excerpt?: string | null
+               analysis?: NoteAnalysis | null
+               publishing_metadata?: PublishingMetadata | null
+             }
 
-            if (item.type !== undefined) updateValues.type = item.type
-            if (item.status !== undefined) updateValues.status = item.status
-            if (item.title !== undefined) updateValues.title = item.title
-            if (item.content !== undefined) updateValues.content = item.content
-            if (item.excerpt !== undefined) updateValues.excerpt = item.excerpt
-            if (item.analysis !== undefined) updateValues.analysis = item.analysis as any
-            if (item.publishingMetadata !== undefined)
-              updateValues.publishing_metadata = item.publishingMetadata as any
+             const updateValues: BatchUpdateValues = { updated_at: now }
+
+             if (item.type !== undefined) updateValues.type = item.type
+             if (item.status !== undefined) updateValues.status = item.status
+             if (item.title !== undefined) updateValues.title = item.title
+             if (item.content !== undefined) updateValues.content = item.content
+             if (item.excerpt !== undefined) updateValues.excerpt = item.excerpt
+             if (item.analysis !== undefined) updateValues.analysis = item.analysis
+             if (item.publishingMetadata !== undefined)
+               updateValues.publishing_metadata = item.publishingMetadata
 
             await db.updateTable('notes').set(updateValues).where('id', '=', noteId).execute()
 
@@ -566,9 +592,9 @@ export const notesRoutes = new Hono<AppContext>()
                 content: item.content,
                 title: item.title || null,
                 excerpt: item.excerpt || null,
-                mentions: (item.mentions || null) as any,
-                analysis: (item.analysis || null) as any,
-                publishing_metadata: (item.publishingMetadata || null) as any,
+                mentions: item.mentions || null,
+                analysis: item.analysis || null,
+                publishing_metadata: item.publishingMetadata || null,
                 created_at: item.createdAt || now,
                 updated_at: item.updatedAt || now,
               })
