@@ -19,7 +19,7 @@ export default function StartScreen() {
   const onIntentPress = useCallback(
     (intent: { id: string; seed_prompt?: string }) => {
       router.push({
-        pathname: '/(drawer)/(tabs)/sherpa',
+        pathname: '/(protected)/(tabs)/sherpa',
         params: { intentId: intent.id, seed: intent.seed_prompt },
       });
     },

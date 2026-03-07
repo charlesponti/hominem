@@ -27,7 +27,7 @@ describe('auth contract integration', () => {
     const next = harness.dispatch({ type: 'SESSION_LOADED', user })
 
     expectAuthStatus(next, 'signed_in')
-    expectNoRedirect(harness.resolveRoute(['(drawer)', '(tabs)', 'start']))
+    expectNoRedirect(harness.resolveRoute(['(protected)', '(tabs)', 'start']))
   })
 
   it('concurrent sign-in events converge to a stable signed_in state', () => {
@@ -61,31 +61,31 @@ describe('auth contract integration', () => {
 
   it('deep link to protected route during boot does not redirect-loop and converges after session resolve', () => {
     const signedOutHarness = createAuthIntegrationHarness()
-    expectNoRedirect(signedOutHarness.resolveRoute(['(drawer)', '(tabs)', 'start']))
+    expectNoRedirect(signedOutHarness.resolveRoute(['(protected)', '(tabs)', 'start']))
 
     signedOutHarness.dispatch({ type: 'SESSION_EXPIRED' })
-    expectRedirect(signedOutHarness.resolveRoute(['(drawer)', '(tabs)', 'start']), '/(auth)')
+    expectRedirect(signedOutHarness.resolveRoute(['(protected)', '(tabs)', 'start']), '/(auth)')
 
     const signedInHarness = createAuthIntegrationHarness()
-    expectNoRedirect(signedInHarness.resolveRoute(['(drawer)', '(tabs)', 'start']))
+    expectNoRedirect(signedInHarness.resolveRoute(['(protected)', '(tabs)', 'start']))
 
     signedInHarness.dispatch({ type: 'SESSION_LOADED', user: buildAuthUser() })
-    expectNoRedirect(signedInHarness.resolveRoute(['(drawer)', '(tabs)', 'start']))
+    expectNoRedirect(signedInHarness.resolveRoute(['(protected)', '(tabs)', 'start']))
   })
 
   it('guarded navigation transitions are idempotent', () => {
     const signedOutHarness = createAuthIntegrationHarness({
       status: 'signed_out',
     })
-    expectRedirect(signedOutHarness.resolveRoute(['(drawer)', '(tabs)', 'start']), '/(auth)')
-    expectRedirect(signedOutHarness.resolveRoute(['(drawer)', '(tabs)', 'start']), '/(auth)')
+    expectRedirect(signedOutHarness.resolveRoute(['(protected)', '(tabs)', 'start']), '/(auth)')
+    expectRedirect(signedOutHarness.resolveRoute(['(protected)', '(tabs)', 'start']), '/(auth)')
 
     const signedInHarness = createAuthIntegrationHarness({
       status: 'signed_in',
       user: buildAuthUser(),
     })
-    expectRedirect(signedInHarness.resolveRoute(['(auth)']), '/(drawer)/(tabs)/start')
-    expectRedirect(signedInHarness.resolveRoute(['(auth)']), '/(drawer)/(tabs)/start')
+    expectRedirect(signedInHarness.resolveRoute(['(auth)']), '/(protected)/(tabs)/start')
+    expectRedirect(signedInHarness.resolveRoute(['(auth)']), '/(protected)/(tabs)/start')
   })
 
   it('query retry backoff remains bounded for deterministic tests', () => {

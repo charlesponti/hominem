@@ -58,7 +58,7 @@ export const FocusView = () => {
           title: 'FOCUS',
           headerRight: () => (
             <View style={{ flexDirection: 'row', columnGap: 8 }}>
-              <Link href="/(drawer)/(tabs)/sherpa">
+              <Link href="/(protected)/(tabs)/sherpa">
                 <Text variant="body" color="secondaryForeground">
                   SHERPA
                 </Text>
@@ -102,7 +102,7 @@ export const FocusView = () => {
 
         <View style={[styles.sherpaButtonContainer, { bottom: insets.bottom }]}>
           <View style={styles.sherpaCircleButton}>
-            <Link href="/(drawer)/(tabs)/sherpa" style={{ flex: 1 }}>
+            <Link href="/(protected)/(tabs)/sherpa" style={{ flex: 1 }}>
               <MindsherpaIcon name="hat-wizard" size={32} color={theme.colors.white} />
             </Link>
           </View>

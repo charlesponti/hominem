@@ -37,7 +37,7 @@ export default function Sherpa() {
   }, [getActiveChat, params.seed]);
 
   const onChatEnd = useCallback(() => {
-    router.push('/(drawer)/(tabs)/focus');
+    router.push('/(protected)/(tabs)/focus');
   }, [router]);
 
   return (

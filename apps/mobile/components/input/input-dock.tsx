@@ -36,7 +36,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
     sherpaMessage: 'Jumping in now.',
     onSuccess: () => {
       setMessage('')
-      router.push('/(drawer)/(tabs)/sherpa')
+      router.push('/(protected)/(tabs)/sherpa')
     },
   })
 
@@ -77,7 +77,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
     })
   }
 
-  const isInDrawer = segments[0] === '(drawer)'
+  const isInDrawer = segments[0] === '(protected)'
   if (!isSignedIn || !isInDrawer) return null
 
   return (

@@ -19,7 +19,7 @@ export const FocusHeader = React.memo(() => {
           </Text>
         </View>
         <View style={[styles.iconWrap]}>
-          <Link href="/(drawer)/(tabs)/account" style={[styles.iconLink]}>
+          <Link href="/(protected)/(tabs)/account" style={[styles.iconLink]}>
             <MindsherpaIcon name="user" size={16} />
           </Link>
         </View>

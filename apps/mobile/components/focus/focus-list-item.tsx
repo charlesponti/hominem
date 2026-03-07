@@ -218,7 +218,7 @@ export const FocusListItem = ({
         <Link
           asChild
           href={{
-            pathname: '/(drawer)/(tabs)/focus/[id]',
+            pathname: '/(protected)/(tabs)/focus/[id]',
             params: { id: item.id },
           }}
         >

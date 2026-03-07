@@ -59,7 +59,7 @@ function InnerRootLayout() {
   return (
     <RootErrorBoundary onError={(error, errorInfo) => logError(error, errorInfo, { route: segments.join('/') })}>
       <Stack>
-        <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+        <Stack.Screen name="(protected)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack>
       {E2E_TESTING ? (

@@ -8,7 +8,7 @@ describe('resolveAuthRedirect', () => {
       resolveAuthRedirect({
         authStatus: 'booting',
         isSignedIn: false,
-        segments: ['(drawer)'],
+        segments: ['(protected)'],
       }),
     ).toBeNull()
   })
@@ -18,7 +18,7 @@ describe('resolveAuthRedirect', () => {
       resolveAuthRedirect({
         authStatus: 'signed_out',
         isSignedIn: false,
-        segments: ['(drawer)', '(tabs)', 'start'],
+        segments: ['(protected)', '(tabs)', 'start'],
       }),
     ).toBe('/(auth)')
   })
@@ -30,7 +30,7 @@ describe('resolveAuthRedirect', () => {
         isSignedIn: true,
         segments: ['(auth)'],
       }),
-    ).toBe('/(drawer)/(tabs)/start')
+    ).toBe('/(protected)/(tabs)/start')
   })
 
   it('does not redirect signed-out users already in auth group', () => {
@@ -48,7 +48,7 @@ describe('resolveAuthRedirect', () => {
       resolveAuthRedirect({
         authStatus: 'signed_in',
         isSignedIn: true,
-        segments: ['(drawer)', '(tabs)', 'start'],
+        segments: ['(protected)', '(tabs)', 'start'],
       }),
     ).toBeNull()
   })
@@ -58,7 +58,7 @@ describe('resolveAuthRedirect', () => {
       resolveAuthRedirect({
         authStatus: 'signing_out',
         isSignedIn: false,
-        segments: ['(drawer)', '(tabs)', 'start'],
+        segments: ['(protected)', '(tabs)', 'start'],
       }),
     ).toBeNull()
   })
@@ -72,7 +72,7 @@ describe('resolveAuthRedirect', () => {
     'redirects %s status on protected group to auth (in-flight auth, not yet signed in)',
     (authStatus) => {
       expect(
-        resolveAuthRedirect({ authStatus, isSignedIn: false, segments: ['(drawer)'] }),
+        resolveAuthRedirect({ authStatus, isSignedIn: false, segments: ['(protected)'] }),
       ).toBe('/(auth)')
     },
   )
@@ -81,7 +81,7 @@ describe('resolveAuthRedirect', () => {
     'redirects %s status on protected group to auth',
     (authStatus) => {
       expect(
-        resolveAuthRedirect({ authStatus, isSignedIn: false, segments: ['(drawer)'] }),
+        resolveAuthRedirect({ authStatus, isSignedIn: false, segments: ['(protected)'] }),
       ).toBe('/(auth)')
     },
   )

@@ -6,7 +6,7 @@ interface ResolveAuthRedirectInput {
   segments: string[]
 }
 
-export type AuthRedirectTarget = '/(auth)' | '/(drawer)/(tabs)/start'
+export type AuthRedirectTarget = '/(auth)' | '/(protected)/(tabs)/start'
 
 const NO_REDIRECT_STATUSES = new Set(['booting', 'signing_out'])
 
@@ -15,7 +15,7 @@ export function resolveAuthRedirect(input: ResolveAuthRedirectInput): AuthRedire
     return null
   }
 
-  const inProtectedGroup = input.segments[0] === '(drawer)'
+  const inProtectedGroup = input.segments[0] === '(protected)'
   const inAuthGroup = input.segments[0] === '(auth)'
 
   if (!input.isSignedIn && inProtectedGroup) {
@@ -23,7 +23,7 @@ export function resolveAuthRedirect(input: ResolveAuthRedirectInput): AuthRedire
   }
 
   if (input.isSignedIn && inAuthGroup) {
-    return '/(drawer)/(tabs)/start'
+    return '/(protected)/(tabs)/start'
   }
 
   return null

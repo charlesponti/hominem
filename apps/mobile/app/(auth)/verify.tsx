@@ -94,7 +94,7 @@ export function VerifyScreen() {
   }, [email, focusOtpInput, requestEmailOtp]);
 
   if (isSignedIn) {
-    return <Redirect href="/(drawer)/(tabs)/start" />;
+    return <Redirect href="/(protected)/(tabs)/start" />;
   }
 
   if (!email) {

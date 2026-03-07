@@ -35,7 +35,7 @@ describe('auth flow integration', () => {
     expectLoadingState(next, false)
     expect(next.error).toBe(error)
     expectNoRedirect(harness.resolveRoute(['(auth)']))
-    expectRedirect(harness.resolveRoute(['(drawer)', '(tabs)', 'start']), '/(auth)')
+    expectRedirect(harness.resolveRoute(['(protected)', '(tabs)', 'start']), '/(auth)')
   })
 
   it('clearing a degraded error returns the auth experience to signed_out for retry', () => {
@@ -78,7 +78,7 @@ describe('auth flow integration', () => {
 
     expectAuthStatus(next, 'signed_out')
     expectLoadingState(next, false)
-    expectRedirect(harness.resolveRoute(['(drawer)', '(tabs)', 'start']), '/(auth)')
+    expectRedirect(harness.resolveRoute(['(protected)', '(tabs)', 'start']), '/(auth)')
   })
 
   it('profile sync keeps auth flow loading until session becomes signed in', () => {
@@ -96,7 +96,7 @@ describe('auth flow integration', () => {
 
     const signedIn = harness.dispatch({ type: 'SESSION_LOADED', user: buildAuthUser() })
     expectAuthStatus(signedIn, 'signed_in')
-    expectRedirect(harness.resolveRoute(['(auth)']), '/(drawer)/(tabs)/start')
+    expectRedirect(harness.resolveRoute(['(auth)']), '/(protected)/(tabs)/start')
   })
 
   it('signing out from a protected route converges to auth without preserving stale user state', () => {
@@ -113,6 +113,6 @@ describe('auth flow integration', () => {
     const signedOut = harness.dispatch({ type: 'SIGN_OUT_SUCCESS' })
     expectAuthStatus(signedOut, 'signed_out')
     expect(signedOut.user).toBeNull()
-    expectRedirect(harness.resolveRoute(['(drawer)', '(tabs)', 'start']), '/(auth)')
+    expectRedirect(harness.resolveRoute(['(protected)', '(tabs)', 'start']), '/(auth)')
   })
 })

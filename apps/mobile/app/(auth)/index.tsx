@@ -65,7 +65,7 @@ export function AuthScreen() {
   }, [completePasskeySignIn, signInWithPasskey]);
 
   if (isSignedIn) {
-    return <Redirect href="/(drawer)/(tabs)/start" />;
+    return <Redirect href="/(protected)/(tabs)/start" />;
   }
 
   const displayError = authError || passkeyError;

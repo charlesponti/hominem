@@ -28,7 +28,7 @@ const Onboarding = () => {
   }
 
   if (currentUser?.name) {
-    return <Redirect href="/(drawer)/(tabs)/focus" />;
+    return <Redirect href="/(protected)/(tabs)/focus" />;
   }
 
   return (
