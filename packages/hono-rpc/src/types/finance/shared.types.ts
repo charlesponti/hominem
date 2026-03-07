@@ -8,6 +8,26 @@ export type BudgetCategoryData = {
   id: string
   name: string
   userId: string
+  /**
+   * Optional category type. Populated by budget endpoints that
+   * compute or infer the type from spending patterns or user config.
+   */
+  type?: 'income' | 'expense'
+  /**
+   * Optional colour associated with the category. Stored on the
+   * underlying `tags` row and surfaced by most budget endpoints.
+   */
+  color?: string | null
+  /**
+   * User-provided monthly budget amount. Historically this field has
+   * lived on the category object in the client, but we now persist
+   * budget goals separately. The field is still exposed here because
+   * most UI components currently read it directly and the create/update
+   * RPC inputs accept it. Keeping it optional allows existing APIs to
+   * continue working while server handlers gradually start to populate
+   * it from `budget_goals`.
+   */
+  averageMonthlyExpense?: string | number | null
 }
 
 export type AccountType = 'checking' | 'savings' | 'credit' | 'investment' | 'cash' | 'other'
