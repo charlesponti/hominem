@@ -102,9 +102,6 @@ jobs:
       - name: 🧱 Build hono-rpc package
         run: bun run --filter @hominem/hono-rpc build
 
-      - name: ⚙️ apply database schema
-        run: cd packages/db && bunx atlas schema apply --auto-approve --env test
-
       - name: 🧪 Unit tests
         run: bun run test
 
