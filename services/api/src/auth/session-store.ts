@@ -64,7 +64,7 @@ async function ensureAuthSession(input: {
       .where((eb) =>
         eb.and([
           eb('user_id', '=', input.userId),
-          eb('session_state', '=', input.sessionState),
+          eb('session_state', '=', input.sessionState!),
           eb('revoked_at', 'is', null),
         ]),
       )

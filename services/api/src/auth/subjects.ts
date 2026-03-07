@@ -29,15 +29,15 @@ export async function ensureOAuthSubjectUser(
   const bySubject = await db
     .selectFrom('auth_subjects')
     .innerJoin('users', (join) => join.onRef('users.id', '=', 'auth_subjects.user_id'))
-    .select({
-      id: 'users.id',
-      email: 'users.email',
-      name: 'users.name',
-      image: 'users.image',
-      isAdmin: 'users.is_admin',
-      createdAt: 'users.created_at',
-      updatedAt: 'users.updated_at',
-    })
+    .select((eb) => [
+      eb.ref('users.id'),
+      eb.ref('users.email'),
+      eb.ref('users.name'),
+      eb.ref('users.image'),
+      eb.ref('users.is_admin').as('isAdmin'),
+      eb.ref('users.created_at').as('createdAt'),
+      eb.ref('users.updated_at').as('updatedAt'),
+    ] as any)
     .where((eb) =>
       eb.and([
         eb('auth_subjects.provider', '=', input.provider),
@@ -55,8 +55,8 @@ export async function ensureOAuthSubjectUser(
       name: bySubject.name,
       image: bySubject.image,
       isAdmin: bySubject.isAdmin as boolean,
-      createdAt: bySubject.createdAt as string,
-      updatedAt: bySubject.updatedAt as string,
+      createdAt: (bySubject.createdAt instanceof Date ? bySubject.createdAt.toISOString() : bySubject.createdAt) || new Date().toISOString(),
+      updatedAt: (bySubject.updatedAt instanceof Date ? bySubject.updatedAt.toISOString() : bySubject.updatedAt) || new Date().toISOString(),
     };
   }
 
@@ -84,8 +84,8 @@ export async function ensureOAuthSubjectUser(
         name: existingUser.name,
         image: existingUser.image,
         isAdmin: existingUser.is_admin as boolean,
-        createdAt: existingUser.created_at as string,
-        updatedAt: existingUser.updated_at as string,
+        createdAt: existingUser.created_at instanceof Date ? existingUser.created_at.toISOString() : existingUser.created_at,
+        updatedAt: existingUser.updated_at instanceof Date ? existingUser.updated_at.toISOString() : existingUser.updated_at,
       }
     : await (async () => {
         const now = new Date().toISOString();
@@ -113,24 +113,27 @@ export async function ensureOAuthSubjectUser(
           name: created.name,
           image: created.image,
           isAdmin: created.is_admin as boolean,
-          createdAt: created.created_at as string,
-          updatedAt: created.updated_at as string,
+          createdAt: created.created_at instanceof Date ? created.created_at.toISOString() : created.created_at,
+          updatedAt: created.updated_at instanceof Date ? created.updated_at.toISOString() : created.updated_at,
         };
       })();
 
   // Link authSubject to user
-  await db
-    .insertInto('auth_subjects')
-    .values({
-      id: randomUUID(),
-      user_id: user.id,
-      provider: input.provider,
-      provider_subject: input.providerSubject,
-      is_primary: true,
-      linked_at: new Date().toISOString(),
-    })
-    .onConflictDoNothing()
-    .execute();
+  try {
+    await db
+      .insertInto('auth_subjects')
+      .values({
+        id: randomUUID(),
+        user_id: user.id,
+        provider: input.provider,
+        provider_subject: input.providerSubject,
+        is_primary: true,
+        linked_at: new Date().toISOString(),
+      })
+      .execute();
+  } catch {
+    // Subject already linked, continue
+  }
 
   return user;
 }
