@@ -1,4 +1,4 @@
-import type { Audio } from 'expo-av'
+import { AudioModule, RecordingPresets, useAudioRecorder } from 'expo-audio'
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -22,8 +22,7 @@ export function useMobileAudioRecorder({
   onAudioTranscribed,
   onError,
 }: UseMobileAudioRecorderProps = {}) {
-  const [recording, setRecording] = useState<Audio.Recording>()
-  const [recordingStatus, setRecordingStatus] = useState<Audio.RecordingStatus>()
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY)
   const [meterings, setMeterings] = useState<number[]>([])
   const [lastRecordingUri, setLastRecordingUri] = useState<string | null>(null)
   const [recorderState, setRecorderState] = useState<RecorderState>('IDLE')
@@ -35,15 +34,15 @@ export function useMobileAudioRecorder({
     isMountedRef.current = true
     return () => {
       isMountedRef.current = false
-      if (recording) {
-        recording.stopAndUnloadAsync().catch(() => {})
+      if (recorder.isRecording) {
+        recorder.stop().catch(() => {})
         deactivateKeepAwake().catch(() => {})
       }
       abortControllerRef.current?.abort()
     }
-  }, [recording])
+  }, [recorder])
 
-  const { mutateAsync: transcribeAudio, isPending: isTranscribing } = useAudioTranscribe({
+  const { mutateAsync: transcribeAudio } = useAudioTranscribe({
     onSuccess: (data) => {
       onAudioTranscribed?.(data)
     },
@@ -52,69 +51,8 @@ export function useMobileAudioRecorder({
     },
   })
 
-  const onRecordingStatusChange = useCallback((status: Audio.RecordingStatus) => {
-    if (!isMountedRef.current) return
-    setRecordingStatus(status)
-    const { metering } = status
-    if (status.isRecording && metering !== undefined) {
-      setMeterings((current) => {
-        const next = [...current, metering]
-        return next.slice(-MAX_METERINGS)
-      })
-    }
-  }, [])
-
-  const startRecording = useCallback(async () => {
-    if (recorderState !== 'IDLE') return
-
-    try {
-      setRecorderState('REQUESTING_PERMISSION')
-      const { Audio } = await import('expo-av')
-      activateKeepAwakeAsync().catch((error: Error) =>
-        console.error('[audio-recorder] keep-awake activation failed', error),
-      )
-
-      const permission = await Audio.requestPermissionsAsync()
-      if (permission.status !== 'granted') {
-        if (isMountedRef.current) setRecorderState('IDLE')
-        onError?.()
-        return
-      }
-
-      if (!isMountedRef.current) return
-      setRecorderState('PREPARING')
-
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      })
-
-      const nextRecording = new Audio.Recording()
-      await nextRecording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY)
-      await nextRecording.startAsync()
-      nextRecording.setOnRecordingStatusUpdate(onRecordingStatusChange)
-
-      if (!isMountedRef.current) {
-        await nextRecording.stopAndUnloadAsync().catch(() => {})
-        return
-      }
-
-      setRecording(nextRecording)
-      setRecordingStatus(undefined)
-      setMeterings([])
-      setRecorderState('RECORDING')
-      emitVoiceEvent('voice_record_started', { platform: 'mobile-ios' })
-    } catch (error) {
-      console.error('[audio-recorder] start failed', error)
-      if (isMountedRef.current) setRecorderState('IDLE')
-      onError?.()
-    }
-  }, [onError, onRecordingStatusChange, recorderState])
-
   const clearRecording = useCallback(() => {
     setLastRecordingUri(null)
-    setRecording(undefined)
-    setRecordingStatus(undefined)
     setMeterings([])
     setRecorderState('IDLE')
   }, [])
@@ -145,15 +83,50 @@ export function useMobileAudioRecorder({
     [autoTranscribe, clearRecording, onAudioTranscribed, transcribeAudio, onError],
   )
 
-  const stopRecording = useCallback(async () => {
-    if (!recording || recorderState === 'STOPPING') {
-      return
+  const startRecording = useCallback(async () => {
+    if (recorderState !== 'IDLE') return
+
+    try {
+      setRecorderState('REQUESTING_PERMISSION')
+
+      const permission = await AudioModule.requestRecordingPermissionsAsync()
+      if (!permission.granted) {
+        if (isMountedRef.current) setRecorderState('IDLE')
+        onError?.()
+        return
+      }
+
+      if (!isMountedRef.current) return
+      setRecorderState('PREPARING')
+
+      activateKeepAwakeAsync().catch((error: Error) =>
+        console.error('[audio-recorder] keep-awake activation failed', error),
+      )
+
+      await recorder.prepareToRecordAsync()
+
+      if (!isMountedRef.current) {
+        await recorder.stop().catch(() => {})
+        return
+      }
+
+      recorder.record()
+      setMeterings([])
+      setRecorderState('RECORDING')
+      emitVoiceEvent('voice_record_started', { platform: 'mobile-ios' })
+    } catch (error) {
+      console.error('[audio-recorder] start failed', error)
+      if (isMountedRef.current) setRecorderState('IDLE')
+      onError?.()
     }
+  }, [onError, recorderState, recorder])
+
+  const stopRecording = useCallback(async () => {
+    if (!recorder.isRecording || recorderState === 'STOPPING') return
 
     setRecorderState('STOPPING')
-    const durationMs = recordingStatus?.durationMillis
 
-    await recording.stopAndUnloadAsync().catch((reason: Error) => {
+    await recorder.stop().catch((reason: Error) => {
       console.error('[audio-recorder] stop failed', reason)
     })
 
@@ -163,10 +136,8 @@ export function useMobileAudioRecorder({
 
     if (!isMountedRef.current) return
 
-    const fileUri = recording.getURI()
+    const fileUri = recorder.uri
 
-    setRecording(undefined)
-    setRecordingStatus(undefined)
     setMeterings([])
 
     if (!fileUri) {
@@ -175,10 +146,7 @@ export function useMobileAudioRecorder({
     }
 
     setLastRecordingUri(fileUri)
-    emitVoiceEvent('voice_record_stopped', {
-      platform: 'mobile-ios',
-      ...(typeof durationMs === 'number' ? { durationMs } : {}),
-    })
+    emitVoiceEvent('voice_record_stopped', { platform: 'mobile-ios' })
 
     if (autoTranscribe) {
       await runTranscription(fileUri)
@@ -187,12 +155,10 @@ export function useMobileAudioRecorder({
 
     setRecorderState('IDLE')
     onAudioReady?.(fileUri)
-  }, [autoTranscribe, onAudioReady, recording, recordingStatus?.durationMillis, runTranscription, recorderState])
+  }, [autoTranscribe, onAudioReady, recorder, runTranscription, recorderState])
 
   const retryTranscription = useCallback(async () => {
-    if (!lastRecordingUri) {
-      return
-    }
+    if (!lastRecordingUri) return
     await runTranscription(lastRecordingUri)
   }, [lastRecordingUri, runTranscription])
 
@@ -208,7 +174,7 @@ export function useMobileAudioRecorder({
     stopRecording,
     retryTranscription,
     clearRecording,
-    onRecordingStatusChange,
+    onRecordingStatusChange: undefined,
     buttonAction: useMemo(
       () => ({
         onPress: isRecording ? stopRecording : startRecording,

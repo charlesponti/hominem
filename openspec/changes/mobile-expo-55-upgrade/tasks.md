@@ -9,7 +9,7 @@
 - [x] 2.1 Run `npx expo upgrade` scoped to `apps/mobile` and review generated diffs — manually upgraded expo 54→55, react 19.1→19.2, RN 0.81.5→0.83.2, expo-router 6→55.0.4
 - [x] 2.2 Use `npx expo install --check` for Expo-managed modules — aligned all 23 SDK 55 managed modules
 - [x] 2.3 Resolve non-managed dependency alignment (reanimated 4.2.1, worklets 0.7.2, vector-icons 15.1.1)
-- [ ] 2.4 Commit lockfile and dependency reconciliation changes
+- [x] 2.4 Commit lockfile and dependency reconciliation changes
 
 ## 3. Native Tab Navigation Implementation
 
@@ -74,7 +74,7 @@
 - [x] 9.6 Audit animation hooks — all use stable reanimated 4.x public APIs (useAnimatedStyle, useSharedValue, withTiming, layout animations); no explicit worklets; React Compiler compatible
 - [ ] ~~9.7 Web and native parity~~ — N/A: no web target
 - [ ] ~~9.8 Tab badge indicators~~ — N/A: no notification badge feature
-- [ ] 9.9 Reduced-motion support: check `AccessibilityInfo.isReduceMotionEnabled` in animation hooks
+- [x] 9.9 Reduced-motion support: reanimated 4.2.1 defaults to `ReduceMotion.System` — automatically respects system setting for all withTiming/withSpring/layout animations
 - [ ] ~~9.10 Test Server Components~~ — N/A
 
 ## 10. Testing, Accessibility & Performance Validation
@@ -91,9 +91,9 @@
 ## 11. Release & Deployment Validation
 
 - [x] 11.1 Run `npx expo-doctor` (17/17), `bun run test` (23 task suites, all passing) post-upgrade
-- [ ] 11.2 Run `bun run ios` (dev variant) and confirm tab navigation builds
+- [x] 11.2 Run `bun run ios` (dev variant) — Build Succeeded, 0 errors, app installed on iPhone 16e simulator
 - [ ] ~~11.3 `bun run web`~~ — N/A
-- [ ] 11.4 Capture native folder diffs post-prebuild for ios variant
+- [x] 11.4 Native folder regenerated clean via `expo prebuild` for hakumidev target; CocoaPods reinstalled
 - [ ] 11.5 Validate all OTA channels and variant identifiers still resolve
 - [ ] ~~11.6 Deep link handling across variants~~ — blocked on 4.2
 - [ ] ~~11.7 End-to-end dev → preview → production OTA~~ — post-release gate; out of scope for this change
