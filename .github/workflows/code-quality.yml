@@ -102,8 +102,8 @@ jobs:
       - name: 🧱 Build hono-rpc package
         run: bun run --filter @hominem/hono-rpc build
 
-      - name: ⚙️ apply database migrations
-        run: bun run --filter @hominem/db db:migrate
+      - name: ⚙️ apply database schema
+        run: cd packages/db && bunx atlas schema apply --auto-approve -u "postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable"
 
       - name: 🧪 Unit tests
         run: bun run test

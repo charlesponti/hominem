@@ -57,7 +57,8 @@
     "dev": "tsc --watch --preserveWatchOutput",
     "prepare": "bun run build",
     "clean": "rm -rf build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "atlas": "atlas"
   },
   "dependencies": {
     "@hominem/utils": "workspace:*",
@@ -70,6 +71,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
+    "atlas": "latest",
     "dotenv": "^16.4.7",
     "typescript": "5.9.3",
     "vitest": "^4.0.16"
