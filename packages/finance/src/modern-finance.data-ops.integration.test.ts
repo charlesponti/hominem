@@ -16,7 +16,7 @@ import {
   exportFinanceData,
   replaceTransactionTags,
   upsertPlaidItem,
-} from './modern-finance';
+} from './finance';
 
 const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('finance.data-ops.integration');

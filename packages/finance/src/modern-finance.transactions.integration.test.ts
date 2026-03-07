@@ -16,7 +16,7 @@ import {
   getTransactionByPlaidId,
   queryTransactions,
   updateTransaction,
-} from './modern-finance';
+} from './finance';
 
 const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('finance.transactions.integration');

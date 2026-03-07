@@ -202,16 +202,15 @@ export const calculateBudgetSchema = z.object({
   savingsTarget: z.number().nonnegative().optional(),
 });
 
-export function calculateBudgetBreakdown(input: z.infer<typeof calculateBudgetBreakdownInputSchema>): {
+export function calculateBudgetBreakdown(
+  input: z.infer<typeof calculateBudgetBreakdownInputSchema>,
+): {
   needs: number;
   wants: number;
   savings: number;
   unallocated: number;
 } {
-  const {
-    monthlyIncome: income,
-    savingsTarget: savingsTarget = income * 0.2,
-  } = input;
+  const { monthlyIncome: income, savingsTarget: savingsTarget = income * 0.2 } = input;
 
   const needs = income * 0.5;
   const wants = income * 0.3;
@@ -364,7 +363,7 @@ export async function exportFinanceData(userId: string): Promise<{
       .orderBy('created_at', 'desc')
       .orderBy('id', 'asc')
       .execute();
-    plaidItems = (plaidItemsResult as PlaidItemRow[]).map((row) => ({
+    plaidItems = plaidItemsResult.map((row) => ({
       id: row.id,
       userId: row.user_id,
       itemId: row.item_id,
@@ -413,7 +412,7 @@ export async function createAccount(
     throw new Error('Failed to create account');
   }
 
-  return toFinanceAccount(result as unknown as FinanceAccountRow);
+  return toFinanceAccount(result);
 }
 
 export async function listAccounts(userId: string): Promise<FinanceAccount[]> {
@@ -873,12 +872,10 @@ export async function getTopMerchants(
     .limit(10)
     .execute();
 
-  return (result as unknown as Array<{ merchant: string; total: string | number }>).map(
-    (row) => ({
-      merchant: row.merchant,
-      total: toNumber(row.total),
-    }),
-  );
+  return (result as unknown as Array<{ merchant: string; total: string | number }>).map((row) => ({
+    merchant: row.merchant,
+    total: toNumber(row.total),
+  }));
 }
 
 export async function queryAnalyticsTransactionsByContract(
@@ -1264,10 +1261,7 @@ export async function queryTransactionsByContract(
 
   const tagIds = parsed.tagIds ?? [];
   const tagNames = parsed.tagNames ?? [];
-  let query = db
-    .selectFrom('finance_transactions as t')
-    .distinctOn(['t.date', 't.id'])
-    .selectAll();
+  let query = db.selectFrom('finance_transactions as t').distinctOn(['t.date', 't.id']).selectAll();
 
   if (tagIds.length > 0 && tagNames.length > 0) {
     query = query
@@ -1280,7 +1274,9 @@ export async function queryTransactionsByContract(
         join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', parsed.userId),
       )
       .where('t.user_id', '=', parsed.userId)
-      .where(sql<boolean>`ti.tag_id in (${sqlValueList(tagIds)}) or tg.name in (${sqlValueList(tagNames)})`);
+      .where(
+        sql<boolean>`ti.tag_id in (${sqlValueList(tagIds)}) or tg.name in (${sqlValueList(tagNames)})`,
+      );
   } else if (tagIds.length > 0) {
     query = query
       .innerJoin('tagged_items as ti', (join) =>
@@ -1350,9 +1346,7 @@ export async function replaceTransactionTags(
       .where('owner_id', '=', userId)
       .where(sql<boolean>`id in (${sqlValueList(uniqueTagIds)})`)
       .execute();
-    const validIds = new Set(
-      (validTagResult as Array<{ id: string }>).map((row) => row.id),
-    );
+    const validIds = new Set((validTagResult as Array<{ id: string }>).map((row) => row.id));
     if (validIds.size !== uniqueTagIds.length) {
       throw new Error('One or more tags are invalid for this user');
     }
@@ -1758,10 +1752,7 @@ export async function deletePlaidItem(id: string, userId?: string): Promise<bool
     return !!result;
   }
 
-  const result = await db
-    .deleteFrom('plaid_items')
-    .where('id', '=', id)
-    .executeTakeFirst();
+  const result = await db.deleteFrom('plaid_items').where('id', '=', id).executeTakeFirst();
   return !!result;
 }
 

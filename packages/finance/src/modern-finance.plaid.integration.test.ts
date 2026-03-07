@@ -19,7 +19,7 @@ import {
   updatePlaidItemStatusById,
   updatePlaidItemStatusByItemId,
   updatePlaidItemSyncStatus,
-} from './modern-finance';
+} from './finance';
 
 const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('finance.plaid.integration');

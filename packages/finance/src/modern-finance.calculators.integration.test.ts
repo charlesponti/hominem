@@ -4,7 +4,7 @@ import {
   calculateBudgetBreakdown,
   calculateLoanDetails,
   calculateSavingsGoal,
-} from './modern-finance';
+} from './finance';
 
 describe('modern-finance calculators integration', () => {
   it('computes runway-adjacent budget breakdown deterministically', () => {

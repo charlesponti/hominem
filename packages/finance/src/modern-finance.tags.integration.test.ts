@@ -12,7 +12,7 @@ import {
   getTransactionTagIds,
   queryTransactionsByContract,
   replaceTransactionTags,
-} from './modern-finance';
+} from './finance';
 
 async function hasTaggingTables(): Promise<boolean> {
   const result = await db.execute(sql`

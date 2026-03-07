@@ -14,7 +14,7 @@ import {
   listAccounts,
   updateAccount,
   upsertAccount,
-} from './modern-finance';
+} from './finance';
 
 const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('finance.accounts.integration');

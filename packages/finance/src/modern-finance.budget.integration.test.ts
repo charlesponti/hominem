@@ -24,7 +24,7 @@ import {
   queryTransactionsByContract,
   replaceTransactionTags,
   updateBudgetCategory,
-} from './modern-finance';
+} from './finance';
 
 const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('finance.budget.integration');
