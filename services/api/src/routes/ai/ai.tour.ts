@@ -87,7 +87,7 @@ aiTourRoutes.post('/', zValidator('json', inputSchema), async (c) => {
     prompt = prompt.replace('{{genresForOptimization}}', genresForOptimization);
 
     const { object: tourBreakdown } = await generateObject({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-5-mini'),
       prompt,
       schema: TourCostBreakdown,
       temperature: 0.7,

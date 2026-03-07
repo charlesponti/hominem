@@ -20,7 +20,7 @@ import {
   chatsUISendSchema,
 } from '../types/chat.types';
 import { toCoreMessage, typeToolsForAI } from '../utils/ai-adapters';
-import { getLMStudioAdapter } from '../utils/llm';
+import { getOpenAIAdapter } from '../utils/llm';
 import { getAvailableTools } from '../utils/tools';
 
 const chatService = new ChatService();
@@ -146,7 +146,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       },
     ];
 
-    const adapter = getLMStudioAdapter();
+    const adapter = getOpenAIAdapter();
     const { textStream, toolCalls } = await streamText({
       model: adapter,
       tools: typeToolsForAI(getAvailableTools(userId)),
@@ -281,7 +281,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     )
 
     const result = streamText({
-      model: getLMStudioAdapter(),
+      model: getOpenAIAdapter(),
       tools: typeToolsForAI(getAvailableTools(userId)),
       messages: coreMessages,
       async onFinish(event) {

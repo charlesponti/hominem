@@ -5,6 +5,7 @@ import { getCookie } from '@better-auth/expo/client'
 
 import { authClient } from '~/lib/auth-client'
 import { API_BASE_URL, E2E_AUTH_SECRET, E2E_TESTING } from '~/utils/constants'
+import { useAuth } from '~/utils/auth-provider'
 
 // The expo client stores Better Auth cookies under this key in SecureStore.
 // Must match the storagePrefix used in auth-client.ts.
@@ -35,6 +36,7 @@ interface UseMobilePasskeyAuthReturn {
 export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { getAccessToken } = useAuth()
 
   // Passkeys require iOS 16+. Earlier versions and non-iOS platforms are not supported.
   const isSupported = Platform.OS === 'ios' && Number.parseInt(Platform.Version as string, 10) >= 16
@@ -181,13 +183,17 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
 
   const listPasskeys = useCallback(async () => {
     try {
-      const { data, error: passkeyError } = await authClient.passkey.listUserPasskeys()
+      const token = await getAccessToken()
+      if (!token) return []
 
-      if (passkeyError) {
-        setError(passkeyError.message || 'Failed to list passkeys')
-        return []
-      }
+      const response = await fetch(new URL('/api/auth/passkeys', API_BASE_URL).toString(), {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+      })
 
+      if (!response.ok) return []
+
+      const data = (await response.json()) as { id: string; name?: string | null }[]
       return (data ?? []).map((p) => ({
         id: p.id,
         name: p.name ?? 'Unnamed passkey',
@@ -195,18 +201,33 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
     } catch {
       return []
     }
-  }, [])
+  }, [getAccessToken])
 
   const deletePasskey = useCallback(async (id: string) => {
     setIsLoading(true)
     setError(null)
 
     try {
-      const { error: passkeyError } = await authClient.passkey.deletePasskey({ id })
+      const token = await getAccessToken()
+      if (!token) {
+        setError('Not authenticated')
+        return { success: false, error: 'Not authenticated' }
+      }
 
-      if (passkeyError) {
-        setError(passkeyError.message || 'Failed to delete passkey')
-        return { success: false, error: passkeyError.message }
+      const response = await fetch(new URL('/api/auth/passkey/delete', API_BASE_URL).toString(), {
+        method: 'DELETE',
+        headers: {
+          'content-type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id }),
+      })
+
+      if (!response.ok) {
+        const body = (await response.json()) as { error?: string }
+        const message = body.error ?? 'Failed to delete passkey'
+        setError(message)
+        return { success: false, error: message }
       }
 
       return { success: true }
@@ -217,7 +238,7 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [getAccessToken])
 
   return {
     signIn,

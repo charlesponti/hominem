@@ -62,7 +62,7 @@
 
 ## 9. Device Validation
 
-- [ ] 9.1 Run complete auth/chat smoke path on physical iOS device.
+- [x] 9.1 Run complete auth/chat smoke path on physical iOS device.
 - [x] 9.2 Confirm Android is out of scope for this product and remove Android validation requirement from this change.
 - [x] 9.3 Log observed iOS physical-run issues and patch regressions before final gate run.
 
@@ -74,7 +74,7 @@
 - [x] 10.4 Run `bun run lint --parallel`.
 - [x] 10.5 Run `bun run check`.
 - [x] 10.6 Update proposal/design/tasks with final evidence and results.
-- [ ] 10.7 Archive `fix-mobile-architecture-issues`.
+- [x] 10.7 Archive `fix-mobile-architecture-issues`.
 
 ## 11. Mobile Auth Stabilization (Single-Token Next Pass)
 
@@ -84,7 +84,7 @@
 - [x] 11.4 Extract `bootSession` into a testable `runAuthBoot(deps)` pure async function. Add vitest unit tests: (a) valid stored token + 200 probe → SESSION_LOADED, (b) 401 probe → tokens cleared → SESSION_EXPIRED, (c) network error → tokens preserved → SESSION_EXPIRED, (d) timeout → SESSION_EXPIRED.
 - [x] 11.5 Fix staged event dispatch: `verifyEmailOtp` emits API_TOKEN_MINT_STARTED → PROFILE_SYNC_STARTED → SESSION_LOADED; OTP_VERIFICATION_FAILED on error (not SYNC_FAILED). `signOut` dispatches SIGN_OUT_REQUESTED before async ops. `completePasskeySignIn` emits PROFILE_SYNC_STARTED before SESSION_LOADED.
 - [x] 11.6 Create `utils/auth/auth-event-log.ts`: structured in-process event recorder (`{ event, phase, timestamp, durationMs }`). Wire into `auth-provider.tsx` at each phase transition. Add `auth_boot_start` / `auth_boot_resolved` marks to startup-metrics. Add budget tests: stored-token path < 500ms, cold path < 100ms.
-- [ ] 11.7 Run physical iOS smoke: sign-in -> force-quit -> reopen -> sign-out.
+- [x] 11.7 Run physical iOS smoke: sign-in -> force-quit -> reopen -> sign-out.
 
 ## 12. Auth Provider Performance
 

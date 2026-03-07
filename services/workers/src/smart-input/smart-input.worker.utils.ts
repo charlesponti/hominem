@@ -47,7 +47,7 @@ async function processAttachment(attachment: Attachment): Promise<string | null>
     const content = await getAttachmentText(attachment);
 
     const { response } = await generateText({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-5-mini'),
       messages: [
         {
           role: 'system',
@@ -106,7 +106,7 @@ export async function processAttachments(
       });
 
       const response = await generateObject<SubmissionAttachment>({
-        model: openai('gpt-4o-mini', { structuredOutputs: true }),
+        model: openai('gpt-5-mini', { structuredOutputs: true }),
         messages: [
           {
             role: 'system',

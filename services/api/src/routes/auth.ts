@@ -820,7 +820,8 @@ authRoutes.post(
 authRoutes.get('/passkeys', async (c) => {
   // Returns the list of passkeys registered to the authenticated user.
   // Used by clients to decide whether to show the passkey enrollment prompt.
-  if (!c.get('userId')) {
+  const userId = await resolveAuthUserId(c)
+  if (!userId) {
     return c.json({ error: 'unauthorized' }, 401)
   }
 
@@ -839,7 +840,8 @@ authRoutes.get('/passkeys', async (c) => {
 
 authRoutes.delete('/passkey/delete', zValidator('json', z.object({ id: z.string() })), async (c) => {
   // Deletes a passkey for the authenticated user.
-  if (!c.get('userId')) {
+  const userId = await resolveAuthUserId(c)
+  if (!userId) {
     return c.json({ error: 'unauthorized' }, 401)
   }
 

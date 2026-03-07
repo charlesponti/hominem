@@ -1,4 +1,4 @@
-import { google } from '@ai-sdk/google';
+import { openai } from '@ai-sdk/openai';
 import { ValidationError } from '../errors';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
@@ -71,7 +71,7 @@ ${strategyPrompt}
 Return only the tweet text, nothing else.`;
 
     const result = await generateText({
-      model: google('gemini-1.5-pro-latest'),
+      model: openai('gpt-5-mini'),
       system: systemPrompt,
       prompt: `Convert this content into an engaging tweet using the ${strategyName} strategy:\n\n${content}`,
       maxTokens: 100,

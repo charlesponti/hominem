@@ -84,7 +84,7 @@ async function processEmailBody(emailBody: string): Promise<Candidates> {
   });
   try {
     const response = await generateObject<Candidates>({
-      model: openai('gpt-4o', { structuredOutputs: true }),
+      model: openai('gpt-5-mini', { structuredOutputs: true }),
       messages: [
         {
           role: 'user',

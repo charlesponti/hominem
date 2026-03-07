@@ -3,6 +3,7 @@ import { Link, Stack } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PulsingCircle } from '~/components/animated/pulsing-circle';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
@@ -16,6 +17,7 @@ import { Text, theme } from '~/theme';
 import { useFocusQuery } from '~/utils/services/notes/use-focus-query';
 
 export const FocusView = () => {
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -98,7 +100,7 @@ export const FocusView = () => {
           ) : null}
         </View>
 
-        <View style={styles.sherpaButtonContainer}>
+        <View style={[styles.sherpaButtonContainer, { bottom: insets.bottom }]}>
           <View style={styles.sherpaCircleButton}>
             <Link href="/(drawer)/(tabs)/sherpa" style={{ flex: 1 }}>
               <MindsherpaIcon name="hat-wizard" size={32} color={theme.colors.white} />

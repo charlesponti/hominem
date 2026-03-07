@@ -1,6 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
-import { Dimensions, Image, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
+import { Dimensions, Image, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { IntentPill } from '~/components/start/intent-pill';
