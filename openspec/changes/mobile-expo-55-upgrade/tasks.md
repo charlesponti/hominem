@@ -70,8 +70,8 @@
 - [x] 9.2 `+native-intent` routes verify→auth, sherpa/focus/account→protected tabs
 - [x] 9.3 Guarded group auth flow tested — covered by E2E suite from fix-mobile-architecture-issues
 - [x] 9.4 Route group reuse — no shared-screen requirement; N/A for now
-- [ ] 9.5 Standardize touch targets ≥44pt — audit after SDK upgrade
-- [ ] 9.6 Audit animation hooks for Expo 55-safe reanimated/worklets behavior — required after upgrade
+- [x] 9.5 Standardize touch targets ≥44pt — Button gets minHeight:44, passkey [REMOVE] gets minHeight/minWidth:44
+- [x] 9.6 Audit animation hooks — all use stable reanimated 4.x public APIs (useAnimatedStyle, useSharedValue, withTiming, layout animations); no explicit worklets; React Compiler compatible
 - [ ] ~~9.7 Web and native parity~~ — N/A: no web target
 - [ ] ~~9.8 Tab badge indicators~~ — N/A: no notification badge feature
 - [ ] 9.9 Reduced-motion support: check `AccessibilityInfo.isReduceMotionEnabled` in animation hooks

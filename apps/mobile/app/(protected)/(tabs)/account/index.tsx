@@ -140,7 +140,10 @@ function Account() {
                   <Text color="foreground" style={{ fontSize: 12 }}>
                     {pk.name}
                   </Text>
-                  <TouchableOpacity onPress={() => onDeletePasskeyPress(pk.id, pk.name)}>
+                  <TouchableOpacity
+                    onPress={() => onDeletePasskeyPress(pk.id, pk.name)}
+                    style={{ minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}
+                  >
                     <Text color="destructive" style={{ fontSize: 12 }}>
                       [REMOVE]
                     </Text>

@@ -33,6 +33,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'row',
     columnGap: theme.spacing.sm_12,
     justifyContent: 'center',
+    minHeight: 44,
     paddingVertical: theme.spacing.sm_12,
     paddingHorizontal: theme.spacing.m_16,
   },
