@@ -18,11 +18,11 @@ export async function listHealthRecords(filters: {
   }
 
   if (filters.startDate) {
-    query = query.where('recorded_at', '>=', filters.startDate)
+    query = query.where('recorded_at', '>=', filters.startDate.toISOString())
   }
 
   if (filters.endDate) {
-    query = query.where('recorded_at', '<=', filters.endDate)
+    query = query.where('recorded_at', '<=', filters.endDate.toISOString())
   }
 
   if (filters.recordType) {

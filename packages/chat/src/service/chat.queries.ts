@@ -15,8 +15,8 @@ function toChatOutput(row: ChatRow): ChatOutput {
     title: row.title,
     userId: row.user_id,
     noteId: row.note_id ?? null,
-    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
-    updatedAt: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 }
 
