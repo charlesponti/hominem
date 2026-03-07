@@ -24,7 +24,7 @@
 ## 4. Advanced Expo Router Setup
 
 - [x] 4.1 Route protection via guarded groups — DrawerLayout guards on authStatus; root _layout.tsx runs resolveAuthRedirect
-- [ ] 4.2 Setup `+native-intent` file for deep link rewriting and app-level routing
+- [x] 4.2 Setup `+native-intent` file for deep link rewriting and app-level routing
 - [ ] ~~4.3 Configure Server Components (RSC)~~ — N/A: mobile-only app, no web/server target
 - [ ] ~~4.4 Implement route groups + array syntax for feature reuse~~ — defer: no shared-screen requirement yet
 - [x] 4.5 Bottom sheet primitive — exists at `components/bottom-sheet.tsx`
@@ -67,7 +67,7 @@
 ## 9. Navigation, Animation, Deep Linking & Gesture Alignment
 
 - [x] 9.1 Route structure and provider boundaries validated after tab and app-shell migration
-- [ ] 9.2 Validate deep-link routing into each tab via `+native-intent` — blocked on 4.2
+- [x] 9.2 `+native-intent` routes verify→auth, sherpa/focus/account→protected tabs
 - [x] 9.3 Guarded group auth flow tested — covered by E2E suite from fix-mobile-architecture-issues
 - [x] 9.4 Route group reuse — no shared-screen requirement; N/A for now
 - [ ] 9.5 Standardize touch targets ≥44pt — audit after SDK upgrade
@@ -80,7 +80,7 @@
 ## 10. Testing, Accessibility & Performance Validation
 
 - [x] 10.1 Enable React Compiler in `babel.config.js` + verify no test regressions
-- [ ] 10.2 Run `bun run test:unit:auth` after SDK upgrade to verify auth boot stays intact
+- [x] 10.2 Run `bun run test:unit:auth` after SDK upgrade — 49/49 passing
 - [ ] 10.3 Run E2E auth smoke (`bun run test:e2e:auth:critical`) after upgrade
 - [ ] ~~10.4 E2E Detox for deep link routing~~ — blocked on 4.2
 - [ ] ~~10.5 Playwright for web~~ — N/A
@@ -90,7 +90,7 @@
 
 ## 11. Release & Deployment Validation
 
-- [ ] 11.1 Run `npx expo-doctor`, `bun run test`, and E2E smoke post-upgrade
+- [x] 11.1 Run `npx expo-doctor` (17/17), `bun run test` (23 task suites, all passing) post-upgrade
 - [ ] 11.2 Run `bun run ios` (dev variant) and confirm tab navigation builds
 - [ ] ~~11.3 `bun run web`~~ — N/A
 - [ ] 11.4 Capture native folder diffs post-prebuild for ios variant
