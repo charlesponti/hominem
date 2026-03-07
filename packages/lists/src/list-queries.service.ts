@@ -1,6 +1,5 @@
-import { sql } from 'kysely';
-
 import { db } from '@hominem/db';
+import { sql } from 'kysely';
 
 import type { ListOutput, ListRecord, ListWithSpreadOwner } from './contracts';
 import { formatList } from './list-crud.service';
@@ -56,9 +55,7 @@ async function queryOwnedListRows(
       .selectFrom('task_lists as tl')
       .innerJoin('users as u', 'u.id', 'tl.user_id')
       .leftJoin('tasks as t', (join) =>
-        join
-          .onRef('t.list_id', '=', 'tl.id')
-          .onRef('t.user_id', '=', 'tl.user_id'),
+        join.onRef('t.list_id', '=', 'tl.id').onRef('t.user_id', '=', 'tl.user_id'),
       )
       .select([
         'tl.id',
@@ -107,9 +104,7 @@ async function queryAccessibleListRows(
       .selectFrom('task_lists as tl')
       .innerJoin('users as u', 'u.id', 'tl.user_id')
       .leftJoin('tasks as t', (join) =>
-        join
-          .onRef('t.list_id', '=', 'tl.id')
-          .onRef('t.user_id', '=', 'tl.user_id'),
+        join.onRef('t.list_id', '=', 'tl.id').onRef('t.user_id', '=', 'tl.user_id'),
       )
       .select([
         'tl.id',
@@ -261,25 +256,15 @@ export async function getListOwnedByUser(
 ): Promise<ListRecord | undefined> {
   const row = await db
     .selectFrom('task_lists as tl')
-    .select([
-      'tl.id',
-      'tl.name',
-      sql<string>`tl.user_id`.as('owner_id'),
-      'tl.created_at',
-    ])
-    .where((eb) =>
-      eb.and([
-        eb('tl.id', '=', listId),
-        eb('tl.user_id', '=', userId),
-      ]),
-    )
+    .select(['tl.id', 'tl.name', sql<string>`tl.user_id`.as('owner_id'), 'tl.created_at'])
+    .where((eb) => eb.and([eb('tl.id', '=', listId), eb('tl.user_id', '=', userId)]))
     .executeTakeFirst();
 
   if (!row) {
     return undefined;
   }
 
-   const createdAt = typeof row.created_at === 'string' ? row.created_at : new Date().toISOString();
+  const createdAt = typeof row.created_at === 'string' ? row.created_at : new Date().toISOString();
   return {
     id: row.id,
     name: row.name,
@@ -308,15 +293,9 @@ export async function getPlaceLists(params: {
   const result = await db
     .selectFrom('task_lists as tl')
     .innerJoin('tasks as t', (join) =>
-      join
-        .onRef('t.list_id', '=', 'tl.id')
-        .onRef('t.user_id', '=', 'tl.user_id'),
+      join.onRef('t.list_id', '=', 'tl.id').onRef('t.user_id', '=', 'tl.user_id'),
     )
-    .select([
-      'tl.id',
-      'tl.name',
-      sql<number>`count(t.id)::int`.as('item_count'),
-    ])
+    .select(['tl.id', 'tl.name', sql<number>`count(t.id)::int`.as('item_count')])
     .where((eb) =>
       eb.and([
         eb('tl.user_id', '=', params.userId),

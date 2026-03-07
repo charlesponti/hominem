@@ -1,9 +1,9 @@
 import crypto from 'node:crypto';
-import { sql, type Selectable } from 'kysely';
 
 import { db } from '@hominem/db';
 import type { Database, Json } from '@hominem/db';
 import { normalizePhotoReference, sanitizeStoredPhotos } from '@hominem/utils/images';
+import { sql, type Selectable } from 'kysely';
 
 import type { PlaceInput, PlaceOutput } from './contracts';
 import { googlePlaces } from './google-places.service';

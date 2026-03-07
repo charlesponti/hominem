@@ -62,12 +62,7 @@ async function hasNameConflict(
   const existing = await db
     .selectFrom('task_lists')
     .select('id')
-    .where((eb) =>
-      eb.and([
-        eb('user_id', '=', userId),
-        eb('name', '=', name),
-      ]),
-    )
+    .where((eb) => eb.and([eb('user_id', '=', userId), eb('name', '=', name)]))
     .executeTakeFirst();
 
   if (!existing) {
@@ -128,12 +123,7 @@ export async function updateList(
   const owned = await db
     .selectFrom('task_lists')
     .select('id')
-    .where((eb) =>
-      eb.and([
-        eb('id', '=', id),
-        eb('user_id', '=', userId),
-      ]),
-    )
+    .where((eb) => eb.and([eb('id', '=', id), eb('user_id', '=', userId)]))
     .executeTakeFirst();
 
   if (!owned) {
@@ -150,12 +140,7 @@ export async function updateList(
     .set({
       name: normalizedName,
     })
-    .where((eb) =>
-      eb.and([
-        eb('id', '=', id),
-        eb('user_id', '=', userId),
-      ]),
-    )
+    .where((eb) => eb.and([eb('id', '=', id), eb('user_id', '=', userId)]))
     .execute();
 
   const updated = await db
@@ -174,12 +159,7 @@ export async function updateList(
 export async function deleteList(id: string, userId: string): Promise<boolean> {
   const result = await db
     .deleteFrom('task_lists')
-    .where((eb) =>
-      eb.and([
-        eb('id', '=', id),
-        eb('user_id', '=', userId),
-      ]),
-    )
+    .where((eb) => eb.and([eb('id', '=', id), eb('user_id', '=', userId)]))
     .returningAll()
     .execute();
 

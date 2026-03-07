@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
-import type { Selectable } from 'kysely';
 
 import { db } from '@hominem/db';
 import type { Database, Json } from '@hominem/db';
+import type { Selectable } from 'kysely';
 import * as z from 'zod';
 
 import type { TripItemOutput, TripOutput } from './contracts';
@@ -84,7 +84,10 @@ function toItems(data: Json | null): TripItemOutput[] {
         createdAt: typeof obj.createdAt === 'string' ? obj.createdAt : new Date().toISOString(),
       };
     })
-    .filter((item): item is TripItemOutput => item !== null && item.tripId.length > 0 && item.itemId.length > 0);
+    .filter(
+      (item): item is TripItemOutput =>
+        item !== null && item.tripId.length > 0 && item.itemId.length > 0,
+    );
 }
 
 function toTripDataJson(items: TripItemOutput[]): Json {
@@ -192,15 +195,15 @@ export async function addItemToTrip(input: AddItemToTripInput): Promise<TripItem
     createdAt: new Date().toISOString(),
   };
 
-   const nextItems = [...currentItems, newItem];
+  const nextItems = [...currentItems, newItem];
 
-    await db
-      .updateTable('travel_trips')
-      .set({
-        data: toTripDataJson(nextItems),
-      })
-     .where('id', '=', validated.tripId)
-     .execute();
+  await db
+    .updateTable('travel_trips')
+    .set({
+      data: toTripDataJson(nextItems),
+    })
+    .where('id', '=', validated.tripId)
+    .execute();
 
-   return newItem;
+  return newItem;
 }

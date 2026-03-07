@@ -1,9 +1,9 @@
 import crypto from 'node:crypto';
-import type { Selectable } from 'kysely';
 
 import { db } from '@hominem/db';
 import type { Database, Json } from '@hominem/db';
 import { logger } from '@hominem/utils/logger';
+import type { Selectable } from 'kysely';
 
 import type { ChatMessageInput, ChatMessageOutput, ChatMessageRole } from '../contracts';
 import { ChatError } from './chat.types';
@@ -204,13 +204,13 @@ export class MessageService {
         throw new ChatError('AUTH_ERROR', 'Chat not found or access denied');
       }
 
-       // Delete all messages created after the timestamp
-       const deletedMessages = await db
-         .deleteFrom('chat_message')
-         .where('chat_id', '=', chatId)
-         .where('created_at', '>', new Date(afterTimestamp).toISOString())
-         .returningAll()
-         .execute();
+      // Delete all messages created after the timestamp
+      const deletedMessages = await db
+        .deleteFrom('chat_message')
+        .where('chat_id', '=', chatId)
+        .where('created_at', '>', new Date(afterTimestamp).toISOString())
+        .returningAll()
+        .execute();
 
       return deletedMessages.length;
     } catch (error) {

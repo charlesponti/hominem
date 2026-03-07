@@ -1,8 +1,8 @@
 import crypto from 'node:crypto';
-import type { Selectable } from 'kysely';
 
 import { db } from '@hominem/db';
 import type { Database } from '@hominem/db';
+import type { Selectable } from 'kysely';
 
 import type { ChatOutput } from '../contracts';
 import type { CreateChatParams } from './chat.types';
@@ -152,11 +152,7 @@ export async function deleteChatQuery(chatId: string, userId: string): Promise<b
   }
 
   await db.deleteFrom('chat_message').where('chat_id', '=', chatId).execute();
-  await db
-    .deleteFrom('chat')
-    .where('id', '=', chatId)
-    .where('user_id', '=', userId)
-    .execute();
+  await db.deleteFrom('chat').where('id', '=', chatId).where('user_id', '=', userId).execute();
   return true;
 }
 

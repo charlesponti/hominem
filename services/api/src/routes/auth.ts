@@ -336,20 +336,18 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
 
   const user =
     existingUser ??
-    (
-      await db
-        .insertInto('users')
-        .values({
-          id: randomBytes(16).toString('hex'),
-          email,
-          name,
-          is_admin: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .returningAll()
-        .executeTakeFirst()
-    );
+    (await db
+      .insertInto('users')
+      .values({
+        id: randomBytes(16).toString('hex'),
+        email,
+        name,
+        is_admin: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .returningAll()
+      .executeTakeFirst());
 
   if (!user) {
     logger.error('[auth:e2e:mobile] failed to create or fetch user', {

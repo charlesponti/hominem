@@ -68,15 +68,7 @@ export async function ensureOAuthSubjectUser(
   // Check if a user with this email already exists
   const existingUser = await db
     .selectFrom('users')
-    .select([
-      'id',
-      'email',
-      'name',
-      'image',
-      'is_admin',
-      'created_at',
-      'updated_at',
-    ])
+    .select(['id', 'email', 'name', 'image', 'is_admin', 'created_at', 'updated_at'])
     .where((eb) => eb('email', '=', input.email))
     .limit(1)
     .executeTakeFirst();

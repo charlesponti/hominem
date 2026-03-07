@@ -36,7 +36,7 @@ async function hasPlaidItemsTable(): Promise<boolean> {
   return Boolean(rows[0]?.relation_name);
 }
 
-describe.skipIf(!dbAvailable)('modern-finance plaid integration', () => {
+describe.skipIf(!dbAvailable)('finance plaid integration', () => {
   let ownerId: string;
   let otherUserId: string;
 

@@ -1,5 +1,5 @@
-import { kyselyAdapter } from '@better-auth/kysely-adapter';
 import { expo } from '@better-auth/expo';
+import { kyselyAdapter } from '@better-auth/kysely-adapter';
 import { passkey } from '@better-auth/passkey';
 import { db } from '@hominem/db';
 import type { BetterAuthOptions } from 'better-auth';

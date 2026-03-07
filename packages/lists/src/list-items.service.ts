@@ -60,11 +60,7 @@ export async function deleteListItem(
   const result = await db
     .deleteFrom('tasks')
     .where((eb) =>
-      eb.and([
-        eb('id', '=', itemId),
-        eb('list_id', '=', listId),
-        eb('user_id', '=', userId),
-      ]),
+      eb.and([eb('id', '=', itemId), eb('list_id', '=', listId), eb('user_id', '=', userId)]),
     )
     .returningAll()
     .execute();
@@ -88,27 +84,17 @@ export async function addItemToList(params: {
   const existing = await db
     .selectFrom('tasks')
     .selectAll()
-    .where((eb) =>
-      eb.and([
-        eb('id', '=', itemId),
-        eb('user_id', '=', userId),
-      ]),
-    )
+    .where((eb) => eb.and([eb('id', '=', itemId), eb('user_id', '=', userId)]))
     .executeTakeFirst();
 
   if (existing) {
-     const updated = await db
-       .updateTable('tasks')
-       .set({
-         list_id: listId,
-         updated_at: new Date().toISOString(),
-       })
-      .where((eb) =>
-        eb.and([
-          eb('id', '=', itemId),
-          eb('user_id', '=', userId),
-        ]),
-      )
+    const updated = await db
+      .updateTable('tasks')
+      .set({
+        list_id: listId,
+        updated_at: new Date().toISOString(),
+      })
+      .where((eb) => eb.and([eb('id', '=', itemId), eb('user_id', '=', userId)]))
       .returningAll()
       .executeTakeFirst();
 
@@ -151,18 +137,14 @@ export async function removeItemFromList(params: {
     throw new Error("List not found or you don't have permission to remove items from it");
   }
 
-   const result = await db
-     .updateTable('tasks')
-     .set({
-       list_id: null,
-       updated_at: new Date().toISOString(),
-     })
+  const result = await db
+    .updateTable('tasks')
+    .set({
+      list_id: null,
+      updated_at: new Date().toISOString(),
+    })
     .where((eb) =>
-      eb.and([
-        eb('id', '=', itemId),
-        eb('list_id', '=', listId),
-        eb('user_id', '=', userId),
-      ]),
+      eb.and([eb('id', '=', itemId), eb('list_id', '=', listId), eb('user_id', '=', userId)]),
     )
     .returningAll()
     .execute();

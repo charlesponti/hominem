@@ -1,6 +1,6 @@
 import { db } from '@hominem/db';
-import type { Selectable } from 'kysely';
 import type { Database } from '@hominem/db';
+import type { Selectable } from 'kysely';
 
 import type {
   NoteStatus,
@@ -22,7 +22,7 @@ type NotesRow = Selectable<Database['notes']>;
 
 function rowToNote(row: NotesRow, tags: NoteOutput['tags'] = []): NoteOutput {
   const toDateStr = (d: string | Date | null | undefined): string | null =>
-    typeof d === 'string' ? d : d instanceof Date ? d.toISOString() : d ?? null;
+    typeof d === 'string' ? d : d instanceof Date ? d.toISOString() : (d ?? null);
   return {
     id: row.id,
     userId: row.user_id,
@@ -635,9 +635,7 @@ export class NotesService {
       .selectFrom('notes')
       .selectAll()
       .where('user_id', '=', userId)
-      .where((eb) =>
-        eb.or([eb('id', '=', rootNoteId), eb('parent_note_id', '=', rootNoteId)]),
-      )
+      .where((eb) => eb.or([eb('id', '=', rootNoteId), eb('parent_note_id', '=', rootNoteId)]))
       .orderBy('version_number', 'asc')
       .execute();
 

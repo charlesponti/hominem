@@ -37,7 +37,7 @@ const taggingTablesAvailable = dbAvailable ? await hasTaggingTables() : false;
 const nextUserId = createDeterministicIdFactory('finance.tags.integration');
 const nextTagId = createDeterministicIdFactory('finance.tags.integration.tag');
 
-describe.skipIf(!dbAvailable || !taggingTablesAvailable)('modern-finance tags integration', () => {
+describe.skipIf(!dbAvailable || !taggingTablesAvailable)('finance tags integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerAccountId: string;

@@ -19,7 +19,7 @@ import {
 const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('finance.accounts.integration');
 
-describe.skipIf(!dbAvailable)('modern-finance accounts integration', () => {
+describe.skipIf(!dbAvailable)('finance accounts integration', () => {
   let ownerId: string;
   let otherUserId: string;
 

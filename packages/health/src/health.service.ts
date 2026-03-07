@@ -1,35 +1,36 @@
-import crypto from 'node:crypto'
-import type { Selectable } from 'kysely'
-import type { Database } from '@hominem/db'
-import { db } from '@hominem/db'
+import crypto from 'node:crypto';
 
-export type HealthRecordRow = Selectable<Database['health_records']>
+import type { Database } from '@hominem/db';
+import { db } from '@hominem/db';
+import type { Selectable } from 'kysely';
+
+export type HealthRecordRow = Selectable<Database['health_records']>;
 
 export async function listHealthRecords(filters: {
-  userId?: string
-  startDate?: Date
-  endDate?: Date
-  recordType?: string
+  userId?: string;
+  startDate?: Date;
+  endDate?: Date;
+  recordType?: string;
 }): Promise<HealthRecordRow[]> {
-  let query = db.selectFrom('health_records').selectAll()
+  let query = db.selectFrom('health_records').selectAll();
 
   if (filters.userId) {
-    query = query.where('user_id', '=', filters.userId)
+    query = query.where('user_id', '=', filters.userId);
   }
 
   if (filters.startDate) {
-    query = query.where('recorded_at', '>=', filters.startDate.toISOString())
+    query = query.where('recorded_at', '>=', filters.startDate.toISOString());
   }
 
   if (filters.endDate) {
-    query = query.where('recorded_at', '<=', filters.endDate.toISOString())
+    query = query.where('recorded_at', '<=', filters.endDate.toISOString());
   }
 
   if (filters.recordType) {
-    query = query.where('record_type', '=', filters.recordType)
+    query = query.where('record_type', '=', filters.recordType);
   }
 
-  return query.execute()
+  return query.execute();
 }
 
 export async function getHealthRecord(id: string): Promise<HealthRecordRow | null> {
@@ -37,15 +38,15 @@ export async function getHealthRecord(id: string): Promise<HealthRecordRow | nul
     .selectFrom('health_records')
     .selectAll()
     .where('id', '=', id)
-    .executeTakeFirst()
+    .executeTakeFirst();
 
-  return result ?? null
+  return result ?? null;
 }
 
 export async function createHealthRecord(
   data: Omit<HealthRecordRow, 'id' | 'created_at'>,
 ): Promise<HealthRecordRow> {
-  const now = new Date().toISOString()
+  const now = new Date().toISOString();
 
   return db
     .insertInto('health_records')
@@ -55,7 +56,7 @@ export async function createHealthRecord(
       ...data,
     })
     .returningAll()
-    .executeTakeFirstOrThrow()
+    .executeTakeFirstOrThrow();
 }
 
 export async function updateHealthRecord(
@@ -63,7 +64,7 @@ export async function updateHealthRecord(
   updates: Partial<Omit<HealthRecordRow, 'id' | 'created_at'>>,
 ): Promise<HealthRecordRow | null> {
   if (Object.keys(updates).length === 0) {
-    return getHealthRecord(id)
+    return getHealthRecord(id);
   }
 
   const result = await db
@@ -71,16 +72,13 @@ export async function updateHealthRecord(
     .set(updates)
     .where('id', '=', id)
     .returningAll()
-    .executeTakeFirst()
+    .executeTakeFirst();
 
-  return result ?? null
+  return result ?? null;
 }
 
 export async function deleteHealthRecord(id: string): Promise<boolean> {
-  const result = await db
-    .deleteFrom('health_records')
-    .where('id', '=', id)
-    .executeTakeFirst()
+  const result = await db.deleteFrom('health_records').where('id', '=', id).executeTakeFirst();
 
-  return (result.numDeletedRows ?? 0n) > 0n
+  return (result.numDeletedRows ?? 0n) > 0n;
 }

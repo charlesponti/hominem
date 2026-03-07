@@ -14,23 +14,13 @@ export async function isUserMemberOfList(listId: string, userId: string): Promis
   const result = await db
     .selectFrom('task_lists as tl')
     .select('tl.id')
-    .where((eb) =>
-      eb.and([
-        eb('tl.id', '=', listId),
-        eb('tl.user_id', '=', userId),
-      ]),
-    )
+    .where((eb) => eb.and([eb('tl.id', '=', listId), eb('tl.user_id', '=', userId)]))
     .union(
       db
         .selectFrom('task_lists as tl')
         .innerJoin('task_list_collaborators as tlc', 'tlc.list_id', 'tl.id')
         .select('tl.id')
-        .where((eb) =>
-          eb.and([
-            eb('tl.id', '=', listId),
-            eb('tlc.user_id', '=', userId),
-          ]),
-        ),
+        .where((eb) => eb.and([eb('tl.id', '=', listId), eb('tlc.user_id', '=', userId)])),
     )
     .limit(1)
     .executeTakeFirst();
@@ -92,12 +82,7 @@ export async function removeUserFromList({
 
   const removed = await db
     .deleteFrom('task_list_collaborators')
-    .where((eb) =>
-      eb.and([
-        eb('list_id', '=', listId),
-        eb('user_id', '=', userIdToRemove),
-      ]),
-    )
+    .where((eb) => eb.and([eb('list_id', '=', listId), eb('user_id', '=', userIdToRemove)]))
     .returningAll()
     .executeTakeFirst();
 

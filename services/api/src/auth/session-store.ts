@@ -143,12 +143,7 @@ async function revokeRefreshFamily(familyId: string) {
   await db
     .updateTable('auth_refresh_tokens')
     .set({ revoked_at: nowIso() })
-    .where((eb) =>
-      eb.and([
-        eb('family_id', '=', familyId),
-        eb('revoked_at', 'is', null),
-      ]),
-    )
+    .where((eb) => eb.and([eb('family_id', '=', familyId), eb('revoked_at', 'is', null)]))
     .execute();
 }
 
@@ -170,12 +165,7 @@ export async function revokeSession(sessionId: string) {
   await db
     .updateTable('auth_refresh_tokens')
     .set({ revoked_at: nowIso() })
-    .where((eb) =>
-      eb.and([
-        eb('session_id', '=', sessionId),
-        eb('revoked_at', 'is', null),
-      ]),
-    )
+    .where((eb) => eb.and([eb('session_id', '=', sessionId), eb('revoked_at', 'is', null)]))
     .execute();
 }
 
@@ -253,12 +243,7 @@ export async function rotateRefreshToken(refreshToken: string) {
   const markedUsed = await db
     .updateTable('auth_refresh_tokens')
     .set({ used_at: now })
-    .where((eb) =>
-      eb.and([
-        eb('id', '=', existing.id),
-        eb('used_at', 'is', null),
-      ]),
-    )
+    .where((eb) => eb.and([eb('id', '=', existing.id), eb('used_at', 'is', null)]))
     .returningAll()
     .executeTakeFirst();
 

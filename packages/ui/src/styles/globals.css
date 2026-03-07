@@ -16,13 +16,12 @@
 
 @theme {
   /* ====== TYPOGRAPHY ====== */
-  
+
   /* Font families */
   --font-family-primary:
     'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-family-mono:
-    'JetBrains Mono', 'SF Mono', 'Monaco', 'Menlo', monospace;
-  
+  --font-family-mono: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Menlo', monospace;
+
   /* Font sizes - 4px rhythm scale */
   --font-size-xs: 12px;
   --font-size-sm: 14px;
@@ -30,82 +29,82 @@
   --font-size-lg: 18px;
   --font-size-xl: 20px;
   --font-size-display: 28px;
-  
+
   /* Font weights */
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  
+
   /* Line heights - Apple HIG aligned */
   --line-height-tight: 1.2;
   --line-height-normal: 1.4;
   --line-height-relaxed: 1.6;
-  
+
   /* Letter spacing - dark mode optimized */
   --letter-spacing-tight: -0.05em;
   --letter-spacing-normal: 0;
   --letter-spacing-relaxed: 0.01em;
-  
+
   /* ====== COLORS: BACKGROUNDS ====== */
   /* Off-black palette with opacity-based elevation */
-  
-  --color-bg-base: #0F1113;        /* App background - deepest */
-  --color-bg-surface: #14171A;     /* Cards, panels */
-  --color-bg-elevated: #1A1E22;    /* Modals, hover states */
+
+  --color-bg-base: #0f1113; /* App background - deepest */
+  --color-bg-surface: #14171a; /* Cards, panels */
+  --color-bg-elevated: #1a1e22; /* Modals, hover states */
   --color-bg-overlay: rgba(255, 255, 255, 0.04);
-  
+
   /* ====== COLORS: TEXT ====== */
   /* Off-white foreground reduces eye fatigue */
-  
-  --color-text-primary: #E7EAEE;     /* Main text - 88% brightness */
-  --color-text-secondary: #B3BAC2;   /* Subtext - 70% brightness */
-  --color-text-tertiary: #7A828A;    /* Metadata - 48% brightness */
-  --color-text-disabled: #545B62;    /* Disabled - 33% brightness */
-  
+
+  --color-text-primary: #e7eaee; /* Main text - 88% brightness */
+  --color-text-secondary: #b3bac2; /* Subtext - 70% brightness */
+  --color-text-tertiary: #7a828a; /* Metadata - 48% brightness */
+  --color-text-disabled: #545b62; /* Disabled - 33% brightness */
+
   /* ====== COLORS: BORDERS & LINES ====== */
   /* Opacity-based for subtle separation */
-  
+
   --color-border-default: rgba(255, 255, 255, 0.08);
   --color-border-subtle: rgba(255, 255, 255, 0.04);
   --color-border-focus: rgba(255, 255, 255, 0.16);
-  
+
   /* ====== COLORS: ICONS & LINES ====== */
-  
-  --color-icon-primary: #F5F7FA;
-  --color-icon-muted: #AEB5BD;
-  
+
+  --color-icon-primary: #f5f7fa;
+  --color-icon-muted: #aeb5bd;
+
   /* ====== COLORS: SEMANTIC STATUS ====== */
-  
-  --color-success: #34C759;
-  --color-warning: #FF9500;
-  --color-destructive: #FF3B30;
-  
+
+  --color-success: #34c759;
+  --color-warning: #ff9500;
+  --color-destructive: #ff3b30;
+
   /* ====== COLORS: ACCENT (Per-Product Override) ====== */
   /* Default: cool blue. Override with [data-product="*"] */
-  
-  --color-accent: #7BD3F7;           /* Void: cool blue */
+
+  --color-accent: #7bd3f7; /* Void: cool blue */
   --color-accent-foreground: #000000;
-  
+
   /* ====== COLORS: SYSTEM (Backward Compatibility) ====== */
-  
-  --color-primary: #E7EAEE;
-  --color-primary-foreground: #0F1113;
+
+  --color-primary: #e7eaee;
+  --color-primary-foreground: #0f1113;
   --color-secondary: rgba(255, 255, 255, 0.1);
-  --color-secondary-foreground: #B3BAC2;
+  --color-secondary-foreground: #b3bac2;
   --color-muted: rgba(255, 255, 255, 0.05);
-  --color-muted-foreground: #7A828A;
-  --color-foreground: #E7EAEE;
-  --color-background: #0F1113;
-  --color-destructive-foreground: #FFFFFF;
-  --color-popover: #14171A;
-  --color-popover-foreground: #E7EAEE;
-  --color-input: #14171A;
-  --color-ring: #E7EAEE;
-  
+  --color-muted-foreground: #7a828a;
+  --color-foreground: #e7eaee;
+  --color-background: #0f1113;
+  --color-destructive-foreground: #ffffff;
+  --color-popover: #14171a;
+  --color-popover-foreground: #e7eaee;
+  --color-input: #14171a;
+  --color-ring: #e7eaee;
+
   /* ====== COLORS: EMPHASIS SCALE ====== */
   /* Opacity layers for subtle differentiation */
-  
+
   --color-emphasis-highest: rgba(255, 255, 255, 0.9);
   --color-emphasis-high: rgba(255, 255, 255, 0.7);
   --color-emphasis-medium: rgba(255, 255, 255, 0.5);
@@ -114,17 +113,17 @@
   --color-emphasis-subtle: rgba(255, 255, 255, 0.15);
   --color-emphasis-minimal: rgba(255, 255, 255, 0.1);
   --color-emphasis-faint: rgba(255, 255, 255, 0.05);
-  
+
   /* ====== COLORS: CHARTS ====== */
-  
+
   --color-chart-1: rgba(255, 255, 255, 0.9);
   --color-chart-2: rgba(255, 255, 255, 0.7);
   --color-chart-3: rgba(255, 255, 255, 0.5);
   --color-chart-4: rgba(255, 255, 255, 0.3);
   --color-chart-5: rgba(255, 255, 255, 0.15);
-  
+
   /* ====== SPACING: 8PX + 4PX GRID ====== */
-  
+
   --spacing-1: 4px;
   --spacing-2: 8px;
   --spacing-3: 12px;
@@ -133,27 +132,27 @@
   --spacing-6: 32px;
   --spacing-7: 48px;
   --spacing-8: 64px;
-  
+
   /* ====== BORDER RADIUS ====== */
   /* Soft rounded corners for modern aesthetic */
-  
+
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 20px;
-  
+
   /* Icon radius: 22% for squircular appearance */
   --radius-icon: 22%;
-  
+
   /* ====== SHADOWS ====== */
   /* Subtle elevation shadows */
-  
+
   --shadow-low: 0 2px 8px rgba(0, 0, 0, 0.35);
   --shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.45);
   --shadow-high: 0 20px 60px rgba(0, 0, 0, 0.55);
-  
+
   /* ====== GLASS MORPHISM ====== */
-  
+
   --glass-blur: 12px;
   --glass-background: rgba(255, 255, 255, 0.04);
 }
@@ -184,8 +183,6 @@
   height: 100dvh;
 }
 
-
-
 /* ====== BASE STYLES ====== */
 
 @layer base {
@@ -202,7 +199,7 @@
     transition: none;
   }
 
-  *:is(button, a, input, select, textarea, [role="button"], [role="link"]) {
+  *:is(button, a, input, select, textarea, [role='button'], [role='link']) {
     transition-property: background-color, color, border-color, opacity;
     transition-duration: 150ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -745,7 +742,9 @@
     outline: none;
     border-color: var(--color-border-focus);
     background-color: var(--color-bg-elevated);
-    box-shadow: 0 0 0 2px var(--color-accent), 0 0 0 4px rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 0 0 2px var(--color-accent),
+      0 0 0 4px rgba(0, 0, 0, 0.1);
   }
 
   .input:disabled {
@@ -765,7 +764,9 @@
   }
 
   .input-error:focus {
-    box-shadow: 0 0 0 2px var(--color-destructive), 0 0 0 4px rgba(255, 59, 48, 0.1);
+    box-shadow:
+      0 0 0 2px var(--color-destructive),
+      0 0 0 4px rgba(255, 59, 48, 0.1);
   }
 
   /* Badge component */

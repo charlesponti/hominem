@@ -1,13 +1,7 @@
 import crypto from 'node:crypto';
 
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError, db } from '@hominem/db';
 import { sql } from 'kysely';
-import {
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-  ValidationError,
-  db,
-} from '@hominem/db';
 import * as z from 'zod';
 
 import type { ListOutput } from './contracts';
@@ -144,12 +138,7 @@ async function ensureListOwner(listId: string, ownerId: string): Promise<void> {
   const result = await db
     .selectFrom('task_lists')
     .select('id')
-    .where((eb) =>
-      eb.and([
-        eb('id', '=', listId),
-        eb('user_id', '=', ownerId),
-      ]),
-    )
+    .where((eb) => eb.and([eb('id', '=', listId), eb('user_id', '=', ownerId)]))
     .executeTakeFirst();
 
   if (!result) {
@@ -255,13 +244,15 @@ export async function getInvitesForUser(
       sql<string>`u_owner.email`.as('list_owner_email'),
       sql<string>`u_owner.name`.as('list_owner_name'),
     ])
-     .where((eb) =>
-       eb.or([
-         eb('li.invited_user_id', '=', userId),
-         email && email.length > 0 ? eb(sql`lower(li.invited_user_email)`, '=', email) : undefined,
-         // eslint-disable-next-line typescript-eslint/no-explicit-any
-       ].filter(Boolean) as any),
-     )
+    .where((eb) =>
+      eb.or(
+        [
+          eb('li.invited_user_id', '=', userId),
+          email && email.length > 0 ? eb(sql`lower(li.invited_user_email)`, '=', email) : undefined,
+          // eslint-disable-next-line typescript-eslint/no-explicit-any
+        ].filter(Boolean) as any,
+      ),
+    )
     .orderBy('li.created_at', 'desc')
     .orderBy('li.id', 'asc')
     .execute();
@@ -292,12 +283,7 @@ export async function getInviteByListAndToken(params: {
   const row = await db
     .selectFrom('task_list_invites')
     .selectAll()
-    .where((eb) =>
-      eb.and([
-        eb('list_id', '=', params.listId),
-        eb('token', '=', params.token),
-      ]),
-    )
+    .where((eb) => eb.and([eb('list_id', '=', params.listId), eb('token', '=', params.token)]))
     .executeTakeFirst();
 
   if (!row) {
@@ -313,12 +299,7 @@ export async function deleteInviteByListAndToken(params: {
 }): Promise<boolean> {
   const result = await db
     .deleteFrom('task_list_invites')
-    .where((eb) =>
-      eb.and([
-        eb('list_id', '=', params.listId),
-        eb('token', '=', params.token),
-      ]),
-    )
+    .where((eb) => eb.and([eb('list_id', '=', params.listId), eb('token', '=', params.token)]))
     .returningAll()
     .execute();
 
@@ -393,12 +374,7 @@ export async function sendListInvite(params: SendListInviteParams): Promise<List
     const membership = await db
       .selectFrom('task_list_collaborators')
       .select('list_id')
-      .where((eb) =>
-        eb.and([
-          eb('list_id', '=', params.listId),
-          eb('user_id', '=', invitee.id),
-        ]),
-      )
+      .where((eb) => eb.and([eb('list_id', '=', params.listId), eb('user_id', '=', invitee.id)]))
       .executeTakeFirst();
 
     if (membership) {
@@ -458,10 +434,7 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
       .selectFrom('task_list_collaborators')
       .select('list_id')
       .where((eb) =>
-        eb.and([
-          eb('list_id', '=', invite.list_id),
-          eb('user_id', '=', params.acceptingUserId),
-        ]),
+        eb.and([eb('list_id', '=', invite.list_id), eb('user_id', '=', params.acceptingUserId)]),
       )
       .executeTakeFirst();
 
@@ -473,11 +446,11 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
   await db
     .updateTable('task_list_invites')
     .set({
-       invited_user_id: params.acceptingUserId,
-       accepted: true,
-       accepted_at: new Date().toISOString(),
-       updated_at: new Date().toISOString(),
-     })
+      invited_user_id: params.acceptingUserId,
+      accepted: true,
+      accepted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
     .where('id', '=', invite.id)
     .execute();
 

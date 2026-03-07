@@ -41,7 +41,7 @@ async function hasBudgetGoalsTable(): Promise<boolean> {
   return Boolean(rows[0]?.relation_name);
 }
 
-describe.skipIf(!dbAvailable)('modern-finance budget integration', () => {
+describe.skipIf(!dbAvailable)('finance budget integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerAccountId: string;

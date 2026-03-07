@@ -1,12 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  calculateBudgetBreakdown,
-  calculateLoanDetails,
-  calculateSavingsGoal,
-} from './finance';
+import { calculateBudgetBreakdown, calculateLoanDetails, calculateSavingsGoal } from './finance';
 
-describe('modern-finance calculators integration', () => {
+describe('finance calculators integration', () => {
   it('computes runway-adjacent budget breakdown deterministically', () => {
     const result = calculateBudgetBreakdown({
       monthlyIncome: 5000,

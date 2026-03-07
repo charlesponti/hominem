@@ -24,10 +24,7 @@ export function EmailSignIn({ actionData }: EmailSignInProps) {
 
         <fetcher.Form method="post" className="space-y-4">
           <div>
-            <label
-              htmlFor="email"
-              className="block text-xs font-medium text-text-primary mb-1"
-            >
+            <label htmlFor="email" className="block text-xs font-medium text-text-primary mb-1">
               Email address
             </label>
             <input
@@ -42,9 +39,7 @@ export function EmailSignIn({ actionData }: EmailSignInProps) {
           </div>
 
           {(actionData?.error || fetcher.data?.error) && (
-            <div className="body-4 text-error">
-              {actionData?.error || fetcher.data?.error}
-            </div>
+            <div className="body-4 text-error">{actionData?.error || fetcher.data?.error}</div>
           )}
 
           {(actionData?.success || fetcher.data?.success) && (
@@ -53,11 +48,7 @@ export function EmailSignIn({ actionData }: EmailSignInProps) {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="btn btn-primary w-full"
-          >
+          <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full">
             {isSubmitting ? 'Sending...' : 'Send Verification Code'}
           </button>
         </fetcher.Form>

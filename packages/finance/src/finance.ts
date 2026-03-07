@@ -50,7 +50,9 @@ interface FinanceAnalyticsTransaction extends FinanceTransaction {
   classification: string;
 }
 
-type FinanceAnalyticsTransactionRow = Selectable<Database['finance_transactions']> & { classification: string };
+type FinanceAnalyticsTransactionRow = Selectable<Database['finance_transactions']> & {
+  classification: string;
+};
 
 type TagCategoryRow = Selectable<Database['tags']>;
 
@@ -1221,12 +1223,12 @@ export async function queryTransactionsByContract(
     if (parsed.accountId) {
       query = query.where('t.account_id', '=', parsed.accountId);
     }
-  if (parsed.dateFrom) {
-    query = query.where('t.date', '>=', parsed.dateFrom);
-  }
-  if (parsed.dateTo) {
-    query = query.where('t.date', '<=', parsed.dateTo);
-  }
+    if (parsed.dateFrom) {
+      query = query.where('t.date', '>=', parsed.dateFrom);
+    }
+    if (parsed.dateTo) {
+      query = query.where('t.date', '<=', parsed.dateTo);
+    }
     const result = await query
       .orderBy('t.date', 'desc')
       .orderBy('t.id', 'desc')
