@@ -87,6 +87,19 @@ function toItems(data: Json | null): TripItemOutput[] {
     .filter((item): item is TripItemOutput => item !== null && item.tripId.length > 0 && item.itemId.length > 0);
 }
 
+function toTripDataJson(items: TripItemOutput[]): Json {
+  // Convert items to a JSON-serializable format that matches what toItems expects
+  const jsonItems = items.map((item) => ({
+    id: item.id,
+    tripId: item.tripId,
+    itemId: item.itemId,
+    day: item.day,
+    order: item.order,
+    createdAt: item.createdAt,
+  }));
+  return { items: jsonItems };
+}
+
 export async function createTrip(input: CreateTripInput): Promise<TripOutput> {
   const validated = createTripSchema.parse(input);
   const tripId = crypto.randomUUID();
@@ -181,13 +194,13 @@ export async function addItemToTrip(input: AddItemToTripInput): Promise<TripItem
 
    const nextItems = [...currentItems, newItem];
 
-   await db
-     .updateTable('travel_trips')
-     .set({
-       data: { items: nextItems } as unknown as Json,
-     })
-    .where('id', '=', validated.tripId)
-    .execute();
+    await db
+      .updateTable('travel_trips')
+      .set({
+        data: toTripDataJson(nextItems),
+      })
+     .where('id', '=', validated.tripId)
+     .execute();
 
-  return newItem;
+   return newItem;
 }
