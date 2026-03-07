@@ -10,14 +10,6 @@ const pdfParse = require('pdf-parse');
 
 const CHUNK_SIZE = 4096;
 
-function splitIntoChunks(content: string) {
-  const chunks: string[] = [];
-  for (let i = 0; i < content.length; i += CHUNK_SIZE) {
-    chunks.push(content.slice(i, i + CHUNK_SIZE));
-  }
-  return chunks;
-}
-
 async function getPDFData(content: Buffer): Promise<PDFParseResult> {
   const pdfData = await pdfParse(content);
   return pdfData;
@@ -35,41 +27,6 @@ async function getAttachmentText(attachment: Attachment): Promise<{ text: string
   }
 
   return { text: content.toString('utf-8'), pages: 1 };
-}
-
-async function processAttachment(attachment: Attachment): Promise<string | null> {
-  const { filename } = attachment;
-  if (!filename || !attachment.content) {
-    return null;
-  }
-
-  try {
-    const content = await getAttachmentText(attachment);
-
-    const { response } = await generateText({
-      model: openai('gpt-5-mini'),
-      messages: [
-        {
-          role: 'system',
-          content: `
-            Based on the following text chunk from an attachment, extract any relevant information that could be added to the writer's profile.
-            Focus on additional notable works, awards, or background information.
-          `,
-        },
-        {
-          role: 'user',
-          content: content.text,
-        },
-      ],
-    });
-
-    const result = response.messages[0]?.content as string;
-
-    return result;
-  } catch (error) {
-    logger.error(`Error processing attachment: ${filename}`);
-    throw error;
-  }
 }
 
 export async function processAttachments(

@@ -52,13 +52,13 @@ vi.mock('@hominem/finance-services', () => ({
 // `plaidClient` directly for simplicity.
 
 // Helper to create a minimal fake job object.
-function makeJob(data: any): Job<any> {
+function makeJob(data: unknown): Job<unknown> {
   // only the fields accessed by processSyncJob are needed
   return {
     id: 'job-id',
     data,
     updateProgress: vi.fn().mockResolvedValue(undefined),
-  } as unknown as Job<any>;
+  } as unknown as Job<unknown>;
 }
 
 describe('processSyncJob', () => {
