@@ -1,4 +1,6 @@
 import { db, NotFoundError, ForbiddenError, InternalError } from '@hominem/db'
+import type { Database } from '@hominem/db'
+import type { Selectable } from 'kysely'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import * as z from 'zod'
@@ -12,6 +14,25 @@ import type {
 } from '../types/chat.types'
 
 import { authMiddleware, type AppContext } from '../middleware/auth'
+
+function toChatMessage(row: Selectable<Database['chat_message']>): ChatMessage {
+  const createdAtStr = typeof row.created_at === 'string' ? row.created_at : row.created_at ?? new Date().toISOString()
+  const updatedAtStr = typeof row.updated_at === 'string' ? row.updated_at : row.updated_at ?? new Date().toISOString()
+  
+  return {
+    id: row.id,
+    chatId: row.chat_id,
+    userId: row.user_id,
+    content: row.content,
+    role: row.role as ChatMessage['role'],
+    files: row.files ? (JSON.parse(String(row.files)) as ChatMessage['files']) : null,
+    toolCalls: row.tool_calls ? (JSON.parse(String(row.tool_calls)) as ChatMessage['toolCalls']) : null,
+    reasoning: row.reasoning,
+    parentMessageId: row.parent_message_id,
+    createdAt: createdAtStr,
+    updatedAt: updatedAtStr,
+  }
+}
 
 const updateMessageSchema = z.object({
   content: z.string().min(1, 'Message content cannot be empty'),
@@ -67,7 +88,7 @@ async function deleteMessagesAfterTimestamp(chatId: string, afterTimestamp: stri
   const result = await db
     .deleteFrom('chat_message')
     .where('chat_id', '=', chatId)
-    .where('created_at', '>', new Date(afterTimestamp))
+    .where('created_at', '>', afterTimestamp)
     .execute()
 
   return result.length
@@ -82,7 +103,7 @@ export const messagesRoutes = new Hono<AppContext>()
 
     const message = await getMessageWithOwnershipCheck(messageId, userId)
     return c.json<MessagesGetOutput>({
-      message: message as unknown as ChatMessage,
+      message: toChatMessage(message),
     })
   })
 
@@ -99,13 +120,13 @@ export const messagesRoutes = new Hono<AppContext>()
     }
 
     // Delete messages after this one
-    await deleteMessagesAfterTimestamp(message.chat_id, message.created_at as any as string, userId)
+    await deleteMessagesAfterTimestamp(message.chat_id, message.created_at, userId)
 
     const updatedMessage = await db
       .updateTable('chat_message')
       .set({
         content,
-        updated_at: new Date(),
+        updated_at: new Date().toISOString(),
       })
       .where('id', '=', messageId)
       .returningAll()
@@ -115,7 +136,7 @@ export const messagesRoutes = new Hono<AppContext>()
       throw new InternalError('Failed to update message')
     }
     return c.json<MessagesUpdateOutput>({
-      message: updatedMessage as unknown as ChatMessage,
+      message: toChatMessage(updatedMessage),
     })
   })
 
