@@ -217,6 +217,15 @@ Removed dangerous `as any` and `as unknown` type casts:
 - **messages.ts**: ChatMessage casts → toChatMessage() converter with proper JSON parsing
 - **Total**: ~50 type casts eliminated, improving code reliability
 
+### Type Safety Improvements (Session 3)
+
+Continued removing type casts from service packages:
+- **packages/places/src/trips.service.ts**: Created `toTripDataJson()` helper function to safely convert `TripItemOutput[]` to `Json` type
+  - Replaced `{ items: nextItems } as unknown as Json` with properly typed helper
+  - Ensures JSON serialization compatibility without dangerous type casts
+  - Aligns with AGENTS.md guidelines (no `any` or `unknown` types)
+- **Verification**: All checks pass (typecheck, build, lint)
+
 ## Conclusion
 
 The Kysely-Atlas migration is **effectively complete**. All database operations throughout the application use Kysely, with the exception of:
