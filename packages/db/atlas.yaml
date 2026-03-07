@@ -1,0 +1,11 @@
+# Atlas configuration for Hominem database
+env:
+  dev:
+    url: postgresql://postgres:postgres@localhost:5432/hominem_dev?sslmode=disable
+  prod:
+    url: ${DATABASE_URL}
+
+lint:
+  latest:
+    ignore:
+      - constraint_missing_enforcement
