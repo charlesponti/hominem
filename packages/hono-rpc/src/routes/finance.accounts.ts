@@ -3,6 +3,8 @@ import { zValidator } from '@hono/zod-validator'
 import * as z from 'zod'
 import { randomUUID } from 'crypto'
 import { db } from '@hominem/db'
+import type { Selectable } from 'kysely'
+import type { Database } from '@hominem/db'
 import { NotFoundError } from '../errors'
 
 import type { AppContext } from '../middleware/auth'
@@ -45,25 +47,25 @@ function normalizeAccountType(value: string): AccountType {
   return 'other'
 }
 
-function toAccountData(input: any): AccountData {
+function toAccountData(row: Selectable<Database['finance_accounts']>): AccountData {
   return {
-    id: input.id,
-    userId: input.user_id,
-    name: input.name,
-    accountType: normalizeAccountType(input.account_type),
-    balance: input.balance ? Number(input.balance) : 0,
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    accountType: normalizeAccountType(row.account_type),
+    balance: row.balance ? Number(row.balance) : 0,
   }
 }
 
-function toTransactionData(input: any): TransactionData {
-  const amount = typeof input.amount === 'string' ? Number.parseFloat(input.amount) : Number(input.amount)
+function toTransactionData(row: Selectable<Database['finance_transactions']>): TransactionData {
+  const amount = typeof row.amount === 'string' ? Number.parseFloat(row.amount) : Number(row.amount)
   return {
-    id: input.id,
-    userId: input.user_id,
-    accountId: input.account_id,
+    id: row.id,
+    userId: row.user_id,
+    accountId: row.account_id,
     amount,
-    description: input.description ?? '',
-    date: input.date instanceof Date ? input.date.toISOString() : input.date,
+    description: row.description ?? '',
+    date: row.date instanceof Date ? row.date.toISOString() : row.date,
     type: (amount < 0 ? 'expense' : 'income') as TransactionType,
   }
 }
@@ -143,6 +145,7 @@ export const accountsRoutes = new Hono<AppContext>()
       .where('id', '=', accountId)
       .executeTakeFirst()
 
+    if (!created) throw new NotFoundError('Account not found after creation')
     return c.json<AccountCreateOutput>(toAccountData(created), 201)
   })
   .post('/update', authMiddleware, zValidator('json', accountUpdateSchema), async (c) => {
@@ -166,6 +169,7 @@ export const accountsRoutes = new Hono<AppContext>()
       .where('id', '=', input.id)
       .executeTakeFirst()
 
+    if (!updated) throw new NotFoundError('Account not found after update')
     return c.json<AccountUpdateOutput>(toAccountData(updated), 200)
   })
   .post('/delete', authMiddleware, zValidator('json', accountDeleteSchema), async (c) => {

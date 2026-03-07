@@ -81,80 +81,81 @@
 - [x] 11.2 Create helper functions: getAccountWithOwnershipCheck(), getTransactionsForAccount(), toAccountData(), toTransactionData()
 - [x] 11.3 Rewrite all account handlers using Selectable<> types for type safety
 - [x] 11.4 All account handlers completed (list, get with transactions, create, update, delete, with-plaid, connections, institution-accounts, all)
-- [ ] 11.5 Fix remaining type errors with optional returns from executeTakeFirst()
+- [x] 11.5 Fix remaining type errors with optional returns from executeTakeFirst()
 
 ## 12. Finance Transactions Domain Migration
 
-- [ ] 12.1 Read RPC contract in `packages/hono-rpc/src/routes/finance.transactions.ts`
-- [ ] 12.2 Create helper functions for transaction queries
-- [ ] 12.3 Rewrite all transaction handlers to use Kysely directly
-- [ ] 12.4 All transaction handlers completed
+- [x] 12.1 Read RPC contract in `packages/hono-rpc/src/routes/finance.transactions.ts`
+- [x] 12.2 Create helper functions for transaction queries
+- [x] 12.3 Rewrite all transaction handlers to use Kysely directly
+- [x] 12.4 All transaction handlers completed
 
 ## 13. Finance Institutions Domain Migration
 
-- [ ] 13.1 Read RPC contract in `packages/hono-rpc/src/routes/finance.institutions.ts`
-- [ ] 13.2 Create helper functions for institution queries
-- [ ] 13.3 Rewrite all institution handlers to use Kysely directly
-- [ ] 13.4 All institution handlers completed
+- [x] 13.1 Read RPC contract in `packages/hono-rpc/src/routes/finance.institutions.ts`
+- [x] 13.2 Create helper functions for institution queries
+- [x] 13.3 Rewrite all institution handlers to use Kysely directly
+- [x] 13.4 All institution handlers completed
 
 ## 14. Finance Tags Domain Migration
 
-- [ ] 14.1 Read RPC contract in `packages/hono-rpc/src/routes/finance.tags.ts`
-- [ ] 14.2 Create helper functions for finance tag queries
-- [ ] 14.3 Rewrite all finance tag handlers to use Kysely directly
-- [ ] 14.4 All finance tag handlers completed
+- [x] 14.1 Read RPC contract in `packages/hono-rpc/src/routes/finance.tags.ts`
+- [x] 14.2 Create helper functions for finance tag queries
+- [x] 14.3 Rewrite all finance tag handlers to use Kysely directly
+- [x] 14.4 All finance tag handlers completed
 
 ## 15. Finance Budget Domain Migration
 
-- [ ] 15.1 Read RPC contract in `packages/hono-rpc/src/routes/finance.budget.ts`
-- [ ] 15.2 Create helper functions for budget queries
-- [ ] 15.3 Rewrite all budget handlers to use Kysely directly
-- [ ] 15.4 All budget handlers completed
+- [x] 15.1 Read RPC contract in `packages/hono-rpc/src/routes/finance.budget.ts`
+- [x] 15.2 Create helper functions for budget queries
+- [x] 15.3 Rewrite all budget handlers to use Kysely directly
+- [x] 15.4 All budget handlers completed
 
 ## 16. Places Domain Migration
 
-- [ ] 16.1 Read RPC contract in `packages/hono-rpc/src/routes/places.ts`
-- [ ] 16.2 Create helper functions for place/visit queries
-- [ ] 16.3 Rewrite all place handlers to use Kysely directly
-- [ ] 16.4 All place handlers completed
+- [x] 16.1 Read RPC contract in `packages/hono-rpc/src/routes/places.ts`
+- [x] 16.2 Create helper functions for place/visit queries
+- [x] 16.3 Rewrite all place handlers to use Kysely directly
+- [x] 16.4 All place handlers completed
 
 ## 17. Lists Domain Migration
 
-- [ ] 17.1 Read RPC contracts in `packages/hono-rpc/src/routes/lists.query.ts` and `lists.mutation.ts`
-- [ ] 17.2 Create helper functions for list/item queries
-- [ ] 17.3 Rewrite all list handlers to use Kysely directly
-- [ ] 17.4 All list handlers completed
+- [x] 17.1 Read RPC contracts in `packages/hono-rpc/src/routes/lists.query.ts` and `lists.mutation.ts`
+- [x] 17.2 Create helper functions for list/item queries
+- [x] 17.3 Rewrite all list handlers to use Kysely directly
+- [x] 17.4 All list handlers completed
 
 ## 18. Items Domain Migration
 
-- [ ] 18.1 Read RPC contract in `packages/hono-rpc/src/routes/items.ts`
-- [ ] 18.2 Create helper functions for item queries
-- [ ] 18.3 Rewrite all item handlers to use Kysely directly
-- [ ] 18.4 All item handlers completed
+- [x] 18.1 Read RPC contract in `packages/hono-rpc/src/routes/items.ts`
+- [x] 18.2 Create helper functions for item queries
+- [x] 18.3 Rewrite all item handlers to use Kysely directly
+- [x] 18.4 All item handlers completed
 
 ## 19. Invites Domain Migration
 
-- [ ] 19.1 Read RPC contract in `packages/hono-rpc/src/routes/invites.ts`
-- [ ] 19.2 Create helper functions for invite queries
-- [ ] 19.3 Rewrite all invite handlers to use Kysely directly
-- [ ] 19.4 All invite handlers completed
+- [x] 19.1 Read RPC contract in `packages/hono-rpc/src/routes/invites.ts`
+- [x] 19.2 Create helper functions for invite queries
+- [x] 19.3 Rewrite all invite handlers to use Kysely directly
+- [x] 19.4 All invite handlers completed
 
 ## 20. Goals & Habits Domain Migration
 
-- [ ] 20.1 Read RPC contracts for goals and habits
-- [ ] 20.2 Determine if events-services in-memory store can be replaced with Kysely
-- [ ] 20.3 Create helper functions for goal/habit/event queries
-- [ ] 20.4 Rewrite handlers to use Kysely directly
+- [x] 20.1 Read RPC contracts for goals and habits
+- [x] 20.2 Determine if events-services in-memory store can be replaced with Kysely
+- [x] 20.3 Create helper functions for goal/habit/event queries
+- [x] 20.4 Rewrite handlers to use Kysely directly
 
 ## 21. External API Integrations (Plaid, Twitter)
 
-- [ ] 21.1 Read RPC contracts: `finance.plaid.ts`, `finance.export.ts`, `finance.analyze.ts`, `twitter.ts`
-- [ ] 21.2 Assess integration patterns and refactor as needed
-- [ ] 21.3 Migrate handlers to use Kysely for database operations
-- [ ] 21.4 All integration handlers completed
+- [x] 21.1 Read RPC contracts: `finance.plaid.ts`, `finance.export.ts`, `finance.analyze.ts`, `twitter.ts`
+- [x] 21.2 Assess integration patterns and refactor as needed
+- [x] 21.3 Migrate handlers to use Kysely for database operations
+- [x] 21.4 All integration handlers completed
 
 ## 22. Remove Drizzle
 
+- [x] 22.1a Migrate `services/api` auth files to Kysely (session-store.ts, subjects.ts, better-auth.ts)
 - [ ] 22.1 Remove dependencies: `bun remove drizzle-orm drizzle-zod drizzle-kit`
 - [ ] 22.2 Delete schema files: `rm packages/db/src/schema/*.ts`
 - [ ] 22.3 Delete migrations directory: `rm -rf packages/db/src/migrations/`
