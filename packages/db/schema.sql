@@ -489,6 +489,134 @@ table "calendar_events" {
       desc   = true
       column = column.start_time
     }
+   }
+}
+table "chat" {
+  schema = schema.public
+  column "id" {
+    null    = false
+    type    = uuid
+    default = sql("gen_random_uuid()")
+  }
+  column "title" {
+    null = false
+    type = text
+  }
+  column "user_id" {
+    null = false
+    type = uuid
+  }
+  column "note_id" {
+    null = true
+    type = uuid
+  }
+  column "created_at" {
+    null    = true
+    type    = timestamptz
+    default = sql("now()")
+  }
+  column "updated_at" {
+    null    = true
+    type    = timestamptz
+    default = sql("now()")
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  foreign_key "chat_user_id_fkey" {
+    columns     = [column.user_id]
+    ref_columns = [table.users.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  foreign_key "chat_note_id_fkey" {
+    columns     = [column.note_id]
+    ref_columns = [table.notes.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  index "chat_user_idx" {
+    columns = [column.user_id]
+  }
+  index "chat_note_idx" {
+    columns = [column.note_id]
+  }
+}
+table "chat_message" {
+  schema = schema.public
+  column "id" {
+    null    = false
+    type    = uuid
+    default = sql("gen_random_uuid()")
+  }
+  column "chat_id" {
+    null = false
+    type = uuid
+  }
+  column "user_id" {
+    null = false
+    type = uuid
+  }
+  column "role" {
+    null = false
+    type = text
+  }
+  column "content" {
+    null = false
+    type = text
+  }
+  column "files" {
+    null = true
+    type = jsonb
+  }
+  column "tool_calls" {
+    null = true
+    type = jsonb
+  }
+  column "reasoning" {
+    null = true
+    type = text
+  }
+  column "parent_message_id" {
+    null = true
+    type = uuid
+  }
+  column "created_at" {
+    null    = true
+    type    = timestamptz
+    default = sql("now()")
+  }
+  column "updated_at" {
+    null    = true
+    type    = timestamptz
+    default = sql("now()")
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  foreign_key "chat_message_chat_id_fkey" {
+    columns     = [column.chat_id]
+    ref_columns = [table.chat.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  foreign_key "chat_message_user_id_fkey" {
+    columns     = [column.user_id]
+    ref_columns = [table.users.column.id]
+    on_update   = NO_ACTION
+    on_delete   = CASCADE
+  }
+  foreign_key "chat_message_parent_id_fkey" {
+    columns     = [column.parent_message_id]
+    ref_columns = [table.chat_message.column.id]
+    on_update   = NO_ACTION
+    on_delete   = SET_NULL
+  }
+  index "chat_message_chat_idx" {
+    columns = [column.chat_id]
+  }
+  index "chat_message_user_idx" {
+    columns = [column.user_id]
   }
 }
 table "career_applications" {

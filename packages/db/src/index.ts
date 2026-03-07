@@ -15,6 +15,8 @@ export type { Database } from './types/database'
 
 // Export all database table types for use in services
 export type {
+  Chat,
+  ChatMessage,
   HealthRecords,
   Tasks,
   Tags,

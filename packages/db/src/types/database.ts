@@ -175,6 +175,29 @@ export interface CareerJobs {
   user_id: string;
 }
 
+export interface Chat {
+  created_at: Generated<Timestamp>;
+  id: Generated<string>;
+  note_id: string | null;
+  title: string;
+  updated_at: Generated<Timestamp>;
+  user_id: string;
+}
+
+export interface ChatMessage {
+  chat_id: string;
+  content: string;
+  created_at: Generated<Timestamp>;
+  files: Json | null;
+  id: Generated<string>;
+  parent_message_id: string | null;
+  reasoning: string | null;
+  role: string;
+  tool_calls: Json | null;
+  updated_at: Generated<Timestamp>;
+  user_id: string;
+}
+
 export interface Contacts {
   created_at: Generated<Timestamp | null>;
   email: string | null;
@@ -840,6 +863,8 @@ export interface DB {
   career_companies: CareerCompanies;
   career_interviews: CareerInterviews;
   career_jobs: CareerJobs;
+  chat: Chat;
+  chat_message: ChatMessage;
   contacts: Contacts;
   "drizzle.__drizzle_migrations": DrizzleDrizzleMigrations;
   finance_accounts: FinanceAccounts;
@@ -892,10 +917,9 @@ export interface DB {
   user_sessions: UserSessions;
   user_verification: UserVerification;
   users: Users;
-   video_channels: VideoChannels;
-   video_subscriptions: VideoSubscriptions;
-   video_viewings: VideoViewings;
+  video_channels: VideoChannels;
+  video_subscriptions: VideoSubscriptions;
+  video_viewings: VideoViewings;
 }
 
-// Alias for convenience
-export type Database = DB
+export type Database = DB;
