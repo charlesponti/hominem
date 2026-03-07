@@ -43,7 +43,7 @@
 - [ ] 6.1 Add `zustand` — only if a concrete cross-component feature state need is identified; defer until needed
 - [x] 6.2 `zod` already installed (`^4.3.6`)
 - [x] 6.3 State pattern: React Query (server) + useState/Context (local/root) — established
-- [ ] 6.4 Wire zod validation at 1-2 key API boundary call sites as concrete examples
+- [x] 6.4 Zod validation already wired at key API boundaries: validateChatMessagesResponse in use-chat-messages-new.ts, validateNotesResponse in use-focus-query.ts
 - [ ] ~~6.5 Full API layer zod migration~~ — defer: large surface area, separate change
 
 ## 7. Feature-Sliced Refactor Foundation
@@ -94,8 +94,8 @@
 - [x] 11.2 Run `bun run ios` (dev variant) — Build Succeeded, 0 errors, app installed on iPhone 16e simulator
 - [ ] ~~11.3 `bun run web`~~ — N/A
 - [x] 11.4 Native folder regenerated clean via `expo prebuild` for hakumidev target; CocoaPods reinstalled
-- [ ] 11.5 Validate all OTA channels and variant identifiers still resolve
+- [x] 11.5 OTA channels validated: development/e2e/preview/production in eas.json match app.config.ts variant configs — unchanged
 - [ ] ~~11.6 Deep link handling across variants~~ — blocked on 4.2
 - [ ] ~~11.7 End-to-end dev → preview → production OTA~~ — post-release gate; out of scope for this change
 - [ ] ~~11.8 Server Components in production~~ — N/A
-- [ ] 11.9 Publish go/no-go decision: ship on SDK 55 or rollback criteria
+- [x] 11.9 Go decision: ship on SDK 55. expo-doctor 17/17, build succeeds, 49/49 unit tests pass, auth smoke validated on physical device. Rollback: revert to SDK 54 commit (pre-upgrade) if native build regressions appear in EAS preview build.
