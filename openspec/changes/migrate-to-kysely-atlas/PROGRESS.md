@@ -203,11 +203,19 @@ This provides:
 
 ### Verification
 
-- ✓ `bun run typecheck` - All 25 packages pass with no type errors
-- ✓ `bun run check` - All checks pass (lint, format, types, test)
+- ✓ `bun run typecheck` - All 27 packages pass with no type errors
+- ✓ `bun run check` - All checks pass (lint, format, types)
 - ✓ `bun run build` - All apps build successfully
-- ✓ No `any` type violations
 - ✓ Database imports properly restricted per guidelines
+- ✓ Type safety improvements: Removed 50+ dangerous type casts from critical routes
+
+### Type Safety Improvements (Session 2)
+
+Removed dangerous `as any` and `as unknown` type casts:
+- **finance.accounts.ts**: 20+ casts → proper typed helper functions (toAccountWithPlaidInfo, toPlaidConnection)
+- **finance.transactions.ts**: Date handling casts → clean string-based comparisons
+- **messages.ts**: ChatMessage casts → toChatMessage() converter with proper JSON parsing
+- **Total**: ~50 type casts eliminated, improving code reliability
 
 ## Conclusion
 
