@@ -1,54 +1,76 @@
-import { and, db, eq, gte, lte } from '@hominem/db';
-import { health } from '@hominem/db/schema/health';
+import type { HealthRecords } from '@hominem/db'
+import { db } from '@hominem/db'
 
-type HealthInsert = typeof health.$inferInsert;
+type HealthRecordInsert = Omit<HealthRecords, 'id' | 'created_at'>
 
 export async function listHealthRecords(filters: {
-  userId?: string;
-  startDate?: Date;
-  endDate?: Date;
-  activityType?: string;
-}) {
-  const conditions = [];
+  userId?: string
+  startDate?: Date
+  endDate?: Date
+  activityType?: string
+}): Promise<HealthRecords[]> {
+  let query = db.selectFrom('health_records').selectAll()
+
   if (filters.userId) {
-    conditions.push(eq(health.userId, filters.userId));
+    query = query.where('user_id', '=', filters.userId)
   }
+
   if (filters.startDate) {
-    conditions.push(gte(health.date, filters.startDate.toISOString()));
+    const startTime = filters.startDate.toISOString()
+    query = query.where('recorded_at', '>=', startTime as any)
   }
+
   if (filters.endDate) {
-    conditions.push(lte(health.date, filters.endDate.toISOString()));
+    const endTime = filters.endDate.toISOString()
+    query = query.where('recorded_at', '<=', endTime as any)
   }
+
   if (filters.activityType) {
-    conditions.push(eq(health.activityType, filters.activityType));
+    query = query.where('record_type', '=', filters.activityType)
   }
 
-  if (conditions.length === 0) {
-    return db.select().from(health);
-  }
-
-  return db
-    .select()
-    .from(health)
-    .where(and(...conditions));
+  return query.execute()
 }
 
-export async function getHealthRecord(id: string) {
-  const result = await db.select().from(health).where(eq(health.id, id)).limit(1);
-  return result[0] ?? null;
+export async function getHealthRecord(id: string): Promise<HealthRecords | null> {
+  const result = await db
+    .selectFrom('health_records')
+    .selectAll()
+    .where('id', '=', id)
+    .executeTakeFirst()
+
+  return result ?? null
 }
 
-export async function createHealthRecord(data: HealthInsert) {
-  const [record] = await db.insert(health).values(data).returning();
-  return record;
+export async function createHealthRecord(data: Omit<HealthRecordInsert, 'id' | 'created_at'>): Promise<HealthRecords> {
+  const record = await db
+    .insertInto('health_records')
+    .values(data as any)
+    .returningAll()
+    .executeTakeFirstOrThrow()
+
+  return record
 }
 
-export async function updateHealthRecord(id: string, updates: Partial<HealthInsert>) {
-  const [record] = await db.update(health).set(updates).where(eq(health.id, id)).returning();
-  return record ?? null;
+export async function updateHealthRecord(
+  id: string,
+  updates: Partial<Omit<HealthRecordInsert, 'id' | 'created_at'>>
+): Promise<HealthRecords | null> {
+  const record = await db
+    .updateTable('health_records')
+    .set(updates as any)
+    .where('id', '=', id)
+    .returningAll()
+    .executeTakeFirst()
+
+  return record ?? null
 }
 
-export async function deleteHealthRecord(id: string) {
-  const deleted = await db.delete(health).where(eq(health.id, id)).returning();
-  return deleted.length > 0;
+export async function deleteHealthRecord(id: string): Promise<boolean> {
+  const result = await db
+    .deleteFrom('health_records')
+    .where('id', '=', id)
+    .executeTakeFirst()
+
+  return (result.numDeletedRows ?? 0n) > 0n
 }

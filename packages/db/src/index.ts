@@ -13,6 +13,25 @@
 export { db, healthCheck, pool } from './db'
 export type { Database } from './types/database'
 
+// Export all database table types for use in services
+export type {
+  HealthRecords,
+  Tasks,
+  Tags,
+  TaskLists,
+  Persons,
+  Places,
+  Bookmarks,
+  Possessions,
+  FinanceAccounts,
+  FinanceTransactions,
+  CalendarEvents,
+  Notes,
+  Logs,
+  Users,
+  UserAccounts,
+} from './types/database'
+
 // Shared service utilities (used by RPC handlers)
 export { brandId, unbrandId } from './services/_shared/ids'
 export type { TaskId, TagId, CalendarEventId, PersonId, BookmarkId, PossessionId, FinanceCategoryId, FinanceAccountId, FinanceTransactionId, UserId } from './services/_shared/ids'
