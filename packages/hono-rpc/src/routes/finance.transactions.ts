@@ -62,7 +62,7 @@ function toTransactionData(row: Selectable<Database['finance_transactions']>): T
     accountId: row.account_id,
     amount,
     description: row.description ?? '',
-    date: row.date instanceof Date ? row.date.toISOString() : String(row.date),
+    date: row.date,
     type: (amount < 0 ? 'expense' : 'income') as TransactionType,
   }
 }
@@ -160,8 +160,8 @@ export const transactionsRoutes = new Hono<AppContext>()
       .offset(offset)
 
     if (accountId) query = query.where('account_id', '=', accountId)
-    if (input.dateFrom) query = query.where('date', '>=', input.dateFrom as unknown as Date)
-    if (input.dateTo) query = query.where('date', '<=', input.dateTo as unknown as Date)
+    if (input.dateFrom) query = query.where('date', '>=', input.dateFrom)
+    if (input.dateTo) query = query.where('date', '<=', input.dateTo)
 
     if (hasTagFilters) {
       const taggedIds = await getTaggedTransactionIds(userId, tagIds, tagNames)
@@ -207,7 +207,7 @@ export const transactionsRoutes = new Hono<AppContext>()
         description: input.description,
         category: null,
         merchant_name: null,
-        date: new Date(input.date),
+        date: input.date,
       })
       .execute()
 
@@ -255,7 +255,7 @@ export const transactionsRoutes = new Hono<AppContext>()
         transaction_type: nextType,
         ...(input.data.description !== undefined ? { description: input.data.description } : {}),
         ...(input.data.category !== undefined ? { category: input.data.category } : {}),
-        ...(input.data.date !== undefined ? { date: new Date(input.data.date) } : {}),
+        ...(input.data.date !== undefined ? { date: input.data.date } : {}),
         ...(input.data.accountId !== undefined ? { account_id: input.data.accountId } : {}),
         ...(input.data.merchantName !== undefined ? { merchant_name: input.data.merchantName } : {}),
       })

@@ -65,8 +65,36 @@ function toTransactionData(row: Selectable<Database['finance_transactions']>): T
     accountId: row.account_id,
     amount,
     description: row.description ?? '',
-    date: row.date instanceof Date ? row.date.toISOString() : row.date,
+    date: row.date,
     type: (amount < 0 ? 'expense' : 'income') as TransactionType,
+  }
+}
+
+function toAccountWithPlaidInfo(row: Selectable<Database['finance_accounts']>): AccountData & {
+  institutionName?: string | null
+  plaidAccountId?: string | null
+} {
+  return {
+    ...toAccountData(row),
+    institutionName: row.institution_name ?? null,
+    plaidAccountId: null,
+  }
+}
+
+function toPlaidConnection(
+  row: Selectable<Database['plaid_items']>,
+  institutionName?: string,
+): PlaidConnection {
+  const createdAtStr = row.created_at ?? new Date(0).toISOString()
+  
+  return {
+    id: row.id,
+    institutionId: row.institution_id ?? '',
+    institutionName: institutionName ?? 'Institution',
+    institutionLogo: null,
+    status: row.error ? 'error' : row.cursor ? 'disconnected' : 'active',
+    lastSynced: createdAtStr,
+    accounts: 0,
   }
 }
 
@@ -113,9 +141,7 @@ export const accountsRoutes = new Hono<AppContext>()
     const account = await getAccountWithOwnershipCheck(input.id, userId)
     const transactions = await getTransactionsForAccount(input.id, 200, 0)
     return c.json<AccountGetOutput>({
-      ...toAccountData(account),
-      institutionName: (account as any).institution_name ?? null,
-      plaidAccountId: (account as any).plaid_account_id ?? null,
+      ...toAccountWithPlaidInfo(account),
       plaidItemId: null,
       transactions: transactions.map(toTransactionData),
     })
@@ -197,9 +223,7 @@ export const accountsRoutes = new Hono<AppContext>()
 
     return c.json<AccountsWithPlaidOutput>(
       accounts.map((account) => ({
-        ...toAccountData(account),
-        institutionName: (account as any).institution_name ?? null,
-        plaidAccountId: (account as any).plaid_account_id ?? null,
+        ...toAccountWithPlaidInfo(account),
         plaidItemId: null,
       })),
       200,
@@ -229,22 +253,10 @@ export const accountsRoutes = new Hono<AppContext>()
       }
     }
 
-    const result: AccountConnectionsOutput = connections.map((connection): PlaidConnection => ({
-      id: (connection as any).id,
-      institutionId: (connection as any).institution_id ?? '',
-      institutionName: (connection as any).institution_id
-        ? institutionNames.get((connection as any).institution_id) ?? 'Institution'
-        : 'Institution',
-      institutionLogo: null,
-      status:
-        (connection as any).error
-          ? 'error'
-          : (connection as any).cursor
-            ? 'disconnected'
-            : 'active',
-      lastSynced: (connection as any).created_at ?? new Date(0).toISOString(),
-      accounts: 0,
-    }))
+    const result: AccountConnectionsOutput = connections.map((connection): PlaidConnection => {
+      const institutionId = connection.institution_id
+      return toPlaidConnection(connection, institutionId ? institutionNames.get(institutionId) : undefined)
+    })
 
     return c.json<AccountConnectionsOutput>(result, 200)
   })
@@ -268,9 +280,7 @@ export const accountsRoutes = new Hono<AppContext>()
 
       return c.json<AccountInstitutionAccountsOutput>(
         accounts.map((account) => ({
-          ...toAccountData(account),
-          institutionName: (account as any).institution_name ?? null,
-          plaidAccountId: (account as any).plaid_account_id ?? null,
+          ...toAccountWithPlaidInfo(account),
           plaidItemId: null,
         })),
         200,
@@ -296,26 +306,11 @@ export const accountsRoutes = new Hono<AppContext>()
 
     const payload: AccountAllOutput = {
       accounts: accounts.map((account) => ({
-        ...toAccountData(account),
-        institutionName: (account as any).institution_name ?? null,
-        plaidAccountId: (account as any).plaid_account_id ?? null,
+        ...toAccountWithPlaidInfo(account),
         plaidItemId: null,
         transactions: [],
       })),
-      connections: connections.map((connection) => ({
-        id: (connection as any).id,
-        institutionId: (connection as any).institution_id ?? '',
-        institutionName: 'Institution',
-        institutionLogo: null,
-        status:
-          (connection as any).error
-            ? 'error'
-            : (connection as any).cursor
-              ? 'disconnected'
-              : 'active',
-        lastSynced: (connection as any).created_at ?? new Date(0).toISOString(),
-        accounts: 0,
-      })),
+      connections: connections.map((connection) => toPlaidConnection(connection)),
     }
     return c.json<AccountAllOutput>(payload, 200)
   })
