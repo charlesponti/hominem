@@ -11,13 +11,7 @@
  *   hakumi://focus/<id>                → /(protected)/(tabs)/focus/<id>
  *   hakumi://account                   → /(protected)/(tabs)/account
  */
-export function redirectSystemPath({
-  path,
-  initial,
-}: {
-  path: string;
-  initial: boolean;
-}): string {
+export function redirectSystemPath({ path, initial }: { path: string; initial: boolean }): string {
   try {
     // Strip leading slash for matching
     const normalized = path.startsWith('/') ? path.slice(1) : path;

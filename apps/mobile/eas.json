@@ -1,7 +1,8 @@
 {
   "cli": {
     "version": ">= 10.0.3",
-    "appVersionSource": "remote"
+    "appVersionSource": "remote",
+    "promptToConfigurePushNotifications": false
   },
   "build": {
     "development": {
@@ -41,7 +42,8 @@
       },
       "ios": {
         "enterpriseProvisioning": "universal"
-      }
+      },
+      "resourceClass": "default"
     }
   },
   "submit": {

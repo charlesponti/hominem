@@ -1,4 +1,4 @@
-import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import React from 'react';
 
 import { theme } from '~/theme';
@@ -11,23 +11,25 @@ export default function TabsLayout() {
       disableTransparentOnScrollEdge
     >
       <NativeTabs.Trigger name="start" role="search">
-        <Label>START</Label>
-        <Icon sf={{ default: 'sparkles', selected: 'sparkles' }} />
+        <NativeTabs.Trigger.Label>START</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'sparkles', selected: 'sparkles' }} />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="focus">
-        <Label>FOCUS</Label>
-        <Icon sf={{ default: 'bolt.fill', selected: 'bolt.fill' }} />
+        <NativeTabs.Trigger.Label>FOCUS</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'bolt.fill', selected: 'bolt.fill' }} />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="sherpa" role="search">
-        <Label>SHERPA</Label>
-        <Icon sf={{ default: 'sparkles', selected: 'sparkles' }} />
+        <NativeTabs.Trigger.Label>SHERPA</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'sparkles', selected: 'sparkles' }} />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="account">
-        <Label>ACCOUNT</Label>
-        <Icon sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }} />
+        <NativeTabs.Trigger.Label>ACCOUNT</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }}
+        />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

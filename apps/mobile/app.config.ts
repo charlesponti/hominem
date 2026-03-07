@@ -1,13 +1,13 @@
-import type { ConfigContext, ExpoConfig } from 'expo/config'
+import type { ConfigContext, ExpoConfig } from 'expo/config';
 
-type AppVariant = 'dev' | 'e2e' | 'preview' | 'production'
+type AppVariant = 'dev' | 'e2e' | 'preview' | 'production';
 
 interface VariantConfig {
-  bundleIdentifier: string
-  name: string
-  updatesChannel: string | null
-  appScheme: string
-  usesDevClient: boolean
+  bundleIdentifier: string;
+  name: string;
+  updatesChannel: string | null;
+  appScheme: string;
+  usesDevClient: boolean;
 }
 
 const APP_VARIANTS: Record<AppVariant, VariantConfig> = {
@@ -39,24 +39,24 @@ const APP_VARIANTS: Record<AppVariant, VariantConfig> = {
     appScheme: 'hakumi',
     usesDevClient: false,
   },
-}
+};
 
 function getAppVariant(): AppVariant {
-  const rawVariant = String(process.env.APP_VARIANT ?? 'dev')
+  const rawVariant = String(process.env.APP_VARIANT ?? 'dev');
   if (rawVariant in APP_VARIANTS) {
-    return rawVariant as AppVariant
+    return rawVariant as AppVariant;
   }
 
-  throw new Error(`Unsupported APP_VARIANT: ${rawVariant}`)
+  throw new Error(`Unsupported APP_VARIANT: ${rawVariant}`);
 }
 
 function allowsLocalNetworking(appVariant: AppVariant) {
-  return appVariant !== 'production'
+  return appVariant !== 'production';
 }
 
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const appVariant = getAppVariant()
-  const variantConfig = APP_VARIANTS[appVariant]
+  const appVariant = getAppVariant();
+  const variantConfig = APP_VARIANTS[appVariant];
   const plugins: ExpoConfig['plugins'] = [
     'expo-router',
     './plugins/with-expo-dev-client-exclusion',
@@ -64,12 +64,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-build-properties',
       {
         ios: {
+          newArchEnabled: true,
           infoPlist: {
-              NSAppTransportSecurity: {
-                NSAllowsArbitraryLoads: false,
-                NSAllowsLocalNetworking: allowsLocalNetworking(appVariant),
-                NSExceptionDomains: {
-                  'railway.app': {
+            NSAppTransportSecurity: {
+              NSAllowsArbitraryLoads: false,
+              NSAllowsLocalNetworking: allowsLocalNetworking(appVariant),
+              NSExceptionDomains: {
+                'railway.app': {
                   NSExceptionRequiresForwardSecrecy: true,
                   NSIncludesSubdomains: true,
                 },
@@ -77,10 +78,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             },
           },
           entitlements: {
-            'keychain-access-groups': [
-              `$(AppIdentifierPrefix)${variantConfig.bundleIdentifier}`,
-            ],
+            'keychain-access-groups': [`$(AppIdentifierPrefix)${variantConfig.bundleIdentifier}`],
           },
+        },
+        android: {
+          newArchEnabled: true,
         },
       },
     ],
@@ -116,7 +118,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     'expo-web-browser',
     '@react-native-community/datetimepicker',
     ['expo-sqlite'],
-  ]
+  ];
 
   if (variantConfig.usesDevClient) {
     plugins.splice(1, 0, [
@@ -124,7 +126,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       {
         launchMode: 'most-recent',
       },
-    ])
+    ]);
   }
 
   return {
@@ -153,7 +155,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       typedRoutes: true,
       tsconfigPaths: true,
     },
-    newArchEnabled: true,
     ios: {
       bundleIdentifier: variantConfig.bundleIdentifier,
       supportsTablet: true,
@@ -195,5 +196,5 @@ export default ({ config }: ConfigContext): ExpoConfig => {
               'expo-channel-name': variantConfig.updatesChannel,
             },
           },
-  }
-}
+  };
+};

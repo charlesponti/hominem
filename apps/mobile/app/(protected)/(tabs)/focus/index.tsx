@@ -63,7 +63,12 @@ export const FocusView = () => {
                   SHERPA
                 </Text>
               </Link>
-              <Text variant="body" color="secondaryForeground" onPress={onRefresh} accessibilityRole="button">
+              <Text
+                variant="body"
+                color="secondaryForeground"
+                onPress={onRefresh}
+                accessibilityRole="button"
+              >
                 REFRESH
               </Text>
             </View>
@@ -102,7 +107,11 @@ export const FocusView = () => {
 
         <View style={[styles.sherpaButtonContainer, { bottom: insets.bottom }]}>
           <View style={styles.sherpaCircleButton}>
-            <Link href="/(protected)/(tabs)/sherpa" style={{ flex: 1 }} accessibilityLabel="Open Sherpa">
+            <Link
+              href="/(protected)/(tabs)/sherpa"
+              style={{ flex: 1 }}
+              accessibilityLabel="Open Sherpa"
+            >
               <MindsherpaIcon name="hat-wizard" size={32} color={theme.colors.white} />
             </Link>
           </View>
@@ -167,9 +176,9 @@ const FocusViewWithErrorBoundary = () => (
   <FeatureErrorBoundary featureName="Focus">
     <FocusView />
   </FeatureErrorBoundary>
-)
+);
 
-export default FocusViewWithErrorBoundary
+export default FocusViewWithErrorBoundary;
 
 const FocusLoadingError = React.memo(() => {
   return (

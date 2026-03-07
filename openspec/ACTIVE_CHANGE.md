@@ -1,12 +1,12 @@
 # Active OpenSpec Change
 
-active_change: none
+active_change: merge-design-systems
 
 ## Canonical Artifacts
 
-- Proposal: none
-- Design: none
-- Tasks: none
+- Proposal: openspec/changes/merge-design-systems/proposal.md
+- Design: openspec/changes/merge-design-systems/design.md
+- Tasks: openspec/changes/merge-design-systems/tasks.md
 
 ## Enforcement
 

@@ -1,16 +1,24 @@
 import { Redirect, useRouter } from 'expo-router';
 import React, { useState, useCallback } from 'react';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
+import TextInput from '~/components/text-input';
 import { Box, Text } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidEmail, normalizeEmail } from '~/utils/auth/validation';
-import { Button } from '~/components/Button';
-import TextInput from '~/components/text-input';
-import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
 import { E2E_TESTING } from '~/utils/constants';
+import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
 
 export function AuthScreen() {
   const { isSignedIn, completePasskeySignIn, requestEmailOtp } = useAuth();
@@ -18,7 +26,12 @@ export function AuthScreen() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const { signIn: signInWithPasskey, isLoading: isPasskeyLoading, error: passkeyError, isSupported: isPasskeySupported } = useMobilePasskeyAuth();
+  const {
+    signIn: signInWithPasskey,
+    isLoading: isPasskeyLoading,
+    error: passkeyError,
+    isSupported: isPasskeySupported,
+  } = useMobilePasskeyAuth();
 
   const handleSendCode = useCallback(async () => {
     const normalizedEmail = normalizeEmail(email);
@@ -54,7 +67,7 @@ export function AuthScreen() {
       setAuthError(null);
       const result = await signInWithPasskey();
       if (result) {
-        await completePasskeySignIn(result)
+        await completePasskeySignIn(result);
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Passkey sign-in failed.';
@@ -72,7 +85,10 @@ export function AuthScreen() {
 
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.flex}
+      >
         <ScrollView
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="always"
@@ -94,7 +110,9 @@ export function AuthScreen() {
               <Text style={styles.subheading}>Use your email to receive a one-time code.</Text>
               {displayError ? (
                 <View testID="auth-error-banner" style={styles.errorContainer}>
-                  <Text testID="auth-error-text" style={styles.errorText}>{displayError.toUpperCase()}</Text>
+                  <Text testID="auth-error-text" style={styles.errorText}>
+                    {displayError.toUpperCase()}
+                  </Text>
                 </View>
               ) : null}
               <TextInput
@@ -134,17 +152,18 @@ export function AuthScreen() {
                 <TouchableOpacity
                   onPress={async () => {
                     try {
-                      setIsSubmitting(true)
-                      setAuthError(null)
-                      const result = await signInWithPasskey('e2e-success')
+                      setIsSubmitting(true);
+                      setAuthError(null);
+                      const result = await signInWithPasskey('e2e-success');
                       if (result) {
-                        await completePasskeySignIn(result)
+                        await completePasskeySignIn(result);
                       }
                     } catch (error: unknown) {
-                      const message = error instanceof Error ? error.message : 'Passkey sign-in failed.'
-                      setAuthError(message)
+                      const message =
+                        error instanceof Error ? error.message : 'Passkey sign-in failed.';
+                      setAuthError(message);
                     } finally {
-                      setIsSubmitting(false)
+                      setIsSubmitting(false);
                     }
                   }}
                   style={styles.e2ePasskeyAction}
@@ -155,11 +174,11 @@ export function AuthScreen() {
                 <TouchableOpacity
                   onPress={async () => {
                     try {
-                      setIsSubmitting(true)
-                      setAuthError(null)
-                      await signInWithPasskey('e2e-cancel')
+                      setIsSubmitting(true);
+                      setAuthError(null);
+                      await signInWithPasskey('e2e-cancel');
                     } finally {
-                      setIsSubmitting(false)
+                      setIsSubmitting(false);
                     }
                   }}
                   style={styles.e2ePasskeyActionAlt}
@@ -292,6 +311,6 @@ const AuthWithErrorBoundary = () => (
   <FeatureErrorBoundary featureName="Auth">
     <AuthScreen />
   </FeatureErrorBoundary>
-)
+);
 
-export default AuthWithErrorBoundary
+export default AuthWithErrorBoundary;

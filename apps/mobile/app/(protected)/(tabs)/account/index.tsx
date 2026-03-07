@@ -11,7 +11,12 @@ import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
 function Account() {
   const insets = useSafeAreaInsets();
   const { isSignedIn, signOut, currentUser, updateProfile } = useAuth();
-  const { addPasskey, listPasskeys, deletePasskey, isLoading: isPasskeyLoading } = useMobilePasskeyAuth();
+  const {
+    addPasskey,
+    listPasskeys,
+    deletePasskey,
+    isLoading: isPasskeyLoading,
+  } = useMobilePasskeyAuth();
   const initialName = currentUser?.name || '';
   const [name, setName] = useState(initialName);
   const [isSaving, setIsSaving] = useState(false);
@@ -72,7 +77,9 @@ function Account() {
 
   useEffect(() => {
     if (isSignedIn) {
-      listPasskeys().then(setPasskeys).catch(() => undefined);
+      listPasskeys()
+        .then(setPasskeys)
+        .catch(() => undefined);
     }
   }, [isSignedIn, listPasskeys]);
 
@@ -83,7 +90,12 @@ function Account() {
   return (
     <View testID="account-screen" style={{ flex: 1, backgroundColor: '#000000' }}>
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 24, rowGap: 8, paddingBottom: 16 }}
+        contentContainerStyle={{
+          paddingHorizontal: 12,
+          paddingTop: 24,
+          rowGap: 8,
+          paddingBottom: 16,
+        }}
         showsVerticalScrollIndicator={false}
       >
         <Text variant="cardHeader" color="foreground">
@@ -111,7 +123,12 @@ function Account() {
           </View>
           {name !== initialName ? (
             <View style={{ marginTop: 24 }}>
-              <Button title="[SAVE]" disabled={isSaving} isLoading={isSaving} onPress={onSavePress} />
+              <Button
+                title="[SAVE]"
+                disabled={isSaving}
+                isLoading={isSaving}
+                onPress={onSavePress}
+              />
             </View>
           ) : null}
 
@@ -144,7 +161,12 @@ function Account() {
                     onPress={() => onDeletePasskeyPress(pk.id, pk.name)}
                     accessibilityLabel={`Remove passkey ${pk.name}`}
                     accessibilityRole="button"
-                    style={{ minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}
+                    style={{
+                      minHeight: 44,
+                      minWidth: 44,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
                     <Text color="destructive" style={{ fontSize: 12 }}>
                       [REMOVE]

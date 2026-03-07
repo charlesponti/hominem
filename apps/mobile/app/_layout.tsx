@@ -9,10 +9,10 @@ import { RootErrorBoundary } from '~/components/error-boundary/root-error-bounda
 import { theme } from '~/theme';
 import { AuthProvider, useAuth } from '~/utils/auth-provider';
 import { E2E_TESTING } from '~/utils/constants';
+import { logError } from '~/utils/error-boundary/log-error';
 import { resolveAuthRedirect } from '~/utils/navigation/auth-route-guard';
 import { initObservability } from '~/utils/observability';
 import { markStartupPhase } from '~/utils/performance/startup-metrics';
-import { logError } from '~/utils/error-boundary/log-error';
 
 SplashScreen.preventAutoHideAsync();
 markStartupPhase('app_start');
@@ -57,15 +57,22 @@ function InnerRootLayout() {
   }, [authStatus, isSignedIn, segments, router]);
 
   return (
-    <RootErrorBoundary onError={(error, errorInfo) => logError(error, errorInfo, { route: segments.join('/') })}>
+    <RootErrorBoundary
+      onError={(error, errorInfo) => logError(error, errorInfo, { route: segments.join('/') })}
+    >
       <Stack>
         <Stack.Screen name="(protected)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack>
       {E2E_TESTING ? (
         <>
-          {authStatus === 'booting' ? <View testID="auth-state-booting" style={styles.e2eIndicator} /> : null}
-          {authStatus === 'signed_out' || authStatus === 'otp_requested' || authStatus === 'verifying_otp' || authStatus === 'degraded' ? (
+          {authStatus === 'booting' ? (
+            <View testID="auth-state-booting" style={styles.e2eIndicator} />
+          ) : null}
+          {authStatus === 'signed_out' ||
+          authStatus === 'otp_requested' ||
+          authStatus === 'verifying_otp' ||
+          authStatus === 'degraded' ? (
             <View testID="auth-state-signed-out" style={styles.e2eIndicator} />
           ) : null}
           {authStatus === 'signed_in' || authStatus === 'signing_out' ? (
@@ -75,14 +82,14 @@ function InnerRootLayout() {
             testID="auth-e2e-reset"
             style={styles.e2eAction}
             onPress={() => {
-              void resetAuthForE2E()
+              void resetAuthForE2E();
             }}
           />
           <Pressable
             testID="auth-e2e-sign-out"
             style={styles.e2eActionAlt}
             onPress={() => {
-              void signOut()
+              void signOut();
             }}
           />
         </>
@@ -136,4 +143,4 @@ const styles = {
     height: 16,
     opacity: 0.02,
   },
-}
+};

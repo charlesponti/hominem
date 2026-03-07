@@ -7,14 +7,17 @@ import { ApiProvider } from '~/utils/api-provider';
 import { useAuth } from '~/utils/auth-provider';
 
 const ProtectedBootstrap = () => (
-  <View testID="protected-bootstrap" style={{ flex: 1, backgroundColor: theme.colors.background }} />
-)
+  <View
+    testID="protected-bootstrap"
+    style={{ flex: 1, backgroundColor: theme.colors.background }}
+  />
+);
 
 const DrawerLayout = () => {
-  const { authStatus, isSignedIn } = useAuth()
+  const { authStatus, isSignedIn } = useAuth();
 
   if (authStatus === 'booting' || !isSignedIn) {
-    return <ProtectedBootstrap />
+    return <ProtectedBootstrap />;
   }
 
   return (

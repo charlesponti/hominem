@@ -44,13 +44,14 @@ module.exports = {
       },
     },
     {
-      files: ['**/packages/ui/src/styles/globals.css'],
+      files: ['packages/ui/src/styles/globals.css'],
       rules: {
-        'declaration-property-value-disallowed-list': {},
-        'property-disallowed-list': [],
+        'declaration-property-value-disallowed-list': null,
+        'property-disallowed-list': null,
         'color-no-hex': null,
-        'function-disallowed-list': [],
-        'at-rule-disallowed-list': [],
+        'function-disallowed-list': null,
+        'at-rule-disallowed-list': null,
+        'color-named': null,
       },
     },
     {

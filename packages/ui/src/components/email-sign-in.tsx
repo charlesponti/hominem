@@ -15,47 +15,18 @@ export function EmailSignIn({ actionData }: EmailSignInProps) {
   const isSubmitting = fetcher.state === 'submitting';
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        minHeight: '100vh',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#0a0a0a',
-        padding: '16px',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '400px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '32px',
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <h2 style={{ fontSize: '30px', fontWeight: 'bold', color: '#fff', marginBottom: '8px' }}>
-            Sign in with Email
-          </h2>
-          <p style={{ color: '#9ca3af' }}>Enter your email to receive a verification code</p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-bg-base p-4">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h2 className="heading-1 text-primary mb-2">Sign in with Email</h2>
+          <p className="body-3 text-secondary">Enter your email to receive a verification code</p>
         </div>
 
-        <fetcher.Form
-          method="post"
-          style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
-        >
+        <fetcher.Form method="post" className="space-y-4">
           <div>
             <label
               htmlFor="email"
-              style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: '#d1d5db',
-                marginBottom: '4px',
-              }}
+              className="block text-xs font-medium text-text-primary mb-1"
             >
               Email address
             </label>
@@ -65,27 +36,19 @@ export function EmailSignIn({ actionData }: EmailSignInProps) {
               type="email"
               autoComplete="email"
               required
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                borderRadius: '6px',
-                border: '1px solid #374151',
-                backgroundColor: '#1f2937',
-                color: '#fff',
-                outline: 'none',
-              }}
+              className="input w-full"
               placeholder="you@example.com"
             />
           </div>
 
           {(actionData?.error || fetcher.data?.error) && (
-            <div style={{ fontSize: '14px', color: '#ef4444' }}>
+            <div className="body-4 text-error">
               {actionData?.error || fetcher.data?.error}
             </div>
           )}
 
           {(actionData?.success || fetcher.data?.success) && (
-            <div style={{ fontSize: '14px', color: '#22c55e' }}>
+            <div className="body-4 text-success">
               {actionData?.message || fetcher.data?.message}
             </div>
           )}
@@ -93,23 +56,13 @@ export function EmailSignIn({ actionData }: EmailSignInProps) {
           <button
             type="submit"
             disabled={isSubmitting}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '6px',
-              border: 'none',
-              backgroundColor: '#3b82f6',
-              color: '#fff',
-              fontWeight: '500',
-              cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              opacity: isSubmitting ? 0.7 : 1,
-            }}
+            className="btn btn-primary w-full"
           >
             {isSubmitting ? 'Sending...' : 'Send Verification Code'}
           </button>
         </fetcher.Form>
 
-        <div style={{ textAlign: 'center', fontSize: '14px', color: '#9ca3af' }}>
+        <div className="text-center body-4 text-secondary">
           <p>You'll receive a one-time code to sign in.</p>
         </div>
       </div>

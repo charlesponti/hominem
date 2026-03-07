@@ -1,14 +1,23 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, Pressable, TextInput as RNTextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link } from 'expo-router';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+  Pressable,
+  TextInput as RNTextInput,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { Box, Text } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidOtp, normalizeOtp } from '~/utils/auth/validation';
-import { Button } from '~/components/Button';
 export function VerifyScreen() {
   const { isSignedIn, requestEmailOtp, verifyEmailOtp } = useAuth();
   const router = useRouter();
@@ -55,7 +64,10 @@ export function VerifyScreen() {
       });
       setAuthError(null);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'There was a problem signing in. Our team is working on it.';
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'There was a problem signing in. Our team is working on it.';
       setAuthError(message);
     } finally {
       setIsSubmitting(false);
@@ -85,7 +97,8 @@ export function VerifyScreen() {
       setResendMessage('A new code is on the way.');
       focusOtpInput();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unable to resend verification code.';
+      const message =
+        error instanceof Error ? error.message : 'Unable to resend verification code.';
       setAuthError(message);
       setResendMessage(null);
     } finally {
@@ -103,7 +116,10 @@ export function VerifyScreen() {
 
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.flex}
+      >
         <ScrollView
           keyboardDismissMode="on-drag"
           keyboardShouldPersistTaps="always"
@@ -125,13 +141,19 @@ export function VerifyScreen() {
               <Text style={styles.subheading}>Enter the code we sent to {email}</Text>
               {authError ? (
                 <View testID="auth-error-banner" style={styles.errorContainer}>
-                  <Text testID="auth-error-text" style={styles.errorText}>{authError.toUpperCase()}</Text>
+                  <Text testID="auth-error-text" style={styles.errorText}>
+                    {authError.toUpperCase()}
+                  </Text>
                 </View>
               ) : null}
-              <Pressable onPress={focusOtpInput} testID="auth-otp-slots" style={styles.otpPressable}>
+              <Pressable
+                onPress={focusOtpInput}
+                testID="auth-otp-slots"
+                style={styles.otpPressable}
+              >
                 <View style={styles.otpSlots}>
                   {otpDigits.map((digit, index) => {
-                    const isActive = index === Math.min(normalizeOtp(otp).length, 5)
+                    const isActive = index === Math.min(normalizeOtp(otp).length, 5);
                     return (
                       <View
                         key={`otp-slot-${index}`}
@@ -140,7 +162,7 @@ export function VerifyScreen() {
                       >
                         <Text style={styles.otpSlotText}>{digit || ' '}</Text>
                       </View>
-                    )
+                    );
                   })}
                 </View>
                 <RNTextInput

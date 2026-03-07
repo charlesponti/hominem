@@ -1,8 +1,8 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { Dimensions, Image, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IntentPill } from '~/components/start/intent-pill';
 import { AsciiTexture } from '~/components/ui/ascii-texture';
