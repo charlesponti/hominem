@@ -8,7 +8,13 @@
       "Bash(chmod +x:*)",
       "Bash(bash:*)",
       "Bash(grep:*)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(ls:*)",
+      "Bash(python3:*)",
+      "Bash(for f in /Users/charlesponti/Developer/hominem/packages/db/src/migrations/0002_tranquil_sleeper.sql /Users/charlesponti/Developer/hominem/packages/db/src/migrations/0003_fantastic_zarek.sql /Users/charlesponti/Developer/hominem/packages/db/src/migrations/0004_modern_list_sharing.sql /Users/charlesponti/Developer/hominem/packages/db/src/migrations/0005_finance_tags_taxonomy_rewrite.sql /Users/charlesponti/Developer/hominem/packages/db/src/migrations/0006_finance_runtime_tables.sql /Users/charlesponti/Developer/hominem/packages/db/src/migrations/0007_budget_goals_nullable_category_id.sql /Users/charlesponti/Developer/hominem/packages/db/src/migrations/0008_better_auth_models.sql /Users/charlesponti/Developer/hominem/packages/db/src/migrations/0070_rapid_reaper.sql /Users/charlesponti/Developer/hominem/packages/db/src/migrations/0071_wealthy_jetstream.sql)",
+      "Bash(do echo \"=== $f ===\")",
+      "Read(//Users/charlesponti/Developer/hominem/packages/db/**)",
+      "Bash(done)"
     ]
   }
 }

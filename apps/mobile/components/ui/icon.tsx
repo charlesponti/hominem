@@ -19,7 +19,7 @@ const MindsherpaIcon = ({ color = theme.colors.foreground, name, size, style }: 
     ? String.fromCharCode(Number.parseInt(unicodeMap[name].slice(2), 16))
     : ''
 
-  return <Text style={[{ fontFamily: 'Font Awesome Regular', color, fontSize: size }, style]}>{icon}</Text>
+  return <Text style={[{ fontFamily: 'fa-regular-400', color, fontSize: size }, style]}>{icon}</Text>
 }
 
 const AnimatedMindsherpaIcon = ({
@@ -33,7 +33,7 @@ const AnimatedMindsherpaIcon = ({
     : ''
 
   return (
-    <Reanimated.Text style={[{ fontFamily: 'Font Awesome Regular', color, fontSize: size }, style]}>
+    <Reanimated.Text style={[{ fontFamily: 'fa-regular-400', color, fontSize: size }, style]}>
       {icon}
     </Reanimated.Text>
   )

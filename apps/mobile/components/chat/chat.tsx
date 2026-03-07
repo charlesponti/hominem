@@ -4,7 +4,8 @@ import { FlashList } from '@shopify/flash-list'
 
 import { FeatureErrorBoundary } from '~/components/error-boundary'
 import queryClient from '~/utils/query-client'
-import { useChatMessages, useEndChat } from '~/utils/services/chat'
+import { useChatMessages, useEndChat, useSendMessage } from '~/utils/services/chat'
+import { ChatInput } from './chat-input'
 import ChatLoading from './chat-loading'
 import { loadMarkdown, renderMessage, type MarkdownComponent } from './chat-message'
 import { Text, theme } from '~/theme'
@@ -23,6 +24,8 @@ export const Chat = (props: ChatProps) => {
       onChatEnd()
     },
   })
+  const { mutate: sendMessage, isPending: isSendingMessage } = useSendMessage({ chatId })
+  const [message, setMessage] = useState('')
   const [Markdown, setMarkdown] = useState<MarkdownComponent | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
 
@@ -48,6 +51,13 @@ export const Chat = (props: ChatProps) => {
   const onEndChatPress = useCallback(() => {
     endChat()
   }, [endChat])
+
+  const handleSendMessage = useCallback((messageText: string) => {
+    if (!messageText.trim()) return
+    sendMessage(messageText)
+    setMessage('')
+  }, [sendMessage])
+
   const renderItem = useCallback(
     ({ item }: { item: (typeof formattedMessages)[number] }) => renderMessage(item, Markdown),
     [Markdown]
@@ -58,12 +68,21 @@ export const Chat = (props: ChatProps) => {
       {isMessagesLoading ? (
         <ChatLoading />
       ) : (
-        <FlashList
-          contentContainerStyle={styles.messagesContainer}
-          data={formattedMessages}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-        />
+        <>
+          <FlashList
+            contentContainerStyle={styles.messagesContainer}
+            data={formattedMessages}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            scrollEnabled={formattedMessages.length > 0}
+          />
+          <ChatInput
+            message={message}
+            onMessageChange={setMessage}
+            onSendMessage={handleSendMessage}
+            isPending={isSendingMessage}
+          />
+        </>
       )}
 
       <Pressable style={styles.endButton} onPress={onEndChatPress} disabled={isEnding}>
@@ -79,10 +98,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0b0d12',
+    flexDirection: 'column',
   },
   messagesContainer: {
     flexGrow: 1,
-    paddingBottom: 96,
+    paddingTop: 12,
     paddingHorizontal: 20,
     rowGap: 12,
   },
