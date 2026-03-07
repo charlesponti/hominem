@@ -1,12 +1,14 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
-    "builder": "RAILPACK",
-    "buildCommand": "bun turbo run build --filter=@hominem/workers --force"
+    "builder": "DOCKER",
+    "dockerfilePath": "./services/workers/Dockerfile"
   },
   "deploy": {
-    "startCommand": "cd services/workers && bun run start",
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 3
+    "restartPolicyMaxRetries": 3,
+    "healthchecks": {
+      "enabled": true
+    }
   }
 }

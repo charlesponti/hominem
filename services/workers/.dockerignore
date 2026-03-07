@@ -1,0 +1,102 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Environment files - DO NOT COPY SENSITIVE ENV VARS
+.env
+.env.local
+.env.*.local
+.env.example
+
+# Dependencies (handled by RUN bun install in Dockerfile)
+node_modules
+npm-debug.log
+yarn-error.log
+bun.lock.backup
+
+# Build artifacts
+dist
+build
+.turbo
+.next
+*.tsbuildinfo
+
+# Testing
+test
+tests
+*.test.ts
+*.spec.ts
+vitest.config.*
+coverage
+.nyc_output
+
+# IDE & Editor files
+.vscode
+.idea
+.sublime-project
+.sublime-workspace
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.circleci
+.travis.yml
+Jenkinsfile
+
+# Documentation
+README.md
+CHANGELOG.md
+docs
+*.md
+
+# Sensitive/Private directories
+.auth
+.crush
+.codex
+.cache
+.claude
+
+# Development config
+tsconfig.json
+tsconfig.test.json
+vitest.config.mts
+.eslintrc*
+.prettierrc*
+prettier.config.*
+eslintignore
+
+# Logs
+logs
+*.log
+
+# OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Docker files
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Source maps (for security)
+*.js.map
+*.ts.map
+
+# Test assets (not needed in production)
+test-assets
+test-setup
+
+# Miscellaneous
+.turbo
+.oxlintrc.json
+.oxfmtrc.json
+tsconfig.*.json
+railway.json
