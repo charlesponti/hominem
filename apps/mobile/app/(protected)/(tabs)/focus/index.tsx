@@ -63,7 +63,7 @@ export const FocusView = () => {
                   SHERPA
                 </Text>
               </Link>
-              <Text variant="body" color="secondaryForeground" onPress={onRefresh}>
+              <Text variant="body" color="secondaryForeground" onPress={onRefresh} accessibilityRole="button">
                 REFRESH
               </Text>
             </View>
@@ -71,7 +71,7 @@ export const FocusView = () => {
         }}
       />
 
-      <GestureHandlerRootView style={styles.container}>
+      <GestureHandlerRootView testID="focus-screen" style={styles.container}>
         <FocusHeader />
 
         <View style={styles.focusContainer}>
@@ -102,7 +102,7 @@ export const FocusView = () => {
 
         <View style={[styles.sherpaButtonContainer, { bottom: insets.bottom }]}>
           <View style={styles.sherpaCircleButton}>
-            <Link href="/(protected)/(tabs)/sherpa" style={{ flex: 1 }}>
+            <Link href="/(protected)/(tabs)/sherpa" style={{ flex: 1 }} accessibilityLabel="Open Sherpa">
               <MindsherpaIcon name="hat-wizard" size={32} color={theme.colors.white} />
             </Link>
           </View>

@@ -3,9 +3,9 @@ import { StyleSheet, View } from 'react-native'
 import { AsciiTexture } from '~/components/ui/ascii-texture'
 import { theme } from '~/theme'
 
-const BlurredGradientBackground = ({ children }: { children: ReactNode }) => {
+const BlurredGradientBackground = ({ children, testID }: { children: ReactNode; testID?: string }) => {
   return (
-    <View style={styles.container}>
+    <View testID={testID} style={styles.container}>
       <AsciiTexture />
       {children}
     </View>

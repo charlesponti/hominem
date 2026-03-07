@@ -1,8 +1,8 @@
-const { getDefaultConfig } = require('expo/metro-config')
+const { getDefaultConfig } = require('expo/metro-config');
 
 /** @type {import('expo/metro-config').MetroConfig} */
-const config = getDefaultConfig(__dirname)
+const config = getDefaultConfig(__dirname);
 
-config.resolver.unstable_enablePackageExports = true
+config.resolver.unstable_enablePackageExports = true;
 
-module.exports = config
+module.exports = config;

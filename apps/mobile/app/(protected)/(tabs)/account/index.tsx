@@ -142,6 +142,8 @@ function Account() {
                   </Text>
                   <TouchableOpacity
                     onPress={() => onDeletePasskeyPress(pk.id, pk.name)}
+                    accessibilityLabel={`Remove passkey ${pk.name}`}
+                    accessibilityRole="button"
                     style={{ minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center' }}
                   >
                     <Text color="destructive" style={{ fontSize: 12 }}>

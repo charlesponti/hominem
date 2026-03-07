@@ -41,7 +41,7 @@ export default function Sherpa() {
   }, [router]);
 
   return (
-    <BlurredGradientBackground>
+    <BlurredGradientBackground testID="sherpa-screen">
       {isLoadingActiveChat || isStartingChat ? (
         <LoadingFull>
           <Text variant="title" color="foreground">
