@@ -1,8 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 
 import { UserAuthService } from '@hominem/auth/server';
-import { users } from '@hominem/db/all-schema';
-import { db, eq } from '@hominem/hono-rpc';
+import { db } from '@hominem/db';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
@@ -328,19 +327,29 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   const amr = payload.amr && payload.amr.length > 0 ? payload.amr : ['e2e', 'mobile'];
   const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 16);
 
-  const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const existingUser = await db
+    .selectFrom('users')
+    .selectAll()
+    .where('email', '=', email)
+    .limit(1)
+    .executeTakeFirst();
+
   const user =
     existingUser ??
     (
       await db
-        .insert(users)
+        .insertInto('users')
         .values({
+          id: randomBytes(16).toString('hex'),
           email,
           name,
-          isAdmin: false,
+          is_admin: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
-        .returning()
-    )[0];
+        .returningAll()
+        .executeTakeFirst()
+    );
 
   if (!user) {
     logger.error('[auth:e2e:mobile] failed to create or fetch user', {
@@ -354,7 +363,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
     sub: user.id,
     sid: crypto.randomUUID(),
     scope: ['api:read', 'api:write'],
-    role: user.isAdmin ? 'admin' : 'user',
+    role: user.is_admin ? 'admin' : 'user',
     amr,
   });
   const refreshToken = randomBytes(32).toString('base64url');
@@ -432,9 +441,11 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
         return c.json({ error: 'user_id_missing' }, 400);
       }
 
-      const dbUser = await db.query.users.findFirst({
-        where: eq(users.id, userId),
-      });
+      const dbUser = await db
+        .selectFrom('users')
+        .selectAll()
+        .where('id', '=', userId)
+        .executeTakeFirst();
 
       if (!dbUser) {
         return c.json({ error: 'user_not_found' }, 400);
@@ -444,7 +455,7 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
       try {
         const tokenPair = await createTokenPairForUser({
           userId,
-          role: dbUser.isAdmin ? 'admin' : 'user',
+          role: dbUser.is_admin ? 'admin' : 'user',
           amr: ['email_otp'],
         });
 
@@ -477,7 +488,7 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
           sub: userId,
           sid: crypto.randomUUID(),
           scope: ['api:read', 'api:write'],
-          role: dbUser.isAdmin ? 'admin' : 'user',
+          role: dbUser.is_admin ? 'admin' : 'user',
           amr: ['email_otp'],
         });
 
@@ -741,9 +752,11 @@ authRoutes.post('/token-from-session', async (c) => {
 
     const userId = session.user.id;
 
-    const dbUser = await db.query.users.findFirst({
-      where: eq(users.id, userId),
-    });
+    const dbUser = await db
+      .selectFrom('users')
+      .selectAll()
+      .where('id', '=', userId)
+      .executeTakeFirst();
 
     if (!dbUser) {
       return c.json({ error: 'user_not_found' }, 400);
@@ -751,7 +764,7 @@ authRoutes.post('/token-from-session', async (c) => {
 
     const tokenPair = await createTokenPairForUser({
       userId,
-      role: dbUser.isAdmin ? 'admin' : 'user',
+      role: dbUser.is_admin ? 'admin' : 'user',
       amr: ['passkey'],
     });
 
@@ -936,9 +949,11 @@ authRoutes.post('/passkey/auth/verify', zValidator('json', passkeyAuthVerifySche
         });
       }
 
-      const dbUser = await db.query.users.findFirst({
-        where: eq(users.id, userId),
-      });
+      const dbUser = await db
+        .selectFrom('users')
+        .selectAll()
+        .where('id', '=', userId)
+        .executeTakeFirst();
 
       if (!dbUser) {
         return c.json({ error: 'user_not_found' }, 400);
@@ -946,7 +961,7 @@ authRoutes.post('/passkey/auth/verify', zValidator('json', passkeyAuthVerifySche
 
       const tokenPair = await createTokenPairForUser({
         userId,
-        role: dbUser.isAdmin ? 'admin' : 'user',
+        role: dbUser.is_admin ? 'admin' : 'user',
         amr: ['passkey'],
       });
 

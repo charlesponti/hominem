@@ -25,7 +25,6 @@ import { healthRoutes } from './routes/health';
 import { imagesRoutes } from './routes/images';
 import { invitesRoutes } from './routes/invites';
 import { oauthRoutes } from './routes/oauth';
-import { possessionsRoutes } from './routes/possessions';
 import { statusRoutes } from './routes/status';
 
 export type AppEnv = {
@@ -87,7 +86,6 @@ export function createServer() {
   app.route('/api/auth', authRoutes);
   app.route('/api/ai', aiRoutes);
   app.route('/api/oauth', oauthRoutes);
-  app.route('/api/possessions', possessionsRoutes);
   app.route('/api/invites', invitesRoutes);
   app.route('/api/images', imagesRoutes);
   app.route('/components', componentsRoutes);

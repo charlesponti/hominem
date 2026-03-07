@@ -13,27 +13,28 @@ import * as z from 'zod';
 
 import type { AppEnv } from '../server';
 
+// Helper to get timestamp as milliseconds for sorting/comparison
+function getTimestamp(date: any): number {
+  if (!date) return 0;
+  if (typeof date === 'string') return new Date(date).getTime();
+  if (date instanceof Date) return date.getTime();
+  return 0;
+}
+
 // Serialize health record timestamps to ISO strings
 // Handles both Date objects (legacy) and string timestamps (new schema with precision: 3)
-function serializeHealthRecord(record: {
-  date: Date | string;
-  createdAt: Date | string | null;
-  updatedAt?: Date | string | null;
-  [key: string]: unknown;
-}) {
+function serializeHealthRecord(record: any) {
+  const serializeDate = (date: any): string | null => {
+    if (!date) return null;
+    if (typeof date === 'string') return date;
+    if (date instanceof Date) return date.toISOString();
+    return String(date);
+  };
+
   return {
     ...record,
-    date: typeof record.date === 'string' ? record.date : record.date.toISOString(),
-    createdAt: record.createdAt
-      ? typeof record.createdAt === 'string'
-        ? record.createdAt
-        : record.createdAt.toISOString()
-      : null,
-    updatedAt: record.updatedAt
-      ? typeof record.updatedAt === 'string'
-        ? record.updatedAt
-        : record.updatedAt.toISOString()
-      : null,
+    recorded_at: serializeDate(record.recorded_at),
+    created_at: serializeDate(record.created_at),
   };
 }
 
@@ -84,7 +85,7 @@ healthRoutes.get('/', zValidator('query', healthQuerySchema), async (c) => {
       ...(query.activityType !== undefined && { activityType: query.activityType }),
     });
 
-    const sorted = results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const sorted = results.sort((a, b) => getTimestamp(b.recorded_at) - getTimestamp(a.recorded_at));
     return c.json(sorted.map(serializeHealthRecord));
   } catch (err) {
     logger.error('Error fetching health data', { error: err });
@@ -114,13 +115,10 @@ healthRoutes.get('/:id', async (c) => {
 healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
   try {
     const validated = c.req.valid('json');
-    const now = new Date().toISOString();
 
     const result = await createHealthRecord({
       ...validated,
-      createdAt: now,
-      updatedAt: now,
-    });
+    } as any);
     if (!result) {
       throw new InternalError('Failed to create health record');
     }
@@ -139,12 +137,12 @@ healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) =
     const validated = c.req.valid('json');
 
     const result = await updateHealthRecord(id, {
-      ...(validated.date !== undefined && { date: validated.date }),
-      ...(validated.activityType !== undefined && { activityType: validated.activityType }),
+      ...(validated.date !== undefined && { recorded_at: validated.date }),
+      ...(validated.activityType !== undefined && { record_type: validated.activityType }),
       ...(validated.duration !== undefined && { duration: validated.duration }),
       ...(validated.caloriesBurned !== undefined && { caloriesBurned: validated.caloriesBurned }),
       ...(validated.notes !== undefined && { notes: validated.notes }),
-    });
+    } as any);
 
     if (!result) {
       throw new NotFoundError('Health record not found');

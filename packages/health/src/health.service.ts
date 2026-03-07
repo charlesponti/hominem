@@ -29,7 +29,7 @@ export async function listHealthRecords(filters: {
     query = query.where('record_type', '=', filters.activityType)
   }
 
-  return query.execute()
+  return query.execute() as unknown as Promise<HealthRecords[]>
 }
 
 export async function getHealthRecord(id: string): Promise<HealthRecords | null> {
@@ -39,7 +39,7 @@ export async function getHealthRecord(id: string): Promise<HealthRecords | null>
     .where('id', '=', id)
     .executeTakeFirst()
 
-  return result ?? null
+  return (result ?? null) as HealthRecords | null
 }
 
 export async function createHealthRecord(data: Omit<HealthRecordInsert, 'id' | 'created_at'>): Promise<HealthRecords> {
@@ -49,7 +49,7 @@ export async function createHealthRecord(data: Omit<HealthRecordInsert, 'id' | '
     .returningAll()
     .executeTakeFirstOrThrow()
 
-  return record
+  return record as unknown as HealthRecords
 }
 
 export async function updateHealthRecord(
@@ -63,7 +63,7 @@ export async function updateHealthRecord(
     .returningAll()
     .executeTakeFirst()
 
-  return record ?? null
+  return (record ?? null) as HealthRecords | null
 }
 
 export async function deleteHealthRecord(id: string): Promise<boolean> {
