@@ -1,19 +1,13 @@
 import crypto from 'node:crypto';
+import type { Selectable } from 'kysely';
 
-import { db, NotFoundError, sql } from '@hominem/db';
+import { db } from '@hominem/db';
+import type { Database } from '@hominem/db';
 import * as z from 'zod';
 
 import type { TripItemOutput, TripOutput } from './contracts';
 
-interface TripRow {
-  id: string;
-  user_id: string;
-  name: string;
-  start_date: string | null;
-  end_date: string | null;
-  created_at: string | null;
-  data: Record<string, unknown> | null;
-}
+type TripRow = Selectable<Database['travel_trips']>;
 
 export const createTripSchema = z.object({
   name: z.string().min(1, 'Trip name is required'),
@@ -46,19 +40,6 @@ export const addItemToTripSchema = z.object({
 
 export type AddItemToTripInput = z.infer<typeof addItemToTripSchema>;
 
-function resultRows<T>(result: unknown): T[] {
-  if (Array.isArray(result)) {
-    return result as T[];
-  }
-  if (result && typeof result === 'object' && 'rows' in result) {
-    const rows = (result as { rows?: unknown }).rows;
-    if (Array.isArray(rows)) {
-      return rows as T[];
-    }
-  }
-  return [];
-}
-
 function toIsoDate(value?: Date): string {
   if (!value) {
     return new Date().toISOString().slice(0, 10);
@@ -67,13 +48,19 @@ function toIsoDate(value?: Date): string {
 }
 
 function rowToTrip(row: TripRow): TripOutput {
-  const createdAt = row.created_at ?? new Date().toISOString();
+  const createdAt =
+    row.created_at instanceof Date
+      ? row.created_at.toISOString()
+      : typeof row.created_at === 'string'
+        ? row.created_at
+        : new Date().toISOString();
+
   return {
     id: row.id,
     name: row.name,
     userId: row.user_id,
-    startDate: row.start_date,
-    endDate: row.end_date,
+    startDate: typeof row.start_date === 'string' ? row.start_date : null,
+    endDate: typeof row.end_date === 'string' ? row.end_date : null,
     createdAt,
     updatedAt: createdAt,
   };
@@ -104,21 +91,20 @@ export async function createTrip(input: CreateTripInput): Promise<TripOutput> {
   const validated = createTripSchema.parse(input);
   const tripId = crypto.randomUUID();
 
-  const result = await db.execute(sql`
-    insert into travel_trips (id, user_id, name, start_date, end_date, status, data)
-    values (
-      ${tripId},
-      ${validated.userId},
-      ${validated.name},
-      ${toIsoDate(validated.startDate)},
-      ${validated.endDate ? toIsoDate(validated.endDate) : null},
-      'planned',
-      ${JSON.stringify({ items: [] })}::jsonb
-    )
-    returning id, user_id, name, start_date, end_date, created_at, data
-  `);
+  const row = await db
+    .insertInto('travel_trips')
+    .values({
+      id: tripId,
+      user_id: validated.userId,
+      name: validated.name,
+      start_date: toIsoDate(validated.startDate),
+      end_date: validated.endDate ? toIsoDate(validated.endDate) : null,
+      status: 'planned',
+      data: { items: [] } as any,
+    })
+    .returningAll()
+    .executeTakeFirst();
 
-  const row = resultRows<TripRow>(result)[0] ?? null;
   if (!row) {
     throw new Error('Failed to create trip');
   }
@@ -129,14 +115,16 @@ export async function createTrip(input: CreateTripInput): Promise<TripOutput> {
 export async function getAllTrips(input: GetAllTripsInput): Promise<TripOutput[]> {
   const validated = getAllTripsSchema.parse(input);
 
-  const result = await db.execute(sql`
-    select id, user_id, name, start_date, end_date, created_at, data
-    from travel_trips
-    where user_id = ${validated.userId}
-    order by start_date desc nulls last, created_at desc, id asc
-  `);
+  const rows = await db
+    .selectFrom('travel_trips')
+    .selectAll()
+    .where('user_id', '=', validated.userId)
+    .orderBy('start_date', 'desc')
+    .orderBy('created_at', 'desc')
+    .orderBy('id', 'asc')
+    .execute();
 
-  return resultRows<TripRow>(result).map(rowToTrip);
+  return rows.map(rowToTrip);
 }
 
 export async function getTripById(
@@ -144,41 +132,39 @@ export async function getTripById(
 ): Promise<TripOutput & { items: TripItemOutput[] }> {
   const validated = getTripByIdSchema.parse(input);
 
-  const result = await db.execute(sql`
-    select id, user_id, name, start_date, end_date, created_at, data
-    from travel_trips
-    where id = ${validated.tripId}
-      and user_id = ${validated.userId}
-    limit 1
-  `);
+  const row = await db
+    .selectFrom('travel_trips')
+    .selectAll()
+    .where('id', '=', validated.tripId)
+    .where('user_id', '=', validated.userId)
+    .limit(1)
+    .executeTakeFirst();
 
-  const row = resultRows<TripRow>(result)[0] ?? null;
   if (!row) {
-    throw new NotFoundError(`Trip not found for id ${validated.tripId}`);
+    throw new Error(`Trip not found for id ${validated.tripId}`);
   }
 
   return {
     ...rowToTrip(row),
-    items: toItems(row.data),
+    items: toItems((row.data as any) ?? null),
   };
 }
 
 export async function addItemToTrip(input: AddItemToTripInput): Promise<TripItemOutput> {
   const validated = addItemToTripSchema.parse(input);
 
-  const tripResult = await db.execute(sql`
-    select id, user_id, name, start_date, end_date, created_at, data
-    from travel_trips
-    where id = ${validated.tripId}
-    limit 1
-  `);
+  const tripRow = await db
+    .selectFrom('travel_trips')
+    .selectAll()
+    .where('id', '=', validated.tripId)
+    .limit(1)
+    .executeTakeFirst();
 
-  const tripRow = resultRows<TripRow>(tripResult)[0] ?? null;
   if (!tripRow) {
-    throw new NotFoundError(`Trip not found for id ${validated.tripId}`);
+    throw new Error(`Trip not found for id ${validated.tripId}`);
   }
 
-  const currentItems = toItems(tripRow.data);
+  const currentItems = toItems((tripRow.data as any) ?? null);
   const existingItem = currentItems.find((item) => item.itemId === validated.itemId);
   if (existingItem) {
     return existingItem;
@@ -195,11 +181,13 @@ export async function addItemToTrip(input: AddItemToTripInput): Promise<TripItem
 
   const nextItems = [...currentItems, newItem];
 
-  await db.execute(sql`
-    update travel_trips
-    set data = ${JSON.stringify({ items: nextItems })}::jsonb
-    where id = ${validated.tripId}
-  `);
+  await db
+    .updateTable('travel_trips')
+    .set({
+      data: { items: nextItems } as any,
+    })
+    .where('id', '=', validated.tripId)
+    .execute();
 
   return newItem;
 }

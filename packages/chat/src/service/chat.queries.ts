@@ -1,61 +1,59 @@
-import { db, takeUniqueOrThrow, and, desc, eq } from '@hominem/db';
-import { jsonb, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import crypto from 'node:crypto';
+import type { Selectable } from 'kysely';
+
+import { db } from '@hominem/db';
+import type { Database } from '@hominem/db';
 
 import type { ChatOutput } from '../contracts';
 import type { CreateChatParams } from './chat.types';
 
-const chatMessageRoleEnum = pgEnum('chat_message_role', ['system', 'user', 'assistant', 'tool']);
+type ChatRow = Selectable<Database['chat']>;
 
-const chatsTable = pgTable('chat', {
-  id: uuid('id').primaryKey().notNull(),
-  title: text('title').notNull(),
-  userId: uuid('user_id').notNull(),
-  noteId: uuid('note_id'),
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-});
-
-const chatMessagesTable = pgTable('chat_message', {
-  id: uuid('id').primaryKey().notNull(),
-  chatId: uuid('chat_id').notNull(),
-  userId: uuid('user_id').notNull(),
-  role: chatMessageRoleEnum('role').notNull(),
-  content: text('content').notNull(),
-  files: jsonb('files'),
-  toolCalls: jsonb('tool_calls'),
-  reasoning: text('reasoning'),
-  parentMessageId: uuid('parent_message_id'),
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-});
+function toChatOutput(row: ChatRow): ChatOutput {
+  return {
+    id: row.id,
+    title: row.title,
+    userId: row.user_id,
+    noteId: row.note_id ?? null,
+    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
+    updatedAt: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
+  };
+}
 
 export async function createChatQuery(params: CreateChatParams): Promise<ChatOutput> {
   const chatId = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  const [newChat] = await db
-    .insert(chatsTable)
+  const newChat = await db
+    .insertInto('chat')
     .values({
       id: chatId,
       title: params.title,
-      userId: params.userId,
-      noteId: params.noteId,
-      createdAt: now,
-      updatedAt: now,
+      user_id: params.userId,
+      note_id: params.noteId ?? null,
+      created_at: now,
+      updated_at: now,
     })
-    .returning();
+    .returningAll()
+    .executeTakeFirst();
 
-  return newChat as ChatOutput;
+  if (!newChat) {
+    throw new Error('Failed to create chat');
+  }
+
+  return toChatOutput(newChat);
 }
 
 export async function getChatByIdQuery(chatId: string, userId: string): Promise<ChatOutput | null> {
-  const [chatData] = await db
-    .select()
-    .from(chatsTable)
-    .where(and(eq(chatsTable.id, chatId), eq(chatsTable.userId, userId)))
-    .limit(1);
+  const chatData = await db
+    .selectFrom('chat')
+    .selectAll()
+    .where('id', '=', chatId)
+    .where('user_id', '=', userId)
+    .limit(1)
+    .executeTakeFirst();
 
-  return chatData ?? null;
+  return chatData ? toChatOutput(chatData) : null;
 }
 
 export async function getOrCreateActiveChatQuery(
@@ -64,53 +62,61 @@ export async function getOrCreateActiveChatQuery(
 ): Promise<ChatOutput> {
   if (chatId) {
     const existingChat = await db
-      .select()
-      .from(chatsTable)
-      .where(and(eq(chatsTable.id, chatId), eq(chatsTable.userId, userId)))
+      .selectFrom('chat')
+      .selectAll()
+      .where('id', '=', chatId)
+      .where('user_id', '=', userId)
       .limit(1)
-      .then(takeUniqueOrThrow)
-      .catch(() => null);
+      .executeTakeFirst();
 
     if (existingChat) {
-      return existingChat as ChatOutput;
+      return toChatOutput(existingChat);
     }
   }
 
   const newChat = await db
-    .insert(chatsTable)
+    .insertInto('chat')
     .values({
       id: crypto.randomUUID(),
       title: 'New Chat',
-      userId: userId,
+      user_id: userId,
+      note_id: null,
     })
-    .returning()
-    .then(takeUniqueOrThrow);
+    .returningAll()
+    .executeTakeFirst();
 
-  return newChat as ChatOutput;
+  if (!newChat) {
+    throw new Error('Failed to create chat');
+  }
+
+  return toChatOutput(newChat);
 }
 
 export async function getUserChatsQuery(userId: string, limit = 50): Promise<ChatOutput[]> {
   const chats = await db
-    .select()
-    .from(chatsTable)
-    .where(eq(chatsTable.userId, userId))
-    .orderBy(desc(chatsTable.updatedAt))
-    .limit(limit);
+    .selectFrom('chat')
+    .selectAll()
+    .where('user_id', '=', userId)
+    .orderBy('updated_at', 'desc')
+    .limit(limit)
+    .execute();
 
-  return chats as ChatOutput[];
+  return chats.map(toChatOutput);
 }
 
 export async function getChatByNoteIdQuery(
   noteId: string,
   userId: string,
 ): Promise<ChatOutput | null> {
-  const [chatData] = await db
-    .select()
-    .from(chatsTable)
-    .where(and(eq(chatsTable.noteId, noteId), eq(chatsTable.userId, userId)))
-    .limit(1);
+  const chatData = await db
+    .selectFrom('chat')
+    .selectAll()
+    .where('note_id', '=', noteId)
+    .where('user_id', '=', userId)
+    .limit(1)
+    .executeTakeFirst();
 
-  return chatData ?? null;
+  return chatData ? toChatOutput(chatData) : null;
 }
 
 export async function updateChatTitleQuery(
@@ -118,45 +124,55 @@ export async function updateChatTitleQuery(
   title: string,
   userId: string,
 ): Promise<ChatOutput | null> {
-  const [updatedChat] = await db
-    .update(chatsTable)
+  const updatedChat = await db
+    .updateTable('chat')
     .set({
       title: title,
-      updatedAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     })
-    .where(and(eq(chatsTable.id, chatId), eq(chatsTable.userId, userId)))
-    .returning();
+    .where('id', '=', chatId)
+    .where('user_id', '=', userId)
+    .returningAll()
+    .executeTakeFirst();
 
-  return updatedChat ?? null;
+  return updatedChat ? toChatOutput(updatedChat) : null;
 }
 
 export async function deleteChatQuery(chatId: string, userId: string): Promise<boolean> {
-  const [existingChat] = await db
-    .select({ id: chatsTable.id })
-    .from(chatsTable)
-    .where(and(eq(chatsTable.id, chatId), eq(chatsTable.userId, userId)))
-    .limit(1);
+  const existingChat = await db
+    .selectFrom('chat')
+    .select('id')
+    .where('id', '=', chatId)
+    .where('user_id', '=', userId)
+    .limit(1)
+    .executeTakeFirst();
 
   if (!existingChat) {
     return false;
   }
 
-  await db.delete(chatMessagesTable).where(eq(chatMessagesTable.chatId, chatId));
-  await db.delete(chatsTable).where(and(eq(chatsTable.id, chatId), eq(chatsTable.userId, userId)));
+  await db.deleteFrom('chat_message').where('chat_id', '=', chatId).execute();
+  await db
+    .deleteFrom('chat')
+    .where('id', '=', chatId)
+    .where('user_id', '=', userId)
+    .execute();
   return true;
 }
 
 export async function clearChatMessagesQuery(chatId: string, userId: string): Promise<boolean> {
-  const [existingChat] = await db
-    .select({ id: chatsTable.id })
-    .from(chatsTable)
-    .where(and(eq(chatsTable.id, chatId), eq(chatsTable.userId, userId)))
-    .limit(1);
+  const existingChat = await db
+    .selectFrom('chat')
+    .select('id')
+    .where('id', '=', chatId)
+    .where('user_id', '=', userId)
+    .limit(1)
+    .executeTakeFirst();
 
   if (!existingChat) {
     return false;
   }
 
-  await db.delete(chatMessagesTable).where(eq(chatMessagesTable.chatId, chatId));
+  await db.deleteFrom('chat_message').where('chat_id', '=', chatId).execute();
   return true;
 }

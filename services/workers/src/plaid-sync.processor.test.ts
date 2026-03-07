@@ -1,5 +1,6 @@
 // import our test-specific environment initializer before anything else
 import './test-setup/env';
+
 // Before any other imports, mock the env module so that zod validation
 // doesn't run and complain about missing variables. This must happen early.
 import { vi } from 'vitest';
@@ -20,9 +21,9 @@ vi.mock('./env', () => ({
   },
 }));
 
-import type { Job } from 'bullmq';
 // now import test helpers and the code under test using normal ESM imports
 import { describe, it, expect, beforeEach } from 'vitest';
+import type { Job } from 'bullmq';
 
 // The processor we're testing
 import { processSyncJob, plaidClient } from './plaid-sync.processor';
@@ -52,13 +53,13 @@ vi.mock('@hominem/finance-services', () => ({
 // `plaidClient` directly for simplicity.
 
 // Helper to create a minimal fake job object.
-function makeJob(data: unknown): Job<unknown> {
+function makeJob(data: any): Job<any> {
   // only the fields accessed by processSyncJob are needed
   return {
     id: 'job-id',
     data,
     updateProgress: vi.fn().mockResolvedValue(undefined),
-  } as unknown as Job<unknown>;
+  } as unknown as Job<any>;
 }
 
 describe('processSyncJob', () => {
@@ -72,12 +73,7 @@ describe('processSyncJob', () => {
     const finance = await import('@hominem/finance-services');
     vi.mocked(finance.getPlaidItemByUserAndItemId).mockResolvedValue(null);
 
-    const job = makeJob({
-      userId: 'u1',
-      accessToken: 'tok',
-      itemId: 'item-abc',
-      initialSync: false,
-    });
+    const job = makeJob({ userId: 'u1', accessToken: 'tok', itemId: 'item-abc', initialSync: false });
 
     await expect(processSyncJob(job)).rejects.toThrow(/Plaid item item-abc not found/);
     expect(finance.updatePlaidItemError).not.toHaveBeenCalled();
@@ -97,27 +93,20 @@ describe('processSyncJob', () => {
     // stub out the plaid client so accounts call returns one account and
     // transactionsSync returns an empty batch; this will exercise upsertAccount
     plaidClient.accountsGet = vi.fn().mockResolvedValue({
-      data: {
-        accounts: [
-          {
-            account_id: 'account-1',
-            name: 'Test Account',
-            type: 'depository',
-            balances: { current: 0, available: null, limit: null, iso_currency_code: 'USD' },
-          },
-        ],
-      },
+      data: { accounts: [
+        {
+          account_id: 'account-1',
+          name: 'Test Account',
+          type: 'depository',
+          balances: { current: 0, available: null, limit: null, iso_currency_code: 'USD' },
+        },
+      ] },
     });
     plaidClient.transactionsSync = vi.fn().mockResolvedValue({
       data: { added: [], modified: [], removed: [], has_more: false },
     });
 
-    const job = makeJob({
-      userId: 'u1',
-      accessToken: 'tok',
-      itemId: 'item-xyz',
-      initialSync: false,
-    });
+    const job = makeJob({ userId: 'u1', accessToken: 'tok', itemId: 'item-xyz', initialSync: false });
 
     await expect(processSyncJob(job)).rejects.toThrow('downstream failure');
     expect(finance.updatePlaidItemError).toHaveBeenCalledWith(

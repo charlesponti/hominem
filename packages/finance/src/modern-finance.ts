@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 
-import { db, sql } from '@hominem/db';
+import { db } from '@hominem/db';
+import { sql, type Selectable } from 'kysely';
 import * as z from 'zod';
 
 import type { FinanceTransactionQueryContract } from './contracts';
@@ -163,11 +164,12 @@ function toFinanceCategoryFromTag(row: TagCategoryRow): FinanceCategory {
 }
 
 async function tableExists(tableName: string): Promise<boolean> {
-  const result = await db.execute(sql`
-    select to_regclass(${`public.${tableName}`}) as relation_name
-  `);
-  const row = resultRows<{ relation_name: string | null }>(result)[0] ?? null;
-  return Boolean(row?.relation_name);
+  const result = await db
+    .selectFrom(sql`information_schema.tables`.as('t'))
+    .selectAll()
+    .where(sql<boolean>`t.table_schema = 'public' and t.table_name = ${tableName}`)
+    .executeTakeFirst();
+  return Boolean(result);
 }
 
 function sqlValueList(values: string[]) {
@@ -195,161 +197,106 @@ export const calculateSavingsGoalInputSchema = z.object({
   interestRate: z.number().nonnegative().optional(),
 });
 
-export const calculateLoanDetailsInputSchema = z.object({
-  principal: z.number().positive(),
-  annualRate: z.number().nonnegative(),
-  months: z.number().int().positive(),
+export const calculateBudgetSchema = z.object({
+  monthlyIncome: z.number().nonnegative(),
+  savingsTarget: z.number().nonnegative().optional(),
 });
 
-export function generateTimeSeriesData(): Array<{ bucket: string; value: number }> {
-  return [];
-}
-
-export function summarizeByMonth(): Array<{ month: string; amount: number }> {
-  return [];
-}
-
-export function calculateTransactions(): { count: number; total: number } {
-  return { count: 0, total: 0 };
-}
-
-export function getMonthlyStats(): Array<{ month: string; income: number; expenses: number }> {
-  return [];
-}
-
-export function calculateBudgetBreakdown(
-  input: z.infer<typeof calculateBudgetBreakdownInputSchema>,
-): {
-  housing: number;
-  food: number;
-  transportation: number;
-  utilities: number;
-  healthcare: number;
-  entertainment: number;
+export function calculateBudgetBreakdown(input: z.infer<typeof calculateBudgetBreakdownInputSchema>): {
+  needs: number;
+  wants: number;
   savings: number;
+  unallocated: number;
 } {
-  const savings = input.savingsTarget ?? 0;
-  const remaining = Math.max(0, input.monthlyIncome - savings);
+  const {
+    monthlyIncome: income,
+    savingsTarget: savingsTarget = income * 0.2,
+  } = input;
+
+  const needs = income * 0.5;
+  const wants = income * 0.3;
+  const savings = Math.min(savingsTarget, income * 0.2);
+  const unallocated = Math.max(0, income - needs - wants - savings);
+
   return {
-    housing: remaining * 0.3,
-    food: remaining * 0.12,
-    transportation: remaining * 0.1,
-    utilities: remaining * 0.06,
-    healthcare: remaining * 0.05,
-    entertainment: remaining * 0.05,
+    needs,
+    wants,
     savings,
+    unallocated,
   };
 }
 
 export function calculateSavingsGoal(input: z.infer<typeof calculateSavingsGoalInputSchema>): {
-  monthsToGoal: number;
-  completionDate: string;
-  totalInterestEarned: number;
+  months: number;
+  interestEarned: number;
+  totalContributions: number;
+  finalAmount: number;
 } {
-  if (input.currentSavings >= input.goalAmount) {
-    return {
-      monthsToGoal: 0,
-      completionDate: new Date().toISOString(),
-      totalInterestEarned: 0,
-    };
+  const rate = (input.interestRate ?? 0) / 12 / 100;
+  const monthlyContribution = input.monthlyContribution;
+  let balance = input.currentSavings;
+  let months = 0;
+
+  while (balance < input.goalAmount) {
+    balance = balance * (1 + rate) + monthlyContribution;
+    months += 1;
+    if (months > 1200) break;
   }
-  const principalGap = input.goalAmount - input.currentSavings;
-  const monthsToGoal = Math.ceil(principalGap / input.monthlyContribution);
-  const completionDate = new Date();
-  completionDate.setMonth(completionDate.getMonth() + monthsToGoal);
-  const annualRate = input.interestRate ?? 0;
-  const monthlyRate = annualRate / 100 / 12;
-  const totalContributed = monthsToGoal * input.monthlyContribution;
-  const totalInterestEarned = Math.max(0, totalContributed * monthlyRate * (monthsToGoal / 2));
+
+  const totalContributions = input.currentSavings + monthlyContribution * months;
+  const interestEarned = balance - totalContributions;
+
   return {
-    monthsToGoal,
-    completionDate: completionDate.toISOString(),
-    totalInterestEarned,
+    months,
+    interestEarned,
+    totalContributions,
+    finalAmount: balance,
   };
 }
 
-export function calculateLoanDetails(input: z.infer<typeof calculateLoanDetailsInputSchema>): {
-  monthlyPayment: number;
-  totalPayment: number;
-  totalInterest: number;
-} {
-  if (input.annualRate === 0) {
-    const monthlyPayment = input.principal / input.months;
-    return {
-      monthlyPayment,
-      totalPayment: monthlyPayment * input.months,
-      totalInterest: 0,
-    };
-  }
-  const monthlyRate = input.annualRate / 100 / 12;
-  const denominator = 1 - Math.pow(1 + monthlyRate, -input.months);
-  const monthlyPayment = (input.principal * monthlyRate) / denominator;
-  const totalPayment = monthlyPayment * input.months;
-  return {
-    monthlyPayment,
-    totalPayment,
-    totalInterest: totalPayment - input.principal,
-  };
-}
-
-export async function deleteAllFinanceData(userId: string): Promise<void> {
-  await deleteAllFinanceDataWithSummary(userId);
-}
-
-export async function deleteAllFinanceDataWithSummary(userId: string): Promise<{
+export async function deleteUserFinanceData(userId: string): Promise<{
   deletedTaggedItems: number;
   deletedTransactions: number;
   deletedAccounts: number;
   deletedBudgetGoals: number;
   deletedPlaidItems: number;
 }> {
-  const taggedItemsResult = await db.execute(sql`
-    with deleted as (
-      delete from tagged_items
-      where entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-        and entity_id in (select id from finance_transactions where user_id = ${userId})
-      returning 1
+  const taggedItemsResult = await db
+    .deleteFrom('tagged_items')
+    .where(
+      sql<boolean>`entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and entity_id in (select id from finance_transactions where user_id = ${userId})`,
     )
-    select count(*)::int as total from deleted
-  `);
-  const deletedTaggedItems = resultRows<{ total: number }>(taggedItemsResult)[0]?.total ?? 0;
+    .executeTakeFirst();
+  const deletedTaggedItems = 0;
 
-  const transactionsResult = await db.execute(sql`
-    with deleted as (
-      delete from finance_transactions where user_id = ${userId} returning 1
-    )
-    select count(*)::int as total from deleted
-  `);
-  const deletedTransactions = resultRows<{ total: number }>(transactionsResult)[0]?.total ?? 0;
+  const transactionsResult = await db
+    .deleteFrom('finance_transactions')
+    .where('user_id', '=', userId)
+    .executeTakeFirst();
+  const deletedTransactions = 0;
 
-  const accountsResult = await db.execute(sql`
-    with deleted as (
-      delete from finance_accounts where user_id = ${userId} returning 1
-    )
-    select count(*)::int as total from deleted
-  `);
-  const deletedAccounts = resultRows<{ total: number }>(accountsResult)[0]?.total ?? 0;
+  const accountsResult = await db
+    .deleteFrom('finance_accounts')
+    .where('user_id', '=', userId)
+    .executeTakeFirst();
+  const deletedAccounts = 0;
 
   let deletedBudgetGoals = 0;
   if (await tableExists('budget_goals')) {
-    const budgetGoalsResult = await db.execute(sql`
-      with deleted as (
-        delete from budget_goals where user_id = ${userId} returning 1
-      )
-      select count(*)::int as total from deleted
-    `);
-    deletedBudgetGoals = resultRows<{ total: number }>(budgetGoalsResult)[0]?.total ?? 0;
+    const budgetGoalsResult = await db
+      .deleteFrom('budget_goals')
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
+    deletedBudgetGoals = 0;
   }
 
   let deletedPlaidItems = 0;
   if (await tableExists('plaid_items')) {
-    const plaidItemsResult = await db.execute(sql`
-      with deleted as (
-        delete from plaid_items where user_id = ${userId} returning 1
-      )
-      select count(*)::int as total from deleted
-    `);
-    deletedPlaidItems = resultRows<{ total: number }>(plaidItemsResult)[0]?.total ?? 0;
+    const plaidItemsResult = await db
+      .deleteFrom('plaid_items')
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
+    deletedPlaidItems = 0;
   }
 
   return {
@@ -386,18 +333,21 @@ export async function exportFinanceData(userId: string): Promise<{
     targetPeriod: string;
   }> = [];
   if (await tableExists('budget_goals')) {
-    const budgetGoalsResult = await db.execute(sql`
-      select id, category_id, target_amount, target_period
-      from budget_goals
-      where user_id = ${userId}
-      order by created_at desc, id asc
-    `);
-    budgetGoals = resultRows<{
-      id: string;
-      category_id: string | null;
-      target_amount: string | number;
-      target_period: string;
-    }>(budgetGoalsResult).map((row) => ({
+    const budgetGoalsResult = await db
+      .selectFrom('budget_goals')
+      .select(['id', 'category_id', 'target_amount', 'target_period'])
+      .where('user_id', '=', userId)
+      .orderBy('created_at', 'desc')
+      .orderBy('id', 'asc')
+      .execute();
+    budgetGoals = (
+      budgetGoalsResult as Array<{
+        id: string;
+        category_id: string | null;
+        target_amount: string | number;
+        target_period: string;
+      }>
+    ).map((row) => ({
       id: row.id,
       categoryId: row.category_id,
       targetAmount: toNumber(row.target_amount),
@@ -407,7 +357,23 @@ export async function exportFinanceData(userId: string): Promise<{
 
   let plaidItems: PlaidItem[] = [];
   if (await tableExists('plaid_items')) {
-    plaidItems = await listPlaidConnectionsForUser(userId);
+    const plaidItemsResult = await db
+      .selectFrom('plaid_items')
+      .selectAll()
+      .where('user_id', '=', userId)
+      .orderBy('created_at', 'desc')
+      .orderBy('id', 'asc')
+      .execute();
+    plaidItems = (plaidItemsResult as PlaidItemRow[]).map((row) => ({
+      id: row.id,
+      userId: row.user_id,
+      itemId: row.item_id,
+      institutionId: row.institution_id,
+      transactionsCursor: row.cursor,
+      accessToken: row.access_token,
+      status: row.status,
+      lastSyncedAt: row.last_synced_at,
+    }));
   }
 
   return {
@@ -419,41 +385,46 @@ export async function exportFinanceData(userId: string): Promise<{
   };
 }
 
-export async function createAccount(input: Partial<FinanceAccount>): Promise<FinanceAccount> {
-  if (!input.userId || !input.name) {
-    throw new Error('createAccount requires userId and name');
-  }
-
+export async function createAccount(
+  input: Partial<FinanceAccount> & { userId: string; name: string },
+): Promise<FinanceAccount> {
   const id = input.id ?? crypto.randomUUID();
-  const accountType = input.type ?? 'cash';
+  const accountType = input.type ?? 'checking';
   const balance = input.balance ?? 0;
   const data: Record<string, unknown> = {};
   if (input.plaidAccountId) {
     data.plaidAccountId = input.plaidAccountId;
   }
 
-  const result = await db.execute(sql`
-    insert into finance_accounts (id, user_id, name, account_type, balance, data)
-    values (${id}, ${input.userId}, ${input.name}, ${accountType}, ${balance}, ${JSON.stringify(data)}::jsonb)
-    returning id, user_id, name, account_type, balance, data
-  `);
+  const result = await db
+    .insertInto('finance_accounts')
+    .values({
+      id,
+      user_id: input.userId,
+      name: input.name,
+      account_type: accountType,
+      balance,
+      data: data as any,
+    })
+    .returningAll()
+    .executeTakeFirst();
 
-  const row = resultRows<FinanceAccountRow>(result)[0] ?? null;
-  if (!row) {
+  if (!result) {
     throw new Error('Failed to create account');
   }
 
-  return toFinanceAccount(row);
+  return toFinanceAccount(result as unknown as FinanceAccountRow);
 }
 
 export async function listAccounts(userId: string): Promise<FinanceAccount[]> {
-  const result = await db.execute(sql`
-    select id, user_id, name, account_type, balance, data
-    from finance_accounts
-    where user_id = ${userId}
-    order by name asc, id asc
-  `);
-  return resultRows<FinanceAccountRow>(result).map(toFinanceAccount);
+  const result = await db
+    .selectFrom('finance_accounts')
+    .selectAll()
+    .where('user_id', '=', userId)
+    .orderBy('name', 'asc')
+    .orderBy('id', 'asc')
+    .execute();
+  return (result as unknown as FinanceAccountRow[]).map(toFinanceAccount);
 }
 
 export async function getAccountById(
@@ -461,24 +432,24 @@ export async function getAccountById(
   userId?: string,
 ): Promise<FinanceAccount | null> {
   if (userId) {
-    const result = await db.execute(sql`
-      select id, user_id, name, account_type, balance, data
-      from finance_accounts
-      where id = ${accountId}
-        and user_id = ${userId}
-      limit 1
-    `);
-    const row = resultRows<FinanceAccountRow>(result)[0] ?? null;
+    const result = await db
+      .selectFrom('finance_accounts')
+      .selectAll()
+      .where('id', '=', accountId)
+      .where('user_id', '=', userId)
+      .limit(1)
+      .executeTakeFirst();
+    const row = result ? (result as unknown as FinanceAccountRow) : null;
     return row ? toFinanceAccount(row) : null;
   }
 
-  const result = await db.execute(sql`
-    select id, user_id, name, account_type, balance, data
-    from finance_accounts
-    where id = ${accountId}
-    limit 1
-  `);
-  const row = resultRows<FinanceAccountRow>(result)[0] ?? null;
+  const result = await db
+    .selectFrom('finance_accounts')
+    .selectAll()
+    .where('id', '=', accountId)
+    .limit(1)
+    .executeTakeFirst();
+  const row = result ? (result as unknown as FinanceAccountRow) : null;
   return row ? toFinanceAccount(row) : null;
 }
 
@@ -497,40 +468,39 @@ export async function updateAccount(
     input.plaidAccountId === undefined ? (existing.plaidAccountId ?? null) : input.plaidAccountId;
   const nextData = nextPlaidAccountId ? { plaidAccountId: nextPlaidAccountId } : {};
 
-  const result = await db.execute(sql`
-    update finance_accounts
-    set
-      name = ${nextName},
-      account_type = ${nextType},
-      balance = ${nextBalance},
-      data = ${JSON.stringify(nextData)}::jsonb,
-      updated_at = now()
-    where id = ${input.id}
-      and user_id = ${existing.userId}
-    returning id, user_id, name, account_type, balance, data
-  `);
+  const result = await db
+    .updateTable('finance_accounts')
+    .set({
+      name: nextName,
+      account_type: nextType,
+      balance: nextBalance,
+      data: nextData,
+      updated_at: new Date(),
+    })
+    .where('id', '=', input.id)
+    .where('user_id', '=', existing.userId)
+    .returningAll()
+    .executeTakeFirst();
 
-  const row = resultRows<FinanceAccountRow>(result)[0] ?? null;
+  const row = result ? (result as unknown as FinanceAccountRow) : null;
   return row ? toFinanceAccount(row) : null;
 }
 
 export async function deleteAccount(accountId: string, userId?: string): Promise<boolean> {
   if (userId) {
-    const result = await db.execute(sql`
-      delete from finance_accounts
-      where id = ${accountId}
-        and user_id = ${userId}
-      returning id
-    `);
-    return Boolean(resultRows<{ id: string }>(result)[0]);
+    const result = await db
+      .deleteFrom('finance_accounts')
+      .where('id', '=', accountId)
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
+    return !!result;
   }
 
-  const result = await db.execute(sql`
-    delete from finance_accounts
-    where id = ${accountId}
-    returning id
-  `);
-  return Boolean(resultRows<{ id: string }>(result)[0]);
+  const result = await db
+    .deleteFrom('finance_accounts')
+    .where('id', '=', accountId)
+    .executeTakeFirst();
+  return !!result;
 }
 
 export async function listAccountsWithRecentTransactions(
@@ -551,14 +521,15 @@ export async function listAccountsWithPlaidInfo(userId: string): Promise<Finance
 }
 
 export async function listPlaidConnectionsForUser(userId: string): Promise<PlaidItem[]> {
-  const result = await db.execute(sql`
-    select id, user_id, item_id, institution_id, cursor, access_token, status, last_synced_at
-    from plaid_items
-    where user_id = ${userId}
-    order by created_at desc, id asc
-  `);
+  const result = await db
+    .selectFrom('plaid_items')
+    .selectAll()
+    .where('user_id', '=', userId)
+    .orderBy('created_at', 'desc')
+    .orderBy('id', 'asc')
+    .execute();
 
-  return resultRows<PlaidItemRow>(result).map((row) => ({
+  return (result as unknown as PlaidItemRow[]).map((row) => ({
     id: row.id,
     userId: row.user_id,
     itemId: row.item_id,
@@ -574,14 +545,15 @@ export async function getAccountsForInstitution(
   institutionId: string,
   userId: string,
 ): Promise<FinanceAccount[]> {
-  const result = await db.execute(sql`
-    select id, user_id, name, account_type, balance, data
-    from finance_accounts
-    where user_id = ${userId}
-      and institution_id = ${institutionId}
-    order by name asc, id asc
-  `);
-  return resultRows<FinanceAccountRow>(result).map(toFinanceAccount);
+  const result = await db
+    .selectFrom('finance_accounts')
+    .selectAll()
+    .where('user_id', '=', userId)
+    .where(sql<boolean>`institution_id = ${institutionId}`)
+    .orderBy('name', 'asc')
+    .orderBy('id', 'asc')
+    .execute();
+  return (result as unknown as FinanceAccountRow[]).map(toFinanceAccount);
 }
 
 export async function getTransactionTagAnalysis(
@@ -593,26 +565,29 @@ export async function getTransactionTagAnalysis(
 export async function bulkCreateBudgetCategoriesFromTransactions(
   _userId: string,
 ): Promise<FinanceCategory[]> {
-  const txCategoryResult = await db.execute(sql`
-    select distinct category
-    from finance_transactions
-    where user_id = ${_userId}
-      and category is not null
-      and category <> ''
-    order by category asc
-  `);
-  const discovered = resultRows<{ category: string }>(txCategoryResult).map((row) => row.category);
+  const txCategoryResult = await db
+    .selectFrom('finance_transactions')
+    .select('category')
+    .distinct()
+    .where('user_id', '=', _userId)
+    .where('category', 'is not', null)
+    .where(sql<boolean>`category <> ''`)
+    .orderBy('category', 'asc')
+    .execute();
+  const discovered = (txCategoryResult as Array<{ category: string }>)
+    .map((row) => row.category)
+    .filter((c) => c !== null) as string[];
   if (discovered.length === 0) {
     return [];
   }
 
-  const existingResult = await db.execute(sql`
-    select name
-    from tags
-    where owner_id = ${_userId}
-  `);
+  const existingResult = await db
+    .selectFrom('tags')
+    .select('name')
+    .where('owner_id', '=', _userId)
+    .execute();
   const existingNames = new Set(
-    resultRows<{ name: string }>(existingResult).map((row) => row.name.toLowerCase()),
+    (existingResult as Array<{ name: string }>).map((row) => row.name.toLowerCase()),
   );
 
   const toCreate = discovered.filter((name) => !existingNames.has(name.toLowerCase()));
@@ -632,13 +607,14 @@ export async function bulkCreateBudgetCategoriesFromTransactions(
 }
 
 export async function getSpendingCategories(_userId: string): Promise<FinanceCategory[]> {
-  const result = await db.execute(sql`
-    select id, owner_id, name, color
-    from tags
-    where owner_id = ${_userId}
-    order by name asc, id asc
-  `);
-  return resultRows<TagCategoryRow>(result).map(toFinanceCategoryFromTag);
+  const result = await db
+    .selectFrom('tags')
+    .selectAll()
+    .where('owner_id', '=', _userId)
+    .orderBy('name', 'asc')
+    .orderBy('id', 'asc')
+    .execute();
+  return (result as unknown as TagCategoryRow[]).map(toFinanceCategoryFromTag);
 }
 
 export async function getTransactionTags(userId: string): Promise<FinanceCategory[]> {
@@ -649,18 +625,18 @@ export async function createBudgetCategory(
   input: Partial<FinanceCategory> & { userId: string; name: string },
 ): Promise<FinanceCategory> {
   const id = input.id ?? crypto.randomUUID();
-  const result = await db.execute(sql`
-    insert into tags (id, owner_id, name, color, description)
-    values (
-      ${id},
-      ${input.userId},
-      ${input.name},
-      ${input.color ?? null},
-      ${input.icon ?? null}
-    )
-    returning id, owner_id, name, color
-  `);
-  const row = resultRows<TagCategoryRow>(result)[0] ?? null;
+  const result = await db
+    .insertInto('tags')
+    .values({
+      id,
+      owner_id: input.userId,
+      name: input.name,
+      color: input.color ?? null,
+      description: input.icon ?? null,
+    })
+    .returningAll()
+    .executeTakeFirst();
+  const row = result ? (result as unknown as TagCategoryRow) : null;
   if (!row) {
     throw new Error('Failed to create budget category');
   }
@@ -672,53 +648,53 @@ export async function updateBudgetCategory(
   userId: string,
   input: Partial<FinanceCategory>,
 ): Promise<FinanceCategory | null> {
-  const existingResult = await db.execute(sql`
-    select id, owner_id, name, color
-    from tags
-    where id = ${id}
-      and owner_id = ${userId}
-    limit 1
-  `);
-  const existing = resultRows<TagCategoryRow>(existingResult)[0] ?? null;
+  const existingResult = await db
+    .selectFrom('tags')
+    .selectAll()
+    .where('id', '=', id)
+    .where('owner_id', '=', userId)
+    .limit(1)
+    .executeTakeFirst();
+  const existing = existingResult ? (existingResult as unknown as TagCategoryRow) : null;
   if (!existing) {
     return null;
   }
 
-  const result = await db.execute(sql`
-    update tags
-    set
-      name = ${input.name ?? existing.name},
-      color = ${input.color === undefined ? existing.color : input.color}
-    where id = ${id}
-      and owner_id = ${userId}
-    returning id, owner_id, name, color
-  `);
-  const row = resultRows<TagCategoryRow>(result)[0] ?? null;
+  const result = await db
+    .updateTable('tags')
+    .set({
+      name: input.name ?? existing.name,
+      color: input.color === undefined ? existing.color : input.color,
+    })
+    .where('id', '=', id)
+    .where('owner_id', '=', userId)
+    .returningAll()
+    .executeTakeFirst();
+  const row = result ? (result as unknown as TagCategoryRow) : null;
   return row ? toFinanceCategoryFromTag(row) : null;
 }
 
 export async function deleteBudgetCategory(id: string, userId: string): Promise<boolean> {
-  const result = await db.execute(sql`
-    delete from tags
-    where id = ${id}
-      and owner_id = ${userId}
-    returning id
-  `);
-  return Boolean(resultRows<{ id: string }>(result)[0]);
+  const result = await db
+    .deleteFrom('tags')
+    .where('id', '=', id)
+    .where('owner_id', '=', userId)
+    .executeTakeFirst();
+  return !!result;
 }
 
 export async function getBudgetCategoryById(
   id: string,
   userId: string,
 ): Promise<FinanceCategory | null> {
-  const result = await db.execute(sql`
-    select id, owner_id, name, color
-    from tags
-    where id = ${id}
-      and owner_id = ${userId}
-    limit 1
-  `);
-  const row = resultRows<TagCategoryRow>(result)[0] ?? null;
+  const result = await db
+    .selectFrom('tags')
+    .selectAll()
+    .where('id', '=', id)
+    .where('owner_id', '=', userId)
+    .limit(1)
+    .executeTakeFirst();
+  const row = result ? (result as unknown as TagCategoryRow) : null;
   return row ? toFinanceCategoryFromTag(row) : null;
 }
 
@@ -726,14 +702,14 @@ export async function checkBudgetCategoryNameExists(
   userId: string,
   name: string,
 ): Promise<boolean> {
-  const result = await db.execute(sql`
-    select id
-    from tags
-    where owner_id = ${userId}
-      and name = ${name}
-    limit 1
-  `);
-  return Boolean(resultRows<{ id: string }>(result)[0]);
+  const result = await db
+    .selectFrom('tags')
+    .select('id')
+    .where('owner_id', '=', userId)
+    .where('name', '=', name)
+    .limit(1)
+    .executeTakeFirst();
+  return !!result;
 }
 
 export async function getUserExpenseCategories(userId: string): Promise<FinanceCategory[]> {
@@ -741,54 +717,61 @@ export async function getUserExpenseCategories(userId: string): Promise<FinanceC
 }
 
 export async function getAllBudgetCategories(userId: string): Promise<FinanceCategory[]> {
-  const result = await db.execute(sql`
-    select id, owner_id, name, color
-    from tags
-    where owner_id = ${userId}
-    order by name asc, id asc
-  `);
-  return resultRows<TagCategoryRow>(result).map(toFinanceCategoryFromTag);
+  const result = await db
+    .selectFrom('tags')
+    .selectAll()
+    .where('owner_id', '=', userId)
+    .orderBy('name', 'asc')
+    .orderBy('id', 'asc')
+    .execute();
+  return (result as unknown as TagCategoryRow[]).map(toFinanceCategoryFromTag);
 }
 
 export async function getBudgetCategoriesWithSpending(
   userId: string,
 ): Promise<Array<FinanceCategory & { spent: number }>> {
-  const result = await db.execute(sql`
-    select
-      tg.id,
-      tg.owner_id,
-      tg.name,
-      tg.color,
-      coalesce(sum(abs(t.amount)), 0) as spent
-    from tags tg
-    left join tagged_items ti
-      on ti.tag_id = tg.id
-      and ti.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-    left join finance_transactions t
-      on t.id = ti.entity_id
-      and t.user_id = tg.owner_id
-      and t.transaction_type = 'expense'
-    where tg.owner_id = ${userId}
-    group by tg.id, tg.owner_id, tg.name, tg.color
-    order by tg.name asc, tg.id asc
-  `);
+  const result = await db
+    .selectFrom('tags as tg')
+    .leftJoin('tagged_items as ti', (join) =>
+      join
+        .onRef('ti.tag_id', '=', 'tg.id')
+        .on('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE),
+    )
+    .leftJoin('finance_transactions as t', (join) =>
+      join
+        .onRef('t.id', '=', 'ti.entity_id')
+        .onRef('t.user_id', '=', 'tg.owner_id')
+        .on('t.transaction_type', '=', 'expense'),
+    )
+    .select([
+      'tg.id',
+      'tg.owner_id',
+      'tg.name',
+      'tg.color',
+      sql<number>`coalesce(sum(abs(t.amount)), 0) as spent`.as('spent'),
+    ])
+    .where('tg.owner_id', '=', userId)
+    .groupBy(['tg.id', 'tg.owner_id', 'tg.name', 'tg.color'])
+    .orderBy('tg.name', 'asc')
+    .orderBy('tg.id', 'asc')
+    .execute();
 
-  return resultRows<TagCategoryRow & { spent: string | number }>(result).map((row) => ({
+  return (result as unknown as Array<TagCategoryRow & { spent: string | number }>).map((row) => ({
     ...toFinanceCategoryFromTag(row),
-    spent: toNumber(row.spent),
+    spent: toNumber((row as any).spent),
   }));
 }
 
 export async function getBudgetTrackingData(
   userId: string,
 ): Promise<{ totalBudget: number; totalSpent: number }> {
-  const spentResult = await db.execute(sql`
-    select coalesce(sum(abs(amount)), 0) as total_spent
-    from finance_transactions
-    where user_id = ${userId}
-      and transaction_type = 'expense'
-  `);
-  const spentRow = resultRows<{ total_spent: string | number }>(spentResult)[0] ?? null;
+  const spentResult = await db
+    .selectFrom('finance_transactions')
+    .select(sql<number>`coalesce(sum(abs(amount)), 0) as total_spent`.as('total_spent'))
+    .where('user_id', '=', userId)
+    .where('transaction_type', '=', 'expense')
+    .executeTakeFirst();
+  const spentRow = spentResult as unknown as { total_spent: string | number } | undefined;
   const totalSpent = spentRow ? toNumber(spentRow.total_spent) : 0;
 
   const hasBudgetGoals = await tableExists('budget_goals');
@@ -796,12 +779,12 @@ export async function getBudgetTrackingData(
     return { totalBudget: 0, totalSpent };
   }
 
-  const budgetResult = await db.execute(sql`
-    select coalesce(sum(target_amount), 0) as total_budget
-    from budget_goals
-    where user_id = ${userId}
-  `);
-  const budgetRow = resultRows<{ total_budget: string | number }>(budgetResult)[0] ?? null;
+  const budgetResult = await db
+    .selectFrom('budget_goals')
+    .select(sql<number>`coalesce(sum(target_amount), 0) as total_budget`.as('total_budget'))
+    .where('user_id', '=', userId)
+    .executeTakeFirst();
+  const budgetRow = budgetResult as unknown as { total_budget: string | number } | undefined;
   return {
     totalBudget: budgetRow ? toNumber(budgetRow.total_budget) : 0,
     totalSpent,
@@ -809,21 +792,25 @@ export async function getBudgetTrackingData(
 }
 
 export async function getAllInstitutions(): Promise<Institution[]> {
-  const result = await db.execute(sql`
-    select id, name
-    from financial_institutions
-    order by name asc, id asc
-  `);
-  return resultRows<Institution>(result);
+  const result = await db
+    .selectFrom('financial_institutions')
+    .selectAll()
+    .orderBy('name', 'asc')
+    .orderBy('id', 'asc')
+    .execute();
+  return result as unknown as Institution[];
 }
 
 export async function createInstitution(name: string): Promise<Institution> {
-  const result = await db.execute(sql`
-    insert into financial_institutions (id, name)
-    values (${crypto.randomUUID()}, ${name})
-    returning id, name
-  `);
-  const row = resultRows<Institution>(result)[0] ?? null;
+  const result = await db
+    .insertInto('financial_institutions')
+    .values({
+      id: crypto.randomUUID(),
+      name,
+    })
+    .returningAll()
+    .executeTakeFirst();
+  const row = result ? (result as unknown as Institution) : null;
   if (!row) {
     throw new Error('Failed to create institution');
   }
@@ -843,24 +830,25 @@ export function calculateRunway(input: z.infer<typeof runwayCalculationSchema>):
 export async function getTagBreakdown(
   _userId: string,
 ): Promise<Array<{ tag: string; total: number }>> {
-  const result = await db.execute(sql`
-    select
-      tg.name as tag,
-      coalesce(sum(abs(amount)), 0) as total
-    from finance_transactions t
-    join tagged_items ti
-      on ti.entity_id = t.id
-      and ti.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-    join tags tg
-      on tg.id = ti.tag_id
-      and tg.owner_id = ${_userId}
-    where t.user_id = ${_userId}
-      and t.transaction_type = 'expense'
-    group by tg.name
-    order by total desc, tag asc
-  `);
+  const result = await db
+    .selectFrom('finance_transactions as t')
+    .innerJoin('tagged_items as ti', (join) =>
+      join
+        .onRef('ti.entity_id', '=', 't.id')
+        .on('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE),
+    )
+    .innerJoin('tags as tg', (join) =>
+      join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', _userId),
+    )
+    .select(['tg.name as tag', sql<number>`coalesce(sum(abs(amount)), 0) as total`.as('total')])
+    .where('t.user_id', '=', _userId)
+    .where('t.transaction_type', '=', 'expense')
+    .groupBy('tg.name')
+    .orderBy(sql`total`, 'desc')
+    .orderBy('tag', 'asc')
+    .execute();
 
-  return resultRows<{ tag: string; total: string | number }>(result).map((row) => ({
+  return (result as unknown as Array<{ tag: string; total: string | number }>).map((row) => ({
     tag: row.tag,
     total: toNumber(row.total),
   }));
@@ -869,24 +857,28 @@ export async function getTagBreakdown(
 export async function getTopMerchants(
   _userId: string,
 ): Promise<Array<{ merchant: string; total: number }>> {
-  const result = await db.execute(sql`
-    select
-      merchant_name as merchant,
-      coalesce(sum(abs(amount)), 0) as total
-    from finance_transactions
-    where user_id = ${_userId}
-      and transaction_type = 'expense'
-      and merchant_name is not null
-      and merchant_name <> ''
-    group by merchant_name
-    order by total desc, merchant_name asc
-    limit 10
-  `);
+  const result = await db
+    .selectFrom('finance_transactions')
+    .select([
+      'merchant_name as merchant',
+      sql<number>`coalesce(sum(abs(amount)), 0) as total`.as('total'),
+    ])
+    .where('user_id', '=', _userId)
+    .where('transaction_type', '=', 'expense')
+    .where('merchant_name', 'is not', null)
+    .where(sql<boolean>`merchant_name <> ''`)
+    .groupBy('merchant_name')
+    .orderBy(sql`total`, 'desc')
+    .orderBy('merchant_name', 'asc')
+    .limit(10)
+    .execute();
 
-  return resultRows<{ merchant: string; total: string | number }>(result).map((row) => ({
-    merchant: row.merchant,
-    total: toNumber(row.total),
-  }));
+  return (result as unknown as Array<{ merchant: string; total: string | number }>).map(
+    (row) => ({
+      merchant: row.merchant,
+      total: toNumber(row.total),
+    }),
+  );
 }
 
 export async function queryAnalyticsTransactionsByContract(
@@ -905,92 +897,58 @@ export async function queryAnalyticsTransactionsByContract(
 
   const tagIds = parsed.tagIds ?? [];
   const tagNames = parsed.tagNames ?? [];
-  const baseFilters = [sql`t.user_id = ${parsed.userId}`];
+  let query = db
+    .selectFrom('finance_transactions as t')
+    .select([
+      't.id',
+      't.user_id',
+      't.account_id',
+      't.amount',
+      't.description',
+      't.date',
+      't.external_id',
+      't.category',
+      't.merchant_name',
+      sql<string>`coalesce((select min(tg_tag.name) from tagged_items ti_tag join tags tg_tag on tg_tag.id = ti_tag.tag_id and tg_tag.owner_id = ${parsed.userId} where ti_tag.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_tag.entity_id = t.id), t.category, ${sql.lit('Uncategorized')}) as classification`.as(
+        'classification',
+      ),
+    ])
+    .where('t.user_id', '=', parsed.userId);
+
   if (parsed.accountId) {
-    baseFilters.push(sql`t.account_id = ${parsed.accountId}`);
+    query = query.where('t.account_id', '=', parsed.accountId);
   }
   if (parsed.dateFrom) {
-    baseFilters.push(sql`t.date >= ${parsed.dateFrom}`);
+    query = query.where('t.date', '>=', new Date(parsed.dateFrom));
   }
   if (parsed.dateTo) {
-    baseFilters.push(sql`t.date <= ${parsed.dateTo}`);
+    query = query.where('t.date', '<=', new Date(parsed.dateTo));
   }
 
   if (tagIds.length > 0 && tagNames.length > 0) {
-    baseFilters.push(sql`
-      exists (
-        select 1
-        from tagged_items ti_filter
-        join tags tg_filter
-          on tg_filter.id = ti_filter.tag_id
-          and tg_filter.owner_id = ${parsed.userId}
-        where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-          and ti_filter.entity_id = t.id
-          and (ti_filter.tag_id in (${sqlValueList(tagIds)}) or tg_filter.name in (${sqlValueList(tagNames)}))
-      )
-    `);
+    query = query.where(
+      sql<boolean>`exists (select 1 from tagged_items ti_filter join tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_id = ${parsed.userId} where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_filter.entity_id = t.id and (ti_filter.tag_id in (${sqlValueList(tagIds)}) or tg_filter.name in (${sqlValueList(tagNames)})))`,
+    );
   } else if (tagIds.length > 0) {
-    baseFilters.push(sql`
-      exists (
-        select 1
-        from tagged_items ti_filter
-        join tags tg_filter
-          on tg_filter.id = ti_filter.tag_id
-          and tg_filter.owner_id = ${parsed.userId}
-        where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-          and ti_filter.entity_id = t.id
-          and ti_filter.tag_id in (${sqlValueList(tagIds)})
-      )
-    `);
+    query = query.where(
+      sql<boolean>`exists (select 1 from tagged_items ti_filter join tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_id = ${parsed.userId} where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_filter.entity_id = t.id and ti_filter.tag_id in (${sqlValueList(tagIds)}))`,
+    );
   } else if (tagNames.length > 0) {
-    baseFilters.push(sql`
-      exists (
-        select 1
-        from tagged_items ti_filter
-        join tags tg_filter
-          on tg_filter.id = ti_filter.tag_id
-          and tg_filter.owner_id = ${parsed.userId}
-        where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-          and ti_filter.entity_id = t.id
-          and tg_filter.name in (${sqlValueList(tagNames)})
-      )
-    `);
+    query = query.where(
+      sql<boolean>`exists (select 1 from tagged_items ti_filter join tags tg_filter on tg_filter.id = ti_filter.tag_id and tg_filter.owner_id = ${parsed.userId} where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_filter.entity_id = t.id and tg_filter.name in (${sqlValueList(tagNames)}))`,
+    );
   }
 
-  const result = await db.execute(sql`
-    select
-      t.id,
-      t.user_id,
-      t.account_id,
-      t.amount,
-      t.description,
-      t.date,
-      t.external_id,
-      t.category,
-      t.merchant_name,
-      coalesce(
-        (
-          select min(tg_tag.name)
-          from tagged_items ti_tag
-          join tags tg_tag
-            on tg_tag.id = ti_tag.tag_id
-            and tg_tag.owner_id = ${parsed.userId}
-          where ti_tag.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-            and ti_tag.entity_id = t.id
-        ),
-        t.category,
-        ${'Uncategorized'}
-      ) as classification
-    from finance_transactions t
-    where ${sql.join(baseFilters, sql` and `)}
-    order by t.date desc, t.id desc
-    limit ${parsed.limit}
-    offset ${parsed.offset}
-  `);
+  const result = await query
+    .orderBy('t.date', 'desc')
+    .orderBy('t.id', 'desc')
+    .limit(parsed.limit)
+    .offset(parsed.offset)
+    .execute();
 
-  return resultRows<FinanceAnalyticsTransactionRow>(result).map((row) => ({
+  return (result as unknown as FinanceAnalyticsTransactionRow[]).map((row) => ({
     ...toFinanceTransaction(row),
-    classification: row.classification,
+    classification: (row as any).classification,
   }));
 }
 
@@ -1042,7 +1000,7 @@ export async function getTopMerchantsByContract(
     merchantTotals.set(merchantName, current);
   }
 
-  const normalizedLimit = Math.max(1, Math.floor(input.limit ?? 10));
+  const normalizedLimit = Math.max(1, Math.floor(input.limit ?? 5));
   return [...merchantTotals.entries()]
     .map(([name, value]) => ({
       name,
@@ -1281,115 +1239,91 @@ export async function queryTransactionsByContract(
     (parsed.tagIds !== undefined && parsed.tagIds.length > 0) ||
     (parsed.tagNames !== undefined && parsed.tagNames.length > 0);
 
-  const baseFilters = [sql`t.user_id = ${parsed.userId}`];
-  if (parsed.accountId) {
-    baseFilters.push(sql`t.account_id = ${parsed.accountId}`);
-  }
-  if (parsed.dateFrom) {
-    baseFilters.push(sql`t.date >= ${parsed.dateFrom}`);
-  }
-  if (parsed.dateTo) {
-    baseFilters.push(sql`t.date <= ${parsed.dateTo}`);
-  }
-
   if (!hasTagFilters) {
-    const result = await db.execute(sql`
-      select t.id, t.user_id, t.account_id, t.amount, t.description, t.date, t.external_id, t.category, t.merchant_name
-      from finance_transactions t
-      where ${sql.join(baseFilters, sql` and `)}
-      order by t.date desc, t.id desc
-      limit ${parsed.limit}
-      offset ${parsed.offset}
-    `);
-    return resultRows<FinanceTransactionRow>(result).map(toFinanceTransaction);
+    let query = db
+      .selectFrom('finance_transactions as t')
+      .selectAll()
+      .where('t.user_id', '=', parsed.userId);
+    if (parsed.accountId) {
+      query = query.where('t.account_id', '=', parsed.accountId);
+    }
+    if (parsed.dateFrom) {
+      query = query.where('t.date', '>=', new Date(parsed.dateFrom));
+    }
+    if (parsed.dateTo) {
+      query = query.where('t.date', '<=', new Date(parsed.dateTo));
+    }
+    const result = await query
+      .orderBy('t.date', 'desc')
+      .orderBy('t.id', 'desc')
+      .limit(parsed.limit)
+      .offset(parsed.offset)
+      .execute();
+    return (result as unknown as FinanceTransactionRow[]).map(toFinanceTransaction);
   }
 
   const tagIds = parsed.tagIds ?? [];
   const tagNames = parsed.tagNames ?? [];
+  let query = db
+    .selectFrom('finance_transactions as t')
+    .distinctOn(['t.date', 't.id'])
+    .selectAll();
+
   if (tagIds.length > 0 && tagNames.length > 0) {
-    const filters = [
-      ...baseFilters,
-      sql`(ti.tag_id in (${sqlValueList(tagIds)}) or tg.name in (${sqlValueList(tagNames)}))`,
-    ];
-    const result = await db.execute(sql`
-      select distinct on (t.date, t.id)
-        t.id,
-        t.user_id,
-        t.account_id,
-        t.amount,
-        t.description,
-        t.date,
-        t.external_id,
-        t.category,
-        t.merchant_name
-      from finance_transactions t
-      join tagged_items ti
-        on ti.entity_id = t.id
-        and ti.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-      join tags tg
-        on tg.id = ti.tag_id
-        and tg.owner_id = ${parsed.userId}
-      where ${sql.join(filters, sql` and `)}
-      order by t.date desc, t.id desc
-      limit ${parsed.limit}
-      offset ${parsed.offset}
-    `);
-    return resultRows<FinanceTransactionRow>(result).map(toFinanceTransaction);
+    query = query
+      .innerJoin('tagged_items as ti', (join) =>
+        join
+          .onRef('ti.entity_id', '=', 't.id')
+          .on('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE),
+      )
+      .innerJoin('tags as tg', (join) =>
+        join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', parsed.userId),
+      )
+      .where('t.user_id', '=', parsed.userId)
+      .where(sql<boolean>`ti.tag_id in (${sqlValueList(tagIds)}) or tg.name in (${sqlValueList(tagNames)})`);
+  } else if (tagIds.length > 0) {
+    query = query
+      .innerJoin('tagged_items as ti', (join) =>
+        join
+          .onRef('ti.entity_id', '=', 't.id')
+          .on('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE),
+      )
+      .innerJoin('tags as tg', (join) =>
+        join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', parsed.userId),
+      )
+      .where('t.user_id', '=', parsed.userId)
+      .where(sql<boolean>`ti.tag_id in (${sqlValueList(tagIds)})`);
+  } else {
+    query = query
+      .innerJoin('tagged_items as ti', (join) =>
+        join
+          .onRef('ti.entity_id', '=', 't.id')
+          .on('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE),
+      )
+      .innerJoin('tags as tg', (join) =>
+        join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', parsed.userId),
+      )
+      .where('t.user_id', '=', parsed.userId)
+      .where(sql<boolean>`tg.name in (${sqlValueList(tagNames)})`);
   }
 
-  if (tagIds.length > 0) {
-    const filters = [...baseFilters, sql`ti.tag_id in (${sqlValueList(tagIds)})`];
-    const result = await db.execute(sql`
-      select distinct on (t.date, t.id)
-        t.id,
-        t.user_id,
-        t.account_id,
-        t.amount,
-        t.description,
-        t.date,
-        t.external_id,
-        t.category,
-        t.merchant_name
-      from finance_transactions t
-      join tagged_items ti
-        on ti.entity_id = t.id
-        and ti.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-      join tags tg
-        on tg.id = ti.tag_id
-        and tg.owner_id = ${parsed.userId}
-      where ${sql.join(filters, sql` and `)}
-      order by t.date desc, t.id desc
-      limit ${parsed.limit}
-      offset ${parsed.offset}
-    `);
-    return resultRows<FinanceTransactionRow>(result).map(toFinanceTransaction);
+  if (parsed.accountId) {
+    query = query.where('t.account_id', '=', parsed.accountId);
+  }
+  if (parsed.dateFrom) {
+    query = query.where('t.date', '>=', new Date(parsed.dateFrom));
+  }
+  if (parsed.dateTo) {
+    query = query.where('t.date', '<=', new Date(parsed.dateTo));
   }
 
-  const filters = [...baseFilters, sql`tg.name in (${sqlValueList(tagNames)})`];
-  const result = await db.execute(sql`
-    select distinct on (t.date, t.id)
-      t.id,
-      t.user_id,
-      t.account_id,
-      t.amount,
-      t.description,
-      t.date,
-      t.external_id,
-      t.category,
-      t.merchant_name
-    from finance_transactions t
-    join tagged_items ti
-      on ti.entity_id = t.id
-      and ti.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-    join tags tg
-      on tg.id = ti.tag_id
-      and tg.owner_id = ${parsed.userId}
-    where ${sql.join(filters, sql` and `)}
-    order by t.date desc, t.id desc
-    limit ${parsed.limit}
-    offset ${parsed.offset}
-  `);
-  return resultRows<FinanceTransactionRow>(result).map(toFinanceTransaction);
+  const result = await query
+    .orderBy('t.date', 'desc')
+    .orderBy('t.id', 'desc')
+    .limit(parsed.limit)
+    .offset(parsed.offset)
+    .execute();
+  return (result as unknown as FinanceTransactionRow[]).map(toFinanceTransaction);
 }
 
 export async function replaceTransactionTags(
@@ -1397,42 +1331,49 @@ export async function replaceTransactionTags(
   userId: string,
   tagIds: string[],
 ): Promise<string[]> {
-  const ownershipResult = await db.execute(sql`
-    select id
-    from finance_transactions
-    where id = ${transactionId}
-      and user_id = ${userId}
-    limit 1
-  `);
-  if (!resultRows<{ id: string }>(ownershipResult)[0]) {
+  const ownershipResult = await db
+    .selectFrom('finance_transactions')
+    .select('id')
+    .where('id', '=', transactionId)
+    .where('user_id', '=', userId)
+    .limit(1)
+    .executeTakeFirst();
+  if (!ownershipResult) {
     return [];
   }
 
   const uniqueTagIds = [...new Set(tagIds)];
   if (uniqueTagIds.length > 0) {
-    const validTagResult = await db.execute(sql`
-      select id
-      from tags
-      where owner_id = ${userId}
-        and id in (${sqlValueList(uniqueTagIds)})
-    `);
-    const validIds = new Set(resultRows<{ id: string }>(validTagResult).map((row) => row.id));
+    const validTagResult = await db
+      .selectFrom('tags')
+      .select('id')
+      .where('owner_id', '=', userId)
+      .where(sql<boolean>`id in (${sqlValueList(uniqueTagIds)})`)
+      .execute();
+    const validIds = new Set(
+      (validTagResult as Array<{ id: string }>).map((row) => row.id),
+    );
     if (validIds.size !== uniqueTagIds.length) {
       throw new Error('One or more tags are invalid for this user');
     }
   }
 
-  await db.execute(sql`
-    delete from tagged_items
-    where entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-      and entity_id = ${transactionId}
-  `);
+  await db
+    .deleteFrom('tagged_items')
+    .where('entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE)
+    .where('entity_id', '=', transactionId)
+    .execute();
 
   for (const tagId of uniqueTagIds) {
-    await db.execute(sql`
-      insert into tagged_items (id, tag_id, entity_type, entity_id)
-      values (${crypto.randomUUID()}, ${tagId}, ${FINANCE_TRANSACTION_ENTITY_TYPE}, ${transactionId})
-    `);
+    await db
+      .insertInto('tagged_items')
+      .values({
+        id: crypto.randomUUID(),
+        tag_id: tagId,
+        entity_type: FINANCE_TRANSACTION_ENTITY_TYPE,
+        entity_id: transactionId,
+      })
+      .execute();
   }
 
   return uniqueTagIds;
@@ -1442,17 +1383,17 @@ export async function getTransactionTagIds(
   transactionId: string,
   userId: string,
 ): Promise<string[]> {
-  const result = await db.execute(sql`
-    select ti.tag_id
-    from tagged_items ti
-    join tags tg
-      on tg.id = ti.tag_id
-      and tg.owner_id = ${userId}
-    where ti.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
-      and ti.entity_id = ${transactionId}
-    order by ti.tag_id asc
-  `);
-  return resultRows<{ tag_id: string }>(result).map((row) => row.tag_id);
+  const result = await db
+    .selectFrom('tagged_items as ti')
+    .innerJoin('tags as tg', (join) =>
+      join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', userId),
+    )
+    .select('ti.tag_id')
+    .where('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE)
+    .where('ti.entity_id', '=', transactionId)
+    .orderBy('ti.tag_id', 'asc')
+    .execute();
+  return (result as Array<{ tag_id: string }>).map((row) => row.tag_id);
 }
 
 export async function createTransaction(
@@ -1461,37 +1402,26 @@ export async function createTransaction(
   const id = input.id ?? crypto.randomUUID();
   const transactionType = input.amount < 0 ? 'expense' : 'income';
 
-  const result = await db.execute(sql`
-    insert into finance_transactions (
+  const result = await db
+    .insertInto('finance_transactions')
+    .values({
       id,
-      user_id,
-      account_id,
-      amount,
-      transaction_type,
-      description,
-      category,
-      merchant_name,
-      date
-    )
-    values (
-      ${id},
-      ${input.userId},
-      ${input.accountId},
-      ${input.amount},
-      ${transactionType},
-      ${input.description},
-      ${input.category ?? null},
-      ${input.merchantName ?? null},
-      ${input.date}
-    )
-    returning id, user_id, account_id, amount, description, date, external_id, category, merchant_name
-  `);
+      user_id: input.userId,
+      account_id: input.accountId,
+      amount: input.amount,
+      transaction_type: transactionType,
+      description: input.description,
+      category: input.category ?? null,
+      merchant_name: input.merchantName ?? null,
+      date: input.date,
+    })
+    .returningAll()
+    .executeTakeFirst();
 
-  const row = resultRows<FinanceTransactionRow>(result)[0] ?? null;
-  if (!row) {
+  if (!result) {
     throw new Error('Failed to create transaction');
   }
-  return toFinanceTransaction(row);
+  return toFinanceTransaction(result as unknown as FinanceTransactionRow);
 }
 
 export async function updateTransaction(
@@ -1499,14 +1429,14 @@ export async function updateTransaction(
   userId: string,
   input: Partial<FinanceTransaction>,
 ): Promise<FinanceTransaction | null> {
-  const existingResult = await db.execute(sql`
-    select id, user_id, account_id, amount, description, date, external_id, category, merchant_name
-    from finance_transactions
-    where id = ${id}
-      and user_id = ${userId}
-    limit 1
-  `);
-  const existing = resultRows<FinanceTransactionRow>(existingResult)[0] ?? null;
+  const existingResult = await db
+    .selectFrom('finance_transactions')
+    .selectAll()
+    .where('id', '=', id)
+    .where('user_id', '=', userId)
+    .limit(1)
+    .executeTakeFirst();
+  const existing = existingResult ? (existingResult as unknown as FinanceTransactionRow) : null;
   if (!existing) {
     return null;
   }
@@ -1521,55 +1451,54 @@ export async function updateTransaction(
     input.merchantName === undefined ? existing.merchant_name : input.merchantName;
   const nextType = nextAmount < 0 ? 'expense' : 'income';
 
-  const updateResult = await db.execute(sql`
-    update finance_transactions
-    set
-      amount = ${nextAmount},
-      description = ${nextDescription},
-      date = ${nextDate},
-      account_id = ${nextAccountId},
-      category = ${nextCategory},
-      merchant_name = ${nextMerchantName},
-      transaction_type = ${nextType}
-    where id = ${id}
-      and user_id = ${userId}
-    returning id, user_id, account_id, amount, description, date, external_id, category, merchant_name
-  `);
-  const updated = resultRows<FinanceTransactionRow>(updateResult)[0] ?? null;
+  const updateResult = await db
+    .updateTable('finance_transactions')
+    .set({
+      amount: nextAmount,
+      description: nextDescription,
+      date: nextDate,
+      account_id: nextAccountId,
+      category: nextCategory,
+      merchant_name: nextMerchantName,
+      transaction_type: nextType,
+    })
+    .where('id', '=', id)
+    .where('user_id', '=', userId)
+    .returningAll()
+    .executeTakeFirst();
+  const updated = updateResult ? (updateResult as unknown as FinanceTransactionRow) : null;
   return updated ? toFinanceTransaction(updated) : null;
 }
 
 export async function deleteTransaction(id: string, userId?: string): Promise<boolean> {
   if (userId) {
-    const result = await db.execute(sql`
-      delete from finance_transactions
-      where id = ${id}
-        and user_id = ${userId}
-      returning id
-    `);
-    return Boolean(resultRows<{ id: string }>(result)[0]);
+    const result = await db
+      .deleteFrom('finance_transactions')
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
+    return !!result;
   }
 
-  const result = await db.execute(sql`
-    delete from finance_transactions
-    where id = ${id}
-    returning id
-  `);
-  return Boolean(resultRows<{ id: string }>(result)[0]);
+  const result = await db
+    .deleteFrom('finance_transactions')
+    .where('id', '=', id)
+    .executeTakeFirst();
+  return !!result;
 }
 
 export async function getPlaidItemByUserAndItemId(
   _userId: string,
   _itemId: string,
 ): Promise<PlaidItem | null> {
-  const result = await db.execute(sql`
-    select id, user_id, item_id, institution_id, cursor, access_token, status, last_synced_at
-    from plaid_items
-    where user_id = ${_userId}
-      and item_id = ${_itemId}
-    limit 1
-  `);
-  const row = resultRows<PlaidItemRow>(result)[0] ?? null;
+  const result = await db
+    .selectFrom('plaid_items')
+    .selectAll()
+    .where('user_id', '=', _userId)
+    .where('item_id', '=', _itemId)
+    .limit(1)
+    .executeTakeFirst();
+  const row = result ? (result as unknown as PlaidItemRow) : null;
   if (!row) {
     return null;
   }
@@ -1587,14 +1516,14 @@ export async function getPlaidItemByUserAndItemId(
 
 export async function getPlaidItemById(_id: string, _userId?: string): Promise<PlaidItem | null> {
   if (_userId) {
-    const result = await db.execute(sql`
-      select id, user_id, item_id, institution_id, cursor, access_token, status, last_synced_at
-      from plaid_items
-      where id = ${_id}
-        and user_id = ${_userId}
-      limit 1
-    `);
-    const row = resultRows<PlaidItemRow>(result)[0] ?? null;
+    const result = await db
+      .selectFrom('plaid_items')
+      .selectAll()
+      .where('id', '=', _id)
+      .where('user_id', '=', _userId)
+      .limit(1)
+      .executeTakeFirst();
+    const row = result ? (result as unknown as PlaidItemRow) : null;
     if (!row) {
       return null;
     }
@@ -1610,13 +1539,13 @@ export async function getPlaidItemById(_id: string, _userId?: string): Promise<P
     };
   }
 
-  const result = await db.execute(sql`
-    select id, user_id, item_id, institution_id, cursor, access_token, status, last_synced_at
-    from plaid_items
-    where id = ${_id}
-    limit 1
-  `);
-  const row = resultRows<PlaidItemRow>(result)[0] ?? null;
+  const result = await db
+    .selectFrom('plaid_items')
+    .selectAll()
+    .where('id', '=', _id)
+    .limit(1)
+    .executeTakeFirst();
+  const row = result ? (result as unknown as PlaidItemRow) : null;
   if (!row) {
     return null;
   }
@@ -1633,14 +1562,15 @@ export async function getPlaidItemById(_id: string, _userId?: string): Promise<P
 }
 
 export async function getPlaidItemByItemId(_itemId: string): Promise<PlaidItem | null> {
-  const result = await db.execute(sql`
-    select id, user_id, item_id, institution_id, cursor, access_token, status, last_synced_at
-    from plaid_items
-    where item_id = ${_itemId}
-    order by created_at desc, id asc
-    limit 1
-  `);
-  const row = resultRows<PlaidItemRow>(result)[0] ?? null;
+  const result = await db
+    .selectFrom('plaid_items')
+    .selectAll()
+    .where('item_id', '=', _itemId)
+    .orderBy('created_at', 'desc')
+    .orderBy('id', 'asc')
+    .limit(1)
+    .executeTakeFirst();
+  const row = result ? (result as unknown as PlaidItemRow) : null;
   if (!row) {
     return null;
   }
@@ -1657,13 +1587,13 @@ export async function getPlaidItemByItemId(_itemId: string): Promise<PlaidItem |
 }
 
 export async function ensureInstitutionExists(name: string): Promise<Institution> {
-  const existing = await db.execute(sql`
-    select id, name
-    from financial_institutions
-    where name = ${name}
-    limit 1
-  `);
-  const existingRow = resultRows<Institution>(existing)[0] ?? null;
+  const existing = await db
+    .selectFrom('financial_institutions')
+    .selectAll()
+    .where('name', '=', name)
+    .limit(1)
+    .executeTakeFirst();
+  const existingRow = existing ? (existing as unknown as Institution) : null;
   if (existingRow) {
     return existingRow;
   }
@@ -1673,49 +1603,30 @@ export async function ensureInstitutionExists(name: string): Promise<Institution
 export async function upsertPlaidItem(
   input: PlaidItem & { accessToken?: string | null },
 ): Promise<PlaidItem> {
-  const existingResult = await db.execute(sql`
-    select id, user_id, item_id, institution_id, cursor, access_token, status, last_synced_at
-    from plaid_items
-    where item_id = ${input.itemId}
-      and user_id = ${input.userId}
-    limit 1
-  `);
-  const existing =
-    resultRows<{
-      id: string;
-      user_id: string;
-      item_id: string;
-      institution_id: string | null;
-      cursor: string | null;
-      access_token: string | null;
-      status: string | null;
-      last_synced_at: string | null;
-    }>(existingResult)[0] ?? null;
+  const existingResult = await db
+    .selectFrom('plaid_items')
+    .selectAll()
+    .where('item_id', '=', input.itemId)
+    .where('user_id', '=', input.userId)
+    .limit(1)
+    .executeTakeFirst();
+  const existing = existingResult ? (existingResult as unknown as PlaidItemRow) : null;
 
   if (existing) {
-    const updatedResult = await db.execute(sql`
-      update plaid_items
-      set
-        institution_id = ${input.institutionId ?? null},
-        cursor = ${input.transactionsCursor ?? null},
-        access_token = ${input.accessToken ?? null},
-        status = ${input.status ?? 'healthy'},
-        last_synced_at = ${input.lastSyncedAt ?? null},
-        updated_at = now()
-      where id = ${existing.id}
-      returning id, user_id, item_id, institution_id, cursor, access_token, status, last_synced_at
-    `);
-    const updated =
-      resultRows<{
-        id: string;
-        user_id: string;
-        item_id: string;
-        institution_id: string | null;
-        cursor: string | null;
-        access_token: string | null;
-        status: string | null;
-        last_synced_at: string | null;
-      }>(updatedResult)[0] ?? null;
+    const updatedResult = await db
+      .updateTable('plaid_items')
+      .set({
+        institution_id: input.institutionId ?? null,
+        cursor: input.transactionsCursor ?? null,
+        access_token: input.accessToken ?? null,
+        status: input.status ?? 'healthy',
+        last_synced_at: input.lastSyncedAt ?? null,
+        updated_at: new Date(),
+      })
+      .where('id', '=', existing.id)
+      .returningAll()
+      .executeTakeFirst();
+    const updated = updatedResult ? (updatedResult as unknown as PlaidItemRow) : null;
     if (!updated) {
       throw new Error('Failed to update plaid item');
     }
@@ -1731,40 +1642,21 @@ export async function upsertPlaidItem(
     };
   }
 
-  const createdResult = await db.execute(sql`
-    insert into plaid_items (
-      id,
-      user_id,
-      item_id,
-      institution_id,
-      cursor,
-      access_token,
-      status,
-      last_synced_at
-    )
-    values (
-      ${input.id ?? crypto.randomUUID()},
-      ${input.userId},
-      ${input.itemId},
-      ${input.institutionId ?? null},
-      ${input.transactionsCursor ?? null},
-      ${input.accessToken ?? null},
-      ${input.status ?? 'healthy'},
-      ${input.lastSyncedAt ?? null}
-    )
-    returning id, user_id, item_id, institution_id, cursor, access_token, status, last_synced_at
-  `);
-  const created =
-    resultRows<{
-      id: string;
-      user_id: string;
-      item_id: string;
-      institution_id: string | null;
-      cursor: string | null;
-      access_token: string | null;
-      status: string | null;
-      last_synced_at: string | null;
-    }>(createdResult)[0] ?? null;
+  const createdResult = await db
+    .insertInto('plaid_items')
+    .values({
+      id: input.id ?? crypto.randomUUID(),
+      user_id: input.userId,
+      item_id: input.itemId,
+      institution_id: input.institutionId ?? null,
+      cursor: input.transactionsCursor ?? null,
+      access_token: input.accessToken ?? null,
+      status: input.status ?? 'healthy',
+      last_synced_at: input.lastSyncedAt ?? null,
+    })
+    .returningAll()
+    .executeTakeFirst();
+  const created = createdResult ? (createdResult as unknown as PlaidItemRow) : null;
   if (!created) {
     throw new Error('Failed to create plaid item');
   }
@@ -1785,14 +1677,16 @@ export async function updatePlaidItemStatusByItemId(
   itemId: string,
   status: string,
 ): Promise<boolean> {
-  const result = await db.execute(sql`
-    update plaid_items
-    set status = ${status}, updated_at = now()
-    where user_id = ${userId}
-      and item_id = ${itemId}
-    returning id
-  `);
-  return Boolean(resultRows<{ id: string }>(result)[0]);
+  const result = await db
+    .updateTable('plaid_items')
+    .set({
+      status,
+      updated_at: new Date(),
+    })
+    .where('user_id', '=', userId)
+    .where('item_id', '=', itemId)
+    .executeTakeFirst();
+  return !!result;
 }
 
 export async function updatePlaidItemStatusById(
@@ -1800,24 +1694,28 @@ export async function updatePlaidItemStatusById(
   userId: string,
   status: string,
 ): Promise<boolean> {
-  const result = await db.execute(sql`
-    update plaid_items
-    set status = ${status}, updated_at = now()
-    where id = ${id}
-      and user_id = ${userId}
-    returning id
-  `);
-  return Boolean(resultRows<{ id: string }>(result)[0]);
+  const result = await db
+    .updateTable('plaid_items')
+    .set({
+      status,
+      updated_at: new Date(),
+    })
+    .where('id', '=', id)
+    .where('user_id', '=', userId)
+    .executeTakeFirst();
+  return !!result;
 }
 
 export async function updatePlaidItemCursor(id: string, cursor: string | null): Promise<boolean> {
-  const result = await db.execute(sql`
-    update plaid_items
-    set cursor = ${cursor}, updated_at = now()
-    where id = ${id}
-    returning id
-  `);
-  return Boolean(resultRows<{ id: string }>(result)[0]);
+  const result = await db
+    .updateTable('plaid_items')
+    .set({
+      cursor,
+      updated_at: new Date(),
+    })
+    .where('id', '=', id)
+    .executeTakeFirst();
+  return !!result;
 }
 
 export async function updatePlaidItemSyncStatus(
@@ -1825,46 +1723,46 @@ export async function updatePlaidItemSyncStatus(
   status: string,
   error?: string | null,
 ): Promise<boolean> {
-  const result = await db.execute(sql`
-    update plaid_items
-    set
-      status = ${status},
-      error = ${error ?? null},
-      last_synced_at = now(),
-      updated_at = now()
-    where id = ${id}
-    returning id
-  `);
-  return Boolean(resultRows<{ id: string }>(result)[0]);
+  const result = await db
+    .updateTable('plaid_items')
+    .set({
+      status,
+      error: error ?? null,
+      last_synced_at: new Date(),
+      updated_at: new Date(),
+    })
+    .where('id', '=', id)
+    .executeTakeFirst();
+  return !!result;
 }
 
 export async function updatePlaidItemError(id: string, error: string | null): Promise<boolean> {
-  const result = await db.execute(sql`
-    update plaid_items
-    set error = ${error}, updated_at = now()
-    where id = ${id}
-    returning id
-  `);
-  return Boolean(resultRows<{ id: string }>(result)[0]);
+  const result = await db
+    .updateTable('plaid_items')
+    .set({
+      error,
+      updated_at: new Date(),
+    })
+    .where('id', '=', id)
+    .executeTakeFirst();
+  return !!result;
 }
 
 export async function deletePlaidItem(id: string, userId?: string): Promise<boolean> {
   if (userId) {
-    const result = await db.execute(sql`
-      delete from plaid_items
-      where id = ${id}
-        and user_id = ${userId}
-      returning id
-    `);
-    return Boolean(resultRows<{ id: string }>(result)[0]);
+    const result = await db
+      .deleteFrom('plaid_items')
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
+    return !!result;
   }
 
-  const result = await db.execute(sql`
-    delete from plaid_items
-    where id = ${id}
-    returning id
-  `);
-  return Boolean(resultRows<{ id: string }>(result)[0]);
+  const result = await db
+    .deleteFrom('plaid_items')
+    .where('id', '=', id)
+    .executeTakeFirst();
+  return !!result;
 }
 
 export async function upsertAccount(
@@ -1875,14 +1773,14 @@ export async function upsertAccount(
   }
 
   if (input.plaidAccountId) {
-    const existingResult = await db.execute(sql`
-      select id, user_id, name, account_type, balance, data
-      from finance_accounts
-      where user_id = ${input.userId}
-        and data ->> 'plaidAccountId' = ${input.plaidAccountId}
-      limit 1
-    `);
-    const existing = resultRows<FinanceAccountRow>(existingResult)[0] ?? null;
+    const existingResult = await db
+      .selectFrom('finance_accounts')
+      .selectAll()
+      .where('user_id', '=', input.userId)
+      .where(sql<boolean>`data ->> 'plaidAccountId' = ${input.plaidAccountId}`)
+      .limit(1)
+      .executeTakeFirst();
+    const existing = existingResult ? (existingResult as unknown as FinanceAccountRow) : null;
     if (existing) {
       const updated = await updateAccount({
         id: existing.id,
@@ -1914,14 +1812,15 @@ export async function getUserAccounts(userId: string, itemId?: string): Promise<
     return listAccounts(userId);
   }
 
-  const result = await db.execute(sql`
-    select id, user_id, name, account_type, balance, data
-    from finance_accounts
-    where user_id = ${userId}
-      and data ->> 'plaidItemId' = ${itemId}
-    order by name asc, id asc
-  `);
-  return resultRows<FinanceAccountRow>(result).map(toFinanceAccount);
+  const result = await db
+    .selectFrom('finance_accounts')
+    .selectAll()
+    .where('user_id', '=', userId)
+    .where(sql<boolean>`data ->> 'plaidItemId' = ${itemId}`)
+    .orderBy('name', 'asc')
+    .orderBy('id', 'asc')
+    .execute();
+  return (result as unknown as FinanceAccountRow[]).map(toFinanceAccount);
 }
 
 export async function getAccountByPlaidId(
@@ -1929,25 +1828,26 @@ export async function getAccountByPlaidId(
   userId?: string,
 ): Promise<FinanceAccount | null> {
   if (userId) {
-    const result = await db.execute(sql`
-      select id, user_id, name, account_type, balance, data
-      from finance_accounts
-      where user_id = ${userId}
-        and data ->> 'plaidAccountId' = ${plaidAccountId}
-      limit 1
-    `);
-    const row = resultRows<FinanceAccountRow>(result)[0] ?? null;
+    const result = await db
+      .selectFrom('finance_accounts')
+      .selectAll()
+      .where('user_id', '=', userId)
+      .where(sql<boolean>`data ->> 'plaidAccountId' = ${plaidAccountId}`)
+      .limit(1)
+      .executeTakeFirst();
+    const row = result ? (result as unknown as FinanceAccountRow) : null;
     return row ? toFinanceAccount(row) : null;
   }
 
-  const result = await db.execute(sql`
-    select id, user_id, name, account_type, balance, data
-    from finance_accounts
-    where data ->> 'plaidAccountId' = ${plaidAccountId}
-    order by created_at desc, id asc
-    limit 1
-  `);
-  const row = resultRows<FinanceAccountRow>(result)[0] ?? null;
+  const result = await db
+    .selectFrom('finance_accounts')
+    .selectAll()
+    .where(sql<boolean>`data ->> 'plaidAccountId' = ${plaidAccountId}`)
+    .orderBy('created_at', 'desc')
+    .orderBy('id', 'asc')
+    .limit(1)
+    .executeTakeFirst();
+  const row = result ? (result as unknown as FinanceAccountRow) : null;
   return row ? toFinanceAccount(row) : null;
 }
 
@@ -1972,43 +1872,29 @@ export async function insertTransaction(input: {
   const transactionType = amount < 0 ? 'expense' : 'income';
   const id = input.id ?? crypto.randomUUID();
 
-  const result = await db.execute(sql`
-    insert into finance_transactions (
+  const result = await db
+    .insertInto('finance_transactions')
+    .values({
       id,
-      user_id,
-      account_id,
+      user_id: input.userId,
+      account_id: input.accountId,
       amount,
-      transaction_type,
-      description,
-      merchant_name,
-      category,
+      transaction_type: transactionType,
+      description: input.description,
+      merchant_name: input.merchantName ?? null,
+      category: input.category ?? null,
       date,
-      pending,
-      source,
-      external_id
-    )
-    values (
-      ${id},
-      ${input.userId},
-      ${input.accountId},
-      ${amount},
-      ${transactionType},
-      ${input.description},
-      ${input.merchantName ?? null},
-      ${input.category ?? null},
-      ${date},
-      ${input.pending ?? false},
-      ${input.paymentChannel ?? null},
-      ${input.plaidTransactionId ?? null}
-    )
-    returning id, user_id, account_id, amount, description, date, external_id, category, merchant_name
-  `);
+      pending: input.pending ?? false,
+      source: input.paymentChannel ?? null,
+      external_id: input.plaidTransactionId ?? null,
+    })
+    .returningAll()
+    .executeTakeFirst();
 
-  const row = resultRows<FinanceTransactionRow>(result)[0] ?? null;
-  if (!row) {
+  if (!result) {
     throw new Error('Failed to insert transaction');
   }
-  return toFinanceTransaction(row);
+  return toFinanceTransaction(result as unknown as FinanceTransactionRow);
 }
 
 export async function getTransactionByPlaidId(
@@ -2016,26 +1902,28 @@ export async function getTransactionByPlaidId(
   userId?: string,
 ): Promise<FinanceTransaction | null> {
   if (userId) {
-    const result = await db.execute(sql`
-      select id, user_id, account_id, amount, description, date, external_id, category, merchant_name
-      from finance_transactions
-      where external_id = ${plaidTransactionId}
-        and user_id = ${userId}
-      order by date desc, id desc
-      limit 1
-    `);
-    const row = resultRows<FinanceTransactionRow>(result)[0] ?? null;
+    const result = await db
+      .selectFrom('finance_transactions')
+      .selectAll()
+      .where('external_id', '=', plaidTransactionId)
+      .where('user_id', '=', userId)
+      .orderBy('date', 'desc')
+      .orderBy('id', 'desc')
+      .limit(1)
+      .executeTakeFirst();
+    const row = result ? (result as unknown as FinanceTransactionRow) : null;
     return row ? toFinanceTransaction(row) : null;
   }
 
-  const result = await db.execute(sql`
-    select id, user_id, account_id, amount, description, date, external_id, category, merchant_name
-    from finance_transactions
-    where external_id = ${plaidTransactionId}
-    order by date desc, id desc
-    limit 1
-  `);
-  const row = resultRows<FinanceTransactionRow>(result)[0] ?? null;
+  const result = await db
+    .selectFrom('finance_transactions')
+    .selectAll()
+    .where('external_id', '=', plaidTransactionId)
+    .orderBy('date', 'desc')
+    .orderBy('id', 'desc')
+    .limit(1)
+    .executeTakeFirst();
+  const row = result ? (result as unknown as FinanceTransactionRow) : null;
   return row ? toFinanceTransaction(row) : null;
 }
 
@@ -2060,13 +1948,13 @@ export async function updatePlaidTransaction(
     pending: boolean;
   }>,
 ): Promise<FinanceTransaction | null> {
-  const existingResult = await db.execute(sql`
-    select id, user_id, account_id, amount, description, date, external_id, category, merchant_name
-    from finance_transactions
-    where id = ${id}
-    limit 1
-  `);
-  const existing = resultRows<FinanceTransactionRow>(existingResult)[0] ?? null;
+  const existingResult = await db
+    .selectFrom('finance_transactions')
+    .selectAll()
+    .where('id', '=', id)
+    .limit(1)
+    .executeTakeFirst();
+  const existing = existingResult ? (existingResult as unknown as FinanceTransactionRow) : null;
   if (!existing) {
     return null;
   }
@@ -2090,27 +1978,27 @@ export async function updatePlaidTransaction(
     updates.merchantName === undefined ? existing.merchant_name : updates.merchantName;
   const nextType = nextAmount < 0 ? 'expense' : 'income';
 
-  const result = await db.execute(sql`
-    update finance_transactions
-    set
-      amount = ${nextAmount},
-      description = ${nextDescription},
-      date = ${nextDate},
-      category = ${nextCategory},
-      merchant_name = ${nextMerchantName},
-      transaction_type = ${nextType}
-    where id = ${id}
-    returning id, user_id, account_id, amount, description, date, external_id, category, merchant_name
-  `);
-  const row = resultRows<FinanceTransactionRow>(result)[0] ?? null;
+  const result = await db
+    .updateTable('finance_transactions')
+    .set({
+      amount: nextAmount,
+      description: nextDescription,
+      date: nextDate,
+      category: nextCategory,
+      merchant_name: nextMerchantName,
+      transaction_type: nextType,
+    })
+    .where('id', '=', id)
+    .returningAll()
+    .executeTakeFirst();
+  const row = result ? (result as unknown as FinanceTransactionRow) : null;
   return row ? toFinanceTransaction(row) : null;
 }
 
 export async function deletePlaidTransaction(plaidTransactionId: string): Promise<boolean> {
-  const result = await db.execute(sql`
-    delete from finance_transactions
-    where external_id = ${plaidTransactionId}
-    returning id
-  `);
-  return Boolean(resultRows<{ id: string }>(result)[0]);
+  const result = await db
+    .deleteFrom('finance_transactions')
+    .where('external_id', '=', plaidTransactionId)
+    .executeTakeFirst();
+  return !!result;
 }

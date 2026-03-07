@@ -1,29 +1,15 @@
 import crypto from 'node:crypto';
 
 import { db } from '@hominem/db';
-import { sql } from '@hominem/db';
 
 import type { ListOutput, ListPlace, ListUser, ListWithSpreadOwner } from './contracts';
 
-interface TaskListRow {
+type TaskListRow = {
   id: string;
   user_id: string;
   name: string;
   created_at: string | null;
-}
-
-function resultRows<T>(result: unknown): T[] {
-  if (Array.isArray(result)) {
-    return result as T[];
-  }
-  if (result && typeof result === 'object' && 'rows' in result) {
-    const rows = (result as { rows?: unknown }).rows;
-    if (Array.isArray(rows)) {
-      return rows as T[];
-    }
-  }
-  return [];
-}
+};
 
 function toOutputRecord(row: TaskListRow): ListOutput {
   return {
@@ -73,14 +59,16 @@ async function hasNameConflict(
   name: string,
   excludeListId?: string,
 ): Promise<boolean> {
-  const result = await db.execute(sql`
-    select id
-    from task_lists
-    where user_id = ${userId}
-      and name = ${name}
-    limit 1
-  `);
-  const existing = resultRows<{ id: string }>(result)[0] ?? null;
+  const existing = await db
+    .selectFrom('task_lists')
+    .select('id')
+    .where((eb) =>
+      eb.and([
+        eb('user_id', '=', userId),
+        eb('name', '=', name),
+      ]),
+    )
+    .executeTakeFirst();
 
   if (!existing) {
     return false;
@@ -105,25 +93,26 @@ export async function createList(name: string, userId: string): Promise<ListOutp
   }
 
   const listId = crypto.randomUUID();
-  await db.execute(sql`
-    insert into task_lists (id, user_id, name)
-    values (${listId}, ${userId}, ${normalizedName})
-  `);
+  await db
+    .insertInto('task_lists')
+    .values({
+      id: listId,
+      user_id: userId,
+      name: normalizedName,
+    })
+    .execute();
 
-  const [created] = await db
-    .execute(sql`
-      select id, user_id, name, created_at
-      from task_lists
-      where id = ${listId}
-      limit 1
-    `)
-    .then((res) => resultRows<TaskListRow>(res));
+  const created = await db
+    .selectFrom('task_lists')
+    .select(['id', 'user_id', 'name', 'created_at'])
+    .where('id', '=', listId)
+    .executeTakeFirst();
 
   if (!created) {
     return null;
   }
 
-  return toOutputRecord(created);
+  return toOutputRecord(created as TaskListRow);
 }
 
 export async function updateList(
@@ -137,14 +126,15 @@ export async function updateList(
   }
 
   const owned = await db
-    .execute(sql`
-      select id
-      from task_lists
-      where id = ${id}
-        and user_id = ${userId}
-      limit 1
-    `)
-    .then((res) => resultRows<{ id: string }>(res)[0] ?? null);
+    .selectFrom('task_lists')
+    .select('id')
+    .where((eb) =>
+      eb.and([
+        eb('id', '=', id),
+        eb('user_id', '=', userId),
+      ]),
+    )
+    .executeTakeFirst();
 
   if (!owned) {
     return null;
@@ -155,38 +145,43 @@ export async function updateList(
     return null;
   }
 
-  await db.execute(sql`
-    update task_lists
-    set name = ${normalizedName}
-    where id = ${id}
-      and user_id = ${userId}
-  `);
+  await db
+    .updateTable('task_lists')
+    .set({
+      name: normalizedName,
+    })
+    .where((eb) =>
+      eb.and([
+        eb('id', '=', id),
+        eb('user_id', '=', userId),
+      ]),
+    )
+    .execute();
 
-  const [updated] = await db
-    .execute(sql`
-      select id, user_id, name, created_at
-      from task_lists
-      where id = ${id}
-      limit 1
-    `)
-    .then((res) => resultRows<TaskListRow>(res));
+  const updated = await db
+    .selectFrom('task_lists')
+    .select(['id', 'user_id', 'name', 'created_at'])
+    .where('id', '=', id)
+    .executeTakeFirst();
 
   if (!updated) {
     return null;
   }
 
-  return toOutputRecord(updated);
+  return toOutputRecord(updated as TaskListRow);
 }
 
 export async function deleteList(id: string, userId: string): Promise<boolean> {
   const result = await db
-    .execute(sql`
-      delete from task_lists
-      where id = ${id}
-        and user_id = ${userId}
-      returning id
-    `)
-    .then((res) => resultRows<{ id: string }>(res));
+    .deleteFrom('task_lists')
+    .where((eb) =>
+      eb.and([
+        eb('id', '=', id),
+        eb('user_id', '=', userId),
+      ]),
+    )
+    .returningAll()
+    .execute();
 
   return result.length > 0;
 }

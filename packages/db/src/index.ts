@@ -12,6 +12,7 @@
 
 export { db, healthCheck, pool } from './db'
 export type { Database } from './types/database'
+export type { Selectable } from 'kysely'
 
 // Export all database table types for use in services
 export type {
