@@ -3,16 +3,7 @@ import { Hono } from 'hono'
 import { getAccountByUserAndProvider } from '@hominem/auth/server'
 import { GoogleCalendarService } from '@hominem/db/google-calendar.service'
 
-import {
-  addEventAttendee,
-  createEvent,
-  deleteEvent,
-  getEvent,
-  listEventAttendees,
-  listEvents,
-  replaceEventAttendees,
-  updateEvent,
-} from '@hominem/db/services/calendar.service'
+import { db, ForbiddenError, NotFoundError } from '@hominem/db'
 import type { AppContext } from '../middleware/auth'
 import { authMiddleware } from '../middleware/auth'
 import {
@@ -23,84 +14,106 @@ import {
   ReplaceEventAttendeesInputSchema,
   UpdateEventInputSchema,
 } from '../schemas/calendar.schema'
-import { ForbiddenError, NotFoundError, UnauthorizedError } from '../errors'
+import { UnauthorizedError } from '../errors'
+
+async function getEventWithOwnershipCheck(id: string, userId: string) {
+  const event = await db
+    .selectFrom('calendar_events')
+    .selectAll()
+    .where('id', '=', id)
+    .where('user_id', '=', userId)
+    .executeTakeFirst()
+
+  if (!event) {
+    throw new ForbiddenError('Event not found or access denied')
+  }
+  return event
+}
 
 export const calendarRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
   .get('/', zValidator('query', ListEventsFilterSchema), async (c) => {
-    const userId = c.get('userId') as Parameters<typeof listEvents>[0]
+    const userId = c.get('userId')!
     const query = c.req.valid('query')
 
-    const filters: NonNullable<Parameters<typeof listEvents>[1]> = {}
-    if (query.startTime !== undefined) filters.startTime = query.startTime
-    if (query.endTime !== undefined) filters.endTime = query.endTime
+    let dbQuery = db.selectFrom('calendar_events').selectAll().where('user_id', '=', userId)
 
-    const rawLimit = c.req.query('limit')
-    if (rawLimit !== undefined) {
-      const parsedLimit = Number.parseInt(rawLimit, 10)
-      if (!Number.isNaN(parsedLimit)) {
-        filters.limit = parsedLimit
-      }
+    if (query.startTime) {
+      dbQuery = dbQuery.where('start_time', '>=', query.startTime as any)
     }
 
-    const rawOffset = c.req.query('offset')
-    if (rawOffset !== undefined) {
-      const parsedOffset = Number.parseInt(rawOffset, 10)
-      if (!Number.isNaN(parsedOffset)) {
-        filters.offset = parsedOffset
-      }
+    if (query.endTime) {
+      dbQuery = dbQuery.where('end_time', '<=', query.endTime as any)
     }
 
-    const events = await listEvents(userId, filters)
+    const offset = query.offset ?? 0
+    const limit = query.limit ?? 50
+
+    const events = await dbQuery
+      .orderBy('start_time', 'desc')
+      .limit(limit)
+      .offset(offset)
+      .execute()
+
     return c.json({ success: true, data: events })
   })
   .get('/:id', async (c) => {
-    const userId = c.get('userId') as Parameters<typeof getEvent>[1]
-    const id = c.req.param('id') as Parameters<typeof getEvent>[0]
+    const userId = c.get('userId')!
+    const id = c.req.param('id')
 
-    const event = await getEvent(id, userId)
-    if (!event) {
-      throw new NotFoundError('Event not found')
-    }
-
+    const event = await getEventWithOwnershipCheck(id, userId)
     return c.json({ success: true, data: event })
   })
   .post('/', zValidator('json', CreateEventInputSchema), async (c) => {
-    const userId = c.get('userId') as Parameters<typeof createEvent>[0]
+    const userId = c.get('userId')!
     const data = c.req.valid('json')
 
-    const newEvent = await createEvent(userId, {
-      eventType: data.eventType,
-      title: data.title,
-      startTime: data.startTime,
-      ...(data.description !== undefined ? { description: data.description } : {}),
-      ...(data.endTime !== undefined ? { endTime: data.endTime } : {}),
-      ...(data.allDay !== undefined ? { allDay: data.allDay } : {}),
-      ...(data.location !== undefined ? { location: data.location } : {}),
-      ...(data.color !== undefined ? { color: data.color } : {}),
-    })
+    const newEvent = await db
+      .insertInto('calendar_events')
+      .values({
+        user_id: userId,
+        event_type: data.eventType,
+        title: data.title,
+        start_time: data.startTime as any,
+        end_time: data.endTime ? (data.endTime as any) : null,
+        description: data.description ?? null,
+        all_day: data.allDay ?? null,
+        location: data.location ?? null,
+        color: data.color ?? null,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow()
 
     return c.json({ success: true, data: newEvent }, 201)
   })
   .patch('/:id', zValidator('json', UpdateEventInputSchema), async (c) => {
     try {
-      const userId = c.get('userId') as Parameters<typeof updateEvent>[1]
-      const id = c.req.param('id') as Parameters<typeof updateEvent>[0]
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
       const data = c.req.valid('json')
 
-      const updateData: Parameters<typeof updateEvent>[2] = {}
-      if (data.eventType !== undefined) updateData.eventType = data.eventType
-      if (data.title !== undefined) updateData.title = data.title
-      if (data.description !== undefined) updateData.description = data.description
-      if (data.startTime !== undefined) updateData.startTime = data.startTime
-      if (data.endTime !== undefined) updateData.endTime = data.endTime
-      if (data.allDay !== undefined) updateData.allDay = data.allDay
-      if (data.location !== undefined) updateData.location = data.location
-      if (data.color !== undefined) updateData.color = data.color
+      // Verify ownership
+      await getEventWithOwnershipCheck(id, userId)
 
-      const updatedEvent = await updateEvent(id, userId, updateData)
+      const updateData: any = {}
+      if (data.eventType !== undefined) updateData.event_type = data.eventType
+      if (data.title !== undefined) updateData.title = data.title
+      if (data.description !== undefined) updateData.description = data.description ?? null
+      if (data.startTime !== undefined) updateData.start_time = data.startTime
+      if (data.endTime !== undefined) updateData.end_time = data.endTime ?? null
+      if (data.allDay !== undefined) updateData.all_day = data.allDay ?? null
+      if (data.location !== undefined) updateData.location = data.location ?? null
+      if (data.color !== undefined) updateData.color = data.color ?? null
+
+      const updatedEvent = await db
+        .updateTable('calendar_events')
+        .set(updateData)
+        .where('id', '=', id)
+        .returningAll()
+        .executeTakeFirst()
+
       if (!updatedEvent) {
-        throw new NotFoundError('Event not found or access denied')
+        throw new NotFoundError('Event not found')
       }
 
       return c.json({ success: true, data: updatedEvent })
@@ -113,12 +126,19 @@ export const calendarRoutes = new Hono<AppContext>()
   })
   .delete('/:id', async (c) => {
     try {
-      const userId = c.get('userId') as Parameters<typeof deleteEvent>[1]
-      const id = c.req.param('id') as Parameters<typeof deleteEvent>[0]
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
 
-      const deleted = await deleteEvent(id, userId)
-      if (!deleted) {
-        throw new NotFoundError('Event not found or access denied')
+      // Verify ownership
+      await getEventWithOwnershipCheck(id, userId)
+
+      const result = await db
+        .deleteFrom('calendar_events')
+        .where('id', '=', id)
+        .executeTakeFirst()
+
+      if ((result.numDeletedRows ?? 0n) === 0n) {
+        throw new NotFoundError('Event not found')
       }
 
       return c.json({ success: true, data: { id } })
@@ -131,10 +151,19 @@ export const calendarRoutes = new Hono<AppContext>()
   })
   .get('/:id/attendees', async (c) => {
     try {
-      const userId = c.get('userId') as Parameters<typeof listEventAttendees>[1]
-      const id = c.req.param('id') as Parameters<typeof listEventAttendees>[0]
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
 
-      const attendees = await listEventAttendees(id, userId)
+      // Verify event exists and user owns it
+      await getEventWithOwnershipCheck(id, userId)
+
+      const attendees = await db
+        .selectFrom('calendar_attendees')
+        .selectAll()
+        .where('event_id', '=', id)
+        .orderBy('created_at', 'asc')
+        .execute()
+
       return c.json({ success: true, data: attendees })
     } catch (error) {
       if (error instanceof ForbiddenError) {
@@ -145,11 +174,22 @@ export const calendarRoutes = new Hono<AppContext>()
   })
   .post('/:id/attendees', zValidator('json', AddEventAttendeeInputSchema), async (c) => {
     try {
-      const userId = c.get('userId') as Parameters<typeof addEventAttendee>[2]
-      const id = c.req.param('id') as Parameters<typeof addEventAttendee>[0]
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
       const data = c.req.valid('json')
 
-      const attendee = await addEventAttendee(id, data.personId, userId)
+      // Verify event exists and user owns it
+      await getEventWithOwnershipCheck(id, userId)
+
+      const attendee = await db
+        .insertInto('calendar_attendees')
+        .values({
+          event_id: id,
+          person_id: data.personId,
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow()
+
       return c.json({ success: true, data: attendee }, 201)
     } catch (error) {
       if (error instanceof ForbiddenError) {
@@ -160,11 +200,26 @@ export const calendarRoutes = new Hono<AppContext>()
   })
   .put('/:id/attendees', zValidator('json', ReplaceEventAttendeesInputSchema), async (c) => {
     try {
-      const userId = c.get('userId') as Parameters<typeof replaceEventAttendees>[2]
-      const id = c.req.param('id') as Parameters<typeof replaceEventAttendees>[0]
+      const userId = c.get('userId')!
+      const id = c.req.param('id')
       const data = c.req.valid('json')
 
-      const attendees = await replaceEventAttendees(id, data.personIds, userId)
+      // Verify event exists and user owns it
+      await getEventWithOwnershipCheck(id, userId)
+
+      // Delete existing attendees
+      await db.deleteFrom('calendar_attendees').where('event_id', '=', id).execute()
+
+      // Insert new attendees
+      let attendees: any[] = []
+      if (data.personIds && data.personIds.length > 0) {
+        attendees = await db
+          .insertInto('calendar_attendees')
+          .values(data.personIds.map((personId) => ({ event_id: id, person_id: personId })))
+          .returningAll()
+          .execute()
+      }
+
       return c.json({ success: true, data: attendees })
     } catch (error) {
       if (error instanceof ForbiddenError) {
@@ -178,7 +233,7 @@ export const calendarRoutes = new Hono<AppContext>()
     const account = await getAccountByUserAndProvider(userId, 'google')
     if (!(account?.accessToken || account?.refreshToken)) {
       throw new UnauthorizedError(
-        'Google Calendar access token not found in session. Please reconnect your Google account.',
+        'Google Calendar access token not found in session. Please reconnect your Google account.'
       )
     }
 
@@ -195,7 +250,7 @@ export const calendarRoutes = new Hono<AppContext>()
     const account = await getAccountByUserAndProvider(userId, 'google')
     if (!(account?.accessToken || account?.refreshToken)) {
       throw new UnauthorizedError(
-        'Google Calendar access token not found in session. Please reconnect your Google account.',
+        'Google Calendar access token not found in session. Please reconnect your Google account.'
       )
     }
 
