@@ -14,28 +14,11 @@ import * as z from 'zod';
 
 import type { AppEnv } from '../server';
 
-// Helper to get timestamp as milliseconds for sorting/comparison
-function getTimestamp(date: unknown): number {
-  if (!date) return 0;
-  if (typeof date === 'string') return new Date(date).getTime();
-  if (date instanceof Date) return date.getTime();
-  return 0;
-}
-
-// Serialize health record timestamps to ISO strings
-// Handles both Date objects (legacy) and string timestamps (new schema with precision: 3)
 function serializeHealthRecord(record: HealthRecordRow) {
-  const serializeDate = (date: unknown): string | null => {
-    if (!date) return null;
-    if (typeof date === 'string') return date;
-    if (date instanceof Date) return date.toISOString();
-    return String(date);
-  };
-
   return {
     ...record,
-    recorded_at: serializeDate(record.recorded_at),
-    created_at: serializeDate(record.created_at),
+    recorded_at: typeof record.recorded_at === 'string' ? record.recorded_at : new Date().toISOString(),
+    created_at: typeof record.created_at === 'string' ? record.created_at : new Date().toISOString(),
   };
 }
 
@@ -86,7 +69,11 @@ healthRoutes.get('/', zValidator('query', healthQuerySchema), async (c) => {
       ...(query.activityType !== undefined && { activityType: query.activityType }),
     });
 
-    const sorted = results.sort((a, b) => getTimestamp(b.recorded_at) - getTimestamp(a.recorded_at));
+    const sorted = results.sort((a, b) => {
+      const aTime = new Date(a.recorded_at).getTime();
+      const bTime = new Date(b.recorded_at).getTime();
+      return bTime - aTime;
+    });
     return c.json(sorted.map(serializeHealthRecord));
   } catch (err) {
     logger.error('Error fetching health data', { error: err });
@@ -121,7 +108,7 @@ healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
       user_id: validated.userId,
       record_type: validated.activityType,
       recorded_at: validated.date,
-      value: validated.duration,
+      value: String(validated.duration),
       unit: 'minutes',
       source: null,
       metadata: validated.notes ? { notes: validated.notes } : null,
@@ -143,11 +130,11 @@ healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) =
 
     const validated = c.req.valid('json');
 
-    const updates: Partial<Omit<HealthRecordRow, 'id' | 'created_at'>> = {};
-    if (validated.date !== undefined) updates.recorded_at = validated.date;
-    if (validated.activityType !== undefined) updates.record_type = validated.activityType;
-    if (validated.duration !== undefined) updates.value = validated.duration;
-    if (validated.notes !== undefined) updates.metadata = { notes: validated.notes };
+     const updates: Partial<Omit<HealthRecordRow, 'id' | 'created_at'>> = {};
+     if (validated.date !== undefined) updates.recorded_at = validated.date;
+     if (validated.activityType !== undefined) updates.record_type = validated.activityType;
+     if (validated.duration !== undefined) updates.value = String(validated.duration);
+     if (validated.notes !== undefined) updates.metadata = { notes: validated.notes };
 
     const result = await updateHealthRecord(id, updates);
 

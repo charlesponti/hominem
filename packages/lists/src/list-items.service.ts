@@ -1,5 +1,3 @@
-import { sql } from 'kysely';
-
 import { db } from '@hominem/db';
 import type { Selectable, Database } from '@hominem/db';
 
@@ -7,10 +5,6 @@ import type { ListPlace } from './contracts';
 import { getListOwnedByUser } from './list-queries.service';
 
 type TaskRow = Selectable<Database['tasks']>;
-
-interface DeletedRow {
-  id: string;
-}
 
 export interface ListTaskItem {
   id: string;
@@ -30,8 +24,8 @@ export interface ListPlacePreview {
 }
 
 function taskToListItem(row: TaskRow): ListTaskItem {
-  const createdAt = row.created_at instanceof Date ? row.created_at.toISOString() : (row.created_at ?? new Date().toISOString());
-  const updatedAt = row.updated_at instanceof Date ? row.updated_at.toISOString() : (row.updated_at ?? createdAt);
+  const createdAt = typeof row.created_at === 'string' ? row.created_at : new Date().toISOString();
+  const updatedAt = typeof row.updated_at === 'string' ? row.updated_at : createdAt;
   return {
     id: row.id,
     listId: row.list_id,
@@ -103,12 +97,12 @@ export async function addItemToList(params: {
     .executeTakeFirst();
 
   if (existing) {
-    const updated = await db
-      .updateTable('tasks')
-      .set({
-        list_id: listId,
-        updated_at: new Date(),
-      })
+     const updated = await db
+       .updateTable('tasks')
+       .set({
+         list_id: listId,
+         updated_at: new Date().toISOString(),
+       })
       .where((eb) =>
         eb.and([
           eb('id', '=', itemId),
@@ -157,12 +151,12 @@ export async function removeItemFromList(params: {
     throw new Error("List not found or you don't have permission to remove items from it");
   }
 
-  const result = await db
-    .updateTable('tasks')
-    .set({
-      list_id: null,
-      updated_at: new Date(),
-    })
+   const result = await db
+     .updateTable('tasks')
+     .set({
+       list_id: null,
+       updated_at: new Date().toISOString(),
+     })
     .where((eb) =>
       eb.and([
         eb('id', '=', itemId),

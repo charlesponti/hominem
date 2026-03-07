@@ -1,4 +1,4 @@
-import { sql, type AliasedExpression } from 'kysely';
+import { sql } from 'kysely';
 
 import { db } from '@hominem/db';
 
@@ -13,13 +13,6 @@ interface ListProjectionRow {
   owner_email: string | null;
   owner_name: string | null;
   task_count?: number | null;
-}
-
-interface OwnedListRow {
-  id: string;
-  name: string;
-  owner_id: string;
-  created_at: string | null;
 }
 
 interface PlaceListRow {
@@ -82,7 +75,8 @@ async function queryOwnedListRows(
       .orderBy('tl.id', 'asc')
       .execute();
 
-    return result as unknown as ListProjectionRow[];
+    // eslint-disable-next-line typescript-eslint/no-explicit-any
+    return result as any as ListProjectionRow[];
   }
 
   const result = await db
@@ -132,8 +126,10 @@ async function queryAccessibleListRows(
           eb.exists(
             db
               .selectFrom('task_list_collaborators as tlc')
+              // eslint-disable-next-line typescript-eslint/no-explicit-any
               .select(['tlc.id'] as any)
               .where((qb) => qb('tlc.user_id', '=', userId))
+              // eslint-disable-next-line typescript-eslint/no-explicit-any
               .where(sql`tlc.list_id = tl.id` as any),
           ),
         ]),
@@ -143,7 +139,8 @@ async function queryAccessibleListRows(
       .orderBy('tl.id', 'asc')
       .execute();
 
-    return result as unknown as ListProjectionRow[];
+    // eslint-disable-next-line typescript-eslint/no-explicit-any
+    return result as any as ListProjectionRow[];
   }
 
   const result = await db
@@ -163,7 +160,9 @@ async function queryAccessibleListRows(
         eb.exists(
           db
             .selectFrom('task_list_collaborators as tlc')
+            // eslint-disable-next-line typescript-eslint/no-explicit-any
             .select(['tlc.id'] as any)
+            // eslint-disable-next-line typescript-eslint/no-explicit-any
             .where(sql`tlc.list_id = tl.id AND tlc.user_id = ${userId}` as any),
         ),
       ]),
@@ -238,8 +237,10 @@ export async function getListById(id: string, userId?: string | null): Promise<L
           eb.exists(
             db
               .selectFrom('task_list_collaborators as tlc')
+              // eslint-disable-next-line typescript-eslint/no-explicit-any
               .select(['tlc.id'] as any)
               .where((qb) => qb('tlc.user_id', '=', userId))
+              // eslint-disable-next-line typescript-eslint/no-explicit-any
               .where(sql`tlc.list_id = tl.id` as any),
           ),
         ]),
@@ -278,7 +279,7 @@ export async function getListOwnedByUser(
     return undefined;
   }
 
-  const createdAt = row.created_at instanceof Date ? row.created_at.toISOString() : (row.created_at ?? new Date().toISOString());
+   const createdAt = typeof row.created_at === 'string' ? row.created_at : new Date().toISOString();
   return {
     id: row.id,
     name: row.name,

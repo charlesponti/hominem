@@ -1,16 +1,7 @@
 import { db } from '@hominem/db';
 
-interface MembershipRow {
-  id: string;
-}
-
 interface LinkRow {
   list_id: string;
-  user_id: string;
-}
-
-interface OwnedListRow {
-  id: string;
   user_id: string;
 }
 

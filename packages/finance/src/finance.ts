@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 
 import { db } from '@hominem/db';
+import type { Database, Json } from '@hominem/db';
 import { sql, type Selectable } from 'kysely';
 import * as z from 'zod';
 
@@ -9,6 +10,8 @@ import {
   FINANCE_TRANSACTION_ENTITY_TYPE,
   financeTransactionQueryContractSchema,
 } from './contracts';
+
+type TimestampString = string;
 
 interface FinanceAccount {
   id: string;
@@ -19,14 +22,7 @@ interface FinanceAccount {
   plaidAccountId?: string | null;
 }
 
-interface FinanceAccountRow {
-  id: string;
-  user_id: string;
-  name: string;
-  account_type: string;
-  balance: string | number | null;
-  data: Record<string, unknown> | null;
-}
+type FinanceAccountRow = Selectable<Database['finance_accounts']>;
 
 interface FinanceCategory {
   id: string;
@@ -48,32 +44,15 @@ interface FinanceTransaction {
   merchantName?: string | null;
 }
 
-interface FinanceTransactionRow {
-  id: string;
-  user_id: string;
-  account_id: string;
-  amount: string | number;
-  description: string | null;
-  date: string;
-  external_id: string | null;
-  category: string | null;
-  merchant_name: string | null;
-}
+type FinanceTransactionRow = Selectable<Database['finance_transactions']>;
 
 interface FinanceAnalyticsTransaction extends FinanceTransaction {
   classification: string;
 }
 
-interface FinanceAnalyticsTransactionRow extends FinanceTransactionRow {
-  classification: string;
-}
+type FinanceAnalyticsTransactionRow = Selectable<Database['finance_transactions']> & { classification: string };
 
-interface TagCategoryRow {
-  id: string;
-  owner_id: string;
-  name: string;
-  color: string | null;
-}
+type TagCategoryRow = Selectable<Database['tags']>;
 
 interface PlaidItem {
   id: string;
@@ -86,16 +65,7 @@ interface PlaidItem {
   lastSyncedAt?: string | null;
 }
 
-interface PlaidItemRow {
-  id: string;
-  user_id: string;
-  item_id: string;
-  institution_id: string | null;
-  cursor: string | null;
-  access_token: string | null;
-  status: string | null;
-  last_synced_at: string | null;
-}
+type PlaidItemRow = Selectable<Database['plaid_items']>;
 
 interface Institution {
   id: string;
@@ -127,7 +97,7 @@ function toNumber(value: string | number | null): number {
 }
 
 function toFinanceAccount(row: FinanceAccountRow): FinanceAccount {
-  const data = row.data ?? {};
+  const data = (row.data ?? {}) as Record<string, unknown>;
   const plaidAccountId = data.plaidAccountId;
   return {
     id: row.id,
@@ -146,7 +116,7 @@ function toFinanceTransaction(row: FinanceTransactionRow): FinanceTransaction {
     accountId: row.account_id,
     amount: toNumber(row.amount),
     description: row.description,
-    date: row.date,
+    date: String(row.date),
     category: row.category,
     merchantName: row.merchant_name,
   };
@@ -390,10 +360,7 @@ export async function createAccount(
   const id = input.id ?? crypto.randomUUID();
   const accountType = input.type ?? 'checking';
   const balance = input.balance ?? 0;
-  const data: Record<string, unknown> = {};
-  if (input.plaidAccountId) {
-    data.plaidAccountId = input.plaidAccountId;
-  }
+  const data: Json = input.plaidAccountId ? { plaidAccountId: input.plaidAccountId } : {};
 
   const result = await db
     .insertInto('finance_accounts')
@@ -403,7 +370,7 @@ export async function createAccount(
       name: input.name,
       account_type: accountType,
       balance,
-      data: data as any,
+      data,
     })
     .returningAll()
     .executeTakeFirst();
@@ -423,7 +390,7 @@ export async function listAccounts(userId: string): Promise<FinanceAccount[]> {
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
-  return (result as unknown as FinanceAccountRow[]).map(toFinanceAccount);
+  return result.map(toFinanceAccount);
 }
 
 export async function getAccountById(
@@ -438,7 +405,7 @@ export async function getAccountById(
       .where('user_id', '=', userId)
       .limit(1)
       .executeTakeFirst();
-    const row = result ? (result as unknown as FinanceAccountRow) : null;
+    const row = result ?? null;
     return row ? toFinanceAccount(row) : null;
   }
 
@@ -448,7 +415,7 @@ export async function getAccountById(
     .where('id', '=', accountId)
     .limit(1)
     .executeTakeFirst();
-  const row = result ? (result as unknown as FinanceAccountRow) : null;
+  const row = result ?? null;
   return row ? toFinanceAccount(row) : null;
 }
 
@@ -474,14 +441,14 @@ export async function updateAccount(
       account_type: nextType,
       balance: nextBalance,
       data: nextData,
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     })
     .where('id', '=', input.id)
     .where('user_id', '=', existing.userId)
     .returningAll()
     .executeTakeFirst();
 
-  const row = result ? (result as unknown as FinanceAccountRow) : null;
+  const row = result ?? null;
   return row ? toFinanceAccount(row) : null;
 }
 
@@ -528,7 +495,7 @@ export async function listPlaidConnectionsForUser(userId: string): Promise<Plaid
     .orderBy('id', 'asc')
     .execute();
 
-  return (result as unknown as PlaidItemRow[]).map((row) => ({
+  return result.map((row) => ({
     id: row.id,
     userId: row.user_id,
     itemId: row.item_id,
@@ -552,7 +519,7 @@ export async function getAccountsForInstitution(
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
-  return (result as unknown as FinanceAccountRow[]).map(toFinanceAccount);
+  return result.map(toFinanceAccount);
 }
 
 export async function getTransactionTagAnalysis(
@@ -613,7 +580,7 @@ export async function getSpendingCategories(_userId: string): Promise<FinanceCat
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
-  return (result as unknown as TagCategoryRow[]).map(toFinanceCategoryFromTag);
+  return result.map(toFinanceCategoryFromTag);
 }
 
 export async function getTransactionTags(userId: string): Promise<FinanceCategory[]> {
@@ -635,7 +602,7 @@ export async function createBudgetCategory(
     })
     .returningAll()
     .executeTakeFirst();
-  const row = result ? (result as unknown as TagCategoryRow) : null;
+  const row = result ?? null;
   if (!row) {
     throw new Error('Failed to create budget category');
   }
@@ -654,7 +621,7 @@ export async function updateBudgetCategory(
     .where('owner_id', '=', userId)
     .limit(1)
     .executeTakeFirst();
-  const existing = existingResult ? (existingResult as unknown as TagCategoryRow) : null;
+  const existing = existingResult ?? null;
   if (!existing) {
     return null;
   }
@@ -669,7 +636,7 @@ export async function updateBudgetCategory(
     .where('owner_id', '=', userId)
     .returningAll()
     .executeTakeFirst();
-  const row = result ? (result as unknown as TagCategoryRow) : null;
+  const row = result ?? null;
   return row ? toFinanceCategoryFromTag(row) : null;
 }
 
@@ -693,7 +660,7 @@ export async function getBudgetCategoryById(
     .where('owner_id', '=', userId)
     .limit(1)
     .executeTakeFirst();
-  const row = result ? (result as unknown as TagCategoryRow) : null;
+  const row = result ?? null;
   return row ? toFinanceCategoryFromTag(row) : null;
 }
 
@@ -723,7 +690,7 @@ export async function getAllBudgetCategories(userId: string): Promise<FinanceCat
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
-  return (result as unknown as TagCategoryRow[]).map(toFinanceCategoryFromTag);
+  return result.map(toFinanceCategoryFromTag);
 }
 
 export async function getBudgetCategoriesWithSpending(
@@ -755,9 +722,14 @@ export async function getBudgetCategoriesWithSpending(
     .orderBy('tg.id', 'asc')
     .execute();
 
-  return (result as unknown as Array<TagCategoryRow & { spent: string | number }>).map((row) => ({
-    ...toFinanceCategoryFromTag(row),
-    spent: toNumber((row as any).spent),
+  return result.map((row) => ({
+    id: row.id,
+    userId: row.owner_id,
+    name: row.name,
+    parentId: null,
+    icon: null,
+    color: row.color,
+    spent: toNumber(row.spent),
   }));
 }
 
@@ -770,8 +742,7 @@ export async function getBudgetTrackingData(
     .where('user_id', '=', userId)
     .where('transaction_type', '=', 'expense')
     .executeTakeFirst();
-  const spentRow = spentResult as unknown as { total_spent: string | number } | undefined;
-  const totalSpent = spentRow ? toNumber(spentRow.total_spent) : 0;
+  const totalSpent = spentResult ? toNumber(spentResult.total_spent) : 0;
 
   const hasBudgetGoals = await tableExists('budget_goals');
   if (!hasBudgetGoals) {
@@ -783,9 +754,8 @@ export async function getBudgetTrackingData(
     .select(sql<number>`coalesce(sum(target_amount), 0) as total_budget`.as('total_budget'))
     .where('user_id', '=', userId)
     .executeTakeFirst();
-  const budgetRow = budgetResult as unknown as { total_budget: string | number } | undefined;
   return {
-    totalBudget: budgetRow ? toNumber(budgetRow.total_budget) : 0,
+    totalBudget: budgetResult ? toNumber(budgetResult.total_budget) : 0,
     totalSpent,
   };
 }
@@ -797,7 +767,7 @@ export async function getAllInstitutions(): Promise<Institution[]> {
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
-  return result as unknown as Institution[];
+  return result;
 }
 
 export async function createInstitution(name: string): Promise<Institution> {
@@ -809,7 +779,7 @@ export async function createInstitution(name: string): Promise<Institution> {
     })
     .returningAll()
     .executeTakeFirst();
-  const row = result ? (result as unknown as Institution) : null;
+  const row = result ?? null;
   if (!row) {
     throw new Error('Failed to create institution');
   }
@@ -847,7 +817,7 @@ export async function getTagBreakdown(
     .orderBy('tag', 'asc')
     .execute();
 
-  return (result as unknown as Array<{ tag: string; total: string | number }>).map((row) => ({
+  return result.map((row) => ({
     tag: row.tag,
     total: toNumber(row.total),
   }));
@@ -872,8 +842,8 @@ export async function getTopMerchants(
     .limit(10)
     .execute();
 
-  return (result as unknown as Array<{ merchant: string; total: string | number }>).map((row) => ({
-    merchant: row.merchant,
+  return result.map((row) => ({
+    merchant: row.merchant ?? 'Unknown',
     total: toNumber(row.total),
   }));
 }
@@ -916,10 +886,10 @@ export async function queryAnalyticsTransactionsByContract(
     query = query.where('t.account_id', '=', parsed.accountId);
   }
   if (parsed.dateFrom) {
-    query = query.where('t.date', '>=', new Date(parsed.dateFrom));
+    query = query.where('t.date', '>=', parsed.dateFrom);
   }
   if (parsed.dateTo) {
-    query = query.where('t.date', '<=', new Date(parsed.dateTo));
+    query = query.where('t.date', '<=', parsed.dateTo);
   }
 
   if (tagIds.length > 0 && tagNames.length > 0) {
@@ -943,9 +913,16 @@ export async function queryAnalyticsTransactionsByContract(
     .offset(parsed.offset)
     .execute();
 
-  return (result as unknown as FinanceAnalyticsTransactionRow[]).map((row) => ({
-    ...toFinanceTransaction(row),
-    classification: (row as any).classification,
+  return result.map((row) => ({
+    id: row.id,
+    userId: row.user_id,
+    accountId: row.account_id,
+    amount: toNumber(row.amount),
+    description: row.description ?? '',
+    date: row.date,
+    category: row.category,
+    merchantName: row.merchant_name,
+    classification: row.classification,
   }));
 }
 
@@ -1244,19 +1221,19 @@ export async function queryTransactionsByContract(
     if (parsed.accountId) {
       query = query.where('t.account_id', '=', parsed.accountId);
     }
-    if (parsed.dateFrom) {
-      query = query.where('t.date', '>=', new Date(parsed.dateFrom));
-    }
-    if (parsed.dateTo) {
-      query = query.where('t.date', '<=', new Date(parsed.dateTo));
-    }
+  if (parsed.dateFrom) {
+    query = query.where('t.date', '>=', parsed.dateFrom);
+  }
+  if (parsed.dateTo) {
+    query = query.where('t.date', '<=', parsed.dateTo);
+  }
     const result = await query
       .orderBy('t.date', 'desc')
       .orderBy('t.id', 'desc')
       .limit(parsed.limit)
       .offset(parsed.offset)
       .execute();
-    return (result as unknown as FinanceTransactionRow[]).map(toFinanceTransaction);
+    return result.map(toFinanceTransaction);
   }
 
   const tagIds = parsed.tagIds ?? [];
@@ -1307,10 +1284,10 @@ export async function queryTransactionsByContract(
     query = query.where('t.account_id', '=', parsed.accountId);
   }
   if (parsed.dateFrom) {
-    query = query.where('t.date', '>=', new Date(parsed.dateFrom));
+    query = query.where('t.date', '>=', parsed.dateFrom);
   }
   if (parsed.dateTo) {
-    query = query.where('t.date', '<=', new Date(parsed.dateTo));
+    query = query.where('t.date', '<=', parsed.dateTo);
   }
 
   const result = await query
@@ -1319,7 +1296,7 @@ export async function queryTransactionsByContract(
     .limit(parsed.limit)
     .offset(parsed.offset)
     .execute();
-  return (result as unknown as FinanceTransactionRow[]).map(toFinanceTransaction);
+  return result.map(toFinanceTransaction);
 }
 
 export async function replaceTransactionTags(
@@ -1415,7 +1392,7 @@ export async function createTransaction(
   if (!result) {
     throw new Error('Failed to create transaction');
   }
-  return toFinanceTransaction(result as unknown as FinanceTransactionRow);
+  return toFinanceTransaction(result);
 }
 
 export async function updateTransaction(
@@ -1430,7 +1407,7 @@ export async function updateTransaction(
     .where('user_id', '=', userId)
     .limit(1)
     .executeTakeFirst();
-  const existing = existingResult ? (existingResult as unknown as FinanceTransactionRow) : null;
+  const existing = existingResult ?? null;
   if (!existing) {
     return null;
   }
@@ -1460,7 +1437,7 @@ export async function updateTransaction(
     .where('user_id', '=', userId)
     .returningAll()
     .executeTakeFirst();
-  const updated = updateResult ? (updateResult as unknown as FinanceTransactionRow) : null;
+  const updated = updateResult ?? null;
   return updated ? toFinanceTransaction(updated) : null;
 }
 
@@ -1492,7 +1469,7 @@ export async function getPlaidItemByUserAndItemId(
     .where('item_id', '=', _itemId)
     .limit(1)
     .executeTakeFirst();
-  const row = result ? (result as unknown as PlaidItemRow) : null;
+  const row = result ?? null;
   if (!row) {
     return null;
   }
@@ -1517,7 +1494,7 @@ export async function getPlaidItemById(_id: string, _userId?: string): Promise<P
       .where('user_id', '=', _userId)
       .limit(1)
       .executeTakeFirst();
-    const row = result ? (result as unknown as PlaidItemRow) : null;
+    const row = result ?? null;
     if (!row) {
       return null;
     }
@@ -1539,7 +1516,7 @@ export async function getPlaidItemById(_id: string, _userId?: string): Promise<P
     .where('id', '=', _id)
     .limit(1)
     .executeTakeFirst();
-  const row = result ? (result as unknown as PlaidItemRow) : null;
+  const row = result ?? null;
   if (!row) {
     return null;
   }
@@ -1564,7 +1541,7 @@ export async function getPlaidItemByItemId(_itemId: string): Promise<PlaidItem |
     .orderBy('id', 'asc')
     .limit(1)
     .executeTakeFirst();
-  const row = result ? (result as unknown as PlaidItemRow) : null;
+  const row = result ?? null;
   if (!row) {
     return null;
   }
@@ -1587,7 +1564,7 @@ export async function ensureInstitutionExists(name: string): Promise<Institution
     .where('name', '=', name)
     .limit(1)
     .executeTakeFirst();
-  const existingRow = existing ? (existing as unknown as Institution) : null;
+  const existingRow = existing ?? null;
   if (existingRow) {
     return existingRow;
   }
@@ -1604,7 +1581,7 @@ export async function upsertPlaidItem(
     .where('user_id', '=', input.userId)
     .limit(1)
     .executeTakeFirst();
-  const existing = existingResult ? (existingResult as unknown as PlaidItemRow) : null;
+  const existing = existingResult ?? null;
 
   if (existing) {
     const updatedResult = await db
@@ -1615,12 +1592,12 @@ export async function upsertPlaidItem(
         access_token: input.accessToken ?? null,
         status: input.status ?? 'healthy',
         last_synced_at: input.lastSyncedAt ?? null,
-        updated_at: new Date(),
+        updated_at: new Date().toISOString(),
       })
       .where('id', '=', existing.id)
       .returningAll()
       .executeTakeFirst();
-    const updated = updatedResult ? (updatedResult as unknown as PlaidItemRow) : null;
+    const updated = updatedResult ?? null;
     if (!updated) {
       throw new Error('Failed to update plaid item');
     }
@@ -1650,7 +1627,7 @@ export async function upsertPlaidItem(
     })
     .returningAll()
     .executeTakeFirst();
-  const created = createdResult ? (createdResult as unknown as PlaidItemRow) : null;
+  const created = createdResult ?? null;
   if (!created) {
     throw new Error('Failed to create plaid item');
   }
@@ -1675,7 +1652,7 @@ export async function updatePlaidItemStatusByItemId(
     .updateTable('plaid_items')
     .set({
       status,
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     })
     .where('user_id', '=', userId)
     .where('item_id', '=', itemId)
@@ -1692,7 +1669,7 @@ export async function updatePlaidItemStatusById(
     .updateTable('plaid_items')
     .set({
       status,
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     })
     .where('id', '=', id)
     .where('user_id', '=', userId)
@@ -1705,7 +1682,7 @@ export async function updatePlaidItemCursor(id: string, cursor: string | null): 
     .updateTable('plaid_items')
     .set({
       cursor,
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     })
     .where('id', '=', id)
     .executeTakeFirst();
@@ -1722,8 +1699,8 @@ export async function updatePlaidItemSyncStatus(
     .set({
       status,
       error: error ?? null,
-      last_synced_at: new Date(),
-      updated_at: new Date(),
+      last_synced_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     })
     .where('id', '=', id)
     .executeTakeFirst();
@@ -1735,7 +1712,7 @@ export async function updatePlaidItemError(id: string, error: string | null): Pr
     .updateTable('plaid_items')
     .set({
       error,
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     })
     .where('id', '=', id)
     .executeTakeFirst();
@@ -1771,7 +1748,7 @@ export async function upsertAccount(
       .where(sql<boolean>`data ->> 'plaidAccountId' = ${input.plaidAccountId}`)
       .limit(1)
       .executeTakeFirst();
-    const existing = existingResult ? (existingResult as unknown as FinanceAccountRow) : null;
+    const existing = existingResult ?? null;
     if (existing) {
       const updated = await updateAccount({
         id: existing.id,
@@ -1811,7 +1788,7 @@ export async function getUserAccounts(userId: string, itemId?: string): Promise<
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
-  return (result as unknown as FinanceAccountRow[]).map(toFinanceAccount);
+  return result.map(toFinanceAccount);
 }
 
 export async function getAccountByPlaidId(
@@ -1826,7 +1803,7 @@ export async function getAccountByPlaidId(
       .where(sql<boolean>`data ->> 'plaidAccountId' = ${plaidAccountId}`)
       .limit(1)
       .executeTakeFirst();
-    const row = result ? (result as unknown as FinanceAccountRow) : null;
+    const row = result ?? null;
     return row ? toFinanceAccount(row) : null;
   }
 
@@ -1838,7 +1815,7 @@ export async function getAccountByPlaidId(
     .orderBy('id', 'asc')
     .limit(1)
     .executeTakeFirst();
-  const row = result ? (result as unknown as FinanceAccountRow) : null;
+  const row = result ?? null;
   return row ? toFinanceAccount(row) : null;
 }
 
@@ -1885,7 +1862,7 @@ export async function insertTransaction(input: {
   if (!result) {
     throw new Error('Failed to insert transaction');
   }
-  return toFinanceTransaction(result as unknown as FinanceTransactionRow);
+  return toFinanceTransaction(result);
 }
 
 export async function getTransactionByPlaidId(
@@ -1902,7 +1879,7 @@ export async function getTransactionByPlaidId(
       .orderBy('id', 'desc')
       .limit(1)
       .executeTakeFirst();
-    const row = result ? (result as unknown as FinanceTransactionRow) : null;
+    const row = result ?? null;
     return row ? toFinanceTransaction(row) : null;
   }
 
@@ -1914,7 +1891,7 @@ export async function getTransactionByPlaidId(
     .orderBy('id', 'desc')
     .limit(1)
     .executeTakeFirst();
-  const row = result ? (result as unknown as FinanceTransactionRow) : null;
+  const row = result ?? null;
   return row ? toFinanceTransaction(row) : null;
 }
 
@@ -1945,7 +1922,7 @@ export async function updatePlaidTransaction(
     .where('id', '=', id)
     .limit(1)
     .executeTakeFirst();
-  const existing = existingResult ? (existingResult as unknown as FinanceTransactionRow) : null;
+  const existing = existingResult ?? null;
   if (!existing) {
     return null;
   }
@@ -1982,7 +1959,7 @@ export async function updatePlaidTransaction(
     .where('id', '=', id)
     .returningAll()
     .executeTakeFirst();
-  const row = result ? (result as unknown as FinanceTransactionRow) : null;
+  const row = result ?? null;
   return row ? toFinanceTransaction(row) : null;
 }
 

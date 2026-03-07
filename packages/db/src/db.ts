@@ -3,7 +3,13 @@ import pg from 'pg'
 import type { Database } from './types/database'
 import { env } from './env'
 
-const { Pool } = pg
+const { Pool, types } = pg
+
+// Configure pg to return dates as strings instead of Date objects
+// This ensures consistent string types across the codebase
+types.setTypeParser(types.builtins.TIMESTAMP, (val) => val)
+types.setTypeParser(types.builtins.TIMESTAMPTZ, (val) => val)
+types.setTypeParser(types.builtins.DATE, (val) => val)
 
 // Create a connection pool
 const pool = new Pool({

@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import type { Selectable } from 'kysely';
 
 import { db } from '@hominem/db';
-import type { Database } from '@hominem/db';
+import type { Database, Json } from '@hominem/db';
 import * as z from 'zod';
 
 import type { TripItemOutput, TripOutput } from './contracts';
@@ -48,12 +48,7 @@ function toIsoDate(value?: Date): string {
 }
 
 function rowToTrip(row: TripRow): TripOutput {
-  const createdAt =
-    row.created_at instanceof Date
-      ? row.created_at.toISOString()
-      : typeof row.created_at === 'string'
-        ? row.created_at
-        : new Date().toISOString();
+  const createdAt = typeof row.created_at === 'string' ? row.created_at : new Date().toISOString();
 
   return {
     id: row.id,
@@ -66,25 +61,30 @@ function rowToTrip(row: TripRow): TripOutput {
   };
 }
 
-function toItems(data: Record<string, unknown> | null): TripItemOutput[] {
-  if (!data) {
+function toItems(data: Json | null): TripItemOutput[] {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
     return [];
   }
-  const rawItems = data.items;
+  const rawItems = (data as Record<string, unknown>).items;
   if (!Array.isArray(rawItems)) {
     return [];
   }
   return rawItems
-    .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === 'object'))
-    .map((item) => ({
-      id: typeof item.id === 'string' ? item.id : crypto.randomUUID(),
-      tripId: typeof item.tripId === 'string' ? item.tripId : '',
-      itemId: typeof item.itemId === 'string' ? item.itemId : '',
-      day: typeof item.day === 'number' ? item.day : null,
-      order: typeof item.order === 'number' ? item.order : null,
-      createdAt: typeof item.createdAt === 'string' ? item.createdAt : new Date().toISOString(),
-    }))
-    .filter((item) => item.tripId.length > 0 && item.itemId.length > 0);
+    .map((item) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) {
+        return null;
+      }
+      const obj = item as Record<string, unknown>;
+      return {
+        id: typeof obj.id === 'string' ? obj.id : crypto.randomUUID(),
+        tripId: typeof obj.tripId === 'string' ? obj.tripId : '',
+        itemId: typeof obj.itemId === 'string' ? obj.itemId : '',
+        day: typeof obj.day === 'number' ? obj.day : null,
+        order: typeof obj.order === 'number' ? obj.order : null,
+        createdAt: typeof obj.createdAt === 'string' ? obj.createdAt : new Date().toISOString(),
+      };
+    })
+    .filter((item): item is TripItemOutput => item !== null && item.tripId.length > 0 && item.itemId.length > 0);
 }
 
 export async function createTrip(input: CreateTripInput): Promise<TripOutput> {
@@ -100,7 +100,7 @@ export async function createTrip(input: CreateTripInput): Promise<TripOutput> {
       start_date: toIsoDate(validated.startDate),
       end_date: validated.endDate ? toIsoDate(validated.endDate) : null,
       status: 'planned',
-      data: { items: [] } as any,
+      data: { items: [] },
     })
     .returningAll()
     .executeTakeFirst();
@@ -146,7 +146,7 @@ export async function getTripById(
 
   return {
     ...rowToTrip(row),
-    items: toItems((row.data as any) ?? null),
+    items: toItems(row.data ?? null),
   };
 }
 
@@ -164,7 +164,7 @@ export async function addItemToTrip(input: AddItemToTripInput): Promise<TripItem
     throw new Error(`Trip not found for id ${validated.tripId}`);
   }
 
-  const currentItems = toItems((tripRow.data as any) ?? null);
+  const currentItems = toItems(tripRow.data ?? null);
   const existingItem = currentItems.find((item) => item.itemId === validated.itemId);
   if (existingItem) {
     return existingItem;
@@ -179,13 +179,13 @@ export async function addItemToTrip(input: AddItemToTripInput): Promise<TripItem
     createdAt: new Date().toISOString(),
   };
 
-  const nextItems = [...currentItems, newItem];
+   const nextItems = [...currentItems, newItem];
 
-  await db
-    .updateTable('travel_trips')
-    .set({
-      data: { items: nextItems } as any,
-    })
+   await db
+     .updateTable('travel_trips')
+     .set({
+       data: { items: nextItems } as unknown as Json,
+     })
     .where('id', '=', validated.tripId)
     .execute();
 

@@ -22,9 +22,9 @@ interface AuthUserRecord {
   updatedAt: string;
 }
 
-const formatDate = (date: unknown): string => {
-  const dateStr = date instanceof Date ? date.toISOString() : String(date);
-  return dateStr || new Date().toISOString();
+const formatDate = (date: Date | string | null): string => {
+  if (!date) return new Date().toISOString();
+  return date instanceof Date ? date.toISOString() : date;
 };
 
 export async function ensureOAuthSubjectUser(

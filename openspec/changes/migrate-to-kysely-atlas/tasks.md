@@ -163,7 +163,19 @@
 - [ ] 22.5 Clean up `packages/db/src/index.ts` exports (keep db instance, remove schema exports)
 - [ ] 22.6 Update `packages/db/package.json` (remove drizzle scripts, add kysely scripts)
 
-## 23. Final Verification
+## 22b. Fix Type Casts from Kysely Migration
+
+- [x] 22b.1a Configure pg driver to return dates as strings (packages/db/src/db.ts)
+- [x] 22b.1b Regenerate kysely types with `--date-parser string` and override Timestamp type
+- [x] 22b.1c Fix `as unknown` casts in `packages/finance/src/finance.ts` - replace custom row interfaces with `Selectable<Database['table']>`
+- [ ] 22b.2 Fix remaining casts in `packages/finance/src/finance.ts`
+- [ ] 22b.3 Fix type errors in `packages/notes/src/notes.service.ts` (timestamp string fixes)
+- [ ] 22b.4 Fix type errors in `packages/places/src/trips.service.ts` (timestamp + JSON type fixes)
+- [ ] 22b.5 Fix `as any` casts in `packages/hono-rpc/src/routes/finance.*.ts`
+- [ ] 22b.6 Fix casts in other packages (lists, places, etc.)
+- [ ] 22b.7 Verify `bun run typecheck` passes
+
+## Verification
 
 - [ ] 23.1 Run full build: `bun run build`
 - [ ] 23.2 Run full test suite: `bun run test`

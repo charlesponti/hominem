@@ -20,6 +20,31 @@ import {
 
 type NotesRow = Selectable<Database['notes']>;
 
+function rowToNote(row: NotesRow, tags: NoteOutput['tags'] = []): NoteOutput {
+  const toDateStr = (d: string | Date | null | undefined): string | null =>
+    typeof d === 'string' ? d : d instanceof Date ? d.toISOString() : d ?? null;
+  return {
+    id: row.id,
+    userId: row.user_id,
+    type: row.type as NoteOutput['type'],
+    status: row.status as NoteOutput['status'],
+    title: row.title,
+    content: row.content ?? '',
+    excerpt: row.excerpt,
+    tags,
+    mentions: row.mentions as NoteOutput['mentions'],
+    analysis: row.analysis as NoteOutput['analysis'],
+    publishingMetadata: row.publishing_metadata as NoteOutput['publishingMetadata'],
+    parentNoteId: row.parent_note_id,
+    versionNumber: row.version_number,
+    isLatestVersion: row.is_latest_version,
+    publishedAt: toDateStr(row.published_at),
+    scheduledFor: toDateStr(row.scheduled_for),
+    createdAt: toDateStr(row.created_at) ?? new Date().toISOString(),
+    updatedAt: toDateStr(row.updated_at) ?? new Date().toISOString(),
+  };
+}
+
 export class NotFoundError extends Error {
   constructor(message: string) {
     super(message);
@@ -151,10 +176,7 @@ export class NotesService {
       noteRows.map((row) => row.id),
       userId,
     );
-    return noteRows.map((row) => ({
-      ...(row as any),
-      tags: tagsByNoteId.get(row.id) ?? [],
-    })) as NoteOutput[];
+    return noteRows.map((row) => rowToNote(row, tagsByNoteId.get(row.id) ?? []));
   }
 
   async create(input: NoteInput): Promise<NoteOutput> {
@@ -245,7 +267,7 @@ export class NotesService {
     // Date filtering
     if (filters?.since) {
       try {
-        const sinceDate = new Date(filters.since);
+        const sinceDate = new Date(filters.since).toISOString();
         query = query.where('updated_at', '>', sinceDate);
       } catch {
         console.warn(`Invalid 'since' date format: ${filters.since}`);
@@ -312,7 +334,7 @@ export class NotesService {
   async update(input: UpdateNoteInput): Promise<NoteOutput> {
     const validatedInput = UpdateNoteZodSchema.parse(input);
 
-    const updateData: Record<string, any> = {};
+    const updateData: Partial<Omit<NotesRow, 'id'>> = {};
     if (validatedInput.type !== undefined) {
       updateData.type = validatedInput.type;
     }
@@ -407,7 +429,7 @@ export class NotesService {
 
     const existingNote = await this.getById(id, userId);
     const now = new Date().toISOString();
-    const updateData: Record<string, any> = {
+    const updateData: Partial<Omit<NotesRow, 'id'>> = {
       status: 'published',
       updated_at: now,
     };
@@ -679,7 +701,7 @@ export class NotesService {
     // Date filtering
     if (filters?.since) {
       try {
-        const sinceDate = new Date(filters.since);
+        const sinceDate = new Date(filters.since).toISOString();
         query = query.where('updated_at', '>', sinceDate);
       } catch {
         console.warn(`Invalid 'since' date format: ${filters.since}`);

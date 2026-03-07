@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { sql, type Selectable } from 'kysely';
 
 import { db } from '@hominem/db';
-import type { Database } from '@hominem/db';
+import type { Database, Json } from '@hominem/db';
 import { normalizePhotoReference, sanitizeStoredPhotos } from '@hominem/utils/images';
 
 import type { PlaceInput, PlaceOutput } from './contracts';
@@ -38,7 +38,10 @@ function toNumber(value: string | number | null): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function toMeta(data: Record<string, unknown> | null, fallbackGoogleMapsId: string): PlaceMeta {
+function toMeta(data: Json | null, fallbackGoogleMapsId: string): PlaceMeta {
+  if (data !== null && (typeof data !== 'object' || Array.isArray(data))) {
+    data = null;
+  }
   const payload = data ?? {};
   const photosRaw = payload.photos;
   const photos =
@@ -76,13 +79,8 @@ function toMeta(data: Record<string, unknown> | null, fallbackGoogleMapsId: stri
 }
 
 function rowToPlaceOutput(row: PlaceRow): PlaceOutput {
-  const meta = toMeta((row.data as any) ?? null, row.id);
-  const createdAt =
-    row.created_at instanceof Date
-      ? row.created_at.toISOString()
-      : typeof row.created_at === 'string'
-        ? row.created_at
-        : new Date().toISOString();
+  const meta = toMeta(row.data ?? null, row.id);
+  const createdAt = typeof row.created_at === 'string' ? row.created_at : new Date().toISOString();
 
   return {
     id: row.id,
@@ -141,7 +139,7 @@ export async function preparePlaceInsertData(data: PlaceInput): Promise<{
   longitude: number | null;
   placeType: string | null;
   rating: number | null;
-  data: PlaceMeta;
+  data: Json;
 }> {
   const processedPhotos = data.photos ? sanitizeStoredPhotos(data.photos) : null;
   const imageUrl = data.imageUrl ? normalizePhotoReference(data.imageUrl) : null;
@@ -319,7 +317,7 @@ export async function upsertPlace({ data }: { data: PlaceInput }): Promise<Place
         longitude: insertValues.longitude,
         place_type: insertValues.placeType,
         rating: insertValues.rating,
-        data: insertValues.data as any,
+        data: insertValues.data,
       })
       .where('id', '=', existing.id)
       .returningAll()
@@ -345,7 +343,7 @@ export async function upsertPlace({ data }: { data: PlaceInput }): Promise<Place
       longitude: insertValues.longitude,
       place_type: insertValues.placeType,
       rating: insertValues.rating,
-      data: insertValues.data as any,
+      data: insertValues.data as unknown as Json,
     })
     .returningAll()
     .executeTakeFirst();

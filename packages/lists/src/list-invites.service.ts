@@ -255,12 +255,13 @@ export async function getInvitesForUser(
       sql<string>`u_owner.email`.as('list_owner_email'),
       sql<string>`u_owner.name`.as('list_owner_name'),
     ])
-    .where((eb) =>
-      eb.or([
-        eb('li.invited_user_id', '=', userId),
-        email && email.length > 0 ? eb(sql`lower(li.invited_user_email)`, '=', email) : undefined,
-      ].filter(Boolean) as any),
-    )
+     .where((eb) =>
+       eb.or([
+         eb('li.invited_user_id', '=', userId),
+         email && email.length > 0 ? eb(sql`lower(li.invited_user_email)`, '=', email) : undefined,
+         // eslint-disable-next-line typescript-eslint/no-explicit-any
+       ].filter(Boolean) as any),
+     )
     .orderBy('li.created_at', 'desc')
     .orderBy('li.id', 'asc')
     .execute();
@@ -472,11 +473,11 @@ export async function acceptListInvite(params: AcceptListInviteParams): Promise<
   await db
     .updateTable('task_list_invites')
     .set({
-      invited_user_id: params.acceptingUserId,
-      accepted: true,
-      accepted_at: new Date(),
-      updated_at: new Date(),
-    })
+       invited_user_id: params.acceptingUserId,
+       accepted: true,
+       accepted_at: new Date().toISOString(),
+       updated_at: new Date().toISOString(),
+     })
     .where('id', '=', invite.id)
     .execute();
 

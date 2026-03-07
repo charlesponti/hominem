@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import type { Selectable } from 'kysely';
 
 import { db } from '@hominem/db';
-import type { Database } from '@hominem/db';
+import type { Database, Json } from '@hominem/db';
 import { logger } from '@hominem/utils/logger';
 
 import type { ChatMessageInput, ChatMessageOutput, ChatMessageRole } from '../contracts';
@@ -34,12 +34,12 @@ function toMessageOutput(row: ChatMessageRow): ChatMessageOutput {
     userId: row.user_id,
     role: row.role as ChatMessageRole,
     content: row.content,
-    files: row.files as any,
-    toolCalls: row.tool_calls as any,
+    files: row.files as ChatMessageOutput['files'],
+    toolCalls: row.tool_calls as ChatMessageOutput['toolCalls'],
     reasoning: row.reasoning ?? null,
     parentMessageId: row.parent_message_id,
-    createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
-    updatedAt: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
+    createdAt: typeof row.created_at === 'string' ? row.created_at : new Date().toISOString(),
+    updatedAt: typeof row.updated_at === 'string' ? row.updated_at : new Date().toISOString(),
   };
 }
 
@@ -56,8 +56,8 @@ export class MessageService {
           user_id: params.userId,
           role: params.role,
           content: params.content,
-          files: params.files as any,
-          tool_calls: params.toolCalls as any,
+          files: params.files as Json,
+          tool_calls: params.toolCalls as Json,
           reasoning: params.reasoning ?? null,
           parent_message_id: params.parentMessageId ?? null,
         })
@@ -146,7 +146,7 @@ export class MessageService {
         .updateTable('chat_message')
         .set({
           content,
-          tool_calls: toolCalls as any,
+          tool_calls: toolCalls as Json,
           updated_at: new Date().toISOString(),
         })
         .where('id', '=', messageId)
@@ -204,13 +204,13 @@ export class MessageService {
         throw new ChatError('AUTH_ERROR', 'Chat not found or access denied');
       }
 
-      // Delete all messages created after the timestamp
-      const deletedMessages = await db
-        .deleteFrom('chat_message')
-        .where('chat_id', '=', chatId)
-        .where('created_at', '>', new Date(afterTimestamp))
-        .returningAll()
-        .execute();
+       // Delete all messages created after the timestamp
+       const deletedMessages = await db
+         .deleteFrom('chat_message')
+         .where('chat_id', '=', chatId)
+         .where('created_at', '>', new Date(afterTimestamp).toISOString())
+         .returningAll()
+         .execute();
 
       return deletedMessages.length;
     } catch (error) {

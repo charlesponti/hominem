@@ -52,14 +52,16 @@ vi.mock('@hominem/finance-services', () => ({
 // in the module's closure, so we'll import the module and mutate its
 // `plaidClient` directly for simplicity.
 
+type SyncJobData = Parameters<typeof processSyncJob>[0]['data'];
+
 // Helper to create a minimal fake job object.
-function makeJob(data: any): Job<any> {
+function makeJob(data: SyncJobData): Job<SyncJobData> {
   // only the fields accessed by processSyncJob are needed
   return {
     id: 'job-id',
     data,
     updateProgress: vi.fn().mockResolvedValue(undefined),
-  } as unknown as Job<any>;
+  } as unknown as Job<SyncJobData>;
 }
 
 describe('processSyncJob', () => {
