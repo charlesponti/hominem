@@ -4,8 +4,8 @@
  * Common patterns for building database queries with filtering, sorting, and pagination.
  * These utilities help keep route and service code DRY and consistent.
  *
- * Note: These are generic helpers that work with any ORM or query builder.
- * To use with Drizzle, convert the returned objects into Drizzle WHERE clauses.
+ * Note: These are generic helpers used by services to build Kysely query filters.
+ * Services convert the returned objects into Kysely WHERE clauses and query conditions.
  */
 
 /**
