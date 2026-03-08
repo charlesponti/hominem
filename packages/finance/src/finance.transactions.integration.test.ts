@@ -18,10 +18,9 @@ import {
   updateTransaction,
 } from './finance';
 
-const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('finance.transactions.integration');
 
-describe.skipIf(!dbAvailable)('finance transactions integration', () => {
+describe('finance transactions integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerAccountId: string;

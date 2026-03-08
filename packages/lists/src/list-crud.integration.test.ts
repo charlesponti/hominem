@@ -21,10 +21,9 @@ function resultRows<T>(result: unknown): T[] {
   return [];
 }
 
-const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('lists.crud.integration');
 
-describe.skipIf(!dbAvailable)('list-crud integration', () => {
+describe('list-crud integration', () => {
   let ownerId: string;
   let otherUserId: string;
 

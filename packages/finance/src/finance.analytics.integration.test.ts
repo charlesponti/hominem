@@ -34,12 +34,10 @@ async function hasTaggingTables(): Promise<boolean> {
   return Boolean(rows[0]?.tags_table && rows[0]?.tagged_items_table);
 }
 
-const dbAvailable = await isIntegrationDatabaseAvailable();
-const taggingTablesAvailable = dbAvailable ? await hasTaggingTables() : false;
 const nextUserId = createDeterministicIdFactory('finance.analytics.integration');
 const nextTagId = createDeterministicIdFactory('finance.analytics.integration.tag');
 
-describe.skipIf(!dbAvailable || !taggingTablesAvailable)('finance analytics integration', () => {
+describe('finance analytics integration', () => {
   let ownerId: string;
   let accountId: string;
   let foodTagId: string;

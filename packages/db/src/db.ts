@@ -1,9 +1,13 @@
-import { Kysely, PostgresDialect } from 'kysely'
+import { Kysely, PostgresDialect, sql as kyselySql } from 'kysely'
 import pg from 'pg'
 import type { Database } from './types/database'
 import { env } from './env'
 
 const { Pool, types } = pg
+
+// Re-export Kysely's sql template tag for raw SQL queries
+// Usage: await db.execute(sql`SELECT * FROM users`)
+export const sql = kyselySql
 
 // Configure pg to return dates as strings instead of Date objects
 // This ensures consistent string types across the codebase
@@ -17,7 +21,13 @@ export const pool = new Pool({
 })
 
 // Create Kysely instance with proper typing
-export const db = new Kysely<Database>({
+class KyselyDb extends Kysely<Database> {
+  async execute(query: Parameters<typeof this.executeQuery>[0]) {
+    return this.executeQuery(query)
+  }
+}
+
+export const db = new KyselyDb({
   dialect: new PostgresDialect({
     pool,
   }),

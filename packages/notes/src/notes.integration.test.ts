@@ -3,7 +3,6 @@ import {
   cleanupTestData,
   createDeterministicIdFactory,
   ensureIntegrationUsers,
-  isIntegrationDatabaseAvailable,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -11,10 +10,9 @@ import type { NoteOutput } from './contracts';
 import { ConflictError } from './note.state.service';
 import { NotFoundError, NotesService } from './notes.service';
 
-const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('notes.integration');
 
-describe.skipIf(!dbAvailable)('notes integration', () => {
+describe('notes integration', () => {
   const service = new NotesService();
   let ownerId: string;
   let otherUserId: string;

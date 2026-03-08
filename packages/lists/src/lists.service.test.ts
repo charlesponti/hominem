@@ -33,9 +33,7 @@ async function isDatabaseAvailable(): Promise<boolean> {
   }
 }
 
-const dbAvailable = await isDatabaseAvailable();
-
-describe.skipIf(!dbAvailable)('list-queries integration', () => {
+describe('list-queries integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerListA: string;

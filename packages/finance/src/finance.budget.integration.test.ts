@@ -26,7 +26,6 @@ import {
   updateBudgetCategory,
 } from './finance';
 
-const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('finance.budget.integration');
 
 async function hasBudgetGoalsTable(): Promise<boolean> {
@@ -41,7 +40,7 @@ async function hasBudgetGoalsTable(): Promise<boolean> {
   return Boolean(rows[0]?.relation_name);
 }
 
-describe.skipIf(!dbAvailable)('finance budget integration', () => {
+describe('finance budget integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerAccountId: string;

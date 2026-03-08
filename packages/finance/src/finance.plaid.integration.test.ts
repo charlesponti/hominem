@@ -21,7 +21,6 @@ import {
   updatePlaidItemSyncStatus,
 } from './finance';
 
-const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('finance.plaid.integration');
 
 async function hasPlaidItemsTable(): Promise<boolean> {
@@ -36,7 +35,7 @@ async function hasPlaidItemsTable(): Promise<boolean> {
   return Boolean(rows[0]?.relation_name);
 }
 
-describe.skipIf(!dbAvailable)('finance plaid integration', () => {
+describe('finance plaid integration', () => {
   let ownerId: string;
   let otherUserId: string;
 

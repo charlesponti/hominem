@@ -34,9 +34,7 @@ async function isDatabaseAvailable(): Promise<boolean> {
   }
 }
 
-const dbAvailable = await isDatabaseAvailable();
-
-describe.skipIf(!dbAvailable)('places.service integration', () => {
+describe('places.service integration', () => {
   let ownerId: string;
   let otherUserId: string;
 

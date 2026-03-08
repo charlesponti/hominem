@@ -18,10 +18,9 @@ import {
   upsertPlaidItem,
 } from './finance';
 
-const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('finance.data-ops.integration');
 
-describe.skipIf(!dbAvailable)('finance data ops integration', () => {
+describe('finance data ops integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerAccountId: string;

@@ -16,10 +16,9 @@ import {
   upsertAccount,
 } from './finance';
 
-const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('finance.accounts.integration');
 
-describe.skipIf(!dbAvailable)('finance accounts integration', () => {
+describe('finance accounts integration', () => {
   let ownerId: string;
   let otherUserId: string;
 
