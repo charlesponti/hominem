@@ -1,4 +1,4 @@
-import { Kysely, PostgresDialect } from 'kysely'
+import { Kysely, PostgresDialect, sql } from 'kysely'
 import pg from 'pg'
 import type { Database } from './types/database'
 import { env } from './env'
@@ -25,6 +25,9 @@ export const db = new Kysely<Database>({
 
 // Export pool for graceful shutdown
 export { pool }
+
+// Export sql for raw queries (used in tests)
+export { sql }
 
 // Health check
 export async function healthCheck(): Promise<boolean> {
