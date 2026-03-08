@@ -1,6 +1,6 @@
 import { db } from '@hominem/db';
-import { sql } from '@hominem/db';
 import {
+  cleanupTestData,
   createDeterministicIdFactory,
   ensureIntegrationUsers,
   isIntegrationDatabaseAvailable,
@@ -20,24 +20,7 @@ describe.skipIf(!dbAvailable)('notes integration', () => {
   let otherUserId: string;
 
   const cleanupUsersAndNotes = async (userIds: string[]) => {
-    if (userIds.length === 0) {
-      return;
-    }
-
-    if (userIds.length === 1) {
-      const userId = userIds[0]!;
-      await db.execute(sql`delete from notes where user_id = ${userId}`).catch(() => {});
-      await db.execute(sql`delete from users where id = ${userId}`).catch(() => {});
-      return;
-    }
-
-    const [firstUserId, secondUserId] = userIds;
-    await db
-      .execute(sql`delete from notes where user_id = ${firstUserId} or user_id = ${secondUserId}`)
-      .catch(() => {});
-    await db
-      .execute(sql`delete from users where id = ${firstUserId} or id = ${secondUserId}`)
-      .catch(() => {});
+    await cleanupTestData(userIds)
   };
 
   const createNoteFor = async (

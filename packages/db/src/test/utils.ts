@@ -15,27 +15,21 @@ export const createDeterministicIdFactory = (prefix: string) => {
   return () => `${prefix}-${counter++}-${Math.random().toString(36).slice(2, 10)}`
 }
 
-export const ensureIntegrationUsers = async (): Promise<{
-  ownerId: string
-  otherUserId: string
-}> => {
+// Create users with specific IDs (for tests that need deterministic IDs)
+export const ensureIntegrationUsers = async (
+  users: Array<{ id: string; name: string }>
+): Promise<{ ownerId: string; otherUserId: string }> => {
   const { db } = await import('../db')
-  const ownerId = `test-owner-${Date.now()}`
-  const otherUserId = `test-other-${Date.now()}`
   
-  await db.insertInto('users').values({
-    id: ownerId,
-    email: `${ownerId}@test.com`,
-    name: 'Test Owner',
-  }).execute()
+  for (const user of users) {
+    await db.insertInto('users').values({
+      id: user.id,
+      email: `${user.id}@test.com`,
+      name: user.name,
+    }).execute()
+  }
   
-  await db.insertInto('users').values({
-    id: otherUserId,
-    email: `${otherUserId}@test.com`,
-    name: 'Test Other',
-  }).execute()
-  
-  return { ownerId, otherUserId }
+  return { ownerId: users[0]?.id || '', otherUserId: users[1]?.id || '' }
 }
 
 export const createTestUser = async (overrides?: { id?: string; email?: string; name?: string }): Promise<string> => {
@@ -51,8 +45,20 @@ export const createTestUser = async (overrides?: { id?: string; email?: string; 
   return id
 }
 
-export const cleanupTestData = async (): Promise<void> => {
-  // Cleanup is handled by individual tests
+export const cleanupTestData = async (userIds: string[]): Promise<void> => {
+  if (userIds.length === 0) return
+  
+  const { db } = await import('../db')
+  
+  // Delete notes for users
+  await db.deleteFrom('notes')
+    .where('user_id', 'in', userIds)
+    .execute()
+  
+  // Delete users
+  await db.deleteFrom('users')
+    .where('id', 'in', userIds)
+    .execute()
 }
 
 export const setUserCleanup = (_cleanup: (userId: string) => Promise<void>): void => {
