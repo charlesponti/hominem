@@ -5,6 +5,7 @@ import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
   isIntegrationDatabaseAvailable,
+  tableExists,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -24,15 +25,7 @@ import {
 const nextUserId = createDeterministicIdFactory('finance.plaid.integration');
 
 async function hasPlaidItemsTable(): Promise<boolean> {
-  const result = await db.execute(sql`
-    select to_regclass('public.plaid_items') as relation_name
-  `);
-  const rows = Array.isArray(result)
-    ? result
-    : result && typeof result === 'object' && 'rows' in result
-      ? ((result as { rows?: Array<{ relation_name: string | null }> }).rows ?? [])
-      : [];
-  return Boolean(rows[0]?.relation_name);
+  return await tableExists('plaid_items');
 }
 
 describe('finance plaid integration', () => {

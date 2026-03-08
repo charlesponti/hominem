@@ -15,6 +15,33 @@ export const createDeterministicIdFactory = (prefix: string) => {
   return () => `${prefix}-${counter++}-${Math.random().toString(36).slice(2, 10)}`
 }
 
+// Helper to extract rows from query results (handles both Kysely and raw results)
+export const extractRows = <T>(result: unknown): T[] => {
+  if (Array.isArray(result)) {
+    return result as T[]
+  }
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows?: unknown }).rows
+    if (Array.isArray(rows)) {
+      return rows as T[]
+    }
+  }
+  return []
+}
+
+// Check if a table exists by name
+export const tableExists = async (tableName: string): Promise<boolean> => {
+  try {
+    const { pool } = await import('../db')
+    // Use raw pool query to avoid SQL builder complexity for dynamic table names
+    const result = await pool.query(`select to_regclass('public.${tableName}') as relation_name`)
+    const rows = result.rows as Array<{ relation_name: string | null }> | undefined
+    return Boolean(rows?.[0]?.relation_name)
+  } catch {
+    return false
+  }
+}
+
 // Create users with specific IDs (for tests that need deterministic IDs)
 export const ensureIntegrationUsers = async (
   users: Array<{ id: string; name: string }>

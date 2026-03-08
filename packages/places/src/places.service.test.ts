@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 
 import { db, sql } from '@hominem/db';
+import { extractRows, isIntegrationDatabaseAvailable } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -11,28 +12,6 @@ import {
   getPlaceById,
   preparePlaceInsertData,
 } from './places.service';
-
-function resultRows<T>(result: unknown): T[] {
-  if (Array.isArray(result)) {
-    return result as T[];
-  }
-  if (result && typeof result === 'object' && 'rows' in result) {
-    const rows = (result as { rows?: unknown }).rows;
-    if (Array.isArray(rows)) {
-      return rows as T[];
-    }
-  }
-  return [];
-}
-
-async function isDatabaseAvailable(): Promise<boolean> {
-  try {
-    await db.execute(sql`select 1`);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 describe('places.service integration', () => {
   let ownerId: string;
@@ -103,7 +82,7 @@ describe('places.service integration', () => {
       where user_id = ${ownerId}
         and data ->> 'googleMapsId' = 'gm-same'
     `);
-    const row = resultRows<{ count: number }>(stored)[0];
+    const row = extractRows<{ count: number }>(stored)[0];
     expect(row?.count).toBe(1);
   });
 

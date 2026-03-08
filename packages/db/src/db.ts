@@ -1,4 +1,4 @@
-import { Kysely, PostgresDialect, sql as kyselySql } from 'kysely'
+import { Kysely, PostgresDialect, sql as kyselySql, type Compilable } from 'kysely'
 import pg from 'pg'
 import type { Database } from './types/database'
 import { env } from './env'
@@ -22,7 +22,7 @@ export const pool = new Pool({
 
 // Create Kysely instance with proper typing
 class KyselyDb extends Kysely<Database> {
-  async execute(query: Parameters<typeof this.executeQuery>[0]) {
+  async execute<R = unknown>(query: Compilable<R>) {
     return this.executeQuery(query)
   }
 }

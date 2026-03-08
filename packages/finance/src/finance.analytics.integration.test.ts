@@ -3,6 +3,7 @@ import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
   isIntegrationDatabaseAvailable,
+  tableExists,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -17,21 +18,9 @@ import {
 } from './finance';
 
 async function hasTaggingTables(): Promise<boolean> {
-  const result = await db.execute(sql`
-    select
-      to_regclass('public.tags') as tags_table,
-      to_regclass('public.tagged_items') as tagged_items_table
-  `);
-  const rows = Array.isArray(result)
-    ? result
-    : result && typeof result === 'object' && 'rows' in result
-      ? ((
-          result as {
-            rows?: Array<{ tags_table: string | null; tagged_items_table: string | null }>;
-          }
-        ).rows ?? [])
-      : [];
-  return Boolean(rows[0]?.tags_table && rows[0]?.tagged_items_table);
+  const hasTagsTable = await tableExists('tags');
+  const hasTaggedItemsTable = await tableExists('tagged_items');
+  return hasTagsTable && hasTaggedItemsTable;
 }
 
 const nextUserId = createDeterministicIdFactory('finance.analytics.integration');
