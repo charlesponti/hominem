@@ -11,15 +11,21 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     env:
-      COOKIE_SECRET: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
+      # ⚠️ IMPORTANT: The following secrets need to be configured in GitHub repository settings:
+      # - COOKIE_SECRET_TEST
+      # - RESEND_API_KEY_TEST  
+      # - RESEND_FROM_EMAIL
+      # - RESEND_FROM_NAME
+      # For now, using test values. Move to secrets for production security.
+      COOKIE_SECRET: ${{ secrets.COOKIE_SECRET_TEST || 'T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U=' }}
       DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       REDIS_URL: "redis://localhost:6379"
-      RESEND_API_KEY: "SG.7Q9Z9ZQzQ9q"
-      RESEND_FROM_EMAIL: "noreply@hominem.test"
-      RESEND_FROM_NAME: "Hominem CI"
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_TEST || 'SG.7Q9Z9ZQzQ9q' }}
+      RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL || 'noreply@hominem.test' }}
+      RESEND_FROM_NAME: ${{ secrets.RESEND_FROM_NAME || 'Hominem CI' }}
       SEND_EMAILS: "false"
       AUTH_TEST_OTP_ENABLED: "true"
       AUTH_E2E_SECRET: "otp-secret"
@@ -38,10 +44,11 @@ jobs:
           POSTGRES_DB: hominem-test
         image: ghcr.io/charlesponti/hominem/pontistudios-postgres:latest
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -h localhost -p 5432 -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --pull always
         ports:
           - 4433:5432
       redis:
@@ -62,6 +69,11 @@ jobs:
         with:
           bun-version: 1.3.0
 
+      - name: Install PostgreSQL client tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
       - name: 📦 Install dependencies
         run: bun install --force
 
@@ -80,16 +92,19 @@ jobs:
             echo "Waiting for redis..."
             sleep 2
           done
-          echo "All services are ready!"
+           echo "All services are ready!"
 
       - name: 🏗️ Build
         run: bun turbo run build
+        timeout-minutes: 30
 
       - name: 🔬 Lint
         run: bun run lint
+        timeout-minutes: 10
 
       - name: ✅ Type check
         run: NODE_OPTIONS="--max-old-space-size=4096" bun run typecheck
+        timeout-minutes: 15
         env:
           TURBO_CONCURRENCY: 4
 
@@ -104,21 +119,29 @@ jobs:
 
       - name: 🧪 Unit tests
         run: bun run test
+        timeout-minutes: 15
 
       - name: 🔐 API auth contract tests
         run: bun run test:e2e:auth:api
+        timeout-minutes: 10
 
       - name: 🌐 Install Playwright browsers
-        run: (cd apps/finance && bunx playwright install --with-deps chromium) && (cd apps/notes && bunx playwright install chromium) && (cd apps/rocco && bunx playwright install chromium)
+        run: |
+          cd apps/finance && bunx playwright install --with-deps chromium
+          cd ../notes && bunx playwright install --with-deps chromium
+          cd ../rocco && bunx playwright install --with-deps chromium
+        timeout-minutes: 20
 
       - name: 📱 Mobile auth unit/integration/screen tests
         run: bun run --filter @hominem/mobile test:unit:auth && bun run --filter @hominem/mobile test:integration:auth && bun run --filter @hominem/mobile test:screens:auth
+        timeout-minutes: 15
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
           EXPO_PUBLIC_R2_DOMAIN: "test-domain"
 
       - name: 🌐 Web auth E2E tests
         run: bun run test:e2e:auth:app
+        timeout-minutes: 20
         env:
           AUTH_TEST_OTP_ENABLED: "true"
           AUTH_E2E_SECRET: "otp-secret"
