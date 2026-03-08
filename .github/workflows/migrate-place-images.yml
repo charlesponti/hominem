@@ -13,6 +13,9 @@ on:
 jobs:
   migrate:
     runs-on: ubuntu-latest
+    # This workflow is currently disabled - the migration script doesn't exist yet
+    # TODO: Re-enable once the script is created
+    if: false
     services:
       redis:
         image: redis
@@ -44,4 +47,10 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
           REDIS_URL: "redis://localhost:6379"
-        run: bun packages/places/src/scripts/migrate-place-images.ts
+        run: |
+          SCRIPT="packages/places/src/scripts/migrate-place-images.ts"
+          if [ ! -f "$SCRIPT" ]; then
+            echo "ERROR: Migration script not found at $SCRIPT"
+            exit 1
+          fi
+          bun "$SCRIPT"
