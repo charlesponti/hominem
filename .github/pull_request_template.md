@@ -10,6 +10,13 @@
 - [ ] ASCII texture opacity ≤ 0.20 where used
 - [ ] Cold, command-like copy; WCAG AA contrast; keyboard focus visible; respects `prefers-reduced-motion`
 
+### CI/CD Workflow Checklist (required when `.github/` files are changed)
+- [ ] Workflow YAML validated with actionlint (run `actionlint .github/workflows/*.yml` locally or see the `validate-workflows` CI job)
+- [ ] All `DATABASE_URL` values in test environments include `?sslmode=disable`
+- [ ] New secrets referenced in workflows are documented and provisioned in the repository settings
+- [ ] Reusable workflows/actions are used where possible instead of copy-pasting steps
+- [ ] No hard-coded versions — pin to a specific SHA or tag for third-party actions
+
 ### Before Merging
 <!---
 E.g:
