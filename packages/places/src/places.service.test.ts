@@ -17,8 +17,10 @@ describe('places.service integration', () => {
   let ownerId: string;
   let otherUserId: string;
 
+  const executeRaw = <T>(query: ReturnType<typeof sql>) => query.execute(db) as Promise<T>;
+
   const createUser = async (id: string): Promise<void> => {
-    await db.execute(sql`
+    await executeRaw(sql`
       insert into users (id, email, name)
       values (${id}, ${`${id}@example.com`}, ${'Places User'})
       on conflict (id) do nothing
@@ -26,9 +28,9 @@ describe('places.service integration', () => {
   };
 
   const cleanupUser = async (userId: string): Promise<void> => {
-    await db.execute(sql`delete from places where user_id = ${userId}`).catch(() => {});
-    await db.execute(sql`delete from travel_trips where user_id = ${userId}`).catch(() => {});
-    await db.execute(sql`delete from users where id = ${userId}`).catch(() => {});
+    await executeRaw(sql`delete from places where user_id = ${userId}`).catch(() => {});
+    await executeRaw(sql`delete from travel_trips where user_id = ${userId}`).catch(() => {});
+    await executeRaw(sql`delete from users where id = ${userId}`).catch(() => {});
   };
 
   beforeEach(async () => {
@@ -76,7 +78,7 @@ describe('places.service integration', () => {
     expect(first.place.id).toBe(second.place.id);
     expect(second.place.name).toBe('Updated');
 
-    const stored = await db.execute(sql`
+    const stored = await executeRaw(sql`
       select count(*)::int as count
       from places
       where user_id = ${ownerId}
