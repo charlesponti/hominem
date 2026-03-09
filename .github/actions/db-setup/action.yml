@@ -1,10 +1,11 @@
 name: Initialize Database Schema with Atlas
-description: Install Atlas CLI and apply database schema to test database
+description: Install Atlas CLI and apply database schema
 
 inputs:
-  database-url:
-    description: PostgreSQL database URL for schema application
-    required: true
+  environment:
+    description: Target environment (test or prod)
+    required: false
+    default: test
   dev-database-url:
     description: Development database URL for schema validation (Atlas uses this to compute diffs)
     required: false
@@ -23,12 +24,19 @@ runs:
         curl -sSf https://atlasgo.sh | sh
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
+    - name: Ensure database URL available
+      shell: bash
+      run: |
+        # workflow should already provide DATABASE_URL via env for prod or test
+        if [ -z "$DATABASE_URL" ]; then
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable" >> $GITHUB_ENV
+        fi
+
     - name: Apply database schema
       shell: bash
-      env:
-        DATABASE_URL: ${{ inputs.database-url }}
       run: |
         cd "${{ inputs.schema-path }}"
         atlas schema apply \
           --dev-url "${{ inputs.dev-database-url }}" \
+          --url "${{ env.DATABASE_URL }}" \
           --auto-approve

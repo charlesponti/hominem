@@ -94,7 +94,7 @@ jobs:
       - name: 🗄️ Initialize test database schema
         uses: ./.github/actions/db-setup
         with:
-          database-url: postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable
+          environment: test
 
       - name: 🏗️ Build
         run: bun turbo run build
