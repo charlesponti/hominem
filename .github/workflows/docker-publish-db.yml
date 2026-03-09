@@ -8,6 +8,10 @@ on:
       - 'docker/postgres/Dockerfile'
       - '.github/workflows/docker-publish-db.yml'
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
