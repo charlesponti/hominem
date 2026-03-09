@@ -10,9 +10,9 @@ if [ ! -d "$MIGRATIONS_DIR" ]; then
   exit 1
 fi
 
-if ! command -v rg >/dev/null 2>&1; then
-  echo "ripgrep (rg) is required"
-  exit 1
+HAS_RG=0
+if command -v rg >/dev/null 2>&1; then
+  HAS_RG=1
 fi
 
 shopt -s nullglob
@@ -29,10 +29,18 @@ for file in "${FILES[@]}"; do
     continue
   fi
 
-  if rg -i --line-number 'drop[[:space:]]+column|drop[[:space:]]+table|alter[[:space:]]+table.+alter[[:space:]]+column.+type' "$file" >/dev/null; then
-    echo "Dangerous migration pattern found in $file"
-    rg -i --line-number 'drop[[:space:]]+column|drop[[:space:]]+table|alter[[:space:]]+table.+alter[[:space:]]+column.+type' "$file"
-    exit 1
+  if [ "$HAS_RG" -eq 1 ]; then
+    if rg -i --line-number 'drop[[:space:]]+column|drop[[:space:]]+table|alter[[:space:]]+table.+alter[[:space:]]+column.+type' "$file" >/dev/null; then
+      echo "Dangerous migration pattern found in $file"
+      rg -i --line-number 'drop[[:space:]]+column|drop[[:space:]]+table|alter[[:space:]]+table.+alter[[:space:]]+column.+type' "$file"
+      exit 1
+    fi
+  else
+    if grep -Ein 'drop[[:space:]]+column|drop[[:space:]]+table|alter[[:space:]]+table.+alter[[:space:]]+column.+type' "$file" >/dev/null; then
+      echo "Dangerous migration pattern found in $file"
+      grep -Ein 'drop[[:space:]]+column|drop[[:space:]]+table|alter[[:space:]]+table.+alter[[:space:]]+column.+type' "$file"
+      exit 1
+    fi
   fi
 done
 
