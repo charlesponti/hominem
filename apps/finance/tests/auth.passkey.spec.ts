@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import type { BrowserContext, Page } from '@playwright/test'
 import { setupVirtualPasskey, teardownVirtualPasskey } from './auth.passkey-helpers'
-import { createAuthTestEmail, enterOtpCode, fetchLatestSignInOtp, signInWithEmailOtp } from './auth.flow-helpers'
+import { createAuthTestEmail, fetchLatestSignInOtp, signInWithEmailOtp, submitOtpCode } from './auth.flow-helpers'
 
 const AUTH_API_BASE_URL = 'http://localhost:4040'
 
@@ -297,8 +297,7 @@ test('web auth falls back from passkey entry to email otp successfully', async (
   await expect(page).toHaveURL(/\/auth\/verify\?email=/, { timeout: 30000 })
 
   const otp = await fetchLatestSignInOtp(email)
-  await enterOtpCode(page, otp)
-  await page.getByRole('button', { name: 'Verify' }).click()
+  await submitOtpCode(page, otp)
   await expect(page).toHaveURL(/\/finance$/, { timeout: 30000 })
 })
 

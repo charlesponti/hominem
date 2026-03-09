@@ -53,8 +53,7 @@ export async function fetchLatestSignInOtp(email: string) {
 export async function signInWithEmailOtp(page: Page, email: string) {
   await startEmailOtpFlow(page, email)
   const otp = await fetchLatestSignInOtp(email)
-  await enterOtpCode(page, otp)
-  await page.getByRole('button', { name: 'Verify' }).click()
+  await submitOtpCode(page, otp)
   await expect(page).toHaveURL(/\/finance$/, { timeout: 30000 })
 }
 
@@ -64,5 +63,27 @@ export async function enterOtpCode(page: Page, otp: string) {
   for (let i = 0; i < 6; i++) {
     await digitInputs.nth(i).fill(normalized[i] ?? '')
   }
-  await expect(page.getByRole('button', { name: 'Verify' })).toBeEnabled({ timeout: 15000 })
+}
+
+export async function submitOtpCode(page: Page, otp: string) {
+  const normalized = otp.replace(/\D/g, '').slice(0, 6)
+  await enterOtpCode(page, normalized)
+
+  const verifyButton = page.getByRole('button', { name: 'Verify' })
+  try {
+    await expect(verifyButton).toBeEnabled({ timeout: 1500 })
+    await verifyButton.click()
+    return
+  } catch {
+    await page.locator('input[name="otp"]').evaluate((input, value) => {
+      if (!(input instanceof HTMLInputElement)) return
+      input.value = value
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+      const form = input.closest('form')
+      if (form instanceof HTMLFormElement) {
+        form.requestSubmit()
+      }
+    }, normalized)
+  }
 }

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { enterOtpCode, signInWithEmailOtp, startEmailOtpFlow } from './auth.flow-helpers'
+import { signInWithEmailOtp, startEmailOtpFlow, submitOtpCode } from './auth.flow-helpers'
 
 test('email + otp app auth flow reaches authenticated finance view', async ({ page, context }) => {
   await context.clearCookies()
@@ -13,8 +13,7 @@ test('email + otp rejects invalid verification code', async ({ page, context }) 
   const email = `finance-e2e-invalid-${Date.now()}@hominem.test`
   await startEmailOtpFlow(page, email)
 
-  await enterOtpCode(page, '111111')
-  await page.getByRole('button', { name: 'Verify' }).click()
+  await submitOtpCode(page, '111111')
 
   await expect(page).toHaveURL(/\/auth\/verify\?email=/, { timeout: 30000 })
   await expect(page.getByText('Verification failed. Please check your code and try again.')).toBeVisible({ timeout: 15000 })
