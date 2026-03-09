@@ -46,7 +46,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --pull always
         ports:
           - 4433:5432
       redis:
