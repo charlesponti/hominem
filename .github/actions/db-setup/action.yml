@@ -9,7 +9,7 @@ inputs:
   dev-database-url:
     description: Development database URL for schema validation (Atlas uses this to compute diffs)
     required: false
-    default: sqlite://file?mode=memory&cache=shared
+    default: ""
   schema-path:
     description: Path to schema directory containing atlas.yaml (relative to repo root)
     required: false
@@ -36,8 +36,40 @@ runs:
       shell: bash
       run: |
         SCHEMA_DIR="${GITHUB_WORKSPACE}/${{ inputs.schema-path }}"
+        SCHEMA_FILE="${SCHEMA_DIR}/schema.hcl"
+        if [ ! -f "$SCHEMA_FILE" ]; then
+          SCHEMA_FILE="$(mktemp --suffix .hcl)"
+          cp "${SCHEMA_DIR}/schema.sql" "$SCHEMA_FILE"
+          trap 'rm -f "$SCHEMA_FILE"' EXIT
+        fi
+        DEV_DATABASE_URL="${{ inputs.dev-database-url }}"
+        if [ -z "$DEV_DATABASE_URL" ]; then
+          DEV_DATABASE_URL="${DATABASE_URL}"
+        fi
+        psql "$DATABASE_URL" <<'SQL'
+        DO $$
+        DECLARE
+          extension_name text;
+          extension_names text[] := '{pgcrypto,pg_trgm,postgis}';
+          extension_schema text;
+        BEGIN
+          FOREACH extension_name IN ARRAY extension_names LOOP
+            SELECT n.nspname
+            INTO extension_schema
+            FROM pg_extension e
+            JOIN pg_namespace n ON n.oid = e.extnamespace
+            WHERE e.extname = extension_name;
+
+            IF extension_schema IS NULL THEN
+              EXECUTE format('CREATE EXTENSION %I WITH SCHEMA public', extension_name);
+            ELSIF extension_schema <> 'public' THEN
+              EXECUTE format('ALTER EXTENSION %I SET SCHEMA public', extension_name);
+            END IF;
+          END LOOP;
+        END $$;
+        SQL
         atlas schema apply \
-          --dir "$SCHEMA_DIR" \
-          --dev-url "${{ inputs.dev-database-url }}" \
+          --to "file://${SCHEMA_FILE}" \
+          --dev-url "$DEV_DATABASE_URL" \
           --url "$DATABASE_URL" \
           --auto-approve
