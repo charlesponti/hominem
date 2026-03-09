@@ -66,3 +66,11 @@ bun-debug.log*
 
 # turbo
 .turbo
+
+# throw-away helpers
+test-import.ts
+.tmp-read-otp.ts
+
+# local logs
+tmp/
+
