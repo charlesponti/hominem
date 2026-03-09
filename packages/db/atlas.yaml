@@ -5,6 +5,10 @@ env:
   prod:
     url: ${DATABASE_URL}
 
+sql:
+  schema:
+    - file: schema.sql
+
 lint:
   latest:
     ignore:

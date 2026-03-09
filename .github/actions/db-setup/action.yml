@@ -5,10 +5,14 @@ inputs:
   database-url:
     description: PostgreSQL database URL for schema application
     required: true
-  schema-path:
-    description: Path to schema.sql file relative to repo root
+  dev-database-url:
+    description: Development database URL for schema validation (Atlas uses this to compute diffs)
     required: false
-    default: packages/db/schema.sql
+    default: sqlite://file?mode=memory&cache=shared
+  schema-path:
+    description: Path to schema directory containing atlas.yaml (relative to repo root)
+    required: false
+    default: packages/db
 
 runs:
   using: composite
@@ -24,8 +28,7 @@ runs:
       env:
         DATABASE_URL: ${{ inputs.database-url }}
       run: |
-        SCHEMA_FILE="${GITHUB_WORKSPACE}/${{ inputs.schema-path }}"
+        cd "${{ inputs.schema-path }}"
         atlas schema apply \
-          --url "${{ inputs.database-url }}" \
-          --to "file://${SCHEMA_FILE}" \
+          --dev-url "${{ inputs.dev-database-url }}" \
           --auto-approve

@@ -95,7 +95,6 @@ jobs:
         uses: ./.github/actions/db-setup
         with:
           database-url: postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable
-          schema-path: packages/db/schema.sql
 
       - name: 🏗️ Build
         run: bun turbo run build
