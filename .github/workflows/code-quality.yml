@@ -15,7 +15,7 @@ jobs:
     env:
       # For now, using test values. Move to secrets for production security.
       COOKIE_SECRET: ${{ secrets.COOKIE_SECRET_TEST }}
-      DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
