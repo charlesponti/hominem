@@ -123,7 +123,7 @@ async function queryAccessibleListRows(
               .selectFrom('task_list_collaborators as tlc')
               .select('tlc.list_id')
               .where((qb) => qb('tlc.user_id', '=', userId))
-              .where(sql`tlc.list_id = tl.id`),
+              .whereRef('tlc.list_id', '=', 'tl.id'),
           ),
         ]),
       )
@@ -154,7 +154,8 @@ async function queryAccessibleListRows(
           db
             .selectFrom('task_list_collaborators as tlc')
             .select('tlc.list_id')
-            .where(sql`tlc.list_id = tl.id AND tlc.user_id = ${userId}`),
+            .whereRef('tlc.list_id', '=', 'tl.id')
+            .where('tlc.user_id', '=', userId),
         ),
       ]),
     )
@@ -230,7 +231,7 @@ export async function getListById(id: string, userId?: string | null): Promise<L
               .selectFrom('task_list_collaborators as tlc')
               .select('tlc.list_id')
               .where((qb) => qb('tlc.user_id', '=', userId))
-              .where(sql`tlc.list_id = tl.id`),
+              .whereRef('tlc.list_id', '=', 'tl.id'),
           ),
         ]),
       ]),
