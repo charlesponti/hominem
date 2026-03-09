@@ -252,6 +252,16 @@ Status: 🟡 In progress
 - [ ] Validate redirect URI allowlist and scope escalation checks in final matrix.
 - [ ] Complete full auth lifecycle audit event coverage and retention policy.
 
+### 4.1.1 Carry-Forward Hardening Items (From Legacy Auth Email Guard Plan)
+
+- [ ] Define and publish auth invariants and threat model doc (`docs/AUTH.md`).
+- [ ] Enforce explicit route auth policy with default-deny semantics for sensitive endpoints.
+- [ ] Add deactivated-account safety controls (`deactivatedAt`, deny-login behavior, audited responses).
+- [ ] Add safe email-change verification policy with audit logging.
+- [ ] Confirm CSRF protections for cookie-backed state-changing requests.
+- [ ] Document emergency auth controls (force reauth, disable login, incident playbook).
+- [ ] Validate profile update field allowlists and ensure privileged fields are blocked.
+
 ### 4.2 Mobile Verification
 
 - [ ] Run final mobile auth suite gates (`test:e2e:auth:api`, `test:e2e:auth:live`).
@@ -278,12 +288,8 @@ Status: 🟡 In progress
 
 ## Section 6: References
 
-- `docs/plans/2026-02-23-1456-apple-signin-only.md`
-- `docs/plans/2026-02-24-1207-better-auth.md`
-- `docs/plans/2026-02-25-2341-mobile-readiness.md`
-- `docs/plans/2026-02-25-2341-mobile-readiness.tasks.md`
-- `docs/plans/2026-02-26-migrate-to-better-auth-expo.md`
 - `docs/plans/2026-02-27-auth-consolidation.md`
+- `docs/plans/auth-email-guard-plan.md`
 - `specs/001-remove-any-types/plan.md`
 - `specs/001-remove-any-types/tasks.md`
 
