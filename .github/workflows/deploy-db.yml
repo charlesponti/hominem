@@ -54,11 +54,11 @@ jobs:
             exit 1
           fi
 
-          HAS_GOOSE_TABLE="$(psql "${DATABASE_URL}" -Atc "SELECT to_regclass('public.goose_db_version') IS NOT NULL;")"
           HAS_EXISTING_SCHEMA="$(psql "${DATABASE_URL}" -Atc "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users');")"
+          HAS_BASELINE_APPLIED="$(psql "${DATABASE_URL}" -Atc "SELECT EXISTS (SELECT 1 FROM public.goose_db_version WHERE version_id = ${BASELINE_VERSION} AND is_applied = true);" 2>/dev/null || echo "f")"
 
-          if [ "${HAS_GOOSE_TABLE}" = "f" ] && [ "${HAS_EXISTING_SCHEMA}" = "t" ]; then
-            echo "Detected existing schema without Goose metadata. Marking baseline ${BASELINE_VERSION} as applied."
+          if [ "${HAS_EXISTING_SCHEMA}" = "t" ] && [ "${HAS_BASELINE_APPLIED}" = "f" ]; then
+            echo "Detected existing schema without applied Goose baseline. Marking ${BASELINE_VERSION} as applied."
             psql "${DATABASE_URL}" <<SQL
           CREATE TABLE IF NOT EXISTS public.goose_db_version (
             id bigserial PRIMARY KEY,
