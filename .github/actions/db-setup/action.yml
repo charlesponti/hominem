@@ -24,7 +24,8 @@ runs:
       env:
         DATABASE_URL: ${{ inputs.database-url }}
       run: |
+        SCHEMA_FILE="${GITHUB_WORKSPACE}/${{ inputs.schema-path }}"
         atlas schema apply \
-          --dev-url "${{ inputs.database-url }}" \
-          --to "file://${{ inputs.schema-path }}" \
+          --url "${{ inputs.database-url }}" \
+          --to "file://${SCHEMA_FILE}" \
           --auto-approve
