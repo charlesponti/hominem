@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 // Kysely-compatible test utilities
 
 export const isIntegrationDatabaseAvailable = async (): Promise<boolean> => {
@@ -12,7 +14,10 @@ export const isIntegrationDatabaseAvailable = async (): Promise<boolean> => {
 
 export const createDeterministicIdFactory = (prefix: string) => {
   let counter = 0
-  return () => `${prefix}-${counter++}-${Math.random().toString(36).slice(2, 10)}`
+  return () => {
+    counter += 1
+    return randomUUID()
+  }
 }
 
 // Helper to extract rows from query results (handles both Kysely and raw results)
@@ -61,7 +66,7 @@ export const ensureIntegrationUsers = async (
 
 export const createTestUser = async (overrides?: { id?: string; email?: string; name?: string }): Promise<string> => {
   const { db } = await import('../db')
-  const id = overrides?.id || `test-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  const id = overrides?.id || randomUUID()
   
   await db.insertInto('users').values({
     id,
