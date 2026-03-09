@@ -39,7 +39,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: hominem-test
-        image: ghcr.io/charlesponti/hominem/pontistudios-postgres:latest
+        image: ghcr.io/hackefeller/postgres:latest
         options: >-
           --health-cmd "pg_isready -h localhost -p 5432 -U postgres"
           --health-interval 10s
@@ -73,6 +73,9 @@ jobs:
 
       - name: 📦 Install dependencies
         run: bun install --force
+
+      - name: 🛡️ Validate DB migrations
+        run: bun run validate-db-migrations
 
       - name: 🧭 TypeScript project-graph guard
         run: bun turbo run typegen && bun run typecheck

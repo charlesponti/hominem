@@ -35,7 +35,17 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run Database Schema Migrations
-        run: cd packages/db && bunx atlas schema apply --auto-approve
+      - name: Install Goose CLI
+        run: |
+          bash scripts/install-goose.sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Check migration status
+        run: goose-migrate -dir packages/db/migrations postgres "${DATABASE_URL}" status
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Run database migrations
+        run: goose-migrate -dir packages/db/migrations postgres "${DATABASE_URL}" up
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

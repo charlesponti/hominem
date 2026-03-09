@@ -1,27 +1,23 @@
-name: Initialize Database Schema with Atlas
-description: Install Atlas CLI and apply database schema
+name: Initialize Database Schema with Goose
+description: Install Goose CLI and apply database migrations
 
 inputs:
   environment:
     description: Target environment (test or prod)
     required: false
     default: test
-  dev-database-url:
-    description: Development database URL for schema validation (Atlas uses this to compute diffs)
+  migrations-path:
+    description: Path to Goose migrations directory (relative to repo root)
     required: false
-    default: ""
-  schema-path:
-    description: Path to schema directory containing atlas.yaml (relative to repo root)
-    required: false
-    default: packages/db
+    default: packages/db/migrations
 
 runs:
   using: composite
   steps:
-    - name: Install Atlas CLI
+    - name: Install Goose CLI
       shell: bash
       run: |
-        curl -sSf https://atlasgo.sh | sh
+        bash "${GITHUB_WORKSPACE}/scripts/install-goose.sh"
         echo "$HOME/.local/bin" >> $GITHUB_PATH
 
     - name: Ensure database URL available
@@ -32,44 +28,12 @@ runs:
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable" >> $GITHUB_ENV
         fi
 
-    - name: Apply database schema
+    - name: Apply database migrations
       shell: bash
       run: |
-        SCHEMA_DIR="${GITHUB_WORKSPACE}/${{ inputs.schema-path }}"
-        SCHEMA_FILE="${SCHEMA_DIR}/schema.hcl"
-        if [ ! -f "$SCHEMA_FILE" ]; then
-          SCHEMA_FILE="$(mktemp --suffix .hcl)"
-          cp "${SCHEMA_DIR}/schema.sql" "$SCHEMA_FILE"
-          trap 'rm -f "$SCHEMA_FILE"' EXIT
+        MIGRATIONS_DIR="${GITHUB_WORKSPACE}/${{ inputs.migrations-path }}"
+        if [ ! -d "$MIGRATIONS_DIR" ]; then
+          echo "Migrations directory not found: $MIGRATIONS_DIR"
+          exit 1
         fi
-        DEV_DATABASE_URL="${{ inputs.dev-database-url }}"
-        if [ -z "$DEV_DATABASE_URL" ]; then
-          DEV_DATABASE_URL="${DATABASE_URL}"
-        fi
-        psql "$DATABASE_URL" <<'SQL'
-        DO $$
-        DECLARE
-          extension_name text;
-          extension_names text[] := '{pgcrypto,pg_trgm,postgis}';
-          extension_schema text;
-        BEGIN
-          FOREACH extension_name IN ARRAY extension_names LOOP
-            SELECT n.nspname
-            INTO extension_schema
-            FROM pg_extension e
-            JOIN pg_namespace n ON n.oid = e.extnamespace
-            WHERE e.extname = extension_name;
-
-            IF extension_schema IS NULL THEN
-              EXECUTE format('CREATE EXTENSION %I WITH SCHEMA public', extension_name);
-            ELSIF extension_schema <> 'public' THEN
-              EXECUTE format('ALTER EXTENSION %I SET SCHEMA public', extension_name);
-            END IF;
-          END LOOP;
-        END $$;
-        SQL
-        atlas schema apply \
-          --to "file://${SCHEMA_FILE}" \
-          --dev-url "$DEV_DATABASE_URL" \
-          --url "$DATABASE_URL" \
-          --auto-approve
+        goose-migrate -dir "$MIGRATIONS_DIR" postgres "$DATABASE_URL" up

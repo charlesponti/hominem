@@ -58,7 +58,11 @@
     "prepare": "bun run build",
     "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
-    "atlas": "atlas"
+    "goose:install": "bash ../../scripts/install-goose.sh",
+    "goose:up": "bash ../../scripts/install-goose.sh && PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"$DATABASE_URL\" up",
+    "goose:down": "bash ../../scripts/install-goose.sh && PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"$DATABASE_URL\" down",
+    "goose:status": "bash ../../scripts/install-goose.sh && PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"$DATABASE_URL\" status",
+    "goose:baseline:pull": "bash ../../scripts/pull-goose-baseline.sh"
   },
   "dependencies": {
     "@hominem/utils": "workspace:*",
@@ -71,7 +75,6 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.7",
-    "atlas": "latest",
     "dotenv": "^16.4.7",
     "typescript": "5.9.3",
     "vitest": "^4.0.16"

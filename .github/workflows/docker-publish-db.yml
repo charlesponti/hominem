@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docker/postgres.dockerfile'
+      - 'docker/postgres/Dockerfile'
       - '.github/workflows/docker-publish-db.yml'
 
 jobs:
@@ -22,10 +22,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push pontistudios-postgres image
+      - name: Build and push postgresql image
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./docker/postgres.dockerfile
+          file: ./docker/postgres/Dockerfile
           push: true
-          tags: ghcr.io/charlesponti/hominem/pontistudios-postgres:latest
+          tags: ghcr.io/hackefeller/postgres:latest
