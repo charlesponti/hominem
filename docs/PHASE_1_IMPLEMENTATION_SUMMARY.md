@@ -121,6 +121,25 @@ Safe, idempotent data migration:
 
 Uses `DO $$` blocks to safely handle cases where old tables don't exist (greenfield).
 
+#### Knip Dead‑code Cleanup
+
+To support the Phase 1 cleanup effort we integrated [Knip](https://github.com/teambit/knip) for dead‑code
+analysis:
+
+- Installed the tool (`bun add -D knip`) and added a root `knip.json` configuration.
+- Added convenient scripts (`bun run knip` / `bun run knip:fix`).
+- Ran the first analysis and removed **9 unused files** plus several duplicate root dependencies.
+- Results summary:
+  - **Before cleanup:** 129 unused files, 80 unused dependencies, 109 unused exports
+  - **After Phase 1:** 120 unused files (−9), 76 unused dependencies (−4), 171 unused exports
+    (internal exports were trimmed, which temporarily increased the count).
+- Identified high‑impact dependencies and 120 remaining files for later phases (see original KNIP report).
+- Added follow‑up phases for dependency/component cleanup and a CI step (Phase 4) to run `bun run knip`.
+
+This work is now reflected here as part of Phase 1c; the standalone `KNIP_CLEANUP_SUMMARY.md` and
+`KNIP_REPORT.md` files have been archived/deleted.
+
+
 ## Generated Artifacts
 
 ### SQL Migrations
