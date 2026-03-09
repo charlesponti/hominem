@@ -31,7 +31,7 @@ class KyselyDb extends Kysely<Database> {
     ) {
       return query.execute(this)
     }
-    return this.executeQuery(query)
+    return this.executeQuery(query as Compilable<R>)
   }
 }
 
