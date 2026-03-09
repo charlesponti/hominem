@@ -94,7 +94,14 @@ jobs:
             echo "Waiting for redis..."
             sleep 2
           done
-           echo "All services are ready!"
+          echo "All services are ready!"
+
+      - name: 🗄️ Initialize test database schema
+        run: |
+          cd packages/db
+          bunx atlas schema apply \
+            --url "postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable" \
+            --to "file://schema.sql"
 
       - name: 🏗️ Build
         run: bun turbo run build

@@ -74,6 +74,8 @@ interface Institution {
   name: string;
 }
 
+type InstitutionRow = Selectable<Database['financial_institutions']>;
+
 
 function toNumber(value: string | number | null): number {
   if (typeof value === 'number') {
@@ -757,7 +759,7 @@ export async function getAllInstitutions(): Promise<Institution[]> {
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
-  return result;
+  return result as Institution[];
 }
 
 export async function createInstitution(name: string): Promise<Institution> {
@@ -773,7 +775,7 @@ export async function createInstitution(name: string): Promise<Institution> {
   if (!row) {
     throw new Error('Failed to create institution');
   }
-  return row;
+  return row as Institution;
 }
 
 export function calculateRunway(input: z.infer<typeof runwayCalculationSchema>): {
@@ -1556,7 +1558,7 @@ export async function ensureInstitutionExists(name: string): Promise<Institution
     .executeTakeFirst();
   const existingRow = existing ?? null;
   if (existingRow) {
-    return existingRow;
+    return existingRow as Institution;
   }
   return createInstitution(name);
 }
