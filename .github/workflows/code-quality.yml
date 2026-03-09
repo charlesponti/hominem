@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: read
     env:
       # For now, using test values. Move to secrets for production security.
       COOKIE_SECRET: ${{ secrets.COOKIE_SECRET_TEST }}
