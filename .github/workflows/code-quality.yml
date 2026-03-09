@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       COOKIE_SECRET: "T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U="
-      DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

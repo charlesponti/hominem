@@ -1,0 +1,66 @@
+name: Initialize Database Schema with Atlas
+description: Install Atlas CLI and apply database schema
+
+inputs:
+  environment:
+    description: Target environment (test or prod)
+    required: false
+    default: test
+  dev-database-url:
+    description: Development database URL for schema validation (Atlas uses this to compute diffs). Must be same driver as target DB.
+    required: false
+    default: ""
+  schema-path:
+    description: Path to schema directory containing atlas.yaml (relative to repo root)
+    required: false
+    default: packages/db
+  schema-file:
+    description: Name of the schema file within schema-path (HCL format)
+    required: false
+    default: schema.hcl
+
+runs:
+  using: composite
+  steps:
+    - name: Install Atlas CLI
+      shell: bash
+      run: |
+        curl -sSf https://atlasgo.sh | sh
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Ensure database URL available
+      shell: bash
+      run: |
+        # workflow should already provide DATABASE_URL via env for prod or test
+        if [ -z "$DATABASE_URL" ]; then
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable" >> $GITHUB_ENV
+        fi
+
+    - name: Create Atlas dev database
+      shell: bash
+      run: |
+        # Derive dev database URL from DATABASE_URL (same host/credentials, different db name)
+        DEV_URL="${{ inputs.dev-database-url }}"
+        if [ -z "$DEV_URL" ]; then
+          # Strip the database name from DATABASE_URL and append the dev db name
+          BASE_URL=$(echo "${DATABASE_URL}" | sed 's|/[^/?]*\(\?.*\)\?$|/hominem-dev\1|')
+          DEV_URL="${BASE_URL}"
+          # Create the dev database; log result but continue if it already exists
+          if psql "${DATABASE_URL}" -c 'CREATE DATABASE "hominem-dev";' 2>&1; then
+            echo "Dev database 'hominem-dev' created successfully."
+          else
+            echo "Dev database 'hominem-dev' already exists or could not be created; continuing."
+          fi
+        fi
+        echo "ATLAS_DEV_URL=${DEV_URL}" >> $GITHUB_ENV
+
+    - name: Apply database schema
+      shell: bash
+      run: |
+        # compute absolute path to schema file
+        SCHEMA_FILE="${GITHUB_WORKSPACE}/${{ inputs.schema-path }}/${{ inputs.schema-file }}"
+        atlas schema apply \
+          --dev-url "${ATLAS_DEV_URL}" \
+          --url "${DATABASE_URL}" \
+          --to "file://${SCHEMA_FILE}" \
+          --auto-approve
