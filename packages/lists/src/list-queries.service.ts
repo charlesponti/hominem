@@ -121,11 +121,9 @@ async function queryAccessibleListRows(
           eb.exists(
             db
               .selectFrom('task_list_collaborators as tlc')
-              // eslint-disable-next-line typescript-eslint/no-explicit-any
-              .select(['tlc.id'] as any)
+              .select('tlc.list_id')
               .where((qb) => qb('tlc.user_id', '=', userId))
-              // eslint-disable-next-line typescript-eslint/no-explicit-any
-              .where(sql`tlc.list_id = tl.id` as any),
+              .where(sql`tlc.list_id = tl.id`),
           ),
         ]),
       )
@@ -155,10 +153,8 @@ async function queryAccessibleListRows(
         eb.exists(
           db
             .selectFrom('task_list_collaborators as tlc')
-            // eslint-disable-next-line typescript-eslint/no-explicit-any
-            .select(['tlc.id'] as any)
-            // eslint-disable-next-line typescript-eslint/no-explicit-any
-            .where(sql`tlc.list_id = tl.id AND tlc.user_id = ${userId}` as any),
+            .select('tlc.list_id')
+            .where(sql`tlc.list_id = tl.id AND tlc.user_id = ${userId}`),
         ),
       ]),
     )
@@ -232,11 +228,9 @@ export async function getListById(id: string, userId?: string | null): Promise<L
           eb.exists(
             db
               .selectFrom('task_list_collaborators as tlc')
-              // eslint-disable-next-line typescript-eslint/no-explicit-any
-              .select(['tlc.id'] as any)
+              .select('tlc.list_id')
               .where((qb) => qb('tlc.user_id', '=', userId))
-              // eslint-disable-next-line typescript-eslint/no-explicit-any
-              .where(sql`tlc.list_id = tl.id` as any),
+              .where(sql`tlc.list_id = tl.id`),
           ),
         ]),
       ]),

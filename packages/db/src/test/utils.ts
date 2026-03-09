@@ -49,14 +49,14 @@ export const tableExists = async (tableName: string): Promise<boolean> => {
 
 // Create users with specific IDs (for tests that need deterministic IDs)
 export const ensureIntegrationUsers = async (
-  users: Array<{ id: string; name: string }>
+  users: Array<{ id: string; name: string; email?: string }>
 ): Promise<{ ownerId: string; otherUserId: string }> => {
   const { db } = await import('../db')
   
   for (const user of users) {
     await db.insertInto('users').values({
       id: user.id,
-      email: `${user.id}@test.com`,
+      email: user.email ?? `${user.id}@test.com`,
       name: user.name,
     }).execute()
   }
