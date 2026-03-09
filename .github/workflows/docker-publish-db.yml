@@ -32,4 +32,4 @@ jobs:
           context: .
           file: ./docker/postgres/Dockerfile
           push: true
-          tags: ghcr.io/hackefeller/postgres:latest
+          tags: ghcr.io/hackefeller/hominem/postgres:latest

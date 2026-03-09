@@ -6,7 +6,7 @@ MIGRATIONS_PATH=${CI_DB_MIGRATIONS_PATH:-"packages/db/migrations"}
 DB_PORT=55433
 DB_CONTAINER="hominem-code-quality-db-setup"
 DB_URL="postgres://postgres:postgres@localhost:${DB_PORT}/hominem-test?sslmode=disable"
-IMAGE="ghcr.io/hackefeller/postgres:latest"
+IMAGE="ghcr.io/hackefeller/hominem/postgres:latest"
 GOOSE_BIN="${HOME}/.local/bin/goose-migrate"
 
 cleanup() {
