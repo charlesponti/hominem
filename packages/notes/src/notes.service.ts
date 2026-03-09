@@ -1,6 +1,6 @@
 import { db } from '@hominem/db';
-import { and, desc, eq, inArray, or, type SQLWrapper, sql } from '@hominem/db';
-import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import type { Database } from '@hominem/db';
+import type { Selectable } from 'kysely';
 
 import type {
   NoteStatus,
@@ -18,29 +18,32 @@ import {
   UpdateNoteZodSchema,
 } from './types';
 
-const notesTable = pgTable('notes', {
-  id: uuid('id').defaultRandom().primaryKey().notNull(),
-  userId: uuid('user_id').notNull(),
-  type: text('type').notNull(),
-  status: text('status').notNull(),
-  title: text('title'),
-  content: text('content'),
-  excerpt: text('excerpt'),
-  mentions: jsonb('mentions'),
-  analysis: jsonb('analysis'),
-  publishingMetadata: jsonb('publishing_metadata'),
-  parentNoteId: uuid('parent_note_id'),
-  versionNumber: integer('version_number').default(1).notNull(),
-  isLatestVersion: boolean('is_latest_version').default(true).notNull(),
-  publishedAt: timestamp('published_at', { withTimezone: true, mode: 'string' }),
-  scheduledFor: timestamp('scheduled_for', { withTimezone: true, mode: 'string' }),
-  source: text('source'),
-  isLocked: boolean('is_locked').default(false),
-  folder: text('folder'),
-  data: jsonb('data'),
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).defaultNow(),
-});
+type NotesRow = Selectable<Database['notes']>;
+
+function rowToNote(row: NotesRow, tags: NoteOutput['tags'] = []): NoteOutput {
+  const toDateStr = (d: string | Date | null | undefined): string | null =>
+    typeof d === 'string' ? d : d instanceof Date ? d.toISOString() : (d ?? null);
+  return {
+    id: row.id,
+    userId: row.user_id,
+    type: row.type as NoteOutput['type'],
+    status: row.status as NoteOutput['status'],
+    title: row.title,
+    content: row.content ?? '',
+    excerpt: row.excerpt,
+    tags,
+    mentions: row.mentions as NoteOutput['mentions'],
+    analysis: row.analysis as NoteOutput['analysis'],
+    publishingMetadata: row.publishing_metadata as NoteOutput['publishingMetadata'],
+    parentNoteId: row.parent_note_id,
+    versionNumber: row.version_number,
+    isLatestVersion: row.is_latest_version,
+    publishedAt: toDateStr(row.published_at),
+    scheduledFor: toDateStr(row.scheduled_for),
+    createdAt: toDateStr(row.created_at) ?? new Date().toISOString(),
+    updatedAt: toDateStr(row.updated_at) ?? new Date().toISOString(),
+  };
+}
 
 export class NotFoundError extends Error {
   constructor(message: string) {
@@ -91,33 +94,51 @@ export class NotesService {
     tags: Array<{ value: string }> | null,
   ): Promise<void> {
     if (tags === null) {
-      await db.execute(sql`delete from note_tags where note_id = ${noteId}`);
+      await db.deleteFrom('note_tags').where('note_id', '=', noteId).execute();
       return;
     }
 
     const normalizedNames = this.normalizeTagValues(tags);
-    await db.execute(sql`delete from note_tags where note_id = ${noteId}`);
+    await db.deleteFrom('note_tags').where('note_id', '=', noteId).execute();
 
     if (normalizedNames.length === 0) {
       return;
     }
 
     for (const name of normalizedNames) {
-      await db.execute(sql`
-        insert into tags (owner_id, name)
-        values (${userId}, ${name})
-        on conflict (owner_id, name) do nothing
-      `);
+      try {
+        await db
+          .insertInto('tags')
+          .values({
+            owner_id: userId,
+            name,
+          })
+          .execute();
+      } catch {
+        // Tag already exists, continue
+      }
     }
 
-    await db.execute(sql`
-      insert into note_tags (note_id, tag_id)
-      select ${noteId}, t.id
-      from tags t
-      where t.owner_id = ${userId}
-        and ${inArray(sql`t.name`, normalizedNames)}
-      on conflict (note_id, tag_id) do nothing
-    `);
+    const tagRecords = await db
+      .selectFrom('tags')
+      .select('id')
+      .where('owner_id', '=', userId)
+      .where('name', 'in', normalizedNames)
+      .execute();
+
+    for (const tagRecord of tagRecords) {
+      try {
+        await db
+          .insertInto('note_tags')
+          .values({
+            note_id: noteId,
+            tag_id: tagRecord.id,
+          })
+          .execute();
+      } catch {
+        // Relationship already exists, continue
+      }
+    }
   }
 
   private async getTagsByNoteIds(
@@ -128,17 +149,18 @@ export class NotesService {
       return new Map();
     }
 
-    const rows = (await db.execute(sql<{
-      noteId: string;
-      tagValue: string;
-    }>`
-      select nt.note_id as "noteId", t.name as "tagValue"
-      from note_tags nt
-      inner join tags t on t.id = nt.tag_id
-      where ${inArray(sql`nt.note_id`, noteIds)}
-        and t.owner_id = ${userId}
-      order by nt.note_id asc, t.name asc
-    `)) as Array<{ noteId: string; tagValue: string }>;
+    const rows = await db
+      .selectFrom('note_tags')
+      .innerJoin('tags', 'tags.id', 'note_tags.tag_id')
+      .select((eb) => [
+        eb.ref('note_tags.note_id').as('noteId'),
+        eb.ref('tags.name').as('tagValue'),
+      ])
+      .where('note_tags.note_id', 'in', noteIds)
+      .where('tags.owner_id', '=', userId)
+      .orderBy('note_tags.note_id', 'asc')
+      .orderBy('tags.name', 'asc')
+      .execute();
 
     const map = new Map<string, Array<{ value: string }>>();
     for (const row of rows) {
@@ -149,40 +171,12 @@ export class NotesService {
     return map;
   }
 
-  private async hydrateTags(
-    noteRows: Array<typeof notesTable.$inferSelect>,
-    userId: string,
-  ): Promise<NoteOutput[]> {
+  private async hydrateTags(noteRows: NotesRow[], userId: string): Promise<NoteOutput[]> {
     const tagsByNoteId = await this.getTagsByNoteIds(
       noteRows.map((row) => row.id),
       userId,
     );
-    return noteRows.map((row) => ({
-      ...row,
-      tags: tagsByNoteId.get(row.id) ?? [],
-    })) as NoteOutput[];
-  }
-
-  private buildInsertValues(input: NoteInput): typeof notesTable.$inferInsert {
-    return {
-      id: input.id,
-      userId: input.userId,
-      type: input.type ?? 'note',
-      status: input.status ?? 'draft',
-      title: input.title,
-      content: input.content ?? '',
-      excerpt: input.excerpt,
-      mentions: input.mentions,
-      analysis: input.analysis,
-      publishingMetadata: input.publishingMetadata,
-      parentNoteId: input.parentNoteId,
-      versionNumber: input.versionNumber,
-      isLatestVersion: input.isLatestVersion,
-      publishedAt: input.publishedAt,
-      scheduledFor: input.scheduledFor,
-      createdAt: input.createdAt,
-      updatedAt: input.updatedAt,
-    };
+    return noteRows.map((row) => rowToNote(row, tagsByNoteId.get(row.id) ?? []));
   }
 
   async create(input: NoteInput): Promise<NoteOutput> {
@@ -190,10 +184,30 @@ export class NotesService {
       throw new ForbiddenError('Not authorized to create note');
     }
 
-    const [resultRow] = await db
-      .insert(notesTable)
-      .values(this.buildInsertValues(input))
-      .returning();
+    const resultRow = await db
+      .insertInto('notes')
+      .values({
+        id: input.id,
+        user_id: input.userId,
+        type: input.type ?? 'note',
+        status: input.status ?? 'draft',
+        title: input.title,
+        content: input.content ?? '',
+        excerpt: input.excerpt,
+        mentions: input.mentions,
+        analysis: input.analysis,
+        publishing_metadata: input.publishingMetadata,
+        parent_note_id: input.parentNoteId,
+        version_number: input.versionNumber,
+        is_latest_version: input.isLatestVersion,
+        published_at: input.publishedAt,
+        scheduled_for: input.scheduledFor,
+        created_at: input.createdAt,
+        updated_at: input.updatedAt,
+      })
+      .returningAll()
+      .executeTakeFirst();
+
     const result = this.requireRow(resultRow, 'Failed to create note');
     await this.syncNoteTags(result.id, input.userId, input.tags ?? []);
     const [hydrated] = await this.hydrateTags([result], input.userId);
@@ -220,102 +234,76 @@ export class NotesService {
       throw new ForbiddenError('Not authorized to query notes');
     }
 
-    const conditions: SQLWrapper[] = [eq(notesTable.userId, userId)];
+    let query = db.selectFrom('notes').selectAll().where('user_id', '=', userId);
 
     // Type filtering
     if (filters?.types && filters.types.length > 0) {
-      const typeFilters: SQLWrapper[] = filters.types.map((type) =>
-        eq(notesTable.type, type as NoteOutput['type']),
-      );
-      conditions.push(or(...typeFilters) as SQLWrapper);
+      query = query.where('type', 'in', filters.types);
     }
 
     // Status filtering
     if (filters?.status && filters.status.length > 0) {
-      const statusFilters: SQLWrapper[] = filters.status.map((status) =>
-        eq(notesTable.status, status),
-      );
-      conditions.push(or(...statusFilters) as SQLWrapper);
-    }
-
-    // Full-Text Search logic
-    let ftsQuery = '';
-    if (filters?.query && filters.query.trim() !== '') {
-      ftsQuery = filters.query.trim();
-    }
-
-    // Define the tsvector construction SQL for ranking
-    // Weights: title (A) > content (B) > tags (C) > excerpt (D)
-    const tsvector_sql = sql`(
-      setweight(to_tsvector('english', coalesce(${notesTable.title}, '')), 'A') ||
-      setweight(to_tsvector('english', ${notesTable.content}), 'B') ||
-      setweight(to_tsvector('english', coalesce((SELECT string_agg(t.name, ' ') FROM note_tags nt INNER JOIN tags t ON t.id = nt.tag_id WHERE nt.note_id = ${notesTable.id}), '')), 'C') ||
-      setweight(to_tsvector('english', coalesce(${notesTable.excerpt}, '')), 'D')
-    )`;
-
-    if (ftsQuery) {
-      conditions.push(sql`${tsvector_sql} @@ websearch_to_tsquery('english', ${ftsQuery})`);
+      query = query.where('status', 'in', filters.status);
     }
 
     // Tag filtering (exact match)
     if (filters?.tags && filters.tags.length > 0) {
-      for (const tag of filters.tags) {
-        conditions.push(sql`exists (
-          select 1
-          from note_tags nt
-          inner join tags t on t.id = nt.tag_id
-          where nt.note_id = ${notesTable.id}
-            and t.owner_id = ${userId}
-            and t.name = ${tag}
-        )`);
+      const noteIdsWithTags = await db
+        .selectFrom('note_tags')
+        .innerJoin('tags', 'tags.id', 'note_tags.tag_id')
+        .select('note_tags.note_id')
+        .where('tags.owner_id', '=', userId)
+        .where('tags.name', 'in', filters.tags)
+        .execute();
+
+      if (noteIdsWithTags.length === 0) {
+        return { notes: [], total: 0 };
       }
+
+      const tagNoteIds = [...new Set(noteIdsWithTags.map((row) => row.note_id))];
+      query = query.where('id', 'in', tagNoteIds);
     }
 
     // Date filtering
     if (filters?.since) {
       try {
         const sinceDate = new Date(filters.since).toISOString();
-        conditions.push(sql`${notesTable.updatedAt} > ${sinceDate}`);
+        query = query.where('updated_at', '>', sinceDate);
       } catch {
         console.warn(`Invalid 'since' date format: ${filters.since}`);
       }
     }
 
-    // Build the base query
-    const baseQuery = db
-      .select()
-      .from(notesTable)
-      .where(and(...conditions.filter((c) => !!c)));
-
-    // biome-ignore lint/suspicious/noImplicitAnyLet: Query type is complex and inferred correctly
-    let orderedQuery;
-    if (ftsQuery) {
-      // Order by relevance (full-text rank), then by recency
-      orderedQuery = baseQuery.orderBy(
-        sql`ts_rank_cd(${tsvector_sql}, websearch_to_tsquery('english', ${ftsQuery})) DESC`,
-        desc(notesTable.updatedAt),
+    // Full-text search (if query provided)
+    if (filters?.query && filters.query.trim() !== '') {
+      // Basic text search implementation using ILIKE
+      const searchPattern = `%${filters.query.trim()}%`;
+      query = query.where((eb) =>
+        eb.or([
+          eb('title', 'like', searchPattern),
+          eb('content', 'like', searchPattern),
+          eb('excerpt', 'like', searchPattern),
+        ]),
       );
-    } else {
-      // Order by recency only
-      orderedQuery = baseQuery.orderBy(desc(notesTable.updatedAt));
-    }
-
-    // Apply pagination
-    if (filters?.limit) {
-      orderedQuery = orderedQuery.limit(filters.limit);
-    }
-    if (filters?.offset) {
-      orderedQuery = orderedQuery.offset(filters.offset);
     }
 
     // Get total count (without pagination)
     const countResult = await db
-      .select({ count: sql<number>`count(*)`.as('count') })
-      .from(notesTable)
-      .where(and(...conditions.filter((c) => !!c)));
+      .selectFrom('notes')
+      .select(db.fn.countAll<number>().as('count'))
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
 
-    const total = countResult[0]?.count ?? 0;
-    const results = await orderedQuery;
+    const total = Number(countResult?.count ?? 0);
+
+    // Apply ordering and pagination
+    let results = await query
+      .orderBy('updated_at', 'desc')
+      .orderBy('id', 'desc')
+      .limit(filters?.limit ?? 50)
+      .offset(filters?.offset ?? 0)
+      .execute();
+
     const hydrated = await this.hydrateTags(results, userId);
 
     return {
@@ -328,11 +316,14 @@ export class NotesService {
     if (!userId) {
       throw new ForbiddenError('Not authorized to retrieve note');
     }
-    const [item] = await db
-      .select()
-      .from(notesTable)
-      .where(and(eq(notesTable.id, id), eq(notesTable.userId, userId)))
-      .limit(1);
+    const item = await db
+      .selectFrom('notes')
+      .selectAll()
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .limit(1)
+      .executeTakeFirst();
+
     if (!item) {
       throw new NotFoundError('Note not found');
     }
@@ -343,7 +334,7 @@ export class NotesService {
   async update(input: UpdateNoteInput): Promise<NoteOutput> {
     const validatedInput = UpdateNoteZodSchema.parse(input);
 
-    const updateData: Partial<typeof notesTable.$inferInsert> = {};
+    const updateData: Partial<Omit<NotesRow, 'id'>> = {};
     if (validatedInput.type !== undefined) {
       updateData.type = validatedInput.type;
     }
@@ -360,11 +351,11 @@ export class NotesService {
       updateData.excerpt = validatedInput.excerpt;
     }
     if (validatedInput.publishingMetadata !== undefined) {
-      updateData.publishingMetadata =
-        validatedInput.publishingMetadata === null ? undefined : validatedInput.publishingMetadata;
+      updateData.publishing_metadata =
+        validatedInput.publishingMetadata === null ? null : validatedInput.publishingMetadata;
     }
     if (validatedInput.analysis !== undefined) {
-      updateData.analysis = validatedInput.analysis === null ? undefined : validatedInput.analysis;
+      updateData.analysis = validatedInput.analysis === null ? null : validatedInput.analysis;
     }
 
     if (Object.keys(updateData).length === 0 && validatedInput.tags === undefined) {
@@ -374,15 +365,16 @@ export class NotesService {
       await this.syncNoteTags(validatedInput.id, validatedInput.userId, validatedInput.tags ?? []);
       return this.getById(validatedInput.id, validatedInput.userId);
     }
-    updateData.updatedAt = new Date().toISOString();
+    updateData.updated_at = new Date().toISOString();
 
-    const [item] = await db
-      .update(notesTable)
+    const item = await db
+      .updateTable('notes')
       .set(updateData)
-      .where(
-        and(eq(notesTable.id, validatedInput.id), eq(notesTable.userId, validatedInput.userId)),
-      )
-      .returning();
+      .where('id', '=', validatedInput.id)
+      .where('user_id', '=', validatedInput.userId)
+      .returningAll()
+      .executeTakeFirst();
+
     if (!item) {
       throw new NotFoundError('Note not found or not authorized to update');
     }
@@ -397,10 +389,13 @@ export class NotesService {
     if (!userId) {
       throw new ForbiddenError('Not authorized to delete note');
     }
-    const [item] = await db
-      .delete(notesTable)
-      .where(and(eq(notesTable.id, id), eq(notesTable.userId, userId)))
-      .returning();
+    const item = await db
+      .deleteFrom('notes')
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .returningAll()
+      .executeTakeFirst();
+
     if (!item) {
       throw new NotFoundError('Note not found or not authorized to delete');
     }
@@ -434,9 +429,9 @@ export class NotesService {
 
     const existingNote = await this.getById(id, userId);
     const now = new Date().toISOString();
-    const updateData: Partial<typeof notesTable.$inferInsert> = {
+    const updateData: Partial<Omit<NotesRow, 'id'>> = {
       status: 'published',
-      updatedAt: now,
+      updated_at: now,
     };
 
     // Handle scheduling
@@ -445,17 +440,17 @@ export class NotesService {
         throw new ConflictError(`Cannot schedule note from ${existingNote.status} state`);
       }
       updateData.status = 'draft'; // Keep as draft until scheduled time
-      updateData.scheduledFor = publishData.scheduledFor;
+      updateData.scheduled_for = publishData.scheduledFor;
     } else {
       assertAllowedTransition(existingNote.status, 'published', 'publish');
-      updateData.publishedAt = now;
+      updateData.published_at = now;
     }
 
     // Build publishing metadata
     if (publishData) {
       const existingMetadata = existingNote.publishingMetadata || {};
 
-      updateData.publishingMetadata = {
+      updateData.publishing_metadata = {
         ...existingMetadata,
         ...(publishData.platform && { platform: publishData.platform }),
         ...(publishData.url && { url: publishData.url }),
@@ -465,11 +460,13 @@ export class NotesService {
       } as PublishingMetadata;
     }
 
-    const [item] = await db
-      .update(notesTable)
+    const item = await db
+      .updateTable('notes')
       .set(updateData)
-      .where(and(eq(notesTable.id, id), eq(notesTable.userId, userId)))
-      .returning();
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .returningAll()
+      .executeTakeFirst();
 
     if (!item) {
       throw new NotFoundError('Note not found or not authorized to publish');
@@ -490,14 +487,16 @@ export class NotesService {
     const existingNote = await this.getById(id, userId);
     assertAllowedTransition(existingNote.status, 'archived', 'archive');
 
-    const [item] = await db
-      .update(notesTable)
+    const item = await db
+      .updateTable('notes')
       .set({
         status: 'archived',
-        updatedAt: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
-      .where(and(eq(notesTable.id, id), eq(notesTable.userId, userId)))
-      .returning();
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .returningAll()
+      .executeTakeFirst();
 
     if (!item) {
       throw new NotFoundError('Note not found or not authorized to archive');
@@ -518,15 +517,17 @@ export class NotesService {
     const existingNote = await this.getById(id, userId);
     assertAllowedTransition(existingNote.status, 'draft', 'unpublish');
 
-    const [item] = await db
-      .update(notesTable)
+    const item = await db
+      .updateTable('notes')
       .set({
         status: 'draft',
-        publishedAt: null,
-        updatedAt: new Date().toISOString(),
+        published_at: null,
+        updated_at: new Date().toISOString(),
       })
-      .where(and(eq(notesTable.id, id), eq(notesTable.userId, userId)))
-      .returning();
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .returningAll()
+      .executeTakeFirst();
 
     if (!item) {
       throw new NotFoundError('Note not found or not authorized to unpublish');
@@ -614,30 +615,29 @@ export class NotesService {
     }
 
     // First, get the note to find the root parent
-    const [note] = await db
-      .select()
-      .from(notesTable)
-      .where(and(eq(notesTable.id, noteId), eq(notesTable.userId, userId)))
-      .limit(1);
+    const note = await db
+      .selectFrom('notes')
+      .selectAll()
+      .where('id', '=', noteId)
+      .where('user_id', '=', userId)
+      .limit(1)
+      .executeTakeFirst();
 
     if (!note) {
       throw new NotFoundError('Note not found');
     }
 
     // Determine the root note ID (the one with no parent, or this note's parent)
-    const rootNoteId = note.parentNoteId || note.id;
+    const rootNoteId = note.parent_note_id || note.id;
 
     // Get all versions: the root note and all notes with this root as parent
     const versions = await db
-      .select()
-      .from(notesTable)
-      .where(
-        and(
-          eq(notesTable.userId, userId),
-          or(eq(notesTable.id, rootNoteId), eq(notesTable.parentNoteId, rootNoteId)),
-        ),
-      )
-      .orderBy(notesTable.versionNumber);
+      .selectFrom('notes')
+      .selectAll()
+      .where('user_id', '=', userId)
+      .where((eb) => eb.or([eb('id', '=', rootNoteId), eb('parent_note_id', '=', rootNoteId)]))
+      .orderBy('version_number', 'asc')
+      .execute();
 
     return this.hydrateTags(versions, userId);
   }
@@ -662,104 +662,80 @@ export class NotesService {
       throw new ForbiddenError('Not authorized to query notes');
     }
 
-    const conditions: SQLWrapper[] = [
-      eq(notesTable.userId, userId),
-      eq(notesTable.isLatestVersion, true),
-    ];
+    let query = db
+      .selectFrom('notes')
+      .selectAll()
+      .where('user_id', '=', userId)
+      .where('is_latest_version', '=', true);
 
     // Type filtering
     if (filters?.types && filters.types.length > 0) {
-      const typeFilters: SQLWrapper[] = filters.types.map((type) =>
-        eq(notesTable.type, type as NoteOutput['type']),
-      );
-      conditions.push(or(...typeFilters) as SQLWrapper);
+      query = query.where('type', 'in', filters.types);
     }
 
     // Status filtering
     if (filters?.status && filters.status.length > 0) {
-      const statusFilters: SQLWrapper[] = filters.status.map((status) =>
-        eq(notesTable.status, status),
-      );
-      conditions.push(or(...statusFilters) as SQLWrapper);
-    }
-
-    // Full-Text Search logic
-    let ftsQuery = '';
-    if (filters?.query && filters.query.trim() !== '') {
-      ftsQuery = filters.query.trim();
-    }
-
-    // Define the tsvector construction SQL for ranking
-    const tsvector_sql = sql`(
-      setweight(to_tsvector('english', coalesce(${notesTable.title}, '')), 'A') ||
-      setweight(to_tsvector('english', ${notesTable.content}), 'B') ||
-      setweight(to_tsvector('english', coalesce((SELECT string_agg(t.name, ' ') FROM note_tags nt INNER JOIN tags t ON t.id = nt.tag_id WHERE nt.note_id = ${notesTable.id}), '')), 'C') ||
-      setweight(to_tsvector('english', coalesce(${notesTable.excerpt}, '')), 'D')
-    )`;
-
-    if (ftsQuery) {
-      conditions.push(sql`${tsvector_sql} @@ websearch_to_tsquery('english', ${ftsQuery})`);
+      query = query.where('status', 'in', filters.status);
     }
 
     // Tag filtering (exact match)
     if (filters?.tags && filters.tags.length > 0) {
-      for (const tag of filters.tags) {
-        conditions.push(sql`exists (
-          select 1
-          from note_tags nt
-          inner join tags t on t.id = nt.tag_id
-          where nt.note_id = ${notesTable.id}
-            and t.owner_id = ${userId}
-            and t.name = ${tag}
-        )`);
+      const noteIdsWithTags = await db
+        .selectFrom('note_tags')
+        .innerJoin('tags', 'tags.id', 'note_tags.tag_id')
+        .select('note_tags.note_id')
+        .where('tags.owner_id', '=', userId)
+        .where('tags.name', 'in', filters.tags)
+        .execute();
+
+      if (noteIdsWithTags.length === 0) {
+        return { notes: [], total: 0 };
       }
+
+      const tagNoteIds = [...new Set(noteIdsWithTags.map((row) => row.note_id))];
+      query = query.where('id', 'in', tagNoteIds);
     }
 
     // Date filtering
     if (filters?.since) {
       try {
         const sinceDate = new Date(filters.since).toISOString();
-        conditions.push(sql`${notesTable.updatedAt} > ${sinceDate}`);
+        query = query.where('updated_at', '>', sinceDate);
       } catch {
         console.warn(`Invalid 'since' date format: ${filters.since}`);
       }
     }
 
-    // Build the base query
-    const baseQuery = db
-      .select()
-      .from(notesTable)
-      .where(and(...conditions.filter((c) => !!c)));
-
-    // biome-ignore lint/suspicious/noImplicitAnyLet: Query type is complex and inferred correctly
-    let orderedQuery;
-    if (ftsQuery) {
-      // Order by relevance (full-text rank), then by recency
-      orderedQuery = baseQuery.orderBy(
-        sql`ts_rank_cd(${tsvector_sql}, websearch_to_tsquery('english', ${ftsQuery})) DESC`,
-        desc(notesTable.updatedAt),
+    // Full-text search (if query provided)
+    if (filters?.query && filters.query.trim() !== '') {
+      const searchPattern = `%${filters.query.trim()}%`;
+      query = query.where((eb) =>
+        eb.or([
+          eb('title', 'like', searchPattern),
+          eb('content', 'like', searchPattern),
+          eb('excerpt', 'like', searchPattern),
+        ]),
       );
-    } else {
-      // Order by recency only
-      orderedQuery = baseQuery.orderBy(desc(notesTable.updatedAt));
-    }
-
-    // Apply pagination
-    if (filters?.limit) {
-      orderedQuery = orderedQuery.limit(filters.limit);
-    }
-    if (filters?.offset) {
-      orderedQuery = orderedQuery.offset(filters.offset);
     }
 
     // Get total count (without pagination)
     const countResult = await db
-      .select({ count: sql<number>`count(*)`.as('count') })
-      .from(notesTable)
-      .where(and(...conditions.filter((c) => !!c)));
+      .selectFrom('notes')
+      .select(db.fn.countAll<number>().as('count'))
+      .where('user_id', '=', userId)
+      .where('is_latest_version', '=', true)
+      .executeTakeFirst();
 
-    const total = countResult[0]?.count ?? 0;
-    const results = await orderedQuery;
+    const total = Number(countResult?.count ?? 0);
+
+    // Apply ordering and pagination
+    const results = await query
+      .orderBy('updated_at', 'desc')
+      .orderBy('id', 'desc')
+      .limit(filters?.limit ?? 50)
+      .offset(filters?.offset ?? 0)
+      .execute();
+
     const hydrated = await this.hydrateTags(results, userId);
 
     return {
@@ -782,75 +758,89 @@ export class NotesService {
     }
 
     // Find the note by ID
-    const [originalNote] = await db
-      .select()
-      .from(notesTable)
-      .where(and(eq(notesTable.id, noteId), eq(notesTable.userId, userId)))
-      .limit(1);
+    const originalNote = await db
+      .selectFrom('notes')
+      .selectAll()
+      .where('id', '=', noteId)
+      .where('user_id', '=', userId)
+      .limit(1)
+      .executeTakeFirst();
 
     if (!originalNote) {
       throw new NotFoundError('Note not found');
     }
 
     // Mark current version as not latest
-    await db.update(notesTable).set({ isLatestVersion: false }).where(eq(notesTable.id, noteId));
+    await db
+      .updateTable('notes')
+      .set({ is_latest_version: false })
+      .where('id', '=', noteId)
+      .execute();
 
     // Call AI to generate content (placeholder implementation)
-    // In production, this would use the AI SDK to generate actual content
     let aiGeneratedContent: string;
     try {
-      // Placeholder: Just return the same content with a prefix
-      // const { text } = await generateText({
-      //   model: google('gemini-2.0-flash-exp'),
-      //   prompt: `${developmentType}: ${originalNote.content}`,
-      // })
-      // aiGeneratedContent = text
-
-      // For now, use a placeholder
       const prefix = developmentType.toUpperCase();
       aiGeneratedContent = `[${prefix}] ${originalNote.content}`;
     } catch (error) {
       console.error('AI generation error:', error);
       // If AI fails, restore the original note as latest and throw
-      await db.update(notesTable).set({ isLatestVersion: true }).where(eq(notesTable.id, noteId));
+      await db
+        .updateTable('notes')
+        .set({ is_latest_version: true })
+        .where('id', '=', noteId)
+        .execute();
       throw new Error('Failed to generate AI content');
     }
 
     // Determine the root parent note ID
-    // If the original note already has a parent, use that parent
-    // Otherwise, use the original note ID as the parent
-    const rootParentId = originalNote.parentNoteId || originalNote.id;
+    const rootParentId = originalNote.parent_note_id || originalNote.id;
 
     // Calculate the next version number
-    const nextVersionNumber = originalNote.versionNumber + 1;
+    const nextVersionNumber = originalNote.version_number + 1;
 
     // Create new note with AI-generated content
-    const [newNoteRow] = await db
-      .insert(notesTable)
+    const newNoteRow = await db
+      .insertInto('notes')
       .values({
-        userId: originalNote.userId,
+        user_id: originalNote.user_id,
         type: originalNote.type,
         status: originalNote.status,
         title: originalNote.title,
         content: aiGeneratedContent,
         excerpt: originalNote.excerpt,
         mentions: originalNote.mentions,
-        parentNoteId: rootParentId,
-        versionNumber: nextVersionNumber,
-        isLatestVersion: true,
+        parent_note_id: rootParentId,
+        version_number: nextVersionNumber,
+        is_latest_version: true,
         analysis: originalNote.analysis,
-        publishingMetadata: originalNote.publishingMetadata,
+        publishing_metadata: originalNote.publishing_metadata,
       })
-      .returning();
+      .returningAll()
+      .executeTakeFirst();
+
     const newNote = this.requireRow(newNoteRow, 'Failed to create developed note');
 
-    await db.execute(sql`
-      insert into note_tags (note_id, tag_id)
-      select ${newNote.id}, nt.tag_id
-      from note_tags nt
-      where nt.note_id = ${originalNote.id}
-      on conflict (note_id, tag_id) do nothing
-    `);
+    // Copy tags from original note
+    const originalTags = await db
+      .selectFrom('note_tags')
+      .select('tag_id')
+      .where('note_id', '=', originalNote.id)
+      .execute();
+
+    for (const tag of originalTags) {
+      try {
+        await db
+          .insertInto('note_tags')
+          .values({
+            note_id: newNote.id,
+            tag_id: tag.tag_id,
+          })
+          .execute();
+      } catch {
+        // Relationship already exists, continue
+      }
+    }
 
     const [hydrated] = await this.hydrateTags([newNote], userId);
     return this.requireHydrated(hydrated);

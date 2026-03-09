@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { sql } from '@hominem/db';
+import { sql } from 'kysely';
 
 import type { ListOutput, ListRecord, ListWithSpreadOwner } from './contracts';
 import { formatList } from './list-crud.service';
@@ -14,30 +14,10 @@ interface ListProjectionRow {
   task_count?: number | null;
 }
 
-interface OwnedListRow {
-  id: string;
-  name: string;
-  owner_id: string;
-  created_at: string | null;
-}
-
 interface PlaceListRow {
   id: string;
   name: string;
   item_count: number;
-}
-
-function resultRows<T>(result: unknown): T[] {
-  if (Array.isArray(result)) {
-    return result as T[];
-  }
-  if (result && typeof result === 'object' && 'rows' in result) {
-    const rows = (result as { rows?: unknown }).rows;
-    if (Array.isArray(rows)) {
-      return rows as T[];
-    }
-  }
-  return [];
 }
 
 function toListWithOwner(row: ListProjectionRow): ListWithSpreadOwner {
@@ -71,40 +51,48 @@ async function queryOwnedListRows(
   withCount: boolean,
 ): Promise<ListProjectionRow[]> {
   if (withCount) {
-    const result = await db.execute(sql`
-      select
-        tl.id,
-        tl.name,
-        tl.user_id as owner_id,
-        tl.created_at,
-        u.email as owner_email,
-        u.name as owner_name,
-        count(t.id)::int as task_count
-      from task_lists tl
-      join users u on u.id = tl.user_id
-      left join tasks t on t.list_id = tl.id and t.user_id = tl.user_id
-      where tl.user_id = ${userId}
-      group by tl.id, tl.name, tl.user_id, tl.created_at, u.email, u.name
-      order by tl.created_at desc, tl.id asc
-    `);
-    return resultRows<ListProjectionRow>(result);
+    const result = await db
+      .selectFrom('task_lists as tl')
+      .innerJoin('users as u', 'u.id', 'tl.user_id')
+      .leftJoin('tasks as t', (join) =>
+        join.onRef('t.list_id', '=', 'tl.id').onRef('t.user_id', '=', 'tl.user_id'),
+      )
+      .select([
+        'tl.id',
+        'tl.name',
+        sql<string>`tl.user_id`.as('owner_id'),
+        'tl.created_at',
+        sql<string>`u.email`.as('owner_email'),
+        sql<string>`u.name`.as('owner_name'),
+        sql<number>`count(t.id)::int`.as('task_count'),
+      ])
+      .where('tl.user_id', '=', userId)
+      .groupBy(['tl.id', 'tl.name', 'tl.user_id', 'tl.created_at', 'u.email', 'u.name'])
+      .orderBy('tl.created_at', 'desc')
+      .orderBy('tl.id', 'asc')
+      .execute();
+
+    // eslint-disable-next-line typescript-eslint/no-explicit-any
+    return result as any as ListProjectionRow[];
   }
 
-  const result = await db.execute(sql`
-    select
-      tl.id,
-      tl.name,
-      tl.user_id as owner_id,
-      tl.created_at,
-      u.email as owner_email,
-      u.name as owner_name
-    from task_lists tl
-    join users u on u.id = tl.user_id
-    where tl.user_id = ${userId}
-    order by tl.created_at desc, tl.id asc
-  `);
+  const result = await db
+    .selectFrom('task_lists as tl')
+    .innerJoin('users as u', 'u.id', 'tl.user_id')
+    .select([
+      'tl.id',
+      'tl.name',
+      sql<string>`tl.user_id`.as('owner_id'),
+      'tl.created_at',
+      sql<string>`u.email`.as('owner_email'),
+      sql<string>`u.name`.as('owner_name'),
+    ])
+    .where('tl.user_id', '=', userId)
+    .orderBy('tl.created_at', 'desc')
+    .orderBy('tl.id', 'asc')
+    .execute();
 
-  return resultRows<ListProjectionRow>(result);
+  return result as ListProjectionRow[];
 }
 
 async function queryAccessibleListRows(
@@ -112,51 +100,68 @@ async function queryAccessibleListRows(
   withCount: boolean,
 ): Promise<ListProjectionRow[]> {
   if (withCount) {
-    const result = await db.execute(sql`
-      select
-        tl.id,
-        tl.name,
-        tl.user_id as owner_id,
-        tl.created_at,
-        u.email as owner_email,
-        u.name as owner_name,
-        count(t.id)::int as task_count
-      from task_lists tl
-      join users u on u.id = tl.user_id
-      left join tasks t on t.list_id = tl.id and t.user_id = tl.user_id
-      where tl.user_id = ${userId}
-         or exists (
-            select 1
-            from task_list_collaborators tlc
-            where tlc.list_id = tl.id
-              and tlc.user_id = ${userId}
-          )
-      group by tl.id, tl.name, tl.user_id, tl.created_at, u.email, u.name
-      order by tl.created_at desc, tl.id asc
-    `);
-    return resultRows<ListProjectionRow>(result);
+    const result = await db
+      .selectFrom('task_lists as tl')
+      .innerJoin('users as u', 'u.id', 'tl.user_id')
+      .leftJoin('tasks as t', (join) =>
+        join.onRef('t.list_id', '=', 'tl.id').onRef('t.user_id', '=', 'tl.user_id'),
+      )
+      .select([
+        'tl.id',
+        'tl.name',
+        sql<string>`tl.user_id`.as('owner_id'),
+        'tl.created_at',
+        sql<string>`u.email`.as('owner_email'),
+        sql<string>`u.name`.as('owner_name'),
+        sql<number>`count(t.id)::int`.as('task_count'),
+      ])
+      .where((eb) =>
+        eb.or([
+          eb('tl.user_id', '=', userId),
+          eb('tl.id', 'in',
+            db
+              .selectFrom('task_list_collaborators as tlc')
+              .select('tlc.list_id')
+              .where('tlc.user_id', '=', userId),
+          ),
+        ]),
+      )
+      .groupBy(['tl.id', 'tl.name', 'tl.user_id', 'tl.created_at', 'u.email', 'u.name'])
+      .orderBy('tl.created_at', 'desc')
+      .orderBy('tl.id', 'asc')
+      .execute();
+
+    // eslint-disable-next-line typescript-eslint/no-explicit-any
+    return result as any as ListProjectionRow[];
   }
 
-  const result = await db.execute(sql`
-    select
-      tl.id,
-      tl.name,
-      tl.user_id as owner_id,
-      tl.created_at,
-      u.email as owner_email,
-      u.name as owner_name
-    from task_lists tl
-    join users u on u.id = tl.user_id
-    where tl.user_id = ${userId}
-       or exists (
-          select 1
-          from task_list_collaborators tlc
-          where tlc.list_id = tl.id
-            and tlc.user_id = ${userId}
-        )
-    order by tl.created_at desc, tl.id asc
-  `);
-  return resultRows<ListProjectionRow>(result);
+  const result = await db
+    .selectFrom('task_lists as tl')
+    .innerJoin('users as u', 'u.id', 'tl.user_id')
+    .select([
+      'tl.id',
+      'tl.name',
+      sql<string>`tl.user_id`.as('owner_id'),
+      'tl.created_at',
+      sql<string>`u.email`.as('owner_email'),
+      sql<string>`u.name`.as('owner_name'),
+    ])
+    .where((eb) =>
+      eb.or([
+        eb('tl.user_id', '=', userId),
+        eb('tl.id', 'in',
+          db
+            .selectFrom('task_list_collaborators as tlc')
+            .select('tlc.list_id')
+            .where('tlc.user_id', '=', userId),
+        ),
+      ]),
+    )
+    .orderBy('tl.created_at', 'desc')
+    .orderBy('tl.id', 'asc')
+    .execute();
+
+  return result as ListProjectionRow[];
 }
 
 export async function getUserLists(userId: string): Promise<ListWithSpreadOwner[]> {
@@ -203,64 +208,60 @@ export async function getListById(id: string, userId?: string | null): Promise<L
     return null;
   }
 
-  const result = await db.execute(sql`
-    select
-      tl.id,
-      tl.name,
-      tl.user_id as owner_id,
-      tl.created_at,
-      u.email as owner_email,
-      u.name as owner_name
-    from task_lists tl
-    join users u on u.id = tl.user_id
-    where tl.id = ${id}
-      and (
-        tl.user_id = ${userId}
-        or exists (
-          select 1
-          from task_list_collaborators tlc
-          where tlc.list_id = tl.id
-            and tlc.user_id = ${userId}
-        )
-      )
-    limit 1
-  `);
+  const row = await db
+    .selectFrom('task_lists as tl')
+    .innerJoin('users as u', 'u.id', 'tl.user_id')
+    .select([
+      'tl.id',
+      'tl.name',
+      sql<string>`tl.user_id`.as('owner_id'),
+      'tl.created_at',
+      sql<string>`u.email`.as('owner_email'),
+      sql<string>`u.name`.as('owner_name'),
+    ])
+    .where((eb) =>
+      eb.and([
+        eb('tl.id', '=', id),
+        eb.or([
+          eb('tl.user_id', '=', userId),
+          eb('tl.id', 'in',
+            db
+              .selectFrom('task_list_collaborators as tlc')
+              .select('tlc.list_id')
+              .where('tlc.user_id', '=', userId),
+          ),
+        ]),
+      ]),
+    )
+    .executeTakeFirst();
 
-  const row = resultRows<ListProjectionRow>(result)[0] ?? null;
   if (!row) {
     return null;
   }
 
-  return formatList(toListWithOwner(row), [], true, true);
+  return formatList(toListWithOwner(row as ListProjectionRow), [], true, true);
 }
 
 export async function getListOwnedByUser(
   listId: string,
   userId: string,
 ): Promise<ListRecord | undefined> {
-  const result = await db.execute(sql`
-    select
-      tl.id,
-      tl.name,
-      tl.user_id as owner_id,
-      tl.created_at
-    from task_lists tl
-    where tl.id = ${listId}
-      and tl.user_id = ${userId}
-    limit 1
-  `);
+  const row = await db
+    .selectFrom('task_lists as tl')
+    .select(['tl.id', 'tl.name', sql<string>`tl.user_id`.as('owner_id'), 'tl.created_at'])
+    .where((eb) => eb.and([eb('tl.id', '=', listId), eb('tl.user_id', '=', userId)]))
+    .executeTakeFirst();
 
-  const row = resultRows<OwnedListRow>(result)[0] ?? null;
   if (!row) {
     return undefined;
   }
 
-  const createdAt = row.created_at ?? new Date().toISOString();
+  const createdAt = typeof row.created_at === 'string' ? row.created_at : new Date().toISOString();
   return {
     id: row.id,
     name: row.name,
     description: null,
-    ownerId: row.owner_id,
+    ownerId: row.owner_id as string,
     isPublic: false,
     createdAt,
     updatedAt: createdAt,
@@ -281,20 +282,25 @@ export async function getPlaceLists(params: {
     return [];
   }
 
-  const result = await db.execute(sql`
-    select
-      tl.id,
-      tl.name,
-      count(t.id)::int as item_count
-    from task_lists tl
-    join tasks t on t.list_id = tl.id and t.user_id = tl.user_id
-    where tl.user_id = ${params.userId}
-      and lower(t.title) like ${`%${placeKey.toLowerCase()}%`}
-    group by tl.id, tl.name
-    order by item_count desc, tl.created_at desc, tl.id asc
-  `);
+  const result = await db
+    .selectFrom('task_lists as tl')
+    .innerJoin('tasks as t', (join) =>
+      join.onRef('t.list_id', '=', 'tl.id').onRef('t.user_id', '=', 'tl.user_id'),
+    )
+    .select(['tl.id', 'tl.name', sql<number>`count(t.id)::int`.as('item_count')])
+    .where((eb) =>
+      eb.and([
+        eb('tl.user_id', '=', params.userId),
+        eb(sql`lower(t.title)`, 'like', `%${placeKey.toLowerCase()}%`),
+      ]),
+    )
+    .groupBy(['tl.id', 'tl.name'])
+    .orderBy(sql`item_count`, 'desc')
+    .orderBy('tl.created_at', 'desc')
+    .orderBy('tl.id', 'asc')
+    .execute();
 
-  return resultRows<PlaceListRow>(result).map((row) => ({
+  return (result as PlaceListRow[]).map((row) => ({
     id: row.id,
     name: row.name,
     itemCount: Number(row.item_count),

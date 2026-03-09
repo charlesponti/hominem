@@ -31,16 +31,6 @@
       "import": "./build/schema/*.js",
       "default": "./build/schema/*.js"
     },
-    "./all-schema": {
-      "types": "./build/all-schema.d.ts",
-      "import": "./build/all-schema.js",
-      "default": "./build/all-schema.js"
-    },
-    "./google-calendar.service": {
-      "types": "./build/google-calendar.service.d.ts",
-      "import": "./build/google-calendar.service.js",
-      "default": "./build/google-calendar.service.js"
-    },
     "./types/*": {
       "types": "./build/schema/*.d.ts",
       "import": "./build/schema/*.js",
@@ -67,18 +57,16 @@
     "dev": "tsc --watch --preserveWatchOutput",
     "prepare": "bun run build",
     "clean": "rm -rf build",
-    "db:generate": "bunx drizzle-kit generate",
-    "db:migrate": "bunx drizzle-kit migrate",
-    "db:migrate:test": "NODE_ENV=test bunx drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "goose:install": "bash ../../scripts/install-goose.sh",
+    "goose:up": "bash ../../scripts/install-goose.sh && PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"$DATABASE_URL\" up",
+    "goose:down": "bash ../../scripts/install-goose.sh && PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"$DATABASE_URL\" down",
+    "goose:status": "bash ../../scripts/install-goose.sh && PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"$DATABASE_URL\" status",
+    "goose:baseline:pull": "bash ../../scripts/pull-goose-baseline.sh"
   },
   "dependencies": {
     "@hominem/utils": "workspace:*",
     "csv-parser": "^3.2.0",
-    "drizzle-orm": "0.45.1",
-    "drizzle-zod": "^0.7.0",
     "googleapis": "^170.0.0",
     "openai": "4.83.0",
     "postgres": "^3.4.5",
@@ -88,7 +76,6 @@
   "devDependencies": {
     "@types/node": "^22.10.7",
     "dotenv": "^16.4.7",
-    "drizzle-kit": "0.31.8",
     "typescript": "5.9.3",
     "vitest": "^4.0.16"
   }

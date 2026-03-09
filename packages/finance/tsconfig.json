@@ -7,7 +7,7 @@
   },
   "include": [
     "src/index.ts",
-    "src/modern-finance.ts",
+    "src/finance.ts",
     "src/contracts.ts"
   ],
   "exclude": [

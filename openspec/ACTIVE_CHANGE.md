@@ -1,12 +1,12 @@
 # Active OpenSpec Change
 
-active_change: migrate-to-kysely-atlas
+active_change: desktop-shell-foundation
 
 ## Canonical Artifacts
 
-- Proposal: openspec/changes/migrate-to-kysely-atlas/proposal.md
-- Design: openspec/changes/migrate-to-kysely-atlas/design.md
-- Tasks: openspec/changes/migrate-to-kysely-atlas/tasks.md
+- Proposal: openspec/changes/desktop-shell-foundation/proposal.md
+- Design: openspec/changes/desktop-shell-foundation/design.md
+- Tasks: openspec/changes/desktop-shell-foundation/tasks.md
 
 ## Enforcement
 

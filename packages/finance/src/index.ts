@@ -1,2 +1,2 @@
-export * from './modern-finance';
+export * from './finance';
 export * from './contracts';

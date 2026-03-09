@@ -1,8 +1,7 @@
-import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { expo } from '@better-auth/expo';
+import { kyselyAdapter } from '@better-auth/kysely-adapter';
 import { passkey } from '@better-auth/passkey';
 import { db } from '@hominem/db';
-import * as schema from '@hominem/db/all-schema';
 import type { BetterAuthOptions } from 'better-auth';
 import type { BetterAuthPlugin } from 'better-auth';
 import { betterAuth } from 'better-auth';
@@ -231,8 +230,5 @@ const betterAuthOptions: BetterAuthOptions = {
 
 export const betterAuthServer = betterAuth({
   ...betterAuthOptions,
-  database: drizzleAdapter(db, {
-    provider: 'pg',
-    schema,
-  }),
+  database: kyselyAdapter(db),
 });

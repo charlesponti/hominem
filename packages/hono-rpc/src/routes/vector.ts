@@ -6,20 +6,35 @@ import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
+interface VectorResult {
+  id: string
+  content: string
+  metadata?: Record<string, unknown>
+  score?: number
+}
+
+interface VectorDocument {
+  id: string
+  content: string
+  source: string
+  createdAt: string
+  metadata?: Record<string, unknown>
+}
+
 const VectorService = {
-  async query(_params: { q: string; source: string; limit?: number }) {
-    return { results: [] as unknown[] };
+  async query(_params: { q: string; source: string; limit?: number }): Promise<{ results: VectorResult[] }> {
+    return { results: [] };
   },
   async searchDocumentsByUser(
     _query: string,
     _userId: string,
     _limit?: number,
     _threshold?: number,
-  ) {
-    return { results: [] as unknown[] };
+  ): Promise<{ results: VectorResult[] }> {
+    return { results: [] };
   },
-  async getUserDocuments(_userId: string, _limit?: number, _offset?: number) {
-    return [] as unknown[];
+  async getUserDocuments(_userId: string, _limit?: number, _offset?: number): Promise<VectorDocument[]> {
+    return [];
   },
   async deleteUserDocuments(_userId: string, _source?: string) {
     return { success: false };

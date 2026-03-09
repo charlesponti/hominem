@@ -7,7 +7,7 @@ set -e
 
 DB_NAME="hominem-test-postgres"
 DB_PORT="4433"
-DB_IMAGE="ghcr.io/charlesponti/hominem/pontistudios-postgres:latest"
+DB_IMAGE="ghcr.io/hackefeller/hominem/postgres:latest"
 
 case "${1:-}" in
   "start")
@@ -27,7 +27,7 @@ case "${1:-}" in
       
       echo "Running migrations..."
       cd packages/db
-      DATABASE_URL="postgres://postgres:postgres@localhost:$DB_PORT/hominem-test" bun run db:migrate
+      DATABASE_URL="postgres://postgres:postgres@localhost:$DB_PORT/hominem-test" bun run goose:up
       cd ../..
       
       echo "Test database is ready on port $DB_PORT"

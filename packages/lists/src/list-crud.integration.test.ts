@@ -2,29 +2,15 @@ import { db, sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
-  isIntegrationDatabaseAvailable,
+  extractRows,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createList, deleteList, updateList } from './list-crud.service';
 
-function resultRows<T>(result: unknown): T[] {
-  if (Array.isArray(result)) {
-    return result as T[];
-  }
-  if (result && typeof result === 'object' && 'rows' in result) {
-    const rows = (result as { rows?: unknown }).rows;
-    if (Array.isArray(rows)) {
-      return rows as T[];
-    }
-  }
-  return [];
-}
-
-const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('lists.crud.integration');
 
-describe.skipIf(!dbAvailable)('list-crud integration', () => {
+describe('list-crud integration', () => {
   let ownerId: string;
   let otherUserId: string;
 
@@ -63,7 +49,7 @@ describe.skipIf(!dbAvailable)('list-crud integration', () => {
       where id = ${created!.id}
       limit 1
     `);
-    const row = resultRows<{ user_id: string }>(stored)[0];
+    const row = extractRows<{ user_id: string }>(stored)[0];
     expect(row?.user_id).toBe(ownerId);
   });
 
@@ -100,7 +86,7 @@ describe.skipIf(!dbAvailable)('list-crud integration', () => {
       where id = ${created!.id}
       limit 1
     `);
-    const stillExistsRow = resultRows<{ name: string }>(stillExists)[0];
+    const stillExistsRow = extractRows<{ name: string }>(stillExists)[0];
     expect(stillExistsRow).toBeDefined();
     expect(stillExistsRow?.name).toBe('Protected');
   });
@@ -122,7 +108,7 @@ describe.skipIf(!dbAvailable)('list-crud integration', () => {
       where id = ${created!.id}
       limit 1
     `);
-    const afterDeleteRow = resultRows<{ id: string }>(afterDelete)[0];
+    const afterDeleteRow = extractRows<{ id: string }>(afterDelete)[0];
     expect(afterDeleteRow).toBeUndefined();
   });
 });

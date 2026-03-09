@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 
 import { db, sql } from '@hominem/db';
+import { extractRows, isIntegrationDatabaseAvailable } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -12,36 +13,14 @@ import {
   preparePlaceInsertData,
 } from './places.service';
 
-function resultRows<T>(result: unknown): T[] {
-  if (Array.isArray(result)) {
-    return result as T[];
-  }
-  if (result && typeof result === 'object' && 'rows' in result) {
-    const rows = (result as { rows?: unknown }).rows;
-    if (Array.isArray(rows)) {
-      return rows as T[];
-    }
-  }
-  return [];
-}
-
-async function isDatabaseAvailable(): Promise<boolean> {
-  try {
-    await db.execute(sql`select 1`);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-const dbAvailable = await isDatabaseAvailable();
-
-describe.skipIf(!dbAvailable)('places.service integration', () => {
+describe('places.service integration', () => {
   let ownerId: string;
   let otherUserId: string;
 
+  const executeRaw = <T>(query: ReturnType<typeof sql>) => query.execute(db) as Promise<T>;
+
   const createUser = async (id: string): Promise<void> => {
-    await db.execute(sql`
+    await executeRaw(sql`
       insert into users (id, email, name)
       values (${id}, ${`${id}@example.com`}, ${'Places User'})
       on conflict (id) do nothing
@@ -49,9 +28,9 @@ describe.skipIf(!dbAvailable)('places.service integration', () => {
   };
 
   const cleanupUser = async (userId: string): Promise<void> => {
-    await db.execute(sql`delete from places where user_id = ${userId}`).catch(() => {});
-    await db.execute(sql`delete from travel_trips where user_id = ${userId}`).catch(() => {});
-    await db.execute(sql`delete from users where id = ${userId}`).catch(() => {});
+    await executeRaw(sql`delete from places where user_id = ${userId}`).catch(() => {});
+    await executeRaw(sql`delete from travel_trips where user_id = ${userId}`).catch(() => {});
+    await executeRaw(sql`delete from users where id = ${userId}`).catch(() => {});
   };
 
   beforeEach(async () => {
@@ -99,13 +78,13 @@ describe.skipIf(!dbAvailable)('places.service integration', () => {
     expect(first.place.id).toBe(second.place.id);
     expect(second.place.name).toBe('Updated');
 
-    const stored = await db.execute(sql`
+    const stored = await executeRaw(sql`
       select count(*)::int as count
       from places
       where user_id = ${ownerId}
         and data ->> 'googleMapsId' = 'gm-same'
     `);
-    const row = resultRows<{ count: number }>(stored)[0];
+    const row = extractRows<{ count: number }>(stored)[0];
     expect(row?.count).toBe(1);
   });
 

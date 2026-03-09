@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import * as z from 'zod'
-import { createInstitution, getAllInstitutions } from '@hominem/finance-services'
+import { randomUUID } from 'crypto'
+import { db } from '@hominem/db'
 import { authMiddleware } from '../middleware/auth'
 
 import type { AppContext } from '../middleware/auth'
@@ -23,23 +24,33 @@ const createInstitutionSchema = z.object({
 
 export const institutionsRoutes = new Hono<AppContext>()
   .post('/list', authMiddleware, zValidator('json', emptyBodySchema), async (c) => {
-    const institutions = await getAllInstitutions()
+    const institutions = await db
+      .selectFrom('financial_institutions')
+      .select(['id', 'name'])
+      .orderBy('name', 'asc')
+      .execute()
+
     return c.json<InstitutionsListOutput>(
-      institutions.map((item) => ({
-        id: item.id,
-        name: item.name,
-      })),
+      institutions.map((item) => ({ id: item.id, name: item.name })),
       200,
     )
   })
   .post('/create', authMiddleware, zValidator('json', createInstitutionSchema), async (c) => {
     const input = c.req.valid('json')
-    const created = await createInstitution(input.name)
-    return c.json<InstitutionCreateOutput>(
-      {
-        id: created.id,
-        name: created.name,
-      },
-      201,
-    )
+    const id = input.id ?? randomUUID()
+
+    await db
+      .insertInto('financial_institutions')
+      .values({ id, name: input.name })
+      .execute()
+
+    const created = await db
+      .selectFrom('financial_institutions')
+      .select(['id', 'name'])
+      .where('id', '=', id)
+      .executeTakeFirst()
+
+    if (!created) throw new Error('Failed to create institution')
+
+    return c.json<InstitutionCreateOutput>({ id: created.id, name: created.name }, 201)
   })

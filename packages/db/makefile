@@ -1,20 +1,19 @@
 include .env
 export
 
-db-gen:
-	@echo "Generating changes..."
-	DATABASE_URL=$(DATABASE_URL) bunx drizzle-kit generate
-	@echo "Generating test changes..."
-	DATABASE_URL=$(TEST_DATABASE_URL) bunx drizzle-kit generate
+goose-install:
+	@bash ../../scripts/install-goose.sh
 
-db-migrate:
+goose-up: goose-install
 	@echo "Migrating application database..."
-	DATABASE_URL=$(DATABASE_URL) bunx drizzle-kit migrate
+	DATABASE_URL=$(DATABASE_URL) goose-migrate -dir ./migrations postgres "$(DATABASE_URL)" up
 	@echo "Migrating test database..."
-	DATABASE_URL=$(TEST_DATABASE_URL) bunx drizzle-kit migrate
+	DATABASE_URL=$(TEST_DATABASE_URL) goose-migrate -dir ./migrations postgres "$(TEST_DATABASE_URL)" up
 
-db-migrate-drop:
-	@echo "Dropping migration..."
-	DATABASE_URL=$(DATABASE_URL) bunx drizzle-kit drop
-	@echo "Dropping test database migration..."
-	DATABASE_URL=$(TEST_DATABASE_URL) bunx drizzle-kit drop
+goose-down: goose-install
+	@echo "Rolling back latest migration on application database..."
+	goose-migrate -dir ./migrations postgres "$(DATABASE_URL)" down
+
+goose-status: goose-install
+	@echo "Application database migration status..."
+	goose-migrate -dir ./migrations postgres "$(DATABASE_URL)" status

@@ -35,7 +35,17 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: Run Migrations
-        run: bun run --filter @hominem/db db:migrate
+      - name: Install Goose CLI
+        run: |
+          bash scripts/install-goose.sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Check migration status
+        run: goose-migrate -dir packages/db/migrations postgres "${DATABASE_URL}" status
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Run database migrations
+        run: goose-migrate -dir packages/db/migrations postgres "${DATABASE_URL}" up
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

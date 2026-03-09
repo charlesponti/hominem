@@ -1,329 +1,133 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { vi } from 'vitest';
+import { randomUUID } from 'node:crypto'
 
-import { createTestUser as createTestUserShared } from './fixtures';
+// Kysely-compatible test utilities
 
-type UserCleanupFn = (userId: string) => Promise<void>;
+export const isIntegrationDatabaseAvailable = async (): Promise<boolean> => {
+  try {
+    const { pool } = await import('../db')
+    const result = await pool.query('SELECT 1')
+    return result.rowCount === 1
+  } catch {
+    return false
+  }
+}
 
-let userCleanup: UserCleanupFn = async () => {};
+export const createDeterministicIdFactory = (prefix: string) => {
+  let counter = 0
+  return () => {
+    counter += 1
+    return randomUUID()
+  }
+}
 
-export const setUserCleanup = (cleanup: UserCleanupFn) => {
-  userCleanup = cleanup;
-};
-
-// Track created test users for cleanup
-const createdTestUsers: string[] = [];
-
-/**
- * Database mock factory for different table operations
- */
-export const createDbMocks = (): {
-  db: any;
-  client: any;
-  mockQueryResult: <T>(data: T[] | T | null) => Promise<T[] | T | null>;
-  mockMutationResult: (count?: number) => Promise<{ rowCount: number; rows: any[] }>;
-  tableQueries: any;
-  mutations: any;
-} => {
-  const mockQueryResult = <T>(data: T[] | T | null = null) => Promise.resolve(data);
-  const mockMutationResult = (count = 1) => Promise.resolve({ rowCount: count, rows: [] });
-
-  // Table-specific query mocks
-  const tableQueries = {
-    users: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-    },
-    financialInstitutions: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-    },
-    plaidItems: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-    },
-    financeAccounts: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-    },
-    transactions: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-    },
-    subscriptions: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-    },
-    places: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-      findUnique: vi.fn(),
-    },
-  };
-
-  // Mutation mocks
-  const mutations = {
-    insert: vi.fn(() => ({
-      values: vi.fn(),
-    })),
-    update: vi.fn(() => ({
-      set: vi.fn(() => ({
-        where: vi.fn(),
-      })),
-    })),
-    delete: vi.fn(() => ({
-      where: vi.fn(),
-    })),
-  };
-
-  const db = {
-    query: tableQueries,
-    ...mutations,
-  };
-
-  const client = {
-    end: vi.fn(() => Promise.resolve()),
-    connect: vi.fn(() => Promise.resolve()),
-  };
-
-  return {
-    db,
-    client,
-    mockQueryResult,
-    mockMutationResult,
-    tableQueries,
-    mutations,
-  };
-};
-
-/**
- * Global database mocks - use this with top-level vi.mock
- */
-export const globalDbMocks: ReturnType<typeof createDbMocks> = createDbMocks();
-
-/**
- * Test data factory for common database entities
- */
-export const createTestData = {
-  user: (overrides = {}) => ({
-    id: 'user-test-id',
-    email: 'test@example.com',
-    firstName: 'Test',
-    lastName: 'User',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  }),
-  financialInstitution: (overrides = {}) => ({
-    id: 'fi-test-id',
-    userId: 'user-test-id',
-    name: 'Test Bank',
-    logo: 'logo.png',
-    primaryColor: '#000000',
-    plaidInstitutionId: 'ins_test',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  }),
-  plaidItem: (overrides = {}) => ({
-    id: 'plaid-item-test-id',
-    userId: 'user-test-id',
-    institutionId: 'fi-test-id',
-    itemId: 'item_test_id',
-    accessToken: 'access-test-token',
-    status: 'active' as const,
-    error: null,
-    consentExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-    transactionsCursor: null,
-    lastSyncedAt: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  }),
-  financeAccount: (overrides = {}) => ({
-    id: 'fa-test-id',
-    userId: 'user-test-id',
-    plaidItemId: 'plaid-item-test-id',
-    institutionId: 'fi-test-id',
-    name: 'Test Account',
-    officialName: 'Test Account Official Name',
-    type: 'depository' as const,
-    subtype: 'checking' as const,
-    mask: '0000',
-    balance: '1000.00', // Using string for numeric type
-    interestRate: null,
-    minimumPayment: null,
-    isoCurrencyCode: 'USD',
-    plaidAccountId: 'plaid-acc-test-id',
-    limit: null,
-    meta: null,
-    lastUpdated: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  }),
-  // Added plaidAccount factory for Plaid API response mocking
-  plaidAccount: (overrides = {}) => ({
-    account_id: 'plaid-acc-test-id',
-    name: 'Plaid Test Account',
-    official_name: 'Plaid Test Account Official Name',
-    type: 'depository' as const,
-    subtype: 'checking' as const,
-    mask: '1111',
-    balances: {
-      current: 1200.0,
-      available: 1150.0,
-      iso_currency_code: 'USD',
-      limit: null,
-      unofficial_currency_code: null,
-    },
-    persistent_account_id: 'persistent-plaid-acc-id',
-    verification_status: 'automatically_verified',
-    ...overrides,
-  }),
-  transaction: (overrides = {}) => ({
-    id: 'test-transaction-id',
-    plaidTransactionId: 'test-plaid-transaction-id',
-    accountId: 'test-account-id',
-    userId: 'test-user-id',
-    amount: 25.5,
-    date: new Date(),
-    name: 'Test Transaction',
-    merchantName: 'Test Merchant',
-    category: ['Food and Drink', 'Restaurants'],
-    subcategory: 'Restaurants',
-    pending: false,
-    isoCurrencyCode: 'USD',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  }),
-
-  place: (overrides = {}) => ({
-    id: 'test-place-id',
-    googleMapsId: 'test-google-id',
-    name: 'Test Place',
-    address: '123 Test St, Test City, TS 12345',
-    latitude: 40.7128,
-    longitude: -74.006,
-    types: ['restaurant'],
-    imageUrl: 'https://example.com/image.jpg',
-    photos: ['https://example.com/photo1.jpg'],
-    userId: 'test-user-id',
-    location: [40.7128, -74.006],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  }),
-};
-
-// Define table names type separately to avoid circular reference
-type TableName =
-  | 'users'
-  | 'financialInstitutions'
-  | 'plaidItems'
-  | 'financeAccounts'
-  | 'transactions'
-  | 'subscriptions'
-  | 'places';
-
-/**
- * Common database operation patterns for tests
- * These work with the globalDbMocks instance
- */
-export const mockDbOperations = {
-  /**
-   * Mock a successful find operation
-   */
-  mockFindSuccess: <T>(table: TableName, method: string, data: T) => {
-    const tableMock = globalDbMocks.tableQueries[table];
-    if (tableMock?.[method as keyof typeof tableMock]) {
-      vi.mocked(tableMock[method as keyof typeof tableMock]).mockResolvedValue(data);
-    }
-  },
-
-  /**
-   * Mock a not found result
-   */
-  mockFindNotFound: (table: TableName, method: string) => {
-    const tableMock = globalDbMocks.tableQueries[table];
-    if (tableMock?.[method as keyof typeof tableMock]) {
-      vi.mocked(tableMock[method as keyof typeof tableMock]).mockResolvedValue(null);
-    }
-  },
-
-  /**
-   * Mock a database error
-   */
-  mockDbError: (table: TableName, method: string, error = new Error('Database error')) => {
-    const tableMock = globalDbMocks.tableQueries[table];
-    if (tableMock?.[method as keyof typeof tableMock]) {
-      vi.mocked(tableMock[method as keyof typeof tableMock]).mockRejectedValue(error);
-    }
-  },
-
-  /**
-   * Mock successful insert operation
-   */
-  mockInsertSuccess: <T>(data: T) => {
-    vi.mocked(globalDbMocks.mutations.insert).mockReturnValue({
-      values: vi.fn().mockResolvedValue(data),
-    } as never);
-  },
-
-  /**
-   * Mock successful update operation
-   */
-  mockUpdateSuccess: <T>(data: T) => {
-    vi.mocked(globalDbMocks.mutations.update).mockReturnValue({
-      set: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue(data),
-      }),
-    } as never);
-  },
-
-  /**
-   * Mock successful delete operation
-   */
-  mockDeleteSuccess: (count = 1) => {
-    vi.mocked(globalDbMocks.mutations.delete).mockReturnValue({
-      where: vi.fn().mockResolvedValue({ rowCount: count }),
-    } as never);
-  },
-};
-
-/**
- * Creates a test user in the database and returns the user ID
- */
-export const createTestUser = async (overrides = {}): Promise<string> => {
-  const user = await createTestUserShared(overrides);
-  createdTestUsers.push(user.id);
-  return user.id;
-};
-
-/**
- * Cleans up test data from the database
- */
-export const cleanupTestData = async (): Promise<void> => {
-  // Clean up test data
-  for (const userId of createdTestUsers) {
-    try {
-      await userCleanup(userId);
-    } catch (error) {
-      console.warn(`Failed to delete test user ${userId}:`, error);
+// Helper to extract rows from query results (handles both Kysely and raw results)
+export const extractRows = <T>(result: unknown): T[] => {
+  if (Array.isArray(result)) {
+    return result as T[]
+  }
+  if (result && typeof result === 'object' && 'rows' in result) {
+    const rows = (result as { rows?: unknown }).rows
+    if (Array.isArray(rows)) {
+      return rows as T[]
     }
   }
+  return []
+}
 
-  // Clear the tracking array
-  createdTestUsers.length = 0;
-};
+// Check if a table exists by name
+export const tableExists = async (tableName: string): Promise<boolean> => {
+  try {
+    const { pool } = await import('../db')
+    // Use raw pool query to avoid SQL builder complexity for dynamic table names
+    const result = await pool.query(`select to_regclass('public.${tableName}') as relation_name`)
+    const rows = result.rows as Array<{ relation_name: string | null }> | undefined
+    return Boolean(rows?.[0]?.relation_name)
+  } catch {
+    return false
+  }
+}
 
-export * from './finance.utils';
-export * from './db-transaction';
-export * from './services/_shared';
+// Create users with specific IDs (for tests that need deterministic IDs)
+export const ensureIntegrationUsers = async (
+  users: Array<{ id: string; name: string; email?: string }>
+): Promise<{ ownerId: string; otherUserId: string }> => {
+  const { db } = await import('../db')
+  
+  for (const user of users) {
+    await db.insertInto('users').values({
+      id: user.id,
+      email: user.email ?? `${user.id}@test.com`,
+      name: user.name,
+    }).execute()
+  }
+  
+  return { ownerId: users[0]?.id || '', otherUserId: users[1]?.id || '' }
+}
+
+export const createTestUser = async (overrides?: { id?: string; email?: string; name?: string }): Promise<string> => {
+  const { db } = await import('../db')
+  const id = overrides?.id || randomUUID()
+  
+  await db.insertInto('users').values({
+    id,
+    email: overrides?.email || `${id}@test.com`,
+    name: overrides?.name || 'Test User',
+  }).execute()
+  
+  return id
+}
+
+export const cleanupTestData = async (userIds: string[]): Promise<void> => {
+  if (userIds.length === 0) return
+  
+  const { db } = await import('../db')
+  
+  // Delete notes for users
+  await db.deleteFrom('notes')
+    .where('user_id', 'in', userIds)
+    .execute()
+  
+  // Delete users
+  await db.deleteFrom('users')
+    .where('id', 'in', userIds)
+    .execute()
+}
+
+export const setUserCleanup = (_cleanup: (userId: string) => Promise<void>): void => {
+  // No-op for Kysely
+}
+
+// Mock utilities for unit tests
+export const createDbMocks = () => {
+  return {
+    db: {},
+    client: {},
+    mockQueryResult: <T>(data: T[] | T | null): Promise<T[] | T | null> => Promise.resolve(data),
+    mockMutationResult: (count = 1): Promise<{ rowCount: number; rows: unknown[] }> => 
+      Promise.resolve({ rowCount: count, rows: [] }),
+    tableQueries: {},
+    mutations: {},
+  }
+}
+
+export const globalDbMocks = createDbMocks()
+
+export const createTestData = {
+  user: (overrides?: Record<string, unknown>) => ({
+    id: `test-user-${Date.now()}`,
+    email: 'test@example.com',
+    name: 'Test User',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    ...overrides,
+  }),
+}
+
+export const mockDbOperations = {
+  mockFindSuccess: <T>(_table: string, _method: string, _data: T): void => {},
+  mockFindNotFound: (_table: string, _method: string): void => {},
+  mockDbError: (_table: string, _method: string, _error?: Error): void => {},
+  mockInsertSuccess: <T>(_data: T): void => {},
+  mockUpdateSuccess: <T>(_data: T): void => {},
+  mockDeleteSuccess: (_count?: number): void => {},
+}

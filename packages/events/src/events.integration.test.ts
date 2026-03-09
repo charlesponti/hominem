@@ -18,10 +18,9 @@ import {
 } from './event-core.service';
 import { getVisitsByUser } from './visits.service';
 
-const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('events.integration');
 
-describe.skipIf(!dbAvailable)('events integration', () => {
+describe('events integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerContactId: string;

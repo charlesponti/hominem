@@ -60,4 +60,5 @@ Uniqlo
 uuidv
 vectorstores
 vercel
+VITE
 xenova

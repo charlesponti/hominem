@@ -1,6 +1,7 @@
 name: deploy-rocco-prod
 
 on:
+  workflow_dispatch: # Allow manual trigger
   workflow_run:
     workflows: ["code-quality"]
     branches: [main]
@@ -10,8 +11,8 @@ on:
 jobs:
   deploy:
     name: Deploy Rocco to Railway
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     container: ghcr.io/railwayapp/cli:latest
     env:
       SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ROCCO }}

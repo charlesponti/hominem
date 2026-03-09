@@ -1,8 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 
 import { UserAuthService } from '@hominem/auth/server';
-import { users } from '@hominem/db/all-schema';
-import { db, eq } from '@hominem/hono-rpc';
+import { db } from '@hominem/db';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
@@ -19,7 +18,7 @@ import {
   revokeSession,
   rotateRefreshToken,
 } from '../auth/session-store';
-import { getLatestTestOtp, isTestOtpStoreEnabled } from '../auth/test-otp-store';
+import { getLatestTestOtp, isTestOtpStoreEnabled, recordTestOtp } from '../auth/test-otp-store';
 import { issueAccessToken, verifyAccessToken } from '../auth/tokens';
 import { env } from '../env';
 import type { AppEnv } from '../server';
@@ -149,6 +148,19 @@ async function resolveAuthUserId(c: {
     }
   }
 
+  const cookieHeader = c.req.header('cookie') ?? '';
+  const tokenMatch = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/);
+  const tokenValue = tokenMatch?.[1];
+  if (tokenValue) {
+    try {
+      const decoded = decodeURIComponent(tokenValue);
+      const claims = await verifyAccessToken(decoded);
+      if (claims?.sub) return claims.sub;
+    } catch {
+      // invalid cookie token — fall through
+    }
+  }
+
   // 3. Better Auth session cookie
   const session = await betterAuthServer.api.getSession(getHeaderCarrier(c));
   if (session?.user?.id) return session.user.id;
@@ -162,6 +174,105 @@ function isE2eAuthEnabled() {
 
 function isTestOtpRetrievalEnabled() {
   return isTestOtpStoreEnabled();
+}
+
+function generateTestOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function findOrCreateEmailOtpUser(input: { email: string; name?: string | undefined }) {
+  const existingUser = await db
+    .selectFrom('users')
+    .selectAll()
+    .where('email', '=', input.email)
+    .executeTakeFirst();
+
+  if (existingUser) {
+    return existingUser;
+  }
+
+  const insertedUser = await db
+    .insertInto('users')
+    .values({
+      email: input.email,
+      ...(input.name ? { name: input.name } : {}),
+      is_admin: false,
+    })
+    .returningAll()
+    .executeTakeFirst();
+
+  if (!insertedUser) {
+    return null;
+  }
+
+  return insertedUser;
+}
+
+async function createEmailOtpAuthResponse(dbUser: {
+  id: string;
+  email: string;
+  name: string | null;
+  is_admin: boolean;
+}) {
+  try {
+    const tokenPair = await createTokenPairForUser({
+      userId: dbUser.id,
+      role: dbUser.is_admin ? 'admin' : 'user',
+      amr: ['email_otp'],
+    });
+
+    return new Response(
+      JSON.stringify({
+        user: {
+          id: dbUser.id,
+          email: dbUser.email,
+          ...(dbUser.name ? { name: dbUser.name } : {}),
+        },
+        accessToken: tokenPair.accessToken,
+        refreshToken: tokenPair.refreshToken,
+        expiresIn: tokenPair.expiresIn,
+        tokenType: tokenPair.tokenType,
+      }),
+      {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+        },
+      },
+    );
+  } catch (sessionError) {
+    logger.warn('[auth:email-otp] session creation failed, issuing access token only', {
+      sessionError,
+    });
+
+    const token = await issueAccessToken({
+      sub: dbUser.id,
+      sid: crypto.randomUUID(),
+      scope: ['api:read', 'api:write'],
+      role: dbUser.is_admin ? 'admin' : 'user',
+      amr: ['email_otp'],
+    });
+
+    return new Response(
+      JSON.stringify({
+        user: {
+          id: dbUser.id,
+          email: dbUser.email,
+          ...(dbUser.name ? { name: dbUser.name } : {}),
+        },
+        accessToken: token.accessToken,
+        refreshToken: '',
+        expiresIn: token.expiresIn,
+        tokenType: token.tokenType,
+      }),
+      {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+        },
+      },
+    );
+  }
 }
 
 async function getRedis() {
@@ -328,19 +439,27 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   const amr = payload.amr && payload.amr.length > 0 ? payload.amr : ['e2e', 'mobile'];
   const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 16);
 
-  const [existingUser] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const existingUser = await db
+    .selectFrom('users')
+    .selectAll()
+    .where('email', '=', email)
+    .limit(1)
+    .executeTakeFirst();
+
   const user =
     existingUser ??
-    (
-      await db
-        .insert(users)
-        .values({
-          email,
-          name,
-          isAdmin: false,
-        })
-        .returning()
-    )[0];
+    (await db
+      .insertInto('users')
+      .values({
+        id: randomBytes(16).toString('hex'),
+        email,
+        name,
+        is_admin: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .returningAll()
+      .executeTakeFirst());
 
   if (!user) {
     logger.error('[auth:e2e:mobile] failed to create or fetch user', {
@@ -354,7 +473,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
     sub: user.id,
     sid: crypto.randomUUID(),
     scope: ['api:read', 'api:write'],
-    role: user.isAdmin ? 'admin' : 'user',
+    role: user.is_admin ? 'admin' : 'user',
     amr,
   });
   const refreshToken = randomBytes(32).toString('base64url');
@@ -390,6 +509,15 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
 authRoutes.post('/email-otp/send', zValidator('json', emailOtpRequestSchema), async (c) => {
   try {
     const payload = c.req.valid('json');
+    if (isTestOtpStoreEnabled()) {
+      recordTestOtp({
+        email: payload.email,
+        otp: generateTestOtp(),
+        type: payload.type,
+      });
+      return c.json({ success: true });
+    }
+
     const response = await callBetterAuthPluginEndpoint({
       request: c.req.raw,
       path: '/email-otp/send-verification-otp',
@@ -409,6 +537,32 @@ authRoutes.post('/email-otp/send', zValidator('json', emailOtpRequestSchema), as
 authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), async (c) => {
   try {
     const payload = c.req.valid('json');
+
+    if (isTestOtpStoreEnabled()) {
+      const latestRecord =
+        getLatestTestOtp({ email: payload.email, type: 'sign-in' }) ??
+        getLatestTestOtp({ email: payload.email });
+
+      if (!latestRecord || latestRecord.otp !== payload.otp) {
+        return c.json({ error: 'invalid_otp' }, 400);
+      }
+
+      if (Date.now() > latestRecord.createdAt + env.AUTH_EMAIL_OTP_EXPIRES_SECONDS * 1000) {
+        return c.json({ error: 'otp_expired' }, 400);
+      }
+
+      const dbUser = await findOrCreateEmailOtpUser({
+        email: payload.email,
+        ...(payload.name ? { name: payload.name } : {}),
+      });
+
+      if (!dbUser) {
+        return c.json({ error: 'user_create_failed' }, 500);
+      }
+
+      return await createEmailOtpAuthResponse(dbUser);
+    }
+
     const response = await callBetterAuthPluginEndpoint({
       request: c.req.raw,
       path: '/sign-in/email-otp',
@@ -432,67 +586,22 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
         return c.json({ error: 'user_id_missing' }, 400);
       }
 
-      const dbUser = await db.query.users.findFirst({
-        where: eq(users.id, userId),
-      });
+      const dbUser = await db
+        .selectFrom('users')
+        .selectAll()
+        .where('id', '=', userId)
+        .executeTakeFirst();
 
       if (!dbUser) {
         return c.json({ error: 'user_not_found' }, 400);
       }
 
-      // Issue token pair with full session tracking
-      try {
-        const tokenPair = await createTokenPairForUser({
-          userId,
-          role: dbUser.isAdmin ? 'admin' : 'user',
-          amr: ['email_otp'],
-        });
-
-        // Forward Better Auth session cookies so passkey enrollment works after OTP sign-in
-        const betterAuthCookies = copyHeadersWithSetCookie(response.headers);
-        const responseHeaders = new Headers(betterAuthCookies);
-        responseHeaders.set('content-type', 'application/json');
-
-        return new Response(
-          JSON.stringify({
-            user: {
-              id: dbUser.id,
-              email: dbUser.email,
-              ...(dbUser.name ? { name: dbUser.name } : {}),
-            },
-            accessToken: tokenPair.accessToken,
-            refreshToken: tokenPair.refreshToken,
-            expiresIn: tokenPair.expiresIn,
-            tokenType: tokenPair.tokenType,
-          }),
-          { status: 200, headers: responseHeaders },
-        );
-      } catch (sessionError) {
-        // Fallback: If session table is not available, issue access token only
-        logger.warn('[auth:email-otp] session creation failed, issuing access token only', {
-          sessionError,
-        });
-
-        const token = await issueAccessToken({
-          sub: userId,
-          sid: crypto.randomUUID(),
-          scope: ['api:read', 'api:write'],
-          role: dbUser.isAdmin ? 'admin' : 'user',
-          amr: ['email_otp'],
-        });
-
-        return c.json({
-          user: {
-            id: dbUser.id,
-            email: dbUser.email,
-            ...(dbUser.name ? { name: dbUser.name } : {}),
-          },
-          accessToken: token.accessToken,
-          refreshToken: '', // Empty string indicates no refresh capability in this mode
-          expiresIn: token.expiresIn,
-          tokenType: token.tokenType,
-        });
-      }
+      const authResponse = await createEmailOtpAuthResponse(dbUser);
+      const betterAuthCookies = copyHeadersWithSetCookie(response.headers);
+      const responseHeaders = new Headers(betterAuthCookies);
+      responseHeaders.set('content-type', 'application/json');
+      const authBody = await authResponse.text();
+      return new Response(authBody, { status: 200, headers: responseHeaders });
     } catch (error) {
       logger.error('[auth:email-otp] sign-in failed', { error });
       return c.json({ error: 'sign_in_failed' }, 500);
@@ -741,9 +850,11 @@ authRoutes.post('/token-from-session', async (c) => {
 
     const userId = session.user.id;
 
-    const dbUser = await db.query.users.findFirst({
-      where: eq(users.id, userId),
-    });
+    const dbUser = await db
+      .selectFrom('users')
+      .selectAll()
+      .where('id', '=', userId)
+      .executeTakeFirst();
 
     if (!dbUser) {
       return c.json({ error: 'user_not_found' }, 400);
@@ -751,7 +862,7 @@ authRoutes.post('/token-from-session', async (c) => {
 
     const tokenPair = await createTokenPairForUser({
       userId,
-      role: dbUser.isAdmin ? 'admin' : 'user',
+      role: dbUser.is_admin ? 'admin' : 'user',
       amr: ['passkey'],
     });
 
@@ -936,9 +1047,11 @@ authRoutes.post('/passkey/auth/verify', zValidator('json', passkeyAuthVerifySche
         });
       }
 
-      const dbUser = await db.query.users.findFirst({
-        where: eq(users.id, userId),
-      });
+      const dbUser = await db
+        .selectFrom('users')
+        .selectAll()
+        .where('id', '=', userId)
+        .executeTakeFirst();
 
       if (!dbUser) {
         return c.json({ error: 'user_not_found' }, 400);
@@ -946,7 +1059,7 @@ authRoutes.post('/passkey/auth/verify', zValidator('json', passkeyAuthVerifySche
 
       const tokenPair = await createTokenPairForUser({
         userId,
-        role: dbUser.isAdmin ? 'admin' : 'user',
+        role: dbUser.is_admin ? 'admin' : 'user',
         amr: ['passkey'],
       });
 

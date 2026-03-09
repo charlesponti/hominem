@@ -1,69 +1,44 @@
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
-
-import type * as schema from './all-schema'
-
-import { getDb } from './client'
-
-let _db: PostgresJsDatabase<typeof schema> | null = null
-
-function getDbInstance() {
-  if (!_db) {
-    _db = getDb() as PostgresJsDatabase<typeof schema>
-  }
-  return _db
-}
-
 /**
- * Main database instance
+ * Database layer - Kysely + PostgreSQL
  *
- * Lazy initialization - only connects when actually used.
+ * Main database instance and utilities.
  *
- * Infrastructure exports only. Services are imported via subpaths:
- *   import { listTasks } from '@hominem/db/services/tasks.service'
- *   NOT: import { TaskService } from '@hominem/db'
+ * Infrastructure exports only. Queries are defined in services/api routes:
+ *   import { db } from '@hominem/db'
+ *   db.selectFrom('tasks').selectAll().execute()
+ *
+ * NOT for use in client applications - use @hominem/hono-client instead.
  */
-export const db = new Proxy({} as PostgresJsDatabase<typeof schema>, {
-  get(_, prop) {
-    return getDbInstance()[prop as keyof PostgresJsDatabase<typeof schema>]
-  },
-})
 
-// Infrastructure exports only
-export { getDb, takeUniqueOrThrow } from './client'
+export { db, healthCheck, pool, sql } from './db'
+export type { Database } from './types/database'
+export type { Selectable } from 'kysely'
+export type { Json, JsonValue, JsonObject, JsonArray } from './types/database'
 
-// Re-export commonly used drizzle-orm functions and types
-// This ensures all packages use the same drizzle-orm instance
-export {
-  and,
-  or,
-  eq,
-  ne,
-  gt,
-  gte,
-  lt,
-  lte,
-  like,
-  ilike,
-  inArray,
-  isNull,
-  isNotNull,
-  asc,
-  desc,
-  sql,
-  count,
-  type SQL,
-  type SQLWrapper,
-} from 'drizzle-orm'
+// Export all database table types for use in services
+export type {
+  Chat,
+  ChatMessage,
+  HealthRecords,
+  Tasks,
+  Tags,
+  TaskLists,
+  Persons,
+  Places,
+  Bookmarks,
+  Possessions,
+  FinanceAccounts,
+  FinanceTransactions,
+  CalendarEvents,
+  Notes,
+  Logs,
+  Users,
+  UserAccounts,
+} from './types/database'
 
-// Shared utilities (no service exports from root)
-export * from './services/_shared/errors'
-export * from './services/_shared/ids'
-export * from './services/_shared/query'
+// Shared service utilities (used by RPC handlers)
+export { brandId, unbrandId } from './services/_shared/ids'
+export type { TaskId, TagId, CalendarEventId, PersonId, BookmarkId, PossessionId, FinanceCategoryId, FinanceAccountId, FinanceTransactionId, UserId } from './services/_shared/ids'
 
-/**
- * Note: Service modules are NOT re-exported from the root index.
- * Import services via subpaths instead:
- *   import { listTasks } from '@hominem/db/services/tasks.service'
- *   import { listTags } from '@hominem/db/services/tags.service'
- *   import { FinanceCategoryService } from '@hominem/db/services/finance/categories'
- */
+export { NotFoundError, ConflictError, ValidationError, ForbiddenError, InternalError, isDbError, isServiceError, getErrorResponse } from './services/_shared/errors'
+export type { DbError } from './services/_shared/errors'

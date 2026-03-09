@@ -1,25 +1,16 @@
 import crypto from 'node:crypto';
 
-import { db, sql } from '@hominem/db';
+import { db } from '@hominem/db';
+import type { Database, Json } from '@hominem/db';
 import { normalizePhotoReference, sanitizeStoredPhotos } from '@hominem/utils/images';
+import { sql, type Selectable } from 'kysely';
 
 import type { PlaceInput, PlaceOutput } from './contracts';
 import { googlePlaces } from './google-places.service';
 import { placeCache } from './place-cache';
 import { isGooglePhotosUrl, type PlaceImagesService } from './place-images.service';
 
-interface PlaceRow {
-  id: string;
-  user_id: string;
-  name: string;
-  address: string | null;
-  latitude: string | number | null;
-  longitude: string | number | null;
-  place_type: string | null;
-  rating: string | number | null;
-  data: Record<string, unknown> | null;
-  created_at: string | null;
-}
+type PlaceRow = Selectable<Database['places']>;
 
 interface PlaceMeta {
   googleMapsId: string;
@@ -36,19 +27,6 @@ interface PlaceMeta {
 
 export type ListSummary = { id: string; name: string };
 
-function resultRows<T>(result: unknown): T[] {
-  if (Array.isArray(result)) {
-    return result as T[];
-  }
-  if (result && typeof result === 'object' && 'rows' in result) {
-    const rows = (result as { rows?: unknown }).rows;
-    if (Array.isArray(rows)) {
-      return rows as T[];
-    }
-  }
-  return [];
-}
-
 function toNumber(value: string | number | null): number | null {
   if (value === null) {
     return null;
@@ -60,7 +38,10 @@ function toNumber(value: string | number | null): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function toMeta(data: Record<string, unknown> | null, fallbackGoogleMapsId: string): PlaceMeta {
+function toMeta(data: Json | null, fallbackGoogleMapsId: string): PlaceMeta {
+  if (data !== null && (typeof data !== 'object' || Array.isArray(data))) {
+    data = null;
+  }
   const payload = data ?? {};
   const photosRaw = payload.photos;
   const photos =
@@ -98,8 +79,8 @@ function toMeta(data: Record<string, unknown> | null, fallbackGoogleMapsId: stri
 }
 
 function rowToPlaceOutput(row: PlaceRow): PlaceOutput {
-  const meta = toMeta(row.data, row.id);
-  const createdAt = row.created_at ?? new Date().toISOString();
+  const meta = toMeta(row.data ?? null, row.id);
+  const createdAt = typeof row.created_at === 'string' ? row.created_at : new Date().toISOString();
 
   return {
     id: row.id,
@@ -158,7 +139,7 @@ export async function preparePlaceInsertData(data: PlaceInput): Promise<{
   longitude: number | null;
   placeType: string | null;
   rating: number | null;
-  data: PlaceMeta;
+  data: Json;
 }> {
   const processedPhotos = data.photos ? sanitizeStoredPhotos(data.photos) : null;
   const imageUrl = data.imageUrl ? normalizePhotoReference(data.imageUrl) : null;
@@ -199,14 +180,13 @@ export async function getPlaceById(id: string): Promise<PlaceOutput | undefined>
     return cached as PlaceOutput;
   }
 
-  const result = await db.execute(sql`
-    select id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
-    from places
-    where id = ${id}
-    limit 1
-  `);
+  const row = await db
+    .selectFrom('places')
+    .selectAll()
+    .where('id', '=', id)
+    .limit(1)
+    .executeTakeFirst();
 
-  const row = resultRows<PlaceRow>(result)[0] ?? null;
   if (!row) {
     return undefined;
   }
@@ -225,15 +205,15 @@ export async function getPlaceByGoogleMapsId(
     return cached as PlaceOutput;
   }
 
-  const result = await db.execute(sql`
-    select id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
-    from places
-    where data ->> 'googleMapsId' = ${googleMapsId}
-    order by created_at desc, id asc
-    limit 1
-  `);
+  const row = await db
+    .selectFrom('places')
+    .selectAll()
+    .where(sql<boolean>`data->>'googleMapsId' = ${googleMapsId}`)
+    .orderBy('created_at', 'desc')
+    .orderBy('id', 'asc')
+    .limit(1)
+    .executeTakeFirst();
 
-  const row = resultRows<PlaceRow>(result)[0] ?? null;
   if (!row) {
     return undefined;
   }
@@ -247,16 +227,16 @@ async function getPlaceByGoogleMapsIdForUser(
   userId: string,
   googleMapsId: string,
 ): Promise<PlaceOutput | undefined> {
-  const result = await db.execute(sql`
-    select id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
-    from places
-    where user_id = ${userId}
-      and data ->> 'googleMapsId' = ${googleMapsId}
-    order by created_at desc, id asc
-    limit 1
-  `);
+  const row = await db
+    .selectFrom('places')
+    .selectAll()
+    .where('user_id', '=', userId)
+    .where(sql<boolean>`data->>'googleMapsId' = ${googleMapsId}`)
+    .orderBy('created_at', 'desc')
+    .orderBy('id', 'asc')
+    .limit(1)
+    .executeTakeFirst();
 
-  const row = resultRows<PlaceRow>(result)[0] ?? null;
   return row ? rowToPlaceOutput(row) : undefined;
 }
 
@@ -265,14 +245,15 @@ export async function getPlacesByIds(ids: string[]): Promise<PlaceOutput[]> {
     return [];
   }
 
-  const result = await db.execute(sql`
-    select id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
-    from places
-    where id = any(${ids}::uuid[])
-    order by created_at desc, id asc
-  `);
+  const rows = await db
+    .selectFrom('places')
+    .selectAll()
+    .where('id', 'in', ids)
+    .orderBy('created_at', 'desc')
+    .orderBy('id', 'asc')
+    .execute();
 
-  return resultRows<PlaceRow>(result).map(rowToPlaceOutput);
+  return rows.map(rowToPlaceOutput);
 }
 
 export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise<PlaceOutput[]> {
@@ -280,14 +261,15 @@ export async function getPlacesByGoogleMapsIds(googleMapsIds: string[]): Promise
     return [];
   }
 
-  const result = await db.execute(sql`
-    select id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
-    from places
-    where data ->> 'googleMapsId' = any(${googleMapsIds}::text[])
-    order by created_at desc, id asc
-  `);
+  const rows = await db
+    .selectFrom('places')
+    .selectAll()
+    .where(sql<boolean>`data->>'googleMapsId' in (${sql.join(googleMapsIds)})`)
+    .orderBy('created_at', 'desc')
+    .orderBy('id', 'asc')
+    .execute();
 
-  return resultRows<PlaceRow>(result).map(rowToPlaceOutput);
+  return rows.map(rowToPlaceOutput);
 }
 
 export async function processPlacePhotos(
@@ -326,21 +308,21 @@ export async function upsertPlace({ data }: { data: PlaceInput }): Promise<Place
   const existing = await getPlaceByGoogleMapsIdForUser(data.userId, data.googleMapsId);
 
   if (existing) {
-    const result = await db.execute(sql`
-      update places
-      set
-        name = ${insertValues.name},
-        address = ${insertValues.address},
-        latitude = ${insertValues.latitude},
-        longitude = ${insertValues.longitude},
-        place_type = ${insertValues.placeType},
-        rating = ${insertValues.rating},
-        data = ${JSON.stringify(insertValues.data)}::jsonb
-      where id = ${existing.id}
-      returning id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
-    `);
+    const row = await db
+      .updateTable('places')
+      .set({
+        name: insertValues.name,
+        address: insertValues.address,
+        latitude: insertValues.latitude,
+        longitude: insertValues.longitude,
+        place_type: insertValues.placeType,
+        rating: insertValues.rating,
+        data: insertValues.data,
+      })
+      .where('id', '=', existing.id)
+      .returningAll()
+      .executeTakeFirst();
 
-    const row = resultRows<PlaceRow>(result)[0] ?? null;
     if (!row) {
       throw new Error('Failed to update place');
     }
@@ -350,23 +332,22 @@ export async function upsertPlace({ data }: { data: PlaceInput }): Promise<Place
     return output;
   }
 
-  const result = await db.execute(sql`
-    insert into places (id, user_id, name, address, latitude, longitude, place_type, rating, data)
-    values (
-      ${insertValues.id},
-      ${insertValues.userId},
-      ${insertValues.name},
-      ${insertValues.address},
-      ${insertValues.latitude},
-      ${insertValues.longitude},
-      ${insertValues.placeType},
-      ${insertValues.rating},
-      ${JSON.stringify(insertValues.data)}::jsonb
-    )
-    returning id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
-  `);
+  const row = await db
+    .insertInto('places')
+    .values({
+      id: insertValues.id,
+      user_id: insertValues.userId,
+      name: insertValues.name,
+      address: insertValues.address,
+      latitude: insertValues.latitude,
+      longitude: insertValues.longitude,
+      place_type: insertValues.placeType,
+      rating: insertValues.rating,
+      data: insertValues.data as unknown as Json,
+    })
+    .returningAll()
+    .executeTakeFirst();
 
-  const row = resultRows<PlaceRow>(result)[0] ?? null;
   if (!row) {
     throw new Error('Failed to insert place');
   }
@@ -426,7 +407,7 @@ export async function createOrUpdatePlace(
 
   const updated = await upsertPlace({ data: merged });
   if (updated.id !== id) {
-    await db.execute(sql`delete from places where id = ${id}`);
+    await db.deleteFrom('places').where('id', '=', id).execute();
   }
   return { ...updated, id };
 }
@@ -468,15 +449,15 @@ export async function getNearbyPlacesFromLists(params: {
   const radiusKm = params.radiusKm ?? 50;
   const limit = params.limit ?? 20;
 
-  const result = await db.execute(sql`
-    select id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
-    from places
-    where user_id = ${params.userId}
-      and latitude is not null
-      and longitude is not null
-  `);
+  const rows = await db
+    .selectFrom('places')
+    .selectAll()
+    .where('user_id', '=', params.userId)
+    .where('latitude', 'is not', null)
+    .where('longitude', 'is not', null)
+    .execute();
 
-  const nearby = resultRows<PlaceRow>(result)
+  const nearby = rows
     .map((row) => rowToPlaceOutput(row))
     .map((place) => {
       if (place.latitude === null || place.longitude === null) {
@@ -507,12 +488,13 @@ export async function getNearbyPlacesFromLists(params: {
 }
 
 export async function deletePlaceById(id: string): Promise<boolean> {
-  const result = await db.execute(sql`
-    delete from places
-    where id = ${id}
-    returning id
-  `);
-  const deleted = resultRows<{ id: string }>(result).length > 0;
+  const result = await db
+    .deleteFrom('places')
+    .where('id', '=', id)
+    .returningAll()
+    .executeTakeFirst();
+
+  const deleted = !!result;
   if (deleted) {
     placeCache.delete(`place:id:${id}`);
   }
@@ -520,13 +502,12 @@ export async function deletePlaceById(id: string): Promise<boolean> {
 }
 
 export async function refreshAllPlaces(): Promise<{ updatedCount: number; errors: string[] }> {
-  const result = await db.execute(sql`
-    select id, user_id, name, address, latitude, longitude, place_type, rating, data, created_at
-    from places
-    where data ->> 'googleMapsId' is not null
-  `);
+  const rows = await db
+    .selectFrom('places')
+    .selectAll()
+    .where(sql<boolean>`data->>'googleMapsId' IS NOT NULL`)
+    .execute();
 
-  const rows = resultRows<PlaceRow>(result);
   let updatedCount = 0;
   const errors: string[] = [];
 

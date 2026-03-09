@@ -1,4 +1,4 @@
-# Makefile for Node.js, Docker, Fastify, and Drizzle project
+# Makefile for Node.js, Docker, Fastify, and Goose migrations
 
 # Load root environment variables when present.
 ifneq (,$(wildcard .env))
@@ -17,7 +17,7 @@ DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install start dev build test lint format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-migration-generate db-migration-apply db-schema-update help-db auth-test-up auth-test-down auth-test-status
+.PHONY: install start dev build test lint format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-migration-generate db-migration-apply db-schema-update help-db auth-test-up auth-test-down auth-test-status validate-db-setup
 
 # Install dependencies
 install:
@@ -62,32 +62,29 @@ dev-status:
 db-migrate:
 	@echo "Waiting for dev database to be ready..."
 	@until docker exec hominem-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
-	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bun run db:migrate
+	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bun run goose:up
 
 # Run migrations against the local test database
 db-migrate-test:
 	@echo "Waiting for test database to be ready..."
 	@until docker exec hominem-test-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
-	@cd packages/db && DATABASE_URL="$(TEST_DATABASE_URL)" bun run db:migrate
+	@cd packages/db && DATABASE_URL="$(TEST_DATABASE_URL)" bun run goose:up
 
 # Run all local database migrations required for development
 db-migrate-all: db-migrate db-migrate-test
 
-# Database schema workflow targets
-# Step 1: Generate migration files from packages/db/src/migrations/schema.ts
+# Database migration workflow targets
 db-migration-generate:
-	@echo "Generating migration files..."
-	@cd packages/db && bun db:generate
-	@echo "✓ Migration files generated at packages/db/src/migrations/*.sql"
+	@echo "Goose uses SQL-first migrations. Create a new file in packages/db/migrations with UTC timestamp prefix."
 
 # Step 2: Apply generated migrations to databases
 db-migration-apply: db-migrate-all
 
-# Full workflow: add new table to migrations/schema.ts, then run this
+# Full workflow: add a new Goose migration file, then run this
 # Example: make db-schema-update
 db-schema-update: db-migration-generate db-migration-apply
 	@echo "✓ Database schema updated and migrations applied"
-	@echo "Remember to commit: git add packages/db/src/migrations/"
+	@echo "Remember to commit: git add packages/db/migrations/"
 
 # Run tests
 test:
@@ -169,6 +166,9 @@ auth-test-down:
 auth-test-status:
 	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps redis db test-db
 
+validate-db-setup:
+	@bash scripts/validate-code-quality-db-setup.sh
+
 mobile-test-e2e-preflight:
 	@bun run --filter @hominem/mobile test:e2e:preflight
 
@@ -186,22 +186,22 @@ blt:
 # Database Operations Help
 help-db:
 	@echo ""
-	@echo "Database Schema Workflow (SIMPLIFIED):"
+	@echo "Database Migration Workflow (Goose):"
 	@echo "======================================"
 	@echo ""
-	@echo "To add a new table:"
-	@echo "  1. Edit packages/db/src/migrations/schema.ts"
-	@echo "  2. Run: make db-schema-update"
+	@echo "To add a schema change:"
+	@echo "  1. Create a new SQL file in packages/db/migrations/"
+	@echo "  2. Use UTC timestamp prefix (YYYYMMDDHHMMSS_description.sql)"
+	@echo "  3. Add -- +goose Up and -- +goose Down blocks"
+	@echo "  4. Run: make db-migrate-all"
 	@echo ""
 	@echo "Individual Steps:"
-	@echo "  make db-migration-generate # Generate migration SQL from schema.ts"
 	@echo "  make db-migration-apply    # Apply migrations to dev + test databases"
 	@echo ""
-	@echo "Why simplified?"
-	@echo "  - Domain schema slices in packages/db/src/schema/ are now simple"
-	@echo "    re-exports from migrations/schema.ts"
-	@echo "  - No generated artifacts to maintain"
-	@echo "  - TypeScript server imports just re-export needed tables"
+	@echo "Safety rules:"
+	@echo "  - Expand -> Backfill -> Contract"
+	@echo "  - Avoid DROP COLUMN/TABLE in normal migrations"
+	@echo "  - Contract changes only after backfill cutover"
 	@echo ""
 
 # Docker compose targets
@@ -222,7 +222,7 @@ docker-test-up:
 	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d test-db
 	@echo "Waiting for test database to be ready..."
 	@sleep 3
-	@cd packages/db && DATABASE_URL="postgres://postgres:postgres@localhost:4433/hominem-test" bun run db:migrate
+	@cd packages/db && DATABASE_URL="postgres://postgres:postgres@localhost:4433/hominem-test" bun run goose:up
 	@echo "Test database ready on port 4433"
 
 docker-test-down:

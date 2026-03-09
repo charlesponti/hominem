@@ -38,6 +38,16 @@ jobs:
       - name: Build CLI binary
         run: bun run --filter @hominem/cli build:core
 
+      - name: Verify binary exists
+        run: |
+          BINARY_PATH="tools/cli/dist/hominem"
+          if [ ! -f "$BINARY_PATH" ]; then
+            echo "ERROR: Binary not found at $BINARY_PATH"
+            ls -la tools/cli/dist/ || echo "dist directory missing"
+            exit 1
+          fi
+          echo "Binary found: $(ls -lh $BINARY_PATH)"
+
       - name: Rename binary
         run: |
           mkdir -p dist/release

@@ -1,9 +1,8 @@
 import { db } from '@hominem/db';
-import { sql } from '@hominem/db';
 import {
+  cleanupTestData,
   createDeterministicIdFactory,
   ensureIntegrationUsers,
-  isIntegrationDatabaseAvailable,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -11,33 +10,15 @@ import type { NoteOutput } from './contracts';
 import { ConflictError } from './note.state.service';
 import { NotFoundError, NotesService } from './notes.service';
 
-const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('notes.integration');
 
-describe.skipIf(!dbAvailable)('notes integration', () => {
+describe('notes integration', () => {
   const service = new NotesService();
   let ownerId: string;
   let otherUserId: string;
 
   const cleanupUsersAndNotes = async (userIds: string[]) => {
-    if (userIds.length === 0) {
-      return;
-    }
-
-    if (userIds.length === 1) {
-      const userId = userIds[0]!;
-      await db.execute(sql`delete from notes where user_id = ${userId}`).catch(() => {});
-      await db.execute(sql`delete from users where id = ${userId}`).catch(() => {});
-      return;
-    }
-
-    const [firstUserId, secondUserId] = userIds;
-    await db
-      .execute(sql`delete from notes where user_id = ${firstUserId} or user_id = ${secondUserId}`)
-      .catch(() => {});
-    await db
-      .execute(sql`delete from users where id = ${firstUserId} or id = ${secondUserId}`)
-      .catch(() => {});
+    await cleanupTestData(userIds)
   };
 
   const createNoteFor = async (

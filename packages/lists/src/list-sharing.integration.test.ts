@@ -17,11 +17,10 @@ import {
   sendListInvite,
 } from './index';
 
-const dbAvailable = await isIntegrationDatabaseAvailable();
 const nextUserId = createDeterministicIdFactory('lists.sharing.integration.user');
 const nextListId = createDeterministicIdFactory('lists.sharing.integration.list');
 
-describe.skipIf(!dbAvailable)('list sharing integration', () => {
+describe('list sharing integration', () => {
   let ownerId: string;
   let collaboratorId: string;
   let listId: string;

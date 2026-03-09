@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 
 import { db, sql } from '@hominem/db';
+import { extractRows, isIntegrationDatabaseAvailable } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -11,31 +12,7 @@ import {
   getPlaceLists,
 } from './list-queries.service';
 
-function resultRows<T>(result: unknown): T[] {
-  if (Array.isArray(result)) {
-    return result as T[];
-  }
-  if (result && typeof result === 'object' && 'rows' in result) {
-    const rows = (result as { rows?: unknown }).rows;
-    if (Array.isArray(rows)) {
-      return rows as T[];
-    }
-  }
-  return [];
-}
-
-async function isDatabaseAvailable(): Promise<boolean> {
-  try {
-    await db.execute(sql`select 1`);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-const dbAvailable = await isDatabaseAvailable();
-
-describe.skipIf(!dbAvailable)('list-queries integration', () => {
+describe('list-queries integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerListA: string;
@@ -153,7 +130,7 @@ describe.skipIf(!dbAvailable)('list-queries integration', () => {
       group by list_id
     `);
 
-    const countRows = resultRows<{ list_id: string; count: number }>(dbCounts);
+    const countRows = extractRows<{ list_id: string; count: number }>(dbCounts);
     expect(countRows.length).toBe(2);
   });
 

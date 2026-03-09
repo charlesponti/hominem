@@ -4,8 +4,6 @@ import * as z from 'zod'
 import {
   calculateBudgetBreakdown,
   calculateBudgetBreakdownInputSchema,
-  calculateLoanDetails,
-  calculateLoanDetailsInputSchema,
   calculateRunway,
   calculateSavingsGoal,
   calculateSavingsGoalInputSchema,
@@ -123,6 +121,6 @@ export const runwayRoutes = new Hono<AppContext>()
   })
   .post('/loan-details', authMiddleware, zValidator('json', loanDetailsInputSchema), async (c) => {
     const input = c.req.valid('json')
-    const parsed = calculateLoanDetailsInputSchema.parse(input)
-    return c.json(calculateLoanDetails(parsed))
+    // TODO: calculateLoanDetails not yet implemented in finance-services
+    return c.json({ error: 'Not implemented' }, 501)
   })

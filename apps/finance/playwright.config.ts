@@ -17,7 +17,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: 'bun run --filter @hominem/db build && bun run --filter @hominem/db db:migrate && bun run --filter @hominem/api dev',
+      command: 'bun run --filter @hominem/db build && bun run --filter @hominem/api dev',
       cwd: workspaceRoot,
       url: 'http://localhost:4040/',
       reuseExistingServer,

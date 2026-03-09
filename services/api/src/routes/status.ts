@@ -1,5 +1,4 @@
-import { sql } from '@hominem/db';
-import { db } from '@hominem/hono-rpc';
+import { db } from '@hominem/db';
 import { UnavailableError } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
@@ -11,7 +10,8 @@ export const statusRoutes = new Hono<AppEnv>();
 // System health check endpoint
 statusRoutes.get('/', async (c) => {
   try {
-    await db.execute(sql`select 1`);
+    // Simple health check using selectFrom
+    await db.selectFrom('users').select('id').limit(1).executeTakeFirst();
 
     return c.json({
       status: 'ok',

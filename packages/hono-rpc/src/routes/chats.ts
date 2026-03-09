@@ -1,12 +1,23 @@
-import { ChatService, MessageService } from '@hominem/chat-services';
-import { NotFoundError, InternalError, ValidationError } from '../errors';
-import { logger } from '@hominem/utils/logger';
-import { zValidator } from '@hono/zod-validator';
-import { convertToCoreMessages, streamText, type CoreMessage, type Message } from 'ai';
-import { Hono } from 'hono';
-import * as z from 'zod';
+import crypto from 'node:crypto'
 
-import { authMiddleware, type AppContext } from '../middleware/auth';
+import { NotFoundError, InternalError, ForbiddenError, ValidationError } from '@hominem/db'
+import {
+  createChatQuery,
+  getChatByIdQuery,
+  getUserChatsQuery,
+  getChatByNoteIdQuery,
+  updateChatTitleQuery,
+  deleteChatQuery,
+  clearChatMessagesQuery,
+  MessageService,
+} from '@hominem/chat-services'
+import { logger } from '@hominem/utils/logger'
+import { zValidator } from '@hono/zod-validator'
+import { convertToCoreMessages, streamText, type CoreMessage, type Message } from 'ai'
+import { Hono } from 'hono'
+import * as z from 'zod'
+
+import { authMiddleware, type AppContext } from '../middleware/auth'
 import {
   type Chat,
   type ChatMessage,
@@ -18,46 +29,31 @@ import {
   type ChatsGetMessagesOutput,
   chatsSendSchema,
   chatsUISendSchema,
-} from '../types/chat.types';
-import { toCoreMessage, typeToolsForAI } from '../utils/ai-adapters';
-import { getOpenAIAdapter } from '../utils/llm';
-import { getAvailableTools } from '../utils/tools';
+} from '../types/chat.types'
+import { toCoreMessage, typeToolsForAI } from '../utils/ai-adapters'
+import { getOpenAIAdapter } from '../utils/llm'
+import { getAvailableTools } from '../utils/tools'
 
-const chatService = new ChatService();
-const messageService = new MessageService();
-
-const ensureChatAndUser = async (userId: string | undefined, chatId: string | undefined) => {
-  if (!userId) {
-    throw new Error('Unauthorized');
-  }
-
-  const currentChat = await chatService.getOrCreateActiveChat(userId, chatId);
-
-  if (!currentChat) {
-    throw new Error('Failed to get or create chat');
-  }
-
-  return currentChat;
-};
-
-/**
- * No serialization helpers needed!
- * Database types are returned directly - timestamps already as strings.
- */
+const messageService = new MessageService()
 
 const chatsCreateSchema = z.object({
   title: z.string().min(1),
   noteId: z.string().optional(),
-});
+})
 
 const chatsUpdateSchema = z.object({
   title: z.string().min(1),
-});
+})
 
 const chatsMessagesQuerySchema = z.object({
   limit: z.string().optional(),
   offset: z.string().optional(),
-});
+})
+
+const chatsSearchSchema = z.object({
+  q: z.string().min(1),
+  limit: z.string().optional(),
+})
 
 const toPersistedToolCalls = (
   calls: Array<{ toolName: string; toolCallId: string; args: Record<string, unknown> }>,
@@ -75,119 +71,134 @@ const toPersistedToolCalls = (
 const chatByIdRoutes = new Hono<AppContext>()
   // Get chat by ID
   .get('/', async (c) => {
-    const chatId = c.req.param('id') as string;
-    const userId = c.get('userId')!;
+    const chatId = c.req.param('id') as string
+    const userId = c.get('userId')!
 
-    const [chatData, messagesData] = await Promise.all([
-      chatService.getChatById(chatId, userId),
-      messageService.getChatMessages(chatId, { limit: 10 }),
-    ]);
-
+    const chatData = await getChatByIdQuery(chatId, userId)
     if (!chatData) {
-      throw new NotFoundError('Chat not found');
+      throw new ForbiddenError('Chat not found or access denied', 'ownership')
     }
+
+    const messagesData = await messageService.getChatMessages(chatId, { limit: 10, orderBy: 'desc' })
 
     return c.json<ChatsGetOutput>({
       ...chatData,
-      messages: messagesData,
-    });
+      messages: messagesData.reverse(),
+    })
   })
 
   // Delete chat
   .delete('/', async (c) => {
-    const chatId = c.req.param('id') as string;
-    const userId = c.get('userId')!;
+    const chatId = c.req.param('id') as string
+    const userId = c.get('userId')!
 
-    const success_result = await chatService.deleteChat(chatId, userId);
-    return c.json({ success: success_result });
+    const success = await deleteChatQuery(chatId, userId)
+    if (!success) {
+      throw new ForbiddenError('Chat not found or access denied', 'ownership')
+    }
+
+    return c.json({ success: true })
   })
 
   // Update chat title
   .patch('/', zValidator('json', chatsUpdateSchema), async (c) => {
-    const chatId = c.req.param('id') as string;
-    const userId = c.get('userId')!;
-    const { title } = c.req.valid('json');
+    const chatId = c.req.param('id') as string
+    const userId = c.get('userId')!
+    const { title } = c.req.valid('json')
 
-    const chatData = await chatService.updateChatTitle(chatId, title, userId);
-    return c.json<ChatsUpdateOutput>({ success: !!chatData });
+    const updated = await updateChatTitleQuery(chatId, userId, title)
+    if (!updated) {
+      throw new ForbiddenError('Chat not found or access denied', 'ownership')
+    }
+
+    return c.json<ChatsUpdateOutput>({ success: true })
   })
 
   // Send message with streaming
   .post('/send', zValidator('json', chatsSendSchema), async (c) => {
-    const userId = c.get('userId')!;
-    const chatId = c.req.param('id') as string;
-    const { message } = c.req.valid('json');
+    const userId = c.get('userId')!
+    const chatId = c.req.param('id') as string
+    const { message } = c.req.valid('json')
 
-    const currentChat = await ensureChatAndUser(userId, chatId);
-    const startTime = Date.now();
+    // Get or verify chat exists
+    let currentChat = await getChatByIdQuery(chatId, userId)
+    if (!currentChat) {
+      throw new ForbiddenError('Chat not found or access denied', 'ownership')
+    }
+
+    const startTime = Date.now()
 
     const historyMessages = await messageService.getChatMessages(currentChat.id, {
       limit: 20,
       orderBy: 'asc',
-    });
+    })
 
     const userMessage = await messageService.addMessage({
       chatId: currentChat.id,
       userId,
       role: 'user',
       content: message,
-    });
+    })
+
+    if (!userMessage) {
+      throw new InternalError('Failed to create user message')
+    }
 
     const messagesWithNewUser: CoreMessage[] = [
       ...historyMessages.map((m) =>
         toCoreMessage({
           role: m.role,
-          content: m.content as string,
+          content: m.content,
         }),
       ),
       {
         role: 'user',
         content: message,
       },
-    ];
+    ]
 
-    const adapter = getOpenAIAdapter();
+    const adapter = getOpenAIAdapter()
     const { textStream, toolCalls } = await streamText({
       model: adapter,
       tools: typeToolsForAI(getAvailableTools(userId)),
       messages: messagesWithNewUser,
-    });
+    })
 
     let assistantMessage = await messageService.addMessage({
       chatId: currentChat.id,
       userId: '',
       role: 'assistant',
       content: '',
-    });
+    })
 
     if (!assistantMessage) {
-      throw new InternalError('Failed to create assistant message');
+      throw new InternalError('Failed to create assistant message')
     }
 
-    let accumulatedContent = '';
+    let accumulatedContent = ''
     interface ToolCallEntry {
-      toolName: string;
-      toolCallId: string;
-      args: Record<string, unknown>;
+      toolName: string
+      toolCallId: string
+      args: Record<string, unknown>
     }
-    const accumulatedToolCalls: ToolCallEntry[] = [];
+    const accumulatedToolCalls: ToolCallEntry[] = []
 
     try {
       // Collect stream results
       const textPromise = (async () => {
         for await (const chunk of textStream) {
-          accumulatedContent += chunk;
+          accumulatedContent += chunk
         }
-      })();
+      })()
 
       const toolsPromise = (async () => {
-        const calls = await toolCalls;
+        const calls = await toolCalls
         for (const call of calls) {
-          accumulatedToolCalls.push(call);
+          accumulatedToolCalls.push(call)
         }
-      })();
+      })()
 
-      await Promise.all([textPromise, toolsPromise]);
+      await Promise.all([textPromise, toolsPromise])
 
       const updatedAssistantMessage = await messageService.updateMessage({
         messageId: assistantMessage.id,
@@ -198,24 +209,19 @@ const chatByIdRoutes = new Hono<AppContext>()
           toolCallId: tc.toolCallId,
           args: tc.args as Record<string, string>,
         })),
-      });
+      })
       if (updatedAssistantMessage) {
-        assistantMessage = updatedAssistantMessage;
+        assistantMessage = updatedAssistantMessage
       }
     } catch (streamError) {
-      logger.error('[chats.send] Error consuming stream', { error: streamError });
+      logger.error('[chats.send] Error consuming stream', { error: streamError })
       const updatedOnError = await messageService.updateMessage({
         messageId: assistantMessage.id,
         content: accumulatedContent || '[Error: Stream processing failed]',
-      });
+      })
       if (updatedOnError) {
-        assistantMessage = updatedOnError;
+        assistantMessage = updatedOnError
       }
-    }
-
-    // Ensure both messages are non-null before returning
-    if (!assistantMessage || !userMessage) {
-      throw new InternalError('Failed to create or update message');
     }
 
     return c.json<ChatsSendOutput>({
@@ -230,7 +236,7 @@ const chatByIdRoutes = new Hono<AppContext>()
         startTime: startTime,
         timestamp: new Date().toISOString(),
       },
-    });
+    })
   })
 
   // AI SDK UI message endpoint for web/mobile useChat clients
@@ -239,7 +245,15 @@ const chatByIdRoutes = new Hono<AppContext>()
     const routeChatId = c.req.param('id') as string
     const { messages } = c.req.valid('json')
 
-    const currentChat = await ensureChatAndUser(userId, routeChatId)
+    let currentChat = await getChatByIdQuery(routeChatId, userId)
+    if (!currentChat) {
+      // Create a new chat if it doesn't exist
+      currentChat = await createChatQuery({
+        userId,
+        title: 'New Chat',
+      })
+    }
+
     const latestUserMessage = [...messages]
       .reverse()
       .find((candidate) => candidate.role === 'user' && candidate.content.trim().length > 0)
@@ -248,12 +262,16 @@ const chatByIdRoutes = new Hono<AppContext>()
       throw new ValidationError('messages must include at least one user message with content')
     }
 
-    await messageService.addMessage({
+    const userMessageResult = await messageService.addMessage({
       chatId: currentChat.id,
       userId,
       role: 'user',
       content: latestUserMessage.content,
     })
+
+    if (!userMessageResult) {
+      throw new InternalError('Failed to create user message')
+    }
 
     const assistantMessage = await messageService.addMessage({
       chatId: currentChat.id,
@@ -293,10 +311,10 @@ const chatByIdRoutes = new Hono<AppContext>()
           })),
         )
 
-        const updatedAssistantMessage = await messageService.updateMessage({
+        await messageService.updateMessage({
           messageId: assistantMessageId,
           content: event.text,
-          ...(persistedToolCalls.length > 0 ? { toolCalls: persistedToolCalls } : {}),
+          toolCalls: persistedToolCalls.length > 0 ? persistedToolCalls : undefined,
         })
       },
     })
@@ -306,61 +324,78 @@ const chatByIdRoutes = new Hono<AppContext>()
 
   // Get messages for a chat
   .get('/messages', zValidator('query', chatsMessagesQuerySchema), async (c) => {
-    const chatId = c.req.param('id') as string;
-    const { limit, offset } = c.req.valid('query');
+    const chatId = c.req.param('id') as string
+    const { limit, offset } = c.req.valid('query')
 
-    const messagesData = await messageService.getChatMessages(chatId, {
-      limit: limit ? parseInt(limit) : undefined,
-      offset: offset ? parseInt(offset) : undefined,
-    });
-    return c.json<ChatsGetMessagesOutput>(messagesData);
-  });
+    const options = {
+      orderBy: 'asc' as const,
+      limit: limit ? Number.parseInt(limit) : undefined,
+      offset: offset ? Number.parseInt(offset) : undefined,
+    }
+
+    const messagesData = await messageService.getChatMessages(chatId, options)
+    return c.json<ChatsGetMessagesOutput>(messagesData)
+  })
 
 export const chatsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
   // Get user's chats
   .get('/', async (c) => {
-    const userId = c.get('userId')!;
-    const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 50;
+    const userId = c.get('userId')!
+    const limit = c.req.query('limit') ? Number.parseInt(c.req.query('limit')!) : 50
 
-    const chatsData = await chatService.getUserChats(userId, limit);
-    return c.json<ChatsListOutput>(chatsData);
+    const chatsData = await getUserChatsQuery(userId, limit)
+    return c.json<ChatsListOutput>(chatsData)
   })
 
   // Get or create chat for a note
   .get('/note/:noteId', async (c) => {
-    const userId = c.get('userId')!;
-    const noteId = c.req.param('noteId');
+    const userId = c.get('userId')!
+    const noteId = c.req.param('noteId')
 
-    const chatData = await chatService.getOrCreateChatForNote(noteId, userId);
-    return c.json<ChatsCreateOutput>(chatData);
+    let chatData = await getChatByNoteIdQuery(noteId, userId)
+    if (!chatData) {
+      chatData = await createChatQuery({
+        userId,
+        title: 'Note Chat',
+        noteId,
+      })
+    }
+
+    return c.json<ChatsCreateOutput>(chatData)
   })
 
   // Create chat
   .post('/', zValidator('json', chatsCreateSchema), async (c) => {
-    const userId = c.get('userId')!;
-    const { title, noteId } = c.req.valid('json');
+    const userId = c.get('userId')!
+    const { title, noteId } = c.req.valid('json')
 
-    const result = await chatService.createChat({ 
-      title, 
-      userId, 
+    const result = await createChatQuery({
+      userId,
+      title,
       ...(noteId && { noteId }),
-    });
-    return c.json<ChatsCreateOutput>(result, 201);
+    })
+
+    return c.json<ChatsCreateOutput>(result, 201)
   })
 
-  // Search chats
+  // Search chats (simple text search on title and conversation context)
   .get('/search', async (c) => {
-    const userId = c.get('userId')!;
-    const query = c.req.query('q');
-    const limit = c.req.query('limit') ? parseInt(c.req.query('limit')!) : 20;
+    const userId = c.get('userId')!
+    const query = c.req.query('q')
+    const limit = c.req.query('limit') ? Number.parseInt(c.req.query('limit')!) : 20
 
     if (!query) {
-      throw new ValidationError('Query is required');
+      throw new ValidationError('Query is required')
     }
 
-    const chatsData = await chatService.searchChats({ userId, query, limit });
-    return c.json({ chats: chatsData });
+    // Get all user chats and filter locally (could optimize with DB full-text search later)
+    const allChats = await getUserChatsQuery(userId, 1000)
+    const filtered = allChats
+      .filter((chat) => chat.title.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, limit)
+
+    return c.json({ chats: filtered })
   })
 
-  .route('/:id', chatByIdRoutes);
+  .route('/:id', chatByIdRoutes)
