@@ -1,9 +1,7 @@
-import crypto from 'node:crypto';
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // TODO: cleanupFinanceTestData and seedFinanceTestData were removed during Kysely migration
 // import { cleanupFinanceTestData, seedFinanceTestData } from '@hominem/db/test/utils';
-import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 
 import {
   assertErrorResponse,
@@ -75,45 +73,11 @@ interface PlaidApiResponse {
 describe('Plaid Router', () => {
   const { getServer } = useApiTestLifecycle();
 
-  let testUserId: string;
-  let testAccountId: string;
-  let testInstitutionId: string;
-
-  // Ensure each test has fresh, isolated data
-  beforeAll(async () => {
-    testUserId = crypto.randomUUID();
-    testAccountId = crypto.randomUUID();
-    testInstitutionId = crypto.randomUUID();
-
-    // TODO: seedFinanceTestData removed during Kysely migration
-    // // Seed fresh test data for this test (with plaid options)
-    // await seedFinanceTestData({
-    //   userId: testUserId,
-    //   accountId: testAccountId,
-    //   institutionId: testInstitutionId,
-    //   plaid: true,
-    // });
-    vi.clearAllMocks();
-  });
-
-  // Clean up after each test to prevent data leakage
-  afterAll(async () => {
-    // TODO: cleanupFinanceTestData removed during Kysely migration
-    // await cleanupFinanceTestData({
-    //   userId: testUserId,
-    //   accountId: testAccountId,
-    //   institutionId: testInstitutionId,
-    // });
-  });
-
   describe('POST /api/finance/plaid/create-link-token', () => {
     test('creates link token successfully', async () => {
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
         url: '/api/finance/plaid/create-link-token',
-        headers: {
-          'x-user-id': testUserId,
-        },
       });
 
       const body = (await assertSuccessResponse(response)) as PlaidApiResponse;
@@ -132,9 +96,6 @@ describe('Plaid Router', () => {
       const response = await makeAuthenticatedRequest(getServer(), {
         method: 'POST',
         url: '/api/finance/plaid/create-link-token',
-        headers: {
-          'x-user-id': testUserId,
-        },
       });
       // When Plaid throws an error, the API should handle it and return an error response
       const body = await assertErrorResponse(response, 500);
@@ -152,9 +113,6 @@ describe('Plaid Router', () => {
           institutionId: 'test-institution-id',
           institutionName: 'Test Bank',
         },
-        headers: {
-          'x-user-id': testUserId,
-        },
       });
 
       await assertSuccessResponse(response);
@@ -166,9 +124,6 @@ describe('Plaid Router', () => {
         url: '/api/finance/plaid/exchange-token',
         payload: {
           // Missing required fields
-        },
-        headers: {
-          'x-user-id': testUserId,
         },
       });
 

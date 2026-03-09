@@ -1,5 +1,6 @@
 import type { HominemUser } from '@hominem/auth/server';
 import { toHominemUser, UserAuthService } from '@hominem/auth/server';
+import { db } from '@hominem/db';
 import { logger } from '@hominem/utils/logger';
 import type { MiddlewareHandler } from 'hono';
 
@@ -166,6 +167,42 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
           });
           return await next();
         }
+
+        const createdUser = await db
+          .insertInto('users')
+          .values({
+            id: testUserId,
+            email: `${testUserId}@hominem.test`,
+            is_admin: false,
+          })
+          .onConflict((oc) => oc.column('id').doNothing())
+          .returningAll()
+          .executeTakeFirst();
+
+        const fallbackUser =
+          createdUser ??
+          (await db
+            .selectFrom('users')
+            .selectAll()
+            .where('id', '=', testUserId)
+            .executeTakeFirst());
+
+        if (fallbackUser) {
+          const user = toHominemUser(fallbackUser);
+          setCachedUser(user);
+          c.set('user', user);
+        }
+
+        c.set('auth', {
+          sub: testUserId,
+          sid: crypto.randomUUID(),
+          scope: ['api:read', 'api:write'],
+          role: 'user',
+          amr: ['test-header'],
+          authTime: Math.floor(Date.now() / 1000),
+        });
+        c.set('userId', testUserId);
+        return await next();
       }
     }
 

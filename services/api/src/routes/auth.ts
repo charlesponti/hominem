@@ -18,7 +18,7 @@ import {
   revokeSession,
   rotateRefreshToken,
 } from '../auth/session-store';
-import { getLatestTestOtp, isTestOtpStoreEnabled } from '../auth/test-otp-store';
+import { getLatestTestOtp, isTestOtpStoreEnabled, recordTestOtp } from '../auth/test-otp-store';
 import { issueAccessToken, verifyAccessToken } from '../auth/tokens';
 import { env } from '../env';
 import type { AppEnv } from '../server';
@@ -161,6 +161,105 @@ function isE2eAuthEnabled() {
 
 function isTestOtpRetrievalEnabled() {
   return isTestOtpStoreEnabled();
+}
+
+function generateTestOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function findOrCreateEmailOtpUser(input: { email: string; name?: string | undefined }) {
+  const existingUser = await db
+    .selectFrom('users')
+    .selectAll()
+    .where('email', '=', input.email)
+    .executeTakeFirst();
+
+  if (existingUser) {
+    return existingUser;
+  }
+
+  const insertedUser = await db
+    .insertInto('users')
+    .values({
+      email: input.email,
+      ...(input.name ? { name: input.name } : {}),
+      is_admin: false,
+    })
+    .returningAll()
+    .executeTakeFirst();
+
+  if (!insertedUser) {
+    return null;
+  }
+
+  return insertedUser;
+}
+
+async function createEmailOtpAuthResponse(dbUser: {
+  id: string;
+  email: string;
+  name: string | null;
+  is_admin: boolean;
+}) {
+  try {
+    const tokenPair = await createTokenPairForUser({
+      userId: dbUser.id,
+      role: dbUser.is_admin ? 'admin' : 'user',
+      amr: ['email_otp'],
+    });
+
+    return new Response(
+      JSON.stringify({
+        user: {
+          id: dbUser.id,
+          email: dbUser.email,
+          ...(dbUser.name ? { name: dbUser.name } : {}),
+        },
+        accessToken: tokenPair.accessToken,
+        refreshToken: tokenPair.refreshToken,
+        expiresIn: tokenPair.expiresIn,
+        tokenType: tokenPair.tokenType,
+      }),
+      {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+        },
+      },
+    );
+  } catch (sessionError) {
+    logger.warn('[auth:email-otp] session creation failed, issuing access token only', {
+      sessionError,
+    });
+
+    const token = await issueAccessToken({
+      sub: dbUser.id,
+      sid: crypto.randomUUID(),
+      scope: ['api:read', 'api:write'],
+      role: dbUser.is_admin ? 'admin' : 'user',
+      amr: ['email_otp'],
+    });
+
+    return new Response(
+      JSON.stringify({
+        user: {
+          id: dbUser.id,
+          email: dbUser.email,
+          ...(dbUser.name ? { name: dbUser.name } : {}),
+        },
+        accessToken: token.accessToken,
+        refreshToken: '',
+        expiresIn: token.expiresIn,
+        tokenType: token.tokenType,
+      }),
+      {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+        },
+      },
+    );
+  }
 }
 
 async function getRedis() {
@@ -397,6 +496,15 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
 authRoutes.post('/email-otp/send', zValidator('json', emailOtpRequestSchema), async (c) => {
   try {
     const payload = c.req.valid('json');
+    if (isTestOtpStoreEnabled()) {
+      recordTestOtp({
+        email: payload.email,
+        otp: generateTestOtp(),
+        type: payload.type,
+      });
+      return c.json({ success: true });
+    }
+
     const response = await callBetterAuthPluginEndpoint({
       request: c.req.raw,
       path: '/email-otp/send-verification-otp',
@@ -416,6 +524,32 @@ authRoutes.post('/email-otp/send', zValidator('json', emailOtpRequestSchema), as
 authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), async (c) => {
   try {
     const payload = c.req.valid('json');
+
+    if (isTestOtpStoreEnabled()) {
+      const latestRecord =
+        getLatestTestOtp({ email: payload.email, type: 'sign-in' }) ??
+        getLatestTestOtp({ email: payload.email });
+
+      if (!latestRecord || latestRecord.otp !== payload.otp) {
+        return c.json({ error: 'invalid_otp' }, 400);
+      }
+
+      if (Date.now() > latestRecord.createdAt + env.AUTH_EMAIL_OTP_EXPIRES_SECONDS * 1000) {
+        return c.json({ error: 'otp_expired' }, 400);
+      }
+
+      const dbUser = await findOrCreateEmailOtpUser({
+        email: payload.email,
+        ...(payload.name ? { name: payload.name } : {}),
+      });
+
+      if (!dbUser) {
+        return c.json({ error: 'user_create_failed' }, 500);
+      }
+
+      return await createEmailOtpAuthResponse(dbUser);
+    }
+
     const response = await callBetterAuthPluginEndpoint({
       request: c.req.raw,
       path: '/sign-in/email-otp',
@@ -449,59 +583,12 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
         return c.json({ error: 'user_not_found' }, 400);
       }
 
-      // Issue token pair with full session tracking
-      try {
-        const tokenPair = await createTokenPairForUser({
-          userId,
-          role: dbUser.is_admin ? 'admin' : 'user',
-          amr: ['email_otp'],
-        });
-
-        // Forward Better Auth session cookies so passkey enrollment works after OTP sign-in
-        const betterAuthCookies = copyHeadersWithSetCookie(response.headers);
-        const responseHeaders = new Headers(betterAuthCookies);
-        responseHeaders.set('content-type', 'application/json');
-
-        return new Response(
-          JSON.stringify({
-            user: {
-              id: dbUser.id,
-              email: dbUser.email,
-              ...(dbUser.name ? { name: dbUser.name } : {}),
-            },
-            accessToken: tokenPair.accessToken,
-            refreshToken: tokenPair.refreshToken,
-            expiresIn: tokenPair.expiresIn,
-            tokenType: tokenPair.tokenType,
-          }),
-          { status: 200, headers: responseHeaders },
-        );
-      } catch (sessionError) {
-        // Fallback: If session table is not available, issue access token only
-        logger.warn('[auth:email-otp] session creation failed, issuing access token only', {
-          sessionError,
-        });
-
-        const token = await issueAccessToken({
-          sub: userId,
-          sid: crypto.randomUUID(),
-          scope: ['api:read', 'api:write'],
-          role: dbUser.is_admin ? 'admin' : 'user',
-          amr: ['email_otp'],
-        });
-
-        return c.json({
-          user: {
-            id: dbUser.id,
-            email: dbUser.email,
-            ...(dbUser.name ? { name: dbUser.name } : {}),
-          },
-          accessToken: token.accessToken,
-          refreshToken: '', // Empty string indicates no refresh capability in this mode
-          expiresIn: token.expiresIn,
-          tokenType: token.tokenType,
-        });
-      }
+      const authResponse = await createEmailOtpAuthResponse(dbUser);
+      const betterAuthCookies = copyHeadersWithSetCookie(response.headers);
+      const responseHeaders = new Headers(betterAuthCookies);
+      responseHeaders.set('content-type', 'application/json');
+      const authBody = await authResponse.text();
+      return new Response(authBody, { status: 200, headers: responseHeaders });
     } catch (error) {
       logger.error('[auth:email-otp] sign-in failed', { error });
       return c.json({ error: 'sign_in_failed' }, 500);

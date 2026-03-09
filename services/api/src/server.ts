@@ -187,7 +187,7 @@ export function createServer() {
 
   // 404 handler for unsupported routes
   app.notFound((c) => {
-    return c.text('玉をなめろ');
+    return c.text('玉をなめろ', 404);
   });
 
   return app;
