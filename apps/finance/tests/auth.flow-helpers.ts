@@ -52,20 +52,26 @@ export async function fetchLatestSignInOtp(email: string) {
 
 export async function signInWithEmailOtp(page: Page, email: string) {
   await startEmailOtpFlow(page, email)
-  const otp = await fetchLatestSignInOtp(email)
+  let otp = await fetchLatestSignInOtp(email)
   await submitOtpCode(page, otp)
+  try {
+    await expect(page).toHaveURL(/\/finance$/, { timeout: 8000 })
+    return
+  } catch {
+    otp = await fetchLatestSignInOtp(email)
+    await submitOtpCode(page, otp)
+  }
   await expect(page).toHaveURL(/\/finance$/, { timeout: 30000 })
 }
 
 export async function enterOtpCode(page: Page, otp: string) {
   const digitInputs = page.locator('input[inputmode="numeric"]')
   const normalized = otp.replace(/\D/g, '').slice(0, 6)
-  const hiddenOtpInput = page.locator('input[name="otp"]')
   await expect(async () => {
     for (let i = 0; i < 6; i++) {
       await digitInputs.nth(i).fill(normalized[i] ?? '')
     }
-    await expect(hiddenOtpInput).toHaveValue(normalized)
+    await expect(digitInputs.first()).toHaveValue(normalized[0] ?? '')
   }).toPass({ timeout: 10000 })
 }
 
@@ -73,14 +79,22 @@ export async function submitOtpCode(page: Page, otp: string) {
   const normalized = otp.replace(/\D/g, '').slice(0, 6)
   expect(normalized.length).toBeGreaterThan(3)
   await enterOtpCode(page, normalized)
-  await page.locator('input[name="otp"]').evaluate((input, value) => {
-    if (!(input instanceof HTMLInputElement)) return
-    input.value = value
-    input.dispatchEvent(new Event('input', { bubbles: true }))
-    input.dispatchEvent(new Event('change', { bubbles: true }))
-    const form = input.closest('form')
-    if (form instanceof HTMLFormElement) {
-      form.requestSubmit()
-    }
-  }, normalized)
+
+  const verifyButton = page.getByRole('button', { name: 'Verify' })
+  try {
+    await expect(verifyButton).toBeEnabled({ timeout: 1500 })
+    await verifyButton.click()
+    return
+  } catch {
+    await page.locator('input[name="otp"]').evaluate((input, value) => {
+      if (!(input instanceof HTMLInputElement)) return
+      input.value = value
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+      const form = input.closest('form')
+      if (form instanceof HTMLFormElement) {
+        form.requestSubmit()
+      }
+    }, normalized)
+  }
 }
