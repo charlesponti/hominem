@@ -1,18 +1,25 @@
 ---
-title: 'Comprehensive Auth + Mobile Implementation Plan'
+title: 'Comprehensive Auth Evolution + Mobile Implementation Plan'
 type: plan
 date: 2026-03-09
 status: in-progress
-scope: 'Auth consolidation (complete) + Mobile readiness & hardening (in-progress)'
+scope: 'Google Auth -> Apple-only -> Better Auth (email+OTP+passkey) with mobile readiness hardening'
 source_plans:
-  - docs/plans/2026-02-27-auth-consolidation.md (archived)
-  - docs/plans/2026-02-25-2341-mobile-readiness.md (archived)
-  - docs/plans/2026-02-25-2341-mobile-readiness.tasks.md (archived)
+  - docs/plans/2026-02-23-1456-apple-signin-only.md
+  - docs/plans/2026-02-24-1207-better-auth.md
+  - docs/plans/2026-02-25-2341-mobile-readiness.md
+  - docs/plans/2026-02-25-2341-mobile-readiness.tasks.md
+  - docs/plans/2026-02-26-migrate-to-better-auth-expo.md
+  - docs/plans/2026-02-27-auth-consolidation.md
 ---
 
-# Comprehensive Auth + Mobile Implementation Plan
+# Comprehensive Auth Evolution + Mobile Implementation Plan
 
-**Overview**: This document consolidates the completed Better Auth migration with ongoing mobile readiness work into a single implementation roadmap. It supersedes the separate auth consolidation and mobile readiness plans.
+**Overview**: This is the single, merged plan that explains how auth evolved across the repo and mobile app:
+1. Legacy Google-inclusive auth and Supabase-coupled paths
+2. Apple-only enforcement for mobile compliance
+3. Better Auth consolidation with email + OTP + passkey capabilities
+4. Mobile readiness hardening (deterministic auth flows, Maestro reliability, EAS device lane)
 
 ---
 
@@ -20,435 +27,271 @@ source_plans:
 
 | Component | Status | Owner Deliverable |
 |-----------|--------|-------------------|
-| **Better Auth Architecture** | ✅ Complete | Core auth platform ready |
-| **API + Middleware** | ✅ Complete | Validated, production-hardened |
-| **Web Apps (Finance/Notes/Rocco)** | ✅ Complete | Migrated off Supabase |
-| **CLI Auth** | ✅ Complete | PKCE + device-code flow working |
-| **Mobile Expo Migration** | ✅ Complete | Official `@better-auth/expo` integrated |
-| **Mobile Apple-Only** | ✅ Complete | Enforced as primary sign-in |
-| **Mobile Auth Hardening** | 🟡 In Progress | Callback proxy, refresh semantics → US1 |
-| **Maestro Modernization** | 🟡 In Progress | Flow rewrite, v2 schema compliance → US2 |
-| **Personal Device Dev Build Lane** | 🟡 In Progress | EAS enrollment, smoke checklist → US3 |
-| **Security Gates & Verification** | 🟡 In Progress | Audit trail, rotation runbooks |
+| **Legacy Google-first mobile auth** | ✅ Retired | Replaced by Apple-only primary sign-in |
+| **Apple-only mobile transition** | ✅ Complete | App Store-compliant sign-in surface |
+| **Better Auth platform rewrite** | ✅ Complete | Canonical API/web/mobile/CLI auth plane |
+| **Email + OTP + Passkey capability** | ✅ Implemented in Better Auth stack | One-time-token + passkey + step-up flows |
+| **Mobile Expo plugin migration** | ✅ Complete | `@better-auth/expo` integrated |
+| **Mobile runtime hardening** | 🟡 In Progress | Deterministic callback + refresh semantics |
+| **Maestro modernization** | 🟡 In Progress | Schema-compatible, deterministic E2E auth |
+| **Personal device EAS lane** | 🟡 In Progress | Reproducible install + smoke workflow |
+| **Security/operational final gates** | 🟡 In Progress | Rotation drills, telemetry completeness |
 
 ---
 
-## Section 1: Completed Work (Auth Consolidation - Phase 1)
+## Section 1: Auth Evolution Narrative
 
-### 1.1 Problem Statement
+### 1.1 Stage A - Google-Influenced Legacy State
 
-Hominem had evolved a fragmented authentication system with:
-- **15+ tables** spanning Supabase, custom auth, and session management
-- **3 separate backends** (API, web, mobile, CLI) with inconsistent auth patterns
-- **No unified logging** for auth lifecycle events
-- **Unstructured health tracking** across multiple schemas
+Initial state issues:
+- Supabase-coupled auth paths across API, web, and mobile
+- Mixed provider behavior (Google and Apple assumptions differed by surface)
+- Fragmented session/token behavior across app, mobile, and CLI
+- Limited deterministic automation for mobile E2E flows
 
-### 1.2 Solution: Unified Better Auth Platform
+### 1.2 Stage B - Apple-Only Mobile Enforcement
 
-Successfully migrated to a **single canonical auth control plane** with:
+Why this phase happened:
+- Mobile needed a single compliant sign-in path for App Store expectations
+- Google sign-in was removed from mobile primary auth UX
+- Apple sign-in became the sole first-party mobile entry point
 
-#### Core Platform Achievements
-- ✅ **Better Auth** as canonical auth library (JWT + JWKS model)
-- ✅ **Refresh rotation** with deterministic replay detection
-- ✅ **Explicit revocation** semantics across all surfaces
-- ✅ **Single user identity** table (`users`) with normalized schema
-- ✅ **Type-safe error taxonomy** across API, web, mobile, CLI
-- ✅ **Unified audit & activity logging** (7 tables → 1 `log` table)
-- ✅ **Canonical health tracking** consolidated from fragmented sources
+What changed:
+- Removed Google OAuth flows from mobile auth provider/UI
+- Kept Apple sign-in path and test infrastructure
+- Preserved web Google linking where required, but not mobile primary login
 
-#### Schema Consolidation
-| Item | Before | After |
-|------|--------|-------|
-| User identity tables | 6 different schemas | 1 unified `users` table |
-| Health tracking tables | 7 separate tables | 1 `health_record` table |
-| Logging tables | 2 (audit + activity) | 1 `log` table |
-| Session management | Custom + Supabase | `user_session` table |
-| Total auth-related tables | 15+ | 9 (with semantic clarity) |
+### 1.3 Stage C - Better Auth Consolidation (Current Foundation)
 
-#### Code & Dependency Impact
-- **Files modified**: 10+
-- **Lines changed**: 1,100+
-- **Dead code removed**: 9 files cleaned via knip analysis
-- **TypeScript compilation**: ✅ All packages passing
-- **Zero data loss**: Greenfield advantage enabled aggressive consolidation
+The auth architecture was rebuilt around Better Auth and standardized contracts:
+- JWT + JWKS with local verification for low-latency auth checks
+- Refresh token family rotation with replay detection and revocation
+- Unified auth middleware and error taxonomy across REST and RPC
+- Canonical identity mapping using auth subjects instead of Supabase-specific IDs
+- CLI loopback PKCE with device-code fallback
 
-### 1.3 Multi-Surface Implementation Details
+### 1.4 Stage D - Better Auth Capability Set (Email + OTP + Passkey)
 
-#### API Layer (`services/api`)
-- Removed legacy Supabase auth middleware
-- Implemented Better Auth JWT validation with:
-  - JWKS key verification
-  - Refresh family tracking
-  - Revocation blacklist checks
-  - Deterministic error handling
-- Added rate limiting to auth-sensitive endpoints
-- Structured logging for all auth lifecycle events
+Final capability model in this merged plan:
+- `Apple OAuth`: primary mobile and supported sign-in path
+- `Email + OTP`: enabled through Better Auth one-time-token style flows for passwordless entry and recovery semantics
+- `Passkey`: registration/auth verification and step-up actions for sensitive operations
+- `Google`: no longer primary sign-in; restricted to authenticated linking where applicable
 
-#### Web Surfaces (`apps/finance`, `apps/notes`, `apps/rocco`)
-- Migrated from direct `supabase.auth.*` calls to `packages/auth` canonicalized client
-- Standardized callback handling across all web apps
-- Cross-subdomain cookie controls implemented
-- Session persistence via canonical client contracts
+### 1.5 Final Auth Method Matrix
 
-#### Mobile (`apps/mobile`)
-- **Completed Phase 1**: Migrated to `@better-auth/expo` (official plugin)
-- Custom auth wrapper code reduced significantly
-- Simplified UX: Apple Sign-In as primary mobile entry point
-- Token management via official plugin (SecureStore for refresh, memory for access)
-- Mobile config cleaned of Supabase runtime references
-
-#### CLI (`tools/cli`)
-- Implemented PKCE + device-code auth flow
-- Loopback listener for OAuth callback (fallback mode)
-- Token metadata reporting: `session_id`, `refresh_family_id`, expiry
-- Refresh rotation alignment with core platform
-
-### 1.4 Validation & Testing
-
-**Completed Test Suites**:
-- API middleware unit tests (JWT validation, refresh, revocation)
-- CLI auth integration tests (device-code, PKCE, loopback)
-- Web callback hardening tests (CSRF, state validation)
-- Mobile auth bootstrap tests (Apple Sign-In flow)
-- Cross-surface integration matrix validation
-
-**Performance Benchmarks**:
-- Auth middleware latency: p95 under target on warm path
-- Token refresh latency: <500ms typical
-- No auth race conditions observed in 2-week production run
-
-### 1.5 Auth Consolidation Exit Criteria: ✅ ALL MET
-
-- ✅ Single canonical user identity table in normalized schema
-- ✅ All auth surfaces (API/web/mobile/CLI) migrated
-- ✅ Zero Supabase auth runtime paths in repository
-- ✅ Unified logging with audit trail capability
-- ✅ Type-safe error contracts across codebase
-- ✅ All TypeScript compilations passing
-- ✅ Cross-surface integration tests green
+| Surface | Primary Sign-In | Secondary/Recovery | Step-Up | Notes |
+|---------|------------------|--------------------|---------|-------|
+| Mobile (`apps/mobile`) | Apple | Email + OTP (Better Auth-compatible path), E2E non-prod bypass | Passkey (sensitive actions) | Google removed as primary |
+| Web (`apps/finance`, `apps/notes`, `apps/rocco`) | Better Auth canonical client flows | Email + OTP | Passkey | Google is link/unlink only |
+| API (`services/api`) | Provider-agnostic token endpoints | OTP/token grants | Passkey verify endpoints | JWT/JWKS + revocation |
+| CLI (`tools/cli`) | Loopback PKCE | Device code fallback | N/A | Refresh family metadata tracked |
 
 ---
 
-## Section 2: In-Progress Work (Mobile Readiness)
+## Section 2: Consolidated Phases And Steps Taken
 
-### 2.1 Problem Statement: Mobile Auth Determinism Gap
+This section is the merged implementation record from the source plans.
 
-While Better Auth is consolidated, **mobile development still has gaps**:
+### Phase 0: Program Controls And Baseline
 
-- **Non-deterministic callback handling**: Edge cases in PKCE/state validation
-- **Flaky token refresh**: Race conditions on app resume, no T-120s proactive refresh
-- **Stale Maestro flows**: Reference removed selectors, incompatible with Maestro v2
-- **CI/CD E2E bloatware**: Manual Apple ID entry breaks automation; no deterministic E2E bypass
-- **Device testing friction**: Personal iPhone testing requires manual setup; no EAS lane guide
-- **Audit gap**: No visibility into E2E auth calls vs. production calls
+Objective:
+- Define metrics, CI guardrails, and rewrite boundaries before auth migration.
 
-### 2.2 Mobile Readiness Vision
+Steps taken:
+- Established phased migration plan and execution tracker.
+- Added/validated CI and test gates around auth routes.
 
-**End State**: A repeatable, deterministic mobile development pipeline where:
+Status: 🟡 Partially complete (some governance and baseline publication still open)
 
-1. **Deterministic auth bootstrap**: E2E flows populate test creds without manual input
-2. **Stable CI/CD**: Maestro flows pass with Maestro v2 schema + proper selectors
-3. **Personal device testing**: Follow guide → EAS dev build → install → auth smoke ✅
-4. **Audit visibility**: All test/E2E auth calls are logged distinctly
-5. **Token stability**: Proactive refresh at T-120s with exponential backoff
+### Phase 1: Apple-Only Mobile Transition
 
----
+Objective:
+- Move mobile from mixed Google/Apple to Apple-only sign-in.
 
-## Section 3: Mobile Readiness Implementation (User Stories)
+Steps taken:
+- Removed Google primary sign-in paths from mobile auth surfaces.
+- Kept Apple sign-in UX and compliance-oriented config.
+- Preserved testability and E2E hooks during provider reduction.
 
-**Timeline**: Started 2026-02-25 | Target completion: 2026-03-15  
-**Parallel tracks**: US1 (auth hardening), US2 (Maestro), US3 (device lane)  
-**Gate dependencies**: US1 → US2 → US3 (sequential validation, parallel development)
+Status: ✅ Complete
 
-### 3.1 User Story 1: Deterministic Mobile Auth Bootstrap (Priority: P1 🎯 MVP)
+### Phase 2: Better Auth Core In API
 
-**Objective**: Developers can sign in reliably on simulator/device without manual setup during automated test execution.
+Objective:
+- Replace Supabase auth runtime with Better Auth core endpoints and policies.
 
-**Deliverables**:
+Steps taken:
+- Implemented Better Auth server module and auth routes.
+- Added JWT issuance and JWKS discovery endpoint.
+- Added refresh/revoke/logout lifecycle routes.
+- Enforced deterministic auth error taxonomy.
 
-#### Architecture Changes
-- **E2E Login Endpoint**: Non-production deterministic auth bypass in `services/api/src/routes/auth.ts`
-  - Endpoint: `POST /api/auth/e2e-login`
-  - Guard: Only callable in non-production environments
-  - Audit: All E2E calls logged to `log` table with `is_e2e_session=true`
-  - Output: Valid JWT + refresh token
-  
-- **Mobile Auth Provider Update**: `apps/mobile/utils/auth-provider.tsx`
-  - Callback parse hardening for PKCE/state validation
-  - Refresh scheduler: T-120s proactive refresh + jitter
-  - Error taxonomy: Distinguish auth/network/user-cancel cases
-  
-- **Better Auth Mobile Client**: `apps/mobile/utils/better-auth-mobile.ts`
-  - Token exchange error handling
-  - Refresh token storage validation (SecureStore)
-  - Access token memory-only enforcement
+Status: ✅ Complete
 
-#### Testing
-- Unit tests: callback parse, state validation, refresh semantics
-- Integration tests: E2E endpoint guard, production denial
-- E2E smoke: cold launch → deterministic auth → API call → cold logout
+### Phase 3: Data Model And Persistence Rewrite
 
-**Completion Status**: 
-- ✅ T016: E2E endpoint implemented
-- ✅ T018: Server-side token issuance
-- ✅ T019-T021: Mobile integration
-- ✅ T022: Audit logging
+Objective:
+- Introduce canonical auth tables and remove Supabase-coupled identity dependencies.
 
-**Acceptance Criteria**:
-- [ ] `bun run test:e2e:auth:api` passes (E2E endpoint guard validation)
-- [ ] Mobile auth unit tests pass (refresh, PKCE, state)
-- [ ] API integration test confirms production E2E path denial
-- [ ] Audit log shows `is_e2e_session=true` for E2E calls
+Steps taken:
+- Added auth tables for subjects, sessions, refresh tokens, passkeys, and device codes.
+- Migrated identity linkage from `users.supabase_id` patterns to auth subject mapping.
+- Added constraints and indexes for provider uniqueness and token family lookups.
 
----
+Status: ✅ Complete (with remaining optional at-rest encryption strategy work)
 
-### 3.2 User Story 2: Maestro Modernization (Priority: P1)
+### Phase 4: Middleware And Authorization Plane
 
-**Objective**: Maestro flows execute deterministically with Maestro v2 schema and new auth model.
+Objective:
+- Deliver low-latency, local JWT validation and consistent authorization context.
 
-**Deliverables**:
+Steps taken:
+- Replaced Supabase middleware with Better Auth middleware.
+- Added bearer/cookie extraction precedence and typed failures.
+- Added revocation hot paths with Redis-backed checks and DB fallback.
+- Verified middleware performance targets.
 
-#### Flow Updates
-- **Auth Flow Rewrite**: `apps/mobile/.maestro/flows/auth/`
-  - Remove credential-form steps (unsupported)
-  - Implement Apple Sign-In flow or E2E bypass flow
-  - File: `apps/mobile/.maestro/flows/auth/login.yaml`
-  
-- **E2E Bypass Flow**: `apps/mobile/.maestro/flows/auth/login_e2e_bypass.yaml`
-  - Call `POST /api/auth/e2e-login` endpoint
-  - Store tokens in app state
-  - No manual input required
-  
-- **Smoke Flow**: `apps/mobile/.maestro/flows/smoke/full.yaml`
-  - Consume new auth flow
-  - Verify authenticated API call
-  - Logout + verify state cleared
+Status: ✅ Complete
 
-#### Maestro CLI + Config
-- **Config**: `apps/mobile/.maestro/config.yaml`
-  - Standardize `appId` to `com.pontistudios.mindsherpa.dev`
-  - Ensure Maestro v2 schema compliance
-  
-- **Preflight**: `apps/mobile/.maestro/scripts/validate-flows.sh`
-  - Check Java 17 availability
-  - Verify Maestro binary in PATH
-  - Detect booted simulator
-  
-- **CI Integration**: `.github/workflows/maestro-e2e.yml`
-  - Lint flows before execution
-  - Run smoke flow in CI
-  - Artifact: test results + logs
+### Phase 5: Client And Surface Cutovers (Web + CLI)
 
-**Completion Status**:
-- ✅ T025: Config normalization
-- ✅ T026: Login flow rewrite
-- ✅ T027: E2E bypass flow
-- ✅ T028-T030: Dependent flows update
-- ✅ T023-T024: Flow validation + CI wiring
+Objective:
+- Ensure all consumers use canonical auth clients and contracts.
 
-**Acceptance Criteria**:
-- [ ] `maestro test apps/mobile/.maestro/flows/smoke/full.yaml` runs end-to-end
-- [ ] No schema validation errors
-- [ ] No missing-selector failures
-- [ ] `bun run test:e2e:smoke` (Make target) succeeds
+Steps taken:
+- Migrated web app auth calls to canonical `packages/auth` client APIs.
+- Standardized OAuth callback handling and redirect safety.
+- Added CLI authorize/callback/exchange and device-code fallback flows.
+- Updated CLI token metadata and status semantics.
 
----
+Status: ✅ Complete
 
-### 3.3 User Story 3: Personal Device Dev Build Lane (Priority: P2)
+### Phase 6: Mobile Better Auth Expo Migration
 
-**Objective**: Developers have a reproducible path to build, install, and validate on personal iPhone.
+Objective:
+- Replace custom mobile wrapper with official `@better-auth/expo` integration.
 
-**Deliverables**:
+Steps taken:
+- Added `expoClient()` plugin-based auth client.
+- Enabled required package export support and deep link/trusted origin wiring.
+- Refactored mobile auth provider to official client session model.
+- Reduced custom auth code and validated no regressions in core flows.
 
-#### EAS Configuration
-- **App Config**: `apps/mobile/app.config.ts`
-  - Bundle ID mapping: dev (`com.pontistudios.mindsherpa.dev`) vs. prod
-  - Environment variable injection
-  - API endpoint routing (tunnel vs. production)
-  
-- **EAS Profile**: `apps/mobile/eas.json`
-  - Development iOS build profile
-  - Appropriate signing identity
-  - Simulator + device builds supported
+Status: ✅ Complete
 
-#### Documentation & Helpers
-- **One-Command Build**: Root `Makefile` + `apps/mobile/package.json`
-  - Script: `make ios-dev-build` or `bun run build:ios:dev`
-  - Produces QR code/link for install
-  
-- **Auth Smoke Checklist**: `apps/mobile/README.md`
-  - Install from EAS link
-  - Launch app
-  - Authenticate via Apple Sign-In
-  - Call protected endpoint
-  - Verify logout clears state
-  
-- **Config Guide**: `config/apple-auth.settings.json`
-  - Document non-secret Apple identifiers
-  - Explain bundle ID mapping
-  - Clarify prod vs. dev signing
+### Phase 7: Mobile Readiness Hardening (US1/US2/US3)
 
-**Completion Status**:
-- ✅ T034: App config finalization
-- ✅ T035: EAS profile validation
-- ✅ T036: One-command build helper
-- ✅ T037-T038: Documentation
+Objective:
+- Make mobile auth deterministic for automation and reliable on personal devices.
 
-**Acceptance Criteria**:
-- [ ] `eas project:info --non-interactive` succeeds from `apps/mobile`
-- [ ] `make ios-dev-build` produces installable build
-- [ ] Install on personal iPhone succeeds
-- [ ] Auth smoke checklist passes on device
-- [ ] Developers report iteration time <5 min per build
+US1 steps (deterministic auth bootstrap):
+- Added non-production E2E login endpoint and guardrails.
+- Hardened callback parse/PKCE/state checks and refresh scheduler semantics.
+- Added audit logging for E2E auth invocations.
+
+US2 steps (Maestro reliability):
+- Standardized Maestro app IDs and schema-compatible syntax.
+- Rewrote stale login flows to Apple/E2E bootstrap flows.
+- Added flow validation scripts and CI execution hooks.
+
+US3 steps (EAS device lane):
+- Finalized app config and EAS profile mapping.
+- Added one-command dev-build helpers.
+- Documented personal device install and auth smoke checklist.
+
+Status: 🟡 In progress (implementation largely done; final verification gates remain)
+
+### Phase 8: Security Hardening And Operational Readiness
+
+Objective:
+- Complete production-hardening and runbook-quality controls.
+
+Steps completed:
+- Route-level rate limiting on auth-sensitive endpoints.
+- Passkey and step-up grant enforcement for sensitive actions.
+
+Open steps:
+- KMS-backed key lifecycle automation and rotation drills.
+- Full audit stream visibility and retention policy alignment.
+- Final security matrix execution (CSRF/state/nonce/replay/scope).
+
+Status: 🟡 In progress
 
 ---
 
-## Section 4: Cross-Cutting Concerns
+## Section 3: Final Implementation Snapshot
 
-### 4.1 Security Hardening (Ongoing)
+### 3.1 Core Platform Outcomes
 
-#### Audit Trail Completeness
-- ✅ E2E login calls logged distinctly
-- 🟡 Full auth lifecycle audit (sign-in, refresh, revoke, MFA events)
-- 🟡 Replay detection verification in production
+- Better Auth is the canonical control plane in API/web/mobile/CLI.
+- Supabase auth runtime paths are removed from active surfaces.
+- Apple-only mobile primary sign-in objective is complete.
+- Email + OTP + passkey capability is included in the Better Auth model.
 
-#### Token Management
-- ✅ Refresh rotation with family ID tracking
-- 🟡 KMS-backed signing key rotation runbook
-- 🟡 Automated key lifecycle in production
+### 3.2 Mobile Outcomes
 
-#### OAuth Security
-- ✅ PKCE enforcement on all mobile flows
-- ✅ State parameter validation
-- 🟡 Redirect URI allowlist enforcement validation
-- 🟡 Scope escalation prevention matrix
+- Official Expo plugin migration complete.
+- Deterministic E2E bootstrap path added for non-production automation.
+- Maestro flows modernized with new auth assumptions.
+- Device build lane documented and scaffolded via EAS helpers.
 
-### 4.2 Verification Gates (Outstanding)
+### 3.3 Validation Snapshot
 
-**Before production promotion**:
-
-- [ ] **Cross-surface integration**: Web + mobile + CLI all using canonical client
-- [ ] **Security matrix**: CSRF, state, nonce, replay, scope validated end-to-end
-- [ ] **Performance baseline**: p95 auth latency <2s, refresh <500ms
-- [ ] **Operational runbook**: Key rotation, replay response, incident handling documented
-- [ ] **Type safety audit**: Zero `any` types in auth-critical paths
-- [ ] **Dead code sweep**: No Supabase auth paths remain
+- API auth suites and middleware tests reported passing in tracker updates.
+- Mobile provider/client tests reported passing in tracker updates.
+- Remaining live endpoint issue: `https://auth.ponti.io/api/status` returning `502`.
 
 ---
 
-## Section 5: Dependency Graph & Execution Order
+## Section 4: Remaining Work To Finalize
 
-### Critical Path
-```
-T001 (backup) → T003 (plan) → T006 (callback hardening) 
-  → T016 (E2E endpoint) → T026 (Maestro login flow)
-  → T034 (app config) → T041 (final validation)
-```
+### 4.1 Security And Operations
 
-### Phase Organization
+- [ ] Complete KMS signing key rotation runbook and drill.
+- [ ] Validate redirect URI allowlist and scope escalation checks in final matrix.
+- [ ] Complete full auth lifecycle audit event coverage and retention policy.
 
-| Phase | User Stories | Est. Effort | Status |
-|-------|-------------|---|--------|
-| Phase 1: Setup | (shared infra) | 2h | ✅ Complete |
-| Phase 2: Foundation | (blocking) | 1-2d | ✅ Complete |
-| Phase 3: US1 (Auth) | Deterministic bootstrap | 1-2d | 🟡 In Progress |
-| Phase 4: US2 (Maestro) | Flow reliability | 1d | 🟡 In Progress |
-| Phase 5: US3 (Device) | EAS lane | 0.5-1d | 🟡 Ready to start |
-| Phase 6: Polish | Gates + verification | 2-4h | 🟡 Ready to start |
+### 4.2 Mobile Verification
 
-### Parallelization Opportunities
-- **Batch A** (after T006): T007 + T008 + T010 (test foundation)
-- **Batch B** (after T016): US1 mobile implementation (T019-T021)
-- **Batch C** (US2 independent): Maestro flow rewrites (T028-T030)
-- **Batch D** (US3 independent): EAS docs/scripts (T032-T038)
+- [ ] Run final mobile auth suite gates (`test:e2e:auth:api`, `test:e2e:auth:live`).
+- [ ] Confirm Maestro smoke/auth runs with no schema or selector failures.
+- [ ] Validate personal iPhone install and smoke checklist end-to-end.
+
+### 4.3 Program Closeout
+
+- [ ] Publish final cross-surface readiness matrix.
+- [ ] Confirm all open tracker criteria are complete or explicitly de-scoped.
+- [ ] Sign off production readiness for auth.
 
 ---
 
-## Section 6: Metrics & Success Criteria
+## Section 5: Execution Order For Final Completion
 
-### Completion Definition
-
-**Phase 1 (Auth Consolidation)**: ✅ COMPLETE
-- All auth surfaces migrated: API, web, mobile, CLI ✅
-- Zero Supabase auth runtime paths ✅
-- All compilation passing ✅
-- Type safety enforced ✅
-
-**Phase 2-6 (Mobile Readiness)**: TARGET, GATE PENDING
-- Auth bootstrap deterministic (US1)
-- Maestro CI-stable and v2-compatible (US2)
-- Personal device testing documented + reproducible (US3)
-- Security gates validated
-- Cross-surface integration verified
-
-### Key Performance Indicators (KPIs)
-
-| Metric | Target | Current |
-|--------|--------|---------|
-| Mobile cold launch → auth | <2s p95 | 1.4s (verified) |
-| Token refresh latency | <500ms | 350ms (verified) |
-| E2E bootstrap → API call | <3s | 2.1s (measured) |
-| Maestro flow execution time | <60s | 45s (measured) |
-| Audit log coverage | 100% of auth events | 95% (E2E partial) |
-| Type safety: `any` in auth | 0 instances | 0 ✅ |
+1. Resolve live auth smoke infra issue (`/api/status` 502).
+2. Run and capture full auth verification suite across API/mobile/CLI.
+3. Complete key management and incident-response runbooks.
+4. Execute final security matrix and attach results.
+5. Approve and mark program fully complete.
 
 ---
 
-## Section 7: Open Items & Blockers
+## Section 6: References
 
-### Operational (Non-Blocking)
-- [ ] Auth smoke endpoint `https://auth.ponti.io/api/status` returns `502` (infra follow-up)
-- [ ] KMS key rotation runbook documentation
-- [ ] Production audit log archival policy
-
-### Technical (Blocking)
-- [ ] Complete mobile refresh rate-limiting edge cases
-- [ ] Maestro iOS simulator detection on CI
-- [ ] EAS build distribution and install flow
-
-### Verification (Gating)
-- [ ] Security matrix cross-validation (web + mobile + CLI)
-- [ ] Load test: 100 concurrent auth refreshes
-- [ ] Incident simulation: key compromise → immediate revocation
+- `docs/plans/2026-02-23-1456-apple-signin-only.md`
+- `docs/plans/2026-02-24-1207-better-auth.md`
+- `docs/plans/2026-02-25-2341-mobile-readiness.md`
+- `docs/plans/2026-02-25-2341-mobile-readiness.tasks.md`
+- `docs/plans/2026-02-26-migrate-to-better-auth-expo.md`
+- `docs/plans/2026-02-27-auth-consolidation.md`
+- `specs/001-remove-any-types/plan.md`
+- `specs/001-remove-any-types/tasks.md`
 
 ---
 
-## Section 8: References & Artifacts
+## Sign-Off
 
-### Source Plans (Archived for Traceability)
-Original plan files have been consolidated into this document. Historical versions retained in git history for detailed implementation traceability:
-- `docs/plans/2026-02-27-auth-consolidation.md` — Complete auth migration details
-- `docs/plans/2026-02-25-2341-mobile-readiness.md` — Mobile readiness original plan
-- `docs/plans/2026-02-25-2341-mobile-readiness.tasks.md` — Detailed task breakdown
-
-### Implementation Artifacts
-- `specs/001-remove-any-types/plan.md` — Source of truth for mobile readiness
-- `specs/001-remove-any-types/tasks.md` — Task execution checklist
-- `docs/plans/archive/specs-001-backup-<timestamp>/` — Workflow artifact backup
-
-### Deployment Runbooks (TODO)
-- Key rotation procedure
-- Replay detection response
-- Auth incident response playbook
-- Mobile emergency rollback procedure
-
----
-
-## Sign-Off & Next Steps
-
-**Current Owner**: Mobile readiness work  
-**Responsible**: Auth consolidation verified ✅ → Mobile work in progress 🟡
-
-**Next Immediate Actions**:
-1. Complete US1 mobile auth bootstrap (T016-T022)
-2. Validate via `bun run test:e2e:auth:api && bun run test:e2e:auth:live`
-3. Begin US2 Maestro modernization in parallel
-4. Establish US3 device testing baseline
-
-**Target completion**: 2026-03-15  
-**Readiness check frequency**: Every 2 days (parallel batches)
-
----
+This file is the single cohesive merged plan for the auth journey and final implementation path.
 
 **Last Updated**: 2026-03-09  
-**Status**: In Progress (Phase 3-6) | Auth Consolidation (Phase 1-2): ✅ Complete
+**Current State**: Auth platform consolidated; mobile readiness and operational hardening in finalization.
