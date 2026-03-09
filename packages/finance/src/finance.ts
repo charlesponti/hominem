@@ -1230,76 +1230,12 @@ export async function queryTransactionsByContract(
     tagNames: input.tagNames,
   });
 
-  const hasTagFilters =
-    (parsed.tagIds !== undefined && parsed.tagIds.length > 0) ||
-    (parsed.tagNames !== undefined && parsed.tagNames.length > 0);
-
-  if (!hasTagFilters) {
-    let query = db
-      .selectFrom('finance_transactions as t')
-      .selectAll()
-      .where('t.user_id', '=', parsed.userId);
-    if (parsed.accountId) {
-      query = query.where('t.account_id', '=', parsed.accountId);
-    }
-    if (parsed.dateFrom) {
-      query = query.where('t.date', '>=', parsed.dateFrom);
-    }
-    if (parsed.dateTo) {
-      query = query.where('t.date', '<=', parsed.dateTo);
-    }
-    const result = await query
-      .orderBy('t.date', 'desc')
-      .orderBy('t.id', 'desc')
-      .limit(parsed.limit)
-      .offset(parsed.offset)
-      .execute();
-    return result.map(toFinanceTransaction);
-  }
-
   const tagIds = parsed.tagIds ?? [];
   const tagNames = parsed.tagNames ?? [];
-  let query = db.selectFrom('finance_transactions as t').distinctOn(['t.date', 't.id']).selectAll();
-
-  if (tagIds.length > 0 && tagNames.length > 0) {
-    query = query
-      .innerJoin('tagged_items as ti', (join) =>
-        join
-          .onRef('ti.entity_id', '=', 't.id')
-          .on('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE),
-      )
-      .innerJoin('tags as tg', (join) =>
-        join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', parsed.userId),
-      )
-      .where('t.user_id', '=', parsed.userId)
-      .where(
-        sql<boolean>`ti.tag_id in (${sqlValueList(tagIds)}) or tg.name in (${sqlValueList(tagNames)})`,
-      );
-  } else if (tagIds.length > 0) {
-    query = query
-      .innerJoin('tagged_items as ti', (join) =>
-        join
-          .onRef('ti.entity_id', '=', 't.id')
-          .on('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE),
-      )
-      .innerJoin('tags as tg', (join) =>
-        join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', parsed.userId),
-      )
-      .where('t.user_id', '=', parsed.userId)
-      .where(sql<boolean>`ti.tag_id in (${sqlValueList(tagIds)})`);
-  } else {
-    query = query
-      .innerJoin('tagged_items as ti', (join) =>
-        join
-          .onRef('ti.entity_id', '=', 't.id')
-          .on('ti.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE),
-      )
-      .innerJoin('tags as tg', (join) =>
-        join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', parsed.userId),
-      )
-      .where('t.user_id', '=', parsed.userId)
-      .where(sql<boolean>`tg.name in (${sqlValueList(tagNames)})`);
-  }
+  let query = db
+    .selectFrom('finance_transactions as t')
+    .selectAll()
+    .where('t.user_id', '=', parsed.userId);
 
   if (parsed.accountId) {
     query = query.where('t.account_id', '=', parsed.accountId);
@@ -1309,6 +1245,49 @@ export async function queryTransactionsByContract(
   }
   if (parsed.dateTo) {
     query = query.where('t.date', '<=', parsed.dateTo);
+  }
+  if (tagIds.length > 0 && tagNames.length > 0) {
+    query = query.where(
+      sql<boolean>`exists (
+        select 1
+        from tagged_items ti_filter
+        join tags tg_filter
+          on tg_filter.id = ti_filter.tag_id
+         and tg_filter.owner_id = ${parsed.userId}
+        where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
+          and ti_filter.entity_id = t.id
+          and (
+            ti_filter.tag_id in (${sqlValueList(tagIds)})
+            or tg_filter.name in (${sqlValueList(tagNames)})
+          )
+      )`,
+    );
+  } else if (tagIds.length > 0) {
+    query = query.where(
+      sql<boolean>`exists (
+        select 1
+        from tagged_items ti_filter
+        join tags tg_filter
+          on tg_filter.id = ti_filter.tag_id
+         and tg_filter.owner_id = ${parsed.userId}
+        where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
+          and ti_filter.entity_id = t.id
+          and ti_filter.tag_id in (${sqlValueList(tagIds)})
+      )`,
+    );
+  } else if (tagNames.length > 0) {
+    query = query.where(
+      sql<boolean>`exists (
+        select 1
+        from tagged_items ti_filter
+        join tags tg_filter
+          on tg_filter.id = ti_filter.tag_id
+         and tg_filter.owner_id = ${parsed.userId}
+        where ti_filter.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE}
+          and ti_filter.entity_id = t.id
+          and tg_filter.name in (${sqlValueList(tagNames)})
+      )`,
+    );
   }
 
   const result = await query
@@ -1469,14 +1448,14 @@ export async function deleteTransaction(id: string, userId?: string): Promise<bo
       .where('id', '=', id)
       .where('user_id', '=', userId)
       .executeTakeFirst();
-    return !!result;
+    return getAffectedRows(result) > 0;
   }
 
   const result = await db
     .deleteFrom('finance_transactions')
     .where('id', '=', id)
     .executeTakeFirst();
-  return !!result;
+  return getAffectedRows(result) > 0;
 }
 
 export async function getPlaidItemByUserAndItemId(
