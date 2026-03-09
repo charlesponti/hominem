@@ -15,7 +15,7 @@ jobs:
     env:
       # ⚠️ IMPORTANT: The following secrets need to be configured in GitHub repository settings:
       # - COOKIE_SECRET_TEST
-      # - RESEND_API_KEY_TEST  
+      # - RESEND_API_KEY_TEST
       # - RESEND_FROM_EMAIL
       # - RESEND_FROM_NAME
       # For now, using test values. Move to secrets for production security.
@@ -96,10 +96,13 @@ jobs:
           done
           echo "All services are ready!"
 
+      - name: Install Atlas CLI
+        run: curl -sSf https://atlasgo.sh | sh
+
       - name: 🗄️ Initialize test database schema
         run: |
           cd packages/db
-          bunx atlas schema apply \
+          /root/.local/bin/atlas schema apply \
             --url "postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable" \
             --to "file://schema.sql"
 
