@@ -25,6 +25,6 @@ runs:
         DATABASE_URL: ${{ inputs.database-url }}
       run: |
         atlas schema apply \
-          --url "${{ inputs.database-url }}" \
+          --dev-url "${{ inputs.database-url }}" \
           --to "file://${{ inputs.schema-path }}" \
           --auto-approve
