@@ -1,0 +1,30 @@
+name: Initialize Database Schema with Atlas
+description: Install Atlas CLI and apply database schema to test database
+
+inputs:
+  database-url:
+    description: PostgreSQL database URL for schema application
+    required: true
+  schema-path:
+    description: Path to schema.sql file relative to repo root
+    required: false
+    default: packages/db/schema.sql
+
+runs:
+  using: composite
+  steps:
+    - name: Install Atlas CLI
+      shell: bash
+      run: |
+        curl -sSf https://atlasgo.sh | sh
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+    - name: Apply database schema
+      shell: bash
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+      run: |
+        atlas schema apply \
+          --url "${{ inputs.database-url }}" \
+          --to "file://${{ inputs.schema-path }}" \
+          --auto-approve

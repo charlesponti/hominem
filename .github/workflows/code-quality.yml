@@ -13,21 +13,16 @@ jobs:
     permissions:
       contents: read
     env:
-      # ⚠️ IMPORTANT: The following secrets need to be configured in GitHub repository settings:
-      # - COOKIE_SECRET_TEST
-      # - RESEND_API_KEY_TEST
-      # - RESEND_FROM_EMAIL
-      # - RESEND_FROM_NAME
       # For now, using test values. Move to secrets for production security.
-      COOKIE_SECRET: ${{ secrets.COOKIE_SECRET_TEST || 'T1FBln1N5TI7qrzHv/ZW+sVbxKAQtBjUP6U=' }}
+      COOKIE_SECRET: ${{ secrets.COOKIE_SECRET_TEST }}
       DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       REDIS_URL: "redis://localhost:6379"
-      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_TEST || 'SG.7Q9Z9ZQzQ9q' }}
-      RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL || 'noreply@hominem.test' }}
-      RESEND_FROM_NAME: ${{ secrets.RESEND_FROM_NAME || 'Hominem CI' }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_TEST }}
+      RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+      RESEND_FROM_NAME: ${{ secrets.RESEND_FROM_NAME }}
       SEND_EMAILS: "false"
       AUTH_TEST_OTP_ENABLED: "true"
       AUTH_E2E_SECRET: "otp-secret"
@@ -96,15 +91,11 @@ jobs:
           done
           echo "All services are ready!"
 
-      - name: Install Atlas CLI
-        run: curl -sSf https://atlasgo.sh | sh
-
       - name: 🗄️ Initialize test database schema
-        run: |
-          cd packages/db
-          /root/.local/bin/atlas schema apply \
-            --url "postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable" \
-            --to "file://schema.sql"
+        uses: ./.github/actions/db-setup
+        with:
+          database-url: postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable
+          schema-path: packages/db/schema.sql
 
       - name: 🏗️ Build
         run: bun turbo run build
