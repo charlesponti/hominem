@@ -22,7 +22,15 @@ export const pool = new Pool({
 
 // Create Kysely instance with proper typing
 class KyselyDb extends Kysely<Database> {
-  async execute<R = unknown>(query: Compilable<R>) {
+  async execute<R = unknown>(query: Compilable<R> | { execute: (db: Kysely<Database>) => Promise<R> }) {
+    if (
+      typeof query === 'object' &&
+      query !== null &&
+      'execute' in query &&
+      typeof query.execute === 'function'
+    ) {
+      return query.execute(this)
+    }
     return this.executeQuery(query)
   }
 }
