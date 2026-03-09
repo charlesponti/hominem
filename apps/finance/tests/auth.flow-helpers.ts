@@ -60,30 +60,27 @@ export async function signInWithEmailOtp(page: Page, email: string) {
 export async function enterOtpCode(page: Page, otp: string) {
   const digitInputs = page.locator('input[inputmode="numeric"]')
   const normalized = otp.replace(/\D/g, '').slice(0, 6)
-  for (let i = 0; i < 6; i++) {
-    await digitInputs.nth(i).fill(normalized[i] ?? '')
-  }
+  const hiddenOtpInput = page.locator('input[name="otp"]')
+  await expect(async () => {
+    for (let i = 0; i < 6; i++) {
+      await digitInputs.nth(i).fill(normalized[i] ?? '')
+    }
+    await expect(hiddenOtpInput).toHaveValue(normalized)
+  }).toPass({ timeout: 10000 })
 }
 
 export async function submitOtpCode(page: Page, otp: string) {
   const normalized = otp.replace(/\D/g, '').slice(0, 6)
+  expect(normalized.length).toBeGreaterThan(3)
   await enterOtpCode(page, normalized)
-
-  const verifyButton = page.getByRole('button', { name: 'Verify' })
-  try {
-    await expect(verifyButton).toBeEnabled({ timeout: 1500 })
-    await verifyButton.click()
-    return
-  } catch {
-    await page.locator('input[name="otp"]').evaluate((input, value) => {
-      if (!(input instanceof HTMLInputElement)) return
-      input.value = value
-      input.dispatchEvent(new Event('input', { bubbles: true }))
-      input.dispatchEvent(new Event('change', { bubbles: true }))
-      const form = input.closest('form')
-      if (form instanceof HTMLFormElement) {
-        form.requestSubmit()
-      }
-    }, normalized)
-  }
+  await page.locator('input[name="otp"]').evaluate((input, value) => {
+    if (!(input instanceof HTMLInputElement)) return
+    input.value = value
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+    const form = input.closest('form')
+    if (form instanceof HTMLFormElement) {
+      form.requestSubmit()
+    }
+  }, normalized)
 }
