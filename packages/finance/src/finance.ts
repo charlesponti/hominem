@@ -88,6 +88,21 @@ function toNumber(value: string | number | null): number {
   return 0;
 }
 
+function getAffectedRows(result: unknown): number {
+  if (!result || typeof result !== 'object') {
+    return 0;
+  }
+  if ('numDeletedRows' in result) {
+    const value = (result as { numDeletedRows: bigint | number }).numDeletedRows;
+    return Number(value);
+  }
+  if ('numUpdatedRows' in result) {
+    const value = (result as { numUpdatedRows: bigint | number }).numUpdatedRows;
+    return Number(value);
+  }
+  return 0;
+}
+
 function toFinanceAccount(row: FinanceAccountRow): FinanceAccount {
   const data = (row.data ?? {}) as Record<string, unknown>;
   const plaidAccountId = data.plaidAccountId;
@@ -228,19 +243,19 @@ export async function deleteUserFinanceData(userId: string): Promise<{
       sql<boolean>`entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and entity_id in (select id from finance_transactions where user_id = ${userId})`,
     )
     .executeTakeFirst();
-  const deletedTaggedItems = 0;
+  const deletedTaggedItems = getAffectedRows(taggedItemsResult);
 
   const transactionsResult = await db
     .deleteFrom('finance_transactions')
     .where('user_id', '=', userId)
     .executeTakeFirst();
-  const deletedTransactions = 0;
+  const deletedTransactions = getAffectedRows(transactionsResult);
 
   const accountsResult = await db
     .deleteFrom('finance_accounts')
     .where('user_id', '=', userId)
     .executeTakeFirst();
-  const deletedAccounts = 0;
+  const deletedAccounts = getAffectedRows(accountsResult);
 
   let deletedBudgetGoals = 0;
   if (await tableExists('budget_goals')) {
@@ -248,7 +263,7 @@ export async function deleteUserFinanceData(userId: string): Promise<{
       .deleteFrom('budget_goals')
       .where('user_id', '=', userId)
       .executeTakeFirst();
-    deletedBudgetGoals = 0;
+    deletedBudgetGoals = getAffectedRows(budgetGoalsResult);
   }
 
   let deletedPlaidItems = 0;
@@ -257,7 +272,7 @@ export async function deleteUserFinanceData(userId: string): Promise<{
       .deleteFrom('plaid_items')
       .where('user_id', '=', userId)
       .executeTakeFirst();
-    deletedPlaidItems = 0;
+    deletedPlaidItems = getAffectedRows(plaidItemsResult);
   }
 
   return {
@@ -267,6 +282,20 @@ export async function deleteUserFinanceData(userId: string): Promise<{
     deletedBudgetGoals,
     deletedPlaidItems,
   };
+}
+
+export async function deleteAllFinanceDataWithSummary(userId: string): Promise<{
+  deletedTaggedItems: number;
+  deletedTransactions: number;
+  deletedAccounts: number;
+  deletedBudgetGoals: number;
+  deletedPlaidItems: number;
+}> {
+  return deleteUserFinanceData(userId);
+}
+
+export async function deleteAllFinanceData(userId: string): Promise<void> {
+  await deleteUserFinanceData(userId);
 }
 
 export async function exportFinanceData(userId: string): Promise<{
@@ -451,14 +480,14 @@ export async function deleteAccount(accountId: string, userId?: string): Promise
       .where('id', '=', accountId)
       .where('user_id', '=', userId)
       .executeTakeFirst();
-    return !!result;
+    return getAffectedRows(result) > 0;
   }
 
   const result = await db
     .deleteFrom('finance_accounts')
     .where('id', '=', accountId)
     .executeTakeFirst();
-  return !!result;
+  return getAffectedRows(result) > 0;
 }
 
 export async function listAccountsWithRecentTransactions(
@@ -638,7 +667,7 @@ export async function deleteBudgetCategory(id: string, userId: string): Promise<
     .where('id', '=', id)
     .where('owner_id', '=', userId)
     .executeTakeFirst();
-  return !!result;
+  return getAffectedRows(result) > 0;
 }
 
 export async function getBudgetCategoryById(
@@ -706,7 +735,7 @@ export async function getBudgetCategoriesWithSpending(
       'tg.owner_id',
       'tg.name',
       'tg.color',
-      sql<number>`coalesce(sum(abs(t.amount)), 0) as spent`.as('spent'),
+      sql<number>`coalesce(sum(abs(t.amount)), 0)`.as('spent'),
     ])
     .where('tg.owner_id', '=', userId)
     .groupBy(['tg.id', 'tg.owner_id', 'tg.name', 'tg.color'])
@@ -730,7 +759,7 @@ export async function getBudgetTrackingData(
 ): Promise<{ totalBudget: number; totalSpent: number }> {
   const spentResult = await db
     .selectFrom('finance_transactions')
-    .select(sql<number>`coalesce(sum(abs(amount)), 0) as total_spent`.as('total_spent'))
+    .select(sql<number>`coalesce(sum(abs(amount)), 0)`.as('total_spent'))
     .where('user_id', '=', userId)
     .where('transaction_type', '=', 'expense')
     .executeTakeFirst();
@@ -743,7 +772,7 @@ export async function getBudgetTrackingData(
 
   const budgetResult = await db
     .selectFrom('budget_goals')
-    .select(sql<number>`coalesce(sum(target_amount), 0) as total_budget`.as('total_budget'))
+    .select(sql<number>`coalesce(sum(target_amount), 0)`.as('total_budget'))
     .where('user_id', '=', userId)
     .executeTakeFirst();
   return {
@@ -801,7 +830,7 @@ export async function getTagBreakdown(
     .innerJoin('tags as tg', (join) =>
       join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', _userId),
     )
-    .select(['tg.name as tag', sql<number>`coalesce(sum(abs(amount)), 0) as total`.as('total')])
+    .select([sql<string>`tg.name`.as('tag'), sql<number>`coalesce(sum(abs(amount)), 0)`.as('total')])
     .where('t.user_id', '=', _userId)
     .where('t.transaction_type', '=', 'expense')
     .groupBy('tg.name')
@@ -822,7 +851,7 @@ export async function getTopMerchants(
     .selectFrom('finance_transactions')
     .select([
       'merchant_name as merchant',
-      sql<number>`coalesce(sum(abs(amount)), 0) as total`.as('total'),
+      sql<number>`coalesce(sum(abs(amount)), 0)`.as('total'),
     ])
     .where('user_id', '=', _userId)
     .where('transaction_type', '=', 'expense')
@@ -868,7 +897,7 @@ export async function queryAnalyticsTransactionsByContract(
       't.external_id',
       't.category',
       't.merchant_name',
-      sql<string>`coalesce((select min(tg_tag.name) from tagged_items ti_tag join tags tg_tag on tg_tag.id = ti_tag.tag_id and tg_tag.owner_id = ${parsed.userId} where ti_tag.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_tag.entity_id = t.id), t.category, ${sql.lit('Uncategorized')}) as classification`.as(
+      sql<string>`coalesce((select min(tg_tag.name) from tagged_items ti_tag join tags tg_tag on tg_tag.id = ti_tag.tag_id and tg_tag.owner_id = ${parsed.userId} where ti_tag.entity_type = ${FINANCE_TRANSACTION_ENTITY_TYPE} and ti_tag.entity_id = t.id), t.category, ${sql.lit('Uncategorized')})`.as(
         'classification',
       ),
     ])
@@ -1649,7 +1678,7 @@ export async function updatePlaidItemStatusByItemId(
     .where('user_id', '=', userId)
     .where('item_id', '=', itemId)
     .executeTakeFirst();
-  return !!result;
+  return getAffectedRows(result) > 0;
 }
 
 export async function updatePlaidItemStatusById(
@@ -1666,7 +1695,7 @@ export async function updatePlaidItemStatusById(
     .where('id', '=', id)
     .where('user_id', '=', userId)
     .executeTakeFirst();
-  return !!result;
+  return getAffectedRows(result) > 0;
 }
 
 export async function updatePlaidItemCursor(id: string, cursor: string | null): Promise<boolean> {
@@ -1678,7 +1707,7 @@ export async function updatePlaidItemCursor(id: string, cursor: string | null): 
     })
     .where('id', '=', id)
     .executeTakeFirst();
-  return !!result;
+  return getAffectedRows(result) > 0;
 }
 
 export async function updatePlaidItemSyncStatus(
@@ -1696,7 +1725,7 @@ export async function updatePlaidItemSyncStatus(
     })
     .where('id', '=', id)
     .executeTakeFirst();
-  return !!result;
+  return getAffectedRows(result) > 0;
 }
 
 export async function updatePlaidItemError(id: string, error: string | null): Promise<boolean> {
@@ -1708,7 +1737,7 @@ export async function updatePlaidItemError(id: string, error: string | null): Pr
     })
     .where('id', '=', id)
     .executeTakeFirst();
-  return !!result;
+  return getAffectedRows(result) > 0;
 }
 
 export async function deletePlaidItem(id: string, userId?: string): Promise<boolean> {
@@ -1718,11 +1747,11 @@ export async function deletePlaidItem(id: string, userId?: string): Promise<bool
       .where('id', '=', id)
       .where('user_id', '=', userId)
       .executeTakeFirst();
-    return !!result;
+    return getAffectedRows(result) > 0;
   }
 
   const result = await db.deleteFrom('plaid_items').where('id', '=', id).executeTakeFirst();
-  return !!result;
+  return getAffectedRows(result) > 0;
 }
 
 export async function upsertAccount(
