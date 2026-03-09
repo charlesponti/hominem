@@ -35,8 +35,10 @@ runs:
     - name: Apply database schema
       shell: bash
       run: |
-        cd "${{ inputs.schema-path }}"
+        # compute absolute path to schema file
+        SCHEMA_FILE="${GITHUB_WORKSPACE}/${{ inputs.schema-path }}/schema.sql"
         atlas schema apply \
           --dev-url "${{ inputs.dev-database-url }}" \
           --url "${{ env.DATABASE_URL }}" \
+          --to "file://${SCHEMA_FILE}" \
           --auto-approve
