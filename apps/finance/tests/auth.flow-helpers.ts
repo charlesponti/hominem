@@ -53,11 +53,16 @@ export async function fetchLatestSignInOtp(email: string) {
 export async function signInWithEmailOtp(page: Page, email: string) {
   await startEmailOtpFlow(page, email)
   const otp = await fetchLatestSignInOtp(email)
-  // Fill each digit input individually
-  const digitInputs = page.locator('input[inputmode="numeric"]')
-  for (let i = 0; i < otp.length; i++) {
-    await digitInputs.nth(i).fill(otp[i])
-  }
+  await enterOtpCode(page, otp)
   await page.getByRole('button', { name: 'Verify' }).click()
   await expect(page).toHaveURL(/\/finance$/, { timeout: 30000 })
+}
+
+export async function enterOtpCode(page: Page, otp: string) {
+  const digitInputs = page.locator('input[inputmode="numeric"]')
+  const normalized = otp.replace(/\D/g, '').slice(0, 6)
+  for (let i = 0; i < 6; i++) {
+    await digitInputs.nth(i).fill(normalized[i] ?? '')
+  }
+  await expect(page.getByRole('button', { name: 'Verify' })).toBeEnabled({ timeout: 15000 })
 }

@@ -64,7 +64,7 @@ export function OtpVerificationForm({
 
         <AuthErrorBanner error={error ?? null} />
 
-        <Button type="submit" disabled={otp.length !== 6 || isSubmitting} className="w-full">
+        <Button type="submit" disabled={otp.length < 4 || isSubmitting} className="w-full">
           {isSubmitting ? loadingMessage : 'Verify'}
         </Button>
 

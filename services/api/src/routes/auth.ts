@@ -148,6 +148,19 @@ async function resolveAuthUserId(c: {
     }
   }
 
+  const cookieHeader = c.req.header('cookie') ?? '';
+  const tokenMatch = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/);
+  const tokenValue = tokenMatch?.[1];
+  if (tokenValue) {
+    try {
+      const decoded = decodeURIComponent(tokenValue);
+      const claims = await verifyAccessToken(decoded);
+      if (claims?.sub) return claims.sub;
+    } catch {
+      // invalid cookie token — fall through
+    }
+  }
+
   // 3. Better Auth session cookie
   const session = await betterAuthServer.api.getSession(getHeaderCarrier(c));
   if (session?.user?.id) return session.user.id;
