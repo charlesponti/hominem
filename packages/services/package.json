@@ -3,23 +3,57 @@
   "version": "0.0.0",
   "description": "Business logic and services",
   "type": "module",
+  "types": "./src/index.ts",
   "sideEffects": false,
   "exports": {
-    ".": "./src/index.ts",
-    "./emails": "./src/resend.ts",
-    "./resend": "./src/resend.ts",
-    "./files": "./src/files.ts",
-    "./fixtures": "./src/fixtures.ts",
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./emails": {
+      "types": "./src/resend.ts",
+      "default": "./src/resend.ts"
+    },
+    "./resend": {
+      "types": "./src/resend.ts",
+      "default": "./src/resend.ts"
+    },
+    "./files": {
+      "types": "./src/files.ts",
+      "default": "./src/files.ts"
+    },
+    "./fixtures": {
+      "types": "./src/fixtures.ts",
+      "default": "./src/fixtures.ts"
+    },
     "./google-calendar": {
       "types": "@hominem/db/build/google-calendar.service.d.ts",
       "default": "@hominem/db"
     },
-    "./logger": "./src/logger.ts",
-    "./env": "./src/env.ts",
-    "./queues": "./src/queues.ts",
-    "./redis": "./src/redis.ts",
-    "./test-utils/google-api-mocks": "./src/test-utils/google-api-mocks.ts",
-    "./travel": "./src/travel/index.ts",
+    "./logger": {
+      "types": "./src/logger.ts",
+      "default": "./src/logger.ts"
+    },
+    "./env": {
+      "types": "./src/env.ts",
+      "default": "./src/env.ts"
+    },
+    "./queues": {
+      "types": "./src/queues.ts",
+      "default": "./src/queues.ts"
+    },
+    "./redis": {
+      "types": "./src/redis.ts",
+      "default": "./src/redis.ts"
+    },
+    "./test-utils/google-api-mocks": {
+      "types": "./src/test-utils/google-api-mocks.ts",
+      "default": "./src/test-utils/google-api-mocks.ts"
+    },
+    "./travel": {
+      "types": "./src/travel/index.ts",
+      "default": "./src/travel/index.ts"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {

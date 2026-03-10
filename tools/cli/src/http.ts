@@ -102,6 +102,19 @@ export async function requestJson(options: HttpJsonOptions): Promise<string> {
     });
   }
 
+  if (
+    !response ||
+    typeof response.ok !== 'boolean' ||
+    typeof response.text !== 'function' ||
+    typeof response.status !== 'number'
+  ) {
+    throw new CliError({
+      code: 'DEPENDENCY_UNAVAILABLE',
+      category: 'dependency',
+      message: 'Dependency returned an invalid response',
+    });
+  }
+
   if (!response.ok) {
     let payload: ApiErrorPayload | null = null;
     try {

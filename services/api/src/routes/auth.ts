@@ -1,9 +1,10 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-import { UserAuthService, grantStepUp, hasRecentStepUp, isFreshPasskeyAuth } from '@hominem/auth/server';
+import { UserAuthService, configureStepUpStore, grantStepUp, hasRecentStepUp, isFreshPasskeyAuth } from '@hominem/auth/server';
 import { STEP_UP_ACTIONS, isStepUpAction } from '@hominem/auth/step-up-actions';
 import type { StepUpAction } from '@hominem/auth/step-up-actions';
 import { db } from '@hominem/db';
+import { redis } from '@hominem/services/redis';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
@@ -26,6 +27,8 @@ import { env } from '../env';
 import type { AppEnv } from '../server';
 
 export const authRoutes = new Hono<AppEnv>();
+
+configureStepUpStore(redis);
 
 const devIssueTokenSchema = z.object({
   userId: z.string().uuid(),

@@ -1,23 +1,26 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { STEP_UP_ACTIONS } from './step-up-actions'
-import { STEP_UP_TTL_SECONDS, grantStepUp, hasRecentStepUp, isFreshPasskeyAuth } from './step-up'
+import {
+  STEP_UP_TTL_SECONDS,
+  configureStepUpStore,
+  grantStepUp,
+  hasRecentStepUp,
+  isFreshPasskeyAuth,
+} from './step-up'
 
 const redisState = vi.hoisted(() => new Map<string, string>())
-
-vi.mock('../../services/src/redis', () => ({
-  redis: {
-    set: vi.fn(async (key: string, value: string) => {
-      redisState.set(key, value)
-      return 'OK'
-    }),
-    get: vi.fn(async (key: string) => redisState.get(key) ?? null),
-  },
-}))
 
 describe('step-up helpers', () => {
   beforeEach(() => {
     redisState.clear()
+    configureStepUpStore({
+      set: vi.fn(async (key: string, value: string) => {
+        redisState.set(key, value)
+        return 'OK'
+      }),
+      get: vi.fn(async (key: string) => redisState.get(key) ?? null),
+    })
   })
 
   it('stores and reads recent action-bound step-up proofs', async () => {

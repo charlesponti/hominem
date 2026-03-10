@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, mock, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
 
 const loadTokensMock = mock();
 const saveTokensMock = mock();
@@ -25,6 +25,7 @@ const { deviceCodeLogin, getAccessToken, interactiveLogin } = await import('./au
 
 describe('cli auth utils', () => {
   let fetchMock: ReturnType<typeof mock>;
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     loadTokensMock.mockReset();
@@ -38,6 +39,10 @@ describe('cli auth utils', () => {
     // Mock global fetch
     fetchMock = mock();
     globalThis.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
   });
 
   test('getAccessToken refreshes expired token and persists metadata-rich response', async () => {

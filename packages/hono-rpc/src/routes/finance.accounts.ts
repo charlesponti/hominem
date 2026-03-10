@@ -2,8 +2,9 @@ import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import * as z from 'zod'
 import { randomUUID } from 'crypto'
-import { STEP_UP_ACTIONS, hasRecentStepUp, isFreshPasskeyAuth } from '@hominem/auth/server'
+import { STEP_UP_ACTIONS, configureStepUpStore, hasRecentStepUp, isFreshPasskeyAuth } from '@hominem/auth/server'
 import { db } from '@hominem/db'
+import { redis } from '@hominem/services/redis'
 import type { Selectable } from 'kysely'
 import type { Database } from '@hominem/db'
 import { NotFoundError } from '../errors'
@@ -33,6 +34,8 @@ import type { AccountData, AccountType, PlaidConnection, TransactionData } from 
 import type { TransactionType } from '../types/finance/shared.types'
 
 const emptyBodySchema = z.object({})
+
+configureStepUpStore(redis)
 
 function normalizeAccountType(value: string): AccountType {
   if (
