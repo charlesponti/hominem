@@ -49,6 +49,7 @@ Completion records must use `YYYY-MM-DD-<change-slug>.md`.
 | 2026-03-09 | remove-mock-apple-auth-add-passkey | completed | [2026-03-09-remove-mock-apple-auth-add-passkey.md](2026-03-09-remove-mock-apple-auth-add-passkey.md) |
 | 2026-03-09 | revamp-tailwind-theme | completed | [2026-03-09-revamp-tailwind-theme.md](2026-03-09-revamp-tailwind-theme.md) |
 | 2026-03-09 | unify-app-auth-system | completed | [2026-03-09-unify-app-auth-system.md](2026-03-09-unify-app-auth-system.md) |
+| 2026-03-10 | desktop-shell-foundation | completed | [2026-03-10-desktop-shell-foundation.md](2026-03-10-desktop-shell-foundation.md) |
 | 2026-03-10 | enforce-db-rpc-separation | completed | [2026-03-10-enforce-db-rpc-separation.md](2026-03-10-enforce-db-rpc-separation.md) |
 | 2026-03-10 | feat-unified-environment-package-plan | completed | [2026-03-10-feat-unified-environment-package-plan.md](2026-03-10-feat-unified-environment-package-plan.md) |
 | 2026-03-10 | openspec-refactor | completed | [2026-03-10-openspec-refactor.md](2026-03-10-openspec-refactor.md) |
