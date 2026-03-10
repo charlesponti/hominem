@@ -1,6 +1,8 @@
 import { KeyRound, Plus, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
+import { Button } from '../ui/button';
+
 interface Passkey {
   id: string;
   name?: string;
@@ -103,23 +105,24 @@ export function PasskeyManagement({ apiUrl, onAdd }: PasskeyManagementProps) {
     <section aria-labelledby="passkey-heading" className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 id="passkey-heading" className="text-base font-semibold">
+          <h2 id="passkey-heading" className="subheading-4 text-text-primary">
             Passkeys
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="body-3 text-text-secondary">
             Sign in without a password using biometrics or a security key.
           </p>
         </div>
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={handleAdd}
           disabled={adding}
           aria-label="Add a passkey"
-          className="flex items-center gap-1.5 border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted disabled:opacity-50"
         >
           <Plus className="w-4 h-4" aria-hidden />
           {adding ? 'Adding...' : 'Add passkey'}
-        </button>
+        </Button>
       </div>
 
       {error && (
@@ -131,7 +134,7 @@ export function PasskeyManagement({ apiUrl, onAdd }: PasskeyManagementProps) {
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading passkeys...</p>
       ) : passkeys.length === 0 ? (
-        <div className="flex items-center gap-3 border border-dashed border-border p-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-3 border border-dashed border-default p-4 text-sm text-text-secondary">
           <KeyRound className="w-4 h-4 shrink-0" aria-hidden />
           <span>No passkeys registered. Add one to sign in faster.</span>
         </div>
@@ -140,14 +143,14 @@ export function PasskeyManagement({ apiUrl, onAdd }: PasskeyManagementProps) {
           {passkeys.map((pk) => (
             <li
               key={pk.id}
-              className="flex items-center justify-between border border-border px-4 py-3 text-sm"
+              className="flex items-center justify-between border border-default px-4 py-3 text-sm"
             >
               <div className="flex items-center gap-3">
-                <KeyRound className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden />
+                <KeyRound className="w-4 h-4 shrink-0 text-text-secondary" aria-hidden />
                 <div>
                   <span className="font-medium">{pk.name ?? 'Passkey'}</span>
                   {pk.createdAt && (
-                    <span className="ml-2 text-xs text-muted-foreground">
+                    <span className="ml-2 text-xs text-text-tertiary">
                       Added {new Date(pk.createdAt).toLocaleDateString()}
                     </span>
                   )}

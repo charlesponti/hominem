@@ -132,27 +132,27 @@ function UpdateGuardClient({
     <>
       {offlineMessage && !isDev && (
         <div className="fixed inset-x-0 bottom-16 z-50 flex justify-center px-4">
-          <div className="flex items-center gap-3 rounded-full border border-border bg-background px-4 py-2 shadow-lg">
-            <span className="text-sm text-foreground">{offlineMessage}</span>
+          <div className="flex items-center gap-3 rounded-lg border border-default bg-bg-surface px-4 py-2 shadow-medium">
+            <span className="text-sm text-text-primary">{offlineMessage}</span>
           </div>
         </div>
       )}
       {(offlineReady || needRefresh) && !isDev && (
         <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
-          <div className="flex items-center gap-3 rounded-full border border-border bg-background px-4 py-2 shadow-lg">
-            <span className="text-sm text-foreground">
+          <div className="flex items-center gap-3 rounded-lg border border-default bg-bg-surface px-4 py-2 shadow-medium">
+            <span className="text-sm text-text-primary">
               {offlineReady ? 'App ready to work offline' : 'New content available'}
             </span>
             {needRefresh && (
               <button
                 type="button"
                 onClick={() => updateServiceWorker(true)}
-                className="text-sm font-semibold text-primary"
+                className="text-sm font-semibold text-accent"
               >
                 Refresh
               </button>
             )}
-            <button type="button" onClick={closePrompt} className="text-sm text-foreground/70">
+            <button type="button" onClick={closePrompt} className="text-sm text-text-secondary">
               Close
             </button>
           </div>
