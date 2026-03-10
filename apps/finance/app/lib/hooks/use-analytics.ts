@@ -44,17 +44,13 @@ export function useTagBreakdown({ from, to, account, tag, limit = 5 }: TagBreakd
         limit,
       },
     ],
-    async (client) => {
-      const res = await client.api.finance.analyze['tag-breakdown'].$post({
-        json: {
-          from: from ? format(from, 'yyyy-MM-dd') : undefined,
-          to: to ? format(to, 'yyyy-MM-dd') : undefined,
-          tag,
-          limit: limit.toString(),
-        },
-      });
-      return res.json() as Promise<TagBreakdownOutput>;
-    },
+    ({ finance }) =>
+      finance.getTagBreakdown({
+        ...(from ? { from: format(from, 'yyyy-MM-dd') } : {}),
+        ...(to ? { to: format(to, 'yyyy-MM-dd') } : {}),
+        ...(tag ? { tag } : {}),
+        limit,
+      }),
     {
       staleTime: 5 * 60 * 1000, // 5 minutes
     },
@@ -67,12 +63,7 @@ export function useTagBreakdown({ from, to, account, tag, limit = 5 }: TagBreakd
 export function useFinanceTags() {
   return useHonoQuery<FinanceTagsOutput>(
     ['finance', 'tags', 'list'],
-    async (client) => {
-      const res = await client.api.finance.tags.list.$post({
-        json: {},
-      });
-      return res.json() as Promise<FinanceTagsOutput>;
-    },
+    ({ finance }) => finance.listTags(),
     {
       staleTime: 10 * 60 * 1000, // 10 minutes - tags don't change often
     },

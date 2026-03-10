@@ -19,18 +19,14 @@ export function useFinanceTopMerchants({
 }: UseFinanceTopMerchantsParams) {
   return useHonoQuery<TopMerchantsOutput>(
     ['finance', 'analyze', 'top-merchants', { from, to, account, tag, limit }],
-    async (client) => {
-      const res = await client.api.finance.analyze['top-merchants'].$post({
-        json: {
-          from,
-          to,
-          account,
-          tag,
-          limit,
-        },
-      });
-      return res.json() as Promise<TopMerchantsOutput>;
-    },
+    ({ finance }) =>
+      finance.getTopMerchants({
+        ...(from ? { from } : {}),
+        ...(to ? { to } : {}),
+        ...(account ? { account } : {}),
+        ...(tag ? { tag } : {}),
+        ...(typeof limit === 'number' ? { limit } : {}),
+      }),
     {
       staleTime: 5 * 60 * 1000,
     },

@@ -68,8 +68,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const authResult = await requireAuth(request);
   const client = createServerHonoClient(authResult.session?.access_token, request);
 
-  const res = await client.api.finance.accounts.all.$post({ json: {} });
-  const data = res.ok ? await res.json() : { accounts: [], connections: [] };
+  const data = await client.finance.listAllAccounts();
 
   return data;
 }

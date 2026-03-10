@@ -1,5 +1,4 @@
 import { useAuthContext } from '@hominem/auth';
-import type { HonoClient } from '@hominem/hono-client';
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import type {
   ChatsGetMessagesOutput,
@@ -39,13 +38,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
 
     const messagesQuery = useHonoQuery<ChatsGetMessagesOutput>(
       ['chats', 'getMessages', { chatId, limit: 50 }],
-      async (client: HonoClient) => {
-        const res = await client.api.chats[':id'].messages.$get({
-          param: { id: chatId },
-          query: { limit: '50' },
-        });
-        return res.json() as Promise<ChatsGetMessagesOutput>;
-      },
+      ({ chats }) => chats.getMessages({ chatId, limit: 50 }),
       {
         enabled: !!chatId,
         refetchOnWindowFocus: false,
@@ -60,12 +53,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
     const utils = useHonoUtils();
 
     const deleteMessageMutation = useHonoMutation<MessagesDeleteOutput, { messageId: string }>(
-      async (client: HonoClient, variables: { messageId: string }) => {
-        const res = await client.api.messages[':messageId'].$delete({
-          param: { messageId: variables.messageId },
-        });
-        return res.json() as Promise<MessagesDeleteOutput>;
-      },
+      ({ messages }, variables) => messages.delete(variables),
       {
         onSuccess: () => {
           // Invalidate messages list for this chat
@@ -160,13 +148,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       MessagesUpdateOutput,
       { messageId: string; content: string }
     >(
-      async (client: HonoClient, variables: { messageId: string; content: string }) => {
-        const res = await client.api.messages[':messageId'].$patch({
-          param: { messageId: variables.messageId },
-          json: { content: variables.content },
-        });
-        return res.json() as Promise<MessagesUpdateOutput>;
-      },
+      ({ messages }, variables) => messages.update(variables),
       {
         onSuccess: () => {
           utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);

@@ -46,9 +46,8 @@ export interface OptimisticUpdateConfig<
  * @example
  * const { data } = useHonoQuery(
  *   ['finance', 'transactions', 'list'],
- *   async (client) => {
- *     const res = await client.api.finance.transactions.list.$post({ json: { limit: 10 } });
- *     return transformResponse(res);
+ *   async ({ finance }) => {
+ *     return finance.listTransactions({ limit: 10, sortBy: 'date', sortDirection: 'desc' });
  *   }
  * );
  */
@@ -76,9 +75,8 @@ export function useHonoQuery<TData>(
  *
  * @example
  * const mutation = useHonoMutation(
- *   async (client, variables) => {
- *     const res = await client.api.finance.transactions.create.$post({ json: variables });
- *     return res.json();
+ *   async ({ places }, variables) => {
+ *     return places.create(variables);
  *   },
  *   {
  *     onSuccess: () => console.log('Created!'),

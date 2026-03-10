@@ -5,9 +5,10 @@ The current client-side Hono integration pushes the full API route tree type int
 ## What Changes
 
 - Introduce a lightweight domain client facade in `@hominem/hono-client` that hides the raw Hono client behind focused domain interfaces.
-- Pilot the new facade with a `PlacesClient` for Rocco place flows, centralizing route-path details and response parsing inside the shared client layer.
+- Expand the new facade beyond places with `ListsClient` and `InvitesClient` for the next highest-value Rocco flows.
 - Update the React Hono provider and hooks to expose the domain facade instead of the full raw Hono client type to app code.
-- Migrate the Rocco places hooks to the new domain client surface and verify that project-graph typecheck remains stable.
+- Migrate the Rocco places, lists, and invites hooks to the new domain client surface and verify that project-graph typecheck remains stable.
+- Remove the temporary compatibility escape hatch once the migrated Rocco hooks no longer require direct raw route-tree access.
 - Establish a rollout path for future domains such as lists, notes, invites, and finance after the pilot proves the performance and ergonomics gains.
 
 ## Capabilities
@@ -20,6 +21,6 @@ The current client-side Hono integration pushes the full API route tree type int
 
 ## Impact
 
-- Affected code: `packages/hono-client`, `packages/hono-rpc`, and `apps/rocco` hooks that currently consume `HonoClient`.
+- Affected code: `packages/hono-client`, `packages/hono-rpc`, and `apps/rocco` hooks that currently consume `HonoClient` or direct raw route access.
 - Affected systems: React Query integration, app provider/context wiring, and local/CI TypeScript project-graph checks.
-- Risk areas: migration compatibility for existing hooks, domain client interface design, and maintaining typed request/response contracts during rollout.
+- Risk areas: compatibility removal timing, domain client interface design, and maintaining typed request/response contracts during rollout.

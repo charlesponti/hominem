@@ -1,4 +1,3 @@
-import type { HonoClient } from '@hominem/hono-client';
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import type {
   PeopleListOutput,
@@ -20,8 +19,7 @@ export const usePeople = () =>
 export const useCreatePerson = () => {
   const utils = useHonoUtils();
   return useHonoMutation<PeopleCreateOutput, PeopleCreateInput>(
-    async (client: HonoClient, variables: PeopleCreateInput) => {
-      void client;
+    async (_client, variables: PeopleCreateInput) => {
       const now = new Date().toISOString();
       return {
         id: `temp-person-${Date.now()}`,

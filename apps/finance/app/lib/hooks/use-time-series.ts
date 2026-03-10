@@ -42,20 +42,16 @@ export function useTimeSeriesData({
         groupBy,
       },
     ],
-    async (client) => {
-      const res = await client.api.finance.analyze['spending-time-series'].$post({
-        json: {
-          from: dateFrom ? format(dateFrom, 'yyyy-MM-dd') : undefined,
-          to: dateTo ? format(dateTo, 'yyyy-MM-dd') : undefined,
-          account: account && account !== 'all' ? account : undefined,
-          tag,
-          includeStats,
-          compareToPrevious,
-          groupBy,
-        },
-      });
-      return res.json() as Promise<SpendingTimeSeriesOutput>;
-    },
+    ({ finance }) =>
+      finance.getSpendingTimeSeries({
+        ...(dateFrom ? { from: format(dateFrom, 'yyyy-MM-dd') } : {}),
+        ...(dateTo ? { to: format(dateTo, 'yyyy-MM-dd') } : {}),
+        ...(account && account !== 'all' ? { account } : {}),
+        ...(tag ? { tag } : {}),
+        includeStats,
+        compareToPrevious,
+        groupBy,
+      }),
     {
       enabled,
       staleTime: 5 * 60 * 1000, // 5 minutes

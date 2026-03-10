@@ -15,12 +15,7 @@ import { useHonoMutation, useHonoQuery, useHonoUtils } from '~/lib/api';
 function useCreateInstitution() {
   const utils = useHonoUtils();
   const mutation = useHonoMutation<InstitutionCreateOutput, InstitutionCreateInput>(
-    async (client, variables) => {
-      const res = await client.api.finance.institutions.create.$post({
-        json: variables,
-      });
-      return res.json() as unknown as InstitutionCreateOutput;
-    },
+    ({ finance }, variables) => finance.createInstitution(variables),
     {
       onSuccess: () => {
         // Invalidate related queries
@@ -43,10 +38,7 @@ function useCreateInstitution() {
 function useAccountsByInstitution() {
   const query = useHonoQuery<AccountsWithPlaidOutput>(
     ['finance', 'accounts', 'with-plaid'],
-    async (client) => {
-      const res = await client.api.finance.accounts['with-plaid'].$post({ json: {} });
-      return res.json() as unknown as Promise<AccountsWithPlaidOutput>;
-    },
+    ({ finance }) => finance.listAccountsWithPlaid(),
   );
 
   const accounts = Array.isArray(query.data) ? query.data : [];
@@ -89,31 +81,26 @@ function useAccountsByInstitution() {
 
 // Export hooks for simple queries
 const useInstitutionConnections = () =>
-  useHonoQuery<AccountConnectionsOutput>(['finance', 'accounts', 'connections'], async (client) => {
-    const res = await client.api.finance.accounts.connections.$post({ json: {} });
-    return res.json() as unknown as Promise<AccountConnectionsOutput>;
-  });
+  useHonoQuery<AccountConnectionsOutput>(
+    ['finance', 'accounts', 'connections'],
+    ({ finance }) => finance.listConnections(),
+  );
 
 const useInstitutionAccounts = () =>
-  useHonoQuery<AccountsWithPlaidOutput>(['finance', 'accounts', 'with-plaid'], async (client) => {
-    const res = await client.api.finance.accounts['with-plaid'].$post({ json: {} });
-    return res.json() as unknown as Promise<AccountsWithPlaidOutput>;
-  });
+  useHonoQuery<AccountsWithPlaidOutput>(
+    ['finance', 'accounts', 'with-plaid'],
+    ({ finance }) => finance.listAccountsWithPlaid(),
+  );
 
 const useInstitutionAccountsByInstitution = (institutionId: string) =>
   useHonoQuery<AccountInstitutionAccountsOutput>(
     ['finance', 'accounts', 'institution-accounts', institutionId],
-    async (client) => {
-      const res = await client.api.finance.accounts['institution-accounts'].$post({
-        json: { institutionId },
-      });
-      return res.json() as unknown as Promise<AccountInstitutionAccountsOutput>;
-    },
+    ({ finance }) => finance.listInstitutionAccounts({ institutionId }),
     { enabled: !!institutionId },
   );
 
 export const useAllInstitutions = () =>
-  useHonoQuery<InstitutionsListOutput>(['finance', 'institutions', 'list'], async (client) => {
-    const res = await client.api.finance.institutions.list.$post({ json: {} });
-    return res.json() as unknown as Promise<InstitutionsListOutput>;
-  });
+  useHonoQuery<InstitutionsListOutput>(
+    ['finance', 'institutions', 'list'],
+    ({ finance }) => finance.listInstitutions(),
+  );

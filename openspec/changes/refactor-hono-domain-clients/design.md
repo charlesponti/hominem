@@ -9,7 +9,7 @@ The explored alternative is to keep the raw Hono client internal to the shared c
 **Goals:**
 - Reduce type-server fanout by removing raw `HonoClient` from app-facing hook callbacks.
 - Preserve strong request and response typing for migrated app hooks.
-- Pilot the pattern with Rocco places flows before broader rollout.
+- Extend the pattern through the highest-value Rocco, Notes, Mobile, and Finance hook surfaces so the temporary compatibility escape hatch can be removed.
 - Keep cache invalidation and optimistic update behavior in app hooks, not in the domain client layer.
 - Create a migration shape that allows additional domains to adopt the facade incrementally.
 
@@ -23,7 +23,7 @@ The explored alternative is to keep the raw Hono client internal to the shared c
 
 ### Expose an `ApiClient` facade instead of raw `HonoClient`
 
-The shared React context and hooks will expose a lightweight `ApiClient` object rather than the raw Hono client. For the pilot, `ApiClient` only needs a `places` domain. This constrains the public type surface that apps depend on and prevents each app hook from importing the full route-tree client type.
+The shared React context and hooks will expose a lightweight `ApiClient` object rather than the raw Hono client. The first extension beyond the places pilot adds `lists` and `invites` domains so that the remaining high-value Rocco hooks can stop depending on raw route access. This constrains the public type surface that apps depend on and prevents each migrated hook from importing the full route-tree client type.
 
 Alternative considered:
 - Keep exposing `HonoClient` and rely on fewer explicit annotations. This lowers some local inference pressure but leaves the full client graph as part of every hook callback contract and does not create a stable long-term abstraction boundary.
@@ -49,9 +49,9 @@ Optimistic updates, cache invalidation, and query key usage stay in app hooks su
 Alternative considered:
 - Move cache behavior into domain clients. This would reduce hook code but would entangle shared infrastructure with app query conventions and make reuse across apps harder.
 
-### Pilot with Rocco places before rolling out broadly
+### Use Rocco places, lists, and invites as the first complete app slice
 
-`apps/rocco/app/lib/hooks/use-places.ts` is the highest-value proving ground because it concentrates many queries, mutations, and the same deep callback typing that previously triggered CI failures. Proving the pattern there gives a concrete benchmark for both ergonomics and typecheck stability before expanding to lists, notes, invites, or finance.
+`apps/rocco/app/lib/hooks/use-places.ts` was the highest-value proving ground because it concentrates many queries, mutations, and the same deep callback typing that previously triggered CI failures. The next step is to extend the same pattern to `use-lists.ts` and `use-invites.ts` so the Rocco slice no longer depends on raw route access directly. Proving the pattern across these three hook modules gives a stronger benchmark for both ergonomics and typecheck stability before expanding to Notes, Finance, or Mobile, which still rely on the temporary compatibility surface.
 
 Alternative considered:
 - Refactor all domains at once. This would maximize consistency but greatly increases risk and makes it harder to isolate whether the new abstraction improves type-server behavior.
@@ -66,20 +66,19 @@ Alternative considered:
 ## Migration Plan
 
 1. Introduce a private raw Hono client boundary and a public `ApiClient` facade in `@hominem/hono-client`.
-2. Add a `PlacesClient` domain module that wraps all place endpoints used by Rocco hooks.
+2. Add `PlacesClient`, `ListsClient`, and `InvitesClient` domain modules that wrap the endpoints used by the Rocco hook slice.
 3. Update the shared React provider/context/hooks to work with `ApiClient`.
-4. Migrate `apps/rocco/app/lib/hooks/use-places.ts` to use `places.*` methods instead of `client.api...`.
-5. Run the existing typecheck and check workflows to confirm the pilot eliminates the current deep type hotspots.
-6. Use the pilot outcomes to decide whether follow-up changes should migrate lists, notes, invites, and finance.
+4. Migrate `apps/rocco/app/lib/hooks/use-places.ts`, `use-lists.ts`, and `use-invites.ts` to use domain methods instead of `client.api...`.
+5. Migrate the remaining Notes, Mobile, Finance, and small Rocco hook consumers until app-facing hooks no longer depend on raw route access.
+6. Remove the temporary `api` compatibility property from `ApiClient`.
+7. Run the existing typecheck and check workflows to confirm the refactor removes the current deep type hotspots.
 
 ## Rollout Follow-Ups
 
-- The pilot keeps a temporary compatibility `api` property on `ApiClient` so untouched callers can continue using raw route access while new domains migrate.
-- The next high-value domains to migrate are Rocco lists and invites, followed by Notes and Finance hook surfaces that still annotate or depend on raw route-tree client access.
-- After additional domains are migrated, the temporary compatibility `api` property should be removed so the raw Hono route tree is no longer part of the app-facing client contract.
+- The app-facing `ApiClient` surface is now limited to domain interfaces for both client hooks and SSR route loaders across Rocco, Notes, Mobile, and Finance.
+- Remaining raw route access is confined to infrastructure internals inside `@hominem/hono-client`, where domain factories wrap the raw Hono client.
+- New app feature work should add domain methods instead of reintroducing raw `client.api...` usage.
 
 ## Open Questions
-
-- Should the first implementation keep a temporary compatibility escape hatch for untouched code paths, or should it fully remove raw client access from the React hooks immediately?
 - Should future domains be grouped by product area (`places`, `lists`, `notes`) or by transport concerns (`queries`, `mutations`) as the facade expands?
 - Do we want a documented performance benchmark for editor/typecheck behavior before and after the pilot, or is CI stability enough for the first rollout?

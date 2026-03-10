@@ -10,6 +10,13 @@ export function createRawHonoClient(config: ClientConfig): RawHonoClient {
     fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
       const token = await config.getAuthToken();
       const headers = new Headers(init?.headers);
+      const extraHeaders = await config.getHeaders?.();
+
+      if (extraHeaders) {
+        Object.entries(extraHeaders).forEach(([key, value]) => {
+          headers.set(key, value);
+        });
+      }
 
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);

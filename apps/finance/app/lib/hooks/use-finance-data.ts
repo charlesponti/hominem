@@ -62,12 +62,7 @@ interface UseFinanceAccountsOptions {
 export const useFinanceAccounts = ({ initialData }: UseFinanceAccountsOptions = {}) => {
   const { data, isLoading, error, refetch } = useHonoQuery<AccountListOutput>(
     ['finance', 'accounts', 'list'],
-    async (client) => {
-      const res = await client.api.finance.accounts.list.$post({
-        json: { includeInactive: false },
-      });
-      return res.json();
-    },
+    ({ finance }) => finance.listAccounts({ includeInactive: false }),
     initialData ? { initialData } : {},
   );
 
@@ -90,18 +85,14 @@ export const useFinanceAccounts = ({ initialData }: UseFinanceAccountsOptions = 
 };
 
 export const useFinancialInstitutions = () =>
-  useHonoQuery(['finance', 'institutions', 'list'], async (client) => {
-    const res = await client.api.finance.institutions.list.$post({ json: {} });
-    return res.json();
-  });
+  useHonoQuery(['finance', 'institutions', 'list'], ({ finance }) => finance.listInstitutions());
 
 // Hook that adds value by transforming data for unified view
 export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
   const allAccountsQuery = useHonoQuery<AccountAllOutput>(
     ['finance', 'accounts', 'all'],
-    async (client) => {
-      const res = await client.api.finance.accounts.all.$post({ json: {} });
-      const data = await res.json();
+    async ({ finance }) => {
+      const data = await finance.listAllAccounts()
       return {
         ...data,
         accounts: data.accounts.map((account) => normalizeAccountWithTransactions(account)),
@@ -124,11 +115,8 @@ export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
 export function useAccountById(id: string, options?: { initialData?: AccountGetOutput }) {
   const accountQuery = useHonoQuery<AccountGetOutput>(
     ['finance', 'accounts', 'get', id],
-    async (client) => {
-      const res = await client.api.finance.accounts.get.$post({
-        json: { id },
-      });
-      const data = await res.json();
+    async ({ finance }) => {
+      const data = await finance.getAccount({ id });
       return normalizeAccountWithTransactions(data);
     },
     {
@@ -193,21 +181,17 @@ export function useFinanceTransactions({
         limit,
       },
     ],
-    async (client) => {
-      const res = await client.api.finance.transactions.list.$post({
-        json: {
-          dateFrom: filters.dateFrom ? format(filters.dateFrom, 'yyyy-MM-dd') : undefined,
-          dateTo: filters.dateTo ? format(filters.dateTo, 'yyyy-MM-dd') : undefined,
-          account: filters.accountId && filters.accountId !== 'all' ? filters.accountId : undefined,
-          description: filters.description,
-          limit,
-          offset,
-          sortBy,
-          sortDirection: sortOrder as 'asc' | 'desc',
-        },
-      });
-      return res.json();
-    },
+    ({ finance }) =>
+      finance.listTransactions({
+        ...(filters.dateFrom ? { dateFrom: format(filters.dateFrom, 'yyyy-MM-dd') } : {}),
+        ...(filters.dateTo ? { dateTo: format(filters.dateTo, 'yyyy-MM-dd') } : {}),
+        ...(filters.accountId && filters.accountId !== 'all' ? { account: filters.accountId } : {}),
+        ...(filters.description ? { description: filters.description } : {}),
+        limit,
+        offset,
+        sortBy,
+        sortDirection: sortOrder as 'asc' | 'desc',
+      }),
     queryOptions,
   );
 

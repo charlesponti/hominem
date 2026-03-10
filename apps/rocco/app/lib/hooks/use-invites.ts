@@ -8,6 +8,9 @@ import type {
   InvitesDeclineOutput,
   InvitesDeleteInput,
   InvitesDeleteOutput,
+  InvitesGetByListInput,
+  InvitesGetReceivedInput,
+  InvitesGetSentInput,
   InvitesGetReceivedOutput,
   InvitesGetSentOutput,
   InvitesGetByListOutput,
@@ -36,19 +39,25 @@ const createOptimisticInvite = (variables: InvitesCreateInput): InvitesCreateOut
  * Get received invites
  */
 const useReceivedInvites = (token?: string) =>
-  useHonoQuery<InvitesGetReceivedOutput>(queryKeys.invites.received(token), async (client) => {
-    const res = await client.api.invites.received.$post({ json: { token } });
-    return res.json() as Promise<InvitesGetReceivedOutput>;
-  });
+  useHonoQuery<InvitesGetReceivedOutput>(
+    queryKeys.invites.received(token),
+    async ({ invites }) => {
+      const input: InvitesGetReceivedInput = {};
+      if (token !== undefined) {
+        input.token = token;
+      }
+      return invites.getReceived(input);
+    },
+  );
 
 /**
  * Get sent invites
  */
 export const useSentInvites = () =>
-  useHonoQuery<InvitesGetSentOutput>(queryKeys.invites.sent(), async (client) => {
-    const res = await client.api.invites.sent.$post({ json: {} });
-    return res.json() as Promise<InvitesGetSentOutput>;
-  });
+  useHonoQuery<InvitesGetSentOutput>(
+    queryKeys.invites.sent(),
+    async ({ invites }) => invites.getSent({} satisfies InvitesGetSentInput),
+  );
 
 /**
  * Get invites for a specific list
@@ -56,10 +65,9 @@ export const useSentInvites = () =>
 const useListInvites = (listId: string | undefined) =>
   useHonoQuery<InvitesGetByListOutput>(
     queryKeys.invites.byList(listId || ''),
-    async (client) => {
+    async ({ invites }) => {
       if (!listId) return [] as unknown as InvitesGetByListOutput;
-      const res = await client.api.invites['by-list'].$post({ json: { listId } });
-      return res.json() as Promise<InvitesGetByListOutput>;
+      return invites.getByList({ listId } satisfies InvitesGetByListInput);
     },
     {
       enabled: !!listId,
@@ -72,10 +80,7 @@ const useListInvites = (listId: string | undefined) =>
 export const useCreateInvite = () => {
   const utils = useHonoUtils();
   return useHonoMutation<InvitesCreateOutput, InvitesCreateInput>(
-    async (client, variables: InvitesCreateInput) => {
-      const res = await client.api.invites.create.$post({ json: variables });
-      return res.json() as Promise<InvitesCreateOutput>;
-    },
+    async ({ invites }, variables) => invites.create(variables),
     {
       onMutate: async (variables) => {
         await utils.cancel(queryKeys.invites.sent());
@@ -156,10 +161,7 @@ export const useCreateInvite = () => {
 export const useAcceptInvite = () => {
   const utils = useHonoUtils();
   return useHonoMutation<InvitesAcceptOutput, InvitesAcceptInput>(
-    async (client, variables: InvitesAcceptInput) => {
-      const res = await client.api.invites.accept.$post({ json: variables });
-      return res.json() as Promise<InvitesAcceptOutput>;
-    },
+    async ({ invites }, variables) => invites.accept(variables),
     {
       onMutate: async (variables) => {
         await utils.cancel(queryKeys.invites.received());
@@ -200,10 +202,7 @@ export const useAcceptInvite = () => {
 const useDeclineInvite = () => {
   const utils = useHonoUtils();
   return useHonoMutation<InvitesDeclineOutput, InvitesDeclineInput>(
-    async (client, variables: InvitesDeclineInput) => {
-      const res = await client.api.invites.decline.$post({ json: variables });
-      return res.json() as Promise<InvitesDeclineOutput>;
-    },
+    async ({ invites }, variables) => invites.decline(variables),
     {
       onMutate: async (variables) => {
         await utils.cancel(queryKeys.invites.received());
@@ -243,10 +242,7 @@ const useDeclineInvite = () => {
 export const useDeleteInvite = () => {
   const utils = useHonoUtils();
   return useHonoMutation<InvitesDeleteOutput, InvitesDeleteInput>(
-    async (client, variables: InvitesDeleteInput) => {
-      const res = await client.api.invites.delete.$post({ json: variables });
-      return res.json() as Promise<InvitesDeleteOutput>;
-    },
+    async ({ invites }, variables) => invites.delete(variables),
     {
       onMutate: async (variables) => {
         await utils.cancel(queryKeys.invites.sent());

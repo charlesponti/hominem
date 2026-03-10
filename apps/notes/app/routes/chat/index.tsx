@@ -11,8 +11,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const rpcClient = createServerHonoClient(session.access_token, request);
 
-  const res = await rpcClient.api.chats.$get({ query: { limit: '1' } });
-  const result = await res.json();
+  const result = await rpcClient.chats.list({ limit: 1 });
 
   if (Array.isArray(result) && result.length > 0) {
     const firstChat = result[0];
@@ -21,10 +20,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   }
 
-  const createRes = await rpcClient.api.chats.$post({
-    json: { title: 'New Chat' },
-  });
-  const createResult = await createRes.json();
+  const createResult = await rpcClient.chats.create({ title: 'New Chat' });
 
   if (!createResult || !createResult.id) {
     return redirect('/', { headers });

@@ -1,4 +1,3 @@
-import type { HonoClient } from '@hominem/hono-client';
 import type { HonoMutationOptions } from '@hominem/hono-client/react';
 import { useHonoMutation, useHonoUtils } from '@hominem/hono-client/react';
 import type { UserDeleteAccountOutput } from '@hominem/hono-rpc/types/user.types';
@@ -11,10 +10,7 @@ import { queryKeys } from '~/lib/query-keys';
 export const useDeleteAccount = (options?: HonoMutationOptions<UserDeleteAccountOutput, {}>) => {
   const utils = useHonoUtils();
   return useHonoMutation<UserDeleteAccountOutput, {}>(
-    async (client: HonoClient) => {
-      const res = await client.api.user['delete-account'].$post({ json: {} });
-      return (await res.json()) as unknown as UserDeleteAccountOutput;
-    },
+    ({ user }) => user.deleteAccount(),
     {
       ...options,
       onMutate: async () => {

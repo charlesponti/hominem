@@ -17,6 +17,12 @@ Each domain client SHALL encapsulate route paths, HTTP method wiring, and respon
 - **AND** it returns the typed domain output expected by application hooks
 - **AND** application hooks do not call `client.api...` directly for migrated place flows
 
+#### Scenario: Lists and invites domains wrap raw route calls
+- **WHEN** the lists or invites domain client performs an operation for a migrated Rocco hook
+- **THEN** it issues the underlying Hono request internally
+- **AND** it returns the typed domain output expected by application hooks
+- **AND** migrated Rocco list and invite hooks do not call `client.api...` directly
+
 ### Requirement: Pilot migration SHALL preserve places behavior
 The initial Rocco places migration SHALL preserve the existing functional behavior of place queries and mutations while moving their transport calls behind the `PlacesClient` interface.
 
@@ -31,3 +37,12 @@ The domain client pilot SHALL remove the known deep raw-client type hotspots fro
 #### Scenario: Clean project-graph typecheck succeeds after migration
 - **WHEN** the repository runs the existing type generation and typecheck workflow from a clean graph state
 - **THEN** the migrated provider and Rocco places hooks do not fail with raw-client-related `TS2589` instantiation errors
+
+### Requirement: The app-facing API client SHALL not expose raw route access after domain migration completes
+Once the remaining Notes, Finance, and Mobile consumers have equivalent domain clients, the shared app-facing `ApiClient` contract SHALL stop exposing the temporary raw route compatibility escape hatch.
+
+#### Scenario: Compatibility escape hatch is removed after domain migration completion
+- **WHEN** the places, lists, and invites Rocco hooks have moved to domain methods
+- **AND** the remaining Notes, Finance, and Mobile consumers no longer depend on raw route access
+- **THEN** application hook callbacks use only domain-scoped client properties
+- **AND** the shared `ApiClient` type no longer includes a raw `api` property
