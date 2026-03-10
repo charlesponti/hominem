@@ -226,7 +226,7 @@ const useUpdatePlace = (options?: HonoMutationOptions<PlaceUpdateOutput, PlaceUp
  */
 const useDeletePlace = (options?: HonoMutationOptions<PlaceDeleteOutput, PlaceDeleteInput>) => {
   const utils = useHonoUtils();
-  return useHonoMutation(
+  return useHonoMutation<PlaceDeleteOutput, PlaceDeleteInput>(
     async (client: HonoClient, variables: PlaceDeleteInput) => {
       const res = await client.api.places.delete.$post({ json: variables });
       return res.json();

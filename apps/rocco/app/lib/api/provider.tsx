@@ -1,5 +1,6 @@
 import { useAuthContext, useSafeAuth } from '@hominem/auth';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
+import type { ClientConfig } from '@hominem/hono-client';
 import { createHonoClient } from '@hominem/hono-rpc/client';
 import { useCallback } from 'react';
 import type { ReactNode } from 'react';
@@ -24,17 +25,17 @@ function HonoProviderInner({ children, baseUrl }: HonoProviderProps) {
     }
   }, [authClient]);
 
+  const config: ClientConfig = {
+    baseUrl,
+    createClient: (nextBaseUrl, options) => createHonoClient(nextBaseUrl, options),
+    getAuthToken,
+    onError: (error) => {
+      console.error('Hono API error:', error);
+    },
+  };
+
   return (
-    <BaseHonoProvider
-      config={{
-        baseUrl,
-        createClient: (nextBaseUrl, options) => createHonoClient(nextBaseUrl, options),
-        getAuthToken,
-        onError: (error) => {
-          console.error('Hono API error:', error);
-        },
-      }}
-    >
+    <BaseHonoProvider config={config}>
       {children}
     </BaseHonoProvider>
   );
@@ -56,19 +57,18 @@ interface HonoProviderProps {
 
 export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
   const authContext = useSafeAuth();
+  const config: ClientConfig = {
+    baseUrl,
+    createClient: (nextBaseUrl, options) => createHonoClient(nextBaseUrl, options),
+    getAuthToken: async () => null,
+    onError: (error) => {
+      console.error('Hono API error:', error);
+    },
+  };
 
   if (!authContext) {
     return (
-      <BaseHonoProvider
-        config={{
-          baseUrl,
-          createClient: (nextBaseUrl, options) => createHonoClient(nextBaseUrl, options),
-          getAuthToken: async () => null,
-          onError: (error) => {
-            console.error('Hono API error:', error);
-          },
-        }}
-      >
+      <BaseHonoProvider config={config}>
         {children}
       </BaseHonoProvider>
     );

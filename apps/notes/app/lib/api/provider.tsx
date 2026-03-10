@@ -1,4 +1,5 @@
 import { useAuthContext, useSafeAuth } from '@hominem/auth';
+import type { ClientConfig } from '@hominem/hono-client';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
 import { createHonoClient } from '@hominem/hono-rpc/client';
 import { useCallback } from 'react';
@@ -38,18 +39,17 @@ function HonoProviderInner({ children, baseUrl }: HonoProviderProps) {
     }
   }, [authClient]);
 
+  const config: ClientConfig = {
+    baseUrl,
+    createClient: (nextBaseUrl, options) => createHonoClient(nextBaseUrl, options),
+    getAuthToken,
+    onError: (error) => {
+      console.error('Hono API error:', error);
+    },
+  };
+
   return (
-    <BaseHonoProvider
-      queryClient={queryClient}
-      config={{
-        baseUrl,
-        createClient: (nextBaseUrl, options) => createHonoClient(nextBaseUrl, options),
-        getAuthToken,
-        onError: (error) => {
-          console.error('Hono API error:', error);
-        },
-      }}
-    >
+    <BaseHonoProvider queryClient={queryClient} config={config}>
       {children}
     </BaseHonoProvider>
   );
@@ -58,21 +58,19 @@ function HonoProviderInner({ children, baseUrl }: HonoProviderProps) {
 export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
   // Check if AuthContext is available (client-side safe)
   const authContext = useSafeAuth();
+  const config: ClientConfig = {
+    baseUrl,
+    createClient: (nextBaseUrl, options) => createHonoClient(nextBaseUrl, options),
+    getAuthToken: async () => null,
+    onError: (error) => {
+      console.error('Hono API error:', error);
+    },
+  };
 
   if (!authContext) {
     // During SSR, render without auth token support
     return (
-      <BaseHonoProvider
-        queryClient={getQueryClient()}
-        config={{
-          baseUrl,
-          createClient: (nextBaseUrl, options) => createHonoClient(nextBaseUrl, options),
-          getAuthToken: async () => null,
-          onError: (error) => {
-            console.error('Hono API error:', error);
-          },
-        }}
-      >
+      <BaseHonoProvider queryClient={getQueryClient()} config={config}>
         {children}
       </BaseHonoProvider>
     );
