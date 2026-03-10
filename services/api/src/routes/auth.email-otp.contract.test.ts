@@ -206,4 +206,35 @@ describe('auth email otp contract', () => {
     });
     expect(sessionResponse.status).toBe(401);
   }, 15000);
+
+  test('2.3 replayed otp verification attempts fail deterministically in test mode', async () => {
+    const createServer = await importServer();
+    const app = createServer();
+    const email = `otp-replay-${Date.now()}@hominem.test`;
+    await requestOtp(app, email);
+    const otpResponse = await fetchOtp(app, email);
+
+    const firstResponse = await app.request('http://localhost/api/auth/email-otp/verify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        otp: otpResponse.otp,
+      }),
+    });
+    expect(firstResponse.status).toBe(200);
+
+    const replayResponse = await app.request('http://localhost/api/auth/email-otp/verify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        otp: otpResponse.otp,
+      }),
+    });
+
+    expect(replayResponse.status).toBe(400);
+    const replayBody = (await replayResponse.json()) as { error: string };
+    expect(replayBody.error).toBe('otp_replayed');
+  }, 15000);
 });

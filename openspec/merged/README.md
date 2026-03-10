@@ -60,6 +60,7 @@ Completion records must use `YYYY-MM-DD-<change-slug>.md`.
 | 2026-03-10 | refactor-remove-deprecated-rpc-functions-plan | completed | [2026-03-10-refactor-remove-deprecated-rpc-functions-plan.md](2026-03-10-refactor-remove-deprecated-rpc-functions-plan.md) |
 | 2026-03-10 | remove-supabase | completed | [2026-03-10-remove-supabase.md](2026-03-10-remove-supabase.md) |
 | 2026-03-10 | rest-api-architecture-migration | completed | [2026-03-10-rest-api-architecture-migration.md](2026-03-10-rest-api-architecture-migration.md) |
+| 2026-03-10 | restore-openspec-conventions | completed | [2026-03-10-restore-openspec-conventions.md](2026-03-10-restore-openspec-conventions.md) |
 | 2026-03-10 | type-and-rpc-performance-project | completed | [2026-03-10-type-and-rpc-performance-project.md](2026-03-10-type-and-rpc-performance-project.md) |
 | 2026-03-10 | typescript-refactor | completed | [2026-03-10-typescript-refactor.md](2026-03-10-typescript-refactor.md) |
 | 2026-03-10 | void-design-alignment-plan | completed | [2026-03-10-void-design-alignment-plan.md](2026-03-10-void-design-alignment-plan.md) |

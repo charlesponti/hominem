@@ -5,17 +5,35 @@
 
 import type { MockAuthConfig } from './auth.types'
 
+interface ProcessEnvShape {
+  VITE_USE_MOCK_AUTH?: string
+  VITE_GOOGLE_AUTH_ENABLED?: string
+  VITE_API_BASE_URL?: string
+}
+
+interface GlobalWithProcess {
+  process?: {
+    env?: ProcessEnvShape
+  }
+}
+
+function getProcessEnv(): ProcessEnvShape {
+  const globalWithProcess = globalThis as GlobalWithProcess
+  return globalWithProcess.process?.env ?? {}
+}
+
 /**
  * Get the authentication configuration based on environment variables
  */
 export function getAuthConfig(): MockAuthConfig {
-  const useMockAuth = process.env.VITE_USE_MOCK_AUTH === 'true'
-  const oauthEnabled = process.env.VITE_GOOGLE_AUTH_ENABLED === 'true'
+  const env = getProcessEnv()
+  const useMockAuth = env.VITE_USE_MOCK_AUTH === 'true'
+  const oauthEnabled = env.VITE_GOOGLE_AUTH_ENABLED === 'true'
 
   return {
     useMockAuth,
     oauthEnabled,
-    apiBaseUrl: process.env.VITE_API_BASE_URL || 'http://localhost:5000',
+    apiBaseUrl: env.VITE_API_BASE_URL || 'http://localhost:5000',
   }
 }
 

@@ -13,8 +13,9 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export default function SecuritySettingsPage() {
-  const { register } = usePasskeyAuth();
+  const { deletePasskey, register } = usePasskeyAuth();
   const handleAdd = useCallback(() => register(), [register]);
+  const handleDelete = useCallback((id: string) => deletePasskey(id), [deletePasskey]);
 
   return (
     <div className="max-w-xl mx-auto py-8 px-4 space-y-8">
@@ -24,7 +25,7 @@ export default function SecuritySettingsPage() {
           Manage sign-in methods and authentication settings.
         </p>
       </div>
-      <PasskeyManagement onAdd={handleAdd} />
+      <PasskeyManagement onAdd={handleAdd} onDelete={handleDelete} />
     </div>
   );
 }

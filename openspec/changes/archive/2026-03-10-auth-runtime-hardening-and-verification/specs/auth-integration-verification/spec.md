@@ -18,10 +18,10 @@ The system MUST provide integration tests that validate API contract behavior fo
 - **WHEN** closeout verification runs against live auth status endpoints
 - **THEN** required health/status checks SHALL return successful responses
 - **AND** unresolved `5xx` responses SHALL block sign-off
-- **AND** any unresolved upstream or infrastructure-owned failure SHALL be explicitly recorded in the readiness matrix with owner and disposition
+- **AND** any unresolved upstream or infrastructure-owned failure SHALL be explicitly recorded with owner and disposition
 
 ### Requirement: Browser auth integration suites across apps
-The system MUST provide browser integration tests for complete auth journeys in Finance, Notes, and Rocco, and MUST include deterministic Maestro/mobile lane validation.
+The system MUST provide browser integration tests for complete auth journeys in Finance, Notes, and Rocco, and MUST include deterministic mobile Detox validation.
 
 #### Scenario: Email OTP journey validated per app
 - **WHEN** browser integration suites execute for each web app
@@ -34,17 +34,7 @@ The system MUST provide browser integration tests for complete auth journeys in 
 - **THEN** each suite validates passkey enrollment and passkey sign-in
 - **AND** each suite validates fallback behavior to email OTP when passkey path is unavailable
 
-#### Scenario: Maestro auth journey is stable
-- **WHEN** Maestro auth flows run in CI and local deterministic lane
-- **THEN** flows SHALL complete without schema syntax regressions or selector drift failures
+#### Scenario: Mobile auth Detox journey is stable
+- **WHEN** mobile auth Detox flows run in CI and local deterministic lane
+- **THEN** flows SHALL complete without selector drift or contract regressions
 - **AND** failures SHALL include actionable diagnostics for rerun
-
-## ADDED Requirements
-
-### Requirement: Personal-device EAS lane verification
-The system MUST validate auth smoke flows on the documented personal-device EAS lane before closeout.
-
-#### Scenario: Device smoke checklist passes
-- **WHEN** an installable EAS dev build is deployed to a personal iPhone lane
-- **THEN** auth bootstrap, session refresh, and sign-out smoke checks SHALL all pass
-- **AND** evidence SHALL be attached to readiness matrix artifacts

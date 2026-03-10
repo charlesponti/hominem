@@ -1,5 +1,6 @@
+import { readAuthErrorMessage } from '@hominem/auth';
 import { AuthScaffold, EmailEntryForm, usePasskeyAuth } from '@hominem/ui';
-import { redirect, useActionData, type ActionFunctionArgs } from 'react-router';
+import { redirect, useActionData, useLocation, type ActionFunctionArgs } from 'react-router';
 
 import { getServerSession } from '~/lib/auth.server';
 import { serverEnv } from '~/lib/env';
@@ -43,12 +44,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function AuthPage() {
   const actionData = useActionData<typeof action>();
+  const location = useLocation();
   const {
     authenticate,
     isLoading: isPasskeyLoading,
     error: passkeyError,
     isSupported: isPasskeySupported,
   } = usePasskeyAuth();
+  const callbackError = readAuthErrorMessage(new URLSearchParams(location.search));
 
   const handlePasskeyAuth = async () => {
     const result = await authenticate();
@@ -59,7 +62,7 @@ export default function AuthPage() {
 
   const emailEntryProps = {
     action: '/auth',
-    error: actionData?.error,
+    error: actionData?.error ?? callbackError ?? passkeyError ?? undefined,
     ...(isPasskeySupported && { onPasskeyClick: handlePasskeyAuth }),
     ...(isPasskeyLoading && { loadingMessage: 'Authenticating with passkey...' }),
   };
@@ -67,11 +70,6 @@ export default function AuthPage() {
   return (
     <AuthScaffold title="Continue to Rocco" description="Enter your email to sign in">
       <EmailEntryForm {...emailEntryProps} />
-      {passkeyError && (
-        <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 text-sm">
-          {passkeyError}
-        </div>
-      )}
     </AuthScaffold>
   );
 }

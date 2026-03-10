@@ -78,4 +78,40 @@ describe('auth token response contract', () => {
     const body = (await response.json()) as { error: string };
     expect(body.error).toBe('unsupported_grant_type');
   });
+
+  test('POST /api/auth/refresh accepts camelCase refresh token input', async () => {
+    mockRotateRefreshToken.mockResolvedValueOnce({
+      ok: true,
+      accessToken: 'access-refresh-token',
+      refreshToken: 'refresh-next-token',
+      tokenType: 'Bearer',
+      expiresIn: 600,
+      sessionId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      refreshFamilyId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    });
+
+    const app = createServer();
+    const response = await app.request('http://localhost/api/auth/refresh', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        refreshToken: 'test-refresh-token',
+      }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      accessToken: string;
+      refreshToken: string;
+      tokenType: string;
+      expiresIn: number;
+    };
+
+    expect(body.accessToken).toBe('access-refresh-token');
+    expect(body.refreshToken).toBe('refresh-next-token');
+    expect(body.tokenType).toBe('Bearer');
+    expect(body.expiresIn).toBe(600);
+  });
 });

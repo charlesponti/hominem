@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 
-import { db } from '@hominem/db';
+import { db, sql } from '@hominem/db';
 
 import { env } from '../env';
 import { issueAccessToken } from './tokens';
@@ -32,6 +32,10 @@ function revokedSessionKey(sessionId: string) {
 
 function sessionStateKey(sessionId: string) {
   return `${SESSION_STATE_PREFIX}${sessionId}`;
+}
+
+function jsonbStringArray(value: string[]) {
+  return sql<string[]>`${JSON.stringify(value)}::jsonb`;
 }
 
 async function getRedisClient() {
@@ -77,7 +81,7 @@ async function ensureAuthSession(input: {
         .updateTable('auth_sessions')
         .set({
           last_seen_at: nowIso(),
-          ...(input.amr ? { amr: input.amr } : {}),
+          ...(input.amr ? { amr: jsonbStringArray(input.amr) } : {}),
         })
         .where((eb) => eb('id', '=', existing.id))
         .returningAll()
@@ -94,7 +98,7 @@ async function ensureAuthSession(input: {
       session_state: input.sessionState ?? randomUUID(),
       created_at: nowIso(),
       last_seen_at: nowIso(),
-      ...(input.amr ? { amr: input.amr } : {}),
+      ...(input.amr ? { amr: jsonbStringArray(input.amr) } : {}),
       ...(input.acr ? { acr: input.acr } : {}),
       ...(input.ipHash ? { ip_hash: input.ipHash } : {}),
       ...(input.userAgentHash ? { user_agent_hash: input.userAgentHash } : {}),

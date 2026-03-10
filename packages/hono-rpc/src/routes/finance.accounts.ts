@@ -2,7 +2,9 @@ import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import * as z from 'zod'
 import { randomUUID } from 'crypto'
+import { STEP_UP_ACTIONS, configureStepUpStore, hasRecentStepUp, isFreshPasskeyAuth } from '@hominem/auth/server'
 import { db } from '@hominem/db'
+import { redis } from '@hominem/services/redis'
 import type { Selectable } from 'kysely'
 import type { Database } from '@hominem/db'
 import { NotFoundError } from '../errors'
@@ -32,6 +34,8 @@ import type { AccountData, AccountType, PlaidConnection, TransactionData } from 
 import type { TransactionType } from '../types/finance/shared.types'
 
 const emptyBodySchema = z.object({})
+
+configureStepUpStore(redis)
 
 function normalizeAccountType(value: string): AccountType {
   if (
@@ -206,6 +210,24 @@ export const accountsRoutes = new Hono<AppContext>()
   .post('/delete', authMiddleware, zValidator('json', accountDeleteSchema), async (c) => {
     const userId = c.get('userId')!
     const input = c.req.valid('json')
+    const auth = c.get('auth')
+
+    const hasStepUp =
+      (await hasRecentStepUp(userId, STEP_UP_ACTIONS.FINANCE_ACCOUNT_DELETE).catch(() => false)) ||
+      isFreshPasskeyAuth({
+        amr: auth?.amr,
+        authTime: auth?.authTime,
+      })
+
+    if (!hasStepUp) {
+      return c.json(
+        {
+          error: 'step_up_required',
+          action: STEP_UP_ACTIONS.FINANCE_ACCOUNT_DELETE,
+        },
+        403,
+      )
+    }
 
     await getAccountWithOwnershipCheck(input.id, userId)
 

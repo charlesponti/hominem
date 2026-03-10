@@ -292,6 +292,13 @@ describe('v2 command contracts', () => {
             runCaptured([...testCase.argv, '--format', format]),
           );
 
+          if (!testCase.expectedExitCodes.includes(result.exitCode)) {
+            console.error(`FAIL: ${testCase.name} with format ${format}`);
+            console.error(`  Expected exit codes: ${testCase.expectedExitCodes.join(', ')}`);
+            console.error(`  Actual exit code: ${result.exitCode}`);
+            console.error(`  stdout: ${result.stdout.substring(0, 200)}`);
+            console.error(`  stderr: ${result.stderr.substring(0, 200)}`);
+          }
           expect(testCase.expectedExitCodes.includes(result.exitCode)).toBeTrue();
 
           if (format === 'text') {

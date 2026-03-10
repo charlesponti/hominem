@@ -1,4 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+
+import { STEP_UP_ACTIONS } from '@hominem/auth/step-up-actions';
 
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
 
@@ -123,6 +125,11 @@ export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
   const { callbackRoute = '/auth/passkey/callback', redirectTo } = options;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSupported, setIsSupported] = useState(false);
+
+  useEffect(() => {
+    setIsSupported(typeof navigator !== 'undefined' && !!navigator.credentials);
+  }, []);
 
   const authenticate = useCallback(async (): Promise<PasskeyAuthResult | null> => {
     setIsLoading(true);
@@ -224,6 +231,79 @@ export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
     }
   }, [callbackRoute, redirectTo]);
 
+  const requireStepUp = useCallback(
+    async (action: string): Promise<boolean> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const optionsResponse = await fetch(`${API_URL}/api/auth/passkey/auth/options`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+
+        if (!optionsResponse.ok) {
+          const err = (await optionsResponse.json()) as PasskeyAuthError;
+          throw new Error(err.message || 'Failed to get passkey options');
+        }
+
+        const rawPayload = (await optionsResponse.json()) as
+          | { options?: RawPublicKeyCredentialRequestOptions }
+          | RawPublicKeyCredentialRequestOptions;
+        const rawOptions =
+          (rawPayload as { options?: RawPublicKeyCredentialRequestOptions }).options ??
+          (rawPayload as RawPublicKeyCredentialRequestOptions);
+        const publicKeyOptions = normalizeRequestOptions(rawOptions);
+
+        const credential = (await navigator.credentials.get({
+          publicKey: publicKeyOptions,
+        })) as PublicKeyCredential | null;
+
+        if (!credential) {
+          throw new Error('No passkey credential provided');
+        }
+
+        const assertionResponse = credential.response as AuthenticatorAssertionResponse;
+        const verifyResponse = await fetch(`${API_URL}/api/auth/passkey/auth/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            action,
+            response: {
+              id: credential.id,
+              rawId: arrayBufferToBase64Url(credential.rawId),
+              type: credential.type,
+              response: {
+                clientDataJSON: arrayBufferToBase64Url(assertionResponse.clientDataJSON),
+                authenticatorData: arrayBufferToBase64Url(assertionResponse.authenticatorData),
+                signature: arrayBufferToBase64Url(assertionResponse.signature),
+                userHandle: assertionResponse.userHandle
+                  ? arrayBufferToBase64Url(assertionResponse.userHandle)
+                  : null,
+              },
+            },
+          }),
+        });
+
+        if (!verifyResponse.ok) {
+          const err = (await verifyResponse.json()) as PasskeyAuthError;
+          throw new Error(err.message || 'Passkey step-up verification failed');
+        }
+
+        return true;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Passkey step-up verification failed';
+        setError(message);
+        return false;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
+
   /**
    * Register a new passkey for the currently authenticated user.
    * Requires the user to already have a valid app session (access token cookie).
@@ -233,6 +313,11 @@ export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
     setError(null);
 
     try {
+      const stepUpSatisfied = await requireStepUp(STEP_UP_ACTIONS.PASSKEY_REGISTER);
+      if (!stepUpSatisfied) {
+        return false;
+      }
+
       // Step 1: Get registration options from server
       const optionsResponse = await fetch(`${API_URL}/api/auth/passkey/register/options`, {
         method: 'POST',
@@ -300,14 +385,48 @@ export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [requireStepUp]);
+
+  const deletePasskey = useCallback(async (id: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const stepUpSatisfied = await requireStepUp(STEP_UP_ACTIONS.PASSKEY_DELETE);
+      if (!stepUpSatisfied) {
+        return false;
+      }
+
+      const response = await fetch(`${API_URL}/api/auth/passkey/delete`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+
+      if (!response.ok) {
+        const err = (await response.json()) as PasskeyAuthError;
+        throw new Error(err.message || 'Failed to delete passkey');
+      }
+
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete passkey';
+      setError(message);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [requireStepUp]);
 
   return {
     authenticate,
+    deletePasskey,
     register,
+    requireStepUp,
     isLoading,
     error,
-    isSupported: typeof navigator !== 'undefined' && !!navigator.credentials,
+    isSupported,
   };
 }
 

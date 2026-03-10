@@ -1,22 +1,30 @@
 import { logger } from '@hominem/utils/logger'
 import { getSetCookieHeaders } from '@hominem/utils/headers'
 
+import { resolveAuthRedirect } from './redirect-policy'
 import type { AuthConfig, HominemSession, HominemUser, ServerAuthResult } from './types'
 
-export function resolveSafeAuthRedirect(next: string | null | undefined, fallback: string): string {
-  if (!next || next.length === 0) {
-    return fallback
+export function resolveSafeAuthRedirect(
+  next: string | null | undefined,
+  fallback: string,
+  allowedPrefixes: string[] = [fallback]
+): string {
+  const resolution = resolveAuthRedirect(next, fallback, allowedPrefixes)
+
+  if (resolution.rejectedReason === 'non_local') {
+    logger.warn('[auth.redirect] rejected non-local redirect target', { next, fallback })
+  } else if (resolution.rejectedReason === 'protocol_relative') {
+    logger.warn('[auth.redirect] rejected protocol-relative redirect target', { next, fallback })
+  } else if (resolution.rejectedReason === 'disallowed') {
+    logger.warn('[auth.redirect] rejected disallowed redirect target', {
+      next,
+      fallback,
+      pathname: resolution.rejectedPathname,
+      allowedPrefixes,
+    })
   }
 
-  if (!next.startsWith('/')) {
-    return fallback
-  }
-
-  if (next.startsWith('//')) {
-    return fallback
-  }
-
-  return next
+  return resolution.safeRedirect
 }
 
 interface ServerSessionPayload {

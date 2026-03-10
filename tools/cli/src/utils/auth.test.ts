@@ -1,20 +1,10 @@
-import { beforeEach, describe, expect, mock, test } from 'bun:test';
-
-const postMock = mock();
-const isAxiosErrorMock = mock(() => true);
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
 
 const loadTokensMock = mock();
 const saveTokensMock = mock();
 const clearTokensMock = mock();
 const openMock = mock();
 const getPortMock = mock();
-
-mock.module('axios', () => ({
-  default: {
-    post: postMock,
-    isAxiosError: isAxiosErrorMock,
-  },
-}));
 
 mock.module('./secure-store', () => ({
   SecureStoreError: class SecureStoreError extends Error {},
@@ -34,10 +24,10 @@ mock.module('get-port', () => ({
 const { deviceCodeLogin, getAccessToken, interactiveLogin } = await import('./auth');
 
 describe('cli auth utils', () => {
+  let fetchMock: ReturnType<typeof mock>;
+  const originalFetch = globalThis.fetch;
+
   beforeEach(() => {
-    postMock.mockReset();
-    isAxiosErrorMock.mockReset();
-    isAxiosErrorMock.mockImplementation(() => true);
     loadTokensMock.mockReset();
     saveTokensMock.mockReset();
     clearTokensMock.mockReset();
@@ -45,6 +35,14 @@ describe('cli auth utils', () => {
     openMock.mockResolvedValue(undefined);
     getPortMock.mockReset();
     getPortMock.mockResolvedValue(39217);
+    
+    // Mock global fetch
+    fetchMock = mock();
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
   });
 
   test('getAccessToken refreshes expired token and persists metadata-rich response', async () => {
@@ -60,8 +58,10 @@ describe('cli auth utils', () => {
       issuerBaseUrl: 'http://localhost:3000',
     });
 
-    postMock.mockResolvedValueOnce({
-      data: {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
         access_token: 'fresh-access',
         refresh_token: 'refresh-token-2',
         token_type: 'Bearer',
@@ -70,17 +70,18 @@ describe('cli auth utils', () => {
         provider: 'better-auth',
         session_id: '33333333-3333-4333-8333-333333333333',
         refresh_family_id: '44444444-4444-4444-8444-444444444444',
-      },
-    });
+      }),
+    } as Response);
 
     const token = await getAccessToken();
 
     expect(token).toBe('fresh-access');
-    expect(postMock).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:3000/api/auth/token',
       expect.objectContaining({
-        grant_type: 'refresh_token',
-        refresh_token: 'refresh-token-1',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: expect.stringContaining('refresh_token'),
       }),
     );
 
@@ -123,7 +124,7 @@ describe('cli auth utils', () => {
       issuerBaseUrl: 'http://localhost:3000',
     });
 
-    postMock.mockImplementationOnce(async () => {
+    fetchMock.mockImplementationOnce(async () => {
       throw new Error('network down');
     });
 
@@ -136,11 +137,13 @@ describe('cli auth utils', () => {
   });
 
   test('interactiveLogin times out when callback never arrives', async () => {
-    postMock.mockResolvedValueOnce({
-      data: {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: async () => ({
         authorization_url: 'https://example.test/authorize',
-      },
-    });
+      }),
+    } as Response);
 
     await expect(
       interactiveLogin({

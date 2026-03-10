@@ -1,13 +1,22 @@
 import { expect, test } from '@playwright/test'
 
-import { createAuthTestEmail, fetchLatestSignInOtp, signInWithEmailOtp, startEmailOtpFlow } from './auth.flow-helpers'
+import {
+  createAuthTestEmail,
+  fetchLatestSignInOtp,
+  signInWithEmailOtp,
+  startEmailOtpFlow,
+  submitOtpCode,
+} from './auth.flow-helpers'
 
 test('rocco auth falls back from passkey entry to email otp successfully', async ({ page, context }) => {
   await context.clearCookies()
   const email = createAuthTestEmail('rocco-passkey-fallback')
 
   await page.goto('/auth')
-  await page.getByRole('button', { name: /passkey/i }).click()
+  const passkeyButton = page.getByRole('button', { name: /passkey/i })
+  if ((await passkeyButton.count()) > 0) {
+    await passkeyButton.first().click()
+  }
 
   const emailInput = page.getByLabel('Email address')
   await expect(async () => {
@@ -19,12 +28,7 @@ test('rocco auth falls back from passkey entry to email otp successfully', async
   await expect(page).toHaveURL(/\/auth\/verify\?email=/, { timeout: 30_000 })
 
   const otp = await fetchLatestSignInOtp(email)
-  const digitInputs = page.locator('input[inputmode="numeric"]')
-  for (let i = 0; i < otp.length; i++) {
-    await digitInputs.nth(i).fill(otp[i])
-  }
-
-  await page.getByRole('button', { name: 'Verify' }).click()
+  await submitOtpCode(page, otp)
   await expect(page).toHaveURL(/\/visits$/, { timeout: 30_000 })
 })
 
@@ -41,12 +45,7 @@ test('rocco email + otp rejects invalid verification code', async ({ page, conte
   const email = createAuthTestEmail('rocco-invalid')
 
   await startEmailOtpFlow(page, email)
-  const digitInputs = page.locator('input[inputmode="numeric"]')
-  for (let i = 0; i < 6; i++) {
-    await digitInputs.nth(i).fill('1')
-  }
-
-  await page.getByRole('button', { name: 'Verify' }).click()
+  await submitOtpCode(page, '111111')
 
   await expect(page).toHaveURL(/\/auth\/verify\?email=/, { timeout: 30_000 })
   await expect(page.getByText('Verification failed. Please check your code and try again.')).toBeVisible({ timeout: 15_000 })

@@ -6,6 +6,7 @@ export interface OtpRecord {
   type: string;
   createdAt: number;
   expiresAt: number;
+  usedAt: number | null;
 }
 
 const otpRecords = new Map<string, OtpRecord[]>();
@@ -35,7 +36,8 @@ export function recordTestOtp(input: { email: string; otp: string; type: string 
   }
 
   const nowMs = getNowMs();
-  const ttlMs = Math.max(1, env.AUTH_TEST_OTP_TTL_SECONDS) * 1000;
+  const ttlSeconds = Math.min(env.AUTH_TEST_OTP_TTL_SECONDS, env.AUTH_EMAIL_OTP_EXPIRES_SECONDS);
+  const ttlMs = Math.max(1, ttlSeconds) * 1000;
   const key = getRecordKey(input.email);
   const next = pruneExpired(otpRecords.get(key) ?? [], nowMs);
   next.push({
@@ -44,6 +46,7 @@ export function recordTestOtp(input: { email: string; otp: string; type: string 
     type: input.type,
     createdAt: nowMs,
     expiresAt: nowMs + ttlMs,
+    usedAt: null,
   });
   otpRecords.set(key, next);
 }
@@ -66,6 +69,38 @@ export function getLatestTestOtp(input: { email: string; type?: string | undefin
   }
 
   return null;
+}
+
+export function consumeTestOtp(input: { email: string; otp: string; type?: string | undefined }) {
+  const nowMs = getNowMs();
+  const key = getRecordKey(input.email);
+  const records = otpRecords.get(key) ?? [];
+
+  for (let i = records.length - 1; i >= 0; i -= 1) {
+    const current = records[i];
+    if (!current) {
+      continue;
+    }
+    if (input.type && current.type !== input.type) {
+      continue;
+    }
+    if (current.otp !== input.otp) {
+      continue;
+    }
+    if (current.expiresAt <= nowMs) {
+      otpRecords.set(key, pruneExpired(records, nowMs));
+      return { status: 'expired' as const };
+    }
+    if (current.usedAt) {
+      return { status: 'replayed' as const };
+    }
+    current.usedAt = nowMs;
+    otpRecords.set(key, records);
+    return { status: 'consumed' as const, record: current };
+  }
+
+  otpRecords.set(key, pruneExpired(records, nowMs));
+  return { status: 'missing' as const };
 }
 
 export function clearTestOtpStore(input?: { email?: string | undefined }) {

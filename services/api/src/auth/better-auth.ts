@@ -20,6 +20,66 @@ import { env } from '../env';
 import { sendEmail } from '../lib/email';
 import { recordTestOtp } from './test-otp-store';
 
+const userFieldMappings = {
+  emailVerified: 'email_verified',
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+}
+
+const sessionFieldMappings = {
+  expiresAt: 'expires_at',
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  ipAddress: 'ip_address',
+  userAgent: 'user_agent',
+  userId: 'user_id',
+}
+
+const accountFieldMappings = {
+  accountId: 'account_id',
+  providerId: 'provider_id',
+  userId: 'user_id',
+  accessToken: 'access_token',
+  refreshToken: 'refresh_token',
+  idToken: 'id_token',
+  accessTokenExpiresAt: 'access_token_expires_at',
+  refreshTokenExpiresAt: 'refresh_token_expires_at',
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+}
+
+const verificationFieldMappings = {
+  expiresAt: 'expires_at',
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+}
+
+const passkeyFieldMappings = {
+  publicKey: 'public_key',
+  userId: 'user_id',
+  credentialID: 'credential_id',
+  deviceType: 'device_type',
+  backedUp: 'backed_up',
+  createdAt: 'created_at',
+}
+
+const jwksFieldMappings = {
+  publicKey: 'public_key',
+  privateKey: 'private_key',
+  createdAt: 'created_at',
+  expiresAt: 'expires_at',
+}
+
+const deviceCodeFieldMappings = {
+  deviceCode: 'device_code',
+  userCode: 'user_code',
+  userId: 'user_id',
+  expiresAt: 'expires_at',
+  lastPolledAt: 'last_polled_at',
+  pollingInterval: 'polling_interval',
+  clientId: 'client_id',
+}
+
 function getTrustedOrigins() {
   const origins = new Set([
     env.BETTER_AUTH_URL,
@@ -83,7 +143,8 @@ function getAuthPlugins() {
       ],
       schema: {
         passkey: {
-          modelName: 'userPasskey',
+          modelName: 'user_passkey',
+          fields: passkeyFieldMappings,
         },
       },
     }),
@@ -138,7 +199,8 @@ function getAuthPlugins() {
     jwt({
       schema: {
         jwks: {
-          modelName: 'userJwks',
+          modelName: 'user_jwks',
+          fields: jwksFieldMappings,
         },
       },
     }),
@@ -153,7 +215,8 @@ function getAuthPlugins() {
       interval: '5s',
       schema: {
         deviceCode: {
-          modelName: 'userDeviceCode',
+          modelName: 'user_device_code',
+          fields: deviceCodeFieldMappings,
         },
       },
     }),
@@ -210,16 +273,20 @@ const betterAuthOptions: BetterAuthOptions = {
   trustedOrigins: getTrustedOrigins(),
   advanced: getAdvancedOptions(),
   user: {
-    modelName: 'authUser',
+    modelName: 'users',
+    fields: userFieldMappings,
   },
   session: {
-    modelName: 'userSession',
+    modelName: 'user_session',
+    fields: sessionFieldMappings,
   },
   account: {
-    modelName: 'userAccount',
+    modelName: 'user_account',
+    fields: accountFieldMappings,
   },
   verification: {
-    modelName: 'userVerification',
+    modelName: 'user_verification',
+    fields: verificationFieldMappings,
   },
   emailAndPassword: {
     enabled: true,

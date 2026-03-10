@@ -17,6 +17,7 @@ import { authStateMachine, initialAuthState, type AuthState } from './auth/types
 import { resolveIsLoadingAuth, type AuthStatusCompat } from './auth/provider-utils'
 import { runAuthBoot } from './auth/boot'
 import { markAuthPhaseStart, recordAuthEvent } from './auth/auth-event-log'
+import { runSingleflight } from './auth/singleflight'
 import { markStartupPhase } from './performance/startup-metrics'
 
 const LOCAL_MIGRATION_KEY = 'hominem_mobile_local_migration_v1'
@@ -54,6 +55,16 @@ interface RefreshResponse {
   refreshToken: string
   expiresIn: number
   tokenType: 'Bearer'
+}
+
+function hasValidSignInResponse(input: SignInResponse) {
+  return (
+    input.accessToken.length > 0 &&
+    input.refreshToken.length > 0 &&
+    input.expiresIn > 0 &&
+    input.user.id.length > 0 &&
+    input.user.email.length > 0
+  )
 }
 
 function toAuthUserProfile(localProfile: LocalUserProfile | null): AuthState['user'] {
@@ -117,6 +128,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const apiAccessTokenRef = useRef<string | null>(null)
   const apiRefreshTokenRef = useRef<string | null>(null)
   const apiExpiresAtRef = useRef<number | null>(null)
+  const refreshRequestRef = useRef<Promise<string | null> | null>(null)
   const hasBootstrappedRef = useRef(false)
   // Set synchronously before first await to prevent TOCTOU race on concurrent boot invocations
   const isBootingRef = useRef(false)
@@ -306,7 +318,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
         const signInData = (await response.json()) as SignInResponse
 
-        if (!signInData.accessToken || !signInData.refreshToken || !signInData.user) {
+        if (!hasValidSignInResponse(signInData)) {
           throw new Error('Invalid sign-in response from API')
         }
 
@@ -336,7 +348,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       dispatch({ type: 'PASSKEY_AUTH_STARTED' })
 
       try {
-        if (!input.accessToken || !input.refreshToken || !input.user) {
+        if (!hasValidSignInResponse(input)) {
           throw new Error('Invalid passkey sign-in response from API')
         }
 
@@ -357,6 +369,50 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     },
     [setApiTokens],
   )
+
+  const refreshAccessToken = useCallback(async () => {
+    const refreshToken = apiRefreshTokenRef.current
+    if (!refreshToken) {
+      return null
+    }
+
+    if (refreshRequestRef.current) {
+      return refreshRequestRef.current
+    }
+
+    return runSingleflight(refreshRequestRef, async () => {
+      dispatch({ type: 'REFRESH_STARTED' })
+      try {
+        const response = await fetch(new URL('/api/auth/refresh', API_BASE_URL).toString(), {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        })
+
+        if (!response.ok) {
+          await setApiTokens(null, null)
+          dispatch({ type: 'REFRESH_FAILED', error: new Error('Token refresh failed') })
+          return null
+        }
+
+        const data = (await response.json()) as RefreshResponse
+        await setApiTokens(data.accessToken, data.refreshToken, data.expiresIn)
+        const profile = await LocalStore.getUserProfile()
+        const userProfile = toAuthUserProfile(profile)
+        if (userProfile) {
+          dispatch({ type: 'SESSION_LOADED', user: userProfile })
+        }
+        return data.accessToken
+      } catch (error) {
+        await setApiTokens(null, null)
+        dispatch({
+          type: 'REFRESH_FAILED',
+          error: error instanceof Error ? error : new Error('Token refresh failed'),
+        })
+        return null
+      }
+    })
+  }, [setApiTokens])
 
   const signOut = useCallback(async () => {
     dispatch({ type: 'SIGN_OUT_REQUESTED' })
@@ -400,39 +456,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     const expiresAt = apiExpiresAtRef.current
     if (expiresAt != null && Date.now() + TOKEN_REFRESH_BUFFER_MS > expiresAt) {
-      const refreshToken = apiRefreshTokenRef.current
-      if (refreshToken) {
-        try {
-          dispatch({ type: 'REFRESH_STARTED' })
-          const response = await fetch(new URL('/api/auth/refresh', API_BASE_URL).toString(), {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ refreshToken }),
-          })
-
-          if (response.ok) {
-            const data = (await response.json()) as RefreshResponse
-            await setApiTokens(data.accessToken, data.refreshToken, data.expiresIn)
-            const profile = await LocalStore.getUserProfile()
-            const userProfile = toAuthUserProfile(profile)
-            if (userProfile) dispatch({ type: 'SESSION_LOADED', user: userProfile })
-            return data.accessToken
-          }
-
-          dispatch({ type: 'REFRESH_FAILED', error: new Error('Token refresh failed') })
-          return null
-        } catch (error) {
-          dispatch({
-            type: 'REFRESH_FAILED',
-            error: error instanceof Error ? error : new Error('Token refresh failed'),
-          })
-          return null
-        }
-      }
+      return refreshAccessToken()
     }
 
     return token
-  }, [setApiTokens])
+  }, [refreshAccessToken])
 
   const clearError = useCallback(() => {
     dispatch({ type: 'CLEAR_ERROR' })

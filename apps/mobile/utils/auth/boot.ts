@@ -40,6 +40,14 @@ export interface AuthBootDeps {
   signal: AbortSignal
 }
 
+function isValidExpiresAt(expiresAtStr: string | null) {
+  if (!expiresAtStr) {
+    return false
+  }
+  const value = Number(expiresAtStr)
+  return Number.isFinite(value) && value > 0
+}
+
 /**
  * Core auth boot logic, extracted for testability.
  *
@@ -61,6 +69,16 @@ export async function runAuthBoot(deps: AuthBootDeps): Promise<AuthBootResult> {
   await clearLegacyData()
 
   const { accessToken, refreshToken, expiresAtStr } = await getStoredTokens()
+
+  if (!accessToken && (refreshToken || expiresAtStr)) {
+    await clearTokens()
+    return { type: 'SESSION_EXPIRED' }
+  }
+
+  if (accessToken && (!refreshToken || !isValidExpiresAt(expiresAtStr))) {
+    await clearTokens()
+    return { type: 'SESSION_EXPIRED' }
+  }
 
   if (accessToken) {
     const probeUser = await probeSession(accessToken, signal)
