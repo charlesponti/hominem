@@ -33,7 +33,7 @@ COPY tsconfig.profiles ./tsconfig.profiles
 
 # Install all dependencies with cache mount reuse
 # BuildKit cache mount persists across builds without bloating image
-RUN --mount=type=cache,target=/root/.bun/install/cache \
+RUN --mount=type=cache,id=bun-cache,target=/root/.bun/install/cache \
     bun install 2>&1 | grep -v "warn\|skipped" || true
 
 # Compile TypeScript application to pre-optimized standalone binary
