@@ -1,10 +1,11 @@
 ---
-applyTo: 'apps/**, packages/**, services/**, tools/**'
+name: auth-contract
+description: Use for authentication work across apps, packages, services, and tools. Covers current auth flows, session/token rules, and deterministic auth testing.
 ---
 
-# Authentication
+# Authentication Contract
 
-## Contract
+## Core Contract
 
 - Better Auth is the identity layer.
 - Protected API access uses explicit bearer tokens.
@@ -16,7 +17,7 @@ applyTo: 'apps/**, packages/**, services/**, tools/**'
 1. Sign in with a supported method.
 2. Receive `accessToken`, `refreshToken`, and expiry metadata.
 3. Call protected routes with `Authorization: Bearer <token>`.
-4. Refresh credentials through the shared refresh contract when needed.
+4. Refresh credentials through the shared refresh contract.
 
 ## Supported Flows
 
@@ -53,15 +54,15 @@ applyTo: 'apps/**, packages/**, services/**, tools/**'
 
 ## Session And Token Endpoints
 
-- Identity: `GET /api/auth/session`
-- Refresh: `POST /api/auth/refresh`
-- Logout: `POST /api/auth/logout`
+- identity: `GET /api/auth/session`
+- refresh: `POST /api/auth/refresh`
+- logout: `POST /api/auth/logout`
 
-`/api/auth/session` is for identity state only. Do not treat it as a fallback token-minting path.
+`/api/auth/session` is identity-only and must not become a fallback token-minting path.
 
 ## Deterministic Testing
 
-Infra commands:
+Infra:
 
 ```bash
 make auth-test-up
@@ -69,17 +70,17 @@ make auth-test-status
 make auth-test-down
 ```
 
-Required environment:
+Required env:
 
 - `AUTH_TEST_OTP_ENABLED=true`
 - `AUTH_TEST_OTP_TTL_SECONDS=300`
 - `AUTH_E2E_SECRET=<shared-secret>`
 - `AUTH_E2E_ENABLED=true`
 
-Test-only OTP retrieval:
+Test-only OTP endpoint:
 
 - `GET /api/auth/test/otp/latest?email=<email>[&type=<otp-type>]`
-- Header: `x-e2e-auth-secret: <AUTH_E2E_SECRET>`
+- header: `x-e2e-auth-secret: <AUTH_E2E_SECRET>`
 
 Expected failures:
 
@@ -87,8 +88,3 @@ Expected failures:
 - `403` when the secret is invalid
 
 Shared helpers live under `tests/auth-harness`.
-
-## Rules
-
-- Keep auth docs focused on the current contract, not migration history.
-- Update this instruction file and the relevant OpenSpec artifacts together when auth behavior changes.

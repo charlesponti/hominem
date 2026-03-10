@@ -1,8 +1,11 @@
 ---
-applyTo: 'packages/**, services/api/**, apps/**'
+name: type-architecture
+description: Use for schema, type flow, TypeScript project graph, and tsconfig decisions across apps, packages, and services.
 ---
 
-# Type Architecture - Single Source of Truth
+# Type Architecture
+
+## Source Of Truth
 
 - Database types are the single source of truth.
 - Keep data flow one-way: DB schema -> services -> routes -> clients.
@@ -20,13 +23,11 @@ applyTo: 'packages/**, services/api/**, apps/**'
 - Use `composite: true` for referenced workspace projects.
 - Prefer declaration boundaries with `disableSourceOfProjectReferenceRedirect: true`.
 - Use `moduleResolution: 'Bundler'` for Bun, Vite, and Expo targets.
-- Keep `baseUrl` and `paths` only when they are actively needed.
+- Keep `baseUrl` and `paths` only when actively needed.
 - Keep `include` tight to real source and config files.
 - Use `moduleDetection: 'force'`, `verbatimModuleSyntax: true`, and `isolatedModules: true`.
 
 ## Validation
-
-Run from the repo root:
 
 ```bash
 npx tsc -b tsconfig.json --pretty false

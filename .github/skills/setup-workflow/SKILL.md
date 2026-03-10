@@ -1,12 +1,9 @@
 ---
-applyTo: '**'
+name: setup-workflow
+description: Use for repo bootstrap, local infrastructure setup, and standard day-to-day dev commands.
 ---
 
-# Setup
-
-## Scope
-
-Use this as the canonical repo-level setup guide.
+# Setup Workflow
 
 ## Prerequisites
 
@@ -23,8 +20,6 @@ Version sources:
 
 ## First-Time Setup
 
-Run from the monorepo root:
-
 ```bash
 bun install
 bun run dev:doctor
@@ -34,35 +29,21 @@ make db-migrate-all
 
 ## Canonical Local Workflow
 
-Start local infrastructure:
-
 ```bash
 make dev-up
 make dev-status
-```
-
-Run the workspace:
-
-```bash
 bun run dev
+make dev-down
+make dev-reset
 ```
 
-Target a surface explicitly when helpful:
+Target a surface when helpful:
 
 ```bash
 bun run dev --filter @hominem/mobile
 bun run dev --filter @hominem/finance
 bun run dev --filter @hominem/notes
 ```
-
-Stop or reset local infra:
-
-```bash
-make dev-down
-make dev-reset
-```
-
-`make dev-reset` is destructive.
 
 ## Local Ports
 
@@ -74,47 +55,22 @@ make dev-reset
 
 ## Database Workflow
 
-The repo uses SQL-first Goose migrations.
-
 ```bash
 make db-migrate
 make db-migrate-test
 make db-migrate-all
-```
-
-Validation:
-
-```bash
 bun run validate-db-imports
 bun run check
 ```
-
-Keep schema changes in `packages/db/migrations`.
 
 ## Advanced Local HTTPS
 
 Default development does not require a local reverse proxy.
 
-When a browser workflow requires local HTTPS domains, the checked-in `Caddyfile` currently supports:
+The checked-in `Caddyfile` supports:
 
 - `notes.hominem.test`
 - `finance.hominem.test`
 - `rocco.hominem.test`
 
-Treat that as an advanced path rather than the default boot flow.
-
-## Verification
-
-```bash
-make dev-status
-bun run typecheck
-bun run test
-bun run check
-```
-
-Auth smoke:
-
-```bash
-bun run test:e2e:auth:live:local
-bun run test:e2e:auth
-```
+Use that only when a workflow truly needs browser-facing local HTTPS.

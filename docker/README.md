@@ -28,9 +28,9 @@ POSTGRES_PASSWORD=your-secure-password docker-compose -f compose/base.yml -f com
 
 ## Full Documentation
 
-- **[Canonical Docker Instructions](../.github/instructions/docker.instructions.md)** - Current Docker source of truth
-- **[Canonical Setup Instructions](../.github/instructions/setup.instructions.md)** - Repo-level local setup and daily workflow
-- **[Canonical Deployment Instructions](../.github/instructions/deployment.instructions.md)** - Repo-level production and release guidance
+- **[Canonical Docker Skill](../.github/skills/docker-workflow/SKILL.md)** - Current Docker source of truth
+- **[Canonical Setup Skill](../.github/skills/setup-workflow/SKILL.md)** - Repo-level local setup and daily workflow
+- **[Canonical Deployment Skill](../.github/skills/deployment-workflow/SKILL.md)** - Repo-level production and release guidance
 
 ## Services
 

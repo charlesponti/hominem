@@ -18,6 +18,10 @@
 - [x] 2.11 Move the remaining repo-wide instructional docs into `.github/instructions` and merge duplicated guidance into the existing instruction set
 - [x] 2.12 Delete the remaining stale root `docs/` analysis, brainstorm, and template files that no longer belong to OpenSpec, service-local docs, or the instruction set
 - [x] 2.13 Delete the root `docs/` directory after migrating or removing its remaining contents
+- [x] 2.14 Convert the current `.github/instructions` guidance bodies into canonical `.github/skills` entries
+- [x] 2.15 Add matching `.codex/skills` wrappers that point at the canonical GitHub skill bodies
+- [x] 2.16 Reduce `.github/instructions` files to minimal `applyTo` dispatchers that route to the correct skill
+- [x] 2.17 Remove `.github/instructions` entirely and repoint all remaining repo guidance to the skill layer
 
 ## 3. Verification
 
@@ -27,3 +31,5 @@
 - [x] 3.4 Review the repo for stale references to superseded Docker documentation paths
 - [x] 3.5 Review the repo for stale references to superseded setup, deployment, or troubleshooting documentation paths
 - [x] 3.6 Review the repo for stale references to the removed root `docs/` files and confirm the surviving instruction paths are the only repo-wide source of documentation guidance
+- [x] 3.7 Verify the converted instruction files still provide complete path coverage while the skill layer becomes the canonical source of repo-wide guidance
+- [x] 3.8 Review the repo for stale `.github/instructions` references and confirm skills are the only surviving repo-wide guidance layer

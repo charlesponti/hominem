@@ -142,13 +142,13 @@ This runs automatically during `bun run check`.
 
 ## API Preferences
 
-- Use Hono + tRPC patterns defined in [.github/instructions/api.instructions.md](.github/instructions/api.instructions.md).
+- Use Hono + tRPC patterns defined in [.github/skills/api-engineering/SKILL.md](.github/skills/api-engineering/SKILL.md).
 - Use `useHonoQuery` / `useHonoMutation` in client code.
 
 ## Imports
 
 - Use path aliases defined in each package/app `tsconfig.json` for internal packages.
-- Prefer direct schema/type imports per [.github/instructions/type-architecture.instructions.md](.github/instructions/type-architecture.instructions.md).
+- Prefer direct schema/type imports per [.github/skills/type-architecture/SKILL.md](.github/skills/type-architecture/SKILL.md).
 
 ## Schema Changes & Type Safety
 
@@ -176,7 +176,7 @@ rm -rf .turbo **/.turbo && bun run check
 
 ## Specialized Rules
 
-See `.github/instructions/` for scoped guidance.
+See `.github/skills/` for reusable scoped guidance.
 
 ## FORBIDDEN
 

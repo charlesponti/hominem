@@ -12,7 +12,8 @@ The repo currently spreads completed OpenSpec history across change-oriented wri
 - Consolidate overlapping authentication documentation under `docs` so one current auth reference remains.
 - Consolidate the `docs/docker/*` bundle into one canonical `docker.instructions.md` file aligned with the repo's actual Docker layout.
 - Consolidate overlapping setup and deployment docs under `docs` into canonical root-level instructions that match the current scripts, Docker setup, and Railway manifests.
-- Eliminate the root `docs/` folder by moving any surviving repo-wide guidance into `.github/instructions`, keeping service-local docs next to their services, and deleting unowned stale analysis files.
+- Eliminate the root `docs/` folder by moving any surviving repo-wide guidance into reusable skills, keeping service-local docs next to their services, and deleting unowned stale analysis files.
+- Remove `.github/instructions` entirely and use GitHub and Codex skills as the only repo-wide guidance layer.
 - Update workflow guidance, indexes, and close-out expectations so completed changes are finalized into `specs` only.
 - Delete the existing `openspec/merged` content, stale top-level `specs/` artifacts, and `docs/plans` planning docs as part of the cleanup.
 

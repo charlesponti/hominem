@@ -10,7 +10,9 @@ The `docs/docker` folder has the same problem: multiple overlapping security, de
 
 The remaining root setup and deployment docs have similar drift. `docs/DEVELOPER_SETUP.md`, `docs/local-dev-setup.md`, `docs/RAILWAY_DEPLOYMENT.md`, and `docs/deployment/mobile-testflight.md` overlap, contradict current commands, and mix repo-wide guidance with environment-specific troubleshooting.
 
-The final root `docs` survivors also split across multiple ownership models. Some are really agent-facing repo instructions (`auth`, `setup`, `deployment`, `docker`, TypeScript baseline), some are stale planning or analysis artifacts with no active owner, and some duplicate guidance that already belongs in `.github/instructions` or OpenSpec.
+The final root `docs` survivors also split across multiple ownership models. Some are really agent-facing repo instructions (`auth`, `setup`, `deployment`, `docker`, TypeScript baseline), some are stale planning or analysis artifacts with no active owner, and some duplicate guidance that already belongs in repo skills or OpenSpec.
+
+The current `.github/instructions` set is slimmer than the old root docs, but it is still a second guidance layer beside skills. If the repo is comfortable trusting modern models to pick the right skill, then the extra routing layer should be removed rather than maintained forever.
 
 This change is small in code footprint but cross-cutting in workflow impact because it affects OpenSpec guidance, archive semantics, and existing completed history on disk.
 
@@ -25,7 +27,8 @@ This change is small in code footprint but cross-cutting in workflow impact beca
 - Consolidate overlapping auth docs into one canonical current reference.
 - Consolidate overlapping Docker docs into one canonical current reference.
 - Consolidate overlapping setup and deployment docs into one canonical repo-level setup guide and one canonical repo-level deployment guide.
-- Move all remaining repo-wide instructional guidance out of `docs/` and into `.github/instructions`, then delete the root `docs/` folder entirely.
+- Move all remaining repo-wide instructional guidance out of `docs/` and into canonical GitHub skills with matching lightweight Codex skill wrappers.
+- Delete `.github/instructions` entirely once all repo references point to the skill layer.
 - Update guidance so future close-out flows do not recreate raw archives or merged change-history docs.
 
 **Non-Goals:**
@@ -64,6 +67,14 @@ For the final cleanup pass, the repo should adopt a strict ownership rule:
 
 Any root `docs` file that does not clearly fit one of those homes should be deleted rather than preserved as an orphan.
 
+For guidance ownership, the repo should adopt this split:
+
+- `.github/skills`: canonical reusable guidance bodies
+- `.codex/skills`: lightweight wrappers that point Codex at the canonical GitHub skill bodies
+- `openspec/changes` and `openspec/specs`: planning and canonical product/workflow contracts
+
+This removes the duplicated instruction layer and leaves one reusable guidance system.
+
 Alternative considered:
 - Change the docs first and defer deletion. Rejected because the repo would still visibly contradict the new workflow until a later cleanup pass.
 
@@ -75,6 +86,7 @@ Alternative considered:
 - Historical investigation becomes harder for completed changes -> Mitigation: accept this as an intentional simplification trade-off.
 - Setup and deployment docs may encode machine-specific workarounds that are still useful to one environment -> Mitigation: keep only repo-backed default paths in canonical docs and move any remaining niche details to the closest service-level README if they are still needed.
 - Some deleted analysis docs may contain ideas that are not yet captured elsewhere -> Mitigation: preserve only the content that still maps to an active OpenSpec change or a live instruction contract; delete the rest as intentional simplification.
+- Skill-only routing could reduce deterministic path-based guidance selection in some tools -> Mitigation: keep skill names explicit, update repo guidance to point at them directly, and accept this as an intentional simplification trade-off.
 
 ## Migration Plan
 

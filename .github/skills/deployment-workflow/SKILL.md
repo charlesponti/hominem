@@ -1,16 +1,11 @@
 ---
-applyTo: '**'
+name: deployment-workflow
+description: Use for repo-level deployment work, Railway releases, environment drift checks, and mobile TestFlight releases.
 ---
 
-# Deployment
+# Deployment Workflow
 
-## Scope
-
-Use this as the canonical repo-level deployment guide.
-
-## Current Deployment Model
-
-### Railway Manifests
+## Railway Manifests
 
 | Surface | Manifest | Builder | Notes |
 | --- | --- | --- | --- |
@@ -29,29 +24,25 @@ Use this as the canonical repo-level deployment guide.
 
 ## Release Checklist
 
-Run from the repo root unless a service README says otherwise.
-
-### Validate
-
 ```bash
 bun run check
 ```
 
-If auth or mobile behavior changed:
+For auth or mobile-sensitive changes:
 
 ```bash
 bun run test:e2e:auth
 bun run test:e2e:auth:live
 ```
 
-### Check Environment Drift
+Check environment drift:
 
 ```bash
 bun scripts/sync-env.ts check
 bun scripts/sync-env.ts diagnose api
 ```
 
-### Railway Operations
+Railway operations:
 
 ```bash
 railway status
@@ -61,43 +52,11 @@ railway up --detach
 
 ## Mobile iOS Release
 
-Credential bootstrap:
-
 ```bash
 bunx --cwd apps/mobile eas credentials --platform ios
-```
-
-Preview build:
-
-```bash
 bun run --filter @hominem/mobile build:preview
-```
-
-Production build:
-
-```bash
 bun run --filter @hominem/mobile build:production
-```
-
-Submit latest build:
-
-```bash
 bunx --cwd apps/mobile eas submit --platform ios --latest
 ```
 
-For deeper runtime and variant detail, use `apps/mobile/README.md`.
-
-## Post-Deploy Verification
-
-- confirm Railway health checks pass
-- inspect logs for startup failures
-- verify the API health endpoint
-- run smoke tests for auth-sensitive changes
-
-Useful commands:
-
-```bash
-railway logs --service <service-name>
-curl -fsS https://<service-domain>/api/status
-bun run test:e2e:auth:live
-```
+For deeper mobile runtime and variant detail, use `apps/mobile/README.md`.

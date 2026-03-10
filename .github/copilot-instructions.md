@@ -2,7 +2,7 @@
 
 Rules
 - Follow `AGENTS.md` for universal repo rules.
-- Apply matching files in `.github/instructions/` based on `applyTo` globs.
+- Use the relevant skills under `.github/skills/` as the canonical repo guidance layer.
 
 Startup checklist
 - Read `openspec/ACTIVE_CHANGE.md` before coding.

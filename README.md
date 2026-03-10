@@ -29,9 +29,9 @@ Run a local environment check:
 
 ### Canonical Docs
 
-- Local setup: `.github/instructions/setup.instructions.md`
-- Deployment: `.github/instructions/deployment.instructions.md`
-- Docker: `.github/instructions/docker.instructions.md`
+- Local setup: `.github/skills/setup-workflow/SKILL.md`
+- Deployment: `.github/skills/deployment-workflow/SKILL.md`
+- Docker: `.github/skills/docker-workflow/SKILL.md`
 
 ### MCP server auth (single source of truth)
 
