@@ -52,9 +52,3 @@ export const endTrace = (handle: TraceHandle | null | undefined, extraTags?: Tra
     console.debug('[rocco-perf]', entry.name, `${entry.duration.toFixed(1)}ms`, entry.tags);
   }
 };
-
-const getTraceEntries = () => traces.slice();
-
-const clearTraceEntries = () => {
-  traces.length = 0;
-};

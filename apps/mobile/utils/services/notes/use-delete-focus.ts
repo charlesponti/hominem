@@ -1,6 +1,6 @@
 import { useMutation, type UseMutationOptions } from '@tanstack/react-query'
 
-import { useHonoClient } from '@hominem/hono-client/react'
+import { useApiClient } from '@hominem/hono-client/react'
 
 import { LocalStore } from '~/utils/local-store'
 
@@ -9,13 +9,11 @@ export const useDeleteFocus = (
     onError?: (error: Error) => void
   }
 ) => {
-  const client = useHonoClient()
+  const client = useApiClient()
 
   return useMutation<string, Error, string>({
     mutationFn: async (id: string) => {
-      await client.api.notes[':id'].$delete({
-        param: { id },
-      })
+      await client.notes.delete({ id })
 
       await LocalStore.deleteFocusItem(id)
       return id

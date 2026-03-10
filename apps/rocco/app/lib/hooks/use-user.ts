@@ -1,4 +1,3 @@
-import type { HonoClient } from '@hominem/hono-client';
 import type { HonoMutationOptions } from '@hominem/hono-client/react';
 import { useHonoMutation, useHonoUtils } from '@hominem/hono-client/react';
 import type { UserDeleteAccountOutput } from '@hominem/hono-rpc/types/user.types';
@@ -11,10 +10,7 @@ import { queryKeys } from '~/lib/query-keys';
 export const useDeleteAccount = (options?: HonoMutationOptions<UserDeleteAccountOutput, {}>) => {
   const utils = useHonoUtils();
   return useHonoMutation<UserDeleteAccountOutput, {}>(
-    async (client: HonoClient) => {
-      const res = await client.api.user['delete-account'].$post({ json: {} });
-      return (await res.json()) as unknown as UserDeleteAccountOutput;
-    },
+    ({ user }) => user.deleteAccount(),
     {
       ...options,
       onMutate: async () => {
@@ -48,7 +44,7 @@ export const useDeleteAccount = (options?: HonoMutationOptions<UserDeleteAccount
           previousInvitesReceived,
         };
       },
-      onError: (error, _variables, context, mutationContext) => {
+      onError: (error, variables, context, mutationContext) => {
         if (context && typeof context === 'object') {
           if ('previousLists' in context) {
             utils.setData(
@@ -88,7 +84,7 @@ export const useDeleteAccount = (options?: HonoMutationOptions<UserDeleteAccount
           }
         }
 
-        options?.onError?.(error, _variables, context, mutationContext);
+        options?.onError?.(error, variables, context, mutationContext);
       },
       onSuccess: (result, variables, context, mutationContext) => {
         options?.onSuccess?.(result, variables, context, mutationContext);

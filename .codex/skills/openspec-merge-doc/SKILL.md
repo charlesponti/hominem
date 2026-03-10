@@ -9,7 +9,7 @@ Create a single canonical merged document for a completed change.
 
 **Required Output Style**
 
-- Use `openspec/merged/_TEMPLATE.md` exactly as the baseline.
+- Use `openspec/done/records/_TEMPLATE.md` exactly as the baseline.
 - Keep the doc detailed and generous, not a short recap.
 - Prefer tables for metadata, decisions, validation, operations, and follow-ups.
 - Include concrete evidence references (PRs, commits, workflow runs) where available.
@@ -20,7 +20,7 @@ Create a single canonical merged document for a completed change.
 1. **Select completed change**
 
    Locate the change under:
-   - `openspec/changes/archive/<change>/`
+   - `openspec/archive/<change>/`
    - or completed active change directory if not yet archived
 
 2. **Collect source artifacts**
@@ -37,7 +37,7 @@ Create a single canonical merged document for a completed change.
 3. **Write canonical merged document**
 
    Create:
-   - `openspec/merged/YYYY-MM-DD-<change>.md`
+   - `openspec/done/records/YYYY-MM-DD-<change>.md`
 
    Fill every template section:
    - metadata
@@ -53,6 +53,10 @@ Create a single canonical merged document for a completed change.
    - lessons learned
    - actionable follow-ups
 
+   Then update:
+   - `openspec/done/README.md`
+   - Add or refresh one index row for the merged doc
+   - Keep the index sorted by filename/date
 4. **Retire superseded planning docs**
 
    Remove when the merge doc is complete:
@@ -68,6 +72,7 @@ Create a single canonical merged document for a completed change.
 
    Provide:
    - created merge doc path
+   - index update status (`openspec/done/README.md`)
    - removed files
    - retained files and reason
 
@@ -76,4 +81,5 @@ Create a single canonical merged document for a completed change.
 - Do not process incomplete or active changes unless explicitly requested.
 - Do not remove audit/compliance artifacts.
 - Keep follow-ups specific with owner, priority, and due date.
-- Keep naming consistent: `openspec/merged/YYYY-MM-DD-<change>.md`.
+- Keep naming consistent: `openspec/done/records/YYYY-MM-DD-<change>.md`.
+- Keep `openspec/done/README.md` in sync with merged docs.

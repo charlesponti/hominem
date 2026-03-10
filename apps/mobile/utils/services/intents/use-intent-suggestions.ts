@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-import { useHonoClient } from '@hominem/hono-client/react'
+import { useApiClient } from '@hominem/hono-client/react'
 
 export type IntentSuggestion = {
   id: string
@@ -40,7 +40,7 @@ async function writeCachedSuggestions(suggestions: IntentSuggestion[]) {
 }
 
 export function useIntentSuggestions() {
-  const client = useHonoClient()
+  const client = useApiClient()
 
   const query = useQuery<{ suggestions: IntentSuggestion[]; source: 'remote' | 'cache' | 'static' }>({
     queryKey: ['intentSuggestions'],
@@ -48,8 +48,7 @@ export function useIntentSuggestions() {
       const cached = await readCachedSuggestions()
 
       try {
-        const response = await client.api.mobile.intents.suggestions.$get()
-        const data = (await response.json()) as { suggestions: IntentSuggestion[] }
+        const data = await client.mobile.getIntentSuggestions()
         const incoming = data?.suggestions ?? []
 
         if (incoming.length > 0) {

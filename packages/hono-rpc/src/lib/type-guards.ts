@@ -66,13 +66,15 @@ export function createDiscriminator<T extends Record<string, unknown>, K extends
   discriminatorValue: T[K],
 ): (value: unknown) => value is Extract<T, Record<K, T[K]>> {
   return (value: unknown): value is Extract<T, Record<K, T[K]>> => {
-    return (
-      typeof value === 'object' &&
-      value !== null &&
-      discriminatorField in value &&
-      (value as any)[discriminatorField] === discriminatorValue
-    );
-  };
+    const record = value as Record<string, unknown>
+
+  return (
+    typeof record === 'object' &&
+    record !== null &&
+    discriminatorField in record &&
+    record[discriminatorField as keyof typeof record] === discriminatorValue
+  );
+};
 }
 
 /**
@@ -103,8 +105,10 @@ export function createPropertyChecker<T extends Record<string, unknown>>(
       return false;
     }
 
+    const record = value as Record<string, unknown>
+
     for (const [prop, checker] of Object.entries(requiredProps)) {
-      if (!(prop in value) || !checker((value as any)[prop])) {
+      if (!(prop in record) || !checker(record[prop])) {
         return false;
       }
     }

@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto'
 
-import type { UserAccounts } from '@hominem/db'
 import { db } from '@hominem/db'
 
 interface AccountRecord {
@@ -33,7 +32,14 @@ interface AccountInsert {
   sessionState?: string | null
 }
 
-function toCompatRecord(row: any): AccountRecord {
+interface AccountSelectRow {
+  id: string
+  user_id: string
+  provider: string
+  account_id: string
+}
+
+function toCompatRecord(row: AccountSelectRow): AccountRecord {
   return {
     id: row.id,
     userId: row.user_id,
@@ -51,14 +57,14 @@ function toCompatRecord(row: any): AccountRecord {
 }
 
 export async function listAccountsByProvider(userId: string, provider: string): Promise<AccountRecord[]> {
-  const rows = await db
+  const rows = (await db
     .selectFrom('user_accounts')
     .selectAll()
     .where('user_id', '=', userId)
     .where('provider', '=', provider)
     .orderBy('created_at', 'desc')
     .orderBy('id', 'asc')
-    .execute()
+    .execute()) as AccountSelectRow[]
 
   return rows.map(toCompatRecord)
 }
@@ -67,7 +73,7 @@ export async function getAccountByUserAndProvider(
   userId: string,
   provider: string
 ): Promise<AccountRecord | null> {
-  const row = await db
+  const row = (await db
     .selectFrom('user_accounts')
     .selectAll()
     .where('user_id', '=', userId)
@@ -75,7 +81,7 @@ export async function getAccountByUserAndProvider(
     .orderBy('created_at', 'desc')
     .orderBy('id', 'asc')
     .limit(1)
-    .executeTakeFirst()
+    .executeTakeFirst()) as AccountSelectRow | undefined
 
   return row ? toCompatRecord(row) : null
 }
@@ -84,7 +90,7 @@ export async function getAccountByProviderAccountId(
   providerAccountId: string,
   provider: string
 ): Promise<AccountRecord | null> {
-  const row = await db
+  const row = (await db
     .selectFrom('user_accounts')
     .selectAll()
     .where('account_id', '=', providerAccountId)
@@ -92,7 +98,7 @@ export async function getAccountByProviderAccountId(
     .orderBy('created_at', 'desc')
     .orderBy('id', 'asc')
     .limit(1)
-    .executeTakeFirst()
+    .executeTakeFirst()) as AccountSelectRow | undefined
 
   return row ? toCompatRecord(row) : null
 }
@@ -100,7 +106,7 @@ export async function getAccountByProviderAccountId(
 export async function createAccount(data: AccountInsert): Promise<AccountRecord | null> {
   const accountId = data.id ?? randomUUID()
 
-  const row = await db
+  const row = (await db
     .insertInto('user_accounts')
     .values({
       id: accountId,
@@ -112,7 +118,7 @@ export async function createAccount(data: AccountInsert): Promise<AccountRecord 
       oc.columns(['account_id', 'provider', 'user_id']).doNothing()
     )
     .returningAll()
-    .executeTakeFirst()
+    .executeTakeFirst()) as AccountSelectRow | undefined
 
   return row ? toCompatRecord(row) : null
 }
@@ -121,7 +127,7 @@ export async function updateAccount(
   id: string,
   updates: Partial<AccountInsert>
 ): Promise<AccountRecord | null> {
-  const updateData: any = {}
+  const updateData: Partial<Record<'account_id' | 'provider', string>> = {}
 
   if (updates.providerAccountId !== undefined) {
     updateData.account_id = updates.providerAccountId
@@ -135,12 +141,12 @@ export async function updateAccount(
     return null
   }
 
-  const row = await db
+  const row = (await db
     .updateTable('user_accounts')
     .set(updateData)
     .where('id', '=', id)
     .returningAll()
-    .executeTakeFirst()
+    .executeTakeFirst()) as AccountSelectRow | undefined
 
   return row ? toCompatRecord(row) : null
 }

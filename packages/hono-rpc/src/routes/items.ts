@@ -32,10 +32,10 @@ function transformItemToApiFormat(item: unknown): ListItem {
 /**
  * Items Routes
  *
- * Handles list item operations using the ApiResult pattern:
+ * Handles list item operations using direct JSON responses:
  * - Services throw typed errors
- * - HTTP endpoints catch errors and return ApiResult
- * - Clients receive discriminated union with `success` field
+ * - HTTP endpoints return concrete response bodies
+ * - Error middleware handles failure responses
  */
 
 // ============================================================================

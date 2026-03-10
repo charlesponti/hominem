@@ -9,25 +9,6 @@
  */
 
 import type { app } from './app';
-import type { vitalRoutes } from './routes/vital';
-import type { knowledgeRoutes } from './routes/knowledge';
-import type { socialRoutes } from './routes/social';
-import type { economyRoutes } from './routes/economy';
-import type { worldRoutes } from './routes/world';
-import type { systemRoutes } from './routes/system';
-
-/**
- * Domain-specific router types
- *
- * Breaking the AppType into smaller domain types reduces TypeScript's
- * type depth computation and makes type checking faster.
- */
-type VitalAppType = typeof vitalRoutes;
-type KnowledgeAppType = typeof knowledgeRoutes;
-type SocialAppType = typeof socialRoutes;
-type EconomyAppType = typeof economyRoutes;
-type WorldAppType = typeof worldRoutes;
-type SystemAppType = typeof systemRoutes;
 
 /**
  * AppType - Type representing the entire API structure

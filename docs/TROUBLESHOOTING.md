@@ -515,7 +515,7 @@ bun run build --filter=@hominem/rocco 2>&1 | grep -i "error\|warn"
 
 ### Resources
 
-- **Design System Docs**: `docs/DESIGN_SYSTEM.md`
+- **Design System Docs**: [Canonical merged design system](/Users/charlesponti/Developer/hominem/docs/DESIGN_SYSTEM.md)
 - **Migration Guide**: `docs/MIGRATION_GUIDE.md`
 - **Token Source**: `packages/ui/src/styles/globals.css`
 - **Tailwind Config**: `packages/ui/tailwind.config.ts`

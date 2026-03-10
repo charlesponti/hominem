@@ -152,7 +152,7 @@ async function syncNoteTags(noteId: string, userId: string, tags: ContentTag[] |
     .execute()
 
   if (tagsToLink.length > 0) {
-    const linkValues = tagsToLink.map((tag: any) => ({
+    const linkValues = tagsToLink.map((tag) => ({
       note_id: noteId,
       tag_id: tag.id,
     }))
@@ -606,7 +606,7 @@ export const notesRoutes = new Hono<AppContext>()
 
             created++
           }
-        } catch (_err) {
+        } catch  {
           failed++
         }
       }

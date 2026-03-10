@@ -5,7 +5,7 @@ import { sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
-  isIntegrationDatabaseAvailable,
+  _isIntegrationDatabaseAvailable,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 

@@ -1,6 +1,7 @@
-import type { Chat } from '@hominem/hono-rpc/types'
+import type { Chat, ChatMessage as RpcChatMessage } from '@hominem/hono-rpc/types'
+import type { ApiClient } from '@hominem/hono-client'
 
-import { useHonoClient } from '@hominem/hono-client/react'
+import { useApiClient } from '@hominem/hono-client/react'
 import NetInfo from '@react-native-community/netinfo'
 import { useMutation, useQuery, useQueryClient, type MutationOptions } from '@tanstack/react-query'
 import { randomUUID } from 'expo-crypto'
@@ -8,8 +9,6 @@ import { useState } from 'react'
 
 import type { Chat as LocalChat } from '~/utils/local-store/types'
 import { LocalStore } from '~/utils/local-store'
-import { validateChatMessagesResponse, type ChatMessage } from '~/utils/validation/schemas'
-
 import { log } from '../../logger'
 import {
   createOptimisticMessage,
@@ -23,8 +22,11 @@ type SendChatMessageOutput = {
   function_calls: string[]
 }
 
-// Convert validated ChatMessage to MessageOutput
-function toMessageOutput(message: ChatMessage): MessageOutput {
+function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
+  if (message.role === 'tool') {
+    return null
+  }
+
   return {
     id: message.id,
     role: message.role,
@@ -32,35 +34,34 @@ function toMessageOutput(message: ChatMessage): MessageOutput {
     created_at: message.createdAt,
     chat_id: message.chatId,
     profile_id: '',
-    focus_ids: message.focusIdsJson ? JSON.parse(message.focusIdsJson) : null,
-    focus_items: message.focusItemsJson ? JSON.parse(message.focusItemsJson) : null,
+    focus_ids: null,
+    focus_items: null,
   }
 }
 
 // Single source of truth: React Query cache
 // SQLite is persistence layer only, updated after successful mutations
 export const useChatMessages = ({ chatId }: { chatId: string }) => {
-  const client = useHonoClient()
+  const client = useApiClient()
   const queryClient = useQueryClient()
 
   return useQuery<MessageOutput[]>({
     queryKey: ['chatMessages', chatId],
     queryFn: async () => {
-      const response = await client.api.chats[':id'].messages.$get({
-        param: { id: chatId },
-        query: { limit: '50' },
+      const messages = await client.chats.getMessages({
+        chatId,
+        limit: 50,
       })
-      
-      // Validate with Zod instead of type assertion
-      const rawData = await response.json()
-      const validated = validateChatMessagesResponse(rawData)
-      const mapped = validated.messages.map(toMessageOutput)
-      
-      // Persist to SQLite (non-blocking)
+
+      const mapped = messages.flatMap((message) => {
+        const output = toMessageOutput(message)
+        return output ? [output] : []
+      })
+
       persistMessages(chatId, mapped).catch((err) => {
         console.warn('[chat] Failed to persist messages:', err)
       })
-      
+
       return mapped
     },
     enabled: Boolean(chatId),
@@ -71,7 +72,7 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
 
 // Consolidated send message with optimistic updates
 export const useSendMessage = ({ chatId }: { chatId: string }) => {
-  const client = useHonoClient()
+  const client = useApiClient()
   const queryClient = useQueryClient()
   const [message, setMessage] = useState('')
   const [sendChatError, setSendChatError] = useState(false)
@@ -101,23 +102,14 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
         throw new Error('offline_unavailable')
       }
 
-      const response = await client.api.chats[':id'].send.$post({
-        param: { id: chatId },
-        json: { message: messageText },
+      const payload = await client.chats.send({
+        chatId,
+        message: messageText,
       })
-      
-      const rawData = await response.json()
-      
-      // Validate response structure
-      if (!rawData || typeof rawData !== 'object' || !('messages' in rawData)) {
-        throw new Error('Invalid response format')
-      }
-      
-      const payload = rawData as { messages: { user: ChatMessage; assistant: ChatMessage } }
-      const mappedMessages = [
-        toMessageOutput(payload.messages.user),
-        toMessageOutput(payload.messages.assistant),
-      ]
+      const mappedMessages = [payload.messages.user, payload.messages.assistant].flatMap((message) => {
+        const output = toMessageOutput(message)
+        return output ? [output] : []
+      })
       
       // Persist to SQLite
       await persistMessages(chatId, mappedMessages)
@@ -140,7 +132,7 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
     },
     
     // Rollback on error
-    onError: (error, _variables, context) => {
+    onError: (error, variables, context) => {
       log('Error sending chat message:', error)
       setSendChatError(true)
       if (context?.previousMessages) {
@@ -183,7 +175,7 @@ export const useStartChat = ({
   intentId?: string
   seedPrompt?: string
 } & MutationOptions<LocalChat, Error, void>) => {
-  const client = useHonoClient()
+  const client = useApiClient()
   const queryClient = useQueryClient()
 
   return useMutation<LocalChat, Error, void>({
@@ -270,28 +262,19 @@ export const useActiveChat = () => {
 }
 
 async function startRemoteChat(
-  client: ReturnType<typeof useHonoClient>,
+  client: ApiClient,
   initialMessage: string
 ): Promise<Chat> {
   const title = initialMessage.trim().slice(0, 64) || 'Sherpa chat'
 
-  const chatResponse = await client.api.chats.$post({
-    json: { title },
+  const chat = await client.chats.create({
+    title,
   })
 
-  const rawData = await chatResponse.json()
-  
-  // Basic validation
-  if (!rawData || typeof rawData !== 'object' || !('id' in rawData)) {
-    throw new Error('Invalid chat response')
-  }
-  
-  const chat = rawData as Chat
-
   if (initialMessage.trim()) {
-    await client.api.chats[':id'].send.$post({
-      param: { id: chat.id },
-      json: { message: initialMessage },
+    await client.chats.send({
+      chatId: chat.id,
+      message: initialMessage,
     })
   }
 

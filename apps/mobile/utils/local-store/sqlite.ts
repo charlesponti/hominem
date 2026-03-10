@@ -9,23 +9,6 @@ const DB_NAME = 'msc_cloud_store.db'
 
 const toISO = (value: string | null | undefined) => value ?? new Date().toISOString()
 
-const parseJson = <T>(value: string | null | undefined): T | null => {
-  if (!value) return null
-  try {
-    return JSON.parse(value) as T
-  } catch {
-    return null
-  }
-}
-
-const stringifyJson = (value: unknown) => {
-  if (value === undefined) return null
-  return JSON.stringify(value)
-}
-
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null
-
 const normalizeProfile = (row: Record<string, unknown>): UserProfile => ({
   id: String(row.id),
   name: typeof row.name === 'string' ? row.name : null,

@@ -3,41 +3,21 @@ import { cn } from '../../lib/utils';
 interface PageContainerProps {
   children: React.ReactNode;
   className?: string;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '6xl' | 'full';
-  padding?: 'none' | 'sm' | 'md' | 'lg';
+  /**
+   * Use `narrow` only for focused single-column content like forms or detail views.
+   * The default (`standard`) matches the AppLayout canonical constraint (max-w-5xl).
+   * Never set this to bypass the layout system — if you think you need a wider container,
+   * the content belongs outside PageContainer entirely.
+   */
+  width?: 'narrow' | 'standard';
 }
 
-export function PageContainer({
-  children,
-  className,
-  maxWidth = '3xl',
-  padding = 'md',
-}: PageContainerProps) {
-  const maxWidthClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    '2xl': 'max-w-2xl',
-    '3xl': 'max-w-3xl',
-    '4xl': 'max-w-4xl',
-    '6xl': 'max-w-6xl',
-    full: 'max-w-full',
-  };
-
-  const paddingClasses = {
-    none: '',
-    sm: 'p-2',
-    md: 'p-4',
-    lg: 'p-6',
-  };
-
+export function PageContainer({ children, className, width = 'standard' }: PageContainerProps) {
   return (
     <div
       className={cn(
-        'container mx-auto',
-        maxWidthClasses[maxWidth],
-        paddingClasses[padding],
+        'w-full',
+        width === 'narrow' && 'max-w-2xl',
         className,
       )}
     >

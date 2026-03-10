@@ -7,7 +7,7 @@ set -e
 
 DB_NAME="hominem-test-postgres"
 DB_PORT="4433"
-DB_IMAGE="ghcr.io/hackefeller/hominem/postgres:latest"
+DB_IMAGE="ghcr.io/hackefeller/postgres:latest"
 
 case "${1:-}" in
   "start")

@@ -97,8 +97,8 @@ export function OtpCodeInput({
           onKeyDown={(e) => handleKeyDown(index, e)}
           className={`
             w-12 h-14 text-center text-xl font-semibold
-            bg-background border-2 border-input rounded-lg
-            focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20
+            bg-bg-surface border border-default rounded-lg
+            focus:border-focus focus:outline-none focus-ring
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-colors
           `}

@@ -27,8 +27,15 @@ export const COMMON_FONT_LINKS: LinkDescriptor[] = [
     crossOrigin: 'anonymous',
   },
   {
+    // Geist: Vercel's UI font — closest open web equivalent to SF Pro.
+    // Clean, legible at small sizes, designed for developer-facing products.
     rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap',
+    href: 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap',
+  },
+  {
+    // Geist Mono: paired monospace, replaces JetBrains Mono and SF Mono fallback.
+    rel: 'stylesheet',
+    href: 'https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap',
   },
 ];
 

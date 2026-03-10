@@ -10,17 +10,17 @@
 @import 'tailwindcss';
 @import './animations.css';
 
-/* ====== WEB FONTS ====== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Fonts loaded via <link> in COMMON_FONT_LINKS — not @import url() here,
+   which would violate the CSS @import ordering rule after PostCSS inlines
+   the imports above. */
 
 @theme {
   /* ====== TYPOGRAPHY ====== */
 
   /* Font families */
   --font-family-primary:
-    'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-family-mono: 'JetBrains Mono', 'SF Mono', 'Monaco', 'Menlo', monospace;
+    'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-family-mono: 'Geist Mono', ui-monospace, 'SF Mono', 'Menlo', monospace;
 
   /* Font sizes - 4px rhythm scale */
   --font-size-xs: 12px;

@@ -22,7 +22,7 @@ export default function ListForm() {
   const navigate = useNavigate();
 
   const { mutate: createList } = useCreateList({
-    onSuccess: (_result) => {
+    onSuccess: () => {
       try {
         localStorage.removeItem(STORAGE_KEY);
       } catch {}

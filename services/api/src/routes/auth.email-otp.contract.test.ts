@@ -4,7 +4,7 @@ interface OtpResponse {
   otp: string;
 }
 
-interface SessionResponse {
+interface _SessionResponse {
   isAuthenticated: boolean;
 }
 

@@ -1,4 +1,3 @@
-import type { HonoClient } from '@hominem/hono-client';
 import { useHonoQuery } from '@hominem/hono-client/react';
 import type { ChatsGetMessagesOutput } from '@hominem/hono-rpc/types/chat.types';
 import { useRef, useState } from 'react';
@@ -29,13 +28,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
 
   const { data: messages } = useHonoQuery<ChatsGetMessagesOutput>(
     ['chats', 'getMessages', { chatId, limit: 100 }],
-    async (client: HonoClient) => {
-      const res = await client.api.chats[':id'].messages.$get({
-        param: { id: chatId },
-        query: { limit: '100' },
-      });
-      return res.json() as Promise<ChatsGetMessagesOutput>;
-    },
+    ({ chats }) => chats.getMessages({ chatId, limit: 100 }),
     {
       enabled: !!chatId,
     },

@@ -23,16 +23,20 @@ export type VisitWithPlaceAndTags = {
 };
 
 export async function getVisitsByUser(
-  _userId: string,
-  _filters?: VisitFilters,
+  userId: string,
+  filters?: VisitFilters,
 ): Promise<VisitWithPlaceAndTags[]> {
+  void userId;
+  void filters;
   return [];
 }
 
 export async function getVisitsByPlace(
-  _placeId: string,
-  _userId?: string,
+  placeId: string,
+  userId?: string,
 ): Promise<VisitWithPlaceAndTags[]> {
+  void placeId;
+  void userId;
   return [];
 }
 
@@ -42,7 +46,9 @@ export interface VisitStats {
   averageRating: number | null;
 }
 
-export async function getVisitStatsByPlace(_placeId: string, _userId: string): Promise<VisitStats> {
+export async function getVisitStatsByPlace(placeId: string, userId: string): Promise<VisitStats> {
+  void placeId;
+  void userId;
   return {
     visitCount: 0,
     lastVisitDate: null,

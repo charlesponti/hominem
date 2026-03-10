@@ -15,10 +15,7 @@ export const useRefreshGooglePlaces = (
 ) => {
   const utils = useHonoUtils();
   return useHonoMutation<AdminRefreshGooglePlacesOutput, AdminRefreshGooglePlacesInput>(
-    async (client, variables: AdminRefreshGooglePlacesInput) => {
-      const res = await client.api.admin['refresh-google-places'].$post({ json: variables });
-      return (await res.json()) as unknown as AdminRefreshGooglePlacesOutput;
-    },
+    ({ admin }, variables) => admin.refreshGooglePlaces(variables),
     {
       ...options,
       onMutate: async () => {

@@ -47,7 +47,7 @@ financePlaidWebhookRoutes.post('/', async (c) => {
     throw new ValidationError('Invalid webhook payload');
   }
 
-  const { webhook_type, webhook_code, item_id, error: webhookError } = parseResult.data;
+  const { webhook_type, webhook_code, item_id, error: _webhookError } = parseResult.data;
 
   try {
     // Find the plaid item

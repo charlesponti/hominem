@@ -21,11 +21,8 @@ export const TaskPrioritySchema = z
   .enum(['low', 'medium', 'high', 'urgent'])
   .describe('TaskPriority');
 
-type NoteContentType = z.infer<typeof NoteContentTypeSchema>;
-type NoteStatus = z.infer<typeof NoteStatusSchema>;
 export type AllContentType = z.infer<typeof AllContentTypeSchema>;
 export type ContentTag = z.infer<typeof ContentTagSchema>;
-type PublishingMetadata = z.infer<typeof PublishingMetadataSchema>;
 export type NoteAnalysis = z.infer<typeof NoteAnalysisSchema>;
 export type TaskStatus = z.infer<typeof TaskStatusSchema>;
 export type TaskPriority = z.infer<typeof TaskPrioritySchema>;
@@ -53,8 +50,6 @@ const NoteMentionSchema = z.object({
   id: z.string(),
   name: z.string(),
 });
-
-type NoteMention = z.infer<typeof NoteMentionSchema>;
 
 export const CreateNoteInputSchema = z.object({
   type: NoteContentTypeSchema.default('note'),

@@ -78,10 +78,10 @@ function serializeTripItem(item: TripItemDbRow) {
 /**
  * Trips Routes
  *
- * Handles trip planning operations using the new API contract pattern:
+ * Handles trip planning operations using direct JSON responses:
  * - Services throw typed errors
- * - HTTP endpoints catch errors and return ApiResult
- * - Clients receive discriminated union with `success` field
+ * - HTTP endpoints return concrete response bodies
+ * - Error middleware handles failure responses
  */
 
 // ============================================================================

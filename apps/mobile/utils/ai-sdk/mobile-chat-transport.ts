@@ -32,7 +32,7 @@ export function createMobileChatFetch(getAccessToken: GetAccessToken) {
   return fetchFn as unknown as typeof fetch
 }
 
-async function isNetworkConnected() {
+async function _isNetworkConnected() {
   const status = await NetInfo.fetch()
   return Boolean(status.isConnected)
 }

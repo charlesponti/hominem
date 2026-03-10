@@ -13,7 +13,7 @@ function getReadableDate(date: FocusItemInput['due_date']) {
       day: 'numeric',
       year: 'numeric',
     })
-  } catch (error) {
+  } catch  {
     return null
   }
 }

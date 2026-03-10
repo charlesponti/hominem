@@ -58,7 +58,8 @@ export function adjustDateRange(
   return { adjustedDateFrom: dateFrom, adjustedDateTo };
 }
 
-export function getLastMonthFromRange(_dateFrom?: Date, dateTo?: Date) {
+export function getLastMonthFromRange(dateFrom?: Date, dateTo?: Date) {
+  void dateFrom;
   if (!dateTo) {
     // If no dateTo, use current month
     const now = new Date();

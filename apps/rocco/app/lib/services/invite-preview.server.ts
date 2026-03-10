@@ -16,10 +16,5 @@ export async function buildInvitePreview(
   request?: Request,
 ): Promise<InvitePreview | null> {
   const client = createServerHonoClient(undefined, request);
-  const res = await client.api.invites.preview.$post({ json: { token } });
-  if (!res.ok) {
-    return null;
-  }
-
-  return res.json();
+  return client.invites.preview({ token });
 }

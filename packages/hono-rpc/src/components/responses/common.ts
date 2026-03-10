@@ -76,30 +76,3 @@ export const commonResponses: Record<
     },
   },
 };
-
-/**
- * Standard success response
- */
-const successResponse = {
-  200: {
-    description: 'Success',
-  },
-};
-
-/**
- * Created response (201)
- */
-const createdResponse = {
-  201: {
-    description: 'Created successfully',
-  },
-};
-
-/**
- * No content response (204)
- */
-const noContentResponse = {
-  204: {
-    description: 'No content - Operation successful',
-  },
-};

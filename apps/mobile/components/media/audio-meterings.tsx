@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, withTiming, interpolateColor } from 'react-native-reanimated';
 import { theme } from '~/theme';
 
 // Constants for normalization
@@ -29,20 +28,6 @@ export const useNormalizedLevels = (levels: number[]) => {
 
 // Animated bar component
 const AudioMeterings = ({ height }: { height: number }) => {
-  const animatedStyles = useAnimatedStyle(() => {
-    const animatedHeight = withTiming(height, { duration: 100 });
-    const backgroundColor = interpolateColor(
-      animatedHeight,
-      [MIN_HEIGHT, (MIN_HEIGHT + MAX_HEIGHT) / 2, MAX_HEIGHT],
-      [theme.colors.green, theme.colors.yellow, theme.colors.red]
-    );
-
-    return {
-      height: animatedHeight,
-      backgroundColor,
-    };
-  });
-
   return <View style={[styles.bar, { height, backgroundColor: theme.colors.foreground }]} />;
   // return <Animated.View style={[styles.bar, animatedStyles]} />;
 };

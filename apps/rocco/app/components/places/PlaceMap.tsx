@@ -9,7 +9,7 @@ type Props = {
   googleMapsId?: string;
 };
 
-const PlaceMap = ({ latitude, longitude, name, googleMapsId: _googleMapsId }: Props) => {
+const PlaceMap = ({ latitude, longitude, name }: Props) => {
   const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${clientEnv.VITE_GOOGLE_API_KEY}&q=${encodeURIComponent(name)}&center=${latitude},${longitude}&zoom=15`;
 
   return (

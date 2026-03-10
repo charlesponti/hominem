@@ -7,7 +7,7 @@ import {
   upsertPlaidItem,
   deletePlaidItem,
 } from '@hominem/finance-services';
-import { NotFoundError, ValidationError, InternalError, isServiceError } from '../errors';
+import { NotFoundError, ValidationError, InternalError } from '../errors';
 import { plaidSyncQueue } from '@hominem/queues';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
@@ -58,13 +58,8 @@ export const plaidRoutes = new Hono<AppContext>()
         200,
       );
     } catch (error) {
-      return c.json(
-        {
-          error: 'Failed to create link token',
-          details: error instanceof Error ? error.message : String(error),
-        },
-        500,
-      );
+      logger.error('Failed to create Plaid link token', { error });
+      throw new InternalError('Failed to create link token');
     }
   })
 

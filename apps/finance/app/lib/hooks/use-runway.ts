@@ -6,10 +6,7 @@ import type {
 import { useHonoMutation } from '~/lib/api';
 
 export const useCalculateRunway = () => {
-  return useHonoMutation<RunwayCalculateOutput, RunwayCalculateInput>(async (client, variables) => {
-    const res = await client.api.finance.runway.calculate.$post({
-      json: variables,
-    });
-    return res.json() as unknown as Promise<RunwayCalculateOutput>;
-  });
+  return useHonoMutation<RunwayCalculateOutput, RunwayCalculateInput>(
+    ({ finance }, variables) => finance.calculateRunway(variables),
+  );
 };

@@ -31,31 +31,3 @@ export const listStyles = StyleSheet.create({
     color: theme.colors.secondaryForeground,
   },
 })
-
-const voidPrimitives = StyleSheet.create({
-  voidSurface: {
-    backgroundColor: theme.colors.background,
-  },
-  voidMutedSurface: {
-    backgroundColor: theme.colors.muted,
-  },
-  voidBorder: {
-    borderColor: theme.colors.border,
-    borderWidth: 1,
-  },
-  voidTextPrimary: {
-    color: theme.colors.foreground,
-  },
-  voidTextSecondary: {
-    color: theme.colors.secondaryForeground,
-  },
-  voidTextMuted: {
-    color: theme.colors.mutedForeground,
-  },
-  maSectionGap: {
-    marginTop: 64,
-  },
-  maBlockGap: {
-    marginTop: 32,
-  },
-})

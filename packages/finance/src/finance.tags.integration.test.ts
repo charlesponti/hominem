@@ -2,7 +2,7 @@ import { db, sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
-  isIntegrationDatabaseAvailable,
+  _isIntegrationDatabaseAvailable,
   tableExists,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -15,7 +15,7 @@ import {
   replaceTransactionTags,
 } from './finance';
 
-async function hasTaggingTables(): Promise<boolean> {
+async function _hasTaggingTables(): Promise<boolean> {
   const hasTagsTable = await tableExists('tags');
   const hasTaggedItemsTable = await tableExists('tagged_items');
   return hasTagsTable && hasTaggedItemsTable;

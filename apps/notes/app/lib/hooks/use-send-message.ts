@@ -1,7 +1,6 @@
 import { useChat } from '@ai-sdk/react';
-import type { HonoClient } from '@hominem/hono-client';
 import { useHonoMutation, useHonoUtils } from '@hominem/hono-client/react';
-import type { ChatsSendInput } from '@hominem/hono-rpc/types/chat.types';
+import type { ChatsSendInput, ChatsSendOutput } from '@hominem/hono-rpc/types/chat.types';
 import { useMemo } from 'react';
 
 import { useFeatureFlag } from './use-feature-flags';
@@ -27,12 +26,11 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
   const chat = useChat() as any; // Type assertion to bypass type errors temporarily
 
   const legacySend = useHonoMutation(
-    async (client: HonoClient, variables: ChatsSendInput) => {
-      const response = await client.api.chats[':id'].send.$post({
-        param: { id: variables.chatId || chatId },
-        json: { message: variables.message },
-      });
-      return response.json() as Promise<unknown>;
+    async ({ chats }, variables: ChatsSendInput) => {
+      return chats.send({
+        chatId: variables.chatId || chatId,
+        message: variables.message,
+      }) as Promise<ChatsSendOutput>;
     },
     {
       onSuccess: () => {

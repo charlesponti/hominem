@@ -1,4 +1,3 @@
-import type { HonoClient } from '@hominem/hono-client';
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import type {
   ItemsAddToListInput,
@@ -14,10 +13,7 @@ import type {
 const useAddItemToList = () => {
   const utils = useHonoUtils();
   return useHonoMutation<ItemsAddToListOutput, ItemsAddToListInput>(
-    async (client: HonoClient, variables: ItemsAddToListInput) => {
-      const res = await client.api.items.add.$post({ json: variables });
-      return res.json();
-    },
+    ({ items }, variables) => items.add(variables),
     {
       onMutate: async (variables) => {
         await utils.cancel(['items', 'by-list', variables.listId]);
@@ -75,10 +71,7 @@ const useAddItemToList = () => {
 const useRemoveItemFromList = () => {
   const utils = useHonoUtils();
   return useHonoMutation<ItemsRemoveFromListOutput, ItemsRemoveFromListInput>(
-    async (client: HonoClient, variables: ItemsRemoveFromListInput) => {
-      const res = await client.api.items.remove.$post({ json: variables });
-      return res.json();
-    },
+    ({ items }, variables) => items.remove(variables),
     {
       onMutate: async (variables) => {
         await utils.cancel(['items', 'by-list', variables.listId]);
@@ -123,10 +116,9 @@ const useRemoveItemFromList = () => {
 const useListItems = (listId: string | undefined) =>
   useHonoQuery<ItemsGetByListIdOutput>(
     ['items', 'by-list', listId],
-    async (client: HonoClient) => {
+    async ({ items }) => {
       if (!listId) return [] as unknown as ItemsGetByListIdOutput;
-      const res = await client.api.items['by-list'].$post({ json: { listId } });
-      return res.json();
+      return items.getByList({ listId });
     },
     {
       enabled: !!listId,

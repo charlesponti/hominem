@@ -14,8 +14,5 @@ const serverSchema = z.object({
   PLAID_ENV: z.enum(['sandbox', 'development', 'production']).default('sandbox'),
 });
 
-const clientEnv = createClientEnv(clientSchema, 'financeClient');
+void createClientEnv(clientSchema, 'financeClient');
 export const serverEnv = createServerEnv(serverSchema, 'financeServer');
-
-type ClientEnv = z.infer<typeof clientSchema>;
-type ServerEnv = z.infer<typeof serverSchema>;

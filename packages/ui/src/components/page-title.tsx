@@ -21,15 +21,15 @@ export function PageTitle({
 }: PageTitleProps) {
   const titleClasses = {
     serif: 'heading-1',
-    sans: 'text-2xl font-sans font-semibold',
-    large: 'heading-1 text-3xl md:text-4xl',
+    sans: 'heading-3',
+    large: 'heading-1',
   };
 
   return (
     <div className={cn('flex flex-1 justify-between items-center gap-2 group pr-2', className)}>
       <div className="flex flex-col">
         <h1 className={cn('wrap-break-word', titleClasses[variant])}>{title}</h1>
-        {subtitle && <p className="text-sm text-muted-foreground/75">{subtitle}</p>}
+        {subtitle && <p className="body-3 text-text-secondary">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
     </div>

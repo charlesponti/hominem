@@ -6,7 +6,7 @@ type NamedStyles<T> = {
 }
 
 const PRIMARY_FONT = 'Inter'
-const MONO_FONT = 'JetBrains Mono'
+const MONO_FONT = 'Geist Mono'
 
 /* ====== UNIFIED DESIGN SYSTEM TOKENS ====== */
 /* Colors, typography, and spacing aligned with web design system */

@@ -3,7 +3,7 @@ import type { AuthProviderProps } from '@hominem/auth';
 
 // debug type alias to ensure correct props are imported
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-type _AuthPropsDebug = AuthProviderProps;
+type AuthPropsDebug = AuthProviderProps;
 import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
 import type React from 'react';
 import { useCallback } from 'react';
@@ -59,7 +59,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <meta
           name="viewport"
-          content="width=device-width, initial-scale=1, user-scalable=no, maximum-scale=1"
+          content="width=device-width, initial-scale=1"
         />
         <Meta />
         <Links />

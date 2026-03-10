@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 
 import { db, sql } from '@hominem/db';
-import { extractRows, isIntegrationDatabaseAvailable } from '@hominem/db/test/utils';
+import { extractRows, _isIntegrationDatabaseAvailable } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {

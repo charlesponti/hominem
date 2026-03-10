@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { useHonoClient } from '@hominem/hono-client/react'
+import { useApiClient } from '@hominem/hono-client/react'
 
 import { LocalStore } from '~/utils/local-store'
 import { validateNotesResponse } from '~/utils/validation/schemas'
@@ -16,21 +16,13 @@ export const useFocusQuery = ({
   onSuccess?: (data: FocusResponse) => void
   params?: Record<string, string | string[] | number>
 }) => {
-  const client = useHonoClient()
+  const client = useApiClient()
 
   return useQuery<FocusItems | null>({
     queryKey: ['focusItems', params],
     queryFn: async () => {
       try {
-        const response = await client.api.notes.$get({
-          query: {
-            status: 'draft,published',
-            types: 'task,todo,goal,note',
-          },
-        })
-
-        const rawPayload = await response.json()
-        const payload = validateNotesResponse(rawPayload)
+        const payload = validateNotesResponse(await client.notes.listFocusItems())
         const mapped = payload.notes.map(noteToFocusItem)
 
         await Promise.all(mapped.map((item) => LocalStore.upsertFocusItem(toLocalFocusItem(item))))
