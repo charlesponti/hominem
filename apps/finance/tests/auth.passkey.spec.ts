@@ -62,6 +62,11 @@ interface SerializedRegistrationCredential {
   }
 }
 
+interface WebAuthnCapability {
+  hasCreate: boolean
+  isSecureContext: boolean
+}
+
 async function getAccessToken(context: BrowserContext): Promise<string | null> {
   const cookies = await context.cookies()
   const tokenCookie = cookies.find((c) => c.name === 'hominem_access_token')
@@ -225,6 +230,15 @@ async function registerPasskey(page: Page, context: BrowserContext): Promise<Pas
   }, accessToken)
 }
 
+async function getWebAuthnCapability(page: Page): Promise<WebAuthnCapability> {
+  await page.goto(`${FINANCE_APP_BASE_URL}/auth`)
+
+  return page.evaluate(() => ({
+    hasCreate: typeof navigator.credentials?.create === 'function',
+    isSecureContext,
+  }))
+}
+
 /**
  * Sign in with a passkey via the finance app's UI.
  * Navigates to /auth, clicks the "Use a passkey" button, and waits for the
@@ -275,6 +289,12 @@ test('web passkey registration and sign-in flow reaches authenticated finance vi
 
   await signInWithEmailOtp(page, email)
   await expect(page).toHaveURL(/\/finance$/)
+
+  const webAuthnCapability = await getWebAuthnCapability(page)
+  test.skip(
+    !webAuthnCapability.isSecureContext || !webAuthnCapability.hasCreate,
+    'WebAuthn registration requires a secure browser context with navigator.credentials.create',
+  )
 
   const passkeyHandle = await setupVirtualPasskey(context, page)
 

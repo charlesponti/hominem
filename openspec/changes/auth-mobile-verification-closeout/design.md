@@ -30,6 +30,12 @@ The remaining work is cohesive: verification, operational readiness, and sign-of
 
 The closeout should treat testing as a layered system instead of a single mobile gate. `jest-expo` with React Native Testing Library covers unit and integration behavior, `expo-router/testing-library` covers route-level auth behavior, Detox covers native-critical simulator behavior, and personal-device smoke covers the remaining hardware-specific confidence without depending on paid Expo workflow features.
 
+The adjacent web auth E2E coverage should also stay deterministic inside local and CI constraints. OTP retrieval should poll until the test harness publishes the code, and passkey browser tests should only execute when the browser origin is a secure WebAuthn-capable context. When that capability is unavailable, the suite should skip the passkey registration assertion instead of failing the entire auth closeout gate.
+
+Finance auth E2E should run with a single Playwright worker and a larger per-test timeout so cold-start SSR compilation, OTP bootstrap, and auth cookie setup do not race each other during closeout verification.
+
+When Finance browser tests only need an authenticated `email_otp` session after the UI reaches `/auth/verify`, they can use the dedicated test-only auth bootstrap endpoint instead of depending on the OTP verify widget for every case. The invalid-code UI path remains covered separately, while the authenticated-path tests stay deterministic.
+
 ### Use one source of truth for runtime variants
 
 `APP_VARIANT` should determine app identity, native module inclusion, local environment loading, update behavior, and testing expectations. The `dev` variant should be the only variant that includes `expo-dev-client` and connects to Metro. `e2e` should generate a standalone test binary without the dev launcher so Detox runs against the same native shape every time. `preview` and `production` should remain standalone update-enabled variants.

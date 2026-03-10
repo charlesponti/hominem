@@ -39,6 +39,26 @@ function getAbsoluteApiUrl(baseUrl: string, path: string) {
   return new URL(path, baseUrl).toString()
 }
 
+function getRequestAccessToken(request: Request) {
+  const authorization = request.headers.get('authorization')
+  if (authorization?.startsWith('Bearer ')) {
+    return authorization.slice(7)
+  }
+
+  const cookieHeader = request.headers.get('cookie') ?? ''
+  const tokenMatch = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/)
+  const tokenValue = tokenMatch?.[1]
+  if (!tokenValue) {
+    return null
+  }
+
+  try {
+    return decodeURIComponent(tokenValue)
+  } catch {
+    return tokenValue
+  }
+}
+
 function toSession(accessToken?: string | null, expiresIn?: number | null): HominemSession | null {
   if (!accessToken) {
     return null
@@ -58,6 +78,7 @@ export async function getServerAuth(
   config: AuthConfig
 ): Promise<ServerAuthResult & { headers: Headers }> {
   const headers = new Headers()
+  const requestAccessToken = getRequestAccessToken(request)
 
   try {
     const cookieHeader = request.headers.get('cookie')
@@ -99,11 +120,13 @@ export async function getServerAuth(
     }
 
     const payload = (await res.json()) as ServerSessionPayload
+    const session = toSession(payload.accessToken ?? requestAccessToken, payload.expiresIn)
+
     return {
       user: payload.user ?? null,
-      session: toSession(payload.accessToken, payload.expiresIn),
+      session,
       auth: payload.auth ?? null,
-      isAuthenticated: Boolean(payload.isAuthenticated && payload.user),
+      isAuthenticated: Boolean(payload.isAuthenticated && payload.user && session),
       headers,
     }
   } catch (error) {

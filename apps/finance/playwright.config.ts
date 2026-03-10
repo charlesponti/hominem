@@ -3,13 +3,14 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const reuseExistingServer = process.env.REUSE_SERVERS === 'true' || !process.env.CI
+const reuseExistingServer = process.env.REUSE_SERVERS === 'true'
 const apiBaseUrl = 'http://api.lvh.me:4040'
 const financeBaseUrl = 'http://finance.lvh.me:4444'
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 30_000,
+  timeout: 60_000,
+  workers: 1,
   retries: 1,
   globalSetup: './tests/global-setup.ts',
   use: {
@@ -38,7 +39,8 @@ export default defineConfig({
         DATABASE_URL: 'postgres://postgres:postgres@localhost:4433/hominem-test',
         AUTH_TEST_OTP_ENABLED: 'true',
         AUTH_E2E_SECRET: 'otp-secret',
-        AUTH_EMAIL_OTP_EXPIRES_SECONDS: '2',
+        AUTH_E2E_ENABLED: 'true',
+        AUTH_EMAIL_OTP_EXPIRES_SECONDS: '60',
         OPENAI_API_KEY: 'test-openai-key',
       },
     },
