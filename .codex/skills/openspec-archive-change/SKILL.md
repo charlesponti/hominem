@@ -52,10 +52,10 @@ Archive a completed change in the experimental workflow.
 
 4. **Assess delta spec sync state**
 
-   Check for delta specs at `openspec/inbox/<name>/specs/`. If none exist, proceed without sync prompt.
+   Check for delta specs at `openspec/changes/<name>/specs/`. If none exist, proceed without sync prompt.
 
    **If delta specs exist:**
-   - Compare each delta spec with its corresponding canonical spec at `openspec/done/specs/<capability>/spec.md`
+   - Compare each delta spec with its corresponding canonical spec at `openspec/specs/<capability>/spec.md`
    - Determine what changes would be applied (adds, modifications, removals, renames)
    - Show a combined summary before prompting
 
@@ -79,7 +79,7 @@ Archive a completed change in the experimental workflow.
    - If no: Move the change directory to archive
 
    ```bash
-   mv openspec/inbox/<name> openspec/archive/YYYY-MM-DD-<name>
+   mv openspec/changes/<name> openspec/archive/YYYY-MM-DD-<name>
    ```
 
 6. **Create merged completion doc and update index**
@@ -87,8 +87,8 @@ Archive a completed change in the experimental workflow.
    After archiving, invoke the `openspec-merge-doc` workflow for the same change.
 
    Requirements:
-   - Create `openspec/done/records/YYYY-MM-DD-<change-name>.md` (if not already present)
-   - Update `openspec/done/README.md` index
+   - Create `openspec/merged/YYYY-MM-DD-<change-name>.md` (if not already present)
+   - Update `openspec/merged/README.md` index
    - Ensure naming uses `YYYY-MM-DD-<change-slug>.md`
    - Keep one merged doc per completed change
 
@@ -111,8 +111,8 @@ Archive a completed change in the experimental workflow.
 **Change:** <change-name>
 **Schema:** <schema-name>
 **Archived to:** openspec/archive/YYYY-MM-DD-<name>/
-**Merged doc:** openspec/done/records/YYYY-MM-DD-<name>.md
-**Merged index:** openspec/done/README.md updated
+**Merged doc:** openspec/merged/YYYY-MM-DD-<name>.md
+**Merged index:** openspec/merged/README.md updated
 **Specs:** ✓ Synced to main specs (or "No delta specs" or "Sync skipped")
 
 All artifacts complete. All tasks complete.

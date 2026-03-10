@@ -9,7 +9,7 @@ Create a single canonical merged document for a completed change.
 
 **Required Output Style**
 
-- Use `openspec/done/records/_TEMPLATE.md` exactly as the baseline.
+- Use `openspec/merged/_TEMPLATE.md` exactly as the baseline.
 - Keep the doc detailed and generous, not a short recap.
 - Prefer tables for metadata, decisions, validation, operations, and follow-ups.
 - Include concrete evidence references (PRs, commits, workflow runs) where available.
@@ -37,7 +37,7 @@ Create a single canonical merged document for a completed change.
 3. **Write canonical merged document**
 
    Create:
-   - `openspec/done/records/YYYY-MM-DD-<change>.md`
+   - `openspec/merged/YYYY-MM-DD-<change>.md`
 
    Fill every template section:
    - metadata
@@ -54,7 +54,7 @@ Create a single canonical merged document for a completed change.
    - actionable follow-ups
 
    Then update:
-   - `openspec/done/README.md`
+   - `openspec/merged/README.md`
    - Add or refresh one index row for the merged doc
    - Keep the index sorted by filename/date
 4. **Retire superseded planning docs**
@@ -72,7 +72,7 @@ Create a single canonical merged document for a completed change.
 
    Provide:
    - created merge doc path
-   - index update status (`openspec/done/README.md`)
+   - index update status (`openspec/merged/README.md`)
    - removed files
    - retained files and reason
 
@@ -81,5 +81,5 @@ Create a single canonical merged document for a completed change.
 - Do not process incomplete or active changes unless explicitly requested.
 - Do not remove audit/compliance artifacts.
 - Keep follow-ups specific with owner, priority, and due date.
-- Keep naming consistent: `openspec/done/records/YYYY-MM-DD-<change>.md`.
-- Keep `openspec/done/README.md` in sync with merged docs.
+- Keep naming consistent: `openspec/merged/YYYY-MM-DD-<change>.md`.
+- Keep `openspec/merged/README.md` in sync with merged docs.

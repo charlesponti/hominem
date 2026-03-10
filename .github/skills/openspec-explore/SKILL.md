@@ -103,9 +103,9 @@ Think freely. When insights crystallize, you might offer:
 If the user mentions a change or you detect one is relevant:
 
 1. **Read existing artifacts for context**
-   - `openspec/inbox/<name>/proposal.md`
-   - `openspec/inbox/<name>/design.md`
-   - `openspec/inbox/<name>/tasks.md`
+   - `openspec/changes/<name>/proposal.md`
+   - `openspec/changes/<name>/design.md`
+   - `openspec/changes/<name>/tasks.md`
    - etc.
 
 2. **Reference them naturally in conversation**
@@ -116,8 +116,8 @@ If the user mentions a change or you detect one is relevant:
 
    | Insight Type | Where to Capture |
    |--------------|------------------|
-   | New requirement discovered | `openspec/done/specs/<capability>/spec.md` |
-   | Requirement changed | `openspec/done/specs/<capability>/spec.md` |
+   | New requirement discovered | `openspec/specs/<capability>/spec.md` |
+   | Requirement changed | `openspec/specs/<capability>/spec.md` |
    | Design decision made | `design.md` |
    | Scope changed | `proposal.md` |
    | New work identified | `tasks.md` |

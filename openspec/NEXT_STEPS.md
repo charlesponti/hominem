@@ -40,9 +40,7 @@ Remaining in-progress changes:
 
 ## Layout Reminder
 
-- Open work lives in `openspec/inbox`
-- Completed canonical specs live in `openspec/done/specs`
-- Completed delivery records live in `openspec/done/records`
+- Open work lives in `openspec/changes`
+- Completed canonical specs live in `openspec/specs`
+- Completed delivery records live in `openspec/merged`
 - Raw historical change folders live in `openspec/archive`
-
-Legacy paths under `openspec/changes`, `openspec/specs`, and `openspec/merged` are compatibility shims for the current CLI.
