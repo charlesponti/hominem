@@ -384,6 +384,62 @@ Use for: delete, disconnect, revoke, purchase, bulk action.
 
 ---
 
+#### 14b. WCAG 2.2 New Criteria (released October 2023)
+
+These are AA requirements specific to WCAG 2.2 — not in 2.1. All apply.
+
+**2.5.7 — Dragging Movements**
+Any UI that uses drag-and-drop must offer a single-pointer (click/tap) alternative. A draggable sort handle must also work with Up/Down buttons or a position input. Never build functionality reachable only by dragging.
+
+**2.5.8 — Target Size Minimum**
+Every interactive element must be at least 24×24 CSS px. Exceptions:
+- Inline text links within a sentence — exempt if spacing is sufficient
+- The element itself is 24px but its activation area (including spacing to adjacent targets) meets 24px clearance
+
+Prefer 44px for primary actions. 24px is the floor, not the target.
+
+**3.3.7 — Redundant Entry**
+Do not ask users to re-enter information already provided in the same session. Examples:
+- If the user entered their email on a previous step, pre-fill it in the next step
+- Do not show a "confirm email" field (type it twice) — it fails this criterion
+- Exception: re-entry required for security (password confirmation for auth change) is allowed
+
+**3.3.8 — Accessible Authentication (Minimum)**
+Cognitive function tests must not be the only authentication mechanism. Applies to:
+- CAPTCHA: always provide an audio or image-based alternative. Prefer passkeys, magic link, or OAuth.
+- Password fields: never block `paste`. Screen reader users and password manager users depend on paste. Never set `onpaste="return false"` or use `autocomplete="off"` on password fields.
+
+**2.5.2 — Pointer Cancellation**
+Actions triggered by pointer must fire on `up` event, not `down` event. Users must be able to cancel by dragging off the target before releasing.
+- Use `click` (fires on up) — not `mousedown`/`pointerdown`/`touchstart` for activation
+- Exception: drawing tools, sliders where down-to-drag is essential behavior
+- Drag-start (pointerdown) is allowed; the completion (drop) fires on pointerup — this is compliant
+
+**2.2.1 — Session Timeout Warning**
+If any session expires (auth token, idle timeout, timed form), users must be warned before expiry and given the ability to extend.
+
+Pattern:
+```html
+<!-- Show at 2 min before expiry -->
+<dialog
+  role="alertdialog"
+  aria-modal="true"
+  aria-labelledby="session-title"
+  aria-describedby="session-desc"
+>
+  <h2 id="session-title">Your session is about to expire</h2>
+  <p id="session-desc">You'll be signed out in <strong><span id="countdown">2:00</span></strong>.</p>
+  <button id="extend-session" autofocus>Stay signed in</button>
+  <button>Sign out now</button>
+</dialog>
+```
+- Warning threshold: ≥ 2 minutes before expiry (or 20% of total session, whichever is longer)
+- Default focus: "Stay signed in" button (safest action)
+- `id="countdown"` updated every second, wrapped in `aria-live="off"` (update span only — avoid constant announcements)
+- After extension: dialog closes, focus returns to prior location, new timeout resets
+
+---
+
 #### 15. Semantic HTML & ARIA
 
 **Page structure (required):**
@@ -433,6 +489,10 @@ Use for: delete, disconnect, revoke, purchase, bulk action.
 | Progress bar | `<div>` | `role="progressbar"`, `aria-valuenow`, `aria-valuemin="0"`, `aria-valuemax="100"` |
 
 **WCAG 2.5.3 — Label in Name.** When a component has visible text, its accessible name must *contain* that text. A button that reads "Learn more" cannot have `aria-label="Read the full article"`. It must be `aria-label="Learn more about pricing"` — the visible text is preserved within the label.
+
+**WCAG 3.2.3 — Consistent Navigation.** Navigation that repeats across pages must appear in the same relative order every time. If the top bar shows [Logo] [Dashboard] [Settings] [Account] on one page, it must appear in that same order on all pages. Reordering based on "most used" or personalization violates this.
+
+**WCAG 3.2.4 — Consistent Identification.** Components with the same function across pages must be identified consistently. If a search input is labelled "Search notes" in one view and "Find notes" in another — that's a violation. Icon-only buttons with the same function must have the same `aria-label` everywhere.
 
 ---
 
@@ -906,6 +966,87 @@ Opens from hamburger button. Full-height overlay sliding from left.
 - Debounce input: 300ms before firing search request
 - Loading state: spinner inside input, `aria-busy="true"` on results container
 
+##### Navigation — Bottom Tab Bar
+
+Apple HIG primary navigation pattern for mobile apps with 3–5 top-level destinations. Use when the app has 3–5 equally weighted sections. Do not use for web apps — use Top Bar + Drawer instead.
+
+```html
+<nav aria-label="Main" role="navigation">
+  <ul role="list" class="tab-bar">
+    <li>
+      <a href="/start" aria-current="page" class="tab-item">
+        <svg aria-hidden="true" focusable="false"><!-- icon --></svg>
+        <span>Start</span>
+      </a>
+    </li>
+    <li>
+      <a href="/focus" class="tab-item">
+        <svg aria-hidden="true" focusable="false"><!-- icon --></svg>
+        <span>Focus</span>
+      </a>
+    </li>
+    <li>
+      <a href="/account" class="tab-item">
+        <svg aria-hidden="true" focusable="false"><!-- icon --></svg>
+        <span>Account</span>
+      </a>
+    </li>
+  </ul>
+</nav>
+```
+
+```css
+.tab-bar {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 56px; /* + env(safe-area-inset-bottom) for iPhone notch */
+  padding-bottom: env(safe-area-inset-bottom);
+  background: var(--background);
+  border-top: 1px solid var(--border);
+  z-index: var(--z-raised);
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: 44px; /* WCAG 2.5.8 — 24px min, prefer 44px */
+  color: var(--foreground-tertiary);
+  font-size: 10px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--duration-instant) var(--ease-default);
+}
+
+.tab-item[aria-current="page"] {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+.tab-item:hover { color: var(--foreground-secondary); }
+
+/* Body padding to prevent content hiding behind tab bar */
+body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+```
+
+- `aria-current="page"` on the active link — update on navigation
+- Icon: 24×24px `<svg>` with `aria-hidden="true"` — label comes from visible text
+- Tab label: always visible — never icon-only (WCAG 1.1.1 and cognitive load)
+- 3 tabs minimum, 5 maximum. More than 5: use drawer navigation instead.
+- Active indicator: `color: var(--foreground)`, weight 600. No filled pill or heavy background.
+- `safe-area-inset-bottom` required for iPhone home indicator overlap (iOS notch/Dynamic Island)
+- On tablet/desktop: hide tab bar, show top bar (`@media (min-width: 768px) { .tab-bar { display: none; } }`)
+- Badge count on tab icon: `<span class="sr-only"> (3 unread)</span>` after tab label
+
 ##### Scrollbar
 
 ```css
@@ -1163,6 +1304,17 @@ Never use color alone to distinguish series. Always pair with one of the above.
 - Mobile nav: focus trap, Escape closes, `aria-expanded` on trigger
 - Pagination: `aria-current="page"`, page change announced via `role="status"`
 - Search: `role="search"`, result count via `role="status"`, arrow key navigation
+- Drag-and-drop has keyboard/single-pointer alternative — WCAG 2.5.7
+- All interactive targets ≥ 24×24px — WCAG 2.5.8
+- No re-entry of previously provided data in same session — WCAG 3.3.7
+- Password fields allow paste. No `autocomplete="off"` on passwords — WCAG 3.3.8
+- Actions fire on `click`/`pointerup`, not `pointerdown` — WCAG 2.5.2
+- Session expiry warns ≥ 2 minutes before with option to extend — WCAG 2.2.1
+- Navigation order is identical across all pages — WCAG 3.2.3
+- Components with same function have same accessible name everywhere — WCAG 3.2.4
+- Bottom tab bar shows `aria-current="page"` on active tab
+- Bottom tab bar always shows visible text labels — never icon-only tabs
+- Bottom tab bar uses `env(safe-area-inset-bottom)` for iPhone notch
 
 **Design consistency:**
 - No raw hex/rgba — all via tokens
@@ -1258,4 +1410,22 @@ rg -n "pagination|Pagination" apps/ --glob "*.tsx" | rg -v "aria-current"
 
 # Mobile nav missing aria-expanded
 rg -n "hamburger|mobile.*menu|menu.*mobile|drawer" apps/ --glob "*.tsx" -i | rg -v "aria-expanded"
+
+# Pointer events on down (WCAG 2.5.2) — actions should fire on click, not mousedown/pointerdown
+rg -n "onMouseDown|onPointerDown|onTouchStart" apps/ --glob "*.tsx" | rg -v "drag|slider|canvas|draw"
+
+# Password fields blocking paste (WCAG 3.3.8)
+rg -n "onPaste.*false|onpaste.*return false|autocomplete.*off.*password" apps/ --glob "*.tsx" --glob "*.html" -i
+
+# Confirm email / re-entry fields (WCAG 3.3.7)
+rg -n "confirm.*email|email.*confirm|confirmEmail|emailConfirm" apps/ --glob "*.tsx" -i
+
+# Bottom tab bar missing aria-current
+rg -n "tab-bar|TabBar|bottomTab|BottomTab|NativeTabs" apps/ --glob "*.tsx" | rg -v "aria-current"
+
+# Session timeout — check for expiry handling with no warning UI
+rg -n "session.*expir|token.*expir|signOut.*idle|idle.*timeout" apps/ --glob "*.tsx" -i | rg -v "warn|dialog|modal|countdown"
+
+# safe-area-inset missing on fixed bottom bars
+rg -n "position.*fixed|position.*sticky" apps/ --glob "*.css" --glob "*.tsx" | rg -v "safe-area|env("
 ```
