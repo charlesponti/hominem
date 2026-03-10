@@ -2,6 +2,7 @@ import type {
   AccountAllOutput,
   AccountGetOutput,
   AccountListOutput,
+  AccountWithTransactions,
   TransactionListOutput,
 } from '@hominem/hono-rpc/types/finance.types';
 import type { SortOption } from '@hominem/ui/hooks';
@@ -9,6 +10,43 @@ import { format } from 'date-fns';
 import { useMemo } from 'react';
 
 import { useHonoQuery } from '~/lib/api';
+
+type RawAccountWithTransactions = {
+  id: string;
+  userId: string;
+  name: string;
+  accountType: AccountWithTransactions['accountType'];
+  balance: number;
+  transactions: AccountWithTransactions['transactions'];
+  institutionName?: string | null | undefined;
+  plaidAccountId?: string | null | undefined;
+  plaidItemId?: string | null | undefined;
+};
+
+function normalizeAccountWithTransactions(
+  account: RawAccountWithTransactions,
+): AccountWithTransactions {
+  const normalized: AccountWithTransactions = {
+    id: account.id,
+    userId: account.userId,
+    name: account.name,
+    accountType: account.accountType,
+    balance: account.balance,
+    transactions: account.transactions,
+  }
+
+  if (account.institutionName !== undefined) {
+    normalized.institutionName = account.institutionName
+  }
+  if (account.plaidAccountId !== undefined) {
+    normalized.plaidAccountId = account.plaidAccountId
+  }
+  if (account.plaidItemId !== undefined) {
+    normalized.plaidItemId = account.plaidItemId
+  }
+
+  return normalized
+}
 
 export interface FilterArgs {
   accountId?: string | undefined;
@@ -63,7 +101,11 @@ export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
     ['finance', 'accounts', 'all'],
     async (client) => {
       const res = await client.api.finance.accounts.all.$post({ json: {} });
-      return res.json();
+      const data = await res.json();
+      return {
+        ...data,
+        accounts: data.accounts.map((account) => normalizeAccountWithTransactions(account)),
+      };
     },
     options?.initialData ? { initialData: options.initialData } : {},
   );
@@ -74,7 +116,7 @@ export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
     isLoading: allAccountsQuery.isLoading,
     error: allAccountsQuery.error,
     refetch: allAccountsQuery.refetch,
-    accounts: result?.accounts ?? [],
+    accounts: (result?.accounts ?? []).map(normalizeAccountWithTransactions),
     connections: result?.connections ?? [],
   };
 }
@@ -86,7 +128,8 @@ export function useAccountById(id: string, options?: { initialData?: AccountGetO
       const res = await client.api.finance.accounts.get.$post({
         json: { id },
       });
-      return res.json();
+      const data = await res.json();
+      return normalizeAccountWithTransactions(data);
     },
     {
       enabled: !!id,
@@ -98,7 +141,7 @@ export function useAccountById(id: string, options?: { initialData?: AccountGetO
 
   return {
     ...accountQuery,
-    account,
+    account: account ? normalizeAccountWithTransactions(account) : undefined,
   };
 }
 

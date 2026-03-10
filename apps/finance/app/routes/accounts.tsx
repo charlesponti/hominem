@@ -30,6 +30,40 @@ import { useAllAccounts } from '~/lib/hooks/use-finance-data';
 
 import type { Route } from './+types/accounts';
 
+type AccountWithOptionalPlaid = ReturnType<typeof useAllAccounts>['accounts'][number];
+type RawAccountWithOptionalPlaid = {
+  id: string;
+  userId: string;
+  name: string;
+  accountType: AccountWithOptionalPlaid['accountType'];
+  balance: number;
+  transactions: AccountWithOptionalPlaid['transactions'];
+  institutionName?: string | null | undefined;
+  plaidAccountId?: string | null | undefined;
+  plaidItemId?: string | null | undefined;
+};
+
+function normalizeAccount(account: RawAccountWithOptionalPlaid): AccountWithOptionalPlaid {
+  const normalized: AccountWithOptionalPlaid = {
+    id: account.id,
+    userId: account.userId,
+    name: account.name,
+    accountType: account.accountType,
+    balance: account.balance,
+    transactions: account.transactions,
+  };
+  if (account.institutionName !== undefined) {
+    normalized.institutionName = account.institutionName;
+  }
+  if (account.plaidAccountId !== undefined) {
+    normalized.plaidAccountId = account.plaidAccountId;
+  }
+  if (account.plaidItemId !== undefined) {
+    normalized.plaidItemId = account.plaidItemId;
+  }
+  return normalized;
+}
+
 export async function loader({ request }: Route.LoaderArgs) {
   const authResult = await requireAuth(request);
   const client = createServerHonoClient(authResult.session?.access_token, request);
@@ -130,7 +164,7 @@ export default function AccountsPage({ loaderData }: Route.ComponentProps) {
   const { accounts: initialAccounts, connections: initialConnections } = loaderData;
 
   const allAccountsQuery = useAllAccounts({
-    initialData: { accounts: initialAccounts, connections: initialConnections },
+    initialData: { accounts: initialAccounts.map(normalizeAccount), connections: initialConnections },
   });
 
   const handleConnectionSuccess = (institutionName: string) => {

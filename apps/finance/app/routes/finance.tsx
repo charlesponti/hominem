@@ -26,7 +26,9 @@ export async function loader({ request }: Route.LoaderArgs) {
   ]);
 
   const accounts = accountsRes.ok ? await accountsRes.json() : [];
-  const transactions = transactionsRes.ok ? await transactionsRes.json() : [];
+  const transactions = transactionsRes.ok
+    ? await transactionsRes.json()
+    : { data: [], filteredCount: 0, totalUserCount: 0 };
 
   return {
     accounts,

@@ -178,9 +178,15 @@ const useUpdatePlace = (options?: HonoMutationOptions<PlaceUpdateOutput, PlaceUp
       onSuccess: (result, variables, context, mutationContext) => {
         utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), (old) => {
           const existing = old ?? [];
-          return existing.map((place) => (place.id === result.id ? result : place));
+          return existing.map((place) => (place.id === result.id ? { ...place, ...result } : place));
         });
-        utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(result.id), result);
+        const cachedPlace = getCachedPlace(utils, result.id);
+        if (cachedPlace) {
+          utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(result.id), {
+            ...cachedPlace,
+            ...result,
+          });
+        }
         utils.invalidate(queryKeys.places.all());
         utils.invalidate(queryKeys.places.get(result.id));
         options?.onSuccess?.(result, variables, context, mutationContext);
@@ -207,7 +213,7 @@ const useUpdatePlace = (options?: HonoMutationOptions<PlaceUpdateOutput, PlaceUp
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, variables) => {
+      onSettled: (result, error, variables) => {
         utils.invalidate(queryKeys.places.all());
         utils.invalidate(queryKeys.places.get(variables.id));
       },
@@ -445,7 +451,7 @@ export const useAddPlaceToLists = (
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, variables) => {
+      onSettled: (result, error, variables) => {
         utils.invalidate(queryKeys.lists.all());
         for (const listId of variables.listIds) {
           utils.invalidate(queryKeys.lists.get(listId));
@@ -527,7 +533,7 @@ export const useRemovePlaceFromList = (
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, variables) => {
+      onSettled: (result, error, variables) => {
         utils.invalidate(queryKeys.lists.all());
         utils.invalidate(queryKeys.lists.get(variables.listId));
       },
@@ -644,7 +650,7 @@ export const useLogPlaceVisit = (
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, variables) => {
+      onSettled: (result, error, variables) => {
         utils.invalidate(queryKeys.places.myVisits());
         utils.invalidate(queryKeys.places.placeVisits(variables.placeId));
         utils.invalidate(queryKeys.places.visitStats(variables.placeId));
@@ -746,7 +752,7 @@ export const useUpdatePlaceVisit = (
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, _variables) => {
+      onSettled: (result, error, variables) => {
         utils.invalidate(queryKeys.places.myVisits());
       },
     },

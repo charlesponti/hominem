@@ -137,7 +137,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: hominem-test
-        image: ghcr.io/hackefeller/hominem/postgres:latest
+        image: ghcr.io/hackefeller/postgres:latest
         options: >-
           --health-cmd "pg_isready -h localhost -p 5432 -U postgres"
           --health-interval 10s
@@ -197,7 +197,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: hominem-test
-        image: ghcr.io/hackefeller/hominem/postgres:latest
+        image: ghcr.io/hackefeller/postgres:latest
         options: >-
           --health-cmd "pg_isready -h localhost -p 5432 -U postgres"
           --health-interval 10s
@@ -283,7 +283,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: hominem-test
-        image: ghcr.io/hackefeller/hominem/postgres:latest
+        image: ghcr.io/hackefeller/postgres:latest
         options: >-
           --health-cmd "pg_isready -h localhost -p 5432 -U postgres"
           --health-interval 10s

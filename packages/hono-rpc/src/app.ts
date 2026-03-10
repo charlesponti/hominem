@@ -28,7 +28,7 @@ import { worldRoutes } from './routes/world';
  *
  * @see packages/hono-rpc/src/app.type.ts for the AppType definition
  */
-function buildApp(): Hono<AppContext> {
+function buildApp() {
   return new Hono<AppContext>()
     .use(requestIdMiddleware)
     .use(validationErrorMiddleware)
@@ -51,4 +51,4 @@ function buildApp(): Hono<AppContext> {
  * NOTE: AppType inference is deferred to app.type.ts to prevent
  * expensive type computation during routine type checking.
  */
-export const app: Hono<AppContext> = buildApp()
+export const app = buildApp()

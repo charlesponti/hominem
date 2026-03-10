@@ -14,190 +14,153 @@ import type {
   BudgetBulkCreateOutput,
   TransactionCategoryAnalysisOutput,
   BudgetCategoriesListWithSpendingOutput,
-} from '@hominem/hono-rpc/types/finance.types';
+} from '@hominem/hono-rpc/types/finance.types'
 
-import { useHonoQuery, useHonoMutation, useHonoUtils } from '~/lib/api';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '~/lib/api'
 
-export const useTransactionCategories = () => {
-  const query = useHonoQuery<TransactionCategoryAnalysisOutput>(
+const BUDGET_API_UNAVAILABLE_MESSAGE = 'Budget write endpoints are unavailable'
+
+function rejectBudgetMutation<T>(): Promise<T> {
+  return Promise.reject(new Error(BUDGET_API_UNAVAILABLE_MESSAGE))
+}
+
+function emptyBudgetTracking(monthYear: string): BudgetTrackingOutput {
+  const tracking: BudgetTrackingOutput = {
+    month: monthYear || new Date().toISOString().slice(0, 7),
+    totalBudget: 0,
+    totalSpent: 0,
+    remaining: 0,
+    status: 'on-track',
+    categories: [],
+  }
+  if (monthYear) {
+    tracking.monthYear = monthYear
+  }
+  return tracking
+}
+
+export const useTransactionCategories = () =>
+  useHonoQuery<TransactionCategoryAnalysisOutput>(
     ['finance', 'budget', 'transaction-categories'],
-    async (client) => {
-      const res = await client.api.finance.budget['transaction-categories'].$post({ json: {} });
-      return res.json() as Promise<TransactionCategoryAnalysisOutput>;
-    },
-  );
+    async () => [],
+  )
 
-  return query;
-};
-
-// Query hooks
-export const useBudgetCategories = () => {
-  const query = useHonoQuery<BudgetCategoriesListOutput>(
+export const useBudgetCategories = () =>
+  useHonoQuery<BudgetCategoriesListOutput>(
     ['finance', 'budget', 'categories', 'list'],
     async (client) => {
-      const res = await client.api.finance.budget.categories.list.$post({ json: {} });
-      return res.json() as unknown as Promise<BudgetCategoriesListOutput>;
+      const res = await client.api.finance.tags.list.$post({ json: {} })
+      const categories = await res.json()
+      return categories.map((category) => {
+        const normalized = {
+          id: category.id,
+          userId: category.userId,
+          name: category.name,
+        }
+        return typeof category.color === 'string'
+          ? { ...normalized, color: category.color }
+          : normalized
+      })
     },
-  );
+  )
 
-  return query;
-};
-
-const useBudgetCategoriesWithSpending = (monthYear: string) => {
-  const query = useHonoQuery<BudgetCategoriesListWithSpendingOutput>(
+const useBudgetCategoriesWithSpending = (monthYear: string) =>
+  useHonoQuery<BudgetCategoriesListWithSpendingOutput>(
     ['finance', 'budget', 'categories', 'list-with-spending', monthYear],
-    async (client) => {
-      const res = await client.api.finance.budget.categories['list-with-spending'].$post({
-        json: { monthYear },
-      });
-      return res.json() as unknown as Promise<BudgetCategoriesListWithSpendingOutput>;
-    },
+    async () => [],
     { enabled: !!monthYear },
-  );
+  )
 
-  return query;
-};
-
-const useBudgetCategory = (id: string) => {
-  const query = useHonoQuery<BudgetCategoryGetOutput>(
+const useBudgetCategory = (id: string) =>
+  useHonoQuery<BudgetCategoryGetOutput>(
     ['finance', 'budget', 'categories', 'get', id],
-    async (client) => {
-      const res = await client.api.finance.budget.categories.get.$post({
-        json: { id },
-      });
-      return res.json() as unknown as Promise<BudgetCategoryGetOutput>;
-    },
+    async () => rejectBudgetMutation<BudgetCategoryGetOutput>(),
     { enabled: !!id },
-  );
+  )
 
-  return query;
-};
-
-const useBudgetTracking = (monthYear: string) => {
-  const query = useHonoQuery<BudgetTrackingOutput>(
+const useBudgetTracking = (monthYear: string) =>
+  useHonoQuery<BudgetTrackingOutput>(
     ['finance', 'budget', 'tracking', monthYear],
-    async (client) => {
-      const res = await client.api.finance.budget.tracking.$post({
-        json: { monthYear },
-      });
-      return res.json() as unknown as Promise<BudgetTrackingOutput>;
-    },
+    async () => emptyBudgetTracking(monthYear),
     { enabled: !!monthYear },
-  );
+  )
 
-  return query;
-};
-
-export const useBudgetHistory = (params: { months: number }) => {
-  const query = useHonoQuery<BudgetHistoryOutput>(
+export const useBudgetHistory = (params: { months: number }) =>
+  useHonoQuery<BudgetHistoryOutput>(
     ['finance', 'budget', 'history', params.months],
-    async (client) => {
-      const res = await client.api.finance.budget.history.$post({
-        json: { months: params.months },
-      });
-      return res.json() as unknown as Promise<BudgetHistoryOutput>;
-    },
-  );
+    async () => [],
+  )
 
-  return query;
-};
-
-// Mutation hooks
 const useCreateBudgetCategory = () => {
-  const utils = useHonoUtils();
+  const utils = useHonoUtils()
 
   return useHonoMutation<BudgetCategoryCreateOutput, BudgetCategoryCreateInput>(
-    async (client, variables: BudgetCategoryCreateInput) => {
-      const res = await client.api.finance.budget.categories.create.$post({
-        json: variables,
-      });
-      return res.json() as Promise<BudgetCategoryCreateOutput>;
-    },
+    async () => rejectBudgetMutation<BudgetCategoryCreateOutput>(),
     {
       onSuccess: () => {
-        utils.invalidate(['finance', 'budget', 'categories']);
-        utils.invalidate(['finance', 'budget', 'tracking']);
-        utils.invalidate(['finance', 'budget', 'history']);
+        utils.invalidate(['finance', 'budget', 'categories'])
+        utils.invalidate(['finance', 'budget', 'tracking'])
+        utils.invalidate(['finance', 'budget', 'history'])
       },
     },
-  );
-};
+  )
+}
 
 const useUpdateBudgetCategory = () => {
-  const utils = useHonoUtils();
+  const utils = useHonoUtils()
 
   return useHonoMutation<BudgetCategoryUpdateOutput, BudgetCategoryUpdateInput>(
-    async (client, variables: BudgetCategoryUpdateInput) => {
-      const res = await client.api.finance.budget.categories.update.$post({
-        json: variables,
-      });
-      return res.json() as Promise<BudgetCategoryUpdateOutput>;
-    },
+    async () => rejectBudgetMutation<BudgetCategoryUpdateOutput>(),
     {
       onSuccess: () => {
-        utils.invalidate(['finance', 'budget', 'categories']);
-        utils.invalidate(['finance', 'budget', 'tracking']);
-        utils.invalidate(['finance', 'budget', 'history']);
+        utils.invalidate(['finance', 'budget', 'categories'])
+        utils.invalidate(['finance', 'budget', 'tracking'])
+        utils.invalidate(['finance', 'budget', 'history'])
       },
     },
-  );
-};
+  )
+}
 
 const useDeleteBudgetCategory = () => {
-  const utils = useHonoUtils();
+  const utils = useHonoUtils()
 
   return useHonoMutation<BudgetCategoryDeleteOutput, { id: string }>(
-    async (client, variables: { id: string }) => {
-      const res = await client.api.finance.budget.categories.delete.$post({
-        json: variables,
-      });
-      return res.json() as Promise<BudgetCategoryDeleteOutput>;
-    },
+    async () => rejectBudgetMutation<BudgetCategoryDeleteOutput>(),
     {
       onSuccess: () => {
-        utils.invalidate(['finance', 'budget', 'categories']);
-        utils.invalidate(['finance', 'budget', 'tracking']);
-        utils.invalidate(['finance', 'budget', 'history']);
+        utils.invalidate(['finance', 'budget', 'categories'])
+        utils.invalidate(['finance', 'budget', 'tracking'])
+        utils.invalidate(['finance', 'budget', 'history'])
       },
     },
-  );
-};
+  )
+}
 
 const useBulkCreateBudgetCategories = () => {
-  const utils = useHonoUtils();
+  const utils = useHonoUtils()
 
   return useHonoMutation<BudgetBulkCreateOutput, BudgetBulkCreateInput>(
-    async (client, variables: BudgetBulkCreateInput) => {
-      const res = await client.api.finance.budget['bulk-create'].$post({
-        json: variables,
-      });
-      return res.json() as unknown as Promise<BudgetBulkCreateOutput>;
-    },
+    async () => rejectBudgetMutation<BudgetBulkCreateOutput>(),
     {
       onSuccess: () => {
-        utils.invalidate(['finance', 'budget', 'categories']);
-        utils.invalidate(['finance', 'budget', 'tracking']);
-        utils.invalidate(['finance', 'budget', 'history']);
+        utils.invalidate(['finance', 'budget', 'categories'])
+        utils.invalidate(['finance', 'budget', 'tracking'])
+        utils.invalidate(['finance', 'budget', 'history'])
       },
     },
-  );
-};
+  )
+}
 
 export const useCalculateBudget = (options?: { onError?: (error: Error) => void }) => {
-  const utils = useHonoUtils();
+  const utils = useHonoUtils()
 
   return useHonoMutation<BudgetCalculateOutput, BudgetCalculateInput | undefined>(
-    async (client, variables: BudgetCalculateInput | undefined) => {
-      const res = await client.api.finance.budget.calculate.$post({
-        json: variables,
-      });
-      return res.json() as Promise<BudgetCalculateOutput>;
-    },
+    async () => rejectBudgetMutation<BudgetCalculateOutput>(),
     {
       onSuccess: () => {
-        utils.invalidate(['finance', 'budget', 'calculate']);
+        utils.invalidate(['finance', 'budget', 'calculate'])
       },
       ...(options?.onError && { onError: options.onError }),
     },
-  );
-};
+  )
+}

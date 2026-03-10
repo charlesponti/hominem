@@ -64,7 +64,10 @@ export async function action({ request }: ActionFunctionArgs) {
           });
           if (res.ok) {
             const data = await res.json();
-            vectorIds = data.vectorIds;
+            vectorIds =
+              'vectorIds' in data && Array.isArray(data.vectorIds)
+                ? data.vectorIds.filter((id) => typeof id === 'string')
+                : [];
           }
         }
 
