@@ -38,3 +38,4 @@ The system SHALL enforce anti-replay safeguards for OTP verification and passkey
 - **WHEN** a user initiates a sensitive action requiring elevated assurance
 - **THEN** the system SHALL require a valid recent passkey step-up proof for that action
 - **AND** missing or stale step-up proofs SHALL block the action
+- **AND** this change SHALL enforce that behavior for `passkey.register`, `passkey.delete`, and `finance.account.delete`
