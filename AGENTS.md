@@ -11,12 +11,8 @@ Before starting implementation work:
 Do not silently mix work across multiple OpenSpec changes.
 
 OpenSpec layout:
-- Open work: `openspec/inbox`
-- Canonical completed specs: `openspec/done/specs`
-- Completed change records: `openspec/done/records`
-- Historical raw change folders: `openspec/archive`
-
-Legacy `openspec/changes`, `openspec/specs`, and `openspec/merged` paths are compatibility shims for the CLI.
+- Open work: `openspec/changes`
+- Canonical completed specs: `openspec/specs`
 
 ## Core Workflow Commands
 

@@ -290,8 +290,6 @@ Status: 🟡 In progress
 
 - `docs/plans/2026-02-27-auth-consolidation.md`
 - `docs/plans/auth-email-guard-plan.md`
-- `specs/001-remove-any-types/plan.md`
-- `specs/001-remove-any-types/tasks.md`
 
 ---
 

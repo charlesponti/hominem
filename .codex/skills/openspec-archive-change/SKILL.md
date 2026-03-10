@@ -65,41 +65,24 @@ Archive a completed change in the experimental workflow.
 
    If user chooses sync, use Task tool (subagent_type: "general-purpose", prompt: "Use Skill tool to invoke openspec-sync-specs for change '<name>'. Delta spec analysis: <include the analyzed delta spec summary>"). Proceed to archive regardless of choice.
 
-5. **Perform the archive**
+5. **Remove the raw change folder**
 
-   Create the archive directory if it doesn't exist:
-   ```bash
-   mkdir -p openspec/archive
-   ```
-
-   Generate target name using current date: `YYYY-MM-DD-<change-name>`
-
-   **Check if target already exists:**
-   - If yes: Fail with error, suggest renaming existing archive or using different date
-   - If no: Move the change directory to archive
+   After merged outputs are finalized, delete the change directory:
 
    ```bash
-   mv openspec/changes/<name> openspec/archive/YYYY-MM-DD-<name>
+   rm -rf openspec/changes/<name>
    ```
 
-6. **Create merged completion doc and update index**
+6. **Finalize canonical specs**
 
-   After archiving, invoke the `openspec-merge-doc` workflow for the same change.
-
-   Requirements:
-   - Create `openspec/merged/YYYY-MM-DD-<change-name>.md` (if not already present)
-   - Update `openspec/merged/README.md` index
-   - Ensure naming uses `YYYY-MM-DD-<change-slug>.md`
-   - Keep one merged doc per completed change
+   Before removing the raw change folder, ensure any required delta specs have been synced into `openspec/specs`.
 
 7. **Display summary**
 
    Show archive completion summary including:
    - Change name
    - Schema that was used
-   - Archive location
-   - Merged doc location
-   - Merged index update status
+   - Raw change folder removal status
    - Whether specs were synced (if applicable)
    - Note about any warnings (incomplete artifacts/tasks)
 
@@ -110,9 +93,7 @@ Archive a completed change in the experimental workflow.
 
 **Change:** <change-name>
 **Schema:** <schema-name>
-**Archived to:** openspec/archive/YYYY-MM-DD-<name>/
-**Merged doc:** openspec/merged/YYYY-MM-DD-<name>.md
-**Merged index:** openspec/merged/README.md updated
+**Removed raw change folder:** openspec/changes/<name>/
 **Specs:** ✓ Synced to main specs (or "No delta specs" or "Sync skipped")
 
 All artifacts complete. All tasks complete.
@@ -122,7 +103,7 @@ All artifacts complete. All tasks complete.
 - Always prompt for change selection if not provided
 - Use artifact graph (openspec status --json) for completion checking
 - Don't block archive on warnings - just inform and confirm
-- Preserve .openspec.yaml when moving to archive (it moves with the directory)
+- Remove the raw change folder only after merged outputs are finalized
 - Show clear summary of what happened
 - If sync is requested, use openspec-sync-specs approach (agent-driven)
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting

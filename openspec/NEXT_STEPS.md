@@ -1,46 +1,34 @@
 # OpenSpec Next Steps
 
-Created: 2026-03-06
+Updated: 2026-03-10
 
 ## Current State
 
-Archived completed changes:
-- `2025-03-04-update-db-schema-references`
-- `2026-02-28-phase-2-api-rebuild`
-- `2026-02-27-move-db-services-to-db-package`
-- `2026-03-01-unify-auth-provider`
+Active change selection:
+- `openspec/ACTIVE_CHANGE.md` is set to `consolidate-openspec-completed-history`
 
-Remaining in-progress changes:
-- `harden-auth-email-otp-passkey-e2e` (6/33)
-- `fix-mobile-architecture-issues` (69/107)
-- `mobile-expo-55-upgrade` (0/23)
-- `2026-02-29-2-remove-mock-apple-auth-add-passkey` (31/37)
-- `2026-03-03-phased-db-redesign` (0/109)
+Open changes discovered from `openspec list --json`:
+- `consolidate-openspec-completed-history` (`0/6`, status: `in-progress`)
+- `platform-observability-with-opentelemetry` (`0/20`, status: `in-progress`)
 
 ## Recommended Execution Order
 
-1. `harden-auth-email-otp-passkey-e2e`
-2. `fix-mobile-architecture-issues`
-3. `mobile-expo-55-upgrade`
-4. `2026-02-29-2-remove-mock-apple-auth-add-passkey`
-5. `2026-03-03-phased-db-redesign`
+1. Finish `consolidate-openspec-completed-history`.
+2. Archive that change or reset `openspec/ACTIVE_CHANGE.md` when its implementation closes.
+3. Activate `platform-observability-with-opentelemetry` before starting feature work there.
 
 ## Why This Order
 
-- Complete auth hardening before broader mobile/platform work.
-- Finish active mobile architecture cleanup before framework upgrade risk.
-- Resolve older auth changes before large DB redesign and app migration.
-- Defer largest-scope foundational rewrites until auth/mobile baselines are stable.
+- The active-change guardrail requires explicit activation before implementation work.
+- Removing raw archive retention simplifies the completed-work model before more changes are archived.
 
 ## Immediate Actions
 
-1. Repoint `openspec/ACTIVE_CHANGE.md` to the next active item before implementation.
-2. Run `openspec list --json` and confirm no additional completed changes need archive.
-3. Resume implementation from the first change in the order above.
+1. Finish `consolidate-openspec-completed-history`.
+2. Activate the telemetry change if implementation should continue next.
+3. Use `openspec list --json` as the source of truth for open-change discovery.
 
 ## Layout Reminder
 
 - Open work lives in `openspec/changes`
 - Completed canonical specs live in `openspec/specs`
-- Completed delivery records live in `openspec/merged`
-- Raw historical change folders live in `openspec/archive`

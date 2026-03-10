@@ -1,10 +1,13 @@
 # Active OpenSpec Change
 
-active_change: none
+active_change: consolidate-openspec-completed-history
 
 ## Canonical Artifacts
 
-- No active change is currently selected.
+- Proposal: `openspec/changes/consolidate-openspec-completed-history/proposal.md`
+- Design: `openspec/changes/consolidate-openspec-completed-history/design.md`
+- Tasks: `openspec/changes/consolidate-openspec-completed-history/tasks.md`
+- Spec delta: `openspec/changes/consolidate-openspec-completed-history/specs/openspec-workflow/spec.md`
 ## Enforcement
 
 - Before any implementation, read this file and keep work scoped to the active change.

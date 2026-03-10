@@ -1,13 +1,5 @@
 ## MODIFIED Requirements
 
-### Requirement: OpenSpec SHALL organize active work under changes
-The repository OpenSpec workflow SHALL treat `openspec/changes` as the home for all non-archived changes, including active work, drafts, and paused items.
-
-#### Scenario: Open change discovery uses changes
-- **WHEN** a user or tool lists available changes
-- **THEN** the open changes are discovered from `openspec/changes`
-- **AND** the active change referenced by `openspec/ACTIVE_CHANGE.md` points to artifacts under `openspec/changes`
-
 ### Requirement: OpenSpec SHALL publish completed truth under specs only
 The repository OpenSpec workflow SHALL treat `openspec/specs` as the only canonical completed OpenSpec tree.
 
@@ -24,3 +16,13 @@ The repository SHALL describe and operate its live OpenSpec workflow directly in
 - **THEN** the guidance references `openspec/changes` and `openspec/specs` as the primary workflow paths
 - **AND** the guidance does not require understanding a separate custom OpenSpec directory model
 - **AND** the guidance does not instruct the user to keep a separate raw archive tree or merged change-history tree for completed changes
+
+## REMOVED Requirements
+
+### Requirement: OpenSpec SHALL preserve archive as trace-only history
+**Reason**: Completed changes now finalize into canonical specs only, so retaining raw archived change folders is no longer part of the supported workflow.
+**Migration**: Delete `openspec/archive` and update any remaining live references to use `openspec/specs` as the completed source of truth.
+
+### Requirement: OpenSpec SHALL publish completed truth under specs and merged
+**Reason**: Keeping both merged records and capability specs has created drift, so completed OpenSpec truth now lives only in canonical specs.
+**Migration**: Delete `openspec/merged` and update any remaining live references to use `openspec/specs` instead of merged change-history docs.
