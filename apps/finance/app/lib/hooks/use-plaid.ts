@@ -251,7 +251,8 @@ export function useLinkAccountToInstitution() {
         throw err;
       }
     },
-    onSuccess: (_result, variables) => {
+    onSuccess: (result, variables) => {
+      void result;
       // Invalidate related queries to refresh account data
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });
@@ -296,7 +297,8 @@ export function useUnlinkAccountFromInstitution() {
         throw err;
       }
     },
-    onSuccess: (_result, accountId) => {
+    onSuccess: (result, accountId) => {
+      void result;
       // Invalidate related queries to refresh account data
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'list'] });
       queryClient.invalidateQueries({ queryKey: ['finance', 'accounts', 'all'] });

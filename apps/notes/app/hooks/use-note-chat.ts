@@ -1,16 +1,10 @@
-import type { HonoClient } from '@hominem/hono-client';
 import { useHonoMutation, useHonoQuery } from '@hominem/hono-client/react';
 import type { Chat } from '@hominem/hono-rpc/types/chat.types';
 
 export function useNoteChat(noteId: string) {
   return useHonoQuery<Chat>(
     ['chats', 'note', noteId],
-    async (client: HonoClient) => {
-      const res = await client.api.chats['note/:noteId'].$get({
-        param: { noteId },
-      });
-      return res.json() as Promise<Chat>;
-    },
+    ({ chats }) => chats.getByNote({ noteId }),
     {
       enabled: !!noteId,
       staleTime: 1000 * 60 * 5,
@@ -20,14 +14,10 @@ export function useNoteChat(noteId: string) {
 
 function useCreateNoteChat() {
   return useHonoMutation<Chat, { noteId: string; title?: string }>(
-    async (client: HonoClient, variables: { noteId: string; title?: string }) => {
-      const res = await client.api.chats.$post({
-        json: {
-          title: variables.title || 'Note Chat',
-          noteId: variables.noteId,
-        },
-      });
-      return res.json() as Promise<Chat>;
-    },
+    ({ chats }, variables) =>
+      chats.create({
+        title: variables.title || 'Note Chat',
+        noteId: variables.noteId,
+      }),
   );
 }

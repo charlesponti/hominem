@@ -53,7 +53,7 @@ export function SpeechInput({
 }: SpeechInputProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [transcript, setTranscript] = useState('');
+  const [_transcript, setTranscript] = useState('');
   const [isSupported, setIsSupported] = useState(false);
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);

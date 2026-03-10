@@ -1,4 +1,3 @@
-import type { HonoClient } from '@hominem/hono-client';
 import { useHonoMutation, useHonoQuery } from '@hominem/hono-client/react';
 import type {
   TwitterAccountsListOutput,
@@ -24,10 +23,7 @@ export function useTwitterAccounts() {
     refetch,
   } = useHonoQuery<TwitterAccountsListOutput>(
     ['twitter', 'accounts'],
-    async (client: HonoClient) => {
-      const res = await client.api.twitter.accounts.$get();
-      return res.json() as Promise<TwitterAccountsListOutput>;
-    },
+    ({ twitter }) => twitter.getAccounts(),
   );
 
   const accountsArray = Array.isArray(accounts) ? accounts : [];
@@ -43,10 +39,7 @@ function useTwitterPost() {
   const { toast } = useToast();
 
   const mutation = useHonoMutation<TwitterPostOutput, TwitterPostInput>(
-    async (client: HonoClient, variables: TwitterPostInput) => {
-      const res = await client.api.twitter.post.$post({ json: variables });
-      return res.json() as Promise<TwitterPostOutput>;
-    },
+    ({ twitter }, variables) => twitter.post(variables),
     {
       onSuccess: () => {
         toast({ title: 'Tweet posted successfully' });

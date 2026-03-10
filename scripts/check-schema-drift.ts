@@ -13,8 +13,8 @@
  *   1 - Generated files are out of date
  */
 
-import fs from 'fs'
-import path from 'path'
+import _fs from 'fs'
+import _path from 'path'
 import { execSync } from 'child_process'
 
 // First, regenerate the schema slices
@@ -25,7 +25,7 @@ try {
     stdio: 'pipe',
   })
   console.log('✓ Schema slices regenerated\n')
-} catch (e) {
+} catch  {
   console.error('❌ Failed to regenerate schema slices')
   process.exit(1)
 }
@@ -55,7 +55,7 @@ try {
 
   console.log('✅ No drift detected - schema files are up-to-date')
   process.exit(0)
-} catch (e) {
+} catch  {
   // Git commands fail in non-repo environments - just exit cleanly
   console.log('✓ (Skipped in non-git environment)')
   process.exit(0)

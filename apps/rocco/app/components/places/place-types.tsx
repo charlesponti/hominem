@@ -117,7 +117,8 @@ const PlaceTypes = ({ limit, types }: { limit?: number; types: string[] }) => {
         types
           .slice(0, limit)
           .filter(filterExcludedTypes)
-          .filter((type, _index, arr) => {
+          .filter((type, index, arr) => {
+            void index;
             if (type === 'store' && arr.length > 1) {
               return false;
             }

@@ -8,6 +8,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "backfill:place-images": "bun src/backfill-place-images.ts",
     "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
     "format": "bunx oxfmt ./src",

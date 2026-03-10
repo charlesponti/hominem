@@ -71,7 +71,12 @@ export const tagsRoutes = new Hono<AppContext>()
       // Verify ownership
       await getTagWithOwnershipCheck(id, userId)
 
-      const updateData: any = {}
+      const updateData: {
+        name?: string
+        color?: string | null
+        description?: string | null
+        emoji_image_url?: string | null
+      } = {}
       if (data.name !== undefined) updateData.name = data.name
       if (data.color !== undefined) updateData.color = data.color ?? null
       if (data.description !== undefined) updateData.description = data.description ?? null
@@ -125,7 +130,7 @@ export const tagsRoutes = new Hono<AppContext>()
     const data = c.req.valid('json')
 
     // Verify tag exists and user owns it
-    const tag = await getTagWithOwnershipCheck(tagId, userId)
+    await getTagWithOwnershipCheck(tagId, userId)
 
     const result = await db
       .insertInto('tagged_items')

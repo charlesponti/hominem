@@ -37,7 +37,7 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
     onSuccess: () => {
       onOpenChange(false);
     },
-    onError: (_error: Error) => {
+    onError: () => {
       // console.error("Error updating list:", error);
     },
     throwOnError: false,

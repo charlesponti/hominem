@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { z } from 'zod'
+import { _z } from 'zod'
 import {
   ChatMessageSchema,
   ChatSchema,

@@ -350,14 +350,9 @@ const createPlaceImagesStorageService = () =>
     isPublic: true,
   });
 
-const throwNotConfigured = () => {
-  throw new Error(
-    'R2 storage not configured. Set R2_ENDPOINT, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY environment variables.',
-  );
-};
-
 export const csvStorageService: R2StorageService = new Proxy({} as R2StorageService, {
-  get(_target, prop) {
+  get(target, prop) {
+    void target
     const service = createCsvStorageService();
     Object.assign(csvStorageService, service);
     return Reflect.get(csvStorageService, prop);
@@ -365,7 +360,8 @@ export const csvStorageService: R2StorageService = new Proxy({} as R2StorageServ
 });
 
 export const fileStorageService: R2StorageService = new Proxy({} as R2StorageService, {
-  get(_target, prop) {
+  get(target, prop) {
+    void target
     const service = createFileStorageService();
     Object.assign(fileStorageService, service);
     return Reflect.get(fileStorageService, prop);
@@ -373,7 +369,8 @@ export const fileStorageService: R2StorageService = new Proxy({} as R2StorageSer
 });
 
 export const placeImagesStorageService: R2StorageService = new Proxy({} as R2StorageService, {
-  get(_target, prop) {
+  get(target, prop) {
+    void target
     const service = createPlaceImagesStorageService();
     Object.assign(placeImagesStorageService, service);
     return Reflect.get(placeImagesStorageService, prop);

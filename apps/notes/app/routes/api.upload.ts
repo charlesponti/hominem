@@ -59,12 +59,18 @@ export async function action({ request }: ActionFunctionArgs) {
         // Index the file in the vector store if file has text content
         let vectorIds: string[] = [];
         if (processedFile.textContent || processedFile.content) {
-          const res = await client.api.files.index.$post({
-            json: processedFile,
+          const data = await client.files.index({
+            id: processedFile.id,
+            originalName: processedFile.originalName,
+            type: processedFile.type,
+            mimetype: processedFile.mimetype,
+            size: processedFile.size,
+            ...(processedFile.textContent ? { textContent: processedFile.textContent } : {}),
+            ...(processedFile.content ? { content: processedFile.content } : {}),
+            ...(processedFile.thumbnail ? { thumbnail: processedFile.thumbnail } : {}),
           });
-          if (res.ok) {
-            const data = await res.json();
-            vectorIds = data.vectorIds;
+          if (data.success) {
+            vectorIds = [];
           }
         }
 

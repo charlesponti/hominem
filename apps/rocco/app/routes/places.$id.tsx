@@ -33,15 +33,9 @@ export async function loader({ params, request }: Route.LoaderArgs) {
 
   const isUuid = z.string().uuid().safeParse(id).success;
   const client = createServerHonoClient(authResult.session?.access_token, request);
-  const res = isUuid
-    ? await client.api.places.get.$post({ json: { id } })
-    : await client.api.places['get-by-google-id'].$post({ json: { googleMapsId: id } });
-
-  if (!res.ok) {
-    return redirect('/404');
-  }
-
-  const place = await res.json();
+  const place = isUuid
+    ? await client.places.getById({ id })
+    : await client.places.getByGoogleId({ googleMapsId: id });
 
   if (!place) {
     return redirect('/404');

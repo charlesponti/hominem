@@ -1,16 +1,11 @@
 import type { PlaceCreateInput } from '@hominem/hono-rpc/types/places.types';
-import { getHominemPhotoURL, sanitizeStoredPhotos } from '@hominem/utils/images';
+import { sanitizeStoredPhotos } from '@hominem/utils/images';
 
 import type {
   GooglePlaceDetailsResponse,
   GooglePlacePrediction,
   GooglePlacesApiResponse,
 } from '~/lib/shared-types';
-
-const getPlacePhotoUrl = (reference: string | null | undefined) => {
-  if (!reference) return null;
-  return getHominemPhotoURL(reference);
-};
 
 /**
  * Transforms Google Places API response to API PlaceCreateInput format

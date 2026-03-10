@@ -53,17 +53,8 @@ export const APP_SCHEME = extra.appScheme || 'hakumi'
 
 const toBooleanFlag = (value: string | undefined) => value === 'true'
 
-const AI_SDK_CHAT_WEB_ENABLED = toBooleanFlag(
-  extra.aiSdkChatWebEnabled || process.env.EXPO_PUBLIC_AI_SDK_CHAT_WEB_ENABLED,
-)
 export const AI_SDK_CHAT_MOBILE_ENABLED = toBooleanFlag(
   extra.aiSdkChatMobileEnabled || process.env.EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED,
-)
-const AI_SDK_TRANSCRIBE_ENABLED = toBooleanFlag(
-  extra.aiSdkTranscribeEnabled || process.env.EXPO_PUBLIC_AI_SDK_TRANSCRIBE_ENABLED,
-)
-const AI_SDK_SPEECH_ENABLED = toBooleanFlag(
-  extra.aiSdkSpeechEnabled || process.env.EXPO_PUBLIC_AI_SDK_SPEECH_ENABLED,
 )
 
 export const E2E_TESTING = toBooleanFlag(

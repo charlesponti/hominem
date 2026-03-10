@@ -18,11 +18,13 @@ export const globalMocks = {
   } as Partial<Queue>,
 
   // Rate limit middleware mocks
-  rateLimit: vi.fn((_c, next) => {
+  rateLimit: vi.fn((c, next) => {
+    void c
     return next()
   }),
 
-  rateLimitImport: vi.fn((_c, next) => {
+  rateLimitImport: vi.fn((c, next) => {
+    void c
     return next()
   }),
 }
@@ -30,7 +32,8 @@ export const globalMocks = {
 /**
  * Creates a test server instance with common setup
  */
-export const createTestServer = async (_options: { logger?: boolean } = {}) => {
+export const createTestServer = async (options: { logger?: boolean } = {}) => {
+  void options
   const server = createServer()
   if (!server) {
     throw new Error('Server is null')

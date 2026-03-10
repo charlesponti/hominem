@@ -43,9 +43,7 @@ export default function Layout() {
       <PasskeyEnrollmentBanner onEnroll={handleEnroll} />
       <AppLayout navigation={<Header />}>
         <Suspense fallback={<LoadingScreen />}>
-          <div className="max-w-4xl mx-auto">
-            <Outlet />
-          </div>
+          <Outlet />
         </Suspense>
       </AppLayout>
     </>

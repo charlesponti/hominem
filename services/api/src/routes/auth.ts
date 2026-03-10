@@ -1155,7 +1155,7 @@ function isMockAuthEnabled(): boolean {
 }
 
 // Import mock auth types and provider
-import { createMockAuthProvider, type User, type Session } from '@hominem/auth/server-auth';
+import { createMockAuthProvider } from '@hominem/auth/server-auth'
 
 /**
  * POST /auth/mock/signin

@@ -9,4 +9,4 @@ export type Account = AccountWithPlaidInfo;
 /**
  * Account with transactions included
  */
-type AccountWithTransactions = AccountWithPlaidInfo & { transactions: TransactionData[] };
+type _AccountWithTransactions = AccountWithPlaidInfo & { transactions: TransactionData[] };

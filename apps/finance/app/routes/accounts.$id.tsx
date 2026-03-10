@@ -15,6 +15,38 @@ import { requireAuth } from '~/lib/guards';
 import { useAccountById, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
 
 import type { Route } from './+types/accounts.$id';
+import type { AccountGetOutput } from '@hominem/hono-rpc/types/finance.types';
+
+function normalizeInitialAccount(account: {
+  id: string;
+  userId: string;
+  name: string;
+  accountType: AccountGetOutput['accountType'];
+  balance: number;
+  transactions: AccountGetOutput['transactions'];
+  institutionName?: string | null | undefined;
+  plaidAccountId?: string | null | undefined;
+  plaidItemId?: string | null | undefined;
+}): AccountGetOutput {
+  const normalized: AccountGetOutput = {
+    id: account.id,
+    userId: account.userId,
+    name: account.name,
+    accountType: account.accountType,
+    balance: account.balance,
+    transactions: account.transactions,
+  };
+  if (account.institutionName !== undefined) {
+    normalized.institutionName = account.institutionName;
+  }
+  if (account.plaidAccountId !== undefined) {
+    normalized.plaidAccountId = account.plaidAccountId;
+  }
+  if (account.plaidItemId !== undefined) {
+    normalized.plaidItemId = account.plaidItemId;
+  }
+  return normalized;
+}
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { id } = params;
@@ -25,32 +57,20 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const authResult = await requireAuth(request);
   const client = createServerHonoClient(authResult.session?.access_token, request);
 
-  const [accountRes, transactionsRes] = await Promise.all([
-    client.api.finance.accounts.get.$post({ json: { id } }),
-    client.api.finance.transactions.list.$post({
-      json: { account: id, limit: 50 },
-    }),
+  const [account, transactionsResult] = await Promise.all([
+    client.finance.getAccount({ id }),
+    client.finance.listTransactions({ account: id, limit: 50 }),
   ]);
-
-  const account = accountRes.ok ? await accountRes.json() : null;
-  const transactionsData = transactionsRes.ok
-    ? await transactionsRes.json()
-    : { data: [], filteredCount: 0 };
 
   return {
     account,
-    transactions: transactionsData.data,
-    totalTransactions: transactionsData.filteredCount,
+    transactionsResult,
   };
 }
 
 export default function AccountDetailsPage({ loaderData }: Route.ComponentProps) {
   const { id } = useParams() as { id: string };
-  const {
-    account: initialAccount,
-    transactions: initialTransactions,
-    totalTransactions: initialTotal,
-  } = loaderData;
+  const { account: initialAccount, transactionsResult: initialTransactionsResult } = loaderData;
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
 
   // Get account details
@@ -59,7 +79,10 @@ export default function AccountDetailsPage({ loaderData }: Route.ComponentProps)
     isLoading: accountLoading,
     error: accountError,
     refetch: refetchAccount,
-  } = useAccountById(id, { initialData: initialAccount });
+  } = useAccountById(
+    id,
+    initialAccount ? { initialData: normalizeInitialAccount(initialAccount) } : undefined,
+  );
 
   // Create a map with a single account for the TransactionsList component
   const accountsMap = useMemo(() => {
@@ -76,7 +99,7 @@ export default function AccountDetailsPage({ loaderData }: Route.ComponentProps)
   } = useFinanceTransactions({
     filters: { accountId: id },
     limit: 50,
-    initialData: initialTransactions,
+    initialData: initialTransactionsResult,
   });
 
   const isLoading = accountLoading || transactionsLoading;
@@ -164,13 +187,15 @@ export default function AccountDetailsPage({ loaderData }: Route.ComponentProps)
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Transactions</h2>
-          <Badge variant="secondary">{initialTotal} total</Badge>
+          <Badge variant="secondary">{initialTransactionsResult.filteredCount} total</Badge>
         </div>
 
         <TransactionsList
           loading={transactionsLoading}
           error={transactionsError}
-          transactions={transactions.length > 0 ? transactions : initialTransactions || []}
+          transactions={
+            transactions.length > 0 ? transactions : (initialTransactionsResult.data ?? [])
+          }
           accountsMap={accountsMap}
         />
       </div>

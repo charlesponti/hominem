@@ -18,8 +18,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const authResult = await requireAuth(request);
   const client = createServerHonoClient(authResult.session?.access_token, request);
 
-  const res = await client.api.finance.analyze['monthly-stats'].$post({ json: { month } });
-  const stats = res.ok ? await res.json() : null;
+  const stats = await client.finance.getMonthlyStats({ month });
 
   return { stats };
 }

@@ -38,7 +38,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
   }, []);
 
   const addPlaceToList = useAddPlaceToList({
-    onSuccess: (_result) => {
+    onSuccess: () => {
       setStatus('success');
       clearSuccessTimer();
       successTimerRef.current = setTimeout(() => {
@@ -87,11 +87,6 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
       setErrorMessage(null);
     }
     setOpen(newOpen);
-  };
-
-  const handleRetry = () => {
-    setStatus('idle');
-    setErrorMessage(null);
   };
 
   const getErrorMessage = () => {

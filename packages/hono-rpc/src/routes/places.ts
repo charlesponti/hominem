@@ -3,6 +3,8 @@ import {
   deleteVisit,
   getVisitsByPlace,
   getVisitsByUser,
+  type EventWithTagsAndPeople,
+  type VisitWithPlaceAndTags,
   updateVisit,
 } from '@hominem/events-services';
 import {
@@ -58,24 +60,74 @@ import {
   type PlaceDeleteVisitOutput,
   type PlaceGetVisitStatsOutput,
 } from '../types/places.types';
+import type { UpdateEventInput } from '@hominem/events-services';
+
+type DistanceShape = number | { km?: number; miles?: number } | null | undefined;
+
+type SerializablePlace = {
+  id: string;
+  name: string;
+  description: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  imageUrl: string | null;
+  googleMapsId: string;
+  rating: number | null;
+  priceLevel: number | null;
+  photos: string[] | null;
+  types: string[] | null;
+  websiteUri: string | null;
+  phoneNumber: string | null;
+  businessStatus: string | null;
+  openingHours: string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  distance?: DistanceShape;
+  lists?: PlaceGetNearbyFromListsOutput[number]['lists'];
+};
+
+type VisitTag = { id: string; name: string; color: string | null; description: string | null };
+type VisitPerson = { id: string; firstName: string; lastName: string | null };
+type GooglePhotoInput = string | { name?: string | null };
+type GoogleSuggestion = {
+  placePrediction?: {
+    placeId?: string | null;
+    id?: string | null;
+    structuredFormat?: {
+      mainText?: { text?: string | null };
+      secondaryText?: { text?: string | null };
+    };
+    text?: { text?: string | null };
+    displayName?: { text?: string | null };
+    formattedAddress?: string | null;
+  } | null;
+};
 
 /**
- * Transform place from service layer to API contract
- * Converts Date objects to ISO strings for API response
- * Normalizes `distance` so the API always returns either `null` or an object of the form:
- *   { km: number, miles: number }
- * The service layer may sometimes return a plain number (meters) or an object with km/miles.
- * This function converts those shapes into a stable API contract.
+ * Transform place from service layer to API contract.
+ * Converts Date objects to ISO strings for API response.
+ * Normalizes `distance` to the API contract when present.
  */
-function transformPlaceToApiFormat(place: any): any {
-  const rawDistance = place.distance;
-  let distance: { km: number; miles: number } | null = null;
+function normalizePlaceDate(value: string | Date | null): string {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  if (typeof value === 'string') {
+    return value;
+  }
+  return new Date(0).toISOString();
+}
+
+function normalizeDistance(distance: DistanceShape): { km: number; miles: number } | null {
+  const rawDistance = distance;
+  let normalizedDistance: { km: number; miles: number } | null = null;
 
   if (rawDistance == null) {
-    distance = null;
+    normalizedDistance = null;
   } else if (typeof rawDistance === 'number' && Number.isFinite(rawDistance)) {
     // Service may provide distance in meters as a plain number — convert to km/miles
-    distance = {
+    normalizedDistance = {
       km: rawDistance / 1000,
       miles: rawDistance / 1609.344,
     };
@@ -87,60 +139,239 @@ function transformPlaceToApiFormat(place: any): any {
     const hasMiles = typeof milesVal === 'number' && Number.isFinite(milesVal);
 
     if (hasKm && hasMiles) {
-      distance = { km: kmVal, miles: milesVal };
+      normalizedDistance = { km: kmVal, miles: milesVal };
     } else if (hasKm) {
-      distance = { km: kmVal, miles: kmVal * 0.621371 };
+      normalizedDistance = { km: kmVal, miles: kmVal * 0.621371 };
     } else if (hasMiles) {
-      distance = { km: milesVal / 0.621371, miles: milesVal };
+      normalizedDistance = { km: milesVal / 0.621371, miles: milesVal };
     } else {
-      distance = null;
+      normalizedDistance = null;
     }
   } else {
-    distance = null;
+    normalizedDistance = null;
+  }
+  return normalizedDistance;
+}
+
+function toPlaceCreateOutput(place: SerializablePlace): PlaceCreateOutput {
+  return {
+    id: place.id,
+    name: place.name,
+    description: place.description,
+    address: place.address,
+    latitude: place.latitude,
+    longitude: place.longitude,
+    imageUrl: place.imageUrl,
+    googleMapsId: place.googleMapsId,
+    rating: place.rating,
+    priceLevel: place.priceLevel,
+    photos: place.photos,
+    types: place.types,
+    websiteUri: place.websiteUri,
+    phoneNumber: place.phoneNumber,
+    businessStatus: place.businessStatus,
+    openingHours: place.openingHours,
+    createdAt: normalizePlaceDate(place.createdAt),
+    updatedAt: normalizePlaceDate(place.updatedAt),
+  };
+}
+
+function toPlaceUpdateOutput(place: SerializablePlace): PlaceUpdateOutput {
+  return {
+    id: place.id,
+    name: place.name,
+    description: place.description,
+    address: place.address,
+    latitude: place.latitude,
+    longitude: place.longitude,
+    imageUrl: place.imageUrl,
+    googleMapsId: place.googleMapsId,
+    rating: place.rating,
+    priceLevel: place.priceLevel,
+    photos: place.photos,
+    types: place.types,
+    websiteUri: place.websiteUri,
+    phoneNumber: place.phoneNumber,
+    businessStatus: place.businessStatus,
+    openingHours: place.openingHours,
+    updatedAt: normalizePlaceDate(place.updatedAt),
+  };
+}
+
+function toPlaceDetailsOutput(place: SerializablePlace): PlaceGetDetailsByGoogleIdOutput {
+  return {
+    id: place.id,
+    name: place.name,
+    description: place.description,
+    address: place.address,
+    latitude: place.latitude,
+    longitude: place.longitude,
+    imageUrl: place.imageUrl,
+    googleMapsId: place.googleMapsId,
+    rating: place.rating,
+    priceLevel: place.priceLevel,
+    photos: place.photos,
+    types: place.types,
+    websiteUri: place.websiteUri,
+    phoneNumber: place.phoneNumber,
+    businessStatus: place.businessStatus,
+    openingHours: place.openingHours,
+    createdAt: normalizePlaceDate(place.createdAt),
+    updatedAt: normalizePlaceDate(place.updatedAt),
+  };
+}
+
+function toPlaceNearbyOutput(place: SerializablePlace): PlaceGetNearbyFromListsOutput[number] {
+  return {
+    id: place.id,
+    name: place.name,
+    description: place.description,
+    address: place.address,
+    latitude: place.latitude,
+    longitude: place.longitude,
+    imageUrl: place.imageUrl,
+    googleMapsId: place.googleMapsId,
+    rating: place.rating,
+    priceLevel: place.priceLevel,
+    photos: place.photos,
+    types: place.types,
+    websiteUri: place.websiteUri,
+    phoneNumber: place.phoneNumber,
+    businessStatus: place.businessStatus,
+    openingHours: place.openingHours,
+    distance: normalizeDistance(place.distance),
+    lists: place.lists ?? [],
+  };
+}
+
+function transformPlaceToApiFormat(place: SerializablePlace, kind: 'create'): PlaceCreateOutput;
+function transformPlaceToApiFormat(place: SerializablePlace, kind: 'update'): PlaceUpdateOutput;
+function transformPlaceToApiFormat(place: SerializablePlace, kind: 'details'): PlaceGetDetailsByIdOutput | PlaceGetDetailsByGoogleIdOutput;
+function transformPlaceToApiFormat(place: SerializablePlace, kind: 'nearby'): PlaceGetNearbyFromListsOutput[number];
+function transformPlaceToApiFormat(
+  place: SerializablePlace,
+  kind: 'create' | 'update' | 'details' | 'nearby',
+): PlaceCreateOutput | PlaceUpdateOutput | PlaceGetDetailsByIdOutput | PlaceGetDetailsByGoogleIdOutput | PlaceGetNearbyFromListsOutput[number] {
+  if (kind === 'create') return toPlaceCreateOutput(place)
+  if (kind === 'update') return toPlaceUpdateOutput(place)
+  if (kind === 'nearby') return toPlaceNearbyOutput(place)
+  return toPlaceDetailsOutput(place)
+}
+
+function normalizeDateString(value: string | Date | null | undefined): string {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  if (value === null || value === undefined) {
+    return new Date(0).toISOString();
+  }
+  return value;
+}
+
+function normalizeVisitTags(tags: VisitTag[] | null | undefined): string[] | null {
+  if (!tags || tags.length === 0) {
+    return null;
   }
 
-  return {
-    ...place,
-    distance,
-    createdAt: place.createdAt instanceof Date ? place.createdAt.toISOString() : place.createdAt,
-    updatedAt: place.updatedAt instanceof Date ? place.updatedAt.toISOString() : place.updatedAt,
-  };
+  return tags.map((tag) => tag.name);
+}
+
+function normalizeVisitPeople(people: VisitPerson[] | null | undefined): string[] | null {
+  if (!people || people.length === 0) {
+    return null;
+  }
+
+  return people.map((person) =>
+    typeof person === 'string' ? person : `${person.firstName}${person.lastName ? ` ${person.lastName}` : ''}`,
+  );
 }
 
 /**
  * Serialize visit data with Date to string conversion
  */
-function serializeVisit(visit: any): any {
+function serializeVisitForLog(visit: EventWithTagsAndPeople): PlaceLogVisitOutput {
   return {
     id: visit.id,
     title: visit.title,
     description: visit.description,
-    date: visit.date instanceof Date ? visit.date.toISOString() : visit.date,
-    placeId: visit.placeId,
+    date: normalizeDateString(visit.date),
+    placeId: visit.placeId ?? '',
     visitNotes: visit.visitNotes,
     visitRating: visit.visitRating,
     visitReview: visit.visitReview,
-    tags: visit.tags,
-    people: visit.people,
+    tags: normalizeVisitTags(visit.tags),
+    people: normalizeVisitPeople(visit.people),
     userId: visit.userId,
-    createdAt: visit.createdAt instanceof Date ? visit.createdAt.toISOString() : visit.createdAt,
-    updatedAt: visit.updatedAt instanceof Date ? visit.updatedAt.toISOString() : visit.updatedAt,
+    createdAt: normalizeDateString(visit.createdAt),
+    updatedAt: normalizeDateString(visit.updatedAt),
   };
 }
 
-/**
- * Serialize visit from service response (may have nested event object)
- */
-function serializeVisitFromService(data: any): any {
-  const event = data.event || data;
-  return serializeVisit(event);
+function serializeVisitForUpdate(visit: EventWithTagsAndPeople): PlaceUpdateVisitOutput {
+  return {
+    id: visit.id,
+    title: visit.title,
+    description: visit.description,
+    date: normalizeDateString(visit.date),
+    placeId: visit.placeId ?? '',
+    visitNotes: visit.visitNotes,
+    visitRating: visit.visitRating,
+    visitReview: visit.visitReview,
+    tags: normalizeVisitTags(visit.tags),
+    people: normalizeVisitPeople(visit.people),
+    userId: visit.userId,
+    updatedAt: normalizeDateString(visit.updatedAt),
+  };
+}
+
+function serializeVisitFromServiceForMyVisits(
+  data: VisitWithPlaceAndTags,
+): PlaceGetMyVisitsOutput[number] {
+  const createdAt = new Date(0).toISOString();
+  return {
+    id: data.id,
+    title: null,
+    description: null,
+    date: normalizeDateString(data.date),
+    placeId: data.placeId ?? '',
+    place: {
+      id: data.place?.id ?? '',
+      name: data.place?.name ?? '',
+      address: null,
+      latitude: null,
+      longitude: null,
+      imageUrl: null,
+    },
+    visitNotes: null,
+    visitRating: data.visitRating,
+    visitReview: null,
+    tags: normalizeVisitTags(data.tags),
+    people: normalizeVisitPeople(data.people),
+    createdAt,
+    updatedAt: createdAt,
+  };
+}
+
+function serializeVisitFromServiceForPlaceVisits(
+  data: VisitWithPlaceAndTags,
+): PlaceGetPlaceVisitsOutput[number] {
+  const base = serializeVisitFromServiceForMyVisits(data)
+  return {
+    ...base,
+    userId: 'unknown-user-id',
+    user: {
+      id: '',
+      name: 'Unknown User',
+      email: 'unknown@example.com',
+    },
+  };
 }
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
-function extractPhotoReferences(photos: any[]): string[] {
+function extractPhotoReferences(photos: GooglePhotoInput[]): string[] {
   if (!photos || !Array.isArray(photos)) return [];
   return photos
     .map((photo) => {
@@ -152,8 +383,10 @@ function extractPhotoReferences(photos: any[]): string[] {
     .filter((url): url is string => url !== null);
 }
 
-function mapGooglePlaceToPrediction(place: any) {
-  const fromPrediction = place.placePrediction ?? place;
+function mapGooglePlaceToPrediction(
+  placePrediction: NonNullable<GoogleSuggestion['placePrediction']>,
+): PlaceAutocompleteOutput[number] {
+  const fromPrediction = placePrediction;
   const structured = fromPrediction.structuredFormat;
   const textObj = fromPrediction.text;
   const text = textObj?.text || fromPrediction.displayName?.text || '';
@@ -164,7 +397,7 @@ function mapGooglePlaceToPrediction(place: any) {
     '';
 
   return {
-    place_id: fromPrediction.placeId || fromPrediction.id,
+    place_id: fromPrediction.placeId ?? fromPrediction.id ?? '',
     text,
     address,
     location: null,
@@ -278,7 +511,7 @@ export const placesRoutes = new Hono<AppContext>()
         logger.warn('[places.create] Failed to enqueue photo enrichment', { error: err });
       }
 
-      return c.json<PlaceCreateOutput>(transformPlaceToApiFormat(createdPlace), 201);
+      return c.json<PlaceCreateOutput>(transformPlaceToApiFormat(createdPlace, 'create'), 201);
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -313,7 +546,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw new NotFoundError('');
       }
 
-      return c.json<PlaceUpdateOutput>(transformPlaceToApiFormat(updatedPlace), 200);
+      return c.json<PlaceUpdateOutput>(transformPlaceToApiFormat(updatedPlace, 'update'), 200);
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -415,7 +648,7 @@ export const placesRoutes = new Hono<AppContext>()
         // Non-fatal
       }
 
-      return c.json<PlaceGetDetailsByIdOutput>(transformPlaceToApiFormat(dbPlace), 200);
+      return c.json<PlaceGetDetailsByIdOutput>(transformPlaceToApiFormat(dbPlace, 'details'), 200);
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -437,8 +670,12 @@ export const placesRoutes = new Hono<AppContext>()
 
         const place = await getPlaceByGoogleMapsId(input.googleMapsId);
 
+        if (!place) {
+          throw new NotFoundError('');
+        }
+
         return c.json<PlaceGetDetailsByGoogleIdOutput>(
-          place ? transformPlaceToApiFormat(place) : null,
+          transformPlaceToApiFormat(place, 'details'),
           200,
         );
       } catch (err) {
@@ -516,7 +753,10 @@ export const placesRoutes = new Hono<AppContext>()
         limit: input.limit ?? 20,
       });
 
-      return c.json<PlaceGetNearbyFromListsOutput>(places.map(transformPlaceToApiFormat), 200);
+      return c.json<PlaceGetNearbyFromListsOutput>(
+        places.map((place) => transformPlaceToApiFormat(place, 'nearby')),
+        200,
+      );
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -562,7 +802,7 @@ export const placesRoutes = new Hono<AppContext>()
         ...(data.people && { people: data.people }),
       });
 
-      return c.json<PlaceLogVisitOutput>(serializeVisit(event), 201);
+      return c.json<PlaceLogVisitOutput>(serializeVisitForLog(event), 201);
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -580,7 +820,10 @@ export const placesRoutes = new Hono<AppContext>()
 
       const visits = await getVisitsByUser(userId);
 
-      return c.json<PlaceGetMyVisitsOutput>(visits.map(serializeVisitFromService), 200);
+      return c.json<PlaceGetMyVisitsOutput>(
+        visits.map(serializeVisitFromServiceForMyVisits),
+        200,
+      );
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -602,7 +845,12 @@ export const placesRoutes = new Hono<AppContext>()
 
         const visits = await getVisitsByPlace(input.placeId);
 
-        return c.json<PlaceGetPlaceVisitsOutput>(visits.map(serializeVisitFromService), 200);
+        return c.json<PlaceGetPlaceVisitsOutput>(
+          visits.map(
+            (visit) => serializeVisitFromServiceForPlaceVisits(visit),
+          ),
+          200,
+        );
       } catch (err) {
         if (isServiceError(err)) {
           throw err;
@@ -621,13 +869,15 @@ export const placesRoutes = new Hono<AppContext>()
 
       const { id, ...rest } = input;
 
-      // Filter out undefined values for exactOptionalPropertyTypes
-      const updateData: Record<string, any> = {};
-      Object.entries(rest).forEach(([key, value]) => {
-        if (value !== undefined) {
-          updateData[key] = value;
-        }
-      });
+      const updateData: UpdateEventInput = {};
+      if (rest.title !== undefined) updateData.title = rest.title;
+      if (rest.description !== undefined) updateData.description = rest.description;
+      if (rest.date !== undefined) updateData.date = new Date(rest.date);
+      if (rest.visitNotes !== undefined) updateData.visitNotes = rest.visitNotes;
+      if (rest.visitRating !== undefined) updateData.visitRating = rest.visitRating;
+      if (rest.visitReview !== undefined) updateData.visitReview = rest.visitReview;
+      if (rest.tags !== undefined) updateData.tags = rest.tags;
+      if (rest.people !== undefined) updateData.people = rest.people;
 
       const updatedEvent = await updateVisit(id, updateData);
 
@@ -635,7 +885,7 @@ export const placesRoutes = new Hono<AppContext>()
         throw new NotFoundError('');
       }
 
-      return c.json<PlaceUpdateVisitOutput>(serializeVisit(updatedEvent), 200);
+      return c.json<PlaceUpdateVisitOutput>(serializeVisitForUpdate(updatedEvent), 200);
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -677,42 +927,37 @@ export const placesRoutes = new Hono<AppContext>()
 
       // Calculate stats
       const totalVisits = visits.length;
-      const normalizedVisits = visits.map((v: any) => v.event || v);
+      const normalizedVisits = visits.map((visit) => ({
+        ...visit,
+        date: visit.date ?? undefined,
+      }));
+
       const ratings = normalizedVisits
-        .filter((v: any) => v.visitRating)
-        .map((v: any) => v.visitRating as number);
+        .map((visit) => visit.visitRating)
+        .filter((rating): rating is number => typeof rating === 'number');
       const averageRating =
-        ratings.length > 0
-          ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length
-          : undefined;
+        ratings.length > 0 ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : undefined;
 
       const sortedVisits = normalizedVisits.sort(
-        (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        (a, b) => new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime(),
       );
       const lastVisitDate = sortedVisits[0]?.date;
       const firstVisitDate = sortedVisits[sortedVisits.length - 1]?.date;
 
-      const lastVisit = lastVisitDate
-        ? lastVisitDate instanceof Date
-          ? lastVisitDate.toISOString()
-          : lastVisitDate
-        : undefined;
-      const firstVisit = firstVisitDate
-        ? firstVisitDate instanceof Date
-          ? firstVisitDate.toISOString()
-          : firstVisitDate
-        : undefined;
+      const lastVisit = lastVisitDate ? normalizeDateString(lastVisitDate) : undefined;
+      const firstVisit = firstVisitDate ? normalizeDateString(firstVisitDate) : undefined;
 
       // Count tags and people
       const tagCounts = new Map<string, number>();
       const peopleCounts = new Map<string, number>();
 
-      visits.forEach((visit: any) => {
-        visit.tags?.forEach((tag: any) => {
-          tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+      visits.forEach((visit) => {
+        visit.tags.forEach((tag) => {
+          tagCounts.set(tag.name, (tagCounts.get(tag.name) || 0) + 1);
         });
-        visit.people?.forEach((person: any) => {
-          peopleCounts.set(person, (peopleCounts.get(person) || 0) + 1);
+        visit.people.forEach((person) => {
+          const personName = `${person.firstName}${person.lastName ? ` ${person.lastName}` : ''}`;
+          peopleCounts.set(personName, (peopleCounts.get(personName) || 0) + 1);
         });
       });
 

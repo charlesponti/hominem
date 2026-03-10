@@ -1,5 +1,4 @@
 import { useAuthContext } from '@hominem/auth';
-import type { ListUser } from '@hominem/hono-rpc/types/lists.types';
 import { Alert, PageTitle } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
 import { UserPlus } from 'lucide-react';
@@ -16,9 +15,29 @@ import { useGeolocation } from '~/hooks/useGeolocation';
 import { createServerHonoClient } from '~/lib/api.server';
 import { requireAuth } from '~/lib/guards';
 import { useListById } from '~/lib/hooks/use-lists';
+import type { List } from '~/lib/types';
 import type { PlaceLocation } from '~/lib/types';
 
 import type { Route } from './+types/lists.$id';
+
+type Collaborator = {
+  id: string;
+  email: string;
+  name: string | null;
+  image?: string | null;
+};
+
+function isCollaborator(value: unknown): value is Collaborator {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const collaborator = value as Record<string, unknown>;
+  return (
+    typeof collaborator.id === 'string' &&
+    typeof collaborator.email === 'string' &&
+    (typeof collaborator.name === 'string' || collaborator.name === null)
+  );
+}
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const authResult = await requireAuth(request);
@@ -32,12 +51,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   }
 
   const client = createServerHonoClient(authResult.session?.access_token, request);
-  const res = await client.api.lists.get.$post({ json: { id } });
-  if (!res.ok) {
-    return redirect('/404');
-  }
-
-  const list = await res.json();
+  const list = await client.lists.getById({ id });
   if (!list) {
     return redirect('/404');
   }
@@ -109,8 +123,22 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   const ownerId = 'ownerId' in list ? list.ownerId : (list as { userId?: string }).userId;
   const isOwner = ownerId === user?.id;
   const hasAccess = 'hasAccess' in list ? (list.hasAccess as boolean) : isOwner;
-  const collaborators =
+  const collaboratorsRaw =
     'collaborators' in list ? list.collaborators : (list as { users?: unknown[] }).users || [];
+  const collaborators = Array.isArray(collaboratorsRaw)
+    ? collaboratorsRaw.filter(isCollaborator)
+    : [];
+  const listForEdit: List = {
+    ...list,
+    createdBy:
+      list.createdBy && list.createdBy.id && list.createdBy.email
+        ? {
+            id: list.createdBy.id,
+            email: list.createdBy.email,
+            name: list.createdBy.name ?? null,
+          }
+        : null,
+  };
 
   return (
     <div className="space-y-4">
@@ -126,7 +154,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
               <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">
                 <UserPlus size={18} />
               </Link>
-              <ListEditButton list={list} />
+              <ListEditButton list={listForEdit} />
             </div>
           )}
         </div>
@@ -134,11 +162,11 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
           {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
           {collaborators && collaborators.length > 0 && (
             <div className="flex items-center -space-x-2">
-              {collaborators.slice(0, 5).map((collaborator: ListUser) => (
+              {collaborators.slice(0, 5).map((collaborator: Collaborator) => (
                 <UserAvatar
                   key={collaborator.id}
                   id={collaborator.id}
-                  name={collaborator.name}
+                  name={collaborator.name ?? undefined}
                   email={collaborator.email}
                   image={collaborator.image}
                   size="sm"

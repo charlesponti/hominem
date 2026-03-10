@@ -145,7 +145,7 @@ export const messagesRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!
     const messageId = c.req.param('messageId')
 
-    const message = await getMessageWithOwnershipCheck(messageId, userId)
+    await getMessageWithOwnershipCheck(messageId, userId)
 
     const result = await db.deleteFrom('chat_message').where('id', '=', messageId).execute()
 

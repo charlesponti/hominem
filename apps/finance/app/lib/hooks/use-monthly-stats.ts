@@ -15,12 +15,7 @@ export type MonthlyStatsContract = MonthlyStatsOutput & {
 export function useMonthlyStats(month: string | undefined | null, options = {}) {
   const query = useHonoQuery<MonthlyStatsContract>(
     ['finance', 'analyze', 'monthly-stats', month],
-    async (client) => {
-      const res = await client.api.finance.analyze['monthly-stats'].$post({
-        json: { month: month! },
-      });
-      return res.json() as unknown as Promise<MonthlyStatsContract>;
-    },
+    ({ finance }) => finance.getMonthlyStats({ month: month! }) as Promise<MonthlyStatsContract>,
     {
       enabled: !!month,
       staleTime: 5 * 60 * 1000, // 5 minutes

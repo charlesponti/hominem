@@ -18,7 +18,7 @@ export const useAuthenticatedRequest = () => {
       const token = await getAccessToken()
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...(options.headers ?? {}),
+        ...options.headers,
       }
 
       if (token) {

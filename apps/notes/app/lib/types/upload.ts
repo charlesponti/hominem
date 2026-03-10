@@ -22,7 +22,7 @@ interface ProcessedFile {
 /**
  * File being uploaded (client-side state during upload process)
  */
-interface FileUpload {
+interface _FileUpload {
   id: string;
   name: string;
   type: string;

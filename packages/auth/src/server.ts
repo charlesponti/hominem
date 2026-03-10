@@ -110,7 +110,8 @@ export async function getServerAuth(
   }
 }
 
-export function createServerAuthClient(_request: Request, config: AuthConfig) {
+export function createServerAuthClient(request: Request, config: AuthConfig) {
+  void request
   return {
     headers: new Headers(),
     authClient: {

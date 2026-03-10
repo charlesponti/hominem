@@ -34,79 +34,67 @@ export const tasksRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)
   // List tasks
   .get('/', async (c) => {
-    try {
-      const userId = c.get('userId')!
-      const status = c.req.query('status')
-      const priority = c.req.query('priority')
-      const limit = c.req.query('limit') ? Math.min(Number.parseInt(c.req.query('limit')!), 100) : 50
+    const userId = c.get('userId')!
+    const status = c.req.query('status')
+    const priority = c.req.query('priority')
+    const limit = c.req.query('limit') ? Math.min(Number.parseInt(c.req.query('limit')!), 100) : 50
 
-      let query = db
-        .selectFrom('tasks')
-        .selectAll()
-        .where('user_id', '=', userId)
+    let query = db
+      .selectFrom('tasks')
+      .selectAll()
+      .where('user_id', '=', userId)
 
-      if (status) {
-        query = query.where('status', '=', status)
-      }
-      if (priority) {
-        query = query.where('priority', '=', priority)
-      }
-
-      const tasks = await query
-        .orderBy('created_at', 'asc')
-        .orderBy('id', 'asc')
-        .limit(limit)
-        .execute()
-
-      return c.json({ success: true, data: tasks })
-    } catch (error) {
-      throw error
+    if (status) {
+      query = query.where('status', '=', status)
     }
+    if (priority) {
+      query = query.where('priority', '=', priority)
+    }
+
+    const tasks = await query
+      .orderBy('created_at', 'asc')
+      .orderBy('id', 'asc')
+      .limit(limit)
+      .execute()
+
+    return c.json({ success: true, data: tasks })
   })
   // Get single task
   .get('/:id', zValidator('param', taskIdParamSchema), async (c) => {
-    try {
-      const userId = c.get('userId')!
-      const { id } = c.req.valid('param')
+    const userId = c.get('userId')!
+    const { id } = c.req.valid('param')
 
-      const task = await db
-        .selectFrom('tasks')
-        .selectAll()
-        .where('id', '=', id)
-        .where('user_id', '=', userId)
-        .executeTakeFirst()
+    const task = await db
+      .selectFrom('tasks')
+      .selectAll()
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
+      .executeTakeFirst()
 
-      if (!task) {
-        throw new NotFoundError('Task not found')
-      }
-      return c.json({ success: true, data: task })
-    } catch (error) {
-      throw error
+    if (!task) {
+      throw new NotFoundError('Task not found')
     }
+    return c.json({ success: true, data: task })
   })
   // Create task
   .post('/', zValidator('json', CreateTaskInputSchema), async (c) => {
-    try {
-      const userId = c.get('userId')!
-      const data = c.req.valid('json')
+    const userId = c.get('userId')!
+    const data = c.req.valid('json')
 
-      const newTask = await db
-        .insertInto('tasks')
-        .values({
-          user_id: userId,
-          title: data.title,
-          description: data.description || null,
-          status: data.status || 'pending',
-          priority: data.priority || 'medium',
-          due_date: data.dueDate || null,
-        })
-        .returningAll()
-        .executeTakeFirstOrThrow()
+    const newTask = await db
+      .insertInto('tasks')
+      .values({
+        user_id: userId,
+        title: data.title,
+        description: data.description || null,
+        status: data.status || 'pending',
+        priority: data.priority || 'medium',
+        due_date: data.dueDate || null,
+      })
+      .returningAll()
+      .executeTakeFirstOrThrow()
 
-      return c.json({ success: true, data: newTask }, 201)
-    } catch (error) {
-      throw error
-    }
+    return c.json({ success: true, data: newTask }, 201)
   })
   // Update task
   .patch('/:id', zValidator('param', taskIdParamSchema), zValidator('json', UpdateTaskInputSchema), async (c) => {
@@ -118,13 +106,19 @@ export const tasksRoutes = new Hono<AppContext>()
       // Verify ownership first
       await getTaskWithOwnershipCheck(id, userId)
 
-      const updateData: Record<string, any> = {}
+      const updateData: {
+        title?: string
+        description?: string | null
+        status?: string
+        priority?: string
+        due_date?: string | null
+        updated_at: string
+      } = { updated_at: new Date().toISOString() }
       if (data.title !== undefined) updateData.title = data.title
       if (data.description !== undefined) updateData.description = data.description
       if (data.status !== undefined) updateData.status = data.status
       if (data.priority !== undefined) updateData.priority = data.priority
       if (data.dueDate !== undefined) updateData.due_date = data.dueDate
-      updateData.updated_at = new Date().toISOString()
 
       const updatedTask = await db
         .updateTable('tasks')

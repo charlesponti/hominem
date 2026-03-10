@@ -1,5 +1,5 @@
 export { HonoProvider } from './provider';
-export { useHonoClient } from './context';
+export { useApiClient, useHonoClient } from './context';
 export { useHonoQuery, useHonoMutation, useHonoUtils } from './hooks';
 export { transformDates, type TransformDates } from '../core/transformer';
 

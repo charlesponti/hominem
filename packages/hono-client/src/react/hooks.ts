@@ -7,9 +7,9 @@ import {
   type QueryKey,
 } from '@tanstack/react-query';
 
-import type { HonoClient } from '../core/client';
+import type { ApiClient } from '../core/api-client';
 
-import { useHonoClient } from './context';
+import { useApiClient } from './context';
 
 export interface HonoQueryOptions<TData> extends Omit<
   UseQueryOptions<TData>,
@@ -31,7 +31,7 @@ export interface OptimisticUpdateConfig<
   TContext = { previousData: TData | undefined }
 > {
   queryKey: QueryKey;
-  mutationFn: (client: HonoClient, variables: TVariables) => Promise<TData>;
+  mutationFn: (client: ApiClient, variables: TVariables) => Promise<TData>;
   updateFn: (oldData: TData | undefined, variables: TVariables) => TData;
   onSuccess?: (data: TData, variables: TVariables, context: TContext) => void;
   onError?: (error: Error, variables: TVariables, context: TContext | undefined) => void;
@@ -46,18 +46,17 @@ export interface OptimisticUpdateConfig<
  * @example
  * const { data } = useHonoQuery(
  *   ['finance', 'transactions', 'list'],
- *   async (client) => {
- *     const res = await client.api.finance.transactions.list.$post({ json: { limit: 10 } });
- *     return transformResponse(res);
+ *   async ({ finance }) => {
+ *     return finance.listTransactions({ limit: 10, sortBy: 'date', sortDirection: 'desc' });
  *   }
  * );
  */
 export function useHonoQuery<TData>(
   queryKey: QueryKey,
-  queryFn: (client: HonoClient) => Promise<TData>,
+  queryFn: (client: ApiClient) => Promise<TData>,
   options?: HonoQueryOptions<TData>,
 ) {
-  const client = useHonoClient();
+  const client = useApiClient();
 
   return useQuery({
     queryKey: options?.queryKey || queryKey,
@@ -76,9 +75,8 @@ export function useHonoQuery<TData>(
  *
  * @example
  * const mutation = useHonoMutation(
- *   async (client, variables) => {
- *     const res = await client.api.finance.transactions.create.$post({ json: variables });
- *     return res.json();
+ *   async ({ places }, variables) => {
+ *     return places.create(variables);
  *   },
  *   {
  *     onSuccess: () => console.log('Created!'),
@@ -87,10 +85,10 @@ export function useHonoQuery<TData>(
  * );
  */
 export function useHonoMutation<TData, TVariables = void>(
-  mutationFn: (client: HonoClient, variables: TVariables) => Promise<TData>,
+  mutationFn: (client: ApiClient, variables: TVariables) => Promise<TData>,
   options?: HonoMutationOptions<TData, TVariables>,
 ) {
-  const client = useHonoClient();
+  const client = useApiClient();
   const queryClient = useQueryClient();
 
   return useMutation({

@@ -31,7 +31,7 @@ export function useSelectedAccount() {
 }
 
 // Alternative hook that provides more control
-function useSelectedAccountWithDefaults(defaultAccount = 'all') {
+function _useSelectedAccountWithDefaults(defaultAccount = 'all') {
   const queryClient = useQueryClient();
 
   const selectedAccount = queryClient.getQueryData<string>(SELECTED_ACCOUNT_KEY) ?? defaultAccount;

@@ -51,8 +51,8 @@ export function createServerEnv<T extends z.ZodObject<z.ZodRawShape>>(
     }
   }
 
-  const _env: Record<string, unknown> = {};
-  return new Proxy(_env, {
+  const envTarget: Record<string, unknown> = {};
+  return new Proxy(envTarget, {
     get(target, prop) {
       return getEnv()[prop as keyof EnvType];
     },
@@ -60,6 +60,7 @@ export function createServerEnv<T extends z.ZodObject<z.ZodRawShape>>(
       return prop in getEnv();
     },
     ownKeys(target) {
+      void target
       return Object.keys(getEnv());
     },
     getOwnPropertyDescriptor(target, prop) {

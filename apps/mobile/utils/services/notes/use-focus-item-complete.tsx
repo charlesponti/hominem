@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 
-import { useHonoClient } from '@hominem/hono-client/react'
+import { useApiClient } from '@hominem/hono-client/react'
 
 import type { FocusItem } from '~/utils/services/notes/types'
 import { LocalStore } from '~/utils/local-store'
@@ -12,16 +12,12 @@ type UseFocusItemComplete = {
 }
 
 export const useFocusItemComplete = ({ onSuccess, onError }: UseFocusItemComplete) => {
-  const client = useHonoClient()
+  const client = useApiClient()
 
   return useMutation({
     mutationKey: ['completeItem'],
     mutationFn: async (id: string) => {
-      const response = await client.api.notes[':id'].archive.$post({
-        param: { id },
-      })
-
-      const archivedNote = (await response.json()) as Parameters<typeof noteToFocusItem>[0]
+      const archivedNote = await client.notes.archive({ id })
       const mapped = {
         ...noteToFocusItem(archivedNote),
         state: 'completed' as const,

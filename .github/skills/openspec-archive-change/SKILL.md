@@ -82,12 +82,24 @@ Archive a completed change in the experimental workflow.
    mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
    ```
 
-6. **Display summary**
+6. **Create merged completion doc and update index**
+
+   After archiving, invoke the `openspec-merge-doc` workflow for the same change.
+
+   Requirements:
+   - Create `openspec/merged/YYYY-MM-DD-<change-name>.md` (if not already present)
+   - Update `openspec/merged/README.md` index
+   - Ensure naming uses `YYYY-MM-DD-<change-slug>.md`
+   - Keep one merged doc per completed change
+
+7. **Display summary**
 
    Show archive completion summary including:
    - Change name
    - Schema that was used
    - Archive location
+   - Merged doc location
+   - Merged index update status
    - Whether specs were synced (if applicable)
    - Note about any warnings (incomplete artifacts/tasks)
 
@@ -99,6 +111,8 @@ Archive a completed change in the experimental workflow.
 **Change:** <change-name>
 **Schema:** <schema-name>
 **Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**Merged doc:** openspec/merged/YYYY-MM-DD-<name>/
+**Merged index:** openspec/merged/README.md updated
 **Specs:** ✓ Synced to main specs (or "No delta specs" or "Sync skipped")
 
 All artifacts complete. All tasks complete.

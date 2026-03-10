@@ -18,7 +18,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
 
   if (content === null) return null;
 
-  const handleCopyCode = async (code: string, _language: string, blockId: string) => {
+  const handleCopyCode = async (code: string, blockId: string) => {
     try {
       await navigator.clipboard.writeText(code);
       setCopiedCodeBlocks((prev) => new Set(prev).add(blockId));
@@ -55,7 +55,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
                       variant="ghost"
                       size="sm"
                       className="h-6 px-2 text-xs"
-                      onClick={() => handleCopyCode(codeString, language, blockId)}
+                      onClick={() => handleCopyCode(codeString, blockId)}
                       aria-label={`Copy ${language} code block`}
                     >
                       {isCopied ? (

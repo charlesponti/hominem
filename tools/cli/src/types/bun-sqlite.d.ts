@@ -1,19 +1,19 @@
 declare module 'bun:sqlite' {
   export class Database {
     constructor(filename: string, options?: { create?: boolean });
-    run(sql: string, ...params: any[]): any;
+    run(sql: string, ...params: unknown[]): unknown;
     exec(sql: string): void;
-    query<T = any>(
+    query<T = unknown>(
       sql: string,
     ): {
-      get: (...params: any[]) => T | undefined;
-      all: (...params: any[]) => T[];
-      run: (...params: any[]) => void;
+      get: (...params: unknown[]) => T | undefined;
+      all: (...params: unknown[]) => T[];
+      run: (...params: unknown[]) => void;
     };
     prepare(sql: string): {
-      run: (...params: any[]) => any;
-      all: (...params: any[]) => any[];
-      get: (...params: any[]) => any;
+      run: (...params: unknown[]) => unknown;
+      all: (...params: unknown[]) => unknown[];
+      get: (...params: unknown[]) => unknown;
     };
     close(): void;
   }

@@ -1,11 +1,11 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome'
 import { forwardRef } from 'react'
-import { Pressable, StyleSheet } from 'react-native'
+import { Pressable, StyleSheet, type View } from 'react-native'
 
-export const HeaderButton = forwardRef<typeof Pressable, { onPress?: () => void }>(
+export const HeaderButton = forwardRef<View, { onPress?: () => void }>(
   ({ onPress }, ref) => {
     return (
-      <Pressable onPress={onPress}>
+      <Pressable ref={ref} onPress={onPress}>
         {({ pressed }) => (
           <FontAwesome
             name="info-circle"

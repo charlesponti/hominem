@@ -132,9 +132,15 @@ describe('Dashboard Integration Tests', () => {
     });
 
     await waitFor(() => {
-      // About page content renders (text is split by <br /> so we use partial match)
-      expect(screen.getByText(/Your places\./)).toBeInTheDocument();
-      expect(screen.getByText(/Your stories\./)).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', {
+          name: /Save places\.\s*Share lists\.\s*Actually go\./,
+        }),
+      ).toBeInTheDocument();
+      expect(screen.getAllByRole('link', { name: 'Start your first list' }).length).toBeGreaterThan(
+        0,
+      );
+      expect(screen.getAllByRole('link', { name: 'Sign in' }).length).toBeGreaterThan(0);
 
       // Dashboard content does NOT render
       expect(screen.queryByTestId('home-scene')).not.toBeInTheDocument();

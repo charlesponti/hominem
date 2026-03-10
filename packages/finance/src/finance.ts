@@ -11,7 +11,7 @@ import {
   financeTransactionQueryContractSchema,
 } from './contracts';
 
-type TimestampString = string;
+type _TimestampString = string;
 
 interface FinanceAccount {
   id: string;
@@ -50,7 +50,7 @@ interface FinanceAnalyticsTransaction extends FinanceTransaction {
   classification: string;
 }
 
-type FinanceAnalyticsTransactionRow = Selectable<Database['finance_transactions']> & {
+type _FinanceAnalyticsTransactionRow = Selectable<Database['finance_transactions']> & {
   classification: string;
 };
 
@@ -67,14 +67,14 @@ interface PlaidItem {
   lastSyncedAt?: string | null;
 }
 
-type PlaidItemRow = Selectable<Database['plaid_items']>;
+type _PlaidItemRow = Selectable<Database['plaid_items']>;
 
 interface Institution {
   id: string;
   name: string;
 }
 
-type InstitutionRow = Selectable<Database['financial_institutions']>;
+type _InstitutionRow = Selectable<Database['financial_institutions']>;
 
 
 function toNumber(value: string | number | null): number {
@@ -187,7 +187,7 @@ export function calculateBudgetBreakdown(
   savings: number;
   unallocated: number;
 } {
-  const { monthlyIncome: income, savingsTarget: savingsTarget = income * 0.2 } = input;
+  const { monthlyIncome: income, savingsTarget = income * 0.2 } = input;
 
   const needs = income * 0.5;
   const wants = income * 0.3;
@@ -593,11 +593,11 @@ export async function bulkCreateBudgetCategoriesFromTransactions(
   return created;
 }
 
-export async function getSpendingCategories(_userId: string): Promise<FinanceCategory[]> {
+export async function getSpendingCategories(userId: string): Promise<FinanceCategory[]> {
   const result = await db
     .selectFrom('tags')
     .selectAll()
-    .where('owner_id', '=', _userId)
+    .where('owner_id', '=', userId)
     .orderBy('name', 'asc')
     .orderBy('id', 'asc')
     .execute();
@@ -1210,9 +1210,9 @@ function getTimeSeriesBucket(date: string, groupBy?: 'month' | 'week' | 'day'): 
   return date;
 }
 
-export async function queryTransactions(_userId: string): Promise<FinanceTransaction[]> {
+export async function queryTransactions(userId: string): Promise<FinanceTransaction[]> {
   return queryTransactionsByContract({
-    userId: _userId,
+    userId,
   });
 }
 
@@ -1459,14 +1459,14 @@ export async function deleteTransaction(id: string, userId?: string): Promise<bo
 }
 
 export async function getPlaidItemByUserAndItemId(
-  _userId: string,
-  _itemId: string,
+  userId: string,
+  itemId: string,
 ): Promise<PlaidItem | null> {
   const result = await db
     .selectFrom('plaid_items')
     .selectAll()
-    .where('user_id', '=', _userId)
-    .where('item_id', '=', _itemId)
+    .where('user_id', '=', userId)
+    .where('item_id', '=', itemId)
     .limit(1)
     .executeTakeFirst();
   const row = result ?? null;
@@ -1485,13 +1485,13 @@ export async function getPlaidItemByUserAndItemId(
   };
 }
 
-export async function getPlaidItemById(_id: string, _userId?: string): Promise<PlaidItem | null> {
-  if (_userId) {
+export async function getPlaidItemById(id: string, userId?: string): Promise<PlaidItem | null> {
+  if (userId) {
     const result = await db
       .selectFrom('plaid_items')
       .selectAll()
-      .where('id', '=', _id)
-      .where('user_id', '=', _userId)
+      .where('id', '=', id)
+      .where('user_id', '=', userId)
       .limit(1)
       .executeTakeFirst();
     const row = result ?? null;
@@ -1513,7 +1513,7 @@ export async function getPlaidItemById(_id: string, _userId?: string): Promise<P
   const result = await db
     .selectFrom('plaid_items')
     .selectAll()
-    .where('id', '=', _id)
+    .where('id', '=', id)
     .limit(1)
     .executeTakeFirst();
   const row = result ?? null;
@@ -1532,11 +1532,11 @@ export async function getPlaidItemById(_id: string, _userId?: string): Promise<P
   };
 }
 
-export async function getPlaidItemByItemId(_itemId: string): Promise<PlaidItem | null> {
+export async function getPlaidItemByItemId(itemId: string): Promise<PlaidItem | null> {
   const result = await db
     .selectFrom('plaid_items')
     .selectAll()
-    .where('item_id', '=', _itemId)
+    .where('item_id', '=', itemId)
     .orderBy('created_at', 'desc')
     .orderBy('id', 'asc')
     .limit(1)

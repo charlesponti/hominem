@@ -40,46 +40,6 @@ jobs:
           bash scripts/install-goose.sh
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install PostgreSQL client tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-
-      - name: Adopt existing schema into Goose (one-time)
-        run: |
-          set -euo pipefail
-          BASELINE_VERSION="$(find packages/db/migrations -maxdepth 1 -type f -name '*.sql' -printf '%f\n' | sort | head -n1 | sed 's/_.*//')"
-          if [ -z "${BASELINE_VERSION}" ]; then
-            echo "No migration files found"
-            exit 1
-          fi
-
-          HAS_EXISTING_SCHEMA="$(psql "${DATABASE_URL}" -Atc "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'users');")"
-          HAS_BASELINE_APPLIED="$(psql "${DATABASE_URL}" -Atc "SELECT EXISTS (SELECT 1 FROM public.goose_db_version WHERE version_id = ${BASELINE_VERSION} AND is_applied = true);" 2>/dev/null || echo "f")"
-
-          if [ "${HAS_EXISTING_SCHEMA}" = "t" ] && [ "${HAS_BASELINE_APPLIED}" = "f" ]; then
-            echo "Detected existing schema without applied Goose baseline. Marking ${BASELINE_VERSION} as applied."
-            psql "${DATABASE_URL}" <<SQL
-          CREATE TABLE IF NOT EXISTS public.goose_db_version (
-            id bigserial PRIMARY KEY,
-            version_id bigint NOT NULL,
-            is_applied boolean NOT NULL,
-            tstamp timestamp NOT NULL DEFAULT now()
-          );
-          INSERT INTO public.goose_db_version (version_id, is_applied, tstamp)
-          SELECT ${BASELINE_VERSION}, true, now()
-          WHERE NOT EXISTS (
-            SELECT 1
-            FROM public.goose_db_version
-            WHERE version_id = ${BASELINE_VERSION} AND is_applied = true
-          );
-          SQL
-          else
-            echo "No Goose adoption needed."
-          fi
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
       - name: Check migration status
         run: goose-migrate -dir packages/db/migrations postgres "${DATABASE_URL}" status
         env:

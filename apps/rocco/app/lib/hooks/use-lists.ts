@@ -1,8 +1,9 @@
-import type { HonoClient } from '@hominem/hono-client';
 import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/hono-client/react';
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import type {
+  ListGetAllInput,
   ListGetAllOutput,
+  ListGetByIdInput,
   ListGetByIdOutput,
   ListCreateInput,
   ListCreateOutput,
@@ -12,6 +13,7 @@ import type {
   ListDeleteOutput,
   ListDeleteItemInput,
   ListDeleteItemOutput,
+  ListGetContainingPlaceInput,
   ListGetContainingPlaceOutput,
   ListRemoveCollaboratorInput,
   ListRemoveCollaboratorOutput,
@@ -43,10 +45,7 @@ const createOptimisticList = (variables: ListCreateInput): ListCreateOutput => {
 export const useLists = (options?: HonoQueryOptions<ListGetAllOutput>) =>
   useHonoQuery<ListGetAllOutput>(
     queryKeys.lists.all(),
-    async (client: HonoClient) => {
-      const res = await client.api.lists.list.$post({ json: {} });
-      return res.json();
-    },
+    async ({ lists }) => lists.getAll({} satisfies ListGetAllInput),
     options,
   );
 
@@ -59,10 +58,9 @@ export const useListById = (
 ) =>
   useHonoQuery<ListGetByIdOutput>(
     queryKeys.lists.get(id || ''),
-    async (client: HonoClient) => {
+    async ({ lists }) => {
       if (!id) throw new Error('ID is required');
-      const res = await client.api.lists.get.$post({ json: { id } });
-      return res.json();
+      return lists.getById({ id } satisfies ListGetByIdInput);
     },
     {
       enabled: !!id,
@@ -76,10 +74,7 @@ export const useListById = (
 export const useCreateList = (options?: HonoMutationOptions<ListCreateOutput, ListCreateInput>) => {
   const utils = useHonoUtils();
   return useHonoMutation<ListCreateOutput, ListCreateInput>(
-    async (client: HonoClient, variables: ListCreateInput) => {
-      const res = await client.api.lists.create.$post({ json: variables });
-      return res.json();
-    },
+    async ({ lists }, variables) => lists.create(variables),
     {
       ...options,
       onMutate: async (variables) => {
@@ -143,10 +138,7 @@ export const useCreateList = (options?: HonoMutationOptions<ListCreateOutput, Li
 export const useUpdateList = (options?: HonoMutationOptions<ListUpdateOutput, ListUpdateInput>) => {
   const utils = useHonoUtils();
   return useHonoMutation<ListUpdateOutput, ListUpdateInput>(
-    async (client: HonoClient, variables: ListUpdateInput) => {
-      const res = await client.api.lists.update.$post({ json: variables });
-      return res.json();
-    },
+    async ({ lists }, variables) => lists.update(variables),
     {
       ...options,
       onMutate: async (variables) => {
@@ -201,7 +193,7 @@ export const useUpdateList = (options?: HonoMutationOptions<ListUpdateOutput, Li
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, variables) => {
+      onSettled: (result, error, variables) => {
         utils.invalidate(queryKeys.lists.all());
         utils.invalidate(queryKeys.lists.get(variables.id));
       },
@@ -215,10 +207,7 @@ export const useUpdateList = (options?: HonoMutationOptions<ListUpdateOutput, Li
 export const useDeleteList = (options?: HonoMutationOptions<ListDeleteOutput, ListDeleteInput>) => {
   const utils = useHonoUtils();
   return useHonoMutation<ListDeleteOutput, ListDeleteInput>(
-    async (client: HonoClient, variables: ListDeleteInput) => {
-      const res = await client.api.lists.delete.$post({ json: variables });
-      return res.json();
-    },
+    async ({ lists }, variables) => lists.delete(variables),
     {
       ...options,
       onMutate: async (variables) => {
@@ -264,10 +253,7 @@ const useDeleteListItem = (
 ) => {
   const utils = useHonoUtils();
   return useHonoMutation<ListDeleteItemOutput, ListDeleteItemInput>(
-    async (client: HonoClient, variables: ListDeleteItemInput) => {
-      const res = await client.api.lists['delete-item'].$post({ json: variables });
-      return res.json();
-    },
+    async ({ lists }, variables) => lists.deleteItem(variables),
     {
       ...options,
       onMutate: async (variables) => {
@@ -331,7 +317,7 @@ const useDeleteListItem = (
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, variables) => {
+      onSettled: (result, error, variables) => {
         utils.invalidate(queryKeys.lists.all());
         utils.invalidate(queryKeys.lists.get(variables.listId));
       },
@@ -348,11 +334,15 @@ export const useListsContainingPlace = (
 ) =>
   useHonoQuery<ListGetContainingPlaceOutput>(
     queryKeys.lists.containing(placeId, googleMapsId),
-    async (client: HonoClient) => {
-      const res = await client.api.lists['containing-place'].$post({
-        json: { placeId, googleMapsId },
-      });
-      return res.json();
+    async ({ lists }) => {
+      const input: ListGetContainingPlaceInput = {};
+      if (placeId !== undefined) {
+        input.placeId = placeId;
+      }
+      if (googleMapsId !== undefined) {
+        input.googleMapsId = googleMapsId;
+      }
+      return lists.getContainingPlace(input);
     },
     {
       enabled: !!placeId || !!googleMapsId,
@@ -367,10 +357,7 @@ export const useRemoveCollaborator = (
 ) => {
   const utils = useHonoUtils();
   return useHonoMutation<ListRemoveCollaboratorOutput, ListRemoveCollaboratorInput>(
-    async (client: HonoClient, variables: ListRemoveCollaboratorInput) => {
-      const res = await client.api.lists['remove-collaborator'].$post({ json: variables });
-      return res.json();
-    },
+    async ({ lists }, variables) => lists.removeCollaborator(variables),
     {
       ...options,
       onMutate: async (variables) => {
@@ -426,7 +413,7 @@ export const useRemoveCollaborator = (
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, variables) => {
+      onSettled: (result, error, variables) => {
         utils.invalidate(queryKeys.lists.all());
         utils.invalidate(queryKeys.lists.get(variables.listId));
       },
