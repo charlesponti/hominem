@@ -1,4 +1,3 @@
-import axios from 'axios';
 import chalk from 'chalk';
 import { consola } from 'consola';
 import getPort from 'get-port';
@@ -19,6 +18,38 @@ import {
 } from './secure-store';
 
 const DEFAULT_AUTH_BASE = 'http://localhost:3000';
+
+interface FetchError extends Error {
+  response?: {
+    status: number;
+    data: unknown;
+  };
+}
+
+function isFetchError(error: unknown): error is FetchError {
+  return error instanceof Error && 'response' in error;
+}
+
+async function postJson<T>(url: string, body: unknown): Promise<T> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as FetchError;
+    error.response = {
+      status: response.status,
+      data: await response.json().catch(() => null),
+    };
+    throw error;
+  }
+
+  return response.json() as Promise<T>;
+}
 
 function getLegacyConfigPath(): string {
   return `${getHominemHomeDir()}/config.json`;
@@ -262,8 +293,7 @@ async function requestCliAuthorizationUrl({
 }) {
   const url = new URL('/api/auth/cli/authorize', baseUrl);
   const payload = buildAuthorizePayload(redirectUri, state, codeChallenge, scopes);
-  const res = await axios.post(url.toString(), payload);
-  const data = res.data as CliAuthorizeResponse;
+  const data = await postJson<CliAuthorizeResponse>(url.toString(), payload);
   if (!data.authorization_url) {
     throw new Error('CLI authorize endpoint did not return an authorization URL');
   }
@@ -282,12 +312,11 @@ async function exchangeCodeForTokens({
   redirectUri: string;
 }): Promise<TokenResponse> {
   const url = new URL('/api/auth/cli/exchange', baseUrl);
-  const res = await axios.post(url.toString(), {
+  return postJson<TokenResponse>(url.toString(), {
     code,
     code_verifier: codeVerifier,
     redirect_uri: redirectUri,
   });
-  return res.data as TokenResponse;
 }
 
 export async function interactiveLogin(options: AuthOptions) {
@@ -446,11 +475,10 @@ export async function deviceCodeLogin(_options: AuthOptions) {
   const scope = options.scopes?.join(' ') ?? 'cli:read';
 
   const codeUrl = new URL('/api/auth/device/code', options.authBaseUrl);
-  const codeResponse = await axios.post(codeUrl.toString(), {
+  const device = await postJson<DeviceCodeResponse>(codeUrl.toString(), {
     client_id: clientId,
     scope,
   });
-  const device = codeResponse.data as DeviceCodeResponse;
 
   if (!device.device_code || !device.user_code) {
     throw new Error('Device code endpoint returned invalid payload');
@@ -473,12 +501,11 @@ export async function deviceCodeLogin(_options: AuthOptions) {
     await new Promise((resolve) => setTimeout(resolve, intervalSec * 1000));
 
     try {
-      const tokenResponse = await axios.post(tokenUrl.toString(), {
+      const data = await postJson<TokenResponse>(tokenUrl.toString(), {
         grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
         device_code: device.device_code,
         client_id: clientId,
       });
-      const data = tokenResponse.data as TokenResponse;
 
       const tokens = buildStoredTokensFromResponse(data, options.authBaseUrl, {
         provider: 'better-auth',
@@ -488,7 +515,7 @@ export async function deviceCodeLogin(_options: AuthOptions) {
       emitInfo(options.outputMode, chalk.green('Authenticated via device flow'));
       return;
     } catch (error) {
-      if (!axios.isAxiosError(error) || !error.response?.data) {
+      if (!isFetchError(error) || !error.response?.data) {
         throw error;
       }
       const payload = error.response.data as { error?: string };
@@ -553,11 +580,10 @@ export async function getAccessToken(params?: {
 
   try {
     const url = new URL('/api/auth/token', normalizeBaseUrl(stored.issuerBaseUrl));
-    const res = await axios.post(url.toString(), {
+    const data = await postJson<TokenResponse>(url.toString(), {
       grant_type: 'refresh_token',
       refresh_token: stored.refreshToken,
     });
-    const data = res.data as TokenResponse;
 
     const tokens = buildStoredTokensFromResponse(
       data,
@@ -569,7 +595,7 @@ export async function getAccessToken(params?: {
 
     return data.access_token;
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (isFetchError(error)) {
       const status = error.response?.status;
       if (status === 401 || status === 403) {
         throw new AuthError({
@@ -601,20 +627,20 @@ async function requireAccessToken() {
   return token;
 }
 
-async function _getAuthToken() {
-  return requireAccessToken();
-}
-
-// Helper function to create an authenticated axios client
-async function _getAuthenticatedClient(host = 'localhost', port = '4445') {
+// Helper function to create an authenticated fetch client
+async function _getAuthenticatedClient(_host = 'localhost', _port = '4445') {
   const token = await requireAccessToken();
 
-  const client = axios.create({
-    baseURL: `http://${host}:${port}`,
-    headers: {
-      Authorization: `Bearer ${token}`,
+  return {
+    fetch: async (path: string, options: RequestInit = {}) => {
+      const url = `http://${_host}:${_port}${path}`;
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${token}`,
+        },
+      });
     },
-  });
-
-  return client;
+  };
 }
