@@ -7,33 +7,130 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: code-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COOKIE_SECRET: ${{ secrets.COOKIE_SECRET_TEST }}
+  DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  REDIS_URL: "redis://localhost:6379"
+  RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_TEST }}
+  RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+  RESEND_FROM_NAME: ${{ secrets.RESEND_FROM_NAME }}
+  SEND_EMAILS: "false"
+  AUTH_TEST_OTP_ENABLED: "true"
+  AUTH_E2E_SECRET: "otp-secret"
+  R2_ENDPOINT: "http://localhost:4567"
+  R2_ACCESS_KEY_ID: "test-key"
+  R2_SECRET_ACCESS_KEY: "test-secret"
+  VITE_APP_BASE_URL: "https://example.com"
+  VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+  VITE_PUBLIC_API_URL: "http://localhost:4040"
+  VITE_R2_DOMAIN: "test-domain"
+
 jobs:
-  code-quality:
+  static-lint:
+    name: static:lint
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
-    env:
-      # For now, using test values. Move to secrets for production security.
-      COOKIE_SECRET: ${{ secrets.COOKIE_SECRET_TEST }}
-      DATABASE_URL: postgresql://postgres:postgres@localhost:4433/hominem-test?sslmode=disable
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      REDIS_URL: "redis://localhost:6379"
-      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY_TEST }}
-      RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-      RESEND_FROM_NAME: ${{ secrets.RESEND_FROM_NAME }}
-      SEND_EMAILS: "false"
-      AUTH_TEST_OTP_ENABLED: "true"
-      AUTH_E2E_SECRET: "otp-secret"
-      R2_ENDPOINT: "http://localhost:4567"
-      R2_ACCESS_KEY_ID: "test-key"
-      R2_SECRET_ACCESS_KEY: "test-secret"
-      VITE_APP_BASE_URL: "https://example.com"
-      VITE_GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      VITE_PUBLIC_API_URL: "http://localhost:4040"
-      VITE_R2_DOMAIN: "test-domain"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.0
+      - name: 📦 Install dependencies
+        run: bun install --force
+      - name: 🔬 Lint
+        run: bun run lint
+        timeout-minutes: 10
+
+  static-typecheck:
+    name: static:typecheck
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.0
+      - name: 📦 Install dependencies
+        run: bun install --force
+      - name: 🧭 TypeScript project-graph guard
+        run: bun turbo run typegen && bun run typecheck
+      - name: ✅ Type check
+        run: NODE_OPTIONS="--max-old-space-size=4096" bun run typecheck
+        timeout-minutes: 15
+        env:
+          TURBO_CONCURRENCY: 4
+
+  db-migrations:
+    name: db:migrations
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.0
+      - name: 📦 Install dependencies
+        run: bun install --force
+      - name: 🛡️ Validate DB migrations
+        run: bun run validate-db-migrations
+
+  build-monorepo:
+    name: build:monorepo
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.0
+      - name: 📦 Install dependencies
+        run: bun install --force
+      - name: 🏗️ Build
+        run: bun turbo run build
+        timeout-minutes: 30
+
+  build-hono-rpc:
+    name: build:hono-rpc
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.0
+      - name: 📦 Install dependencies
+        run: bun install --force
+      - name: 🧱 Build hono-rpc package
+        run: bun run --filter @hominem/hono-rpc build
+
+  test-unit:
+    name: test:unit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     services:
       postgres:
         env:
@@ -57,86 +154,116 @@ jobs:
           --health-retries 5
         ports:
           - 6379:6379
-
     steps:
-      - uses: styfle/cancel-workflow-action@0.12.1
       - uses: actions/checkout@v4
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.0
-
       - name: Install PostgreSQL client tools
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
-
       - name: 📦 Install dependencies
         run: bun install --force
-
-      - name: 🛡️ Validate DB migrations
-        run: bun run validate-db-migrations
-
-      - name: 🧭 TypeScript project-graph guard
-        run: bun turbo run typegen && bun run typecheck
-
       - name: 🏗️ Wait for services
         run: |
-          # Wait for postgres to be ready
           until pg_isready -h localhost -p 4433; do
             echo "Waiting for postgres..."
             sleep 2
           done
-          # Wait for redis to be ready using netcat
           until nc -z localhost 6379; do
             echo "Waiting for redis..."
             sleep 2
           done
           echo "All services are ready!"
-
       - name: 🗄️ Initialize test database schema
         uses: ./.github/actions/db-setup
         with:
           environment: test
+      - name: 🧪 Unit tests
+        run: bun run test
+        timeout-minutes: 15
 
-      - name: 🏗️ Build
-        run: bun turbo run build
-        timeout-minutes: 30
-
-      - name: 🔬 Lint
-        run: bun run lint
+  test-auth-contract:
+    name: test:auth-contract
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    services:
+      postgres:
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hominem-test
+        image: ghcr.io/hackefeller/hominem/postgres:latest
+        options: >-
+          --health-cmd "pg_isready -h localhost -p 5432 -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 4433:5432
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.0
+      - name: Install PostgreSQL client tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: 📦 Install dependencies
+        run: bun install --force
+      - name: 🏗️ Wait for services
+        run: |
+          until pg_isready -h localhost -p 4433; do
+            echo "Waiting for postgres..."
+            sleep 2
+          done
+          until nc -z localhost 6379; do
+            echo "Waiting for redis..."
+            sleep 2
+          done
+          echo "All services are ready!"
+      - name: 🗄️ Initialize test database schema
+        uses: ./.github/actions/db-setup
+        with:
+          environment: test
+      - name: 🔐 API auth contract tests
+        run: bun run test:e2e:auth:api
         timeout-minutes: 10
 
-      - name: ✅ Type check
-        run: NODE_OPTIONS="--max-old-space-size=4096" bun run typecheck
-        timeout-minutes: 15
-        env:
-          TURBO_CONCURRENCY: 4
-
+  test-mobile:
+    name: test:mobile
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.0
+      - name: 📦 Install dependencies
+        run: bun install --force
       - name: 📱 Verify mobile gate
         run: bun run verify:mobile
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
           EXPO_PUBLIC_R2_DOMAIN: "test-domain"
-
-      - name: 🧱 Build hono-rpc package
-        run: bun run --filter @hominem/hono-rpc build
-
-      - name: 🧪 Unit tests
-        run: bun run test
-        timeout-minutes: 15
-
-      - name: 🔐 API auth contract tests
-        run: bun run test:e2e:auth:api
-        timeout-minutes: 10
-
-      - name: 🌐 Install Playwright browsers
-        run: |
-          cd apps/finance && bunx playwright install --with-deps chromium
-          cd ../notes && bunx playwright install --with-deps chromium
-          cd ../rocco && bunx playwright install --with-deps chromium
-        timeout-minutes: 20
-
       - name: 📱 Mobile auth unit/integration/screen tests
         run: bun run --filter @hominem/mobile test:unit:auth && bun run --filter @hominem/mobile test:integration:auth && bun run --filter @hominem/mobile test:screens:auth
         timeout-minutes: 15
@@ -144,6 +271,68 @@ jobs:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
           EXPO_PUBLIC_R2_DOMAIN: "test-domain"
 
+  test-web-auth-e2e:
+    name: test:web-auth-e2e
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    services:
+      postgres:
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hominem-test
+        image: ghcr.io/hackefeller/hominem/postgres:latest
+        options: >-
+          --health-cmd "pg_isready -h localhost -p 5432 -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 4433:5432
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.0
+      - name: Install PostgreSQL client tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - name: 📦 Install dependencies
+        run: bun install --force
+      - name: 🏗️ Wait for services
+        run: |
+          until pg_isready -h localhost -p 4433; do
+            echo "Waiting for postgres..."
+            sleep 2
+          done
+          until nc -z localhost 6379; do
+            echo "Waiting for redis..."
+            sleep 2
+          done
+          echo "All services are ready!"
+      - name: 🗄️ Initialize test database schema
+        uses: ./.github/actions/db-setup
+        with:
+          environment: test
+      - name: 🌐 Install Playwright browsers
+        run: |
+          cd apps/finance && bunx playwright install --with-deps chromium
+          cd ../notes && bunx playwright install --with-deps chromium
+          cd ../rocco && bunx playwright install --with-deps chromium
+        timeout-minutes: 20
       - name: 🌐 Web auth E2E tests
         run: bun run test:e2e:auth:app
         timeout-minutes: 20
