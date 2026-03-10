@@ -38,7 +38,12 @@ export function AppLayout({ children, navigation, backgroundImage }: AppLayoutPr
           id="main-content"
           className="flex-1 mt-14 md:mt-16 pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-12"
         >
-          <div className="w-full px-2">{children}</div>
+          {/*
+            Canonical content constraint — single source of truth for all apps.
+            max-w-5xl (1024px) centers content; responsive px prevents content touching edges.
+            Never override this in app-level layout.tsx files.
+          */}
+          <div className="w-full max-w-5xl px-4 sm:px-8 lg:px-12">{children}</div>
         </main>
       </div>
     </>
