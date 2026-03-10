@@ -37,3 +37,12 @@ Remaining in-progress changes:
 1. Repoint `openspec/ACTIVE_CHANGE.md` to the next active item before implementation.
 2. Run `openspec list --json` and confirm no additional completed changes need archive.
 3. Resume implementation from the first change in the order above.
+
+## Layout Reminder
+
+- Open work lives in `openspec/inbox`
+- Completed canonical specs live in `openspec/done/specs`
+- Completed delivery records live in `openspec/done/records`
+- Raw historical change folders live in `openspec/archive`
+
+Legacy paths under `openspec/changes`, `openspec/specs`, and `openspec/merged` are compatibility shims for the current CLI.

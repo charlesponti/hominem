@@ -45,10 +45,10 @@ Archive a completed change in the experimental workflow.
 
 4. **Assess delta spec sync state**
 
-   Check for delta specs at `openspec/changes/<name>/specs/`. If none exist, proceed without sync prompt.
+   Check for delta specs at `openspec/inbox/<name>/specs/`. If none exist, proceed without sync prompt.
 
    **If delta specs exist:**
-   - Compare each delta spec with its corresponding main spec at `openspec/specs/<capability>/spec.md`
+   - Compare each delta spec with its corresponding canonical spec at `openspec/done/specs/<capability>/spec.md`
    - Determine what changes would be applied (adds, modifications, removals, renames)
    - Show a combined summary before prompting
 
@@ -62,7 +62,7 @@ Archive a completed change in the experimental workflow.
 
    Create the archive directory if it doesn't exist:
    ```bash
-   mkdir -p openspec/changes/archive
+   mkdir -p openspec/archive
    ```
 
    Generate target name using current date: `YYYY-MM-DD-<change-name>`
@@ -72,7 +72,7 @@ Archive a completed change in the experimental workflow.
    - If no: Move the change directory to archive
 
    ```bash
-   mv openspec/changes/<name> openspec/changes/archive/YYYY-MM-DD-<name>
+   mv openspec/inbox/<name> openspec/archive/YYYY-MM-DD-<name>
    ```
 
 6. **Create merged completion doc and update index**
@@ -80,8 +80,8 @@ Archive a completed change in the experimental workflow.
    After archiving, invoke the `openspec-merge-doc` workflow for the same change.
 
    Requirements:
-   - Create `openspec/merged/YYYY-MM-DD-<change-name>.md` (if not already present)
-   - Update `openspec/merged/README.md` index
+   - Create `openspec/done/records/YYYY-MM-DD-<change-name>.md` (if not already present)
+   - Update `openspec/done/README.md` index
    - Ensure naming uses `YYYY-MM-DD-<change-slug>.md`
    - Keep one merged doc per completed change
 
@@ -103,9 +103,9 @@ Archive a completed change in the experimental workflow.
 
 **Change:** <change-name>
 **Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Merged doc:** openspec/merged/YYYY-MM-DD-<name>/
-**Merged index:** openspec/merged/README.md updated
+**Archived to:** openspec/archive/YYYY-MM-DD-<name>/
+**Merged doc:** openspec/done/records/YYYY-MM-DD-<name>.md
+**Merged index:** openspec/done/README.md updated
 **Specs:** ✓ Synced to main specs
 
 All artifacts complete. All tasks complete.
@@ -118,9 +118,9 @@ All artifacts complete. All tasks complete.
 
 **Change:** <change-name>
 **Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Merged doc:** openspec/merged/YYYY-MM-DD-<name>/
-**Merged index:** openspec/merged/README.md updated
+**Archived to:** openspec/archive/YYYY-MM-DD-<name>/
+**Merged doc:** openspec/done/records/YYYY-MM-DD-<name>.md
+**Merged index:** openspec/done/README.md updated
 **Specs:** No delta specs
 
 All artifacts complete. All tasks complete.
@@ -133,9 +133,9 @@ All artifacts complete. All tasks complete.
 
 **Change:** <change-name>
 **Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Merged doc:** openspec/merged/YYYY-MM-DD-<name>/
-**Merged index:** openspec/merged/README.md updated
+**Archived to:** openspec/archive/YYYY-MM-DD-<name>/
+**Merged doc:** openspec/done/records/YYYY-MM-DD-<name>.md
+**Merged index:** openspec/done/README.md updated
 **Specs:** Sync skipped (user chose to skip)
 
 **Warnings:**
@@ -152,7 +152,7 @@ Review the archive if this was not intentional.
 ## Archive Failed
 
 **Change:** <change-name>
-**Target:** openspec/changes/archive/YYYY-MM-DD-<name>/
+**Target:** openspec/archive/YYYY-MM-DD-<name>/
 
 Target archive directory already exists.
 

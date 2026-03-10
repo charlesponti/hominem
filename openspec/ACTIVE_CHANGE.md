@@ -1,10 +1,12 @@
 # Active OpenSpec Change
 
-active_change: none
+active_change: openspec-refactor
 
 ## Canonical Artifacts
 
-- None. No OpenSpec change is currently active.
+- [proposal.md](/Users/charlesponti/Developer/hominem/openspec/inbox/openspec-refactor/proposal.md)
+- [design.md](/Users/charlesponti/Developer/hominem/openspec/inbox/openspec-refactor/design.md)
+- [tasks.md](/Users/charlesponti/Developer/hominem/openspec/inbox/openspec-refactor/tasks.md)
 
 ## Enforcement
 
