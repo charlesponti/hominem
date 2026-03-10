@@ -1,10 +1,9 @@
 'use client';
 
-import { BookOpen, ChevronDown, ChevronUp, Hash } from 'lucide-react';
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import { BookOpen } from 'lucide-react';
+import type { HTMLAttributes, ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
-import { Button } from '../ui/button';
 
 interface ContextProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;

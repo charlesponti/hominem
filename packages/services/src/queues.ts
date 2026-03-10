@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { QUEUE_NAMES } from '@hominem/utils/consts';
-import type { ConnectionOptions } from 'bullmq';
 import { Queue } from 'bullmq';
 
 import { env } from './env';

@@ -4,12 +4,8 @@ import type {
   InvitesCreateOutput,
   InvitesAcceptInput,
   InvitesAcceptOutput,
-  InvitesDeclineInput,
-  InvitesDeclineOutput,
   InvitesDeleteInput,
   InvitesDeleteOutput,
-  InvitesGetByListInput,
-  InvitesGetReceivedInput,
   InvitesGetSentInput,
   InvitesGetReceivedOutput,
   InvitesGetSentOutput,
@@ -38,21 +34,6 @@ const createOptimisticInvite = (variables: InvitesCreateInput): InvitesCreateOut
 /**
  * Get received invites
  */
-const useReceivedInvites = (token?: string) =>
-  useHonoQuery<InvitesGetReceivedOutput>(
-    queryKeys.invites.received(token),
-    async ({ invites }) => {
-      const input: InvitesGetReceivedInput = {};
-      if (token !== undefined) {
-        input.token = token;
-      }
-      return invites.getReceived(input);
-    },
-  );
-
-/**
- * Get sent invites
- */
 export const useSentInvites = () =>
   useHonoQuery<InvitesGetSentOutput>(
     queryKeys.invites.sent(),
@@ -61,21 +42,6 @@ export const useSentInvites = () =>
 
 /**
  * Get invites for a specific list
- */
-const useListInvites = (listId: string | undefined) =>
-  useHonoQuery<InvitesGetByListOutput>(
-    queryKeys.invites.byList(listId || ''),
-    async ({ invites }) => {
-      if (!listId) return [] as unknown as InvitesGetByListOutput;
-      return invites.getByList({ listId } satisfies InvitesGetByListInput);
-    },
-    {
-      enabled: !!listId,
-    },
-  );
-
-/**
- * Create invite
  */
 export const useCreateInvite = () => {
   const utils = useHonoUtils();
@@ -176,7 +142,7 @@ export const useAcceptInvite = () => {
 
         return { previousReceived };
       },
-      onSuccess: (result) => {
+      onSuccess: () => {
         utils.invalidate(queryKeys.invites.received());
         utils.invalidate(queryKeys.lists.all());
       },
@@ -198,46 +164,6 @@ export const useAcceptInvite = () => {
 
 /**
  * Decline invite
- */
-const useDeclineInvite = () => {
-  const utils = useHonoUtils();
-  return useHonoMutation<InvitesDeclineOutput, InvitesDeclineInput>(
-    async ({ invites }, variables) => invites.decline(variables),
-    {
-      onMutate: async (variables) => {
-        await utils.cancel(queryKeys.invites.received());
-        const previousReceived = utils.getData<InvitesGetReceivedOutput>(
-          queryKeys.invites.received(),
-        );
-
-        utils.setData<InvitesGetReceivedOutput>(queryKeys.invites.received(), (old) => {
-          const existing = old ?? [];
-          return existing.filter((invite) => invite.token !== variables.token);
-        });
-
-        return { previousReceived };
-      },
-      onSuccess: (result) => {
-        utils.invalidate(queryKeys.invites.received());
-      },
-      onError: (error, variables, context) => {
-        const previousReceived =
-          typeof context === 'object' && context !== null && 'previousReceived' in context
-            ? (context as { previousReceived?: InvitesGetReceivedOutput }).previousReceived
-            : undefined;
-
-        if (previousReceived) {
-          utils.setData<InvitesGetReceivedOutput>(queryKeys.invites.received(), previousReceived);
-        }
-
-        console.error('Failed to decline invite:', error);
-      },
-    },
-  );
-};
-
-/**
- * Delete invite (revoke sent invite)
  */
 export const useDeleteInvite = () => {
   const utils = useHonoUtils();
@@ -276,7 +202,7 @@ export const useDeleteInvite = () => {
 
         return { previousSent, previousByList };
       },
-      onSuccess: (result, variables) => {
+      onSuccess: (_result, variables) => {
         utils.invalidate(queryKeys.invites.sent());
         utils.invalidate(queryKeys.invites.byList(variables.listId));
       },

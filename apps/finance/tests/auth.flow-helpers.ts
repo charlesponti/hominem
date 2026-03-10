@@ -1,6 +1,7 @@
 import { expect } from '@playwright/test'
 import type { Page } from '@playwright/test'
-const AUTH_TEST_OTP_URL = 'http://localhost:4040/api/auth/test/otp/latest'
+const AUTH_API_BASE_URL = 'http://api.lvh.me:4040'
+const AUTH_TEST_OTP_URL = `${AUTH_API_BASE_URL}/api/auth/test/otp/latest`
 const AUTH_E2E_SECRET = 'otp-secret'
 
 export interface OtpResponse {

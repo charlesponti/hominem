@@ -1,9 +1,4 @@
 import { AuthProvider } from '@hominem/auth';
-import type { AuthProviderProps } from '@hominem/auth';
-
-// debug type alias to ensure correct props are imported
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type AuthPropsDebug = AuthProviderProps;
 import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
 import type React from 'react';
 import { useCallback } from 'react';
@@ -74,7 +69,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session, authEnv, apiBaseUrl } = loaderData;
+  const { authEnv, apiBaseUrl } = loaderData;
   const revalidator = useRevalidator();
   const clearOfflineCaches = useCallback(async () => {
     if (!('caches' in window)) {

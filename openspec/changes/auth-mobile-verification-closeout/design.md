@@ -10,6 +10,7 @@ The legacy auth plan mostly documents already-completed architecture work. What 
 - Keep the focus on final readiness gates rather than re-documenting the completed rewrite.
 - Align the remaining readiness work with the 2026 Expo testing model so verification paths are explicit and maintainable.
 - Rebuild the Expo / React Native configuration around a deterministic variant architecture so native generation matches the intended runtime without manual cleanup.
+- Eliminate repo lint warnings surfaced by the closeout safety check so `bun run check` reflects only active regressions.
 
 **Non-Goals:**
 - Re-planning the entire auth architecture.
@@ -40,6 +41,10 @@ Passkeys cannot rely on `localhost` or a LAN IP as the effective relying-party d
 ### Make native generation deterministic when switching variants
 
 The repo should not rely on a previously generated `ios/` tree being compatible with a different variant. Variant-aware prebuild commands should regenerate native artifacts when the requested runtime shape changes so the Podfile, Expo plist, app identity, and project naming stay aligned.
+
+### Treat stale lint warnings as closeout debt
+
+The closeout gate uses `bun run check`, so warning-only lint debt in adjacent packages still obscures whether auth mobile work is actually clean. Removing truly dead local helpers and stale imports keeps the closeout signal trustworthy without inventing a separate cleanup project.
 
 ## Risks / Trade-offs
 

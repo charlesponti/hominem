@@ -7,6 +7,7 @@
 
 - [x] 2.1 Complete the remaining security hardening and operational runbook items
 - [x] 2.2 Confirm incident-response and emergency auth controls are documented and verified
+- [x] 2.3 Clear the repo lint warnings surfaced by the auth-mobile closeout safety check
 
 ## 3. Closeout
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { Mic, Speaker, User } from 'lucide-react';
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 

@@ -51,7 +51,7 @@ export const meta = () => [
 ];
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session, authConfig, apiBaseUrl } = loaderData;
+  const { authConfig, apiBaseUrl } = loaderData;
   const revalidator = useRevalidator();
   const clearOfflineCaches = useCallback(async () => {
     if (!('caches' in window)) {

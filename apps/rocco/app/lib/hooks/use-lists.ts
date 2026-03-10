@@ -11,8 +11,6 @@ import type {
   ListUpdateOutput,
   ListDeleteInput,
   ListDeleteOutput,
-  ListDeleteItemInput,
-  ListDeleteItemOutput,
   ListGetContainingPlaceInput,
   ListGetContainingPlaceOutput,
   ListRemoveCollaboratorInput,
@@ -248,82 +246,6 @@ export const useDeleteList = (options?: HonoMutationOptions<ListDeleteOutput, Li
 /**
  * Delete item from list
  */
-const useDeleteListItem = (
-  options?: HonoMutationOptions<ListDeleteItemOutput, ListDeleteItemInput>,
-) => {
-  const utils = useHonoUtils();
-  return useHonoMutation<ListDeleteItemOutput, ListDeleteItemInput>(
-    async ({ lists }, variables) => lists.deleteItem(variables),
-    {
-      ...options,
-      onMutate: async (variables) => {
-        await utils.cancel(queryKeys.lists.all());
-        await utils.cancel(queryKeys.lists.get(variables.listId));
-
-        const previousLists = utils.getData<ListGetAllOutput>(queryKeys.lists.all());
-        const previousList = utils.getData<ListGetByIdOutput>(
-          queryKeys.lists.get(variables.listId),
-        );
-
-        utils.setData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
-          const existing = old ?? [];
-          return existing.map((list) => {
-            if (list.id !== variables.listId) return list;
-            const updatedPlaces = list.places.filter((place) => place.id !== variables.itemId);
-            const updatedItems = list.items?.filter((item) => item.id !== variables.itemId);
-            return {
-              ...list,
-              places: updatedPlaces,
-              ...(updatedItems ? { items: updatedItems } : {}),
-            };
-          });
-        });
-
-        if (previousList) {
-          const updatedPlaces = previousList.places.filter(
-            (place) => place.id !== variables.itemId,
-          );
-          const updatedItems = previousList.items?.filter((item) => item.id !== variables.itemId);
-          utils.setData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId), {
-            ...previousList,
-            places: updatedPlaces,
-            ...(updatedItems ? { items: updatedItems } : {}),
-          });
-        }
-
-        return { previousLists, previousList };
-      },
-      onSuccess: (result, variables, context, mutationContext) => {
-        utils.invalidate(queryKeys.lists.all());
-        utils.invalidate(queryKeys.lists.get(variables.listId));
-        options?.onSuccess?.(result, variables, context, mutationContext);
-      },
-      onError: (error, variables, context, mutationContext) => {
-        const previousLists =
-          typeof context === 'object' && context !== null && 'previousLists' in context
-            ? (context as { previousLists?: ListGetAllOutput }).previousLists
-            : undefined;
-        const previousList =
-          typeof context === 'object' && context !== null && 'previousList' in context
-            ? (context as { previousList?: ListGetByIdOutput }).previousList
-            : undefined;
-
-        if (previousLists) {
-          utils.setData<ListGetAllOutput>(queryKeys.lists.all(), previousLists);
-        }
-        if (previousList) {
-          utils.setData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId), previousList);
-        }
-
-        options?.onError?.(error, variables, context, mutationContext);
-      },
-      onSettled: (result, error, variables) => {
-        utils.invalidate(queryKeys.lists.all());
-        utils.invalidate(queryKeys.lists.get(variables.listId));
-      },
-    },
-  );
-};
 
 /**
  * Get lists containing a specific place

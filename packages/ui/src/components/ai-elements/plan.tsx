@@ -1,10 +1,9 @@
 'use client';
 
 import { Check, ChevronRight, ListOrdered, Circle } from 'lucide-react';
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
-import { Button } from '../ui/button';
 
 type PlanStepStatus = 'pending' | 'in-progress' | 'completed' | 'skipped';
 

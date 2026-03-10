@@ -1,6 +1,6 @@
 'use client';
 
-import { Send, Sparkles, Paperclip, Globe, ChevronDown, ChevronUp } from 'lucide-react';
+import { Paperclip, Send, Sparkles } from 'lucide-react';
 import {
   createContext,
   forwardRef,
@@ -12,7 +12,6 @@ import {
   type FormEvent,
   type HTMLAttributes,
   type ReactNode,
-  type RefObject,
 } from 'react';
 
 import { cn } from '../../lib/utils';
@@ -21,7 +20,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 
@@ -208,12 +206,13 @@ interface PromptInputProps {
 export const PromptInput = forwardRef<HTMLFormElement, PromptInputProps>(function PromptInput(
   {
     onSubmit,
-    accept,
-    multiple = true,
+    accept: _accept,
+    multiple: _multiple = true,
     globalDrop = false,
-    maxFiles = 10,
-    maxFileSize = 10 * 1024 * 1024,
-    onError,
+    syncHiddenInput: _syncHiddenInput,
+    maxFiles: _maxFiles = 10,
+    maxFileSize: _maxFileSize = 10 * 1024 * 1024,
+    onError: _onError,
     className,
     children,
     ...props
@@ -539,8 +538,6 @@ interface PromptInputHoverCardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export function PromptInputHoverCard({
-  openDelay = 0,
-  closeDelay = 0,
   className,
   children,
   ...props
@@ -565,7 +562,6 @@ export function PromptInputHoverCardTrigger({
 }
 
 export function PromptInputHoverCardContent({
-  align: align = 'start',
   className,
   children,
   ...props

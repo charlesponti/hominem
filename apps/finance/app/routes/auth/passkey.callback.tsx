@@ -1,6 +1,8 @@
 import { buildAuthCallbackErrorRedirect, resolveSafeAuthRedirect } from '@hominem/auth/server';
 import { redirect } from 'react-router';
 
+import { serverEnv } from '~/lib/env';
+
 const ALLOWED_REDIRECT_PREFIXES = ['/finance', '/import', '/accounts', '/analytics', '/account', '/settings']
 
 interface PasskeyCallbackPayload {
@@ -49,9 +51,11 @@ export async function action({ request }: { request: Request }) {
   }
 
   const headers = new Headers();
+  const cookieDomain = serverEnv.AUTH_COOKIE_DOMAIN?.trim();
+  const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
   headers.append(
     'set-cookie',
-    `hominem_access_token=${encodeURIComponent(accessToken)}; Path=/; HttpOnly; SameSite=Lax`,
+    `hominem_access_token=${encodeURIComponent(accessToken)}; Path=/; HttpOnly; SameSite=Lax${domainAttribute}`,
   );
 
   return redirect(next, { headers });

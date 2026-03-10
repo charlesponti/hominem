@@ -8,8 +8,6 @@ import type {
   NotesUpdateInput,
   NotesUpdateOutput,
   NotesDeleteOutput,
-  NotesSyncInput,
-  NotesSyncOutput,
 } from '@hominem/hono-rpc/types/notes.types';
 
 export function useNotesList(options: NotesListInput = {}) {
@@ -67,19 +65,6 @@ export function useDeleteNote() {
 
   return useHonoMutation<NotesDeleteOutput, { id: string }>(
     ({ notes }, variables) => notes.delete(variables),
-    {
-      onSuccess: () => {
-        utils.invalidate(['notes', 'list']);
-      },
-    },
-  );
-}
-
-function useSyncNotes() {
-  const utils = useHonoUtils();
-
-  return useHonoMutation<NotesSyncOutput, NotesSyncInput>(
-    ({ notes }, variables) => notes.sync(variables),
     {
       onSuccess: () => {
         utils.invalidate(['notes', 'list']);

@@ -1,6 +1,5 @@
 import { useSort } from '@hominem/ui/hooks';
 import { useEffect, useState } from 'react';
-import { redirect } from 'react-router';
 
 import { PaginationControls } from '~/components/finance/pagination-controls';
 import { TransactionFilters } from '~/components/finance/transaction-filters';

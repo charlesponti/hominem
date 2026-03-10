@@ -2,12 +2,6 @@ import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/hono-client
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import type { ListGetAllOutput, ListGetByIdOutput } from '@hominem/hono-rpc/types/lists.types';
 import type {
-  PlaceCreateInput,
-  PlaceCreateOutput,
-  PlaceUpdateInput,
-  PlaceUpdateOutput,
-  PlaceDeleteInput,
-  PlaceDeleteOutput,
   PlaceAddToListsInput,
   PlaceAddToListsOutput,
   PlaceRemoveFromListInput,
@@ -30,8 +24,6 @@ import type {
   PlaceGetMyVisitsOutput,
   PlaceGetPlaceVisitsInput,
   PlaceGetPlaceVisitsOutput,
-  PlaceGetVisitStatsInput,
-  PlaceGetVisitStatsOutput,
 } from '@hominem/hono-rpc/types/places.types';
 
 import { endTrace, startTrace } from '~/lib/performance/trace';
@@ -39,30 +31,6 @@ import { queryKeys } from '~/lib/query-keys';
 
 const OPTIMISTIC_USER_ID = '00000000-0000-0000-0000-000000000000';
 const OPTIMISTIC_USER_EMAIL = 'unknown@local';
-
-const createOptimisticPlace = (variables: PlaceCreateInput): PlaceCreateOutput => {
-  const now = new Date().toISOString();
-  return {
-    id: `temp-place-${Date.now()}`,
-    name: variables.name,
-    description: variables.description ?? null,
-    address: variables.address ?? null,
-    latitude: variables.latitude ?? null,
-    longitude: variables.longitude ?? null,
-    imageUrl: variables.imageUrl ?? null,
-    googleMapsId: variables.googleMapsId,
-    rating: variables.rating ?? null,
-    priceLevel: variables.priceLevel ?? null,
-    photos: variables.photos ?? null,
-    types: variables.types ?? null,
-    websiteUri: variables.websiteUri ?? null,
-    phoneNumber: variables.phoneNumber ?? null,
-    businessStatus: null,
-    openingHours: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-};
 
 const getCachedPlace = (
   utils: ReturnType<typeof useHonoUtils>,
@@ -75,195 +43,6 @@ const getCachedPlace = (
 /**
  * Create new place
  */
-const useCreatePlace = (options?: HonoMutationOptions<PlaceCreateOutput, PlaceCreateInput>) => {
-  const utils = useHonoUtils();
-  return useHonoMutation<PlaceCreateOutput, PlaceCreateInput>(
-    async ({ places }, variables) => places.create(variables),
-    {
-      ...options,
-      onMutate: async (variables) => {
-        await utils.cancel(queryKeys.places.all());
-        const previousPlaces = utils.getData<PlaceCreateOutput[]>(queryKeys.places.all());
-        const optimisticPlace = createOptimisticPlace(variables);
-
-        utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), (old) => {
-          const existing = old ?? [];
-          return [optimisticPlace, ...existing];
-        });
-        utils.setData<PlaceGetDetailsByIdOutput>(
-          queryKeys.places.get(optimisticPlace.id),
-          optimisticPlace,
-        );
-
-        return {
-          previousPlaces,
-          optimisticId: optimisticPlace.id,
-        };
-      },
-      onSuccess: (result, variables, context, mutationContext) => {
-        const optimisticId =
-          typeof context === 'object' &&
-          context !== null &&
-          'optimisticId' in context &&
-          typeof context.optimisticId === 'string'
-            ? context.optimisticId
-            : null;
-
-        if (optimisticId) {
-          utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), (old) => {
-            const existing = old ?? [];
-            return existing.map((place) => (place.id === optimisticId ? result : place));
-          });
-          utils.remove(queryKeys.places.get(optimisticId));
-        }
-        utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(result.id), result);
-        utils.invalidate(queryKeys.places.all());
-        utils.invalidate(queryKeys.places.get(result.id));
-        options?.onSuccess?.(result, variables, context, mutationContext);
-      },
-      onError: (error, variables, context, mutationContext) => {
-        const previousPlaces =
-          typeof context === 'object' && context !== null && 'previousPlaces' in context
-            ? (context as { previousPlaces?: PlaceCreateOutput[] }).previousPlaces
-            : undefined;
-
-        if (previousPlaces) {
-          utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), previousPlaces);
-        }
-
-        options?.onError?.(error, variables, context, mutationContext);
-      },
-      onSettled: () => {
-        utils.invalidate(queryKeys.places.all());
-      },
-    },
-  );
-};
-
-/**
- * Update place
- */
-const useUpdatePlace = (options?: HonoMutationOptions<PlaceUpdateOutput, PlaceUpdateInput>) => {
-  const utils = useHonoUtils();
-  return useHonoMutation<PlaceUpdateOutput, PlaceUpdateInput>(
-    async ({ places }, variables) => places.update(variables),
-    {
-      ...options,
-      onMutate: async (variables) => {
-        await utils.cancel(queryKeys.places.all());
-        await utils.cancel(queryKeys.places.get(variables.id));
-
-        const previousPlaces = utils.getData<PlaceCreateOutput[]>(queryKeys.places.all());
-        const previousPlace = utils.getData<PlaceGetDetailsByIdOutput>(
-          queryKeys.places.get(variables.id),
-        );
-
-        utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), (old) => {
-          const existing = old ?? [];
-          return existing.map((place) =>
-            place.id === variables.id ? { ...place, ...variables } : place,
-          );
-        });
-
-        if (previousPlace) {
-          utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(variables.id), {
-            ...previousPlace,
-            ...variables,
-          });
-        }
-
-        return { previousPlaces, previousPlace };
-      },
-      onSuccess: (result, variables, context, mutationContext) => {
-        utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), (old) => {
-          const existing = old ?? [];
-          return existing.map((place) => (place.id === result.id ? { ...place, ...result } : place));
-        });
-        const cachedPlace = getCachedPlace(utils, result.id);
-        if (cachedPlace) {
-          utils.setData<PlaceGetDetailsByIdOutput>(queryKeys.places.get(result.id), {
-            ...cachedPlace,
-            ...result,
-          });
-        }
-        utils.invalidate(queryKeys.places.all());
-        utils.invalidate(queryKeys.places.get(result.id));
-        options?.onSuccess?.(result, variables, context, mutationContext);
-      },
-      onError: (error, variables, context, mutationContext) => {
-        const previousPlaces =
-          typeof context === 'object' && context !== null && 'previousPlaces' in context
-            ? (context as { previousPlaces?: PlaceCreateOutput[] }).previousPlaces
-            : undefined;
-        const previousPlace =
-          typeof context === 'object' && context !== null && 'previousPlace' in context
-            ? (context as { previousPlace?: PlaceGetDetailsByIdOutput }).previousPlace
-            : undefined;
-
-        if (previousPlaces) {
-          utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), previousPlaces);
-        }
-        if (previousPlace) {
-          utils.setData<PlaceGetDetailsByIdOutput>(
-            queryKeys.places.get(variables.id),
-            previousPlace,
-          );
-        }
-
-        options?.onError?.(error, variables, context, mutationContext);
-      },
-      onSettled: (result, error, variables) => {
-        utils.invalidate(queryKeys.places.all());
-        utils.invalidate(queryKeys.places.get(variables.id));
-      },
-    },
-  );
-};
-
-/**
- * Delete place
- */
-const useDeletePlace = (options?: HonoMutationOptions<PlaceDeleteOutput, PlaceDeleteInput>) => {
-  const utils = useHonoUtils();
-  return useHonoMutation<PlaceDeleteOutput, PlaceDeleteInput>(
-    async ({ places }, variables) => places.delete(variables),
-    {
-      ...options,
-      onMutate: async (variables) => {
-        await utils.cancel(queryKeys.places.all());
-        const previousPlaces = utils.getData<PlaceCreateOutput[]>(queryKeys.places.all());
-
-        utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), (old) => {
-          const existing = old ?? [];
-          return existing.filter((place) => place.id !== variables.id);
-        });
-        utils.remove(queryKeys.places.get(variables.id));
-
-        return { previousPlaces };
-      },
-      onSuccess: (result, variables, context, mutationContext) => {
-        utils.invalidate(queryKeys.places.all());
-        options?.onSuccess?.(result, variables, context, mutationContext);
-      },
-      onError: (error, variables, context, mutationContext) => {
-        const previousPlaces =
-          typeof context === 'object' && context !== null && 'previousPlaces' in context
-            ? (context as { previousPlaces?: PlaceCreateOutput[] }).previousPlaces
-            : undefined;
-
-        if (previousPlaces) {
-          utils.setData<PlaceCreateOutput[]>(queryKeys.places.all(), previousPlaces);
-        }
-
-        options?.onError?.(error, variables, context, mutationContext);
-      },
-      onSettled: () => {
-        utils.invalidate(queryKeys.places.all());
-      },
-    },
-  );
-};
-
 /**
  * Autocomplete places search
  */
@@ -726,7 +505,7 @@ export const useUpdatePlaceVisit = (
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (result, error, variables) => {
+      onSettled: () => {
         utils.invalidate(queryKeys.places.myVisits());
       },
     },
@@ -782,22 +561,3 @@ export const useDeletePlaceVisit = (
 /**
  * Get visit statistics
  */
-const usePlaceVisitStats = (placeId: string | undefined) => {
-  if (!placeId) {
-    // Return a disabled query when placeId is undefined
-    return useHonoQuery<PlaceGetVisitStatsOutput>(
-      queryKeys.places.visitStats(''),
-      async () => {
-        throw new Error('Query should not be called when placeId is undefined');
-      },
-      {
-        enabled: false,
-      },
-    );
-  }
-
-  return useHonoQuery<PlaceGetVisitStatsOutput>(
-    queryKeys.places.visitStats(placeId),
-    async ({ places }) => places.getVisitStats({ placeId } satisfies PlaceGetVisitStatsInput),
-  );
-};

@@ -1,10 +1,5 @@
-import { useHonoMutation, useHonoQuery } from '@hominem/hono-client/react';
-import type {
-  TwitterAccountsListOutput,
-  TwitterPostInput,
-  TwitterPostOutput,
-} from '@hominem/hono-rpc/types/twitter.types';
-import { useToast } from '@hominem/ui';
+import { useHonoQuery } from '@hominem/hono-client/react';
+import type { TwitterAccountsListOutput } from '@hominem/hono-rpc/types/twitter.types';
 import { useCallback } from 'react';
 
 export function useTwitterOAuth() {
@@ -33,22 +28,4 @@ export function useTwitterAccounts() {
     isLoading,
     refetch,
   };
-}
-
-function useTwitterPost() {
-  const { toast } = useToast();
-
-  const mutation = useHonoMutation<TwitterPostOutput, TwitterPostInput>(
-    ({ twitter }, variables) => twitter.post(variables),
-    {
-      onSuccess: () => {
-        toast({ title: 'Tweet posted successfully' });
-      },
-      onError: (error) => {
-        toast({ title: 'Error posting tweet', description: error.message, variant: 'destructive' });
-      },
-    },
-  );
-
-  return mutation;
 }

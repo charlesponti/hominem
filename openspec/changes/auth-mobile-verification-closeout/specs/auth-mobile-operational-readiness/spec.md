@@ -42,3 +42,10 @@ The auth/mobile closeout SHALL conclude with an explicit readiness decision.
 #### Scenario: Team evaluates auth readiness
 - **WHEN** the remaining hardening and verification work is complete
 - **THEN** the final readiness status is recorded as complete or explicitly de-scoped with rationale
+
+### Requirement: Auth closeout SHALL maintain a clean repo safety signal
+The auth/mobile closeout SHALL leave the standard repo safety check free of lint warnings that were surfaced during the closeout.
+
+#### Scenario: Team runs the standard safety check
+- **WHEN** `bun run check` is executed during auth/mobile closeout
+- **THEN** stale unused imports, unused parameters, and dead local helpers uncovered by that run are removed so the check output remains actionable

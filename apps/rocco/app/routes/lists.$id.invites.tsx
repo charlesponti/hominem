@@ -7,7 +7,6 @@ import { Link, useRevalidator } from 'react-router';
 import ErrorBoundary from '~/components/ErrorBoundary';
 import SentInviteForm from '~/components/lists/sent-invite-form';
 import SentInvites from '~/components/lists/sent-invites';
-import type { SentInvite } from '~/lib/types';
 
 import type { Route } from './+types/lists.$id.invites';
 

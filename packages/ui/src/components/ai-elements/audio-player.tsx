@@ -1,7 +1,7 @@
 'use client';
 
 import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
-import { forwardRef, useRef, useState, useEffect, type HTMLAttributes } from 'react';
+import { useEffect, useRef, useState, type HTMLAttributes } from 'react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
