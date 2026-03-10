@@ -78,4 +78,4 @@ This runs automatically during `bun run check`.
 
 ## More Information
 
-See the detailed plan at `docs/plans/2026-type-and-rpc-performance-project.md` (Phase 4: Enforce DB/RPC Separation)
+See `AGENTS.md` for the current DB/RPC separation rules and OpenSpec workflow guidance.

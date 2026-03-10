@@ -28,8 +28,9 @@ POSTGRES_PASSWORD=your-secure-password docker-compose -f compose/base.yml -f com
 
 ## Full Documentation
 
-- **[Developer Setup Guide](../docs/DEVELOPER_SETUP.md)** - Complete setup instructions
-- **[Railway Deployment Guide](../docs/RAILWAY_DEPLOYMENT.md)** - Production deployment
+- **[Canonical Docker Instructions](../.github/instructions/docker.instructions.md)** - Current Docker source of truth
+- **[Canonical Setup Instructions](../.github/instructions/setup.instructions.md)** - Repo-level local setup and daily workflow
+- **[Canonical Deployment Instructions](../.github/instructions/deployment.instructions.md)** - Repo-level production and release guidance
 
 ## Services
 

@@ -258,6 +258,26 @@ Purposeful, light, fast. Remove animations that don't change user understanding.
 
 | State | Treatment |
 | :--- | :--- |
+
+---
+
+#### Troubleshooting
+
+Use these checks before introducing ad hoc UI fixes:
+
+- Ensure `@hominem/ui/src/styles/globals.css` is imported at the app root.
+- Verify design token names directly in `packages/ui/src/styles/globals.css`.
+- Prefer semantic classes over inline styles or raw hex values.
+- Use the intended typography utilities instead of arbitrary font sizing.
+- Verify focus visibility with forced `:focus-visible` state in DevTools.
+- Keep spacing on the system scale and use the right primitive: padding, margin, gap, or `space-*`.
+- Avoid arbitrary radius and accent values.
+
+#### Migration Guidance
+
+- Treat this file as the only repo-wide design-system instruction source.
+- Capture broad design migrations in OpenSpec changes, not root docs.
+- Remove superseded migration notes instead of preserving parallel design guides.
 | Default | `background: var(--background)`, `color: var(--foreground)` |
 | Hover | `background: var(--surface)`, `transition: background-color var(--duration-instant) var(--ease-default)` |
 | Active | `transform: scale(0.97)`, `opacity: 0.75`, `transition: transform var(--duration-fast) var(--ease-default)` |

@@ -138,7 +138,7 @@ function validate() {
   console.log('💡 To fix these violations:');
   console.log('   1. Replace DB imports with types from @hominem/hono-rpc/types');
   console.log('   2. Use the RPC client (@hominem/hono-client) for data access');
-  console.log('   3. See docs/plans/2026-type-and-rpc-performance-project.md for details\n');
+  console.log('   3. Follow the RPC boundary rules in AGENTS.md and the active OpenSpec guidance\n');
   
   return 1;
 }

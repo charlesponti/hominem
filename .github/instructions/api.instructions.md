@@ -17,7 +17,13 @@ applyTo: 'packages/hono-rpc/**, services/api/**'
 - Reuse schemas between service and route layers.
 - Service functions accept a single object parameter.
 - Do not expose internal error details to clients.
-- When integrating third-party providers, log the raw provider failure server-side and translate it into a typed `ServiceError` (`UnavailableError` or `InternalError`) before it reaches the client.
+- When integrating third-party providers, catch provider-specific failures at the service or integration boundary, log the raw provider failure server-side with structured metadata, and translate it into a typed `ServiceError` before it reaches the client.
+- For third-party provider failures, prefer these mappings:
+  - Temporary upstream outage, rate limit, or timeout -> `UnavailableError`
+  - Unexpected provider failure or malformed upstream response -> `InternalError`
+  - Missing local auth/session context required for the provider action -> `UnauthorizedError`
+  - Missing local resource required for the provider action -> `NotFoundError`
+- Successful provider-backed routes should still return the direct JSON success body for the endpoint contract rather than provider-shaped envelopes.
 
 ## Anti-rules
 

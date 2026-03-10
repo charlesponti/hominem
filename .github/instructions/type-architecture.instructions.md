@@ -11,3 +11,25 @@ applyTo: 'packages/**, services/api/**, apps/**'
 - Do not use barrel imports from `@hominem/db/schema`.
 - Do not redefine DB types; extend with intersections when needed.
 - Use Zod schemas for validation and derive from DB schema when possible.
+
+## TypeScript Baseline
+
+- Keep root solution references in `tsconfig.json`.
+- Use `tsconfig.editor.json` as the focused editor solution.
+- Keep `disableReferencedProjectLoad: true` and `disableSolutionSearching: true` in the solution configs.
+- Use `composite: true` for referenced workspace projects.
+- Prefer declaration boundaries with `disableSourceOfProjectReferenceRedirect: true`.
+- Use `moduleResolution: 'Bundler'` for Bun, Vite, and Expo targets.
+- Keep `baseUrl` and `paths` only when they are actively needed.
+- Keep `include` tight to real source and config files.
+- Use `moduleDetection: 'force'`, `verbatimModuleSyntax: true`, and `isolatedModules: true`.
+
+## Validation
+
+Run from the repo root:
+
+```bash
+npx tsc -b tsconfig.json --pretty false
+bun run typecheck
+bun run check
+```

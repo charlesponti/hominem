@@ -25,7 +25,13 @@ Run a local environment check:
 
 - Develop (example):
 
-	bun run -C apps/api dev
+	bun run dev
+
+### Canonical Docs
+
+- Local setup: `.github/instructions/setup.instructions.md`
+- Deployment: `.github/instructions/deployment.instructions.md`
+- Docker: `.github/instructions/docker.instructions.md`
 
 ### MCP server auth (single source of truth)
 
