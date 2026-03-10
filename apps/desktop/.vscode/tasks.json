@@ -1,0 +1,40 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "electron-vite: dev",
+      "type": "shell",
+      "command": "npm run dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "electron-vite",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^\\[\\d\\d:\\d\\d:\\d\\d\\]\\s+(.*)$",
+          "message": 1
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Electron App started.*$",
+          "endsPattern": "^.*Renderer process started.*$"
+        }
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "electron-vite: build",
+      "type": "shell",
+      "command": "npm run build",
+      "group": "build"
+    },
+    {
+      "label": "electron-vite: package",
+      "type": "shell",
+      "command": "npm run package",
+      "group": "build"
+    }
+  ]
+}

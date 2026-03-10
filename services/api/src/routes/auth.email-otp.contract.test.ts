@@ -144,6 +144,50 @@ describe('auth email otp contract', () => {
     expect(payload.user.email).toBe(email);
   }, 15000);
 
+  test('2.2 bearer logout revokes the authenticated session', async () => {
+    const createServer = await importServer();
+    const app = createServer();
+    const email = `otp-logout-${Date.now()}@hominem.test`;
+    await requestOtp(app, email);
+    const otpResponse = await fetchOtp(app, email);
+
+    const signInResponse = await app.request('http://localhost/api/auth/email-otp/verify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        otp: otpResponse.otp,
+      }),
+    });
+
+    expect(signInResponse.status).toBe(200);
+    const payload = (await signInResponse.json()) as VerifyOtpResponse;
+
+    const sessionBeforeLogout = await app.request('http://localhost/api/auth/session', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${payload.accessToken}`,
+      },
+    });
+    expect(sessionBeforeLogout.status).toBe(200);
+
+    const logoutResponse = await app.request('http://localhost/api/auth/logout', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${payload.accessToken}`,
+      },
+    });
+    expect(logoutResponse.status).toBe(200);
+
+    const sessionAfterLogout = await app.request('http://localhost/api/auth/session', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${payload.accessToken}`,
+      },
+    });
+    expect(sessionAfterLogout.status).toBe(401);
+  }, 15000);
+
   test('2.2 invalid otp is rejected and does not create authenticated session', async () => {
     const createServer = await importServer();
     const app = createServer();

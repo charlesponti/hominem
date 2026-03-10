@@ -17,7 +17,6 @@ import { getJwks } from '../auth/key-store';
 import {
   createTokenPairForUser,
   isSessionRevoked,
-  revokeByRefreshToken,
   revokeSession,
   rotateRefreshToken,
 } from '../auth/session-store';
@@ -47,11 +46,6 @@ const refreshTokenSchema = z.union([
 ]).transform((value) => ({
   refreshToken: 'refresh_token' in value ? value.refresh_token : value.refreshToken,
 }));
-
-const revokeTokenSchema = z.object({
-  token: z.string().min(16),
-  token_type_hint: z.enum(['refresh_token', 'access_token']).optional(),
-});
 
 const passkeyRegisterVerifySchema = z.object({
   response: z.any(),
@@ -176,6 +170,41 @@ async function resolveAuthUserId(c: {
   // 3. Better Auth session cookie
   const session = await betterAuthServer.api.getSession(getHeaderCarrier(c));
   if (session?.user?.id) return session.user.id;
+
+  return null;
+}
+
+async function resolveAuthSessionId(c: {
+  get: (key: string) => { sid?: string | undefined } | null;
+  req: { header: (name: string) => string | undefined };
+}): Promise<string | null> {
+  const fromMiddleware = c.get('auth');
+  if (fromMiddleware?.sid) {
+    return fromMiddleware.sid;
+  }
+
+  const authHeader = c.req.header('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    try {
+      const claims = await verifyAccessToken(authHeader.slice(7));
+      return claims.sid;
+    } catch {
+      return null;
+    }
+  }
+
+  const cookieHeader = c.req.header('cookie') ?? '';
+  const tokenMatch = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/);
+  const tokenValue = tokenMatch?.[1];
+  if (tokenValue) {
+    try {
+      const decoded = decodeURIComponent(tokenValue);
+      const claims = await verifyAccessToken(decoded);
+      return claims.sid;
+    } catch {
+      return null;
+    }
+  }
 
   return null;
 }
@@ -671,9 +700,9 @@ authRoutes.get('/test/otp/latest', zValidator('query', testOtpQuerySchema), asyn
 });
 
 authRoutes.post('/logout', async (c) => {
-  const auth = c.get('auth');
-  if (auth?.sid) {
-    await revokeSession(auth.sid);
+  const sessionId = await resolveAuthSessionId(c);
+  if (sessionId) {
+    await revokeSession(sessionId);
   }
   await betterAuthServer.api.signOut({
     ...getHeaderCarrier(c),

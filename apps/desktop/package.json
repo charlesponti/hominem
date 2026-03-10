@@ -1,0 +1,100 @@
+{
+  "name": "@hominem/desktop",
+  "version": "0.0.0",
+  "description": "Hominem desktop shell",
+  "main": "./out/main/index.js",
+  "private": true,
+  "type": "module",
+  "author": {
+    "name": "chase bridges",
+    "email": "code@hominem.io",
+    "url": "https://ponti.io/"
+  },
+  "scripts": {
+    "build": "electron-vite build",
+    "dev": "electron-vite dev",
+    "format": "bunx oxfmt ./src ./electron.vite.config.ts ./vite.config.ts",
+    "lint": "bunx oxlint ./src ./electron.vite.config.ts ./vite.config.ts",
+    "package": "electron-vite build && electron-builder --mac --arm64 --publish=never",
+    "package:all": "electron-vite build && electron-builder --mac --win --linux --publish=never",
+    "postinstall": "node ./node_modules/electron/install.js && electron-builder install-app-deps",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@hominem/auth": "workspace:*",
+    "@hominem/env": "workspace:*",
+    "@hominem/hono-client": "workspace:*",
+    "@hominem/hono-rpc": "workspace:*",
+    "@hominem/ui": "workspace:*",
+    "@hominem/utils": "workspace:*",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "tailwindcss": "^4.2.1",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/node": "25.2.3",
+    "@types/react": "19.2.10",
+    "@types/react-dom": "19.1.7",
+    "@vitejs/plugin-react": "5.1.4",
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
+    "electron-vite": "^5.0.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.1",
+    "vite-tsconfig-paths": "6.1.1",
+    "vitest": "4.0.18"
+  },
+  "build": {
+    "appId": "com.hominem.desktop",
+    "productName": "Hominem",
+    "directories": {
+      "buildResources": "assets",
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "./out/main/index.js"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "linux": {
+      "category": "Utility",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "allowToChangeInstallationDirectory": true,
+      "oneClick": false
+    }
+  },
+  "trustedDependencies": [
+    "electron"
+  ]
+}
