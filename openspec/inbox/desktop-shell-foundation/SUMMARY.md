@@ -159,8 +159,8 @@ Once Phase 1 is complete:
 ## References
 
 - **Neko source**: `~/Developer/neko/`
-- **Design document**: `openspec/changes/desktop-shell-foundation/design.md`
-- **Tasks**: `openspec/changes/desktop-shell-foundation/tasks.md`
+- **Design document**: `openspec/inbox/desktop-shell-foundation/design.md`
+- **Tasks**: `openspec/inbox/desktop-shell-foundation/tasks.md`
 - **Monorepo notes app**: `apps/notes/`
 - **Monorepo design system**: `packages/ui/src/styles/globals.css`
 - **Electron best practices**: https://www.electronjs.org/docs/latest/

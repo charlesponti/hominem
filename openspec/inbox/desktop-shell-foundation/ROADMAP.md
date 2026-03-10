@@ -440,13 +440,13 @@ hominem/
 
 ## References
 
-- **Phase 1 Proposal**: `openspec/changes/desktop-shell-foundation/proposal.md`
-- **Phase 1 Design**: `openspec/changes/desktop-shell-foundation/design.md`
-- **Phase 1 Tasks**: `openspec/changes/desktop-shell-foundation/tasks.md`
+- **Phase 1 Proposal**: `openspec/inbox/desktop-shell-foundation/proposal.md`
+- **Phase 1 Design**: `openspec/inbox/desktop-shell-foundation/design.md`
+- **Phase 1 Tasks**: `openspec/inbox/desktop-shell-foundation/tasks.md`
 - **Neko Source**: `~/Developer/neko/`
 - **Notes App**: `hominem/apps/notes/`
 - **Design System**: `hominem/packages/ui/src/styles/globals.css`
 
 ---
 
-**Ready to start Phase 1?** Begin with `openspec/changes/desktop-shell-foundation/proposal.md`.
+**Ready to start Phase 1?** Begin with `openspec/inbox/desktop-shell-foundation/proposal.md`.
