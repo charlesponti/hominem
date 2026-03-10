@@ -1,14 +1,13 @@
 # Active OpenSpec Change
 
-active_change: openspec-refactor
+active_change: none
 
 ## Canonical Artifacts
 
-- [proposal.md](/Users/charlesponti/Developer/hominem/openspec/inbox/openspec-refactor/proposal.md)
-- [design.md](/Users/charlesponti/Developer/hominem/openspec/inbox/openspec-refactor/design.md)
-- [tasks.md](/Users/charlesponti/Developer/hominem/openspec/inbox/openspec-refactor/tasks.md)
+No active change is currently selected.
 
 ## Enforcement
 
 - Before any implementation, read this file and keep work scoped to the active change.
 - Do not implement from OpenSpec changes unless the user explicitly activates one.
+- Activate a change from `openspec/inbox` before starting new implementation work.

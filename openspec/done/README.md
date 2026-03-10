@@ -23,6 +23,7 @@ Legacy paths such as `openspec/specs` and `openspec/merged` remain as compatibil
 | mobile-auth-state-machine | [spec](specs/mobile-auth-state-machine/spec.md) |
 | mobile-error-boundaries | [spec](specs/mobile-error-boundaries/spec.md) |
 | mobile-state-consolidation | [spec](specs/mobile-state-consolidation/spec.md) |
+| openspec-workflow | [spec](specs/openspec-workflow/spec.md) |
 | person-consolidation | [spec](specs/person-consolidation/spec.md) |
 | schema-consolidation | [spec](specs/schema-consolidation/spec.md) |
 | schema-standards | [spec](specs/schema-standards/spec.md) |
@@ -54,6 +55,7 @@ Completion records must use `YYYY-MM-DD-<change-slug>.md`.
 | 2026-03-09 | unify-app-auth-system | completed | [2026-03-09-unify-app-auth-system.md](records/2026-03-09-unify-app-auth-system.md) |
 | 2026-03-10 | enforce-db-rpc-separation | completed | [2026-03-10-enforce-db-rpc-separation.md](records/2026-03-10-enforce-db-rpc-separation.md) |
 | 2026-03-10 | feat-unified-environment-package-plan | completed | [2026-03-10-feat-unified-environment-package-plan.md](records/2026-03-10-feat-unified-environment-package-plan.md) |
+| 2026-03-10 | openspec-refactor | completed | [2026-03-10-openspec-refactor.md](records/2026-03-10-openspec-refactor.md) |
 | 2026-03-10 | performance-roadmap | completed | [2026-03-10-performance-roadmap.md](records/2026-03-10-performance-roadmap.md) |
 | 2026-03-10 | place-images-migration | completed | [2026-03-10-place-images-migration.md](records/2026-03-10-place-images-migration.md) |
 | 2026-03-10 | refactor-api-client-architecture-plan | completed | [2026-03-10-refactor-api-client-architecture-plan.md](records/2026-03-10-refactor-api-client-architecture-plan.md) |
