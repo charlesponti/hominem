@@ -143,7 +143,7 @@ const useCreatePlace = (options?: HonoMutationOptions<PlaceCreateOutput, PlaceCr
  */
 const useUpdatePlace = (options?: HonoMutationOptions<PlaceUpdateOutput, PlaceUpdateInput>) => {
   const utils = useHonoUtils();
-  return useHonoMutation(
+  return useHonoMutation<PlaceUpdateOutput, PlaceUpdateInput>(
     async (client: HonoClient, variables: PlaceUpdateInput) => {
       const res = await client.api.places.update.$post({ json: variables });
       return res.json();

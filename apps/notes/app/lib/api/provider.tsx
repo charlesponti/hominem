@@ -1,13 +1,10 @@
 import { useAuthContext, useSafeAuth } from '@hominem/auth';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
-import type { CreateClient } from '@hominem/hono-client';
 import { createHonoClient } from '@hominem/hono-rpc/client';
 import { useCallback } from 'react';
 import type { ReactNode } from 'react';
 
 import { getQueryClient } from '~/lib/get-query-client';
-
-const createAppHonoClient: CreateClient = (baseUrl, options) => createHonoClient(baseUrl, options);
 
 /**
  * Hono Provider for Notes App
@@ -46,7 +43,7 @@ function HonoProviderInner({ children, baseUrl }: HonoProviderProps) {
       queryClient={queryClient}
       config={{
         baseUrl,
-        createClient: createAppHonoClient,
+        createClient: (nextBaseUrl, options) => createHonoClient(nextBaseUrl, options),
         getAuthToken,
         onError: (error) => {
           console.error('Hono API error:', error);
@@ -69,7 +66,7 @@ export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
         queryClient={getQueryClient()}
         config={{
           baseUrl,
-          createClient: createAppHonoClient,
+          createClient: (nextBaseUrl, options) => createHonoClient(nextBaseUrl, options),
           getAuthToken: async () => null,
           onError: (error) => {
             console.error('Hono API error:', error);
