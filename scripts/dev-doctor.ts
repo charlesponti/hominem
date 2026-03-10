@@ -187,7 +187,7 @@ function runDoctor(): number {
     ),
   );
   checks.push(checkCommand('Git', 'git', ['--version'], true));
-  checks.push(checkCommand('TypeScript CLI', 'npx', ['tsc', '--version'], true));
+  checks.push(checkCommand('TypeScript CLI', 'bunx', ['tsc', '--version'], true));
   checks.push(checkCommand('Watchman', 'watchman', ['--version'], false));
 
   const isDarwin = process.platform === 'darwin';

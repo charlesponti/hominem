@@ -1,79 +1,17 @@
 #!/usr/bin/env bun
-/**
- * Environment Variable Synchronization Script
- *
- * Syncs environment variables between local .env.production files and Railway services.
- * Supports checking, diagnosing, and fixing mismatches.
- *
- * Usage:
- *   bun scripts/sync-env.ts check [service]          - Check for mismatches
- *   bun scripts/sync-env.ts diagnose [service]       - Diagnose issues with details
- *   bun scripts/sync-env.ts sync <service> <env>     - Sync .env.production to Railway
- *   bun scripts/sync-env.ts set <service> <var>=<val> - Set a single variable
- *   bun scripts/sync-env.ts list [service]           - List all variables in a service
- */
 
-import { execSync } from 'child_process'
-import * as fs from 'fs'
-import * as path from 'path'
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 
-// Types
-interface _EnvVar {
-  name: string
-  value?: string
-}
+import {
+  SERVICE_CONFIGS,
+  compareEnvVars,
+  findLocalEnvFile,
+  getServiceConfig,
+  parseEnvFile,
+} from './lib/env-tooling';
+import { runCommand } from './lib/run-command';
 
-interface ServiceConfig {
-  name: string
-  envFiles: string[]
-  railwayService: string
-}
-
-interface SyncResult {
-  service: string
-  localVars: Map<string, string>
-  railwayVars: Map<string, string>
-  missing: string[]
-  extra: string[]
-  mismatch: Array<{ name: string; local?: string; railway?: string }>
-  status: 'ok' | 'missing' | 'extra' | 'mismatch'
-}
-
-// Configuration
-const SERVICES: ServiceConfig[] = [
-  {
-    name: 'api',
-    envFiles: ['services/api/.env.production', 'services/api/.env'],
-    railwayService: 'hominem-api',
-  },
-  {
-    name: 'workers',
-    envFiles: ['services/workers/.env.production', 'services/workers/.env'],
-    railwayService: 'workers',
-  },
-  {
-    name: 'db',
-    envFiles: ['packages/db/.env.production', 'packages/db/.env'],
-    railwayService: 'hominem-db',
-  },
-  {
-    name: 'florin',
-    envFiles: ['apps/rocco/.env.production', 'apps/rocco/.env'],
-    railwayService: 'Florin',
-  },
-  {
-    name: 'rocco',
-    envFiles: ['apps/rocco/.env.production', 'apps/rocco/.env'],
-    railwayService: 'Rocco',
-  },
-  {
-    name: 'notes',
-    envFiles: ['apps/notes/.env.production', 'apps/notes/.env'],
-    railwayService: 'Notes',
-  },
-]
-
-// Utility functions
 function log(message: string, level: 'info' | 'warn' | 'error' | 'success' = 'info') {
   const colors = {
     info: '\x1b[36m',
@@ -81,358 +19,272 @@ function log(message: string, level: 'info' | 'warn' | 'error' | 'success' = 'in
     error: '\x1b[31m',
     success: '\x1b[32m',
     reset: '\x1b[0m',
-  }
+  };
   const prefix = {
     info: 'ℹ ',
     warn: '⚠ ',
     error: '✗ ',
     success: '✓ ',
-  }
-  console.log(`${colors[level]}${prefix[level]}${message}${colors.reset}`)
-}
-
-function runCommand(cmd: string, silent = false): string {
-  try {
-    return execSync(cmd, { encoding: 'utf-8', stdio: silent ? 'pipe' : 'inherit' }).trim()
-  } catch  {
-    if (!silent) {
-      log(`Command failed: ${cmd}`, 'error')
-    }
-    return ''
-  }
-}
-
-function parseEnvFile(filePath: string): Map<string, string> {
-  const vars = new Map<string, string>()
-
-  if (!fs.existsSync(filePath)) {
-    return vars
-  }
-
-  const content = fs.readFileSync(filePath, 'utf-8')
-  const lines = content.split('\n')
-
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) continue
-
-    const match = trimmed.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/)
-    if (match) {
-      const [, name, value] = match
-      // Remove quotes if present
-      const cleanValue = value.replace(/^["']|["']$/g, '')
-      vars.set(name, cleanValue)
-    }
-  }
-
-  return vars
+  };
+  console.log(`${colors[level]}${prefix[level]}${message}${colors.reset}`);
 }
 
 function getRailwayVars(service: string): Map<string, string> {
-  const vars = new Map<string, string>()
+  const serviceNames = [service];
+  if (service.startsWith('hominem-')) {
+    serviceNames.push(service.replace('hominem-', ''));
+  }
 
-  try {
-    const output = runCommand(
-      `railway variable list --service "${service}" --kv 2>/dev/null || railway variable list --service "${service.replace('hominem-', '')}" --kv 2>/dev/null || true`,
+  for (const serviceName of serviceNames) {
+    const result = runCommand(
+      'railway',
+      ['variable', 'list', '--service', serviceName, '--kv'],
       true,
-    )
+    );
 
-    if (!output) {
-      return vars
+    if (result.code !== 0 || !result.stdout) {
+      continue;
     }
 
-    const lines = output.split('\n')
-    for (const line of lines) {
-      const match = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/)
+    const vars = new Map<string, string>();
+    for (const line of result.stdout.split('\n')) {
+      const match = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
       if (match) {
-        const [, name, value] = match
-        vars.set(name, value)
+        const [, name, value] = match;
+        vars.set(name, value);
       }
     }
-  } catch  {
-    log(`Failed to query Railway for service ${service}`, 'warn')
+
+    return vars;
   }
 
-  return vars
+  return new Map<string, string>();
 }
 
-function getServiceConfig(serviceName: string): ServiceConfig | undefined {
-  return SERVICES.find((s) => s.name === serviceName)
+function setRailwayVar(service: string, name: string, value: string): void {
+  runCommand('railway', [
+    'variable',
+    'set',
+    `${name}=${value}`,
+    '--service',
+    service,
+    '--skip-deploys',
+  ]);
 }
 
-function findLocalEnvFile(config: ServiceConfig): string | null {
-  for (const file of config.envFiles) {
-    const fullPath = path.join(process.cwd(), file)
-    if (fs.existsSync(fullPath)) {
-      return fullPath
-    }
-  }
-  return null
-}
-
-function compareVars(local: Map<string, string>, railway: Map<string, string>): SyncResult {
-  const missing: string[] = []
-  const extra: string[] = []
-  const mismatch: Array<{ name: string; local?: string; railway?: string }> = []
-
-  // Check for missing variables
-  for (const [name] of local) {
-    if (!railway.has(name)) {
-      missing.push(name)
-    }
-  }
-
-  // Check for extra variables (exclude Railway-specific ones)
-  const railwaySystemVars = new Set([
-    'RAILWAY_PROJECT_ID',
-    'RAILWAY_PROJECT_NAME',
-    'RAILWAY_SERVICE_ID',
-    'RAILWAY_SERVICE_NAME',
-    'RAILWAY_STATIC_URL',
-    'RAILWAY_PUBLIC_DOMAIN',
-    'RAILWAY_PRIVATE_DOMAIN',
-    'NIXPACKS_NODE_VERSION',
-    'COOKIE_DOMAIN',
-    'COOKIE_NAME',
-    'COOKIE_SALT',
-    'COOKIE_SECRET',
-    'FLORIN_URL',
-    'ROCCO_URL',
-    'NOTES_URL',
-  ])
-
-  for (const [name] of railway) {
-    if (!local.has(name) && !railwaySystemVars.has(name) && !name.startsWith('RAILWAY_SERVICE_')) {
-      extra.push(name)
-    }
-  }
-
-  let status: 'ok' | 'missing' | 'extra' | 'mismatch' = 'ok'
-  if (missing.length > 0) status = 'missing'
-  if (extra.length > 0) status = 'extra'
-
-  return {
-    service: '',
-    localVars: local,
-    railwayVars: railway,
-    missing,
-    extra,
-    mismatch,
-    status,
-  }
-}
-
-// Commands
 async function checkCommand(serviceName?: string) {
-  log('Checking environment variable synchronization...', 'info')
+  log('Checking environment variable synchronization...', 'info');
 
   const services = serviceName
-    ? SERVICES.filter((s) => s.name === serviceName)
-    : SERVICES
+    ? SERVICE_CONFIGS.filter((service) => service.name === serviceName)
+    : SERVICE_CONFIGS;
 
   if (serviceName && services.length === 0) {
-    log(`Service not found: ${serviceName}`, 'error')
-    process.exit(1)
+    log(`Service not found: ${serviceName}`, 'error');
+    process.exit(1);
   }
 
-  let allOk = true
+  let allOk = true;
 
   for (const service of services) {
-    const envFilePath = findLocalEnvFile(service)
+    const envFilePath = findLocalEnvFile(service);
     if (!envFilePath) {
-      log(`No .env file found for ${service.name}`, 'warn')
-      continue
+      log(`No .env file found for ${service.name}`, 'warn');
+      continue;
     }
 
-    const localVars = parseEnvFile(envFilePath)
-    const railwayVars = getRailwayVars(service.railwayService)
+    const localVars = parseEnvFile(envFilePath);
+    const railwayVars = getRailwayVars(service.railwayService);
+    const result = compareEnvVars(localVars, railwayVars);
 
-    const result = compareVars(localVars, railwayVars)
-
-    if (result.missing.length === 0 && result.extra.length === 0) {
-      log(`${service.name}: All variables synchronized`, 'success')
+    if (result.status === 'ok') {
+      log(`${service.name}: All variables synchronized`, 'success');
     } else {
-      allOk = false
+      allOk = false;
       if (result.missing.length > 0) {
-        log(`${service.name}: Missing ${result.missing.length} variables in Railway`, 'error')
+        log(`${service.name}: Missing ${result.missing.length} variables in Railway`, 'error');
       }
       if (result.extra.length > 0) {
-        log(`${service.name}: ${result.extra.length} extra variables in Railway`, 'warn')
+        log(`${service.name}: ${result.extra.length} extra variables in Railway`, 'warn');
+      }
+      if (result.mismatch.length > 0) {
+        log(`${service.name}: ${result.mismatch.length} mismatched variable values`, 'error');
       }
     }
   }
 
-  process.exit(allOk ? 0 : 1)
+  process.exit(allOk ? 0 : 1);
 }
 
 async function diagnoseCommand(serviceName?: string) {
-  log('Diagnosing environment variable mismatches...', 'info')
-  console.log('')
+  log('Diagnosing environment variable mismatches...', 'info');
+  console.log('');
 
   const services = serviceName
-    ? SERVICES.filter((s) => s.name === serviceName)
-    : SERVICES
+    ? SERVICE_CONFIGS.filter((service) => service.name === serviceName)
+    : SERVICE_CONFIGS;
 
   if (serviceName && services.length === 0) {
-    log(`Service not found: ${serviceName}`, 'error')
-    process.exit(1)
+    log(`Service not found: ${serviceName}`, 'error');
+    process.exit(1);
   }
 
   for (const service of services) {
-    const envFilePath = findLocalEnvFile(service)
+    const envFilePath = findLocalEnvFile(service);
     if (!envFilePath) {
-      log(`No .env file found for ${service.name}`, 'warn')
-      continue
+      log(`No .env file found for ${service.name}`, 'warn');
+      continue;
     }
 
-    log(`\n=== ${service.name} (Railway: ${service.railwayService}) ===`, 'info')
+    log(`\n=== ${service.name} (Railway: ${service.railwayService}) ===`, 'info');
 
-    const localVars = parseEnvFile(envFilePath)
-    const railwayVars = getRailwayVars(service.railwayService)
-    const result = compareVars(localVars, railwayVars)
+    const localVars = parseEnvFile(envFilePath);
+    const railwayVars = getRailwayVars(service.railwayService);
+    const result = compareEnvVars(localVars, railwayVars);
 
-    log(`Local variables: ${localVars.size}`, 'info')
-    log(`Railway variables: ${railwayVars.size}`, 'info')
+    log(`Local variables: ${localVars.size}`, 'info');
+    log(`Railway variables: ${railwayVars.size}`, 'info');
 
     if (result.missing.length > 0) {
-      log(`\nMissing from Railway (${result.missing.length}):`, 'error')
+      log(`\nMissing from Railway (${result.missing.length}):`, 'error');
       for (const varName of result.missing) {
-        console.log(`  - ${varName}`)
+        console.log(`  - ${varName}`);
       }
     }
 
     if (result.extra.length > 0) {
-      log(`\nExtra in Railway (${result.extra.length}):`, 'warn')
+      log(`\nExtra in Railway (${result.extra.length}):`, 'warn');
       for (const varName of result.extra.slice(0, 10)) {
-        console.log(`  - ${varName}`)
+        console.log(`  - ${varName}`);
       }
       if (result.extra.length > 10) {
-        console.log(`  ... and ${result.extra.length - 10} more`)
+        console.log(`  ... and ${result.extra.length - 10} more`);
       }
     }
 
-    if (result.missing.length === 0 && result.extra.length === 0) {
-      log('✓ All variables synchronized', 'success')
+    if (result.mismatch.length > 0) {
+      log(`\nMismatched values (${result.mismatch.length}):`, 'error');
+      for (const mismatch of result.mismatch) {
+        console.log(`  - ${mismatch.name}`);
+      }
+    }
+
+    if (result.status === 'ok') {
+      log('✓ All variables synchronized', 'success');
     }
   }
 
-  console.log('')
+  console.log('');
 }
 
 async function syncCommand(serviceName: string, envFile: string) {
-  const service = getServiceConfig(serviceName)
+  const service = getServiceConfig(serviceName);
   if (!service) {
-    log(`Service not found: ${serviceName}`, 'error')
-    process.exit(1)
+    log(`Service not found: ${serviceName}`, 'error');
+    process.exit(1);
   }
 
-  const filePath = path.join(process.cwd(), envFile)
-  if (!fs.existsSync(filePath)) {
-    log(`File not found: ${envFile}`, 'error')
-    process.exit(1)
+  const filePath = path.join(process.cwd(), envFile);
+  if (!existsSync(filePath)) {
+    log(`File not found: ${envFile}`, 'error');
+    process.exit(1);
   }
 
-  log(`Syncing ${envFile} to Railway (${service.railwayService})...`, 'info')
+  log(`Syncing ${envFile} to Railway (${service.railwayService})...`, 'info');
 
-  const localVars = parseEnvFile(filePath)
-  let synced = 0
-  let failed = 0
+  const localVars = parseEnvFile(filePath);
+  let synced = 0;
+  let failed = 0;
 
   for (const [name, value] of localVars) {
     try {
-      const escapedValue = value.replace(/"/g, '\\"')
-      runCommand(
-        `railway variable set "${name}=${escapedValue}" --service "${service.railwayService}" --skip-deploys`,
-        true,
-      )
-      log(`  ${name}`, 'success')
-      synced++
-    } catch  {
-      log(`  ${name} (FAILED)`, 'error')
-      failed++
+      setRailwayVar(service.railwayService, name, value);
+      log(`  ${name}`, 'success');
+      synced++;
+    } catch (error) {
+      log(`  ${name} (FAILED)`, 'error');
+      log(error instanceof Error ? error.message : 'Unknown Railway CLI failure', 'error');
+      failed++;
     }
   }
 
-  console.log('')
-  log(`Sync complete: ${synced} variables updated`, 'success')
+  console.log('');
+  log(`Sync complete: ${synced} variables updated`, 'success');
   if (failed > 0) {
-    log(`${failed} variables failed to sync`, 'error')
+    log(`${failed} variables failed to sync`, 'error');
   }
 
-  process.exit(failed > 0 ? 1 : 0)
+  process.exit(failed > 0 ? 1 : 0);
 }
 
 async function setCommand(serviceName: string, varAssignment: string) {
-  const service = getServiceConfig(serviceName)
+  const service = getServiceConfig(serviceName);
   if (!service) {
-    log(`Service not found: ${serviceName}`, 'error')
-    process.exit(1)
+    log(`Service not found: ${serviceName}`, 'error');
+    process.exit(1);
   }
 
-  const [name, ...valueParts] = varAssignment.split('=')
-  const value = valueParts.join('=')
+  const [name, ...valueParts] = varAssignment.split('=');
+  const value = valueParts.join('=');
 
   if (!name || !value) {
-    log('Invalid format. Use: bun scripts/sync-env.ts set <service> <VAR>=<value>', 'error')
-    process.exit(1)
+    log('Invalid format. Use: bun scripts/sync-env.ts set <service> <VAR>=<value>', 'error');
+    process.exit(1);
   }
 
-  log(`Setting ${name} in Railway (${service.railwayService})...`, 'info')
+  log(`Setting ${name} in Railway (${service.railwayService})...`, 'info');
 
   try {
-    const escapedValue = value.replace(/"/g, '\\"')
-    runCommand(
-      `railway variable set "${name}=${escapedValue}" --service "${service.railwayService}" --skip-deploys`,
-      true,
-    )
-    log(`Successfully set ${name}`, 'success')
-  } catch  {
-    log(`Failed to set ${name}`, 'error')
-    process.exit(1)
+    setRailwayVar(service.railwayService, name, value);
+    log(`Successfully set ${name}`, 'success');
+  } catch (error) {
+    log(`Failed to set ${name}`, 'error');
+    log(error instanceof Error ? error.message : 'Unknown Railway CLI failure', 'error');
+    process.exit(1);
   }
 }
 
 async function listCommand(serviceName?: string) {
   const services = serviceName
-    ? SERVICES.filter((s) => s.name === serviceName)
-    : SERVICES
+    ? SERVICE_CONFIGS.filter((service) => service.name === serviceName)
+    : SERVICE_CONFIGS;
 
   if (serviceName && services.length === 0) {
-    log(`Service not found: ${serviceName}`, 'error')
-    process.exit(1)
+    log(`Service not found: ${serviceName}`, 'error');
+    process.exit(1);
   }
 
   for (const service of services) {
-    log(`\n=== ${service.name} ===`, 'info')
+    log(`\n=== ${service.name} ===`, 'info');
 
-    const envFilePath = findLocalEnvFile(service)
+    const envFilePath = findLocalEnvFile(service);
     if (envFilePath) {
-      log('\nLocal variables:', 'info')
-      const localVars = parseEnvFile(envFilePath)
+      log('\nLocal variables:', 'info');
+      const localVars = parseEnvFile(envFilePath);
       for (const [name] of localVars) {
-        console.log(`  ${name}`)
+        console.log(`  ${name}`);
       }
     } else {
-      log('No local .env file found', 'warn')
+      log('No local .env file found', 'warn');
     }
 
-    log('\nRailway variables:', 'info')
-    const railwayVars = getRailwayVars(service.railwayService)
+    log('\nRailway variables:', 'info');
+    const railwayVars = getRailwayVars(service.railwayService);
     if (railwayVars.size === 0) {
-      log('No variables found', 'warn')
+      log('No variables found', 'warn');
     } else {
       for (const [name] of railwayVars) {
-        console.log(`  ${name}`)
+        console.log(`  ${name}`);
       }
     }
   }
 
-  console.log('')
+  console.log('');
 }
 
 // Main
 async function main() {
-  const args = process.argv.slice(2)
+  const args = process.argv.slice(2);
 
   if (args.length === 0) {
     console.log(`
@@ -446,7 +298,7 @@ Usage:
   bun scripts/sync-env.ts list [service]           - List all variables
 
 Services:
-  ${SERVICES.map((s) => s.name).join(', ')}
+  ${SERVICE_CONFIGS.map((service) => service.name).join(', ')}
 
 Examples:
   bun scripts/sync-env.ts check
@@ -454,35 +306,35 @@ Examples:
   bun scripts/sync-env.ts sync api services/api/.env.production
   bun scripts/sync-env.ts set api MY_VAR=myvalue
   bun scripts/sync-env.ts list florin
-    `)
-    process.exit(0)
+    `);
+    process.exit(0);
   }
 
-  const command = args[0]
+  const command = args[0];
 
   switch (command) {
     case 'check':
-      await checkCommand(args[1])
-      break
+      await checkCommand(args[1]);
+      break;
     case 'diagnose':
-      await diagnoseCommand(args[1])
-      break
+      await diagnoseCommand(args[1]);
+      break;
     case 'sync':
-      await syncCommand(args[1], args[2])
-      break
+      await syncCommand(args[1], args[2]);
+      break;
     case 'set':
-      await setCommand(args[1], args[2])
-      break
+      await setCommand(args[1], args[2]);
+      break;
     case 'list':
-      await listCommand(args[1])
-      break
+      await listCommand(args[1]);
+      break;
     default:
-      log(`Unknown command: ${command}`, 'error')
-      process.exit(1)
+      log(`Unknown command: ${command}`, 'error');
+      process.exit(1);
   }
 }
 
 main().catch((error) => {
-  log(`Error: ${error.message}`, 'error')
-  process.exit(1)
-})
+  log(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
+  process.exit(1);
+});
