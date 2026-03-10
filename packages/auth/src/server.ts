@@ -1,57 +1,30 @@
 import { logger } from '@hominem/utils/logger'
 import { getSetCookieHeaders } from '@hominem/utils/headers'
 
+import { resolveAuthRedirect } from './redirect-policy'
 import type { AuthConfig, HominemSession, HominemUser, ServerAuthResult } from './types'
-
-function normalizeRedirectPrefix(prefix: string) {
-  const normalized = new URL(prefix, 'https://hominem.local').pathname
-  return normalized.endsWith('/') && normalized !== '/' ? normalized.slice(0, -1) : normalized
-}
-
-function isAllowedRedirectPath(pathname: string, allowedPrefixes: string[]) {
-  for (const prefix of allowedPrefixes) {
-    const normalizedPrefix = normalizeRedirectPrefix(prefix)
-    if (pathname === normalizedPrefix) {
-      return true
-    }
-    if (normalizedPrefix !== '/' && pathname.startsWith(`${normalizedPrefix}/`)) {
-      return true
-    }
-  }
-  return false
-}
 
 export function resolveSafeAuthRedirect(
   next: string | null | undefined,
   fallback: string,
   allowedPrefixes: string[] = [fallback]
 ): string {
-  if (!next || next.length === 0) {
-    return fallback
-  }
+  const resolution = resolveAuthRedirect(next, fallback, allowedPrefixes)
 
-  if (!next.startsWith('/')) {
+  if (resolution.rejectedReason === 'non_local') {
     logger.warn('[auth.redirect] rejected non-local redirect target', { next, fallback })
-    return fallback
-  }
-
-  if (next.startsWith('//')) {
+  } else if (resolution.rejectedReason === 'protocol_relative') {
     logger.warn('[auth.redirect] rejected protocol-relative redirect target', { next, fallback })
-    return fallback
-  }
-
-  const url = new URL(next, 'https://hominem.local')
-  if (!isAllowedRedirectPath(url.pathname, allowedPrefixes)) {
+  } else if (resolution.rejectedReason === 'disallowed') {
     logger.warn('[auth.redirect] rejected disallowed redirect target', {
       next,
       fallback,
-      pathname: url.pathname,
+      pathname: resolution.rejectedPathname,
       allowedPrefixes,
     })
-    return fallback
   }
 
-  return `${url.pathname}${url.search}${url.hash}`
+  return resolution.safeRedirect
 }
 
 interface ServerSessionPayload {

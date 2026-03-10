@@ -17,12 +17,12 @@
 
 - [x] 3.1 Run and document API auth contract suites for OTP and passkey lifecycle coverage
 - [x] 3.2 Resolve or explicitly disposition live auth status endpoint health gate ownership, then re-verify with no unresolved sign-off-blocking 5xx
-- [ ] 3.3 Run web auth integration coverage across Finance, Notes, and Rocco for redirect fallback and passkey/OTP flows
-- [ ] 3.4 Run mobile Detox auth flows and fix selector or contract regressions
-- [ ] 3.5 Capture any optional personal-device smoke evidence outside the required completion path
+- [x] 3.3 Run web auth integration coverage across Finance, Notes, and Rocco for redirect fallback and passkey/OTP flows
+- [x] 3.4 Run mobile Detox auth flows and fix selector or contract regressions
+- [x] 3.5 Capture any optional personal-device smoke evidence outside the required completion path
 
 ## 4. Change Closeout
 
-- [ ] 4.1 Mark all engineering criteria complete or explicitly de-scoped with owner approval
-- [ ] 4.2 Record verification outcomes for the required API, web, mobile, and live auth gates
-- [ ] 4.3 Split any remaining operational sign-off work into a separate follow-up if it is still required
+- [x] 4.1 Mark all engineering criteria complete or explicitly de-scoped with owner approval
+- [x] 4.2 Record verification outcomes for the required API, web, mobile, and live auth gates
+- [x] 4.3 Split any remaining operational sign-off work into a separate follow-up if it is still required

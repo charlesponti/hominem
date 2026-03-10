@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { STEP_UP_ACTIONS } from '@hominem/auth/step-up-actions';
 
@@ -125,6 +125,11 @@ export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
   const { callbackRoute = '/auth/passkey/callback', redirectTo } = options;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSupported, setIsSupported] = useState(false);
+
+  useEffect(() => {
+    setIsSupported(typeof navigator !== 'undefined' && !!navigator.credentials);
+  }, []);
 
   const authenticate = useCallback(async (): Promise<PasskeyAuthResult | null> => {
     setIsLoading(true);
@@ -421,7 +426,7 @@ export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
     requireStepUp,
     isLoading,
     error,
-    isSupported: typeof navigator !== 'undefined' && !!navigator.credentials,
+    isSupported,
   };
 }
 

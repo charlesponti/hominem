@@ -20,7 +20,7 @@ import {
   revokeSession,
   rotateRefreshToken,
 } from '../auth/session-store';
-import { consumeTestOtp, getLatestTestOtp, isTestOtpStoreEnabled, recordTestOtp } from '../auth/test-otp-store';
+import { consumeTestOtp, getLatestTestOtp, isTestOtpStoreEnabled } from '../auth/test-otp-store';
 import { issueAccessToken, verifyAccessToken } from '../auth/tokens';
 import { env } from '../env';
 import type { AppEnv } from '../server';
@@ -185,38 +185,6 @@ function isTestOtpRetrievalEnabled() {
   return isTestOtpStoreEnabled();
 }
 
-function generateTestOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
-
-async function findOrCreateEmailOtpUser(input: { email: string; name?: string | undefined }) {
-  const existingUser = await db
-    .selectFrom('users')
-    .selectAll()
-    .where('email', '=', input.email)
-    .executeTakeFirst();
-
-  if (existingUser) {
-    return existingUser;
-  }
-
-  const insertedUser = await db
-    .insertInto('users')
-    .values({
-      email: input.email,
-      ...(input.name ? { name: input.name } : {}),
-      is_admin: false,
-    })
-    .returningAll()
-    .executeTakeFirst();
-
-  if (!insertedUser) {
-    return null;
-  }
-
-  return insertedUser;
-}
-
 async function createEmailOtpAuthResponse(dbUser: {
   id: string;
   email: string;
@@ -281,6 +249,55 @@ async function createEmailOtpAuthResponse(dbUser: {
         },
       },
     );
+  }
+}
+
+async function signInWithBetterAuthEmailOtp(
+  c: Context<AppEnv>,
+  payload: z.infer<typeof emailOtpVerifySchema>,
+) {
+  const response = await callBetterAuthPluginEndpoint({
+    request: c.req.raw,
+    path: '/sign-in/email-otp',
+    method: 'POST',
+    body: payload as Record<string, unknown>,
+  });
+  const body = await response.text();
+
+  if (!response.ok) {
+    return new Response(body, {
+      status: response.status,
+      headers: new Headers(response.headers),
+    });
+  }
+
+  try {
+    const parsed = JSON.parse(body) as { user?: { id?: string } };
+    const userId = parsed.user?.id;
+
+    if (!userId) {
+      return c.json({ error: 'user_id_missing' }, 400);
+    }
+
+    const dbUser = await db
+      .selectFrom('users')
+      .selectAll()
+      .where('id', '=', userId)
+      .executeTakeFirst();
+
+    if (!dbUser) {
+      return c.json({ error: 'user_not_found' }, 400);
+    }
+
+    const authResponse = await createEmailOtpAuthResponse(dbUser);
+    const betterAuthCookies = copyHeadersWithSetCookie(response.headers);
+    const responseHeaders = new Headers(betterAuthCookies);
+    responseHeaders.set('content-type', 'application/json');
+    const authBody = await authResponse.text();
+    return new Response(authBody, { status: 200, headers: responseHeaders });
+  } catch (error) {
+    logger.error('[auth:email-otp] sign-in failed', { error });
+    return c.json({ error: 'sign_in_failed' }, 500);
   }
 }
 
@@ -569,15 +586,6 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
 authRoutes.post('/email-otp/send', zValidator('json', emailOtpRequestSchema), async (c) => {
   try {
     const payload = c.req.valid('json');
-    if (isTestOtpStoreEnabled()) {
-      recordTestOtp({
-        email: payload.email,
-        otp: generateTestOtp(),
-        type: payload.type,
-      });
-      return c.json({ success: true });
-    }
-
     const response = await callBetterAuthPluginEndpoint({
       request: c.req.raw,
       path: '/email-otp/send-verification-otp',
@@ -621,62 +629,10 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
         });
         return c.json({ error: 'otp_replayed' }, 400);
       }
-
-      const dbUser = await findOrCreateEmailOtpUser({
-        email: payload.email,
-        ...(payload.name ? { name: payload.name } : {}),
-      });
-
-      if (!dbUser) {
-        return c.json({ error: 'user_create_failed' }, 500);
-      }
-
-      return await createEmailOtpAuthResponse(dbUser);
+      return signInWithBetterAuthEmailOtp(c, payload);
     }
 
-    const response = await callBetterAuthPluginEndpoint({
-      request: c.req.raw,
-      path: '/sign-in/email-otp',
-      method: 'POST',
-      body: payload as Record<string, unknown>,
-    });
-    const body = await response.text();
-
-    if (!response.ok) {
-      return new Response(body, {
-        status: response.status,
-        headers: new Headers(response.headers),
-      });
-    }
-
-    try {
-      const parsed = JSON.parse(body) as { user?: { id?: string; email?: string; name?: string } };
-      const userId = parsed.user?.id;
-
-      if (!userId) {
-        return c.json({ error: 'user_id_missing' }, 400);
-      }
-
-      const dbUser = await db
-        .selectFrom('users')
-        .selectAll()
-        .where('id', '=', userId)
-        .executeTakeFirst();
-
-      if (!dbUser) {
-        return c.json({ error: 'user_not_found' }, 400);
-      }
-
-      const authResponse = await createEmailOtpAuthResponse(dbUser);
-      const betterAuthCookies = copyHeadersWithSetCookie(response.headers);
-      const responseHeaders = new Headers(betterAuthCookies);
-      responseHeaders.set('content-type', 'application/json');
-      const authBody = await authResponse.text();
-      return new Response(authBody, { status: 200, headers: responseHeaders });
-    } catch (error) {
-      logger.error('[auth:email-otp] sign-in failed', { error });
-      return c.json({ error: 'sign_in_failed' }, 500);
-    }
+    return signInWithBetterAuthEmailOtp(c, payload);
   } catch {
     return c.json({ error: 'email_otp_verify_failed' }, 400);
   }

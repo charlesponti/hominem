@@ -1,4 +1,4 @@
-import { resolveSafeAuthRedirect } from './server'
+import { resolveAuthRedirect } from './redirect-policy'
 
 export const AUTH_CALLBACK_ERROR = 'auth_callback_failed' as const
 
@@ -20,7 +20,7 @@ export function buildAuthCallbackErrorRedirect(input: BuildAuthCallbackErrorRedi
   params.set('error_description', input.description)
   params.set(
     'next',
-    resolveSafeAuthRedirect(input.next, input.fallback, input.allowedPrefixes),
+    resolveAuthRedirect(input.next, input.fallback, input.allowedPrefixes).safeRedirect,
   )
 
   const authPath = input.authPath ?? '/auth'

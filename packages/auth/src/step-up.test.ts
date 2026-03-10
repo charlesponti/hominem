@@ -5,7 +5,7 @@ import { STEP_UP_TTL_SECONDS, grantStepUp, hasRecentStepUp, isFreshPasskeyAuth }
 
 const redisState = vi.hoisted(() => new Map<string, string>())
 
-vi.mock('@hominem/services/redis', () => ({
+vi.mock('../../services/src/redis', () => ({
   redis: {
     set: vi.fn(async (key: string, value: string) => {
       redisState.set(key, value)
