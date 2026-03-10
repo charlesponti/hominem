@@ -26,10 +26,8 @@ COPY tools ./tools
 COPY config ./config
 COPY tsconfig.profiles ./tsconfig.profiles
 
-# Install all dependencies with cache mount reuse
-# Note: Railway requires 's-' prefix on cache mount IDs
-RUN --mount=type=cache,id=s-bun-cache,target=/root/.bun/install/cache \
-    bun install 2>&1 | grep -v "warn\|skipped" || true
+# Install all dependencies
+RUN bun install 2>&1 | grep -v "warn\|skipped" || true
 
 # Compile TypeScript application to pre-optimized standalone binary
 RUN bun build \
