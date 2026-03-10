@@ -181,7 +181,12 @@ export const accountsRoutes = new Hono<AppContext>()
     await getAccountWithOwnershipCheck(input.id, userId)
 
     const now = new Date().toISOString()
-    const updateValues: Record<string, any> = { updated_at: now }
+    const updateValues: {
+      updated_at: string
+      name?: string
+      account_type?: AccountType
+      balance?: number
+    } = { updated_at: now }
 
     if (input.name !== undefined) updateValues.name = input.name
     if (input.type !== undefined) updateValues.account_type = input.type

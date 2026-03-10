@@ -6,6 +6,8 @@ applyTo: 'apps/**'
 
 The VOID design system is an "amoralist" approach to UI, manifesting as a collection of aesthetic constraints designed for efficiency, precision, and a cold, technical atmosphere. This documentation merges all current versions (v1.1, v1.2, and Quickstart) into a single technical standard.
 
+Canonical reference for implementation notes and historical mappings now lives at [docs/DESIGN_SYSTEM.md](/Users/charlesponti/Developer/hominem/docs/DESIGN_SYSTEM.md). Follow this file for one-source audits.
+
 ---
 
 #### 00. Philosophy: The Four Pillars

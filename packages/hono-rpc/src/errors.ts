@@ -6,8 +6,8 @@
  *
  * Pattern:
  * - Service throws specific error type
- * - HTTP endpoint catches and returns ApiResult with correct status code
- * - Client receives typed response
+ * - Route or middleware maps it to the correct HTTP status code
+ * - Clients receive the direct endpoint response shape
  */
 
 export type ErrorCode =

@@ -3,6 +3,7 @@ import {
   deleteVisit,
   getVisitsByPlace,
   getVisitsByUser,
+  type VisitWithPlaceAndTags,
   updateVisit,
 } from '@hominem/events-services';
 import {
@@ -59,6 +60,80 @@ import {
   type PlaceGetVisitStatsOutput,
 } from '../types/places.types';
 
+type DistanceShape = number | { km?: number; miles?: number } | null | undefined;
+
+type SerializablePlace = {
+  id: string;
+  name: string;
+  description: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  imageUrl: string | null;
+  googleMapsId: string;
+  rating: number | null;
+  priceLevel: number | null;
+  photos: string[] | null;
+  types: string[] | null;
+  websiteUri: string | null;
+  phoneNumber: string | null;
+  businessStatus: string | null;
+  openingHours: string | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  distance?: DistanceShape;
+  lists?: PlaceGetNearbyFromListsOutput[number]['lists'];
+};
+
+type SerializedPlace =
+  | PlaceCreateOutput
+  | PlaceUpdateOutput
+  | PlaceGetDetailsByIdOutput
+  | PlaceGetDetailsByGoogleIdOutput
+  | PlaceGetNearbyFromListsOutput[number];
+
+type VisitTag = { id: string; name: string; color: string | null; description: string | null };
+type VisitPerson = { id: string; firstName: string; lastName: string | null };
+type VisitPlace = PlaceGetMyVisitsOutput[number]['place'];
+type VisitUser = PlaceGetPlaceVisitsOutput[number]['user'];
+
+type SerializableVisit = {
+  id: string;
+  title?: string | null;
+  description?: string | null;
+  date: string | Date | null;
+  placeId?: string | null;
+  visitNotes?: string | null;
+  visitRating?: number | null;
+  visitReview?: string | null;
+  tags?: Array<string | VisitTag> | null;
+  people?: Array<string | VisitPerson> | null;
+  userId?: string;
+  createdAt?: string | Date | null;
+  updatedAt?: string | Date | null;
+  place?: VisitPlace | null;
+  user?: VisitUser | null;
+};
+
+type SerializableVisitEnvelope = { event?: SerializableVisit };
+
+type GooglePhotoInput = string | { name?: string | null };
+type GoogleTextValue = { text?: string | null };
+type GooglePlacePrediction = {
+  placeId?: string | null;
+  id?: string | null;
+  structuredFormat?:
+    | {
+        mainText?: GoogleTextValue | null;
+        secondaryText?: GoogleTextValue | null;
+      }
+    | null;
+  text?: GoogleTextValue | null;
+  displayName?: GoogleTextValue | null;
+  formattedAddress?: string | null;
+};
+type GoogleSuggestion = GooglePlacePrediction | { placePrediction?: GooglePlacePrediction | null };
+
 /**
  * Transform place from service layer to API contract
  * Converts Date objects to ISO strings for API response
@@ -67,7 +142,7 @@ import {
  * The service layer may sometimes return a plain number (meters) or an object with km/miles.
  * This function converts those shapes into a stable API contract.
  */
-function transformPlaceToApiFormat(place: any): any {
+function transformPlaceToApiFormat(place: SerializablePlace): SerializedPlace {
   const rawDistance = place.distance;
   let distance: { km: number; miles: number } | null = null;
 
@@ -107,40 +182,86 @@ function transformPlaceToApiFormat(place: any): any {
   };
 }
 
+function normalizeVisitTags(tags: SerializableVisit['tags']): string[] | null {
+  if (!tags || tags.length === 0) {
+    return null;
+  }
+
+  return tags.map((tag) => (typeof tag === 'string' ? tag : tag.name));
+}
+
+function normalizeVisitPeople(people: SerializableVisit['people']): string[] | null {
+  if (!people || people.length === 0) {
+    return null;
+  }
+
+  return people.map((person) =>
+    typeof person === 'string' ? person : `${person.firstName}${person.lastName ? ` ${person.lastName}` : ''}`,
+  );
+}
+
 /**
  * Serialize visit data with Date to string conversion
  */
-function serializeVisit(visit: any): any {
+function serializeVisit(visit: SerializableVisit): PlaceLogVisitOutput | PlaceUpdateVisitOutput {
   return {
     id: visit.id,
-    title: visit.title,
-    description: visit.description,
+    title: visit.title ?? null,
+    description: visit.description ?? null,
     date: visit.date instanceof Date ? visit.date.toISOString() : visit.date,
-    placeId: visit.placeId,
-    visitNotes: visit.visitNotes,
-    visitRating: visit.visitRating,
-    visitReview: visit.visitReview,
-    tags: visit.tags,
-    people: visit.people,
-    userId: visit.userId,
-    createdAt: visit.createdAt instanceof Date ? visit.createdAt.toISOString() : visit.createdAt,
-    updatedAt: visit.updatedAt instanceof Date ? visit.updatedAt.toISOString() : visit.updatedAt,
+    placeId: visit.placeId ?? '',
+    visitNotes: visit.visitNotes ?? null,
+    visitRating: visit.visitRating ?? null,
+    visitReview: visit.visitReview ?? null,
+    tags: normalizeVisitTags(visit.tags),
+    people: normalizeVisitPeople(visit.people),
+    userId: visit.userId ?? '',
+    createdAt:
+      visit.createdAt instanceof Date
+        ? visit.createdAt.toISOString()
+        : (visit.createdAt ?? new Date(0).toISOString()),
+    updatedAt:
+      visit.updatedAt instanceof Date
+        ? visit.updatedAt.toISOString()
+        : (visit.updatedAt ?? new Date(0).toISOString()),
   };
 }
 
 /**
  * Serialize visit from service response (may have nested event object)
  */
-function serializeVisitFromService(data: any): any {
-  const event = data.event || data;
-  return serializeVisit(event);
+function serializeVisitFromService(
+  data: SerializableVisitEnvelope | SerializableVisit | VisitWithPlaceAndTags,
+): PlaceGetMyVisitsOutput[number] | PlaceGetPlaceVisitsOutput[number] {
+  const event = 'event' in data && data.event ? data.event : data;
+  const serialized = serializeVisit(event);
+
+  const place =
+    'place' in event && event.place
+      ? {
+          id: event.place.id,
+          name: event.place.name,
+          address: event.place.address,
+          latitude: event.place.latitude,
+          longitude: event.place.longitude,
+          imageUrl: event.place.imageUrl,
+        }
+      : undefined;
+
+  const user = 'user' in event ? event.user : undefined;
+
+  return {
+    ...serialized,
+    ...(place ? { place } : {}),
+    ...(user ? { user } : {}),
+  };
 }
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
-function extractPhotoReferences(photos: any[]): string[] {
+function extractPhotoReferences(photos: GooglePhotoInput[]): string[] {
   if (!photos || !Array.isArray(photos)) return [];
   return photos
     .map((photo) => {
@@ -152,7 +273,7 @@ function extractPhotoReferences(photos: any[]): string[] {
     .filter((url): url is string => url !== null);
 }
 
-function mapGooglePlaceToPrediction(place: any) {
+function mapGooglePlaceToPrediction(place: GoogleSuggestion) {
   const fromPrediction = place.placePrediction ?? place;
   const structured = fromPrediction.structuredFormat;
   const textObj = fromPrediction.text;
@@ -580,7 +701,10 @@ export const placesRoutes = new Hono<AppContext>()
 
       const visits = await getVisitsByUser(userId);
 
-      return c.json<PlaceGetMyVisitsOutput>(visits.map(serializeVisitFromService), 200);
+      return c.json<PlaceGetMyVisitsOutput>(
+        visits.map((visit) => serializeVisitFromService(visit) as PlaceGetMyVisitsOutput[number]),
+        200,
+      );
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -602,7 +726,12 @@ export const placesRoutes = new Hono<AppContext>()
 
         const visits = await getVisitsByPlace(input.placeId);
 
-        return c.json<PlaceGetPlaceVisitsOutput>(visits.map(serializeVisitFromService), 200);
+        return c.json<PlaceGetPlaceVisitsOutput>(
+          visits.map(
+            (visit) => serializeVisitFromService(visit) as PlaceGetPlaceVisitsOutput[number],
+          ),
+          200,
+        );
       } catch (err) {
         if (isServiceError(err)) {
           throw err;
@@ -622,8 +751,12 @@ export const placesRoutes = new Hono<AppContext>()
       const { id, ...rest } = input;
 
       // Filter out undefined values for exactOptionalPropertyTypes
-      const updateData: Record<string, any> = {};
-      Object.entries(rest).forEach(([key, value]) => {
+      const updateData: Partial<typeof rest> = {};
+      const entries = Object.entries(rest) as Array<
+        [keyof typeof rest, (typeof rest)[keyof typeof rest]]
+      >;
+
+      entries.forEach(([key, value]) => {
         if (value !== undefined) {
           updateData[key] = value;
         }
@@ -677,17 +810,17 @@ export const placesRoutes = new Hono<AppContext>()
 
       // Calculate stats
       const totalVisits = visits.length;
-      const normalizedVisits = visits.map((v: any) => v.event || v);
+      const normalizedVisits = visits.map((visit) =>
+        'event' in visit && visit.event ? visit.event : visit,
+      );
       const ratings = normalizedVisits
-        .filter((v: any) => v.visitRating)
-        .map((v: any) => v.visitRating as number);
+        .map((visit) => visit.visitRating)
+        .filter((rating): rating is number => typeof rating === 'number');
       const averageRating =
-        ratings.length > 0
-          ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length
-          : undefined;
+        ratings.length > 0 ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : undefined;
 
       const sortedVisits = normalizedVisits.sort(
-        (a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        (a, b) => new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime(),
       );
       const lastVisitDate = sortedVisits[0]?.date;
       const firstVisitDate = sortedVisits[sortedVisits.length - 1]?.date;
@@ -707,12 +840,13 @@ export const placesRoutes = new Hono<AppContext>()
       const tagCounts = new Map<string, number>();
       const peopleCounts = new Map<string, number>();
 
-      visits.forEach((visit: any) => {
-        visit.tags?.forEach((tag: any) => {
-          tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+      visits.forEach((visit) => {
+        visit.tags?.forEach((tag) => {
+          tagCounts.set(tag.name, (tagCounts.get(tag.name) || 0) + 1);
         });
-        visit.people?.forEach((person: any) => {
-          peopleCounts.set(person, (peopleCounts.get(person) || 0) + 1);
+        visit.people?.forEach((person) => {
+          const personName = `${person.firstName}${person.lastName ? ` ${person.lastName}` : ''}`;
+          peopleCounts.set(personName, (peopleCounts.get(personName) || 0) + 1);
         });
       });
 

@@ -118,13 +118,19 @@ export const tasksRoutes = new Hono<AppContext>()
       // Verify ownership first
       await getTaskWithOwnershipCheck(id, userId)
 
-      const updateData: Record<string, any> = {}
+      const updateData: {
+        title?: string
+        description?: string | null
+        status?: string
+        priority?: string
+        due_date?: string | null
+        updated_at: string
+      } = { updated_at: new Date().toISOString() }
       if (data.title !== undefined) updateData.title = data.title
       if (data.description !== undefined) updateData.description = data.description
       if (data.status !== undefined) updateData.status = data.status
       if (data.priority !== undefined) updateData.priority = data.priority
       if (data.dueDate !== undefined) updateData.due_date = data.dueDate
-      updateData.updated_at = new Date().toISOString()
 
       const updatedTask = await db
         .updateTable('tasks')

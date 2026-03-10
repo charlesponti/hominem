@@ -95,7 +95,12 @@ export const bookmarksRoutes = new Hono<AppContext>()
       // Verify ownership first
       await getBookmarkWithOwnershipCheck(id, userId)
 
-      const updateData: any = {}
+      const updateData: {
+        url?: string
+        title?: string | null
+        description?: string | null
+        folder?: string | null
+      } = {}
       if (data.url !== undefined) updateData.url = data.url
       if (data.title !== undefined) updateData.title = data.title ?? null
       if (data.description !== undefined) updateData.description = data.description ?? null

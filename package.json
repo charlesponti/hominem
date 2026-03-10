@@ -25,6 +25,7 @@
     "packages/*"
   ],
   "scripts": {
+    "backfill:place-images": "bun run --filter @hominem/places-services backfill:place-images",
     "build": "turbo run build",
     "check": "bun run validate-db-imports && bun run validate-db-migrations && bun run typecheck && bun run lint",
     "clean": "turbo run clean",

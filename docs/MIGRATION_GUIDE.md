@@ -2,7 +2,9 @@
 
 ## Quick Start
 
-The old VOID design system has been replaced with a unified Ponti Studios design system. Here's how to migrate your code.
+## Purpose
+
+Use this guide for tactical migration of existing code patterns to the current canonical VOID design system defined in [docs/DESIGN_SYSTEM.md](/Users/charlesponti/Developer/hominem/docs/DESIGN_SYSTEM.md). This is the canonical reference for design audits.
 
 ## Before and After Examples
 
