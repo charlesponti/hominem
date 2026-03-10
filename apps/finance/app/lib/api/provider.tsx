@@ -1,8 +1,11 @@
 import { useAuthContext, useSafeAuth } from '@hominem/auth';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
+import type { CreateClient } from '@hominem/hono-client';
 import { createHonoClient } from '@hominem/hono-rpc/client';
-import { useCallback, useContext } from 'react';
+import { useCallback } from 'react';
 import type { ReactNode } from 'react';
+
+const createAppHonoClient: CreateClient = (baseUrl, options) => createHonoClient(baseUrl, options);
 
 /**
  * Hono RPC Provider Inner for Finance App
@@ -27,7 +30,7 @@ function HonoProviderInner({ children, baseUrl }: HonoProviderProps) {
     <BaseHonoProvider
       config={{
         baseUrl,
-        createClient: createHonoClient,
+        createClient: createAppHonoClient,
         getAuthToken,
         onError: (error) => {
           console.error('Hono RPC Error:', error);
@@ -58,7 +61,7 @@ export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
       <BaseHonoProvider
         config={{
           baseUrl,
-          createClient: createHonoClient,
+          createClient: createAppHonoClient,
           getAuthToken: async () => null,
           onError: (error) => {
             console.error('Hono RPC Error:', error);

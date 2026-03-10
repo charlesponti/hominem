@@ -72,7 +72,7 @@ const getCachedPlace = (
  */
 const useCreatePlace = (options?: HonoMutationOptions<PlaceCreateOutput, PlaceCreateInput>) => {
   const utils = useHonoUtils();
-  return useHonoMutation(
+  return useHonoMutation<PlaceCreateOutput, PlaceCreateInput>(
     async (client: HonoClient, variables: PlaceCreateInput) => {
       const res = await client.api.places.create.$post({ json: variables });
       return res.json();
