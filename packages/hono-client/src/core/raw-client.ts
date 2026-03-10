@@ -1,20 +1,12 @@
-import type { HonoClientOptions, HonoClientType } from '@hominem/hono-rpc/client';
+import { createHonoClient as createRpcClient } from '@hominem/hono-rpc/client';
+import type { HonoClientType } from '@hominem/hono-rpc/client';
 
-export type HonoClientInstance = HonoClientType;
-export type HonoClient = HonoClientInstance;
+import type { ClientConfig } from './api-client';
 
-export type CreateClient = (baseUrl: string, options?: HonoClientOptions) => HonoClientInstance;
+export type RawHonoClient = HonoClientType;
 
-export interface ClientConfig {
-  baseUrl: string;
-  getAuthToken: () => Promise<string | null>;
-  createClient: CreateClient;
-  onError?: (error: Error) => void;
-}
-
-// Factory to create a configured Hono client with auth + error handling.
-export function createHonoClient(config: ClientConfig): HonoClientInstance {
-  return config.createClient(config.baseUrl, {
+export function createRawHonoClient(config: ClientConfig): RawHonoClient {
+  return createRpcClient(config.baseUrl, {
     fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
       const token = await config.getAuthToken();
       const headers = new Headers(init?.headers);
@@ -30,7 +22,6 @@ export function createHonoClient(config: ClientConfig): HonoClientInstance {
           credentials: 'include',
         });
 
-        // Throw on non-OK responses so React Query can handle them as errors
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ error: 'Request failed' }));
           const errorMessage = errorData.error || `Request failed with status ${response.status}`;

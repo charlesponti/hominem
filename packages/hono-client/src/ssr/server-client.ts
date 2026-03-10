@@ -1,4 +1,4 @@
-import type { HonoClientInstance } from '../core/client'
+import type { HonoClientInstance } from '../core/api-client'
 
 import { createHonoClient } from '@hominem/hono-rpc/client'
 
