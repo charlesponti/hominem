@@ -1,14 +1,14 @@
 ## 1. Mobile Verification
 
-- [ ] 1.1 Run and stabilize the remaining mobile auth suite gates and smoke flows
-- [ ] 1.2 Verify Maestro and personal-device auth workflows are deterministic and documented
+- [x] 1.1 Run and stabilize the layered mobile auth verification gates across `jest-expo`, React Native Testing Library, `expo-router/testing-library`, deterministic variant-specific native generation, retained native-critical Detox smoke flows, and the personal-device readiness checklist
+- [x] 1.2 Document which auth scenarios are covered by local JS tests, which require Detox, and how personal-device verification fits into the final readiness gate
 
 ## 2. Security And Operations
 
-- [ ] 2.1 Complete the remaining security hardening and operational runbook items
-- [ ] 2.2 Confirm incident-response and emergency auth controls are documented and verified
+- [x] 2.1 Complete the remaining security hardening and operational runbook items
+- [x] 2.2 Confirm incident-response and emergency auth controls are documented and verified
 
 ## 3. Closeout
 
-- [ ] 3.1 Publish the final readiness matrix and resolve or explicitly de-scope remaining items
+- [x] 3.1 Publish the final readiness matrix and resolve or explicitly de-scope remaining items
 - [ ] 3.2 Sign off auth mobile production readiness after the verification gates pass

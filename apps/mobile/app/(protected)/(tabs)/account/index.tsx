@@ -6,6 +6,7 @@ import { Button } from '~/components/Button';
 import TextInput from '~/components/text-input';
 import { Text } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
+import { MOBILE_PASSKEY_ENABLED } from '~/utils/constants';
 import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
 
 function Account() {
@@ -76,6 +77,11 @@ function Account() {
   }, [currentUser]);
 
   useEffect(() => {
+    if (!MOBILE_PASSKEY_ENABLED) {
+      setPasskeys([])
+      return
+    }
+
     if (isSignedIn) {
       listPasskeys()
         .then(setPasskeys)
@@ -132,56 +138,57 @@ function Account() {
             </View>
           ) : null}
 
-          {/* Passkey management */}
-          <View style={{ rowGap: 8 }}>
-            <Text variant="cardHeader" color="foreground">
-              PASSKEYS
-            </Text>
-            {passkeys.length === 0 ? (
-              <Text color="mutedForeground" style={{ fontSize: 12 }}>
-                No passkeys registered.
+          {MOBILE_PASSKEY_ENABLED ? (
+            <View style={{ rowGap: 8 }}>
+              <Text variant="cardHeader" color="foreground">
+                PASSKEYS
               </Text>
-            ) : (
-              passkeys.map((pk) => (
-                <View
-                  key={pk.id}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    borderWidth: 1,
-                    borderColor: '#333',
-                    padding: 8,
-                  }}
-                >
-                  <Text color="foreground" style={{ fontSize: 12 }}>
-                    {pk.name}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => onDeletePasskeyPress(pk.id, pk.name)}
-                    accessibilityLabel={`Remove passkey ${pk.name}`}
-                    accessibilityRole="button"
+              {passkeys.length === 0 ? (
+                <Text color="mutedForeground" style={{ fontSize: 12 }}>
+                  No passkeys registered.
+                </Text>
+              ) : (
+                passkeys.map((pk) => (
+                  <View
+                    key={pk.id}
                     style={{
-                      minHeight: 44,
-                      minWidth: 44,
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
                       alignItems: 'center',
-                      justifyContent: 'center',
+                      borderWidth: 1,
+                      borderColor: '#333',
+                      padding: 8,
                     }}
                   >
-                    <Text color="destructive" style={{ fontSize: 12 }}>
-                      [REMOVE]
+                    <Text color="foreground" style={{ fontSize: 12 }}>
+                      {pk.name}
                     </Text>
-                  </TouchableOpacity>
-                </View>
-              ))
-            )}
-            <Button
-              title={isPasskeyLoading ? '[ADDING...]' : '[ADD_PASSKEY]'}
-              disabled={isPasskeyLoading}
-              isLoading={isPasskeyLoading}
-              onPress={onAddPasskeyPress}
-            />
-          </View>
+                    <TouchableOpacity
+                      onPress={() => onDeletePasskeyPress(pk.id, pk.name)}
+                      accessibilityLabel={`Remove passkey ${pk.name}`}
+                      accessibilityRole="button"
+                      style={{
+                        minHeight: 44,
+                        minWidth: 44,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text color="destructive" style={{ fontSize: 12 }}>
+                        [REMOVE]
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
+              <Button
+                title={isPasskeyLoading ? '[ADDING...]' : '[ADD_PASSKEY]'}
+                disabled={isPasskeyLoading}
+                isLoading={isPasskeyLoading}
+                onPress={onAddPasskeyPress}
+              />
+            </View>
+          ) : null}
         </View>
       </ScrollView>
 

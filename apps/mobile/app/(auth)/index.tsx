@@ -17,7 +17,7 @@ import TextInput from '~/components/text-input';
 import { Box, Text } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidEmail, normalizeEmail } from '~/utils/auth/validation';
-import { E2E_TESTING } from '~/utils/constants';
+import { E2E_TESTING, MOBILE_PASSKEY_ENABLED } from '~/utils/constants';
 import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
 
 export function AuthScreen() {
@@ -82,6 +82,7 @@ export function AuthScreen() {
   }
 
   const displayError = authError || passkeyError;
+  const canUsePasskeys = MOBILE_PASSKEY_ENABLED && isPasskeySupported
 
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
@@ -136,7 +137,7 @@ export function AuthScreen() {
                 title="SEND_CODE"
                 style={styles.primaryButton}
               />
-              {isPasskeySupported && (
+              {canUsePasskeys && (
                 <TouchableOpacity
                   onPress={handlePasskeySignIn}
                   disabled={isSubmitting}
@@ -148,7 +149,7 @@ export function AuthScreen() {
                   </Text>
                 </TouchableOpacity>
               )}
-              {E2E_TESTING ? (
+              {E2E_TESTING && MOBILE_PASSKEY_ENABLED ? (
                 <TouchableOpacity
                   onPress={async () => {
                     try {
@@ -170,7 +171,7 @@ export function AuthScreen() {
                   testID="auth-e2e-passkey-success"
                 />
               ) : null}
-              {E2E_TESTING ? (
+              {E2E_TESTING && MOBILE_PASSKEY_ENABLED ? (
                 <TouchableOpacity
                   onPress={async () => {
                     try {

@@ -1,5 +1,5 @@
 import React from 'react'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
 
 import { AuthScreen } from '../../app/(auth)/index'
 import { VerifyScreen } from '../../app/(auth)/verify'
@@ -9,6 +9,8 @@ const mockCompletePasskeySignIn = jest.fn()
 const mockRequestEmailOtp = jest.fn()
 const mockVerifyEmailOtp = jest.fn()
 const mockPasskeySignIn = jest.fn()
+let mockIsE2ETesting = false
+let mockIsMobilePasskeyEnabled = true
 
 jest.mock('expo-router', () => ({
   Redirect: ({ href }: { href: string }) => href,
@@ -33,6 +35,15 @@ jest.mock('../../utils/use-mobile-passkey-auth', () => ({
     error: null,
     isSupported: true,
   }),
+}))
+
+jest.mock('../../utils/constants', () => ({
+  get E2E_TESTING() {
+    return mockIsE2ETesting
+  },
+  get MOBILE_PASSKEY_ENABLED() {
+    return mockIsMobilePasskeyEnabled
+  },
 }))
 
 jest.mock('../../theme', () => ({
@@ -100,6 +111,8 @@ jest.mock('../../components/error-boundary', () => ({
 describe('auth rendered screens', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockIsE2ETesting = false
+    mockIsMobilePasskeyEnabled = true
   })
 
   it('shows validation error when email is empty', async () => {
@@ -124,7 +137,13 @@ describe('auth rendered screens', () => {
       expect(mockRequestEmailOtp).toHaveBeenCalledWith('user@example.com')
     })
 
-    jest.runAllTimers()
+    act(() => {
+      jest.runAllTimers()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-send-otp')).not.toBeDisabled()
+    })
 
     expect(mockReplace).toHaveBeenCalledWith('/(auth)/verify?email=user%40example.com')
     jest.useRealTimers()
@@ -153,6 +172,10 @@ describe('auth rendered screens', () => {
         email: 'mobile-test@hominem.test',
         otp: '123456',
       })
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-verify-otp')).not.toBeDisabled()
     })
   })
 
@@ -209,7 +232,13 @@ describe('auth rendered screens', () => {
 
     expect(screen.getByTestId('auth-send-otp')).toBeDisabled()
 
-    resolveOtp()
+    await act(async () => {
+      resolveOtp()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-send-otp')).not.toBeDisabled()
+    })
   })
 
   it('disables verify button while OTP verify is in-flight', async () => {
@@ -222,7 +251,13 @@ describe('auth rendered screens', () => {
 
     expect(screen.getByTestId('auth-verify-otp')).toBeDisabled()
 
-    resolveVerify()
+    await act(async () => {
+      resolveVerify()
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-verify-otp')).not.toBeDisabled()
+    })
   })
 
   it('shows passkey CTA when supported and invokes passkey sign-in', async () => {
@@ -245,5 +280,15 @@ describe('auth rendered screens', () => {
       expect(mockPasskeySignIn).toHaveBeenCalledTimes(1)
       expect(mockCompletePasskeySignIn).toHaveBeenCalledTimes(1)
     })
+  })
+
+  it('hides passkey CTA when the mobile passkey flag is disabled', () => {
+    mockIsMobilePasskeyEnabled = false
+
+    render(<AuthScreen />)
+
+    expect(screen.queryByTestId('auth-passkey-button')).toBeNull()
+    expect(screen.queryByTestId('auth-e2e-passkey-success')).toBeNull()
+    expect(screen.queryByTestId('auth-e2e-passkey-cancel')).toBeNull()
   })
 })

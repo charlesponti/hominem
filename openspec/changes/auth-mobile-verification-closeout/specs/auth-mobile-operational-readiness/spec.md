@@ -5,7 +5,29 @@ The auth platform SHALL complete its remaining mobile verification gates before 
 
 #### Scenario: Final mobile verification runs
 - **WHEN** the mobile auth closeout work is executed
-- **THEN** the required auth test suites, smoke flows, and device checks are run and reviewed
+- **THEN** the required layered auth verification flows are run and reviewed, including `jest-expo` plus React Native Testing Library coverage, `expo-router/testing-library` route checks, retained native-critical Detox checks, and a personal-device smoke checklist for hardware-specific validation
+
+### Requirement: Mobile auth verification SHALL avoid paid Expo workflow dependencies
+The auth platform SHALL use a verification path that does not require paid Expo workflow features for mobile auth readiness.
+
+#### Scenario: Team selects mobile end-to-end coverage
+- **WHEN** the team defines or updates auth end-to-end verification
+- **THEN** the repo-standard path uses local JS test harnesses, retained Detox simulator coverage, and personal-device smoke validation instead of paid Expo workflow features
+
+### Requirement: Mobile runtime configuration SHALL generate deterministic variant-specific native settings
+The mobile runtime SHALL generate native projects that match the intended Expo / React Native runtime model for each app variant.
+
+#### Scenario: Development build is generated
+- **WHEN** `APP_VARIANT=dev` is used for native generation
+- **THEN** the generated iOS project includes `expo-dev-client` support, local networking support, Metro-driven bundle loading, and updates disabled for that runtime
+
+#### Scenario: E2E build is generated
+- **WHEN** `APP_VARIANT=e2e` is used for native generation
+- **THEN** the generated iOS project excludes `expo-dev-client`, remains deterministic for Detox, and disables updates for that runtime
+
+#### Scenario: Variant switches between dev and e2e
+- **WHEN** the team regenerates native iOS artifacts for a different variant
+- **THEN** the repo-native prebuild path replaces stale native settings so the Podfile, Expo plist, app identity, and generated project name match the requested variant
 
 ### Requirement: Auth operations SHALL document emergency controls
 The auth platform SHALL document and verify the emergency controls needed for production response.

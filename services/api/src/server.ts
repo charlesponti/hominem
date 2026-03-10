@@ -35,6 +35,26 @@ export type AppEnv = {
   };
 };
 
+function getAppleAppSiteAssociation() {
+  const teamId = env.APPLE_TEAM_ID.trim()
+  const bundleIdentifiers = [
+    'com.pontistudios.hakumi',
+    'com.pontistudios.hakumi.preview',
+    'com.pontistudios.hakumi.dev',
+    'com.pontistudios.hakumi.e2e',
+  ]
+
+  const appIds = teamId
+    ? bundleIdentifiers.map((bundleIdentifier) => `${teamId}.${bundleIdentifier}`)
+    : []
+
+  return {
+    webcredentials: {
+      apps: appIds,
+    },
+  }
+}
+
 export function createServer() {
   const app = new Hono<AppEnv>();
 
@@ -78,6 +98,20 @@ export function createServer() {
 
   app.get('/.well-known/jwks.json', async (c) => {
     return c.json(await getJwks());
+  });
+
+  app.get('/.well-known/apple-app-site-association', (c) => {
+    return c.json(getAppleAppSiteAssociation(), 200, {
+      'cache-control': 'public, max-age=300',
+      'content-type': 'application/json',
+    });
+  });
+
+  app.get('/apple-app-site-association', (c) => {
+    return c.json(getAppleAppSiteAssociation(), 200, {
+      'cache-control': 'public, max-age=300',
+      'content-type': 'application/json',
+    });
   });
 
   // Register other route handlers

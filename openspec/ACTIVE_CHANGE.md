@@ -1,6 +1,12 @@
 # Active OpenSpec Change
 
-active_change: none
+active_change: auth-mobile-verification-closeout
+
+artifacts:
+- openspec/changes/auth-mobile-verification-closeout/proposal.md
+- openspec/changes/auth-mobile-verification-closeout/design.md
+- openspec/changes/auth-mobile-verification-closeout/specs/auth-mobile-operational-readiness/spec.md
+- openspec/changes/auth-mobile-verification-closeout/tasks.md
 
 ## Enforcement
 

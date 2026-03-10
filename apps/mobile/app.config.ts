@@ -4,50 +4,38 @@ type AppVariant = 'dev' | 'e2e' | 'preview' | 'production'
 
 interface VariantConfig {
   bundleIdentifier: string
-  name: string
+  displayName: string
   updatesChannel: string | null
-  appScheme: string
+  scheme: string
   usesDevClient: boolean
 }
 
-const APP_VARIANTS: Record<AppVariant, VariantConfig> = {
-  dev: {
-    bundleIdentifier: 'com.pontistudios.hakumi.dev',
-    name: 'hakumi-dev',
-    updatesChannel: 'development',
-    appScheme: 'hakumi-dev',
-    usesDevClient: true,
-  },
-  e2e: {
-    bundleIdentifier: 'com.pontistudios.hakumi.e2e',
-    name: 'hakumi-e2e',
-    updatesChannel: null,
-    appScheme: 'hakumi-e2e',
-    usesDevClient: false,
-  },
-  preview: {
-    bundleIdentifier: 'com.pontistudios.hakumi.preview',
-    name: 'hakumi-preview',
-    updatesChannel: 'preview',
-    appScheme: 'hakumi-preview',
-    usesDevClient: false,
-  },
-  production: {
-    bundleIdentifier: 'com.pontistudios.hakumi',
-    name: 'hakumi',
-    updatesChannel: 'production',
-    appScheme: 'hakumi',
-    usesDevClient: false,
-  },
+const { getAppVariant, getAppVariantConfig } = require('./config/appVariant') as {
+  getAppVariant: () => AppVariant
+  getAppVariantConfig: (rawVariant?: string) => VariantConfig
 }
 
-function getAppVariant(): AppVariant {
-  const rawVariant = String(process.env.APP_VARIANT ?? 'dev')
-  if (rawVariant in APP_VARIANTS) {
-    return rawVariant as AppVariant
+function getAssociatedDomains() {
+  const passkeyRpDomain = process.env.EXPO_PUBLIC_PASSKEY_RP_DOMAIN?.trim() || 'api.ponti.io'
+
+  return [`webcredentials:${passkeyRpDomain}`]
+}
+
+function getUpdatesConfig(variantConfig: VariantConfig): ExpoConfig['updates'] {
+  if (variantConfig.usesDevClient || variantConfig.updatesChannel === null) {
+    return {
+      enabled: false,
+      checkAutomatically: 'NEVER',
+      fallbackToCacheTimeout: 0,
+    }
   }
 
-  throw new Error(`Unsupported APP_VARIANT: ${rawVariant}`)
+  return {
+    url: 'https://u.expo.dev/4dfac82b-644f-4ff3-be42-e8f941287aa1',
+    requestHeaders: {
+      'expo-channel-name': variantConfig.updatesChannel,
+    },
+  }
 }
 
 function allowsLocalNetworking(appVariant: AppVariant) {
@@ -56,7 +44,7 @@ function allowsLocalNetworking(appVariant: AppVariant) {
 
 export default ({ config }: ConfigContext) => {
   const appVariant = getAppVariant()
-  const variantConfig = APP_VARIANTS[appVariant]
+  const variantConfig = getAppVariantConfig(appVariant)
   const plugins: ExpoConfig['plugins'] = [
     'expo-router',
     './plugins/with-expo-dev-client-exclusion',
@@ -65,11 +53,11 @@ export default ({ config }: ConfigContext) => {
       {
         ios: {
           infoPlist: {
-              NSAppTransportSecurity: {
-                NSAllowsArbitraryLoads: false,
-                NSAllowsLocalNetworking: allowsLocalNetworking(appVariant),
-                NSExceptionDomains: {
-                  'railway.app': {
+            NSAppTransportSecurity: {
+              NSAllowsArbitraryLoads: false,
+              NSAllowsLocalNetworking: allowsLocalNetworking(appVariant),
+              NSExceptionDomains: {
+                'railway.app': {
                   NSExceptionRequiresForwardSecrecy: true,
                   NSIncludesSubdomains: true,
                 },
@@ -109,10 +97,10 @@ export default ({ config }: ConfigContext) => {
 
   return {
     ...config,
-    name: variantConfig.name,
+    name: variantConfig.displayName,
     slug: 'hakumi',
     version: '1.0.0',
-    scheme: variantConfig.appScheme,
+    scheme: variantConfig.scheme,
     owner: 'cponti44',
     orientation: 'portrait',
     icon: './assets/icon.png',
@@ -135,6 +123,8 @@ export default ({ config }: ConfigContext) => {
     },
     newArchEnabled: true,
     ios: {
+      appleTeamId: process.env.EXPO_APPLE_TEAM_ID,
+      associatedDomains: getAssociatedDomains(),
       bundleIdentifier: variantConfig.bundleIdentifier,
       supportsTablet: true,
       infoPlist: {
@@ -150,8 +140,8 @@ export default ({ config }: ConfigContext) => {
     },
     extra: {
       appVariant,
-      appScheme: variantConfig.appScheme,
-      isDevClient: String(variantConfig.usesDevClient),
+      appScheme: variantConfig.scheme,
+      isDevClient: variantConfig.usesDevClient,
       apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL,
       e2eTesting: process.env.EXPO_PUBLIC_E2E_TESTING,
       e2eAuthSecret: process.env.EXPO_PUBLIC_E2E_AUTH_SECRET,
@@ -159,6 +149,7 @@ export default ({ config }: ConfigContext) => {
       aiSdkChatMobileEnabled: process.env.EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED,
       aiSdkTranscribeEnabled: process.env.EXPO_PUBLIC_AI_SDK_TRANSCRIBE_ENABLED,
       aiSdkSpeechEnabled: process.env.EXPO_PUBLIC_AI_SDK_SPEECH_ENABLED,
+      mobilePasskeyEnabled: process.env.EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED,
       eas: {
         projectId: '4dfac82b-644f-4ff3-be42-e8f941287aa1',
       },
@@ -166,14 +157,6 @@ export default ({ config }: ConfigContext) => {
     runtimeVersion: {
       policy: 'fingerprint',
     },
-    updates:
-      variantConfig.updatesChannel === null
-        ? undefined
-        : {
-            url: 'https://u.expo.dev/4dfac82b-644f-4ff3-be42-e8f941287aa1',
-            requestHeaders: {
-              'expo-channel-name': variantConfig.updatesChannel,
-            },
-          },
+    updates: getUpdatesConfig(variantConfig),
   }
 }

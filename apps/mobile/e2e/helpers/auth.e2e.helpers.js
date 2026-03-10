@@ -56,12 +56,17 @@ async function waitForAuthState(state, timeout = 30000) {
 }
 
 async function launchMobileApp() {
-  await device.launchApp({ newInstance: true, delete: true })
+  await device.clearKeychain()
+  await device.launchApp()
   await device.disableSynchronization()
 }
 
 async function stopMobileAppSync() {
-  await device.enableSynchronization()
+  try {
+    await device.enableSynchronization()
+  } catch {
+    return
+  }
 }
 
 async function fetchLatestOtp(email) {

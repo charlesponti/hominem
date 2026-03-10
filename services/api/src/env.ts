@@ -23,6 +23,8 @@ const serverSchema = z.object({
   AUTH_AUDIENCE: z.string().default('hominem-api'),
   BETTER_AUTH_SECRET: z.string().default('dev-better-auth-secret-change-me'),
   BETTER_AUTH_URL: z.url().default('http://localhost:3000'),
+  AUTH_PASSKEY_RP_ID: z.string().default('api.ponti.io'),
+  AUTH_PASSKEY_ORIGIN: z.url().default('https://api.ponti.io'),
   AUTH_COOKIE_DOMAIN: z.string().default(''),
   AUTH_CAPTCHA_PROVIDER: z
     .enum(['cloudflare-turnstile', 'google-recaptcha', 'hcaptcha', 'captchafox'])
@@ -57,6 +59,7 @@ const serverSchema = z.object({
   // SERVICES
   APPLE_CLIENT_ID: z.string().default(''),
   APPLE_CLIENT_SECRET: z.string().default(''),
+  APPLE_TEAM_ID: z.string().default(''),
   GOOGLE_API_KEY: z.string().default(''),
   GOOGLE_CLIENT_ID: z.string().default(''),
   GOOGLE_CLIENT_SECRET: z.string().default(''),

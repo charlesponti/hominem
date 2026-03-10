@@ -1,14 +1,15 @@
-const isE2eVariant = process.env.APP_VARIANT === 'e2e'
+const { getAppVariantConfig } = require('./config/appVariant')
+const variantConfig = getAppVariantConfig()
 
 module.exports = {
-  dependencies: isE2eVariant
-    ? {
+  dependencies: variantConfig.usesDevClient
+    ? {}
+    : {
         'expo-dev-client': {
           platforms: {
             ios: null,
             android: null,
           },
         },
-      }
-    : {},
+      },
 }
