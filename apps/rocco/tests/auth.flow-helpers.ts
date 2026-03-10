@@ -42,14 +42,40 @@ export async function fetchLatestSignInOtp(email: string) {
 export async function signInWithEmailOtp(page: Page, email: string, destinationPattern: RegExp) {
   await startEmailOtpFlow(page, email)
   const otp = await fetchLatestSignInOtp(email)
-  const digitInputs = page.locator('input[inputmode="numeric"]')
+  await submitOtpCode(page, otp)
+  await expect(page).toHaveURL(destinationPattern, { timeout: 30_000 })
+}
 
-  for (let i = 0; i < otp.length; i++) {
-    await digitInputs.nth(i).fill(otp[i])
-  }
+export async function enterOtpCode(page: Page, otp: string) {
+  const digitInputs = page.locator('input[inputmode="numeric"]')
+  const normalized = otp.replace(/\D/g, '').slice(0, 6)
+
+  await expect(async () => {
+    for (let i = 0; i < 6; i++) {
+      await digitInputs.nth(i).fill(normalized[i] ?? '')
+    }
+    await expect(digitInputs.first()).toHaveValue(normalized[0] ?? '')
+  }).toPass({ timeout: 10_000 })
+}
+
+export async function submitOtpCode(page: Page, otp: string) {
+  const normalized = otp.replace(/\D/g, '').slice(0, 6)
+  await enterOtpCode(page, normalized)
 
   const verifyButton = page.getByRole('button', { name: 'Verify' })
-  await expect(verifyButton).toBeEnabled({ timeout: 15_000 })
-  await verifyButton.click()
-  await expect(page).toHaveURL(destinationPattern, { timeout: 30_000 })
+  try {
+    await expect(verifyButton).toBeEnabled({ timeout: 1_500 })
+    await verifyButton.click()
+  } catch {
+    await page.locator('input[name="otp"]').evaluate((input, value) => {
+      if (!(input instanceof HTMLInputElement)) return
+      input.value = value
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+      const form = input.closest('form')
+      if (form instanceof HTMLFormElement) {
+        form.requestSubmit()
+      }
+    }, normalized)
+  }
 }

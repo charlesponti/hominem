@@ -1,5 +1,7 @@
-import { resolveSafeAuthRedirect } from '@hominem/auth/server';
+import { buildAuthCallbackErrorRedirect, resolveSafeAuthRedirect } from '@hominem/auth/server';
 import { redirect } from 'react-router';
+
+const ALLOWED_REDIRECT_PREFIXES = ['/', '/chat', '/notes', '/account', '/settings']
 
 interface PasskeyCallbackPayload {
   accessToken: string;
@@ -17,14 +19,28 @@ export async function action({ request }: { request: Request }) {
   try {
     payload = (await request.json()) as PasskeyCallbackPayload;
   } catch {
-    return new Response(JSON.stringify({ error: 'invalid_json' }), { status: 400 });
+    return redirect(
+      buildAuthCallbackErrorRedirect({
+        next: null,
+        fallback: '/notes',
+        allowedPrefixes: ALLOWED_REDIRECT_PREFIXES,
+        description: 'Passkey sign-in failed. Please try again.',
+      }),
+    );
   }
 
-  const next = resolveSafeAuthRedirect(payload.next, '/notes');
+  const next = resolveSafeAuthRedirect(payload.next, '/notes', ALLOWED_REDIRECT_PREFIXES);
   const { accessToken } = payload;
 
   if (!accessToken) {
-    return new Response(JSON.stringify({ error: 'missing_access_token' }), { status: 400 });
+    return redirect(
+      buildAuthCallbackErrorRedirect({
+        next: payload.next,
+        fallback: '/notes',
+        allowedPrefixes: ALLOWED_REDIRECT_PREFIXES,
+        description: 'Passkey sign-in failed. Please try again.',
+      }),
+    );
   }
 
   const headers = new Headers();

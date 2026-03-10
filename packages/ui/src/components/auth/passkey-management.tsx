@@ -20,13 +20,14 @@ interface PasskeyManagementProps {
    * Should invoke the platform WebAuthn registration flow.
    */
   onAdd: () => Promise<boolean>;
+  onDelete: (id: string) => Promise<boolean>;
 }
 
 /**
  * Passkey management panel — lists registered passkeys, lets users add or
  * delete them. Designed to be embedded in a `/settings/security` page.
  */
-export function PasskeyManagement({ apiUrl, onAdd }: PasskeyManagementProps) {
+export function PasskeyManagement({ apiUrl, onAdd, onDelete }: PasskeyManagementProps) {
   const [passkeys, setPasskeys] = useState<Passkey[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -84,13 +85,8 @@ export function PasskeyManagement({ apiUrl, onAdd }: PasskeyManagementProps) {
       setDeletingId(id);
       setError(null);
       try {
-        const res = await fetch(`${base}/api/auth/passkey/delete`, {
-          method: 'DELETE',
-          credentials: 'include',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ id }),
-        });
-        if (!res.ok) throw new Error('Failed to delete passkey');
+        const success = await onDelete(id);
+        if (!success) throw new Error('Failed to delete passkey');
         setPasskeys((prev) => prev.filter((p) => p.id !== id));
       } catch {
         setError('Could not delete passkey. Please try again.');
@@ -98,7 +94,7 @@ export function PasskeyManagement({ apiUrl, onAdd }: PasskeyManagementProps) {
         setDeletingId(null);
       }
     },
-    [base],
+    [onDelete],
   );
 
   return (

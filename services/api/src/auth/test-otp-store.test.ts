@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   clearTestOtpStore,
+  consumeTestOtp,
   getLatestTestOtp,
   isTestOtpStoreEnabled,
   recordTestOtp,
@@ -42,5 +43,14 @@ describe('test otp store', () => {
     vi.advanceTimersByTime(301_000);
     const latest = getLatestTestOtp({ email: 'user@example.com' });
     expect(latest).toBeNull();
+  });
+
+  test('marks otp as replayed after first successful consume', () => {
+    recordTestOtp({ email: 'user@example.com', otp: '123456', type: 'sign-in' });
+
+    expect(consumeTestOtp({ email: 'user@example.com', otp: '123456', type: 'sign-in' }).status)
+      .toBe('consumed');
+    expect(consumeTestOtp({ email: 'user@example.com', otp: '123456', type: 'sign-in' }).status)
+      .toBe('replayed');
   });
 });

@@ -3,6 +3,8 @@ import { Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import { getCookie } from '@better-auth/expo/client'
 
+import { STEP_UP_ACTIONS } from '@hominem/auth/step-up-actions'
+
 import { authClient } from '~/lib/auth-client'
 import { API_BASE_URL, E2E_AUTH_SECRET, E2E_TESTING } from '~/utils/constants'
 import { useAuth } from '~/utils/auth-provider'
@@ -208,20 +210,43 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
     setError(null)
 
     try {
-      const token = await getAccessToken()
+      let token = await getAccessToken()
       if (!token) {
         setError('Not authenticated')
         return { success: false, error: 'Not authenticated' }
       }
 
-      const response = await fetch(new URL('/api/auth/passkey/delete', API_BASE_URL).toString(), {
-        method: 'DELETE',
-        headers: {
-          'content-type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ id }),
-      })
+      const requestDelete = async (accessToken: string) => {
+        return fetch(new URL('/api/auth/passkey/delete', API_BASE_URL).toString(), {
+          method: 'DELETE',
+          headers: {
+            'content-type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ id }),
+        })
+      }
+
+      let response = await requestDelete(token)
+
+      if (response.status === 403) {
+        const body = (await response.json()) as { error?: string; action?: string }
+        if (body.error === 'step_up_required' && body.action === STEP_UP_ACTIONS.PASSKEY_DELETE) {
+          const stepUpResult = await signIn('real')
+          if (!stepUpResult?.accessToken) {
+            const message = 'Passkey step-up required'
+            setError(message)
+            return { success: false, error: message }
+          }
+
+          token = stepUpResult.accessToken
+          response = await requestDelete(token)
+        } else {
+          const message = body.error ?? 'Failed to delete passkey'
+          setError(message)
+          return { success: false, error: message }
+        }
+      }
 
       if (!response.ok) {
         const body = (await response.json()) as { error?: string }

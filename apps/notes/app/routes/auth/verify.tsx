@@ -1,9 +1,12 @@
+import { resolveSafeAuthRedirect } from '@hominem/auth/server';
 import { AuthScaffold, OtpVerificationForm } from '@hominem/ui';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { redirect, useActionData, useLoaderData, useLocation } from 'react-router';
 
 import { getServerAuth } from '~/lib/auth.server';
 import { serverEnv } from '~/lib/env';
+
+const ALLOWED_REDIRECT_PREFIXES = ['/', '/chat', '/notes', '/account', '/settings']
 
 interface VerifySuccessPayload {
   accessToken: string;
@@ -33,7 +36,11 @@ export async function action({ request }: { request: Request }) {
   const formData = await request.formData();
   const email = String(formData.get('email') ?? '');
   const otp = String(formData.get('otp') ?? '');
-  const next = String(formData.get('next') ?? '/notes');
+  const next = resolveSafeAuthRedirect(
+    String(formData.get('next') ?? '/notes'),
+    '/notes',
+    ALLOWED_REDIRECT_PREFIXES,
+  );
 
   if (!email || !otp) {
     return { error: 'Email and verification code are required.' };

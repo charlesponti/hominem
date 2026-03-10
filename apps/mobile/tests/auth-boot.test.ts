@@ -79,12 +79,46 @@ describe('runAuthBoot', () => {
     expect(deps.upsertProfile).not.toHaveBeenCalled()
   })
 
+  it('fails closed when stored bootstrap state is incomplete', async () => {
+    const deps = makeDeps({
+      getStoredTokens: vi.fn().mockResolvedValue({
+        accessToken: 'valid-token',
+        refreshToken: null,
+        expiresAtStr: '9999999999000',
+      }),
+      clearTokens: vi.fn().mockResolvedValue(undefined),
+    })
+
+    const result = await runAuthBoot(deps)
+
+    expect(result.type).toBe('SESSION_EXPIRED')
+    expect(deps.clearTokens).toHaveBeenCalledTimes(1)
+    expect(deps.probeSession).not.toHaveBeenCalled()
+  })
+
+  it('fails closed when stored expiry metadata is malformed', async () => {
+    const deps = makeDeps({
+      getStoredTokens: vi.fn().mockResolvedValue({
+        accessToken: 'valid-token',
+        refreshToken: 'valid-refresh',
+        expiresAtStr: 'not-a-number',
+      }),
+      clearTokens: vi.fn().mockResolvedValue(undefined),
+    })
+
+    const result = await runAuthBoot(deps)
+
+    expect(result.type).toBe('SESSION_EXPIRED')
+    expect(deps.clearTokens).toHaveBeenCalledTimes(1)
+    expect(deps.probeSession).not.toHaveBeenCalled()
+  })
+
   it('propagates network errors without clearing tokens', async () => {
     const deps = makeDeps({
       getStoredTokens: vi.fn().mockResolvedValue({
         accessToken: 'token',
-        refreshToken: 'r',
-        expiresAtStr: null,
+        refreshToken: 'valid-refresh',
+        expiresAtStr: '9999999999000',
       }),
       probeSession: vi.fn().mockRejectedValue(new TypeError('network unavailable')),
     })
@@ -98,8 +132,8 @@ describe('runAuthBoot', () => {
     const deps = makeDeps({
       getStoredTokens: vi.fn().mockResolvedValue({
         accessToken: 'token',
-        refreshToken: 'r',
-        expiresAtStr: null,
+        refreshToken: 'valid-refresh',
+        expiresAtStr: '9999999999000',
       }),
       probeSession: vi.fn().mockImplementation(() => {
         controller.abort()
@@ -117,8 +151,8 @@ describe('runAuthBoot', () => {
     const deps = makeDeps({
       getStoredTokens: vi.fn().mockResolvedValue({
         accessToken: 'token',
-        refreshToken: null,
-        expiresAtStr: null,
+        refreshToken: 'valid-refresh',
+        expiresAtStr: '9999999999000',
       }),
       probeSession: vi.fn().mockResolvedValue(testUser),
       signal: controller.signal,

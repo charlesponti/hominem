@@ -33,6 +33,7 @@
 
 // Public client API
 export { AuthProvider, type AuthProviderProps, useAuthContext, useSafeAuth } from './client'
+export * from './auth-error-contract'
 export * from './contracts'
 export * from './types'
 export * from './user'

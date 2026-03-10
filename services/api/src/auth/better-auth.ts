@@ -83,7 +83,7 @@ function getAuthPlugins() {
       ],
       schema: {
         passkey: {
-          modelName: 'userPasskey',
+          modelName: 'user_passkey',
         },
       },
     }),
@@ -138,7 +138,7 @@ function getAuthPlugins() {
     jwt({
       schema: {
         jwks: {
-          modelName: 'userJwks',
+          modelName: 'user_jwks',
         },
       },
     }),
@@ -153,7 +153,7 @@ function getAuthPlugins() {
       interval: '5s',
       schema: {
         deviceCode: {
-          modelName: 'userDeviceCode',
+          modelName: 'user_device_code',
         },
       },
     }),
@@ -210,16 +210,16 @@ const betterAuthOptions: BetterAuthOptions = {
   trustedOrigins: getTrustedOrigins(),
   advanced: getAdvancedOptions(),
   user: {
-    modelName: 'authUser',
+    modelName: 'users',
   },
   session: {
-    modelName: 'userSession',
+    modelName: 'user_session',
   },
   account: {
-    modelName: 'userAccount',
+    modelName: 'user_account',
   },
   verification: {
-    modelName: 'userVerification',
+    modelName: 'user_verification',
   },
   emailAndPassword: {
     enabled: true,

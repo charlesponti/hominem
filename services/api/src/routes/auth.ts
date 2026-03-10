@@ -1,6 +1,8 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-import { UserAuthService } from '@hominem/auth/server';
+import { UserAuthService, grantStepUp, hasRecentStepUp, isFreshPasskeyAuth } from '@hominem/auth/server';
+import { STEP_UP_ACTIONS, isStepUpAction } from '@hominem/auth/step-up-actions';
+import type { StepUpAction } from '@hominem/auth/step-up-actions';
 import { db } from '@hominem/db';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { logger } from '@hominem/utils/logger';
@@ -18,7 +20,7 @@ import {
   revokeSession,
   rotateRefreshToken,
 } from '../auth/session-store';
-import { getLatestTestOtp, isTestOtpStoreEnabled, recordTestOtp } from '../auth/test-otp-store';
+import { consumeTestOtp, getLatestTestOtp, isTestOtpStoreEnabled, recordTestOtp } from '../auth/test-otp-store';
 import { issueAccessToken, verifyAccessToken } from '../auth/tokens';
 import { env } from '../env';
 import type { AppEnv } from '../server';
@@ -32,9 +34,16 @@ const devIssueTokenSchema = z.object({
   sid: z.string().uuid().optional(),
 });
 
-const refreshTokenSchema = z.object({
-  refresh_token: z.string().min(16),
-});
+const refreshTokenSchema = z.union([
+  z.object({
+    refresh_token: z.string().min(16),
+  }),
+  z.object({
+    refreshToken: z.string().min(16),
+  }),
+]).transform((value) => ({
+  refreshToken: 'refresh_token' in value ? value.refresh_token : value.refreshToken,
+}));
 
 const revokeTokenSchema = z.object({
   token: z.string().min(16),
@@ -321,15 +330,56 @@ async function enforceAuthRateLimit(c: Context<AppEnv>, input: AuthRateLimitInpu
   return null;
 }
 
-const STEP_UP_TTL_SECONDS = 5 * 60;
+function getBearerToken(headerValue?: string) {
+  if (!headerValue || !headerValue.startsWith('Bearer ')) {
+    return null
+  }
 
-function getStepUpKey(userId: string, action: string) {
-  return `auth:stepup:${userId}:${action}`;
+  return headerValue.slice(7)
 }
 
-async function grantStepUp(userId: string, action: string) {
-  const { redis } = await import('@hominem/services/redis');
-  await redis.set(getStepUpKey(userId, action), '1', 'EX', STEP_UP_TTL_SECONDS);
+async function hasRecentPasskeyBearerAuth(c: Context<AppEnv>) {
+  const bearerToken = getBearerToken(c.req.header('authorization'))
+  if (!bearerToken) {
+    return false
+  }
+
+  try {
+    const claims = await verifyAccessToken(bearerToken)
+    return isFreshPasskeyAuth({
+      amr: claims.amr,
+      authTime: claims.auth_time,
+    })
+  } catch {
+    return false
+  }
+}
+
+async function hasSatisfiedStepUp(c: Context<AppEnv>, userId: string, action: StepUpAction) {
+  if (await hasRecentStepUp(userId, action)) {
+    return true
+  }
+
+  return hasRecentPasskeyBearerAuth(c)
+}
+
+async function userHasRegisteredPasskeys(userId: string) {
+  const existingPasskey = await db
+    .selectFrom('user_passkey')
+    .select('id')
+    .where('user_id', '=', userId)
+    .limit(1)
+    .executeTakeFirst()
+
+  return Boolean(existingPasskey)
+}
+
+async function requiresPasskeyRegisterStepUp(c: Context<AppEnv>, userId: string) {
+  if (!(await userHasRegisteredPasskeys(userId))) {
+    return false
+  }
+
+  return !(await hasSatisfiedStepUp(c, userId, STEP_UP_ACTIONS.PASSKEY_REGISTER))
 }
 
 function copyHeadersWithSetCookie(headers: Headers) {
@@ -406,11 +456,19 @@ authRoutes.get('/jwks', async (c) => {
 
 authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), async (c) => {
   const clientIp = getClientIp(c);
+  const userAgent = c.req.header('user-agent') ?? 'unknown';
+  const auditContext = {
+    actor: 'mobile-e2e-client',
+    clientIp,
+    environment: env.NODE_ENV,
+    timestamp: new Date().toISOString(),
+    userAgent,
+  };
 
   if (!isE2eAuthEnabled()) {
     logger.warn('[auth:e2e:mobile] denied because E2E auth is disabled', {
-      clientIp,
-      nodeEnv: env.NODE_ENV,
+      ...auditContext,
+      denialReason: 'e2e_auth_disabled',
     });
     return c.json({ error: 'not_found' }, 404);
   }
@@ -418,7 +476,9 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   const providedSecret = c.req.header('x-e2e-auth-secret');
   if (!providedSecret || !env.AUTH_E2E_SECRET || providedSecret !== env.AUTH_E2E_SECRET) {
     logger.warn('[auth:e2e:mobile] denied because secret header is invalid', {
-      clientIp,
+      ...auditContext,
+      denialReason: 'invalid_secret',
+      hasProvidedSecret: Boolean(providedSecret),
     });
     return c.json({ error: 'forbidden' }, 403);
   }
@@ -481,7 +541,7 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
   const refreshFamilyId = crypto.randomUUID();
 
   logger.info('[auth:e2e:mobile] issued token pair', {
-    clientIp,
+    ...auditContext,
     emailHash,
     userId: user.id,
     sessionId,
@@ -539,16 +599,27 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
     const payload = c.req.valid('json');
 
     if (isTestOtpStoreEnabled()) {
-      const latestRecord =
-        getLatestTestOtp({ email: payload.email, type: 'sign-in' }) ??
-        getLatestTestOtp({ email: payload.email });
+      const consumption = consumeTestOtp({
+        email: payload.email,
+        otp: payload.otp,
+        type: 'sign-in',
+      });
 
-      if (!latestRecord || latestRecord.otp !== payload.otp) {
+      if (consumption.status === 'missing') {
         return c.json({ error: 'invalid_otp' }, 400);
       }
 
-      if (Date.now() > latestRecord.createdAt + env.AUTH_EMAIL_OTP_EXPIRES_SECONDS * 1000) {
+      if (consumption.status === 'expired') {
         return c.json({ error: 'otp_expired' }, 400);
+      }
+
+      if (consumption.status === 'replayed') {
+        logger.warn('[auth:email-otp:test] replay attempt rejected', {
+          clientIp: getClientIp(c),
+          emailHash: createHash('sha256').update(payload.email).digest('hex').slice(0, 16),
+          type: 'sign-in',
+        });
+        return c.json({ error: 'otp_replayed' }, 400);
       }
 
       const dbUser = await findOrCreateEmailOtpUser({
@@ -712,7 +783,7 @@ authRoutes.post('/refresh', zValidator('json', refreshTokenSchema), async (c) =>
   // Input: { refreshToken }
   // Output: { accessToken, refreshToken, expiresIn }
 
-  const { refresh_token: refreshToken } = c.req.valid('json');
+  const { refreshToken } = c.req.valid('json');
 
   const refreshRateLimit = await enforceAuthRateLimit(c, {
     bucket: 'refresh-token-standard',
@@ -811,7 +882,7 @@ authRoutes.post('/token', async (c) => {
 
   const tokenRateLimit = await enforceAuthRateLimit(c, {
     bucket: 'refresh-token',
-    identifier: `${getClientIp(c)}:${parsed.data.refresh_token.slice(0, 16)}`,
+    identifier: `${getClientIp(c)}:${parsed.data.refreshToken.slice(0, 16)}`,
     windowSec: AUTH_REFRESH_LIMIT_WINDOW_SECONDS,
     max: AUTH_REFRESH_LIMIT_MAX,
   });
@@ -819,7 +890,7 @@ authRoutes.post('/token', async (c) => {
     return tokenRateLimit;
   }
 
-  const rotated = await rotateRefreshToken(parsed.data.refresh_token);
+  const rotated = await rotateRefreshToken(parsed.data.refreshToken);
   if (!rotated.ok) {
     return c.json({ error: rotated.error }, 401);
   }
@@ -889,6 +960,10 @@ authRoutes.post('/passkey/register/options', async (c) => {
     return c.json({ error: 'unauthorized' }, 401);
   }
 
+  if (await requiresPasskeyRegisterStepUp(c, userId)) {
+    return c.json({ error: 'step_up_required', action: STEP_UP_ACTIONS.PASSKEY_REGISTER }, 403)
+  }
+
   try {
     const response = await callBetterAuthPluginEndpoint({
       request: c.req.raw,
@@ -912,6 +987,10 @@ authRoutes.post(
     const userId = await resolveAuthUserId(c);
     if (!userId) {
       return c.json({ error: 'unauthorized' }, 401);
+    }
+
+    if (await requiresPasskeyRegisterStepUp(c, userId)) {
+      return c.json({ error: 'step_up_required', action: STEP_UP_ACTIONS.PASSKEY_REGISTER }, 403)
     }
 
     try {
@@ -961,6 +1040,10 @@ authRoutes.delete(
     const userId = await resolveAuthUserId(c);
     if (!userId) {
       return c.json({ error: 'unauthorized' }, 401);
+    }
+
+    if (!(await hasSatisfiedStepUp(c, userId, STEP_UP_ACTIONS.PASSKEY_DELETE))) {
+      return c.json({ error: 'step_up_required', action: STEP_UP_ACTIONS.PASSKEY_DELETE }, 403)
     }
 
     try {
@@ -1015,9 +1098,9 @@ authRoutes.post('/passkey/auth/verify', zValidator('json', passkeyAuthVerifySche
     }
 
     // Handle step-up action grant (for authenticated users doing re-auth)
-    const existingUserId = c.get('userId');
+    const existingUserId = await resolveAuthUserId(c);
     const requestedAction = body.action;
-    if (existingUserId && requestedAction) {
+    if (existingUserId && requestedAction && isStepUpAction(requestedAction)) {
       await grantStepUp(existingUserId, requestedAction).catch(() => null);
       // Step-up flows just return the Better Auth response (no new tokens needed)
       return new Response(responseText, {
