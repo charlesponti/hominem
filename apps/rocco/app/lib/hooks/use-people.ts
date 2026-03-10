@@ -20,7 +20,8 @@ export const usePeople = () =>
 export const useCreatePerson = () => {
   const utils = useHonoUtils();
   return useHonoMutation<PeopleCreateOutput, PeopleCreateInput>(
-    async (_client: HonoClient, variables: PeopleCreateInput) => {
+    async (client: HonoClient, variables: PeopleCreateInput) => {
+      void client;
       const now = new Date().toISOString();
       return {
         id: `temp-person-${Date.now()}`,
@@ -62,10 +63,11 @@ export const useCreatePerson = () => {
 
         return { previousPeople, optimisticId: optimisticPerson.id };
       },
-      onSuccess: (_result) => {
+      onSuccess: () => {
         utils.invalidate(queryKeys.people.list());
       },
-      onError: (error, _variables, context) => {
+      onError: (error, variables, context) => {
+        void variables;
         const previousPeople =
           typeof context === 'object' && context !== null && 'previousPeople' in context
             ? (context as { previousPeople?: PeopleListOutput }).previousPeople
