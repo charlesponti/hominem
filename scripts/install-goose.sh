@@ -2,11 +2,13 @@
 set -euo pipefail
 
 TARGET_BIN="${HOME}/.local/bin/goose-migrate"
-DEFAULT_TAG="${GOOSE_VERSION:-v3.27.0}"
+TARGET_TAG="${GOOSE_VERSION:-v3.27.0}"
 
 if [ -x "$TARGET_BIN" ]; then
-  "$TARGET_BIN" -version >/dev/null 2>&1 || true
-  exit 0
+  CURRENT_VERSION="$("$TARGET_BIN" -version 2>/dev/null | awk '{print $NF}' || true)"
+  if [ "$CURRENT_VERSION" = "${TARGET_TAG#v}" ] || [ "$CURRENT_VERSION" = "$TARGET_TAG" ]; then
+    exit 0
+  fi
 fi
 
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
@@ -21,12 +23,7 @@ case "$ARCH" in
     ;;
 esac
 
-LATEST_TAG="$(curl -fsSL https://api.github.com/repos/pressly/goose/releases/latest | sed -n 's/.*\"tag_name\": \"\\([^\"]*\\)\".*/\\1/p' | head -n 1 || true)"
-if [ -z "$LATEST_TAG" ]; then
-  LATEST_TAG="$DEFAULT_TAG"
-fi
-
-BIN_URL="https://github.com/pressly/goose/releases/download/${LATEST_TAG}/goose_${OS}_${ARCH}"
+BIN_URL="https://github.com/pressly/goose/releases/download/${TARGET_TAG}/goose_${OS}_${ARCH}"
 mkdir -p "${HOME}/.local/bin"
 curl -fsSL "$BIN_URL" -o "$TARGET_BIN"
 chmod +x "$TARGET_BIN"

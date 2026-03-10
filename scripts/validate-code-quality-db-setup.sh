@@ -8,8 +8,10 @@ DB_CONTAINER="hominem-code-quality-db-setup"
 DB_URL="postgres://postgres:postgres@localhost:${DB_PORT}/hominem-test?sslmode=disable"
 IMAGE="ghcr.io/hackefeller/postgres:latest"
 GOOSE_BIN="${HOME}/.local/bin/goose-migrate"
+DB_LOG_FILE="$(mktemp)"
 
 cleanup() {
+  rm -f "$DB_LOG_FILE"
   if docker ps -a --format '{{.Names}}' | grep -q "^${DB_CONTAINER}$"; then
     docker stop "$DB_CONTAINER" >/dev/null 2>&1 || true
     docker rm "$DB_CONTAINER" >/dev/null 2>&1 || true
@@ -61,14 +63,14 @@ docker run -d --name "$DB_CONTAINER" \
   -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=hominem-test \
   -p ${DB_PORT}:5432 \
-  "$IMAGE" >/tmp/hominem-code-quality-db.log
+  "$IMAGE" >"$DB_LOG_FILE"
 
 echo "Waiting for PostgreSQL..."
 until docker exec "$DB_CONTAINER" pg_isready -h localhost -p 5432 -U postgres >/dev/null 2>&1; do
   sleep 1
   if ! docker ps --format '{{.Names}}' | grep -q "^${DB_CONTAINER}$"; then
     echo "Test database container exited unexpectedly"
-    cat /tmp/hominem-code-quality-db.log
+    cat "$DB_LOG_FILE"
     exit 1
   fi
   echo -n "."

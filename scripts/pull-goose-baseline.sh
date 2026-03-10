@@ -18,7 +18,7 @@ if ! command -v pg_dump-18 >/dev/null 2>&1 && ! command -v pg_dump >/dev/null 2>
 fi
 
 mkdir -p "$MIGRATIONS_DIR"
-TMP_DUMP="$(mktemp /tmp/hominem-goose-baseline.XXXXXX.sql)"
+TMP_DUMP="$(mktemp)"
 trap 'rm -f "$TMP_DUMP"' EXIT
 
 PG_DUMP_BIN="pg_dump"
