@@ -120,7 +120,7 @@ export const runwayRoutes = new Hono<AppContext>()
     return c.json(calculateSavingsGoal(parsed))
   })
   .post('/loan-details', authMiddleware, zValidator('json', loanDetailsInputSchema), async (c) => {
-    const input = c.req.valid('json')
+    void c.req.valid('json')
     // TODO: calculateLoanDetails not yet implemented in finance-services
     return c.json({ error: 'Not implemented' }, 501)
   })

@@ -98,13 +98,10 @@ export async function transcribeVoiceBuffer(input: {
   fileName?: string;
   language?: string;
 }): Promise<VoiceTranscriptionOutput> {
-  const normalizedMimeType = validateVoiceInput({
+  validateVoiceInput({
     mimeType: input.mimeType,
     size: input.buffer.byteLength,
   });
-
-  const _fileExtension = getVoiceFileExtension(normalizedMimeType);
-  const _fileName = input.fileName || `audio${_fileExtension}`;
   const audioBuffer = Buffer.from(input.buffer);
 
   try {

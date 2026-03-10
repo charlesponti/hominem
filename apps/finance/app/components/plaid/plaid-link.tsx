@@ -109,7 +109,7 @@ export function PlaidLink({
 
   // Handle connection errors
   const handleOnExit = useCallback<PlaidLinkOnExit>(
-    (error, _metadata) => {
+    (error) => {
       if (error) {
         console.error('Plaid Link error:', error);
         const errorMessage = error.error_message || 'Failed to connect bank account';

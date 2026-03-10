@@ -16,7 +16,8 @@ interface RegisterSWResult {
   updateServiceWorker: (reload?: boolean) => void;
 }
 
-function useRegisterSW(_options?: RegisterSWOptions): RegisterSWResult {
+function useRegisterSW(options?: RegisterSWOptions): RegisterSWResult {
+  void options;
   const [offlineReady, setOfflineReady] = useState(false);
   const [needRefresh, setNeedRefresh] = useState(false);
 

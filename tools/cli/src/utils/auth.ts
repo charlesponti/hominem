@@ -145,7 +145,7 @@ async function migrateLegacyConfig(): Promise<void> {
 
     await fs.rm(legacyConfig, { force: true });
     await fs.rm(legacyGoogle, { force: true });
-  } catch (_err) {
+  } catch  {
     // ignore missing or malformed legacy config
   }
 }
@@ -388,9 +388,7 @@ export async function interactiveLogin(options: AuthOptions) {
           redirectUri,
         });
 
-        const tokens = buildStoredTokensFromResponse(tokenResponse, issuerBaseUrl, {
-          ...(options.scopes ? { scopes: options.scopes } : {}),
-        });
+        const tokens = buildStoredTokensFromResponse(tokenResponse, issuerBaseUrl, (options.scopes ? { scopes: options.scopes } : {}));
 
         await saveTokens(tokens);
 
@@ -603,12 +601,12 @@ async function requireAccessToken() {
   return token;
 }
 
-async function getAuthToken() {
+async function _getAuthToken() {
   return requireAccessToken();
 }
 
 // Helper function to create an authenticated axios client
-async function getAuthenticatedClient(host = 'localhost', port = '4445') {
+async function _getAuthenticatedClient(host = 'localhost', port = '4445') {
   const token = await requireAccessToken();
 
   const client = axios.create({

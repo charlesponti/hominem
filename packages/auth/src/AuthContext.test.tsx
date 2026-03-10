@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import _userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
 import { LocalMockAuthProvider, useAuth } from './AuthContext'
 import { useSafeAuth, useAuthContext } from './client'

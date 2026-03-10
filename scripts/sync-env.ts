@@ -18,7 +18,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 // Types
-interface EnvVar {
+interface _EnvVar {
   name: string
   value?: string
 }
@@ -94,7 +94,7 @@ function log(message: string, level: 'info' | 'warn' | 'error' | 'success' = 'in
 function runCommand(cmd: string, silent = false): string {
   try {
     return execSync(cmd, { encoding: 'utf-8', stdio: silent ? 'pipe' : 'inherit' }).trim()
-  } catch (error) {
+  } catch  {
     if (!silent) {
       log(`Command failed: ${cmd}`, 'error')
     }
@@ -149,7 +149,7 @@ function getRailwayVars(service: string): Map<string, string> {
         vars.set(name, value)
       }
     }
-  } catch (error) {
+  } catch  {
     log(`Failed to query Railway for service ${service}`, 'warn')
   }
 
@@ -297,7 +297,6 @@ async function diagnoseCommand(serviceName?: string) {
     if (result.missing.length > 0) {
       log(`\nMissing from Railway (${result.missing.length}):`, 'error')
       for (const varName of result.missing) {
-        const value = localVars.get(varName) || '(empty)'
         console.log(`  - ${varName}`)
       }
     }
@@ -348,7 +347,7 @@ async function syncCommand(serviceName: string, envFile: string) {
       )
       log(`  ${name}`, 'success')
       synced++
-    } catch (error) {
+    } catch  {
       log(`  ${name} (FAILED)`, 'error')
       failed++
     }
@@ -387,7 +386,7 @@ async function setCommand(serviceName: string, varAssignment: string) {
       true,
     )
     log(`Successfully set ${name}`, 'success')
-  } catch (error) {
+  } catch  {
     log(`Failed to set ${name}`, 'error')
     process.exit(1)
   }

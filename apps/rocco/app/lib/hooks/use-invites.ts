@@ -174,11 +174,11 @@ export const useAcceptInvite = () => {
 
         return { previousReceived };
       },
-      onSuccess: (_result) => {
+      onSuccess: (result) => {
         utils.invalidate(queryKeys.invites.received());
         utils.invalidate(queryKeys.lists.all());
       },
-      onError: (error, _variables, context) => {
+      onError: (error, variables, context) => {
         const previousReceived =
           typeof context === 'object' && context !== null && 'previousReceived' in context
             ? (context as { previousReceived?: InvitesGetReceivedOutput }).previousReceived
@@ -218,10 +218,10 @@ const useDeclineInvite = () => {
 
         return { previousReceived };
       },
-      onSuccess: (_result) => {
+      onSuccess: (result) => {
         utils.invalidate(queryKeys.invites.received());
       },
-      onError: (error, _variables, context) => {
+      onError: (error, variables, context) => {
         const previousReceived =
           typeof context === 'object' && context !== null && 'previousReceived' in context
             ? (context as { previousReceived?: InvitesGetReceivedOutput }).previousReceived

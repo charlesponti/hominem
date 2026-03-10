@@ -56,7 +56,7 @@ export default function ListInvites({ loaderData }: Route.ComponentProps) {
     return <Alert variant="destructive">We could not find this list.</Alert>;
   }
 
-  const handleInviteSuccess = (_newInvite: SentInvite) => {
+  const handleInviteSuccess = () => {
     // Just trigger revalidation - the mutation already succeeded server-side
     // The new invite will appear when revalidation completes
     // For smoother UX, we could optimistically add it, but the types don't match perfectly

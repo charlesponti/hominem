@@ -130,7 +130,7 @@ export const tagsRoutes = new Hono<AppContext>()
     const data = c.req.valid('json')
 
     // Verify tag exists and user owns it
-    const tag = await getTagWithOwnershipCheck(tagId, userId)
+    await getTagWithOwnershipCheck(tagId, userId)
 
     const result = await db
       .insertInto('tagged_items')

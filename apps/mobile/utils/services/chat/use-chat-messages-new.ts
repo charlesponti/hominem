@@ -140,7 +140,7 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
     },
     
     // Rollback on error
-    onError: (error, _variables, context) => {
+    onError: (error, variables, context) => {
       log('Error sending chat message:', error)
       setSendChatError(true)
       if (context?.previousMessages) {

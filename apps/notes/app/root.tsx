@@ -3,7 +3,7 @@ import type { AuthProviderProps } from '@hominem/auth';
 
 // debug type alias to ensure correct props are imported
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-type _AuthPropsDebug = AuthProviderProps;
+type AuthPropsDebug = AuthProviderProps;
 import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
 import type React from 'react';
 import { useCallback } from 'react';

@@ -201,7 +201,7 @@ export const useUpdateList = (options?: HonoMutationOptions<ListUpdateOutput, Li
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, variables) => {
+      onSettled: (result, error, variables) => {
         utils.invalidate(queryKeys.lists.all());
         utils.invalidate(queryKeys.lists.get(variables.id));
       },
@@ -331,7 +331,7 @@ const useDeleteListItem = (
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, variables) => {
+      onSettled: (result, error, variables) => {
         utils.invalidate(queryKeys.lists.all());
         utils.invalidate(queryKeys.lists.get(variables.listId));
       },
@@ -426,7 +426,7 @@ export const useRemoveCollaborator = (
 
         options?.onError?.(error, variables, context, mutationContext);
       },
-      onSettled: (_result, _error, variables) => {
+      onSettled: (result, error, variables) => {
         utils.invalidate(queryKeys.lists.all());
         utils.invalidate(queryKeys.lists.get(variables.listId));
       },

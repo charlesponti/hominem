@@ -565,7 +565,7 @@ export function PromptInputHoverCardTrigger({
 }
 
 export function PromptInputHoverCardContent({
-  align: _align = 'start',
+  align: align = 'start',
   className,
   children,
   ...props

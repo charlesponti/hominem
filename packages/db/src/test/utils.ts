@@ -13,6 +13,7 @@ export const isIntegrationDatabaseAvailable = async (): Promise<boolean> => {
 }
 
 export const createDeterministicIdFactory = (prefix: string) => {
+  void prefix
   let counter = 0
   return () => {
     counter += 1
@@ -93,7 +94,8 @@ export const cleanupTestData = async (userIds: string[]): Promise<void> => {
     .execute()
 }
 
-export const setUserCleanup = (_cleanup: (userId: string) => Promise<void>): void => {
+export const setUserCleanup = (cleanup: (userId: string) => Promise<void>): void => {
+  void cleanup
   // No-op for Kysely
 }
 
@@ -124,10 +126,27 @@ export const createTestData = {
 }
 
 export const mockDbOperations = {
-  mockFindSuccess: <T>(_table: string, _method: string, _data: T): void => {},
-  mockFindNotFound: (_table: string, _method: string): void => {},
-  mockDbError: (_table: string, _method: string, _error?: Error): void => {},
-  mockInsertSuccess: <T>(_data: T): void => {},
-  mockUpdateSuccess: <T>(_data: T): void => {},
-  mockDeleteSuccess: (_count?: number): void => {},
+  mockFindSuccess: <T>(table: string, method: string, data: T): void => {
+    void table
+    void method
+    void data
+  },
+  mockFindNotFound: (table: string, method: string): void => {
+    void table
+    void method
+  },
+  mockDbError: (table: string, method: string, error?: Error): void => {
+    void table
+    void method
+    void error
+  },
+  mockInsertSuccess: <T>(data: T): void => {
+    void data
+  },
+  mockUpdateSuccess: <T>(data: T): void => {
+    void data
+  },
+  mockDeleteSuccess: (count?: number): void => {
+    void count
+  },
 }

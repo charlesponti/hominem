@@ -38,7 +38,7 @@ const DEFAULT_CONFIG_BASE = {
 }
 
 function makeConfig<T>(config?: BenchmarkConfig<T>): Required<BenchmarkConfig<T>> {
-  return { ...DEFAULT_CONFIG_BASE, ...(config || {}) } as Required<BenchmarkConfig<T>>
+  return { ...DEFAULT_CONFIG_BASE, ...config } as Required<BenchmarkConfig<T>>
 }
 
 function hrtimeNs(): bigint {

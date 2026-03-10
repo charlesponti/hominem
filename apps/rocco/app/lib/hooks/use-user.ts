@@ -48,7 +48,7 @@ export const useDeleteAccount = (options?: HonoMutationOptions<UserDeleteAccount
           previousInvitesReceived,
         };
       },
-      onError: (error, _variables, context, mutationContext) => {
+      onError: (error, variables, context, mutationContext) => {
         if (context && typeof context === 'object') {
           if ('previousLists' in context) {
             utils.setData(
@@ -88,7 +88,7 @@ export const useDeleteAccount = (options?: HonoMutationOptions<UserDeleteAccount
           }
         }
 
-        options?.onError?.(error, _variables, context, mutationContext);
+        options?.onError?.(error, variables, context, mutationContext);
       },
       onSuccess: (result, variables, context, mutationContext) => {
         options?.onSuccess?.(result, variables, context, mutationContext);

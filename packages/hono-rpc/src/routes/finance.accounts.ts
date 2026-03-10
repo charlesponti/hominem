@@ -158,7 +158,7 @@ export const accountsRoutes = new Hono<AppContext>()
         id: accountId,
         user_id: userId,
         name: input.name,
-        account_type: input.type,
+        account_type: normalizeAccountType(input.type),
         balance: input.balance === undefined ? 0 : Number(input.balance),
         created_at: now,
         updated_at: now,
@@ -189,7 +189,7 @@ export const accountsRoutes = new Hono<AppContext>()
     } = { updated_at: now }
 
     if (input.name !== undefined) updateValues.name = input.name
-    if (input.type !== undefined) updateValues.account_type = input.type
+    if (input.type !== undefined) updateValues.account_type = normalizeAccountType(input.type)
     if (input.balance !== undefined) updateValues.balance = Number(input.balance)
 
     await db.updateTable('finance_accounts').set(updateValues).where('id', '=', input.id).execute()

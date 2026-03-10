@@ -252,11 +252,12 @@ Sidebar.displayName = 'Sidebar';
 const SidebarTrigger = React.forwardRef<
   React.ComponentRef<typeof Button>,
   React.ComponentProps<typeof Button>
->(({ className, onClick, ...props }, _ref) => {
+>(({ className, onClick, ...props }, ref) => {
   const { toggleSidebar } = useSidebar();
 
   return (
     <Button
+      ref={ref}
       data-sidebar="trigger"
       variant="ghost"
       size="icon"

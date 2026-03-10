@@ -238,7 +238,7 @@ export interface AuthContextType {
   unlinkGoogle: () => Promise<void>
   signOut: () => Promise<void>
   getSession: () => Promise<HominemSession | null>
-  requireStepUp: (_action: string) => Promise<void>
+  requireStepUp: (action: string) => Promise<void>
   logout: () => Promise<void>
   authClient: AuthClient
   userId?: string | undefined

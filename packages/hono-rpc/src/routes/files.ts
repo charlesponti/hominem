@@ -18,10 +18,12 @@ type ProcessedFile = {
   metadata?: Record<string, unknown>;
 };
 
-async function indexProcessedFile(_file: ProcessedFile, _userId: string): Promise<{
+async function indexProcessedFile(file: ProcessedFile, userId: string): Promise<{
   success: boolean;
   message: string;
 }> {
+  void file;
+  void userId;
   return {
     success: false,
     message: 'File indexing is not available in the current DB architecture',

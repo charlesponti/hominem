@@ -1,4 +1,4 @@
-import { db } from '@hominem/db';
+import { _db } from '@hominem/db';
 import {
   cleanupTestData,
   createDeterministicIdFactory,

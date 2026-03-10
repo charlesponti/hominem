@@ -57,7 +57,8 @@ async function waitForAppSsr(url: string, maxRetries: number): Promise<void> {
   throw new Error(`App SSR at ${url} did not become ready after ${maxRetries} retries`)
 }
 
-export default async function globalSetup(_config: FullConfig) {
+export default async function globalSetup(config: FullConfig) {
+  void config
   // Wait for the API to accept connections.
   await waitForEndpoint(`${API_BASE_URL}/`, MAX_RETRIES)
 

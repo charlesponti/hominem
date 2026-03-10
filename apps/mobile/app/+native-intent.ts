@@ -11,34 +11,34 @@
  *   hakumi://focus/<id>                → /(protected)/(tabs)/focus/<id>
  *   hakumi://account                   → /(protected)/(tabs)/account
  */
-export function redirectSystemPath({ path, initial }: { path: string; initial: boolean }): string {
-  try {
-    // Strip leading slash for matching
-    const normalized = path.startsWith('/') ? path.slice(1) : path;
+export function redirectSystemPath({
+  path,
+  initial: _initial,
+}: {
+  path: string
+  initial: boolean
+}): string {
+  // Strip leading slash for matching
+  const normalized = path.startsWith('/') ? path.slice(1) : path
 
-    // OTP verification link: verify?token=xxx → /(auth)/verify?token=xxx
-    if (normalized.startsWith('verify')) {
-      return `/(auth)/${normalized}`;
-    }
-
-    // Sherpa / chat intent
-    if (normalized.startsWith('sherpa')) {
-      return `/(protected)/(tabs)/${normalized}`;
-    }
-
-    // Focus screen or focus item
-    if (normalized.startsWith('focus')) {
-      return `/(protected)/(tabs)/${normalized}`;
-    }
-
-    // Account screen
-    if (normalized.startsWith('account')) {
-      return `/(protected)/(tabs)/account`;
-    }
-  } catch {
-    // Malformed path — fall through to default
+  // OTP verification link: verify?token=xxx → /(auth)/verify?token=xxx
+  if (normalized.startsWith('verify')) {
+    return `/(auth)/${normalized}`
   }
 
-  // Unknown path: return as-is and let Expo Router handle or 404
-  return path;
+  // Sherpa / chat intent
+  if (normalized.startsWith('sherpa')) {
+    return `/(protected)/(tabs)/${normalized}`
+  }
+
+  // Focus screen or focus item
+  if (normalized.startsWith('focus')) {
+    return `/(protected)/(tabs)/${normalized}`
+  }
+
+  // Account screen
+  if (normalized.startsWith('account')) {
+    return `/(protected)/(tabs)/account`
+  }
+  return path
 }

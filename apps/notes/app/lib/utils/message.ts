@@ -35,7 +35,7 @@ export function findPreviousUserMessage(
 /**
  * Finds the next assistant message after the given index
  */
-function findNextAssistantMessage(
+function _findNextAssistantMessage(
   messages: ExtendedMessage[],
   startIndex: number,
 ): ExtendedMessage | undefined {

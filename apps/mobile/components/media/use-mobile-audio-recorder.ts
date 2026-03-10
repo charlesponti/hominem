@@ -5,8 +5,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { emitVoiceEvent } from '~/utils/voice-events'
 import { useAudioTranscribe } from './use-audio-transcribe'
 
-const MAX_METERINGS = 100
-
 type RecorderState = 'IDLE' | 'REQUESTING_PERMISSION' | 'PREPARING' | 'RECORDING' | 'STOPPING' | 'TRANSCRIBING'
 
 interface UseMobileAudioRecorderProps {

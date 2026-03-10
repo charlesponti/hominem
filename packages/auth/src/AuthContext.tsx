@@ -58,7 +58,7 @@ export function LocalMockAuthProvider({ children }: MockAuthProviderProps) {
         setUser(parsed.user);
         setSession(parsed.session);
         setIsAuthenticated(true);
-      } catch (err) {
+      } catch  {
         // Remove invalid JSON from localStorage
         localStorage.removeItem(STORAGE_KEY);
       }

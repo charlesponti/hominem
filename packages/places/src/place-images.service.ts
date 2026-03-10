@@ -6,19 +6,19 @@ import { placeImagesStorageService } from '@hominem/utils/storage';
 
 import { googlePlaces } from './google-places.service';
 
-let _placeImagesServiceInstance: PlaceImagesService | undefined;
+let placeImagesServiceInstance: PlaceImagesService | undefined;
 
 /**
  * Get or create a singleton instance of PlaceImagesService.
  * Used by background workers and server-side scripts.
  */
 export function getPlaceImagesService(): PlaceImagesService {
-  if (!_placeImagesServiceInstance) {
-    _placeImagesServiceInstance = createPlaceImagesService({
+  if (!placeImagesServiceInstance) {
+    placeImagesServiceInstance = createPlaceImagesService({
       appBaseUrl: env.VITE_APP_BASE_URL,
     });
   }
-  return _placeImagesServiceInstance;
+  return placeImagesServiceInstance;
 }
 
 export interface PlaceImagesService {
