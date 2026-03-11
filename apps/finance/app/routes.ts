@@ -1,6 +1,12 @@
 import { index, layout, type RouteConfig, route } from '@react-router/dev/routes';
 
 export default [
+  layout('routes/auth/layout.tsx', [
+    route('/auth', 'routes/auth/index.tsx'),
+    route('/auth/verify', 'routes/auth/verify.tsx'),
+    route('/auth/logout', 'routes/auth/logout.tsx'),
+    route('/auth/passkey/callback', 'routes/auth/passkey.callback.tsx'),
+  ]),
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
 
@@ -20,10 +26,6 @@ export default [
     // Finance tools
     route('finance/runway', 'routes/finance.runway.tsx'),
     route('/account', 'routes/account.tsx'),
-    route('/auth', 'routes/auth/index.tsx'),
-    route('/auth/verify', 'routes/auth/verify.tsx'),
-    route('/auth/logout', 'routes/auth/logout.tsx'),
-    route('/auth/passkey/callback', 'routes/auth/passkey.callback.tsx'),
     route('/settings/security', 'routes/settings.security.tsx'),
     route('/auth/cli', 'routes/auth.cli.tsx'),
 

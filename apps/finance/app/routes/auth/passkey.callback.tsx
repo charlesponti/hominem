@@ -1,4 +1,8 @@
-import { buildAuthCallbackErrorRedirect, resolveSafeAuthRedirect } from '@hominem/auth/server';
+import {
+  buildAuthCallbackErrorRedirect,
+  getAuthCookieDomain,
+  resolveSafeAuthRedirect,
+} from '@hominem/auth/server';
 import { redirect } from 'react-router';
 
 import { serverEnv } from '~/lib/env';
@@ -51,7 +55,7 @@ export async function action({ request }: { request: Request }) {
   }
 
   const headers = new Headers();
-  const cookieDomain = serverEnv.AUTH_COOKIE_DOMAIN?.trim();
+  const cookieDomain = getAuthCookieDomain();
   const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
   headers.append(
     'set-cookie',

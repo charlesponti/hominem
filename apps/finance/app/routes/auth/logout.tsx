@@ -1,4 +1,5 @@
 import { redirect } from 'react-router';
+import { getAuthCookieDomain } from '@hominem/auth/server';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
 
 import { serverEnv } from '~/lib/env';
@@ -20,7 +21,7 @@ export async function action({ request }: { request: Request }) {
       headers.append('set-cookie', value);
     }
   } catch {
-    const cookieDomain = serverEnv.AUTH_COOKIE_DOMAIN?.trim();
+    const cookieDomain = getAuthCookieDomain();
     const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
     headers.append(
       'set-cookie',

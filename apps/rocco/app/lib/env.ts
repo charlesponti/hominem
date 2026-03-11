@@ -12,12 +12,16 @@ const clientSchema = z.object({
 const serverSchema = z.object({
   VITE_PUBLIC_API_URL: z.string().url(),
   VITE_R2_DOMAIN: z.string().optional(),
+  AUTH_COOKIE_DOMAIN: z.string().optional(),
   VITE_GOOGLE_API_KEY: z.string().min(1),
   VITE_APP_BASE_URL: z.string().url(),
 });
 
 export const clientEnv = createClientEnv(clientSchema, 'roccoClient');
-export const serverEnv = createServerEnv(serverSchema, 'roccoServer');
+
+type ServerEnv = z.infer<typeof serverSchema>;
+
+export const serverEnv: ServerEnv = createServerEnv(serverSchema, 'roccoServer');
 
 type _ClientEnv = z.infer<typeof clientSchema>;
-type _ServerEnv = z.infer<typeof serverSchema>;
+type _ServerEnv = ServerEnv;

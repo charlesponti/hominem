@@ -39,6 +39,10 @@ function getAbsoluteApiUrl(baseUrl: string, path: string) {
   return new URL(path, baseUrl).toString()
 }
 
+export function getAuthCookieDomain() {
+  return process.env.AUTH_COOKIE_DOMAIN?.trim()
+}
+
 function getRequestAccessToken(request: Request) {
   const authorization = request.headers.get('authorization')
   if (authorization?.startsWith('Bearer ')) {

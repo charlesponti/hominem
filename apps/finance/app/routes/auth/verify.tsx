@@ -1,4 +1,4 @@
-import { resolveSafeAuthRedirect } from '@hominem/auth/server';
+import { getAuthCookieDomain, resolveSafeAuthRedirect } from '@hominem/auth/server';
 import { AuthScaffold, OtpVerificationForm } from '@hominem/ui';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { redirect, useActionData, useLoaderData, useLocation } from 'react-router';
@@ -62,7 +62,7 @@ export async function action({ request }: { request: Request }) {
   }
 
   const headers = new Headers();
-  const cookieDomain = serverEnv.AUTH_COOKIE_DOMAIN?.trim();
+  const cookieDomain = getAuthCookieDomain();
   const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
 
   const setCookieValues = getSetCookieHeaders(response.headers);

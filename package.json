@@ -31,6 +31,7 @@
     "clean": "turbo run clean",
     "dev": "turbo dev",
     "dev:doctor": "bun scripts/dev-doctor.ts",
+    "doctor:react": "bunx react-doctor@latest . --yes --offline --verbose",
     "format": "turbo run format",
     "knip": "knip --include files,dependencies,exports",
     "knip:fix": "knip --fix",
