@@ -5,6 +5,7 @@
  */
 
 import type { ClassificationReviewProps } from '@hominem/chat-services';
+import { Button } from '@hominem/ui/button';
 
 export function ClassificationReview({
   proposedType,
@@ -57,20 +58,12 @@ export function ClassificationReview({
 
         {/* Actions */}
         <div className="flex gap-2 pt-1">
-          <button
-            type="button"
-            onClick={onAccept}
-            className="flex-1 text-sm font-medium bg-foreground text-background rounded px-4 py-2.5 hover:opacity-90 transition-opacity"
-          >
+          <Button type="button" variant="primary" onClick={onAccept} className="flex-1">
             Save Note
-          </button>
-          <button
-            type="button"
-            onClick={onReject}
-            className="px-4 py-2.5 text-sm text-muted-foreground border border-border rounded hover:bg-muted transition-colors"
-          >
+          </Button>
+          <Button type="button" variant="outline" onClick={onReject}>
             Discard
-          </button>
+          </Button>
         </div>
       </div>
     </dialog>

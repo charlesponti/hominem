@@ -1,4 +1,5 @@
 import { Alert } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/input';
 import { Check, MapPin, Search } from 'lucide-react';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
@@ -151,9 +152,10 @@ function PlacesAutocomplete({
           {!isLoading && data && data.length > 0 && (
             <div className="py-1">
               {data.map((suggestion, index: number) => (
-                <button
+                <Button
                   key={suggestion.place_id}
                   type="button"
+                  variant="ghost"
                   onClick={() => handleSelect(suggestion)}
                   className={cn(
                     'flex items-center px-3 py-2  w-full text-left overflow-x-hidden',
@@ -171,7 +173,7 @@ function PlacesAutocomplete({
                     </span>
                   </div>
                   {selectedIndex === index && <Check className="ml-auto size-4 text-primary" />}
-                </button>
+                </Button>
               ))}
             </div>
           )}

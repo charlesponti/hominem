@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { cn } from '../../lib/utils'
+import type { TextVariant } from './text.types'
 
-type TextVariant = 'body-1' | 'body-2' | 'body-3' | 'body-4'
 type TextElement = 'p' | 'span' | 'div' | 'li' | 'label' | 'strong' | 'em' | 'small'
 
 interface TextProps extends React.HTMLAttributes<HTMLElement> {

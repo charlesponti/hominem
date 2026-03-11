@@ -1,14 +1,6 @@
 import * as React from 'react'
 import { cn } from '../../lib/utils'
-
-type HeadingLevel = 1 | 2 | 3 | 4
-type HeadingVariant =
-  | 'display-1'
-  | 'display-2'
-  | 'heading-1'
-  | 'heading-2'
-  | 'heading-3'
-  | 'heading-4'
+import type { HeadingLevel, HeadingVariant } from './heading.types'
 
 /** Default variant for each semantic level */
 const levelVariantMap: Record<HeadingLevel, HeadingVariant> = {

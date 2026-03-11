@@ -10,6 +10,7 @@
  */
 
 import type { ReviewItem } from '@hominem/chat-services';
+import { Button } from '@hominem/ui/button';
 import { FileText } from 'lucide-react';
 
 interface ProposalCardProps {
@@ -40,21 +41,19 @@ export function ProposalCard({ item, onReview, onReject }: ProposalCardProps) {
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <button
-          type="button"
-          onClick={() => onReview(item)}
-          className="text-xs font-mono text-foreground border border-border rounded px-2.5 py-1 hover:bg-background transition-colors"
-        >
+        <Button type="button" variant="outline" size="sm" onClick={() => onReview(item)} className="text-xs">
           Review →
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => onReject(item)}
-          className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
+          className="px-2 text-xs text-muted-foreground"
           aria-label="Reject proposal"
         >
           ✕
-        </button>
+        </Button>
       </div>
     </div>
   );

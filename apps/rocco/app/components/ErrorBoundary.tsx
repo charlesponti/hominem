@@ -195,37 +195,40 @@ export default function ErrorBoundary({ error }: ErrorBoundaryProps) {
             <div className="pt-6 border-t border-border/50 w-full">
               <p className="text-sm text-muted-foreground mb-4 font-light">Quick Links</p>
               <div className="flex flex-wrap justify-center gap-4 text-sm">
-                <button
-                  type="button"
+                <Button
+                  variant="link"
+                  size="sm"
                   onClick={() => navigate('/')}
-                  className="text-primary hover:text-primary/80 flex items-center gap-1.5"
+                  className="h-auto p-0 text-primary flex items-center gap-1.5"
                 >
                   <Home className="size-4" />
                   Explore Places
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="link"
+                  size="sm"
                   onClick={() => navigate('/lists')}
-                  className="text-primary hover:text-primary/80 flex items-center gap-1.5"
+                  className="h-auto p-0 text-primary flex items-center gap-1.5"
                 >
                   <List className="size-4" />
                   My Lists
-                </button>
+                </Button>
               </div>
             </div>
 
             {/* Developer Stack Trace */}
             {stack && (
               <div className="w-full flex flex-col gap-3">
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowStack(!showStack)}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                  className="h-auto w-fit px-0 text-sm text-muted-foreground hover:text-foreground"
                 >
                   <Bug className="size-4" />
                   <span>Developer Info</span>
                   <ChevronDown className={`size-4 ${showStack ? 'rotate-180' : ''}`} />
-                </button>
+                </Button>
                 {showStack && (
                   <div className="overflow-hidden">
                     <pre className="w-full p-4 overflow-x-auto border border-border text-xs text-left">

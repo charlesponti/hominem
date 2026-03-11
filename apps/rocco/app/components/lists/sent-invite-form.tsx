@@ -1,7 +1,7 @@
 import { Alert } from '@hominem/ui';
+import { Form } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
-import { Input } from '@hominem/ui/input';
-import { Label } from '@hominem/ui/label';
+import { TextField } from '@hominem/ui/text-field';
 import { type SyntheticEvent, useCallback, useId, useState } from 'react';
 
 import { useCreateInvite } from '~/lib/hooks/use-invites';
@@ -36,12 +36,10 @@ export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps
     <div className="flex flex-col gap-3">
       {mutation.error && <Alert variant="destructive">{mutation.error.message}</Alert>}
 
-      <form className="flex items-center gap-1" onSubmit={onFormSubmit}>
-        <Label htmlFor={emailId} className="sr-only">
-          Email address
-        </Label>
-        <Input
+      <Form className="flex items-center gap-1" onSubmit={onFormSubmit}>
+        <TextField
           id={emailId}
+          label="Email address"
           type="email"
           name="email"
           placeholder="colleague@example.com"
@@ -58,7 +56,7 @@ export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps
         >
           <span>Invit{mutation.isPending ? <span>ing...</span> : 'e'}</span>
         </Button>
-      </form>
+      </Form>
     </div>
   );
 }

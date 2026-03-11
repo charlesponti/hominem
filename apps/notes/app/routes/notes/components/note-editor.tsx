@@ -1,6 +1,7 @@
 import type { Note } from '@hominem/hono-rpc/types/notes.types';
 import { Button } from '@hominem/ui/button';
 import { Textarea } from '@hominem/ui/components/ui/textarea';
+import { TextField } from '@hominem/ui/text-field';
 import { Sparkles, Save, Trash2, Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
@@ -97,8 +98,7 @@ export function NoteEditor({ note, chatId, onAIAction }: NoteEditorProps) {
     <div className="flex flex-col h-full p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <input
-          type="text"
+        <TextField
           value={title}
           onChange={handleTitleChange}
           placeholder="Note title..."

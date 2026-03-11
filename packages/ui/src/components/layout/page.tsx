@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { cn } from '../../lib/utils'
-
-type PageMaxWidth = 'sm' | 'md' | 'lg' | 'xl' | 'full'
+import type { PageMaxWidth } from './page.types'
 
 const maxWidthMap: Record<PageMaxWidth, string> = {
   sm: 'max-w-2xl',

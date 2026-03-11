@@ -82,15 +82,15 @@
 - [x] 9.2 Create `Button` (web + mobile) with standard variants: default, primary, destructive, ghost, link; sizes: sm, md, lg
 - [x] 9.3 Create `TextField` (web + mobile) — wraps `<input type="text|email|password|search">` / `TextInput` with consistent styling, label wiring, error state, disabled state
 - [x] 9.4 Create `TextArea` (web + mobile) — wraps `<textarea>` / multiline `TextInput`
-- [ ] 9.5 Create `Field` — label + control + helper text + error text slot; wires `htmlFor`/`accessibilityLabelledBy` automatically
-- [ ] 9.6 Create `Form` (web) — semantic `<form>` wrapper with consistent gap and submit handling
-- [ ] 9.7 Create `Stack` layout primitive (web + mobile) — vertical flex container with gap token, optional dividers
-- [ ] 9.8 Create `Inline` layout primitive (web + mobile) — horizontal flex container with gap token and wrapping option
-- [ ] 9.9 Create `Screen` / `Page` shell (web + mobile) — handles safe area, max-width, horizontal padding, scroll behavior
-- [ ] 9.10 Create `Card` component (web + mobile) — surface container with canonical radius, border, and padding
-- [ ] 9.11 Create `Text` typography primitive (web + mobile) — maps to design system body/caption/label scale; replaces direct `<p>` / `<span>` / `<Text>` usage
-- [ ] 9.12 Create `Heading` typography primitive (web + mobile) — maps to h1–h4 / display scale; replaces raw heading tags
-- [ ] 9.13 Write stories for every new primitive in Storybook (`packages/ui`)
+- [x] 9.5 Create `Field` — label + control + helper text + error text slot; wires `htmlFor`/`accessibilityLabelledBy` automatically
+- [x] 9.6 Create `Form` (web) — semantic `<form>` wrapper with consistent gap and submit handling
+- [x] 9.7 Create `Stack` layout primitive (web + mobile) — vertical flex container with gap token, optional dividers
+- [x] 9.8 Create `Inline` layout primitive (web + mobile) — horizontal flex container with gap token and wrapping option
+- [x] 9.9 Create `Screen` / `Page` shell (web + mobile) — handles safe area, max-width, horizontal padding, scroll behavior
+- [x] 9.10 Create `Card` component (web + mobile) — surface container with canonical radius, border, and padding
+- [x] 9.11 Create `Text` typography primitive (web + mobile) — maps to design system body/caption/label scale; replaces direct `<p>` / `<span>` / `<Text>` usage
+- [x] 9.12 Create `Heading` typography primitive (web + mobile) — maps to h1–h4 / display scale; replaces raw heading tags
+- [x] 9.13 Write stories for every new primitive in Storybook (`packages/ui`)
 
 ## Phase 10: Replace High-Frequency Raw Usage
 

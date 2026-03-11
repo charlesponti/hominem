@@ -1,16 +1,15 @@
 import * as React from 'react'
 import {
   StyleSheet,
-  Text,
   TextInput,
-  View,
   type StyleProp,
   type TextInputProps,
   type TextStyle,
   type ViewStyle,
 } from 'react-native'
 
-import { colors, fontFamiliesNative, fontSizes, fontWeights, spacing } from '../../tokens'
+import { colors, fontFamiliesNative, fontSizes, spacing } from '../../tokens'
+import { Field } from './field.native'
 import type { TextAreaBaseProps } from './text-area.types'
 
 interface TextAreaProps
@@ -32,15 +31,16 @@ function TextArea({
   style,
   ...props
 }: TextAreaProps) {
-  const describedText = error ?? helpText
   const isEditable = editable ?? !disabled
 
   return (
-    <View style={containerStyle}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+    <Field
+      containerStyle={containerStyle}
+      error={error}
+      helpText={helpText}
+      label={label}
+    >
       <TextInput
-        accessibilityHint={describedText}
-        accessibilityLabel={label}
         editable={isEditable}
         multiline
         placeholder={placeholder ?? label}
@@ -54,30 +54,11 @@ function TextArea({
         textAlignVertical="top"
         {...props}
       />
-      {describedText ? (
-        <Text style={error ? styles.errorText : styles.helpText}>{describedText}</Text>
-      ) : null}
-    </View>
+    </Field>
   )
 }
 
 const styles = StyleSheet.create({
-  errorText: {
-    color: colors.destructive,
-    fontFamily: fontFamiliesNative.primary,
-    fontSize: fontSizes.xs,
-    fontWeight: fontWeights.regular,
-    lineHeight: Math.round(fontSizes.xs * 1.4),
-    marginTop: spacing[1],
-  },
-  helpText: {
-    color: colors['text-tertiary'],
-    fontFamily: fontFamiliesNative.primary,
-    fontSize: fontSizes.xs,
-    fontWeight: fontWeights.regular,
-    lineHeight: Math.round(fontSizes.xs * 1.4),
-    marginTop: spacing[1],
-  },
   input: {
     backgroundColor: colors.muted,
     borderColor: colors['border-default'],
@@ -95,14 +76,6 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: colors.destructive,
-  },
-  label: {
-    color: colors['text-secondary'],
-    fontFamily: fontFamiliesNative.primary,
-    fontSize: fontSizes.xs,
-    fontWeight: fontWeights.semibold,
-    lineHeight: Math.round(fontSizes.xs * 1.4),
-    marginBottom: spacing[2],
   },
 })
 

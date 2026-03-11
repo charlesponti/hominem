@@ -1,16 +1,15 @@
 import * as React from 'react'
 import {
   StyleSheet,
-  Text,
   TextInput,
-  View,
   type StyleProp,
   type TextInputProps,
   type TextStyle,
   type ViewStyle,
 } from 'react-native'
 
-import { colors, fontFamiliesNative, fontSizes, fontWeights, spacing } from '../../tokens'
+import { colors, fontFamiliesNative, fontSizes, spacing } from '../../tokens'
+import { Field } from './field.native'
 import type { TextFieldBaseProps, TextFieldType } from './text-field.types'
 
 interface TextFieldProps
@@ -34,7 +33,6 @@ function TextField({
   type = 'text',
   ...props
 }: TextFieldProps) {
-  const describedText = error ?? helpText
   const isEditable = editable ?? !disabled
   const keyboardType =
     type === 'email'
@@ -45,11 +43,13 @@ function TextField({
   const secureTextEntry = type === 'password'
 
   return (
-    <View style={containerStyle}>
-      {label ? <Text style={styles.label}>{label}</Text> : null}
+    <Field
+      containerStyle={containerStyle}
+      error={error}
+      helpText={helpText}
+      label={label}
+    >
       <TextInput
-        accessibilityHint={describedText}
-        accessibilityLabel={label}
         editable={isEditable}
         keyboardType={keyboardType}
         placeholder={placeholder ?? label}
@@ -63,30 +63,11 @@ function TextField({
         ]}
         {...props}
       />
-      {describedText ? (
-        <Text style={error ? styles.errorText : styles.helpText}>{describedText}</Text>
-      ) : null}
-    </View>
+    </Field>
   )
 }
 
 const styles = StyleSheet.create({
-  errorText: {
-    color: colors.destructive,
-    fontFamily: fontFamiliesNative.primary,
-    fontSize: fontSizes.xs,
-    fontWeight: fontWeights.regular,
-    lineHeight: Math.round(fontSizes.xs * 1.4),
-    marginTop: spacing[1],
-  },
-  helpText: {
-    color: colors['text-tertiary'],
-    fontFamily: fontFamiliesNative.primary,
-    fontSize: fontSizes.xs,
-    fontWeight: fontWeights.regular,
-    lineHeight: Math.round(fontSizes.xs * 1.4),
-    marginTop: spacing[1],
-  },
   input: {
     backgroundColor: colors.muted,
     borderColor: colors['border-default'],
@@ -104,14 +85,6 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: colors.destructive,
-  },
-  label: {
-    color: colors['text-secondary'],
-    fontFamily: fontFamiliesNative.primary,
-    fontSize: fontSizes.xs,
-    fontWeight: fontWeights.semibold,
-    lineHeight: Math.round(fontSizes.xs * 1.4),
-    marginBottom: spacing[2],
   },
 })
 

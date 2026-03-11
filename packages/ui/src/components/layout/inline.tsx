@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { cn } from '../../lib/utils'
-
-type GapToken = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+import type { InlineAlign, InlineBaseProps, InlineJustify } from './inline.types'
+import type { GapToken } from './stack.types'
 
 const gapMap: Record<GapToken, string> = {
   none: 'gap-0',
@@ -12,20 +12,11 @@ const gapMap: Record<GapToken, string> = {
   xl: 'gap-8',
 }
 
-interface InlineProps extends React.ComponentProps<'div'> {
-  /** Horizontal gap between children using spacing tokens */
-  gap?: GapToken
-  /** Whether children wrap to the next line */
-  wrap?: boolean
-  /** Cross-axis alignment */
-  align?: 'start' | 'center' | 'end' | 'baseline' | 'stretch'
-  /** Main-axis justification */
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around'
-  /** Render as a different element */
+interface InlineProps extends React.ComponentProps<'div'>, InlineBaseProps {
   as?: React.ElementType
 }
 
-const alignMap: Record<NonNullable<InlineProps['align']>, string> = {
+const alignMap: Record<InlineAlign, string> = {
   start: 'items-start',
   center: 'items-center',
   end: 'items-end',
@@ -33,7 +24,7 @@ const alignMap: Record<NonNullable<InlineProps['align']>, string> = {
   stretch: 'items-stretch',
 }
 
-const justifyMap: Record<NonNullable<InlineProps['justify']>, string> = {
+const justifyMap: Record<InlineJustify, string> = {
   start: 'justify-start',
   center: 'justify-center',
   end: 'justify-end',

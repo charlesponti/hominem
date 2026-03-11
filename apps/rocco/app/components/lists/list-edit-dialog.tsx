@@ -1,10 +1,10 @@
-import { Alert, Label } from '@hominem/ui';
+import { Alert, Form } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
-import { Textarea } from '@hominem/ui/components/ui/textarea';
-import { Input } from '@hominem/ui/input';
+import { TextArea } from '@hominem/ui/text-area';
+import { TextField } from '@hominem/ui/text-field';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { useDeleteList, useUpdateList } from '~/lib/lists';
@@ -21,8 +21,6 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
   const [name, setName] = useState(list.name);
   const [description, setDescription] = useState(list.description || '');
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const listNameId = useId();
-  const descriptionId = useId();
 
   // Sync state when list prop changes
   useEffect(() => {
@@ -100,16 +98,15 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
             <>
               <Dialog.Title>Edit list</Dialog.Title>
               <Dialog.Description>Update your list information</Dialog.Description>
-              <form
+              <Form
                 data-testid="list-edit-form"
                 className="flex flex-col gap-4 mt-4"
                 onSubmit={handleSave}
               >
-                <div className="space-y-2">
-                  <Label htmlFor={listNameId}>Name</Label>
-                  <Input
+                <div>
+                  <TextField
                     type="text"
-                    id={listNameId}
+                    label="Name"
                     name="name"
                     placeholder="Enter list name"
                     autoComplete="off"
@@ -117,10 +114,9 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
                     onChange={(e) => setName(e.target.value)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor={descriptionId}>Description</Label>
-                  <Textarea
-                    id={descriptionId}
+                <div>
+                  <TextArea
+                    label="Description"
                     placeholder="Enter list description"
                     value={description || ''}
                     onChange={(e) => setDescription(e.target.value)}
@@ -145,7 +141,7 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
                     Delete
                   </Button>
                 </div>
-              </form>
+              </Form>
               {updateList.isError ? (
                 <Alert variant="destructive">
                   There was an issue editing your list. Try again later.
@@ -182,13 +178,15 @@ export default function ListEditDialog({ list, isOpen, onOpenChange }: ListEditD
             </>
           )}
           <Dialog.Close asChild>
-            <button
+            <Button
               type="button"
-              className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+              variant="ghost"
+              size="sm"
+              className="absolute right-2 top-2 px-2 text-muted-foreground"
               aria-label="Close"
             >
               <span className="sr-only">Close</span>×
-            </button>
+            </Button>
           </Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>

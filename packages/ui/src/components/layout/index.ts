@@ -4,7 +4,10 @@ export type { LandingPageProps, LandingFeature, LandingStep } from './landing-pa
 export { PageContainer } from './page-container';
 export { Stack } from './stack';
 export type { StackProps, GapToken } from './stack';
+export type { StackProps as NativeStackProps } from './stack.native';
 export { Inline } from './inline';
 export type { InlineProps } from './inline';
+export type { InlineProps as NativeInlineProps } from './inline.native';
 export { Page, Container } from './page';
 export type { PageProps, ContainerProps, PageMaxWidth } from './page';
+export type { ScreenProps, ContainerProps as NativeContainerProps } from './page.native';

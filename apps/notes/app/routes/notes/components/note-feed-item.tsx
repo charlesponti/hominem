@@ -75,7 +75,7 @@ export function NoteFeedItem({
 
   const handleRemoveTag = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
-      const tagValue = (event.target as HTMLButtonElement).dataset.tagValue;
+      const tagValue = event.currentTarget.dataset.tagValue;
       if (tagValue) {
         onRemoveTag(note.id, tagValue);
       }
@@ -127,8 +127,9 @@ export function NoteFeedItem({
               >
                 {tag.value}
                 {!extractHashtags.includes(tag.value) && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
                     onClick={handleRemoveTag}
                     data-tag-value={tag.value}
                     className="ml-1 text-muted-foreground hover:text-foreground"
@@ -136,7 +137,7 @@ export function NoteFeedItem({
                     aria-label={`Remove tag ${tag.value}`}
                   >
                     <X className="size-3" />
-                  </button>
+                  </Button>
                 )}
               </Badge>
             ))}

@@ -1,14 +1,9 @@
 import * as React from 'react'
 import { cn } from '../../lib/utils'
+import type { FieldBaseProps } from './field.types'
 
-interface FieldProps {
-  label?: string | undefined
-  helpText?: string | undefined
-  error?: string | undefined
-  required?: boolean | undefined
+interface FieldProps extends FieldBaseProps {
   children: React.ReactNode
-  className?: string | undefined
-  id?: string | undefined
 }
 
 /**
