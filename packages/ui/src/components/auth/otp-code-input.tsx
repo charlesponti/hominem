@@ -8,7 +8,7 @@ interface OtpCodeInputProps {
   disabled?: boolean;
   autoFocus?: boolean;
   className?: string;
-  error?: string;
+  error?: string | undefined;
   onComplete?: () => void;
   maskDelay?: number;
   success?: boolean;
@@ -22,15 +22,16 @@ interface DigitProps {
   onChange: (index: number, char: string) => void;
   onKeyDown: (index: number, e: React.KeyboardEvent<HTMLInputElement>) => void;
   refCallback: (el: HTMLInputElement | null, idx: number) => void;
-  error?: string;
-  masked?: boolean;
+  error?: string | undefined;
+  masked?: boolean | undefined;
+  success?: boolean | undefined;
 }
 
 // memoized single-cell input to avoid unnecessary rerenders
 const Digit = /*#__PURE__*/
   React.memo(
     React.forwardRef<HTMLInputElement, DigitProps>(
-      ({ value, index, length, disabled, onChange, onKeyDown, refCallback, error, masked }, ref) => {
+      ({ value, index, length, disabled, onChange, onKeyDown, refCallback, error, masked, success }, ref) => {
         return (
           <input
             key={index}
@@ -39,21 +40,25 @@ const Digit = /*#__PURE__*/
             inputMode="numeric"
             maxLength={1}
             value={masked ? '•' : value}
-            disabled={disabled}
+            disabled={disabled || success}
+            readOnly={success}
             onChange={(e) => onChange(index, e.target.value)}
             onKeyDown={(e) => onKeyDown(index, e)}
             className={cn(
               "w-12 h-14 text-center body-2 font-semibold",
-              "bg-bg-surface border border-border-default",
-              "focus-visible:outline-none focus-visible:border-border-focus focus-visible:shadow-[0_0_0_2px_var(--color-bg-elevated),0_0_0_4px_var(--color-accent)]",
+              "bg-bg-surface border",
+              "focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_var(--color-bg-elevated),0_0_0_4px_var(--color-accent)]",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-all duration-120",
               "text-text-primary placeholder-text-tertiary",
               "rounded-md",
+              success && "border-accent bg-accent/5",
+              !success && !error && "border-border-default focus-visible:border-border-focus",
               error && "border-destructive focus-visible:shadow-[0_0_0_2px_var(--color-bg-elevated),0_0_0_4px_var(--color-destructive)]",
             )}
             aria-label={`Digit ${index + 1} of ${length}`}
             aria-invalid={!!error}
+            aria-busy={success}
           />
         );
       },
@@ -72,10 +77,26 @@ export function OtpCodeInput({
   error,
   onComplete,
   maskDelay = 300,
+  success = false,
 }: OtpCodeInputProps) {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const maskTimersRef = useRef<Record<number, NodeJS.Timeout>>({});
+  const maskTimersRef = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
   const [maskedIndices, setMaskedIndices] = useState<Set<number>>(new Set());
+
+  // Auto-clear on error & refocus
+  useEffect(() => {
+    if (error && value.length > 0) {
+      onChange('');
+      setMaskedIndices(new Set());
+      // Clear any pending mask timers
+      Object.values(maskTimersRef.current).forEach(clearTimeout);
+      maskTimersRef.current = {};
+      // Refocus first input for immediate retry
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 0);
+    }
+  }, [error, onChange, value.length]);
 
   // derive per-cell values from the single value prop; keeps component pure
   const inputValues = useMemo(() => {
@@ -140,13 +161,18 @@ export function OtpCodeInput({
       const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, length);
       const arr = Array(length).fill('');
       paste.split('').forEach((ch, i) => (arr[i] = ch));
-      onChange(arr.join(''));
+      const newValue = arr.join('');
+      onChange(newValue);
       if (paste.length > 0) {
         const focusIndex = Math.min(paste.length, length - 1);
         inputRefs.current[focusIndex]?.focus();
       }
+      // Auto-submit if paste fills all digits
+      if (paste.length === length && onComplete) {
+        setTimeout(() => onComplete(), 0);
+      }
     },
-    [length, onChange],
+    [length, onChange, onComplete],
   );
 
   useEffect(() => {
@@ -175,6 +201,7 @@ export function OtpCodeInput({
               }}
               error={error}
               masked={maskedIndices.has(index)}
+              success={success}
             />
           ))}
         </div>

@@ -1,6 +1,6 @@
 interface AuthErrorBannerProps {
-  error?: string | null;
-  className?: string;
+  error?: string | null | undefined;
+  className?: string | undefined;
 }
 
 export function AuthErrorBanner({ error, className }: AuthErrorBannerProps) {
