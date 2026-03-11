@@ -26,14 +26,14 @@ export function Checkpoint({
   const statusIcons = {
     pending: <Circle className="size-4 text-muted-foreground" />,
     'in-progress': <Loader2 className="size-4 animate-spin text-primary" />,
-    completed: <Check className="size-4 text-green-500" />,
+    completed: <Check className="size-4 text-success" />,
     error: <Circle className="size-4 text-destructive" />,
   };
 
   const statusColors = {
     pending: 'text-muted-foreground',
     'in-progress': 'text-primary',
-    completed: 'text-green-500',
+    completed: 'text-success',
     error: 'text-destructive',
   };
 

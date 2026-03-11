@@ -52,7 +52,7 @@ export function PlanStep({
   const statusIcons = {
     pending: <Circle className="size-4 text-muted-foreground" />,
     'in-progress': <ChevronRight className="size-4 text-primary animate-pulse" />,
-    completed: <Check className="size-4 text-green-500" />,
+    completed: <Check className="size-4 text-success" />,
     skipped: <ChevronRight className="size-4 text-muted-foreground line-through" />,
   };
 

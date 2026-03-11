@@ -50,7 +50,6 @@ const searchHeaderStyles = StyleSheet.create({
     lineHeight: 20,
     color: theme.colors.foreground,
     alignItems: 'center',
-    // backgroundColor: theme.colors.grayDark,
     paddingVertical: 8,
   },
   clearButton: {

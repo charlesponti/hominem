@@ -62,9 +62,9 @@ export function QueueItem({
   const statusColors = {
     pending: 'bg-muted',
     running: 'bg-primary/10',
-    paused: 'bg-yellow-500/10',
-    completed: 'bg-green-500/10',
-    error: 'bg-red-500/10',
+    paused: 'bg-warning/10',
+    completed: 'bg-success/10',
+    error: 'bg-destructive/10',
   };
 
   return (

@@ -33,14 +33,14 @@ export function Task({
   const statusIcons = {
     pending: <Circle className="size-4 text-muted-foreground" />,
     'in-progress': <Clock className="size-4 text-primary animate-pulse" />,
-    completed: <Check className="size-4 text-green-500" />,
+    completed: <Check className="size-4 text-success" />,
     cancelled: <Circle className="size-4 text-muted-foreground line-through" />,
   };
 
   const priorityColors = {
     low: 'text-muted-foreground',
-    medium: 'text-yellow-500',
-    high: 'text-red-500',
+    medium: 'text-warning',
+    high: 'text-destructive',
   };
 
   return (
@@ -111,7 +111,7 @@ export function TaskStatusBadge({ status, className, ...props }: TaskStatusBadge
   const statusColors = {
     pending: 'bg-muted text-muted-foreground',
     'in-progress': 'bg-primary/10 text-primary',
-    completed: 'bg-green-500/10 text-green-500',
+    completed: 'bg-success/10 text-success',
     cancelled: 'bg-muted text-muted-foreground',
   };
 
