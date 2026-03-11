@@ -1,4 +1,5 @@
 import {
+  useRef,
   type ReactNode,
   useCallback,
   useContext,
@@ -7,7 +8,14 @@ import {
   useState,
 } from 'react';
 
-import type { AuthClient, AuthConfig, AuthContextType, HominemSession, HominemUser } from './types';
+import type {
+  AppAuthStatus,
+  AuthClient,
+  AuthConfig,
+  AuthContextType,
+  HominemSession,
+  HominemUser,
+} from './types';
 import { AuthContext } from './AuthContext'
 type AuthEvent = 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED';
 
@@ -107,6 +115,14 @@ function toSession(accessToken?: string | null, expiresIn?: number | null): Homi
     expires_in: ttl,
     expires_at: new Date(Date.now() + ttl * 1000).toISOString(),
   };
+}
+
+interface ClientAuthState {
+  error: Error | null;
+  isLoading: boolean;
+  session: HominemSession | null;
+  status: AppAuthStatus;
+  user: HominemUser | null;
 }
 
 async function fetchSession(apiBaseUrl: string): Promise<SessionResponse> {
@@ -231,24 +247,31 @@ export function AuthProvider({
   initialSession = null,
 }: AuthProviderProps) {
   const hasInitialAuth = Boolean(initialUser && initialSession);
-  const [session, setSession] = useState<HominemSession | null>(initialSession);
-  const [user, setUser] = useState<HominemUser | null>(initialUser);
-  const [isLoading, setIsLoading] = useState(!hasInitialAuth);
+  const previousSessionTokenRef = useRef<string | null>(initialSession?.access_token ?? null);
+  const [authState, setAuthState] = useState<ClientAuthState>(() => ({
+    error: null,
+    isLoading: !hasInitialAuth,
+    session: initialSession,
+    status: hasInitialAuth ? 'signed_in' : 'booting',
+    user: initialUser,
+  }));
 
   const refreshAuth = useCallback(async () => {
     const payload = await fetchSession(config.apiBaseUrl);
-    setUser(payload.user ?? null);
-    setSession((currentSession) => {
+    setAuthState((currentState) => {
       const nextSession = toSession(payload.accessToken, payload.expiresIn);
-      if (nextSession) {
-        return nextSession;
-      }
-      if (payload.isAuthenticated && payload.user && currentSession) {
-        return currentSession;
-      }
-      return null;
+      const session =
+        nextSession ?? (payload.isAuthenticated && payload.user ? currentState.session : null);
+      const user = payload.user ?? null;
+
+      return {
+        error: null,
+        isLoading: false,
+        session,
+        status: user && session ? 'signed_in' : 'signed_out',
+        user,
+      };
     });
-    setIsLoading(false);
     return payload;
   }, [config.apiBaseUrl]);
 
@@ -451,22 +474,33 @@ export function AuthProvider({
   }, []);
 
   const signOut = useCallback(async () => {
+    setAuthState((currentState) => ({
+      ...currentState,
+      error: null,
+      isLoading: true,
+      status: 'signing_out',
+    }));
     await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/logout'), {
       method: 'POST',
       credentials: 'include',
     });
-    setUser(null);
-    setSession(null);
+    setAuthState({
+      error: null,
+      isLoading: false,
+      session: null,
+      status: 'signed_out',
+      user: null,
+    });
     onAuthEvent?.('SIGNED_OUT');
   }, [config.apiBaseUrl, onAuthEvent]);
 
   const getSession = useCallback(async () => {
-    if (session) {
-      return session;
+    if (authState.session) {
+      return authState.session;
     }
     const payload = await refreshAuth();
     return toSession(payload.accessToken, payload.expiresIn);
-  }, [refreshAuth, session]);
+  }, [authState.session, refreshAuth]);
 
   const authClient = useMemo<AuthClient>(
     () => ({
@@ -505,18 +539,28 @@ export function AuthProvider({
   );
 
   useEffect(() => {
-    if (!session) {
+    const currentToken = authState.session?.access_token ?? null;
+    if (!currentToken) {
+      previousSessionTokenRef.current = null;
       return;
     }
+    if (previousSessionTokenRef.current === null) {
+      previousSessionTokenRef.current = currentToken;
+      return;
+    }
+    if (previousSessionTokenRef.current === currentToken) {
+      return;
+    }
+    previousSessionTokenRef.current = currentToken;
     onAuthEvent?.('TOKEN_REFRESHED');
-  }, [onAuthEvent, session]);
+  }, [authState.session, onAuthEvent]);
 
   const value = useMemo<AuthContextType>(
     () => ({
-      user,
-      session,
-      isLoading,
-      isAuthenticated: Boolean(user && session),
+      user: authState.user,
+      session: authState.session,
+      isLoading: authState.isLoading,
+      isAuthenticated: authState.status === 'signed_in',
       signIn,
       signInWithEmail,
       signInWithPasskey,
@@ -528,12 +572,10 @@ export function AuthProvider({
       requireStepUp,
       logout: signOut,
       authClient,
-      userId: user?.id,
+      userId: authState.user?.id,
     }),
     [
-      user,
-      session,
-      isLoading,
+      authState,
       signIn,
       signInWithEmail,
       signInWithPasskey,

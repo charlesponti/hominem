@@ -46,12 +46,14 @@ describe('AuthProvider', () => {
 
   it('hydrates authenticated state from the server session without a client session probe', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
+    const onAuthEvent = vi.fn()
 
     render(
       <AuthProvider
         config={{ apiBaseUrl: 'http://localhost:4040' }}
         initialUser={initialUser}
         initialSession={initialSession}
+        onAuthEvent={onAuthEvent}
       >
         <TestConsumer />
       </AuthProvider>,
@@ -64,5 +66,6 @@ describe('AuthProvider', () => {
     })
 
     expect(fetchSpy).not.toHaveBeenCalled()
+    expect(onAuthEvent).not.toHaveBeenCalled()
   })
 })
