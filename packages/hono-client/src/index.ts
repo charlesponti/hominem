@@ -15,7 +15,7 @@ export type { InvitesClient } from './domains/invites';
 export type { ItemsClient } from './domains/items';
 export type { ListsClient } from './domains/lists';
 export type { MessagesClient } from './domains/messages';
-export type { MobileClient } from './domains/mobile';
+export type { MobileClient, MobileSpeechInput } from './domains/mobile';
 export type {
   NotesArchiveInput,
   NotesClient,
@@ -24,6 +24,7 @@ export type {
   NotesUpdateByIdInput,
 } from './domains/notes';
 export type { PlacesClient } from './domains/places';
+export type { ReviewClient, ReviewAcceptClientInput, ReviewRejectClientInput } from './domains/review';
 export type { TwitterClient } from './domains/twitter';
 export type { UserClient } from './domains/user';
 export { transformDates, type TransformDates } from './core/transformer';

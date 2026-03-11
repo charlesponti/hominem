@@ -92,23 +92,13 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
   const handleFilesUploaded = useCallback(() => {}, []);
 
   const handleAudioTranscribed = useCallback(
-    async (transcript: string) => {
+    (transcript: string) => {
       if (!transcript.trim()) return;
-
-      try {
-        onStatusChange?.('streaming');
-        await sendMessage.mutateAsync({
-          message: transcript.trim(),
-          chatId,
-        });
-        onStatusChange?.('idle');
-      } catch (error) {
-        console.error('Failed to send transcribed message:', error);
-        onStatusChange?.('error', error as Error);
-        throw error;
-      }
+      setInputValue(transcript.trim());
+      setShowAudioRecorder(false);
+      setTimeout(() => textareaRef.current?.focus(), 50);
     },
-    [chatId, onStatusChange, sendMessage],
+    [],
   );
 
   const isSubmitting = sendMessage.isPending;

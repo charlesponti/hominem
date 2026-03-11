@@ -798,6 +798,11 @@ authRoutes.get('/session', async (c) => {
         ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
         ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
       },
+      accessToken: bearerToken,
+      expiresIn:
+        typeof claims.exp === 'number'
+          ? Math.max(claims.exp - Math.floor(Date.now() / 1000), 0)
+          : undefined,
     });
   } catch {
     return c.json({ isAuthenticated: false, user: null }, 401);

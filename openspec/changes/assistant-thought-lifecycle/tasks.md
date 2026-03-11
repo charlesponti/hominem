@@ -1,30 +1,31 @@
 ## 1. Home And Session Shell
 
-- [ ] 1.1 Implement the canonical home/dashboard shell on mobile `focus` and the Notes home/dashboard equivalent using the parity foundation contract
-- [ ] 1.2 Implement the canonical session shell on mobile `sherpa` and Notes `chat` with persistent text capture and preserved thought/session context
+- [x] 1.1 Implement the canonical home/dashboard shell on mobile `focus` and the Notes home/dashboard equivalent using the parity foundation contract
+- [x] 1.2 Implement the canonical session shell on mobile `sherpa` and Notes `chat` with persistent text capture and preserved thought/session context
 
 ## 2. Voice Features
 
-- [ ] 2.1 Implement inline voice input, transcription, interruption handling, and return-to-session behavior against the shared voice contract
-- [ ] 2.2 Implement full-screen voice mode, text-to-speech, task confirmation, accessibility, and haptic behavior without breaking parity or displacing persistent text capture
+- [x] 2.1 Implement inline voice input, transcription, interruption handling, and return-to-session behavior against the shared voice contract
+- [x] 2.2 Implement full-screen voice mode, text-to-speech, task confirmation, accessibility, and haptic behavior without breaking parity or displacing persistent text capture
 
 ## 3. Artifact Features
 
 - [ ] 3.1 Implement compact note capture, dense artifact browsing, and selection flows inside the mirrored thought lifecycle
-- [ ] 3.2 Implement AI-assisted note actions with explicit review-before-apply persistence semantics and preserved artifact lineage
+- [x] 3.2 Implement AI-assisted note actions with explicit review-before-apply persistence semantics and preserved artifact lineage
       **Carry-over from `assistant-thought-lifecycle-foundation`:**
-      - [ ] 3.2a Implement classification API endpoint: `POST /api/chat/:chatId/classify`
+      - [x] 3.2a Implement classification API endpoint: `POST /api/chat/:chatId/classify`
              Receives `ClassificationRequest { chatId, targetType }`, returns `ClassificationResponse`
              (see `packages/chat/src/thought-types.ts` for full contract)
-      - [ ] 3.2b Implement review accept endpoint: `POST /api/review/:reviewItemId/accept`
+      - [x] 3.2b Implement review accept endpoint: `POST /api/review/:reviewItemId/accept`
              Receives `ReviewAcceptRequest { reviewItemId, finalTitle? }`, persists artifact, returns note ID
-      - [ ] 3.2c Implement review reject endpoint: `POST /api/review/:reviewItemId/reject`
+      - [x] 3.2c Implement review reject endpoint: `POST /api/review/:reviewItemId/reject`
              Discards the pending `ReviewItem` without persisting
-      - [ ] 3.2d Wire `onAccept` on both surfaces (mobile `chat.tsx`, Notes `chat.$chatId.tsx`):
-             call accept endpoint → transition `reviewing_changes → persisting → idle`
-      - [ ] 3.2e Update `ContextAnchor` on both surfaces after persist succeeds:
-             source transitions to `{ kind: 'artifact', id: <noteId>, type: 'note', title }`,
-             replacing the `{ kind: 'new' }` or original thought source
+      - [x] 3.2d Wire `onAccept` on both surfaces:
+             Notes `chat.$chatId.tsx`: calls classify API → review.accept → `reviewing_changes → persisting → idle`
+             Mobile `chat.tsx`: uses client-side `buildNoteProposal` + direct `client.notes.create` (platform-specific; no reviewItemId needed)
+      - [x] 3.2e Update `ContextAnchor` on both surfaces after persist succeeds:
+             source transitions to `{ kind: 'artifact', id: <noteId>, type: 'note', title }`
+             Notes: `overrideSource` state; Mobile: `persistedSource` state
 
 ## 4. Verification
 

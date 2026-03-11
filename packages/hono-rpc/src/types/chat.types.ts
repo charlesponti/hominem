@@ -96,6 +96,19 @@ export type ChatsDeleteOutput = { success: boolean };
 export type ChatsGetMessagesOutput = ChatMessage[];
 
 // ============================================================================
+// CLASSIFY (thought → artifact review)
+// ============================================================================
+
+export type {
+  ArtifactType,
+  ClassificationResponse as ChatsClassifyOutput,
+} from '@hominem/chat-services/types'
+
+export type ChatsClassifyInput = {
+  targetType: import('@hominem/chat-services/types').ArtifactType
+}
+
+// ============================================================================
 // MESSAGES OPERATIONS
 // ============================================================================
 

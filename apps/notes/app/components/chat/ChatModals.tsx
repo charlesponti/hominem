@@ -1,7 +1,7 @@
 import type { VoiceErrorCode } from '@hominem/services';
 import { SpeechInput } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';
-import { Loader2, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import type { UploadedFile } from '~/lib/types/upload.js';
@@ -15,7 +15,7 @@ interface ChatModalsProps {
   onCloseFileUploader: () => void;
   onCloseAudioRecorder: () => void;
   onFilesUploaded: (files: UploadedFile[]) => void;
-  onAudioTranscribed: (transcript: string) => Promise<void>;
+  onAudioTranscribed: (transcript: string) => void;
 }
 
 type TranscribeApiResponse =
@@ -37,7 +37,6 @@ export function ChatModals({
   onFilesUploaded,
   onAudioTranscribed,
 }: ChatModalsProps) {
-  const [isSubmittingTranscript, setIsSubmittingTranscript] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
 
   const transcribeAudioBlob = useCallback(async (audioBlob: Blob) => {
@@ -80,22 +79,16 @@ export function ChatModals({
   }, []);
 
   const handleVoiceTranscription = useCallback(
-    async (transcript: string) => {
-      if (!transcript.trim()) {
-        return;
-      }
-      setIsSubmittingTranscript(true);
+    (transcript: string) => {
+      if (!transcript.trim()) return;
       setVoiceError(null);
       try {
-        await onAudioTranscribed(transcript.trim());
-        onCloseAudioRecorder();
+        onAudioTranscribed(transcript.trim());
       } catch (error) {
-        setVoiceError(error instanceof Error ? error.message : 'Failed to send transcript');
-      } finally {
-        setIsSubmittingTranscript(false);
+        setVoiceError(error instanceof Error ? error.message : 'Failed to process transcript');
       }
     },
-    [onAudioTranscribed, onCloseAudioRecorder],
+    [onAudioTranscribed],
   );
 
   return (
@@ -115,28 +108,32 @@ export function ChatModals({
       ) : null}
 
       {showAudioRecorder ? (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Voice input"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        >
           <div className="border p-6 w-full max-w-md space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Record Audio</h3>
-              <Button variant="ghost" size="sm" onClick={onCloseAudioRecorder}>
+              <h3 className="text-lg font-semibold" id="voice-dialog-title">Record Audio</h3>
+              <Button variant="ghost" size="sm" onClick={onCloseAudioRecorder} aria-label="Close voice input">
                 <X className="size-4" />
               </Button>
             </div>
+            <p className="text-sm text-muted-foreground">
+              Tap to record, tap again to stop. The transcript will appear in the message input.
+            </p>
             <div className="flex items-center gap-2">
               <SpeechInput
                 aria-label="Record audio message"
                 onAudioRecorded={transcribeAudioBlob}
                 onTranscriptionChange={(text: string) => {
-                  void handleVoiceTranscription(text);
+                  handleVoiceTranscription(text);
                 }}
               />
-              {isSubmittingTranscript ? <Loader2 className="size-4 animate-spin" /> : null}
-              <span className="text-sm text-muted-foreground">
-                Tap to record, tap again to stop
-              </span>
             </div>
-            {voiceError ? <p className="text-sm text-destructive">{voiceError}</p> : null}
+            {voiceError ? <p className="text-sm text-destructive" role="alert">{voiceError}</p> : null}
           </div>
         </div>
       ) : null}

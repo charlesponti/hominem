@@ -1,11 +1,8 @@
 import { useCallback, useRef, useState } from 'react'
 import { Pressable, StyleSheet, TextInput, View } from 'react-native'
-import { interpolateColor, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated'
 
 import { theme } from '~/theme'
-import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
-import { useMobileAudioRecorder } from '../media/use-mobile-audio-recorder'
-import { MobileVoiceInput } from '../media/mobile-voice-input'
+import { VoiceSessionModal } from '../media/voice-session-modal'
 import MindsherpaIcon from '../ui/icon'
 
 type ChatInputProps = {
@@ -17,28 +14,7 @@ type ChatInputProps = {
 
 export const ChatInput = ({ message, onMessageChange, onSendMessage, isPending = false }: ChatInputProps) => {
   const inputRef = useRef<TextInput>(null)
-  const [isVoiceMode, setIsVoiceMode] = useState(false)
-
-  // Voice recording with auto-transcription
-  const { startRecording, stopRecording, isRecording } = useMobileAudioRecorder({
-    autoTranscribe: true,
-    onAudioTranscribed: (transcription) => {
-      // Auto-send transcribed message in chat
-      onSendMessage(transcription)
-      setIsVoiceMode(false)
-    },
-    onError: () => {
-      setIsVoiceMode(false)
-    },
-  })
-
-  const handleVoiceToggle = useCallback(() => {
-    if (isRecording) {
-      void stopRecording()
-      return
-    }
-    void startRecording()
-  }, [isRecording, startRecording, stopRecording])
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
 
   const handleSend = useCallback(() => {
     if (!message.trim()) return
@@ -47,69 +23,53 @@ export const ChatInput = ({ message, onMessageChange, onSendMessage, isPending =
     inputRef.current?.focus()
   }, [message, onSendMessage, onMessageChange])
 
-  const backgroundColor = useSharedValue(0)
-  const voiceButtonStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(
-      backgroundColor.value,
-      [0, 1],
-      [theme.colors.muted, theme.colors.destructive]
-    ),
-  }))
-
-  // Drive the shared value from a derived value so it never mutates during render
-  useDerivedValue(() => {
-    backgroundColor.value = withTiming(isRecording ? 1 : 0, {
-      duration: VOID_MOTION_DURATION_STANDARD,
-    })
-  })
+  const handleVoiceTranscribed = useCallback(
+    (transcription: string) => {
+      onSendMessage(transcription)
+    },
+    [onSendMessage],
+  )
 
   return (
     <View style={styles.container}>
-      {isVoiceMode ? (
-        <MobileVoiceInput
-          onRecordingStateChange={setIsVoiceMode}
-          autoTranscribe={true}
-          onAudioTranscribed={(transcription) => {
-            onSendMessage(transcription)
-          }}
+      <View style={styles.inputRow}>
+        <TextInput
+          ref={inputRef}
+          placeholder="Where should we start?"
+          placeholderTextColor={theme.colors.mutedForeground}
+          style={styles.input}
+          editable={!isPending}
+          value={message}
+          onChangeText={onMessageChange}
+          testID="chat-input-message"
+          onSubmitEditing={handleSend}
+          returnKeyType="send"
         />
-      ) : (
-        <View style={styles.inputRow}>
-          <TextInput
-            ref={inputRef}
-            placeholder="Where should we start?"
-            placeholderTextColor={theme.colors.mutedForeground}
-            style={styles.input}
-            editable={!isPending && !isRecording}
-            value={message}
-            onChangeText={onMessageChange}
-            testID="chat-input-message"
-            onSubmitEditing={handleSend}
-            returnKeyType="send"
-          />
-          <Pressable
-            style={[styles.iconButton, voiceButtonStyle]}
-            onPress={handleVoiceToggle}
-            accessibilityLabel="Voice input"
-            testID="chat-voice-input-button"
-          >
-            <MindsherpaIcon
-              name="microphone"
-              size={20}
-              color={isRecording ? theme.colors.foreground : theme.colors.white}
-            />
-          </Pressable>
-          <Pressable
-            style={[styles.iconButton, styles.sendButton, isPending || !message.trim() ? styles.disabled : null]}
-            disabled={isPending || !message.trim()}
-            onPress={handleSend}
-            accessibilityLabel="Send message"
-            testID="chat-send-message-button"
-          >
-            <MindsherpaIcon name="arrow-up" size={20} color={theme.colors.foreground} />
-          </Pressable>
-        </View>
-      )}
+        <Pressable
+          style={styles.iconButton}
+          onPress={() => setIsVoiceModalOpen(true)}
+          accessibilityLabel="Open voice input"
+          accessibilityHint="Opens a full-screen voice recording panel"
+          testID="chat-voice-input-button"
+        >
+          <MindsherpaIcon name="microphone" size={20} color={theme.colors.white} />
+        </Pressable>
+        <Pressable
+          style={[styles.iconButton, styles.sendButton, isPending || !message.trim() ? styles.disabled : null]}
+          disabled={isPending || !message.trim()}
+          onPress={handleSend}
+          accessibilityLabel="Send message"
+          testID="chat-send-message-button"
+        >
+          <MindsherpaIcon name="arrow-up" size={20} color={theme.colors.foreground} />
+        </Pressable>
+      </View>
+
+      <VoiceSessionModal
+        visible={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        onAudioTranscribed={handleVoiceTranscribed}
+      />
     </View>
   )
 }

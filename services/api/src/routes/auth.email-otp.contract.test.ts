@@ -6,6 +6,8 @@ interface OtpResponse {
 
 interface _SessionResponse {
   isAuthenticated: boolean;
+  accessToken?: string;
+  expiresIn?: number;
 }
 
 interface VerifyOtpResponse {
@@ -186,6 +188,40 @@ describe('auth email otp contract', () => {
       },
     });
     expect(sessionAfterLogout.status).toBe(401);
+  }, 15000);
+
+  test('2.2 session probe returns token contract for cookie-authenticated web sessions', async () => {
+    const createServer = await importServer();
+    const app = createServer();
+    const email = `otp-web-session-${Date.now()}@hominem.test`;
+    await requestOtp(app, email);
+    const otpResponse = await fetchOtp(app, email);
+
+    const signInResponse = await app.request('http://localhost/api/auth/email-otp/verify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        otp: otpResponse.otp,
+      }),
+    });
+
+    expect(signInResponse.status).toBe(200);
+    const payload = (await signInResponse.json()) as VerifyOtpResponse;
+
+    const sessionResponse = await app.request('http://localhost/api/auth/session', {
+      method: 'GET',
+      headers: {
+        cookie: `hominem_access_token=${encodeURIComponent(payload.accessToken)}`,
+      },
+    });
+
+    expect(sessionResponse.status).toBe(200);
+
+    const sessionPayload = (await sessionResponse.json()) as _SessionResponse;
+    expect(sessionPayload.isAuthenticated).toBe(true);
+    expect(sessionPayload.accessToken).toBe(payload.accessToken);
+    expect(sessionPayload.expiresIn).toBeGreaterThan(0);
   }, 15000);
 
   test('2.2 invalid otp is rejected and does not create authenticated session', async () => {

@@ -6,7 +6,8 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
-    "./types": "./src/types-only.ts"
+    "./types": "./src/types-only.ts",
+    "./ui": "./src/session-artifacts.ts"
   },
   "scripts": {
     "clean": "rm -rf build",

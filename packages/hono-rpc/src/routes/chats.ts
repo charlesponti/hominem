@@ -11,11 +11,14 @@ import {
   clearChatMessagesQuery,
   MessageService,
 } from '@hominem/chat-services'
+import type { ArtifactType, ClassificationResponse } from '@hominem/chat-services/types'
 import { logger } from '@hominem/utils/logger'
 import { zValidator } from '@hono/zod-validator'
-import { convertToCoreMessages, streamText, type CoreMessage, type Message } from 'ai'
+import { convertToCoreMessages, streamText, generateObject, type CoreMessage, type Message } from 'ai'
 import { Hono } from 'hono'
 import * as z from 'zod'
+
+import { setReviewItem } from '../services/review-store'
 
 import { authMiddleware, type AppContext } from '../middleware/auth'
 import {
@@ -336,6 +339,73 @@ const chatByIdRoutes = new Hono<AppContext>()
     const messagesData = await messageService.getChatMessages(chatId, options)
     return c.json<ChatsGetMessagesOutput>(messagesData)
   })
+
+  // Classify the conversation into a reviewable artifact
+  .post(
+    '/classify',
+    zValidator('json', z.object({ targetType: z.enum(['note', 'task', 'task_list', 'tracker']) })),
+    async (c) => {
+      const chatId = c.req.param('id') as string
+      const userId = c.get('userId')!
+      const { targetType } = c.req.valid('json') as { targetType: ArtifactType }
+
+      const chat = await getChatByIdQuery(chatId, userId)
+      if (!chat) {
+        throw new ForbiddenError('Chat not found or access denied', 'ownership')
+      }
+
+      const messagesData = await messageService.getChatMessages(chatId, { limit: 50, orderBy: 'asc' })
+      if (messagesData.length === 0) {
+        throw new ValidationError('No messages to classify')
+      }
+
+      const transcript = messagesData
+        .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+        .join('\n')
+
+      const classifySchema = z.object({
+        proposedTitle: z.string().max(100),
+        proposedChanges: z.array(z.string()).max(5),
+        previewContent: z.string(),
+      })
+
+      const { object } = await generateObject<z.infer<typeof classifySchema>>({
+        model: getOpenAIAdapter(),
+        schema: classifySchema,
+        prompt: [
+          `You are classifying a chat conversation into a "${targetType}" artifact.`,
+          'Produce:',
+          '- proposedTitle: a concise, descriptive title (max 100 chars)',
+          '- proposedChanges: up to 5 short human-readable summary lines of what would be captured',
+          '- previewContent: the full Markdown content of the proposed artifact',
+          '',
+          'Conversation:',
+          transcript,
+        ].join('\n'),
+      })
+
+      const reviewItemId = crypto.randomUUID()
+      const reviewItem = {
+        id: reviewItemId,
+        sessionId: chatId,
+        proposedType: targetType,
+        proposedTitle: object.proposedTitle,
+        proposedChanges: object.proposedChanges,
+        previewContent: object.previewContent,
+        createdAt: new Date().toISOString(),
+      }
+
+      setReviewItem(reviewItem)
+
+      return c.json<ClassificationResponse>({
+        proposedType: targetType,
+        proposedTitle: object.proposedTitle,
+        proposedChanges: object.proposedChanges,
+        previewContent: object.previewContent,
+        reviewItemId,
+      })
+    },
+  )
 
 export const chatsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)

@@ -5,35 +5,30 @@ import type { RelativePathString } from 'expo-router'
 
 import { Text, theme } from '~/theme'
 import { LocalStore } from '~/utils/local-store'
-import type { Chat as LocalChat } from '~/utils/local-store/types'
 import { FadeIn } from '~/components/animated/fade-in'
+import type { ChatWithActivity } from '~/utils/services/chat/session-state'
+import { toChatsWithActivity } from '~/utils/services/chat/session-state'
 
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 const MAX_SESSION_CARDS = 3
 
-// ─── Query ────────────────────────────────────────────────────────────────────
-
 export const useResumableSessions = () => {
-  return useQuery<LocalChat[]>({
+  return useQuery<ChatWithActivity[]>({
     queryKey: ['resumableSessions'],
     queryFn: async () => {
-      const now = Date.now()
       const chats = await LocalStore.listChats()
-      return chats
-        .filter((chat) => {
-          const age = now - new Date(chat.createdAt).getTime()
-          return age <= THIRTY_DAYS_MS
-        })
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, MAX_SESSION_CARDS)
+      const messagesByChatId = Object.fromEntries(
+        await Promise.all(
+          chats.map(async (chat) => [chat.id, await LocalStore.listMessages(chat.id)] as const),
+        ),
+      )
+
+      return toChatsWithActivity(chats, messagesByChatId).slice(0, MAX_SESSION_CARDS)
     },
   })
 }
 
-// ─── SessionCard ──────────────────────────────────────────────────────────────
-
 interface SessionCardProps {
-  chat: LocalChat
+  chat: ChatWithActivity
   isActive?: boolean
 }
 
@@ -60,7 +55,7 @@ export const SessionCard = ({ chat, isActive }: SessionCardProps) => {
             {label}
           </Text>
           <Text variant="caption" color="secondaryForeground">
-            {isActive ? 'Active' : formatAge(chat.createdAt)}
+            {isActive ? 'Active' : formatAge(chat.activityAt)}
           </Text>
         </View>
         <Text variant="caption" color="secondaryForeground" style={styles.arrow}>→</Text>
@@ -88,10 +83,8 @@ export const SessionList = () => {
   )
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatAge(createdAt: string): string {
-  const diffMs = Date.now() - new Date(createdAt).getTime()
+function formatAge(activityAt: string): string {
+  const diffMs = Date.now() - new Date(activityAt).getTime()
   const diffH = Math.floor(diffMs / (1000 * 60 * 60))
   if (diffH < 1) return 'Just now'
   if (diffH < 24) return `${diffH}h ago`

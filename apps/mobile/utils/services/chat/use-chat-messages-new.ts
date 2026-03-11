@@ -16,6 +16,7 @@ import {
   reconcileMessagesAfterSend,
   type MessageOutput,
 } from './chat-contract'
+import { selectSherpaChat } from './session-state'
 
 type SendChatMessageOutput = {
   messages: MessageOutput[]
@@ -250,13 +251,12 @@ export const useEndChat = ({
   })
 }
 
-export const useActiveChat = () => {
+export const useActiveChat = (chatId?: string | null) => {
   return useQuery<LocalChat | null>({
-    queryKey: ['activeChatLocal'],
+    queryKey: ['activeChatLocal', chatId ?? null],
     queryFn: async () => {
       const chats = await LocalStore.listChats()
-      const active = chats.find((chat) => !chat.endedAt)
-      return active ?? null
+      return selectSherpaChat(chats, chatId)
     },
   })
 }

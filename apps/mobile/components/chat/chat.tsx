@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Alert, Pressable, StyleSheet, View } from 'react-native'
+import { useApiClient } from '@hominem/hono-client/react'
 import { FlashList, type ListRenderItem } from '@shopify/flash-list'
+import { useMutation } from '@tanstack/react-query'
 
 import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types'
+import { buildNoteProposal, deriveSessionSource } from '@hominem/chat-services/ui'
 import { FeatureErrorBoundary } from '~/components/error-boundary'
 import queryClient from '~/utils/query-client'
 import { useChatMessages, useEndChat, useSendMessage } from '~/utils/services/chat'
@@ -31,6 +34,7 @@ type ChatProps = {
 }
 export const Chat = (props: ChatProps) => {
   const { chatId, onChatEnd, source } = props
+  const client = useApiClient()
   const { isPending: isMessagesLoading, data: messages } = useChatMessages({ chatId })
   const { mutate: endChat, isPending: isEnding } = useEndChat({
     chatId,
@@ -45,8 +49,33 @@ export const Chat = (props: ChatProps) => {
   const abortControllerRef = useRef<AbortController | null>(null)
   const [lifecycleState, setLifecycleState] = useState<ThoughtLifecycleState>('idle')
   const [pendingReview, setPendingReview] = useState<PendingReview | null>(null)
+  const [persistedSource, setPersistedSource] = useState<SessionSource | null>(null)
 
   const formattedMessages = useMemo(() => (messages && messages.length > 0 ? messages : []), [messages])
+  const proposalMessages = useMemo(
+    () => formattedMessages.map((message) => ({ role: message.role, content: message.message })),
+    [formattedMessages],
+  )
+  const resolvedSource = useMemo(
+    () =>
+      persistedSource ?? (
+        source.kind === 'artifact'
+          ? source
+          : deriveSessionSource({ messages: proposalMessages })
+      ),
+    [persistedSource, proposalMessages, source],
+  )
+  const createNote = useMutation({
+    mutationKey: ['chat-note', chatId],
+    mutationFn: async (review: PendingReview) => {
+      return client.notes.create({
+        content: review.previewContent,
+        excerpt: review.previewContent.slice(0, 160),
+        title: review.proposedTitle,
+        type: 'note',
+      })
+    },
+  })
 
   useEffect(() => {
     abortControllerRef.current = new AbortController()
@@ -84,21 +113,33 @@ export const Chat = (props: ChatProps) => {
   // Passes through 'classifying' so ArtifactActions dim state renders before the review sheet.
   const handleTransform = useCallback((_type: ArtifactType) => {
     setLifecycleState('classifying')
+    const proposal = buildNoteProposal(proposalMessages)
     queueMicrotask(() => {
       setLifecycleState('reviewing_changes')
-      setPendingReview({
-        proposedType: 'note',
-        proposedTitle: 'Untitled note',
-        proposedChanges: ['Classification API not yet implemented'],
-        previewContent: '',
-      })
+      setPendingReview(proposal)
     })
-  }, [])
+  }, [proposalMessages])
 
-  const handleAcceptReview = useCallback(() => {
-    setLifecycleState('idle')
-    setPendingReview(null)
-  }, [])
+  const handleAcceptReview = useCallback(async () => {
+    if (!pendingReview) return
+
+    setLifecycleState('persisting')
+
+    try {
+      const note = await createNote.mutateAsync(pendingReview)
+      setPersistedSource({
+        kind: 'artifact',
+        id: note.id,
+        type: 'note',
+        title: note.title || pendingReview.proposedTitle,
+      })
+      setLifecycleState('idle')
+      setPendingReview(null)
+    } catch {
+      setLifecycleState('reviewing_changes')
+      Alert.alert('Could not save note', 'Please try again.')
+    }
+  }, [createNote, pendingReview])
 
   const handleRejectReview = useCallback(() => {
     setLifecycleState('idle')
@@ -108,7 +149,7 @@ export const Chat = (props: ChatProps) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <ContextAnchor source={source} />
+        <ContextAnchor source={resolvedSource} />
       </View>
       {isMessagesLoading ? (
         <ChatLoading />
