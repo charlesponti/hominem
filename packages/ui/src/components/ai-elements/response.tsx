@@ -4,13 +4,14 @@ import { cn } from '../../lib/utils';
 
 interface ResponseProps extends HTMLAttributes<HTMLDivElement> {
   children?: string;
+  isStreaming?: boolean;
 }
 
 export const Response = forwardRef<HTMLDivElement, ResponseProps>(function Response(
-  { children, className, ...props },
+  { children, className, isStreaming, ...props },
   ref,
 ) {
-  if (!children) return null;
+  if (!children && !isStreaming) return null;
 
   return (
     <div
@@ -26,6 +27,12 @@ export const Response = forwardRef<HTMLDivElement, ResponseProps>(function Respo
       {...props}
     >
       {children}
+      {isStreaming && (
+        <span
+          aria-hidden="true"
+          className="inline-block w-0.5 h-4 bg-current align-text-bottom ml-0.5 animate-pulse"
+        />
+      )}
     </div>
   );
 });

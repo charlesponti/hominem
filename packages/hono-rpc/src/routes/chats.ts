@@ -169,7 +169,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     let assistantMessage = await messageService.addMessage({
       chatId: currentChat.id,
-      userId: '',
+      userId,
       role: 'assistant',
       content: '',
     })
@@ -278,7 +278,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const assistantMessage = await messageService.addMessage({
       chatId: currentChat.id,
-      userId: '',
+      userId,
       role: 'assistant',
       content: '',
     })

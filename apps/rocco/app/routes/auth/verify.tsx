@@ -73,10 +73,18 @@ export async function action({ request }: { request: Request }) {
     if (setCookie) headers.append('set-cookie', setCookie);
   }
 
+  const cookieDomain = serverEnv.AUTH_COOKIE_DOMAIN?.trim();
+  const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
   headers.append(
     'set-cookie',
-    `hominem_access_token=${encodeURIComponent(result.accessToken)}; Path=/; HttpOnly; SameSite=Lax`,
+    `hominem_access_token=${encodeURIComponent(result.accessToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${result.expiresIn}${domainAttribute}`,
   );
+  if (result.refreshToken) {
+    headers.append(
+      'set-cookie',
+      `hominem_refresh_token=${encodeURIComponent(result.refreshToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${domainAttribute}`,
+    );
+  }
 
   return redirect(next, { headers });
 }

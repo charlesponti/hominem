@@ -19,9 +19,9 @@ import { useSendMessage } from '~/lib/hooks/use-send-message';
 import type { ExtendedMessage } from '~/lib/types/chat-message';
 import { findPreviousUserMessage } from '~/lib/utils/message';
 
+import { ShimmerMessage, ThinkingIndicator } from '@hominem/ui/ai-elements';
+
 import { ChatMessage } from './ChatMessage';
-import { SkeletonMessage } from './SkeletonMessage';
-import { ThinkingComponent } from './ThinkingComponent';
 
 interface ChatMessagesProps {
   chatId: string;
@@ -267,9 +267,9 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           {/* Loading state when fetching messages */}
           {isLoading && extendedMessages.length === 0 && (
             <div className="space-y-4">
-              <SkeletonMessage />
-              <SkeletonMessage />
-              <SkeletonMessage />
+              <ShimmerMessage />
+              <ShimmerMessage />
+              <ShimmerMessage />
             </div>
           )}
 
@@ -356,8 +356,8 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           )}
         </div>
 
-        {/* Enhanced thinking component */}
-        {showThinkingComponent && <ThinkingComponent />}
+        {/* Thinking indicator */}
+        {showThinkingComponent && <ThinkingIndicator />}
       </div>
     );
   },

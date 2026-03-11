@@ -284,11 +284,11 @@ export function AuthProvider({
 
   const signIn = useCallback(async () => {
     // Default sign-in: redirect to email sign-in page
-    window.location.href = '/auth/email';
+    window.location.href = '/auth';
   }, []);
 
   const signInWithEmail = useCallback(async () => {
-    window.location.href = '/auth/email';
+    window.location.href = '/auth';
   }, []);
 
   const signInWithPasskey = useCallback(async () => {

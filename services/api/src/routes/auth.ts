@@ -17,6 +17,7 @@ import { getJwks } from '../auth/key-store';
 import {
   createTokenPairForUser,
   isSessionRevoked,
+  revokeByRefreshToken,
   revokeSession,
   rotateRefreshToken,
 } from '../auth/session-store';
@@ -98,6 +99,7 @@ const AUTH_DEVICE_TOKEN_LIMIT_WINDOW_SECONDS = 10 * 60;
 const AUTH_DEVICE_TOKEN_LIMIT_MAX = 120;
 const AUTH_E2E_LOGIN_LIMIT_WINDOW_SECONDS = 60;
 const AUTH_E2E_LOGIN_LIMIT_MAX = 20;
+const AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 interface AuthRateLimitInput {
   bucket: string;
@@ -129,12 +131,43 @@ function normalizeOtpCode(otp: string) {
   return otp.replace(/\D/g, '');
 }
 
-function appendExpiredAccessTokenCookie(headers: Headers) {
+function getCookieValue(cookieHeader: string, name: string) {
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${escapedName}=([^;]+)`));
+  return match?.[1] ?? null;
+}
+
+function appendAuthCookie(headers: Headers, name: string, value: string, maxAge?: number) {
   const cookieDomain = env.AUTH_COOKIE_DOMAIN.trim();
   const domainAttribute = cookieDomain.length > 0 ? `; Domain=${cookieDomain}` : '';
+  const maxAgeAttribute = typeof maxAge === 'number' ? `; Max-Age=${maxAge}` : '';
   headers.append(
     'set-cookie',
-    `hominem_access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT${domainAttribute}`,
+    `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax${maxAgeAttribute}${domainAttribute}`,
+  );
+}
+
+function appendExpiredAccessTokenCookie(headers: Headers) {
+  appendAuthCookie(headers, 'hominem_access_token', '', 0);
+  headers.append(
+    'set-cookie',
+    `hominem_access_token=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${
+      env.AUTH_COOKIE_DOMAIN.trim().length > 0 ? `; Domain=${env.AUTH_COOKIE_DOMAIN.trim()}` : ''
+    }`,
+  );
+}
+
+function appendRefreshTokenCookie(headers: Headers, refreshToken: string) {
+  appendAuthCookie(headers, 'hominem_refresh_token', refreshToken, AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS);
+}
+
+function appendExpiredRefreshTokenCookie(headers: Headers) {
+  appendAuthCookie(headers, 'hominem_refresh_token', '', 0);
+  headers.append(
+    'set-cookie',
+    `hominem_refresh_token=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${
+      env.AUTH_COOKIE_DOMAIN.trim().length > 0 ? `; Domain=${env.AUTH_COOKIE_DOMAIN.trim()}` : ''
+    }`,
   );
 }
 
@@ -181,21 +214,16 @@ async function resolveAuthUserId(c: {
   }
 
   const cookieHeader = c.req.header('cookie') ?? '';
-  const tokenMatch = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/);
-  const tokenValue = tokenMatch?.[1];
+  const tokenValue = getCookieValue(cookieHeader, 'hominem_access_token');
   if (tokenValue) {
     try {
       const decoded = decodeURIComponent(tokenValue);
       const claims = await verifyAccessToken(decoded);
       if (claims?.sub) return claims.sub;
     } catch {
-      // invalid cookie token — fall through
+      return null;
     }
   }
-
-  // 3. Better Auth session cookie
-  const session = await betterAuthServer.api.getSession(getHeaderCarrier(c));
-  if (session?.user?.id) return session.user.id;
 
   return null;
 }
@@ -220,8 +248,7 @@ async function resolveAuthSessionId(c: {
   }
 
   const cookieHeader = c.req.header('cookie') ?? '';
-  const tokenMatch = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/);
-  const tokenValue = tokenMatch?.[1];
+  const tokenValue = getCookieValue(cookieHeader, 'hominem_access_token');
   if (tokenValue) {
     try {
       const decoded = decodeURIComponent(tokenValue);
@@ -774,15 +801,30 @@ authRoutes.get('/test/otp/latest', zValidator('query', testOtpQuerySchema), asyn
 });
 
 authRoutes.post('/logout', async (c) => {
+  const cookieHeader = c.req.header('cookie') ?? '';
+  const rawRefreshToken = getCookieValue(cookieHeader, 'hominem_refresh_token');
+  let refreshToken: string | null = null;
+  if (rawRefreshToken) {
+    try {
+      refreshToken = decodeURIComponent(rawRefreshToken);
+    } catch {
+      refreshToken = rawRefreshToken;
+    }
+  }
+
   const sessionId = await resolveAuthSessionId(c);
   if (sessionId) {
     await revokeSession(sessionId);
+  }
+  if (refreshToken) {
+    await revokeByRefreshToken(refreshToken);
   }
   await betterAuthServer.api.signOut({
     ...getHeaderCarrier(c),
   });
   const headers = new Headers();
   appendExpiredAccessTokenCookie(headers);
+  appendExpiredRefreshTokenCookie(headers);
   return jsonWithHeaders({ success: true }, 200, headers);
 });
 
@@ -796,11 +838,11 @@ authRoutes.get('/session', async (c) => {
   const authHeader = c.req.header('authorization') ?? '';
   let bearerToken: string | null = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   let tokenSource: 'authorization' | 'cookie' | null = bearerToken ? 'authorization' : null;
+  const cookieHeader = c.req.header('cookie') ?? '';
+  let refreshToken: string | null = null;
 
   if (!bearerToken) {
-    const cookieHeader = c.req.header('cookie') ?? '';
-    const match = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/);
-    const rawValue = match?.[1];
+    const rawValue = getCookieValue(cookieHeader, 'hominem_access_token');
     if (rawValue) {
       try {
         bearerToken = decodeURIComponent(rawValue);
@@ -811,13 +853,61 @@ authRoutes.get('/session', async (c) => {
     }
   }
 
-  if (!bearerToken) {
-    return c.json({ isAuthenticated: false, user: null }, 401);
+  const rawRefreshToken = getCookieValue(cookieHeader, 'hominem_refresh_token');
+  if (rawRefreshToken) {
+    try {
+      refreshToken = decodeURIComponent(rawRefreshToken);
+    } catch {
+      refreshToken = rawRefreshToken;
+    }
   }
 
   const unauthorizedHeaders = new Headers();
   if (tokenSource === 'cookie') {
     appendExpiredAccessTokenCookie(unauthorizedHeaders);
+  }
+  if (refreshToken) {
+    appendExpiredRefreshTokenCookie(unauthorizedHeaders);
+  }
+
+  if (!bearerToken && refreshToken) {
+    const rotated = await rotateRefreshToken(refreshToken);
+    if (!rotated.ok) {
+      return jsonWithHeaders({ isAuthenticated: false, user: null }, 401, unauthorizedHeaders);
+    }
+
+    const claims = await verifyAccessToken(rotated.accessToken);
+    const userRecord = await UserAuthService.findByIdOrEmail({ id: claims.sub });
+    if (!userRecord) {
+      await revokeSession(claims.sid);
+      return jsonWithHeaders({ isAuthenticated: false, user: null }, 401, unauthorizedHeaders);
+    }
+
+    const refreshedHeaders = new Headers();
+    appendAuthCookie(refreshedHeaders, 'hominem_access_token', rotated.accessToken, rotated.expiresIn);
+    appendRefreshTokenCookie(refreshedHeaders, rotated.refreshToken);
+
+    return jsonWithHeaders(
+      {
+        isAuthenticated: true,
+        user: {
+          id: userRecord.id,
+          email: userRecord.email,
+          ...(userRecord.name ? { name: userRecord.name } : {}),
+          isAdmin: userRecord.is_admin ?? false,
+          ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
+          ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
+        },
+        accessToken: rotated.accessToken,
+        expiresIn: rotated.expiresIn,
+      },
+      200,
+      refreshedHeaders,
+    );
+  }
+
+  if (!bearerToken) {
+    return c.json({ isAuthenticated: false, user: null }, 401);
   }
 
   try {

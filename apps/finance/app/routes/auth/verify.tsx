@@ -77,8 +77,14 @@ export async function action({ request }: { request: Request }) {
 
   headers.append(
     'set-cookie',
-    `hominem_access_token=${encodeURIComponent(result.accessToken)}; Path=/; HttpOnly; SameSite=Lax${domainAttribute}`,
+    `hominem_access_token=${encodeURIComponent(result.accessToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${result.expiresIn}${domainAttribute}`,
   );
+  if (result.refreshToken) {
+    headers.append(
+      'set-cookie',
+      `hominem_refresh_token=${encodeURIComponent(result.refreshToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${domainAttribute}`,
+    );
+  }
 
   return redirect(next, { headers });
 }

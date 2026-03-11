@@ -15,8 +15,8 @@ export default function AboutPage() {
         </>
       }
       sub="Stop losing track of places worth remembering. Rocco turns scattered notes and screenshots into organized lists you'll use."
-      ctaPrimary={{ label: 'Start your first list', href: '/auth/email' }}
-      ctaSecondary={{ label: 'Sign in', href: '/auth/email' }}
+      ctaPrimary={{ label: 'Start your first list', href: '/auth' }}
+      ctaSecondary={{ label: 'Sign in', href: '/auth' }}
       problem="Your friend texts you a great restaurant. You screenshot it, save it in notes, maybe drop a pin. Six months later you're in that neighborhood. You can't find it. You eat somewhere mediocre. This is a solved problem."
       features={[
         {
