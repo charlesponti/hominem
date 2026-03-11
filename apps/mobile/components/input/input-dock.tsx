@@ -34,7 +34,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
 
   const { mutate: startChat, isPending } = useStartChat({
     userMessage: message || seedPrompt || '',
-    sherpaMessage: 'Jumping in now.',
+    _sherpaMessage: 'Jumping in now.',
     onSuccess: () => {
       setMessage('')
       router.push('/(protected)/(tabs)/sherpa' as RelativePathString)

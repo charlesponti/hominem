@@ -16,7 +16,7 @@ export default function Sherpa() {
   const { isPending: isLoadingActiveChat, refetch: getActiveChat } = useActiveChat();
   const { mutateAsync: startChat, isPending: isStartingChat } = useStartChat({
     userMessage: params.seed || '',
-    sherpaMessage: 'Starting now.',
+    _sherpaMessage: 'Starting now.',
     onSuccess: (chat) => {
       setActiveChat(chat);
     },

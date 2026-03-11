@@ -1,7 +1,7 @@
 # auth-mobile-operational-readiness Specification
 
 ## Purpose
-TBD - created by archiving change auth-mobile-verification-closeout. Update Purpose after archive.
+Define the completed operational-readiness expectations for mobile authentication, including verification coverage, deterministic runtime configuration, emergency controls, readiness recording, and final repo safety checks.
 ## Requirements
 ### Requirement: Mobile auth SHALL pass final verification gates before closeout
 The auth platform SHALL complete its remaining mobile verification gates before the work is considered operationally ready.
@@ -52,4 +52,3 @@ The auth/mobile closeout SHALL leave the standard repo safety check free of lint
 #### Scenario: Team runs the standard safety check
 - **WHEN** `bun run check` is executed during auth/mobile closeout
 - **THEN** stale unused imports, unused parameters, and dead local helpers uncovered by that run are removed so the check output remains actionable
-

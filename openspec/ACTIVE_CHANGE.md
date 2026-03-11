@@ -1,14 +1,12 @@
 # Active OpenSpec Change
 
-active_change: auth-mobile-verification-closeout
+active_change: none
 
 artifacts:
-- openspec/changes/auth-mobile-verification-closeout/proposal.md
-- openspec/changes/auth-mobile-verification-closeout/design.md
-- openspec/changes/auth-mobile-verification-closeout/specs/auth-mobile-operational-readiness/spec.md
-- openspec/changes/auth-mobile-verification-closeout/tasks.md
+- none selected
 
 ## Enforcement
 
-- Before any implementation, read this file and keep work scoped to the active change.
+- Before any implementation, read this file and explicitly select one open change from `openspec/changes`.
 - Do not silently mix work across multiple OpenSpec changes.
+- If `active_change: none`, do not start implementation until the intended change is activated here.
