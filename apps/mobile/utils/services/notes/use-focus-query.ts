@@ -6,20 +6,19 @@ import { LocalStore } from '~/utils/local-store'
 import { validateNotesResponse } from '~/utils/validation/schemas'
 import type { FocusItems, FocusResponse } from './types'
 import { fromLocalFocusItems, noteToFocusItem, toLocalFocusItem } from './local-focus'
+import { focusKeys } from './query-keys'
 
 export const useFocusQuery = ({
   onError,
   onSuccess,
-  params,
 }: {
   onError?: (error: Error) => void
   onSuccess?: (data: FocusResponse) => void
-  params?: Record<string, string | string[] | number>
 }) => {
   const client = useApiClient()
 
   return useQuery<FocusItems | null>({
-    queryKey: ['focusItems', params],
+    queryKey: focusKeys.all,
     queryFn: async () => {
       try {
         const payload = validateNotesResponse(await client.notes.listFocusItems())

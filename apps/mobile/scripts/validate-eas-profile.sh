@@ -53,5 +53,11 @@ if (cfg.build.production.env?.APP_VARIANT !== 'production') {
 if (cfg.build.production.developmentClient === true) {
   throw new Error('production profile must not enable developmentClient')
 }
+if (cfg.build.production.autoIncrement !== true) {
+  throw new Error('production profile must enable autoIncrement')
+}
+if (cfg.build.preview.autoIncrement !== true) {
+  throw new Error('preview profile must enable autoIncrement')
+}
 console.log('EAS profile validation passed')
 " "${EAS_FILE}"

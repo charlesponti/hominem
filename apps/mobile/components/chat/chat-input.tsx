@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from 'react'
 import { Pressable, StyleSheet, TextInput, View } from 'react-native'
-import Reanimated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import { interpolateColor, useAnimatedStyle, useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated'
 
-import { Text, theme } from '~/theme'
+import { theme } from '~/theme'
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { useMobileAudioRecorder } from '../media/use-mobile-audio-recorder'
 import { MobileVoiceInput } from '../media/mobile-voice-input'
@@ -32,13 +32,12 @@ export const ChatInput = ({ message, onMessageChange, onSendMessage, isPending =
     },
   })
 
-  const handleVoiceToggle = useCallback(async () => {
+  const handleVoiceToggle = useCallback(() => {
     if (isRecording) {
-      await stopRecording()
+      void stopRecording()
       return
     }
-
-    await startRecording()
+    void startRecording()
   }, [isRecording, startRecording, stopRecording])
 
   const handleSend = useCallback(() => {
@@ -57,12 +56,12 @@ export const ChatInput = ({ message, onMessageChange, onSendMessage, isPending =
     ),
   }))
 
-  // Update color when recording state changes
-  if (isRecording && backgroundColor.value !== 1) {
-    backgroundColor.value = withTiming(1, { duration: VOID_MOTION_DURATION_STANDARD })
-  } else if (!isRecording && backgroundColor.value !== 0) {
-    backgroundColor.value = withTiming(0, { duration: VOID_MOTION_DURATION_STANDARD })
-  }
+  // Drive the shared value from a derived value so it never mutates during render
+  useDerivedValue(() => {
+    backgroundColor.value = withTiming(isRecording ? 1 : 0, {
+      duration: VOID_MOTION_DURATION_STANDARD,
+    })
+  })
 
   return (
     <View style={styles.container}>
@@ -90,9 +89,7 @@ export const ChatInput = ({ message, onMessageChange, onSendMessage, isPending =
           />
           <Pressable
             style={[styles.iconButton, voiceButtonStyle]}
-            onPress={() => {
-              void handleVoiceToggle()
-            }}
+            onPress={handleVoiceToggle}
             accessibilityLabel="Voice input"
             testID="chat-voice-input-button"
           >

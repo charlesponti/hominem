@@ -1,46 +1,55 @@
 import type { PropsWithChildren } from 'react'
+import { StyleSheet } from 'react-native'
 
 import { theme } from '~/theme'
 import Text from '~/theme/Text'
 import { FocusCategory } from '../focus/focus-category'
 
+// Predefined category colors using design system tokens
+const CATEGORY_COLORS = [
+  { bg: 'bg-surface', fg: 'text-primary' },
+  { bg: 'bg-elevated', fg: 'text-secondary' },
+  { bg: 'muted', fg: 'foreground' },
+] as const
+
+function getCategoryColor(category: string): { bg: string; fg: string } {
+  // Use hash of category name to pick consistent color
+  const hash = category.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  const index = hash % CATEGORY_COLORS.length
+  const colors = CATEGORY_COLORS[index]
+  return {
+    bg: theme.colors[colors.bg] as string,
+    fg: theme.colors[colors.fg] as string,
+  }
+}
+
 export const Badge = ({
   children,
-  color,
-}: PropsWithChildren<{ color: { color: string; textColor: string } }>) => (
+  bg,
+  fg,
+}: PropsWithChildren<{ bg: string; fg: string }>) => (
   <Text
     variant="body"
-    style={{
-      backgroundColor: color.color ?? theme.colors.greenLight,
-      borderRadius: 20,
-      color: color.textColor ?? theme.colors.foreground,
-      fontSize: 10,
-      paddingVertical: 4,
-      paddingHorizontal: 8,
-    }}
+    style={[styles.badge, { backgroundColor: bg, color: fg }]}
   >
     {children}
   </Text>
 )
 
-const CategoryColorMap = new Map()
-function getCategoryColor(category: string): { color: string; textColor: string } {
-  if (CategoryColorMap.has(category)) {
-    return CategoryColorMap.get(category)
-  }
-
-  const r = Math.floor(Math.random() * 256)
-  const g = Math.floor(Math.random() * 256)
-  const b = Math.floor(Math.random() * 256)
-  const color = `rgba(${r}, ${g}, ${b}, 1)`
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
-  const textColor = luminance < 128 ? '#FFFFFF' : '#000000'
-  CategoryColorMap.set(category, { color, textColor })
-  return { color, textColor }
+export const CategoryBadge = ({ category }: { category: string }) => {
+  const colors = getCategoryColor(category)
+  return (
+    <Badge bg={colors.bg} fg={colors.fg}>
+      <FocusCategory category={category} />
+    </Badge>
+  )
 }
 
-export const CategoryBadge = ({ category }: { category: string }) => (
-  <Badge color={getCategoryColor(category)}>
-    <FocusCategory category={category} />
-  </Badge>
-)
+const styles = StyleSheet.create({
+  badge: {
+    borderRadius: 20,
+    fontSize: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+})

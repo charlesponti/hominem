@@ -1,9 +1,10 @@
-import { useMutation, type UseMutationResult } from '@tanstack/react-query'
+import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query'
 
 import { useApiClient } from '@hominem/hono-client/react'
 
 import { LocalStore } from '~/utils/local-store'
 import { noteToFocusItem, toLocalFocusItem } from './local-focus'
+import { focusKeys } from './query-keys'
 import type { FocusItem } from './types'
 
 export interface UpdateFocusItemInput {
@@ -39,6 +40,7 @@ export const useUpdateFocusItem = (): UseMutationResult<
   UpdateFocusItemInput
 > => {
   const client = useApiClient()
+  const queryClient = useQueryClient()
 
   return useMutation<FocusItem, Error, UpdateFocusItemInput>({
     mutationKey: ['updateFocusItem'],
@@ -55,6 +57,9 @@ export const useUpdateFocusItem = (): UseMutationResult<
       await LocalStore.upsertFocusItem(toLocalFocusItem(mapped))
 
       return mapped
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: focusKeys.all })
     },
   })
 }

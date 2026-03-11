@@ -1,3 +1,4 @@
+import { StyleSheet } from 'react-native'
 import { Text, theme } from '~/theme'
 
 export const FocusCategory = ({ category }: { category: keyof CategoryMap }) => {
@@ -5,18 +6,23 @@ export const FocusCategory = ({ category }: { category: keyof CategoryMap }) => 
 
   if (!foundCategory) {
     return (
-      <Text variant="small" style={{ color: theme.colors.mutedForeground }}>
+      <Text variant="small" style={styles.muted}>
         {`🤷 ${category}`}
       </Text>
     )
   }
 
   return (
-    <Text variant="small" style={{ color: theme.colors.secondaryForeground }}>
+    <Text variant="small" style={styles.secondary}>
       {`${foundCategory.emoji} ${foundCategory.label}`}
     </Text>
   )
 }
+
+const styles = StyleSheet.create({
+  muted: { color: theme.colors.mutedForeground },
+  secondary: { color: theme.colors.secondaryForeground },
+})
 
 export const CATEGORIES: Record<string, { emoji: string; label: string }> = {
   career: {

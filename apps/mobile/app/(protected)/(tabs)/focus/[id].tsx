@@ -17,12 +17,6 @@ import {
   type UpdateFocusItemInput,
 } from '~/utils/services/notes/use-update-focus';
 
-// function getFocusItemDate(focusItem: FocusItem) {
-//   if (!focusItem.due_date) return null
-//   const { localDate } = getLocalDate(new Date(focusItem.due_date))
-//   return localDate
-// }
-
 export default function FocusItemView() {
   const { id } = useLocalSearchParams();
   const updateFocusItem = useUpdateFocusItem();
@@ -71,13 +65,7 @@ export default function FocusItemView() {
     };
 
     try {
-      const data = await updateFocusItem.mutateAsync(input);
-      const prevData = queryClient.getQueryData(['focusItems']) || [];
-      if (!prevData || !Array.isArray(prevData)) {
-        return;
-      }
-      const nextData = prevData.map((item) => (item.id === focusItem.id ? data : item));
-      queryClient.setQueryData(['focusItems'], nextData);
+      await updateFocusItem.mutateAsync(input);
     } catch (error) {
       console.error(error);
     }

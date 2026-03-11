@@ -12,4 +12,4 @@
 ## 3. Closeout
 
 - [x] 3.1 Publish the final readiness matrix and resolve or explicitly de-scope remaining items
-- [ ] 3.2 Sign off auth mobile production readiness after the verification gates pass
+- [x] 3.2 Sign off auth mobile production readiness after the verification gates pass

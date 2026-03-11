@@ -1,24 +1,24 @@
-import { forwardRef, type ElementRef } from 'react'
-import { ActivityIndicator, TouchableOpacity, type TouchableOpacityProps } from 'react-native'
+import { forwardRef } from 'react'
+import { ActivityIndicator, Pressable, type PressableProps, View } from 'react-native'
 import { Text, makeStyles } from 'theme'
 
 type ButtonProps = {
   isLoading?: boolean
   title?: string
   testID?: string
-} & TouchableOpacityProps
+} & PressableProps
 
-export const Button = forwardRef<ElementRef<typeof TouchableOpacity>, ButtonProps>(
-  ({ title, children, isLoading, ...touchableProps }, ref) => {
+export const Button = forwardRef<View, ButtonProps>(
+  ({ title, children, isLoading, ...pressableProps }, ref) => {
     const styles = useStyles()
 
     return (
-      <TouchableOpacity ref={ref} {...touchableProps} style={[styles.button, touchableProps.style]}>
+      <Pressable ref={ref} {...pressableProps} style={[styles.button, pressableProps.style as object]}>
         <Text variant="label" textAlign="center" color="foreground" fontWeight="600">
           {(typeof children === 'string' ? children : title)?.toUpperCase()}
         </Text>
-        {isLoading && <ActivityIndicator color={styles.loader.color} size="small" />}
-      </TouchableOpacity>
+        {isLoading ? <ActivityIndicator color={styles.loader.color} size="small" /> : null}
+      </Pressable>
     )
   }
 )

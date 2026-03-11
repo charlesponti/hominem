@@ -1,12 +1,14 @@
+import { Image } from 'expo-image';
 import { Stack, useRouter } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
 import React, { useCallback } from 'react';
-import { Dimensions, Image, ScrollView, StyleSheet, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IntentPill } from '~/components/start/intent-pill';
 import { AsciiTexture } from '~/components/ui/ascii-texture';
-import { Text } from '~/theme';
+import { Text, theme } from '~/theme';
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 import { useIntentSuggestions } from '~/utils/services/intents/use-intent-suggestions';
 
@@ -19,7 +21,7 @@ export default function StartScreen() {
   const onIntentPress = useCallback(
     (intent: { id: string; seed_prompt?: string }) => {
       router.push({
-        pathname: '/(protected)/(tabs)/sherpa',
+        pathname: '/(protected)/(tabs)/sherpa' as RelativePathString,
         params: { intentId: intent.id, seed: intent.seed_prompt },
       });
     },
@@ -32,13 +34,17 @@ export default function StartScreen() {
       <SafeAreaView testID="start-screen" style={styles.background}>
         <AsciiTexture />
         <ScrollView
-          style={{ flex: 1 }}
+          style={styles.scrollFlex}
           contentContainerStyle={styles.container}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.topBar}>
-            <Image source={require('~/assets/icon.png')} style={styles.logo} />
+            <Image
+              source={require('~/assets/icon.png')}
+              contentFit="cover"
+              style={styles.logo}
+            />
             <Text variant="title" color="foreground">
               MINDSHERPA
             </Text>
@@ -47,7 +53,7 @@ export default function StartScreen() {
 
           <Animated.View
             entering={FadeIn.duration(VOID_MOTION_DURATION_STANDARD)}
-            style={{ gap: 10, marginTop: 18 }}
+            style={styles.headingBlock}
           >
             <Text variant="header" color="foreground">
               WHERE SHOULD WE START?
@@ -76,10 +82,13 @@ export default function StartScreen() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: theme.colors.background,
+  },
+  scrollFlex: {
+    flex: 1,
   },
   container: {
-    paddingHorizontal: 16,
+    paddingHorizontal: theme.spacing.m_16,
     paddingBottom: 140,
     gap: 18,
   },
@@ -87,24 +96,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 12,
+    marginTop: theme.spacing.sm_12,
   },
   logo: {
     height: 32,
     width: 32,
-    borderRadius: 8,
+    borderRadius: theme.borderRadii.sm_6,
   },
   avatar: {
     height: 34,
     width: 34,
     borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: theme.colors.muted,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: theme.colors.border,
+  },
+  headingBlock: {
+    gap: 10,
+    marginTop: 18,
   },
   pills: {
     marginTop: 18,
-    gap: 12,
+    gap: theme.spacing.sm_12,
     width: width - 32,
   },
 });

@@ -29,6 +29,7 @@
     "preview": {
       "channel": "preview",
       "distribution": "internal",
+      "autoIncrement": true,
       "environment": "preview",
       "env": {
         "APP_VARIANT": "preview"
@@ -36,18 +37,20 @@
     },
     "production": {
       "channel": "production",
+      "autoIncrement": true,
       "environment": "production",
       "env": {
         "APP_VARIANT": "production"
       },
-      "ios": {
-        "enterpriseProvisioning": "universal"
-      },
-      "resourceClass": "default"
+      "resourceClass": "large"
     }
   },
   "submit": {
-    "production": {},
+    "production": {
+      "ios": {
+        "appleTeamId": "$(EXPO_APPLE_TEAM_ID)"
+      }
+    },
     "development": {},
     "preview": {}
   }

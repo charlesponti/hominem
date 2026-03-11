@@ -1,15 +1,18 @@
-import { useMutation, type UseMutationOptions } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { useApiClient } from '@hominem/hono-client/react'
 
 import { LocalStore } from '~/utils/local-store'
+import { focusKeys } from './query-keys'
 
-export const useDeleteFocus = (
-  props: UseMutationOptions<string, Error, string> & {
-    onError?: (error: Error) => void
-  }
-) => {
+interface UseDeleteFocusOptions {
+  onSuccess?: (data: string) => void
+  onError?: (error: Error) => void
+}
+
+export const useDeleteFocus = (options?: UseDeleteFocusOptions) => {
   const client = useApiClient()
+  const queryClient = useQueryClient()
 
   return useMutation<string, Error, string>({
     mutationFn: async (id: string) => {
@@ -18,6 +21,12 @@ export const useDeleteFocus = (
       await LocalStore.deleteFocusItem(id)
       return id
     },
-    ...props,
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: focusKeys.all })
+      options?.onSuccess?.(data)
+    },
+    onError: (error) => {
+      options?.onError?.(error)
+    },
   })
 }

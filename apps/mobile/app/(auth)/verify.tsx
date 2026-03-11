@@ -1,8 +1,9 @@
+import { Image } from 'expo-image';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Link } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,9 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
-import { Box, Text } from '~/theme';
+import { Box, Text, theme as appTheme } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidOtp, normalizeOtp } from '~/utils/auth/validation';
+
 export function VerifyScreen() {
   const { isSignedIn, requestEmailOtp, verifyEmailOtp } = useAuth();
   const router = useRouter();
@@ -36,7 +38,7 @@ export function VerifyScreen() {
 
   useEffect(() => {
     if (!email) {
-      router.replace('/(auth)');
+      router.replace('/(auth)' as RelativePathString);
     }
   }, [email, router]);
 
@@ -107,7 +109,7 @@ export function VerifyScreen() {
   }, [email, focusOtpInput, requestEmailOtp]);
 
   if (isSignedIn) {
-    return <Redirect href="/(protected)/(tabs)/start" />;
+    return <Redirect href={"/(protected)/(tabs)/start" as RelativePathString} />;
   }
 
   if (!email) {
@@ -128,7 +130,7 @@ export function VerifyScreen() {
         >
           <Box flex={1} testID="auth-verify-screen" style={styles.screen}>
             <View style={styles.hero}>
-              <Image source={require('~/assets/icon.png')} style={styles.logo} />
+              <Image source={require('~/assets/icon.png')} contentFit="contain" style={styles.logo} />
               <Text variant="header" color="foreground" style={styles.title}>
                 VERIFY
               </Text>
@@ -203,7 +205,7 @@ export function VerifyScreen() {
                 title="RESEND CODE"
                 style={styles.secondaryButton}
               />
-              <Link href="/(auth)" asChild>
+              <Link href={"/(auth)" as RelativePathString} asChild>
                 <View style={styles.secondaryActionContainer}>
                   <Text style={styles.secondaryAction}>USE DIFFERENT EMAIL</Text>
                 </View>
@@ -219,7 +221,7 @@ export function VerifyScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: appTheme.colors.background,
   },
   flex: {
     flex: 1,
@@ -228,12 +230,12 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   screen: {
-    backgroundColor: '#000000',
+    backgroundColor: appTheme.colors.background,
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 24,
-    rowGap: 24,
+    paddingHorizontal: appTheme.spacing.m_16,
+    paddingTop: appTheme.spacing.m_16,
+    paddingBottom: appTheme.spacing.ml_24,
+    rowGap: appTheme.spacing.ml_24,
     justifyContent: 'space-between',
   },
   hero: {
@@ -251,46 +253,40 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: 'center',
     maxWidth: 280,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
   },
-  title: {
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
-  },
+  title: {},
   formContainer: {
     width: '100%',
-    backgroundColor: '#101010',
+    backgroundColor: appTheme.colors['bg-surface'],
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: appTheme.colors['emphasis-lower'],
     borderRadius: 16,
-    padding: 20,
-    rowGap: 12,
+    padding: appTheme.spacing.m_16,
+    rowGap: appTheme.spacing.sm_12,
   },
   heading: {
-    color: '#F5F5F5',
+    color: appTheme.colors.foreground,
     fontSize: 18,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '700',
   },
   subheading: {
-    color: '#A1A1AA',
+    color: appTheme.colors.mutedForeground,
     fontSize: 13,
     lineHeight: 18,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '500',
   },
   errorContainer: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 0, 0, 0.4)',
-    backgroundColor: 'rgba(255, 0, 0, 0.08)',
-    borderRadius: 8,
+    borderColor: appTheme.colors.destructive,
+    backgroundColor: appTheme.colors.muted,
+    borderRadius: appTheme.borderRadii.sm_6,
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: appTheme.spacing.sm_12,
   },
   errorText: {
-    color: '#FF0000',
+    color: appTheme.colors.destructive,
     textAlign: 'left',
     fontSize: 14,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '600',
   },
   otpPressable: {
@@ -298,27 +294,26 @@ const styles = StyleSheet.create({
   },
   otpSlots: {
     flexDirection: 'row',
-    columnGap: 8,
+    columnGap: appTheme.spacing.s_8,
     justifyContent: 'space-between',
   },
   otpSlot: {
     flex: 1,
     minHeight: 56,
-    borderRadius: 10,
+    borderRadius: appTheme.borderRadii.md_10,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.16)',
-    backgroundColor: '#141414',
+    borderColor: appTheme.colors['border-focus'],
+    backgroundColor: appTheme.colors['bg-surface'],
     alignItems: 'center',
     justifyContent: 'center',
   },
   otpSlotActive: {
-    borderColor: '#E4E4E7',
+    borderColor: appTheme.colors.foreground,
   },
   otpSlotText: {
-    color: '#F5F5F5',
+    color: appTheme.colors.foreground,
     fontSize: 22,
     lineHeight: 28,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '700',
   },
   overlayOtpInput: {
@@ -332,10 +327,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   resendMessage: {
-    color: '#A1A1AA',
+    color: appTheme.colors.mutedForeground,
     fontSize: 12,
     lineHeight: 18,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '500',
   },
   primaryButton: {
@@ -344,7 +338,7 @@ const styles = StyleSheet.create({
   secondaryButton: {
     width: '100%',
     backgroundColor: 'transparent',
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: appTheme.colors['emphasis-lower'],
   },
   secondaryActionContainer: {
     alignItems: 'center',
@@ -352,9 +346,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   secondaryAction: {
-    color: '#E4E4E7',
+    color: appTheme.colors.foreground,
     fontSize: 12,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '600',
   },
 });

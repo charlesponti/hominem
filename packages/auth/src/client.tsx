@@ -219,28 +219,45 @@ export type AuthProviderProps = {
   children: ReactNode;
   config: AuthConfig;
   onAuthEvent?: (event: AuthEvent) => void;
+  initialUser?: HominemUser | null;
+  initialSession?: HominemSession | null;
 }
 
 export function AuthProvider({
   children,
   config,
   onAuthEvent,
+  initialUser = null,
+  initialSession = null,
 }: AuthProviderProps) {
-  const [session, setSession] = useState<HominemSession | null>(null);
-  const [user, setUser] = useState<HominemUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const hasInitialAuth = Boolean(initialUser && initialSession);
+  const [session, setSession] = useState<HominemSession | null>(initialSession);
+  const [user, setUser] = useState<HominemUser | null>(initialUser);
+  const [isLoading, setIsLoading] = useState(!hasInitialAuth);
 
   const refreshAuth = useCallback(async () => {
     const payload = await fetchSession(config.apiBaseUrl);
     setUser(payload.user ?? null);
-    setSession(toSession(payload.accessToken, payload.expiresIn));
+    setSession((currentSession) => {
+      const nextSession = toSession(payload.accessToken, payload.expiresIn);
+      if (nextSession) {
+        return nextSession;
+      }
+      if (payload.isAuthenticated && payload.user && currentSession) {
+        return currentSession;
+      }
+      return null;
+    });
     setIsLoading(false);
     return payload;
   }, [config.apiBaseUrl]);
 
   useEffect(() => {
+    if (hasInitialAuth) {
+      return;
+    }
     void refreshAuth();
-  }, [refreshAuth]);
+  }, [hasInitialAuth, refreshAuth]);
 
   const signIn = useCallback(async () => {
     // Default sign-in: redirect to email sign-in page
@@ -444,9 +461,12 @@ export function AuthProvider({
   }, [config.apiBaseUrl, onAuthEvent]);
 
   const getSession = useCallback(async () => {
+    if (session) {
+      return session;
+    }
     const payload = await refreshAuth();
     return toSession(payload.accessToken, payload.expiresIn);
-  }, [refreshAuth]);
+  }, [refreshAuth, session]);
 
   const authClient = useMemo<AuthClient>(
     () => ({

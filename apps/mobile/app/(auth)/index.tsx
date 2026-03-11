@@ -1,12 +1,13 @@
+import { Image } from 'expo-image';
 import { Redirect, useRouter } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
 import React, { useState, useCallback } from 'react';
 import {
-  Image,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import TextInput from '~/components/text-input';
-import { Box, Text } from '~/theme';
+import { Box, Text, theme as appTheme } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidEmail, normalizeEmail } from '~/utils/auth/validation';
 import { E2E_TESTING, MOBILE_PASSKEY_ENABLED } from '~/utils/constants';
@@ -78,7 +79,7 @@ export function AuthScreen() {
   }, [completePasskeySignIn, signInWithPasskey]);
 
   if (isSignedIn) {
-    return <Redirect href="/(protected)/(tabs)/start" />;
+    return <Redirect href={"/(protected)/(tabs)/start" as RelativePathString} />;
   }
 
   const displayError = authError || passkeyError;
@@ -98,7 +99,7 @@ export function AuthScreen() {
         >
           <Box flex={1} testID="auth-screen" style={styles.screen}>
             <View style={styles.hero}>
-              <Image source={require('~/assets/icon.png')} style={styles.logo} />
+              <Image source={require('~/assets/icon.png')} contentFit="contain" style={styles.logo} />
               <Text variant="header" color="foreground" style={styles.title}>
                 WELCOME
               </Text>
@@ -137,8 +138,8 @@ export function AuthScreen() {
                 title="SEND_CODE"
                 style={styles.primaryButton}
               />
-              {canUsePasskeys && (
-                <TouchableOpacity
+              {canUsePasskeys ? (
+                <Pressable
                   onPress={handlePasskeySignIn}
                   disabled={isSubmitting}
                   style={styles.passkeyButton}
@@ -147,10 +148,10 @@ export function AuthScreen() {
                   <Text style={styles.passkeyButtonText}>
                     {isPasskeyLoading ? 'AUTHENTICATING...' : 'USE PASSKEY'}
                   </Text>
-                </TouchableOpacity>
-              )}
+                </Pressable>
+              ) : null}
               {E2E_TESTING && MOBILE_PASSKEY_ENABLED ? (
-                <TouchableOpacity
+                <Pressable
                   onPress={async () => {
                     try {
                       setIsSubmitting(true);
@@ -172,7 +173,7 @@ export function AuthScreen() {
                 />
               ) : null}
               {E2E_TESTING && MOBILE_PASSKEY_ENABLED ? (
-                <TouchableOpacity
+                <Pressable
                   onPress={async () => {
                     try {
                       setIsSubmitting(true);
@@ -197,7 +198,7 @@ export function AuthScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: appTheme.colors.background,
   },
   flex: {
     flex: 1,
@@ -206,12 +207,12 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   screen: {
-    backgroundColor: '#000000',
+    backgroundColor: appTheme.colors.background,
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 24,
-    rowGap: 24,
+    paddingHorizontal: appTheme.spacing.m_16,
+    paddingTop: appTheme.spacing.m_16,
+    paddingBottom: appTheme.spacing.ml_24,
+    rowGap: appTheme.spacing.ml_24,
     justifyContent: 'space-between',
   },
   hero: {
@@ -229,46 +230,40 @@ const styles = StyleSheet.create({
   subtitle: {
     textAlign: 'center',
     maxWidth: 280,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
   },
-  title: {
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
-  },
+  title: {},
   formContainer: {
     width: '100%',
-    backgroundColor: '#101010',
+    backgroundColor: appTheme.colors['bg-surface'],
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: appTheme.colors['emphasis-lower'],
     borderRadius: 16,
-    padding: 20,
-    rowGap: 12,
+    padding: appTheme.spacing.m_16,
+    rowGap: appTheme.spacing.sm_12,
   },
   heading: {
-    color: '#F5F5F5',
+    color: appTheme.colors.foreground,
     fontSize: 18,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '700',
   },
   subheading: {
-    color: '#A1A1AA',
+    color: appTheme.colors.mutedForeground,
     fontSize: 13,
     lineHeight: 18,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '500',
   },
   errorContainer: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 0, 0, 0.4)',
-    backgroundColor: 'rgba(255, 0, 0, 0.08)',
-    borderRadius: 8,
+    borderColor: appTheme.colors.destructive,
+    backgroundColor: appTheme.colors.muted,
+    borderRadius: appTheme.borderRadii.sm_6,
     paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: appTheme.spacing.sm_12,
   },
   errorText: {
-    color: '#FF0000',
+    color: appTheme.colors.destructive,
     textAlign: 'left',
     fontSize: 14,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '600',
   },
   primaryButton: {
@@ -277,17 +272,16 @@ const styles = StyleSheet.create({
   passkeyButton: {
     width: '100%',
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: appTheme.borderRadii.sm_6,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: appTheme.colors['emphasis-lower'],
     backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
   passkeyButtonText: {
-    color: '#A1A1AA',
+    color: appTheme.colors.mutedForeground,
     fontSize: 14,
-    fontFamily: Platform.select({ ios: 'System', android: 'sans-serif', default: 'System' }),
     fontWeight: '600',
   },
   e2ePasskeyAction: {

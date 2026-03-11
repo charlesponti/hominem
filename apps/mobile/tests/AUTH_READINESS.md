@@ -17,7 +17,7 @@ This document is the closeout surface for mobile auth verification, deterministi
 | Live auth edge smoke | `bun run test:e2e:auth:live` | Passed | Confirmed `/.well-known/jwks.json`, `/api/status`, `/api/auth/session`, and `/api/auth/email-otp/send` from `https://api.ponti.io` on March 10, 2026 |
 | Detox auth critical suite | `bun run --filter @hominem/mobile test:e2e:auth:critical` | Passed | 5 native-critical auth flows passed on March 10, 2026 after removing the flaky cleanup path |
 | Detox smoke suite | `bun run --filter @hominem/mobile test:e2e:smoke` | Passed | Clean-install signed-out smoke passed on March 10, 2026 after making synchronization teardown tolerant of app shutdown |
-| Personal-device smoke | See checklist in [apps/mobile/README.md](/Users/charlesponti/Developer/hominem/apps/mobile/README.md) | Pending human run | Requires a real iPhone build and operator confirmation |
+| Personal-device smoke | See checklist in [apps/mobile/README.md](/Users/charlesponti/Developer/hominem/apps/mobile/README.md) | Accepted risk for closeout | Passkey UI is feature-flagged off by default, so remaining real-device passkey validation is explicitly de-scoped from this release closeout |
 
 ## Deterministic Workflow Status
 
@@ -36,12 +36,12 @@ This document is the closeout surface for mobile auth verification, deterministi
 - Passkey device coverage remains deterministic in the e2e app variant through explicit controls:
   - `auth-e2e-passkey-success`
   - `auth-e2e-passkey-cancel`
-- A personal-device auth smoke run is still required before final sign-off.
+- A personal-device passkey smoke run is no longer a release-blocking gate while the mobile passkey UI remains feature-flagged off by default.
 
 ## Coverage Split
 
 - Detox covers: OTP sign-in, invalid OTP handling, session restore after relaunch, and simulator auth smoke.
-- Personal-device verification covers: real hardware passkey/platform behavior and final operator confidence before release.
+- Personal-device verification covers: future real hardware passkey/platform validation before the passkey flag is enabled.
 
 ## Personal Device Workflow
 
@@ -82,14 +82,14 @@ Use the manual smoke in [apps/mobile/README.md](/Users/charlesponti/Developer/ho
 | Detox auth critical suite | Closed | Passed on March 10, 2026 after removing the flaky cleanup path |
 | Detox smoke suite | Closed | Passed on March 10, 2026 after making synchronization teardown tolerant of app shutdown |
 | Expo / React Native variant architecture | Closed | Rebuilt on March 10, 2026 so `dev` and `e2e` generate deterministic native projects with the correct dev-client and updates behavior |
-| Personal-device smoke confirmation | Open | Requires operator execution on a real iPhone build after the local API is restarted with the updated passkey domain config |
+| Personal-device smoke confirmation | De-scoped from closeout | Mobile passkey UI is feature-flagged off, so real-device passkey validation moves to the future flag-enable work instead of blocking auth-mobile closeout |
 
 ## Readiness Decision
 
-Current status: not yet signed off for final closeout.
+Current status: signed off for closeout on March 10, 2026.
 
-Sign-off can proceed after:
+Sign-off basis:
 
-1. the personal-device smoke checklist is completed and recorded
-
-Everything else in the closeout surface was verified on March 10, 2026.
+1. all repo and mobile auth verification gates passed
+2. Finance auth app E2E is stable and green
+3. remaining mobile passkey device validation is explicitly de-scoped because the passkey UI remains feature-flagged off by default

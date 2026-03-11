@@ -1,6 +1,8 @@
 import { Redirect } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
 import { useState } from 'react';
-import { SafeAreaView, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
 import { FeedbackBlock } from '~/components/feedback-block';
@@ -24,36 +26,17 @@ const Onboarding = () => {
   };
 
   if (!isSignedIn) {
-    return <Redirect href="/(auth)" />;
+    return <Redirect href={"/(auth)" as RelativePathString} />;
   }
 
   if (currentUser?.name) {
-    return <Redirect href="/(protected)/(tabs)/focus" />;
+    return <Redirect href={"/(protected)/(tabs)/focus" as RelativePathString} />;
   }
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        backgroundColor: theme.colors.background,
-        justifyContent: 'center',
-      }}
-    >
-      <View
-        style={{
-          paddingHorizontal: 24,
-          rowGap: 48,
-        }}
-      >
-        <View
-          style={{
-            justifyContent: 'center',
-            paddingTop: 24,
-            alignItems: 'center',
-            marginBottom: 48,
-            rowGap: 12,
-          }}
-        >
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.content}>
+        <View style={styles.hero}>
           <Text variant="header" color="foreground">
             WELCOME
           </Text>
@@ -67,7 +50,7 @@ const Onboarding = () => {
           label="Name"
           placeholder="Enter your name"
           value={name}
-          style={{ flex: 1 }}
+          style={styles.inputFlex}
           onChange={(e) => setName(e.nativeEvent.text)}
         />
         <Button title="Create profile" onPress={onButtonPress} />
@@ -83,5 +66,27 @@ const Onboarding = () => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+    justifyContent: 'center',
+  },
+  content: {
+    paddingHorizontal: theme.spacing.ml_24,
+    rowGap: theme.spacing.xl_48,
+  },
+  hero: {
+    justifyContent: 'center',
+    paddingTop: theme.spacing.ml_24,
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl_48,
+    rowGap: theme.spacing.sm_12,
+  },
+  inputFlex: {
+    flex: 1,
+  },
+});
 
 export default Onboarding;
