@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useRef } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import { fontSizes } from '@hominem/ui/tokens'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Reanimated, {
   runOnJS,
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
   focusInfoContainer: {
     flex: 1,
     fontWeight: 500,
-    fontSize: 14,
+    fontSize: fontSizes.sm,
     lineHeight: 20,
     color: theme.colors['text-secondary'],
   },

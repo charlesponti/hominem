@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { Alert, Platform, Pressable, Share, StyleSheet, TextInput, View } from 'react-native'
+import { fontSizes } from '@hominem/ui/tokens'
 import { useApiClient } from '@hominem/hono-client/react'
 import { FlashList, type ListRenderItem } from '@shopify/flash-list'
 import { useMutation } from '@tanstack/react-query'
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     color: theme.colors.foreground,
-    fontSize: 14,
+    fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
     paddingVertical: 6,
     paddingHorizontal: 10,
@@ -401,7 +402,7 @@ const styles = StyleSheet.create({
   },
   searchResultCount: {
     color: theme.colors['text-tertiary'],
-    fontSize: 12,
+    fontSize: fontSizes.xs,
     fontFamily: 'Geist Mono',
   },
   messagesContainer: {
@@ -420,7 +421,7 @@ const styles = StyleSheet.create({
   },
   emptySearchText: {
     color: theme.colors['text-tertiary'],
-    fontSize: 14,
+    fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
   },
   endButton: {

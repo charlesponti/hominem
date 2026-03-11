@@ -1,5 +1,6 @@
 import React, { memo, useState } from 'react'
 import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native'
+import { fontSizes } from '@hominem/ui/tokens'
 
 import { Text, theme as appTheme } from '~/theme'
 import type { MessageOutput } from '~/utils/services/chat'
@@ -256,7 +257,7 @@ const styles = StyleSheet.create({
   },
   metadataText: {
     color: appTheme.colors['text-tertiary'],
-    fontSize: 11,
+    fontSize: fontSizes.xs,
   },
   actions: {
     flexDirection: 'row',
@@ -275,13 +276,13 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     color: appTheme.colors['text-secondary'],
-    fontSize: 11,
+    fontSize: fontSizes.xs,
     textTransform: 'uppercase',
   },
   reasoningText: {
     marginTop: 10,
     color: appTheme.colors.foreground,
-    fontSize: 12,
+    fontSize: fontSizes.xs,
     opacity: 0.8,
   },
   toolCalls: {
@@ -298,12 +299,12 @@ const styles = StyleSheet.create({
   },
   toolCallName: {
     color: appTheme.colors.foreground,
-    fontSize: 12,
+    fontSize: fontSizes.xs,
     fontWeight: '600',
   },
   toolCallArgs: {
     color: appTheme.colors['text-secondary'],
-    fontSize: 11,
+    fontSize: fontSizes.xs,
     fontFamily: appTheme.textVariants.mono.fontFamily,
   },
   editBackdrop: {

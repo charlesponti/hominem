@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { fontSizes } from '@hominem/ui/tokens'
 import { Text, theme } from '~/theme';
 import { borderStyle } from '~/theme/styles';
 
@@ -46,7 +47,7 @@ const searchHeaderStyles = StyleSheet.create({
     ...borderStyle.border,
   },
   searchText: {
-    fontSize: 14,
+    fontSize: fontSizes.sm,
     lineHeight: 20,
     color: theme.colors.foreground,
     alignItems: 'center',

@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
+import { fontSizes } from '@hominem/ui/tokens'
 
 import { theme } from '~/theme'
 import { VoiceSessionModal } from '../media/voice-session-modal'
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
   },
   suggestionText: {
     color: theme.colors.foreground,
-    fontSize: 12,
+    fontSize: fontSizes.xs,
     fontFamily: 'Geist Mono',
   },
   attachmentsScroll: {
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
   },
   attachmentName: {
     color: theme.colors.foreground,
-    fontSize: 11,
+    fontSize: fontSizes.xs,
     fontFamily: 'Geist Mono',
     flex: 1,
   },
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
   },
   removeAttachmentText: {
     color: theme.colors['text-tertiary'],
-    fontSize: 16,
+    fontSize: fontSizes.md,
     lineHeight: 18,
   },
   inputRow: {
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     color: theme.colors.foreground,
-    fontSize: 14,
+    fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
     paddingVertical: 10,
     paddingHorizontal: 12,
@@ -317,7 +318,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   charCount: {
-    fontSize: 11,
+    fontSize: fontSizes.xs,
     fontFamily: 'Geist Mono',
     color: theme.colors['text-tertiary'],
   },
@@ -325,7 +326,7 @@ const styles = StyleSheet.create({
     color: theme.colors.destructive,
   },
   overLimitText: {
-    fontSize: 11,
+    fontSize: fontSizes.xs,
     fontFamily: 'Geist Mono',
     color: theme.colors.destructive,
     flex: 1,

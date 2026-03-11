@@ -1,5 +1,6 @@
 import { memo, useCallback } from 'react'
 import { StyleSheet } from 'react-native'
+import { fontSizes } from '@hominem/ui/tokens'
 import { FlashList, type ListRenderItem } from '@shopify/flash-list'
 import { theme } from '~/theme'
 import { RefreshControl } from 'react-native-gesture-handler'
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   headerText: {
-    fontSize: 14,
+    fontSize: fontSizes.sm,
     color: theme.colors['text-tertiary'],
   },
 })

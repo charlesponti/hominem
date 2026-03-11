@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Animated, StyleSheet, View } from 'react-native'
+import { fontSizes } from '@hominem/ui/tokens'
 
 import { Text, theme } from '~/theme'
 
@@ -76,7 +77,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: theme.colors['text-tertiary'],
-    fontSize: 12,
+    fontSize: fontSizes.xs,
     fontWeight: '500',
     marginBottom: 4,
   },
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
   },
   thinkingText: {
     color: theme.colors['text-tertiary'],
-    fontSize: 12,
+    fontSize: fontSizes.xs,
     marginLeft: 2,
   },
 })

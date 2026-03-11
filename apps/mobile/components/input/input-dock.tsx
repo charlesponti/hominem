@@ -1,6 +1,7 @@
 import { useRouter, useSegments } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
 import React, { useCallback, useMemo } from 'react'
+import { fontSizes } from '@hominem/ui/tokens'
 import { Pressable, StyleSheet, TextInput, View } from 'react-native'
 import Animated, {
   Extrapolation,
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     color: theme.colors.foreground,
-    fontSize: 14,
+    fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
     paddingVertical: 10,
   },

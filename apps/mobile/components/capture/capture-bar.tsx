@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
 import { useCallback, useState } from 'react'
+import { fontSizes } from '@hominem/ui/tokens'
 import { Pressable, StyleSheet, TextInput, View } from 'react-native'
 import { useMutation } from '@tanstack/react-query'
 
@@ -110,7 +111,7 @@ const styles = StyleSheet.create({
   },
   input: {
     color: theme.colors.foreground,
-    fontSize: 14,
+    fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
     minHeight: 40,
   },

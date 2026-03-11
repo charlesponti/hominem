@@ -1,4 +1,5 @@
 import { StyleSheet, TextInput as RNTextInput, type TextInputProps, View } from 'react-native'
+import { fontSizes } from '@hominem/ui/tokens'
 import { Text, theme } from '~/theme'
 
 function TextInput({ label, style, ...props }: TextInputProps & { label?: string }) {
@@ -47,7 +48,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     fontFamily: 'Geist Mono',
-    fontSize: 14,
+    fontSize: fontSizes.sm,
     color: theme.colors.foreground,
   },
   inputLabeled: {
