@@ -10,7 +10,7 @@ test.describe('Notes: HomeView → chat.$chatId critical path', () => {
     await context.clearCookies()
     const email = createAuthTestEmail('notes-home-lifecycle')
 
-    await signInWithEmailOtp(page, email, /\/(home|notes)/)
+    await signInWithEmailOtp(page, email, /\/home/)
 
     await page.goto('/home')
     await expect(page).toHaveURL(/\/home/, { timeout: 15_000 })
@@ -24,7 +24,7 @@ test.describe('Notes: HomeView → chat.$chatId critical path', () => {
     await context.clearCookies()
     const email = createAuthTestEmail('notes-capture-think')
 
-    await signInWithEmailOtp(page, email, /\/(home|notes)/)
+    await signInWithEmailOtp(page, email, /\/home/)
     await page.goto('/home')
 
     const captureInput = page.getByTestId('capture-bar-input')
@@ -47,7 +47,7 @@ test.describe('Notes: HomeView → chat.$chatId critical path', () => {
     await context.clearCookies()
     const email = createAuthTestEmail('notes-capture-save')
 
-    await signInWithEmailOtp(page, email, /\/(home|notes)/)
+    await signInWithEmailOtp(page, email, /\/home/)
     await page.goto('/home')
 
     const captureInput = page.getByTestId('capture-bar-input')
@@ -69,7 +69,7 @@ test.describe('Notes: HomeView → chat.$chatId critical path', () => {
     await context.clearCookies()
     const email = createAuthTestEmail('notes-voice-confirm')
 
-    await signInWithEmailOtp(page, email, /\/(home|notes)/)
+    await signInWithEmailOtp(page, email, /\/home/)
     await page.goto('/home')
 
     const captureInput = page.getByTestId('capture-bar-input')

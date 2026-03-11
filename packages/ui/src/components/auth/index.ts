@@ -1,5 +1,11 @@
 export { AuthScaffold } from './auth-scaffold';
 export { AuthRouteLayout } from './auth-route-layout';
+export {
+  createAuthEntryRoute,
+  createAuthLogoutRoute,
+  createAuthPasskeyCallbackRoute,
+  createAuthVerifyRoute,
+} from './web-auth-routes';
 export { AuthErrorBanner } from './auth-error-banner';
 export { AuthLoadingState } from './auth-loading-state';
 export { SessionExpiredDialog } from './session-expired-dialog';
