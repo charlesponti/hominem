@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { getSetCookieHeaders } from '@hominem/utils/headers';
 
 const mockRotateRefreshToken = vi.hoisted(() => vi.fn());
 
@@ -113,5 +114,37 @@ describe('auth token response contract', () => {
     expect(body.refreshToken).toBe('refresh-next-token');
     expect(body.tokenType).toBe('Bearer');
     expect(body.expiresIn).toBe(600);
+  });
+
+  test('POST /api/auth/refresh rotates cookie-backed sessions on the refresh route only', async () => {
+    mockRotateRefreshToken.mockResolvedValueOnce({
+      ok: true,
+      accessToken: 'cookie-access-token',
+      refreshToken: 'cookie-refresh-next',
+      tokenType: 'Bearer',
+      expiresIn: 600,
+      sessionId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      refreshFamilyId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+    });
+
+    const app = createServer();
+    const response = await app.request('http://localhost/api/auth/refresh', {
+      method: 'POST',
+      headers: {
+        cookie: 'hominem_refresh_token=test-refresh-cookie',
+      },
+    });
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      accessToken: string;
+      refreshToken: string;
+    };
+    expect(body.accessToken).toBe('cookie-access-token');
+    expect(body.refreshToken).toBe('cookie-refresh-next');
+
+    const setCookies = getSetCookieHeaders(response.headers);
+    expect(setCookies.some((value) => value.includes('hominem_access_token='))).toBe(true);
+    expect(setCookies.some((value) => value.includes('hominem_refresh_token='))).toBe(true);
   });
 });

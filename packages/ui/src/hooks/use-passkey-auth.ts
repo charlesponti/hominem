@@ -8,6 +8,7 @@ interface PasskeyAuthResult {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+  tokenType?: string;
   user: {
     id: string;
     email: string;
@@ -109,8 +110,8 @@ function normalizeCreationOptions(
 
 export interface UsePasskeyAuthOptions {
   /**
-   * After successful sign-in, POST the accessToken to this app-local route
-   * so the server can set an HttpOnly cookie before redirecting.
+   * After successful sign-in, POST the token pair to this app-local route so
+   * the server can set HttpOnly cookies before redirecting.
    * Defaults to '/auth/passkey/callback'.
    */
   callbackRoute?: string;
@@ -169,7 +170,7 @@ export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
 
       const assertionResponse = credential.response as AuthenticatorAssertionResponse;
 
-      // Step 3: Send assertion to server — now returns canonical token contract
+      // Step 3: Verify the passkey and establish the Better Auth session cookie.
       const verifyResponse = await fetch(`${API_URL}/api/auth/passkey/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -191,23 +192,38 @@ export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
         }),
       });
 
-      const verifyData = await verifyResponse.json();
-
       if (!verifyResponse.ok) {
+        const verifyData = await verifyResponse.json();
         const err = verifyData as PasskeyAuthError;
         throw new Error(err.message || 'Passkey verification failed');
       }
 
-      const result = verifyData as PasskeyAuthResult;
+      // Step 4: Exchange the Better Auth session for canonical app tokens.
+      const tokenResponse = await fetch(`${API_URL}/api/auth/token-from-session`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      const tokenData = await tokenResponse.json();
+      if (!tokenResponse.ok) {
+        const err = tokenData as PasskeyAuthError;
+        throw new Error(err.message || 'Failed to exchange passkey session for app tokens');
+      }
+
+      const result = tokenData as PasskeyAuthResult;
 
       if (!result.accessToken) {
         throw new Error('Server did not return an access token after passkey sign-in');
       }
 
-      // Step 4: Store access token via server-side callback route (sets HttpOnly cookie)
+      // Step 5: Store the token pair via the server-side callback route.
       // Use fetch with redirect:follow so the browser applies Set-Cookie from the 302 response,
       // then navigate to the destination.
-      const callbackBody: Record<string, string> = { accessToken: result.accessToken };
+      const callbackBody: Record<string, string | number> = {
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+        expiresIn: result.expiresIn,
+      };
       if (redirectTo) callbackBody['next'] = redirectTo;
 
       const callbackResponse = await fetch(callbackRoute, {

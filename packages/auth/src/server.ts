@@ -63,6 +63,36 @@ function getRequestAccessToken(request: Request) {
   }
 }
 
+function getRequestRefreshToken(request: Request) {
+  const cookieHeader = request.headers.get('cookie') ?? ''
+  const tokenMatch = cookieHeader.match(/(?:^|;\s*)hominem_refresh_token=([^;]+)/)
+  const tokenValue = tokenMatch?.[1]
+  if (!tokenValue) {
+    return null
+  }
+
+  try {
+    return decodeURIComponent(tokenValue)
+  } catch {
+    return tokenValue
+  }
+}
+
+function appendSetCookieHeaders(target: Headers, source: Headers) {
+  const setCookieValues = getSetCookieHeaders(source)
+  if (setCookieValues.length > 0) {
+    for (const value of setCookieValues) {
+      target.append('set-cookie', value)
+    }
+    return
+  }
+
+  const setCookie = source.get('set-cookie')
+  if (setCookie) {
+    target.append('set-cookie', setCookie)
+  }
+}
+
 function toSession(accessToken?: string | null, expiresIn?: number | null): HominemSession | null {
   if (!accessToken) {
     return null
@@ -83,6 +113,7 @@ export async function getServerAuth(
 ): Promise<ServerAuthResult & { headers: Headers }> {
   const headers = new Headers()
   const requestAccessToken = getRequestAccessToken(request)
+  const requestRefreshToken = getRequestRefreshToken(request)
 
   try {
     const cookieHeader = request.headers.get('cookie')
@@ -101,19 +132,44 @@ export async function getServerAuth(
       headers: upstreamHeaders,
     })
 
-    const setCookieValues = getSetCookieHeaders(res.headers)
-    if (setCookieValues.length > 0) {
-      for (const value of setCookieValues) {
-        headers.append('set-cookie', value)
+    appendSetCookieHeaders(headers, res.headers)
+
+    let sessionResponse = res
+    if (res.status === 401 && !authHeader && requestRefreshToken) {
+      const refreshHeaders = new Headers()
+      if (cookieHeader) {
+        refreshHeaders.set('cookie', cookieHeader)
       }
-    } else {
-      const setCookie = res.headers.get('set-cookie')
-      if (setCookie) {
-        headers.append('set-cookie', setCookie)
+
+      const refreshRes = await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/refresh'), {
+        method: 'POST',
+        headers: refreshHeaders,
+      })
+
+      appendSetCookieHeaders(headers, refreshRes.headers)
+
+      if (refreshRes.ok) {
+        const refreshPayload = (await refreshRes.json()) as {
+          accessToken?: string | null
+        }
+
+        if (refreshPayload.accessToken) {
+          sessionResponse = await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/session'), {
+            method: 'GET',
+            headers: new Headers({
+              authorization: `Bearer ${refreshPayload.accessToken}`,
+            }),
+          })
+          appendSetCookieHeaders(headers, sessionResponse.headers)
+        } else {
+          sessionResponse = refreshRes
+        }
+      } else {
+        sessionResponse = refreshRes
       }
     }
 
-    if (!res.ok) {
+    if (!sessionResponse.ok) {
       return {
         user: null,
         session: null,
@@ -123,7 +179,7 @@ export async function getServerAuth(
       }
     }
 
-    const payload = (await res.json()) as ServerSessionPayload
+    const payload = (await sessionResponse.json()) as ServerSessionPayload
     const session = toSession(payload.accessToken ?? requestAccessToken, payload.expiresIn)
 
     return {

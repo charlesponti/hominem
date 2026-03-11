@@ -351,6 +351,19 @@ export async function signInWithPasskey(apiBaseUrl: string): Promise<SessionResu
     throw new Error('Passkey sign-in failed.')
   }
 
+  const tokenResponse = await fetch(`${apiBaseUrl}/api/auth/token-from-session`, {
+    credentials: 'include',
+    method: 'POST',
+  })
+
+  if (!tokenResponse.ok) {
+    throw new Error('Failed to exchange passkey session for app tokens.')
+  }
+
+  const tokenPayload = await readJson(tokenResponse, otpVerifyResponseSchema)
+  const session = createSession(tokenPayload.accessToken, tokenPayload.expiresIn)
+  writeStoredSession(session)
+
   const response = await fetch(`${apiBaseUrl}/api/auth/session`, {
     credentials: 'include',
     method: 'GET',
@@ -364,9 +377,6 @@ export async function signInWithPasskey(apiBaseUrl: string): Promise<SessionResu
   if (!payload.isAuthenticated || !payload.user || !payload.accessToken || !payload.expiresIn) {
     throw new Error('Passkey sign-in completed without a usable desktop session.')
   }
-
-  const session = createSession(payload.accessToken, payload.expiresIn)
-  writeStoredSession(session)
 
   return {
     session,

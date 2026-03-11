@@ -141,7 +141,7 @@ describe('auth email otp contract', () => {
     expect(signInResponse.status).toBe(200);
     const payload = (await signInResponse.json()) as VerifyOtpResponse;
     expect(payload.accessToken.length).toBeGreaterThan(0);
-    // refresh token may be empty in fallback mode when session table unavailable
+    expect(payload.refreshToken.length).toBeGreaterThan(0);
     expect(payload.expiresIn).toBeGreaterThan(0);
     expect(payload.tokenType).toBe('Bearer');
     expect(payload.user.email).toBe(email);
@@ -247,7 +247,7 @@ describe('auth email otp contract', () => {
     expect(sessionPayload.expiresIn).toBeGreaterThan(0);
   }, 15000);
 
-  test('2.2 session probe restores a web session from refresh-token cookie', async () => {
+  test('2.2 session probe stays identity-only when only a refresh-token cookie is present', async () => {
     const createServer = await importServer();
     const app = createServer();
     const email = `otp-refresh-session-${Date.now()}@hominem.test`;
@@ -274,14 +274,10 @@ describe('auth email otp contract', () => {
       },
     });
 
-    expect(sessionResponse.status).toBe(200);
+    expect(sessionResponse.status).toBe(401);
     const sessionPayload = (await sessionResponse.json()) as _SessionResponse;
-    expect(sessionPayload.isAuthenticated).toBe(true);
-    expect(sessionPayload.accessToken).toBeTruthy();
-    expect(sessionPayload.expiresIn).toBeGreaterThan(0);
-    const setCookies = getSetCookieHeaders(sessionResponse.headers).join('\n');
-    expect(setCookies).toContain('hominem_access_token=');
-    expect(setCookies).toContain('hominem_refresh_token=');
+    expect(sessionPayload.isAuthenticated).toBe(false);
+    expect(getSetCookieHeaders(sessionResponse.headers)).toHaveLength(0);
   }, 15000);
 
   test('2.2 session probe clears expired or invalid app token cookies', async () => {
