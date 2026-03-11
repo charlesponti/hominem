@@ -9,7 +9,7 @@ export const FocusItemIcon = ({ item }: { item: FocusItem }) => {
       return (
         <MaterialIcons
           name="radio-button-off"
-          color={theme.colors.quaternary}
+          color={theme.colors['emphasis-low']}
           size={ITEM_ICON_SIZE}
         />
       )
@@ -17,13 +17,13 @@ export const FocusItemIcon = ({ item }: { item: FocusItem }) => {
       return (
         <MaterialIcons
           name="calendar-today"
-          color={theme.colors.quaternary}
+          color={theme.colors['emphasis-low']}
           size={ITEM_ICON_SIZE}
         />
       )
     case 'reminder':
       return (
-        <MaterialIcons name="notifications" color={theme.colors.quaternary} size={ITEM_ICON_SIZE} />
+        <MaterialIcons name="notifications" color={theme.colors['emphasis-low']} size={ITEM_ICON_SIZE} />
       )
     default:
       return null

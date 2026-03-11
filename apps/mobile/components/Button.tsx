@@ -29,7 +29,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.colors.muted,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     flexDirection: 'row',
     columnGap: theme.spacing.sm_12,
     justifyContent: 'center',

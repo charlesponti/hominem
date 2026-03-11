@@ -21,7 +21,7 @@ export const ProposalCard = ({ item, onReview, onReject }: ProposalCardProps) =>
     <FadeIn>
       <View style={styles.card}>
         <View style={styles.content}>
-          <Text variant="caption" color="secondaryForeground" style={styles.typeLabel}>
+          <Text variant="caption" color="text-secondary" style={styles.typeLabel}>
             {TYPE_LABEL[item.proposedType]}
           </Text>
           <Text variant="body" color="foreground" numberOfLines={1} style={styles.title}>
@@ -42,7 +42,7 @@ export const ProposalCard = ({ item, onReview, onReject }: ProposalCardProps) =>
             onPress={() => onReject(item)}
             accessibilityLabel={`Reject proposal: ${item.proposedTitle}`}
           >
-            <Text variant="caption" color="secondaryForeground">✕</Text>
+            <Text variant="caption" color="text-secondary">✕</Text>
           </Pressable>
         </View>
       </View>
@@ -64,7 +64,7 @@ export const ProposalList = ({
 
   return (
     <View style={styles.list}>
-      <Text variant="caption" color="secondaryForeground" style={styles.sectionLabel}>
+      <Text variant="caption" color="text-secondary" style={styles.sectionLabel}>
         NEEDS REVIEW
       </Text>
       {items.map((item) => (
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     backgroundColor: theme.colors.muted,
   },
   content: { flex: 1, gap: 2 },
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   rejectBtn: { padding: 4 },
 })

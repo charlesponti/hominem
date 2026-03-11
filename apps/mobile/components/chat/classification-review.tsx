@@ -64,7 +64,7 @@ export const ClassificationReview = ({
 
           {/* Header */}
           <View style={styles.header}>
-            <Text variant="caption" color="secondaryForeground" style={styles.typeLabel}>
+            <Text variant="caption" color="text-secondary" style={styles.typeLabel}>
               SAVE AS {TYPE_LABEL[proposedType]}
             </Text>
             <Text variant="body" color="foreground" style={styles.title}>
@@ -78,8 +78,8 @@ export const ClassificationReview = ({
               {proposedChanges.map((change, i) => (
                 // eslint-disable-next-line react/no-array-index-key
                 <View key={i} style={styles.changeRow}>
-                  <Text variant="caption" color="secondaryForeground" style={styles.dash}>—</Text>
-                  <Text variant="caption" color="secondaryForeground" style={styles.changeText}>{change}</Text>
+                  <Text variant="caption" color="text-secondary" style={styles.dash}>—</Text>
+                  <Text variant="caption" color="text-secondary" style={styles.changeText}>{change}</Text>
                 </View>
               ))}
             </View>
@@ -87,7 +87,7 @@ export const ClassificationReview = ({
 
           {/* Preview */}
           <ScrollView style={styles.preview} nestedScrollEnabled>
-            <Text variant="caption" color="secondaryForeground" style={styles.previewText}>
+            <Text variant="caption" color="text-secondary" style={styles.previewText}>
               {previewContent}
             </Text>
           </ScrollView>
@@ -106,7 +106,7 @@ export const ClassificationReview = ({
               onPress={onReject}
               accessibilityLabel="Discard"
             >
-              <Text variant="label" color="secondaryForeground">DISCARD</Text>
+              <Text variant="label" color="text-secondary">DISCARD</Text>
             </Pressable>
           </View>
         </Animated.View>
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     borderTopWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     padding: 20,
     gap: 16,
   },
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 999,
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors['border-default'],
     alignSelf: 'center',
     marginBottom: 4,
   },
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.muted,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     padding: 10,
   },
   previewText: { fontFamily: 'Geist Mono' },
@@ -168,6 +168,6 @@ const styles = StyleSheet.create({
   },
   secondaryBtn: {
     backgroundColor: 'transparent',
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
 })

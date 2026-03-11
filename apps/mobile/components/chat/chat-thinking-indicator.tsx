@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
-    color: theme.colors.mutedForeground,
+    color: theme.colors['text-tertiary'],
     fontSize: 12,
     fontWeight: '500',
     marginBottom: 4,
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
   },
   thinkingText: {
-    color: theme.colors.mutedForeground,
+    color: theme.colors['text-tertiary'],
     fontSize: 12,
     marginLeft: 2,
   },

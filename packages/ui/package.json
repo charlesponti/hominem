@@ -22,7 +22,8 @@
     "./lib/*": "./src/lib/*.ts",
     "./styles/*": "./src/styles/*",
     "./ai-elements": "./src/components/ai-elements/index.ts",
-    "./ai-elements/*": "./src/components/ai-elements/*.tsx"
+    "./ai-elements/*": "./src/components/ai-elements/*.tsx",
+    "./tokens": "./src/tokens/index.ts"
   },
   "scripts": {
     "clean": "rm -rf build",

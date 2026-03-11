@@ -18,8 +18,8 @@ import {
  * opacity 0→1, translateY 6→0, 150ms decelerate.
  */
 export const FadeIn = ({ children }: { children: React.ReactNode }) => {
-  const opacity = useSharedValue(0)
-  const translateY = useSharedValue(VOID_ENTER_TRANSLATE_Y)
+  const opacity = useSharedValue<number>(0)
+  const translateY = useSharedValue<number>(VOID_ENTER_TRANSLATE_Y)
 
   React.useEffect(() => {
     opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER })
@@ -39,8 +39,8 @@ export const FadeIn = ({ children }: { children: React.ReactNode }) => {
  * Call triggerEnter() to start the animation.
  */
 export const useVoidEnter = () => {
-  const opacity = useSharedValue(0)
-  const translateY = useSharedValue(VOID_ENTER_TRANSLATE_Y)
+  const opacity = useSharedValue<number>(0)
+  const translateY = useSharedValue<number>(VOID_ENTER_TRANSLATE_Y)
 
   const triggerEnter = React.useCallback(() => {
     opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER })
@@ -60,8 +60,8 @@ export const useVoidEnter = () => {
  * Call triggerExit(onComplete) to start the animation.
  */
 export const useVoidExit = () => {
-  const opacity = useSharedValue(1)
-  const translateY = useSharedValue(0)
+  const opacity = useSharedValue<number>(1)
+  const translateY = useSharedValue<number>(0)
 
   const triggerExit = React.useCallback(
     (onComplete?: () => void) => {

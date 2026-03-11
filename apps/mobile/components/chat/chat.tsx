@@ -274,7 +274,7 @@ export const Chat = (props: ChatProps) => {
           <MindsherpaIcon
             name={showSearch ? 'x' : 'magnifying-glass'}
             size={18}
-            color={showSearch ? theme.colors.foreground : theme.colors.mutedForeground}
+            color={showSearch ? theme.colors.foreground : theme.colors['text-tertiary']}
           />
         </Pressable>
       </View>
@@ -286,7 +286,7 @@ export const Chat = (props: ChatProps) => {
             ref={searchInputRef}
             style={styles.searchInput}
             placeholder="Search messages…"
-            placeholderTextColor={theme.colors.mutedForeground}
+            placeholderTextColor={theme.colors['text-tertiary']}
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoFocus
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors['border-default'],
   },
   searchToggle: {
     marginLeft: 'auto',
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors['border-default'],
     gap: 8,
   },
   searchInput: {
@@ -396,11 +396,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     borderRadius: 8,
   },
   searchResultCount: {
-    color: theme.colors.mutedForeground,
+    color: theme.colors['text-tertiary'],
     fontSize: 12,
     fontFamily: 'Geist Mono',
   },
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptySearchText: {
-    color: theme.colors.mutedForeground,
+    color: theme.colors['text-tertiary'],
     fontSize: 14,
     fontFamily: 'Geist Mono',
   },
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: theme.colors['fg-primary'],
+    backgroundColor: theme.colors['text-primary'],
     marginBottom: 24,
   },
 })

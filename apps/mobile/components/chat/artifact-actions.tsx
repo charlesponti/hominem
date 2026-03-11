@@ -50,7 +50,7 @@ export const ArtifactActions = ({ state, messageCount, onTransform }: ArtifactAc
           >
             <Text
               variant="caption"
-              color={disabled ? 'secondaryForeground' : 'foreground'}
+              color={disabled ? 'text-secondary' : 'foreground'}
               style={disabled ? styles.disabledText : undefined}
             >
               {label}
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    borderTopColor: theme.colors['border-default'],
     backgroundColor: theme.colors.background,
   },
   dimmed: { opacity: 0.5 },
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     backgroundColor: theme.colors.muted,
   },
   btnDisabled: { opacity: 0.38 },

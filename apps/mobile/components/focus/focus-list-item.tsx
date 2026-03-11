@@ -28,7 +28,7 @@ const FocusDueDate = memo(({ dueDate }: { dueDate: Date | null }) => {
   const { localDateString } = getLocalDate(dueDate)
 
   return (
-    <MSText variant="small" color="mutedForeground" fontSize={12}>
+    <MSText variant="small" color="text-tertiary" fontSize={12}>
       {localDateString} {dueDate.toLocaleTimeString()}
     </MSText>
   )
@@ -47,7 +47,7 @@ export const FocusListItem = ({
 }) => {
   const translateX = useSharedValue(0)
   const itemHeight = useSharedValue(64)
-  const iconBackgroundColor = useSharedValue(theme.colors.muted)
+  const iconBackgroundColor = useSharedValue<string>(theme.colors.muted)
   const iconName = useSharedValue<MindsherpaIconName>('check')
   const isMutating = useSharedValue(false)
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -87,14 +87,14 @@ export const FocusListItem = ({
 
   const completeItem = useFocusItemComplete({
     onSuccess: () => {
-      iconBackgroundColor.value = withTiming(theme.colors.green, {
+      iconBackgroundColor.value = withTiming(theme.colors.success, {
         duration: VOID_MOTION_DURATION_STANDARD,
       })
       isMutating.value = false
     },
     onError: () => {
       iconName.value = 'circle-xmark'
-      iconBackgroundColor.value = withTiming(theme.colors.red, {
+      iconBackgroundColor.value = withTiming(theme.colors.destructive, {
         duration: VOID_MOTION_DURATION_STANDARD,
       })
       if (errorTimeoutRef.current) {
@@ -235,14 +235,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: theme.colors.muted,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   focusInfoContainer: {
     flex: 1,
     fontWeight: 500,
     fontSize: 14,
     lineHeight: 20,
-    color: theme.colors.secondaryForeground,
+    color: theme.colors['text-secondary'],
   },
   itemRow: {
     flex: 1,
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   leftAction: {
     position: 'absolute',

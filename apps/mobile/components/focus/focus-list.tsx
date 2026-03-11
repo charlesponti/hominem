@@ -78,6 +78,6 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 14,
-    color: theme.colors.mutedForeground,
+    color: theme.colors['text-tertiary'],
   },
 })

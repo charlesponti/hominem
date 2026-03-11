@@ -138,7 +138,7 @@ function Account() {
                 PASSKEYS
               </Text>
               {passkeys.length === 0 ? (
-                <Text color="mutedForeground" style={styles.noPasskeysText}>
+                <Text color="text-tertiary" style={styles.noPasskeysText}>
                   No passkeys registered.
                 </Text>
               ) : (
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     padding: theme.spacing.s_8,
   },
   passkeyName: {
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.sm_12,
     rowGap: theme.spacing.sm_12,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    borderTopColor: theme.colors['border-default'],
   },
   deleteButton: {
     borderColor: theme.colors.destructive,

@@ -20,8 +20,8 @@ export const FocusCategory = ({ category }: { category: keyof CategoryMap }) => 
 }
 
 const styles = StyleSheet.create({
-  muted: { color: theme.colors.mutedForeground },
-  secondary: { color: theme.colors.secondaryForeground },
+  muted: { color: theme.colors['text-tertiary'] },
+  secondary: { color: theme.colors['text-secondary'] },
 })
 
 export const CATEGORIES: Record<string, { emoji: string; label: string }> = {

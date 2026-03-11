@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 16,
     // opacity: 0.8,
-    // backgroundColor: theme.colors.grayLight,
+    // backgroundColor: theme.colors['emphasis-faint'],
   },
   gradient: {
     height: '100%',

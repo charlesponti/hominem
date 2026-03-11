@@ -58,7 +58,7 @@ export default function StartScreen() {
             <Text variant="header" color="foreground">
               WHERE SHOULD WE START?
             </Text>
-            <Text variant="body" color="secondaryForeground">
+            <Text variant="body" color="text-secondary">
               SELECT AN INTENT OR START FREEFORM INPUT.
             </Text>
           </Animated.View>
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     backgroundColor: theme.colors.muted,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   headingBlock: {
     gap: 10,

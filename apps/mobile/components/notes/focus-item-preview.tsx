@@ -49,7 +49,7 @@ const FocusItemPreview = ({
         {focusItem.due_date && readableDate ? <Text variant="caption">{readableDate}</Text> : null}
       </View>
       <Pressable disabled={disabled} style={[focusItemStyles.icon]} onPress={onDeleteIconPress}>
-        <MindsherpaIcon name="trash" size={24} color={theme.colors.red} />
+        <MindsherpaIcon name="trash" size={24} color={theme.colors.destructive} />
       </Pressable>
       <Pressable disabled={disabled} style={[focusItemStyles.icon]} onPress={onIconPress}>
         <MindsherpaIcon name="list-tree" size={24} color={theme.colors.foreground} />
@@ -61,7 +61,7 @@ const FocusItemPreview = ({
 const focusItemStyles = StyleSheet.create({
   item: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.blueLight,
+    backgroundColor: theme.colors['emphasis-faint'],
     borderRadius: 16,
   },
   info: {

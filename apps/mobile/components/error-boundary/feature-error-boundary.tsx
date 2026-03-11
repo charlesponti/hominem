@@ -45,7 +45,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
 
       return (
         <View style={styles.container}>
-          <Text variant="body" color="mutedForeground">
+          <Text variant="body" color="text-tertiary">
             {createFeatureFallbackLabel(this.props.featureName)}
           </Text>
           <Pressable style={styles.button} onPress={this.handleReset} accessibilityRole="button">
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.muted,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     alignItems: 'center',
   },
   button: {
@@ -77,6 +77,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
 })

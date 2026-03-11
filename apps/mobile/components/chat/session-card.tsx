@@ -54,11 +54,11 @@ export const SessionCard = ({ chat, isActive }: SessionCardProps) => {
           <Text variant="body" color="foreground" numberOfLines={1} style={styles.title}>
             {label}
           </Text>
-          <Text variant="caption" color="secondaryForeground">
+          <Text variant="caption" color="text-secondary">
             {isActive ? 'Active' : formatAge(chat.activityAt)}
           </Text>
         </View>
-        <Text variant="caption" color="secondaryForeground" style={styles.arrow}>→</Text>
+        <Text variant="caption" color="text-secondary" style={styles.arrow}>→</Text>
       </Pressable>
     </FadeIn>
   )
@@ -73,7 +73,7 @@ export const SessionList = () => {
 
   return (
     <View style={styles.list}>
-      <Text variant="caption" color="secondaryForeground" style={styles.sectionLabel}>
+      <Text variant="caption" color="text-secondary" style={styles.sectionLabel}>
         SESSIONS
       </Text>
       {sessions.map((chat, i) => (
@@ -107,17 +107,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     backgroundColor: theme.colors.muted,
   },
   activeCard: {
-    borderColor: theme.colors.green,
+    borderColor: theme.colors.success,
   },
   activeDot: {
     width: 6,
     height: 6,
     borderRadius: 999,
-    backgroundColor: theme.colors.green,
+    backgroundColor: theme.colors.success,
   },
   content: { flex: 1, gap: 1 },
   title: { fontWeight: '500' },

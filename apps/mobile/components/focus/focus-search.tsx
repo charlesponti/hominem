@@ -13,7 +13,7 @@ export const ActiveSearchSummary = React.memo(
     return (
       <View style={[searchHeaderStyles.container]}>
         <View style={searchHeaderStyles.resultCount}>
-          <Text variant="body" color="fg-primary" style={[searchHeaderStyles.searchText]}>
+          <Text variant="body" color="text-primary" style={[searchHeaderStyles.searchText]}>
             {activeSearch.count} RESULTS FOR "{activeSearch.keyword.toUpperCase()}"
           </Text>
         </View>
@@ -56,7 +56,7 @@ const searchHeaderStyles = StyleSheet.create({
   clearButton: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     paddingVertical: 8,
     paddingHorizontal: 12,
     alignItems: 'center',

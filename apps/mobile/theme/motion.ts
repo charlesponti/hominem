@@ -1,19 +1,17 @@
 import { Easing } from 'react-native-reanimated'
+import { durations, translateDistances } from '@hominem/ui/tokens'
 
-// Component enter: 150ms, decelerate — element arrives and settles.
-export const VOID_MOTION_ENTER = 150
+// Re-export canonical durations under the existing names so call sites need
+// no changes. Numeric values are guaranteed to match the web animation system.
+export const VOID_MOTION_ENTER = durations.enter
+export const VOID_MOTION_EXIT = durations.exit
+export const VOID_MOTION_DURATION_STANDARD = durations.standard
 
-// Component exit: 120ms, accelerate — element leaves without lingering.
-export const VOID_MOTION_EXIT = 120
-
-// Content animations (thinking indicators, loading states): unchanged.
-export const VOID_MOTION_DURATION_STANDARD = 120
-
-// Easing curves aligned with web cubic-bezier values.
+// CSS easing is web-only (see packages/ui/src/tokens/motion.ts easingWeb).
+// Mobile easing uses react-native-reanimated Easing functions kept here.
 export const VOID_EASING_ENTER = Easing.out(Easing.cubic)   // decelerate
 export const VOID_EASING_EXIT = Easing.in(Easing.cubic)     // accelerate
 export const VOID_EASING_STANDARD = Easing.inOut(Easing.ease)
 
-// Translate distance constants (keep small — motion clarifies, not decorates).
-export const VOID_ENTER_TRANSLATE_Y = 6   // px, enter lift
-export const VOID_EXIT_TRANSLATE_Y = 4    // px, exit settle
+export const VOID_ENTER_TRANSLATE_Y = translateDistances.enterY
+export const VOID_EXIT_TRANSLATE_Y = translateDistances.exitY

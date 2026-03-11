@@ -71,7 +71,7 @@ const ChatMessage = memo(({
               multiline
               style={styles.editInput}
               placeholder="Update your message"
-              placeholderTextColor={appTheme.colors.mutedForeground}
+              placeholderTextColor={appTheme.colors['text-tertiary']}
             />
             <View style={styles.editButtonRow}>
               <Pressable
@@ -171,15 +171,15 @@ const ChatMessage = memo(({
         </View>
       ) : null}
       <View style={styles.metadata}>
-        <Text variant="caption" color="secondaryForeground" style={styles.metadataText}>
+        <Text variant="caption" color="text-secondary" style={styles.metadataText}>
           {senderLabel}
         </Text>
         {timestamp ? (
           <>
-            <Text variant="caption" color="secondaryForeground">
+            <Text variant="caption" color="text-secondary">
               {' · '}
             </Text>
-            <Text variant="caption" color="secondaryForeground" style={styles.metadataText}>
+            <Text variant="caption" color="text-secondary" style={styles.metadataText}>
               {timestamp}
             </Text>
           </>
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
   botMessage: {
     alignSelf: 'flex-start',
-    backgroundColor: appTheme.colors.darkCard,
+    backgroundColor: appTheme.colors['bg-surface'],
     borderWidth: 1,
     borderColor: appTheme.colors['border-subtle'],
   },
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   metadataText: {
-    color: appTheme.colors.mutedForeground,
+    color: appTheme.colors['text-tertiary'],
     fontSize: 11,
   },
   actions: {
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   actionLabel: {
-    color: appTheme.colors.secondaryForeground,
+    color: appTheme.colors['text-secondary'],
     fontSize: 11,
     textTransform: 'uppercase',
   },
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   toolCallArgs: {
-    color: appTheme.colors.secondaryForeground,
+    color: appTheme.colors['text-secondary'],
     fontSize: 11,
     fontFamily: appTheme.textVariants.mono.fontFamily,
   },
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   },
   editInput: {
     borderWidth: 1,
-    borderColor: appTheme.colors.border,
+    borderColor: appTheme.colors['border-default'],
     borderRadius: 10,
     color: appTheme.colors.foreground,
     minHeight: 90,

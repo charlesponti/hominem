@@ -15,8 +15,8 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export const BottomSheet = ({ isOpen, toggleSheet }: { isOpen: boolean; toggleSheet: () => void }) => {
   const [isVisible, setIsVisible] = useState(isOpen)
-  const offset = useSharedValue(VOID_ENTER_TRANSLATE_Y)
-  const opacity = useSharedValue(0)
+  const offset = useSharedValue<number>(VOID_ENTER_TRANSLATE_Y)
+  const opacity = useSharedValue<number>(0)
 
   useEffect(() => {
     if (isOpen) {
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     paddingTop: 24,
     paddingHorizontal: 16,
     backgroundColor: theme.colors.background,

@@ -104,7 +104,7 @@ export function AuthScreen() {
               <Text variant="header" color="foreground" style={styles.title}>
                 {AUTH_COPY.emailEntry.title.toUpperCase()}
               </Text>
-              <Text variant="body" color="mutedForeground" style={styles.subtitle}>
+              <Text variant="body" color="text-tertiary" style={styles.subtitle}>
                 {AUTH_COPY.emailEntry.subtitle}
               </Text>
             </View>
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   subheading: {
-    color: appTheme.colors.mutedForeground,
+    color: appTheme.colors['text-tertiary'],
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '500',
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   passkeyButtonText: {
-    color: appTheme.colors.mutedForeground,
+    color: appTheme.colors['text-tertiary'],
     fontSize: 14,
     fontWeight: '600',
   },

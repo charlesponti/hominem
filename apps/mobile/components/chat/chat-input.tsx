@@ -154,7 +154,7 @@ export const ChatInput = ({
         <TextInput
           ref={inputRef}
           placeholder="Where should we start?"
-          placeholderTextColor={theme.colors.mutedForeground}
+          placeholderTextColor={theme.colors['text-tertiary']}
           style={[styles.input, isOverLimit && styles.inputError]}
           editable={!isPending}
           value={message}
@@ -171,7 +171,7 @@ export const ChatInput = ({
           accessibilityLabel="Attach image"
           testID="chat-attach-button"
         >
-          <MindsherpaIcon name="paperclip" size={18} color={theme.colors.mutedForeground} />
+          <MindsherpaIcon name="paperclip" size={18} color={theme.colors['text-tertiary']} />
         </Pressable>
         <Pressable
           style={styles.iconButton}
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    borderTopColor: theme.colors['border-default'],
     backgroundColor: theme.colors.background,
     gap: 8,
   },
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     backgroundColor: theme.colors.muted,
   },
   suggestionText: {
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     backgroundColor: theme.colors.muted,
     maxWidth: 160,
     gap: 6,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   removeAttachmentText: {
-    color: theme.colors.mutedForeground,
+    color: theme.colors['text-tertiary'],
     fontSize: 16,
     lineHeight: 18,
   },
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     borderRadius: 8,
     maxHeight: 120,
   },
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: theme.colors.muted,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   sendButton: {
     backgroundColor: theme.colors.muted,
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   charCount: {
     fontSize: 11,
     fontFamily: 'Geist Mono',
-    color: theme.colors.mutedForeground,
+    color: theme.colors['text-tertiary'],
   },
   charCountError: {
     color: theme.colors.destructive,

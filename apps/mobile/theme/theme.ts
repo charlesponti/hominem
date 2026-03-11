@@ -1,130 +1,54 @@
 import { createTheme, useTheme as useRestyleTheme } from '@shopify/restyle'
 import type { ImageStyle, TextStyle, ViewStyle } from 'react-native'
+import {
+  colors as tokenColors,
+  fontFamiliesNative,
+  radiiNative,
+  shadowsNative,
+  spacing as tokenSpacing,
+} from '@hominem/ui/tokens'
 
 type NamedStyles<T> = {
   [P in keyof T]: ViewStyle | TextStyle | ImageStyle
 }
 
-const PRIMARY_FONT = 'Inter'
-const MONO_FONT = 'Geist Mono'
-
-/* ====== UNIFIED DESIGN SYSTEM TOKENS ====== */
-/* Colors, typography, and spacing aligned with web design system */
+const PRIMARY_FONT = fontFamiliesNative.primary
+const MONO_FONT = fontFamiliesNative.mono
 
 const theme = createTheme({
   colors: {
-    /* Background colors - off-black palette with opacity-based elevation */
-    background: '#0F1113',           /* App background - deepest */
-    muted: 'rgba(255, 255, 255, 0.05)',
-    'bg-base': '#0F1113',
-    'bg-surface': '#14171A',
-    'bg-elevated': '#1A1E22',
-    
-    /* Text colors - off-white foreground reduces eye fatigue */
-    foreground: '#E7EAEE',           /* Main text - 88% brightness */
-    'text-primary': '#E7EAEE',
-    'text-secondary': '#B3BAC2',     /* Subtext - 70% brightness */
-    'text-tertiary': '#7A828A',      /* Metadata - 48% brightness */
-    'text-disabled': '#545B62',      /* Disabled - 33% brightness */
-    secondaryForeground: '#B3BAC2',
-    mutedForeground: '#7A828A',
-    
-    /* Primary (backward compatibility) */
-    primary: '#E7EAEE',
-    'fg-primary': '#E7EAEE',
-    
-    /* Borders & lines - opacity-based for subtle separation */
-    border: 'rgba(255, 255, 255, 0.08)',
-    'border-default': 'rgba(255, 255, 255, 0.08)',
-    'border-subtle': 'rgba(255, 255, 255, 0.04)',
-    'border-focus': 'rgba(255, 255, 255, 0.16)',
-    
-    /* Icons */
-    'icon-primary': '#F5F7FA',
-    'icon-muted': '#AEB5BD',
-    
-    /* Semantic status colors */
-    success: '#34C759',
-    warning: '#FF9500',
-    destructive: '#FF3B30',
-    red: '#FF3B30',
-    redLight: '#FF6B6B',
-    
-    /* Accent - unified color */
-    accent: '#7BD3F7',
-    
-    /* Emphasis scale utilities - opacity layers for subtle differentiation */
-    'emphasis-highest': 'rgba(255, 255, 255, 0.9)',
-    'emphasis-high': 'rgba(255, 255, 255, 0.7)',
-    'emphasis-medium': 'rgba(255, 255, 255, 0.5)',
-    'emphasis-low': 'rgba(255, 255, 255, 0.3)',
-    'emphasis-lower': 'rgba(255, 255, 255, 0.2)',
-    'emphasis-subtle': 'rgba(255, 255, 255, 0.15)',
-    
-    /* Glass morphism */
-    'glass-background': 'rgba(255, 255, 255, 0.04)',
-    
-    /* Legacy color aliases (for migration) */
-    black: '#0F1113',
-    white: '#FFFFFF',
-    backgroundColor: '#0F1113',
-    darkBg: '#0F1113',
-    darkSurface: '#14171A',
-    darkCard: '#14171A',
-    glow: 'rgba(255, 255, 255, 0.1)',
-    
-    /* Emphasis aliases */
-    blue: 'rgba(255, 255, 255, 0.05)',
-    blueLight: 'rgba(255, 255, 255, 0.05)',
-    blueDark: 'rgba(255, 255, 255, 0.4)',
-    brown: 'rgba(255, 255, 255, 0.4)',
-    darkGray: 'rgba(255, 255, 255, 0.7)',
-    gray: 'rgba(255, 255, 255, 0.4)',
-    grayMedium: 'rgba(255, 255, 255, 0.1)',
-    grayDark: 'rgba(255, 255, 255, 0.7)',
-    grayLight: 'rgba(255, 255, 255, 0.05)',
-    green: '#34C759',
-    greenLight: '#50E991',
-    lime: '#FFFFFF',
-    orange: '#FF9500',
-    pink: 'rgba(255, 255, 255, 0.7)',
-    purple: 'rgba(255, 255, 255, 0.7)',
-    sky: 'rgba(255, 255, 255, 0.7)',
-    tomato: '#FF3B30',
-    yellow: '#FFD60A',
-    quaternary: 'rgba(255, 255, 255, 0.4)',
-    secondary: 'rgba(255, 255, 255, 0.7)',
-    tertiary: 'rgba(255, 255, 255, 0.05)',
+    // ── Canonical design system tokens ───────────────────────────────────
+    ...tokenColors,
+
   },
-  
-  /* Spacing - 8px primary grid + 4px secondary grid */
+
+  // Spacing — named keys for Restyle, values from canonical tokens
   spacing: {
-    'xs_4': 4,        /* 4px */
-    's_8': 8,         /* 8px primary grid */
-    'sm_12': 12,      /* 12px */
-    'm_16': 16,       /* 16px (2x grid) */
-    'ml_24': 24,      /* 24px (3x grid) */
-    'l_32': 32,       /* 32px (4x grid) */
-    'xl_48': 48,      /* 48px (6x grid) */
-    'xl_64': 64,      /* 64px (8x grid) */
+    xs_4: tokenSpacing[1],
+    s_8: tokenSpacing[2],
+    sm_12: tokenSpacing[3],
+    m_16: tokenSpacing[4],
+    ml_24: tokenSpacing[5],
+    l_32: tokenSpacing[6],
+    xl_48: tokenSpacing[7],
+    xl_64: tokenSpacing[8],
   },
-  
-  /* Border radius - soft rounded corners */
+
+  // Border radii — named keys for Restyle, values from canonical tokens
   borderRadii: {
-    's_3': 3,         /* Legacy */
-    'sm_6': 6,        /* Small */
-    'm_6': 6,
-    'md_10': 10,      /* Medium */
-    'l_12': 12,       /* Large */
-    'lg_14': 14,
-    'xl_20': 20,      /* Extra large */
-    'xl_24': 24,      /* Legacy */
+    s_3: 3,
+    sm_6: radiiNative.sm,
+    m_6: radiiNative.sm,
+    md_10: radiiNative.md,
+    l_12: 12,
+    lg_14: radiiNative.lg,
+    xl_20: radiiNative.xl,
+    xl_24: 24,
   },
-  
-  /* Typography - Apple HIG aligned scales */
+
+  // Typography — Apple HIG aligned scales
   textVariants: {
-    /* Display scales */
-    'extra_large': {
+    extra_large: {
       fontFamily: PRIMARY_FONT,
       fontSize: 64,
       fontWeight: '700',
@@ -132,9 +56,7 @@ const theme = createTheme({
       letterSpacing: -0.05,
       color: 'foreground',
     },
-    
-    /* Heading scales */
-    'header': {
+    header: {
       fontFamily: PRIMARY_FONT,
       fontSize: 36,
       fontWeight: '700',
@@ -142,7 +64,7 @@ const theme = createTheme({
       letterSpacing: -0.05,
       color: 'foreground',
     },
-    'large': {
+    large: {
       fontFamily: PRIMARY_FONT,
       fontSize: 32,
       fontWeight: '600',
@@ -150,7 +72,7 @@ const theme = createTheme({
       letterSpacing: -0.05,
       color: 'foreground',
     },
-    'cardHeader': {
+    cardHeader: {
       fontFamily: PRIMARY_FONT,
       fontSize: 24,
       fontWeight: '600',
@@ -158,9 +80,7 @@ const theme = createTheme({
       letterSpacing: -0.04,
       color: 'foreground',
     },
-    
-    /* Body styles - minimum 17px per design system */
-    'bodyLarge': {
+    bodyLarge: {
       fontFamily: PRIMARY_FONT,
       fontSize: 18,
       fontWeight: '600',
@@ -168,13 +88,13 @@ const theme = createTheme({
       letterSpacing: 0,
       color: 'foreground',
     },
-    'body': {
+    body: {
       fontFamily: PRIMARY_FONT,
       fontSize: 17,
       fontWeight: '400',
       lineHeight: 24,
       letterSpacing: 0,
-      color: 'secondaryForeground',
+      color: 'text-secondary',
     },
     'text-md': {
       fontFamily: PRIMARY_FONT,
@@ -182,11 +102,9 @@ const theme = createTheme({
       fontWeight: '400',
       lineHeight: 24,
       letterSpacing: 0,
-      color: 'secondaryForeground',
+      color: 'text-secondary',
     },
-    
-    /* Subheading scales */
-    'title': {
+    title: {
       fontFamily: PRIMARY_FONT,
       fontSize: 18,
       fontWeight: '500',
@@ -194,54 +112,46 @@ const theme = createTheme({
       letterSpacing: 0,
       color: 'foreground',
     },
-    
-    /* Caption/small text */
-    'caption': {
+    caption: {
+      fontFamily: PRIMARY_FONT,
       fontSize: 12,
       fontWeight: '500',
       lineHeight: 16,
       letterSpacing: 0.01,
-      color: 'mutedForeground',
-      fontFamily: PRIMARY_FONT,
+      color: 'text-tertiary',
     },
-    'label': {
+    label: {
       fontFamily: PRIMARY_FONT,
       fontSize: 14,
       fontWeight: '500',
       lineHeight: 18,
       letterSpacing: 0,
-      color: 'mutedForeground',
+      color: 'text-tertiary',
     },
-    'small': {
+    small: {
       fontFamily: PRIMARY_FONT,
       fontSize: 12,
       fontWeight: '400',
       lineHeight: 16,
       letterSpacing: 0,
-      color: 'mutedForeground',
+      color: 'text-tertiary',
     },
-    
-    /* Monospace (code) */
-    'mono': {
+    mono: {
       fontFamily: MONO_FONT,
       fontSize: 12,
       fontWeight: '400',
       lineHeight: 16,
       letterSpacing: 0,
-      color: 'secondaryForeground',
+      color: 'text-secondary',
     },
-    
-    /* Default text variant */
-    'defaults': {
+    defaults: {
       fontFamily: PRIMARY_FONT,
       fontSize: 14,
       fontWeight: '400',
       lineHeight: 20,
-      color: 'secondaryForeground',
+      color: 'text-secondary',
     },
-    
-    /* Shadow variant (for elevation effect) */
-    'shadow': {
+    shadow: {
       shadowColor: '#000000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.35,
@@ -250,26 +160,10 @@ const theme = createTheme({
   },
 })
 
-/* ====== ELEVATION SHADOWS ====== */
 const Shadows = {
-  low: {
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-  },
-  medium: {
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 24,
-  },
-  high: {
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.55,
-    shadowRadius: 60,
-  },
+  low: { ...shadowsNative.low, shadowColor: theme.colors.black },
+  medium: { ...shadowsNative.medium, shadowColor: theme.colors.black },
+  high: { ...shadowsNative.high, shadowColor: theme.colors.black },
   dark: {
     shadowColor: theme.colors.black,
     shadowOffset: { width: 0, height: 0 },

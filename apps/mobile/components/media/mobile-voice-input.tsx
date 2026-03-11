@@ -94,14 +94,14 @@ export function MobileVoiceInput({
       </AnimatedPressable>
       {hasRetryRecording && autoTranscribe ? (
         <Pressable onPress={() => void retryTranscription()} style={styles.retryButton}>
-          <Text variant="body" color="secondaryForeground">
+          <Text variant="body" color="text-secondary">
             RETRY
           </Text>
         </Pressable>
       ) : null}
       {hasRetryRecording && autoTranscribe ? (
         <Pressable onPress={clearRecording} style={styles.retryButton}>
-          <Text variant="body" color="secondaryForeground">
+          <Text variant="body" color="text-secondary">
             CLEAR
           </Text>
         </Pressable>
@@ -122,11 +122,11 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 50,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   retryButton: {
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     paddingHorizontal: 8,
     paddingVertical: 4,
   },

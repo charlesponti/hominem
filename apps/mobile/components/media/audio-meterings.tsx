@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     height: MAX_HEIGHT,
-    backgroundColor: theme.colors.grayLight,
+    backgroundColor: theme.colors['emphasis-faint'],
     borderRadius: 12,
     columnGap: 5,
   },

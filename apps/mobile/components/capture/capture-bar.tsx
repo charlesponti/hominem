@@ -58,7 +58,7 @@ export const CaptureBar = () => {
     <View style={styles.container}>
       <TextInput
         placeholder="What's on your mind?"
-        placeholderTextColor={theme.colors.mutedForeground}
+        placeholderTextColor={theme.colors['text-tertiary']}
         style={styles.input}
         value={text}
         onChangeText={setText}
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     borderRadius: 8,
     backgroundColor: theme.colors.background,
     padding: 12,
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   primaryAction: {
     backgroundColor: theme.colors.foreground,

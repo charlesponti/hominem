@@ -21,7 +21,7 @@ export function VoiceSessionModal({ visible, onClose, onAudioTranscribed }: Voic
       <View style={styles.overlay}>
         <View style={styles.container} accessibilityRole="none">
           <View style={styles.header}>
-            <Text variant="label" color="secondaryForeground">
+            <Text variant="label" color="text-secondary">
               Voice Input
             </Text>
             <Pressable
@@ -44,7 +44,7 @@ export function VoiceSessionModal({ visible, onClose, onAudioTranscribed }: Voic
               onError={onClose}
               style={styles.micButton}
             />
-            <Text variant="caption" color="secondaryForeground" style={styles.hint}>
+            <Text variant="caption" color="text-secondary" style={styles.hint}>
               Tap to record · tap again to stop
             </Text>
           </View>

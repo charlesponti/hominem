@@ -40,7 +40,7 @@ const Onboarding = () => {
           <Text variant="header" color="foreground">
             WELCOME
           </Text>
-          <Text variant="label" color="mutedForeground">
+          <Text variant="label" color="text-tertiary">
             DEFINE PROFILE IDENTIFIER.
           </Text>
         </View>

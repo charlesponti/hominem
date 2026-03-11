@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 20,
     backgroundColor: theme.colors.muted,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     borderWidth: 1,
     borderRadius: 8,
     marginVertical: 8,

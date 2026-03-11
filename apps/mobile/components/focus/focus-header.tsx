@@ -26,7 +26,7 @@ export const FocusHeader = React.memo(() => {
         </View>
       </View>
       <View style={[styles.bottomRow]}>
-        <Text variant="small" color="mutedForeground">
+        <Text variant="small" color="text-tertiary">
           {todaysDate}
         </Text>
       </View>
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.muted,
     borderRadius: 99,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   iconLink: {
     padding: 12,

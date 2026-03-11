@@ -11,12 +11,12 @@ export default function FocusInsightsSheet() {
         <Text variant="cardHeader" color="foreground">
           FOCUS INSIGHTS
         </Text>
-        <Text variant="body" color="secondaryForeground">
+        <Text variant="body" color="text-secondary">
           LIVE SUMMARY OF FOCUS STATE.
         </Text>
       </View>
       <View style={styles.section}>
-        <Text variant="label" color="mutedForeground">
+        <Text variant="label" color="text-tertiary">
           LIVE METRICS
         </Text>
         <View style={styles.metricRow}>
@@ -33,10 +33,10 @@ export default function FocusInsightsSheet() {
         </View>
       </View>
       <View style={styles.section}>
-        <Text variant="label" color="mutedForeground">
+        <Text variant="label" color="text-tertiary">
           SHERPA REMINDER
         </Text>
-        <Text variant="body" color="secondaryForeground">
+        <Text variant="body" color="text-secondary">
           OPEN SHERPA TO GENERATE NEW FOCUS CYCLES.
         </Text>
       </View>
