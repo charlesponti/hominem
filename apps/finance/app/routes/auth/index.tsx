@@ -1,9 +1,25 @@
-import { createAuthEntryRoute } from '@hominem/ui';
+import {
+  createAuthEntryComponent,
+} from '@hominem/ui';
+import { createAuthEntryAction, createAuthEntryLoader } from '@hominem/ui/auth-server-routes';
 
 import { AUTH_ROUTE_CONFIG } from './config';
 
-const authEntryRoute = createAuthEntryRoute(AUTH_ROUTE_CONFIG);
+export const loader = createAuthEntryLoader(AUTH_ROUTE_CONFIG, async (request) => {
+  const { getServerAuth } = await import('~/lib/auth.server');
+  const { user, headers } = await getServerAuth(request);
 
-export const { action, loader } = authEntryRoute;
+  return {
+    headers,
+    user: user
+      ? {
+          id: user.id,
+          email: user.email,
+          ...(user.name ? { name: user.name } : {}),
+        }
+      : null,
+  };
+});
+export const action = createAuthEntryAction(AUTH_ROUTE_CONFIG);
 
-export default authEntryRoute.Component;
+export default createAuthEntryComponent(AUTH_ROUTE_CONFIG);

@@ -15,6 +15,7 @@
     "./list": "./src/components/list.tsx",
     "./filters": "./src/components/filters/index.ts",
     "./hooks": "./src/hooks/index.ts",
+    "./auth-server-routes": "./src/components/auth/web-auth-route-servers.ts",
     "./components/ui/*": "./src/components/ui/*.tsx",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts",

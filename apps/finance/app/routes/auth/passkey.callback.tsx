@@ -1,4 +1,4 @@
-import { createAuthPasskeyCallbackRoute } from '@hominem/ui';
+import { createAuthPasskeyCallbackRoute } from '@hominem/ui/auth-server-routes';
 
 import { AUTH_CONFIG } from './config';
 
@@ -7,4 +7,4 @@ const authPasskeyCallbackRoute = createAuthPasskeyCallbackRoute({
   defaultRedirect: AUTH_CONFIG.defaultRedirect,
 });
 
-export const { action } = authPasskeyCallbackRoute;
+export const action = authPasskeyCallbackRoute.action;
