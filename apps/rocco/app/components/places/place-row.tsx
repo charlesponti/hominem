@@ -51,7 +51,7 @@ export default function PlaceRow({
       onMouseLeave={onMouseLeave}
       data-selected={isSelected}
     >
-      <Link to={href} viewTransition className="flex-1 min-w-0 focus:outline-none">
+      <Link to={href} viewTransition className="flex-1 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <div className="flex items-center gap-4">
           <div className="size-8 overflow-hidden shrink-0 border border-border flex items-center justify-center">
             {resolvedImage ? (

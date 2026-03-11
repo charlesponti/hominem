@@ -141,7 +141,8 @@ export function PeopleMultiSelect({
                     {getPersonDisplayName(person)}
                     <button
                       type="button"
-                      className="ml-1 ring-offset-background outline-none focus:ring-2 focus:ring-ring focus:"
+                      aria-label={`Remove ${getPersonDisplayName(person)}`}
+                      className="ml-1 ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           handleRemovePerson(person.id);

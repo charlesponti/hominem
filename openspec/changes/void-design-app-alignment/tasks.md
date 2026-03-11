@@ -27,13 +27,13 @@
 
 ## Phase 4: Focus States and Accessibility
 
-- [ ] 4.1 Audit all `:focus-visible` states in app components and shared UI
-- [ ] 4.2 Ensure focus indicators have ≥4.5:1 contrast (WCAG 2.2 AA)
-- [ ] 4.3 Verify all text has ≥4.5:1 contrast against background (WCAG 2.2 AA)
-- [ ] 4.4 Verify interactive element boundaries have ≥3:1 contrast
-- [ ] 4.5 Fix any missing focus outlines or broken focus visibility
-- [ ] 4.6 Verify semantic HTML usage (buttons, links, landmarks, labels)
-- [ ] 4.7 Test keyboard navigation and screen reader compatibility
+- [x] 4.1 Audit all `:focus-visible` states in app components and shared UI
+- [x] 4.2 Ensure focus indicators have ≥4.5:1 contrast (WCAG 2.2 AA)
+- [x] 4.3 Verify all text has ≥4.5:1 contrast against background (WCAG 2.2 AA)
+- [x] 4.4 Verify interactive element boundaries have ≥3:1 contrast
+- [x] 4.5 Fix any missing focus outlines or broken focus visibility
+- [x] 4.6 Verify semantic HTML usage (buttons, links, landmarks, labels)
+- [x] 4.7 Test keyboard navigation and screen reader compatibility
 
 ## Phase 5: Icon and Typography Alignment
 

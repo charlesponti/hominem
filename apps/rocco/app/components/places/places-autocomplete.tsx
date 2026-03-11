@@ -157,7 +157,7 @@ function PlacesAutocomplete({
                   onClick={() => handleSelect(suggestion)}
                   className={cn(
                     'flex items-center px-3 py-2  w-full text-left overflow-x-hidden',
-                    'hover:bg-muted focus:bg-muted focus:outline-none',
+                    'hover:bg-muted focus:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
                     selectedIndex === index && 'bg-muted',
                     styles.autocompleteItem,
                   )}

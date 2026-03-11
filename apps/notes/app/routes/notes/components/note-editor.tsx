@@ -102,7 +102,8 @@ export function NoteEditor({ note, chatId, onAIAction }: NoteEditorProps) {
           value={title}
           onChange={handleTitleChange}
           placeholder="Note title..."
-          className="text-xl font-semibold bg-transparent border-none outline-none flex-1"
+          aria-label="Note title"
+          className="text-xl font-semibold bg-transparent border-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring flex-1"
         />
         <div className="flex items-center gap-2">
           <Button
