@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { expect, userEvent, within } from '@storybook/test'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from './button'
 
@@ -22,6 +23,16 @@ type Story = StoryObj<typeof Button>
 
 export const Default: Story = {
   args: { children: 'Button' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button', { name: 'Button' })
+
+    await userEvent.hover(button)
+    await userEvent.click(button)
+
+    await expect(button).toHaveFocus()
+    await expect(button).toBeEnabled()
+  },
 }
 
 export const Variants: Story = {
@@ -64,4 +75,24 @@ export const Disabled: Story = {
       <Button variant="destructive" disabled>Destructive</Button>
     </div>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByRole('button', { name: 'Default' })).toBeDisabled()
+    await expect(canvas.getByRole('button', { name: 'Outline' })).toBeDisabled()
+    await expect(canvas.getByRole('button', { name: 'Destructive' })).toBeDisabled()
+  },
+}
+
+export const Loading: Story = {
+  args: {
+    children: 'Saving',
+    isLoading: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button', { name: 'Saving' })
+
+    await expect(button).toBeDisabled()
+  },
 }

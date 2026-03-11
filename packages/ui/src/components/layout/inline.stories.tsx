@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { expect, within } from '@storybook/test'
 
 import { Inline } from './inline'
 
@@ -19,6 +20,13 @@ export const Default: Story = {
       <div className="border px-3 py-2">Gamma</div>
     </Inline>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('Alpha')).toBeInTheDocument()
+    await expect(canvas.getByText('Beta')).toBeInTheDocument()
+    await expect(canvas.getByText('Gamma')).toBeInTheDocument()
+  },
 }
 
 export const Wrapped: Story = {
@@ -30,4 +38,10 @@ export const Wrapped: Story = {
       <div className="border px-3 py-2">Assigned</div>
     </Inline>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('Filters')).toBeInTheDocument()
+    await expect(canvas.getByText('Assigned')).toBeInTheDocument()
+  },
 }

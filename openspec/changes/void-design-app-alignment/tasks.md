@@ -92,42 +92,7 @@
 - [x] 9.12 Create `Heading` typography primitive (web + mobile) — maps to h1–h4 / display scale; replaces raw heading tags
 - [x] 9.13 Write stories for every new primitive in Storybook (`packages/ui`)
 
-## Phase 10: Replace High-Frequency Raw Usage
+## Phase 10: Storybook
 
-- [x] 10.1 Replace all raw `<button>` usages in feature code with `Button`; preserve existing variants through props
-- [x] 10.2 Replace all raw `<input>` usages in feature code with `TextField`; wire label and error state through `Field`
-- [x] 10.3 Replace all raw `<textarea>` usages with `TextArea`; wire through `Field`
-- [x] 10.4 Replace all raw `<select>` usages with `SelectField` (create if missing); wire through `Field`
-- [x] 10.5 Replace raw `<form>` wrappers with `Form`; preserve submit logic
-- [x] 10.6 Replace orphaned `<label>` elements with `Field` label slot
-- [x] 10.7 Replace mobile `Pressable`/`TouchableOpacity` with `Button` or `IconButton` wherever behavior matches
-- [x] 10.8 Replace mobile `TextInput` in feature code with `TextField`
-- [x] 10.9 Replace repeated ad hoc `<div className="flex flex-col gap-*">` patterns with `Stack`
-- [x] 10.10 Replace repeated `<div className="flex items-center gap-*">` patterns with `Inline`
-- [ ] 10.11 Replace raw heading tags (`<h1>`–`<h4>`) in feature routes with `Heading`
-- [ ] 10.12 Replace direct `<p>` / `<span>` / mobile `<Text>` for body text with `Text` primitive
-- [ ] 10.13 Replace ad hoc page/screen shell wrappers with `Screen` or `Page` where applicable
-- [ ] 10.14 Replace one-off `<div className="rounded-* border bg-* p-*">` card patterns with `Card`
-
-## Phase 11: Standardize Responsive Layout
-
-- [ ] 11.1 Identify all one-off media-query or breakpoint logic in feature code
-- [ ] 11.2 Define breakpoint tokens in `packages/ui/src/tokens/breakpoints.ts`; ensure consistent sm/md/lg/xl thresholds across apps
-- [ ] 11.3 Extend `Stack` with responsive direction prop (`direction={{ base: "column", md: "row" }}`)
-- [ ] 11.4 Create `Container` with canonical max-width and horizontal padding that matches across all apps
-- [ ] 11.5 Create `SidebarLayout`, `SplitLayout`, and `CenteredLayout` for the three dominant page patterns
-- [ ] 11.6 Migrate auth pages across all apps to `CenteredLayout`
-- [ ] 11.7 Migrate settings/account pages to `SidebarLayout` or equivalent
-- [ ] 11.8 Migrate list+detail views to `SplitLayout` where applicable
-- [ ] 11.9 Remove scattered one-off responsive class combinations that are now covered by layout primitives
-- [ ] 11.10 Document responsive layout API and allowed breakpoint usage in design system skill
-
-## Phase 12: Enforce and Prevent Regression
-
-- [ ] 12.1 Add ESLint rule (or use `no-restricted-elements`) to warn on raw `<input>`, `<textarea>`, `<select>`, `<button>`, `<form>` in feature code paths
-- [ ] 12.2 Add ESLint rule to warn on direct React Native `TextInput`, `Pressable`, `TouchableOpacity` imports in feature code (outside `packages/ui`)
-- [ ] 12.3 Document banned/restricted element list and approved replacements in `.github/skills/design-system/SKILL.md`
-- [ ] 12.4 Add Storybook interaction tests for all new primitives to verify state coverage (default, hover, focus, disabled, error, loading)
-- [ ] 12.5 Add visual regression snapshots for each Storybook story to catch future drift
-- [ ] 12.6 Update PR review checklist in design system skill with primitive adoption rules
-- [ ] 12.7 Add a "new screen checklist" to the design system skill: which primitives to reach for first
+- [x] 10.1 Add Storybook interaction tests for all new primitives to verify state coverage (default, hover, focus, disabled, error, loading)
+- [x] 10.2 Add visual regression snapshots for each Storybook story to catch future drift

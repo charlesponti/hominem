@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { expect, userEvent, within } from '@storybook/test'
 
 import { Input } from './input'
 import { Field } from './field'
@@ -19,6 +20,15 @@ export const Default: Story = {
       <Input placeholder="you@example.com" />
     </Field>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const input = canvas.getByLabelText('Email')
+
+    await userEvent.type(input, 'you@example.com')
+
+    await expect(input).toHaveValue('you@example.com')
+    await expect(canvas.getByText('We will never share your address.')).toBeInTheDocument()
+  },
 }
 
 export const Error: Story = {
@@ -27,6 +37,12 @@ export const Error: Story = {
       <Input placeholder="you@example.com" />
     </Field>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByLabelText('Email')).toHaveAttribute('aria-invalid', 'true')
+    await expect(canvas.getByRole('alert')).toHaveTextContent('Email is required')
+  },
 }
 
 export const TextareaField: Story = {
@@ -35,4 +51,10 @@ export const TextareaField: Story = {
       <Textarea rows={5} placeholder="Write something..." />
     </Field>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByLabelText('Notes')).toBeInTheDocument()
+    await expect(canvas.getByText('Markdown supported')).toBeInTheDocument()
+  },
 }

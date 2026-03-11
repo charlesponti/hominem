@@ -1,10 +1,10 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { Form, useFetcher, useNavigation, useSearchParams } from 'react-router';
 import { parseAuthError } from '@hominem/utils';
 
 import { Button } from '../ui/button';
+import { NumberInput } from '../ui/number-input';
 import { AuthErrorBanner } from './auth-error-banner';
-import { OtpCodeInput } from './otp-code-input';
 import { PasskeyButton } from './passkey-button';
 import { ResendCodeButton } from './resend-code-button';
 import { useCountdown } from '../../hooks/use-countdown';
@@ -47,7 +47,6 @@ export function OtpVerificationForm({
   const [expirationCountdown, setExpirationCountdown] = useState<string | null>(null);
   const [attemptCount, setAttemptCount] = useState(0);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [submitDebounce, setSubmitDebounce] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   // Use countdown hook for resend timer
@@ -107,13 +106,17 @@ export function OtpVerificationForm({
   }, [expiresAt]);
 
   // Auto-submit when code is complete
-  const handleCodeComplete = () => {
-    if (!isSubmitting && !submitDebounce && !isAccountLocked) {
-      setSubmitDebounce(true);
-      setTimeout(() => setSubmitDebounce(false), 1000);
-      formRef.current?.requestSubmit();
-    }
-  };
+  const handleOtpChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      setOtp(val);
+      // Auto-submit when all digits are entered
+      if (val.length === 6 && !isSubmitting && !isAccountLocked) {
+        setTimeout(() => formRef.current?.requestSubmit(), 0);
+      }
+    },
+    [isSubmitting, isAccountLocked]
+  );
 
   // Resend is via fetcher since it doesn't need a redirect
   const handleResend = () => {
@@ -154,22 +157,31 @@ export function OtpVerificationForm({
 
         {/* OTP Input */}
         <div className="flex justify-center">
-          <OtpCodeInput
+          <NumberInput
             value={otp}
-            onChange={setOtp}
-            disabled={isSubmitting || isAccountLocked || isSuccess}
-            autoFocus={!error}
-            error={isAccountLocked ? 'Too many attempts. Please request a new code.' : error}
-            onComplete={handleCodeComplete}
+            onChange={handleOtpChange}
+            maxLength={6}
+            error={!!error}
             success={isSuccess}
+            disabled={isSubmitting || isAccountLocked}
+            autoFocus={!error}
+            placeholder="• • • • • •"
+            className="w-full px-4 py-3 text-center body-2 font-semibold tracking-widest"
+            aria-label="One-time code"
           />
         </div>
 
         {/* Error Banner with type-specific messaging */}
-        {error && !isSuccess && (
+        {(error || isAccountLocked) && !isSuccess && (
           <AuthErrorBanner
-            error={parsedError.message}
-            {...(parsedError.isCritical && { className: 'bg-destructive/10 border border-destructive/20' })}
+            error={
+              isAccountLocked
+                ? 'Too many attempts. Please request a new code.'
+                : parsedError.message
+            }
+            {...((isAccountLocked || parsedError.isCritical) && {
+              className: 'bg-destructive/10 border border-destructive/20',
+            })}
           />
         )}
 
@@ -183,7 +195,7 @@ export function OtpVerificationForm({
         {/* Submit button */}
         <Button
           type="submit"
-          disabled={otp.length < 6 || isSubmitting || isAccountLocked || isSuccess || submitDebounce}
+          disabled={otp.length < 6 || isSubmitting || isAccountLocked || isSuccess}
           className="w-full"
         >
           {isSuccess ? 'Redirecting...' : isSubmitting ? loadingMessage : 'Verify'}

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { expect, within } from '@storybook/test'
 
 import { Stack } from './stack'
 
@@ -19,6 +20,13 @@ export const Default: Story = {
       <div className="border p-3">Third item</div>
     </Stack>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('First item')).toBeInTheDocument()
+    await expect(canvas.getByText('Second item')).toBeInTheDocument()
+    await expect(canvas.getByText('Third item')).toBeInTheDocument()
+  },
 }
 
 export const WithDividers: Story = {
@@ -29,4 +37,11 @@ export const WithDividers: Story = {
       <div className="py-2">Notifications</div>
     </Stack>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('Profile')).toBeInTheDocument()
+    await expect(canvas.getByText('Security')).toBeInTheDocument()
+    await expect(canvas.getByText('Notifications')).toBeInTheDocument()
+  },
 }

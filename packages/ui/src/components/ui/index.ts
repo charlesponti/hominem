@@ -13,6 +13,7 @@ export * from './drawer';
 export * from './dropdown-menu';
 export * from './form';
 export * from './input';
+export * from './number-input';
 export * from './label';
 export * from './loading';
 export * from './loading-spinner';

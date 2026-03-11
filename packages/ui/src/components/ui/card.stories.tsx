@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { expect, userEvent, within } from '@storybook/test'
 import { Button } from './button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card'
 
@@ -27,6 +28,16 @@ export const Default: Story = {
       </CardFooter>
     </Card>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const cancelButton = canvas.getByRole('button', { name: 'Cancel' })
+
+    await userEvent.tab()
+
+    await expect(canvas.getByText('Card Title')).toBeInTheDocument()
+    await expect(cancelButton).toHaveFocus()
+    await expect(canvas.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
+  },
 }
 
 export const Minimal: Story = {
@@ -37,4 +48,9 @@ export const Minimal: Story = {
       </CardContent>
     </Card>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('Minimal card with only content.')).toBeInTheDocument()
+  },
 }

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { expect, within } from '@storybook/test'
 
 import { Stack } from '../layout/stack'
 import { Heading } from './heading'
@@ -23,4 +24,10 @@ export const Scale: Story = {
       <Heading level={4}>Heading Four</Heading>
     </Stack>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByRole('heading', { level: 1, name: 'Heading One' })).toBeInTheDocument()
+    await expect(canvas.getByRole('heading', { level: 4, name: 'Heading Four' })).toBeInTheDocument()
+  },
 }

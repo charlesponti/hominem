@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { expect, within } from '@storybook/test'
 
 import { Stack } from '../layout/stack'
 import { Text } from './text'
@@ -21,8 +22,19 @@ export const Scale: Story = {
       <Text variant="body-4">Body 4 text for captions and helper content.</Text>
     </Stack>
   ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('Body 1 text for prominent copy.')).toBeInTheDocument()
+    await expect(canvas.getByText('Body 4 text for captions and helper content.')).toBeInTheDocument()
+  },
 }
 
 export const Muted: Story = {
   render: () => <Text muted>Muted helper text.</Text>,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('Muted helper text.')).toBeInTheDocument()
+  },
 }

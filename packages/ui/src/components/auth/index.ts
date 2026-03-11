@@ -10,7 +10,6 @@ export { SessionExpiredDialog } from './session-expired-dialog';
 export { SignedOutGuard } from './signed-out-guard';
 export { EmailEntryForm } from './email-entry-form';
 export { OtpVerificationForm } from './otp-verification-form';
-export { OtpCodeInput } from './otp-code-input';
 export { ResendCodeButton } from './resend-code-button';
 export { PasskeyButton } from './passkey-button';
 export { PasskeyEnrollmentBanner } from './passkey-enrollment-banner';
