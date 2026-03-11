@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite'
 import type { Chat, ChatMessage, FocusItem, Media, Settings, UserProfile } from './types'
+import type { MessageOutput } from '../services/chat'
 
 type QueryResult = {
   rows: Array<Record<string, unknown>>
@@ -30,9 +31,42 @@ const normalizeMessage = (row: Record<string, unknown>): ChatMessage => ({
   role: row.role === 'assistant' || row.role === 'system' ? row.role : 'user',
   content: String(row.content),
   createdAt: String(row.created_at),
+  reasoning: typeof row.reasoning === 'string' ? row.reasoning : null,
+  toolCalls: parseToolCalls(row.tool_calls_json),
+  isStreaming:
+    row.is_streaming === 1 ||
+    row.is_streaming === true ||
+    row.is_streaming === '1',
   focusItemsJson: typeof row.focus_items_json === 'string' ? row.focus_items_json : null,
   focusIdsJson: typeof row.focus_ids_json === 'string' ? row.focus_ids_json : null,
 })
+
+const parseToolCalls = (value: unknown): MessageOutput['toolCalls'] | null => {
+  if (typeof value !== 'string') return null
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(value)
+  } catch {
+    return null
+  }
+
+  if (!Array.isArray(parsed)) return null
+
+  return parsed.every(
+    (item) =>
+      typeof item === 'object' &&
+      item !== null &&
+      typeof item.type === 'string' &&
+      item.type === 'tool-call' &&
+      typeof item.toolName === 'string' &&
+      typeof item.toolCallId === 'string' &&
+      typeof item.args === 'object' &&
+      item.args !== null,
+  )
+    ? (parsed as MessageOutput['toolCalls'])
+    : null
+}
 
 const normalizeFocusItem = (row: Record<string, unknown>): FocusItem => ({
   id: String(row.id),
@@ -70,6 +104,22 @@ const getFirst = async (db: SQLite.SQLiteDatabase, sql: string, args: Array<stri
   return rows[0] ?? null
 }
 
+const normalizeColumn = async (
+  db: SQLite.SQLiteDatabase,
+  tableName: string,
+  columnName: string,
+  columnType: string,
+) => {
+  const columns = (await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${tableName})`)) as {
+    name: string
+  }[]
+  const exists = columns.some((column) => column.name === columnName)
+
+  if (!exists) {
+    await execute(db, `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnType}`)
+  }
+}
+
 export const createSQLiteStore = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME)
 
@@ -83,8 +133,11 @@ export const createSQLiteStore = async () => {
   )
   await execute(
     db,
-    'CREATE TABLE IF NOT EXISTS chat_messages (id TEXT PRIMARY KEY, chat_id TEXT, role TEXT, content TEXT, created_at TEXT, focus_items_json TEXT, focus_ids_json TEXT)'
+    'CREATE TABLE IF NOT EXISTS chat_messages (id TEXT PRIMARY KEY, chat_id TEXT, role TEXT, content TEXT, created_at TEXT, focus_items_json TEXT, focus_ids_json TEXT, is_streaming INTEGER)'
   )
+  await normalizeColumn(db, 'chat_messages', 'reasoning', 'TEXT')
+  await normalizeColumn(db, 'chat_messages', 'tool_calls_json', 'TEXT')
+  await normalizeColumn(db, 'chat_messages', 'is_streaming', 'INTEGER')
   await execute(
     db,
     'CREATE TABLE IF NOT EXISTS focus_items (id TEXT PRIMARY KEY, text TEXT, status TEXT, created_at TEXT, updated_at TEXT, payload_json TEXT)'
@@ -141,7 +194,7 @@ export const createSQLiteStore = async () => {
       const createdAt = toISO(message.createdAt)
       await execute(
         db,
-        'INSERT OR REPLACE INTO chat_messages (id, chat_id, role, content, created_at, focus_items_json, focus_ids_json) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        'INSERT OR REPLACE INTO chat_messages (id, chat_id, role, content, created_at, focus_items_json, focus_ids_json, reasoning, tool_calls_json, is_streaming) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [
           message.id,
           message.chatId,
@@ -150,6 +203,9 @@ export const createSQLiteStore = async () => {
           createdAt,
           message.focusItemsJson ?? null,
           message.focusIdsJson ?? null,
+          message.reasoning ?? null,
+          message.toolCalls ? JSON.stringify(message.toolCalls) : null,
+          typeof message.isStreaming === 'boolean' ? Number(message.isStreaming) : null,
         ]
       )
       return { ...message, createdAt }

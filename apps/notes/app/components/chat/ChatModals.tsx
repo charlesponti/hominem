@@ -4,17 +4,11 @@ import { Button } from '@hominem/ui/button';
 import { X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
-import type { UploadedFile } from '~/lib/types/upload.js';
 import { emitVoiceEvent } from '~/lib/voice-events';
 
-import { FileUploader } from './FileUploader.js';
-
 interface ChatModalsProps {
-  showFileUploader: boolean;
   showAudioRecorder: boolean;
-  onCloseFileUploader: () => void;
   onCloseAudioRecorder: () => void;
-  onFilesUploaded: (files: UploadedFile[]) => void;
   onAudioTranscribed: (transcript: string) => void;
 }
 
@@ -30,11 +24,8 @@ type TranscribeApiResponse =
     };
 
 export function ChatModals({
-  showFileUploader,
   showAudioRecorder,
-  onCloseFileUploader,
   onCloseAudioRecorder,
-  onFilesUploaded,
   onAudioTranscribed,
 }: ChatModalsProps) {
   const [voiceError, setVoiceError] = useState<string | null>(null);
@@ -93,20 +84,6 @@ export function ChatModals({
 
   return (
     <>
-      {showFileUploader ? (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="border p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Upload Files</h3>
-              <Button variant="ghost" size="sm" onClick={onCloseFileUploader}>
-                <X className="size-4" />
-              </Button>
-            </div>
-            <FileUploader onFilesUploaded={onFilesUploaded} maxFiles={5} />
-          </div>
-        </div>
-      ) : null}
-
       {showAudioRecorder ? (
         <div
           role="dialog"

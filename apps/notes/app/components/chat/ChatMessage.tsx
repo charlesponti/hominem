@@ -1,5 +1,14 @@
 import type { ChatMessageToolCall } from '@hominem/hono-rpc/types/chat.types';
-import { Reasoning, Tool } from '@hominem/ui/ai-elements';
+import {
+  Message,
+  MessageAction,
+  MessageAnnotations,
+  MessageContent,
+  MessageResponse,
+  Reasoning,
+  Tool,
+  ToolInput,
+} from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';
 import {
   DropdownMenu,
@@ -60,19 +69,121 @@ export const ChatMessage = memo(function ChatMessage({
   const timestamp = message.createdAt ? formatMessageTimestamp(message.createdAt) : '';
 
   return (
-    <article
-      className={cn('group relative p-4 flex flex-col gap-3', {
-        'bg-primary text-primary-foreground ml-12': isUser,
-        'bg-muted mr-12': !isUser,
-      })}
+    <div
+      className="relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      role="article"
       aria-label={`${isUser ? 'Your' : 'AI Assistant'} message${timestamp ? ` from ${timestamp}` : ''}`}
     >
+      <Message
+        from={isUser ? 'user' : 'assistant'}
+        className={cn({
+          'ml-12': isUser,
+          'mr-12': !isUser,
+        })}
+      >
+        <MessageContent className="gap-3">
+          {/* Reasoning section (shown first for assistant messages) */}
+          {!isUser && hasReasoning && <Reasoning>{message.reasoning}</Reasoning>}
+
+          {/* Tool calls section */}
+          {hasToolCalls && (
+            <div className="flex flex-col gap-2">
+              {message.toolCalls!.map((toolCall: ChatMessageToolCall, index: number) => (
+                <Tool
+                  key={toolCall.toolCallId || `tool-${index}`}
+                  name={toolCall.toolName}
+                  status={toolCall.type === 'tool-call' ? 'running' : 'completed'}
+                >
+                  <ToolInput
+                    className="text-xs bg-muted/50 p-2 rounded overflow-x-auto"
+                    children={
+                      toolCall.args && Object.keys(toolCall.args).length > 0
+                        ? JSON.stringify(toolCall.args, null, 2)
+                        : ''
+                    }
+                  />
+                </Tool>
+              ))}
+            </div>
+          )}
+
+          {/* Main content with markdown rendering or edit mode */}
+          {isEditing && isUser ? (
+            <form
+              className="flex flex-col gap-2"
+              aria-label="Edit message"
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveEdit();
+              }}
+            >
+              <Textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="min-h-[100px] resize-none"
+                autoFocus
+                aria-label="Message content"
+                aria-describedby="edit-instructions"
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    cancelEdit();
+                  } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    saveEdit();
+                  }
+                }}
+              />
+              <span id="edit-instructions" className="sr-only">
+                Press Escape to cancel, or Ctrl+Enter to save
+              </span>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" size="sm" onClick={cancelEdit} aria-label="Cancel editing">
+                  <X className="mr-2 size-4" aria-hidden="true" />
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={saveEdit} disabled={!canSave} aria-label="Save edited message">
+                  <Save className="mr-2 size-4" aria-hidden="true" />
+                  Save
+                </Button>
+              </div>
+            </form>
+          ) : (
+            hasContent && (
+              <MessageResponse>
+                <MarkdownContent
+                  content={message.content}
+                  isStreaming={isStreaming}
+                  className={isUser ? 'prose-invert' : ''}
+                />
+              </MessageResponse>
+            )
+          )}
+
+          {/* Message metadata */}
+          <MessageAnnotations
+            className={cn('text-xs opacity-70 mt-1', {
+              'justify-end': isUser,
+              'justify-start': !isUser,
+            })}
+          >
+            <span>{isUser ? 'You' : 'AI Assistant'}</span>
+            {timestamp && (
+              <>
+                <span>·</span>
+                <span className="opacity-60" title={message.createdAt}>
+                  {timestamp}
+                </span>
+              </>
+            )}
+          </MessageAnnotations>
+        </MessageContent>
+      </Message>
+
       {/* Message actions menu */}
       {isHovered && !isStreaming && (
-        <div
-          className={cn('absolute top-2', {
+        <MessageAction
+          className={cn('absolute top-6', {
             'right-2': isUser,
             'left-2': !isUser,
           })}
@@ -140,106 +251,8 @@ export const ChatMessage = memo(function ChatMessage({
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
+        </MessageAction>
       )}
-
-      {/* Reasoning section (shown first for assistant messages) */}
-      {!isUser && hasReasoning && <Reasoning>{message.reasoning}</Reasoning>}
-
-      {/* Tool calls section */}
-      {hasToolCalls && (
-        <div className="flex flex-col gap-2">
-          {message.toolCalls!.map((toolCall: ChatMessageToolCall, index: number) => (
-            <Tool
-              key={toolCall.toolCallId || `tool-${index}`}
-              name={toolCall.toolName}
-              status={toolCall.type === 'tool-call' ? 'running' : 'completed'}
-            >
-              <div className="flex flex-col gap-2">
-                {toolCall.args && Object.keys(toolCall.args).length > 0 ? (
-                  <pre className="text-xs bg-muted/50 p-2 rounded overflow-x-auto">
-                    {JSON.stringify(toolCall.args, null, 2)}
-                  </pre>
-                ) : null}
-              </div>
-            </Tool>
-          ))}
-        </div>
-      )}
-
-      {/* Main content with markdown rendering or edit mode */}
-      {isEditing && isUser ? (
-        <form
-          className="flex flex-col gap-2"
-          aria-label="Edit message"
-          onSubmit={(e) => {
-            e.preventDefault();
-            saveEdit();
-          }}
-        >
-          <Textarea
-            value={editContent}
-            onChange={(e) => setEditContent(e.target.value)}
-            className="min-h-[100px] resize-none"
-            autoFocus
-            aria-label="Message content"
-            aria-describedby="edit-instructions"
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                cancelEdit();
-              } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-                saveEdit();
-              }
-            }}
-          />
-          <span id="edit-instructions" className="sr-only">
-            Press Escape to cancel, or Ctrl+Enter to save
-          </span>
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" size="sm" onClick={cancelEdit} aria-label="Cancel editing">
-              <X className="mr-2 size-4" aria-hidden="true" />
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={saveEdit}
-              disabled={!canSave}
-              aria-label="Save edited message"
-            >
-              <Save className="mr-2 size-4" aria-hidden="true" />
-              Save
-            </Button>
-          </div>
-        </form>
-      ) : (
-        hasContent && (
-          <div>
-            <MarkdownContent
-              content={message.content}
-              isStreaming={isStreaming}
-              className={isUser ? 'prose-invert' : ''}
-            />
-          </div>
-        )
-      )}
-
-      {/* Message metadata */}
-      <div
-        className={cn('flex items-center gap-2 text-xs opacity-70 mt-1', {
-          'justify-end': isUser,
-          'justify-start': !isUser,
-        })}
-      >
-        <span>{isUser ? 'You' : 'AI Assistant'}</span>
-        {timestamp && (
-          <>
-            <span>·</span>
-            <span className="opacity-60" title={message.createdAt}>
-              {timestamp}
-            </span>
-          </>
-        )}
-      </div>
-    </article>
-  );
+    </div>
+  )
 });

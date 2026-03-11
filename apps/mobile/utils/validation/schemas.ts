@@ -18,6 +18,19 @@ export const ChatMessageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system'] as const),
   content: z.string(),
   createdAt: z.string().datetime(),
+  reasoning: z.string().nullable().optional(),
+  toolCalls: z
+    .array(
+      z.object({
+        toolName: z.string(),
+        type: z.literal('tool-call'),
+        toolCallId: z.string(),
+        args: z.record(z.string(), z.string()),
+      }),
+    )
+    .nullable()
+    .optional(),
+  isStreaming: z.boolean().optional(),
   focusItemsJson: z.string().nullable().optional(),
   focusIdsJson: z.string().nullable().optional(),
 })

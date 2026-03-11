@@ -1,4 +1,4 @@
-import { readAuthErrorMessage } from '@hominem/auth';
+import { AUTH_COPY, readAuthErrorMessage } from '@hominem/auth';
 import { useActionData, useLoaderData, useLocation } from 'react-router';
 
 import { usePasskeyAuth } from '../../hooks/use-passkey-auth';
@@ -106,7 +106,7 @@ export function createAuthVerifyComponent(config: AuthVerifyRouteConfig) {
     const location = useLocation();
 
     return (
-      <AuthScaffold title="Enter code" description="We sent a code to your email">
+      <AuthScaffold title={AUTH_COPY.otpVerification.title} description={AUTH_COPY.otpVerification.subtitle}>
         <OtpVerificationForm
           action={`/auth/verify${location.search}`}
           email={email}

@@ -1,12 +1,9 @@
 # Active OpenSpec Change
 
-active_change: web-auth-layout-alignment
+active_change: none
 
 artifacts:
-- proposal: openspec/changes/web-auth-layout-alignment/proposal.md
-- design: openspec/changes/web-auth-layout-alignment/design.md
-- tasks: openspec/changes/web-auth-layout-alignment/tasks.md
-- spec: openspec/changes/web-auth-layout-alignment/specs/web-auth-layout-alignment/spec.md
+- tasks.md
 
 ## Enforcement
 

@@ -1,3 +1,5 @@
+import type { ChatMessage as RpcChatMessage } from '@hominem/hono-rpc/types'
+
 export type MessageOutput = {
   id: string
   role: 'user' | 'assistant' | 'system'
@@ -7,6 +9,9 @@ export type MessageOutput = {
   profile_id: string
   focus_ids: string[] | null
   focus_items: Array<{ id: string; text: string }> | null
+  reasoning?: string | null
+  toolCalls: RpcChatMessage['toolCalls']
+  isStreaming?: boolean
 }
 
 function fallbackId() {
@@ -30,6 +35,9 @@ export function createOptimisticMessage(
     profile_id: '',
     focus_ids: null,
     focus_items: null,
+    reasoning: null,
+    toolCalls: null,
+    isStreaming: false,
   }
 }
 

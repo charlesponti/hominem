@@ -65,19 +65,8 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
 
     const sendMessage = useSendMessage({ chatId, ...(userId && { userId }) });
 
-    // Cast messages to extended type to handle optimistic updates
-    // Note: our ChatMessage type vs ExtendedMessage type
-    const extendedMessages = messages as unknown as ExtendedMessage[];
+    const extendedMessages: ExtendedMessage[] = messages;
     const shouldUseVirtualScrolling = extendedMessages.length >= 50;
-
-    // Virtual scrolling setup
-    const virtualizer = useVirtualizer({
-      count: extendedMessages.length,
-      getScrollElement: () => parentRef.current,
-      estimateSize: () => 150, // Estimated height per message
-      overscan: 5, // Render 5 extra items outside viewport
-      enabled: shouldUseVirtualScrolling,
-    });
 
     // Message search functionality
     const {
@@ -88,6 +77,16 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       setShowSearch,
       searchInputRef,
     } = useMessageSearch({ messages: extendedMessages });
+    const displayMessages = filteredMessages;
+
+    // Virtual scrolling setup
+    const virtualizer = useVirtualizer({
+      count: displayMessages.length,
+      getScrollElement: () => parentRef.current,
+      estimateSize: () => 150, // Estimated height per message
+      overscan: 5, // Render 5 extra items outside viewport
+      enabled: shouldUseVirtualScrolling,
+    });
 
     // Expose showSearch method via ref
     useImperativeHandle(ref, () => ({
@@ -110,7 +109,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       containerRef: messagesContainerRef as React.RefObject<HTMLDivElement | null>,
       parentRef: parentRef as React.RefObject<HTMLDivElement | null>,
       virtualizer,
-      messageCount: extendedMessages.length,
+      messageCount: displayMessages.length,
       status,
       isNearBottom,
       shouldUseVirtualScrolling,
@@ -305,7 +304,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
                         message={message}
                         isStreaming={
                           (status === 'streaming' &&
-                            virtualItem.index === extendedMessages.length - 1 &&
+                            virtualItem.index === displayMessages.length - 1 &&
                             message.role === 'assistant') ||
                           (message.isStreaming ?? false)
                         }
@@ -325,19 +324,19 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredMessages.length === 0 && searchQuery ? (
+              {displayMessages.length === 0 && searchQuery ? (
                 <div className="text-center text-muted-foreground py-8">
                   <Search className="size-8 mx-auto mb-2 " />
                   <p>No messages found matching &quot;{searchQuery}&quot;</p>
                 </div>
               ) : (
-                filteredMessages.map((message, index) => (
+                displayMessages.map((message, index) => (
                   <ChatMessage
                     key={message.id}
                     message={message}
                     isStreaming={
                       (status === 'streaming' &&
-                        index === filteredMessages.length - 1 &&
+                        index === displayMessages.length - 1 &&
                         message.role === 'assistant') ||
                       (message.isStreaming ?? false)
                     }

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
-import { Alert, Pressable, StyleSheet, View } from 'react-native'
+import { Alert, Platform, Pressable, Share, StyleSheet, TextInput, View } from 'react-native'
 import { useApiClient } from '@hominem/hono-client/react'
 import { FlashList, type ListRenderItem } from '@shopify/flash-list'
 import { useMutation } from '@tanstack/react-query'
+import * as Clipboard from 'expo-clipboard'
 
 import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types'
 import { buildNoteProposal, deriveSessionSource } from '@hominem/chat-services/ui'
@@ -18,6 +19,7 @@ import { ArtifactActions } from './artifact-actions'
 import { ClassificationReview } from './classification-review'
 import { ContextAnchor, type SessionSource } from './context-anchor'
 import { Text, theme } from '~/theme'
+import MindsherpaIcon from '../ui/icon'
 
 const keyExtractor = (item: MessageOutput) => item.id
 
@@ -44,7 +46,7 @@ export const Chat = (props: ChatProps) => {
       onChatEnd()
     },
   })
-  const { sendChatMessage, isChatSending } = useSendMessage({ chatId })
+  const { sendChatMessage, isChatSending, chatSendStatus } = useSendMessage({ chatId })
   const [message, setMessage] = useState('')
   const [Markdown, setMarkdown] = useState<MarkdownComponent | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -52,7 +54,19 @@ export const Chat = (props: ChatProps) => {
   const [pendingReview, setPendingReview] = useState<PendingReview | null>(null)
   const [persistedSource, setPersistedSource] = useState<SessionSource | null>(null)
 
+  // Search state
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const searchInputRef = useRef<TextInput>(null)
+
   const formattedMessages = useMemo(() => (messages && messages.length > 0 ? messages : []), [messages])
+
+  const displayMessages = useMemo(() => {
+    if (!searchQuery.trim()) return formattedMessages
+    const lower = searchQuery.toLowerCase()
+    return formattedMessages.filter((m) => m.message?.toLowerCase().includes(lower))
+  }, [formattedMessages, searchQuery])
+
   const proposalMessages = useMemo(
     () => formattedMessages.map((message) => ({ role: message.role, content: message.message })),
     [formattedMessages],
@@ -81,7 +95,7 @@ export const Chat = (props: ChatProps) => {
   useEffect(() => {
     abortControllerRef.current = new AbortController()
     const signal = abortControllerRef.current.signal
-    
+
     loadMarkdown()
       .then((component) => {
         if (!signal.aborted) setMarkdown(() => component)
@@ -89,7 +103,7 @@ export const Chat = (props: ChatProps) => {
       .catch(() => {
         if (!signal.aborted) setMarkdown(null)
       })
-      
+
     return () => {
       abortControllerRef.current?.abort()
     }
@@ -101,13 +115,102 @@ export const Chat = (props: ChatProps) => {
 
   const handleSendMessage = useCallback((messageText: string) => {
     if (!messageText.trim()) return
-    void sendChatMessage()
+    void sendChatMessage(messageText)
     setMessage('')
   }, [sendChatMessage])
 
+  const handleCopyMessage = useCallback((copiedMessage: MessageOutput) => {
+    const text = copiedMessage.message
+    if (!text) return
+
+    if (Platform.OS !== 'web') {
+      void Clipboard.setStringAsync(text).catch(() => {
+        void Share.share({
+          message: text,
+          title: 'Copy message',
+        })
+      })
+      return
+    }
+
+    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+      void navigator.clipboard
+        .writeText(text)
+        .catch(() => {
+          void Share.share({
+            message: text,
+            title: 'Copy message',
+          })
+        })
+      return
+    }
+
+    void Share.share({
+      message: text,
+      title: 'Copy message',
+    })
+  }, [])
+
+  const handleRegenerate = useCallback(
+    async (messageId: string) => {
+      const messageIndex = formattedMessages.findIndex((message) => message.id === messageId)
+      if (messageIndex === -1) return
+
+      const previousUserMessage = [...formattedMessages]
+        .slice(0, messageIndex)
+        .reverse()
+        .find((message) => message.role === 'user' && message.message.trim().length > 0)
+
+      if (!previousUserMessage) return
+
+      try {
+        await client.messages.delete({ messageId })
+      } catch {
+        // Intentionally fall through to keep parity with existing UX while avoiding hard failure
+      }
+
+      await sendChatMessage(previousUserMessage.message)
+    },
+    [client.messages, formattedMessages, sendChatMessage],
+  )
+
+  const handleEditMessage = useCallback(
+    async (messageId: string, content: string) => {
+      const trimmedContent = content.trim()
+      if (!trimmedContent) return
+
+      try {
+        await client.messages.update({
+          messageId,
+          content: trimmedContent,
+        })
+      } catch {
+        return
+      }
+
+      await sendChatMessage(trimmedContent)
+    },
+    [client.messages, sendChatMessage],
+  )
+
+  const handleDeleteMessage = useCallback(
+    (messageId: string) => {
+      void client.messages.delete({ messageId }).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['chatMessages', chatId] })
+      })
+    },
+    [chatId, client.messages],
+  )
+
   const renderItem = useCallback<ListRenderItem<MessageOutput>>(
-    ({ item }) => renderMessage(item, Markdown),
-    [Markdown]
+    ({ item }) =>
+      renderMessage(item, Markdown, {
+        onCopy: handleCopyMessage,
+        onEdit: handleEditMessage,
+        onRegenerate: handleRegenerate,
+        onDelete: handleDeleteMessage,
+      }),
+    [Markdown, handleCopyMessage, handleEditMessage, handleRegenerate, handleDeleteMessage],
   )
 
   // Phase 7: classification API not yet implemented.
@@ -147,11 +250,57 @@ export const Chat = (props: ChatProps) => {
     setPendingReview(null)
   }, [])
 
+  const handleToggleSearch = useCallback(() => {
+    setShowSearch((prev) => {
+      if (prev) {
+        setSearchQuery('')
+      } else {
+        setTimeout(() => searchInputRef.current?.focus(), 50)
+      }
+      return !prev
+    })
+  }, [])
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <ContextAnchor source={resolvedSource} />
+        <Pressable
+          onPress={handleToggleSearch}
+          style={styles.searchToggle}
+          accessibilityLabel={showSearch ? 'Close search' : 'Search messages'}
+          testID="chat-search-toggle"
+        >
+          <MindsherpaIcon
+            name={showSearch ? 'x' : 'magnifying-glass'}
+            size={18}
+            color={showSearch ? theme.colors.foreground : theme.colors.mutedForeground}
+          />
+        </Pressable>
       </View>
+
+      {/* Search bar */}
+      {showSearch && (
+        <View style={styles.searchBar}>
+          <TextInput
+            ref={searchInputRef}
+            style={styles.searchInput}
+            placeholder="Search messages…"
+            placeholderTextColor={theme.colors.mutedForeground}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoFocus
+            returnKeyType="search"
+            testID="chat-search-input"
+          />
+          {searchQuery.length > 0 && (
+            <Text style={styles.searchResultCount}>
+              {displayMessages.length} result{displayMessages.length !== 1 ? 's' : ''}
+            </Text>
+          )}
+        </View>
+      )}
+
       {isMessagesLoading ? (
         <View style={styles.shimmerContainer}>
           <ChatShimmerMessage />
@@ -162,12 +311,22 @@ export const Chat = (props: ChatProps) => {
         <>
           <FlashList
             contentContainerStyle={styles.messagesContainer}
-            data={formattedMessages}
+            data={displayMessages}
             keyExtractor={keyExtractor}
             renderItem={renderItem}
-            scrollEnabled={formattedMessages.length > 0}
+            scrollEnabled={displayMessages.length > 0}
+            ListEmptyComponent={
+              showSearch && searchQuery.length > 0 ? (
+                <View style={styles.emptySearch}>
+                  <Text style={styles.emptySearchText}>
+                    No messages matching "{searchQuery}"
+                  </Text>
+                </View>
+              ) : null
+            }
           />
-          {isChatSending && <ChatThinkingIndicator />}
+          {chatSendStatus === 'submitted' && <ChatShimmerMessage />}
+          {chatSendStatus === 'streaming' && <ChatThinkingIndicator />}
           <ArtifactActions
             state={lifecycleState}
             messageCount={formattedMessages.length}
@@ -209,10 +368,41 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+  },
+  searchToggle: {
+    marginLeft: 'auto',
+    padding: 4,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: theme.colors.foreground,
+    fontSize: 14,
+    fontFamily: 'Geist Mono',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 8,
+  },
+  searchResultCount: {
+    color: theme.colors.mutedForeground,
+    fontSize: 12,
+    fontFamily: 'Geist Mono',
   },
   messagesContainer: {
     flexGrow: 1,
@@ -223,6 +413,15 @@ const styles = StyleSheet.create({
   shimmerContainer: {
     flex: 1,
     paddingTop: 8,
+  },
+  emptySearch: {
+    paddingTop: 40,
+    alignItems: 'center',
+  },
+  emptySearchText: {
+    color: theme.colors.mutedForeground,
+    fontSize: 14,
+    fontFamily: 'Geist Mono',
   },
   endButton: {
     alignSelf: 'center',
