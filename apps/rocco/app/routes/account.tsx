@@ -1,4 +1,4 @@
-import { Alert, Form, PageTitle } from '@hominem/ui';
+import { Alert, Form, Inline, PageTitle, Stack } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { LoadingScreen } from '@hominem/ui/loading';
 import { UserCircle } from 'lucide-react';
@@ -74,27 +74,27 @@ export default function Account({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="h-full overflow-y-auto p-6">
-      <div className="space-y-6">
+      <Stack gap="lg">
         <PageTitle title="Account" />
         <div className="border border-border p-4 flex flex-col gap-4">
-          <div className="flex items-center gap-4">
+          <Inline gap="md">
             {user.image ? (
               <img src={user.image} alt="user avatar" className="w-16 h-16 object-cover" />
             ) : (
               <UserCircle data-testid="user-circle-icon" size={64} />
             )}
-            <div className="flex flex-col">
+            <Stack gap="none">
               <p className="text-lg font-medium">{user.name}</p>
               <p className="text-sm text-muted-foreground">{user.email}</p>
               <p className="text-sm text-muted-foreground">
                 <MemberSince createdAt={user.createdAt} />
               </p>
-            </div>
-          </div>
+            </Stack>
+          </Inline>
         </div>
 
         <DeleteAccount />
-      </div>
+      </Stack>
     </div>
   );
 }

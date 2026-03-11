@@ -16,6 +16,7 @@ import {
   Suggestion,
   usePromptInputController,
 } from '@hominem/ui/ai-elements';
+import { Stack } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { FileText, Mic } from 'lucide-react';
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState, type ForwardedRef } from 'react';
@@ -154,7 +155,7 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
 
   return (
     <>
-      <div className="flex flex-col gap-2">
+      <Stack gap="sm">
         {/* Suggestions */}
         {suggestions.length > 0 && !hasInput && !isSubmitting && (
           <Suggestions>
@@ -242,7 +243,7 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
             </span>
           </PromptInputFooter>
         </PromptInput>
-      </div>
+      </Stack>
 
       {/* Voice recording modal */}
       <ChatModals

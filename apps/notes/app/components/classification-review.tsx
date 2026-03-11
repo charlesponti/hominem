@@ -6,6 +6,7 @@
 
 import type { ClassificationReviewProps } from '@hominem/chat-services';
 import { Button } from '@hominem/ui/button';
+import { Inline, Stack } from '@hominem/ui';
 
 export function ClassificationReview({
   proposedType,
@@ -27,18 +28,18 @@ export function ClassificationReview({
         aria-labelledby="cr-title"
       >
         {/* Header */}
-        <div className="flex flex-col gap-1">
+        <Stack gap="xs">
           <p className="text-xs text-muted-foreground uppercase tracking-wider font-mono">
             Save as {proposedType.replace('_', ' ')}
           </p>
           <h2 id="cr-title" className="text-base font-medium text-foreground">
             {proposedTitle}
           </h2>
-        </div>
+        </Stack>
 
         {/* Change summary */}
         {proposedChanges.length > 0 && (
-          <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+          <Stack as="ul" className="text-sm text-muted-foreground" gap="xs">
             {proposedChanges.map((change: string, i: number) => (
               // eslint-disable-next-line react/no-array-index-key
               <li key={i} className="flex items-start gap-2">
@@ -46,7 +47,7 @@ export function ClassificationReview({
                 <span>{change}</span>
               </li>
             ))}
-          </ul>
+          </Stack>
         )}
 
         {/* Preview */}
@@ -57,14 +58,14 @@ export function ClassificationReview({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 pt-1">
+        <Inline gap="sm" className="pt-1">
           <Button type="button" variant="primary" onClick={onAccept} className="flex-1">
             Save Note
           </Button>
           <Button type="button" variant="outline" onClick={onReject}>
             Discard
           </Button>
-        </div>
+        </Inline>
       </div>
     </dialog>
   );

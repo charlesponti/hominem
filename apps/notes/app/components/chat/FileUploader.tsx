@@ -1,4 +1,5 @@
 import { Button } from '@hominem/ui/button';
+import { Inline, Stack } from '@hominem/ui';
 import {
   AlertCircle,
   CheckCircle,
@@ -149,38 +150,38 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
 
       {/* Error Messages */}
       {uploadState.errors.length > 0 && (
-        <div className="space-y-2">
+        <Stack gap="sm">
           {uploadState.errors.map((error) => (
-            <div key={error} className="flex items-center gap-2 text-sm text-destructive">
+            <Inline key={error} gap="sm" className="text-sm text-destructive">
               <AlertCircle className="size-4" />
               <span>{error}</span>
-            </div>
+            </Inline>
           ))}
-        </div>
+        </Stack>
       )}
 
       {/* Uploaded Files List */}
       {uploadState.uploadedFiles.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
+        <Stack gap="sm">
+          <Inline justify="between">
             <h4 className="text-sm font-medium">
               Uploaded Files ({uploadState.uploadedFiles.length})
             </h4>
             <Button type="button" variant="ghost" size="sm" onClick={clearAll} className="text-xs">
               Clear All
             </Button>
-          </div>
+          </Inline>
 
           <div className="space-y-2 max-h-40 overflow-y-auto">
             {uploadState.uploadedFiles.map((file) => (
-              <div key={file.id} className="flex items-center gap-3 p-3 bg-muted">
+              <Inline key={file.id} gap="sm" className="p-3 bg-muted">
                 {/* File Icon */}
                 <div className="shrink-0">{getFileIcon(file.type)}</div>
 
                 {/* File Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{file.originalName}</p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Inline gap="sm" className="text-xs text-muted-foreground">
                     <span>{formatFileSize(file.size)}</span>
                     <span>•</span>
                     <span className="capitalize">{file.type}</span>
@@ -191,7 +192,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
                         <span>Processed</span>
                       </>
                     )}
-                  </div>
+                  </Inline>
 
                   {/* File Preview/Content */}
                   {file.content && (
@@ -218,10 +219,10 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
                 >
                   <X className="size-4" />
                 </Button>
-              </div>
+              </Inline>
             ))}
           </div>
-        </div>
+        </Stack>
       )}
     </div>
   );

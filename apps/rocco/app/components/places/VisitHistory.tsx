@@ -1,4 +1,5 @@
 import { useHonoUtils } from '@hominem/hono-client/react';
+import { Inline, Stack } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { List } from '@hominem/ui/list';
 import { Edit2, Star, Trash2 } from 'lucide-react';
@@ -60,9 +61,9 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
 
   return (
     <li className="group">
-      <div className="flex items-center gap-3 p-2 border-b border-border/30">
+      <Inline gap="sm" className="p-2 border-b border-border/30">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+          <Inline gap="sm" wrap>
             <span className="text-xs text-muted-foreground">
               {new Date(visit.date).toLocaleDateString('en-US', {
                 month: 'short',
@@ -73,14 +74,14 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
             <p className="flex-1 text-sm text-accent-foreground truncate font-medium">
               {visit.title}
             </p>
-            <div className="space-x-6 flex items-center">
+            <Inline gap="lg">
               {visit.visitRating && (
-                <div className="flex items-center gap-1 shrink-0">
+                <Inline gap="xs" className="shrink-0">
                   <Star className="size-4 fill-foreground text-foreground" />
                   <span className="text-xs text-muted-foreground">{visit.visitRating}</span>
-                </div>
+                </Inline>
               )}
-              <div className="flex items-center justify-between gap-3">
+              <Inline gap="sm" justify="between">
                 <Button variant="ghost" size="icon" aria-label="Edit visit" onClick={onEdit}>
                   <Edit2 className="size-4" />
                 </Button>
@@ -94,9 +95,9 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
                 >
                   <Trash2 className="size-4" />
                 </Button>
-              </div>
-            </div>
-          </div>
+              </Inline>
+            </Inline>
+          </Inline>
           {(visit.description || visit.visitNotes || visit.visitReview || visit.visitPeople) && (
             <div className="mt-1 space-y-0.5">
               {visit.description && (
@@ -120,7 +121,7 @@ function VisitItem({ visit, placeId, placeName, isEditing, onEdit, onCancel }: V
             </div>
           )}
         </div>
-      </div>
+      </Inline>
     </li>
   );
 }
@@ -133,8 +134,8 @@ export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
   const [editingVisitId, setEditingVisitId] = useState<string | null>(null);
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between">
+    <Stack gap="xs">
+      <Inline justify="between">
         <h3 className="heading-2 font-light">Visit History</h3>
         <Button
           variant="outline"
@@ -148,7 +149,7 @@ export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
         >
           {showInlineForm ? 'Cancel' : 'Log Visit'}
         </Button>
-      </div>
+      </Inline>
 
       {showInlineForm && (
         <div id="log-visit-inline-form" className="py-2">
@@ -181,6 +182,6 @@ export function VisitHistory({ placeId, placeName }: VisitHistoryProps) {
           ))}
         </List>
       )}
-    </div>
+    </Stack>
   );
 }

@@ -102,8 +102,8 @@
 - [x] 10.6 Replace orphaned `<label>` elements with `Field` label slot
 - [x] 10.7 Replace mobile `Pressable`/`TouchableOpacity` with `Button` or `IconButton` wherever behavior matches
 - [x] 10.8 Replace mobile `TextInput` in feature code with `TextField`
-- [ ] 10.9 Replace repeated ad hoc `<div className="flex flex-col gap-*">` patterns with `Stack`
-- [ ] 10.10 Replace repeated `<div className="flex items-center gap-*">` patterns with `Inline`
+- [x] 10.9 Replace repeated ad hoc `<div className="flex flex-col gap-*">` patterns with `Stack`
+- [x] 10.10 Replace repeated `<div className="flex items-center gap-*">` patterns with `Inline`
 - [ ] 10.11 Replace raw heading tags (`<h1>`–`<h4>`) in feature routes with `Heading`
 - [ ] 10.12 Replace direct `<p>` / `<span>` / mobile `<Text>` for body text with `Text` primitive
 - [ ] 10.13 Replace ad hoc page/screen shell wrappers with `Screen` or `Page` where applicable

@@ -5,6 +5,7 @@ import type {
   MessagesDeleteOutput,
   MessagesUpdateOutput,
 } from '@hominem/hono-rpc/types/chat.types';
+import { Inline } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/components/ui/input';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -205,7 +206,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         {/* Search Bar */}
         {showSearch && (
           <div className="border-b p-2 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-            <div className="flex items-center gap-2">
+            <Inline gap="sm">
               <Search className="size-4 text-muted-foreground" />
               <Input
                 ref={searchInputRef}
@@ -227,7 +228,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
               >
                 <X className="size-4" />
               </Button>
-            </div>
+            </Inline>
             {searchQuery && (
               <div className="text-xs text-muted-foreground mt-1 px-1">
                 {filteredMessages.length} {filteredMessages.length === 1 ? 'result' : 'results'}

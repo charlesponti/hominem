@@ -6,7 +6,6 @@ import { apiReference } from '@scalar/hono-api-reference';
 import { Hono } from 'hono';
 import { openAPIRouteHandler } from 'hono-openapi';
 import { cors } from 'hono/cors';
-import { logger as honoLogger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
@@ -16,6 +15,7 @@ import type { AuthContextEnvelope } from './auth/types';
 import { env } from './env';
 import { authJwtMiddleware } from './middleware/auth';
 import { blockMaliciousProbes } from './middleware/block-probes';
+import { requestLogger } from './middleware/request-logger';
 import { aiRoutes } from './routes/ai';
 import { authRoutes } from './routes/auth';
 import { componentsRoutes } from './routes/components';
@@ -33,7 +33,7 @@ export type AppEnv = {
     user?: HominemUser;
     auth?: AuthContextEnvelope;
   };
-};
+}
 
 function getAppleAppSiteAssociation() {
   const teamId = env.APPLE_TEAM_ID.trim()
@@ -56,15 +56,14 @@ function getAppleAppSiteAssociation() {
 }
 
 export function createServer() {
-  const app = new Hono<AppEnv>();
+  const app = new Hono<AppEnv>()
 
   // Block malicious probe requests before doing anything else.
   // Placing this ahead of the logger keeps the noise out of our logs and
   // prevents the request from traversing any further middleware.
-  app.use('*', blockMaliciousProbes());
+  app.use('*', blockMaliciousProbes())
 
-  // Logger middleware
-  app.use('*', honoLogger());
+  app.use('*', requestLogger())
 
   // Pretty JSON middleware
   app.use('*', prettyJSON());

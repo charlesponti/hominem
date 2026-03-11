@@ -1,5 +1,6 @@
 import { useAuthContext } from '@hominem/auth';
 import { Field } from '@hominem/ui/field';
+import { Inline } from '@hominem/ui';
 import { Input } from '@hominem/ui/input';
 import { SelectField } from '@hominem/ui/select-field';
 import { TextField } from '@hominem/ui/text-field';
@@ -138,10 +139,10 @@ export default function VisitsPage() {
                     </div>
 
                     {visit.visitRating && (
-                      <div className="flex items-center gap-1 shrink-0">
+                      <Inline gap="xs" className="shrink-0">
                         <Star className="size-4 fill-foreground text-foreground" />
                         <span className="text-sm font-medium">{visit.visitRating}</span>
-                      </div>
+                      </Inline>
                     )}
                   </div>
 

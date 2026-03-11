@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useHonoMutation } from '@hominem/hono-client/react';
 import type { ThoughtLifecycleState } from '@hominem/chat-services';
+import { Inline, Stack } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { TextArea } from '@hominem/ui/text-area';
 
@@ -79,7 +80,7 @@ export function CaptureBar({ state = 'idle' }: CaptureBarProps) {
 
   return (
     <div className="border-b border-border bg-background px-4 py-3">
-      <div className="flex flex-col gap-2 max-w-3xl mx-auto">
+      <Stack gap="sm" className="max-w-3xl mx-auto">
         <TextArea
           placeholder="What's on your mind?"
           value={text}
@@ -97,7 +98,7 @@ export function CaptureBar({ state = 'idle' }: CaptureBarProps) {
           data-testid="capture-bar-input"
         />
         {hasInput && (
-          <div className="flex items-center gap-2">
+          <Inline gap="sm">
             <Button
               variant="primary"
               size="sm"
@@ -118,9 +119,9 @@ export function CaptureBar({ state = 'idle' }: CaptureBarProps) {
             >
               {saveNote.isPending ? 'Saving…' : 'Save'}
             </Button>
-          </div>
+          </Inline>
         )}
-      </div>
+      </Stack>
     </div>
   );
 }

@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@hominem/ui/dropdown';
-import { Form } from '@hominem/ui';
+import { Form, Inline, Stack } from '@hominem/ui';
 import { Textarea } from '@hominem/ui/textarea';
 import { formatMessageTimestamp } from '@hominem/utils/dates';
 import { Check, Copy, Edit2, MoreVertical, RotateCcw, Save, Trash2, X } from 'lucide-react';
@@ -90,7 +90,7 @@ export const ChatMessage = memo(function ChatMessage({
 
           {/* Tool calls section */}
           {hasToolCalls && (
-            <div className="flex flex-col gap-2">
+            <Stack gap="sm">
               {message.toolCalls!.map((toolCall: ChatMessageToolCall, index: number) => (
                 <Tool
                   key={toolCall.toolCallId || `tool-${index}`}
@@ -107,13 +107,13 @@ export const ChatMessage = memo(function ChatMessage({
                   />
                 </Tool>
               ))}
-            </div>
+            </Stack>
           )}
 
           {/* Main content with markdown rendering or edit mode */}
           {isEditing && isUser ? (
             <Form
-              className="flex flex-col gap-2"
+              className="flex flex-col"
               aria-label="Edit message"
               onSubmit={(e) => {
                 e.preventDefault();
@@ -138,7 +138,7 @@ export const ChatMessage = memo(function ChatMessage({
               <span id="edit-instructions" className="sr-only">
                 Press Escape to cancel, or Ctrl+Enter to save
               </span>
-              <div className="flex gap-2 justify-end">
+              <Inline gap="sm" justify="end">
                 <Button variant="outline" size="sm" onClick={cancelEdit} aria-label="Cancel editing">
                   <X className="mr-2 size-4" aria-hidden="true" />
                   Cancel
@@ -147,7 +147,7 @@ export const ChatMessage = memo(function ChatMessage({
                   <Save className="mr-2 size-4" aria-hidden="true" />
                   Save
                 </Button>
-              </div>
+              </Inline>
             </Form>
           ) : (
             hasContent && (

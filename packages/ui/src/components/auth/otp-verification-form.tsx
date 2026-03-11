@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Form, useFetcher, useNavigation, useSearchParams } from 'react-router';
 
 import { Button } from '../ui/button';
@@ -36,9 +36,17 @@ export function OtpVerificationForm({
   const isSubmitting = navigation.state === 'submitting' && navigation.formAction === action;
 
   const [otp, setOtp] = useState('');
+  const formRef = useRef<HTMLFormElement>(null);
   const resolvedEmail = searchParams.get('email') ?? email;
   const next = searchParams.get('next') ?? defaultNext;
   const maskedEmail = resolvedEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+
+  // Auto-submit when code is complete
+  const handleCodeComplete = () => {
+    if (!isSubmitting) {
+      formRef.current?.requestSubmit();
+    }
+  };
 
   // Resend is via fetcher since it doesn't need a redirect
   const handleResend = () => {
@@ -48,7 +56,7 @@ export function OtpVerificationForm({
   };
 
   return (
-    <Form method="post" action={action} className={className}>
+    <Form ref={formRef} method="post" action={action} className={className}>
       <input type="hidden" name="email" value={resolvedEmail} />
       <input type="hidden" name="next" value={next} />
       <input type="hidden" name="otp" value={otp} />
@@ -60,11 +68,11 @@ export function OtpVerificationForm({
           </p>
         </div>
 
-        <OtpCodeInput value={otp} onChange={setOtp} disabled={isSubmitting} autoFocus />
+        <OtpCodeInput value={otp} onChange={setOtp} disabled={isSubmitting} autoFocus error={error} onComplete={handleCodeComplete} />
 
         <AuthErrorBanner error={error ?? null} />
 
-        <Button type="submit" disabled={otp.length < 4 || isSubmitting} className="w-full">
+        <Button type="submit" disabled={otp.length < 6 || isSubmitting} className="w-full">
           {isSubmitting ? loadingMessage : 'Verify'}
         </Button>
 

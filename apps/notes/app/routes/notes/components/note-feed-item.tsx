@@ -1,4 +1,5 @@
 import type { Note } from '@hominem/hono-rpc/types/notes.types';
+import { Inline } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Edit, Trash2, X, Maximize2, List, RefreshCw } from 'lucide-react';
@@ -93,8 +94,8 @@ export function NoteFeedItem({
     <div className={cn('border-b border-border py-4 px-4 group', className)}>
       <div className="space-y-3">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <Inline justify="between">
+          <Inline gap="sm">
             {note.title && (
               <h3 className="font-semibold text-base text-foreground">{note.title}</h3>
             )}
@@ -106,8 +107,8 @@ export function NoteFeedItem({
                 {versionLabel}
               </Badge>
             )}
-          </div>
-        </div>
+          </Inline>
+        </Inline>
 
         {/* Content */}
         <div>
@@ -149,7 +150,7 @@ export function NoteFeedItem({
           <p className="text-xs text-muted-foreground">
             {new Date(note.createdAt).toLocaleDateString()}
           </p>
-          <div className="flex items-center gap-1">
+          <Inline gap="xs">
             {/* Development actions - subtle buttons */}
             {onExpand && (
               <Button
@@ -205,7 +206,7 @@ export function NoteFeedItem({
             >
               <Trash2 className="size-4" />
             </Button>
-          </div>
+          </Inline>
         </div>
       </div>
     </div>

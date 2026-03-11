@@ -20,6 +20,7 @@
 import { useHonoQuery } from '@hominem/hono-client/react';
 import type { ChatsListOutput } from '@hominem/hono-rpc/types/chat.types';
 import type { Note } from '@hominem/hono-rpc/types/notes.types';
+import { Stack } from '@hominem/ui';
 import { FileText, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router';
 
@@ -55,7 +56,7 @@ export default function HomeView() {
   if (!hasAnything) return null;
 
   return (
-    <div className="flex flex-col gap-8 py-6">
+    <Stack gap="xl" className="py-6">
       {/* Resumable Sessions */}
       {resumableSessions.length > 0 && (
         <section aria-labelledby="sessions-heading">
@@ -65,7 +66,7 @@ export default function HomeView() {
           >
             Sessions
           </h2>
-          <ul className="flex flex-col gap-2">
+          <Stack as="ul" gap="sm">
             {resumableSessions.map((chat) => (
               <li key={chat.id}>
                 <Link
@@ -82,7 +83,7 @@ export default function HomeView() {
                 </Link>
               </li>
             ))}
-          </ul>
+          </Stack>
         </section>
       )}
 
@@ -99,7 +100,7 @@ export default function HomeView() {
             Your saved notes, tasks, and trackers will appear here.
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <Stack as="ul" gap="sm">
             {notes.map((note: Note) => (
               <li key={note.id}>
                 <Link
@@ -116,9 +117,9 @@ export default function HomeView() {
                 </Link>
               </li>
             ))}
-          </ul>
+          </Stack>
         )}
       </section>
-    </div>
+    </Stack>
   );
 }

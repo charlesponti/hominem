@@ -1,5 +1,4 @@
-import { Alert } from '@hominem/ui';
-import { Form } from '@hominem/ui';
+import { Alert, Form, Stack } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { TextField } from '@hominem/ui/text-field';
 import { type SyntheticEvent, useCallback, useId, useState } from 'react';
@@ -33,7 +32,7 @@ export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps
   );
 
   return (
-    <div className="flex flex-col gap-3">
+    <Stack gap="sm">
       {mutation.error && <Alert variant="destructive">{mutation.error.message}</Alert>}
 
       <Form className="flex items-center gap-1" onSubmit={onFormSubmit}>
@@ -57,6 +56,6 @@ export default function SentInviteForm({ listId, onCreate }: SentInviteFormProps
           <span>Invit{mutation.isPending ? <span>ing...</span> : 'e'}</span>
         </Button>
       </Form>
-    </div>
+    </Stack>
   );
 }
