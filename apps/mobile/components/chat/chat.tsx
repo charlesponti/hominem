@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
-import { Alert, Platform, Pressable, Share, StyleSheet, TextInput, View } from 'react-native'
+import { Alert, Platform, Share, StyleSheet, View } from 'react-native'
 import { fontSizes } from '@hominem/ui/tokens'
 import { useApiClient } from '@hominem/hono-client/react'
 import { FlashList, type ListRenderItem } from '@shopify/flash-list'
@@ -8,7 +8,9 @@ import * as Clipboard from 'expo-clipboard'
 
 import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types'
 import { buildNoteProposal, deriveSessionSource } from '@hominem/chat-services/ui'
+import { Button } from '~/components/Button'
 import { FeatureErrorBoundary } from '~/components/error-boundary'
+import TextInputField from '~/components/text-input'
 import queryClient from '~/utils/query-client'
 import { useChatMessages, useEndChat, useSendMessage } from '~/utils/services/chat'
 import type { MessageOutput } from '~/utils/services/chat'
@@ -58,7 +60,7 @@ export const Chat = (props: ChatProps) => {
   // Search state
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const searchInputRef = useRef<TextInput>(null)
+  const searchInputRef = useRef<React.ElementRef<typeof TextInputField> | null>(null)
 
   const formattedMessages = useMemo(() => (messages && messages.length > 0 ? messages : []), [messages])
 
@@ -266,7 +268,9 @@ export const Chat = (props: ChatProps) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <ContextAnchor source={resolvedSource} />
-        <Pressable
+        <Button
+          variant="ghost"
+          size="icon-xs"
           onPress={handleToggleSearch}
           style={styles.searchToggle}
           accessibilityLabel={showSearch ? 'Close search' : 'Search messages'}
@@ -277,17 +281,17 @@ export const Chat = (props: ChatProps) => {
             size={18}
             color={showSearch ? theme.colors.foreground : theme.colors['text-tertiary']}
           />
-        </Pressable>
+        </Button>
       </View>
 
       {/* Search bar */}
       {showSearch && (
         <View style={styles.searchBar}>
-          <TextInput
+          <TextInputField
             ref={searchInputRef}
+            containerStyle={styles.searchInputContainer}
             style={styles.searchInput}
             placeholder="Search messages…"
-            placeholderTextColor={theme.colors['text-tertiary']}
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoFocus
@@ -342,11 +346,13 @@ export const Chat = (props: ChatProps) => {
         </>
       )}
 
-      <Pressable style={styles.endButton} onPress={onEndChatPress} disabled={isEnding}>
-        <Text variant="label" color="white">
-          {isEnding ? 'Ending…' : 'End Chat'}
-        </Text>
-      </Pressable>
+      <Button
+        variant="primary"
+        style={styles.endButton}
+        onPress={onEndChatPress}
+        disabled={isEnding}
+        title={isEnding ? 'Ending…' : 'End Chat'}
+      />
 
       {lifecycleState === 'reviewing_changes' && pendingReview && (
         <ClassificationReview
@@ -378,7 +384,6 @@ const styles = StyleSheet.create({
   },
   searchToggle: {
     marginLeft: 'auto',
-    padding: 4,
   },
   searchBar: {
     flexDirection: 'row',
@@ -389,16 +394,15 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors['border-default'],
     gap: 8,
   },
-  searchInput: {
+  searchInputContainer: {
     flex: 1,
+  },
+  searchInput: {
     color: theme.colors.foreground,
     fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
+    minHeight: 36,
     paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    borderRadius: 8,
   },
   searchResultCount: {
     color: theme.colors['text-tertiary'],
@@ -426,9 +430,6 @@ const styles = StyleSheet.create({
   },
   endButton: {
     alignSelf: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
     backgroundColor: theme.colors['text-primary'],
     marginBottom: 24,
   },

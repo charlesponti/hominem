@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
 
+import { Button } from '~/components/Button'
 import { Text, theme } from '~/theme'
 import { LocalStore } from '~/utils/local-store'
 import { FadeIn } from '~/components/animated/fade-in'
@@ -43,11 +44,12 @@ export const SessionCard = ({ chat, isActive }: SessionCardProps) => {
 
   return (
     <FadeIn>
-      <Pressable
+      <Button
+        variant="outline"
+        size="sm"
         style={[styles.card, isActive && styles.activeCard]}
         onPress={handlePress}
         accessibilityLabel={`Resume session: ${label}`}
-        accessibilityRole="button"
       >
         {isActive && <View style={styles.activeDot} />}
         <View style={styles.content}>
@@ -59,7 +61,7 @@ export const SessionCard = ({ chat, isActive }: SessionCardProps) => {
           </Text>
         </View>
         <Text variant="caption" color="text-secondary" style={styles.arrow}>→</Text>
-      </Pressable>
+      </Button>
     </FadeIn>
   )
 }
@@ -103,12 +105,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
     borderColor: theme.colors['border-default'],
     backgroundColor: theme.colors.muted,
+    justifyContent: 'flex-start',
   },
   activeCard: {
     borderColor: theme.colors.success,

@@ -21,18 +21,21 @@ interface TextFieldProps
   type?: TextFieldType | undefined
 }
 
-function TextField({
-  containerStyle,
-  disabled,
-  editable,
-  error,
-  helpText,
-  label,
-  placeholder,
-  style,
-  type = 'text',
-  ...props
-}: TextFieldProps) {
+const TextField = React.forwardRef<TextInput, TextFieldProps>(function TextField(
+  {
+    containerStyle,
+    disabled,
+    editable,
+    error,
+    helpText,
+    label,
+    placeholder,
+    style,
+    type = 'text',
+    ...props
+  },
+  ref,
+) {
   const isEditable = editable ?? !disabled
   const keyboardType =
     type === 'email'
@@ -50,6 +53,7 @@ function TextField({
       label={label}
     >
       <TextInput
+        ref={ref}
         editable={isEditable}
         keyboardType={keyboardType}
         placeholder={placeholder ?? label}
@@ -65,7 +69,7 @@ function TextField({
       />
     </Field>
   )
-}
+})
 
 const styles = StyleSheet.create({
   input: {

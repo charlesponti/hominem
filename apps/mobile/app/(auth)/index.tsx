@@ -140,18 +140,18 @@ export function AuthScreen() {
                 style={styles.primaryButton}
               />
               {canUsePasskeys ? (
-                <Pressable
+                <Button
                   onPress={handlePasskeySignIn}
                   disabled={isSubmitting}
+                  isLoading={isPasskeyLoading}
                   style={styles.passkeyButton}
                   testID="auth-passkey-button"
-                >
-                  <Text style={styles.passkeyButtonText}>
-                    {isPasskeyLoading
-                    ? AUTH_COPY.emailEntry.passkeyLoadingButton.toUpperCase()
-                    : AUTH_COPY.emailEntry.passkeyButton.toUpperCase()}
-                  </Text>
-                </Pressable>
+                  title={
+                    isPasskeyLoading
+                      ? AUTH_COPY.emailEntry.passkeyLoadingButton.toUpperCase()
+                      : AUTH_COPY.emailEntry.passkeyButton.toUpperCase()
+                  }
+                />
               ) : null}
               {E2E_TESTING && MOBILE_PASSKEY_ENABLED ? (
                 <Pressable

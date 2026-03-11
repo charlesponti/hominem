@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
 import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types'
-import { Text, theme } from '~/theme'
+import { Button } from '~/components/Button'
+import { theme } from '~/theme'
 
 /**
  * ArtifactActions — transformation strip shown in SessionView.
@@ -40,22 +41,17 @@ export const ArtifactActions = ({ state, messageCount, onTransform }: ArtifactAc
         const disabled = !enabled || isBlocked
 
         return (
-          <Pressable
+          <Button
             key={type}
+            variant="outline"
+            size="xs"
             style={[styles.btn, disabled && styles.btnDisabled]}
             onPress={() => onTransform(type)}
             disabled={disabled}
-            accessibilityLabel={enabled ? label : `${label} — Coming soon`}
-            accessibilityState={{ disabled }}
+            title={label}
           >
-            <Text
-              variant="caption"
-              color={disabled ? 'text-secondary' : 'foreground'}
-              style={disabled ? styles.disabledText : undefined}
-            >
-              {label}
-            </Text>
-          </Pressable>
+            {label}
+          </Button>
         )
       })}
     </View>
@@ -74,13 +70,7 @@ const styles = StyleSheet.create({
   },
   dimmed: { opacity: 0.5 },
   btn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
     backgroundColor: theme.colors.muted,
   },
   btnDisabled: { opacity: 0.38 },
-  disabledText: {},
 })

@@ -94,14 +94,14 @@
 
 ## Phase 10: Replace High-Frequency Raw Usage
 
-- [ ] 10.1 Replace all raw `<button>` usages in feature code with `Button`; preserve existing variants through props
-- [ ] 10.2 Replace all raw `<input>` usages in feature code with `TextField`; wire label and error state through `Field`
-- [ ] 10.3 Replace all raw `<textarea>` usages with `TextArea`; wire through `Field`
-- [ ] 10.4 Replace all raw `<select>` usages with `SelectField` (create if missing); wire through `Field`
-- [ ] 10.5 Replace raw `<form>` wrappers with `Form`; preserve submit logic
-- [ ] 10.6 Replace orphaned `<label>` elements with `Field` label slot
-- [ ] 10.7 Replace mobile `Pressable`/`TouchableOpacity` with `Button` or `IconButton` wherever behavior matches
-- [ ] 10.8 Replace mobile `TextInput` in feature code with `TextField`
+- [x] 10.1 Replace all raw `<button>` usages in feature code with `Button`; preserve existing variants through props
+- [x] 10.2 Replace all raw `<input>` usages in feature code with `TextField`; wire label and error state through `Field`
+- [x] 10.3 Replace all raw `<textarea>` usages with `TextArea`; wire through `Field`
+- [x] 10.4 Replace all raw `<select>` usages with `SelectField` (create if missing); wire through `Field`
+- [x] 10.5 Replace raw `<form>` wrappers with `Form`; preserve submit logic
+- [x] 10.6 Replace orphaned `<label>` elements with `Field` label slot
+- [x] 10.7 Replace mobile `Pressable`/`TouchableOpacity` with `Button` or `IconButton` wherever behavior matches
+- [x] 10.8 Replace mobile `TextInput` in feature code with `TextField`
 - [ ] 10.9 Replace repeated ad hoc `<div className="flex flex-col gap-*">` patterns with `Stack`
 - [ ] 10.10 Replace repeated `<div className="flex items-center gap-*">` patterns with `Inline`
 - [ ] 10.11 Replace raw heading tags (`<h1>`–`<h4>`) in feature routes with `Heading`

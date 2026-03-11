@@ -1,15 +1,10 @@
 import * as ImagePicker from 'expo-image-picker'
 import { useCallback, useRef, useState } from 'react'
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { fontSizes } from '@hominem/ui/tokens'
 
+import { Button } from '~/components/Button'
+import TextArea from '~/components/text-input-autogrow'
 import { theme } from '~/theme'
 import { VoiceSessionModal } from '../media/voice-session-modal'
 import MindsherpaIcon from '../ui/icon'
@@ -38,7 +33,7 @@ export const ChatInput = ({
   isPending = false,
   suggestions = DEFAULT_SUGGESTIONS,
 }: ChatInputProps) => {
-  const inputRef = useRef<TextInput>(null)
+  const inputRef = useRef<React.ElementRef<typeof TextArea> | null>(null)
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
   const [attachments, setAttachments] = useState<ImagePicker.ImagePickerAsset[]>([])
 
@@ -110,15 +105,16 @@ export const ChatInput = ({
           contentContainerStyle={styles.suggestionsContent}
         >
           {suggestions.map((suggestion) => (
-            <Pressable
+            <Button
               key={suggestion}
+              variant="outline"
+              size="xs"
               style={styles.suggestionChip}
               onPress={() => handleSuggestionTap(suggestion)}
-              accessibilityRole="button"
               accessibilityLabel={suggestion}
             >
-              <Text style={styles.suggestionText}>{suggestion}</Text>
-            </Pressable>
+              {suggestion}
+            </Button>
           ))}
         </ScrollView>
       )}
@@ -138,13 +134,15 @@ export const ChatInput = ({
                 <Text style={styles.attachmentName} numberOfLines={1}>
                   {name}
                 </Text>
-                <Pressable
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   onPress={() => handleRemoveAttachment(asset.uri)}
-                  style={styles.removeAttachment}
+                  textStyle={styles.removeAttachment}
                   accessibilityLabel={`Remove ${name}`}
                 >
-                  <Text style={styles.removeAttachmentText}>×</Text>
-                </Pressable>
+                  ×
+                </Button>
               </View>
             )
           })}
@@ -152,10 +150,10 @@ export const ChatInput = ({
       )}
 
       <View style={styles.inputRow}>
-        <TextInput
+        <TextArea
           ref={inputRef}
+          containerStyle={styles.inputContainer}
           placeholder="Where should we start?"
-          placeholderTextColor={theme.colors['text-tertiary']}
           style={[styles.input, isOverLimit && styles.inputError]}
           editable={!isPending}
           value={message}
@@ -163,9 +161,10 @@ export const ChatInput = ({
           testID="chat-input-message"
           onSubmitEditing={handleSend}
           returnKeyType="send"
-          multiline
         />
-        <Pressable
+        <Button
+          variant="outline"
+          size="icon-sm"
           style={styles.iconButton}
           onPress={handlePickImage}
           disabled={isPending}
@@ -173,8 +172,10 @@ export const ChatInput = ({
           testID="chat-attach-button"
         >
           <MindsherpaIcon name="paperclip" size={18} color={theme.colors['text-tertiary']} />
-        </Pressable>
-        <Pressable
+        </Button>
+        <Button
+          variant="primary"
+          size="icon-sm"
           style={styles.iconButton}
           onPress={() => setIsVoiceModalOpen(true)}
           accessibilityLabel="Open voice input"
@@ -182,8 +183,10 @@ export const ChatInput = ({
           testID="chat-voice-input-button"
         >
           <MindsherpaIcon name="microphone" size={20} color={theme.colors.white} />
-        </Pressable>
-        <Pressable
+        </Button>
+        <Button
+          variant="outline"
+          size="icon-sm"
           style={[styles.iconButton, styles.sendButton, !canSend ? styles.disabled : null]}
           disabled={!canSend}
           onPress={handleSend}
@@ -191,7 +194,7 @@ export const ChatInput = ({
           testID="chat-send-message-button"
         >
           <MindsherpaIcon name="arrow-up" size={20} color={theme.colors.foreground} />
-        </Pressable>
+        </Button>
       </View>
 
       {/* Character counter / over-limit warning */}
@@ -230,17 +233,7 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   suggestionChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
     backgroundColor: theme.colors.muted,
-  },
-  suggestionText: {
-    color: theme.colors.foreground,
-    fontSize: fontSizes.xs,
-    fontFamily: 'Geist Mono',
   },
   attachmentsScroll: {
     flexGrow: 0,
@@ -268,41 +261,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   removeAttachment: {
-    paddingHorizontal: 2,
-  },
-  removeAttachmentText: {
     color: theme.colors['text-tertiary'],
-    fontSize: fontSizes.md,
-    lineHeight: 18,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 8,
   },
-  input: {
+  inputContainer: {
     flex: 1,
+  },
+  input: {
     color: theme.colors.foreground,
     fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    borderRadius: 8,
     maxHeight: 120,
+    minHeight: 48,
   },
   inputError: {
     borderColor: theme.colors.destructive,
   },
   iconButton: {
-    height: 40,
-    width: 40,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: theme.colors.muted,
-    borderWidth: 1,
     borderColor: theme.colors['border-default'],
   },
   sendButton: {

@@ -1,5 +1,6 @@
 import React, { Component, type ReactNode } from 'react'
-import { Pressable, View, StyleSheet } from 'react-native'
+import { View, StyleSheet } from 'react-native'
+import { Button } from '~/components/Button'
 import { Text, theme } from '~/theme'
 import {
   createBoundaryStateFromError,
@@ -50,11 +51,12 @@ export class RootErrorBoundary extends Component<Props, State> {
           <Text variant="body" color="text-tertiary" style={styles.message}>
             {createRootFallbackMessage(this.state.error)}
           </Text>
-          <Pressable style={styles.button} onPress={this.handleReset} accessibilityRole="button">
-            <Text variant="label" color="white">
-              Try Again
-            </Text>
-          </Pressable>
+          <Button
+            variant="primary"
+            style={styles.button}
+            onPress={this.handleReset}
+            title="Try Again"
+          />
         </View>
       )
     }
@@ -78,9 +80,6 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 24,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
     backgroundColor: theme.colors['text-primary'],
-    borderRadius: 8,
   },
 })

@@ -11,12 +11,12 @@ import {
   StyleSheet,
   View,
   Pressable,
-  TextInput as RNTextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
+import TextInput from '~/components/text-input';
 import { Box, Text, theme as appTheme } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidOtp, normalizeOtp } from '~/utils/auth/validation';
@@ -30,7 +30,7 @@ export function VerifyScreen() {
   const [isResending, setIsResending] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
-  const otpInputRef = useRef<RNTextInput | null>(null);
+  const otpInputRef = useRef<React.ElementRef<typeof TextInput> | null>(null);
 
   const otpDigits = useMemo(() => {
     const normalized = normalizeOtp(otp);
@@ -168,8 +168,9 @@ export function VerifyScreen() {
                     );
                   })}
                 </View>
-                <RNTextInput
+                <TextInput
                   ref={otpInputRef}
+                  containerStyle={styles.overlayOtpContainer}
                   testID="auth-otp-input"
                   keyboardType="number-pad"
                   textContentType="oneTimeCode"
@@ -326,6 +327,13 @@ const styles = StyleSheet.create({
     left: 0,
     color: 'transparent',
     backgroundColor: 'transparent',
+  },
+  overlayOtpContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: 56,
   },
   resendMessage: {
     color: appTheme.colors['text-tertiary'],

@@ -1,9 +1,10 @@
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { Modal, ScrollView, StyleSheet, View } from 'react-native'
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated'
 import { useEffect } from 'react'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import type { ArtifactType } from '@hominem/chat-services/types'
+import { Button } from '~/components/Button'
 import { Text, theme } from '~/theme'
 import { VOID_EASING_ENTER, VOID_MOTION_ENTER } from '~/theme/motion'
 
@@ -94,20 +95,22 @@ export const ClassificationReview = ({
 
           {/* Actions */}
           <View style={styles.actions}>
-            <Pressable
+            <Button
+              variant="primary"
               style={[styles.btn, styles.primaryBtn]}
               onPress={onAccept}
               accessibilityLabel="Save Note"
             >
-              <Text variant="label" color="background">SAVE NOTE</Text>
-            </Pressable>
-            <Pressable
+              SAVE NOTE
+            </Button>
+            <Button
+              variant="outline"
               style={[styles.btn, styles.secondaryBtn]}
               onPress={onReject}
               accessibilityLabel="Discard"
             >
-              <Text variant="label" color="text-secondary">DISCARD</Text>
-            </Pressable>
+              DISCARD
+            </Button>
           </View>
         </Animated.View>
       </View>
@@ -157,10 +160,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 8 },
   btn: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
   },
   primaryBtn: {
     backgroundColor: theme.colors.foreground,

@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
+import { Button } from '~/components/Button'
 import { Text, theme } from '~/theme'
 
 export default function ErrorScreen({ error }: { error: Error }) {
@@ -15,11 +16,12 @@ export default function ErrorScreen({ error }: { error: Error }) {
       <Text variant="body" color="text-tertiary" style={styles.message}>
         {error?.message || 'An unexpected error occurred'}
       </Text>
-      <Pressable style={styles.button} onPress={() => router.replace('/' as RelativePathString)} accessibilityRole="button">
-        <Text variant="label" color="white">
-          Go Home
-        </Text>
-      </Pressable>
+      <Button
+        variant="primary"
+        style={styles.button}
+        onPress={() => router.replace('/' as RelativePathString)}
+        title="Go Home"
+      />
     </View>
   )
 }
@@ -39,9 +41,6 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 24,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
     backgroundColor: theme.colors['text-primary'],
-    borderRadius: 8,
   },
 })

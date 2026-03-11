@@ -19,6 +19,7 @@ export * from './loading-spinner';
 export * from './popover';
 export * from './progress';
 export * from './radio-group';
+export * from './select-field';
 export * from './sheet';
 export * from './slider';
 export * from './tabs';

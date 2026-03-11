@@ -20,17 +20,20 @@ interface TextAreaProps
   style?: StyleProp<TextStyle>
 }
 
-function TextArea({
-  containerStyle,
-  disabled,
-  editable,
-  error,
-  helpText,
-  label,
-  placeholder,
-  style,
-  ...props
-}: TextAreaProps) {
+const TextArea = React.forwardRef<TextInput, TextAreaProps>(function TextArea(
+  {
+    containerStyle,
+    disabled,
+    editable,
+    error,
+    helpText,
+    label,
+    placeholder,
+    style,
+    ...props
+  },
+  ref,
+) {
   const isEditable = editable ?? !disabled
 
   return (
@@ -41,6 +44,7 @@ function TextArea({
       label={label}
     >
       <TextInput
+        ref={ref}
         editable={isEditable}
         multiline
         placeholder={placeholder ?? label}
@@ -56,7 +60,7 @@ function TextArea({
       />
     </Field>
   )
-}
+})
 
 const styles = StyleSheet.create({
   input: {

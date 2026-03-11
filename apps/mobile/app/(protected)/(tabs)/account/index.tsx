@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
@@ -147,16 +147,14 @@ function Account() {
                     <Text color="foreground" style={styles.passkeyName}>
                       {pk.name}
                     </Text>
-                    <Pressable
+                    <Button
+                      variant="ghost"
+                      size="xs"
                       onPress={() => onDeletePasskeyPress(pk.id, pk.name)}
                       accessibilityLabel={`Remove passkey ${pk.name}`}
-                      accessibilityRole="button"
                       style={styles.passkeyDeleteButton}
-                    >
-                      <Text color="destructive" style={styles.passkeyDeleteText}>
-                        [REMOVE]
-                      </Text>
-                    </Pressable>
+                      title="[REMOVE]"
+                    />
                   </View>
                 ))
               )}
@@ -222,13 +220,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   passkeyDeleteButton: {
-    minHeight: 44,
-    minWidth: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  passkeyDeleteText: {
-    fontSize: 12,
+    minWidth: 72,
   },
   footer: {
     paddingHorizontal: theme.spacing.sm_12,

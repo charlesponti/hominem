@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import type { ArtifactType, ReviewItem } from '@hominem/chat-services/types'
+import { Button } from '~/components/Button'
 import { Text, theme } from '~/theme'
 import { FadeIn } from '~/components/animated/fade-in'
 
@@ -30,20 +31,24 @@ export const ProposalCard = ({ item, onReview, onReject }: ProposalCardProps) =>
         </View>
 
         <View style={styles.actions}>
-          <Pressable
+          <Button
+            variant="outline"
+            size="xs"
             style={styles.reviewBtn}
             onPress={() => onReview(item)}
             accessibilityLabel={`Review proposal: ${item.proposedTitle}`}
           >
-            <Text variant="caption" color="foreground">REVIEW →</Text>
-          </Pressable>
-          <Pressable
+            REVIEW →
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
             style={styles.rejectBtn}
             onPress={() => onReject(item)}
             accessibilityLabel={`Reject proposal: ${item.proposedTitle}`}
           >
-            <Text variant="caption" color="text-secondary">✕</Text>
-          </Pressable>
+            ✕
+          </Button>
         </View>
       </View>
     </FadeIn>
@@ -97,11 +102,7 @@ const styles = StyleSheet.create({
   title: { fontWeight: '500' },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   reviewBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
+    minHeight: 30,
   },
-  rejectBtn: { padding: 4 },
+  rejectBtn: { minHeight: 28, minWidth: 28 },
 })

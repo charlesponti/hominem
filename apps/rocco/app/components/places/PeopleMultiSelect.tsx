@@ -139,15 +139,23 @@ export function PeopleMultiSelect({
                     }}
                   >
                     {getPersonDisplayName(person)}
-                    <button
-                      type="button"
-                      aria-label={`Remove ${getPersonDisplayName(person)}`}
-                      className="ml-1 void-focus"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleRemovePerson(person.id);
-                        }
-                      }}
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="icon-xs"
+                      className="ml-1 text-muted-foreground hover:text-foreground"
+                    >
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Remove ${getPersonDisplayName(person)}`}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRemovePerson(person.id);
+                          }
+                        }}
                       onMouseDown={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -157,9 +165,10 @@ export function PeopleMultiSelect({
                         e.stopPropagation();
                         handleRemovePerson(person.id);
                       }}
-                    >
-                      <X className="size-3 text-muted-foreground hover:text-foreground" />
-                    </button>
+                      >
+                        <X className="size-3" />
+                      </span>
+                    </Button>
                   </Badge>
                 ))
               ) : (

@@ -42,6 +42,20 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
     [uploadFiles, onFilesUploaded, maxFiles],
   );
 
+  const openFilePicker = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx,.txt';
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (files) {
+        void handleFileSelect(files);
+      }
+    };
+    input.click();
+  }, [handleFileSelect]);
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -91,8 +105,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
   return (
     <div className={`space-y-4 ${className}`}>
       {/* File Upload Area */}
-      <button
-        type="button"
+      <div
         className={`
           border-2 border-dashed p-6 text-center w-full
           ${isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/25'}
@@ -111,17 +124,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
           variant="outline"
           size="sm"
           disabled={uploadState.isUploading}
-          onClick={() => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.multiple = true;
-            input.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx,.txt';
-            input.onchange = (e) => {
-              const files = (e.target as HTMLInputElement).files;
-              if (files) handleFileSelect(files);
-            };
-            input.click();
-          }}
+          onClick={openFilePicker}
         >
           <Paperclip className="size-4 mr-2" />
           Choose Files
@@ -129,7 +132,7 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
         <p className="text-xs text-muted-foreground mt-2">
           Supports images, documents, audio, and video files (max 10MB each)
         </p>
-      </button>
+      </div>
 
       {/* Upload Progress */}
       {uploadState.isUploading && (

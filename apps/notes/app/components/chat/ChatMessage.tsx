@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@hominem/ui/dropdown';
+import { Form } from '@hominem/ui';
 import { Textarea } from '@hominem/ui/textarea';
 import { formatMessageTimestamp } from '@hominem/utils/dates';
 import { Check, Copy, Edit2, MoreVertical, RotateCcw, Save, Trash2, X } from 'lucide-react';
@@ -111,7 +112,7 @@ export const ChatMessage = memo(function ChatMessage({
 
           {/* Main content with markdown rendering or edit mode */}
           {isEditing && isUser ? (
-            <form
+            <Form
               className="flex flex-col gap-2"
               aria-label="Edit message"
               onSubmit={(e) => {
@@ -142,12 +143,12 @@ export const ChatMessage = memo(function ChatMessage({
                   <X className="mr-2 size-4" aria-hidden="true" />
                   Cancel
                 </Button>
-                <Button size="sm" onClick={saveEdit} disabled={!canSave} aria-label="Save edited message">
+                <Button type="submit" size="sm" disabled={!canSave} aria-label="Save edited message">
                   <Save className="mr-2 size-4" aria-hidden="true" />
                   Save
                 </Button>
               </div>
-            </form>
+            </Form>
           ) : (
             hasContent && (
               <MessageResponse>

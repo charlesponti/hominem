@@ -1,7 +1,9 @@
 import React, { memo, useState } from 'react'
-import { Modal, Pressable, StyleSheet, TextInput, View } from 'react-native'
+import { Modal, StyleSheet, View } from 'react-native'
 import { fontSizes } from '@hominem/ui/tokens'
 
+import { Button } from '~/components/Button'
+import TextArea from '~/components/text-input-autogrow'
 import { Text, theme as appTheme } from '~/theme'
 import type { MessageOutput } from '~/utils/services/chat'
 import { getLocalDate } from '~/utils/dates'
@@ -66,25 +68,28 @@ const ChatMessage = memo(({
         <View style={styles.editBackdrop}>
           <View style={styles.editSheet}>
             <Text style={styles.editTitle}>Edit message</Text>
-            <TextInput
+            <TextArea
+              label="Edit message"
               value={draftMessage}
-              onChangeText={setDraftMessage}
-              multiline
+              onChange={(event) => setDraftMessage(event.nativeEvent.text)}
               style={styles.editInput}
               placeholder="Update your message"
-              placeholderTextColor={appTheme.colors['text-tertiary']}
             />
             <View style={styles.editButtonRow}>
-              <Pressable
+              <Button
+                variant="outline"
+                size="sm"
                 style={styles.actionButton}
                 onPress={() => {
                   setDraftMessage(content)
                   setIsEditing(false)
                 }}
               >
-                <Text style={styles.actionLabel}>cancel</Text>
-              </Pressable>
-              <Pressable
+                cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 style={styles.actionButton}
                 onPress={() => {
                   const trimmedContent = draftMessage.trim()
@@ -93,8 +98,8 @@ const ChatMessage = memo(({
                   setIsEditing(false)
                 }}
               >
-                <Text style={styles.actionLabel}>save</Text>
-              </Pressable>
+                save
+              </Button>
             </View>
           </View>
         </View>
@@ -121,43 +126,47 @@ const ChatMessage = memo(({
         </View>
       )}
       <View style={styles.actions}>
-        <Pressable
+        <Button
+          variant="ghost"
+          size="xs"
           onPress={() => onCopy?.(message)}
-          accessibilityRole="button"
           disabled={!canCopy}
           style={[styles.actionButton, !canCopy && styles.actionButtonDisabled]}
         >
-          <Text style={styles.actionLabel}>copy</Text>
-        </Pressable>
+          copy
+        </Button>
         {canEdit ? (
-          <Pressable
+          <Button
+            variant="ghost"
+            size="xs"
             onPress={() => {
               setDraftMessage(content)
               setIsEditing(true)
             }}
-            accessibilityRole="button"
             style={styles.actionButton}
           >
-            <Text style={styles.actionLabel}>edit</Text>
-          </Pressable>
+            edit
+          </Button>
         ) : null}
         {canRegenerate ? (
-          <Pressable
+          <Button
+            variant="ghost"
+            size="xs"
             onPress={() => onRegenerate?.(message.id)}
-            accessibilityRole="button"
             style={styles.actionButton}
           >
-            <Text style={styles.actionLabel}>regenerate</Text>
-          </Pressable>
+            regenerate
+          </Button>
         ) : null}
         {canDelete ? (
-          <Pressable
+          <Button
+            variant="ghost"
+            size="xs"
             onPress={() => onDelete?.(message.id)}
-            accessibilityRole="button"
             style={styles.actionButton}
           >
-            <Text style={styles.actionLabel}>delete</Text>
-          </Pressable>
+            delete
+          </Button>
         ) : null}
       </View>
       {message.focus_items && message.focus_items.length > 0 ? (
@@ -266,9 +275,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   actionButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 12,
     backgroundColor: appTheme.colors['border-default'],
   },
   actionButtonDisabled: {
@@ -334,14 +340,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   editInput: {
-    borderWidth: 1,
-    borderColor: appTheme.colors['border-default'],
-    borderRadius: 10,
-    color: appTheme.colors.foreground,
     minHeight: 90,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    backgroundColor: appTheme.colors.muted,
   },
   editButtonRow: {
     flexDirection: 'row',

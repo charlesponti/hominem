@@ -1,6 +1,8 @@
 import { useAuthContext } from '@hominem/auth';
-import { Label } from '@hominem/ui/components/ui/label';
+import { Field } from '@hominem/ui/field';
 import { Input } from '@hominem/ui/input';
+import { SelectField } from '@hominem/ui/select-field';
+import { TextField } from '@hominem/ui/text-field';
 import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -55,48 +57,39 @@ export default function VisitsPage() {
 
       <div className="mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 space-y-2">
-            <Label htmlFor="place-filter">Filter by place</Label>
-            <Input
-              id="place-filter"
-              placeholder="Search places..."
-              value={placeFilter}
-              onChange={(e) => setPlaceFilter(e.target.value)}
-            />
-          </div>
+          <TextField
+            className="flex-1"
+            label="Filter by place"
+            placeholder="Search places..."
+            value={placeFilter}
+            onChange={(e) => setPlaceFilter(e.target.value)}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="start-date">Start date</Label>
+          <Field label="Start date">
             <Input
-              id="start-date"
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
-          </div>
+          </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="end-date">End date</Label>
+          <Field label="End date">
             <Input
-              id="end-date"
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
-          </div>
+          </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="sort">Sort</Label>
-            <select
-              id="sort"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest')}
-              className="flex h-10 w-full border border-input bg-transparent px-3 py-2 text-base void-focus disabled:cursor-not-allowed disabled: md:text-sm"
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-            </select>
-          </div>
+          <SelectField
+            label="Sort"
+            value={sortOrder}
+            onValueChange={(value) => setSortOrder(value === 'oldest' ? 'oldest' : 'newest')}
+            options={[
+              { label: 'Newest first', value: 'newest' },
+              { label: 'Oldest first', value: 'oldest' },
+            ]}
+          />
         </div>
       </div>
 

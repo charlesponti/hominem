@@ -24,6 +24,7 @@
       "react-native": "./src/components/ui/text-area.native.tsx",
       "default": "./src/components/ui/text-area.tsx"
     },
+    "./select-field": "./src/components/ui/select-field.tsx",
     "./field": {
       "react-native": "./src/components/ui/field.native.tsx",
       "default": "./src/components/ui/field.tsx"

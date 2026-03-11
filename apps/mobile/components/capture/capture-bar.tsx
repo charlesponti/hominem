@@ -2,11 +2,13 @@ import { useRouter } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
 import { useCallback, useState } from 'react'
 import { fontSizes } from '@hominem/ui/tokens'
-import { Pressable, StyleSheet, TextInput, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { useMutation } from '@tanstack/react-query'
 
 import { useApiClient } from '@hominem/hono-client/react'
-import { Text, theme } from '~/theme'
+import { Button } from '~/components/Button'
+import TextArea from '~/components/text-input-autogrow'
+import { theme } from '~/theme'
 import { useStartChat } from '~/utils/services/chat/use-chat-messages-new'
 
 /**
@@ -57,41 +59,36 @@ export const CaptureBar = () => {
 
   return (
     <View style={styles.container}>
-      <TextInput
+      <TextArea
+        label="Capture your thought"
         placeholder="What's on your mind?"
-        placeholderTextColor={theme.colors['text-tertiary']}
         style={styles.input}
         value={text}
-        onChangeText={setText}
-        multiline
-        returnKeyType="default"
-        accessibilityLabel="Capture your thought"
+        onChange={(event) => setText(event.nativeEvent.text)}
         testID="capture-bar-input"
       />
       {hasInput && (
         <View style={styles.actions}>
-          <Pressable
-            style={[styles.actionButton, styles.primaryAction]}
+          <Button
+            variant="primary"
+            size="sm"
+            style={styles.primaryAction}
             onPress={handleThinkThroughIt}
             disabled={isBusy}
-            accessibilityLabel="Think through it — open as chat"
             testID="capture-bar-think"
           >
-            <Text variant="label" color="background">
-              THINK THROUGH IT
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[styles.actionButton, styles.secondaryAction]}
+            THINK THROUGH IT
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            style={styles.secondaryAction}
             onPress={handleSave}
             disabled={isBusy}
-            accessibilityLabel="Save as note"
             testID="capture-bar-save"
           >
-            <Text variant="label" color="foreground">
-              {saveNote.isPending ? 'SAVING…' : 'SAVE'}
-            </Text>
-          </Pressable>
+            {saveNote.isPending ? 'SAVING…' : 'SAVE'}
+          </Button>
         </View>
       )}
     </View>
@@ -118,13 +115,6 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: 8,
-  },
-  actionButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
   },
   primaryAction: {
     backgroundColor: theme.colors.foreground,

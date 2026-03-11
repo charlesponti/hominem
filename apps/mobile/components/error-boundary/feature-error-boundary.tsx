@@ -1,5 +1,6 @@
 import React, { Component, type ReactNode } from 'react'
-import { Pressable, View, StyleSheet } from 'react-native'
+import { View, StyleSheet } from 'react-native'
+import { Button } from '~/components/Button'
 import { Text, theme } from '~/theme'
 import {
   createBoundaryStateFromError,
@@ -48,11 +49,13 @@ export class FeatureErrorBoundary extends Component<Props, State> {
           <Text variant="body" color="text-tertiary">
             {createFeatureFallbackLabel(this.props.featureName)}
           </Text>
-          <Pressable style={styles.button} onPress={this.handleReset} accessibilityRole="button">
-            <Text variant="small" color="foreground">
-              Retry
-            </Text>
-          </Pressable>
+          <Button
+            variant="outline"
+            size="sm"
+            style={styles.button}
+            onPress={this.handleReset}
+            title="Retry"
+          />
         </View>
       )
     }
@@ -72,11 +75,7 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
     backgroundColor: theme.colors.background,
-    borderRadius: 6,
-    borderWidth: 1,
     borderColor: theme.colors['border-default'],
   },
 })

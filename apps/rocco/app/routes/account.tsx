@@ -1,4 +1,4 @@
-import { Alert, PageTitle } from '@hominem/ui';
+import { Alert, Form, PageTitle } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { LoadingScreen } from '@hominem/ui/loading';
 import { UserCircle } from 'lucide-react';
@@ -55,7 +55,7 @@ function DeleteAccount() {
         </Alert>
       )}
 
-      <form onSubmit={onSubmit}>
+      <Form onSubmit={onSubmit}>
         <Button
           data-testid="delete-account-form"
           className="px-4 py-2"
@@ -64,7 +64,7 @@ function DeleteAccount() {
         >
           Delete account
         </Button>
-      </form>
+      </Form>
     </>
   );
 }

@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
+import { cn } from '../../lib/utils';
 
 interface OtpCodeInputProps {
   length?: number;
@@ -95,13 +96,13 @@ export function OtpCodeInput({
           disabled={disabled}
           onChange={(e) => handleChange(index, e.target.value)}
           onKeyDown={(e) => handleKeyDown(index, e)}
-          className={`
-            flex-1 min-h-14 text-center text-xl font-bold
-            bg-bg-surface border border-default rounded-xl
-            focus:border-focus focus:outline-none focus-ring
-            disabled:opacity-50 disabled:cursor-not-allowed
-            transition-colors
-          `}
+          className={cn(
+            "min-h-14 text-center text-xl font-bold",
+            "bg-bg-surface border border-default rounded-xl",
+            "focus:border-focus focus:outline-none focus-ring",
+            "disabled:opacity-50 disabled:cursor-not-allowed",
+            "transition-colors",
+      )}
           aria-label={`Digit ${index + 1} of ${length}`}
         />
       ))}
