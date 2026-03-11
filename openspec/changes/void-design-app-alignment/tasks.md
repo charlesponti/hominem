@@ -18,12 +18,12 @@
 
 ## Phase 3: Depth and Visual Hierarchy
 
-- [ ] 3.1 Identify all `rounded-*` (border-radius) usage in app code; document which are decorative vs. structural
-- [ ] 3.2 Remove decorative rounded corners; keep only where required by the design system
-- [ ] 3.3 Identify all `shadow-*` utilities or `box-shadow` properties in app style
-- [ ] 3.4 Remove non-canonical shadows (design system allows only specific depth treatments if needed)
-- [ ] 3.5 Identify and remove `blur()` filters and effects
-- [ ] 3.6 Audit visual hierarchy; use negative space, edge alignment, and typography weight instead of depth effects
+- [x] 3.1 Identify all `rounded-*` (border-radius) usage in app code; document which are decorative vs. structural
+- [x] 3.2 Remove decorative rounded corners; keep only where required by the design system
+- [x] 3.3 Identify all `shadow-*` utilities or `box-shadow` properties in app style
+- [x] 3.4 Remove non-canonical shadows (design system allows only specific depth treatments if needed)
+- [x] 3.5 Identify and remove `blur()` filters and effects
+- [x] 3.6 Audit visual hierarchy; use negative space, edge alignment, and typography weight instead of depth effects
 
 ## Phase 4: Focus States and Accessibility
 

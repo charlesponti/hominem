@@ -319,7 +319,7 @@ const RoccoMap = ({
                   borderRadius: '50%',
                   backgroundColor: colors['google-maps-blue'],
                   border: '2px solid white',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                  boxShadow: `0 2px 4px ${colors['overlay-modal-medium']}`,
                 }}
               />
             </AdvancedMarker>

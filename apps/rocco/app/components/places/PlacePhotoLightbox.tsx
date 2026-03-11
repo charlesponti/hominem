@@ -59,14 +59,14 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 p-2 border border-border/50 backdrop-blur-sm"
+        className="absolute top-4 right-4 z-10 p-2 border border-border/50"
         aria-label="Close lightbox"
       >
         <X size={24} className="text-white" />
       </button>
 
       {/* Counter */}
-      <div className="absolute top-4 left-4 z-10 px-4 py-2 backdrop-blur-sm text-white font-medium">
+      <div className="absolute top-4 left-4 z-10 px-4 py-2 text-white font-medium">
         {activeIndex + 1} / {photos.length}
       </div>
 
@@ -79,7 +79,7 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
               e.stopPropagation();
               goToPrevious();
             }}
-            className="absolute left-4 z-10 p-3 border border-border/50 backdrop-blur-sm"
+            className="absolute left-4 z-10 p-3 border border-border/50"
             aria-label="Previous photo"
           >
             <ChevronLeft size={32} className="text-white" />
@@ -91,7 +91,7 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
               e.stopPropagation();
               goToNext();
             }}
-            className="absolute right-4 z-10 p-3 border border-border/50 backdrop-blur-sm"
+            className="absolute right-4 z-10 p-3 border border-border/50"
             aria-label="Next photo"
           >
             <ChevronRight size={32} className="text-white" />

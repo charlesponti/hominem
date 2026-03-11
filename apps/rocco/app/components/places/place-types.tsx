@@ -88,7 +88,6 @@ const PlaceType = ({ children, className, emoji, ...props }: PlaceTypeProps) => 
         'bg-muted',
         'border border-border',
         'text-foreground',
-        'backdrop-blur-sm',
         className,
       )}
       {...props}
