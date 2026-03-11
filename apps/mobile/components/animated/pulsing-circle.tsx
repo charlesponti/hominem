@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 42,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     backgroundColor: theme.colors.muted,
   },
 })

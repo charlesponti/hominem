@@ -55,6 +55,7 @@ export {
 } from './conversation';
 export { SpeechInput } from './speech-input';
 export { Shimmer, ShimmerText, ShimmerMessage } from './shimmer';
+export { ThinkingIndicator } from './thinking-indicator';
 export { Checkpoint, CheckpointList, CheckpointProgress } from './checkpoint';
 export { Task, TaskList, TaskStatusBadge } from './task';
 export {

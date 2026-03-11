@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons'
 import { useCallback, useEffect } from 'react'
-import { ActivityIndicator, Pressable, StyleSheet, View, type PressableProps } from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, Vibration, View, type PressableProps } from 'react-native'
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
@@ -43,11 +43,13 @@ export function MobileVoiceInput({
 
   const onPress = useCallback(async () => {
     if (isRecording) {
+      Vibration.vibrate(40)
       await stopRecording()
       onRecordingStateChange?.(false)
       return
     }
 
+    Vibration.vibrate(20)
     await startRecording()
     onRecordingStateChange?.(true)
   }, [isRecording, onRecordingStateChange, startRecording, stopRecording])
@@ -76,6 +78,9 @@ export function MobileVoiceInput({
         onPress={() => {
           void onPress()
         }}
+        accessibilityLabel={isRecording ? 'Stop recording' : 'Start voice recording'}
+        accessibilityHint={isRecording ? 'Tap to stop and transcribe' : 'Tap to record a voice message'}
+        accessibilityRole="button"
         testID={isRecording ? 'voice-stop-button' : 'voice-start-button'}
         {...props}
       >
@@ -89,14 +94,14 @@ export function MobileVoiceInput({
       </AnimatedPressable>
       {hasRetryRecording && autoTranscribe ? (
         <Pressable onPress={() => void retryTranscription()} style={styles.retryButton}>
-          <Text variant="body" color="secondaryForeground">
+          <Text variant="body" color="text-secondary">
             RETRY
           </Text>
         </Pressable>
       ) : null}
       {hasRetryRecording && autoTranscribe ? (
         <Pressable onPress={clearRecording} style={styles.retryButton}>
-          <Text variant="body" color="secondaryForeground">
+          <Text variant="body" color="text-secondary">
             CLEAR
           </Text>
         </Pressable>
@@ -117,11 +122,11 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 50,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   retryButton: {
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     paddingHorizontal: 8,
     paddingVertical: 4,
   },

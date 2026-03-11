@@ -39,6 +39,18 @@ function TestConsumer() {
   )
 }
 
+function StateConsumer() {
+  const { isAuthenticated, user, session } = useAuthContext()
+
+  return (
+    <div>
+      <div data-testid="authenticated">{isAuthenticated ? 'authenticated' : 'signed-out'}</div>
+      <div data-testid="email">{user?.email ?? 'missing'}</div>
+      <div data-testid="token">{session?.access_token ?? 'missing'}</div>
+    </div>
+  )
+}
+
 describe('AuthProvider', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -67,5 +79,72 @@ describe('AuthProvider', () => {
 
     expect(fetchSpy).not.toHaveBeenCalled()
     expect(onAuthEvent).not.toHaveBeenCalled()
+  })
+
+  it('uses the explicit refresh route before retrying the session probe', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
+    fetchSpy
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ isAuthenticated: false, user: null }), {
+          status: 401,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            accessToken: 'refreshed-token',
+            refreshToken: 'refreshed-refresh',
+            expiresIn: 600,
+            tokenType: 'Bearer',
+          }),
+          {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            isAuthenticated: true,
+            user: initialUser,
+            accessToken: 'refreshed-token',
+            expiresIn: 600,
+          }),
+          {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          },
+        ),
+      )
+
+    render(
+      <AuthProvider config={{ apiBaseUrl: 'http://localhost:4040' }}>
+        <StateConsumer />
+      </AuthProvider>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
+      expect(screen.getByTestId('email')).toHaveTextContent('user@example.com')
+      expect(screen.getByTestId('token')).toHaveTextContent('refreshed-token')
+    })
+
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      1,
+      'http://localhost:4040/api/auth/session',
+      expect.objectContaining({ method: 'GET', credentials: 'include' }),
+    )
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      2,
+      'http://localhost:4040/api/auth/refresh',
+      expect.objectContaining({ method: 'POST', credentials: 'include' }),
+    )
+    expect(fetchSpy).toHaveBeenNthCalledWith(
+      3,
+      'http://localhost:4040/api/auth/session',
+      expect.objectContaining({ method: 'GET', credentials: 'include' }),
+    )
   })
 })

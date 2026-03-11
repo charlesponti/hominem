@@ -1,3 +1,4 @@
+import { AUTH_COPY, SHERPA_AUTH_CONFIG } from '@hominem/auth';
 import { Image } from 'expo-image';
 import { Redirect, useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
@@ -37,11 +38,11 @@ export function AuthScreen() {
   const handleSendCode = useCallback(async () => {
     const normalizedEmail = normalizeEmail(email);
     if (!normalizedEmail) {
-      setAuthError('Email is required.');
+      setAuthError(AUTH_COPY.emailEntry.emailRequiredError);
       return;
     }
     if (!isValidEmail(normalizedEmail)) {
-      setAuthError('Enter a valid email address.');
+      setAuthError(AUTH_COPY.emailEntry.emailInvalidError);
       return;
     }
 
@@ -55,7 +56,7 @@ export function AuthScreen() {
         (router as typeof router & { replace(path: string): void }).replace(verifyPath);
       }, 0);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unable to send verification code.';
+      const message = error instanceof Error ? error.message : AUTH_COPY.emailEntry.sendFailedError;
       setAuthError(message);
     } finally {
       setIsSubmitting(false);
@@ -71,7 +72,7 @@ export function AuthScreen() {
         await completePasskeySignIn(result);
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Passkey sign-in failed.';
+      const message = error instanceof Error ? error.message : AUTH_COPY.passkey.genericError;
       setAuthError(message);
     } finally {
       setIsSubmitting(false);
@@ -79,7 +80,7 @@ export function AuthScreen() {
   }, [completePasskeySignIn, signInWithPasskey]);
 
   if (isSignedIn) {
-    return <Redirect href={"/(protected)/(tabs)/start" as RelativePathString} />;
+    return <Redirect href={SHERPA_AUTH_CONFIG.defaultPostAuthDestination as RelativePathString} />;
   }
 
   const displayError = authError || passkeyError;
@@ -101,15 +102,15 @@ export function AuthScreen() {
             <View style={styles.hero}>
               <Image source={require('~/assets/icon.png')} contentFit="contain" style={styles.logo} />
               <Text variant="header" color="foreground" style={styles.title}>
-                WELCOME
+                {AUTH_COPY.emailEntry.title.toUpperCase()}
               </Text>
-              <Text variant="body" color="mutedForeground" style={styles.subtitle}>
-                Sign in with your email and one-time code.
+              <Text variant="body" color="text-tertiary" style={styles.subtitle}>
+                {AUTH_COPY.emailEntry.subtitle}
               </Text>
             </View>
             <View style={styles.formContainer}>
-              <Text style={styles.heading}>SIGN IN</Text>
-              <Text style={styles.subheading}>Use your email to receive a one-time code.</Text>
+              <Text style={styles.heading}>{AUTH_COPY.emailEntry.formHeading.toUpperCase()}</Text>
+              <Text style={styles.subheading}>{AUTH_COPY.emailEntry.formSubheading}</Text>
               {displayError ? (
                 <View testID="auth-error-banner" style={styles.errorContainer}>
                   <Text testID="auth-error-text" style={styles.errorText}>
@@ -124,7 +125,7 @@ export function AuthScreen() {
                 autoCorrect={false}
                 value={email}
                 editable={!isSubmitting}
-                placeholder="EMAIL"
+                placeholder={AUTH_COPY.emailEntry.emailPlaceholder}
                 onChangeText={(text) => {
                   setEmail(text);
                   setAuthError(null);
@@ -135,7 +136,7 @@ export function AuthScreen() {
                 disabled={isSubmitting}
                 isLoading={isSubmitting}
                 testID="auth-send-otp"
-                title="SEND_CODE"
+                title={AUTH_COPY.emailEntry.submitButton.toUpperCase()}
                 style={styles.primaryButton}
               />
               {canUsePasskeys ? (
@@ -146,7 +147,9 @@ export function AuthScreen() {
                   testID="auth-passkey-button"
                 >
                   <Text style={styles.passkeyButtonText}>
-                    {isPasskeyLoading ? 'AUTHENTICATING...' : 'USE PASSKEY'}
+                    {isPasskeyLoading
+                    ? AUTH_COPY.emailEntry.passkeyLoadingButton.toUpperCase()
+                    : AUTH_COPY.emailEntry.passkeyButton.toUpperCase()}
                   </Text>
                 </Pressable>
               ) : null}
@@ -162,7 +165,7 @@ export function AuthScreen() {
                       }
                     } catch (error: unknown) {
                       const message =
-                        error instanceof Error ? error.message : 'Passkey sign-in failed.';
+                        error instanceof Error ? error.message : AUTH_COPY.passkey.genericError;
                       setAuthError(message);
                     } finally {
                       setIsSubmitting(false);
@@ -247,7 +250,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   subheading: {
-    color: appTheme.colors.mutedForeground,
+    color: appTheme.colors['text-tertiary'],
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '500',
@@ -280,7 +283,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   passkeyButtonText: {
-    color: appTheme.colors.mutedForeground,
+    color: appTheme.colors['text-tertiary'],
     fontSize: 14,
     fontWeight: '600',
   },

@@ -167,7 +167,7 @@ function MobileTabBar({ navItems }: { navItems: NavItem[] }) {
 
 function SignInButton() {
   const onSignInClick = useCallback(() => {
-    window.location.href = '/auth/email';
+    window.location.href = '/auth';
   }, []);
   return <Button onClick={onSignInClick}>Sign in</Button>;
 }

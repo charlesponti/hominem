@@ -10,6 +10,6 @@ module.exports = {
     '^theme$': '<rootDir>/theme',
   },
   transformIgnorePatterns: preset.transformIgnorePatterns.map((pattern) =>
-    pattern.replace('.pnpm|react-native', '.pnpm|.bun|react-native')
+    pattern.replace('.pnpm|react-native', '.pnpm|.bun|react-native|@hominem')
   ),
 }

@@ -99,6 +99,14 @@ function createSession(accessToken: string, expiresIn: number): HominemSession {
   }
 }
 
+function normalizeAuthEmail(email: string) {
+  return email.trim().toLowerCase()
+}
+
+function normalizeOtpCode(otp: string) {
+  return otp.replace(/\D/g, '')
+}
+
 function normalizeUser(user: z.infer<typeof userSchema>): HominemUser {
   return {
     id: user.id,
@@ -254,7 +262,7 @@ export async function bootstrapSession(apiBaseUrl: string): Promise<SessionResul
 
 export async function requestEmailOtp(apiBaseUrl: string, email: string) {
   const response = await fetch(`${apiBaseUrl}/api/auth/email-otp/send`, {
-    body: JSON.stringify({ email, type: 'sign-in' }),
+    body: JSON.stringify({ email: normalizeAuthEmail(email), type: 'sign-in' }),
     headers: {
       'content-type': 'application/json',
     },
@@ -268,7 +276,7 @@ export async function requestEmailOtp(apiBaseUrl: string, email: string) {
 
 export async function verifyEmailOtp(apiBaseUrl: string, email: string, otp: string): Promise<SessionResult> {
   const response = await fetch(`${apiBaseUrl}/api/auth/email-otp/verify`, {
-    body: JSON.stringify({ email, otp }),
+    body: JSON.stringify({ email: normalizeAuthEmail(email), otp: normalizeOtpCode(otp) }),
     headers: {
       'content-type': 'application/json',
     },
@@ -343,6 +351,19 @@ export async function signInWithPasskey(apiBaseUrl: string): Promise<SessionResu
     throw new Error('Passkey sign-in failed.')
   }
 
+  const tokenResponse = await fetch(`${apiBaseUrl}/api/auth/token-from-session`, {
+    credentials: 'include',
+    method: 'POST',
+  })
+
+  if (!tokenResponse.ok) {
+    throw new Error('Failed to exchange passkey session for app tokens.')
+  }
+
+  const tokenPayload = await readJson(tokenResponse, otpVerifyResponseSchema)
+  const session = createSession(tokenPayload.accessToken, tokenPayload.expiresIn)
+  writeStoredSession(session)
+
   const response = await fetch(`${apiBaseUrl}/api/auth/session`, {
     credentials: 'include',
     method: 'GET',
@@ -356,9 +377,6 @@ export async function signInWithPasskey(apiBaseUrl: string): Promise<SessionResu
   if (!payload.isAuthenticated || !payload.user || !payload.accessToken || !payload.expiresIn) {
     throw new Error('Passkey sign-in completed without a usable desktop session.')
   }
-
-  const session = createSession(payload.accessToken, payload.expiresIn)
-  writeStoredSession(session)
 
   return {
     session,

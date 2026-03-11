@@ -7,10 +7,10 @@ export const borderStyle = StyleSheet.create({
   },
   borderBottom: {
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors['border-default'],
   },
   border: {
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     borderWidth: 1,
     borderRadius: 8,
   },
@@ -28,6 +28,6 @@ export const listStyles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     fontSize: 14,
-    color: theme.colors.secondaryForeground,
+    color: theme.colors['text-secondary'],
   },
 })

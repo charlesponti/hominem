@@ -1,5 +1,3 @@
-import { KeyRound } from 'lucide-react';
-
 import { Button } from '../ui/button';
 
 interface PasskeyButtonProps {
@@ -23,8 +21,7 @@ export function PasskeyButton({
       disabled={disabled || isLoading}
       className={className}
     >
-      <KeyRound className="w-4 h-4 mr-2" />
-      {isLoading ? 'Signing in...' : 'Use a passkey'}
+      {isLoading ? 'Authenticating…' : 'Use passkey'}
     </Button>
   );
 }

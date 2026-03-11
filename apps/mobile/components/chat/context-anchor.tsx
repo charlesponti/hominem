@@ -23,7 +23,7 @@ const TYPE_LABELS: Record<string, string> = {
 export const ContextAnchor = ({ source }: ContextAnchorProps) => {
   if (source.kind === 'new') {
     return (
-      <Text variant="caption" color="secondaryForeground" style={styles.italic}>
+      <Text variant="caption" color="text-secondary" style={styles.italic}>
         New session
       </Text>
     )
@@ -32,7 +32,7 @@ export const ContextAnchor = ({ source }: ContextAnchorProps) => {
   if (source.kind === 'thought') {
     return (
       <View style={styles.pill}>
-        <Text variant="caption" color="secondaryForeground" numberOfLines={1}>
+        <Text variant="caption" color="text-secondary" numberOfLines={1}>
           {source.preview}
         </Text>
       </View>
@@ -42,11 +42,11 @@ export const ContextAnchor = ({ source }: ContextAnchorProps) => {
   // kind === 'artifact'
   return (
     <View style={styles.pill}>
-      <Text variant="caption" color="secondaryForeground">
+      <Text variant="caption" color="text-secondary">
         {TYPE_LABELS[source.type] ?? source.type}
       </Text>
-      <Text variant="caption" color="secondaryForeground" style={styles.dot}>·</Text>
-      <Text variant="caption" color="secondaryForeground" numberOfLines={1} style={styles.title}>
+      <Text variant="caption" color="text-secondary" style={styles.dot}>·</Text>
+      <Text variant="caption" color="text-secondary" numberOfLines={1} style={styles.title}>
         {source.title}
       </Text>
     </View>
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     backgroundColor: theme.colors.muted,
     maxWidth: 240,
   },

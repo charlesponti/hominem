@@ -8,6 +8,14 @@ export default [
   route('api/chat-ui/:chatId', 'routes/api.chat-ui.$chatId.ts'),
   route('api/auth/google', 'routes/api/auth/google.ts'),
 
+  layout('routes/auth/layout.tsx', [
+    route('/auth', 'routes/auth/index.tsx'),
+    route('/auth/verify', 'routes/auth/verify.tsx'),
+    route('/auth/logout', 'routes/auth/logout.tsx'),
+    route('/auth/passkey/callback', 'routes/auth/passkey.callback.tsx'),
+    route('/auth/google', 'routes/auth/google.tsx'),
+  ]),
+
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
 
@@ -28,13 +36,6 @@ export default [
     ]),
 
     route('/account', 'routes/account.tsx'),
-
-    // Auth Routes
-    route('/auth', 'routes/auth/index.tsx'),
-    route('/auth/verify', 'routes/auth/verify.tsx'),
-    route('/auth/logout', 'routes/auth/logout.tsx'),
-    route('/auth/passkey/callback', 'routes/auth/passkey.callback.tsx'),
-    route('/auth/google', 'routes/auth/google.tsx'),
     route('/settings/security', 'routes/settings.security.tsx'),
 
     // Catch-all 404 route

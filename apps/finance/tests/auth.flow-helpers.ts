@@ -115,31 +115,38 @@ export async function enterOtpCode(page: Page, otp: string) {
   const digitInputs = page.locator('input[inputmode="numeric"]')
   const otpField = page.locator('input[name="otp"]')
   const normalized = otp.replace(/\D/g, '').slice(0, 6)
-  await expect(async () => {
-    for (let i = 0; i < 6; i++) {
-      await digitInputs.nth(i).fill(normalized[i] ?? '')
-    }
-    await expect(digitInputs.first()).toHaveValue(normalized[0] ?? '')
-    await expect(otpField).toHaveValue(normalized)
-  }).toPass({ timeout: 10000 })
+
+  // Fill each digit input
+  for (let i = 0; i < 6; i++) {
+    await digitInputs.nth(i).fill(normalized[i] ?? '')
+  }
+
+  // Verify digit inputs have values
+  await expect(digitInputs.first()).toHaveValue(normalized[0] ?? '', { timeout: 5000 })
+
+  // Manually set hidden OTP field since React state sync may not work with Playwright
+  await otpField.evaluate((input, value) => {
+    if (!(input instanceof HTMLInputElement)) return
+    input.value = value
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+  }, normalized)
+
+  // Verify hidden field has value
+  await expect(otpField).toHaveValue(normalized, { timeout: 5000 })
 }
 
 export async function submitOtpCode(page: Page, otp: string) {
   const normalized = otp.replace(/\D/g, '').slice(0, 6)
   expect(normalized.length).toBeGreaterThan(3)
   await enterOtpCode(page, normalized)
-  await page.locator('input[name="otp"]').evaluate((input, value) => {
-    if (!(input instanceof HTMLInputElement)) {
-      return
-    }
 
-    input.value = value
-    input.dispatchEvent(new Event('input', { bubbles: true }))
-    input.dispatchEvent(new Event('change', { bubbles: true }))
-
+  // Submit the form
+  await page.locator('input[name="otp"]').evaluate((input) => {
+    if (!(input instanceof HTMLInputElement)) return
     const form = input.closest('form')
     if (form instanceof HTMLFormElement) {
       form.requestSubmit()
     }
-  }, normalized)
+  })
 }

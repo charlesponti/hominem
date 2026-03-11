@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   pressed: {
     opacity: 0.7,

@@ -122,7 +122,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
           </Pressable>
           <TextInput
             placeholder="Where should we start?"
-            placeholderTextColor={theme.colors.mutedForeground}
+            placeholderTextColor={theme.colors['text-tertiary']}
             style={styles.input}
             editable={!isPending && !isRecording}
             value={message}
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.background,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 10,
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 999,
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors['border-default'],
   },
   inputRow: {
     flexDirection: 'row',
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: theme.colors.muted,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   sendButton: {
     backgroundColor: theme.colors.muted,

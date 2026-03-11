@@ -53,7 +53,7 @@ export function OtpVerificationForm({
       <input type="hidden" name="next" value={next} />
       <input type="hidden" name="otp" value={otp} />
 
-      <div className="space-y-6">
+      <div className="space-y-3">
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
             Code sent to <span className="text-foreground font-medium">{maskedEmail}</span>

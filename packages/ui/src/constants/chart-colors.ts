@@ -1,8 +1,10 @@
+import { colors } from '../tokens';
+
 /**
  * Chart Colors for Kanso Monochrome Design System
  *
  * Use these constants for consistent chart styling across the application.
- * All charts should use grayscale colors with red for negative/destructive values.
+ * All charts should use grayscale colors with semantic tokens for meaning.
  */
 
 export const CHART_COLORS = {
@@ -15,11 +17,11 @@ export const CHART_COLORS = {
 
   /** Semantic chart colors for meaning-based visualization */
   positive: 'rgba(255, 255, 255, 0.7)', // income, growth, success
-  negative: '#ff0000', // expenses, decline, errors
+  negative: colors.destructive, // expenses, decline, errors
   neutral: 'rgba(255, 255, 255, 0.5)', // baseline, reference lines
 
   /** Chart background and grid */
-  background: '#000000',
+  background: colors['bg-base'],
   grid: 'rgba(255, 255, 255, 0.1)',
 
   /** Axis and label colors */
@@ -28,8 +30,8 @@ export const CHART_COLORS = {
 
   /** Tooltip styling */
   tooltip: {
-    background: '#ffffff',
-    text: '#000000',
+    background: colors['text-primary'],
+    text: colors['bg-base'],
     border: 'rgba(255, 255, 255, 0.2)',
   },
 } as const;

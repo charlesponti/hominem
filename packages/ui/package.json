@@ -15,13 +15,15 @@
     "./list": "./src/components/list.tsx",
     "./filters": "./src/components/filters/index.ts",
     "./hooks": "./src/hooks/index.ts",
+    "./auth-server-routes": "./src/components/auth/web-auth-route-servers.ts",
     "./components/ui/*": "./src/components/ui/*.tsx",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts",
     "./lib/*": "./src/lib/*.ts",
     "./styles/*": "./src/styles/*",
     "./ai-elements": "./src/components/ai-elements/index.ts",
-    "./ai-elements/*": "./src/components/ai-elements/*.tsx"
+    "./ai-elements/*": "./src/components/ai-elements/*.tsx",
+    "./tokens": "./src/tokens/index.ts"
   },
   "scripts": {
     "clean": "rm -rf build",

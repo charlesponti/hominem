@@ -1,23 +1,10 @@
-import { redirect } from 'react-router';
+import { createAuthLogoutRoute } from '@hominem/ui/auth-server-routes';
 
-import { getServerAuth } from '~/lib/auth.server';
 import { serverEnv } from '~/lib/env';
 
-export async function action({ request }: { request: Request }) {
-  const { headers } = await getServerAuth(request);
+const authLogoutRoute = createAuthLogoutRoute({
+  apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
+});
 
-  try {
-    await fetch(`${serverEnv.VITE_PUBLIC_API_URL}/api/auth/logout`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-  } catch {
-    // Ignore errors during logout
-  }
-
-  return redirect('/auth', { headers });
-}
-
-export async function loader() {
-  return redirect('/auth');
-}
+export const action = authLogoutRoute.action;
+export const loader = authLogoutRoute.loader;

@@ -3,7 +3,7 @@ import { generateObject } from 'ai'
 import * as z from 'zod'
 import { zValidator } from '@hono/zod-validator'
 
-import { VoiceTranscriptionError, transcribeVoiceBuffer } from '@hominem/services'
+import { VoiceTranscriptionError, transcribeVoiceBuffer, generateSpeechBuffer, VoiceSpeechError } from '@hominem/services'
 import { authMiddleware, type AppContext } from '../middleware/auth'
 import type {
   MobileIntentDeriveOutputV1,
@@ -190,3 +190,25 @@ export const mobileRoutes = new Hono<AppContext>()
       )
     }
   })
+  .post(
+    '/voice/speech',
+    zValidator('json', z.object({ text: z.string().min(1).max(4096), voice: z.string().default('alloy'), speed: z.number().min(0.25).max(4).default(1) })),
+    async (c) => {
+      const { text, voice, speed } = c.req.valid('json')
+      try {
+        const { audioBuffer, mediaType } = await generateSpeechBuffer({ text, voice, speed })
+        c.header('Content-Type', mediaType)
+        c.header('Content-Length', String(audioBuffer.byteLength))
+        return c.body(audioBuffer)
+      } catch (error) {
+        if (error instanceof VoiceSpeechError) {
+          const statusCode =
+            error.statusCode === 400 || error.statusCode === 401 || error.statusCode === 429
+              ? error.statusCode
+              : 500
+          return c.json({ error: error.message }, statusCode)
+        }
+        return c.json({ error: 'Failed to generate speech' }, 500)
+      }
+    },
+  )

@@ -5,6 +5,8 @@ import type {
   ChatsGetMessagesOutput,
   ChatsGetOutput,
   ChatsSendOutput,
+  ChatsClassifyInput,
+  ChatsClassifyOutput,
 } from '@hominem/hono-rpc/types/chat.types'
 
 export interface ChatsCreateInput {
@@ -48,6 +50,10 @@ export interface ChatsGetInput {
   chatId: string
 }
 
+export interface ChatsClassifyClientInput extends ChatsClassifyInput {
+  chatId: string
+}
+
 export interface ChatsClient {
   list(input: ChatsListInput): Promise<Chat[]>
   get(input: ChatsGetInput): Promise<ChatsGetOutput>
@@ -55,6 +61,7 @@ export interface ChatsClient {
   getByNote(input: ChatsGetByNoteInput): Promise<Chat>
   create(input: ChatsCreateInput): Promise<ChatsCreateOutput>
   send(input: ChatsSendMessageInput): Promise<ChatsSendOutput>
+  classify(input: ChatsClassifyClientInput): Promise<ChatsClassifyOutput>
 }
 
 export function createChatsClient(rawClient: RawHonoClient): ChatsClient {
@@ -98,6 +105,13 @@ export function createChatsClient(rawClient: RawHonoClient): ChatsClient {
         json: { message: input.message },
       })
       return res.json() as Promise<ChatsSendOutput>
+    },
+    async classify(input) {
+      const res = await rawClient.api.chats[':id'].classify.$post({
+        param: { id: input.chatId },
+        json: { targetType: input.targetType },
+      })
+      return res.json() as Promise<ChatsClassifyOutput>
     },
   }
 }

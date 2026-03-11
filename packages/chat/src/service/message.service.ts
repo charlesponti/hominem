@@ -27,6 +27,27 @@ export interface ChatMessagesOptions {
   orderBy?: 'asc' | 'desc' | undefined;
 }
 
+function toIsoString(value: string | Date | null | undefined): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+
+  return new Date(0).toISOString();
+}
+
+function normalizeParentMessageId(parentMessageId?: string | null): string | null {
+  if (!parentMessageId) {
+    return null;
+  }
+
+  const trimmedParentMessageId = parentMessageId.trim();
+  return trimmedParentMessageId.length > 0 ? trimmedParentMessageId : null;
+}
+
 function toMessageOutput(row: ChatMessageRow): ChatMessageOutput {
   return {
     id: row.id,
@@ -38,45 +59,66 @@ function toMessageOutput(row: ChatMessageRow): ChatMessageOutput {
     toolCalls: row.tool_calls as ChatMessageOutput['toolCalls'],
     reasoning: row.reasoning ?? null,
     parentMessageId: row.parent_message_id,
-    createdAt: typeof row.created_at === 'string' ? row.created_at : new Date().toISOString(),
-    updatedAt: typeof row.updated_at === 'string' ? row.updated_at : new Date().toISOString(),
+    createdAt: toIsoString(row.created_at),
+    updatedAt: toIsoString(row.updated_at),
   };
 }
 
 export class MessageService {
   async addMessage(params: CreateMessageParams): Promise<ChatMessageOutput | null> {
+    const messages = await this.addMessages([params]);
+    return messages[0] ?? null;
+  }
+
+  async addMessages(params: CreateMessageParams[]): Promise<ChatMessageOutput[]> {
     try {
-      const messageId = crypto.randomUUID();
-
-      const newMessage = await db
-        .insertInto('chat_message')
-        .values({
-          id: messageId,
-          chat_id: params.chatId,
-          user_id: params.userId,
-          role: params.role,
-          content: params.content,
-          files: params.files as Json,
-          tool_calls: params.toolCalls as Json,
-          reasoning: params.reasoning ?? null,
-          parent_message_id: params.parentMessageId ?? null,
-        })
-        .returningAll()
-        .executeTakeFirst();
-
-      if (!newMessage) {
-        throw new ChatError('DATABASE_ERROR', 'Failed to create message - no record returned');
+      if (params.length === 0) {
+        return [];
       }
 
-      await db
-        .updateTable('chat')
-        .set({ updated_at: new Date().toISOString() })
-        .where('id', '=', params.chatId)
-        .execute();
+      const chatId = params[0]?.chatId;
+      if (!chatId || params.some((message) => message.chatId !== chatId)) {
+        throw new ChatError('VALIDATION_ERROR', 'Messages must target the same chat');
+      }
 
-      return toMessageOutput(newMessage);
+      const insertedMessages = await db.transaction().execute(async (trx) => {
+        const newMessages = await trx
+          .insertInto('chat_message')
+          .values(
+            params.map((message) => ({
+              id: crypto.randomUUID(),
+              chat_id: message.chatId,
+              user_id: message.userId,
+              role: message.role,
+              content: message.content,
+              files: message.files as Json,
+              tool_calls: message.toolCalls as Json,
+              reasoning: message.reasoning ?? null,
+              parent_message_id: normalizeParentMessageId(message.parentMessageId),
+            })),
+          )
+          .returningAll()
+          .execute();
+
+        if (newMessages.length !== params.length) {
+          throw new ChatError('DATABASE_ERROR', 'Failed to create all messages');
+        }
+
+        await trx
+          .updateTable('chat')
+          .set({ updated_at: new Date().toISOString() })
+          .where('id', '=', chatId)
+          .execute();
+
+        return newMessages;
+      });
+
+      return insertedMessages.map(toMessageOutput);
     } catch (error) {
       logger.error(`Failed to add message: ${error}`);
+      if (error instanceof ChatError) {
+        throw error;
+      }
       throw new ChatError('DATABASE_ERROR', 'Failed to add message to conversation');
     }
   }
@@ -101,7 +143,7 @@ export class MessageService {
       return results.map(toMessageOutput);
     } catch (error) {
       logger.error(`Failed to get chat messages: ${error}`);
-      return [];
+      throw new ChatError('DATABASE_ERROR', 'Failed to fetch chat messages');
     }
   }
 
@@ -125,7 +167,10 @@ export class MessageService {
       return toMessageOutput(message);
     } catch (error) {
       logger.error(`Failed to get message by ID: ${error}`);
-      return null;
+      if (error instanceof ChatError) {
+        throw error;
+      }
+      throw new ChatError('DATABASE_ERROR', 'Failed to fetch message');
     }
   }
 
@@ -154,13 +199,16 @@ export class MessageService {
         .executeTakeFirst();
 
       if (!updatedMessage) {
-        throw new ChatError('DATABASE_ERROR', 'Failed to update message - no record returned');
+        return null;
       }
 
       return toMessageOutput(updatedMessage);
     } catch (error) {
       logger.error(`Failed to update message: ${error}`);
-      return null;
+      if (error instanceof ChatError) {
+        throw error;
+      }
+      throw new ChatError('DATABASE_ERROR', 'Failed to update message');
     }
   }
 

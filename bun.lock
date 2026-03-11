@@ -123,6 +123,7 @@
         "@hominem/chat-services": "workspace:*",
         "@hominem/hono-client": "workspace:*",
         "@hominem/hono-rpc": "workspace:*",
+        "@hominem/ui": "workspace:*",
         "@react-native-async-storage/async-storage": "2.2.0",
         "@react-native-community/datetimepicker": "8.6.0",
         "@react-native-community/netinfo": "11.5.2",
@@ -135,6 +136,7 @@
         "expo-asset": "^55.0.8",
         "expo-audio": "^55.0.8",
         "expo-build-properties": "~55.0.9",
+        "expo-clipboard": "~55.0.0",
         "expo-constants": "~55.0.7",
         "expo-crypto": "~55.0.9",
         "expo-dev-client": "~55.0.11",
@@ -288,6 +290,7 @@
       "name": "@hominem/auth",
       "version": "0.0.0",
       "dependencies": {
+        "@babel/runtime": "^7.28.6",
         "@hominem/db": "workspace:*",
         "@hominem/services": "workspace:*",
         "@hominem/utils": "workspace:*",
@@ -3105,6 +3108,8 @@
     "expo-audio": ["expo-audio@55.0.8", "", { "peerDependencies": { "expo": "*", "expo-asset": "*", "react": "*", "react-native": "*" } }, "sha512-X61pQSikE2rsP2ZTMFUMThOmgGyYEHcmZpGVMrKJgcYtRCFKuctB/z69dFQPoumL+zTz8qlBoGohjkHVvA9P8A=="],
 
     "expo-build-properties": ["expo-build-properties@55.0.9", "", { "dependencies": { "@expo/schema-utils": "^55.0.2", "resolve-from": "^5.0.0", "semver": "^7.6.0" }, "peerDependencies": { "expo": "*" } }, "sha512-p0rNHW/6ghKsvjlUn2DQfbLYuTB6ba+15SeTPOz5BYbyU1F/0F/YyxBtHdmWitqgDPn6VgXQeKhiNC1fMwYDpg=="],
+
+    "expo-clipboard": ["expo-clipboard@55.0.8", "", { "peerDependencies": { "expo": "*", "react": "*", "react-native": "*" } }, "sha512-s0Hkop+dc6m09LwzUAWweNI0gzLAaX5CgEGR8TMdOdSPKTPc2rCl8h8Ji/cUNM1wYoJQ4Wysa15E8If/Vlu7WA=="],
 
     "expo-constants": ["expo-constants@55.0.7", "", { "dependencies": { "@expo/config": "~55.0.8", "@expo/env": "~2.1.1" }, "peerDependencies": { "expo": "*", "react-native": "*" } }, "sha512-kdcO4TsQRRqt0USvjaY5vgQMO9H52K3kBZ/ejC7F6rz70mv08GoowrZ1CYOr5O4JpPDRlIpQfZJUucaS/c+KWQ=="],
 

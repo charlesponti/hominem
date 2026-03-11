@@ -22,16 +22,16 @@ export function Tool({
 
   const statusColors = {
     pending: 'bg-muted text-muted-foreground',
-    running: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-    completed: 'bg-green-500/10 text-green-500 border-green-500/20',
-    error: 'bg-red-500/10 text-red-500 border-red-500/20',
+    running: 'bg-accent/10 text-accent border-accent/20',
+    completed: 'bg-success/10 text-success border-success/20',
+    error: 'bg-destructive/10 text-destructive border-destructive/20',
   };
 
   const statusIcons = {
     pending: <Wrench className="size-4" />,
     running: <Loader2 className="size-4 animate-spin" />,
-    completed: <span className="text-green-500">✓</span>,
-    error: <span className="text-red-500">✗</span>,
+    completed: <span className="text-success">✓</span>,
+    error: <span className="text-destructive">✗</span>,
   };
 
   return (
@@ -99,7 +99,7 @@ export function ToolOutput({ children, isError = false, className, ...props }: T
     <pre
       className={cn(
         'mt-2 overflow-x-auto rounded bg-muted/50 p-2 text-xs font-mono',
-        isError && 'text-red-500',
+        isError && 'text-destructive',
         className,
       )}
       {...props}

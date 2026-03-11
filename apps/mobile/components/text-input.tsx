@@ -5,13 +5,13 @@ function TextInput({ label, style, ...props }: TextInputProps & { label?: string
   if (label) {
     return (
       <View style={styles.row}>
-        <Text variant="label" color="mutedForeground" style={styles.label}>
+        <Text variant="label" color="text-tertiary" style={styles.label}>
           {label.toUpperCase()}
         </Text>
         <RNTextInput
           style={[styles.input, styles.inputLabeled, style]}
           placeholder={label.toUpperCase()}
-          placeholderTextColor={theme.colors.mutedForeground}
+          placeholderTextColor={theme.colors['text-tertiary']}
           accessibilityLabel={label}
           {...props}
         />
@@ -22,7 +22,7 @@ function TextInput({ label, style, ...props }: TextInputProps & { label?: string
   return (
     <RNTextInput
       style={[styles.input, style]}
-      placeholderTextColor={theme.colors.mutedForeground}
+      placeholderTextColor={theme.colors['text-tertiary']}
       {...props}
     />
   )
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     rowGap: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     borderRadius: 8,
     backgroundColor: theme.colors.muted,
   },

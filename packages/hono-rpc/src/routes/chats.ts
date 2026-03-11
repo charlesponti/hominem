@@ -1,6 +1,5 @@
 import crypto from 'node:crypto'
 
-import { NotFoundError, InternalError, ForbiddenError, ValidationError } from '@hominem/db'
 import {
   createChatQuery,
   getChatByIdQuery,
@@ -11,11 +10,15 @@ import {
   clearChatMessagesQuery,
   MessageService,
 } from '@hominem/chat-services'
+import type { ArtifactType, ClassificationResponse } from '@hominem/chat-services/types'
 import { logger } from '@hominem/utils/logger'
 import { zValidator } from '@hono/zod-validator'
-import { convertToCoreMessages, streamText, type CoreMessage, type Message } from 'ai'
+import { convertToCoreMessages, streamText, generateObject, type CoreMessage, type Message } from 'ai'
 import { Hono } from 'hono'
 import * as z from 'zod'
+
+import { InternalError, ForbiddenError, ValidationError, UnavailableError } from '../errors'
+import { setReviewItem } from '../services/review-store'
 
 import { authMiddleware, type AppContext } from '../middleware/auth'
 import {
@@ -76,7 +79,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const chatData = await getChatByIdQuery(chatId, userId)
     if (!chatData) {
-      throw new ForbiddenError('Chat not found or access denied', 'ownership')
+      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' })
     }
 
     const messagesData = await messageService.getChatMessages(chatId, { limit: 10, orderBy: 'desc' })
@@ -94,7 +97,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const success = await deleteChatQuery(chatId, userId)
     if (!success) {
-      throw new ForbiddenError('Chat not found or access denied', 'ownership')
+      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' })
     }
 
     return c.json({ success: true })
@@ -108,7 +111,7 @@ const chatByIdRoutes = new Hono<AppContext>()
 
     const updated = await updateChatTitleQuery(chatId, userId, title)
     if (!updated) {
-      throw new ForbiddenError('Chat not found or access denied', 'ownership')
+      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' })
     }
 
     return c.json<ChatsUpdateOutput>({ success: true })
@@ -123,7 +126,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     // Get or verify chat exists
     let currentChat = await getChatByIdQuery(chatId, userId)
     if (!currentChat) {
-      throw new ForbiddenError('Chat not found or access denied', 'ownership')
+      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' })
     }
 
     const startTime = Date.now()
@@ -132,17 +135,6 @@ const chatByIdRoutes = new Hono<AppContext>()
       limit: 20,
       orderBy: 'asc',
     })
-
-    const userMessage = await messageService.addMessage({
-      chatId: currentChat.id,
-      userId,
-      role: 'user',
-      content: message,
-    })
-
-    if (!userMessage) {
-      throw new InternalError('Failed to create user message')
-    }
 
     const messagesWithNewUser: CoreMessage[] = [
       ...historyMessages.map((m) =>
@@ -158,21 +150,20 @@ const chatByIdRoutes = new Hono<AppContext>()
     ]
 
     const adapter = getOpenAIAdapter()
-    const { textStream, toolCalls } = await streamText({
-      model: adapter,
-      tools: typeToolsForAI(getAvailableTools(userId)),
-      messages: messagesWithNewUser,
-    })
+    let textStream: AsyncIterable<string>
+    let toolCalls: Promise<Array<{ toolName: string; toolCallId: string; args: Record<string, unknown> }>>
 
-    let assistantMessage = await messageService.addMessage({
-      chatId: currentChat.id,
-      userId: '',
-      role: 'assistant',
-      content: '',
-    })
-
-    if (!assistantMessage) {
-      throw new InternalError('Failed to create assistant message')
+    try {
+      const result = await streamText({
+        model: adapter,
+        tools: typeToolsForAI(getAvailableTools(userId)),
+        messages: messagesWithNewUser,
+      })
+      textStream = result.textStream
+      toolCalls = result.toolCalls
+    } catch (error) {
+      logger.error('[chats.send] Failed to start generation', { error })
+      throw new UnavailableError('Failed to generate assistant response')
     }
 
     let accumulatedContent = ''
@@ -182,9 +173,9 @@ const chatByIdRoutes = new Hono<AppContext>()
       args: Record<string, unknown>
     }
     const accumulatedToolCalls: ToolCallEntry[] = []
+    let didGenerationFail = false
 
     try {
-      // Collect stream results
       const textPromise = (async () => {
         for await (const chunk of textStream) {
           accumulatedContent += chunk
@@ -199,29 +190,39 @@ const chatByIdRoutes = new Hono<AppContext>()
       })()
 
       await Promise.all([textPromise, toolsPromise])
-
-      const updatedAssistantMessage = await messageService.updateMessage({
-        messageId: assistantMessage.id,
-        content: accumulatedContent,
-        toolCalls: accumulatedToolCalls.map((tc) => ({
-          toolName: tc.toolName,
-          type: 'tool-call',
-          toolCallId: tc.toolCallId,
-          args: tc.args as Record<string, string>,
-        })),
-      })
-      if (updatedAssistantMessage) {
-        assistantMessage = updatedAssistantMessage
-      }
     } catch (streamError) {
+      didGenerationFail = true
       logger.error('[chats.send] Error consuming stream', { error: streamError })
-      const updatedOnError = await messageService.updateMessage({
-        messageId: assistantMessage.id,
-        content: accumulatedContent || '[Error: Stream processing failed]',
-      })
-      if (updatedOnError) {
-        assistantMessage = updatedOnError
-      }
+    }
+
+    const persistedMessages = await messageService.addMessages([
+      {
+        chatId: currentChat.id,
+        userId,
+        role: 'user',
+        content: message,
+      },
+      {
+        chatId: currentChat.id,
+        userId,
+        role: 'assistant',
+        content: didGenerationFail ? accumulatedContent || '[Error: Stream processing failed]' : accumulatedContent,
+        ...(didGenerationFail
+          ? {}
+          : {
+              toolCalls: accumulatedToolCalls.map((tc) => ({
+                toolName: tc.toolName,
+                type: 'tool-call' as const,
+                toolCallId: tc.toolCallId,
+                args: tc.args as Record<string, string>,
+              })),
+            }),
+      },
+    ])
+
+    const [userMessage, assistantMessage] = persistedMessages
+    if (!userMessage || !assistantMessage) {
+      throw new InternalError('Failed to persist chat messages')
     }
 
     return c.json<ChatsSendOutput>({
@@ -245,13 +246,9 @@ const chatByIdRoutes = new Hono<AppContext>()
     const routeChatId = c.req.param('id') as string
     const { messages } = c.req.valid('json')
 
-    let currentChat = await getChatByIdQuery(routeChatId, userId)
+    const currentChat = await getChatByIdQuery(routeChatId, userId)
     if (!currentChat) {
-      // Create a new chat if it doesn't exist
-      currentChat = await createChatQuery({
-        userId,
-        title: 'New Chat',
-      })
+      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' })
     }
 
     const latestUserMessage = [...messages]
@@ -262,29 +259,6 @@ const chatByIdRoutes = new Hono<AppContext>()
       throw new ValidationError('messages must include at least one user message with content')
     }
 
-    const userMessageResult = await messageService.addMessage({
-      chatId: currentChat.id,
-      userId,
-      role: 'user',
-      content: latestUserMessage.content,
-    })
-
-    if (!userMessageResult) {
-      throw new InternalError('Failed to create user message')
-    }
-
-    const assistantMessage = await messageService.addMessage({
-      chatId: currentChat.id,
-      userId: '',
-      role: 'assistant',
-      content: '',
-    })
-
-    if (!assistantMessage) {
-      throw new InternalError('Failed to create assistant message')
-    }
-
-    const assistantMessageId = assistantMessage.id
     const coreMessages = convertToCoreMessages(
       messages.map((message) => {
         const createdAt = message.createdAt ? new Date(message.createdAt) : undefined
@@ -298,26 +272,43 @@ const chatByIdRoutes = new Hono<AppContext>()
       }),
     )
 
-    const result = streamText({
-      model: getOpenAIAdapter(),
-      tools: typeToolsForAI(getAvailableTools(userId)),
-      messages: coreMessages,
-      async onFinish(event) {
-        const persistedToolCalls = toPersistedToolCalls(
-          event.toolCalls.map((call) => ({
-            toolName: call.toolName,
-            toolCallId: call.toolCallId,
-            args: call.args as Record<string, unknown>,
-          })),
-        )
+    let result: ReturnType<typeof streamText>
 
-        await messageService.updateMessage({
-          messageId: assistantMessageId,
-          content: event.text,
-          toolCalls: persistedToolCalls.length > 0 ? persistedToolCalls : undefined,
-        })
-      },
-    })
+    try {
+      result = streamText({
+        model: getOpenAIAdapter(),
+        tools: typeToolsForAI(getAvailableTools(userId)),
+        messages: coreMessages,
+        async onFinish(event) {
+          const persistedToolCalls = toPersistedToolCalls(
+            event.toolCalls.map((call) => ({
+              toolName: call.toolName,
+              toolCallId: call.toolCallId,
+              args: call.args as Record<string, unknown>,
+            })),
+          )
+
+          await messageService.addMessages([
+            {
+              chatId: currentChat.id,
+              userId,
+              role: 'user',
+              content: latestUserMessage.content,
+            },
+            {
+              chatId: currentChat.id,
+              userId,
+              role: 'assistant',
+              content: event.text,
+              ...(persistedToolCalls.length > 0 ? { toolCalls: persistedToolCalls } : {}),
+            },
+          ])
+        },
+      })
+    } catch (error) {
+      logger.error('[chats.ui.send] Failed to start generation', { error })
+      throw new UnavailableError('Failed to generate assistant response')
+    }
 
     return result.toDataStreamResponse()
   })
@@ -336,6 +327,73 @@ const chatByIdRoutes = new Hono<AppContext>()
     const messagesData = await messageService.getChatMessages(chatId, options)
     return c.json<ChatsGetMessagesOutput>(messagesData)
   })
+
+  // Classify the conversation into a reviewable artifact
+  .post(
+    '/classify',
+    zValidator('json', z.object({ targetType: z.enum(['note', 'task', 'task_list', 'tracker']) })),
+    async (c) => {
+      const chatId = c.req.param('id') as string
+      const userId = c.get('userId')!
+      const { targetType } = c.req.valid('json') as { targetType: ArtifactType }
+
+      const chat = await getChatByIdQuery(chatId, userId)
+      if (!chat) {
+        throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' })
+      }
+
+      const messagesData = await messageService.getChatMessages(chatId, { limit: 50, orderBy: 'asc' })
+      if (messagesData.length === 0) {
+        throw new ValidationError('No messages to classify')
+      }
+
+      const transcript = messagesData
+        .map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
+        .join('\n')
+
+      const classifySchema = z.object({
+        proposedTitle: z.string().max(100),
+        proposedChanges: z.array(z.string()).max(5),
+        previewContent: z.string(),
+      })
+
+      const { object } = await generateObject<z.infer<typeof classifySchema>>({
+        model: getOpenAIAdapter(),
+        schema: classifySchema,
+        prompt: [
+          `You are classifying a chat conversation into a "${targetType}" artifact.`,
+          'Produce:',
+          '- proposedTitle: a concise, descriptive title (max 100 chars)',
+          '- proposedChanges: up to 5 short human-readable summary lines of what would be captured',
+          '- previewContent: the full Markdown content of the proposed artifact',
+          '',
+          'Conversation:',
+          transcript,
+        ].join('\n'),
+      })
+
+      const reviewItemId = crypto.randomUUID()
+      const reviewItem = {
+        id: reviewItemId,
+        sessionId: chatId,
+        proposedType: targetType,
+        proposedTitle: object.proposedTitle,
+        proposedChanges: object.proposedChanges,
+        previewContent: object.previewContent,
+        createdAt: new Date().toISOString(),
+      }
+
+      setReviewItem(reviewItem)
+
+      return c.json<ClassificationResponse>({
+        proposedType: targetType,
+        proposedTitle: object.proposedTitle,
+        proposedChanges: object.proposedChanges,
+        previewContent: object.previewContent,
+        reviewItemId,
+      })
+    },
+  )
 
 export const chatsRoutes = new Hono<AppContext>()
   .use('*', authMiddleware)

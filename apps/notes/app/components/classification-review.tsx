@@ -17,7 +17,7 @@ export function ClassificationReview({
   return (
     <dialog
       open
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 w-full h-full m-0 p-0 border-0 max-w-none max-h-none"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-background/80 w-full h-full m-0 p-0 border-0 max-w-none max-h-none"
     >
       <div
         className="void-anim-enter-bottom w-full sm:w-[480px] bg-background border border-border rounded-t-xl sm:rounded-xl p-6 flex flex-col gap-4"

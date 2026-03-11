@@ -33,8 +33,8 @@ export default function HomePage() {
         </>
       }
       sub="Animus turns scattered thoughts into organized knowledge — with AI that helps you find connections you'd have missed."
-      ctaPrimary={{ label: 'Open Animus', href: '/auth/email' }}
-      ctaSecondary={{ label: 'Sign in', href: '/auth/email' }}
+      ctaPrimary={{ label: 'Open Animus', href: '/auth' }}
+      ctaSecondary={{ label: 'Sign in', href: '/auth' }}
       problem="You have the idea in the shower. You voice-note it on the walk. You write half of it down somewhere. Three weeks later you can't find it — or worse, you have the same idea again and don't know you already had it."
       features={[
         {

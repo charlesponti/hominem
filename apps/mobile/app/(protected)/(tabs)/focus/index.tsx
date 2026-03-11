@@ -59,13 +59,13 @@ export const FocusView = () => {
           headerRight: () => (
             <View style={headerRightStyles.row}>
               <Link href={"/(protected)/(tabs)/sherpa" as RelativePathString}>
-                <Text variant="body" color="secondaryForeground">
+                <Text variant="body" color="text-secondary">
                   SHERPA
                 </Text>
               </Link>
               <Text
                 variant="body"
-                color="secondaryForeground"
+                color="text-secondary"
                 onPress={onRefresh}
                 accessibilityRole="button"
               >
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.muted,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
   },
   scrollContainer: {
     paddingTop: 12,
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.muted,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors['border-default'],
     padding: 12,
     maxWidth: 120,
     marginBottom: 24,
@@ -197,12 +197,12 @@ const FocusLoadingError = React.memo(() => {
     <View style={errorStyles.wrapper}>
       <FeedbackBlock error>
         <View style={errorStyles.row}>
-          <MindsherpaIcon name="circle-exclamation" size={24} color={theme.colors.tomato} />
+          <MindsherpaIcon name="circle-exclamation" size={24} color={theme.colors.destructive} />
           <View style={errorStyles.textCol}>
             <Text variant="body" color="foreground">
               FOCUS LOAD FAILED.
             </Text>
-            <Text variant="body" color="secondaryForeground">
+            <Text variant="body" color="text-secondary">
               RETRY LATER.
             </Text>
           </View>

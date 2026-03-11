@@ -183,8 +183,8 @@ export function SpeechInput({
       </Button>
       {isRecording && (
         <span className="absolute -top-1 -right-1 flex size-3">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive/70 opacity-75" />
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive" />
         </span>
       )}
     </div>

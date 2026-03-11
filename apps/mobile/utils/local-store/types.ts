@@ -19,6 +19,9 @@ export type ChatMessage = {
   role: 'user' | 'assistant' | 'system'
   content: string
   createdAt: string
+  reasoning?: string | null
+  toolCalls?: Array<{ toolName: string; type: 'tool-call'; toolCallId: string; args: Record<string, string> }> | null
+  isStreaming?: boolean
   focusItemsJson?: string | null
   focusIdsJson?: string | null
 }

@@ -1,19 +1,28 @@
 import { useAuthContext } from '@hominem/auth';
 import {
+  Attachments,
+  Attachment,
+  PromptInput,
+  PromptInputActionAddAttachments,
+  PromptInputActionMenu,
+  PromptInputActionMenuContent,
+  PromptInputActionMenuTrigger,
+  PromptInputFooter,
+  PromptInputProvider,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputTools,
   Suggestions,
   Suggestion,
-  PromptInput,
-  PromptInputTextarea,
-  PromptInputSubmit,
-  PromptInputFooter,
-  PromptInputTools,
+  usePromptInputController,
 } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';
-import { Mic, Paperclip, FileText } from 'lucide-react';
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react';
+import { FileText, Mic } from 'lucide-react';
+import { forwardRef, useCallback, useImperativeHandle, useRef, useState, type ForwardedRef } from 'react';
 
 import { useFileUpload } from '~/lib/hooks/use-file-upload';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
+import type { UploadedFile } from '~/lib/types/upload';
 
 import { ChatModals } from './ChatModals';
 
@@ -36,12 +45,11 @@ const DEFAULT_SUGGESTIONS = [
   'Rewrite in a different style',
 ];
 
-export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function ChatInput(
+const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function InnerChatInput(
   { chatId, onStatusChange, onSaveAsNote, suggestions = DEFAULT_SUGGESTIONS },
   ref,
 ) {
-  const [inputValue, setInputValue] = useState('');
-  const [showFileUploader, setShowFileUploader] = useState(false);
+  const { textInput, attachments } = usePromptInputController();
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -50,79 +58,105 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
   const { userId } = useAuthContext();
 
   const sendMessage = useSendMessage({ chatId, ...(userId && { userId }) });
-  const { clearAll } = useFileUpload();
+  const { uploadFiles, uploadState } = useFileUpload();
 
-  const characterCount = inputValue.length;
-  const hasInput = inputValue.trim().length > 0;
+  const characterCount = textInput.value.length;
+  const hasInput = textInput.value.trim().length > 0;
   const isOverLimit = characterCount > MAX_MESSAGE_LENGTH;
   const canSubmit = hasInput && !isOverLimit;
 
+  const formatAttachmentContext = useCallback((uploadedFiles: UploadedFile[]) => {
+    if (uploadedFiles.length === 0) {
+      return '';
+    }
+
+    return uploadedFiles
+      .map((file) => {
+        const extractedContent = file.textContent || file.content || '';
+        const summary = extractedContent.trim().slice(0, 4000);
+
+        return [
+          `Attachment: ${file.originalName}`,
+          `Type: ${file.type}`,
+          `MIME: ${file.mimetype}`,
+          summary ? `Extracted content:\n${summary}` : null,
+        ]
+          .filter((value): value is string => Boolean(value))
+          .join('\n');
+      })
+      .join('\n\n');
+  }, []);
+
   const handlePromptSubmit = useCallback(
-    async (message: { text: string }) => {
+    async (message: {
+      text: string;
+      files?: Array<{
+        id: string;
+        file?: File;
+      }>;
+    }) => {
       const trimmedValue = message.text.trim();
       if (!trimmedValue) return;
 
       try {
         onStatusChange?.('streaming');
-        setInputValue('');
-        clearAll();
+
+        const selectedFiles = (message.files ?? [])
+          .map((file) => file.file)
+          .filter((file): file is File => Boolean(file));
+        const uploadedFiles =
+          selectedFiles.length > 0 ? await uploadFiles(selectedFiles) : [];
+        const attachmentContext = formatAttachmentContext(uploadedFiles);
+        const messageWithAttachments = attachmentContext
+          ? `${trimmedValue}\n\nAttached files context:\n${attachmentContext}`
+          : trimmedValue;
+
+        textInput.setInput('');
 
         await sendMessage.mutateAsync({
-          message: trimmedValue,
+          message: messageWithAttachments,
           chatId,
         });
 
         onStatusChange?.('idle');
+        attachments.clear();
       } catch (error) {
         console.error('Failed to send message:', error);
         onStatusChange?.('error', error as Error);
       }
     },
-    [chatId, sendMessage, clearAll, onStatusChange],
+    [attachments, chatId, formatAttachmentContext, onStatusChange, sendMessage, textInput, uploadFiles],
   );
-
-  const handleFileUpload = useCallback(() => {
-    setShowFileUploader(true);
-  }, []);
 
   const handleAudioRecord = useCallback(() => {
     setShowAudioRecorder(true);
   }, []);
 
-  const handleFilesUploaded = useCallback(() => {}, []);
-
   const handleAudioTranscribed = useCallback(
     async (transcript: string) => {
-      if (!transcript.trim()) return;
-
-      try {
-        onStatusChange?.('streaming');
-        await sendMessage.mutateAsync({
-          message: transcript.trim(),
-          chatId,
-        });
-        onStatusChange?.('idle');
-      } catch (error) {
-        console.error('Failed to send transcribed message:', error);
-        onStatusChange?.('error', error as Error);
-        throw error;
-      }
+      const trimmed = transcript.trim();
+      if (!trimmed) return;
+      setShowAudioRecorder(false);
+      await handlePromptSubmit({ text: trimmed });
     },
-    [chatId, onStatusChange, sendMessage],
+    [handlePromptSubmit],
   );
 
-  const isSubmitting = sendMessage.isPending;
+  const isSubmitting = sendMessage.isPending || uploadState.isUploading;
 
-  const handleSuggestionClick = useCallback((suggestion: string) => {
-    setInputValue(suggestion);
-    textareaRef.current?.focus();
-  }, []);
+  const handleSuggestionClick = useCallback(
+    (suggestion: string) => {
+      textInput.setInput(suggestion);
+      textareaRef.current?.focus();
+    },
+    [textInput],
+  );
 
   return (
     <>
       <div className="flex flex-col gap-2">
         {/* Suggestions */}
-        {suggestions.length > 0 && !inputValue && !isSubmitting && (
+        {suggestions.length > 0 && !hasInput && !isSubmitting && (
           <Suggestions>
             {suggestions.map((suggestion) => (
               <Suggestion
@@ -136,14 +170,17 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
 
         {/* Error message */}
         {isOverLimit && <div className="text-xs text-destructive">Message too long</div>}
+        {uploadState.errors.length > 0 && (
+          <div className="text-xs text-destructive">{uploadState.errors[0]}</div>
+        )}
 
         {/* PromptInput - AI Elements style */}
         <PromptInput onSubmit={handlePromptSubmit}>
           <div className="flex gap-2 items-end">
             <PromptInputTextarea
               ref={textareaRef}
-              value={inputValue}
-              onValueChange={setInputValue}
+              value={textInput.value}
+              onValueChange={textInput.setInput}
               placeholder="Type your message..."
               disabled={isSubmitting}
               className="flex-1"
@@ -154,18 +191,26 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
             />
           </div>
 
+          {attachments.files.length > 0 ? (
+            <Attachments variant="inline" className="mb-2">
+              {attachments.files.map((file) => (
+                <Attachment
+                  key={file.id}
+                  data={file}
+                  onRemove={() => attachments.remove(file.id)}
+                />
+              ))}
+            </Attachments>
+          ) : null}
+
           <PromptInputFooter>
             <PromptInputTools>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleFileUpload}
-                disabled={isSubmitting}
-                title="Attach files"
-              >
-                <Paperclip className="size-4" />
-              </Button>
+              <PromptInputActionMenu>
+                <PromptInputActionMenuTrigger title="Attach files" disabled={isSubmitting} />
+                <PromptInputActionMenuContent>
+                  <PromptInputActionAddAttachments label="Attach files" />
+                </PromptInputActionMenuContent>
+              </PromptInputActionMenu>
 
               <Button
                 type="button"
@@ -199,15 +244,23 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(functio
         </PromptInput>
       </div>
 
-      {/* File Upload and Audio Recording Modals */}
+      {/* Voice recording modal */}
       <ChatModals
-        showFileUploader={showFileUploader}
         showAudioRecorder={showAudioRecorder}
-        onCloseFileUploader={() => setShowFileUploader(false)}
         onCloseAudioRecorder={() => setShowAudioRecorder(false)}
-        onFilesUploaded={handleFilesUploaded}
         onAudioTranscribed={handleAudioTranscribed}
       />
     </>
+  );
+});
+
+export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function ChatInput(
+  props: ChatInputProps,
+  ref: ForwardedRef<HTMLTextAreaElement>,
+) {
+  return (
+    <PromptInputProvider>
+      <InnerChatInput {...props} ref={ref} />
+    </PromptInputProvider>
   );
 });

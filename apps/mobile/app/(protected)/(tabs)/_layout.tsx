@@ -7,7 +7,7 @@ export default function TabsLayout() {
   return (
     <NativeTabs
       minimizeBehavior="onScrollDown"
-      tintColor={theme.colors['fg-primary']}
+      tintColor={theme.colors.primary}
       disableTransparentOnScrollEdge
     >
       <NativeTabs.Trigger name="start" role="search">

@@ -30,7 +30,7 @@ export function EmailEntryForm({
 
   return (
     <Form method={method} action={action} className={className}>
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div>
           <Label htmlFor="email" className="text-foreground">
             Email address
@@ -43,13 +43,13 @@ export function EmailEntryForm({
             required
             placeholder="you@example.com"
             disabled={isSubmitting}
-            className="mt-1"
+            className="mt-1 bg-muted font-mono py-3"
           />
         </div>
 
         <AuthErrorBanner error={error ?? null} />
 
-        <Button type="submit" disabled={isSubmitting} className="w-full">
+        <Button type="submit" variant="outline" disabled={isSubmitting} className="w-full uppercase">
           {isSubmitting ? loadingMessage : 'Continue'}
         </Button>
 
@@ -62,10 +62,6 @@ export function EmailEntryForm({
           />
         )}
       </div>
-
-      <p className="mt-4 text-center text-sm text-muted-foreground">
-        We&apos;ll send a one-time code to your email.
-      </p>
     </Form>
   );
 }

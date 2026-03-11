@@ -16,6 +16,7 @@ import {
   reconcileMessagesAfterSend,
   type MessageOutput,
 } from './chat-contract'
+import { selectSherpaChat } from './session-state'
 
 type SendChatMessageOutput = {
   messages: MessageOutput[]
@@ -36,6 +37,9 @@ function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
     profile_id: '',
     focus_ids: null,
     focus_items: null,
+    reasoning: message.reasoning,
+    toolCalls: message.toolCalls ?? null,
+    isStreaming: false,
   }
 }
 
@@ -70,32 +74,46 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
   })
 }
 
+export type ChatSendStatus = 'idle' | 'submitted' | 'streaming' | 'error'
+
 // Consolidated send message with optimistic updates
 export const useSendMessage = ({ chatId }: { chatId: string }) => {
   const client = useApiClient()
   const queryClient = useQueryClient()
   const [message, setMessage] = useState('')
   const [sendChatError, setSendChatError] = useState(false)
+  const [chatSendStatus, setChatSendStatus] = useState<ChatSendStatus>('idle')
 
-  const mutation = useMutation<SendChatMessageOutput, Error, string, { previousMessages: MessageOutput[] }>({
+  const mutation = useMutation<
+    SendChatMessageOutput,
+    Error,
+    string,
+    { previousMessages: MessageOutput[] }
+  >({
     mutationKey: ['sendChatMessage', chatId],
-    
+
     // Optimistic update
     onMutate: async (messageText) => {
+      setChatSendStatus('submitted')
+      const text = messageText.trim()
+      if (!text) {
+        return { previousMessages: [] }
+      }
+
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['chatMessages', chatId] })
-      
+
       // Snapshot previous value
       const previousMessages = queryClient.getQueryData<MessageOutput[]>(['chatMessages', chatId]) || []
-      
+
       // Optimistically add user message
-      const optimisticMessage = createOptimisticMessage(chatId, messageText, generateId())
-      
+      const optimisticMessage = createOptimisticMessage(chatId, text, generateId())
+
       queryClient.setQueryData(['chatMessages', chatId], [...previousMessages, optimisticMessage])
-      
+
       return { previousMessages }
     },
-    
+
     mutationFn: async (messageText) => {
       const status = await NetInfo.fetch()
       if (!status.isConnected) {
@@ -104,25 +122,27 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
 
       const payload = await client.chats.send({
         chatId,
-        message: messageText,
+        message: messageText.trim(),
       })
+      setChatSendStatus('streaming')
       const mappedMessages = [payload.messages.user, payload.messages.assistant].flatMap((message) => {
         const output = toMessageOutput(message)
         return output ? [output] : []
       })
-      
+
       // Persist to SQLite
       await persistMessages(chatId, mappedMessages)
-      
+
       return {
         messages: mappedMessages,
         function_calls: [],
       }
     },
-    
+
     // On success, update cache with server data
     onSuccess: (data) => {
       setSendChatError(false)
+      setChatSendStatus('idle')
       queryClient.setQueryData(['chatMessages', chatId], (old: MessageOutput[] | undefined) => {
         if (!old) {
           return data.messages
@@ -130,11 +150,12 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
         return reconcileMessagesAfterSend(old, data.messages)
       })
     },
-    
+
     // Rollback on error
     onError: (error, variables, context) => {
       log('Error sending chat message:', error)
       setSendChatError(true)
+      setChatSendStatus('error')
       if (context?.previousMessages) {
         queryClient.setQueryData(['chatMessages', chatId], context.previousMessages)
       }
@@ -146,9 +167,10 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
     setMessage,
     sendChatError,
     setSendChatError,
+    chatSendStatus,
     isChatSending: mutation.isPending,
-    sendChatMessage: async () => {
-      const text = message.trim()
+    sendChatMessage: async (nextMessageText = message) => {
+      const text = nextMessageText.trim()
       if (!text) {
         return {
           messages: [],
@@ -210,6 +232,7 @@ export const useStartChat = ({
             profile_id: '',
             focus_ids: null,
             focus_items: null,
+            toolCalls: null,
           },
         ])
       }
@@ -250,13 +273,12 @@ export const useEndChat = ({
   })
 }
 
-export const useActiveChat = () => {
+export const useActiveChat = (chatId?: string | null) => {
   return useQuery<LocalChat | null>({
-    queryKey: ['activeChatLocal'],
+    queryKey: ['activeChatLocal', chatId ?? null],
     queryFn: async () => {
       const chats = await LocalStore.listChats()
-      const active = chats.find((chat) => !chat.endedAt)
-      return active ?? null
+      return selectSherpaChat(chats, chatId)
     },
   })
 }
@@ -291,6 +313,9 @@ const persistMessages = async (chatId: string, messages: MessageOutput[]) => {
         chatId,
         role: msg.role,
         content: msg.message ?? '',
+        reasoning: msg.reasoning ?? null,
+        toolCalls: msg.toolCalls ?? null,
+        isStreaming: msg.isStreaming,
         focusItemsJson: msg.focus_items ? JSON.stringify(msg.focus_items) : null,
         focusIdsJson: msg.focus_ids ? JSON.stringify(msg.focus_ids) : null,
         createdAt: msg.created_at ?? new Date().toISOString(),

@@ -12,7 +12,7 @@ export default function ErrorScreen({ error }: { error: Error }) {
       <Text variant="header" color="foreground">
         Something went wrong
       </Text>
-      <Text variant="body" color="mutedForeground" style={styles.message}>
+      <Text variant="body" color="text-tertiary" style={styles.message}>
         {error?.message || 'An unexpected error occurred'}
       </Text>
       <Pressable style={styles.button} onPress={() => router.replace('/' as RelativePathString)} accessibilityRole="button">
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     marginTop: 24,
     paddingHorizontal: 24,
     paddingVertical: 12,
-    backgroundColor: theme.colors['fg-primary'],
+    backgroundColor: theme.colors['text-primary'],
     borderRadius: 8,
   },
 })

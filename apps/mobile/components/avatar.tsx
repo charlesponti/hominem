@@ -96,8 +96,8 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   noImage: {
-    backgroundColor: theme.colors.grayLight,
-    borderColor: theme.colors.border,
+    backgroundColor: theme.colors['emphasis-faint'],
+    borderColor: theme.colors['border-default'],
     borderWidth: 1,
     borderRadius: 1000,
     justifyContent: 'center',

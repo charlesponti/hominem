@@ -1,3 +1,4 @@
+import { AUTH_COPY, SHERPA_AUTH_CONFIG } from '@hominem/auth';
 import { Image } from 'expo-image';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Link } from 'expo-router';
@@ -50,11 +51,11 @@ export function VerifyScreen() {
 
     const normalizedOtp = normalizeOtp(otp);
     if (!normalizedOtp) {
-      setAuthError('Code is required.');
+      setAuthError(AUTH_COPY.otpVerification.codeRequiredError);
       return;
     }
     if (!isValidOtp(normalizedOtp)) {
-      setAuthError('Code must be 6 digits.');
+      setAuthError(AUTH_COPY.otpVerification.codeLengthError);
       return;
     }
 
@@ -69,7 +70,7 @@ export function VerifyScreen() {
       const message =
         error instanceof Error
           ? error.message
-          : 'There was a problem signing in. Our team is working on it.';
+          : AUTH_COPY.otpVerification.verifyFailedError;
       setAuthError(message);
     } finally {
       setIsSubmitting(false);
@@ -96,11 +97,11 @@ export function VerifyScreen() {
       setIsResending(true);
       setAuthError(null);
       await requestEmailOtp(email);
-      setResendMessage('A new code is on the way.');
+      setResendMessage(AUTH_COPY.otpVerification.resendSuccessMessage);
       focusOtpInput();
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : 'Unable to resend verification code.';
+        error instanceof Error ? error.message : AUTH_COPY.otpVerification.resendFailedError;
       setAuthError(message);
       setResendMessage(null);
     } finally {
@@ -109,7 +110,7 @@ export function VerifyScreen() {
   }, [email, focusOtpInput, requestEmailOtp]);
 
   if (isSignedIn) {
-    return <Redirect href={"/(protected)/(tabs)/start" as RelativePathString} />;
+    return <Redirect href={SHERPA_AUTH_CONFIG.defaultPostAuthDestination as RelativePathString} />;
   }
 
   if (!email) {
@@ -132,15 +133,15 @@ export function VerifyScreen() {
             <View style={styles.hero}>
               <Image source={require('~/assets/icon.png')} contentFit="contain" style={styles.logo} />
               <Text variant="header" color="foreground" style={styles.title}>
-                VERIFY
+                {AUTH_COPY.otpVerification.title.toUpperCase()}
               </Text>
-              <Text variant="body" color="mutedForeground" style={styles.subtitle}>
-                Enter the code we sent to your email.
+              <Text variant="body" color="text-tertiary" style={styles.subtitle}>
+                {AUTH_COPY.otpVerification.subtitle}
               </Text>
             </View>
             <View style={styles.formContainer}>
-              <Text style={styles.heading}>VERIFY</Text>
-              <Text style={styles.subheading}>Enter the code we sent to {email}</Text>
+              <Text style={styles.heading}>{AUTH_COPY.otpVerification.formHeading.toUpperCase()}</Text>
+              <Text style={styles.subheading}>{AUTH_COPY.otpVerification.formSubheading(email)}</Text>
               {authError ? (
                 <View testID="auth-error-banner" style={styles.errorContainer}>
                   <Text testID="auth-error-text" style={styles.errorText}>
@@ -194,7 +195,7 @@ export function VerifyScreen() {
                 disabled={isSubmitting || isResending}
                 isLoading={isSubmitting}
                 testID="auth-verify-otp"
-                title="VERIFY"
+                title={AUTH_COPY.otpVerification.verifyButton.toUpperCase()}
                 style={styles.primaryButton}
               />
               <Button
@@ -202,12 +203,12 @@ export function VerifyScreen() {
                 disabled={isSubmitting || isResending}
                 isLoading={isResending}
                 testID="auth-resend-otp"
-                title="RESEND CODE"
+                title={AUTH_COPY.otpVerification.resendButton.toUpperCase()}
                 style={styles.secondaryButton}
               />
               <Link href={"/(auth)" as RelativePathString} asChild>
                 <View style={styles.secondaryActionContainer}>
-                  <Text style={styles.secondaryAction}>USE DIFFERENT EMAIL</Text>
+                  <Text style={styles.secondaryAction}>{AUTH_COPY.otpVerification.changeEmailLink.toUpperCase()}</Text>
                 </View>
               </Link>
             </View>
@@ -270,7 +271,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   subheading: {
-    color: appTheme.colors.mutedForeground,
+    color: appTheme.colors['text-tertiary'],
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '500',
@@ -327,7 +328,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   resendMessage: {
-    color: appTheme.colors.mutedForeground,
+    color: appTheme.colors['text-tertiary'],
     fontSize: 12,
     lineHeight: 18,
     fontWeight: '500',

@@ -12,9 +12,9 @@ import { useActiveChat, useStartChat } from '~/utils/services/chat';
 
 export default function Sherpa() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ intentId?: string; seed?: string }>();
+  const params = useLocalSearchParams<{ chatId?: string; intentId?: string; seed?: string }>();
   const [activeChat, setActiveChat] = useState<ChatType | null>(null);
-  const { isPending: isLoadingActiveChat, refetch: getActiveChat } = useActiveChat();
+  const { isPending: isLoadingActiveChat, refetch: getActiveChat } = useActiveChat(params.chatId);
   const { mutateAsync: startChat, isPending: isStartingChat } = useStartChat({
     userMessage: params.seed || '',
     _sherpaMessage: 'Starting now.',

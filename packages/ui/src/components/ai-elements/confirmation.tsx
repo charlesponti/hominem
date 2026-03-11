@@ -104,16 +104,16 @@ export function ConfirmationBanner({
 }: ConfirmationBannerProps) {
   const icons = {
     info: <Info className="size-5" />,
-    success: <CheckCircle className="size-5 text-green-500" />,
-    warning: <AlertTriangle className="size-5 text-yellow-500" />,
+    success: <CheckCircle className="size-5 text-success" />,
+    warning: <AlertTriangle className="size-5 text-warning" />,
     error: <AlertTriangle className="size-5 text-destructive" />,
     question: <HelpCircle className="size-5" />,
   };
 
   const typeStyles = {
     info: 'border-primary/20 bg-primary/5',
-    success: 'border-green-500/20 bg-green-500/5',
-    warning: 'border-yellow-500/20 bg-yellow-500/5',
+    success: 'border-success/20 bg-success/5',
+    warning: 'border-warning/20 bg-warning/5',
     error: 'border-destructive/20 bg-destructive/5',
     question: 'border-muted bg-muted/50',
   };

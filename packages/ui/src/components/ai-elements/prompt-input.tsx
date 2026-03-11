@@ -29,6 +29,7 @@ interface FileUIPart {
   name: string;
   url?: string;
   id: string;
+  file?: File;
 }
 
 interface PromptInputMessage {
@@ -70,6 +71,7 @@ export function PromptInputProvider({ children }: PromptInputProviderProps) {
       name: file.name,
       url: URL.createObjectURL(file),
       id: `${Date.now()}-${file.name}`,
+      file,
     }));
     setFiles((prev) => [...prev, ...fileParts]);
   }, []);
@@ -141,6 +143,7 @@ export function usePromptInputAttachments() {
         name: file.name,
         url: URL.createObjectURL(file),
         id: `${Date.now()}-${file.name}`,
+        file,
       }));
       setFiles((prev) => [...prev, ...fileParts]);
     }, []);
@@ -221,6 +224,7 @@ export const PromptInput = forwardRef<HTMLFormElement, PromptInputProps>(functio
 ) {
   const [isDragOver, setIsDragOver] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const attachments = useContext(PromptInputAttachmentsContext);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -232,7 +236,10 @@ export const PromptInput = forwardRef<HTMLFormElement, PromptInputProps>(functio
       return;
     }
 
-    const message: PromptInputMessage = { text };
+    const message: PromptInputMessage = {
+      text,
+      ...(attachments?.files.length ? { files: attachments.files } : {}),
+    };
     onSubmit?.(message, e);
 
     if (textarea) {

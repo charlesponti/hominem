@@ -17,6 +17,7 @@ import { getJwks } from '../auth/key-store';
 import {
   createTokenPairForUser,
   isSessionRevoked,
+  revokeByRefreshToken,
   revokeSession,
   rotateRefreshToken,
 } from '../auth/session-store';
@@ -98,6 +99,7 @@ const AUTH_DEVICE_TOKEN_LIMIT_WINDOW_SECONDS = 10 * 60;
 const AUTH_DEVICE_TOKEN_LIMIT_MAX = 120;
 const AUTH_E2E_LOGIN_LIMIT_WINDOW_SECONDS = 60;
 const AUTH_E2E_LOGIN_LIMIT_MAX = 20;
+const AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 interface AuthRateLimitInput {
   bucket: string;
@@ -119,6 +121,75 @@ interface MobileE2eLoginResponse {
     email: string;
     name?: string | null;
   };
+}
+
+function normalizeAuthEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function normalizeOtpCode(otp: string) {
+  return otp.replace(/\D/g, '');
+}
+
+function getCookieValue(cookieHeader: string, name: string) {
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${escapedName}=([^;]+)`));
+  return match?.[1] ?? null;
+}
+
+function appendAuthCookie(headers: Headers, name: string, value: string, maxAge?: number) {
+  const cookieDomain = env.AUTH_COOKIE_DOMAIN.trim();
+  const domainAttribute = cookieDomain.length > 0 ? `; Domain=${cookieDomain}` : '';
+  const maxAgeAttribute = typeof maxAge === 'number' ? `; Max-Age=${maxAge}` : '';
+  headers.append(
+    'set-cookie',
+    `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax${maxAgeAttribute}${domainAttribute}`,
+  );
+}
+
+function appendExpiredAccessTokenCookie(headers: Headers) {
+  appendAuthCookie(headers, 'hominem_access_token', '', 0);
+  headers.append(
+    'set-cookie',
+    `hominem_access_token=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${
+      env.AUTH_COOKIE_DOMAIN.trim().length > 0 ? `; Domain=${env.AUTH_COOKIE_DOMAIN.trim()}` : ''
+    }`,
+  );
+}
+
+function appendRefreshTokenCookie(headers: Headers, refreshToken: string) {
+  appendAuthCookie(headers, 'hominem_refresh_token', refreshToken, AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS);
+}
+
+function appendExpiredRefreshTokenCookie(headers: Headers) {
+  appendAuthCookie(headers, 'hominem_refresh_token', '', 0);
+  headers.append(
+    'set-cookie',
+    `hominem_refresh_token=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${
+      env.AUTH_COOKIE_DOMAIN.trim().length > 0 ? `; Domain=${env.AUTH_COOKIE_DOMAIN.trim()}` : ''
+    }`,
+  );
+}
+
+function appendTokenPairCookies(
+  headers: Headers,
+  input: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+  },
+) {
+  appendAuthCookie(headers, 'hominem_access_token', input.accessToken, input.expiresIn);
+  appendRefreshTokenCookie(headers, input.refreshToken);
+}
+
+function jsonWithHeaders(body: Record<string, unknown>, status: number, headers?: Headers) {
+  const responseHeaders = new Headers(headers);
+  responseHeaders.set('content-type', 'application/json');
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: responseHeaders,
+  });
 }
 
 function getHeaderCarrier(c: { req: { raw: Request } }) {
@@ -155,21 +226,16 @@ async function resolveAuthUserId(c: {
   }
 
   const cookieHeader = c.req.header('cookie') ?? '';
-  const tokenMatch = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/);
-  const tokenValue = tokenMatch?.[1];
+  const tokenValue = getCookieValue(cookieHeader, 'hominem_access_token');
   if (tokenValue) {
     try {
       const decoded = decodeURIComponent(tokenValue);
       const claims = await verifyAccessToken(decoded);
       if (claims?.sub) return claims.sub;
     } catch {
-      // invalid cookie token — fall through
+      return null;
     }
   }
-
-  // 3. Better Auth session cookie
-  const session = await betterAuthServer.api.getSession(getHeaderCarrier(c));
-  if (session?.user?.id) return session.user.id;
 
   return null;
 }
@@ -194,8 +260,7 @@ async function resolveAuthSessionId(c: {
   }
 
   const cookieHeader = c.req.header('cookie') ?? '';
-  const tokenMatch = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/);
-  const tokenValue = tokenMatch?.[1];
+  const tokenValue = getCookieValue(cookieHeader, 'hominem_access_token');
   if (tokenValue) {
     try {
       const decoded = decodeURIComponent(tokenValue);
@@ -223,65 +288,31 @@ async function createEmailOtpAuthResponse(dbUser: {
   name: string | null;
   is_admin: boolean;
 }) {
-  try {
-    const tokenPair = await createTokenPairForUser({
-      userId: dbUser.id,
-      role: dbUser.is_admin ? 'admin' : 'user',
-      amr: ['email_otp'],
-    });
+  const tokenPair = await createTokenPairForUser({
+    userId: dbUser.id,
+    role: dbUser.is_admin ? 'admin' : 'user',
+    amr: ['email_otp'],
+  });
 
-    return new Response(
-      JSON.stringify({
-        user: {
-          id: dbUser.id,
-          email: dbUser.email,
-          ...(dbUser.name ? { name: dbUser.name } : {}),
-        },
-        accessToken: tokenPair.accessToken,
-        refreshToken: tokenPair.refreshToken,
-        expiresIn: tokenPair.expiresIn,
-        tokenType: tokenPair.tokenType,
-      }),
-      {
-        status: 200,
-        headers: {
-          'content-type': 'application/json',
-        },
+  return new Response(
+    JSON.stringify({
+      user: {
+        id: dbUser.id,
+        email: dbUser.email,
+        ...(dbUser.name ? { name: dbUser.name } : {}),
       },
-    );
-  } catch (sessionError) {
-    logger.warn('[auth:email-otp] session creation failed, issuing access token only', {
-      sessionError,
-    });
-
-    const token = await issueAccessToken({
-      sub: dbUser.id,
-      sid: crypto.randomUUID(),
-      scope: ['api:read', 'api:write'],
-      role: dbUser.is_admin ? 'admin' : 'user',
-      amr: ['email_otp'],
-    });
-
-    return new Response(
-      JSON.stringify({
-        user: {
-          id: dbUser.id,
-          email: dbUser.email,
-          ...(dbUser.name ? { name: dbUser.name } : {}),
-        },
-        accessToken: token.accessToken,
-        refreshToken: '',
-        expiresIn: token.expiresIn,
-        tokenType: token.tokenType,
-      }),
-      {
-        status: 200,
-        headers: {
-          'content-type': 'application/json',
-        },
+      accessToken: tokenPair.accessToken,
+      refreshToken: tokenPair.refreshToken,
+      expiresIn: tokenPair.expiresIn,
+      tokenType: tokenPair.tokenType,
+    }),
+    {
+      status: 200,
+      headers: {
+        'content-type': 'application/json',
       },
-    );
-  }
+    },
+  );
 }
 
 async function findOrCreateEmailOtpUser(input: {
@@ -414,6 +445,19 @@ function getBearerToken(headerValue?: string) {
   }
 
   return headerValue.slice(7)
+}
+
+function getRefreshTokenFromCookieHeader(cookieHeader: string) {
+  const rawRefreshToken = getCookieValue(cookieHeader, 'hominem_refresh_token');
+  if (!rawRefreshToken) {
+    return null;
+  }
+
+  try {
+    return decodeURIComponent(rawRefreshToken);
+  } catch {
+    return rawRefreshToken;
+  }
 }
 
 async function hasRecentPasskeyBearerAuth(c: Context<AppEnv>) {
@@ -647,11 +691,15 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
 authRoutes.post('/email-otp/send', zValidator('json', emailOtpRequestSchema), async (c) => {
   try {
     const payload = c.req.valid('json');
+    const normalizedPayload = {
+      ...payload,
+      email: normalizeAuthEmail(payload.email),
+    };
     const response = await callBetterAuthPluginEndpoint({
       request: c.req.raw,
       path: '/email-otp/send-verification-otp',
       method: 'POST',
-      body: payload as Record<string, unknown>,
+      body: normalizedPayload as Record<string, unknown>,
     });
     const body = await response.text();
     return new Response(body, {
@@ -666,11 +714,16 @@ authRoutes.post('/email-otp/send', zValidator('json', emailOtpRequestSchema), as
 authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), async (c) => {
   try {
     const payload = c.req.valid('json');
+    const normalizedPayload = {
+      ...payload,
+      email: normalizeAuthEmail(payload.email),
+      otp: normalizeOtpCode(payload.otp),
+    };
 
     if (isTestOtpStoreEnabled()) {
       const consumption = consumeTestOtp({
-        email: payload.email,
-        otp: payload.otp,
+        email: normalizedPayload.email,
+        otp: normalizedPayload.otp,
         type: 'sign-in',
       });
 
@@ -685,25 +738,30 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
       if (consumption.status === 'replayed') {
         logger.warn('[auth:email-otp:test] replay attempt rejected', {
           clientIp: getClientIp(c),
-          emailHash: createHash('sha256').update(payload.email).digest('hex').slice(0, 16),
+          emailHash: createHash('sha256').update(normalizedPayload.email).digest('hex').slice(0, 16),
           type: 'sign-in',
         });
         return c.json({ error: 'otp_replayed' }, 400);
       }
 
       const dbUser = await findOrCreateEmailOtpUser({
-        email: payload.email,
-        name: payload.name,
+        email: normalizedPayload.email,
+        name: normalizedPayload.name,
       })
 
       if (!dbUser) {
         return c.json({ error: 'user_not_found' }, 400)
       }
 
-      return createEmailOtpAuthResponse(dbUser)
+      try {
+        return await createEmailOtpAuthResponse(dbUser)
+      } catch (error) {
+        logger.error('[auth:email-otp:test] failed to create canonical session', { error })
+        return c.json({ error: 'sign_in_failed' }, 500)
+      }
     }
 
-    return signInWithBetterAuthEmailOtp(c, payload);
+    return signInWithBetterAuthEmailOtp(c, normalizedPayload);
   } catch {
     return c.json({ error: 'email_otp_verify_failed' }, 400);
   }
@@ -739,14 +797,23 @@ authRoutes.get('/test/otp/latest', zValidator('query', testOtpQuerySchema), asyn
 });
 
 authRoutes.post('/logout', async (c) => {
+  const cookieHeader = c.req.header('cookie') ?? '';
+  const refreshToken = getRefreshTokenFromCookieHeader(cookieHeader);
+
   const sessionId = await resolveAuthSessionId(c);
   if (sessionId) {
     await revokeSession(sessionId);
   }
+  if (refreshToken) {
+    await revokeByRefreshToken(refreshToken);
+  }
   await betterAuthServer.api.signOut({
     ...getHeaderCarrier(c),
   });
-  return c.json({ success: true });
+  const headers = new Headers();
+  appendExpiredAccessTokenCookie(headers);
+  appendExpiredRefreshTokenCookie(headers);
+  return jsonWithHeaders({ success: true }, 200, headers);
 });
 
 authRoutes.get('/session', async (c) => {
@@ -758,18 +825,24 @@ authRoutes.get('/session', async (c) => {
 
   const authHeader = c.req.header('authorization') ?? '';
   let bearerToken: string | null = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  let tokenSource: 'authorization' | 'cookie' | null = bearerToken ? 'authorization' : null;
+  const cookieHeader = c.req.header('cookie') ?? '';
 
   if (!bearerToken) {
-    const cookieHeader = c.req.header('cookie') ?? '';
-    const match = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/);
-    const rawValue = match?.[1];
+    const rawValue = getCookieValue(cookieHeader, 'hominem_access_token');
     if (rawValue) {
       try {
         bearerToken = decodeURIComponent(rawValue);
       } catch {
         bearerToken = rawValue;
       }
+      tokenSource = 'cookie';
     }
+  }
+
+  const unauthorizedHeaders = new Headers();
+  if (tokenSource === 'cookie') {
+    appendExpiredAccessTokenCookie(unauthorizedHeaders);
   }
 
   if (!bearerToken) {
@@ -780,12 +853,12 @@ authRoutes.get('/session', async (c) => {
     const claims = await verifyAccessToken(bearerToken);
     const revoked = await isSessionRevoked(claims.sid);
     if (revoked) {
-      return c.json({ isAuthenticated: false, user: null }, 401);
+      return jsonWithHeaders({ isAuthenticated: false, user: null }, 401, unauthorizedHeaders);
     }
 
     const userRecord = await UserAuthService.findByIdOrEmail({ id: claims.sub });
     if (!userRecord) {
-      return c.json({ isAuthenticated: false, user: null }, 401);
+      return jsonWithHeaders({ isAuthenticated: false, user: null }, 401, unauthorizedHeaders);
     }
 
     return c.json({
@@ -798,19 +871,38 @@ authRoutes.get('/session', async (c) => {
         ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
         ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
       },
+      accessToken: bearerToken,
+      expiresIn:
+        typeof claims.exp === 'number'
+          ? Math.max(claims.exp - Math.floor(Date.now() / 1000), 0)
+          : undefined,
     });
   } catch {
-    return c.json({ isAuthenticated: false, user: null }, 401);
+    return jsonWithHeaders({ isAuthenticated: false, user: null }, 401, unauthorizedHeaders);
   }
 });
 
-authRoutes.post('/refresh', zValidator('json', refreshTokenSchema), async (c) => {
+authRoutes.post('/refresh', async (c) => {
   // Clean refresh endpoint matching the single-path architecture spec
   // POST /api/auth/refresh
-  // Input: { refreshToken }
+  // Input: { refreshToken } or hominem_refresh_token cookie
   // Output: { accessToken, refreshToken, expiresIn }
+  const cookieHeader = c.req.header('cookie') ?? '';
+  const cookieRefreshToken = getRefreshTokenFromCookieHeader(cookieHeader);
+  const payload = await c.req.json().catch(() => null);
+  const parsedPayload = payload ? refreshTokenSchema.safeParse(payload) : null;
 
-  const { refreshToken } = c.req.valid('json');
+  if (parsedPayload && !parsedPayload.success) {
+    return c.json({ error: 'invalid_request', message: parsedPayload.error.message }, 400);
+  }
+
+  const refreshToken = parsedPayload?.success
+    ? parsedPayload.data.refreshToken
+    : cookieRefreshToken;
+
+  if (!refreshToken) {
+    return c.json({ error: 'invalid_request', message: 'Refresh token is required.' }, 400);
+  }
 
   const refreshRateLimit = await enforceAuthRateLimit(c, {
     bucket: 'refresh-token-standard',
@@ -829,7 +921,12 @@ authRoutes.post('/refresh', zValidator('json', refreshTokenSchema), async (c) =>
       error: rotated.error,
       clientIp: getClientIp(c),
     });
-    return c.json(
+    const unauthorizedHeaders = new Headers();
+    if (cookieRefreshToken) {
+      appendExpiredAccessTokenCookie(unauthorizedHeaders);
+      appendExpiredRefreshTokenCookie(unauthorizedHeaders);
+    }
+    return jsonWithHeaders(
       {
         error: rotated.error,
         message:
@@ -838,15 +935,25 @@ authRoutes.post('/refresh', zValidator('json', refreshTokenSchema), async (c) =>
             : 'Invalid or revoked refresh token. Please sign in again.',
       },
       401,
+      unauthorizedHeaders,
     );
   }
 
-  return c.json({
-    accessToken: rotated.accessToken,
-    refreshToken: rotated.refreshToken,
-    expiresIn: rotated.expiresIn,
-    tokenType: rotated.tokenType,
-  });
+  const headers = new Headers();
+  if (cookieRefreshToken) {
+    appendTokenPairCookies(headers, rotated);
+  }
+
+  return jsonWithHeaders(
+    {
+      accessToken: rotated.accessToken,
+      refreshToken: rotated.refreshToken,
+      expiresIn: rotated.expiresIn,
+      tokenType: rotated.tokenType,
+    },
+    200,
+    headers,
+  );
 });
 
 authRoutes.post('/verify', async (c) => {
@@ -903,13 +1010,23 @@ authRoutes.post('/token', async (c) => {
   }
 
   const parsed = refreshTokenSchema.safeParse(payload);
-  if (!parsed.success) {
-    return c.json({ error: 'invalid_request', message: parsed.error.message }, 400);
+  const refreshToken = parsed.success
+    ? parsed.data.refreshToken
+    : getRefreshTokenFromCookieHeader(c.req.header('cookie') ?? '');
+
+  if (!refreshToken) {
+    return c.json(
+      {
+        error: 'invalid_request',
+        message: parsed.success ? 'Refresh token is required.' : parsed.error.message,
+      },
+      400,
+    );
   }
 
   const tokenRateLimit = await enforceAuthRateLimit(c, {
     bucket: 'refresh-token',
-    identifier: `${getClientIp(c)}:${parsed.data.refreshToken.slice(0, 16)}`,
+    identifier: `${getClientIp(c)}:${refreshToken.slice(0, 16)}`,
     windowSec: AUTH_REFRESH_LIMIT_WINDOW_SECONDS,
     max: AUTH_REFRESH_LIMIT_MAX,
   });
@@ -917,7 +1034,7 @@ authRoutes.post('/token', async (c) => {
     return tokenRateLimit;
   }
 
-  const rotated = await rotateRefreshToken(parsed.data.refreshToken);
+  const rotated = await rotateRefreshToken(refreshToken);
   if (!rotated.ok) {
     return c.json({ error: rotated.error }, 401);
   }
@@ -964,17 +1081,24 @@ authRoutes.post('/token-from-session', async (c) => {
       amr: ['passkey'],
     });
 
-    return c.json({
-      user: {
-        id: dbUser.id,
-        email: dbUser.email,
-        ...(dbUser.name ? { name: dbUser.name } : {}),
+    const headers = new Headers();
+    appendTokenPairCookies(headers, tokenPair);
+
+    return jsonWithHeaders(
+      {
+        user: {
+          id: dbUser.id,
+          email: dbUser.email,
+          ...(dbUser.name ? { name: dbUser.name } : {}),
+        },
+        accessToken: tokenPair.accessToken,
+        refreshToken: tokenPair.refreshToken,
+        expiresIn: tokenPair.expiresIn,
+        tokenType: tokenPair.tokenType,
       },
-      accessToken: tokenPair.accessToken,
-      refreshToken: tokenPair.refreshToken,
-      expiresIn: tokenPair.expiresIn,
-      tokenType: tokenPair.tokenType,
-    });
+      200,
+      headers,
+    );
   } catch (err) {
     logger.error('[auth:token-from-session] failed', { err });
     return c.json({ error: 'token_exchange_failed' }, 500);
@@ -1136,66 +1260,10 @@ authRoutes.post('/passkey/auth/verify', zValidator('json', passkeyAuthVerifySche
       });
     }
 
-    // Sign-in flow: mint canonical app token pair, same contract as OTP verify
-    try {
-      const parsed = JSON.parse(responseText) as {
-        user?: { id?: string; email?: string; name?: string };
-        session?: { userId?: string };
-      };
-      // Better Auth passkey endpoint returns { session: { userId, ... } }, not { user: { id, ... } }
-      const userId = parsed.user?.id || parsed.session?.userId;
-
-      if (!userId) {
-        logger.warn(
-          '[auth:passkey] verify-authentication succeeded but no user.id or session.userId in response',
-          { parsed },
-        );
-        // Fall through: return Better Auth response without app tokens
-        return new Response(responseText, {
-          status: response.status,
-          headers: copyHeadersWithSetCookie(response.headers),
-        });
-      }
-
-      const dbUser = await db
-        .selectFrom('users')
-        .selectAll()
-        .where('id', '=', userId)
-        .executeTakeFirst();
-
-      if (!dbUser) {
-        return c.json({ error: 'user_not_found' }, 400);
-      }
-
-      const tokenPair = await createTokenPairForUser({
-        userId,
-        role: dbUser.is_admin ? 'admin' : 'user',
-        amr: ['passkey'],
-      });
-
-      // Forward Better Auth session cookies so enrollment/management features work
-      const betterAuthCookies = copyHeadersWithSetCookie(response.headers);
-      const responseHeaders = new Headers(betterAuthCookies);
-      responseHeaders.set('content-type', 'application/json');
-
-      return new Response(
-        JSON.stringify({
-          user: {
-            id: dbUser.id,
-            email: dbUser.email,
-            ...(dbUser.name ? { name: dbUser.name } : {}),
-          },
-          accessToken: tokenPair.accessToken,
-          refreshToken: tokenPair.refreshToken,
-          expiresIn: tokenPair.expiresIn,
-          tokenType: tokenPair.tokenType,
-        }),
-        { status: 200, headers: responseHeaders },
-      );
-    } catch (mintError) {
-      logger.error('[auth:passkey] token minting failed', { mintError });
-      return c.json({ error: 'token_mint_failed' }, 500);
-    }
+    return new Response(responseText, {
+      status: response.status,
+      headers: copyHeadersWithSetCookie(response.headers),
+    });
   } catch {
     return c.json({ error: 'passkey_authentication_failed' }, 401);
   }

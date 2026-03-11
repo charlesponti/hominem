@@ -9,7 +9,6 @@ const clientSchema = z.object({
 const serverSchema = z.object({
   VITE_PUBLIC_API_URL: z.string().url(),
   VITE_R2_DOMAIN: z.string().optional(),
-  AUTH_COOKIE_DOMAIN: z.string().optional(),
   PLAID_CLIENT_ID: z.string().optional(),
   PLAID_API_KEY: z.string().optional(),
   PLAID_ENV: z.enum(['sandbox', 'development', 'production']).default('sandbox'),
