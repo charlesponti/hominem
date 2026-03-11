@@ -12,6 +12,10 @@
       "react-native": "./src/components/ui/text-field.native.tsx",
       "default": "./src/components/ui/text-field.tsx"
     },
+    "./text-area": {
+      "react-native": "./src/components/ui/text-area.native.tsx",
+      "default": "./src/components/ui/text-area.tsx"
+    },
     "./input": "./src/components/ui/input.tsx",
     "./label": "./src/components/ui/label.tsx",
     "./textarea": "./src/components/ui/textarea.tsx",
@@ -24,6 +28,8 @@
     "./hooks": "./src/hooks/index.ts",
     "./auth-server-routes": "./src/components/auth/web-auth-route-servers.ts",
     "./components/ui/*": "./src/components/ui/*.tsx",
+    "./components/ui/text-field.native": "./src/components/ui/text-field.native.tsx",
+    "./components/ui/text-area.native": "./src/components/ui/text-area.native.tsx",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts",
     "./lib/*": "./src/lib/*.ts",

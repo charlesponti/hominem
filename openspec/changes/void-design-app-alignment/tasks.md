@@ -80,8 +80,8 @@
 
 - [x] 9.1 Audit `packages/ui` for existing shared components; document what already covers each primitive category
 - [x] 9.2 Create `Button` (web + mobile) with standard variants: default, primary, destructive, ghost, link; sizes: sm, md, lg
-- [ ] 9.3 Create `TextField` (web + mobile) — wraps `<input type="text|email|password|search">` / `TextInput` with consistent styling, label wiring, error state, disabled state
-- [ ] 9.4 Create `TextArea` (web + mobile) — wraps `<textarea>` / multiline `TextInput`
+- [x] 9.3 Create `TextField` (web + mobile) — wraps `<input type="text|email|password|search">` / `TextInput` with consistent styling, label wiring, error state, disabled state
+- [x] 9.4 Create `TextArea` (web + mobile) — wraps `<textarea>` / multiline `TextInput`
 - [ ] 9.5 Create `Field` — label + control + helper text + error text slot; wires `htmlFor`/`accessibilityLabelledBy` automatically
 - [ ] 9.6 Create `Form` (web) — semantic `<form>` wrapper with consistent gap and submit handling
 - [ ] 9.7 Create `Stack` layout primitive (web + mobile) — vertical flex container with gap token, optional dividers

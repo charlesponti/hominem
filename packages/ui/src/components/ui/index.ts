@@ -2,6 +2,7 @@ export * from './accordion';
 export * from './alert';
 export * from './field';
 export * from './text-field';
+export * from './text-area';
 export * from './text-area-field';
 export * from './avatar';
 export * from './button';
