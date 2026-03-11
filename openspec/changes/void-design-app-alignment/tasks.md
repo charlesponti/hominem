@@ -9,12 +9,12 @@
 
 ## Phase 2: Motion and Animation
 
-- [ ] 2.1 Identify all custom `@keyframes` and ad-hoc `transition` or `animation` properties in app CSS/JSX
-- [ ] 2.2 Replace with canonical web classes (`.void-anim-enter`, `.void-anim-exit`, directional variants) from `animations.css`
-- [ ] 2.3 Replace mobile custom animations with hooks from `apps/mobile/components/animated/fade-in.tsx` (`FadeIn`, `useVoidEnter()`, `useVoidExit()`)
-- [ ] 2.4 Remove all hover `transform`, `scale`, and related decorative effects
-- [ ] 2.5 Audit all motion for `prefers-reduced-motion` compliance (should disable or respect system preference)
-- [ ] 2.6 Remove motion-based UI patterns that require animation for state clarity (use color, position, or text instead)
+- [x] 2.1 Identify all custom `@keyframes` and ad-hoc `transition` or `animation` properties in app CSS/JSX
+- [x] 2.2 Replace with canonical web classes (`.void-anim-enter`, `.void-anim-exit`, directional variants) from `animations.css`
+- [x] 2.3 Replace mobile custom animations with hooks from `apps/mobile/components/animated/fade-in.tsx` (`FadeIn`, `useVoidEnter()`, `useVoidExit()`)
+- [x] 2.4 Remove all hover `transform`, `scale`, and related decorative effects
+- [x] 2.5 Audit all motion for `prefers-reduced-motion` compliance (should disable or respect system preference)
+- [x] 2.6 Remove motion-based UI patterns that require animation for state clarity (use color, position, or text instead)
 
 ## Phase 3: Depth and Visual Hierarchy
 
