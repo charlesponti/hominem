@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { View, Button, Text, StyleSheet, Animated } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 
 const SWIPE_THRESHOLD = 50;
 
@@ -21,7 +22,7 @@ const App = () => {
       if (nativeEvent.translationY > SWIPE_THRESHOLD) {
         Animated.timing(translateY, {
           toValue: 500,
-          duration: 200,
+          duration: VOID_MOTION_DURATION_STANDARD,
           useNativeDriver: true,
         }).start(() => setIsCardVisible(false));
       } else {

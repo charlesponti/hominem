@@ -31,6 +31,14 @@ interface EmailOtpErrorPayload {
   message?: string;
 }
 
+interface FormDataReader {
+  get(name: string): FormDataEntryValue | null;
+}
+
+function hasFormDataGet(value: object): value is FormDataReader {
+  return 'get' in value;
+}
+
 async function appendTokenCookies(
   headers: Headers,
   responseHeaders: Headers,
@@ -84,6 +92,9 @@ export function createAuthEntryLoader(
 export function createAuthEntryAction(config: AuthEntryRouteConfig) {
   return async function action({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
+    if (!hasFormDataGet(formData)) {
+      return { error: 'Invalid form submission' };
+    }
     const email = String(formData.get('email') ?? '').trim().toLowerCase();
     const next = String(formData.get('next') ?? config.defaultRedirect);
 
@@ -136,6 +147,9 @@ export function createAuthVerifyLoader(
 export function createAuthVerifyAction(config: AuthVerifyRouteConfig) {
   return async function action({ request }: { request: Request }) {
     const formData = await request.formData();
+    if (!hasFormDataGet(formData)) {
+      return { error: 'Invalid form submission' };
+    }
     const email = String(formData.get('email') ?? '').trim().toLowerCase();
     const otp = String(formData.get('otp') ?? '').replace(/\D/g, '');
     const next = resolveSafeAuthRedirect(

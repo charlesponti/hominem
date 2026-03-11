@@ -133,22 +133,22 @@ export default function ErrorBoundary({ error }: ErrorBoundaryProps) {
       <div className="h-full w-full flex flex-col sm:max-w-3xl px-2">
         <Header />
         <main className="pt-16 p-4 container mx-auto">
-          <div className="flex flex-col items-center text-center max-w-2xl mx-auto py-8">
+          <div className="flex flex-col items-center text-center max-w-2xl mx-auto py-8 gap-6">
             {/* Error Icon */}
-            <div className={`mb-6 ${errorDetails.iconColor}`}>{errorDetails.icon}</div>
+            <div className={errorDetails.iconColor}>{errorDetails.icon}</div>
 
             {/* Error Message */}
-            <div className="mb-4">
+            <div>
               <PageTitle title={errorDetails.message} />
             </div>
 
             {/* Error Details */}
-            <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-md font-light leading-relaxed">
+            <p className="body-1 text-muted-foreground max-w-md">
               {errorDetails.details}
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mb-8">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <Button onClick={handleRetry} size="lg" className="flex items-center gap-2">
                 <RefreshCw className="size-4" />
                 Retry
@@ -175,7 +175,7 @@ export default function ErrorBoundary({ error }: ErrorBoundaryProps) {
 
             {/* Suggestions */}
             {errorDetails.suggestions.length > 0 && (
-              <div className="w-full border border-border/30 p-6 mb-6 text-left">
+              <div className="w-full border border-border/30 p-6 text-left">
                 <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                   <AlertCircle className="size-4" />
                   What you can try:
@@ -216,11 +216,11 @@ export default function ErrorBoundary({ error }: ErrorBoundaryProps) {
 
             {/* Developer Stack Trace */}
             {stack && (
-              <div className="w-full mt-8">
+              <div className="w-full flex flex-col gap-3">
                 <button
                   type="button"
                   onClick={() => setShowStack(!showStack)}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
                 >
                   <Bug className="size-4" />
                   <span>Developer Info</span>

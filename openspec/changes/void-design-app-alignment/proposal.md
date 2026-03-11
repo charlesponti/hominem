@@ -13,12 +13,18 @@ The app layer contains styling, interaction patterns, and component usage that d
 - Audit icon usage: keep only icons that communicate information; replace decorative emojis with semantic meaning or remove, uniformly across all apps.
 - Ensure all motion respects `prefers-reduced-motion` via canonical animation rules on all platforms.
 - **Achieve perfect 1-1 design alignment across mobile, desktop web, and notes web apps**: identical visual hierarchy, spacing, typography rendering, focus states, motion timing, color application, and interaction feedback on all three platforms.
+- **Replace raw platform primitives in feature code** with shared higher-level design system components (Button, TextField, Field, Form, Stack, Inline, Screen, Card, Heading, Text) so feature code expresses product intent rather than rendering mechanics.
+- **Define core primitive components** for every high-frequency element category: inputs and form controls, layout primitives, typography primitives, interactive actions, page/screen shells.
+- **Standardize responsive layout** through shared layout components (Container, SidebarLayout, SplitLayout, CenteredLayout) and a canonical breakpoint token set.
+- **Prevent regression** via ESLint rules, Storybook interaction tests, visual regression snapshots, and updated review checklists.
 
 ## Capabilities
 
 ### New Capabilities
 
 - `void-app-design-alignment`: Enforces VOID design system philosophy (clarity, accessibility, technical honesty) across app routing, component layout, styling, motion, and icon usage.
+- `ui-primitive-system`: Shared design system components in `packages/ui` that replace raw platform elements in feature code — Button, TextField, TextArea, Field, Form, Stack, Inline, Screen, Page, Card, Heading, Text, Container, SelectField, and layout shells.
+- `responsive-layout-system`: Canonical layout primitives and breakpoint tokens that standardize page structure and responsive behavior across web, mobile, and Electron.
 
 ### Modified Capabilities
 

@@ -73,10 +73,10 @@ export function ProposalList({
   if (items.length === 0) return null;
 
   return (
-    <section aria-labelledby="review-heading">
+    <section aria-labelledby="review-heading" className="flex flex-col gap-3">
       <h2
         id="review-heading"
-        className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3"
+        className="text-xs font-mono text-muted-foreground uppercase tracking-wider"
       >
         Needs Review
       </h2>

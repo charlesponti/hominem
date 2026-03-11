@@ -562,6 +562,16 @@
   outline-offset: 2px;
 }
 
+/* void-focus: canonical focus state for interactive elements.
+   Suppresses browser default; shows accent outline on keyboard focus only. */
+@utility void-focus {
+  outline: none;
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
 @utility transition-colors {
   transition-property: background-color, border-color, color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);

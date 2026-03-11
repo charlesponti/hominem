@@ -20,9 +20,11 @@ export const IntentPill = ({ intent, delay = 0, onPress }: IntentPillProps) => {
       layout={Layout.duration(VOID_MOTION_DURATION_STANDARD)}
     >
       <Pressable onPress={() => onPress(intent)} style={({ pressed }) => [styles.pill, pressed && styles.pressed]}>
-        <View style={styles.emojiCircle}>
-          <Text variant="title">{intent.emoji ?? '+'}</Text>
-        </View>
+        {intent.emoji && (
+          <View style={styles.emojiCircle}>
+            <Text variant="title">{intent.emoji}</Text>
+          </View>
+        )}
         <Text variant="title" color="foreground">
           {intent.title.toUpperCase()}
         </Text>
@@ -44,7 +46,6 @@ const styles = StyleSheet.create({
     borderColor: theme.colors['border-default'],
   },
   pressed: {
-    transform: [{ scale: 0.98 }],
     opacity: 0.8,
   },
   emojiCircle: {

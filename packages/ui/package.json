@@ -4,7 +4,14 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./button": "./src/components/ui/button.tsx",
+    "./button": {
+      "react-native": "./src/components/ui/button.native.tsx",
+      "default": "./src/components/ui/button.tsx"
+    },
+    "./text-field": {
+      "react-native": "./src/components/ui/text-field.native.tsx",
+      "default": "./src/components/ui/text-field.tsx"
+    },
     "./input": "./src/components/ui/input.tsx",
     "./label": "./src/components/ui/label.tsx",
     "./textarea": "./src/components/ui/textarea.tsx",
@@ -31,7 +38,9 @@
     "lint": "bunx oxlint ./src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@hominem/auth": "workspace:*",
@@ -67,6 +76,12 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
+    "@storybook/addon-essentials": "^8.0.0",
+    "@storybook/addon-interactions": "^8.0.0",
+    "@storybook/react": "^8.0.0",
+    "@storybook/react-vite": "^8.0.0",
+    "@storybook/test": "^8.0.0",
+    "@tailwindcss/vite": "^4.1.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",
@@ -74,6 +89,8 @@
     "@types/react-dom": "19.1.7",
     "jsdom": "^25.0.1",
     "react": "19.2.0",
+    "react-native": "0.83.2",
+    "storybook": "^8.0.0",
     "typescript": "5.9.3",
     "vite": "7.3.1",
     "vite-tsconfig-paths": "6.0.3",

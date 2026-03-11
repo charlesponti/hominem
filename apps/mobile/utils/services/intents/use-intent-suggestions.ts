@@ -12,10 +12,10 @@ export type IntentSuggestion = {
 }
 
 const STATIC_DEFAULTS: IntentSuggestion[] = [
-  { id: 'create_image', title: 'Create image', emoji: '🎨', seed_prompt: 'Create an illustration' },
-  { id: 'help_me_learn', title: 'Help me learn', emoji: '📚', seed_prompt: 'Teach me something new' },
-  { id: 'write_anything', title: 'Write anything', emoji: '📝', seed_prompt: 'Draft a concise note' },
-  { id: 'boost_my_day', title: 'Boost my day', emoji: '✨', seed_prompt: 'Share a quick boost' },
+  { id: 'create_image', title: 'Create image', seed_prompt: 'Create an illustration' },
+  { id: 'help_me_learn', title: 'Help me learn', seed_prompt: 'Teach me something new' },
+  { id: 'write_anything', title: 'Write anything', seed_prompt: 'Draft a concise note' },
+  { id: 'boost_my_day', title: 'Boost my day', seed_prompt: 'Share a quick boost' },
 ]
 
 const CACHE_KEY = '@intent_suggestions_cache'

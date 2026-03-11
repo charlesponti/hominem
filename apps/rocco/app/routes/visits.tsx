@@ -23,7 +23,7 @@ export default function VisitsPage() {
   if (!isAuthenticated) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4">My Visits</h1>
+        <h1 className="heading-3 mb-4">My Visits</h1>
         <p className="text-muted-foreground">Sign in to view visits.</p>
       </div>
     );
@@ -49,7 +49,7 @@ export default function VisitsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">My Visits</h1>
+        <h1 className="heading-3 mb-2">My Visits</h1>
         <p className="text-muted-foreground">Track your visits to places</p>
       </div>
 
@@ -91,7 +91,7 @@ export default function VisitsPage() {
               id="sort"
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest')}
-              className="flex h-10 w-full border border-input bg-transparent px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled: md:text-sm"
+              className="flex h-10 w-full border border-input bg-transparent px-3 py-2 text-base void-focus disabled:cursor-not-allowed disabled: md:text-sm"
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>

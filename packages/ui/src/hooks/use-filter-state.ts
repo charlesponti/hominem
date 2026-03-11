@@ -11,7 +11,7 @@ export function useFilterState<T extends Record<string, unknown>>(
 ) {
   const { initialFilters, onFiltersChange, debounceMs } = options;
   const [filters, setFiltersState] = useState<T>(initialFilters);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setFilters = useCallback(
     (newFilters: T | ((prev: T) => T)) => {

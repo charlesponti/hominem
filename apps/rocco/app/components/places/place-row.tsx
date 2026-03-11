@@ -51,7 +51,7 @@ export default function PlaceRow({
       onMouseLeave={onMouseLeave}
       data-selected={isSelected}
     >
-      <Link to={href} viewTransition className="flex-1 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <Link to={href} viewTransition className="flex-1 min-w-0 void-focus">
         <div className="flex items-center gap-4">
           <div className="size-8 overflow-hidden shrink-0 border border-border flex items-center justify-center">
             {resolvedImage ? (
@@ -78,7 +78,7 @@ export default function PlaceRow({
               {addedBy && (
                 <div className="flex items-center gap-1.5">
                   {addedBy.name ? (
-                    <span className="text-[0.65rem] text-muted-foreground/60 truncate">
+                    <span className="body-4 text-muted-foreground/60 truncate">
                       {addedBy.name.split(' ')[0]}
                     </span>
                   ) : null}
