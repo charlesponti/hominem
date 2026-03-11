@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 
 import { theme } from '~/theme'
-import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
+import { VOID_EASING_ENTER, VOID_MOTION_ENTER } from '~/theme/motion'
 import { borderStyle } from '~/theme/styles'
 
 export const Card = ({ children }: { children: React.ReactNode }) => {
@@ -14,7 +14,7 @@ export const Card = ({ children }: { children: React.ReactNode }) => {
   }))
 
   useEffect(() => {
-    opacity.value = withTiming(1, { duration: VOID_MOTION_DURATION_STANDARD })
+    opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER })
   }, [opacity])
 
   return (

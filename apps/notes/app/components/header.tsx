@@ -1,21 +1,13 @@
 'use client';
 
 import { Header, type NavItem } from '@hominem/ui';
-import { Sparkles } from 'lucide-react';
+import { Home, Sparkles, NotebookText } from 'lucide-react';
 
 const APP_NAME = 'Animus';
 
 const navItems: NavItem[] = [
-  {
-    title: 'Notes',
-    url: '/notes',
-    icon: Sparkles,
-  },
-  {
-    title: 'Chat',
-    url: '/chat',
-    icon: Sparkles,
-  },
+  { title: 'Home', url: '/home', icon: Home },
+  { title: 'Notes', url: '/notes', icon: NotebookText },
 ];
 
 export default function NotesHeader() {

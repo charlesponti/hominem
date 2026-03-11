@@ -1,24 +1,32 @@
 import { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
-import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
+import {
+  VOID_EASING_ENTER,
+  VOID_EASING_EXIT,
+  VOID_ENTER_TRANSLATE_Y,
+  VOID_EXIT_TRANSLATE_Y,
+  VOID_MOTION_ENTER,
+  VOID_MOTION_EXIT,
+} from '~/theme/motion'
 import { Text, theme } from '~/theme'
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export const BottomSheet = ({ isOpen, toggleSheet }: { isOpen: boolean; toggleSheet: () => void }) => {
   const [isVisible, setIsVisible] = useState(isOpen)
-  const offset = useSharedValue(30)
+  const offset = useSharedValue(VOID_ENTER_TRANSLATE_Y)
   const opacity = useSharedValue(0)
 
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true)
-    }
-    offset.value = withTiming(isOpen ? 0 : 30, { duration: VOID_MOTION_DURATION_STANDARD })
-    opacity.value = withTiming(isOpen ? 1 : 0, { duration: VOID_MOTION_DURATION_STANDARD })
-    if (!isOpen) {
-      const timer = setTimeout(() => setIsVisible(false), VOID_MOTION_DURATION_STANDARD)
+      offset.value = withTiming(0, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER })
+      opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER })
+    } else {
+      offset.value = withTiming(VOID_EXIT_TRANSLATE_Y, { duration: VOID_MOTION_EXIT, easing: VOID_EASING_EXIT })
+      opacity.value = withTiming(0, { duration: VOID_MOTION_EXIT, easing: VOID_EASING_EXIT })
+      const timer = setTimeout(() => setIsVisible(false), VOID_MOTION_EXIT)
       return () => clearTimeout(timer)
     }
   }, [isOpen, offset, opacity])

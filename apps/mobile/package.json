@@ -43,6 +43,7 @@
     "@better-auth/passkey": "^1.5.4",
     "@expo/vector-icons": "^15.0.3",
     "@hominem/auth": "workspace:*",
+    "@hominem/chat-services": "workspace:*",
     "@hominem/hono-client": "workspace:*",
     "@hominem/hono-rpc": "workspace:*",
     "@react-native-async-storage/async-storage": "2.2.0",

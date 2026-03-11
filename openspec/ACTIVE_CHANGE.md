@@ -1,9 +1,12 @@
 # Active OpenSpec Change
 
-active_change: none
+active_change: assistant-thought-lifecycle-foundation
 
 artifacts:
-- none selected
+- proposal: openspec/changes/assistant-thought-lifecycle-foundation/proposal.md
+- design: openspec/changes/assistant-thought-lifecycle-foundation/design.md
+- tasks: openspec/changes/assistant-thought-lifecycle-foundation/tasks.md
+- spec: openspec/changes/assistant-thought-lifecycle-foundation/specs/assistant-thought-lifecycle-foundation/spec.md
 
 ## Enforcement
 

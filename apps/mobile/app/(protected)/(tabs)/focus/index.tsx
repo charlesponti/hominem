@@ -6,6 +6,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PulsingCircle } from '~/components/animated/pulsing-circle';
+import { CaptureBar } from '~/components/capture/capture-bar';
+import { SessionList } from '~/components/chat/session-card';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { FeedbackBlock } from '~/components/feedback-block';
 import { FocusHeader } from '~/components/focus/focus-header';
@@ -76,6 +78,11 @@ export const FocusView = () => {
 
       <GestureHandlerRootView testID="focus-screen" style={styles.container}>
         <FocusHeader />
+        <CaptureBar />
+
+        <View style={styles.sessionSection}>
+          <SessionList />
+        </View>
 
         <View style={styles.focusContainer}>
           {isLoading && !isRefetching && !refreshing ? (
@@ -129,6 +136,10 @@ const styles = StyleSheet.create({
     flex: 1,
     rowGap: 12,
     marginTop: 16,
+  },
+  sessionSection: {
+    paddingHorizontal: 12,
+    paddingTop: 12,
   },
   focuses: {
     flex: 1,

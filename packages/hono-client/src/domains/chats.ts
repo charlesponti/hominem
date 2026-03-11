@@ -3,6 +3,7 @@ import type {
   Chat,
   ChatsCreateOutput,
   ChatsGetMessagesOutput,
+  ChatsGetOutput,
   ChatsSendOutput,
 } from '@hominem/hono-rpc/types/chat.types'
 
@@ -43,8 +44,13 @@ function toMessageQuery(input: ChatsGetMessagesInput): Record<string, string> {
   return query
 }
 
+export interface ChatsGetInput {
+  chatId: string
+}
+
 export interface ChatsClient {
   list(input: ChatsListInput): Promise<Chat[]>
+  get(input: ChatsGetInput): Promise<ChatsGetOutput>
   getMessages(input: ChatsGetMessagesInput): Promise<ChatsGetMessagesOutput>
   getByNote(input: ChatsGetByNoteInput): Promise<Chat>
   create(input: ChatsCreateInput): Promise<ChatsCreateOutput>
@@ -60,6 +66,12 @@ export function createChatsClient(rawClient: RawHonoClient): ChatsClient {
       }
       const res = await rawClient.api.chats.$get({ query })
       return res.json() as Promise<Chat[]>
+    },
+    async get(input) {
+      const res = await rawClient.api.chats[':id'].$get({
+        param: { id: input.chatId },
+      })
+      return res.json() as Promise<ChatsGetOutput>
     },
     async getMessages(input) {
       const res = await rawClient.api.chats[':id'].messages.$get({

@@ -18,6 +18,7 @@
   "dependencies": {
     "@ai-sdk/react": "^3.0.110",
     "@hominem/auth": "workspace:*",
+    "@hominem/chat-services": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/hono-client": "workspace:*",
     "@hominem/hono-rpc": "workspace:*",

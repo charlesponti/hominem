@@ -8,7 +8,7 @@ import type { LoaderFunctionArgs } from 'react-router';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user, headers } = await getServerSession(request);
-  if (user) return redirect('/notes', { headers });
+  if (user) return redirect('/home', { headers });
   return data({}, { headers });
 }
 

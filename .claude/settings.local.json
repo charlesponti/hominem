@@ -37,7 +37,8 @@
       "Bash(xcodebuild:*)",
       "Bash(head:*)",
       "Bash(bunx vitest:*)",
-      "Bash(ls /Users/charlesponti/Developer/hominem/apps/mobile/app/\\\\\\(protected\\\\\\)/)"
+      "Bash(ls /Users/charlesponti/Developer/hominem/apps/mobile/app/\\\\\\(protected\\\\\\)/)",
+      "Bash(ls /Users/charlesponti/Developer/hominem/apps/mobile/app/\\\\\\(protected\\\\\\)/\\\\\\(tabs\\\\\\)/focus/ 2>/dev/null && ls /Users/charlesponti/Developer/hominem/apps/mobile/app/\\\\\\(protected\\\\\\)/\\\\\\(tabs\\\\\\)/sherpa/ 2>/dev/null)"
     ]
   }
 }
