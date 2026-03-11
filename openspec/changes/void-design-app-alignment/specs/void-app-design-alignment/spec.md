@@ -71,9 +71,17 @@ Icons in apps SHALL only be used when they communicate information (e.g., a chec
 - **WHEN** an icon or emoji appears in the app UI
 - **THEN** it communicates a piece of information (status, action, category) or is removed
 
-### Requirement: App code SHALL use semantic HTML
-App components and routes SHALL use semantic HTML elements (buttons for actions, links for navigation, labels for form inputs, landmark regions for page structure).
+### Requirement: App design SHALL be 1-1 aligned across mobile, desktop, and notes platforms
+Any UI component or user-facing flow that appears on multiple platforms (mobile Expo app, desktop React Router app, notes React Router app) SHALL render and interact identically on all platforms, unless explicitly documented as a platform-specific exception.
 
-#### Scenario: Buttons are button elements
-- **WHEN** a user interacts with an action in the app
-- **THEN** the action is a native `<button>` or accessible button component, not a `<div>` or `<span>`
+#### Scenario: Component renders identically across platforms
+- **WHEN** viewing the same component (button, input, card, form, modal) on mobile, desktop, and notes apps
+- **THEN** the visual hierarchy, spacing, typography, color, focus state, and motion are pixel-perfect identical
+
+#### Scenario: User flow matches across platforms
+- **WHEN** a user completes the same workflow (sign-in, create note, send chat message) on mobile vs. desktop vs. notes
+- **THEN** the visual feedback, form validation, error messaging, and success confirmation are identical on all platforms
+
+#### Scenario: Platform-specific features are documented
+- **WHEN** a component or interaction differs between platforms (e.g., mobile gesture vs. desktop click, safe area padding)
+- **THEN** the exception is documented in the component code with a comment explaining the platform-specific reason

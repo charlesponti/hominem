@@ -32,6 +32,18 @@ Apps gain access to approved colors, spacing, motion durations, and typography t
 
 Web uses CSS animation classes from `animations.css`; mobile uses exported constants and hooks from `motion.ts`. Both platforms respect the same timing, easing, and `prefers-reduced-motion` semantics.
 
+### 1-1 Design Alignment Across Mobile, Desktop, and Notes
+
+All three user-facing apps (mobile Expo app, desktop React Router web app, notes React Router web app) shall render and interact identically when displaying the same content and affordances. This means:
+
+- **Visual hierarchy**: identical spacing, typography size/weight, color application, and border/shadow treatment.
+- **Focus and hover states**: identical keyboard navigation experience, focus ring appearance, and interactive element feedback.
+- **Motion**: motion timing and easing match exactly between platforms (canonical primitives enforce this).
+- **Icon and text treatment**: identical semantic use of icons, emoji removal standards, and fallback rendering.
+- **Form and input behavior**: identical input styling, validation feedback, and error messaging presentation.
+
+Platform-specific exceptions (e.g., mobile-only gestures, mobile safe area handling) are allowed only when documented in component code and spec. Visual and interaction design shall not diverge.
+
 ## Risks / Trade-offs
 
 - Some components may have legitimate reasons for non-standard depth or transitions -> Mitigation: document exceptions in component code and spec.
@@ -68,10 +80,20 @@ Web uses CSS animation classes from `animations.css`; mobile uses exported const
 - Audit heading, label, and body text to meet typography scale (body ≥17px).
 - Fix any fixed-height text containers that break relative sizing.
 
-### Phase 6: Verification
-- Visual regression testing across supported apps.
-- Accessibility audit pass (WCAG 2.2 AA).
-- Update related docs and design guidelines.
+### Phase 6: 1-1 Design Alignment Verification
+- Compare visual rendering of the same component across mobile, desktop, and notes.
+- Document pixel-perfect alignment for spacing, typography, color, borders, shadows.
+- Identify any platform-specific deviations and either unify them or document exceptions in component code/spec.
+- Create side-by-side screenshots or design demos of key user flows (auth, chat, note creation, etc.) and verify visual parity.
+- Ensure focus states, hover interactions, and motion timing match identically across all three platforms.
+
+### Phase 7: Verification and Documentation
+- Visual regression testing across all affected apps.
+- Conduct full WCAG 2.2 AA accessibility audit.
+- Test on both web and mobile platforms.
+- Verify motion on both desktop and mobile respect `prefers-reduced-motion`.
+- Update or create design system verification doc for future contributors.
+- Update AGENTS.md or design skill if new rules or patterns are discovered.
 
 ## Open Questions
 

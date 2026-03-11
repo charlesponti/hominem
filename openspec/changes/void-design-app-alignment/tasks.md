@@ -43,11 +43,25 @@
 - [ ] 5.4 Audit heading styles; ensure they follow approved typography scale
 - [ ] 5.5 Audit form label and button text typography; ensure consistency with design system
 
-## Phase 6: Verification and Documentation
+## Phase 6: 1-1 Design Alignment Across Mobile, Desktop, and Notes
 
-- [ ] 6.1 Run visual regression tests across all affected apps
-- [ ] 6.2 Conduct full WCAG 2.2 AA accessibility audit
-- [ ] 6.3 Test on both web and mobile platforms
-- [ ] 6.4 Verify motion on both desktop and mobile respect `prefers-reduced-motion`
-- [ ] 6.5 Update or create design system verification doc for future contributors
-- [ ] 6.6 Update AGENTS.md or design skill if new rules or patterns are discovered
+- [ ] 6.1 Document shared component usage across `apps/mobile/`, `apps/notes/`, and `apps/rocco/` (chat, auth, input, button, etc.)
+- [ ] 6.2 Compare visual rendering of key components (button, input, form, card, modal) across all three platforms
+- [ ] 6.3 Create side-by-side screenshots of identical affordances on mobile vs. desktop vs. notes
+- [ ] 6.4 Verify spacing (padding, margin, gaps) is identical across platforms using canonical token values
+- [ ] 6.5 Verify typography rendering matches exactly (font-size, weight, line-height) across all three apps
+- [ ] 6.6 Verify color application is identical on all platforms (no color value differences)
+- [ ] 6.7 Verify focus states, keyboard navigation, and interactive feedback are identical across platforms
+- [ ] 6.8 Verify motion timing and easing match identically on mobile and web (canonical primitives)
+- [ ] 6.9 Document any platform-specific exceptions (mobile gestures, safe area handling, etc.) in component code and spec
+- [ ] 6.10 Create a parity matrix or dashboard showing which components/flows have been verified as 1-1 aligned
+
+## Phase 7: Verification and Documentation
+
+- [ ] 7.1 Run visual regression tests across all affected apps (mobile, desktop, notes)
+- [ ] 7.2 Conduct full WCAG 2.2 AA accessibility audit across all platforms
+- [ ] 7.3 Cross-platform testing: verify the same user flow (auth, note creation, chat) renders identically on mobile and web
+- [ ] 7.4 Verify motion on both desktop and mobile respect `prefers-reduced-motion`
+- [ ] 7.5 Update or create design system verification doc for future contributors
+- [ ] 7.6 Update AGENTS.md or design skill if new rules or patterns are discovered
+- [ ] 7.7 Create or update design-system alignment checklist for code reviews
