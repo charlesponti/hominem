@@ -5,7 +5,7 @@ Updated: 2026-03-10
 ## Current State
 
 Active change selection:
-- `openspec/ACTIVE_CHANGE.md` is currently set to `assistant-thought-lifecycle-foundation`
+- `openspec/ACTIVE_CHANGE.md` is currently unset (`active_change: none`)
 
 Open changes discovered from `openspec list --json`:
 - `assistant-thought-lifecycle-foundation` (`0/6`, status: `in-progress`)

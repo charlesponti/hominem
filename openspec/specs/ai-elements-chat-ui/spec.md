@@ -1,4 +1,4 @@
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Chat surfaces SHALL use shared AI Elements primitives
 Supported chat surfaces SHALL rely on shared AI Elements-based primitives instead of duplicating equivalent custom UI implementations.

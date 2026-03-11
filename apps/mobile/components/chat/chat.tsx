@@ -11,7 +11,8 @@ import queryClient from '~/utils/query-client'
 import { useChatMessages, useEndChat, useSendMessage } from '~/utils/services/chat'
 import type { MessageOutput } from '~/utils/services/chat'
 import { ChatInput } from './chat-input'
-import ChatLoading from './chat-loading'
+import { ChatShimmerMessage } from './chat-shimmer-message'
+import { ChatThinkingIndicator } from './chat-thinking-indicator'
 import { loadMarkdown, renderMessage, type MarkdownComponent } from './chat-message'
 import { ArtifactActions } from './artifact-actions'
 import { ClassificationReview } from './classification-review'
@@ -152,7 +153,11 @@ export const Chat = (props: ChatProps) => {
         <ContextAnchor source={resolvedSource} />
       </View>
       {isMessagesLoading ? (
-        <ChatLoading />
+        <View style={styles.shimmerContainer}>
+          <ChatShimmerMessage />
+          <ChatShimmerMessage />
+          <ChatShimmerMessage />
+        </View>
       ) : (
         <>
           <FlashList
@@ -162,6 +167,7 @@ export const Chat = (props: ChatProps) => {
             renderItem={renderItem}
             scrollEnabled={formattedMessages.length > 0}
           />
+          {isChatSending && <ChatThinkingIndicator />}
           <ArtifactActions
             state={lifecycleState}
             messageCount={formattedMessages.length}
@@ -213,6 +219,10 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingHorizontal: 20,
     rowGap: 12,
+  },
+  shimmerContainer: {
+    flex: 1,
+    paddingTop: 8,
   },
   endButton: {
     alignSelf: 'center',
