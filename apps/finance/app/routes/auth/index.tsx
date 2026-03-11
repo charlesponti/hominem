@@ -15,7 +15,7 @@ export async function loader({ request }: { request: Request }) {
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
-  const email = formData.get('email') as string;
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
   const next = (formData.get('next') as string) || '/finance';
 
   if (!email) {

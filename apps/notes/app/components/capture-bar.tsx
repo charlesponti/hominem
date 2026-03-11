@@ -47,9 +47,10 @@ export function CaptureBar({ state = 'idle' }: CaptureBarProps) {
 
   const saveNote = useHonoMutation<{ id: string }, string>(
     async ({ notes }, content) => {
+      const title = content.trim().slice(0, 64);
       return notes.create({
         content,
-        title: content.trim().slice(0, 64) || undefined,
+        ...(title ? { title } : {}),
       });
     },
     {

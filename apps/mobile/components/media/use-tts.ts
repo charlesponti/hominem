@@ -1,5 +1,5 @@
 import { useAudioPlayer } from 'expo-audio'
-import * as FileSystem from 'expo-file-system'
+import * as FileSystem from 'expo-file-system/legacy'
 import { useCallback, useRef, useState } from 'react'
 import { useApiClient } from '@hominem/hono-client/react'
 

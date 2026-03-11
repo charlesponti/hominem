@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { getSetCookieHeaders } from '@hominem/utils/headers';
 
 interface OtpResponse {
   otp: string;
@@ -146,6 +147,28 @@ describe('auth email otp contract', () => {
     expect(payload.user.email).toBe(email);
   }, 15000);
 
+  test('2.2 valid otp accepts normalized email and formatted otp input', async () => {
+    const createServer = await importServer();
+    const app = createServer();
+    const email = `otp-normalized-${Date.now()}@hominem.test`;
+    await requestOtp(app, email.toUpperCase());
+    const otpResponse = await fetchOtp(app, email);
+
+    const signInResponse = await app.request('http://localhost/api/auth/email-otp/verify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: email.toUpperCase(),
+        otp: `${otpResponse.otp.slice(0, 3)} ${otpResponse.otp.slice(3)}`,
+      }),
+    });
+
+    expect(signInResponse.status).toBe(200);
+    const payload = (await signInResponse.json()) as VerifyOtpResponse;
+    expect(payload.accessToken.length).toBeGreaterThan(0);
+    expect(payload.user.email).toBe(email);
+  }, 15000);
+
   test('2.2 bearer logout revokes the authenticated session', async () => {
     const createServer = await importServer();
     const app = createServer();
@@ -222,6 +245,23 @@ describe('auth email otp contract', () => {
     expect(sessionPayload.isAuthenticated).toBe(true);
     expect(sessionPayload.accessToken).toBe(payload.accessToken);
     expect(sessionPayload.expiresIn).toBeGreaterThan(0);
+  }, 15000);
+
+  test('2.2 session probe clears expired or invalid app token cookies', async () => {
+    const createServer = await importServer();
+    const app = createServer();
+
+    const sessionResponse = await app.request('http://localhost/api/auth/session', {
+      method: 'GET',
+      headers: {
+        cookie: 'hominem_access_token=invalid-token',
+      },
+    });
+
+    expect(sessionResponse.status).toBe(401);
+    const clearedCookie = getSetCookieHeaders(sessionResponse.headers)[0] ?? null;
+    expect(clearedCookie).toContain('hominem_access_token=');
+    expect(clearedCookie).toContain('Max-Age=0');
   }, 15000);
 
   test('2.2 invalid otp is rejected and does not create authenticated session', async () => {

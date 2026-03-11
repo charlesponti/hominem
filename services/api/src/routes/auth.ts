@@ -121,6 +121,32 @@ interface MobileE2eLoginResponse {
   };
 }
 
+function normalizeAuthEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function normalizeOtpCode(otp: string) {
+  return otp.replace(/\D/g, '');
+}
+
+function appendExpiredAccessTokenCookie(headers: Headers) {
+  const cookieDomain = env.AUTH_COOKIE_DOMAIN.trim();
+  const domainAttribute = cookieDomain.length > 0 ? `; Domain=${cookieDomain}` : '';
+  headers.append(
+    'set-cookie',
+    `hominem_access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT${domainAttribute}`,
+  );
+}
+
+function jsonWithHeaders(body: Record<string, unknown>, status: number, headers?: Headers) {
+  const responseHeaders = new Headers(headers);
+  responseHeaders.set('content-type', 'application/json');
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: responseHeaders,
+  });
+}
+
 function getHeaderCarrier(c: { req: { raw: Request } }) {
   return {
     headers: c.req.raw.headers,
@@ -647,11 +673,15 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
 authRoutes.post('/email-otp/send', zValidator('json', emailOtpRequestSchema), async (c) => {
   try {
     const payload = c.req.valid('json');
+    const normalizedPayload = {
+      ...payload,
+      email: normalizeAuthEmail(payload.email),
+    };
     const response = await callBetterAuthPluginEndpoint({
       request: c.req.raw,
       path: '/email-otp/send-verification-otp',
       method: 'POST',
-      body: payload as Record<string, unknown>,
+      body: normalizedPayload as Record<string, unknown>,
     });
     const body = await response.text();
     return new Response(body, {
@@ -666,11 +696,16 @@ authRoutes.post('/email-otp/send', zValidator('json', emailOtpRequestSchema), as
 authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), async (c) => {
   try {
     const payload = c.req.valid('json');
+    const normalizedPayload = {
+      ...payload,
+      email: normalizeAuthEmail(payload.email),
+      otp: normalizeOtpCode(payload.otp),
+    };
 
     if (isTestOtpStoreEnabled()) {
       const consumption = consumeTestOtp({
-        email: payload.email,
-        otp: payload.otp,
+        email: normalizedPayload.email,
+        otp: normalizedPayload.otp,
         type: 'sign-in',
       });
 
@@ -685,15 +720,15 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
       if (consumption.status === 'replayed') {
         logger.warn('[auth:email-otp:test] replay attempt rejected', {
           clientIp: getClientIp(c),
-          emailHash: createHash('sha256').update(payload.email).digest('hex').slice(0, 16),
+          emailHash: createHash('sha256').update(normalizedPayload.email).digest('hex').slice(0, 16),
           type: 'sign-in',
         });
         return c.json({ error: 'otp_replayed' }, 400);
       }
 
       const dbUser = await findOrCreateEmailOtpUser({
-        email: payload.email,
-        name: payload.name,
+        email: normalizedPayload.email,
+        name: normalizedPayload.name,
       })
 
       if (!dbUser) {
@@ -703,7 +738,7 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
       return createEmailOtpAuthResponse(dbUser)
     }
 
-    return signInWithBetterAuthEmailOtp(c, payload);
+    return signInWithBetterAuthEmailOtp(c, normalizedPayload);
   } catch {
     return c.json({ error: 'email_otp_verify_failed' }, 400);
   }
@@ -746,7 +781,9 @@ authRoutes.post('/logout', async (c) => {
   await betterAuthServer.api.signOut({
     ...getHeaderCarrier(c),
   });
-  return c.json({ success: true });
+  const headers = new Headers();
+  appendExpiredAccessTokenCookie(headers);
+  return jsonWithHeaders({ success: true }, 200, headers);
 });
 
 authRoutes.get('/session', async (c) => {
@@ -758,6 +795,7 @@ authRoutes.get('/session', async (c) => {
 
   const authHeader = c.req.header('authorization') ?? '';
   let bearerToken: string | null = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  let tokenSource: 'authorization' | 'cookie' | null = bearerToken ? 'authorization' : null;
 
   if (!bearerToken) {
     const cookieHeader = c.req.header('cookie') ?? '';
@@ -769,6 +807,7 @@ authRoutes.get('/session', async (c) => {
       } catch {
         bearerToken = rawValue;
       }
+      tokenSource = 'cookie';
     }
   }
 
@@ -776,16 +815,21 @@ authRoutes.get('/session', async (c) => {
     return c.json({ isAuthenticated: false, user: null }, 401);
   }
 
+  const unauthorizedHeaders = new Headers();
+  if (tokenSource === 'cookie') {
+    appendExpiredAccessTokenCookie(unauthorizedHeaders);
+  }
+
   try {
     const claims = await verifyAccessToken(bearerToken);
     const revoked = await isSessionRevoked(claims.sid);
     if (revoked) {
-      return c.json({ isAuthenticated: false, user: null }, 401);
+      return jsonWithHeaders({ isAuthenticated: false, user: null }, 401, unauthorizedHeaders);
     }
 
     const userRecord = await UserAuthService.findByIdOrEmail({ id: claims.sub });
     if (!userRecord) {
-      return c.json({ isAuthenticated: false, user: null }, 401);
+      return jsonWithHeaders({ isAuthenticated: false, user: null }, 401, unauthorizedHeaders);
     }
 
     return c.json({
@@ -805,7 +849,7 @@ authRoutes.get('/session', async (c) => {
           : undefined,
     });
   } catch {
-    return c.json({ isAuthenticated: false, user: null }, 401);
+    return jsonWithHeaders({ isAuthenticated: false, user: null }, 401, unauthorizedHeaders);
   }
 });
 

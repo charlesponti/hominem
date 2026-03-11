@@ -34,8 +34,8 @@ export async function loader({ request }: { request: Request }) {
 
 export async function action({ request }: { request: Request }) {
   const formData = await request.formData();
-  const email = String(formData.get('email') ?? '');
-  const otp = String(formData.get('otp') ?? '');
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
+  const otp = String(formData.get('otp') ?? '').replace(/\D/g, '');
   const next = resolveSafeAuthRedirect(
     String(formData.get('next') ?? '/visits'),
     '/visits',

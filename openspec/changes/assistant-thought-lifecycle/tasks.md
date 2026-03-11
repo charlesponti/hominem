@@ -10,7 +10,7 @@
 
 ## 3. Artifact Features
 
-- [ ] 3.1 Implement compact note capture, dense artifact browsing, and selection flows inside the mirrored thought lifecycle
+- [x] 3.1 Implement compact note capture, dense artifact browsing, and selection flows inside the mirrored thought lifecycle
 - [x] 3.2 Implement AI-assisted note actions with explicit review-before-apply persistence semantics and preserved artifact lineage
       **Carry-over from `assistant-thought-lifecycle-foundation`:**
       - [x] 3.2a Implement classification API endpoint: `POST /api/chat/:chatId/classify`
@@ -29,9 +29,9 @@
 
 ## 4. Verification
 
-- [ ] 4.1 Verify parity, persistence, accessibility, performance, and persistent text capture across the mobile app and Notes app
-- [ ] 4.2 Add end-to-end coverage for home, session, voice, and AI artifact action flows
+- [x] 4.1 Verify parity, persistence, accessibility, performance, and persistent text capture across the mobile app and Notes app
+- [x] 4.2 Add end-to-end coverage for home, session, voice, and AI artifact action flows
       **Carry-over from `assistant-thought-lifecycle-foundation`:**
-      - [ ] 4.2a E2E: mobile `focus → sherpa` critical path (Detox)
-      - [ ] 4.2b E2E: Notes `HomeView → chat.$chatId` critical path (Playwright)
-      - [ ] 4.2c Gate: confirm both surfaces pass before marking lifecycle change complete
+      - [x] 4.2a E2E: mobile `focus → sherpa` critical path (Detox)
+      - [x] 4.2b E2E: Notes `HomeView → chat.$chatId` critical path (Playwright)
+      - [x] 4.2c Gate: confirm both surfaces pass before marking lifecycle change complete
