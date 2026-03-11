@@ -16,6 +16,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@babel/runtime": "^7.28.6",
     "@hominem/db": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
