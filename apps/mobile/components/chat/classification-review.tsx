@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: theme.colors['overlay-modal-high'],
   },
   sheet: {
     backgroundColor: theme.colors.background,

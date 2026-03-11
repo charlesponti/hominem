@@ -1,6 +1,7 @@
 import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types';
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { colors } from '@hominem/ui/tokens';
 import { subMonths } from 'date-fns';
 import { useMemo, useState } from 'react';
 import {
@@ -18,7 +19,7 @@ import {
 import { useTimeSeriesData } from '~/lib/hooks/use-time-series';
 import { formatCurrency } from '~/lib/number.utils';
 
-const SPENDING_COLOR = '#ef4444';
+const SPENDING_COLOR = colors.destructive;
 
 interface AccountSpendingChartProps {
   accountId: string;
@@ -152,7 +153,7 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
                 <CartesianGrid strokeDasharray="3 3" />
                 <Tooltip
                   formatter={(value) => [formatCurrency(Number(value)), 'Spending']}
-                  labelStyle={{ color: '#000' }}
+                  labelStyle={{ color: colors['text-primary'] }}
                 />
                 <Area
                   type="monotone"
@@ -169,7 +170,7 @@ export function AccountSpendingChart({ accountId, accountName }: AccountSpending
                 <CartesianGrid strokeDasharray="3 3" />
                 <Tooltip
                   formatter={(value) => [formatCurrency(Number(value)), 'Spending']}
-                  labelStyle={{ color: '#000' }}
+                  labelStyle={{ color: colors['text-primary'] }}
                 />
                 <Bar dataKey="Spending" fill={SPENDING_COLOR} />
               </BarChart>

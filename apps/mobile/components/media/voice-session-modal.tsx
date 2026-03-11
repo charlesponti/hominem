@@ -57,7 +57,7 @@ export function VoiceSessionModal({ visible, onClose, onAudioTranscribed }: Voic
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: theme.colors['overlay-modal-high'],
     justifyContent: 'flex-end',
   },
   container: {

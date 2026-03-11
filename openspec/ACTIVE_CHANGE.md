@@ -1,6 +1,6 @@
 # Active OpenSpec Change
 
-active_change: none
+active_change: void-design-app-alignment
 
 artifacts:
 - tasks.md
