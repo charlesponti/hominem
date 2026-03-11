@@ -104,6 +104,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     },
 
     server: {
+      allowedHosts: ['finance.lvh.me'],
       port: 4444,
       strictPort: true,
     },

@@ -1,7 +1,7 @@
 import type { FullConfig } from '@playwright/test'
 
-const API_BASE_URL = 'http://localhost:4040'
-const APP_BASE_URL = 'http://localhost:4444'
+const API_BASE_URL = 'http://api.lvh.me:4040'
+const APP_BASE_URL = 'http://finance.lvh.me:4444'
 const MAX_RETRIES = 20
 const RETRY_DELAY_MS = 1000
 

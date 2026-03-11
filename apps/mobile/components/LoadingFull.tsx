@@ -1,13 +1,13 @@
 import type { PropsWithChildren } from 'react'
 import { ActivityIndicator, StyleSheet } from 'react-native'
 
-import { Box } from '~/theme'
+import { Box, theme } from '~/theme'
 
 export const LoadingFull = ({ children }: PropsWithChildren) => {
   return (
     <LoadingContainer>
       {children}
-      <ActivityIndicator size="large" color="#FFFFFF" />
+      <ActivityIndicator size="large" color={theme.colors.foreground} />
     </LoadingContainer>
   )
 }
@@ -21,9 +21,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 48,
-    rowGap: 24,
-    backgroundColor: '#000000',
+    paddingHorizontal: theme.spacing.ml_24,
+    paddingVertical: theme.spacing.xl_48,
+    rowGap: theme.spacing.ml_24,
+    backgroundColor: theme.colors.background,
   },
 })

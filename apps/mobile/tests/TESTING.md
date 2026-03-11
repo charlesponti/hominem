@@ -8,6 +8,23 @@ This app uses a layered testing model for auth.
 - Keep device E2E small and focused on native/lifecycle-critical behavior.
 - Start every device test from fresh app state.
 - Do not build one giant shared-state auth suite.
+- Keep the native app variant aligned with the runner. `dev` is for Metro-backed local development, `e2e` is for standalone Detox binaries.
+
+## Variant Discipline
+
+Auth test reliability depends on generating the right native app for the right runner.
+
+- `dev` includes `expo-dev-client` and should be used with `bun run start` and local device development.
+- `e2e` excludes `expo-dev-client` and should be used for Detox build and test commands.
+- `preview` and `production` are standalone update-enabled release variants and are not part of the local auth test loop.
+- Before switching between local device work and Detox, run the matching variant prebuild:
+
+```bash
+bun run prebuild:dev
+bun run prebuild:e2e
+```
+
+- Do not patch `ios/Podfile` or generated plist files by hand to flip runners. Regenerate them from the variant scripts.
 
 ## Layers
 
@@ -61,7 +78,25 @@ Run with:
 bun run test:integration:auth
 ```
 
-### 3. Contract
+### 3. Router Integration
+
+Use for route-level auth flows with Expo Router's in-memory test harness.
+
+Best cases for this layer:
+- auth route to verify route transitions
+- deep links that hydrate auth params
+- route-level redirects that depend on file-based routing semantics
+
+Current files:
+- `apps/mobile/tests/routes/auth-router.test.tsx`
+
+Run with:
+
+```bash
+bun run test:routes:auth
+```
+
+### 4. Contract
 
 Use for backend/auth boundary correctness.
 
@@ -77,18 +112,24 @@ Primary ownership lives in API/shared auth packages, but mobile relies on these 
 
 These should fail before device tests fail.
 
-### 4. Device E2E
+### 5. Device E2E
 
 Use only for high-value native confidence.
 
-Current files:
-- `apps/mobile/e2e/smoke.mobile.e2e.js`
-- `apps/mobile/e2e/auth.mobile.e2e.js`
+Current harnesses:
+- Detox: `apps/mobile/e2e/smoke.mobile.e2e.js`
+- Detox: `apps/mobile/e2e/auth.mobile.e2e.js`
+- Personal device: checklist in `apps/mobile/README.md`
 
 Critical auth device tests:
-- OTP sign-in success
-- invalid OTP remains unauthenticated
-- session restore after terminate/relaunch
+- Detox: OTP sign-in success
+- Detox: invalid OTP remains unauthenticated
+- Detox: session restore after terminate/relaunch
+- Personal device: passkey/platform behavior and final release confidence
+
+Native expectations:
+- Detox should run against the `e2e` native project shape with no dev launcher.
+- Local device smoke should run against the `dev` native project shape with the Expo dev client available.
 
 Next device test to add:
 - one deterministic passkey-native-critical path, but only after the simulator/runtime strategy is explicit
@@ -120,10 +161,12 @@ Use the lightest runner that still proves the behavior.
 
 - `vitest` / `jest-expo` style unit tests: pure logic and hooks
 - React Native integration tests: app state and screen behavior
+- `expo-router/testing-library`: route-level auth navigation and deep-link semantics
 - API contract tests: backend correctness
 - Detox: native/lifecycle-sensitive mobile flows only
+- personal-device smoke: hardware-specific validation before release
 
-If the team later adopts a lighter black-box mobile runner for simple smoke flows, keep deep lifecycle and native-precision scenarios in Detox or equivalent gray-box tooling.
+Use Detox as the default device harness for native-critical flows. Use a personal-device smoke pass for hardware-specific behavior that simulators do not prove well.
 
 ## Fresh-State Rule For Detox
 
@@ -132,7 +175,7 @@ Device auth tests must start from fresh app state:
 ```js
 beforeEach(async () => {
   await device.clearKeychain()
-  await device.launchApp({ newInstance: true })
+  await device.launchApp()
   await device.disableSynchronization()
   await resetToSignedOut()
 })
@@ -149,12 +192,14 @@ Notes:
 
 - `bun run test:unit:auth`
 - `bun run test:integration:auth`
+- `bun run test:routes:auth`
 - auth contract tests in API/shared packages
-- `bun run test:e2e:auth:critical`
+- retained Detox auth-critical flows
+- personal-device auth smoke before release
 
 ### Nightly / Release
 
-- full mobile smoke/device suite
+- full Detox auth-critical/device suite
 - passkey-native device scenario
 - relaunch/session-restore checks
 - deep link / notification lifecycle flows

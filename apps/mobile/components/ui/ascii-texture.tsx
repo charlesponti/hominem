@@ -1,6 +1,8 @@
 import { memo, useMemo } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
+import { theme } from '~/theme'
+
 const GLYPHS = ['+', '·', '~', '-', '/', '\\']
 
 function createPattern(rows: number, cols: number) {
@@ -31,7 +33,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   pattern: {
-    color: '#FFFFFF',
+    color: theme.colors.foreground,
     opacity: 0.12,
     fontFamily: 'Geist Mono',
     fontSize: 12,

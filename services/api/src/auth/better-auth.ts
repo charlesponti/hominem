@@ -83,6 +83,7 @@ const deviceCodeFieldMappings = {
 function getTrustedOrigins() {
   const origins = new Set([
     env.BETTER_AUTH_URL,
+    env.AUTH_PASSKEY_ORIGIN,
     env.FINANCE_URL,
     env.NOTES_URL,
     env.ROCCO_URL,
@@ -130,10 +131,11 @@ function getAuthPlugins() {
   const plugins: BetterAuthPlugin[] = [
     expo(),
     passkey({
-      rpID: new URL(env.BETTER_AUTH_URL).hostname,
+      rpID: env.AUTH_PASSKEY_RP_ID,
       rpName: 'Hominem',
       origin: [
         env.BETTER_AUTH_URL,
+        env.AUTH_PASSKEY_ORIGIN,
         env.FINANCE_URL,
         env.NOTES_URL,
         env.ROCCO_URL,

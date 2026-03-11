@@ -3,7 +3,8 @@ import type { BrowserContext, Page } from '@playwright/test'
 import { setupVirtualPasskey, teardownVirtualPasskey } from './auth.passkey-helpers'
 import { createAuthTestEmail, fetchLatestSignInOtp, signInWithEmailOtp, submitOtpCode } from './auth.flow-helpers'
 
-const AUTH_API_BASE_URL = 'http://localhost:4040'
+const AUTH_API_BASE_URL = 'http://api.lvh.me:4040'
+const FINANCE_APP_BASE_URL = 'http://finance.lvh.me:4444'
 
 interface PasskeyOperationResult {
   ok: boolean
@@ -59,6 +60,11 @@ interface SerializedRegistrationCredential {
     attestationObject: string
     transports?: string[]
   }
+}
+
+interface WebAuthnCapability {
+  hasCreate: boolean
+  isSecureContext: boolean
 }
 
 async function getAccessToken(context: BrowserContext): Promise<string | null> {
@@ -224,6 +230,15 @@ async function registerPasskey(page: Page, context: BrowserContext): Promise<Pas
   }, accessToken)
 }
 
+async function getWebAuthnCapability(page: Page): Promise<WebAuthnCapability> {
+  await page.goto(`${FINANCE_APP_BASE_URL}/auth`)
+
+  return page.evaluate(() => ({
+    hasCreate: typeof navigator.credentials?.create === 'function',
+    isSecureContext,
+  }))
+}
+
 /**
  * Sign in with a passkey via the finance app's UI.
  * Navigates to /auth, clicks the "Use a passkey" button, and waits for the
@@ -231,7 +246,7 @@ async function registerPasskey(page: Page, context: BrowserContext): Promise<Pas
  * inside the app calls /auth/passkey/callback to set the HttpOnly cookie.
  */
 async function authenticateWithPasskeyUI(page: Page): Promise<{ errors: string[] }> {
-  await page.goto('http://localhost:4444/auth')
+  await page.goto(`${FINANCE_APP_BASE_URL}/auth`)
   // Wait for the page to hydrate — the passkey button is added after hydration
   const passkeyButton = page.getByRole('button', { name: /passkey/i })
   await passkeyButton.waitFor({ state: 'visible', timeout: 20000 })
@@ -248,11 +263,38 @@ async function authenticateWithPasskeyUI(page: Page): Promise<{ errors: string[]
   return { errors }
 }
 
+async function readAuthSession(context: BrowserContext): Promise<{
+  status: number
+  body: { isAuthenticated?: boolean; user?: { email?: string } | null }
+}> {
+  const sessionPage = await context.newPage()
+  try {
+    const response = await sessionPage.goto(`${AUTH_API_BASE_URL}/api/auth/session`)
+    const status = response?.status() ?? 0
+    const body = (await sessionPage.evaluate(() => document.body.textContent || '{}').then((text) => {
+      try {
+        return JSON.parse(text) as { isAuthenticated?: boolean; user?: { email?: string } | null }
+      } catch {
+        return {}
+      }
+    }))
+    return { status, body }
+  } finally {
+    await sessionPage.close()
+  }
+}
+
 test('web passkey registration and sign-in flow reaches authenticated finance view', async ({ page, context }) => {
   const email = createAuthTestEmail('finance-passkey')
 
   await signInWithEmailOtp(page, email)
   await expect(page).toHaveURL(/\/finance$/)
+
+  const webAuthnCapability = await getWebAuthnCapability(page)
+  test.skip(
+    !webAuthnCapability.isSecureContext || !webAuthnCapability.hasCreate,
+    'WebAuthn registration requires a secure browser context with navigator.credentials.create',
+  )
 
   const passkeyHandle = await setupVirtualPasskey(context, page)
 
@@ -288,7 +330,7 @@ test('web auth falls back from passkey entry to email otp successfully', async (
   const email = createAuthTestEmail('finance-passkey-fallback')
 
   await context.clearCookies()
-  await page.goto('http://localhost:4444/auth')
+  await page.goto(`${FINANCE_APP_BASE_URL}/auth`)
 
   const passkeyButton = page.getByRole('button', { name: /passkey/i })
   const passkeyCount = await passkeyButton.count()
@@ -320,7 +362,7 @@ test('finance authenticated surfaces expose passkey enrollment controls', async 
   await expect(page.getByRole('button', { name: /add a passkey/i })).toBeVisible({ timeout: 15000 })
 })
 
-test('boot flow with valid credentials keeps user signed in', async ({ page }) => {
+test('boot flow with valid credentials keeps user signed in', async ({ page, context }) => {
   const email = createAuthTestEmail('finance-boot-valid')
 
   // Sign in normally
@@ -328,12 +370,9 @@ test('boot flow with valid credentials keeps user signed in', async ({ page }) =
   await expect(page).toHaveURL(/\/finance$/)
 
   // Verify we can access protected endpoints
-  const sessionResponse = await page.evaluate(() =>
-    fetch('http://localhost:4040/api/auth/session', {
-      credentials: 'include',
-    }).then((r) => r.status),
-  )
-  expect(sessionResponse).toBe(200)
+  const sessionResponse = await readAuthSession(context)
+  expect(sessionResponse.status).toBe(200)
+  expect(sessionResponse.body.isAuthenticated).toBe(true)
 
   // Reload the page — access token cookie should still be valid
   await page.reload()
@@ -345,13 +384,13 @@ test('boot flow with valid credentials keeps user signed in', async ({ page }) =
 test('boot flow with no credentials redirects to auth', async ({ page, context }) => {
   // Navigate to a protected route without any cookies
   await context.clearCookies()
-  await page.goto('http://localhost:4444/finance')
+  await page.goto(`${FINANCE_APP_BASE_URL}/finance`)
 
   // Should redirect to /auth since there's no session
   await expect(page).toHaveURL(/\/auth$/, { timeout: 10000 })
 })
 
-test('session expiry flow verifies access token is sent in requests', async ({ page }) => {
+test('session expiry flow verifies access token is sent in requests', async ({ page, context }) => {
   const email = createAuthTestEmail('finance-session-expiry')
 
   // Sign in normally
@@ -360,13 +399,10 @@ test('session expiry flow verifies access token is sent in requests', async ({ p
 
   // Verify that the access token is being used in subsequent API calls
   // by checking that session verification succeeds
-  const sessionResponse = await page.evaluate(() =>
-    fetch('http://localhost:4040/api/auth/session', {
-      credentials: 'include',
-    }).then((r) => r.json()),
-  )
+  const sessionResponse = await readAuthSession(context)
 
   // Should have a valid user in the session
-  expect(sessionResponse.user).toBeDefined()
-  expect(sessionResponse.user.email).toContain(email)
+  expect(sessionResponse.status).toBe(200)
+  expect(sessionResponse.body.user).toBeDefined()
+  expect(sessionResponse.body.user?.email).toContain(email)
 })

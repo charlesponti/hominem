@@ -62,6 +62,8 @@ export async function action({ request }: { request: Request }) {
   }
 
   const headers = new Headers();
+  const cookieDomain = serverEnv.AUTH_COOKIE_DOMAIN?.trim();
+  const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
 
   const setCookieValues = getSetCookieHeaders(response.headers);
   if (setCookieValues.length > 0) {
@@ -75,7 +77,7 @@ export async function action({ request }: { request: Request }) {
 
   headers.append(
     'set-cookie',
-    `hominem_access_token=${encodeURIComponent(result.accessToken)}; Path=/; HttpOnly; SameSite=Lax`,
+    `hominem_access_token=${encodeURIComponent(result.accessToken)}; Path=/; HttpOnly; SameSite=Lax${domainAttribute}`,
   );
 
   return redirect(next, { headers });

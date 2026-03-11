@@ -1,5 +1,5 @@
 import React, { Component, type ReactNode } from 'react'
-import { View, StyleSheet } from 'react-native'
+import { Pressable, View, StyleSheet } from 'react-native'
 import { Text, theme } from '~/theme'
 import {
   createBoundaryStateFromError,
@@ -7,6 +7,7 @@ import {
   resetBoundaryState,
   type BoundaryState,
 } from '~/utils/error-boundary/contracts'
+import { logError } from '~/utils/error-boundary/log-error'
 
 interface Props {
   children: ReactNode
@@ -28,7 +29,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error(`[FeatureErrorBoundary:${this.props.featureName}] Error:`, error, errorInfo)
+    logError(error, errorInfo, { feature: this.props.featureName })
     this.props.onError?.(error, errorInfo)
   }
 
@@ -47,11 +48,11 @@ export class FeatureErrorBoundary extends Component<Props, State> {
           <Text variant="body" color="mutedForeground">
             {createFeatureFallbackLabel(this.props.featureName)}
           </Text>
-          <View style={styles.button} onTouchEnd={this.handleReset}>
+          <Pressable style={styles.button} onPress={this.handleReset} accessibilityRole="button">
             <Text variant="small" color="foreground">
               Retry
             </Text>
-          </View>
+          </Pressable>
         </View>
       )
     }

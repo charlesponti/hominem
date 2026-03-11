@@ -6,12 +6,20 @@ This app is the iOS mobile client for Hominem, built with Expo Router and Better
 
 The mobile app uses explicit runtime variants. `APP_VARIANT` controls app identity, native generation, and local env loading.
 
-| Variant | Purpose | Dev Client | OTA Updates | Primary Command |
+| Variant | Purpose | Native Shape | OTA Updates | Primary Command |
 | --- | --- | --- | --- | --- |
-| `dev` | local feature development | yes | development channel | `bun run start` |
-| `e2e` | deterministic Detox runtime | no | disabled | `bun run test:e2e:build:ios` |
-| `preview` | internal QA / release candidate | no | preview channel | `bun run build:preview:ios` |
-| `production` | App Store / TestFlight | no | production channel | `bun run build:production:ios` |
+| `dev` | local feature development | Expo dev client + Metro | disabled | `bun run start` |
+| `e2e` | deterministic mobile test runtime | standalone native test app | disabled | `bun run test:e2e:build:ios` |
+| `preview` | internal QA / release candidate | standalone update-enabled build | preview channel | `bun run build:preview` |
+| `production` | App Store / TestFlight | standalone update-enabled build | production channel | `bun run build:production` |
+
+## Native Generation Rules
+
+- `APP_VARIANT` is the single source of truth for app identity, bundle identifier, URL scheme, dev-client inclusion, and Expo updates behavior.
+- Only `dev` includes `expo-dev-client` and connects to Metro.
+- `e2e`, `preview`, and `production` exclude the dev client and generate standalone native projects.
+- `bun run prebuild:dev` and `bun run prebuild:e2e` are variant-aware and regenerate `ios/` when the requested native shape changes.
+- Do not hand-edit generated `ios/Podfile`, `Expo.plist`, or project naming to switch variants. Regenerate through the variant prebuild scripts instead.
 
 ## Runtime Scope
 
@@ -27,6 +35,9 @@ The mobile app uses explicit runtime variants. `APP_VARIANT` controls app identi
 EXPO_PUBLIC_API_BASE_URL="http://localhost:4040"
 EXPO_PUBLIC_E2E_TESTING="false"
 EXPO_PUBLIC_E2E_AUTH_SECRET=""
+EXPO_APPLE_TEAM_ID="<apple-team-id>"
+EXPO_PUBLIC_PASSKEY_RP_DOMAIN="api.ponti.io"
+EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED="false"
 ```
 
 ### E2E (`.env.e2e.local`, `APP_VARIANT=e2e`)
@@ -73,6 +84,17 @@ bun run prebuild:dev
 bun run prebuild:e2e
 ```
 
+If you switch from simulator Detox work back to a physical-device dev build, run `bun run prebuild:dev` before `bun run ios` so the generated iOS project includes the dev launcher again.
+
+### Local device signing
+
+- Set `EXPO_APPLE_TEAM_ID` in `.env.development.local` before generating or building a physical-device `dev` app.
+- Set `EXPO_PUBLIC_PASSKEY_RP_DOMAIN` to the stable passkey relying-party host. The repo default is `api.ponti.io`.
+- Set `EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED=true` only when you are actively validating the mobile passkey surface.
+- Expo maps `ios.appleTeamId` from app config into the generated Xcode project, which keeps `dev` builds reproducible after a clean prebuild.
+- Expo maps `ios.associatedDomains` from app config into the generated entitlements, which is required for iOS passkey registration.
+- The `e2e` simulator workflow does not require a development team.
+
 ## Detox E2E
 
 ### Prerequisites
@@ -110,6 +132,24 @@ bun run test:e2e:smoke
   - `account-screen`
   - `account-sign-out`
 
+## Auth Testing
+
+```bash
+bun run test:unit:auth
+bun run test:integration:auth
+bun run test:screens:auth
+bun run test:routes:auth
+bun run test:e2e:build:ios
+bun run test:e2e:auth:critical
+bun run test:e2e:smoke
+```
+
+- `jest-expo` plus React Native Testing Library cover auth screen behavior.
+- `expo-router/testing-library` covers route-level auth navigation and deep-link hydration.
+- Detox covers native-critical auth and relaunch flows.
+- personal-device smoke covers final hardware-specific auth validation.
+- Mobile passkey buttons are hidden by default behind `EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED`.
+
 ## EAS Builds
 
 ### Prerequisites
@@ -131,15 +171,10 @@ eas credentials
 ### Build Commands
 
 ```bash
-# development build (device)
-bun run build:dev:ios
-
-# dedicated e2e build
-bun run build:e2e:ios
-
-# preview/production
-bun run build:preview:ios
-bun run build:production:ios
+bun run build:development
+bun run build:e2e
+bun run build:preview
+bun run build:production
 ```
 
 ### TestFlight Deployment
@@ -148,7 +183,7 @@ For production TestFlight deployment, ensure Apple credentials are configured:
 
 ```bash
 # Build for production
-bun run build:production:ios
+bun run build:production
 
 # Submit to TestFlight (requires credentials)
 eas submit --platform ios --latest
@@ -156,11 +191,19 @@ eas submit --platform ios --latest
 
 ## Device Auth Smoke Checklist
 
-1. Install the development build on iPhone (`bun run build:dev:ios`).
+1. Set `EXPO_APPLE_TEAM_ID`, run `bun run prebuild:dev`, and install the generated development build on iPhone.
 2. Launch app and complete email + OTP sign-in.
 3. Verify protected data screen loads from API without auth error.
 4. Sign out and verify app returns to signed-out state.
 5. Relaunch app and verify refresh-token session restore works.
+6. For passkey add/sign-in on a real device, use a backend configured with a stable HTTPS passkey domain (`AUTH_PASSKEY_RP_ID` / `AUTH_PASSKEY_ORIGIN`), not a local IP or `localhost`.
+
+## Auth Readiness
+
+- Read the closeout matrix in [tests/AUTH_READINESS.md](/Users/charlesponti/Developer/hominem/apps/mobile/tests/AUTH_READINESS.md) before signing off mobile auth changes.
+- Detox is the repo-standard native-critical auth harness.
+- The `dev` and `e2e` native projects are intentionally different; always regenerate when switching harnesses.
+- A final personal-device smoke pass is required before sign-off.
 
 ## Architecture
 

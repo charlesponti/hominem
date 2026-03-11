@@ -1,10 +1,19 @@
 import { redirect } from 'react-router';
 
-export async function action({ request }: { request: Request }) {
-  // Clear auth cookies
+import { serverEnv } from '~/lib/env';
+
+export async function action() {
   const headers = new Headers();
-  headers.append('Set-Cookie', 'hominem_access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
-  headers.append('Set-Cookie', 'hominem_refresh_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+  const cookieDomain = serverEnv.AUTH_COOKIE_DOMAIN?.trim();
+  const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
+  headers.append(
+    'Set-Cookie',
+    `hominem_access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${domainAttribute}`,
+  );
+  headers.append(
+    'Set-Cookie',
+    `hominem_refresh_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${domainAttribute}`,
+  );
 
   return redirect('/auth', { headers });
 }

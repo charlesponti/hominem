@@ -1,18 +1,18 @@
 import { memo, useCallback } from 'react'
 import { StyleSheet } from 'react-native'
 import { FlashList, type ListRenderItem } from '@shopify/flash-list'
+import { theme } from '~/theme'
 import { RefreshControl } from 'react-native-gesture-handler'
 import type { FocusItem } from '~/utils/services/notes/types'
 import { FocusListItem } from './focus-list-item'
 
 // Memoized render item component to prevent unnecessary re-renders
-const RenderFocusItem = memo(({ item, index, totalCount }: { item: FocusItem; index: number; totalCount: number }) => {
+const RenderFocusItem = memo(({ item, index }: { item: FocusItem; index: number }) => {
   return (
     <FocusListItem
       label={item.text}
       item={item}
       itemIndex={index}
-      showBorder={totalCount === 1 || index < totalCount - 1}
     />
   )
 })
@@ -34,9 +34,9 @@ export const FocusList = ({
   // Memoized render function with stable reference
   const renderItem = useCallback<ListRenderItem<FocusItem>>(
     ({ item, index }) => {
-      return <RenderFocusItem item={item} index={index} totalCount={data.length} />
+      return <RenderFocusItem item={item} index={index} />
     },
-    [data.length]
+    []
   )
 
   if (!data.length) {
@@ -78,6 +78,6 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 14,
-    color: '#667085',
+    color: theme.colors.mutedForeground,
   },
 })

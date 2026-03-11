@@ -1,9 +1,4 @@
 import { AuthProvider } from '@hominem/auth';
-import type { AuthProviderProps } from '@hominem/auth';
-
-// debug type alias to ensure correct props are imported
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type AuthPropsDebug = AuthProviderProps;
 import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
 import type React from 'react';
 import { useCallback } from 'react';
@@ -29,10 +24,11 @@ import './lib/i18n';
 import { serverEnv } from './lib/env';
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { session, headers } = await getServerSession(request);
+  const { user, session, headers } = await getServerSession(request);
 
   return data(
     {
+      user,
       session,
       authEnv: {
         apiBaseUrl: authConfig.apiBaseUrl,
@@ -74,7 +70,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session, authEnv, apiBaseUrl } = loaderData;
+  const { authEnv, apiBaseUrl, session, user } = loaderData;
   const revalidator = useRevalidator();
   const clearOfflineCaches = useCallback(async () => {
     if (!('caches' in window)) {
@@ -97,7 +93,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 
   return (
-    <AuthProvider config={authEnv} onAuthEvent={handleAuthEvent}>
+    <AuthProvider
+      config={authEnv}
+      onAuthEvent={handleAuthEvent}
+      initialUser={user}
+      initialSession={session}
+    >
       <HonoProvider baseUrl={apiBaseUrl}>
         <FeatureFlagsProvider>
           <UpdateGuard logo="/logo.png" appName="Notes">

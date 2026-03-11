@@ -1,5 +1,6 @@
 import { useRouter, useSegments } from 'expo-router'
-import React, { useMemo } from 'react'
+import type { RelativePathString } from 'expo-router'
+import React, { useCallback, useMemo } from 'react'
 import { Pressable, StyleSheet, TextInput, View } from 'react-native'
 import Animated, {
   Extrapolation,
@@ -33,10 +34,10 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
 
   const { mutate: startChat, isPending } = useStartChat({
     userMessage: message || seedPrompt || '',
-    sherpaMessage: 'Jumping in now.',
+    _sherpaMessage: 'Jumping in now.',
     onSuccess: () => {
       setMessage('')
-      router.push('/(protected)/(tabs)/sherpa')
+      router.push('/(protected)/(tabs)/sherpa' as RelativePathString)
     },
   })
 
@@ -66,16 +67,29 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
     }
   })
 
-  const onSend = () => {
+  const handleVoicePress = useCallback(() => {
+    setIsRecording(!isRecording)
+    setMode('voice')
+  }, [isRecording, setIsRecording, setMode])
+
+  const handleTextModePress = useCallback(() => {
+    setMode('text')
+  }, [setMode])
+
+  const handleInputFocus = useCallback(() => {
+    expanded.value = withTiming(1, { duration: VOID_MOTION_DURATION_STANDARD })
+  }, [expanded])
+
+  const onSend = useCallback(() => {
     if (!message && !seedPrompt) return
     startChat()
-  }
+  }, [message, seedPrompt, startChat])
 
-  const toggleExpanded = () => {
+  const toggleExpanded = useCallback(() => {
     expanded.value = withTiming(expanded.value === 1 ? 0 : 1, {
       duration: VOID_MOTION_DURATION_STANDARD,
     })
-  }
+  }, [expanded])
 
   const isInDrawer = segments[0] === '(protected)'
   if (!isSignedIn || !isInDrawer) return null
@@ -101,7 +115,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
         <View style={styles.inputRow}>
           <Pressable
             style={styles.iconButton}
-            onPress={() => setMode('text')}
+            onPress={handleTextModePress}
             accessibilityLabel="Add attachment"
           >
             <MindsherpaIcon name="circle-plus" size={22} color={theme.colors.white} />
@@ -114,16 +128,11 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
             value={message}
             onChangeText={setMessage}
             testID="input-message"
-            onFocus={() => {
-              expanded.value = withTiming(1, { duration: VOID_MOTION_DURATION_STANDARD })
-            }}
+            onFocus={handleInputFocus}
           />
           <Pressable
             style={styles.iconButton}
-            onPress={() => {
-              setIsRecording(!isRecording)
-              setMode('voice')
-            }}
+            onPress={handleVoicePress}
             accessibilityLabel="Voice input"
             testID="voice-input-button"
           >

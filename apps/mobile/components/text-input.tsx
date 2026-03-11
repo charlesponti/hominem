@@ -9,7 +9,7 @@ function TextInput({ label, style, ...props }: TextInputProps & { label?: string
           {label.toUpperCase()}
         </Text>
         <RNTextInput
-          style={[styles.input, { textAlign: label ? 'right' : 'left' }, style]}
+          style={[styles.input, styles.inputLabeled, style]}
           placeholder={label.toUpperCase()}
           placeholderTextColor={theme.colors.mutedForeground}
           accessibilityLabel={label}
@@ -49,6 +49,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Geist Mono',
     fontSize: 14,
     color: theme.colors.foreground,
+  },
+  inputLabeled: {
+    textAlign: 'right',
   },
 })
 

@@ -259,13 +259,22 @@ jobs:
           bun-version: 1.3.0
       - name: 📦 Install dependencies
         run: bun install --force
+      - name: 🔎 Mobile typecheck
+        run: bun run --filter @hominem/mobile typecheck
+        env:
+          EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
+      - name: 🔬 Mobile lint
+        run: bun run --filter @hominem/mobile lint
       - name: 📱 Verify mobile gate
         run: bun run verify:mobile
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
           EXPO_PUBLIC_R2_DOMAIN: "test-domain"
       - name: 📱 Mobile auth unit/integration/screen tests
-        run: bun run --filter @hominem/mobile test:unit:auth && bun run --filter @hominem/mobile test:integration:auth && bun run --filter @hominem/mobile test:screens:auth
+        run: |
+          bun run --filter @hominem/mobile test:unit:auth
+          bun run --filter @hominem/mobile test:integration:auth
+          bun run --filter @hominem/mobile test:screens:auth
         timeout-minutes: 15
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"

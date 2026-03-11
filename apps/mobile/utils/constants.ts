@@ -6,6 +6,7 @@ const extra = (Constants.expoConfig?.extra ?? {}) as {
   aiSdkChatMobileEnabled?: string
   aiSdkTranscribeEnabled?: string
   aiSdkSpeechEnabled?: string
+  mobilePasskeyEnabled?: string
   e2eTesting?: string
   e2eAuthSecret?: string
   appVariant?: string
@@ -55,6 +56,10 @@ const toBooleanFlag = (value: string | undefined) => value === 'true'
 
 export const AI_SDK_CHAT_MOBILE_ENABLED = toBooleanFlag(
   extra.aiSdkChatMobileEnabled || process.env.EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED,
+)
+
+export const MOBILE_PASSKEY_ENABLED = toBooleanFlag(
+  extra.mobilePasskeyEnabled || process.env.EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED,
 )
 
 export const E2E_TESTING = toBooleanFlag(

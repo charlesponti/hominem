@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, TouchableOpacity, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
 import TextInput from '~/components/text-input';
-import { Text } from '~/theme';
+import { Text, theme } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
+import { MOBILE_PASSKEY_ENABLED } from '~/utils/constants';
 import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
 
 function Account() {
@@ -76,6 +77,10 @@ function Account() {
   }, [currentUser]);
 
   useEffect(() => {
+    if (!MOBILE_PASSKEY_ENABLED) {
+      setPasskeys([]);
+      return;
+    }
     if (isSignedIn) {
       listPasskeys()
         .then(setPasskeys)
@@ -88,27 +93,22 @@ function Account() {
   }
 
   return (
-    <View testID="account-screen" style={{ flex: 1, backgroundColor: '#000000' }}>
+    <View testID="account-screen" style={styles.root}>
       <ScrollView
-        contentContainerStyle={{
-          paddingHorizontal: 12,
-          paddingTop: 24,
-          rowGap: 8,
-          paddingBottom: 16,
-        }}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <Text variant="cardHeader" color="foreground">
           ACCOUNT
         </Text>
-        <View style={{ rowGap: 24, marginTop: 32 }}>
+        <View style={styles.formSection}>
           <View>
             <TextInput
               aria-disabled
               label="Name"
               placeholder="ENTER NAME"
               value={name}
-              style={{ flex: 1 }}
+              style={styles.inputFlex}
               onChange={(e) => setName(e.nativeEvent.text)}
             />
           </View>
@@ -118,11 +118,11 @@ function Account() {
               label="Email"
               editable={false}
               value={currentUser?.email ?? ''}
-              style={{ flex: 1 }}
+              style={styles.inputFlex}
             />
           </View>
           {name !== initialName ? (
-            <View style={{ marginTop: 24 }}>
+            <View style={styles.saveRow}>
               <Button
                 title="[SAVE]"
                 disabled={isSaving}
@@ -132,78 +132,114 @@ function Account() {
             </View>
           ) : null}
 
-          {/* Passkey management */}
-          <View style={{ rowGap: 8 }}>
-            <Text variant="cardHeader" color="foreground">
-              PASSKEYS
-            </Text>
-            {passkeys.length === 0 ? (
-              <Text color="mutedForeground" style={{ fontSize: 12 }}>
-                No passkeys registered.
+          {MOBILE_PASSKEY_ENABLED ? (
+            <View style={styles.passkeysSection}>
+              <Text variant="cardHeader" color="foreground">
+                PASSKEYS
               </Text>
-            ) : (
-              passkeys.map((pk) => (
-                <View
-                  key={pk.id}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    borderWidth: 1,
-                    borderColor: '#333',
-                    padding: 8,
-                  }}
-                >
-                  <Text color="foreground" style={{ fontSize: 12 }}>
-                    {pk.name}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => onDeletePasskeyPress(pk.id, pk.name)}
-                    accessibilityLabel={`Remove passkey ${pk.name}`}
-                    accessibilityRole="button"
-                    style={{
-                      minHeight: 44,
-                      minWidth: 44,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Text color="destructive" style={{ fontSize: 12 }}>
-                      [REMOVE]
+              {passkeys.length === 0 ? (
+                <Text color="mutedForeground" style={styles.noPasskeysText}>
+                  No passkeys registered.
+                </Text>
+              ) : (
+                passkeys.map((pk) => (
+                  <View key={pk.id} style={styles.passkeyRow}>
+                    <Text color="foreground" style={styles.passkeyName}>
+                      {pk.name}
                     </Text>
-                  </TouchableOpacity>
-                </View>
-              ))
-            )}
-            <Button
-              title={isPasskeyLoading ? '[ADDING...]' : '[ADD_PASSKEY]'}
-              disabled={isPasskeyLoading}
-              isLoading={isPasskeyLoading}
-              onPress={onAddPasskeyPress}
-            />
-          </View>
+                    <Pressable
+                      onPress={() => onDeletePasskeyPress(pk.id, pk.name)}
+                      accessibilityLabel={`Remove passkey ${pk.name}`}
+                      accessibilityRole="button"
+                      style={styles.passkeyDeleteButton}
+                    >
+                      <Text color="destructive" style={styles.passkeyDeleteText}>
+                        [REMOVE]
+                      </Text>
+                    </Pressable>
+                  </View>
+                ))
+              )}
+              <Button
+                title={isPasskeyLoading ? '[ADDING...]' : '[ADD_PASSKEY]'}
+                disabled={isPasskeyLoading}
+                isLoading={isPasskeyLoading}
+                onPress={onAddPasskeyPress}
+              />
+            </View>
+          ) : null}
         </View>
       </ScrollView>
 
-      <View
-        style={{
-          paddingHorizontal: 12,
-          paddingBottom: insets.bottom + 16,
-          paddingTop: 12,
-          rowGap: 12,
-          borderTopWidth: 1,
-          borderTopColor: 'rgba(255,255,255,0.08)',
-        }}
-      >
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
         <Button testID="account-sign-out" title="[SIGN_OUT]" onPress={onLogoutPress} />
         <Button
           title="[DELETE_ACCOUNT]"
           onPress={onDeleteAccountPress}
-          style={{ borderColor: '#FF0000' }}
+          style={styles.deleteButton}
         />
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  scrollContent: {
+    paddingHorizontal: theme.spacing.sm_12,
+    paddingTop: theme.spacing.ml_24,
+    rowGap: theme.spacing.s_8,
+    paddingBottom: theme.spacing.m_16,
+  },
+  formSection: {
+    rowGap: theme.spacing.ml_24,
+    marginTop: theme.spacing.l_32,
+  },
+  inputFlex: {
+    flex: 1,
+  },
+  saveRow: {
+    marginTop: theme.spacing.ml_24,
+  },
+  passkeysSection: {
+    rowGap: theme.spacing.s_8,
+  },
+  noPasskeysText: {
+    fontSize: 12,
+  },
+  passkeyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.s_8,
+  },
+  passkeyName: {
+    fontSize: 12,
+  },
+  passkeyDeleteButton: {
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  passkeyDeleteText: {
+    fontSize: 12,
+  },
+  footer: {
+    paddingHorizontal: theme.spacing.sm_12,
+    paddingTop: theme.spacing.sm_12,
+    rowGap: theme.spacing.sm_12,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  deleteButton: {
+    borderColor: theme.colors.destructive,
+  },
+});
 
 export default Account;

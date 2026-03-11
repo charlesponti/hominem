@@ -20,7 +20,6 @@ import {
   RefreshCcw,
 } from 'lucide-react';
 import { useState } from 'react';
-import { redirect } from 'react-router';
 
 import { PlaidConnectButton, PlaidLink } from '~/components/plaid/plaid-link';
 import { RouteLink } from '~/components/route-link';

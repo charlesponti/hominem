@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
-import { FlashList } from '@shopify/flash-list'
+import { FlashList, type ListRenderItem } from '@shopify/flash-list'
 
 import { FeatureErrorBoundary } from '~/components/error-boundary'
 import queryClient from '~/utils/query-client'
 import { useChatMessages, useEndChat, useSendMessage } from '~/utils/services/chat'
+import type { MessageOutput } from '~/utils/services/chat'
 import { ChatInput } from './chat-input'
 import ChatLoading from './chat-loading'
 import { loadMarkdown, renderMessage, type MarkdownComponent } from './chat-message'
 import { Text, theme } from '~/theme'
+
+const keyExtractor = (item: MessageOutput) => item.id
 
 type ChatProps = {
   chatId: string
@@ -58,8 +61,8 @@ export const Chat = (props: ChatProps) => {
     setMessage('')
   }, [sendChatMessage])
 
-  const renderItem = useCallback(
-    ({ item }: { item: (typeof formattedMessages)[number] }) => renderMessage(item, Markdown),
+  const renderItem = useCallback<ListRenderItem<MessageOutput>>(
+    ({ item }) => renderMessage(item, Markdown),
     [Markdown]
   )
 
@@ -72,7 +75,7 @@ export const Chat = (props: ChatProps) => {
           <FlashList
             contentContainerStyle={styles.messagesContainer}
             data={formattedMessages}
-            keyExtractor={(item) => item.id}
+            keyExtractor={keyExtractor}
             renderItem={renderItem}
             scrollEnabled={formattedMessages.length > 0}
           />
@@ -97,7 +100,7 @@ export const Chat = (props: ChatProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0b0d12',
+    backgroundColor: theme.colors.background,
     flexDirection: 'column',
   },
   messagesContainer: {

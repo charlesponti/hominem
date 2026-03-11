@@ -159,20 +159,20 @@ const theme = createTheme({
       color: 'foreground',
     },
     
-    /* Body styles */
+    /* Body styles - minimum 17px per design system */
     'bodyLarge': {
       fontFamily: PRIMARY_FONT,
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: '600',
-      lineHeight: 24,
+      lineHeight: 28,
       letterSpacing: 0,
       color: 'foreground',
     },
     'body': {
       fontFamily: PRIMARY_FONT,
-      fontSize: 14,
+      fontSize: 17,
       fontWeight: '400',
-      lineHeight: 20,
+      lineHeight: 24,
       letterSpacing: 0,
       color: 'secondaryForeground',
     },

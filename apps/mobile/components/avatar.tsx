@@ -1,6 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy'
+import { Image } from 'expo-image'
 import { useEffect, useState } from 'react'
-import { Alert, Button, Image, StyleSheet, View } from 'react-native'
+import { Alert, Button, StyleSheet, View } from 'react-native'
 
 import { theme } from '~/theme'
 
@@ -62,12 +63,13 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
   }
 
   return (
-    <View style={{ width: '100%', rowGap: 8, alignItems: 'center' }}>
+    <View style={styles.container}>
       {avatarUrl ? (
         <Image
           source={{ uri: avatarUrl }}
           accessibilityLabel="Avatar"
-          style={[avatarSize, styles.avatar, styles.image]}
+          contentFit="cover"
+          style={[avatarSize, styles.avatar]}
         />
       ) : (
         <View style={[avatarSize, styles.avatar, styles.noImage]}>
@@ -83,19 +85,19 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    rowGap: 8,
+    alignItems: 'center',
+  },
   avatar: {
     borderRadius: 1000,
     overflow: 'hidden',
     maxWidth: '100%',
   },
-  image: {
-    objectFit: 'cover',
-    paddingTop: 0,
-  },
   noImage: {
     backgroundColor: theme.colors.grayLight,
-    borderColor: 'rgb(200, 200, 200)',
-    borderStyle: 'solid',
+    borderColor: theme.colors.border,
     borderWidth: 1,
     borderRadius: 1000,
     justifyContent: 'center',

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { memo } from 'react'
 import { StyleSheet, View } from 'react-native'
 
-import { Text, theme } from '~/theme'
+import { Text, theme as appTheme } from '~/theme'
 import type { MessageOutput } from '~/utils/services/chat'
 
 export type MarkdownComponent = React.ComponentType<{
@@ -14,7 +14,11 @@ export const loadMarkdown = async () => {
   return mod.default as MarkdownComponent
 }
 
-const ChatMessage = ({
+// Hoisted markdown style maps — stable references, no per-render allocation
+const userMarkdownStyle = { body: {} as Record<string, unknown> }
+const botMarkdownStyle = { body: {} as Record<string, unknown> }
+
+const ChatMessage = memo(({
   message,
   Markdown,
 }: {
@@ -22,22 +26,23 @@ const ChatMessage = ({
   Markdown?: MarkdownComponent | null
 }) => {
   const { role, message: content } = message
-  const formattedRole = role.toLowerCase()
-  const isUser = formattedRole === 'user'
+  const isUser = role.toLowerCase() === 'user'
   const chatBubbleStyle = isUser ? styles.userMessage : styles.botMessage
+  const textStyle = isUser ? styles.userMessageText : styles.botMessageText
+
+  // Assign lazily so StyleSheet objects are used (avoids per-render allocation)
+  userMarkdownStyle.body = styles.userMessageText as unknown as Record<string, unknown>
+  botMarkdownStyle.body = styles.botMessageText as unknown as Record<string, unknown>
+  const markdownStyle = isUser ? userMarkdownStyle : botMarkdownStyle
 
   return (
     <View style={[styles.bubble, chatBubbleStyle]}>
       {Markdown ? (
-        <Markdown
-          style={{
-            body: isUser ? styles.userMessageText : styles.botMessageText,
-          }}
-        >
+        <Markdown style={markdownStyle}>
           {content}
         </Markdown>
       ) : (
-        <Text style={isUser ? styles.userMessageText : styles.botMessageText}>{content}</Text>
+        <Text style={textStyle}>{content}</Text>
       )}
       {message.focus_items && message.focus_items.length > 0 ? (
         <View style={[styles.focusItems]}>
@@ -52,7 +57,9 @@ const ChatMessage = ({
       ) : null}
     </View>
   )
-}
+})
+
+ChatMessage.displayName = 'ChatMessage'
 
 export const renderMessage = (
   item: MessageOutput,
@@ -71,37 +78,37 @@ const styles = StyleSheet.create({
   },
   botMessage: {
     alignSelf: 'flex-start',
-    backgroundColor: theme.colors.darkCard,
+    backgroundColor: appTheme.colors.darkCard,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    borderColor: appTheme.colors['border-subtle'],
   },
   userMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: appTheme.colors['emphasis-lower'],
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: appTheme.colors['emphasis-subtle'],
   },
   userMessageText: {
     fontSize: 17,
     lineHeight: 24,
-    color: '#e8ebf4',
+    color: appTheme.colors.foreground,
   },
   botMessageText: {
     fontSize: 18,
     lineHeight: 24,
-    color: '#f6f7fb',
+    color: appTheme.colors.foreground,
   },
   focusItems: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    gap: appTheme.spacing.sm_12,
+    paddingHorizontal: appTheme.spacing.sm_12,
+    paddingVertical: appTheme.spacing.s_8,
   },
   focusItem: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
+    backgroundColor: appTheme.colors['border-default'],
+    paddingHorizontal: appTheme.spacing.sm_12,
+    paddingVertical: appTheme.spacing.s_8,
+    borderRadius: appTheme.borderRadii.l_12,
   },
 })

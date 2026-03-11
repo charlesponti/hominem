@@ -284,6 +284,35 @@ async function createEmailOtpAuthResponse(dbUser: {
   }
 }
 
+async function findOrCreateEmailOtpUser(input: {
+  email: string
+  name?: string | undefined
+}) {
+  const existingUser = await db
+    .selectFrom('users')
+    .selectAll()
+    .where('email', '=', input.email)
+    .limit(1)
+    .executeTakeFirst()
+
+  if (existingUser) {
+    return existingUser
+  }
+
+  return db
+    .insertInto('users')
+    .values({
+      id: randomBytes(16).toString('hex'),
+      email: input.email,
+      name: input.name ?? null,
+      is_admin: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .returningAll()
+    .executeTakeFirst()
+}
+
 async function signInWithBetterAuthEmailOtp(
   c: Context<AppEnv>,
   payload: z.infer<typeof emailOtpVerifySchema>,
@@ -661,7 +690,17 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
         });
         return c.json({ error: 'otp_replayed' }, 400);
       }
-      return signInWithBetterAuthEmailOtp(c, payload);
+
+      const dbUser = await findOrCreateEmailOtpUser({
+        email: payload.email,
+        name: payload.name,
+      })
+
+      if (!dbUser) {
+        return c.json({ error: 'user_not_found' }, 400)
+      }
+
+      return createEmailOtpAuthResponse(dbUser)
     }
 
     return signInWithBetterAuthEmailOtp(c, payload);

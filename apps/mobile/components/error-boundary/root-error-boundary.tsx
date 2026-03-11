@@ -1,5 +1,5 @@
 import React, { Component, type ReactNode } from 'react'
-import { View, StyleSheet } from 'react-native'
+import { Pressable, View, StyleSheet } from 'react-native'
 import { Text, theme } from '~/theme'
 import {
   createBoundaryStateFromError,
@@ -7,6 +7,7 @@ import {
   resetBoundaryState,
   type BoundaryState,
 } from '~/utils/error-boundary/contracts'
+import { logError } from '~/utils/error-boundary/log-error'
 
 interface Props {
   children: ReactNode
@@ -27,7 +28,7 @@ export class RootErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('[RootErrorBoundary] Uncaught error:', error, errorInfo)
+    logError(error, errorInfo)
     this.props.onError?.(error, errorInfo)
   }
 
@@ -49,11 +50,11 @@ export class RootErrorBoundary extends Component<Props, State> {
           <Text variant="body" color="mutedForeground" style={styles.message}>
             {createRootFallbackMessage(this.state.error)}
           </Text>
-          <View style={styles.button} onTouchEnd={this.handleReset}>
+          <Pressable style={styles.button} onPress={this.handleReset} accessibilityRole="button">
             <Text variant="label" color="white">
               Try Again
             </Text>
-          </View>
+          </Pressable>
         </View>
       )
     }

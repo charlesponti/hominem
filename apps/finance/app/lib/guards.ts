@@ -9,7 +9,7 @@ import { getServerAuth } from './auth.server';
 export async function requireAuth(request: Request) {
   const auth = await getServerAuth(request);
 
-  if (!auth.user) {
+  if (!auth.user || !auth.session?.access_token) {
     throw redirect('/auth');
   }
 

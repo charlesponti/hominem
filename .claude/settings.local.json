@@ -35,7 +35,9 @@
       "WebFetch(domain:docs.expo.dev)",
       "WebFetch(domain:github.com)",
       "Bash(xcodebuild:*)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(bunx vitest:*)",
+      "Bash(ls /Users/charlesponti/Developer/hominem/apps/mobile/app/\\\\\\(protected\\\\\\)/)"
     ]
   }
 }

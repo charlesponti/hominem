@@ -1,7 +1,7 @@
 'use client';
 
-import { Clock, GripVertical, Pause, Play, X } from 'lucide-react';
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import { Clock, GripVertical } from 'lucide-react';
+import type { HTMLAttributes, ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -52,7 +52,6 @@ interface QueueItemProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export function QueueItem({
-  id,
   status = 'pending',
   title,
   description,

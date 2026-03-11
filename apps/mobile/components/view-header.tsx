@@ -1,4 +1,5 @@
 import { Link } from 'expo-router'
+import type { RelativePathString } from 'expo-router'
 import React, { type PropsWithChildren } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Text, theme } from '~/theme'
@@ -8,8 +9,8 @@ export const ViewHeader = ({ children }: PropsWithChildren) => {
   return (
     <View style={styles.container}>
       <View style={styles.navbar}>
-        <Link href="/(protected)/(tabs)/focus">
-          <View style={{ flexDirection: 'row', alignItems: 'center', columnGap: 12 }}>
+        <Link href={"/(protected)/(tabs)/focus" as RelativePathString}>
+          <View style={styles.backLink}>
             <MindsherpaIcon name="arrow-left" size={26} color={theme.colors.foreground} />
             <Text variant="bodyLarge">Today</Text>
           </View>
@@ -24,6 +25,11 @@ const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
     marginTop: 50,
+  },
+  backLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    columnGap: 12,
   },
   navbar: {
     flexDirection: 'row',

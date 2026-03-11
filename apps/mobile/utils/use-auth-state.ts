@@ -4,7 +4,7 @@ import { useAuth } from './auth-provider'
 import type { AppAuthState, AppAuthStatus } from '@hominem/auth'
 
 export function useAuthState(): AppAuthState {
-  const { authStatus, isLoadingAuth, currentUser, isSignedIn, clearError } = useAuth()
+  const { authStatus, isLoadingAuth, currentUser } = useAuth()
 
   const state = useMemo<AppAuthState>(() => {
     const status = mapToCanonicalStatus(authStatus)

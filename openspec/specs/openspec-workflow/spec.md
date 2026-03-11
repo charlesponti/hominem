@@ -6,7 +6,7 @@ The repository OpenSpec workflow SHALL treat `openspec/changes` as the home for 
 #### Scenario: Open change discovery uses changes
 - **WHEN** a user or tool lists available changes
 - **THEN** the open changes are discovered from `openspec/changes`
-- **AND** the active change referenced by `openspec/ACTIVE_CHANGE.md` points to artifacts under `openspec/changes`
+- **AND** the active change referenced by `openspec/ACTIVE_CHANGE.md` either points to artifacts under `openspec/changes` or is explicitly unset as `active_change: none`
 
 ### Requirement: OpenSpec SHALL publish completed truth under specs only
 The repository OpenSpec workflow SHALL treat `openspec/specs` as the only canonical completed OpenSpec tree.

@@ -43,7 +43,7 @@ function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
 // SQLite is persistence layer only, updated after successful mutations
 export const useChatMessages = ({ chatId }: { chatId: string }) => {
   const client = useApiClient()
-  const queryClient = useQueryClient()
+  const _queryClient = useQueryClient()
 
   return useQuery<MessageOutput[]>({
     queryKey: ['chatMessages', chatId],
@@ -165,15 +165,15 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
 // Simplified start chat - uses React Query retry instead of custom queue
 export const useStartChat = ({
   userMessage,
-  sherpaMessage,
-  intentId,
-  seedPrompt,
+  _sherpaMessage,
+  _intentId,
+  _seedPrompt,
   ...props
 }: {
   userMessage: string
-  sherpaMessage: string
-  intentId?: string
-  seedPrompt?: string
+  _sherpaMessage: string
+  _intentId?: string
+  _seedPrompt?: string
 } & MutationOptions<LocalChat, Error, void>) => {
   const client = useApiClient()
   const queryClient = useQueryClient()

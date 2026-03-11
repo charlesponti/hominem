@@ -21,10 +21,11 @@ import { serverEnv } from './lib/env';
 import './globals.css';
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { session, headers } = await getServerSession(request);
+  const { user, session, headers } = await getServerSession(request);
 
   return data(
     {
+      user,
       session,
       authEnv: {
         apiBaseUrl: authConfig.apiBaseUrl,
@@ -66,7 +67,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session, authEnv, apiBaseUrl } = loaderData;
+  const { authEnv, apiBaseUrl, session, user } = loaderData;
   const revalidator = useRevalidator();
   const clearOfflineCaches = useCallback(async () => {
     if (!('caches' in window)) {
@@ -89,7 +90,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
   );
 
   return (
-    <AuthProvider config={authEnv} onAuthEvent={handleAuthEvent}>
+    <AuthProvider
+      config={authEnv}
+      onAuthEvent={handleAuthEvent}
+      initialUser={user}
+      initialSession={session}
+    >
       <HonoProvider baseUrl={apiBaseUrl}>
         <UpdateGuard logo="/logo-finance.png" appName="Finance">
           <Outlet />

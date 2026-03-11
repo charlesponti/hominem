@@ -1,4 +1,5 @@
 import { Link } from 'expo-router'
+import type { RelativePathString } from 'expo-router'
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Text, theme } from '~/theme'
@@ -19,7 +20,7 @@ export const FocusHeader = React.memo(() => {
           </Text>
         </View>
         <View style={[styles.iconWrap]}>
-          <Link href="/(protected)/(tabs)/account" style={[styles.iconLink]}>
+          <Link href={"/(protected)/(tabs)/account" as RelativePathString} style={[styles.iconLink]}>
             <MindsherpaIcon name="user" size={16} />
           </Link>
         </View>

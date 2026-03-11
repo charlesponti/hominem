@@ -20,10 +20,11 @@ import { serverEnv } from './lib/env';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { getServerSession } = await import('./lib/auth.server');
-  const { session, headers } = await getServerSession(request);
+  const { user, session, headers } = await getServerSession(request);
 
   return data(
     {
+      user,
       session,
       authConfig: {
         apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
@@ -51,7 +52,7 @@ export const meta = () => [
 ];
 
 export default function App({ loaderData }: Route.ComponentProps) {
-  const { session, authConfig, apiBaseUrl } = loaderData;
+  const { authConfig, apiBaseUrl, session, user } = loaderData;
   const revalidator = useRevalidator();
   const clearOfflineCaches = useCallback(async () => {
     if (!('caches' in window)) {
@@ -85,7 +86,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
         <Links />
       </head>
       <body>
-        <AuthProvider config={authConfig} onAuthEvent={handleAuthEvent}>
+        <AuthProvider
+          config={authConfig}
+          onAuthEvent={handleAuthEvent}
+          initialUser={user}
+          initialSession={session}
+        >
           <HonoProvider baseUrl={apiBaseUrl}>
             <UpdateGuard logo="/icons/apple-touch-icon-152x152.png" appName="Rocco">
               <Outlet />

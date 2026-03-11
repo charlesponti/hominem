@@ -1,5 +1,5 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { Link, Stack } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -18,7 +18,6 @@ import { useFocusQuery } from '~/utils/services/notes/use-focus-query';
 
 export const FocusView = () => {
   const insets = useSafeAreaInsets();
-  const queryClient = useQueryClient();
   const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const {
@@ -39,9 +38,8 @@ export const FocusView = () => {
   const onRefresh = useCallback(() => {
     setActiveSearch(null);
     setRefreshing(true);
-    queryClient.setQueryData(['focusItems'], []);
     refetch();
-  }, [queryClient.setQueryData, refetch]);
+  }, [refetch]);
 
   const onSearchClose = useCallback(() => {
     onRefresh();
@@ -57,8 +55,8 @@ export const FocusView = () => {
         options={{
           title: 'FOCUS',
           headerRight: () => (
-            <View style={{ flexDirection: 'row', columnGap: 8 }}>
-              <Link href="/(protected)/(tabs)/sherpa">
+            <View style={headerRightStyles.row}>
+              <Link href={"/(protected)/(tabs)/sherpa" as RelativePathString}>
                 <Text variant="body" color="secondaryForeground">
                   SHERPA
                 </Text>
@@ -108,8 +106,8 @@ export const FocusView = () => {
         <View style={[styles.sherpaButtonContainer, { bottom: insets.bottom }]}>
           <View style={styles.sherpaCircleButton}>
             <Link
-              href="/(protected)/(tabs)/sherpa"
-              style={{ flex: 1 }}
+              href={"/(protected)/(tabs)/sherpa" as RelativePathString}
+              style={styles.sherpaLink}
               accessibilityLabel="Open Sherpa"
             >
               <MindsherpaIcon name="hat-wizard" size={32} color={theme.colors.white} />
@@ -159,6 +157,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+  sherpaLink: {
+    flex: 1,
+  },
   sherpaCircleButton: {
     backgroundColor: theme.colors.muted,
     borderRadius: 999,
@@ -182,18 +183,11 @@ export default FocusViewWithErrorBoundary;
 
 const FocusLoadingError = React.memo(() => {
   return (
-    <View
-      style={[
-        {
-          padding: 12,
-          marginHorizontal: 12,
-        },
-      ]}
-    >
+    <View style={errorStyles.wrapper}>
       <FeedbackBlock error>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', columnGap: 24 }}>
+        <View style={errorStyles.row}>
           <MindsherpaIcon name="circle-exclamation" size={24} color={theme.colors.tomato} />
-          <View style={{ flex: 1 }}>
+          <View style={errorStyles.textCol}>
             <Text variant="body" color="foreground">
               FOCUS LOAD FAILED.
             </Text>
@@ -205,4 +199,27 @@ const FocusLoadingError = React.memo(() => {
       </FeedbackBlock>
     </View>
   );
+});
+
+const headerRightStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    columnGap: 8,
+  },
+});
+
+const errorStyles = StyleSheet.create({
+  wrapper: {
+    padding: 12,
+    marginHorizontal: 12,
+  },
+  row: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    columnGap: 24,
+  },
+  textCol: {
+    flex: 1,
+  },
 });

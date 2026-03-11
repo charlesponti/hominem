@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 
 import BlurredGradientBackground from '~/components/chat/blurred-background';
@@ -15,7 +16,7 @@ export default function Sherpa() {
   const { isPending: isLoadingActiveChat, refetch: getActiveChat } = useActiveChat();
   const { mutateAsync: startChat, isPending: isStartingChat } = useStartChat({
     userMessage: params.seed || '',
-    sherpaMessage: 'Starting now.',
+    _sherpaMessage: 'Starting now.',
     onSuccess: (chat) => {
       setActiveChat(chat);
     },
@@ -37,7 +38,7 @@ export default function Sherpa() {
   }, [getActiveChat, params.seed]);
 
   const onChatEnd = useCallback(() => {
-    router.push('/(protected)/(tabs)/focus');
+    router.push('/(protected)/(tabs)/focus' as RelativePathString);
   }, [router]);
 
   return (

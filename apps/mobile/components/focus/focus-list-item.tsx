@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useRef } from 'react'
-import { StyleSheet, Text, View, type ViewStyle } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Reanimated, {
   runOnJS,
@@ -10,24 +10,17 @@ import Reanimated, {
 import * as ContextMenu from 'zeego/context-menu'
 
 import { Link } from 'expo-router'
+import type { RelativePathString } from 'expo-router'
 import { Text as MSText, theme } from '~/theme'
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { borderStyle, listStyles } from '~/theme/styles'
 import { getLocalDate } from '~/utils/dates'
-import queryClient from '~/utils/query-client'
 import type { FocusItem } from '~/utils/services/notes/types'
 import { useDeleteFocus } from '~/utils/services/notes/use-delete-focus'
 import { useFocusItemComplete } from '../../utils/services/notes/use-focus-item-complete'
 import MindsherpaIcon, { type MindsherpaIconName } from '../ui/icon'
 
 const SWIPE_THRESHOLD = 80
-
-// Memoized cache update function to prevent recreating on every render
-const removeFocusItem = (itemId: string) => {
-  queryClient.setQueryData(['focusItems'], (old: FocusItem[] | undefined) =>
-    (old || []).filter((focusItem) => focusItem.id !== itemId)
-  )
-}
 
 const FocusDueDate = memo(({ dueDate }: { dueDate: Date | null }) => {
   if (!dueDate) return null
@@ -47,15 +40,10 @@ export const FocusListItem = ({
   item,
   label,
   itemIndex,
-  showBorder,
-  style,
-  ...props
 }: {
   item: FocusItem
   label: string
   itemIndex?: number
-  showBorder?: boolean
-  style?: ViewStyle[]
 }) => {
   const translateX = useSharedValue(0)
   const itemHeight = useSharedValue(64)
@@ -86,14 +74,10 @@ export const FocusListItem = ({
   }, [iconName, iconBackgroundColor, isMutating])
 
   const deleteFocusItem = useDeleteFocus({
-    onSuccess: async (deletedItemId) => {
-      await queryClient.cancelQueries({ queryKey: ['focusItems'] })
-      removeFocusItem(item.id)
+    onSuccess: () => {
       isMutating.value = false
     },
     onError: () => {
-      const previousItems = queryClient.getQueryData(['focusItems'])
-      queryClient.setQueryData(['focusItems'], previousItems)
       if (errorTimeoutRef.current) {
         clearTimeout(errorTimeoutRef.current)
       }
@@ -102,11 +86,10 @@ export const FocusListItem = ({
   })
 
   const completeItem = useFocusItemComplete({
-    onSuccess: (data) => {
+    onSuccess: () => {
       iconBackgroundColor.value = withTiming(theme.colors.green, {
         duration: VOID_MOTION_DURATION_STANDARD,
       })
-      removeFocusItem(item.id)
       isMutating.value = false
     },
     onError: () => {
@@ -170,14 +153,8 @@ export const FocusListItem = ({
 
   const itemInfo = (
     <Reanimated.View style={[styles.itemContainer, animatedStyle]}>
-      <View
-        style={{
-          flex: 1,
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}
-      >
-        <View style={{ flex: 1, flexDirection: 'column', rowGap: 6 }}>
+      <View style={styles.itemRow}>
+        <View style={styles.itemContent}>
           <Reanimated.Text
             style={[
               listStyles.text,
@@ -218,11 +195,11 @@ export const FocusListItem = ({
         <Link
           asChild
           href={{
-            pathname: '/(protected)/(tabs)/focus/[id]',
+            pathname: '/(protected)/(tabs)/focus/[id]' as RelativePathString,
             params: { id: item.id },
           }}
         >
-          <ContextMenu.Trigger style={{ flex: 1, width: '100%' }}>
+          <ContextMenu.Trigger style={styles.triggerFull}>
             <GestureDetector gesture={combinedGesture}>{itemInfo}</GestureDetector>
           </ContextMenu.Trigger>
         </Link>
@@ -266,6 +243,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: theme.colors.secondaryForeground,
+  },
+  itemRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemContent: {
+    flex: 1,
+    flexDirection: 'column',
+    rowGap: 6,
+  },
+  triggerFull: {
+    flex: 1,
+    width: '100%',
   },
   icon: {
     borderRadius: 999,

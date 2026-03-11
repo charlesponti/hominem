@@ -1,7 +1,8 @@
 import { ThemeProvider } from '@shopify/restyle';
 import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -19,7 +20,7 @@ markStartupPhase('app_start');
 
 function InnerRootLayout() {
   const router = useRouter();
-  const segments = useSegments();
+  const segments = useSegments() as string[];
   const { authStatus, isSignedIn, resetAuthForE2E, signOut } = useAuth();
   const hasMarkedShellReady = React.useRef(false);
 
@@ -52,7 +53,7 @@ function InnerRootLayout() {
       segments,
     });
     if (target) {
-      router.replace(target);
+      router.replace(target as RelativePathString);
     }
   }, [authStatus, isSignedIn, segments, router]);
 
@@ -106,10 +107,12 @@ function RootLayout() {
   return (
     <ThemeProvider theme={theme}>
       <SafeAreaProvider>
-        <GestureHandlerRootView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-          <AuthProvider>
-            <InnerRootLayout />
-          </AuthProvider>
+        <GestureHandlerRootView style={rootStyles.gestureRoot}>
+          <RootErrorBoundary>
+            <AuthProvider>
+              <InnerRootLayout />
+            </AuthProvider>
+          </RootErrorBoundary>
         </GestureHandlerRootView>
       </SafeAreaProvider>
     </ThemeProvider>
@@ -118,9 +121,16 @@ function RootLayout() {
 
 export default RootLayout;
 
-const styles = {
+const rootStyles = StyleSheet.create({
+  gestureRoot: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+});
+
+const styles = StyleSheet.create({
   e2eIndicator: {
-    position: 'absolute' as const,
+    position: 'absolute',
     top: 0,
     left: 0,
     width: 2,
@@ -128,7 +138,7 @@ const styles = {
     opacity: 0.02,
   },
   e2eAction: {
-    position: 'absolute' as const,
+    position: 'absolute',
     top: 2,
     right: 2,
     width: 16,
@@ -136,11 +146,11 @@ const styles = {
     opacity: 0.02,
   },
   e2eActionAlt: {
-    position: 'absolute' as const,
+    position: 'absolute',
     top: 22,
     right: 2,
     width: 16,
     height: 16,
     opacity: 0.02,
   },
-};
+});

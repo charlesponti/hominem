@@ -12,7 +12,7 @@ export const ActiveSearchSummary = React.memo(
   ({ activeSearch, onCloseClick }: { activeSearch: ActiveSearch; onCloseClick: () => void }) => {
     return (
       <View style={[searchHeaderStyles.container]}>
-        <View style={{ flex: 1, alignContent: 'center' }}>
+        <View style={searchHeaderStyles.resultCount}>
           <Text variant="body" color="fg-primary" style={[searchHeaderStyles.searchText]}>
             {activeSearch.count} RESULTS FOR "{activeSearch.keyword.toUpperCase()}"
           </Text>
@@ -30,6 +30,10 @@ export const ActiveSearchSummary = React.memo(
 )
 
 const searchHeaderStyles = StyleSheet.create({
+  resultCount: {
+    flex: 1,
+    alignContent: 'center',
+  },
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',

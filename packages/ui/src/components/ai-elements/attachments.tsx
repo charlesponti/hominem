@@ -144,7 +144,6 @@ interface AttachmentInfoProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export function AttachmentInfo({
-  showMediaType = false,
   className,
   children,
   ...props
