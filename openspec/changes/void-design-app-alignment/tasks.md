@@ -1,7 +1,7 @@
 ## Phase 1: Color and Typography Tokens
 
 - [x] 1.1 Audit all app routes and components for hardcoded hex/rgba color values
-- [ ] 1.2 Replace hardcoded colors with imports from `@hominem/ui/tokens/colors.ts`
+- [x] 1.2 Replace hardcoded colors with imports from `@hominem/ui/tokens/colors.ts`
 - [ ] 1.3 Verify Tailwind CSS color classes use only approved token values (no raw hex in `className`)
 - [ ] 1.4 Audit typography (font-size, font-weight, line-height) in app components
 - [ ] 1.5 Replace arbitrary font sizes with canonical typography scale from `@hominem/ui/tokens/typography.ts`
