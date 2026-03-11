@@ -86,6 +86,25 @@ const mobileE2eLoginSchema = z.object({
   name: z.string().min(1).max(128).optional(),
   amr: z.array(z.string()).optional(),
 });
+
+const cliAuthorizeSchema = z.object({
+  redirect_uri: z.string().url(),
+  code_challenge: z.string().min(43).max(128),
+  state: z.string().min(1).max(256),
+  scope: z.string().optional(),
+});
+
+const cliExchangeSchema = z.object({
+  code: z.string().min(16),
+  code_verifier: z.string().min(43).max(128),
+  redirect_uri: z.string().url(),
+});
+
+const cliE2eLoginSchema = z.object({
+  email: z.string().email().optional(),
+  name: z.string().min(1).max(128).optional(),
+});
+
 const testOtpQuerySchema = z.object({
   email: z.string().email(),
   type: z.string().min(1).optional(),
@@ -100,6 +119,8 @@ const AUTH_DEVICE_TOKEN_LIMIT_MAX = 120;
 const AUTH_E2E_LOGIN_LIMIT_WINDOW_SECONDS = 60;
 const AUTH_E2E_LOGIN_LIMIT_MAX = 20;
 const AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+const AUTH_CLI_SESSION_TTL_SECONDS = 5 * 60;
+const AUTH_CLI_CODE_TTL_SECONDS = 5 * 60;
 
 interface AuthRateLimitInput {
   bucket: string;
@@ -121,6 +142,110 @@ interface MobileE2eLoginResponse {
     email: string;
     name?: string | null;
   };
+}
+
+interface CliTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
+  session_id: string;
+  refresh_family_id: string;
+  scope: string;
+  provider: 'better-auth';
+}
+
+interface CliPkceSession {
+  code_challenge: string;
+  redirect_uri: string;
+  state: string;
+  scope: string;
+  created_at: string;
+}
+
+interface CliAuthCode {
+  user_id: string;
+  session_id: string;
+  code_challenge: string;
+  redirect_uri: string;
+  scope: string;
+}
+
+function cliSessionKey(sessionId: string) {
+  return `auth:cli:session:${sessionId}`;
+}
+
+function cliCodeKey(code: string) {
+  return `auth:cli:code:${code}`;
+}
+
+function isLoopbackUri(uri: string): boolean {
+  try {
+    const parsed = new URL(uri);
+    return (
+      parsed.hostname === '127.0.0.1' ||
+      parsed.hostname === 'localhost' ||
+      parsed.hostname === '[::1]'
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function storeCliPkceSession(
+  sessionId: string,
+  session: CliPkceSession,
+): Promise<void> {
+  const redis = await getRedis();
+  await redis.set(
+    cliSessionKey(sessionId),
+    JSON.stringify(session),
+    'EX',
+    AUTH_CLI_SESSION_TTL_SECONDS,
+  );
+}
+
+async function getCliPkceSession(sessionId: string): Promise<CliPkceSession | null> {
+  const redis = await getRedis();
+  const raw = await redis.get(cliSessionKey(sessionId));
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as CliPkceSession;
+  } catch (error) {
+    logger.warn('[auth:cli] failed to parse stored PKCE session', { sessionId, error });
+    return null;
+  }
+}
+
+async function deleteCliPkceSession(sessionId: string): Promise<void> {
+  const redis = await getRedis();
+  await redis.del(cliSessionKey(sessionId));
+}
+
+async function storeCliAuthCode(code: string, data: CliAuthCode): Promise<void> {
+  const redis = await getRedis();
+  await redis.set(cliCodeKey(code), JSON.stringify(data), 'EX', AUTH_CLI_CODE_TTL_SECONDS);
+}
+
+async function consumeCliAuthCode(code: string): Promise<CliAuthCode | null> {
+  const redis = await getRedis();
+  const raw = await redis.get(cliCodeKey(code));
+  if (!raw) return null;
+  let parsed: CliAuthCode;
+  try {
+    parsed = JSON.parse(raw) as CliAuthCode;
+  } catch (error) {
+    logger.warn('[auth:cli] failed to parse stored auth code', { error });
+    return null;
+  }
+  // Delete only after successful parse to avoid masking data corruption
+  await redis.del(cliCodeKey(code));
+  return parsed;
+}
+
+function verifyPkce(codeVerifier: string, codeChallenge: string): boolean {
+  const computed = createHash('sha256').update(codeVerifier).digest('base64url');
+  return computed === codeChallenge;
 }
 
 function normalizeAuthEmail(email: string) {
@@ -683,6 +808,241 @@ authRoutes.post('/mobile/e2e/login', zValidator('json', mobileE2eLoginSchema), a
       email: user.email,
       name: user.name,
     },
+  };
+
+  return c.json(response);
+});
+
+// CLI OAuth PKCE flow routes
+authRoutes.post('/cli/authorize', zValidator('json', cliAuthorizeSchema), async (c) => {
+  const payload = c.req.valid('json');
+
+  if (!isLoopbackUri(payload.redirect_uri)) {
+    return c.json({ error: 'invalid_redirect_uri', message: 'redirect_uri must be a loopback address' }, 400);
+  }
+
+  const sessionId = randomBytes(16).toString('hex');
+  const session: CliPkceSession = {
+    code_challenge: payload.code_challenge,
+    redirect_uri: payload.redirect_uri,
+    state: payload.state,
+    scope: payload.scope ?? 'cli:read',
+    created_at: new Date().toISOString(),
+  };
+
+  try {
+    await storeCliPkceSession(sessionId, session);
+  } catch (error) {
+    logger.error('[auth:cli:authorize] failed to store session', { error });
+    return c.json({ error: 'server_error' }, 500);
+  }
+
+  const authorizationUrl = new URL('/api/auth/cli/callback', env.API_URL);
+  authorizationUrl.searchParams.set('session', sessionId);
+
+  return c.json({ authorization_url: authorizationUrl.toString() });
+});
+
+authRoutes.get('/cli/callback', async (c) => {
+  const sessionId = c.req.query('session');
+  if (!sessionId) {
+    return c.json({ error: 'missing_session' }, 400);
+  }
+
+  const session = await getCliPkceSession(sessionId);
+  if (!session) {
+    return c.json({ error: 'session_not_found' }, 400);
+  }
+
+  // Resolve the authenticated user from the request (bearer token or cookie)
+  const authHeader = c.req.header('authorization');
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const cookieHeader = c.req.header('cookie') ?? '';
+  const cookieToken = getCookieValue(cookieHeader, 'hominem_access_token');
+
+  let userId: string | null = null;
+  const tokenToVerify = bearerToken ?? (cookieToken ? decodeURIComponent(cookieToken) : null);
+  if (tokenToVerify) {
+    try {
+      const claims = await verifyAccessToken(tokenToVerify);
+      userId = claims.sub;
+    } catch {
+      userId = null;
+    }
+  }
+
+  if (!userId) {
+    // Redirect to sign-in page with session embedded so user can authenticate
+    // sessionId is a non-secret reference (analogous to OAuth 'state') used to
+    // look up the PKCE session server-side. It does not grant access on its own
+    // and expires in AUTH_CLI_SESSION_TTL_SECONDS.
+    const signInUrl = new URL('/api/better-auth/sign-in/email-otp', env.BETTER_AUTH_URL);
+    signInUrl.searchParams.set('cli_session', sessionId);
+    return c.redirect(signInUrl.toString(), 302);
+  }
+
+  // Issue a one-time authorization code and redirect to the CLI's redirect_uri
+  const code = randomBytes(32).toString('base64url');
+  const codeData: CliAuthCode = {
+    user_id: userId,
+    session_id: sessionId,
+    code_challenge: session.code_challenge,
+    redirect_uri: session.redirect_uri,
+    scope: session.scope,
+  };
+
+  try {
+    await storeCliAuthCode(code, codeData);
+    await deleteCliPkceSession(sessionId);
+  } catch (error) {
+    logger.error('[auth:cli:callback] failed to store auth code', { error });
+    return c.json({ error: 'server_error' }, 500);
+  }
+
+  const redirectTo = new URL(session.redirect_uri);
+  redirectTo.searchParams.set('code', code);
+  redirectTo.searchParams.set('state', session.state);
+  return c.redirect(redirectTo.toString(), 302);
+});
+
+authRoutes.post('/cli/exchange', zValidator('json', cliExchangeSchema), async (c) => {
+  const payload = c.req.valid('json');
+
+  const codeData = await consumeCliAuthCode(payload.code);
+  if (!codeData) {
+    return c.json({ error: 'invalid_grant', message: 'Authorization code not found or already used' }, 400);
+  }
+
+  if (codeData.redirect_uri !== payload.redirect_uri) {
+    return c.json({ error: 'redirect_uri_mismatch' }, 400);
+  }
+
+  if (!verifyPkce(payload.code_verifier, codeData.code_challenge)) {
+    return c.json({ error: 'invalid_code_verifier' }, 400);
+  }
+
+  try {
+    const tokenPair = await createTokenPairForUser({
+      userId: codeData.user_id,
+      role: 'user',
+      amr: ['cli'],
+      scope: codeData.scope.split(' '),
+    });
+
+    const response: CliTokenResponse = {
+      access_token: tokenPair.accessToken,
+      refresh_token: tokenPair.refreshToken,
+      token_type: tokenPair.tokenType,
+      expires_in: tokenPair.expiresIn,
+      session_id: tokenPair.sessionId,
+      refresh_family_id: tokenPair.refreshFamilyId,
+      scope: codeData.scope,
+      provider: 'better-auth',
+    };
+
+    return c.json(response);
+  } catch (error) {
+    logger.error('[auth:cli:exchange] failed to issue tokens', { error });
+    return c.json({ error: 'server_error' }, 500);
+  }
+});
+
+authRoutes.post('/cli/e2e/login', zValidator('json', cliE2eLoginSchema), async (c) => {
+  const clientIp = getClientIp(c);
+  const userAgent = c.req.header('user-agent') ?? 'unknown';
+  const auditContext = {
+    actor: 'cli-e2e-client',
+    clientIp,
+    environment: env.NODE_ENV,
+    timestamp: new Date().toISOString(),
+    userAgent,
+  };
+
+  if (!isE2eAuthEnabled()) {
+    logger.warn('[auth:e2e:cli] denied because E2E auth is disabled', {
+      ...auditContext,
+      denialReason: 'e2e_auth_disabled',
+    });
+    return c.json({ error: 'not_found' }, 404);
+  }
+
+  const providedSecret = c.req.header('x-e2e-auth-secret');
+  if (!providedSecret || !env.AUTH_E2E_SECRET || providedSecret !== env.AUTH_E2E_SECRET) {
+    logger.warn('[auth:e2e:cli] denied because secret header is invalid', {
+      ...auditContext,
+      denialReason: 'invalid_secret',
+      hasProvidedSecret: Boolean(providedSecret),
+    });
+    return c.json({ error: 'forbidden' }, 403);
+  }
+
+  const e2eLoginRateLimit = await enforceAuthRateLimit(c, {
+    bucket: 'cli-e2e-login',
+    identifier: getClientIp(c),
+    windowSec: AUTH_E2E_LOGIN_LIMIT_WINDOW_SECONDS,
+    max: AUTH_E2E_LOGIN_LIMIT_MAX,
+  });
+  if (e2eLoginRateLimit) {
+    return e2eLoginRateLimit;
+  }
+
+  const payload = c.req.valid('json');
+  const email = payload.email ?? 'cli-e2e@hominem.test';
+  const name = payload.name ?? 'CLI E2E User';
+  const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 16);
+
+  const existingUser = await db
+    .selectFrom('users')
+    .selectAll()
+    .where('email', '=', email)
+    .limit(1)
+    .executeTakeFirst();
+
+  const user =
+    existingUser ??
+    (await db
+      .insertInto('users')
+      .values({
+        id: randomBytes(16).toString('hex'),
+        email,
+        name,
+        is_admin: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .returningAll()
+      .executeTakeFirst());
+
+  if (!user) {
+    logger.error('[auth:e2e:cli] failed to create or fetch user', {
+      clientIp,
+      emailHash,
+    });
+    return c.json({ error: 'e2e_user_create_failed' }, 500);
+  }
+
+  const tokenPair = await createTokenPairForUser({
+    userId: user.id,
+    role: user.is_admin ? 'admin' : 'user',
+    amr: ['cli', 'e2e'],
+  });
+
+  logger.info('[auth:e2e:cli] issued token pair', {
+    ...auditContext,
+    emailHash,
+    userId: user.id,
+    sessionId: tokenPair.sessionId,
+  });
+
+  const response: CliTokenResponse = {
+    access_token: tokenPair.accessToken,
+    refresh_token: tokenPair.refreshToken,
+    token_type: tokenPair.tokenType,
+    expires_in: tokenPair.expiresIn,
+    session_id: tokenPair.sessionId,
+    refresh_family_id: tokenPair.refreshFamilyId,
+    scope: 'cli:read cli:write',
+    provider: 'better-auth',
   };
 
   return c.json(response);
