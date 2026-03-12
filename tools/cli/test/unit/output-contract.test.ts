@@ -181,6 +181,7 @@ describe('v2 output contract snapshots', () => {
           message: 'Show authentication status',
           data: {
             authenticated: false,
+            tokenStored: false,
             tokenVersion: null,
             provider: null,
             issuerBaseUrl: null,
