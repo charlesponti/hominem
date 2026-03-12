@@ -209,7 +209,7 @@ function getAuthPlugins() {
         },
       },
     }),
-    bearer({ requireSignature: true }),
+    bearer(),
     multiSession({ maximumSessions: 8 }),
     oneTimeToken({
       expiresIn: 5,
@@ -218,6 +218,7 @@ function getAuthPlugins() {
     deviceAuthorization({
       expiresIn: '10m',
       interval: '5s',
+      verificationUri: '/api/auth/device',
       schema: {
         deviceCode: {
           modelName: 'user_device_code',

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { getStoredTokens } from '@/utils/auth';
+import { getStoredTokens, hasValidStoredSession } from '@/utils/auth';
 
 import { createCommand } from '../../command-factory';
 
@@ -12,6 +12,7 @@ export default createCommand({
   args: z.object({}),
   flags: z.object({}),
   outputSchema: z.object({
+    tokenStored: z.boolean(),
     authenticated: z.boolean(),
     tokenVersion: z.number().nullable(),
     provider: z.string().nullable(),
@@ -22,12 +23,17 @@ export default createCommand({
   }),
   async run() {
     const tokens = await getStoredTokens();
+    const tokenStored = Boolean(tokens?.accessToken);
+    const authenticated = tokens?.issuerBaseUrl
+      ? await hasValidStoredSession(tokens.issuerBaseUrl)
+      : false;
     const expiresAtMs = tokens?.expiresAt ? new Date(tokens.expiresAt).getTime() : null;
     const ttlSeconds =
       expiresAtMs === null ? null : Math.max(0, Math.floor((expiresAtMs - Date.now()) / 1000));
 
     return {
-      authenticated: Boolean(tokens?.accessToken),
+      tokenStored,
+      authenticated,
       tokenVersion: tokens?.tokenVersion ?? null,
       provider: tokens?.provider ?? null,
       issuerBaseUrl: tokens?.issuerBaseUrl ?? null,

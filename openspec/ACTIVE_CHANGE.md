@@ -1,6 +1,6 @@
 # Active OpenSpec Change
 
-active_change: better-auth-session-consolidation
+active_change: pure-better-auth-cli-flow
 
 artifacts:
 - proposal.md
