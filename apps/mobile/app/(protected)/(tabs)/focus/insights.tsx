@@ -9,7 +9,7 @@ const useStyles = makeStyles((t) =>
     container: {
       flex: 1,
       padding: t.spacing.ml_24,
-      rowGap: 18,
+      rowGap: t.spacing.m_16,
       backgroundColor: t.colors.background,
     },
     section: {

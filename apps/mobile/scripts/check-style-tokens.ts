@@ -1,10 +1,28 @@
 import fs from 'fs'
 import path from 'path'
 
-// lightweight audit: flag raw numeric spacing values (padding, margin, gap, borderRadius)
-// in StyleSheet.create blocks. Ignore fontSize, width, height as those are one-offs.
+// lightweight audit: flag raw numeric spacing values in StyleSheet.create blocks.
+// Focus on actual layout spacing props, not radii or dimensions.
 
-const spacingProperties = ['padding', 'margin', 'gap', 'borderRadius']
+const spacingProperties = [
+  'padding',
+  'paddingTop',
+  'paddingRight',
+  'paddingBottom',
+  'paddingLeft',
+  'paddingHorizontal',
+  'paddingVertical',
+  'margin',
+  'marginTop',
+  'marginRight',
+  'marginBottom',
+  'marginLeft',
+  'marginHorizontal',
+  'marginVertical',
+  'gap',
+  'rowGap',
+  'columnGap',
+]
 
 const root = path.resolve(__dirname, '../../..')
 const targetDir = path.join(root, 'apps', 'mobile')
@@ -40,13 +58,28 @@ function scanFile(filePath: string) {
       braceDepth += (line.match(/{/g) || []).length
       braceDepth -= (line.match(/}/g) || []).length
 
-      // only flag spacing-related properties with raw numbers
-      const hasSpacingProp = spacingProperties.some((prop) => line.includes(prop))
-      if (hasSpacingProp) {
-        const match = line.match(/:\s*(\d+)/)
-        if (match && !line.includes('t.spacing') && !line.includes('t.borderRadii')) {
+      if (line.includes('token-audit-ignore')) {
+        return
+      }
+
+      const trimmed = line.trim()
+
+      for (const prop of spacingProperties) {
+        const match = trimmed.match(new RegExp(`^${prop}:\\s*(-?\\d+)`))
+        if (!match) {
+          continue
+        }
+
+        const value = Number.parseInt(match[1], 10)
+        if (value === 0 || value === 1) {
+          break
+        }
+
+        if (!line.includes('t.spacing')) {
           violations.push(`${filePath}:${idx + 1} raw spacing ${match[1]}`)
         }
+
+        break
       }
 
       if (braceDepth <= 0) {

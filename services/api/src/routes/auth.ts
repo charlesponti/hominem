@@ -307,6 +307,9 @@ async function createEmailOtpAuthResponse(dbUser: {
     amr: ['email_otp'],
   });
 
+  const headers = new Headers();
+  appendTokenPairCookies(headers, tokenPair);
+
   return new Response(
     JSON.stringify({
       user: {
@@ -323,6 +326,7 @@ async function createEmailOtpAuthResponse(dbUser: {
       status: 200,
       headers: {
         'content-type': 'application/json',
+        ...Object.fromEntries(headers.entries()),
       },
     },
   );

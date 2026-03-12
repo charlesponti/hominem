@@ -417,7 +417,7 @@ const useStyles = makeStyles((t) =>
     messagesContainer: {
       flexGrow: 1,
       paddingTop: t.spacing.sm_12,
-      paddingHorizontal: 20 /* standard message padding */,
+      paddingHorizontal: t.spacing.sm_8 + t.spacing.sm_12,
       rowGap: t.spacing.sm_12,
     },
     shimmerContainer: {

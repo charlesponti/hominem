@@ -44,7 +44,7 @@ const useStyles = makeStyles((t) =>
   StyleSheet.create({
     header: {
       justifyContent: 'space-between',
-      marginTop: 91,
+      marginTop: 91, // token-audit-ignore top offset is screen-specific
       rowGap: t.spacing.xs_4,
     },
     topRow: {

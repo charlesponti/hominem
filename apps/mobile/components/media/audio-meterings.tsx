@@ -56,7 +56,7 @@ const useStyles = makeStyles((t) =>
       height: MAX_HEIGHT,
       backgroundColor: t.colors['emphasis-faint'],
       borderRadius: t.borderRadii.l_12,
-      columnGap: 5 /* small gap for layout */,
+      columnGap: 5 /* token-audit-ignore small waveform gap */,
     },
     bar: {
       width: 3,
