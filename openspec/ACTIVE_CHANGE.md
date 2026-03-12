@@ -1,8 +1,11 @@
 # Active OpenSpec Change
 
-active_change: void-design-app-alignment
+active_change: better-auth-session-consolidation
 
 artifacts:
+- proposal.md
+- design.md
+- specs/
 - tasks.md
 
 ## Enforcement

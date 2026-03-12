@@ -2,8 +2,8 @@ import type { AuthState } from './types';
 
 export interface AuthBootStoredTokens {
   accessToken: string | null;
-  refreshToken: string | null;
   expiresAtStr: string | null;
+  sessionCookieHeader: string | null;
 }
 
 export interface AuthBootUser {
@@ -16,7 +16,7 @@ export type AuthBootResult =
   | {
       type: 'SESSION_LOADED';
       user: NonNullable<AuthState['user']>;
-      tokens: { accessToken: string; refreshToken: string | null; expiresAtStr: string | null };
+      tokens: { accessToken: string; expiresAtStr: string | null; sessionCookieHeader: string | null };
     }
   | { type: 'SESSION_EXPIRED' };
 
@@ -29,7 +29,11 @@ export interface AuthBootDeps {
    * - Returns null when the token is invalid (401) — caller will clear tokens.
    * - Throws on network errors or AbortError — caller handles without clearing tokens.
    */
-  probeSession: (accessToken: string, signal: AbortSignal) => Promise<AuthBootUser | null>;
+  probeSession: (input: {
+    accessToken: string | null;
+    sessionCookieHeader: string | null;
+    signal: AbortSignal;
+  }) => Promise<{ user: AuthBootUser; accessToken: string; expiresAtStr: string | null } | null>;
   /** Clear all stored tokens. Called only when probeSession returns null (invalid token). */
   clearTokens: () => Promise<void>;
   /** Upsert the user profile in local store and return the normalized profile. */
@@ -68,28 +72,36 @@ export async function runAuthBoot(deps: AuthBootDeps): Promise<AuthBootResult> {
 
   await clearLegacyData();
 
-  const { accessToken, refreshToken, expiresAtStr } = await getStoredTokens();
+  const { accessToken, expiresAtStr, sessionCookieHeader } = await getStoredTokens();
 
-  if (!accessToken && (refreshToken || expiresAtStr)) {
+  if (!accessToken && expiresAtStr) {
     await clearTokens();
     return { type: 'SESSION_EXPIRED' };
   }
 
-  if (accessToken && (!refreshToken || !isValidExpiresAt(expiresAtStr))) {
+  if (accessToken && !isValidExpiresAt(expiresAtStr)) {
     await clearTokens();
     return { type: 'SESSION_EXPIRED' };
   }
 
-  if (accessToken) {
-    const probeUser = await probeSession(accessToken, signal);
+  if (accessToken || sessionCookieHeader) {
+    const probeResult = await probeSession({
+      accessToken,
+      sessionCookieHeader,
+      signal,
+    });
 
-    if (probeUser) {
-      const userProfile = await upsertProfile(probeUser);
+    if (probeResult) {
+      const userProfile = await upsertProfile(probeResult.user);
       if (userProfile) {
         return {
           type: 'SESSION_LOADED',
           user: userProfile,
-          tokens: { accessToken, refreshToken, expiresAtStr },
+          tokens: {
+            accessToken: probeResult.accessToken,
+            expiresAtStr: probeResult.expiresAtStr,
+            sessionCookieHeader,
+          },
         };
       }
     } else {

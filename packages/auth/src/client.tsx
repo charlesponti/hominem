@@ -135,24 +135,6 @@ async function fetchSession(apiBaseUrl: string): Promise<SessionResponse> {
     return (await res.json()) as SessionResponse;
   }
 
-  if (res.status === 401) {
-    const refreshRes = await fetch(getAbsoluteApiUrl(apiBaseUrl, '/api/auth/refresh'), {
-      method: 'POST',
-      credentials: 'include',
-    });
-
-    if (refreshRes.ok) {
-      const retryRes = await fetch(getAbsoluteApiUrl(apiBaseUrl, '/api/auth/session'), {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (retryRes.ok) {
-        return (await retryRes.json()) as SessionResponse;
-      }
-    }
-  }
-
   return { isAuthenticated: false, user: null, accessToken: null };
 }
 
@@ -375,18 +357,6 @@ export function AuthProvider({
 
     if (!verifyRes.ok) {
       throw new Error('Passkey sign-in failed.');
-    }
-
-    const tokenRes = await fetch(
-      getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/token-from-session'),
-      {
-        method: 'POST',
-        credentials: 'include',
-      },
-    );
-
-    if (!tokenRes.ok) {
-      throw new Error('Failed to exchange passkey session for app tokens.');
     }
 
     await refreshAuth();

@@ -1,4 +1,3 @@
-import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mockRotateRefreshToken = vi.hoisted(() => vi.fn());
@@ -80,17 +79,7 @@ describe('auth token response contract', () => {
     expect(body.error).toBe('unsupported_grant_type');
   });
 
-  test('POST /api/auth/refresh accepts camelCase refresh token input', async () => {
-    mockRotateRefreshToken.mockResolvedValueOnce({
-      ok: true,
-      accessToken: 'access-refresh-token',
-      refreshToken: 'refresh-next-token',
-      tokenType: 'Bearer',
-      expiresIn: 600,
-      sessionId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-      refreshFamilyId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-    });
-
+  test('POST /api/auth/refresh is deprecated for first-party callers', async () => {
     const app = createServer();
     const response = await app.request('http://localhost/api/auth/refresh', {
       method: 'POST',
@@ -102,49 +91,19 @@ describe('auth token response contract', () => {
       }),
     });
 
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as {
-      accessToken: string;
-      refreshToken: string;
-      tokenType: string;
-      expiresIn: number;
-    };
-
-    expect(body.accessToken).toBe('access-refresh-token');
-    expect(body.refreshToken).toBe('refresh-next-token');
-    expect(body.tokenType).toBe('Bearer');
-    expect(body.expiresIn).toBe(600);
+    expect(response.status).toBe(410);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toBe('deprecated_endpoint');
   });
 
-  test('POST /api/auth/refresh rotates cookie-backed sessions on the refresh route only', async () => {
-    mockRotateRefreshToken.mockResolvedValueOnce({
-      ok: true,
-      accessToken: 'cookie-access-token',
-      refreshToken: 'cookie-refresh-next',
-      tokenType: 'Bearer',
-      expiresIn: 600,
-      sessionId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-      refreshFamilyId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-    });
-
+  test('POST /api/auth/token-from-session is deprecated for first-party callers', async () => {
     const app = createServer();
-    const response = await app.request('http://localhost/api/auth/refresh', {
+    const response = await app.request('http://localhost/api/auth/token-from-session', {
       method: 'POST',
-      headers: {
-        cookie: 'hominem_refresh_token=test-refresh-cookie',
-      },
     });
 
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as {
-      accessToken: string;
-      refreshToken: string;
-    };
-    expect(body.accessToken).toBe('cookie-access-token');
-    expect(body.refreshToken).toBe('cookie-refresh-next');
-
-    const setCookies = getSetCookieHeaders(response.headers);
-    expect(setCookies.some((value) => value.includes('hominem_access_token='))).toBe(true);
-    expect(setCookies.some((value) => value.includes('hominem_refresh_token='))).toBe(true);
+    expect(response.status).toBe(410);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toBe('deprecated_endpoint');
   });
 });

@@ -43,41 +43,6 @@ export function getAuthCookieDomain() {
   return process.env.AUTH_COOKIE_DOMAIN?.trim()
 }
 
-function getRequestAccessToken(request: Request) {
-  const authorization = request.headers.get('authorization')
-  if (authorization?.startsWith('Bearer ')) {
-    return authorization.slice(7)
-  }
-
-  const cookieHeader = request.headers.get('cookie') ?? ''
-  const tokenMatch = cookieHeader.match(/(?:^|;\s*)hominem_access_token=([^;]+)/)
-  const tokenValue = tokenMatch?.[1]
-  if (!tokenValue) {
-    return null
-  }
-
-  try {
-    return decodeURIComponent(tokenValue)
-  } catch {
-    return tokenValue
-  }
-}
-
-function getRequestRefreshToken(request: Request) {
-  const cookieHeader = request.headers.get('cookie') ?? ''
-  const tokenMatch = cookieHeader.match(/(?:^|;\s*)hominem_refresh_token=([^;]+)/)
-  const tokenValue = tokenMatch?.[1]
-  if (!tokenValue) {
-    return null
-  }
-
-  try {
-    return decodeURIComponent(tokenValue)
-  } catch {
-    return tokenValue
-  }
-}
-
 function appendSetCookieHeaders(target: Headers, source: Headers) {
   const setCookieValues = getSetCookieHeaders(source)
   if (setCookieValues.length > 0) {
@@ -112,8 +77,6 @@ export async function getServerAuth(
   config: AuthConfig
 ): Promise<ServerAuthResult & { headers: Headers }> {
   const headers = new Headers()
-  const requestAccessToken = getRequestAccessToken(request)
-  const requestRefreshToken = getRequestRefreshToken(request)
 
   try {
     const cookieHeader = request.headers.get('cookie')
@@ -134,42 +97,7 @@ export async function getServerAuth(
 
     appendSetCookieHeaders(headers, res.headers)
 
-    let sessionResponse = res
-    if (res.status === 401 && !authHeader && requestRefreshToken) {
-      const refreshHeaders = new Headers()
-      if (cookieHeader) {
-        refreshHeaders.set('cookie', cookieHeader)
-      }
-
-      const refreshRes = await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/refresh'), {
-        method: 'POST',
-        headers: refreshHeaders,
-      })
-
-      appendSetCookieHeaders(headers, refreshRes.headers)
-
-      if (refreshRes.ok) {
-        const refreshPayload = (await refreshRes.json()) as {
-          accessToken?: string | null
-        }
-
-        if (refreshPayload.accessToken) {
-          sessionResponse = await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/session'), {
-            method: 'GET',
-            headers: new Headers({
-              authorization: `Bearer ${refreshPayload.accessToken}`,
-            }),
-          })
-          appendSetCookieHeaders(headers, sessionResponse.headers)
-        } else {
-          sessionResponse = refreshRes
-        }
-      } else {
-        sessionResponse = refreshRes
-      }
-    }
-
-    if (!sessionResponse.ok) {
+    if (!res.ok) {
       return {
         user: null,
         session: null,
@@ -179,14 +107,14 @@ export async function getServerAuth(
       }
     }
 
-    const payload = (await sessionResponse.json()) as ServerSessionPayload
-    const session = toSession(payload.accessToken ?? requestAccessToken, payload.expiresIn)
+    const payload = (await res.json()) as ServerSessionPayload
+    const session = toSession(payload.accessToken, payload.expiresIn)
 
     return {
       user: payload.user ?? null,
       session,
       auth: payload.auth ?? null,
-      isAuthenticated: Boolean(payload.isAuthenticated && payload.user && session),
+      isAuthenticated: Boolean(payload.isAuthenticated && payload.user),
       headers,
     }
   } catch (error) {
@@ -202,15 +130,20 @@ export async function getServerAuth(
 }
 
 export function createServerAuthClient(request: Request, config: AuthConfig) {
-  void request
   return {
     headers: new Headers(),
     authClient: {
       auth: {
         async getUser() {
+          const headers = new Headers()
+          const cookieHeader = request.headers.get('cookie')
+          if (cookieHeader) {
+            headers.set('cookie', cookieHeader)
+          }
+
           const res = await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/session'), {
             method: 'GET',
-            credentials: 'include',
+            headers,
           })
 
           if (!res.ok) {

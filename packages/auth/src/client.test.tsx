@@ -72,16 +72,16 @@ describe('AuthProvider', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
-      expect(screen.getByTestId('email')).toHaveTextContent('user@example.com')
-      expect(screen.getByTestId('token')).toHaveTextContent('token-123')
+      expect(screen.getByTestId('authenticated').textContent).toBe('authenticated')
+      expect(screen.getByTestId('email').textContent).toBe('user@example.com')
+      expect(screen.getByTestId('token').textContent).toBe('token-123')
     })
 
     expect(fetchSpy).not.toHaveBeenCalled()
     expect(onAuthEvent).not.toHaveBeenCalled()
   })
 
-  it('uses the explicit refresh route before retrying the session probe', async () => {
+  it('treats a 401 session probe as signed out without calling the refresh route', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
     fetchSpy
       .mockResolvedValueOnce(
@@ -89,34 +89,6 @@ describe('AuthProvider', () => {
           status: 401,
           headers: { 'content-type': 'application/json' },
         }),
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            accessToken: 'refreshed-token',
-            refreshToken: 'refreshed-refresh',
-            expiresIn: 600,
-            tokenType: 'Bearer',
-          }),
-          {
-            status: 200,
-            headers: { 'content-type': 'application/json' },
-          },
-        ),
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            isAuthenticated: true,
-            user: initialUser,
-            accessToken: 'refreshed-token',
-            expiresIn: 600,
-          }),
-          {
-            status: 200,
-            headers: { 'content-type': 'application/json' },
-          },
-        ),
       )
 
     render(
@@ -126,23 +98,13 @@ describe('AuthProvider', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByTestId('authenticated')).toHaveTextContent('authenticated')
-      expect(screen.getByTestId('email')).toHaveTextContent('user@example.com')
-      expect(screen.getByTestId('token')).toHaveTextContent('refreshed-token')
+      expect(screen.getByTestId('authenticated').textContent).toBe('signed-out')
+      expect(screen.getByTestId('email').textContent).toBe('missing')
+      expect(screen.getByTestId('token').textContent).toBe('missing')
     })
 
-    expect(fetchSpy).toHaveBeenNthCalledWith(
-      1,
-      'http://localhost:4040/api/auth/session',
-      expect.objectContaining({ method: 'GET', credentials: 'include' }),
-    )
-    expect(fetchSpy).toHaveBeenNthCalledWith(
-      2,
-      'http://localhost:4040/api/auth/refresh',
-      expect.objectContaining({ method: 'POST', credentials: 'include' }),
-    )
-    expect(fetchSpy).toHaveBeenNthCalledWith(
-      3,
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    expect(fetchSpy).toHaveBeenCalledWith(
       'http://localhost:4040/api/auth/session',
       expect.objectContaining({ method: 'GET', credentials: 'include' }),
     )

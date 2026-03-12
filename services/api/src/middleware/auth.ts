@@ -4,6 +4,7 @@ import { db } from '@hominem/db';
 import { logger } from '@hominem/utils/logger';
 import type { MiddlewareHandler } from 'hono';
 
+import { betterAuthServer } from '../auth/better-auth';
 import { isSessionRevoked } from '../auth/session-store';
 import { verifyAccessToken } from '../auth/tokens';
 import type { AuthContextEnvelope } from '../auth/types';
@@ -258,6 +259,51 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
     if (bearerAuthError) {
       c.set('authError', bearerAuthError);
       return c.json(authErrorResponse(bearerAuthError), 401);
+    }
+
+    try {
+      const betterAuthSession = await betterAuthServer.api.getSession({
+        headers: c.req.raw.headers,
+      });
+
+      const betterAuthUserId = betterAuthSession?.user?.id;
+      const betterAuthSessionId = betterAuthSession?.session?.id;
+
+      if (betterAuthUserId && betterAuthSessionId) {
+        const cached = getCachedUser(betterAuthUserId);
+        if (cached) {
+          c.set('user', cached);
+          c.set('userId', cached.id);
+          c.set('auth', {
+            sub: cached.id,
+            sid: betterAuthSessionId,
+            scope: ['api:read', 'api:write'],
+            role: cached.isAdmin ? 'admin' : 'user',
+            amr: ['better-auth-session'],
+            authTime: Math.floor(Date.now() / 1000),
+          });
+          return await next();
+        }
+
+        const dbUser = await UserAuthService.getUserById(betterAuthUserId);
+        if (dbUser) {
+          const user = toHominemUser(dbUser);
+          setCachedUser(user);
+          c.set('user', user);
+          c.set('userId', dbUser.id);
+          c.set('auth', {
+            sub: dbUser.id,
+            sid: betterAuthSessionId,
+            scope: ['api:read', 'api:write'],
+            role: user.isAdmin ? 'admin' : 'user',
+            amr: ['better-auth-session'],
+            authTime: Math.floor(Date.now() / 1000),
+          });
+          return await next();
+        }
+      }
+    } catch (error) {
+      logger.warn('[authJwtMiddleware] better auth session lookup failed', { error });
     }
 
     return await next();

@@ -15,8 +15,8 @@ function makeDeps(overrides: Partial<AuthBootDeps> = {}): AuthBootDeps {
   return {
     getStoredTokens: vi.fn().mockResolvedValue({
       accessToken: null,
-      refreshToken: null,
       expiresAtStr: null,
+      sessionCookieHeader: null,
     }),
     probeSession: vi.fn().mockResolvedValue(null),
     clearTokens: vi.fn().mockResolvedValue(undefined),
@@ -43,10 +43,14 @@ describe('runAuthBoot', () => {
     const deps = makeDeps({
       getStoredTokens: vi.fn().mockResolvedValue({
         accessToken: 'valid-token',
-        refreshToken: 'valid-refresh',
+        expiresAtStr: '9999999999000',
+        sessionCookieHeader: 'session=abc',
+      }),
+      probeSession: vi.fn().mockResolvedValue({
+        user: testUser,
+        accessToken: 'valid-token',
         expiresAtStr: '9999999999000',
       }),
-      probeSession: vi.fn().mockResolvedValue(testUser),
     })
 
     const result = await runAuthBoot(deps)
@@ -55,8 +59,8 @@ describe('runAuthBoot', () => {
     if (result.type === 'SESSION_LOADED') {
       expect(result.user.id).toBe('u1')
       expect(result.tokens.accessToken).toBe('valid-token')
-      expect(result.tokens.refreshToken).toBe('valid-refresh')
       expect(result.tokens.expiresAtStr).toBe('9999999999000')
+      expect(result.tokens.sessionCookieHeader).toBe('session=abc')
     }
     expect(deps.clearTokens).not.toHaveBeenCalled()
   })
@@ -65,8 +69,8 @@ describe('runAuthBoot', () => {
     const deps = makeDeps({
       getStoredTokens: vi.fn().mockResolvedValue({
         accessToken: 'expired-token',
-        refreshToken: 'r',
         expiresAtStr: null,
+        sessionCookieHeader: 'session=abc',
       }),
       probeSession: vi.fn().mockResolvedValue(null),
       clearTokens: vi.fn().mockResolvedValue(undefined),
@@ -83,25 +87,29 @@ describe('runAuthBoot', () => {
     const deps = makeDeps({
       getStoredTokens: vi.fn().mockResolvedValue({
         accessToken: 'valid-token',
-        refreshToken: null,
+        expiresAtStr: '9999999999000',
+        sessionCookieHeader: null,
+      }),
+      probeSession: vi.fn().mockResolvedValue({
+        user: testUser,
+        accessToken: 'fresh-token',
         expiresAtStr: '9999999999000',
       }),
-      clearTokens: vi.fn().mockResolvedValue(undefined),
     })
 
     const result = await runAuthBoot(deps)
 
-    expect(result.type).toBe('SESSION_EXPIRED')
-    expect(deps.clearTokens).toHaveBeenCalledTimes(1)
-    expect(deps.probeSession).not.toHaveBeenCalled()
+    expect(result.type).toBe('SESSION_LOADED')
+    expect(deps.clearTokens).not.toHaveBeenCalled()
+    expect(deps.probeSession).toHaveBeenCalledTimes(1)
   })
 
   it('fails closed when stored expiry metadata is malformed', async () => {
     const deps = makeDeps({
       getStoredTokens: vi.fn().mockResolvedValue({
         accessToken: 'valid-token',
-        refreshToken: 'valid-refresh',
         expiresAtStr: 'not-a-number',
+        sessionCookieHeader: 'session=abc',
       }),
       clearTokens: vi.fn().mockResolvedValue(undefined),
     })
@@ -117,8 +125,8 @@ describe('runAuthBoot', () => {
     const deps = makeDeps({
       getStoredTokens: vi.fn().mockResolvedValue({
         accessToken: 'token',
-        refreshToken: 'valid-refresh',
         expiresAtStr: '9999999999000',
+        sessionCookieHeader: 'session=abc',
       }),
       probeSession: vi.fn().mockRejectedValue(new TypeError('network unavailable')),
     })
@@ -132,8 +140,8 @@ describe('runAuthBoot', () => {
     const deps = makeDeps({
       getStoredTokens: vi.fn().mockResolvedValue({
         accessToken: 'token',
-        refreshToken: 'valid-refresh',
         expiresAtStr: '9999999999000',
+        sessionCookieHeader: 'session=abc',
       }),
       probeSession: vi.fn().mockImplementation(() => {
         controller.abort()
@@ -151,16 +159,24 @@ describe('runAuthBoot', () => {
     const deps = makeDeps({
       getStoredTokens: vi.fn().mockResolvedValue({
         accessToken: 'token',
-        refreshToken: 'valid-refresh',
+        expiresAtStr: '9999999999000',
+        sessionCookieHeader: 'session=abc',
+      }),
+      probeSession: vi.fn().mockResolvedValue({
+        user: testUser,
+        accessToken: 'token',
         expiresAtStr: '9999999999000',
       }),
-      probeSession: vi.fn().mockResolvedValue(testUser),
       signal: controller.signal,
     })
 
     await runAuthBoot(deps)
 
-    expect(deps.probeSession).toHaveBeenCalledWith('token', controller.signal)
+    expect(deps.probeSession).toHaveBeenCalledWith({
+      accessToken: 'token',
+      sessionCookieHeader: 'session=abc',
+      signal: controller.signal,
+    })
   })
 
   it('runs clearLegacyData before reading tokens', async () => {
@@ -172,7 +188,11 @@ describe('runAuthBoot', () => {
       }),
       getStoredTokens: vi.fn().mockImplementation(() => {
         callOrder.push('getStoredTokens')
-        return Promise.resolve({ accessToken: null, refreshToken: null, expiresAtStr: null })
+        return Promise.resolve({
+          accessToken: null,
+          expiresAtStr: null,
+          sessionCookieHeader: null,
+        })
       }),
     })
 

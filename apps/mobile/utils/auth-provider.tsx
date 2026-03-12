@@ -12,6 +12,12 @@ import React, {
 
 import { markAuthPhaseStart, recordAuthEvent } from './auth/auth-event-log';
 import { runAuthBoot } from './auth/boot';
+import {
+  clearPersistedSessionCookies,
+  getPersistedSessionCookieHeader,
+  persistSessionCookieFromHeaders,
+  persistSessionCookieHeader,
+} from './auth/session-cookie';
 import { resolveIsLoadingAuth, type AuthStatusCompat } from './auth/provider-utils';
 import { runSingleflight } from './auth/singleflight';
 import { authStateMachine, initialAuthState, type AuthState } from './auth/types';
@@ -22,7 +28,6 @@ import { markStartupPhase } from './performance/startup-metrics';
 
 const LOCAL_MIGRATION_KEY = 'hominem_mobile_local_migration_v1';
 const API_ACCESS_TOKEN_KEY = 'hominem_mobile_api_access_token_v1';
-const API_REFRESH_TOKEN_KEY = 'hominem_mobile_api_refresh_token_v1';
 const API_EXPIRES_AT_KEY = 'hominem_mobile_api_expires_at_v1';
 const OTP_REQUEST_TIMEOUT_MS = 12000;
 const OTP_VERIFY_TIMEOUT_MS = 20000;
@@ -36,7 +41,6 @@ interface SignInResponse {
     name?: string | null;
   };
   accessToken: string;
-  refreshToken: string;
   expiresIn: number;
   tokenType: 'Bearer';
 }
@@ -52,7 +56,6 @@ interface SessionResponse {
 
 interface RefreshResponse {
   accessToken: string;
-  refreshToken: string;
   expiresIn: number;
   tokenType: 'Bearer';
 }
@@ -60,7 +63,6 @@ interface RefreshResponse {
 function hasValidSignInResponse(input: SignInResponse) {
   return (
     input.accessToken.length > 0 &&
-    input.refreshToken.length > 0 &&
     input.expiresIn > 0 &&
     input.user.id.length > 0 &&
     input.user.email.length > 0
@@ -126,24 +128,22 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [state, dispatch] = useReducer(authStateMachine, initialAuthState);
   const abortControllerRef = useRef<AbortController | null>(null);
   const apiAccessTokenRef = useRef<string | null>(null);
-  const apiRefreshTokenRef = useRef<string | null>(null);
   const apiExpiresAtRef = useRef<number | null>(null);
+  const sessionCookieHeaderRef = useRef<string | null>(null);
   const refreshRequestRef = useRef<Promise<string | null> | null>(null);
   const hasBootstrappedRef = useRef(false);
   // Set synchronously before first await to prevent TOCTOU race on concurrent boot invocations
   const isBootingRef = useRef(false);
 
   const setApiTokens = useCallback(
-    async (accessToken: string | null, refreshToken: string | null, expiresIn?: number) => {
+    async (accessToken: string | null, expiresIn?: number) => {
       apiAccessTokenRef.current = accessToken;
-      apiRefreshTokenRef.current = refreshToken;
       apiExpiresAtRef.current = expiresIn != null ? Date.now() + expiresIn * 1000 : null;
 
-      if (accessToken && refreshToken) {
+      if (accessToken) {
         const expiresAt = apiExpiresAtRef.current;
         await Promise.all([
           SecureStore.setItemAsync(API_ACCESS_TOKEN_KEY, accessToken),
-          SecureStore.setItemAsync(API_REFRESH_TOKEN_KEY, refreshToken),
           expiresAt != null
             ? SecureStore.setItemAsync(API_EXPIRES_AT_KEY, String(expiresAt))
             : SecureStore.deleteItemAsync(API_EXPIRES_AT_KEY),
@@ -153,7 +153,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
       await Promise.all([
         SecureStore.deleteItemAsync(API_ACCESS_TOKEN_KEY),
-        SecureStore.deleteItemAsync(API_REFRESH_TOKEN_KEY),
         SecureStore.deleteItemAsync(API_EXPIRES_AT_KEY),
       ]);
     },
@@ -185,27 +184,52 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       try {
         const result = await runAuthBoot({
           getStoredTokens: async () => {
-            const [accessToken, refreshToken, expiresAtStr] = await Promise.all([
+            const [accessToken, expiresAtStr, sessionCookieHeader] = await Promise.all([
               SecureStore.getItemAsync(API_ACCESS_TOKEN_KEY),
-              SecureStore.getItemAsync(API_REFRESH_TOKEN_KEY),
               SecureStore.getItemAsync(API_EXPIRES_AT_KEY),
+              getPersistedSessionCookieHeader(),
             ]);
-            return { accessToken, refreshToken, expiresAtStr };
+            return { accessToken, expiresAtStr, sessionCookieHeader };
           },
-          probeSession: async (token, sig) => {
+          probeSession: async ({ accessToken, sessionCookieHeader, signal: sig }) => {
+            const headers: Record<string, string> = {};
+            if (accessToken) {
+              headers.Authorization = `Bearer ${accessToken}`;
+            }
+            if (sessionCookieHeader) {
+              headers.cookie = sessionCookieHeader;
+            }
+
             const response = await fetch(new URL('/api/auth/session', API_BASE_URL).toString(), {
               method: 'GET',
-              headers: { Authorization: `Bearer ${token}` },
+              headers,
               signal: sig,
             });
             if (response.ok) {
-              const data = (await response.json()) as SessionResponse;
-              return data.isAuthenticated && data.user ? data.user : null;
+              const data = (await response.json()) as SessionResponse & {
+                accessToken?: string;
+                expiresIn?: number;
+              };
+              if (data.isAuthenticated && data.user && data.accessToken) {
+                return {
+                  user: data.user,
+                  accessToken: data.accessToken,
+                  expiresAtStr:
+                    typeof data.expiresIn === 'number'
+                      ? String(Date.now() + data.expiresIn * 1000)
+                      : null,
+                };
+              }
+              return null;
             }
             if (response.status === 401) return null;
             throw new Error(`session probe failed: ${response.status}`);
           },
-          clearTokens: () => setApiTokens(null, null),
+          clearTokens: async () => {
+            await setApiTokens(null);
+            await clearPersistedSessionCookies();
+            sessionCookieHeaderRef.current = null;
+          },
           upsertProfile: async (user) => {
             const saved = await LocalStore.upsertUserProfile(fromSignInUser(user));
             return toAuthUserProfile(saved);
@@ -216,10 +240,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
         if (result.type === 'SESSION_LOADED') {
           apiAccessTokenRef.current = result.tokens.accessToken;
-          apiRefreshTokenRef.current = result.tokens.refreshToken;
           apiExpiresAtRef.current = result.tokens.expiresAtStr
             ? Number(result.tokens.expiresAtStr)
             : null;
+          sessionCookieHeaderRef.current = result.tokens.sessionCookieHeader;
           dispatch({ type: 'SESSION_LOADED', user: result.user });
           recordAuthEvent('auth_boot_resolved:session_loaded', 'boot');
         } else {
@@ -325,8 +349,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           throw new Error('Invalid sign-in response from API');
         }
 
+        const sessionCookieHeader = await persistSessionCookieFromHeaders(response.headers);
+        if (!sessionCookieHeader) {
+          throw new Error('Verification succeeded but no session cookie was returned');
+        }
+        sessionCookieHeaderRef.current = sessionCookieHeader;
+
         dispatch({ type: 'API_TOKEN_MINT_STARTED' });
-        await setApiTokens(signInData.accessToken, signInData.refreshToken, signInData.expiresIn);
+        await setApiTokens(signInData.accessToken, signInData.expiresIn);
 
         dispatch({ type: 'PROFILE_SYNC_STARTED' });
         const localUser = fromSignInUser(signInData.user);
@@ -355,7 +385,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           throw new Error('Invalid passkey sign-in response from API');
         }
 
-        await setApiTokens(input.accessToken, input.refreshToken, input.expiresIn);
+        const sessionCookieHeader = await getPersistedSessionCookieHeader();
+        if (!sessionCookieHeader) {
+          throw new Error('Missing Better Auth session cookie after passkey sign-in');
+        }
+
+        sessionCookieHeaderRef.current = sessionCookieHeader;
+        await persistSessionCookieHeader(sessionCookieHeader);
+        await setApiTokens(input.accessToken, input.expiresIn);
 
         dispatch({ type: 'PROFILE_SYNC_STARTED' });
         const localUser = fromSignInUser(input.user);
@@ -374,8 +411,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   );
 
   const refreshAccessToken = useCallback(async () => {
-    const refreshToken = apiRefreshTokenRef.current;
-    if (!refreshToken) {
+    const sessionCookieHeader = sessionCookieHeaderRef.current;
+    if (!sessionCookieHeader) {
       return null;
     }
 
@@ -386,20 +423,23 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     return runSingleflight(refreshRequestRef, async () => {
       dispatch({ type: 'REFRESH_STARTED' });
       try {
-        const response = await fetch(new URL('/api/auth/refresh', API_BASE_URL).toString(), {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ refreshToken }),
+        const response = await fetch(new URL('/api/auth/session', API_BASE_URL).toString(), {
+          method: 'GET',
+          headers: {
+            cookie: sessionCookieHeader,
+          },
         });
 
         if (!response.ok) {
-          await setApiTokens(null, null);
+          await setApiTokens(null);
+          await clearPersistedSessionCookies();
+          sessionCookieHeaderRef.current = null;
           dispatch({ type: 'REFRESH_FAILED', error: new Error('Token refresh failed') });
           return null;
         }
 
-        const data = (await response.json()) as RefreshResponse;
-        await setApiTokens(data.accessToken, data.refreshToken, data.expiresIn);
+        const data = (await response.json()) as RefreshResponse & { user?: SessionResponse['user'] };
+        await setApiTokens(data.accessToken, data.expiresIn);
         const profile = await LocalStore.getUserProfile();
         const userProfile = toAuthUserProfile(profile);
         if (userProfile) {
@@ -407,7 +447,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         }
         return data.accessToken;
       } catch (error) {
-        await setApiTokens(null, null);
+        await setApiTokens(null);
+        await clearPersistedSessionCookies();
+        sessionCookieHeaderRef.current = null;
         dispatch({
           type: 'REFRESH_FAILED',
           error: error instanceof Error ? error : new Error('Token refresh failed'),
@@ -421,17 +463,19 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     dispatch({ type: 'SIGN_OUT_REQUESTED' });
 
     try {
-      const accessToken = apiAccessTokenRef.current;
-      if (accessToken) {
+      const sessionCookieHeader = sessionCookieHeaderRef.current;
+      if (sessionCookieHeader) {
         await fetch(new URL('/api/auth/logout', API_BASE_URL).toString(), {
           method: 'POST',
-          headers: { Authorization: `Bearer ${accessToken}` },
+          headers: { cookie: sessionCookieHeader },
         }).catch(() => {
           // Best-effort server revocation — clear locally regardless
         });
       }
     } finally {
-      await setApiTokens(null, null);
+      await setApiTokens(null);
+      await clearPersistedSessionCookies();
+      sessionCookieHeaderRef.current = null;
       await LocalStore.clearAllData();
       dispatch({ type: 'SIGN_OUT_SUCCESS' });
     }
@@ -455,7 +499,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const getAccessToken = useCallback(async () => {
     const token = apiAccessTokenRef.current;
-    if (!token) return null;
+    if (!token) {
+      return refreshAccessToken();
+    }
 
     const expiresAt = apiExpiresAtRef.current;
     if (expiresAt != null && Date.now() + TOKEN_REFRESH_BUFFER_MS > expiresAt) {
@@ -472,7 +518,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const resetAuthForE2E = useCallback(async () => {
     if (!E2E_TESTING) return;
     await LocalStore.clearAllData();
-    await setApiTokens(null, null);
+    await setApiTokens(null);
+    await clearPersistedSessionCookies();
+    sessionCookieHeaderRef.current = null;
     dispatch({ type: 'RESET_TO_SIGNED_OUT' });
     hasBootstrappedRef.current = false;
     isBootingRef.current = false;

@@ -17,23 +17,6 @@ export interface AuthLoaderResult {
   user: AuthUser | null;
 }
 
-interface VerifySuccessPayload {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  tokenType: string;
-  user: { id: string; email: string; name?: string | null };
-}
-
-interface PasskeyCallbackPayload {
-  accessToken: string;
-  next?: string;
-}
-
-interface EmailOtpErrorPayload {
-  message?: string;
-}
-
 interface AuthActionData {
   error?: string;
 }

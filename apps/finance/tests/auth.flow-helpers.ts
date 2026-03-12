@@ -11,11 +11,6 @@ export interface OtpResponse {
   otp: string
 }
 
-interface EmailOtpVerifyResponse {
-  access_token: string
-  expires_in: number
-}
-
 export function createAuthTestEmail(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1_000_000)}@hominem.test`
 }
@@ -70,44 +65,8 @@ export async function fetchLatestSignInOtp(email: string) {
 
 export async function signInWithEmailOtp(page: Page, email: string) {
   await startEmailOtpFlow(page, email)
-  const verifyResponse = await fetch(`${AUTH_API_BASE_URL}/api/auth/mobile/e2e/login`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-e2e-auth-secret': AUTH_E2E_SECRET,
-    },
-    body: JSON.stringify({ email, amr: ['email_otp'] }),
-  })
-
-  if (!verifyResponse.ok) {
-    throw new Error(
-      `Failed to create E2E auth session (${verifyResponse.status}): ${await verifyResponse.text()}`,
-    )
-  }
-  const verifyPayload = (await verifyResponse.json()) as EmailOtpVerifyResponse
-  expect(verifyPayload.access_token.length).toBeGreaterThan(10)
-
-  const expiresAtSeconds = Math.floor(Date.now() / 1000) + Math.max(verifyPayload.expires_in, 60)
-  await page.context().addCookies([
-    {
-      name: 'hominem_access_token',
-      value: verifyPayload.access_token,
-      url: FINANCE_APP_BASE_URL,
-      httpOnly: true,
-      sameSite: 'Lax',
-      expires: expiresAtSeconds,
-    },
-    {
-      name: 'hominem_access_token',
-      value: verifyPayload.access_token,
-      url: AUTH_API_BASE_URL,
-      httpOnly: true,
-      sameSite: 'Lax',
-      expires: expiresAtSeconds,
-    },
-  ])
-
-  await page.goto(`${FINANCE_APP_BASE_URL}/finance`)
+  const otp = await fetchLatestSignInOtp(email)
+  await submitOtpCode(page, otp)
   await expect(page).toHaveURL(/\/finance$/, { timeout: 30000 })
 }
 
