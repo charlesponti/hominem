@@ -2,7 +2,7 @@ import { db, sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
-  _isIntegrationDatabaseAvailable,
+  isIntegrationDatabaseAvailable,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -19,8 +19,9 @@ import {
 
 const nextUserId = createDeterministicIdFactory('lists.sharing.integration.user');
 const nextListId = createDeterministicIdFactory('lists.sharing.integration.list');
+const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
 
-describe('list sharing integration', () => {
+describeIntegration('list sharing integration', () => {
   let ownerId: string;
   let collaboratorId: string;
   let listId: string;

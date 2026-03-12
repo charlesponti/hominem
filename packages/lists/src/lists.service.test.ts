@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 
 import { db, sql } from '@hominem/db';
-import { extractRows, _isIntegrationDatabaseAvailable } from '@hominem/db/test/utils';
+import { extractRows, isIntegrationDatabaseAvailable } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -12,7 +12,9 @@ import {
   getPlaceLists,
 } from './list-queries.service';
 
-describe('list-queries integration', () => {
+const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
+
+describeIntegration('list-queries integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerListA: string;
