@@ -1,7 +1,7 @@
 import React, { Component, type ReactNode } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Button } from '~/components/Button'
-import { Text, theme } from '~/theme'
+import { Text, makeStyles } from '~/theme'
 import {
   createBoundaryStateFromError,
   createRootFallbackMessage,
@@ -43,6 +43,7 @@ export class RootErrorBoundary extends Component<Props, State> {
         return this.props.fallback
       }
 
+      const styles = useStyles()
       return (
         <View style={styles.container}>
           <Text variant="header" color="foreground">
@@ -65,21 +66,21 @@ export class RootErrorBoundary extends Component<Props, State> {
   }
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    padding: 24,
+    backgroundColor: t.colors.background,
+    padding: t.spacing.ml_24,
   },
   message: {
-    marginTop: 12,
+    marginTop: t.spacing.sm_12,
     textAlign: 'center',
     maxWidth: 300,
   },
   button: {
-    marginTop: 24,
-    backgroundColor: theme.colors['text-primary'],
+    marginTop: t.spacing.ml_24,
+    backgroundColor: t.colors['text-primary'],
   },
-})
+}))

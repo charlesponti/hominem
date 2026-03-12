@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View, type ViewProps } from 'react-native'
-import { Text, theme } from '~/theme'
+import { Text, makeStyles } from '~/theme'
 import type { FocusItemInput } from '~/utils/services/notes/types'
 import AppIcon from '../ui/icon'
 
@@ -31,6 +31,7 @@ const FocusItemPreview = ({
   onCreateClick,
   ...props
 }: FocusItemPreviewProps) => {
+  const styles = useFocusItemStyles()
   const readableDate = getReadableDate(focusItem.due_date)
   const onDeleteIconPress = () => {
     onDeleteClick(focusItem)
@@ -41,38 +42,38 @@ const FocusItemPreview = ({
   }
 
   return (
-    <View style={[focusItemStyles.item]} {...props}>
-      <View style={[focusItemStyles.info]}>
+    <View style={[styles.item]} {...props}>
+      <View style={[styles.info]}>
         <Text variant="body" color="black">
           {focusItem.text}
         </Text>
         {focusItem.due_date && readableDate ? <Text variant="caption">{readableDate}</Text> : null}
       </View>
-      <Pressable disabled={disabled} style={[focusItemStyles.icon]} onPress={onDeleteIconPress}>
-        <AppIcon name="trash" size={24} color={theme.colors.destructive} />
+      <Pressable disabled={disabled} style={[styles.icon]} onPress={onDeleteIconPress}>
+        <AppIcon name="trash" size={24} color="#d32f2f" />
       </Pressable>
-      <Pressable disabled={disabled} style={[focusItemStyles.icon]} onPress={onIconPress}>
-        <AppIcon name="list-tree" size={24} color={theme.colors.foreground} />
+      <Pressable disabled={disabled} style={[styles.icon]} onPress={onIconPress}>
+        <AppIcon name="list-tree" size={24} color="#000" />
       </Pressable>
     </View>
   )
 }
 
-const focusItemStyles = StyleSheet.create({
+const useFocusItemStyles = makeStyles((t) => StyleSheet.create({
   item: {
     flexDirection: 'row',
-    backgroundColor: theme.colors['emphasis-faint'],
-    borderRadius: 16,
+    backgroundColor: t.colors['emphasis-faint'],
+    borderRadius: t.borderRadii.l_12,
   },
   info: {
     flex: 1,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
+    paddingVertical: t.spacing.ml_24,
+    paddingHorizontal: t.spacing.ml_24,
   },
   icon: {
     justifyContent: 'center',
-    marginRight: 20,
+    marginRight: t.spacing.m_16,
   },
-})
+}))
 
 export default FocusItemPreview

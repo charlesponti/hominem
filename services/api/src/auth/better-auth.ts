@@ -83,7 +83,7 @@ const deviceCodeFieldMappings = {
 
 function getTrustedOrigins() {
   const origins = new Set([
-    env.BETTER_AUTH_URL,
+    env.API_URL,
     env.AUTH_PASSKEY_ORIGIN,
     env.FINANCE_URL,
     env.NOTES_URL,
@@ -104,7 +104,7 @@ function getAdvancedOptions() {
   const cookieDomain = env.AUTH_COOKIE_DOMAIN.trim();
   const crossSubDomainEnabled = cookieDomain.length > 0;
   const useSecureCookies =
-    env.NODE_ENV === 'production' || new URL(env.BETTER_AUTH_URL).protocol === 'https:';
+    env.NODE_ENV === 'production' || new URL(env.API_URL).protocol === 'https:';
 
   return {
     database: {
@@ -134,16 +134,7 @@ function getAuthPlugins() {
     passkey({
       rpID: env.AUTH_PASSKEY_RP_ID,
       rpName: 'Hominem',
-      origin: [
-        env.BETTER_AUTH_URL,
-        env.AUTH_PASSKEY_ORIGIN,
-        env.FINANCE_URL,
-        env.NOTES_URL,
-        env.ROCCO_URL,
-        'http://localhost:4444',
-        'http://localhost:4445',
-        'http://localhost:4446',
-      ],
+      origin: getTrustedOrigins(),
       schema: {
         passkey: {
           modelName: 'user_passkey',
@@ -260,7 +251,7 @@ function getAuthPlugins() {
 
 const betterAuthOptions: BetterAuthOptions = {
   secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.BETTER_AUTH_URL,
+  baseURL: env.API_URL,
   trustedOrigins: getTrustedOrigins(),
   advanced: getAdvancedOptions(),
   user: {

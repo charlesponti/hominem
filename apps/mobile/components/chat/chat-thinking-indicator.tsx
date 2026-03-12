@@ -10,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import { fontSizes } from '@hominem/ui/tokens'
 
-import { Text, theme } from '~/theme'
+import { makeStyles, Text } from '~/theme'
 import { VOID_EASING_STANDARD } from '~/theme/motion'
 
 // Stagger timing for thinking dots — 3-dot bounce cadence
@@ -42,6 +42,7 @@ function useBounceDot(delayMs: number) {
 }
 
 export function ChatThinkingIndicator() {
+  const styles = useStyles()
   const dot1Style = useBounceDot(0)
   const dot2Style = useBounceDot(STAGGER_OFFSET)
   const dot3Style = useBounceDot(STAGGER_OFFSET * 2)
@@ -64,55 +65,57 @@ export function ChatThinkingIndicator() {
   )
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-  },
-  iconBox: {
-    width: 32,
-    height: 32,
-    backgroundColor: `${theme.colors.primary}1A`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  iconDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: theme.colors.primary,
-    opacity: 0.6,
-  },
-  content: {
-    flex: 1,
-    backgroundColor: theme.colors.muted,
-    borderWidth: 1,
-    borderColor: theme.colors['border-subtle'],
-    padding: 16,
-    gap: 8,
-  },
-  label: {
-    color: theme.colors['text-tertiary'],
-    fontSize: fontSizes.xs,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    backgroundColor: theme.colors.primary,
-  },
-  thinkingText: {
-    color: theme.colors['text-tertiary'],
-    fontSize: fontSizes.xs,
-    marginLeft: 2,
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      gap: t.spacing.sm_12,
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.xs_4,
+    },
+    iconBox: {
+      width: 32,
+      height: 32,
+      backgroundColor: `${t.colors.primary}1A`,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    iconDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: t.colors.primary,
+      opacity: 0.6,
+    },
+    content: {
+      flex: 1,
+      backgroundColor: t.colors.muted,
+      borderWidth: 1,
+      borderColor: t.colors['border-subtle'],
+      padding: t.spacing.m_16,
+      gap: t.spacing.sm_8,
+    },
+    label: {
+      color: t.colors['text-tertiary'],
+      fontSize: fontSizes.xs,
+      fontWeight: '500',
+      marginBottom: t.spacing.xs_4,
+    },
+    dotsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.xs_6,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      backgroundColor: t.colors.primary,
+    },
+    thinkingText: {
+      color: t.colors['text-tertiary'],
+      fontSize: fontSizes.xs,
+      marginLeft: t.spacing.xs_2,
+    },
+  })
+)

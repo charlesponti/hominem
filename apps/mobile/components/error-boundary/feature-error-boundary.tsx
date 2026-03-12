@@ -1,7 +1,7 @@
 import React, { Component, type ReactNode } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Button } from '~/components/Button'
-import { Text, theme } from '~/theme'
+import { Text, makeStyles } from '~/theme'
 import {
   createBoundaryStateFromError,
   createFeatureFallbackLabel,
@@ -44,6 +44,7 @@ export class FeatureErrorBoundary extends Component<Props, State> {
         return this.props.fallback
       }
 
+      const styles = useStyles()
       return (
         <View style={styles.container}>
           <Text variant="body" color="text-tertiary">
@@ -64,18 +65,18 @@ export class FeatureErrorBoundary extends Component<Props, State> {
   }
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => StyleSheet.create({
   container: {
-    padding: 16,
-    backgroundColor: theme.colors.muted,
-    borderRadius: 8,
+    padding: t.spacing.m_16,
+    backgroundColor: t.colors.muted,
+    borderRadius: t.borderRadii.sm_6,
     borderWidth: 1,
-    borderColor: theme.colors['border-default'],
+    borderColor: t.colors['border-default'],
     alignItems: 'center',
   },
   button: {
-    marginTop: 12,
-    backgroundColor: theme.colors.background,
-    borderColor: theme.colors['border-default'],
+    marginTop: t.spacing.sm_12,
+    backgroundColor: t.colors.background,
+    borderColor: t.colors['border-default'],
   },
-})
+}))

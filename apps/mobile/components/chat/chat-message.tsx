@@ -4,7 +4,7 @@ import { fontSizes } from '@hominem/ui/tokens'
 
 import { Button } from '~/components/Button'
 import TextArea from '~/components/text-input-autogrow'
-import { Text, theme as appTheme } from '~/theme'
+import { Text, theme as appTheme, makeStyles } from '~/theme'
 import type { MessageOutput } from '~/utils/services/chat'
 import { getLocalDate } from '~/utils/dates'
 
@@ -33,6 +33,141 @@ export const loadMarkdown = async () => {
 const userMarkdownStyle = { body: {} as Record<string, unknown> }
 const botMarkdownStyle = { body: {} as Record<string, unknown> }
 
+const useStyles = makeStyles((t) => StyleSheet.create({
+  bubble: {
+    maxWidth: '90%',
+    paddingHorizontal: t.spacing.m_16,
+    paddingVertical: t.spacing.sm_12,
+    borderRadius: t.borderRadii.xl_20,
+    marginBottom: t.spacing.xs_4,
+  },
+  botMessage: {
+    alignSelf: 'flex-start',
+    backgroundColor: t.colors['bg-surface'],
+    borderWidth: 1,
+    borderColor: t.colors['border-subtle'],
+  },
+  userMessage: {
+    alignSelf: 'flex-end',
+    backgroundColor: t.colors['emphasis-lower'],
+    borderWidth: 1,
+    borderColor: t.colors['emphasis-subtle'],
+  },
+  userMessageText: {
+    fontSize: 17,
+    lineHeight: 24,
+    color: t.colors.foreground,
+  },
+  botMessageText: {
+    fontSize: 18,
+    lineHeight: 24,
+    color: t.colors.foreground,
+  },
+  focusItems: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: t.spacing.sm_12,
+    paddingHorizontal: t.spacing.sm_12,
+    paddingVertical: t.spacing.sm_8,
+  },
+  focusItem: {
+    backgroundColor: t.colors['border-default'],
+    paddingHorizontal: t.spacing.sm_12,
+    paddingVertical: t.spacing.sm_8,
+    borderRadius: t.borderRadii.l_12,
+  },
+  metadata: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.spacing.xs_4,
+    marginTop: t.spacing.s_8,
+    opacity: 0.7,
+  },
+  metadataText: {
+    color: t.colors['text-tertiary'],
+    fontSize: fontSizes.xs,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.spacing.sm_8,
+    marginTop: t.spacing.s_8,
+  },
+  actionButton: {
+    backgroundColor: t.colors['border-default'],
+  },
+  actionButtonDisabled: {
+    opacity: 0.35,
+  },
+  actionLabel: {
+    color: t.colors['text-secondary'],
+    fontSize: fontSizes.xs,
+    textTransform: 'uppercase',
+  },
+  reasoningText: {
+    marginTop: t.spacing.sm_12,
+    color: t.colors.foreground,
+    fontSize: fontSizes.xs,
+    opacity: 0.8,
+  },
+  toolCalls: {
+    marginTop: t.spacing.s_8,
+    gap: t.spacing.xs_4,
+  },
+  toolCall: {
+    borderRadius: t.borderRadii.md_10,
+    borderWidth: 1,
+    borderColor: t.colors['border-subtle'],
+    backgroundColor: t.colors.muted,
+    padding: t.spacing.sm_12,
+    gap: t.spacing.xs_4,
+  },
+  toolCallName: {
+    color: t.colors.foreground,
+    fontSize: fontSizes.xs,
+    fontWeight: '600',
+  },
+  toolCallArgs: {
+    color: t.colors['text-secondary'],
+    fontSize: fontSizes.xs,
+    fontFamily: t.textVariants.mono.fontFamily,
+  },
+  editBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: t.colors['overlay-modal-medium'],
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: t.spacing.ml_24,
+  },
+  editSheet: {
+    width: '100%',
+    borderRadius: t.borderRadii.l_12,
+    backgroundColor: t.colors.background,
+    borderWidth: 1,
+    borderColor: t.colors['border-subtle'],
+    paddingHorizontal: t.spacing.m_16,
+    paddingVertical: t.spacing.m_16,
+    gap: t.spacing.sm_12,
+  },
+  editTitle: {
+    color: t.colors.foreground,
+    fontSize: 16,
+    marginBottom: t.spacing.xs_4,
+  },
+  editInput: {
+    minHeight: 90,
+  },
+  editButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: t.spacing.sm_8,
+  },
+}));
+
 const ChatMessage = memo(({
   message,
   Markdown,
@@ -41,6 +176,7 @@ const ChatMessage = memo(({
   onRegenerate,
   onDelete,
 }: ChatMessageProps) => {
+  const styles = useStyles();
   const { role, message: content } = message
   const isUser = role.toLowerCase() === 'user'
   const chatBubbleStyle = isUser ? styles.userMessage : styles.botMessage
@@ -214,137 +350,3 @@ export const renderMessage = (
   return <ChatMessage message={item} Markdown={Markdown} {...actions} />
 }
 
-const styles = StyleSheet.create({
-  bubble: {
-    maxWidth: '90%',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 18,
-    marginBottom: 6,
-  },
-  botMessage: {
-    alignSelf: 'flex-start',
-    backgroundColor: appTheme.colors['bg-surface'],
-    borderWidth: 1,
-    borderColor: appTheme.colors['border-subtle'],
-  },
-  userMessage: {
-    alignSelf: 'flex-end',
-    backgroundColor: appTheme.colors['emphasis-lower'],
-    borderWidth: 1,
-    borderColor: appTheme.colors['emphasis-subtle'],
-  },
-  userMessageText: {
-    fontSize: 17,
-    lineHeight: 24,
-    color: appTheme.colors.foreground,
-  },
-  botMessageText: {
-    fontSize: 18,
-    lineHeight: 24,
-    color: appTheme.colors.foreground,
-  },
-  focusItems: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: appTheme.spacing.sm_12,
-    paddingHorizontal: appTheme.spacing.sm_12,
-    paddingVertical: appTheme.spacing.s_8,
-  },
-  focusItem: {
-    backgroundColor: appTheme.colors['border-default'],
-    paddingHorizontal: appTheme.spacing.sm_12,
-    paddingVertical: appTheme.spacing.s_8,
-    borderRadius: appTheme.borderRadii.l_12,
-  },
-  metadata: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 8,
-    opacity: 0.7,
-  },
-  metadataText: {
-    color: appTheme.colors['text-tertiary'],
-    fontSize: fontSizes.xs,
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 8,
-  },
-  actionButton: {
-    backgroundColor: appTheme.colors['border-default'],
-  },
-  actionButtonDisabled: {
-    opacity: 0.35,
-  },
-  actionLabel: {
-    color: appTheme.colors['text-secondary'],
-    fontSize: fontSizes.xs,
-    textTransform: 'uppercase',
-  },
-  reasoningText: {
-    marginTop: 10,
-    color: appTheme.colors.foreground,
-    fontSize: fontSizes.xs,
-    opacity: 0.8,
-  },
-  toolCalls: {
-    marginTop: 8,
-    gap: 6,
-  },
-  toolCall: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: appTheme.colors['border-subtle'],
-    backgroundColor: appTheme.colors.muted,
-    padding: 10,
-    gap: 4,
-  },
-  toolCallName: {
-    color: appTheme.colors.foreground,
-    fontSize: fontSizes.xs,
-    fontWeight: '600',
-  },
-  toolCallArgs: {
-    color: appTheme.colors['text-secondary'],
-    fontSize: fontSizes.xs,
-    fontFamily: appTheme.textVariants.mono.fontFamily,
-  },
-  editBackdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: appTheme.colors['overlay-modal-medium'],
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  editSheet: {
-    width: '100%',
-    borderRadius: 12,
-    backgroundColor: appTheme.colors.background,
-    borderWidth: 1,
-    borderColor: appTheme.colors['border-subtle'],
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    gap: 10,
-  },
-  editTitle: {
-    color: appTheme.colors.foreground,
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  editInput: {
-    minHeight: 90,
-  },
-  editButtonRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 8,
-  },
-})

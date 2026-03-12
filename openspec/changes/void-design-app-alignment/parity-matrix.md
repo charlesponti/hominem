@@ -36,7 +36,7 @@ Verified as of Phase 6 audit. Each row documents alignment status and any platfo
 | Surface | Notes (web) | Rocco (web) | Mobile |
 |---|---|---|---|
 | Page padding | ✓ Tailwind `px-4` / `py-4` = 16px | ✓ Tailwind `px-4` | ✓ `m_16` token = 16px |
-| Component gaps | ✓ Tailwind `gap-4` = 16px | ✓ Tailwind `gap-4` | ✓ `s_8` / `m_16` tokens |
+| Component gaps | ✓ Tailwind `gap-4` = 16px | ✓ Tailwind `gap-4` | ✓ `sm_8` / `m_16` tokens |
 | Inline spacing | ✓ No hardcoded values (audit clean) | ✓ No hardcoded values | ✓ Token-based |
 
 ## Motion / Animation

@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from 'react'
 import { StyleSheet } from 'react-native'
 
-import { theme } from '~/theme'
+import { makeStyles, theme } from '~/theme'
 import Text from '~/theme/Text'
 import { FocusCategory } from '../focus/focus-category'
 
@@ -18,8 +18,8 @@ function getCategoryColor(category: string): { bg: string; fg: string } {
   const index = hash % CATEGORY_COLORS.length
   const colors = CATEGORY_COLORS[index]
   return {
-    bg: theme.colors[colors.bg] as string,
-    fg: theme.colors[colors.fg] as string,
+    bg: theme.colors[colors.bg as keyof typeof theme.colors] as string,
+    fg: theme.colors[colors.fg as keyof typeof theme.colors] as string,
   }
 }
 
@@ -27,14 +27,17 @@ export const Badge = ({
   children,
   bg,
   fg,
-}: PropsWithChildren<{ bg: string; fg: string }>) => (
-  <Text
-    variant="body"
-    style={[styles.badge, { backgroundColor: bg, color: fg }]}
-  >
-    {children}
-  </Text>
-)
+}: PropsWithChildren<{ bg: string; fg: string }>) => {
+  const styles = useStyles()
+  return (
+    <Text
+      variant="body"
+      style={[styles.badge, { backgroundColor: bg, color: fg }]}
+    >
+      {children}
+    </Text>
+  )
+}
 
 export const CategoryBadge = ({ category }: { category: string }) => {
   const colors = getCategoryColor(category)
@@ -45,11 +48,13 @@ export const CategoryBadge = ({ category }: { category: string }) => {
   )
 }
 
-const styles = StyleSheet.create({
-  badge: {
-    borderRadius: 20,
-    fontSize: 10,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    badge: {
+      borderRadius: t.borderRadii.xl_20,
+      fontSize: 10,
+      paddingVertical: t.spacing.xs_4,
+      paddingHorizontal: t.spacing.sm_8,
+    },
+  })
+)

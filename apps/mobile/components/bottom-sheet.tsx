@@ -9,11 +9,12 @@ import {
   VOID_MOTION_ENTER,
   VOID_MOTION_EXIT,
 } from '~/theme/motion'
-import { Text, theme } from '~/theme'
+import { makeStyles, Text } from '~/theme'
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
 export const BottomSheet = ({ isOpen, toggleSheet }: { isOpen: boolean; toggleSheet: () => void }) => {
+  const styles = useStyles()
   const [isVisible, setIsVisible] = useState(isOpen)
   const offset = useSharedValue<number>(VOID_ENTER_TRANSLATE_Y)
   const opacity = useSharedValue<number>(0)
@@ -50,24 +51,26 @@ export const BottomSheet = ({ isOpen, toggleSheet }: { isOpen: boolean; toggleSh
   )
 }
 
-const styles = StyleSheet.create({
-  root: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: theme.colors.black,
-    opacity: 0.8,
-  },
-  container: {
-    height: 420,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    paddingTop: 24,
-    paddingHorizontal: 16,
-    backgroundColor: theme.colors.background,
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    root: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: 'flex-end',
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: t.colors.black,
+      opacity: 0.8,
+    },
+    container: {
+      height: 420,
+      borderTopLeftRadius: t.borderRadii.l_12,
+      borderTopRightRadius: t.borderRadii.l_12,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+      paddingTop: t.spacing.ml_24,
+      paddingHorizontal: t.spacing.m_16,
+      backgroundColor: t.colors.background,
+    },
+  })
+)

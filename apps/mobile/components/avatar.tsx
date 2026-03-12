@@ -3,7 +3,7 @@ import { Image } from 'expo-image'
 import { useEffect, useState } from 'react'
 import { Alert, Button, StyleSheet, View } from 'react-native'
 
-import { theme } from '~/theme'
+import { makeStyles } from '~/theme'
 
 interface Props {
   size: number
@@ -12,6 +12,7 @@ interface Props {
 }
 
 export default function Avatar({ url, size = 150, onUpload }: Props) {
+  const styles = useStyles()
   const [uploading, setUploading] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const avatarSize = { height: size, width: size }
@@ -84,23 +85,25 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    rowGap: 8,
-    alignItems: 'center',
-  },
-  avatar: {
-    borderRadius: 1000,
-    overflow: 'hidden',
-    maxWidth: '100%',
-  },
-  noImage: {
-    backgroundColor: theme.colors['emphasis-faint'],
-    borderColor: theme.colors['border-default'],
-    borderWidth: 1,
-    borderRadius: 1000,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      width: '100%',
+      rowGap: t.spacing.sm_8,
+      alignItems: 'center',
+    },
+    avatar: {
+      borderRadius: 1000,
+      overflow: 'hidden',
+      maxWidth: '100%',
+    },
+    noImage: {
+      backgroundColor: t.colors['emphasis-faint'],
+      borderColor: t.colors['border-default'],
+      borderWidth: 1,
+      borderRadius: 1000,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  })
+)

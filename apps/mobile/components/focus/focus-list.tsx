@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react'
 import { StyleSheet } from 'react-native'
 import { fontSizes } from '@hominem/ui/tokens'
 import { FlashList, type ListRenderItem } from '@shopify/flash-list'
-import { theme } from '~/theme'
+import { makeStyles } from '~/theme'
 import { RefreshControl } from 'react-native-gesture-handler'
 import type { FocusItem } from '~/utils/services/notes/types'
 import { FocusListItem } from './focus-list-item'
@@ -32,6 +32,7 @@ export const FocusList = ({
   isRefreshing: boolean
   onRefresh: () => void
 }) => {
+  const styles = useStyles()
   // Memoized render function with stable reference
   const renderItem = useCallback<ListRenderItem<FocusItem>>(
     ({ item, index }) => {
@@ -60,25 +61,27 @@ export const FocusList = ({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingBottom: 32,
-  },
-  listContainer: {
-    rowGap: 12,
-    // This enables users to scroll the the last item above the `Sherpa` button
-    paddingBottom: 120,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    columnGap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-  },
-  headerText: {
-    fontSize: fontSizes.sm,
-    color: theme.colors['text-tertiary'],
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingBottom: t.spacing.l_32,
+    },
+    listContainer: {
+      rowGap: t.spacing.sm_12,
+      // This enables users to scroll the the last item above the `Sherpa` button
+      paddingBottom: 120,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      columnGap: t.spacing.xs_6,
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.xs_4,
+    },
+    headerText: {
+      fontSize: fontSizes.sm,
+      color: t.colors['text-tertiary'],
+    },
+  })
+)

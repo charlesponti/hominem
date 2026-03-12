@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
 
 import { Button } from '~/components/Button'
-import { Text, theme } from '~/theme'
+import { makeStyles, Text } from '~/theme'
 import { LocalStore } from '~/utils/local-store'
 import { FadeIn } from '~/components/animated/fade-in'
 import type { ChatWithActivity } from '~/utils/services/chat/session-state'
@@ -34,6 +34,7 @@ interface SessionCardProps {
 }
 
 export const SessionCard = ({ chat, isActive }: SessionCardProps) => {
+  const styles = useStyles()
   const router = useRouter()
 
   const handlePress = () => {
@@ -69,6 +70,7 @@ export const SessionCard = ({ chat, isActive }: SessionCardProps) => {
 // ─── SessionList ──────────────────────────────────────────────────────────────
 
 export const SessionList = () => {
+  const styles = useStyles()
   const { data: sessions } = useResumableSessions()
 
   if (!sessions || sessions.length === 0) return null
@@ -94,31 +96,33 @@ function formatAge(activityAt: string): string {
   return `${diffD}d ago`
 }
 
-const styles = StyleSheet.create({
-  list: { gap: 6 },
-  sectionLabel: {
-    letterSpacing: 1,
-    marginBottom: 2,
-    paddingHorizontal: 2,
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    borderColor: theme.colors['border-default'],
-    backgroundColor: theme.colors.muted,
-    justifyContent: 'flex-start',
-  },
-  activeCard: {
-    borderColor: theme.colors.success,
-  },
-  activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: theme.colors.success,
-  },
-  content: { flex: 1, gap: 1 },
-  title: { fontWeight: '500' },
-  arrow: { opacity: 0.4 },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    list: { gap: t.spacing.xs_4 },
+    sectionLabel: {
+      letterSpacing: 1, /* text kerning */
+      marginBottom: t.spacing.xs_4,
+      paddingHorizontal: t.spacing.xs_4,
+    },
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.sm_12,
+      borderColor: t.colors['border-default'],
+      backgroundColor: t.colors.muted,
+      justifyContent: 'flex-start',
+    },
+    activeCard: {
+      borderColor: t.colors.success,
+    },
+    activeDot: {
+      width: t.spacing.xs_4,
+      height: t.spacing.xs_4,
+      borderRadius: 999, /* full radius */
+      backgroundColor: t.colors.success,
+    },
+    content: { flex: 1, gap: 1 /* minimal gap */ },
+    title: { fontWeight: '500' },
+    arrow: { opacity: 0.4 },
+  })
+)

@@ -8,6 +8,7 @@ const domains = [
   { id: 'agent', description: 'Agent orchestration commands' },
   { id: 'system', description: 'System diagnostics and generators' },
   { id: 'config', description: 'Configuration commands' },
+  { id: 'skills', description: 'Skill import/export helpers' },
 ];
 
 export function renderGlobalHelp(binaryName: string): string {

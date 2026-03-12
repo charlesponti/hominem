@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native'
 
 import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types'
 import { Button } from '~/components/Button'
-import { theme } from '~/theme'
+import { makeStyles } from '~/theme'
 
 /**
  * ArtifactActions — transformation strip shown in SessionView.
@@ -29,6 +29,8 @@ const ENABLED: ArtifactType[] = ['note']
 const BLOCKING: ThoughtLifecycleState[] = ['classifying', 'reviewing_changes', 'persisting']
 
 export const ArtifactActions = ({ state, messageCount, onTransform }: ArtifactActionsProps) => {
+  const styles = useStyles()
+  
   if (messageCount === 0) return null
 
   const isComposing = state === 'composing'
@@ -58,19 +60,21 @@ export const ArtifactActions = ({ state, messageCount, onTransform }: ArtifactAc
   )
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors['border-default'],
-    backgroundColor: theme.colors.background,
-  },
-  dimmed: { opacity: 0.5 },
-  btn: {
-    backgroundColor: theme.colors.muted,
-  },
-  btnDisabled: { opacity: 0.38 },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      gap: t.spacing.sm_8,
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.sm_10,
+      borderTopWidth: 1,
+      borderTopColor: t.colors['border-default'],
+      backgroundColor: t.colors.background,
+    },
+    dimmed: { opacity: 0.5 },
+    btn: {
+      backgroundColor: t.colors.muted,
+    },
+    btnDisabled: { opacity: 0.38 },
+  })
+)

@@ -8,7 +8,7 @@ const serverSchema = z.object({
   PORT: z.string().default('3000'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
-  API_URL: z.url().default('http://localhost:3000'),
+  API_URL: z.url().default('http://localhost:4040'),
   DATABASE_URL: isTest
     ? z.url().default('postgresql://postgres:postgres@localhost:5432/hominem_test')
     : z.url(),
@@ -22,7 +22,6 @@ const serverSchema = z.object({
   AUTH_ISSUER: z.url().default('http://localhost:3000'),
   AUTH_AUDIENCE: z.string().default('hominem-api'),
   BETTER_AUTH_SECRET: z.string().default('dev-better-auth-secret-change-me'),
-  BETTER_AUTH_URL: z.url().default('http://localhost:3000'),
   AUTH_PASSKEY_RP_ID: z.string().default('api.ponti.io'),
   AUTH_PASSKEY_ORIGIN: z.url().default('https://api.ponti.io'),
   AUTH_COOKIE_DOMAIN: z.string().default(''),

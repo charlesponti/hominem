@@ -121,4 +121,43 @@ describe('v2 integration HOMINEM_HOME isolation', () => {
       },
     );
   });
+
+  it('can export and import a skills directory', async () => {
+    const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'hominem-skills-'));
+    const repo = path.join(sandbox, 'repo');
+    const other = path.join(sandbox, 'other');
+    fs.mkdirSync(repo, { recursive: true });
+    fs.mkdirSync(other, { recursive: true });
+
+    // create a fake skills directory with one file
+    const skillsPath = path.join(repo, '.github/skills');
+    fs.mkdirSync(skillsPath, { recursive: true });
+    fs.writeFileSync(path.join(skillsPath, 'foo.md'), '# hello');
+
+    // run export from repo; temporarily change cwd so our command sees the right skills folder
+    const originalCwd = process.cwd();
+    process.chdir(repo);
+    const exportResult = await runCaptured(['skills', 'export', '--format', 'json', other]);
+    process.chdir(originalCwd);
+    if (exportResult.exitCode !== 0) {
+      console.error('export stderr', exportResult.stderr);
+      console.error('export stdout', exportResult.stdout);
+    }
+    expect(exportResult.exitCode).toBe(0);
+    const exportEnvelope = parseSuccessEnvelope(exportResult);
+    expect(exportEnvelope.data.fileCount).toBe(1);
+    expect(fs.existsSync(path.join(other, 'foo.md'))).toBeTrue();
+
+    // clear repo and then import back
+    fs.rmSync(skillsPath, { recursive: true, force: true });
+    expect(fs.existsSync(skillsPath)).toBeFalse();
+
+    process.chdir(repo);
+    const importResult = await runCaptured(['skills', 'import', '--format', 'json', other]);
+    process.chdir(originalCwd);
+    expect(importResult.exitCode).toBe(0);
+    const importEnvelope = parseSuccessEnvelope(importResult);
+    expect(importEnvelope.data.fileCount).toBe(1);
+    expect(fs.existsSync(path.join(skillsPath, 'foo.md'))).toBeTrue();
+  });
 });

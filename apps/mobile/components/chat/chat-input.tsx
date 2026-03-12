@@ -5,7 +5,7 @@ import { fontSizes } from '@hominem/ui/tokens'
 
 import { Button } from '~/components/Button'
 import TextArea from '~/components/text-input-autogrow'
-import { theme } from '~/theme'
+import { makeStyles, theme } from '~/theme'
 import { VoiceSessionModal } from '../media/voice-session-modal'
 import AppIcon from '../ui/icon'
 
@@ -33,6 +33,7 @@ export const ChatInput = ({
   isPending = false,
   suggestions = DEFAULT_SUGGESTIONS,
 }: ChatInputProps) => {
+  const styles = useStyles()
   const inputRef = useRef<React.ElementRef<typeof TextArea> | null>(null)
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
   const [attachments, setAttachments] = useState<ImagePicker.ImagePickerAsset[]>([])
@@ -216,99 +217,101 @@ export const ChatInput = ({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors['border-default'],
-    backgroundColor: theme.colors.background,
-    gap: 8,
-  },
-  suggestionsScroll: {
-    flexGrow: 0,
-  },
-  suggestionsContent: {
-    gap: 8,
-    paddingRight: 4,
-  },
-  suggestionChip: {
-    backgroundColor: theme.colors.muted,
-  },
-  attachmentsScroll: {
-    flexGrow: 0,
-  },
-  attachmentsContent: {
-    gap: 8,
-    paddingRight: 4,
-  },
-  attachmentChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    backgroundColor: theme.colors.muted,
-    maxWidth: 160,
-    gap: 6,
-  },
-  attachmentName: {
-    color: theme.colors.foreground,
-    fontSize: fontSizes.xs,
-    fontFamily: 'Geist Mono',
-    flex: 1,
-  },
-  removeAttachment: {
-    color: theme.colors['text-tertiary'],
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
-  },
-  inputContainer: {
-    flex: 1,
-  },
-  input: {
-    color: theme.colors.foreground,
-    fontSize: fontSizes.sm,
-    fontFamily: 'Geist Mono',
-    maxHeight: 120,
-    minHeight: 48,
-  },
-  inputError: {
-    borderColor: theme.colors.destructive,
-  },
-  iconButton: {
-    backgroundColor: theme.colors.muted,
-    borderColor: theme.colors['border-default'],
-  },
-  sendButton: {
-    backgroundColor: theme.colors.muted,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: 8,
-  },
-  charCount: {
-    fontSize: fontSizes.xs,
-    fontFamily: 'Geist Mono',
-    color: theme.colors['text-tertiary'],
-  },
-  charCountError: {
-    color: theme.colors.destructive,
-  },
-  overLimitText: {
-    fontSize: fontSizes.xs,
-    fontFamily: 'Geist Mono',
-    color: theme.colors.destructive,
-    flex: 1,
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.sm_12,
+      borderTopWidth: 1,
+      borderTopColor: t.colors['border-default'],
+      backgroundColor: t.colors.background,
+      gap: t.spacing.sm_8,
+    },
+    suggestionsScroll: {
+      flexGrow: 0,
+    },
+    suggestionsContent: {
+      gap: t.spacing.sm_8,
+      paddingRight: t.spacing.xs_4,
+    },
+    suggestionChip: {
+      backgroundColor: t.colors.muted,
+    },
+    attachmentsScroll: {
+      flexGrow: 0,
+    },
+    attachmentsContent: {
+      gap: t.spacing.sm_8,
+      paddingRight: t.spacing.xs_4,
+    },
+    attachmentChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: t.spacing.sm_12,
+      paddingVertical: t.spacing.xs_4,
+      borderRadius: t.borderRadii.sm_6,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+      backgroundColor: t.colors.muted,
+      maxWidth: 160, // <‑ this value may need a token, consider adding if reused elsewhere
+      gap: t.spacing.sm_8,
+    },
+    attachmentName: {
+      color: t.colors.foreground,
+      fontSize: fontSizes.xs,
+      fontFamily: 'Geist Mono',
+      flex: 1,
+    },
+    removeAttachment: {
+      color: t.colors['text-tertiary'],
+    },
+    inputRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      gap: t.spacing.sm_8,
+    },
+    inputContainer: {
+      flex: 1,
+    },
+    input: {
+      color: t.colors.foreground,
+      fontSize: fontSizes.sm,
+      fontFamily: 'Geist Mono',
+      maxHeight: 120, // <‑ consider converting to spacing token if needed
+      minHeight: 48,
+    },
+    inputError: {
+      borderColor: t.colors.destructive,
+    },
+    iconButton: {
+      backgroundColor: t.colors.muted,
+      borderColor: t.colors['border-default'],
+    },
+    sendButton: {
+      backgroundColor: t.colors.muted,
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      gap: t.spacing.sm_8,
+    },
+    charCount: {
+      fontSize: fontSizes.xs,
+      fontFamily: 'Geist Mono',
+      color: t.colors['text-tertiary'],
+    },
+    charCountError: {
+      color: t.colors.destructive,
+    },
+    overLimitText: {
+      fontSize: fontSizes.xs,
+      fontFamily: 'Geist Mono',
+      color: t.colors.destructive,
+      flex: 1,
+    },
+  })
+)

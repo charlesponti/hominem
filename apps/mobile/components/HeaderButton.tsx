@@ -2,10 +2,11 @@ import FontAwesome from '@expo/vector-icons/FontAwesome'
 import { forwardRef } from 'react'
 import { Pressable, StyleSheet, type View } from 'react-native'
 
-import { theme } from '~/theme'
+import { makeStyles, theme } from '~/theme'
 
 export const HeaderButton = forwardRef<View, { onPress?: () => void }>(
   ({ onPress }, ref) => {
+    const styles = useStyles()
     return (
       <Pressable ref={ref} onPress={onPress}>
         {({ pressed }) => (
@@ -26,8 +27,10 @@ export const HeaderButton = forwardRef<View, { onPress?: () => void }>(
   }
 )
 
-export const styles = StyleSheet.create({
-  headerRight: {
-    marginRight: 15,
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    headerRight: {
+      marginRight: t.spacing.sm_12,
+    },
+  })
+)

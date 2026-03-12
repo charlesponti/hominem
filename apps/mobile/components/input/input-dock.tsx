@@ -13,7 +13,7 @@ import Animated, {
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { Text, theme } from '~/theme'
+import { Text, makeStyles } from '~/theme'
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { useAuth } from '~/utils/auth-provider'
 import { useStartChat } from '~/utils/services/chat'
@@ -25,6 +25,7 @@ type InputDockProps = {
 }
 
 export const InputDock = ({ seedPrompt }: InputDockProps) => {
+  const styles = useStyles()
   const { isSignedIn } = useAuth()
   const router = useRouter()
   const segments = useSegments()
@@ -119,11 +120,11 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
             onPress={handleTextModePress}
             accessibilityLabel="Add attachment"
           >
-            <AppIcon name="circle-plus" size={22} color={theme.colors.white} />
+            <AppIcon name="circle-plus" size={22} color="#fff" />
           </Pressable>
           <TextInput
             placeholder="Where should we start?"
-            placeholderTextColor={theme.colors['text-tertiary']}
+            placeholderTextColor="#999"
             style={styles.input}
             editable={!isPending && !isRecording}
             value={message}
@@ -137,7 +138,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
             accessibilityLabel="Voice input"
             testID="voice-input-button"
           >
-            <AppIcon name="microphone" size={22} color={theme.colors.white} />
+            <AppIcon name="microphone" size={22} color="#fff" />
           </Pressable>
           <Pressable
             style={[styles.iconButton, styles.sendButton, isPending ? styles.disabled : null]}
@@ -146,7 +147,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
             accessibilityLabel="Send"
             testID="send-message-button"
           >
-            <AppIcon name="arrow-up" size={20} color={theme.colors.foreground} />
+            <AppIcon name="arrow-up" size={20} color="#000" />
           </Pressable>
         </View>
       </Animated.View>
@@ -154,14 +155,14 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
   )
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.background,
+    backgroundColor: t.colors.background,
     borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 10,
+    borderColor: t.colors['border-default'],
+    paddingHorizontal: t.spacing.sm_12,
+    paddingVertical: t.spacing.s_8,
+    gap: t.spacing.s_8,
     width: '94%',
     alignSelf: 'center',
     position: 'absolute',
@@ -172,40 +173,40 @@ const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: t.spacing.s_8,
   },
   grabber: {
     width: 36,
     height: 4,
-    borderRadius: 999,
-    backgroundColor: theme.colors['border-default'],
+    borderRadius: 999, /* full radius */
+    backgroundColor: t.colors['border-default'],
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: t.spacing.s_8,
   },
   input: {
     flex: 1,
-    color: theme.colors.foreground,
+    color: t.colors.foreground,
     fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
-    paddingVertical: 10,
+    paddingVertical: t.spacing.s_8,
   },
   iconButton: {
     height: 42,
     width: 42,
-    borderRadius: 8,
+    borderRadius: t.borderRadii.sm_6,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.muted,
+    backgroundColor: t.colors.muted,
     borderWidth: 1,
-    borderColor: theme.colors['border-default'],
+    borderColor: t.colors['border-default'],
   },
   sendButton: {
-    backgroundColor: theme.colors.muted,
+    backgroundColor: t.colors.muted,
   },
   disabled: {
     opacity: 0.5,
   },
-})
+}))

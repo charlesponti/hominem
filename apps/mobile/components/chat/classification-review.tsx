@@ -5,10 +5,63 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import type { ArtifactType } from '@hominem/chat-services/types'
 import { Button } from '~/components/Button'
-import { Text, theme } from '~/theme'
+import { Text, makeStyles } from '~/theme'
 import { VOID_EASING_ENTER, VOID_MOTION_ENTER } from '~/theme/motion'
 
-interface ClassificationReviewProps {
+const useStyles = makeStyles((t) => StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: t.colors['overlay-modal-high'],
+  },
+  sheet: {
+    backgroundColor: t.colors.background,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderTopWidth: 1,
+    borderColor: t.colors['border-default'],
+    padding: t.spacing.ml_24,
+    gap: t.spacing.m_16,
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 999, // special: infinite radius for pill
+    backgroundColor: t.colors['border-default'],
+    alignSelf: 'center',
+    marginBottom: t.spacing.xs_4,
+  },
+  header: { gap: t.spacing.xs_4 },
+  typeLabel: { letterSpacing: 1 },
+  title: { fontWeight: '500' },
+  changesList: { gap: t.spacing.xs_4 },
+  changeRow: { flexDirection: 'row', gap: t.spacing.s_8, alignItems: 'flex-start' },
+  dash: { opacity: 0.4, marginTop: 1 },
+  changeText: { flex: 1 },
+  preview: {
+    maxHeight: 120,
+    backgroundColor: t.colors.muted,
+    borderRadius: t.borderRadii.sm_6,
+    borderWidth: 1,
+    borderColor: t.colors['border-default'],
+    padding: t.spacing.sm_12,
+  },
+  previewText: { fontFamily: 'Geist Mono' },
+  actions: { flexDirection: 'row', gap: t.spacing.s_8 },
+  btn: {
+    flex: 1,
+  },
+  primaryBtn: {
+    backgroundColor: t.colors.foreground,
+    borderColor: t.colors.foreground,
+  },
+  secondaryBtn: {
+    backgroundColor: 'transparent',
+    borderColor: t.colors['border-default'],
+  },
+}))
+
+type ClassificationReviewProps = {
   proposedType: ArtifactType
   proposedTitle: string
   proposedChanges: string[]
@@ -37,6 +90,7 @@ export const ClassificationReview = ({
   onReject,
 }: ClassificationReviewProps) => {
   const insets = useSafeAreaInsets()
+  const styles = useStyles()
   const translateY = useSharedValue(80)
   const opacity = useSharedValue(0)
 
@@ -117,56 +171,3 @@ export const ClassificationReview = ({
     </Modal>
   )
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: theme.colors['overlay-modal-high'],
-  },
-  sheet: {
-    backgroundColor: theme.colors.background,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    borderTopWidth: 1,
-    borderColor: theme.colors['border-default'],
-    padding: 20,
-    gap: 16,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 999,
-    backgroundColor: theme.colors['border-default'],
-    alignSelf: 'center',
-    marginBottom: 4,
-  },
-  header: { gap: 4 },
-  typeLabel: { letterSpacing: 1 },
-  title: { fontWeight: '500' },
-  changesList: { gap: 6 },
-  changeRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
-  dash: { opacity: 0.4, marginTop: 1 },
-  changeText: { flex: 1 },
-  preview: {
-    maxHeight: 120,
-    backgroundColor: theme.colors.muted,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    padding: 10,
-  },
-  previewText: { fontFamily: 'Geist Mono' },
-  actions: { flexDirection: 'row', gap: 8 },
-  btn: {
-    flex: 1,
-  },
-  primaryBtn: {
-    backgroundColor: theme.colors.foreground,
-    borderColor: theme.colors.foreground,
-  },
-  secondaryBtn: {
-    backgroundColor: 'transparent',
-    borderColor: theme.colors['border-default'],
-  },
-})

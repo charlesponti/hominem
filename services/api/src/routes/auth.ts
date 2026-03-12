@@ -525,7 +525,7 @@ function buildBetterAuthUrl(input: {
 }) {
   const requestUrl = new URL(input.request.url);
   const targetPath = input.path ? `/api/auth${input.path}` : requestUrl.pathname;
-  const targetUrl = new URL(targetPath, env.BETTER_AUTH_URL);
+  const targetUrl = new URL(targetPath, env.API_URL);
 
   if (input.preserveQuery) {
     targetUrl.search = requestUrl.search;
@@ -540,7 +540,7 @@ function ensureTrustedOrigin(headers: Headers) {
     return;
   }
 
-  headers.set('origin', env.BETTER_AUTH_URL);
+  headers.set('origin', env.API_URL);
 }
 
 async function callBetterAuthPluginEndpoint(input: {

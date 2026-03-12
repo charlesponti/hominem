@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 
-import { theme } from '~/theme'
+import { makeStyles } from '~/theme'
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 
 // 5x standard duration per direction (~600ms) for a slow, calm loading pulse
@@ -31,6 +31,7 @@ function usePulse() {
 }
 
 export function ChatShimmerMessage() {
+  const styles = useStyles()
   const animatedStyle = usePulse()
   return (
     <View style={styles.row}>
@@ -43,33 +44,35 @@ export function ChatShimmerMessage() {
   )
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 16,
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.muted,
-    flexShrink: 0,
-  },
-  lines: {
-    flex: 1,
-    gap: 8,
-    paddingTop: 4,
-  },
-  line: {
-    height: 16,
-    borderRadius: 4,
-    backgroundColor: theme.colors.muted,
-  },
-  lineFull: {
-    width: '100%',
-  },
-  lineShort: {
-    width: '66%',
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      gap: t.spacing.sm_12,
+      padding: t.spacing.m_16,
+    },
+    avatar: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: t.colors.muted,
+      flexShrink: 0,
+    },
+    lines: {
+      flex: 1,
+      gap: t.spacing.sm_8,
+      paddingTop: t.spacing.xs_4,
+    },
+    line: {
+      height: 16,
+      borderRadius: t.borderRadii.s_3,
+      backgroundColor: t.colors.muted,
+    },
+    lineFull: {
+      width: '100%',
+    },
+    lineShort: {
+      width: '66%',
+    },
+  })
+)

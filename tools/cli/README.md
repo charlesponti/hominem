@@ -16,6 +16,7 @@ Automation-first CLI for hominem, replatformed to a typed command graph runtime.
 - `hominem agent ...`
 - `hominem system ...`
 - `hominem config ...`
+- `hominem skills ...` (export/import `.github/skills`)
 
 ## Build and Distribution
 - Primary artifact: compiled binary (`dist/hominem`)

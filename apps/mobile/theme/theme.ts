@@ -25,7 +25,7 @@ const theme = createTheme({
   // Spacing — named keys for Restyle, values from canonical tokens
   spacing: {
     xs_4: tokenSpacing[1],
-    s_8: tokenSpacing[2],
+    sm_8: tokenSpacing[2],
     sm_12: tokenSpacing[3],
     m_16: tokenSpacing[4],
     ml_24: tokenSpacing[5],

@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native'
 import type { ArtifactType, ReviewItem } from '@hominem/chat-services/types'
 import { Button } from '~/components/Button'
-import { Text, theme } from '~/theme'
+import { Text, makeStyles, theme } from '~/theme'
 import { FadeIn } from '~/components/animated/fade-in'
 
 interface ProposalCardProps {
@@ -17,7 +17,36 @@ const TYPE_LABEL: Record<ArtifactType, string> = {
   tracker: 'TRACKER',
 }
 
+const useStyles = makeStyles((t) => StyleSheet.create({
+  list: { gap: t.spacing.s_8 },
+  sectionLabel: {
+    letterSpacing: 1,
+    marginBottom: t.spacing.xs_4,
+    paddingHorizontal: t.spacing.xs_4,
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: t.spacing.sm_12,
+    paddingHorizontal: t.spacing.sm_12,
+    paddingVertical: t.spacing.sm_12,
+    borderRadius: t.borderRadii.md_10,
+    borderWidth: 1,
+    borderColor: theme.colors['border-default'],
+    backgroundColor: theme.colors.muted,
+  },
+  content: { flex: 1, gap: t.spacing.xs_4 },
+  typeLabel: { letterSpacing: 1 },
+  title: { fontWeight: '500' },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.s_8 },
+  reviewBtn: {
+    minHeight: 30,
+  },
+  rejectBtn: { minHeight: 28, minWidth: 28 },
+}))
+
 export const ProposalCard = ({ item, onReview, onReject }: ProposalCardProps) => {
+  const styles = useStyles()
   return (
     <FadeIn>
       <View style={styles.card}>
@@ -55,7 +84,6 @@ export const ProposalCard = ({ item, onReview, onReject }: ProposalCardProps) =>
   )
 }
 
-/** Renders the review queue. Hides entirely when empty. */
 export const ProposalList = ({
   items,
   onReview,
@@ -65,6 +93,7 @@ export const ProposalList = ({
   onReview: (item: ReviewItem) => void
   onReject: (item: ReviewItem) => void
 }) => {
+  const styles = useStyles()
   if (items.length === 0) return null
 
   return (
@@ -78,31 +107,3 @@ export const ProposalList = ({
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  list: { gap: 6 },
-  sectionLabel: {
-    letterSpacing: 1,
-    marginBottom: 2,
-    paddingHorizontal: 2,
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    backgroundColor: theme.colors.muted,
-  },
-  content: { flex: 1, gap: 2 },
-  typeLabel: { letterSpacing: 1 },
-  title: { fontWeight: '500' },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  reviewBtn: {
-    minHeight: 30,
-  },
-  rejectBtn: { minHeight: 28, minWidth: 28 },
-})

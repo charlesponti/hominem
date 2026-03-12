@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: theme.spacing.sm_12,
     paddingTop: theme.spacing.ml_24,
-    rowGap: theme.spacing.s_8,
+    rowGap: theme.spacing.sm_8,
     paddingBottom: theme.spacing.m_16,
   },
   formSection: {
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.ml_24,
   },
   passkeysSection: {
-    rowGap: theme.spacing.s_8,
+    rowGap: theme.spacing.sm_8,
   },
   noPasskeysText: {
     fontSize: 12,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
-    padding: theme.spacing.s_8,
+    padding: theme.spacing.sm_8,
   },
   passkeyName: {
     fontSize: 12,

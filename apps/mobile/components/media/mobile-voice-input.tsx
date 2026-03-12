@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Vibration, View, type Pressab
 import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
-import { Text, theme } from '~/theme'
+import { makeStyles, Text, theme } from '~/theme'
 import { useMobileAudioRecorder } from './use-mobile-audio-recorder'
 import { AudioLevelVisualizer } from './audio-meterings'
 
@@ -25,6 +25,7 @@ export function MobileVoiceInput({
   style,
   ...props
 }: MobileVoiceInputProps) {
+  const styles = useStyles()
   const {
     isRecording,
     isTranscribing,
@@ -112,22 +113,24 @@ export function MobileVoiceInput({
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    columnGap: 12,
-  },
-  speakButton: {
-    padding: 8,
-    borderRadius: 50,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-  },
-  retryButton: {
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      columnGap: t.spacing.sm_12,
+    },
+    speakButton: {
+      padding: t.spacing.sm_8,
+      borderRadius: 50,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+    },
+    retryButton: {
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+      paddingHorizontal: t.spacing.sm_8,
+      paddingVertical: t.spacing.xs_4,
+    },
+  })
+)

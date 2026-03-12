@@ -1,7 +1,8 @@
 import { StyleSheet } from 'react-native'
-import { Text, theme } from '~/theme'
+import { makeStyles, Text } from '~/theme'
 
 export const FocusCategory = ({ category }: { category: keyof CategoryMap }) => {
+  const styles = useStyles()
   const foundCategory = CATEGORIES[category]
 
   if (!foundCategory) {
@@ -19,10 +20,12 @@ export const FocusCategory = ({ category }: { category: keyof CategoryMap }) => 
   )
 }
 
-const styles = StyleSheet.create({
-  muted: { color: theme.colors['text-tertiary'] },
-  secondary: { color: theme.colors['text-secondary'] },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    muted: { color: t.colors['text-tertiary'] },
+    secondary: { color: t.colors['text-secondary'] },
+  })
+)
 
 export const CATEGORIES: Record<string, { label: string }> = {
   career: { label: 'Career' },

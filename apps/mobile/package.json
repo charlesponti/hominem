@@ -9,7 +9,7 @@
     "target:sim": "bash scripts/dev-target.sh simulator",
     "target:device": "bash scripts/dev-target.sh device",
     "typecheck": "tsc --noEmit",
-    "lint": "bunx oxlint ./app ./components ./utils ./theme ./lib",
+    "lint": "bunx tsx ./scripts/check-style-tokens.ts && bunx oxlint ./app ./components ./utils ./theme ./lib",
     "format": "bunx oxfmt ./app ./components ./utils ./theme ./lib",
     "ios": "bun run prebuild:dev && bash scripts/run-variant.sh dev expo run:ios",
     "prebuild": "bun run prebuild:dev",

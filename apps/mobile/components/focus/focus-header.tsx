@@ -2,10 +2,11 @@ import { Link } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
-import { Text, theme } from '~/theme'
+import { makeStyles, Text } from '~/theme'
 import AppIcon from '../ui/icon'
 
 export const FocusHeader = React.memo(() => {
+  const styles = useStyles()
   const todaysDate = useMemo(
     () => new Date().toLocaleString('default', { month: 'long', day: 'numeric' }),
     []
@@ -34,31 +35,33 @@ export const FocusHeader = React.memo(() => {
   )
 })
 
-const styles = StyleSheet.create({
-  header: {
-    justifyContent: 'space-between',
-    marginTop: 91,
-    rowGap: 4,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-  },
-  today: { flex: 1, alignItems: 'flex-start' },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    paddingHorizontal: 16,
-  },
-  iconWrap: {
-    backgroundColor: theme.colors.muted,
-    borderRadius: 99,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-  },
-  iconLink: {
-    padding: 12,
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    header: {
+      justifyContent: 'space-between',
+      marginTop: 91,
+      rowGap: t.spacing.xs_4,
+    },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: t.spacing.m_16,
+    },
+    today: { flex: 1, alignItems: 'flex-start' },
+    bottomRow: {
+      flexDirection: 'row',
+      justifyContent: 'flex-start',
+      paddingHorizontal: t.spacing.m_16,
+    },
+    iconWrap: {
+      backgroundColor: t.colors.muted,
+      borderRadius: 99, /* full radius for circular icon */
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+    },
+    iconLink: {
+      padding: t.spacing.sm_12,
+    },
+  })
+)

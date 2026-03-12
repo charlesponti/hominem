@@ -1,0 +1,76 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { z } from 'zod';
+
+import { createCommand } from '../../command-factory';
+import { CliError } from '../../errors';
+
+export default createCommand({
+  name: 'skills import',
+  summary: 'Copy skills from another location into `.github/skills`',
+  description:
+    'Typically used after running `skills export` in another repository.  Any existing files in the destination will be overwritten.',
+  argNames: ['src'],
+  args: z.object({
+    src: z.string().default('.'),
+  }),
+  flags: z.object({}),
+  outputSchema: z.object({
+    source: z.string(),
+    dest: z.string(),
+    fileCount: z.number(),
+  }),
+  async run({ args, context }) {
+    const source = path.resolve(context.cwd, args.src);
+    const dest = path.resolve(context.cwd, '.github/skills');
+
+    try {
+      const stat = await fs.stat(source);
+      if (!stat.isDirectory()) {
+        throw new CliError({
+          code: 'SKILLS_SOURCE_NOT_DIRECTORY',
+          category: 'validation',
+          message: `source path is not a directory: ${source}`,
+        });
+      }
+    } catch (err) {
+      if (err instanceof CliError) throw err;
+      throw new CliError({
+        code: 'SKILLS_SOURCE_MISSING',
+        category: 'dependency',
+        message: `failed to read skills directory at ${source}`,
+      });
+    }
+
+    try {
+      await fs.mkdir(dest, { recursive: true });
+      await fs.cp(source, dest, { recursive: true, force: true });
+
+      let fileCount = 0;
+      async function countFiles(dir: string) {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          const abs = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            await countFiles(abs);
+          } else {
+            fileCount += 1;
+          }
+        }
+      }
+      await countFiles(dest);
+
+      return {
+        source,
+        dest,
+        fileCount,
+      };
+    } catch (err) {
+      throw new CliError({
+        code: 'SKILLS_IMPORT_FAILED',
+        category: 'dependency',
+        message: err instanceof Error ? err.message : 'import failed',
+      });
+    }
+  },
+});

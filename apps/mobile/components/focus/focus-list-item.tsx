@@ -12,7 +12,7 @@ import * as ContextMenu from 'zeego/context-menu'
 
 import { Link } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
-import { Text as MSText, theme } from '~/theme'
+import { Text as MSText, makeStyles, theme } from '~/theme'
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { borderStyle, listStyles } from '~/theme/styles'
 import { getLocalDate } from '~/utils/dates'
@@ -37,6 +37,80 @@ const FocusDueDate = memo(({ dueDate }: { dueDate: Date | null }) => {
 
 FocusDueDate.displayName = 'FocusDueDate'
 
+const useStyles = makeStyles((t) => StyleSheet.create({
+  container: {
+    backgroundColor: theme.colors.background,
+    ...borderStyle.borderBottom,
+    borderRadius: t.borderRadii.md_10,
+    overflow: 'hidden',
+  },
+  itemContainer: {
+    flexDirection: 'row',
+    paddingVertical: t.spacing.m_16,
+    paddingHorizontal: t.spacing.ml_24,
+    paddingRight: t.spacing.m_16,
+    borderRadius: t.borderRadii.md_10,
+    backgroundColor: theme.colors.muted,
+    borderWidth: 1,
+    borderColor: theme.colors['border-default'],
+  },
+  focusInfoContainer: {
+    flex: 1,
+    fontWeight: 500,
+    fontSize: fontSizes.sm,
+    lineHeight: 20,
+    color: theme.colors['text-secondary'],
+  },
+  itemRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemContent: {
+    flex: 1,
+    flexDirection: 'column',
+    rowGap: t.spacing.s_8,
+  },
+  triggerFull: {
+    flex: 1,
+    width: '100%',
+  },
+  icon: {
+    borderRadius: 999, /* ensures circular shape */
+    padding: t.spacing.s_8,
+    paddingHorizontal: t.spacing.sm_12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors['border-default'],
+  },
+  leftAction: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    backgroundColor: theme.colors.muted,
+    paddingHorizontal: t.spacing.ml_24,
+  },
+  rightAction: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    backgroundColor: theme.colors.destructive,
+    paddingHorizontal: t.spacing.ml_24,
+  },
+  actionText: {
+    color: theme.colors.foreground,
+    fontWeight: 'bold',
+    fontFamily: 'Geist Mono',
+  },
+}))
+
 export const FocusListItem = ({
   item,
   label,
@@ -46,6 +120,7 @@ export const FocusListItem = ({
   label: string
   itemIndex?: number
 }) => {
+  const styles = useStyles()
   const translateX = useSharedValue(0)
   const itemHeight = useSharedValue(64)
   const iconBackgroundColor = useSharedValue<string>(theme.colors.muted)
@@ -221,76 +296,3 @@ export const FocusListItem = ({
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.background,
-    ...borderStyle.borderBottom,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    paddingRight: 16,
-    borderRadius: 8,
-    backgroundColor: theme.colors.muted,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-  },
-  focusInfoContainer: {
-    flex: 1,
-    fontWeight: 500,
-    fontSize: fontSizes.sm,
-    lineHeight: 20,
-    color: theme.colors['text-secondary'],
-  },
-  itemRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  itemContent: {
-    flex: 1,
-    flexDirection: 'column',
-    rowGap: 6,
-  },
-  triggerFull: {
-    flex: 1,
-    width: '100%',
-  },
-  icon: {
-    borderRadius: 999,
-    padding: 8,
-    paddingHorizontal: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-  },
-  leftAction: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    backgroundColor: theme.colors.muted,
-    paddingHorizontal: 20,
-  },
-  rightAction: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    backgroundColor: theme.colors.destructive,
-    paddingHorizontal: 20,
-  },
-  actionText: {
-    color: theme.colors.foreground,
-    fontWeight: 'bold',
-    fontFamily: 'Geist Mono',
-  },
-})

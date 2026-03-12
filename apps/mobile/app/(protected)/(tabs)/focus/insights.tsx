@@ -2,9 +2,27 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import AppIcon from '~/components/ui/icon';
-import { Text, theme } from '~/theme';
+import { Text, theme, makeStyles } from '~/theme';
+
+const useStyles = makeStyles((t) => StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: t.spacing.ml_24,
+    rowGap: 18,
+    backgroundColor: t.colors.background,
+  },
+  section: {
+    rowGap: t.spacing.sm_8,
+  },
+  metricRow: {
+    flexDirection: 'row',
+    columnGap: t.spacing.sm_8,
+    alignItems: 'center',
+  },
+}));
 
 export default function FocusInsightsSheet() {
+  const styles = useStyles();
   return (
     <View style={styles.container}>
       <View style={styles.section}>
@@ -44,19 +62,3 @@ export default function FocusInsightsSheet() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    rowGap: 18,
-    backgroundColor: theme.colors.background,
-  },
-  section: {
-    rowGap: 8,
-  },
-  metricRow: {
-    flexDirection: 'row',
-    columnGap: 8,
-    alignItems: 'center',
-  },
-});

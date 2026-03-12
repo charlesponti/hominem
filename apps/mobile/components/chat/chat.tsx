@@ -21,7 +21,7 @@ import { loadMarkdown, renderMessage, type MarkdownComponent } from './chat-mess
 import { ArtifactActions } from './artifact-actions'
 import { ClassificationReview } from './classification-review'
 import { ContextAnchor, type SessionSource } from './context-anchor'
-import { Text, theme } from '~/theme'
+import { Text, makeStyles } from '~/theme'
 import AppIcon from '../ui/icon'
 
 const keyExtractor = (item: MessageOutput) => item.id
@@ -39,6 +39,7 @@ type ChatProps = {
   source: SessionSource
 }
 export const Chat = (props: ChatProps) => {
+  const styles = useStyles();
   const { chatId, onChatEnd, source } = props
   const client = useApiClient()
   const { isPending: isMessagesLoading, data: messages } = useChatMessages({ chatId })
@@ -279,7 +280,7 @@ export const Chat = (props: ChatProps) => {
           <AppIcon
             name={showSearch ? 'x' : 'magnifying-glass'}
             size={18}
-            color={showSearch ? theme.colors.foreground : theme.colors['text-tertiary']}
+            color={showSearch ? '#000' : '#999'}
           />
         </Button>
       </View>
@@ -368,19 +369,19 @@ export const Chat = (props: ChatProps) => {
   )
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((t) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: t.colors.background,
     flexDirection: 'column',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: t.spacing.m_16,
+    paddingVertical: t.spacing.sm_8,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors['border-default'],
+    borderBottomColor: t.colors['border-default'],
   },
   searchToggle: {
     marginLeft: 'auto',
@@ -388,52 +389,52 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: t.spacing.m_16,
+    paddingVertical: t.spacing.sm_8,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors['border-default'],
-    gap: 8,
+    borderBottomColor: t.colors['border-default'],
+    gap: t.spacing.sm_8,
   },
   searchInputContainer: {
     flex: 1,
   },
   searchInput: {
-    color: theme.colors.foreground,
+    color: t.colors.foreground,
     fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
     minHeight: 36,
-    paddingVertical: 6,
+    paddingVertical: t.spacing.xs_6,
   },
   searchResultCount: {
-    color: theme.colors['text-tertiary'],
+    color: t.colors['text-tertiary'],
     fontSize: fontSizes.xs,
     fontFamily: 'Geist Mono',
   },
   messagesContainer: {
     flexGrow: 1,
-    paddingTop: 12,
-    paddingHorizontal: 20,
-    rowGap: 12,
+    paddingTop: t.spacing.sm_12,
+    paddingHorizontal: 20, /* standard message padding */
+    rowGap: t.spacing.sm_12,
   },
   shimmerContainer: {
     flex: 1,
-    paddingTop: 8,
+    paddingTop: t.spacing.sm_8,
   },
   emptySearch: {
-    paddingTop: 40,
+    paddingTop: t.spacing.xl_48,
     alignItems: 'center',
   },
   emptySearchText: {
-    color: theme.colors['text-tertiary'],
+    color: t.colors['text-tertiary'],
     fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
   },
   endButton: {
     alignSelf: 'center',
-    backgroundColor: theme.colors['text-primary'],
-    marginBottom: 24,
+    backgroundColor: t.colors['text-primary'],
+    marginBottom: t.spacing.ml_24,
   },
-})
+}));
 
 // Wrapped export with error boundary
 export const ChatWithErrorBoundary = (props: ChatProps) => (

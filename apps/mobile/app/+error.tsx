@@ -3,10 +3,11 @@ import type { RelativePathString } from 'expo-router'
 import { StyleSheet, View } from 'react-native'
 
 import { Button } from '~/components/Button'
-import { Text, theme } from '~/theme'
+import { makeStyles, Text } from '~/theme'
 
 export default function ErrorScreen({ error }: { error: Error }) {
   const router = useRouter()
+  const styles = useStyles()
 
   return (
     <View style={styles.container}>
@@ -26,21 +27,23 @@ export default function ErrorScreen({ error }: { error: Error }) {
   )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    padding: 24,
-  },
-  message: {
-    marginTop: 12,
-    textAlign: 'center',
-    maxWidth: 300,
-  },
-  button: {
-    marginTop: 24,
-    backgroundColor: theme.colors['text-primary'],
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: t.colors.background,
+      padding: t.spacing.ml_24,
+    },
+    message: {
+      marginTop: t.spacing.sm_12,
+      textAlign: 'center',
+      maxWidth: 300,
+    },
+    button: {
+      marginTop: t.spacing.ml_24,
+      backgroundColor: t.colors['text-primary'],
+    },
+  })
+)
