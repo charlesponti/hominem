@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 
+import { createTestCommandContext } from '../../../test/helpers/command-context'
+
 const getStoredTokensMock = mock()
 const hasValidStoredSessionMock = mock()
 
@@ -29,23 +31,7 @@ describe('auth status command', () => {
     const result = await commandModule.default.run({
       args: {},
       flags: {},
-      context: {
-        cwd: process.cwd(),
-        env: process.env,
-        stdio: {
-          out: process.stdout,
-          err: process.stderr,
-        },
-        outputFormat: 'json',
-        quiet: false,
-        verbose: false,
-        interactive: false,
-        telemetry: {
-          requestId: 'test-request-id',
-          startedAt: new Date().toISOString(),
-        },
-        abortSignal: new AbortController().signal,
-      },
+      context: createTestCommandContext(),
     })
 
     expect(result).toMatchObject({

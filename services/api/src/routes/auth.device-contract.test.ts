@@ -16,6 +16,28 @@ interface DeviceCodeResponse {
   verification_uri_complete: string
 }
 
+function requestJson(input: {
+  app: AppRequester
+  path: string
+  method?: 'GET' | 'POST'
+  headers?: Record<string, string>
+  body?: Record<string, unknown>
+}) {
+  return input.app.request(`http://localhost${input.path}`, {
+    method: input.method ?? 'GET',
+    ...(input.headers ? { headers: input.headers } : {}),
+    ...(input.body
+      ? {
+          body: JSON.stringify(input.body),
+          headers: {
+            'content-type': 'application/json',
+            ...input.headers,
+          },
+        }
+      : {}),
+  })
+}
+
 async function importServer() {
   const module = await import('../server')
   return module.createServer
@@ -85,15 +107,14 @@ describe('auth device contract', () => {
     const email = `cli-device-${Date.now()}@hominem.test`
     const cookieHeader = await signInWithEmailOtp(app, email)
 
-    const codeResponse = await app.request('http://localhost/api/auth/device/code', {
+    const codeResponse = await requestJson({
+      app,
+      path: '/api/auth/device/code',
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
+      body: {
         client_id: 'hominem-cli',
         scope: 'cli:read',
-      }),
+      },
     })
 
     expect(codeResponse.status).toBe(200)
@@ -104,12 +125,10 @@ describe('auth device contract', () => {
       deviceCode.user_code,
     )
 
-    const verifyResponse = await app.request(
-      `http://localhost/api/auth/device?user_code=${encodeURIComponent(deviceCode.user_code)}`,
-      {
-        method: 'GET',
-      },
-    )
+    const verifyResponse = await requestJson({
+      app,
+      path: `/api/auth/device?user_code=${encodeURIComponent(deviceCode.user_code)}`,
+    })
 
     expect(verifyResponse.status).toBe(200)
     await expect(verifyResponse.json()).resolves.toMatchObject({
@@ -117,38 +136,39 @@ describe('auth device contract', () => {
       status: 'pending',
     })
 
-    const approveResponse = await app.request('http://localhost/api/auth/device/approve', {
+    const approveResponse = await requestJson({
+      app,
+      path: '/api/auth/device/approve',
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
         cookie: cookieHeader,
       },
-      body: JSON.stringify({
+      body: {
         userCode: deviceCode.user_code,
-      }),
+      },
     })
 
     expect(approveResponse.status).toBe(200)
     await expect(approveResponse.json()).resolves.toEqual({ success: true })
 
-    const tokenResponse = await app.request('http://localhost/api/auth/device/token', {
+    const tokenResponse = await requestJson({
+      app,
+      path: '/api/auth/device/token',
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
+      body: {
         grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
         device_code: deviceCode.device_code,
         client_id: 'hominem-cli',
-      }),
+      },
     })
 
     expect(tokenResponse.status).toBe(200)
     const bearerToken = tokenResponse.headers.get('set-auth-token')
     expect(bearerToken).toBeTruthy()
 
-    const sessionResponse = await app.request('http://localhost/api/auth/session', {
-      method: 'GET',
+    const sessionResponse = await requestJson({
+      app,
+      path: '/api/auth/session',
       headers: {
         authorization: `Bearer ${bearerToken}`,
       },
@@ -161,5 +181,36 @@ describe('auth device contract', () => {
         email,
       },
     })
+  })
+
+  test('device approval requires an authenticated browser session', async () => {
+    const createServer = await importServer()
+    const app = createServer()
+
+    const response = await requestJson({
+      app,
+      path: '/api/auth/device/approve',
+      method: 'POST',
+      body: {
+        userCode: 'ABCDEFGH',
+      },
+    })
+
+    expect(response.status).toBe(401)
+    await expect(response.json()).resolves.toMatchObject({
+      error: 'unauthorized',
+    })
+  })
+
+  test('device verification requires a user_code query param', async () => {
+    const createServer = await importServer()
+    const app = createServer()
+
+    const response = await requestJson({
+      app,
+      path: '/api/auth/device',
+    })
+
+    expect(response.status).toBe(400)
   })
 })

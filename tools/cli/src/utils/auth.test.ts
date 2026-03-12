@@ -18,6 +18,60 @@ mock.module('open', () => ({
 
 const { deviceCodeLogin, getAccessToken, interactiveLogin } = await import('./auth')
 
+function createDeviceCodeResponse(overrides?: Partial<{
+  device_code: string
+  user_code: string
+  verification_uri: string
+  expires_in: number
+  interval: number
+}>) {
+  return {
+    ok: true,
+    status: 200,
+    json: async () => ({
+      device_code: 'device-code-1',
+      user_code: 'ABCD1234',
+      verification_uri: 'http://localhost:4040/api/auth/device',
+      expires_in: 600,
+      interval: 1,
+      ...overrides,
+    }),
+  } as Response
+}
+
+function createDeviceTokenResponse(input?: {
+  headerToken?: string | null
+  bodyToken?: string
+  scope?: string
+  expiresIn?: number
+}) {
+  return {
+    ok: true,
+    status: 200,
+    headers: {
+      get: (name: string) =>
+        name === 'set-auth-token' ? (input?.headerToken ?? 'header-token') : null,
+    },
+    json: async () => ({
+      access_token: input?.bodyToken ?? 'body-token',
+      token_type: 'Bearer',
+      expires_in: input?.expiresIn ?? 604799,
+      scope: input?.scope ?? 'cli:read',
+    }),
+  } as Response
+}
+
+function createPendingTokenResponse() {
+  return {
+    ok: false,
+    status: 400,
+    statusText: 'Bad Request',
+    json: async () => ({
+      error: 'authorization_pending',
+    }),
+  } as Response
+}
+
 describe('cli auth utils', () => {
   let fetchMock: ReturnType<typeof mock>
   const originalFetch = globalThis.fetch
@@ -83,30 +137,8 @@ describe('cli auth utils', () => {
   })
 
   test('deviceCodeLogin stores Better Auth bearer token from set-auth-token header', async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        device_code: 'device-code-1',
-        user_code: 'ABCD1234',
-        verification_uri: 'http://localhost:4040/api/auth/device',
-        interval: 1,
-      }),
-    } as Response)
-
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      headers: {
-        get: (name: string) => (name === 'set-auth-token' ? 'header-token' : null),
-      },
-      json: async () => ({
-        access_token: 'body-token',
-        token_type: 'Bearer',
-        expires_in: 604799,
-        scope: 'cli:read',
-      }),
-    } as Response)
+    fetchMock.mockResolvedValueOnce(createDeviceCodeResponse())
+    fetchMock.mockResolvedValueOnce(createDeviceTokenResponse())
 
     await deviceCodeLogin({
       authBaseUrl: 'http://localhost:4040',
@@ -136,27 +168,27 @@ describe('cli auth utils', () => {
     )
   })
 
-  test('interactiveLogin honors timeoutMs while device authorization remains pending', async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({
-        device_code: 'device-code-1',
-        user_code: 'ABCD1234',
-        verification_uri: 'http://localhost:4040/api/auth/device',
-        expires_in: 600,
-        interval: 0,
-      }),
-    } as Response)
+  test('interactiveLogin fails loudly when the browser verification URL cannot be opened', async () => {
+    openMock.mockRejectedValueOnce(new Error('open failed'))
+    fetchMock.mockResolvedValueOnce(createDeviceCodeResponse())
 
-    fetchMock.mockResolvedValue({
-      ok: false,
-      status: 400,
-      statusText: 'Bad Request',
-      json: async () => ({
-        error: 'authorization_pending',
+    await expect(
+      interactiveLogin({
+        authBaseUrl: 'http://localhost:4040',
+        outputMode: 'interactive',
+        timeoutMs: 1000,
       }),
-    } as Response)
+    ).rejects.toMatchObject({
+      code: 'AUTH_LOGIN_FAILED',
+      hint: 'Open http://localhost:4040/api/auth/device manually',
+    })
+
+    expect(saveTokensMock).not.toHaveBeenCalled()
+  })
+
+  test('interactiveLogin honors timeoutMs while device authorization remains pending', async () => {
+    fetchMock.mockResolvedValueOnce(createDeviceCodeResponse({ interval: 0 }))
+    fetchMock.mockResolvedValue(createPendingTokenResponse())
 
     await expect(
       interactiveLogin({
