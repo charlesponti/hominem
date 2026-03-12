@@ -17,10 +17,7 @@ function assertPath(path: ThoughtLifecycleState[]) {
   for (let i = 0; i < path.length - 1; i++) {
     const from = path[i];
     const to = path[i + 1];
-    expect(
-      isValidTransition(from, to),
-      `expected valid transition: ${from} → ${to}`,
-    ).toBe(true);
+    expect(isValidTransition(from, to), `expected valid transition: ${from} → ${to}`).toBe(true);
   }
 }
 
@@ -29,34 +26,28 @@ function assertPath(path: ThoughtLifecycleState[]) {
 describe('isValidTransition', () => {
   it('accepts every transition listed in ALLOWED_TRANSITIONS', () => {
     for (const [from, to] of ALLOWED_TRANSITIONS) {
-      expect(
-        isValidTransition(from, to),
-        `expected valid: ${from} → ${to}`,
-      ).toBe(true);
+      expect(isValidTransition(from, to), `expected valid: ${from} → ${to}`).toBe(true);
     }
   });
 
   it('rejects transitions that are not in ALLOWED_TRANSITIONS', () => {
     const invalid: [ThoughtLifecycleState, ThoughtLifecycleState][] = [
-      ['idle', 'recording'],        // must compose first
-      ['idle', 'classifying'],      // must compose first
+      ['idle', 'recording'], // must compose first
+      ['idle', 'classifying'], // must compose first
       ['idle', 'persisting'],
-      ['composing', 'persisting'],  // must classify first
+      ['composing', 'persisting'], // must classify first
       ['composing', 'reviewing_changes'],
-      ['classifying', 'idle'],      // must review first
+      ['classifying', 'idle'], // must review first
       ['classifying', 'composing'],
       ['reviewing_changes', 'classifying'],
       ['persisting', 'composing'],
       ['persisting', 'classifying'],
-      ['recording', 'composing'],   // must transcribe first
+      ['recording', 'composing'], // must transcribe first
       ['transcribing', 'idle'],
     ];
 
     for (const [from, to] of invalid) {
-      expect(
-        isValidTransition(from, to),
-        `expected invalid: ${from} → ${to}`,
-      ).toBe(false);
+      expect(isValidTransition(from, to), `expected invalid: ${from} → ${to}`).toBe(false);
     }
   });
 });
@@ -73,8 +64,14 @@ describe('ALLOWED_TRANSITIONS', () => {
 
   it('every "from" state is a reachable lifecycle state (no stale entries)', () => {
     const allStates: ThoughtLifecycleState[] = [
-      'idle', 'composing', 'recording', 'transcribing',
-      'classifying', 'reviewing_changes', 'persisting', 'recovering_error',
+      'idle',
+      'composing',
+      'recording',
+      'transcribing',
+      'classifying',
+      'reviewing_changes',
+      'persisting',
+      'recovering_error',
     ];
     for (const [from] of ALLOWED_TRANSITIONS) {
       expect(allStates).toContain(from);
@@ -125,7 +122,11 @@ describe('isBlockingState', () => {
 
   it('returns false for non-blocking states', () => {
     const nonBlocking: ThoughtLifecycleState[] = [
-      'idle', 'composing', 'recording', 'reviewing_changes', 'recovering_error',
+      'idle',
+      'composing',
+      'recording',
+      'reviewing_changes',
+      'recovering_error',
     ];
     for (const state of nonBlocking) {
       expect(isBlockingState(state), `expected non-blocking: ${state}`).toBe(false);
@@ -152,8 +153,14 @@ describe('journey paths — canonical state machine transitions', () => {
   it('Journey 4: Voice → Thought → Save (full voice path)', () => {
     // idle → composing → recording → transcribing → classifying → reviewing_changes → persisting → idle
     assertPath([
-      'idle', 'composing', 'recording', 'transcribing',
-      'classifying', 'reviewing_changes', 'persisting', 'idle',
+      'idle',
+      'composing',
+      'recording',
+      'transcribing',
+      'classifying',
+      'reviewing_changes',
+      'persisting',
+      'idle',
     ]);
   });
 
@@ -175,13 +182,26 @@ describe('journey paths — canonical state machine transitions', () => {
   it('Journey 5: Error recovery — retry directly from error state', () => {
     // recovering_error → classifying → reviewing_changes → persisting → idle
     assertPath([
-      'idle', 'composing', 'classifying',
+      'idle',
+      'composing',
+      'classifying',
       'recovering_error',
-      'classifying', 'reviewing_changes', 'persisting', 'idle',
+      'classifying',
+      'reviewing_changes',
+      'persisting',
+      'idle',
     ]);
   });
 
   it('Journey 5: Persist fails — recovering_error → idle', () => {
-    assertPath(['idle', 'composing', 'classifying', 'reviewing_changes', 'persisting', 'recovering_error', 'idle']);
+    assertPath([
+      'idle',
+      'composing',
+      'classifying',
+      'reviewing_changes',
+      'persisting',
+      'recovering_error',
+      'idle',
+    ]);
   });
 });

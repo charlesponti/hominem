@@ -2,9 +2,13 @@ import React, { useState, useRef } from 'react';
 import { View, Button, Text, StyleSheet, Animated } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
 
+import { makeStyles } from '~/theme';
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
+
 const SWIPE_THRESHOLD = 50;
 
 const App = () => {
+  const styles = useStyles();
   const [isCardVisible, setIsCardVisible] = useState(true);
   const translateY = useRef(new Animated.Value(0)).current;
 
@@ -21,7 +25,7 @@ const App = () => {
       if (nativeEvent.translationY > SWIPE_THRESHOLD) {
         Animated.timing(translateY, {
           toValue: 500,
-          duration: 200,
+          duration: VOID_MOTION_DURATION_STANDARD,
           useNativeDriver: true,
         }).start(() => setIsCardVisible(false));
       } else {
@@ -50,14 +54,16 @@ const App = () => {
     <GestureHandlerRootView style={styles.container}>
       <PanGestureHandler
         onGestureEvent={handleGestureEvent}
-        onHandlerStateChange={handleStateChange}>
+        onHandlerStateChange={handleStateChange}
+      >
         <Animated.View
           style={[
             styles.card,
             {
               transform: [{ translateY }],
             },
-          ]}>
+          ]}
+        >
           <Text>Swipe down to dismiss</Text>
         </Animated.View>
       </PanGestureHandler>
@@ -65,22 +71,24 @@ const App = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  card: {
-    backgroundColor: 'lightgray',
-    padding: 20,
-    borderRadius: 10,
-    width: '100%',
-    minHeight: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: t.spacing.ml_24,
+    },
+    card: {
+      backgroundColor: t.colors.muted,
+      padding: t.spacing.ml_24,
+      borderRadius: t.borderRadii.md_10,
+      width: '100%',
+      minHeight: 100,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  }),
+);
 
 export default App;

@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 
-import { useDesktopAuth } from './auth/desktop-auth-provider'
+import { useDesktopAuth } from './auth/desktop-auth-provider';
 
 export function AppShell() {
-  const [isPackaged, setIsPackaged] = useState(false)
-  const { signOut, state } = useDesktopAuth()
+  const [isPackaged, setIsPackaged] = useState(false);
+  const { signOut, state } = useDesktopAuth();
 
   useEffect(() => {
-    void window.electronAPI.isPackaged().then(setIsPackaged)
-  }, [])
+    void window.electronAPI.isPackaged().then(setIsPackaged);
+  }, []);
 
   return (
     <main className="desktop-shell">
@@ -19,11 +19,7 @@ export function AppShell() {
             <h1 className="desktop-shell__title">Desktop shell</h1>
           </div>
           <div className="desktop-shell__actions" role="group" aria-label="Window controls">
-            <button
-              className="desktop-shell__button"
-              onClick={() => void signOut()}
-              type="button"
-            >
+            <button className="desktop-shell__button" onClick={() => void signOut()} type="button">
               Sign out
             </button>
             <button
@@ -50,15 +46,17 @@ export function AppShell() {
               Desktop auth is aligned with the rest of Hominem.
             </h2>
             <p className="desktop-shell__body">
-              Signed in as <strong>{state.user?.email ?? 'unknown user'}</strong>. The desktop app can now
-              bootstrap auth state, restore sessions, and gate product features behind the same backend
-              contract used by the other first-party apps.
+              Signed in as <strong>{state.user?.email ?? 'unknown user'}</strong>. The desktop app
+              can now bootstrap auth state, restore sessions, and gate product features behind the
+              same backend contract used by the other first-party apps.
             </p>
           </div>
           <dl className="desktop-shell__status-list">
             <div className="desktop-shell__status-item">
               <dt className="desktop-shell__label">Runtime</dt>
-              <dd className="desktop-shell__value">{isPackaged ? 'Packaged build' : 'Development build'}</dd>
+              <dd className="desktop-shell__value">
+                {isPackaged ? 'Packaged build' : 'Development build'}
+              </dd>
             </div>
             <div className="desktop-shell__status-item">
               <dt className="desktop-shell__label">Platform</dt>
@@ -83,12 +81,12 @@ export function AppShell() {
           <article className="desktop-shell__panel">
             <h2 className="desktop-shell__panel-title">Next</h2>
             <p className="desktop-shell__body">
-              The next implementation pass can connect this signed-in shell to shared notes and tracker
-              features without rebuilding auth primitives first.
+              The next implementation pass can connect this signed-in shell to shared notes and
+              tracker features without rebuilding auth primitives first.
             </p>
           </article>
         </section>
       </div>
     </main>
-  )
+  );
 }

@@ -16,7 +16,7 @@ export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
 
   return (
     <li className="flex items-center gap-3 p-2 group border-b border-border">
-      <Link to={`/lists/${id}`} viewTransition className="flex-1 min-w-0 focus:outline-none">
+      <Link to={`/lists/${id}`} viewTransition className="flex-1 min-w-0 void-focus">
         <div className="flex items-center gap-4">
           {imageUrl !== undefined ? (
             <>

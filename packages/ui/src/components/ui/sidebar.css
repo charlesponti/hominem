@@ -1,16 +1,4 @@
-@import 'tailwindcss';
-
-@theme {
-  /* Sidebar Colors - Kanso Monochrome */
-  --color-sidebar: #000000;
-  --color-sidebar-foreground: #ffffff;
-  --color-sidebar-primary: #ffffff;
-  --color-sidebar-primary-foreground: #000000;
-  --color-sidebar-accent: rgba(255, 255, 255, 0.15);
-  --color-sidebar-accent-foreground: #ffffff;
-  --color-sidebar-border: rgba(255, 255, 255, 0.1);
-  --color-sidebar-ring: #ffffff;
-}
+/* Sidebar colors are defined in globals.css @theme block */
 
 @layer base {
   :root {

@@ -5,6 +5,8 @@ import type {
   MessagesDeleteOutput,
   MessagesUpdateOutput,
 } from '@hominem/hono-rpc/types/chat.types';
+import { Inline } from '@hominem/ui';
+import { ShimmerMessage, ThinkingIndicator } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/components/ui/input';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -18,8 +20,6 @@ import { useScrollDetection } from '~/lib/hooks/use-scroll-detection';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
 import type { ExtendedMessage } from '~/lib/types/chat-message';
 import { findPreviousUserMessage } from '~/lib/utils/message';
-
-import { ShimmerMessage, ThinkingIndicator } from '@hominem/ui/ai-elements';
 
 import { ChatMessage } from './ChatMessage';
 
@@ -146,14 +146,11 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
     const updateMessageMutation = useHonoMutation<
       MessagesUpdateOutput,
       { messageId: string; content: string }
-    >(
-      ({ messages }, variables) => messages.update(variables),
-      {
-        onSuccess: () => {
-          utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
-        },
+    >(({ messages }, variables) => messages.update(variables), {
+      onSuccess: () => {
+        utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
       },
-    );
+    });
 
     const handleRegenerate = useCallback(
       async (messageId: string) => {
@@ -205,7 +202,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         {/* Search Bar */}
         {showSearch && (
           <div className="border-b p-2 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-            <div className="flex items-center gap-2">
+            <Inline gap="sm">
               <Search className="size-4 text-muted-foreground" />
               <Input
                 ref={searchInputRef}
@@ -227,7 +224,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
               >
                 <X className="size-4" />
               </Button>
-            </div>
+            </Inline>
             {searchQuery && (
               <div className="text-xs text-muted-foreground mt-1 px-1">
                 {filteredMessages.length} {filteredMessages.length === 1 ? 'result' : 'results'}

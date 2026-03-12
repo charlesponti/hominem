@@ -1,46 +1,41 @@
-import { memo, useCallback } from 'react'
-import { StyleSheet } from 'react-native'
-import { FlashList, type ListRenderItem } from '@shopify/flash-list'
-import { theme } from '~/theme'
-import { RefreshControl } from 'react-native-gesture-handler'
-import type { FocusItem } from '~/utils/services/notes/types'
-import { FocusListItem } from './focus-list-item'
+import { fontSizes } from '@hominem/ui/tokens';
+import { FlashList, type ListRenderItem } from '@shopify/flash-list';
+import { memo, useCallback } from 'react';
+import { StyleSheet } from 'react-native';
+import { RefreshControl } from 'react-native-gesture-handler';
+
+import { makeStyles } from '~/theme';
+import type { FocusItem } from '~/utils/services/notes/types';
+
+import { FocusListItem } from './focus-list-item';
 
 // Memoized render item component to prevent unnecessary re-renders
 const RenderFocusItem = memo(({ item, index }: { item: FocusItem; index: number }) => {
-  return (
-    <FocusListItem
-      label={item.text}
-      item={item}
-      itemIndex={index}
-    />
-  )
-})
+  return <FocusListItem label={item.text} item={item} itemIndex={index} />;
+});
 
-RenderFocusItem.displayName = 'RenderFocusItem'
+RenderFocusItem.displayName = 'RenderFocusItem';
 
 // Stable key extractor - just use item.id directly
-const keyExtractor = (item: FocusItem) => item.id
+const keyExtractor = (item: FocusItem) => item.id;
 
 export const FocusList = ({
   data,
   isRefreshing,
   onRefresh,
 }: {
-  data: FocusItem[]
-  isRefreshing: boolean
-  onRefresh: () => void
+  data: FocusItem[];
+  isRefreshing: boolean;
+  onRefresh: () => void;
 }) => {
+  const styles = useStyles();
   // Memoized render function with stable reference
-  const renderItem = useCallback<ListRenderItem<FocusItem>>(
-    ({ item, index }) => {
-      return <RenderFocusItem item={item} index={index} />
-    },
-    []
-  )
+  const renderItem = useCallback<ListRenderItem<FocusItem>>(({ item, index }) => {
+    return <RenderFocusItem item={item} index={index} />;
+  }, []);
 
   if (!data.length) {
-    return null
+    return null;
   }
 
   return (
@@ -56,28 +51,30 @@ export const FocusList = ({
       // FlashList optimizations for smooth scrolling
       removeClippedSubviews={true}
     />
-  )
-}
+  );
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingBottom: 32,
-  },
-  listContainer: {
-    rowGap: 12,
-    // This enables users to scroll the the last item above the `Sherpa` button
-    paddingBottom: 120,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    columnGap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-  },
-  headerText: {
-    fontSize: 14,
-    color: theme.colors['text-tertiary'],
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingBottom: t.spacing.l_32,
+    },
+    listContainer: {
+      rowGap: t.spacing.sm_12,
+      // This enables users to scroll the the last item above the `Sherpa` button
+      paddingBottom: t.spacing.xl_64 + t.spacing.l_32 + t.spacing.ml_24,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      columnGap: t.spacing.sm_8,
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.xs_4,
+    },
+    headerText: {
+      fontSize: fontSizes.sm,
+      color: t.colors['text-tertiary'],
+    },
+  }),
+);

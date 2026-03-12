@@ -5,7 +5,7 @@ import { sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
-  _isIntegrationDatabaseAvailable,
+  isIntegrationDatabaseAvailable,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -19,8 +19,9 @@ import {
 import { getVisitsByUser } from './visits.service';
 
 const nextUserId = createDeterministicIdFactory('events.integration');
+const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
 
-describe('events integration', () => {
+describeIntegration('events integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerContactId: string;

@@ -2,7 +2,7 @@ import { db, sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
-  _isIntegrationDatabaseAvailable,
+  isIntegrationDatabaseAvailable,
   tableExists,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -23,8 +23,9 @@ async function _hasTaggingTables(): Promise<boolean> {
 
 const nextUserId = createDeterministicIdFactory('finance.tags.integration');
 const nextTagId = createDeterministicIdFactory('finance.tags.integration.tag');
+const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
 
-describe('finance tags integration', () => {
+describeIntegration('finance tags integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerAccountId: string;

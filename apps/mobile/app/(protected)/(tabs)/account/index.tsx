@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
@@ -94,10 +94,7 @@ function Account() {
 
   return (
     <View testID="account-screen" style={styles.root}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text variant="cardHeader" color="foreground">
           ACCOUNT
         </Text>
@@ -147,16 +144,14 @@ function Account() {
                     <Text color="foreground" style={styles.passkeyName}>
                       {pk.name}
                     </Text>
-                    <Pressable
+                    <Button
+                      variant="ghost"
+                      size="xs"
                       onPress={() => onDeletePasskeyPress(pk.id, pk.name)}
                       accessibilityLabel={`Remove passkey ${pk.name}`}
-                      accessibilityRole="button"
                       style={styles.passkeyDeleteButton}
-                    >
-                      <Text color="destructive" style={styles.passkeyDeleteText}>
-                        [REMOVE]
-                      </Text>
-                    </Pressable>
+                      title="[REMOVE]"
+                    />
                   </View>
                 ))
               )}
@@ -191,7 +186,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: theme.spacing.sm_12,
     paddingTop: theme.spacing.ml_24,
-    rowGap: theme.spacing.s_8,
+    rowGap: theme.spacing.sm_8,
     paddingBottom: theme.spacing.m_16,
   },
   formSection: {
@@ -205,7 +200,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.ml_24,
   },
   passkeysSection: {
-    rowGap: theme.spacing.s_8,
+    rowGap: theme.spacing.sm_8,
   },
   noPasskeysText: {
     fontSize: 12,
@@ -216,19 +211,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
-    padding: theme.spacing.s_8,
+    padding: theme.spacing.sm_8,
   },
   passkeyName: {
     fontSize: 12,
   },
   passkeyDeleteButton: {
-    minHeight: 44,
-    minWidth: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  passkeyDeleteText: {
-    fontSize: 12,
+    minWidth: 72,
   },
   footer: {
     paddingHorizontal: theme.spacing.sm_12,

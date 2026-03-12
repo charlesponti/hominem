@@ -44,7 +44,7 @@ export default function Sherpa() {
 
   // Local store Chat has no noteId — source is always 'new' on mobile.
   // AX-001: noteId not tracked in LocalStore.
-  const source: SessionSource = { kind: 'new' }
+  const source: SessionSource = { kind: 'new' };
 
   return (
     <BlurredGradientBackground testID="sherpa-screen">

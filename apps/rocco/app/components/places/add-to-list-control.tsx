@@ -1,4 +1,5 @@
 import { useAuthContext } from '@hominem/auth';
+import { Inline } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Drawer, DrawerContent, DrawerTrigger } from '@hominem/ui/components/ui/drawer';
 import { ListPlus } from 'lucide-react';
@@ -43,7 +44,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
   }
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <Inline gap="sm" wrap>
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>
           <Button size="sm" className="flex items-center gap-2" onMouseEnter={handleMouseEnter}>
@@ -62,7 +63,7 @@ const AddToListControl = ({ placeId }: AddToListControlProps) => {
           </Suspense>
         </DrawerContent>
       </Drawer>
-    </div>
+    </Inline>
   );
 };
 

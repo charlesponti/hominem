@@ -1,5 +1,6 @@
-import { StyleSheet } from 'react-native'
-import { theme } from './index'
+import { StyleSheet } from 'react-native';
+
+import { theme } from './index';
 
 export const borderStyle = StyleSheet.create({
   noBorder: {
@@ -12,17 +13,17 @@ export const borderStyle = StyleSheet.create({
   border: {
     borderColor: theme.colors['border-default'],
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: theme.borderRadii.sm_6,
   },
-})
+});
 
 export const listStyles = StyleSheet.create({
   container: {
-    paddingVertical: 24,
-    paddingHorizontal: 16,
+    paddingVertical: theme.spacing.ml_24,
+    paddingHorizontal: theme.spacing.m_16,
     alignItems: 'center',
     flexDirection: 'row',
-    columnGap: 12,
+    columnGap: theme.spacing.sm_12,
   },
   text: {
     flex: 1,
@@ -30,4 +31,4 @@ export const listStyles = StyleSheet.create({
     fontSize: 14,
     color: theme.colors['text-secondary'],
   },
-})
+});

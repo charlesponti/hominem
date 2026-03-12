@@ -90,7 +90,6 @@ export function LandingPage({
 }: LandingPageProps) {
   return (
     <div style={{ color: 'var(--color-text-primary)' }}>
-
       {/* ── 1. HERO ─────────────────────────────────────────────────────────── */}
       <Section className="pt-28 md:pt-36 pb-20 md:pb-28">
         {/* Kicker */}
@@ -203,7 +202,10 @@ export function LandingPage({
                 >
                   {step.label}
                 </h3>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text-tertiary)' }}>
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: 'var(--color-text-tertiary)' }}
+                >
                   {step.description}
                 </p>
               </div>
@@ -246,7 +248,6 @@ export function LandingPage({
           </p>
         )}
       </Section>
-
     </div>
   );
 }

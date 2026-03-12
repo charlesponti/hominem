@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 interface OtpResponse {
   otp: string;
@@ -79,6 +79,40 @@ describe('auth email otp contract', () => {
     process.env.AUTH_TEST_OTP_ENABLED = 'true';
     process.env.AUTH_EMAIL_OTP_EXPIRES_SECONDS = '300';
   });
+
+  test('logs OTP info in development environment', async () => {
+    // reinitialize modules under development env so plugin logs for us
+    vi.resetModules();
+    process.env.NODE_ENV = 'development';
+    process.env.AUTH_E2E_SECRET = 'otp-secret';
+    process.env.AUTH_TEST_OTP_ENABLED = 'true';
+    process.env.AUTH_EMAIL_OTP_EXPIRES_SECONDS = '300';
+
+    const spy = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
+    vi.doMock('@hominem/utils/logger', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('@hominem/utils/logger')>();
+      return {
+        ...actual,
+        logger: spy,
+      };
+    });
+
+    const createServer = await importServer();
+    const app = createServer();
+    const email = `otp-log-${Date.now()}@hominem.test`;
+
+    const okResponse = await requestOtp(app, email);
+    expect(okResponse.status).toBe(200);
+
+    // import the mocked logger and assert it received a call
+    expect(spy.info).toHaveBeenCalledWith(
+      '[auth:email-otp] generated OTP',
+      expect.objectContaining({ email, otp: expect.any(String), type: 'sign-in' }),
+    );
+
+    // restore test environment for subsequent beforeEach hooks
+    process.env.NODE_ENV = 'test';
+  }, 10000);
 
   test('2.1 sends otp for valid email and rejects invalid email', async () => {
     const createServer = await importServer();

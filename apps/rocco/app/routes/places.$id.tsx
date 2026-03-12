@@ -1,4 +1,4 @@
-import { PageTitle } from '@hominem/ui';
+import { PageTitle, Stack } from '@hominem/ui';
 import { redirect } from 'react-router';
 import z from 'zod';
 
@@ -53,16 +53,13 @@ export default function Place({ loaderData }: Route.ComponentProps) {
   const { place } = loaderData;
 
   return (
-    <div data-testid="place" className="flex flex-col items-start gap-4">
+    <Stack data-testid="place" gap="md" className="items-start">
       <div className="max-w-full" style={{ viewTransitionName: `place-photos-${place.id}` }}>
         <PlacePhotos alt={place.name} photos={place.photos} placeId={place.id} />
       </div>
 
-      <div className="w-full space-y-12">
-        <div
-          className="flex flex-col gap-2"
-          style={{ viewTransitionName: `place-header-${place.id}` }}
-        >
+      <Stack gap="xl" className="w-full">
+        <div className="flex flex-col" style={{ viewTransitionName: `place-header-${place.id}` }}>
           <PageTitle title={place.name} />
 
           <PlaceStatus
@@ -70,7 +67,7 @@ export default function Place({ loaderData }: Route.ComponentProps) {
             {...(place.openingHours ? { openingHours: place.openingHours } : {})}
           />
 
-          <div className="space-y-2">
+          <Stack gap="sm">
             <PlaceTypes types={place.types || []} />
 
             {place.address && (
@@ -86,7 +83,7 @@ export default function Place({ loaderData }: Route.ComponentProps) {
             {place.phoneNumber && <PlacePhone phoneNumber={place.phoneNumber} />}
 
             {place.rating && <PlaceRating rating={place.rating} />}
-          </div>
+          </Stack>
         </div>
 
         <div>
@@ -117,8 +114,8 @@ export default function Place({ loaderData }: Route.ComponentProps) {
             />
           </div>
         )}
-      </div>
-    </div>
+      </Stack>
+    </Stack>
   );
 }
 

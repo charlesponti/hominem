@@ -1,6 +1,8 @@
 import type { Note } from '@hominem/hono-rpc/types/notes.types';
+import { Inline } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Textarea } from '@hominem/ui/components/ui/textarea';
+import { TextField } from '@hominem/ui/text-field';
 import { Sparkles, Save, Trash2, Loader2 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
@@ -96,15 +98,15 @@ export function NoteEditor({ note, chatId, onAIAction }: NoteEditorProps) {
   return (
     <div className="flex flex-col h-full p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <input
-          type="text"
+      <Inline justify="between" className="mb-4">
+        <TextField
           value={title}
           onChange={handleTitleChange}
           placeholder="Note title..."
-          className="text-xl font-semibold bg-transparent border-none outline-none flex-1"
+          aria-label="Note title"
+          className="text-xl font-semibold bg-transparent border-none void-focus flex-1"
         />
-        <div className="flex items-center gap-2">
+        <Inline gap="sm">
           <Button
             variant="outline"
             size="sm"
@@ -117,11 +119,11 @@ export function NoteEditor({ note, chatId, onAIAction }: NoteEditorProps) {
           <Button variant="ghost" size="sm" onClick={handleDelete}>
             <Trash2 className="size-4" />
           </Button>
-        </div>
-      </div>
+        </Inline>
+      </Inline>
 
       {/* AI Actions Toolbar */}
-      <div className="flex items-center gap-2 mb-4 py-2 border-y">
+      <Inline gap="sm" className="mb-4 py-2 border-y">
         <Sparkles className="size-4 text-muted-foreground mr-2" />
         {aiActions.map((action) => (
           <Button
@@ -136,7 +138,7 @@ export function NoteEditor({ note, chatId, onAIAction }: NoteEditorProps) {
             {action.label}
           </Button>
         ))}
-      </div>
+      </Inline>
 
       {/* Content */}
       <Textarea

@@ -1,4 +1,5 @@
 import type { VoiceErrorCode } from '@hominem/services';
+import { Inline } from '@hominem/ui';
 import { SpeechInput } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';
 import { X } from 'lucide-react';
@@ -92,16 +93,23 @@ export function ChatModals({
           className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         >
           <div className="border p-6 w-full max-w-md space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold" id="voice-dialog-title">Record Audio</h3>
-              <Button variant="ghost" size="sm" onClick={onCloseAudioRecorder} aria-label="Close voice input">
+            <Inline justify="between">
+              <h3 className="text-lg font-semibold" id="voice-dialog-title">
+                Record Audio
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onCloseAudioRecorder}
+                aria-label="Close voice input"
+              >
                 <X className="size-4" />
               </Button>
-            </div>
+            </Inline>
             <p className="text-sm text-muted-foreground">
               Tap to record, tap again to stop. The transcript will appear in the message input.
             </p>
-            <div className="flex items-center gap-2">
+            <Inline gap="sm">
               <SpeechInput
                 aria-label="Record audio message"
                 onAudioRecorded={transcribeAudioBlob}
@@ -109,8 +117,12 @@ export function ChatModals({
                   handleVoiceTranscription(text);
                 }}
               />
-            </div>
-            {voiceError ? <p className="text-sm text-destructive" role="alert">{voiceError}</p> : null}
+            </Inline>
+            {voiceError ? (
+              <p className="text-sm text-destructive" role="alert">
+                {voiceError}
+              </p>
+            ) : null}
           </div>
         </div>
       ) : null}

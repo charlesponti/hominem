@@ -1,31 +1,30 @@
-import { createTheme, useTheme as useRestyleTheme } from '@shopify/restyle'
-import type { ImageStyle, TextStyle, ViewStyle } from 'react-native'
 import {
   colors as tokenColors,
   fontFamiliesNative,
   radiiNative,
   shadowsNative,
   spacing as tokenSpacing,
-} from '@hominem/ui/tokens'
+} from '@hominem/ui/tokens';
+import { createTheme, useTheme as useRestyleTheme } from '@shopify/restyle';
+import type { ImageStyle, TextStyle, ViewStyle } from 'react-native';
 
 type NamedStyles<T> = {
-  [P in keyof T]: ViewStyle | TextStyle | ImageStyle
-}
+  [P in keyof T]: ViewStyle | TextStyle | ImageStyle;
+};
 
-const PRIMARY_FONT = fontFamiliesNative.primary
-const MONO_FONT = fontFamiliesNative.mono
+const PRIMARY_FONT = fontFamiliesNative.primary;
+const MONO_FONT = fontFamiliesNative.mono;
 
 const theme = createTheme({
   colors: {
     // ── Canonical design system tokens ───────────────────────────────────
     ...tokenColors,
-
   },
 
   // Spacing — named keys for Restyle, values from canonical tokens
   spacing: {
     xs_4: tokenSpacing[1],
-    s_8: tokenSpacing[2],
+    sm_8: tokenSpacing[2],
     sm_12: tokenSpacing[3],
     m_16: tokenSpacing[4],
     ml_24: tokenSpacing[5],
@@ -158,7 +157,7 @@ const theme = createTheme({
       shadowRadius: 8,
     },
   },
-})
+});
 
 const Shadows = {
   low: { ...shadowsNative.low, shadowColor: theme.colors.black },
@@ -169,20 +168,20 @@ const Shadows = {
     shadowOffset: { width: 0, height: 0 },
     shadowRadius: 0,
   },
-}
+};
 
 export const useTheme = () => {
-  return useRestyleTheme<Theme>()
-}
+  return useRestyleTheme<Theme>();
+};
 
 export const makeStyles = <T extends NamedStyles<T> | NamedStyles<unknown>>(
-  styles: (theme: Theme) => T
+  styles: (theme: Theme) => T,
 ) => {
   return () => {
-    return styles(theme)
-  }
-}
+    return styles(theme);
+  };
+};
 
-export type Theme = typeof theme
-export { Shadows }
-export default theme
+export type Theme = typeof theme;
+export { Shadows };
+export default theme;

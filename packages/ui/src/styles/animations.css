@@ -177,43 +177,43 @@
    Exit:  120ms, accelerate — element leaves without lingering. */
 
 .void-anim-enter {
-  animation: void-enter 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .void-anim-exit {
-  animation: void-exit 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .void-anim-enter-top {
-  animation: void-enter-top 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-top 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .void-anim-exit-top {
-  animation: void-exit-top 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit-top 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .void-anim-enter-bottom {
-  animation: void-enter-bottom 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-bottom 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .void-anim-exit-bottom {
-  animation: void-exit-bottom 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit-bottom 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .void-anim-enter-left {
-  animation: void-enter-left 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-left 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .void-anim-exit-left {
-  animation: void-exit-left 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit-left 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .void-anim-enter-right {
-  animation: void-enter-right 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-right 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .void-anim-exit-right {
-  animation: void-exit-right 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit-right 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 /* ====== CONTENT ANIMATION UTILITIES ====== */
@@ -234,11 +234,21 @@
   animation: void-breezy-wave 1.8s cubic-bezier(0.32, 0.72, 0.28, 1) infinite;
 }
 
-.void-anim-breezy-stagger > *:nth-child(1) { animation-delay: 0ms; }
-.void-anim-breezy-stagger > *:nth-child(2) { animation-delay: 120ms; }
-.void-anim-breezy-stagger > *:nth-child(3) { animation-delay: 240ms; }
-.void-anim-breezy-stagger > *:nth-child(4) { animation-delay: 360ms; }
-.void-anim-breezy-stagger > *:nth-child(5) { animation-delay: 480ms; }
+.void-anim-breezy-stagger > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.void-anim-breezy-stagger > *:nth-child(2) {
+  animation-delay: 120ms;
+}
+.void-anim-breezy-stagger > *:nth-child(3) {
+  animation-delay: 240ms;
+}
+.void-anim-breezy-stagger > *:nth-child(4) {
+  animation-delay: 360ms;
+}
+.void-anim-breezy-stagger > *:nth-child(5) {
+  animation-delay: 480ms;
+}
 
 /* ====== RADIX UI STATE BRIDGES ====== */
 /* Map Radix data-state attributes to canonical enter/exit animations.
@@ -246,98 +256,98 @@
 
 /* Generic open/close (dialogs, alerts, tooltips, popovers) */
 .data-\[state\=open\]\:animate-in {
-  animation: void-enter 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .data-\[state\=closed\]\:animate-out {
-  animation: void-exit 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 /* Fade shortcuts (Radix often combines animate-in + fade-in-0) */
 .data-\[state\=open\]\:fade-in-0,
 .data-\[state\=open\]\:fade-in-90,
 .data-\[state\=visible\]\:fade-in {
-  animation: void-enter 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .data-\[state\=closed\]\:fade-out-0,
 .data-\[state\=hidden\]\:fade-out {
-  animation: void-exit 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 /* Zoom shortcuts (Radix dropdowns, selects) */
 .data-\[state\=open\]\:zoom-in-90,
 .data-\[state\=open\]\:zoom-in-95 {
-  animation: void-enter 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .data-\[state\=closed\]\:zoom-out-95 {
-  animation: void-exit 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 /* Directional slide variants — matched by data-side on the positioned element */
 .data-\[side\=bottom\]\:slide-in-from-top-2 {
-  animation: void-enter-top 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-top 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .data-\[side\=top\]\:slide-in-from-bottom-2 {
-  animation: void-enter-bottom 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-bottom 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .data-\[side\=left\]\:slide-in-from-right-2 {
-  animation: void-enter-right 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-right 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .data-\[side\=right\]\:slide-in-from-left-2 {
-  animation: void-enter-left 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-left 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 /* Slide panel variants (drawers, sheets, navigation menus) */
 .slide-in-from-bottom-10,
 .slide-in-from-bottom-0 {
-  animation: void-enter-bottom 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-bottom 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .slide-in-from-left-52 {
-  animation: void-enter-left 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-left 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .slide-in-from-right-52 {
-  animation: void-enter-right 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-right 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .slide-out-to-left-52 {
-  animation: void-exit-left 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit-left 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .slide-out-to-right-52 {
-  animation: void-exit-right 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit-right 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 /* Accordion */
 .animate-accordion-down {
-  animation: void-enter-bottom 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter-bottom 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .animate-accordion-up {
-  animation: void-exit-top 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit-top 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 /* Standalone class aliases */
 .animate-in {
-  animation: void-enter 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .animate-out {
-  animation: void-exit 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 .fade-in {
-  animation: void-enter 150ms cubic-bezier(0.0, 0.0, 0.2, 1) both;
+  animation: void-enter 150ms cubic-bezier(0, 0, 0.2, 1) both;
 }
 
 .fade-out {
-  animation: void-exit 120ms cubic-bezier(0.4, 0.0, 1, 1) both;
+  animation: void-exit 120ms cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 /* Spinner */

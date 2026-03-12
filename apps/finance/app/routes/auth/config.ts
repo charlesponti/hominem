@@ -14,7 +14,7 @@ export const AUTH_CONFIG = {
   title: 'Continue to Florin',
 } as const;
 
-export const AUTH_ROUTE_CONFIG = {
+export const AUTH_SERVER_ROUTE_CONFIG = {
   ...AUTH_CONFIG,
-  apiBaseUrl: serverEnv.VITE_PUBLIC_API_URL,
-};
+  getApiBaseUrl: () => serverEnv.VITE_PUBLIC_API_URL,
+} as const;

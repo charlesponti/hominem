@@ -14,11 +14,100 @@ import { FocusHeader } from '~/components/focus/focus-header';
 import { FocusList } from '~/components/focus/focus-list';
 import { ActiveSearchSummary, type ActiveSearch } from '~/components/focus/focus-search';
 import { LoadingContainer } from '~/components/LoadingFull';
-import MindsherpaIcon from '~/components/ui/icon';
-import { Text, theme } from '~/theme';
+import AppIcon from '~/components/ui/icon';
+import { Text, theme, makeStyles } from '~/theme';
 import { useFocusQuery } from '~/utils/services/notes/use-focus-query';
 
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      position: 'relative',
+      backgroundColor: t.colors.background,
+    },
+    focusContainer: {
+      flex: 1,
+      rowGap: t.spacing.sm_12,
+      marginTop: t.spacing.m_16,
+    },
+    sessionSection: {
+      paddingHorizontal: t.spacing.sm_12,
+      paddingTop: t.spacing.sm_12,
+    },
+    focuses: {
+      flex: 1,
+      rowGap: t.spacing.ml_24,
+      paddingTop: t.spacing.sm_12,
+      paddingHorizontal: t.spacing.sm_12,
+    },
+    empty: {
+      marginHorizontal: t.spacing.sm_12,
+      paddingVertical: t.spacing.xl_64,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: t.colors.muted,
+      borderRadius: t.borderRadii.sm_6,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+    },
+    scrollContainer: {
+      paddingTop: t.spacing.sm_12,
+    },
+    sherpaButtonContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+    },
+    sherpaLink: {
+      flex: 1,
+    },
+    sherpaCircleButton: {
+      backgroundColor: t.colors.muted,
+      borderRadius: 999, // special: infinite radius
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+      padding: t.spacing.sm_12,
+      maxWidth: 120,
+      marginBottom: t.spacing.ml_24,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  }),
+);
+
+const useHeaderRightStyles = makeStyles((t) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      columnGap: t.spacing.sm_8,
+    },
+  }),
+);
+
+const useErrorStyles = makeStyles((t) =>
+  StyleSheet.create({
+    wrapper: {
+      padding: t.spacing.sm_12,
+      marginHorizontal: t.spacing.sm_12,
+    },
+    row: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      columnGap: t.spacing.ml_24,
+    },
+    textCol: {
+      flex: 1,
+    },
+  }),
+);
+
 export const FocusView = () => {
+  const styles = useStyles();
+  const headerRightStyles = useHeaderRightStyles();
   const insets = useSafeAreaInsets();
   const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -58,7 +147,7 @@ export const FocusView = () => {
           title: 'FOCUS',
           headerRight: () => (
             <View style={headerRightStyles.row}>
-              <Link href={"/(protected)/(tabs)/sherpa" as RelativePathString}>
+              <Link href={'/(protected)/(tabs)/sherpa' as RelativePathString}>
                 <Text variant="body" color="text-secondary">
                   SHERPA
                 </Text>
@@ -113,11 +202,11 @@ export const FocusView = () => {
         <View style={[styles.sherpaButtonContainer, { bottom: insets.bottom }]}>
           <View style={styles.sherpaCircleButton}>
             <Link
-              href={"/(protected)/(tabs)/sherpa" as RelativePathString}
+              href={'/(protected)/(tabs)/sherpa' as RelativePathString}
               style={styles.sherpaLink}
               accessibilityLabel="Open Sherpa"
             >
-              <MindsherpaIcon name="hat-wizard" size={32} color={theme.colors.white} />
+              <AppIcon name="hat-wizard" size={32} color={theme.colors.white} />
             </Link>
           </View>
         </View>
@@ -125,64 +214,6 @@ export const FocusView = () => {
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    position: 'relative',
-    backgroundColor: theme.colors.background,
-  },
-  focusContainer: {
-    flex: 1,
-    rowGap: 12,
-    marginTop: 16,
-  },
-  sessionSection: {
-    paddingHorizontal: 12,
-    paddingTop: 12,
-  },
-  focuses: {
-    flex: 1,
-    rowGap: 24,
-    paddingTop: 12,
-    paddingHorizontal: 12,
-  },
-  empty: {
-    marginHorizontal: 12,
-    paddingVertical: 75,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.muted,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-  },
-  scrollContainer: {
-    paddingTop: 12,
-  },
-  sherpaButtonContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  sherpaLink: {
-    flex: 1,
-  },
-  sherpaCircleButton: {
-    backgroundColor: theme.colors.muted,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    padding: 12,
-    maxWidth: 120,
-    marginBottom: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
 
 const FocusViewWithErrorBoundary = () => (
   <FeatureErrorBoundary featureName="Focus">
@@ -193,11 +224,12 @@ const FocusViewWithErrorBoundary = () => (
 export default FocusViewWithErrorBoundary;
 
 const FocusLoadingError = React.memo(() => {
+  const errorStyles = useErrorStyles();
   return (
     <View style={errorStyles.wrapper}>
       <FeedbackBlock error>
         <View style={errorStyles.row}>
-          <MindsherpaIcon name="circle-exclamation" size={24} color={theme.colors.destructive} />
+          <AppIcon name="circle-exclamation" size={24} color={theme.colors.destructive} />
           <View style={errorStyles.textCol}>
             <Text variant="body" color="foreground">
               FOCUS LOAD FAILED.
@@ -210,27 +242,4 @@ const FocusLoadingError = React.memo(() => {
       </FeedbackBlock>
     </View>
   );
-});
-
-const headerRightStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    columnGap: 8,
-  },
-});
-
-const errorStyles = StyleSheet.create({
-  wrapper: {
-    padding: 12,
-    marginHorizontal: 12,
-  },
-  row: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    columnGap: 24,
-  },
-  textCol: {
-    flex: 1,
-  },
 });

@@ -4,19 +4,63 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./button": "./src/components/ui/button.tsx",
+    "./button": {
+      "react-native": "./src/components/ui/button.native.tsx",
+      "default": "./src/components/ui/button.tsx"
+    },
+    "./heading": {
+      "react-native": "./src/components/typography/heading.native.tsx",
+      "default": "./src/components/typography/heading.tsx"
+    },
+    "./text": {
+      "react-native": "./src/components/typography/text.native.tsx",
+      "default": "./src/components/typography/text.tsx"
+    },
+    "./text-field": {
+      "react-native": "./src/components/ui/text-field.native.tsx",
+      "default": "./src/components/ui/text-field.tsx"
+    },
+    "./text-area": {
+      "react-native": "./src/components/ui/text-area.native.tsx",
+      "default": "./src/components/ui/text-area.tsx"
+    },
+    "./select-field": "./src/components/ui/select-field.tsx",
+    "./field": {
+      "react-native": "./src/components/ui/field.native.tsx",
+      "default": "./src/components/ui/field.tsx"
+    },
+    "./stack": {
+      "react-native": "./src/components/layout/stack.native.tsx",
+      "default": "./src/components/layout/stack.tsx"
+    },
+    "./inline": {
+      "react-native": "./src/components/layout/inline.native.tsx",
+      "default": "./src/components/layout/inline.tsx"
+    },
+    "./page": {
+      "react-native": "./src/components/layout/page.native.tsx",
+      "default": "./src/components/layout/page.tsx"
+    },
     "./input": "./src/components/ui/input.tsx",
     "./label": "./src/components/ui/label.tsx",
     "./textarea": "./src/components/ui/textarea.tsx",
     "./dialog": "./src/components/ui/dialog.tsx",
     "./dropdown": "./src/components/ui/dropdown-menu.tsx",
-    "./card": "./src/components/ui/card.tsx",
+    "./card": {
+      "react-native": "./src/components/ui/card.native.tsx",
+      "default": "./src/components/ui/card.tsx"
+    },
     "./loading": "./src/components/ui/loading.tsx",
     "./list": "./src/components/list.tsx",
     "./filters": "./src/components/filters/index.ts",
     "./hooks": "./src/hooks/index.ts",
     "./auth-server-routes": "./src/components/auth/web-auth-route-servers.ts",
     "./components/ui/*": "./src/components/ui/*.tsx",
+    "./components/ui/text-field.native": "./src/components/ui/text-field.native.tsx",
+    "./components/ui/text-area.native": "./src/components/ui/text-area.native.tsx",
+    "./components/ui/field.native": "./src/components/ui/field.native.tsx",
+    "./components/typography/text.native": "./src/components/typography/text.native.tsx",
+    "./components/typography/heading.native": "./src/components/typography/heading.native.tsx",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts",
     "./lib/*": "./src/lib/*.ts",
@@ -31,7 +75,9 @@
     "lint": "bunx oxlint ./src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@hominem/auth": "workspace:*",
@@ -61,12 +107,19 @@
     "react": "19.2.0",
     "react-day-picker": "8.10.1",
     "react-hook-form": "^7.70.0",
+    "react-native-safe-area-context": "5.6.2",
     "react-router": "7.12.0",
     "tailwind-merge": "3.2.0",
     "tailwindcss": "^4.1.18",
     "vaul": "^1.1.2"
   },
   "devDependencies": {
+    "@storybook/addon-essentials": "^8.0.0",
+    "@storybook/addon-interactions": "^8.0.0",
+    "@storybook/react": "^8.0.0",
+    "@storybook/react-vite": "^8.0.0",
+    "@storybook/test": "^8.0.0",
+    "@tailwindcss/vite": "^4.1.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.6.1",
@@ -74,6 +127,8 @@
     "@types/react-dom": "19.1.7",
     "jsdom": "^25.0.1",
     "react": "19.2.0",
+    "react-native": "0.83.2",
+    "storybook": "^8.0.0",
     "typescript": "5.9.3",
     "vite": "7.3.1",
     "vite-tsconfig-paths": "6.0.3",

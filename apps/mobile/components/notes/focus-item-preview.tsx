@@ -1,29 +1,31 @@
-import { Pressable, StyleSheet, View, type ViewProps } from 'react-native'
-import { Text, theme } from '~/theme'
-import type { FocusItemInput } from '~/utils/services/notes/types'
-import MindsherpaIcon from '../ui/icon'
+import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
+
+import { Text, makeStyles } from '~/theme';
+import type { FocusItemInput } from '~/utils/services/notes/types';
+
+import AppIcon from '../ui/icon';
 
 function getReadableDate(date: FocusItemInput['due_date']) {
-  if (!date) return null
+  if (!date) return null;
 
   try {
-    const dateObject = new Date(date)
+    const dateObject = new Date(date);
     return dateObject.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
-    })
-  } catch  {
-    return null
+    });
+  } catch {
+    return null;
   }
 }
 
 type FocusItemPreviewProps = {
-  disabled: boolean
-  focusItem: FocusItemInput
-  onDeleteClick: (focusItem: FocusItemInput) => void
-  onCreateClick: (focusItem: FocusItemInput) => void
-} & ViewProps
+  disabled: boolean;
+  focusItem: FocusItemInput;
+  onDeleteClick: (focusItem: FocusItemInput) => void;
+  onCreateClick: (focusItem: FocusItemInput) => void;
+} & ViewProps;
 const FocusItemPreview = ({
   disabled,
   focusItem,
@@ -31,48 +33,51 @@ const FocusItemPreview = ({
   onCreateClick,
   ...props
 }: FocusItemPreviewProps) => {
-  const readableDate = getReadableDate(focusItem.due_date)
+  const styles = useFocusItemStyles();
+  const readableDate = getReadableDate(focusItem.due_date);
   const onDeleteIconPress = () => {
-    onDeleteClick(focusItem)
-  }
+    onDeleteClick(focusItem);
+  };
 
   const onIconPress = () => {
-    onCreateClick(focusItem)
-  }
+    onCreateClick(focusItem);
+  };
 
   return (
-    <View style={[focusItemStyles.item]} {...props}>
-      <View style={[focusItemStyles.info]}>
+    <View style={[styles.item]} {...props}>
+      <View style={[styles.info]}>
         <Text variant="body" color="black">
           {focusItem.text}
         </Text>
         {focusItem.due_date && readableDate ? <Text variant="caption">{readableDate}</Text> : null}
       </View>
-      <Pressable disabled={disabled} style={[focusItemStyles.icon]} onPress={onDeleteIconPress}>
-        <MindsherpaIcon name="trash" size={24} color={theme.colors.destructive} />
+      <Pressable disabled={disabled} style={[styles.icon]} onPress={onDeleteIconPress}>
+        <AppIcon name="trash" size={24} color="#d32f2f" />
       </Pressable>
-      <Pressable disabled={disabled} style={[focusItemStyles.icon]} onPress={onIconPress}>
-        <MindsherpaIcon name="list-tree" size={24} color={theme.colors.foreground} />
+      <Pressable disabled={disabled} style={[styles.icon]} onPress={onIconPress}>
+        <AppIcon name="list-tree" size={24} color="#000" />
       </Pressable>
     </View>
-  )
-}
+  );
+};
 
-const focusItemStyles = StyleSheet.create({
-  item: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors['emphasis-faint'],
-    borderRadius: 16,
-  },
-  info: {
-    flex: 1,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-  },
-  icon: {
-    justifyContent: 'center',
-    marginRight: 20,
-  },
-})
+const useFocusItemStyles = makeStyles((t) =>
+  StyleSheet.create({
+    item: {
+      flexDirection: 'row',
+      backgroundColor: t.colors['emphasis-faint'],
+      borderRadius: t.borderRadii.l_12,
+    },
+    info: {
+      flex: 1,
+      paddingVertical: t.spacing.ml_24,
+      paddingHorizontal: t.spacing.ml_24,
+    },
+    icon: {
+      justifyContent: 'center',
+      marginRight: t.spacing.m_16,
+    },
+  }),
+);
 
-export default FocusItemPreview
+export default FocusItemPreview;

@@ -33,6 +33,22 @@ Run a local environment check:
 - Deployment: `.github/skills/deployment-workflow/SKILL.md`
 - Docker: `.github/skills/docker-workflow/SKILL.md`
 
+### Sharing skills between projects
+
+Skills are defined under `.github/skills` and are repo‑scoped.  To move them
+elsewhere you can use the CLI helpers:
+
+```bash
+# from the source repository
+hominem skills export /tmp/skills-export
+
+# in the new repository
+hominem skills import /tmp/skills-export
+```
+
+The commands simply copy the directory tree, creating the destination as
+needed.  Once imported you can commit the files in the new project as usual.
+
 ### MCP server auth (single source of truth)
 
 The MCP server reads its auth token from a config file only.

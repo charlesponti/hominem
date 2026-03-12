@@ -29,7 +29,6 @@ export default defineConfig({
         NODE_ENV: 'test',
         PORT: '4040',
         API_URL: apiBaseUrl,
-        BETTER_AUTH_URL: apiBaseUrl,
         AUTH_PASSKEY_RP_ID: 'lvh.me',
         AUTH_PASSKEY_ORIGIN: apiBaseUrl,
         AUTH_COOKIE_DOMAIN: 'lvh.me',

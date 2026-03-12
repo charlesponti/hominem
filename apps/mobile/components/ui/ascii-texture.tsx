@@ -1,31 +1,31 @@
-import { memo, useMemo } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { memo, useMemo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { theme } from '~/theme'
+import { theme } from '~/theme';
 
-const GLYPHS = ['+', '·', '~', '-', '/', '\\']
+const GLYPHS = ['+', '·', '~', '-', '/', '\\'];
 
 function createPattern(rows: number, cols: number) {
-  const lines: string[] = []
+  const lines: string[] = [];
   for (let row = 0; row < rows; row += 1) {
-    let line = ''
+    let line = '';
     for (let col = 0; col < cols; col += 1) {
-      const index = (row * 17 + col * 13) % GLYPHS.length
-      line += GLYPHS[index]
+      const index = (row * 17 + col * 13) % GLYPHS.length;
+      line += GLYPHS[index];
     }
-    lines.push(line)
+    lines.push(line);
   }
-  return lines.join('\n')
+  return lines.join('\n');
 }
 
 export const AsciiTexture = memo(() => {
-  const pattern = useMemo(() => createPattern(18, 34), [])
+  const pattern = useMemo(() => createPattern(18, 34), []);
   return (
     <View pointerEvents="none" style={styles.container}>
       <Text style={styles.pattern}>{pattern}</Text>
     </View>
-  )
-})
+  );
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -39,4 +39,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 12,
   },
-})
+});

@@ -92,15 +92,9 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
             );
           },
           // Headings
-          h1: ({ children }) => (
-            <h1 className="text-2xl font-bold mt-6 mb-4 first:mt-0">{children}</h1>
-          ),
-          h2: ({ children }) => (
-            <h2 className="text-xl font-semibold mt-5 mb-3 first:mt-0">{children}</h2>
-          ),
-          h3: ({ children }) => (
-            <h3 className="text-lg font-semibold mt-4 mb-2 first:mt-0">{children}</h3>
-          ),
+          h1: ({ children }) => <h1 className="heading-3 mt-6 mb-4 first:mt-0">{children}</h1>,
+          h2: ({ children }) => <h2 className="heading-4 mt-5 mb-3 first:mt-0">{children}</h2>,
+          h3: ({ children }) => <h3 className="heading-4 mt-4 mb-2 first:mt-0">{children}</h3>,
           // Paragraphs
           p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
           // Lists

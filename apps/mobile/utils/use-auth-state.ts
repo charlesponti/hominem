@@ -1,13 +1,13 @@
-import { useMemo } from 'react'
+import type { AppAuthState, AppAuthStatus } from '@hominem/auth';
+import { useMemo } from 'react';
 
-import { useAuth } from './auth-provider'
-import type { AppAuthState, AppAuthStatus } from '@hominem/auth'
+import { useAuth } from './auth-provider';
 
 export function useAuthState(): AppAuthState {
-  const { authStatus, isLoadingAuth, currentUser } = useAuth()
+  const { authStatus, isLoadingAuth, currentUser } = useAuth();
 
   const state = useMemo<AppAuthState>(() => {
-    const status = mapToCanonicalStatus(authStatus)
+    const status = mapToCanonicalStatus(authStatus);
     return {
       status,
       user: currentUser
@@ -22,10 +22,10 @@ export function useAuthState(): AppAuthState {
         : null,
       error: null,
       isLoading: isLoadingAuth,
-    }
-  }, [authStatus, currentUser, isLoadingAuth])
+    };
+  }, [authStatus, currentUser, isLoadingAuth]);
 
-  return state
+  return state;
 }
 
 function mapToCanonicalStatus(status: string): AppAuthStatus {
@@ -40,6 +40,6 @@ function mapToCanonicalStatus(status: string): AppAuthStatus {
     signed_in: 'signed_in',
     signing_out: 'signing_out',
     degraded: 'degraded',
-  }
-  return statusMap[status] ?? 'signed_out'
+  };
+  return statusMap[status] ?? 'signed_out';
 }

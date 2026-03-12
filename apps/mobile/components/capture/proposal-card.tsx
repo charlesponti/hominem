@@ -1,12 +1,14 @@
-import { Pressable, StyleSheet, View } from 'react-native'
-import type { ArtifactType, ReviewItem } from '@hominem/chat-services/types'
-import { Text, theme } from '~/theme'
-import { FadeIn } from '~/components/animated/fade-in'
+import type { ArtifactType, ReviewItem } from '@hominem/chat-services/types';
+import { StyleSheet, View } from 'react-native';
+
+import { FadeIn } from '~/components/animated/fade-in';
+import { Button } from '~/components/Button';
+import { Text, makeStyles, theme } from '~/theme';
 
 interface ProposalCardProps {
-  item: ReviewItem
-  onReview: (item: ReviewItem) => void
-  onReject: (item: ReviewItem) => void
+  item: ReviewItem;
+  onReview: (item: ReviewItem) => void;
+  onReject: (item: ReviewItem) => void;
 }
 
 const TYPE_LABEL: Record<ArtifactType, string> = {
@@ -14,9 +16,40 @@ const TYPE_LABEL: Record<ArtifactType, string> = {
   task: 'TASK',
   task_list: 'LIST',
   tracker: 'TRACKER',
-}
+};
+
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    list: { gap: t.spacing.sm_8 },
+    sectionLabel: {
+      letterSpacing: 1,
+      marginBottom: t.spacing.xs_4,
+      paddingHorizontal: t.spacing.xs_4,
+    },
+    card: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.sm_12,
+      paddingHorizontal: t.spacing.sm_12,
+      paddingVertical: t.spacing.sm_12,
+      borderRadius: t.borderRadii.md_10,
+      borderWidth: 1,
+      borderColor: theme.colors['border-default'],
+      backgroundColor: theme.colors.muted,
+    },
+    content: { flex: 1, gap: t.spacing.xs_4 },
+    typeLabel: { letterSpacing: 1 },
+    title: { fontWeight: '500' },
+    actions: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm_8 },
+    reviewBtn: {
+      minHeight: 30,
+    },
+    rejectBtn: { minHeight: 28, minWidth: 28 },
+  }),
+);
 
 export const ProposalCard = ({ item, onReview, onReject }: ProposalCardProps) => {
+  const styles = useStyles();
   return (
     <FadeIn>
       <View style={styles.card}>
@@ -30,37 +63,41 @@ export const ProposalCard = ({ item, onReview, onReject }: ProposalCardProps) =>
         </View>
 
         <View style={styles.actions}>
-          <Pressable
+          <Button
+            variant="outline"
+            size="xs"
             style={styles.reviewBtn}
             onPress={() => onReview(item)}
             accessibilityLabel={`Review proposal: ${item.proposedTitle}`}
           >
-            <Text variant="caption" color="foreground">REVIEW →</Text>
-          </Pressable>
-          <Pressable
+            REVIEW →
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
             style={styles.rejectBtn}
             onPress={() => onReject(item)}
             accessibilityLabel={`Reject proposal: ${item.proposedTitle}`}
           >
-            <Text variant="caption" color="text-secondary">✕</Text>
-          </Pressable>
+            ✕
+          </Button>
         </View>
       </View>
     </FadeIn>
-  )
-}
+  );
+};
 
-/** Renders the review queue. Hides entirely when empty. */
 export const ProposalList = ({
   items,
   onReview,
   onReject,
 }: {
-  items: ReviewItem[]
-  onReview: (item: ReviewItem) => void
-  onReject: (item: ReviewItem) => void
+  items: ReviewItem[];
+  onReview: (item: ReviewItem) => void;
+  onReject: (item: ReviewItem) => void;
 }) => {
-  if (items.length === 0) return null
+  const styles = useStyles();
+  if (items.length === 0) return null;
 
   return (
     <View style={styles.list}>
@@ -71,37 +108,5 @@ export const ProposalList = ({
         <ProposalCard key={item.id} item={item} onReview={onReview} onReject={onReject} />
       ))}
     </View>
-  )
-}
-
-const styles = StyleSheet.create({
-  list: { gap: 6 },
-  sectionLabel: {
-    letterSpacing: 1,
-    marginBottom: 2,
-    paddingHorizontal: 2,
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    backgroundColor: theme.colors.muted,
-  },
-  content: { flex: 1, gap: 2 },
-  typeLabel: { letterSpacing: 1 },
-  title: { fontWeight: '500' },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  reviewBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-  },
-  rejectBtn: { padding: 4 },
-})
+  );
+};

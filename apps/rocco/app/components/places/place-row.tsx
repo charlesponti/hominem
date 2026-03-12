@@ -1,3 +1,4 @@
+import { Inline } from '@hominem/ui';
 import { Star } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
@@ -51,8 +52,8 @@ export default function PlaceRow({
       onMouseLeave={onMouseLeave}
       data-selected={isSelected}
     >
-      <Link to={href} viewTransition className="flex-1 min-w-0 focus:outline-none">
-        <div className="flex items-center gap-4">
+      <Link to={href} viewTransition className="flex-1 min-w-0 void-focus">
+        <Inline gap="md">
           <div className="size-8 overflow-hidden shrink-0 border border-border flex items-center justify-center">
             {resolvedImage ? (
               <img
@@ -67,26 +68,26 @@ export default function PlaceRow({
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
+            <Inline justify="between">
               <p className="flex-1 text-sm text-accent-foreground truncate">{name}</p>
               {meta ?? null}
-            </div>
-            <div className="flex items-center gap-2">
+            </Inline>
+            <Inline gap="sm">
               {subtitle ? (
                 <p className="text-xs text-muted-foreground/60 truncate">{subtitle}</p>
               ) : null}
               {addedBy && (
-                <div className="flex items-center gap-1.5">
+                <Inline gap="xs">
                   {addedBy.name ? (
-                    <span className="text-[0.65rem] text-muted-foreground/60 truncate">
+                    <span className="body-4 text-muted-foreground/60 truncate">
                       {addedBy.name.split(' ')[0]}
                     </span>
                   ) : null}
-                </div>
+                </Inline>
               )}
-            </div>
+            </Inline>
           </div>
-        </div>
+        </Inline>
       </Link>
 
       {accessory ? <div className="ml-2 flex items-center">{accessory}</div> : null}

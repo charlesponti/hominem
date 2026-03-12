@@ -15,30 +15,30 @@ export function redirectSystemPath({
   path,
   initial: _initial,
 }: {
-  path: string
-  initial: boolean
+  path: string;
+  initial: boolean;
 }): string {
   // Strip leading slash for matching
-  const normalized = path.startsWith('/') ? path.slice(1) : path
+  const normalized = path.startsWith('/') ? path.slice(1) : path;
 
   // OTP verification link: verify?token=xxx → /(auth)/verify?token=xxx
   if (normalized.startsWith('verify')) {
-    return `/(auth)/${normalized}`
+    return `/(auth)/${normalized}`;
   }
 
   // Sherpa / chat intent
   if (normalized.startsWith('sherpa')) {
-    return `/(protected)/(tabs)/${normalized}`
+    return `/(protected)/(tabs)/${normalized}`;
   }
 
   // Focus screen or focus item
   if (normalized.startsWith('focus')) {
-    return `/(protected)/(tabs)/${normalized}`
+    return `/(protected)/(tabs)/${normalized}`;
   }
 
   // Account screen
   if (normalized.startsWith('account')) {
-    return `/(protected)/(tabs)/account`
+    return `/(protected)/(tabs)/account`;
   }
-  return path
+  return path;
 }

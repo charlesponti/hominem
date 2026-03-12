@@ -10,7 +10,8 @@ export function meta() {
     { title: 'Florin — Personal Finance' },
     {
       name: 'description',
-      content: 'See where your money goes. Connect accounts, track spending, and understand your financial picture.',
+      content:
+        'See where your money goes. Connect accounts, track spending, and understand your financial picture.',
     },
   ];
 }
@@ -45,36 +46,43 @@ export default function Home() {
         {
           icon: Landmark,
           title: 'Account sync',
-          description: 'Connect your bank and card accounts. Transactions appear automatically, categorized and ready to review.',
+          description:
+            'Connect your bank and card accounts. Transactions appear automatically, categorized and ready to review.',
         },
         {
           icon: ChartLine,
           title: 'Spending breakdown',
-          description: 'See exactly where money went, by category and by month. No guessing. No spreadsheets.',
+          description:
+            'See exactly where money went, by category and by month. No guessing. No spreadsheets.',
         },
         {
           icon: Gauge,
           title: 'Runway',
-          description: 'Know how long your savings will last at your current spend rate. A single number that tells you everything.',
+          description:
+            'Know how long your savings will last at your current spend rate. A single number that tells you everything.',
         },
         {
           icon: UploadCloud,
           title: 'CSV import',
-          description: "Your bank doesn't connect? Upload a CSV. Florin parses it regardless of format.",
+          description:
+            "Your bank doesn't connect? Upload a CSV. Florin parses it regardless of format.",
         },
       ]}
       steps={[
         {
           label: 'Connect your accounts',
-          description: 'Link your bank, credit cards, and investment accounts via Plaid. Takes under two minutes.',
+          description:
+            'Link your bank, credit cards, and investment accounts via Plaid. Takes under two minutes.',
         },
         {
           label: 'Review your spending',
-          description: 'Transactions are auto-categorized. Adjust any that are wrong — Florin learns from corrections.',
+          description:
+            'Transactions are auto-categorized. Adjust any that are wrong — Florin learns from corrections.',
         },
         {
           label: 'Understand the picture',
-          description: 'See your monthly totals, category breakdown, and runway in one view. No analysis required.',
+          description:
+            'See your monthly totals, category breakdown, and runway in one view. No analysis required.',
         },
       ]}
       trustSignal="Free to use. No credit card required."

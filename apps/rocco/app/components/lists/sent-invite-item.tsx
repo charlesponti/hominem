@@ -1,3 +1,4 @@
+import { Inline } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Check, Link as LinkIcon, Mail } from 'lucide-react';
 import { useCallback, useState } from 'react';
@@ -46,7 +47,7 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
 
   return (
     <li className="flex flex-col md:flex-row md:items-center gap-3 p-3 group border-b border-border">
-      <div className="flex items-center gap-2 flex-1 min-w-0">
+      <Inline gap="sm" className="flex-1 min-w-0">
         {accepted ? (
           <UserAvatar
             name={userName ?? undefined}
@@ -60,7 +61,7 @@ export default function SentInviteItem({ invite, listId, onDelete }: SentInviteI
         <div className="flex-1 min-w-0">
           <p className="font-light text-muted-foreground truncate text-base">{invitedUserEmail}</p>
         </div>
-      </div>
+      </Inline>
       <div className="ml-0 md:ml-2 flex justify-end items-center gap-3 flex-wrap">
         {accepted ? (
           user_invitedUserId?.id && (

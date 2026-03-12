@@ -1,51 +1,51 @@
-import type { AuthState } from './types'
+import type { AuthState } from './types';
 
 export interface AuthBootStoredTokens {
-  accessToken: string | null
-  refreshToken: string | null
-  expiresAtStr: string | null
+  accessToken: string | null;
+  refreshToken: string | null;
+  expiresAtStr: string | null;
 }
 
 export interface AuthBootUser {
-  id: string
-  email: string
-  name?: string | null
+  id: string;
+  email: string;
+  name?: string | null;
 }
 
 export type AuthBootResult =
   | {
-      type: 'SESSION_LOADED'
-      user: NonNullable<AuthState['user']>
-      tokens: { accessToken: string; refreshToken: string | null; expiresAtStr: string | null }
+      type: 'SESSION_LOADED';
+      user: NonNullable<AuthState['user']>;
+      tokens: { accessToken: string; refreshToken: string | null; expiresAtStr: string | null };
     }
-  | { type: 'SESSION_EXPIRED' }
+  | { type: 'SESSION_EXPIRED' };
 
 export interface AuthBootDeps {
   /** Read all stored token values — implementations should parallelize. */
-  getStoredTokens: () => Promise<AuthBootStoredTokens>
+  getStoredTokens: () => Promise<AuthBootStoredTokens>;
   /**
    * Probe the session endpoint with the stored token.
    * - Returns the authenticated user on success (2xx + isAuthenticated).
    * - Returns null when the token is invalid (401) — caller will clear tokens.
    * - Throws on network errors or AbortError — caller handles without clearing tokens.
    */
-  probeSession: (accessToken: string, signal: AbortSignal) => Promise<AuthBootUser | null>
+  probeSession: (accessToken: string, signal: AbortSignal) => Promise<AuthBootUser | null>;
   /** Clear all stored tokens. Called only when probeSession returns null (invalid token). */
-  clearTokens: () => Promise<void>
+  clearTokens: () => Promise<void>;
   /** Upsert the user profile in local store and return the normalized profile. */
-  upsertProfile: (user: AuthBootUser) => Promise<NonNullable<AuthState['user']> | null>
+  upsertProfile: (user: AuthBootUser) => Promise<NonNullable<AuthState['user']> | null>;
   /** One-time legacy data migration — must be idempotent. */
-  clearLegacyData: () => Promise<void>
+  clearLegacyData: () => Promise<void>;
   /** AbortSignal tied to the boot lifecycle. Throws AbortError on timeout or unmount. */
-  signal: AbortSignal
+  signal: AbortSignal;
 }
 
 function isValidExpiresAt(expiresAtStr: string | null) {
   if (!expiresAtStr) {
-    return false
+    return false;
   }
-  const value = Number(expiresAtStr)
-  return Number.isFinite(value) && value > 0
+  const value = Number(expiresAtStr);
+  return Number.isFinite(value) && value > 0;
 }
 
 /**
@@ -64,39 +64,39 @@ function isValidExpiresAt(expiresAtStr: string | null) {
  */
 export async function runAuthBoot(deps: AuthBootDeps): Promise<AuthBootResult> {
   const { getStoredTokens, probeSession, clearTokens, upsertProfile, clearLegacyData, signal } =
-    deps
+    deps;
 
-  await clearLegacyData()
+  await clearLegacyData();
 
-  const { accessToken, refreshToken, expiresAtStr } = await getStoredTokens()
+  const { accessToken, refreshToken, expiresAtStr } = await getStoredTokens();
 
   if (!accessToken && (refreshToken || expiresAtStr)) {
-    await clearTokens()
-    return { type: 'SESSION_EXPIRED' }
+    await clearTokens();
+    return { type: 'SESSION_EXPIRED' };
   }
 
   if (accessToken && (!refreshToken || !isValidExpiresAt(expiresAtStr))) {
-    await clearTokens()
-    return { type: 'SESSION_EXPIRED' }
+    await clearTokens();
+    return { type: 'SESSION_EXPIRED' };
   }
 
   if (accessToken) {
-    const probeUser = await probeSession(accessToken, signal)
+    const probeUser = await probeSession(accessToken, signal);
 
     if (probeUser) {
-      const userProfile = await upsertProfile(probeUser)
+      const userProfile = await upsertProfile(probeUser);
       if (userProfile) {
         return {
           type: 'SESSION_LOADED',
           user: userProfile,
           tokens: { accessToken, refreshToken, expiresAtStr },
-        }
+        };
       }
     } else {
       // probeSession returned null → 401, token is invalid
-      await clearTokens()
+      await clearTokens();
     }
   }
 
-  return { type: 'SESSION_EXPIRED' }
+  return { type: 'SESSION_EXPIRED' };
 }

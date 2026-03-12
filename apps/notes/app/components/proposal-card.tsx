@@ -10,6 +10,8 @@
  */
 
 import type { ReviewItem } from '@hominem/chat-services';
+import { Inline, Stack } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
 import { FileText } from 'lucide-react';
 
 interface ProposalCardProps {
@@ -27,36 +29,43 @@ const TYPE_LABEL: Record<string, string> = {
 
 export function ProposalCard({ item, onReview, onReject }: ProposalCardProps) {
   return (
-    <div className="void-anim-enter flex items-start gap-3 px-3 py-3 border border-border rounded bg-muted">
+    <Inline
+      align="start"
+      className="void-anim-enter gap-3 px-3 py-3 border border-border rounded bg-muted"
+    >
       <FileText className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
+        <Inline gap="sm" className="mb-0.5">
           <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
             {TYPE_LABEL[item.proposedType] ?? item.proposedType}
           </span>
-        </div>
+        </Inline>
         <p className="text-sm text-foreground truncate">{item.proposedTitle}</p>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        <button
+      <Inline gap="sm" className="shrink-0">
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => onReview(item)}
-          className="text-xs font-mono text-foreground border border-border rounded px-2.5 py-1 hover:bg-background transition-colors"
+          className="text-xs"
         >
           Review →
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => onReject(item)}
-          className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
+          className="px-2 text-xs text-muted-foreground"
           aria-label="Reject proposal"
         >
           ✕
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Inline>
+    </Inline>
   );
 }
 
@@ -73,20 +82,20 @@ export function ProposalList({
   if (items.length === 0) return null;
 
   return (
-    <section aria-labelledby="review-heading">
+    <Stack as="section" gap="sm" aria-labelledby="review-heading">
       <h2
         id="review-heading"
-        className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-3"
+        className="text-xs font-mono text-muted-foreground uppercase tracking-wider"
       >
         Needs Review
       </h2>
-      <ul className="flex flex-col gap-2">
+      <Stack as="ul" gap="sm">
         {items.map((item) => (
           <li key={item.id}>
             <ProposalCard item={item} onReview={onReview} onReject={onReject} />
           </li>
         ))}
-      </ul>
-    </section>
+      </Stack>
+    </Stack>
   );
 }

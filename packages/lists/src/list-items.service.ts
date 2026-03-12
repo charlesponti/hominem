@@ -37,12 +37,12 @@ function taskToListItem(row: TaskRow): ListTaskItem {
 }
 
 export async function getListPlaces(listId: string): Promise<ListPlace[]> {
-  void listId
+  void listId;
   return [];
 }
 
 export async function getPlaceListPreview(listId: string): Promise<ListPlacePreview | null> {
-  void listId
+  void listId;
   return null;
 }
 

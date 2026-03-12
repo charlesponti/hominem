@@ -1,6 +1,6 @@
 import { useAuthContext, useSafeAuth } from '@hominem/auth';
-import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
 import type { ClientConfig } from '@hominem/hono-client';
+import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
 import { useCallback } from 'react';
 import type { ReactNode } from 'react';
 
@@ -31,11 +31,7 @@ function HonoProviderInner({ children, baseUrl }: HonoProviderProps) {
     },
   };
 
-  return (
-    <BaseHonoProvider config={config}>
-      {children}
-    </BaseHonoProvider>
-  );
+  return <BaseHonoProvider config={config}>{children}</BaseHonoProvider>;
 }
 
 /**
@@ -61,11 +57,7 @@ export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
   };
 
   if (!authContext) {
-    return (
-      <BaseHonoProvider config={config}>
-        {children}
-      </BaseHonoProvider>
-    );
+    return <BaseHonoProvider config={config}>{children}</BaseHonoProvider>;
   }
 
   return <HonoProviderInner baseUrl={baseUrl}>{children}</HonoProviderInner>;

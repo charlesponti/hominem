@@ -43,28 +43,36 @@ interface AuthVerifyLoaderData {
 }
 
 export type GetServerAuth = (request: Request) => Promise<AuthLoaderResult>;
+export type GetAuthApiBaseUrl = () => string;
 
-interface SharedAuthRouteConfig {
-  apiBaseUrl: string;
+interface SharedAuthComponentConfig {
   defaultRedirect: string;
 }
 
-export interface AuthEntryRouteConfig extends SharedAuthRouteConfig {
+export interface AuthEntryRouteConfig extends SharedAuthComponentConfig {
   title: string;
   description: string;
 }
 
-export interface AuthVerifyRouteConfig extends SharedAuthRouteConfig {
+export interface AuthVerifyRouteConfig extends SharedAuthComponentConfig {
   allowedRedirectPrefixes: readonly string[];
 }
 
 export interface AuthLogoutRouteConfig {
-  apiBaseUrl: string;
+  getApiBaseUrl: GetAuthApiBaseUrl;
 }
 
 export interface AuthPasskeyCallbackRouteConfig {
   allowedRedirectPrefixes: readonly string[];
   defaultRedirect: string;
+}
+
+export interface AuthEntryServerRouteConfig extends AuthEntryRouteConfig {
+  getApiBaseUrl: GetAuthApiBaseUrl;
+}
+
+export interface AuthVerifyServerRouteConfig extends AuthVerifyRouteConfig {
+  getApiBaseUrl: GetAuthApiBaseUrl;
 }
 
 export function createAuthEntryComponent(config: AuthEntryRouteConfig) {
@@ -106,7 +114,10 @@ export function createAuthVerifyComponent(config: AuthVerifyRouteConfig) {
     const location = useLocation();
 
     return (
-      <AuthScaffold title={AUTH_COPY.otpVerification.title} description={AUTH_COPY.otpVerification.subtitle}>
+      <AuthScaffold
+        title={AUTH_COPY.otpVerification.title}
+        description={AUTH_COPY.otpVerification.subtitle}
+      >
         <OtpVerificationForm
           action={`/auth/verify${location.search}`}
           email={email}

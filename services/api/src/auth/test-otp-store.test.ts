@@ -48,9 +48,11 @@ describe('test otp store', () => {
   test('marks otp as replayed after first successful consume', () => {
     recordTestOtp({ email: 'user@example.com', otp: '123456', type: 'sign-in' });
 
-    expect(consumeTestOtp({ email: 'user@example.com', otp: '123456', type: 'sign-in' }).status)
-      .toBe('consumed');
-    expect(consumeTestOtp({ email: 'user@example.com', otp: '123456', type: 'sign-in' }).status)
-      .toBe('replayed');
+    expect(
+      consumeTestOtp({ email: 'user@example.com', otp: '123456', type: 'sign-in' }).status,
+    ).toBe('consumed');
+    expect(
+      consumeTestOtp({ email: 'user@example.com', otp: '123456', type: 'sign-in' }).status,
+    ).toBe('replayed');
   });
 });

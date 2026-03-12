@@ -1,6 +1,9 @@
 import { useAuthContext } from '@hominem/auth';
-import { Label } from '@hominem/ui/components/ui/label';
+import { Inline } from '@hominem/ui';
+import { Field } from '@hominem/ui/field';
 import { Input } from '@hominem/ui/input';
+import { SelectField } from '@hominem/ui/select-field';
+import { TextField } from '@hominem/ui/text-field';
 import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -23,7 +26,7 @@ export default function VisitsPage() {
   if (!isAuthenticated) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4">My Visits</h1>
+        <h1 className="heading-3 mb-4">My Visits</h1>
         <p className="text-muted-foreground">Sign in to view visits.</p>
       </div>
     );
@@ -49,54 +52,37 @@ export default function VisitsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">My Visits</h1>
+        <h1 className="heading-3 mb-2">My Visits</h1>
         <p className="text-muted-foreground">Track your visits to places</p>
       </div>
 
       <div className="mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 space-y-2">
-            <Label htmlFor="place-filter">Filter by place</Label>
-            <Input
-              id="place-filter"
-              placeholder="Search places..."
-              value={placeFilter}
-              onChange={(e) => setPlaceFilter(e.target.value)}
-            />
-          </div>
+          <TextField
+            className="flex-1"
+            label="Filter by place"
+            placeholder="Search places..."
+            value={placeFilter}
+            onChange={(e) => setPlaceFilter(e.target.value)}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="start-date">Start date</Label>
-            <Input
-              id="start-date"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </div>
+          <Field label="Start date">
+            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="end-date">End date</Label>
-            <Input
-              id="end-date"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
+          <Field label="End date">
+            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          </Field>
 
-          <div className="space-y-2">
-            <Label htmlFor="sort">Sort</Label>
-            <select
-              id="sort"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest')}
-              className="flex h-10 w-full border border-input bg-transparent px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled: md:text-sm"
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-            </select>
-          </div>
+          <SelectField
+            label="Sort"
+            value={sortOrder}
+            onValueChange={(value) => setSortOrder(value === 'oldest' ? 'oldest' : 'newest')}
+            options={[
+              { label: 'Newest first', value: 'newest' },
+              { label: 'Oldest first', value: 'oldest' },
+            ]}
+          />
         </div>
       </div>
 
@@ -145,10 +131,10 @@ export default function VisitsPage() {
                     </div>
 
                     {visit.visitRating && (
-                      <div className="flex items-center gap-1 shrink-0">
+                      <Inline gap="xs" className="shrink-0">
                         <Star className="size-4 fill-foreground text-foreground" />
                         <span className="text-sm font-medium">{visit.visitRating}</span>
-                      </div>
+                      </Inline>
                     )}
                   </div>
 

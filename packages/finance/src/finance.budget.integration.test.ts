@@ -4,7 +4,7 @@ import { db, sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
-  _isIntegrationDatabaseAvailable,
+  isIntegrationDatabaseAvailable,
   tableExists,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -28,12 +28,13 @@ import {
 } from './finance';
 
 const nextUserId = createDeterministicIdFactory('finance.budget.integration');
+const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
 
 async function hasBudgetGoalsTable(): Promise<boolean> {
   return await tableExists('budget_goals');
 }
 
-describe('finance budget integration', () => {
+describeIntegration('finance budget integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerAccountId: string;

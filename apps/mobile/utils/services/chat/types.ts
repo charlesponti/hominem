@@ -1,5 +1,5 @@
 export type Chat = {
-  id: string
-  title: string
-  created_at: string
-}
+  id: string;
+  title: string;
+  created_at: string;
+};

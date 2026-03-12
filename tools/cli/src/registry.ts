@@ -140,6 +140,24 @@ export const commandRoutes: CommandRoute[] = [
     loader: () => import('./commands/files/rename-markdown'),
   },
   {
+    id: 'skills',
+    summary: 'Skill management domain',
+    description: 'Commands for exporting/importing the `.github/skills` directory.',
+    loader: () => import('./commands/skills/root'),
+  },
+  {
+    id: 'skills export',
+    summary: 'Copy the local `.github/skills` folder to another location',
+    description: "Make a copy of the current repo's skill definitions.",
+    loader: () => import('./commands/skills/export'),
+  },
+  {
+    id: 'skills import',
+    summary: 'Copy skills from another location into `.github/skills`',
+    description: 'Populate the current repository with shared skills.',
+    loader: () => import('./commands/skills/import'),
+  },
+  {
     id: 'agent',
     summary: 'Agent command domain',
     description: 'Agent orchestration command namespace.',

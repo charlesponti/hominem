@@ -1,5 +1,6 @@
 import { Alert } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
+import { colors } from '@hominem/ui/tokens';
 import {
   AdvancedMarker,
   APIProvider,
@@ -116,7 +117,7 @@ const MapMarker = memo(
       () => ({
         width: isHovered || isSelected ? '32px' : '24px',
         height: isHovered || isSelected ? '32px' : '24px',
-        backgroundColor: isHovered || isSelected ? '#ef4444' : '#dc2626',
+        backgroundColor: isHovered || isSelected ? colors.destructive : colors['destructive-muted'],
         border: '2px solid white',
         cursor: 'pointer' as const,
       }),
@@ -316,9 +317,9 @@ const RoccoMap = ({
                   width: '20px',
                   height: '20px',
                   borderRadius: '50%',
-                  backgroundColor: '#4285F4',
+                  backgroundColor: colors['google-maps-blue'],
                   border: '2px solid white',
-                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                  boxShadow: `0 2px 4px ${colors['overlay-modal-medium']}`,
                 }}
               />
             </AdvancedMarker>

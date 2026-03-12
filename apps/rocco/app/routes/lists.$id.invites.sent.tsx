@@ -42,7 +42,7 @@ export default function ListSentInvites() {
                 </p>
                 <p>
                   <span className="font-semibold mr-2">Accepted:</span>
-                  {invite.status === 'accepted' ? 'Accepted ✅' : 'Awaiting acceptance ⏳'}
+                  {invite.status === 'accepted' ? 'Accepted' : 'Awaiting acceptance'}
                 </p>
               </li>
             ))}

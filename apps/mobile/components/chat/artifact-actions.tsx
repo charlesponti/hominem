@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, View } from 'react-native'
+import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types';
+import { StyleSheet, View } from 'react-native';
 
-import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types'
-import { Text, theme } from '~/theme'
+import { Button } from '~/components/Button';
+import { makeStyles } from '~/theme';
 
 /**
  * ArtifactActions — transformation strip shown in SessionView.
@@ -12,9 +13,9 @@ import { Text, theme } from '~/theme'
  */
 
 interface ArtifactActionsProps {
-  state: ThoughtLifecycleState
-  messageCount: number
-  onTransform: (type: ArtifactType) => void
+  state: ThoughtLifecycleState;
+  messageCount: number;
+  onTransform: (type: ArtifactType) => void;
 }
 
 const ACTIONS: { type: ArtifactType; label: string }[] = [
@@ -22,65 +23,58 @@ const ACTIONS: { type: ArtifactType; label: string }[] = [
   { type: 'task', label: '→ TASK' },
   { type: 'task_list', label: '→ LIST' },
   { type: 'tracker', label: '→ TRACKER' },
-]
+];
 
-const ENABLED: ArtifactType[] = ['note']
-const BLOCKING: ThoughtLifecycleState[] = ['classifying', 'reviewing_changes', 'persisting']
+const ENABLED: ArtifactType[] = ['note'];
+const BLOCKING: ThoughtLifecycleState[] = ['classifying', 'reviewing_changes', 'persisting'];
 
 export const ArtifactActions = ({ state, messageCount, onTransform }: ArtifactActionsProps) => {
-  if (messageCount === 0) return null
+  const styles = useStyles();
 
-  const isComposing = state === 'composing'
-  const isBlocked = BLOCKING.includes(state)
+  if (messageCount === 0) return null;
+
+  const isComposing = state === 'composing';
+  const isBlocked = BLOCKING.includes(state);
 
   return (
     <View style={[styles.row, isComposing && styles.dimmed]}>
       {ACTIONS.map(({ type, label }) => {
-        const enabled = ENABLED.includes(type)
-        const disabled = !enabled || isBlocked
+        const enabled = ENABLED.includes(type);
+        const disabled = !enabled || isBlocked;
 
         return (
-          <Pressable
+          <Button
             key={type}
+            variant="outline"
+            size="xs"
             style={[styles.btn, disabled && styles.btnDisabled]}
             onPress={() => onTransform(type)}
             disabled={disabled}
-            accessibilityLabel={enabled ? label : `${label} — Coming soon`}
-            accessibilityState={{ disabled }}
+            title={label}
           >
-            <Text
-              variant="caption"
-              color={disabled ? 'text-secondary' : 'foreground'}
-              style={disabled ? styles.disabledText : undefined}
-            >
-              {label}
-            </Text>
-          </Pressable>
-        )
+            {label}
+          </Button>
+        );
       })}
     </View>
-  )
-}
+  );
+};
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors['border-default'],
-    backgroundColor: theme.colors.background,
-  },
-  dimmed: { opacity: 0.5 },
-  btn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    backgroundColor: theme.colors.muted,
-  },
-  btnDisabled: { opacity: 0.38 },
-  disabledText: {},
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      gap: t.spacing.sm_8,
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.sm_12,
+      borderTopWidth: 1,
+      borderTopColor: t.colors['border-default'],
+      backgroundColor: t.colors.background,
+    },
+    dimmed: { opacity: 0.5 },
+    btn: {
+      backgroundColor: t.colors.muted,
+    },
+    btnDisabled: { opacity: 0.38 },
+  }),
+);

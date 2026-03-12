@@ -1,6 +1,12 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-import { UserAuthService, configureStepUpStore, grantStepUp, hasRecentStepUp, isFreshPasskeyAuth } from '@hominem/auth/server';
+import {
+  UserAuthService,
+  configureStepUpStore,
+  grantStepUp,
+  hasRecentStepUp,
+  isFreshPasskeyAuth,
+} from '@hominem/auth/server';
 import { STEP_UP_ACTIONS, isStepUpAction } from '@hominem/auth/step-up-actions';
 import type { StepUpAction } from '@hominem/auth/step-up-actions';
 import { db } from '@hominem/db';
@@ -37,16 +43,18 @@ const devIssueTokenSchema = z.object({
   sid: z.string().uuid().optional(),
 });
 
-const refreshTokenSchema = z.union([
-  z.object({
-    refresh_token: z.string().min(16),
-  }),
-  z.object({
-    refreshToken: z.string().min(16),
-  }),
-]).transform((value) => ({
-  refreshToken: 'refresh_token' in value ? value.refresh_token : value.refreshToken,
-}));
+const refreshTokenSchema = z
+  .union([
+    z.object({
+      refresh_token: z.string().min(16),
+    }),
+    z.object({
+      refreshToken: z.string().min(16),
+    }),
+  ])
+  .transform((value) => ({
+    refreshToken: 'refresh_token' in value ? value.refresh_token : value.refreshToken,
+  }));
 
 const passkeyRegisterVerifySchema = z.object({
   response: z.any(),
@@ -158,7 +166,12 @@ function appendExpiredAccessTokenCookie(headers: Headers) {
 }
 
 function appendRefreshTokenCookie(headers: Headers, refreshToken: string) {
-  appendAuthCookie(headers, 'hominem_refresh_token', refreshToken, AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS);
+  appendAuthCookie(
+    headers,
+    'hominem_refresh_token',
+    refreshToken,
+    AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS,
+  );
 }
 
 function appendExpiredRefreshTokenCookie(headers: Headers) {
@@ -294,6 +307,9 @@ async function createEmailOtpAuthResponse(dbUser: {
     amr: ['email_otp'],
   });
 
+  const headers = new Headers();
+  appendTokenPairCookies(headers, tokenPair);
+
   return new Response(
     JSON.stringify({
       user: {
@@ -310,24 +326,22 @@ async function createEmailOtpAuthResponse(dbUser: {
       status: 200,
       headers: {
         'content-type': 'application/json',
+        ...Object.fromEntries(headers.entries()),
       },
     },
   );
 }
 
-async function findOrCreateEmailOtpUser(input: {
-  email: string
-  name?: string | undefined
-}) {
+async function findOrCreateEmailOtpUser(input: { email: string; name?: string | undefined }) {
   const existingUser = await db
     .selectFrom('users')
     .selectAll()
     .where('email', '=', input.email)
     .limit(1)
-    .executeTakeFirst()
+    .executeTakeFirst();
 
   if (existingUser) {
-    return existingUser
+    return existingUser;
   }
 
   return db
@@ -341,7 +355,7 @@ async function findOrCreateEmailOtpUser(input: {
       updated_at: new Date().toISOString(),
     })
     .returningAll()
-    .executeTakeFirst()
+    .executeTakeFirst();
 }
 
 async function signInWithBetterAuthEmailOtp(
@@ -441,10 +455,10 @@ async function enforceAuthRateLimit(c: Context<AppEnv>, input: AuthRateLimitInpu
 
 function getBearerToken(headerValue?: string) {
   if (!headerValue || !headerValue.startsWith('Bearer ')) {
-    return null
+    return null;
   }
 
-  return headerValue.slice(7)
+  return headerValue.slice(7);
 }
 
 function getRefreshTokenFromCookieHeader(cookieHeader: string) {
@@ -461,28 +475,28 @@ function getRefreshTokenFromCookieHeader(cookieHeader: string) {
 }
 
 async function hasRecentPasskeyBearerAuth(c: Context<AppEnv>) {
-  const bearerToken = getBearerToken(c.req.header('authorization'))
+  const bearerToken = getBearerToken(c.req.header('authorization'));
   if (!bearerToken) {
-    return false
+    return false;
   }
 
   try {
-    const claims = await verifyAccessToken(bearerToken)
+    const claims = await verifyAccessToken(bearerToken);
     return isFreshPasskeyAuth({
       amr: claims.amr,
       authTime: claims.auth_time,
-    })
+    });
   } catch {
-    return false
+    return false;
   }
 }
 
 async function hasSatisfiedStepUp(c: Context<AppEnv>, userId: string, action: StepUpAction) {
   if (await hasRecentStepUp(userId, action)) {
-    return true
+    return true;
   }
 
-  return hasRecentPasskeyBearerAuth(c)
+  return hasRecentPasskeyBearerAuth(c);
 }
 
 async function userHasRegisteredPasskeys(userId: string) {
@@ -491,17 +505,17 @@ async function userHasRegisteredPasskeys(userId: string) {
     .select('id')
     .where('user_id', '=', userId)
     .limit(1)
-    .executeTakeFirst()
+    .executeTakeFirst();
 
-  return Boolean(existingPasskey)
+  return Boolean(existingPasskey);
 }
 
 async function requiresPasskeyRegisterStepUp(c: Context<AppEnv>, userId: string) {
   if (!(await userHasRegisteredPasskeys(userId))) {
-    return false
+    return false;
   }
 
-  return !(await hasSatisfiedStepUp(c, userId, STEP_UP_ACTIONS.PASSKEY_REGISTER))
+  return !(await hasSatisfiedStepUp(c, userId, STEP_UP_ACTIONS.PASSKEY_REGISTER));
 }
 
 function copyHeadersWithSetCookie(headers: Headers) {
@@ -525,7 +539,7 @@ function buildBetterAuthUrl(input: {
 }) {
   const requestUrl = new URL(input.request.url);
   const targetPath = input.path ? `/api/auth${input.path}` : requestUrl.pathname;
-  const targetUrl = new URL(targetPath, env.BETTER_AUTH_URL);
+  const targetUrl = new URL(targetPath, env.API_URL);
 
   if (input.preserveQuery) {
     targetUrl.search = requestUrl.search;
@@ -540,7 +554,7 @@ function ensureTrustedOrigin(headers: Headers) {
     return;
   }
 
-  headers.set('origin', env.BETTER_AUTH_URL);
+  headers.set('origin', env.API_URL);
 }
 
 async function callBetterAuthPluginEndpoint(input: {
@@ -738,7 +752,10 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
       if (consumption.status === 'replayed') {
         logger.warn('[auth:email-otp:test] replay attempt rejected', {
           clientIp: getClientIp(c),
-          emailHash: createHash('sha256').update(normalizedPayload.email).digest('hex').slice(0, 16),
+          emailHash: createHash('sha256')
+            .update(normalizedPayload.email)
+            .digest('hex')
+            .slice(0, 16),
           type: 'sign-in',
         });
         return c.json({ error: 'otp_replayed' }, 400);
@@ -747,17 +764,17 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
       const dbUser = await findOrCreateEmailOtpUser({
         email: normalizedPayload.email,
         name: normalizedPayload.name,
-      })
+      });
 
       if (!dbUser) {
-        return c.json({ error: 'user_not_found' }, 400)
+        return c.json({ error: 'user_not_found' }, 400);
       }
 
       try {
-        return await createEmailOtpAuthResponse(dbUser)
+        return await createEmailOtpAuthResponse(dbUser);
       } catch (error) {
-        logger.error('[auth:email-otp:test] failed to create canonical session', { error })
-        return c.json({ error: 'sign_in_failed' }, 500)
+        logger.error('[auth:email-otp:test] failed to create canonical session', { error });
+        return c.json({ error: 'sign_in_failed' }, 500);
       }
     }
 
@@ -1112,7 +1129,7 @@ authRoutes.post('/passkey/register/options', async (c) => {
   }
 
   if (await requiresPasskeyRegisterStepUp(c, userId)) {
-    return c.json({ error: 'step_up_required', action: STEP_UP_ACTIONS.PASSKEY_REGISTER }, 403)
+    return c.json({ error: 'step_up_required', action: STEP_UP_ACTIONS.PASSKEY_REGISTER }, 403);
   }
 
   try {
@@ -1141,7 +1158,7 @@ authRoutes.post(
     }
 
     if (await requiresPasskeyRegisterStepUp(c, userId)) {
-      return c.json({ error: 'step_up_required', action: STEP_UP_ACTIONS.PASSKEY_REGISTER }, 403)
+      return c.json({ error: 'step_up_required', action: STEP_UP_ACTIONS.PASSKEY_REGISTER }, 403);
     }
 
     try {
@@ -1194,7 +1211,7 @@ authRoutes.delete(
     }
 
     if (!(await hasSatisfiedStepUp(c, userId, STEP_UP_ACTIONS.PASSKEY_DELETE))) {
-      return c.json({ error: 'step_up_required', action: STEP_UP_ACTIONS.PASSKEY_DELETE }, 403)
+      return c.json({ error: 'step_up_required', action: STEP_UP_ACTIONS.PASSKEY_DELETE }, 403);
     }
 
     try {
@@ -1333,7 +1350,7 @@ function isMockAuthEnabled(): boolean {
 }
 
 // Import mock auth types and provider
-import { createMockAuthProvider } from '@hominem/auth/server-auth'
+import { createMockAuthProvider } from '@hominem/auth/server-auth';
 
 /**
  * POST /auth/mock/signin

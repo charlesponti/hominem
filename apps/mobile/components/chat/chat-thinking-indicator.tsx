@@ -1,30 +1,51 @@
-import { useEffect, useRef } from 'react'
-import { Animated, StyleSheet, View } from 'react-native'
+import { fontSizes } from '@hominem/ui/tokens';
+import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { Text, theme } from '~/theme'
+import { makeStyles, Text } from '~/theme';
+import { VOID_EASING_STANDARD } from '~/theme/motion';
 
-function useBounceDot(delay: number) {
-  const translateY = useRef(new Animated.Value(0)).current
+// Stagger timing for thinking dots — 3-dot bounce cadence
+const DOT_UP_DURATION = 400;
+const DOT_DOWN_DURATION = 230;
+const DOT_RETURN_DURATION = 170;
+const CYCLE_IDLE = 800; // idle period before repeating
+const STAGGER_OFFSET = 120; // ms between each dot
+
+function useBounceDot(delayMs: number) {
+  const translateY = useSharedValue(0);
+
   useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(translateY, { toValue: -4, duration: 400, useNativeDriver: true }),
-        Animated.timing(translateY, { toValue: 2, duration: 230, useNativeDriver: true }),
-        Animated.timing(translateY, { toValue: 0, duration: 170, useNativeDriver: true }),
-        Animated.delay(1800 - 800 - delay),
-      ]),
-    )
-    anim.start()
-    return () => anim.stop()
-  }, [translateY, delay])
-  return translateY
+    translateY.value = withDelay(
+      delayMs,
+      withRepeat(
+        withSequence(
+          withTiming(-4, { duration: DOT_UP_DURATION, easing: VOID_EASING_STANDARD }),
+          withTiming(2, { duration: DOT_DOWN_DURATION, easing: VOID_EASING_STANDARD }),
+          withTiming(0, { duration: DOT_RETURN_DURATION, easing: VOID_EASING_STANDARD }),
+          withTiming(0, { duration: CYCLE_IDLE }),
+        ),
+        -1,
+      ),
+    );
+  }, [translateY, delayMs]);
+
+  return useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
 }
 
 export function ChatThinkingIndicator() {
-  const dot1 = useBounceDot(0)
-  const dot2 = useBounceDot(120)
-  const dot3 = useBounceDot(240)
+  const styles = useStyles();
+  const dot1Style = useBounceDot(0);
+  const dot2Style = useBounceDot(STAGGER_OFFSET);
+  const dot3Style = useBounceDot(STAGGER_OFFSET * 2);
 
   return (
     <View style={styles.row}>
@@ -32,67 +53,73 @@ export function ChatThinkingIndicator() {
         <View style={styles.iconDot} />
       </View>
       <View style={styles.content}>
-        <Text variant="small" style={styles.label}>AI Assistant</Text>
+        <Text variant="small" style={styles.label}>
+          AI Assistant
+        </Text>
         <View style={styles.dotsRow}>
-          <Animated.View style={[styles.dot, { transform: [{ translateY: dot1 }] }]} />
-          <Animated.View style={[styles.dot, { transform: [{ translateY: dot2 }] }]} />
-          <Animated.View style={[styles.dot, { transform: [{ translateY: dot3 }] }]} />
-          <Text variant="small" style={styles.thinkingText}>Thinking...</Text>
+          <Animated.View style={[styles.dot, dot1Style]} />
+          <Animated.View style={[styles.dot, dot2Style]} />
+          <Animated.View style={[styles.dot, dot3Style]} />
+          <Text variant="small" style={styles.thinkingText}>
+            Thinking...
+          </Text>
         </View>
       </View>
     </View>
-  )
+  );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-  },
-  iconBox: {
-    width: 32,
-    height: 32,
-    backgroundColor: `${theme.colors.primary}1A`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  iconDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: theme.colors.primary,
-    opacity: 0.6,
-  },
-  content: {
-    flex: 1,
-    backgroundColor: theme.colors.muted,
-    borderWidth: 1,
-    borderColor: theme.colors['border-subtle'],
-    padding: 16,
-    gap: 8,
-  },
-  label: {
-    color: theme.colors['text-tertiary'],
-    fontSize: 12,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    backgroundColor: theme.colors.primary,
-  },
-  thinkingText: {
-    color: theme.colors['text-tertiary'],
-    fontSize: 12,
-    marginLeft: 2,
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      gap: t.spacing.sm_12,
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.xs_4,
+    },
+    iconBox: {
+      width: 32,
+      height: 32,
+      backgroundColor: `${t.colors.primary}1A`,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    iconDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: t.colors.primary,
+      opacity: 0.6,
+    },
+    content: {
+      flex: 1,
+      backgroundColor: t.colors.muted,
+      borderWidth: 1,
+      borderColor: t.colors['border-subtle'],
+      padding: t.spacing.m_16,
+      gap: t.spacing.sm_8,
+    },
+    label: {
+      color: t.colors['text-tertiary'],
+      fontSize: fontSizes.xs,
+      fontWeight: '500',
+      marginBottom: t.spacing.xs_4,
+    },
+    dotsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.sm_8,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      backgroundColor: t.colors.primary,
+    },
+    thinkingText: {
+      color: t.colors['text-tertiary'],
+      fontSize: fontSizes.xs,
+      marginLeft: t.spacing.xs_4,
+    },
+  }),
+);

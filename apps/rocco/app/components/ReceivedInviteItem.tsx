@@ -1,3 +1,4 @@
+import { Inline, Stack } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { ArrowRight, ListCheck } from 'lucide-react';
 import { useCallback } from 'react';
@@ -51,12 +52,12 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
     const { preview } = previewProps;
     return (
       <li className="flex flex-col gap-3 p-6 bg-secondary border border-border">
-        <div className="flex items-center gap-3">
+        <Inline gap="sm">
           <div className="size-8 bg-muted flex items-center justify-center shrink-0">
             <ListCheck className="size-4 text-primary" />
           </div>
           <p className="text-xl font-semibold text-foreground">{preview.listName}</p>
-        </div>
+        </Inline>
 
         {preview.coverPhoto ? (
           <div className="w-full h-40 bg-muted overflow-hidden">
@@ -78,7 +79,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
           </p>
         )}
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Stack gap="sm" className="sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
             Sign in to accept this invite{' '}
             {preview.invitedUserEmail ? (
@@ -92,7 +93,7 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
           <Button className="px-4 py-2 font-medium" onClick={preview.onSignIn}>
             Continue with Apple
           </Button>
-        </div>
+        </Stack>
       </li>
     );
   }
@@ -105,12 +106,12 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
   return (
     <li className="flex flex-col gap-3 p-6 bg-secondary border border-border">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0">
-        <div className="flex items-center gap-3">
+        <Inline gap="sm">
           <div className="size-8 bg-muted flex items-center justify-center shrink-0">
             <ListCheck className="size-4 text-primary" />
           </div>
           <p className="text-xl font-semibold text-foreground">{list?.name || 'Unknown List'}</p>
-        </div>
+        </Inline>
         {isAccepted ? (
           <Link
             to={`/lists/${list?.id || listInvite.listId}`}
@@ -124,13 +125,13 @@ const ReceivedInviteItem = (props: ReceivedInviteItemProps) => {
         )}
       </div>
       {!isAccepted && isEmailMismatch && (
-        <p className="flex flex-col gap-2 text-sm text-muted-foreground">
+        <Stack as="p" gap="sm" className="text-sm text-muted-foreground">
           <span>
             Invited as{' '}
             <span className="italic text-muted-foreground">{listInvite.invitedUserEmail}</span>
           </span>
           <span>Accepting will attach it to your current signed-in account.</span>
-        </p>
+        </Stack>
       )}
     </li>
   );

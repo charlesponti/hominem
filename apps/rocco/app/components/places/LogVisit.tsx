@@ -1,8 +1,10 @@
 import { useHonoUtils } from '@hominem/hono-client/react';
+import { Form } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
+import { Field } from '@hominem/ui/field';
 import { Input } from '@hominem/ui/input';
-import { Label } from '@hominem/ui/label';
-import { Textarea } from '@hominem/ui/textarea';
+import { TextArea } from '@hominem/ui/text-area';
+import { TextField } from '@hominem/ui/text-field';
 import { useEffect, useState } from 'react';
 import { useRevalidator } from 'react-router';
 
@@ -139,42 +141,28 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
           </span>
         )}
       </div>
-      <form onSubmit={handleSubmit} className="space-y-4 min-w-0">
-        <div className="space-y-2">
-          <Label htmlFor="visit-title">Title *</Label>
-          <Input
-            id="visit-title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g., Dinner at..."
-            required
-          />
-        </div>
+      <Form onSubmit={handleSubmit} className="min-w-0">
+        <TextField
+          label="Title"
+          required
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g., Dinner at..."
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="visit-date">Date *</Label>
-          <Input
-            id="visit-date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-          />
-        </div>
+        <Field label="Date" required>
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+        </Field>
 
-        <div className="space-y-2">
-          <Label htmlFor="visit-description">Description</Label>
-          <Textarea
-            id="visit-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional description"
-            rows={2}
-          />
-        </div>
+        <TextArea
+          label="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Optional description"
+          rows={2}
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="visit-rating">Rating (1-5)</Label>
+        <Field label="Rating (1-5)">
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5].map((rating) => (
               <Button
@@ -188,16 +176,15 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
               </Button>
             ))}
           </div>
-        </div>
+        </Field>
 
-        <div className="space-y-2">
-          <Label htmlFor="visit-people">People</Label>
+        <Field label="People">
           <PeopleMultiSelect
             value={selectedPeople}
             onChange={setSelectedPeople}
             placeholder="Select people..."
           />
-        </div>
+        </Field>
 
         <div className="flex gap-2 justify-end">
           <Button type="button" variant="outline" onClick={onCancel || onSuccess}>
@@ -213,7 +200,7 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
                 : 'Log Visit'}
           </Button>
         </div>
-      </form>
+      </Form>
     </section>
   );
 }

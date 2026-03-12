@@ -1,5 +1,5 @@
 import type { ListPlace } from '@hominem/lists-services';
-import { Alert } from '@hominem/ui';
+import { Alert, Stack } from '@hominem/ui';
 import { List } from '@hominem/ui/list';
 import { useCallback, useState } from 'react';
 import { href } from 'react-router';
@@ -36,14 +36,14 @@ export default function PlacesList({ places, listId, canAdd = true }: PlacesList
       <AddPlaceControl listId={listId} canAdd={canAdd} />
       {deleteError && <Alert variant="destructive">{deleteError}</Alert>}
       {places.length === 0 ? (
-        <div className="flex flex-col gap-2 items-center justify-center p-6">
-          <div className="flex flex-col items-center">
+        <Stack gap="sm" className="items-center justify-center p-6">
+          <Stack gap="none" className="items-center">
             <h3 className="heading-2">No places yet</h3>
             <p className="body-3 text-muted-foreground max-w-md">
               Start building your list by adding places to see them on the map.
             </p>
-          </div>
-        </div>
+          </Stack>
+        </Stack>
       ) : null}
 
       {places.length > 0 ? (

@@ -1,4 +1,5 @@
 import { useAuthContext } from '@hominem/auth';
+import { Stack } from '@hominem/ui';
 import {
   Attachments,
   Attachment,
@@ -18,7 +19,14 @@ import {
 } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';
 import { FileText, Mic } from 'lucide-react';
-import { forwardRef, useCallback, useImperativeHandle, useRef, useState, type ForwardedRef } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type ForwardedRef,
+} from 'react';
 
 import { useFileUpload } from '~/lib/hooks/use-file-upload';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
@@ -104,8 +112,7 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
         const selectedFiles = (message.files ?? [])
           .map((file) => file.file)
           .filter((file): file is File => Boolean(file));
-        const uploadedFiles =
-          selectedFiles.length > 0 ? await uploadFiles(selectedFiles) : [];
+        const uploadedFiles = selectedFiles.length > 0 ? await uploadFiles(selectedFiles) : [];
         const attachmentContext = formatAttachmentContext(uploadedFiles);
         const messageWithAttachments = attachmentContext
           ? `${trimmedValue}\n\nAttached files context:\n${attachmentContext}`
@@ -125,7 +132,15 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
         onStatusChange?.('error', error as Error);
       }
     },
-    [attachments, chatId, formatAttachmentContext, onStatusChange, sendMessage, textInput, uploadFiles],
+    [
+      attachments,
+      chatId,
+      formatAttachmentContext,
+      onStatusChange,
+      sendMessage,
+      textInput,
+      uploadFiles,
+    ],
   );
 
   const handleAudioRecord = useCallback(() => {
@@ -154,7 +169,7 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
 
   return (
     <>
-      <div className="flex flex-col gap-2">
+      <Stack gap="sm">
         {/* Suggestions */}
         {suggestions.length > 0 && !hasInput && !isSubmitting && (
           <Suggestions>
@@ -242,7 +257,7 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
             </span>
           </PromptInputFooter>
         </PromptInput>
-      </div>
+      </Stack>
 
       {/* Voice recording modal */}
       <ChatModals

@@ -1,4 +1,5 @@
 import type { ChatMessageToolCall } from '@hominem/hono-rpc/types/chat.types';
+import { Form, Inline, Stack } from '@hominem/ui';
 import {
   Message,
   MessageAction,
@@ -89,7 +90,7 @@ export const ChatMessage = memo(function ChatMessage({
 
           {/* Tool calls section */}
           {hasToolCalls && (
-            <div className="flex flex-col gap-2">
+            <Stack gap="sm">
               {message.toolCalls!.map((toolCall: ChatMessageToolCall, index: number) => (
                 <Tool
                   key={toolCall.toolCallId || `tool-${index}`}
@@ -106,13 +107,13 @@ export const ChatMessage = memo(function ChatMessage({
                   />
                 </Tool>
               ))}
-            </div>
+            </Stack>
           )}
 
           {/* Main content with markdown rendering or edit mode */}
           {isEditing && isUser ? (
-            <form
-              className="flex flex-col gap-2"
+            <Form
+              className="flex flex-col"
               aria-label="Edit message"
               onSubmit={(e) => {
                 e.preventDefault();
@@ -137,17 +138,27 @@ export const ChatMessage = memo(function ChatMessage({
               <span id="edit-instructions" className="sr-only">
                 Press Escape to cancel, or Ctrl+Enter to save
               </span>
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" size="sm" onClick={cancelEdit} aria-label="Cancel editing">
+              <Inline gap="sm" justify="end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={cancelEdit}
+                  aria-label="Cancel editing"
+                >
                   <X className="mr-2 size-4" aria-hidden="true" />
                   Cancel
                 </Button>
-                <Button size="sm" onClick={saveEdit} disabled={!canSave} aria-label="Save edited message">
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!canSave}
+                  aria-label="Save edited message"
+                >
                   <Save className="mr-2 size-4" aria-hidden="true" />
                   Save
                 </Button>
-              </div>
-            </form>
+              </Inline>
+            </Form>
           ) : (
             hasContent && (
               <MessageResponse>
@@ -254,5 +265,5 @@ export const ChatMessage = memo(function ChatMessage({
         </MessageAction>
       )}
     </div>
-  )
+  );
 });

@@ -1,3 +1,4 @@
+import { Inline, Stack } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Twitter } from 'lucide-react';
 
@@ -11,24 +12,24 @@ export function ConnectTwitterAccount() {
   }
 
   return (
-    <div className="space-y-3">
+    <Stack gap="sm">
       {accounts.length === 0 ? (
         <Button variant="outline" className="w-full justify-start gap-2" disabled>
           <Twitter className="size-4" />
           Connect Twitter
         </Button>
       ) : (
-        <div className="space-y-2">
+        <Stack gap="sm">
           {accounts.map((account: { id: string; providerAccountId: string }) => (
-            <div key={account.id} className="flex items-center justify-between p-3 border">
-              <div className="flex items-center gap-2">
+            <Inline key={account.id} justify="between" className="p-3 border">
+              <Inline gap="sm">
                 <Twitter className="size-4 text-muted-foreground" />
                 <span className="font-medium">@{account.providerAccountId}</span>
-              </div>
-            </div>
+              </Inline>
+            </Inline>
           ))}
-        </div>
+        </Stack>
       )}
-    </div>
+    </Stack>
   );
 }

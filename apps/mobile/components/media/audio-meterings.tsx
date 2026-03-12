@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { theme } from '~/theme';
+
+import { makeStyles } from '~/theme';
 
 // Constants for normalization
 const MIN_DB = -50; // Minimum decibel level
@@ -28,12 +29,12 @@ export const useNormalizedLevels = (levels: number[]) => {
 
 // Animated bar component
 const AudioMeterings = ({ height }: { height: number }) => {
-  return <View style={[styles.bar, { height, backgroundColor: theme.colors.foreground }]} />;
-  // return <Animated.View style={[styles.bar, animatedStyles]} />;
+  return <View style={{ height, width: 3, borderRadius: 25 }} />;
 };
 
 // Component to render the audio levels
 export const AudioLevelVisualizer: React.FC<{ levels: number[] }> = ({ levels }) => {
+  const styles = useStyles();
   const normalizedLevels = useNormalizedLevels(levels);
 
   return (
@@ -45,19 +46,21 @@ export const AudioLevelVisualizer: React.FC<{ levels: number[] }> = ({ levels })
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    height: MAX_HEIGHT,
-    backgroundColor: theme.colors['emphasis-faint'],
-    borderRadius: 12,
-    columnGap: 5,
-  },
-  bar: {
-    width: 3,
-    borderRadius: 25,
-  },
-});
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      height: MAX_HEIGHT,
+      backgroundColor: t.colors['emphasis-faint'],
+      borderRadius: t.borderRadii.l_12,
+      columnGap: 5 /* token-audit-ignore small waveform gap */,
+    },
+    bar: {
+      width: 3,
+      borderRadius: 25,
+    },
+  }),
+);

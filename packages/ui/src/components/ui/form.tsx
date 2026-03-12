@@ -14,7 +14,11 @@ import {
 
 import { cn } from '../../lib/utils';
 
-const Form = FormProvider;
+const FormProviderRoot = FormProvider;
+
+function Form({ className, ...props }: React.ComponentProps<'form'>) {
+  return <form className={cn('grid gap-4', className)} {...props} />;
+}
 
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,
@@ -140,6 +144,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
 
 export {
   Form,
+  FormProviderRoot as FormProvider,
   FormControl,
   FormDescription,
   FormField,

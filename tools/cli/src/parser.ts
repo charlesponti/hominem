@@ -58,6 +58,7 @@ export function parseArgv(argv: string[]): ParseResult {
     }
 
     if (token === '--format') {
+      commandFinalized = true;
       const value = argv[index + 1];
       if (value && isOutputFormat(value)) {
         globals.outputFormat = value;
@@ -67,6 +68,7 @@ export function parseArgv(argv: string[]): ParseResult {
     }
 
     if (token.startsWith('--format=')) {
+      commandFinalized = true;
       const value = token.split('=')[1];
       if (value && isOutputFormat(value)) {
         globals.outputFormat = value;

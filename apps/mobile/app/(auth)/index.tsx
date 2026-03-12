@@ -16,13 +16,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import TextInput from '~/components/text-input';
-import { Box, Text, theme as appTheme } from '~/theme';
+import { Box, Text, makeStyles } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidEmail, normalizeEmail } from '~/utils/auth/validation';
 import { E2E_TESTING, MOBILE_PASSKEY_ENABLED } from '~/utils/constants';
 import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
 
 export function AuthScreen() {
+  const styles = useStyles();
   const { isSignedIn, completePasskeySignIn, requestEmailOtp } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -84,7 +85,7 @@ export function AuthScreen() {
   }
 
   const displayError = authError || passkeyError;
-  const canUsePasskeys = MOBILE_PASSKEY_ENABLED && isPasskeySupported
+  const canUsePasskeys = MOBILE_PASSKEY_ENABLED && isPasskeySupported;
 
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
@@ -100,7 +101,11 @@ export function AuthScreen() {
         >
           <Box flex={1} testID="auth-screen" style={styles.screen}>
             <View style={styles.hero}>
-              <Image source={require('~/assets/icon.png')} contentFit="contain" style={styles.logo} />
+              <Image
+                source={require('~/assets/icon.png')}
+                contentFit="contain"
+                style={styles.logo}
+              />
               <Text variant="header" color="foreground" style={styles.title}>
                 {AUTH_COPY.emailEntry.title.toUpperCase()}
               </Text>
@@ -140,18 +145,18 @@ export function AuthScreen() {
                 style={styles.primaryButton}
               />
               {canUsePasskeys ? (
-                <Pressable
+                <Button
                   onPress={handlePasskeySignIn}
                   disabled={isSubmitting}
+                  isLoading={isPasskeyLoading}
                   style={styles.passkeyButton}
                   testID="auth-passkey-button"
-                >
-                  <Text style={styles.passkeyButtonText}>
-                    {isPasskeyLoading
-                    ? AUTH_COPY.emailEntry.passkeyLoadingButton.toUpperCase()
-                    : AUTH_COPY.emailEntry.passkeyButton.toUpperCase()}
-                  </Text>
-                </Pressable>
+                  title={
+                    isPasskeyLoading
+                      ? AUTH_COPY.emailEntry.passkeyLoadingButton.toUpperCase()
+                      : AUTH_COPY.emailEntry.passkeyButton.toUpperCase()
+                  }
+                />
               ) : null}
               {E2E_TESTING && MOBILE_PASSKEY_ENABLED ? (
                 <Pressable
@@ -198,112 +203,114 @@ export function AuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: appTheme.colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  screen: {
-    backgroundColor: appTheme.colors.background,
-    flex: 1,
-    paddingHorizontal: appTheme.spacing.m_16,
-    paddingTop: appTheme.spacing.m_16,
-    paddingBottom: appTheme.spacing.ml_24,
-    rowGap: appTheme.spacing.ml_24,
-    justifyContent: 'space-between',
-  },
-  hero: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    rowGap: 14,
-  },
-  logo: {
-    width: 96,
-    height: 96,
-    maxWidth: 96,
-    maxHeight: 96,
-  },
-  subtitle: {
-    textAlign: 'center',
-    maxWidth: 280,
-  },
-  title: {},
-  formContainer: {
-    width: '100%',
-    backgroundColor: appTheme.colors['bg-surface'],
-    borderWidth: 1,
-    borderColor: appTheme.colors['emphasis-lower'],
-    borderRadius: 16,
-    padding: appTheme.spacing.m_16,
-    rowGap: appTheme.spacing.sm_12,
-  },
-  heading: {
-    color: appTheme.colors.foreground,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  subheading: {
-    color: appTheme.colors['text-tertiary'],
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '500',
-  },
-  errorContainer: {
-    borderWidth: 1,
-    borderColor: appTheme.colors.destructive,
-    backgroundColor: appTheme.colors.muted,
-    borderRadius: appTheme.borderRadii.sm_6,
-    paddingVertical: 10,
-    paddingHorizontal: appTheme.spacing.sm_12,
-  },
-  errorText: {
-    color: appTheme.colors.destructive,
-    textAlign: 'left',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  primaryButton: {
-    width: '100%',
-  },
-  passkeyButton: {
-    width: '100%',
-    paddingVertical: 14,
-    borderRadius: appTheme.borderRadii.sm_6,
-    borderWidth: 1,
-    borderColor: appTheme.colors['emphasis-lower'],
-    backgroundColor: 'transparent',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  passkeyButtonText: {
-    color: appTheme.colors['text-tertiary'],
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  e2ePasskeyAction: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 16,
-    height: 16,
-    opacity: 0.02,
-  },
-  e2ePasskeyActionAlt: {
-    position: 'absolute',
-    top: 20,
-    right: 0,
-    width: 16,
-    height: 16,
-    opacity: 0.02,
-  },
-});
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: t.colors.background,
+    },
+    flex: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+    },
+    screen: {
+      backgroundColor: t.colors.background,
+      flex: 1,
+      paddingHorizontal: t.spacing.m_16,
+      paddingTop: t.spacing.m_16,
+      paddingBottom: t.spacing.ml_24,
+      rowGap: t.spacing.ml_24,
+      justifyContent: 'space-between',
+    },
+    hero: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      rowGap: t.spacing.sm_12,
+    },
+    logo: {
+      width: 96,
+      height: 96,
+      maxWidth: 96,
+      maxHeight: 96,
+    },
+    subtitle: {
+      textAlign: 'center',
+      maxWidth: 280,
+    },
+    title: {},
+    formContainer: {
+      width: '100%',
+      backgroundColor: t.colors['bg-surface'],
+      borderWidth: 1,
+      borderColor: t.colors['emphasis-lower'],
+      borderRadius: t.spacing.m_16,
+      padding: t.spacing.m_16,
+      rowGap: t.spacing.sm_12,
+    },
+    heading: {
+      color: t.colors.foreground,
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    subheading: {
+      color: t.colors['text-tertiary'],
+      fontSize: 13,
+      lineHeight: 18,
+      fontWeight: '500',
+    },
+    errorContainer: {
+      borderWidth: 1,
+      borderColor: t.colors.destructive,
+      backgroundColor: t.colors.muted,
+      borderRadius: t.borderRadii.sm_6,
+      paddingVertical: t.spacing.sm_12,
+      paddingHorizontal: t.spacing.sm_12,
+    },
+    errorText: {
+      color: t.colors.destructive,
+      textAlign: 'left',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    primaryButton: {
+      width: '100%',
+    },
+    passkeyButton: {
+      width: '100%',
+      paddingVertical: t.spacing.sm_12,
+      borderRadius: t.borderRadii.sm_6,
+      borderWidth: 1,
+      borderColor: t.colors['emphasis-lower'],
+      backgroundColor: 'transparent',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    passkeyButtonText: {
+      color: t.colors['text-tertiary'],
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    e2ePasskeyAction: {
+      position: 'absolute',
+      top: t.spacing.xs_4,
+      right: t.spacing.xs_4,
+      width: 16,
+      height: 16,
+      opacity: 0.02,
+    },
+    e2ePasskeyActionAlt: {
+      position: 'absolute',
+      top: t.spacing.ml_24,
+      right: t.spacing.xs_4,
+      width: 16,
+      height: 16,
+      opacity: 0.02,
+    },
+  }),
+);
 
 const AuthWithErrorBoundary = () => (
   <FeatureErrorBoundary featureName="Auth">

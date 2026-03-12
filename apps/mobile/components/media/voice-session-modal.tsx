@@ -1,15 +1,22 @@
-import { MaterialIcons } from '@expo/vector-icons'
-import { Modal, Pressable, StyleSheet, View } from 'react-native'
-import { MobileVoiceInput } from './mobile-voice-input'
-import { Text, theme } from '~/theme'
+import { MaterialIcons } from '@expo/vector-icons';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+
+import { Text, makeStyles } from '~/theme';
+
+import { MobileVoiceInput } from './mobile-voice-input';
 
 interface VoiceSessionModalProps {
-  visible: boolean
-  onClose: () => void
-  onAudioTranscribed: (transcription: string) => void
+  visible: boolean;
+  onClose: () => void;
+  onAudioTranscribed: (transcription: string) => void;
 }
 
-export function VoiceSessionModal({ visible, onClose, onAudioTranscribed }: VoiceSessionModalProps) {
+export function VoiceSessionModal({
+  visible,
+  onClose,
+  onAudioTranscribed,
+}: VoiceSessionModalProps) {
+  const styles = useStyles();
   return (
     <Modal
       visible={visible}
@@ -30,7 +37,7 @@ export function VoiceSessionModal({ visible, onClose, onAudioTranscribed }: Voic
               accessibilityLabel="Close voice input"
               accessibilityRole="button"
             >
-              <MaterialIcons name="close" size={20} color={theme.colors.foreground} />
+              <MaterialIcons name="close" size={20} color="#000" />
             </Pressable>
           </View>
 
@@ -38,8 +45,8 @@ export function VoiceSessionModal({ visible, onClose, onAudioTranscribed }: Voic
             <MobileVoiceInput
               autoTranscribe
               onAudioTranscribed={(transcription) => {
-                onAudioTranscribed(transcription)
-                onClose()
+                onAudioTranscribed(transcription);
+                onClose();
               }}
               onError={onClose}
               style={styles.micButton}
@@ -51,43 +58,45 @@ export function VoiceSessionModal({ visible, onClose, onAudioTranscribed }: Voic
         </View>
       </View>
     </Modal>
-  )
+  );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  container: {
-    backgroundColor: theme.colors.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 40,
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    minHeight: 220,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-  },
-  closeButton: {
-    padding: 4,
-  },
-  body: {
-    alignItems: 'center',
-    gap: 16,
-  },
-  micButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-  },
-  hint: {
-    textAlign: 'center',
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: t.colors['overlay-modal-high'],
+      justifyContent: 'flex-end',
+    },
+    container: {
+      backgroundColor: t.colors.background,
+      borderTopLeftRadius: t.borderRadii.xl_20,
+      borderTopRightRadius: t.borderRadii.xl_20,
+      paddingBottom: t.spacing.xl_48,
+      paddingHorizontal: t.spacing.ml_24,
+      paddingTop: t.spacing.m_16,
+      minHeight: 220,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: t.spacing.l_32,
+    },
+    closeButton: {
+      padding: t.spacing.xs_4,
+    },
+    body: {
+      alignItems: 'center',
+      gap: t.spacing.m_16,
+    },
+    micButton: {
+      width: 72,
+      height: 72,
+      borderRadius: 36 /* half of 72 for circle */,
+    },
+    hint: {
+      textAlign: 'center',
+    },
+  }),
+);

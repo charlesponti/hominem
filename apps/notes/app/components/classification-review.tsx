@@ -5,6 +5,8 @@
  */
 
 import type { ClassificationReviewProps } from '@hominem/chat-services';
+import { Inline, Stack } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
 
 export function ClassificationReview({
   proposedType,
@@ -26,18 +28,18 @@ export function ClassificationReview({
         aria-labelledby="cr-title"
       >
         {/* Header */}
-        <div className="flex flex-col gap-1">
+        <Stack gap="xs">
           <p className="text-xs text-muted-foreground uppercase tracking-wider font-mono">
             Save as {proposedType.replace('_', ' ')}
           </p>
           <h2 id="cr-title" className="text-base font-medium text-foreground">
             {proposedTitle}
           </h2>
-        </div>
+        </Stack>
 
         {/* Change summary */}
         {proposedChanges.length > 0 && (
-          <ul className="flex flex-col gap-1.5 text-sm text-muted-foreground">
+          <Stack as="ul" className="text-sm text-muted-foreground" gap="xs">
             {proposedChanges.map((change: string, i: number) => (
               // eslint-disable-next-line react/no-array-index-key
               <li key={i} className="flex items-start gap-2">
@@ -45,7 +47,7 @@ export function ClassificationReview({
                 <span>{change}</span>
               </li>
             ))}
-          </ul>
+          </Stack>
         )}
 
         {/* Preview */}
@@ -56,22 +58,14 @@ export function ClassificationReview({
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 pt-1">
-          <button
-            type="button"
-            onClick={onAccept}
-            className="flex-1 text-sm font-medium bg-foreground text-background rounded px-4 py-2.5 hover:opacity-90 transition-opacity"
-          >
+        <Inline gap="sm" className="pt-1">
+          <Button type="button" variant="primary" onClick={onAccept} className="flex-1">
             Save Note
-          </button>
-          <button
-            type="button"
-            onClick={onReject}
-            className="px-4 py-2.5 text-sm text-muted-foreground border border-border rounded hover:bg-muted transition-colors"
-          >
+          </Button>
+          <Button type="button" variant="outline" onClick={onReject}>
             Discard
-          </button>
-        </div>
+          </Button>
+        </Inline>
       </div>
     </dialog>
   );

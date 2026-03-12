@@ -1,155 +1,234 @@
-import { memo, useCallback, useEffect, useRef } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
-import { Gesture, GestureDetector } from 'react-native-gesture-handler'
+import { fontSizes } from '@hominem/ui/tokens';
+import { Link } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
+import { memo, useCallback, useEffect, useRef } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-} from 'react-native-reanimated'
-import * as ContextMenu from 'zeego/context-menu'
+} from 'react-native-reanimated';
+import * as ContextMenu from 'zeego/context-menu';
 
-import { Link } from 'expo-router'
-import type { RelativePathString } from 'expo-router'
-import { Text as MSText, theme } from '~/theme'
-import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
-import { borderStyle, listStyles } from '~/theme/styles'
-import { getLocalDate } from '~/utils/dates'
-import type { FocusItem } from '~/utils/services/notes/types'
-import { useDeleteFocus } from '~/utils/services/notes/use-delete-focus'
-import { useFocusItemComplete } from '../../utils/services/notes/use-focus-item-complete'
-import MindsherpaIcon, { type MindsherpaIconName } from '../ui/icon'
+import { Text as MSText, makeStyles, theme } from '~/theme';
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
+import { borderStyle, listStyles } from '~/theme/styles';
+import { getLocalDate } from '~/utils/dates';
+import type { FocusItem } from '~/utils/services/notes/types';
+import { useDeleteFocus } from '~/utils/services/notes/use-delete-focus';
 
-const SWIPE_THRESHOLD = 80
+import { useFocusItemComplete } from '../../utils/services/notes/use-focus-item-complete';
+import AppIcon, { type AppIconName } from '../ui/icon';
+
+const SWIPE_THRESHOLD = 80;
 
 const FocusDueDate = memo(({ dueDate }: { dueDate: Date | null }) => {
-  if (!dueDate) return null
+  if (!dueDate) return null;
 
-  const { localDateString } = getLocalDate(dueDate)
+  const { localDateString } = getLocalDate(dueDate);
 
   return (
-    <MSText variant="small" color="text-tertiary" fontSize={12}>
+    <MSText variant="small" color="text-tertiary">
       {localDateString} {dueDate.toLocaleTimeString()}
     </MSText>
-  )
-})
+  );
+});
 
-FocusDueDate.displayName = 'FocusDueDate'
+FocusDueDate.displayName = 'FocusDueDate';
+
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      backgroundColor: theme.colors.background,
+      ...borderStyle.borderBottom,
+      borderRadius: t.borderRadii.md_10,
+      overflow: 'hidden',
+    },
+    itemContainer: {
+      flexDirection: 'row',
+      paddingVertical: t.spacing.m_16,
+      paddingHorizontal: t.spacing.ml_24,
+      paddingRight: t.spacing.m_16,
+      borderRadius: t.borderRadii.md_10,
+      backgroundColor: theme.colors.muted,
+      borderWidth: 1,
+      borderColor: theme.colors['border-default'],
+    },
+    focusInfoContainer: {
+      flex: 1,
+      fontWeight: 500,
+      fontSize: fontSizes.sm,
+      lineHeight: 20,
+      color: theme.colors['text-secondary'],
+    },
+    itemRow: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    itemContent: {
+      flex: 1,
+      flexDirection: 'column',
+      rowGap: t.spacing.sm_8,
+    },
+    triggerFull: {
+      flex: 1,
+      width: '100%',
+    },
+    icon: {
+      borderRadius: 999 /* ensures circular shape */,
+      padding: t.spacing.sm_8,
+      paddingHorizontal: t.spacing.sm_12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors['border-default'],
+    },
+    leftAction: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+      backgroundColor: theme.colors.muted,
+      paddingHorizontal: t.spacing.ml_24,
+    },
+    rightAction: {
+      position: 'absolute',
+      right: 0,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      alignItems: 'flex-end',
+      backgroundColor: theme.colors.destructive,
+      paddingHorizontal: t.spacing.ml_24,
+    },
+    actionText: {
+      color: theme.colors.foreground,
+      fontWeight: 'bold',
+      fontFamily: 'Geist Mono',
+    },
+  }),
+);
 
 export const FocusListItem = ({
   item,
   label,
   itemIndex,
 }: {
-  item: FocusItem
-  label: string
-  itemIndex?: number
+  item: FocusItem;
+  label: string;
+  itemIndex?: number;
 }) => {
-  const translateX = useSharedValue(0)
-  const itemHeight = useSharedValue(64)
-  const iconBackgroundColor = useSharedValue<string>(theme.colors.muted)
-  const iconName = useSharedValue<MindsherpaIconName>('check')
-  const isMutating = useSharedValue(false)
-  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const dueDate = item.due_date ? new Date(item.due_date) : null
+  const styles = useStyles();
+  const translateX = useSharedValue(0);
+  const itemHeight = useSharedValue(64);
+  const iconBackgroundColor = useSharedValue<string>(theme.colors.muted);
+  const iconName = useSharedValue<AppIconName>('check');
+  const isMutating = useSharedValue(false);
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dueDate = item.due_date ? new Date(item.due_date) : null;
 
   useEffect(() => {
     return () => {
       if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current)
+        clearTimeout(errorTimeoutRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const iconStyle = useAnimatedStyle(() => ({
     backgroundColor: iconBackgroundColor.value,
-  }))
+  }));
 
   const resetErrorState = useCallback(() => {
-    iconName.value = 'circle-check'
+    iconName.value = 'circle-check';
     iconBackgroundColor.value = withTiming(theme.colors.muted, {
       duration: VOID_MOTION_DURATION_STANDARD,
-    })
-    isMutating.value = false
-  }, [iconName, iconBackgroundColor, isMutating])
+    });
+    isMutating.value = false;
+  }, [iconName, iconBackgroundColor, isMutating]);
 
   const deleteFocusItem = useDeleteFocus({
     onSuccess: () => {
-      isMutating.value = false
+      isMutating.value = false;
     },
     onError: () => {
       if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current)
+        clearTimeout(errorTimeoutRef.current);
       }
-      errorTimeoutRef.current = setTimeout(resetErrorState, 1000)
+      errorTimeoutRef.current = setTimeout(resetErrorState, 1000);
     },
-  })
+  });
 
   const completeItem = useFocusItemComplete({
     onSuccess: () => {
       iconBackgroundColor.value = withTiming(theme.colors.success, {
         duration: VOID_MOTION_DURATION_STANDARD,
-      })
-      isMutating.value = false
+      });
+      isMutating.value = false;
     },
     onError: () => {
-      iconName.value = 'circle-xmark'
+      iconName.value = 'circle-xmark';
       iconBackgroundColor.value = withTiming(theme.colors.destructive, {
         duration: VOID_MOTION_DURATION_STANDARD,
-      })
+      });
       if (errorTimeoutRef.current) {
-        clearTimeout(errorTimeoutRef.current)
+        clearTimeout(errorTimeoutRef.current);
       }
-      errorTimeoutRef.current = setTimeout(resetErrorState, 1000)
+      errorTimeoutRef.current = setTimeout(resetErrorState, 1000);
     },
-  })
+  });
 
   const panHandler = Gesture.Pan()
     .activeOffsetX([-10, 10])
     .activeOffsetY([-1000, 1000])
     .simultaneousWithExternalGesture(Gesture.Native())
     .onChange((event) => {
-      if (event.numberOfPointers > 1) return
+      if (event.numberOfPointers > 1) return;
 
-      const { translationX, translationY } = event
+      const { translationX, translationY } = event;
       if (Math.abs(translationX) > Math.abs(translationY)) {
-        translateX.value = translationX
+        translateX.value = translationX;
       }
     })
     .onEnd(() => {
-      if (isMutating.value) return
+      if (isMutating.value) return;
 
       if (translateX.value > SWIPE_THRESHOLD) {
-        isMutating.value = true
-        translateX.value = withTiming(0)
-        runOnJS(completeItem.mutate)(item.id)
+        isMutating.value = true;
+        translateX.value = withTiming(0);
+        runOnJS(completeItem.mutate)(item.id);
       } else if (translateX.value < -SWIPE_THRESHOLD) {
-        isMutating.value = true
+        isMutating.value = true;
         translateX.value = withTiming(-itemHeight.value, {}, () => {
-          runOnJS(deleteFocusItem.mutate)(item.id)
-        })
+          runOnJS(deleteFocusItem.mutate)(item.id);
+        });
       } else {
-        translateX.value = withTiming(0, { duration: VOID_MOTION_DURATION_STANDARD })
+        translateX.value = withTiming(0, { duration: VOID_MOTION_DURATION_STANDARD });
       }
-    })
+    });
 
-  const combinedGesture = panHandler
+  const combinedGesture = panHandler;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
-  }))
+  }));
 
   const leftActionStyle = useAnimatedStyle(() => ({
     opacity: translateX.value > 0 ? translateX.value / SWIPE_THRESHOLD : 0,
-  }))
+  }));
 
   const rightActionStyle = useAnimatedStyle(() => ({
     opacity: translateX.value < 0 ? -translateX.value / SWIPE_THRESHOLD : 0,
-  }))
+  }));
 
   const onDeleteMenuItemPress = useCallback(() => {
-    deleteFocusItem.mutate(item.id)
-  }, [deleteFocusItem, item.id])
+    deleteFocusItem.mutate(item.id);
+  }, [deleteFocusItem, item.id]);
 
   const itemInfo = (
     <Reanimated.View style={[styles.itemContainer, animatedStyle]}>
@@ -169,22 +248,28 @@ export const FocusListItem = ({
           <FocusDueDate dueDate={dueDate} />
         </View>
         <Reanimated.View style={[styles.icon, iconStyle]}>
-          <MindsherpaIcon name={iconName.value} size={20} color={theme.colors.foreground} />
+          <AppIcon name={iconName.value} size={20} color={theme.colors.foreground} />
         </Reanimated.View>
       </View>
     </Reanimated.View>
-  )
+  );
 
   if (item.state === 'completed') {
     return (
-      <View testID={typeof itemIndex === 'number' ? `focus-item-${itemIndex}` : undefined} style={[styles.container]}>
+      <View
+        testID={typeof itemIndex === 'number' ? `focus-item-${itemIndex}` : undefined}
+        style={[styles.container]}
+      >
         {itemInfo}
       </View>
-    )
+    );
   }
 
   return (
-    <View testID={typeof itemIndex === 'number' ? `focus-item-${itemIndex}` : undefined} style={[styles.container]}>
+    <View
+      testID={typeof itemIndex === 'number' ? `focus-item-${itemIndex}` : undefined}
+      style={[styles.container]}
+    >
       <Reanimated.View style={[styles.leftAction, leftActionStyle]}>
         <Text style={styles.actionText}>Complete</Text>
       </Reanimated.View>
@@ -217,79 +302,5 @@ export const FocusListItem = ({
         </ContextMenu.Content>
       </ContextMenu.Root>
     </View>
-  )
-}
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: theme.colors.background,
-    ...borderStyle.borderBottom,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    paddingRight: 16,
-    borderRadius: 8,
-    backgroundColor: theme.colors.muted,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-  },
-  focusInfoContainer: {
-    flex: 1,
-    fontWeight: 500,
-    fontSize: 14,
-    lineHeight: 20,
-    color: theme.colors['text-secondary'],
-  },
-  itemRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  itemContent: {
-    flex: 1,
-    flexDirection: 'column',
-    rowGap: 6,
-  },
-  triggerFull: {
-    flex: 1,
-    width: '100%',
-  },
-  icon: {
-    borderRadius: 999,
-    padding: 8,
-    paddingHorizontal: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-  },
-  leftAction: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    backgroundColor: theme.colors.muted,
-    paddingHorizontal: 20,
-  },
-  rightAction: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    backgroundColor: theme.colors.destructive,
-    paddingHorizontal: 20,
-  },
-  actionText: {
-    color: theme.colors.foreground,
-    fontWeight: 'bold',
-    fontFamily: 'Geist Mono',
-  },
-})
+  );
+};

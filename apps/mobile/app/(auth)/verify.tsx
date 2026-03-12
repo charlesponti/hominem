@@ -11,17 +11,18 @@ import {
   StyleSheet,
   View,
   Pressable,
-  TextInput as RNTextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
-import { Box, Text, theme as appTheme } from '~/theme';
+import TextInput from '~/components/text-input';
+import { Box, Text, makeStyles } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidOtp, normalizeOtp } from '~/utils/auth/validation';
 
 export function VerifyScreen() {
+  const styles = useStyles();
   const { isSignedIn, requestEmailOtp, verifyEmailOtp } = useAuth();
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -30,7 +31,7 @@ export function VerifyScreen() {
   const [isResending, setIsResending] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
-  const otpInputRef = useRef<RNTextInput | null>(null);
+  const otpInputRef = useRef<React.ElementRef<typeof TextInput> | null>(null);
 
   const otpDigits = useMemo(() => {
     const normalized = normalizeOtp(otp);
@@ -68,9 +69,7 @@ export function VerifyScreen() {
       setAuthError(null);
     } catch (error: unknown) {
       const message =
-        error instanceof Error
-          ? error.message
-          : AUTH_COPY.otpVerification.verifyFailedError;
+        error instanceof Error ? error.message : AUTH_COPY.otpVerification.verifyFailedError;
       setAuthError(message);
     } finally {
       setIsSubmitting(false);
@@ -131,7 +130,11 @@ export function VerifyScreen() {
         >
           <Box flex={1} testID="auth-verify-screen" style={styles.screen}>
             <View style={styles.hero}>
-              <Image source={require('~/assets/icon.png')} contentFit="contain" style={styles.logo} />
+              <Image
+                source={require('~/assets/icon.png')}
+                contentFit="contain"
+                style={styles.logo}
+              />
               <Text variant="header" color="foreground" style={styles.title}>
                 {AUTH_COPY.otpVerification.title.toUpperCase()}
               </Text>
@@ -140,8 +143,12 @@ export function VerifyScreen() {
               </Text>
             </View>
             <View style={styles.formContainer}>
-              <Text style={styles.heading}>{AUTH_COPY.otpVerification.formHeading.toUpperCase()}</Text>
-              <Text style={styles.subheading}>{AUTH_COPY.otpVerification.formSubheading(email)}</Text>
+              <Text style={styles.heading}>
+                {AUTH_COPY.otpVerification.formHeading.toUpperCase()}
+              </Text>
+              <Text style={styles.subheading}>
+                {AUTH_COPY.otpVerification.formSubheading(email)}
+              </Text>
               {authError ? (
                 <View testID="auth-error-banner" style={styles.errorContainer}>
                   <Text testID="auth-error-text" style={styles.errorText}>
@@ -168,8 +175,9 @@ export function VerifyScreen() {
                     );
                   })}
                 </View>
-                <RNTextInput
+                <TextInput
                   ref={otpInputRef}
+                  containerStyle={styles.overlayOtpContainer}
                   testID="auth-otp-input"
                   keyboardType="number-pad"
                   textContentType="oneTimeCode"
@@ -206,9 +214,11 @@ export function VerifyScreen() {
                 title={AUTH_COPY.otpVerification.resendButton.toUpperCase()}
                 style={styles.secondaryButton}
               />
-              <Link href={"/(auth)" as RelativePathString} asChild>
+              <Link href={'/(auth)' as RelativePathString} asChild>
                 <View style={styles.secondaryActionContainer}>
-                  <Text style={styles.secondaryAction}>{AUTH_COPY.otpVerification.changeEmailLink.toUpperCase()}</Text>
+                  <Text style={styles.secondaryAction}>
+                    {AUTH_COPY.otpVerification.changeEmailLink.toUpperCase()}
+                  </Text>
                 </View>
               </Link>
             </View>
@@ -219,139 +229,148 @@ export function VerifyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: appTheme.colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  screen: {
-    backgroundColor: appTheme.colors.background,
-    flex: 1,
-    paddingHorizontal: appTheme.spacing.m_16,
-    paddingTop: appTheme.spacing.m_16,
-    paddingBottom: appTheme.spacing.ml_24,
-    rowGap: appTheme.spacing.ml_24,
-    justifyContent: 'space-between',
-  },
-  hero: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    rowGap: 14,
-  },
-  logo: {
-    width: 96,
-    height: 96,
-    maxWidth: 96,
-    maxHeight: 96,
-  },
-  subtitle: {
-    textAlign: 'center',
-    maxWidth: 280,
-  },
-  title: {},
-  formContainer: {
-    width: '100%',
-    backgroundColor: appTheme.colors['bg-surface'],
-    borderWidth: 1,
-    borderColor: appTheme.colors['emphasis-lower'],
-    borderRadius: 16,
-    padding: appTheme.spacing.m_16,
-    rowGap: appTheme.spacing.sm_12,
-  },
-  heading: {
-    color: appTheme.colors.foreground,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  subheading: {
-    color: appTheme.colors['text-tertiary'],
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '500',
-  },
-  errorContainer: {
-    borderWidth: 1,
-    borderColor: appTheme.colors.destructive,
-    backgroundColor: appTheme.colors.muted,
-    borderRadius: appTheme.borderRadii.sm_6,
-    paddingVertical: 10,
-    paddingHorizontal: appTheme.spacing.sm_12,
-  },
-  errorText: {
-    color: appTheme.colors.destructive,
-    textAlign: 'left',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  otpPressable: {
-    width: '100%',
-  },
-  otpSlots: {
-    flexDirection: 'row',
-    columnGap: appTheme.spacing.s_8,
-    justifyContent: 'space-between',
-  },
-  otpSlot: {
-    flex: 1,
-    minHeight: 56,
-    borderRadius: appTheme.borderRadii.md_10,
-    borderWidth: 1,
-    borderColor: appTheme.colors['border-focus'],
-    backgroundColor: appTheme.colors['bg-surface'],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  otpSlotActive: {
-    borderColor: appTheme.colors.foreground,
-  },
-  otpSlotText: {
-    color: appTheme.colors.foreground,
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: '700',
-  },
-  overlayOtpInput: {
-    position: 'absolute',
-    opacity: 0.02,
-    width: '100%',
-    height: 56,
-    top: 0,
-    left: 0,
-    color: 'transparent',
-    backgroundColor: 'transparent',
-  },
-  resendMessage: {
-    color: appTheme.colors['text-tertiary'],
-    fontSize: 12,
-    lineHeight: 18,
-    fontWeight: '500',
-  },
-  primaryButton: {
-    width: '100%',
-  },
-  secondaryButton: {
-    width: '100%',
-    backgroundColor: 'transparent',
-    borderColor: appTheme.colors['emphasis-lower'],
-  },
-  secondaryActionContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-  },
-  secondaryAction: {
-    color: appTheme.colors.foreground,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-});
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: t.colors.background,
+    },
+    flex: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+    },
+    screen: {
+      backgroundColor: t.colors.background,
+      flex: 1,
+      paddingHorizontal: t.spacing.m_16,
+      paddingTop: t.spacing.m_16,
+      paddingBottom: t.spacing.ml_24,
+      rowGap: t.spacing.ml_24,
+      justifyContent: 'space-between',
+    },
+    hero: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      rowGap: t.spacing.sm_12,
+    },
+    logo: {
+      width: 96,
+      height: 96,
+      maxWidth: 96,
+      maxHeight: 96,
+    },
+    subtitle: {
+      textAlign: 'center',
+      maxWidth: 280,
+    },
+    title: {},
+    formContainer: {
+      width: '100%',
+      backgroundColor: t.colors['bg-surface'],
+      borderWidth: 1,
+      borderColor: t.colors['emphasis-lower'],
+      borderRadius: t.spacing.m_16,
+      padding: t.spacing.m_16,
+      rowGap: t.spacing.sm_12,
+    },
+    heading: {
+      color: t.colors.foreground,
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    subheading: {
+      color: t.colors['text-tertiary'],
+      fontSize: 13,
+      lineHeight: 18,
+      fontWeight: '500',
+    },
+    errorContainer: {
+      borderWidth: 1,
+      borderColor: t.colors.destructive,
+      backgroundColor: t.colors.muted,
+      borderRadius: t.borderRadii.sm_6,
+      paddingVertical: t.spacing.sm_12,
+      paddingHorizontal: t.spacing.sm_12,
+    },
+    errorText: {
+      color: t.colors.destructive,
+      textAlign: 'left',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    otpPressable: {
+      width: '100%',
+    },
+    otpSlots: {
+      flexDirection: 'row',
+      columnGap: t.spacing.sm_8,
+      justifyContent: 'space-between',
+    },
+    otpSlot: {
+      flex: 1,
+      minHeight: 56,
+      borderRadius: t.borderRadii.md_10,
+      borderWidth: 1,
+      borderColor: t.colors['border-focus'],
+      backgroundColor: t.colors['bg-surface'],
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    otpSlotActive: {
+      borderColor: t.colors.foreground,
+    },
+    otpSlotText: {
+      color: t.colors.foreground,
+      fontSize: 22,
+      lineHeight: 28,
+      fontWeight: '700',
+    },
+    overlayOtpInput: {
+      position: 'absolute',
+      opacity: 0.02,
+      width: '100%',
+      height: 56,
+      top: t.spacing.xs_4,
+      left: t.spacing.xs_4,
+      color: 'transparent',
+      backgroundColor: 'transparent',
+    },
+    overlayOtpContainer: {
+      position: 'absolute',
+      top: t.spacing.xs_4,
+      left: t.spacing.xs_4,
+      width: '100%',
+      height: 56,
+    },
+    resendMessage: {
+      color: t.colors['text-tertiary'],
+      fontSize: 12,
+      lineHeight: 18,
+      fontWeight: '500',
+    },
+    primaryButton: {
+      width: '100%',
+    },
+    secondaryButton: {
+      width: '100%',
+      backgroundColor: 'transparent',
+      borderColor: t.colors['emphasis-lower'],
+    },
+    secondaryActionContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: t.spacing.sm_12,
+    },
+    secondaryAction: {
+      color: t.colors.foreground,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+  }),
+);
 
 const VerifyWithErrorBoundary = () => (
   <FeatureErrorBoundary featureName="AuthVerify">

@@ -25,7 +25,6 @@ export default defineConfig({
         NODE_ENV: 'test',
         PORT: '4040',
         API_URL: 'http://localhost:4040',
-        BETTER_AUTH_URL: 'http://localhost:4040',
         FINANCE_URL: 'http://localhost:4444',
         NOTES_URL: 'http://localhost:4445',
         ROCCO_URL: 'http://localhost:4446',

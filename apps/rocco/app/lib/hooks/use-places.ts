@@ -56,9 +56,7 @@ export const usePlacesAutocomplete = (
     async ({ places }) => {
       if (!query || query.length < 2) return [] as unknown as PlaceAutocompleteOutput;
       const input: PlaceAutocompleteInput =
-        latitude && longitude
-          ? { query, location: { lat: latitude, lng: longitude } }
-          : { query };
+        latitude && longitude ? { query, location: { lat: latitude, lng: longitude } } : { query };
       return places.autocomplete(input);
     },
     {
@@ -83,9 +81,8 @@ export const usePlaceById = (id: string | undefined) => {
     );
   }
 
-  return useHonoQuery<PlaceGetDetailsByIdOutput>(
-    queryKeys.places.get(id),
-    async ({ places }) => places.getById({ id } satisfies PlaceGetDetailsByIdInput),
+  return useHonoQuery<PlaceGetDetailsByIdOutput>(queryKeys.places.get(id), async ({ places }) =>
+    places.getById({ id } satisfies PlaceGetDetailsByIdInput),
   );
 };
 

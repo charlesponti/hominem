@@ -4,7 +4,7 @@ import { db, sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
-  _isIntegrationDatabaseAvailable,
+  isIntegrationDatabaseAvailable,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
@@ -19,8 +19,9 @@ import {
 } from './finance';
 
 const nextUserId = createDeterministicIdFactory('finance.data-ops.integration');
+const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
 
-describe('finance data ops integration', () => {
+describeIntegration('finance data ops integration', () => {
   let ownerId: string;
   let otherUserId: string;
   let ownerAccountId: string;

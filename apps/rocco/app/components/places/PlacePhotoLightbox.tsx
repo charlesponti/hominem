@@ -1,3 +1,4 @@
+import { Button } from '@hominem/ui/button';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
@@ -56,46 +57,49 @@ const PlacePhotoLightbox = ({ photos, currentIndex, isOpen, onClose, alt }: Prop
       onClick={onClose}
     >
       {/* Close button */}
-      <button
-        type="button"
+      <Button
+        variant="outline"
+        size="icon"
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 p-2 border border-border/50 backdrop-blur-sm"
+        className="absolute top-4 right-4 z-10 border-border/50 bg-transparent text-white hover:bg-white/10 hover:text-white"
         aria-label="Close lightbox"
       >
         <X size={24} className="text-white" />
-      </button>
+      </Button>
 
       {/* Counter */}
-      <div className="absolute top-4 left-4 z-10 px-4 py-2 backdrop-blur-sm text-white font-medium">
+      <div className="absolute top-4 left-4 z-10 px-4 py-2 text-white font-medium">
         {activeIndex + 1} / {photos.length}
       </div>
 
       {/* Navigation buttons */}
       {photos.length > 1 && (
         <>
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="icon-lg"
             onClick={(e) => {
               e.stopPropagation();
               goToPrevious();
             }}
-            className="absolute left-4 z-10 p-3 border border-border/50 backdrop-blur-sm"
+            className="absolute left-4 z-10 border-border/50 bg-transparent text-white hover:bg-white/10 hover:text-white"
             aria-label="Previous photo"
           >
             <ChevronLeft size={32} className="text-white" />
-          </button>
+          </Button>
 
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="icon-lg"
             onClick={(e) => {
               e.stopPropagation();
               goToNext();
             }}
-            className="absolute right-4 z-10 p-3 border border-border/50 backdrop-blur-sm"
+            className="absolute right-4 z-10 border-border/50 bg-transparent text-white hover:bg-white/10 hover:text-white"
             aria-label="Next photo"
           >
             <ChevronRight size={32} className="text-white" />
-          </button>
+          </Button>
         </>
       )}
 

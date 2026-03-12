@@ -1,3 +1,4 @@
+import { Button } from '@hominem/ui/button';
 import { Image as ImageIcon } from 'lucide-react';
 import { memo, useCallback, useState } from 'react';
 
@@ -58,11 +59,12 @@ const PlacePhotos = ({ alt, photos, thumbnailPhotos, fullPhotos, placeId }: Prop
           const hasFailed = failedImages.has(index);
 
           return (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="icon"
               key={photoUrl}
               onClick={() => openLightbox(index)}
-              className="shrink-0 snap-center group relative  w-[85vw] h-[85vw] max-w-[350px] max-h-[350px] sm:w-[350px] sm:h-[350px] aspect-square overflow-hidden border border-border"
+              className="shrink-0 snap-center group relative h-[85vw] w-[85vw] max-h-[350px] max-w-[350px] overflow-hidden border border-border p-0 sm:h-[350px] sm:w-[350px]"
               aria-label={`View photo ${index + 1} of ${displayPhotos.length}`}
             >
               {hasFailed ? (
@@ -86,7 +88,7 @@ const PlacePhotos = ({ alt, photos, thumbnailPhotos, fullPhotos, placeId }: Prop
                   onError={() => handleImageError(index)}
                 />
               )}
-            </button>
+            </Button>
           );
         })}
       </div>

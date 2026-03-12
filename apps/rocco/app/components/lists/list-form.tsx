@@ -1,7 +1,8 @@
 import { useAuthContext } from '@hominem/auth';
+import { Form } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
-import { Input } from '@hominem/ui/input';
 import { Loading } from '@hominem/ui/loading';
+import { TextField } from '@hominem/ui/text-field';
 import { PlusCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -111,7 +112,7 @@ export default function ListForm() {
     <div className="flex gap-1">
       {showInput ? (
         <div className="relative w-full">
-          <form onSubmit={handleSubmit} className="w-full">
+          <Form onSubmit={handleSubmit} className="w-full">
             <div className="flex gap-1">
               <div
                 className={cn('flex-1', {
@@ -119,8 +120,9 @@ export default function ListForm() {
                   'opacity-100': !isOverlayVisible,
                 })}
               >
-                <Input
+                <TextField
                   ref={inputRef}
+                  label="List name"
                   placeholder="Enter list name..."
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -139,7 +141,7 @@ export default function ListForm() {
                 </Button>
               )}
             </div>
-          </form>
+          </Form>
 
           {status === 'submitting' ? (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -162,7 +164,7 @@ export default function ListForm() {
           onClick={status === 'idle' ? handleOpen : handleClose}
           disabled={status === 'submitting'}
           variant={status !== 'idle' ? 'secondary' : 'default'}
-          className="flex items-center gap-2 disabled:"
+          className="flex items-center gap-2"
         >
           {status !== 'idle' ? (
             <span> Cancel </span>

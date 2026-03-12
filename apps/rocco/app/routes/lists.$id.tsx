@@ -1,5 +1,5 @@
 import { useAuthContext } from '@hominem/auth';
-import { Alert, PageTitle } from '@hominem/ui';
+import { Alert, Inline, PageTitle, Stack } from '@hominem/ui';
 import { Loading } from '@hominem/ui/loading';
 import { UserPlus } from 'lucide-react';
 import { useMemo } from 'react';
@@ -141,8 +141,8 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex-1 space-y-2">
+    <Stack gap="md">
+      <Stack gap="sm" className="flex-1">
         {error && <Alert variant="destructive">Error loading list updates: {error?.message}</Alert>}
         <div
           className="flex justify-between items-center"
@@ -150,15 +150,15 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
         >
           <PageTitle title={list.name} />
           {isOwner && (
-            <div className="flex items-center gap-2">
+            <Inline gap="sm">
               <Link to={`/lists/${list.id}/invites`} className="flex items-center gap-2">
                 <UserPlus size={18} />
               </Link>
               <ListEditButton list={listForEdit} />
-            </div>
+            </Inline>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <Inline gap="md">
           {/* <ListVisibilityBadge isPublic={data.isPublic} /> */}
           {collaborators && collaborators.length > 0 && (
             <div className="flex items-center -space-x-2">
@@ -179,8 +179,8 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
               )}
             </div>
           )}
-        </div>
-      </div>
+        </Inline>
+      </Stack>
 
       <MapInteractionProvider>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -198,7 +198,7 @@ export default function ListPage({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
       </MapInteractionProvider>
-    </div>
+    </Stack>
   );
 }
 

@@ -8,13 +8,59 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IntentPill } from '~/components/start/intent-pill';
 import { AsciiTexture } from '~/components/ui/ascii-texture';
-import { Text, theme } from '~/theme';
+import { Text, makeStyles } from '~/theme';
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 import { useIntentSuggestions } from '~/utils/services/intents/use-intent-suggestions';
 
 const { width } = Dimensions.get('window');
 
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    background: {
+      flex: 1,
+      backgroundColor: t.colors.background,
+    },
+    scrollFlex: {
+      flex: 1,
+    },
+    container: {
+      paddingHorizontal: t.spacing.m_16,
+      paddingBottom: t.spacing.xl_64,
+      gap: t.spacing.m_16,
+    },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: t.spacing.sm_12,
+    },
+    logo: {
+      height: 32,
+      width: 32,
+      borderRadius: t.borderRadii.sm_6,
+    },
+    avatar: {
+      height: 34,
+      width: 34,
+      borderRadius: 17, // special: half of width for circular avatar
+      backgroundColor: t.colors.muted,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+    },
+    headingBlock: {
+      gap: t.spacing.sm_12,
+      marginTop: t.spacing.m_16,
+    },
+    pills: {
+      marginTop: t.spacing.m_16,
+      gap: t.spacing.sm_12,
+      width: width - t.spacing.l_32,
+    },
+  }),
+);
+
 export default function StartScreen() {
+  const styles = useStyles();
   const router = useRouter();
   const { suggestions } = useIntentSuggestions();
 
@@ -40,11 +86,7 @@ export default function StartScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.topBar}>
-            <Image
-              source={require('~/assets/icon.png')}
-              contentFit="cover"
-              style={styles.logo}
-            />
+            <Image source={require('~/assets/icon.png')} contentFit="cover" style={styles.logo} />
             <Text variant="title" color="foreground">
               MINDSHERPA
             </Text>
@@ -78,46 +120,3 @@ export default function StartScreen() {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollFlex: {
-    flex: 1,
-  },
-  container: {
-    paddingHorizontal: theme.spacing.m_16,
-    paddingBottom: 140,
-    gap: 18,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: theme.spacing.sm_12,
-  },
-  logo: {
-    height: 32,
-    width: 32,
-    borderRadius: theme.borderRadii.sm_6,
-  },
-  avatar: {
-    height: 34,
-    width: 34,
-    borderRadius: 17,
-    backgroundColor: theme.colors.muted,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-  },
-  headingBlock: {
-    gap: 10,
-    marginTop: 18,
-  },
-  pills: {
-    marginTop: 18,
-    gap: theme.spacing.sm_12,
-    width: width - 32,
-  },
-});

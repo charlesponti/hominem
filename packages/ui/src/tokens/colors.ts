@@ -32,10 +32,14 @@ export const colors = {
   success: '#34c759',
   warning: '#ff9500',
   destructive: '#ff3b30',
+  'destructive-muted': 'rgba(255, 59, 48, 0.65)',
 
   // Accent (per-product override at the CSS layer; default: cool blue)
   accent: '#7bd3f7',
   'accent-foreground': '#000000',
+
+  // Vendor colors
+  'google-maps-blue': '#4285F4', // Google Maps standard marker color
 
   // System / backward-compat aliases
   primary: '#e7eaee',
@@ -62,8 +66,9 @@ export const colors = {
   'emphasis-minimal': 'rgba(255, 255, 255, 0.1)',
   'emphasis-faint': 'rgba(255, 255, 255, 0.05)',
 
-  // Glass
-  'glass-background': 'rgba(255, 255, 255, 0.04)',
+  // Modal overlays — darkens background for sheet/modal UI
+  'overlay-modal-high': 'rgba(0, 0, 0, 0.6)',
+  'overlay-modal-medium': 'rgba(0, 0, 0, 0.45)',
 
   // Charts
   'chart-1': 'rgba(255, 255, 255, 0.9)',
@@ -75,6 +80,6 @@ export const colors = {
   // Primitive values used by mobile shadow system
   black: '#0f1113',
   white: '#ffffff',
-} as const
+} as const;
 
-export type ColorToken = keyof typeof colors
+export type ColorToken = keyof typeof colors;

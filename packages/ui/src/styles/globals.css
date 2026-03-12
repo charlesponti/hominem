@@ -155,6 +155,18 @@
 
   --glass-blur: 12px;
   --glass-background: rgba(255, 255, 255, 0.04);
+
+  /* ====== SIDEBAR COLORS ====== */
+  /* Kanso Monochrome */
+
+  --color-sidebar: #000000;
+  --color-sidebar-foreground: #ffffff;
+  --color-sidebar-primary: #ffffff;
+  --color-sidebar-primary-foreground: #000000;
+  --color-sidebar-accent: rgba(255, 255, 255, 0.15);
+  --color-sidebar-accent-foreground: #ffffff;
+  --color-sidebar-border: rgba(255, 255, 255, 0.1);
+  --color-sidebar-ring: #ffffff;
 }
 
 /* ====== SAFE AREA UTILITIES ====== */
@@ -560,6 +572,16 @@
 @utility focus-ring {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* void-focus: canonical focus state for interactive elements.
+   Suppresses browser default; shows accent outline on keyboard focus only. */
+@utility void-focus {
+  outline: none;
+  &:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 }
 
 @utility transition-colors {

@@ -7,7 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { RootErrorBoundary } from '~/components/error-boundary/root-error-boundary';
-import { theme } from '~/theme';
+import { theme, makeStyles } from '~/theme';
 import { AuthProvider, useAuth } from '~/utils/auth-provider';
 import { E2E_TESTING } from '~/utils/constants';
 import { logError } from '~/utils/error-boundary/log-error';
@@ -121,36 +121,40 @@ function RootLayout() {
 
 export default RootLayout;
 
-const rootStyles = StyleSheet.create({
-  gestureRoot: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-});
+const rootStyles = makeStyles((t) =>
+  StyleSheet.create({
+    gestureRoot: {
+      flex: 1,
+      backgroundColor: t.colors.background,
+    },
+  }),
+)();
 
-const styles = StyleSheet.create({
-  e2eIndicator: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: 2,
-    height: 2,
-    opacity: 0.02,
-  },
-  e2eAction: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: 16,
-    height: 16,
-    opacity: 0.02,
-  },
-  e2eActionAlt: {
-    position: 'absolute',
-    top: 22,
-    right: 2,
-    width: 16,
-    height: 16,
-    opacity: 0.02,
-  },
-});
+const styles = makeStyles((t) =>
+  StyleSheet.create({
+    e2eIndicator: {
+      position: 'absolute',
+      top: t.spacing.xs_4,
+      left: t.spacing.xs_4,
+      width: 2,
+      height: 2,
+      opacity: 0.02,
+    },
+    e2eAction: {
+      position: 'absolute',
+      top: t.spacing.sm_8,
+      right: t.spacing.sm_8,
+      width: 16,
+      height: 16,
+      opacity: 0.02,
+    },
+    e2eActionAlt: {
+      position: 'absolute',
+      top: t.spacing.ml_24,
+      right: t.spacing.sm_8,
+      width: 16,
+      height: 16,
+      opacity: 0.02,
+    },
+  }),
+)();

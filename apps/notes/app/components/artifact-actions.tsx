@@ -8,6 +8,7 @@
 
 import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services';
 import { isArtifactTypeEnabled } from '@hominem/chat-services';
+import { Button } from '@hominem/ui/button';
 
 interface ArtifactActionsProps {
   state: ThoughtLifecycleState;
@@ -39,23 +40,25 @@ export function ArtifactActions({ state, messageCount, onTransform }: ArtifactAc
         const enabled = isArtifactTypeEnabled(type);
         const disabled = !enabled || isBlocked;
         return (
-          <button
+          <Button
             key={type}
-            type="button"
+            variant="outline"
+            size="sm"
             disabled={disabled}
             onClick={() => onTransform(type)}
             title={enabled ? undefined : 'Coming soon'}
             aria-label={enabled ? label : `${label} — Coming soon`}
             className={`
-              text-xs font-mono px-3 py-1.5 rounded border transition-colors
-              ${disabled
-                ? 'border-border text-muted-foreground opacity-[0.38] cursor-not-allowed'
-                : 'border-border text-foreground hover:bg-muted cursor-pointer'
+              text-xs font-mono
+              ${
+                disabled
+                  ? 'border-border text-muted-foreground opacity-[0.38] cursor-not-allowed'
+                  : 'border-border text-foreground hover:bg-muted cursor-pointer'
               }
             `}
           >
             {label}
-          </button>
+          </Button>
         );
       })}
     </div>

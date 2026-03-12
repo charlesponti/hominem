@@ -35,7 +35,7 @@ describe('cli auth utils', () => {
     openMock.mockResolvedValue(undefined);
     getPortMock.mockReset();
     getPortMock.mockResolvedValue(39217);
-    
+
     // Mock global fetch
     fetchMock = mock();
     globalThis.fetch = fetchMock as unknown as typeof fetch;

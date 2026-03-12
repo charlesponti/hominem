@@ -139,26 +139,36 @@ export function PeopleMultiSelect({
                     }}
                   >
                     {getPersonDisplayName(person)}
-                    <button
-                      type="button"
-                      className="ml-1 ring-offset-background outline-none focus:ring-2 focus:ring-ring focus:"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleRemovePerson(person.id);
-                        }
-                      }}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleRemovePerson(person.id);
-                      }}
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="icon-xs"
+                      className="ml-1 text-muted-foreground hover:text-foreground"
                     >
-                      <X className="size-3 text-muted-foreground hover:text-foreground" />
-                    </button>
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Remove ${getPersonDisplayName(person)}`}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRemovePerson(person.id);
+                          }
+                        }}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemovePerson(person.id);
+                        }}
+                      >
+                        <X className="size-3" />
+                      </span>
+                    </Button>
                   </Badge>
                 ))
               ) : (

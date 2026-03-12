@@ -1,16 +1,17 @@
-import type { Note } from '@hominem/hono-rpc/types'
-import type { Note as ValidatedNote } from '~/utils/validation/schemas'
+import type { Note } from '@hominem/hono-rpc/types';
 
-import type { FocusItem, FocusItems } from './types'
-import type { FocusItem as LocalFocusItem } from '~/utils/local-store/types'
+import type { FocusItem as LocalFocusItem } from '~/utils/local-store/types';
+import type { Note as ValidatedNote } from '~/utils/validation/schemas';
+
+import type { FocusItem, FocusItems } from './types';
 
 function parseNoteDate(dateValue?: string | null) {
   if (!dateValue) {
-    return null
+    return null;
   }
 
-  const parsed = new Date(dateValue)
-  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString()
+  const parsed = new Date(dateValue);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 
 export function noteToFocusItem(note: Note | ValidatedNote): FocusItem {
@@ -28,7 +29,7 @@ export function noteToFocusItem(note: Note | ValidatedNote): FocusItem {
     created_at: note.createdAt,
     updated_at: note.updatedAt,
     source_note: note as Note,
-  }
+  };
 }
 
 export const toLocalFocusItem = (item: FocusItem): LocalFocusItem => ({
@@ -38,18 +39,18 @@ export const toLocalFocusItem = (item: FocusItem): LocalFocusItem => ({
   createdAt: item.created_at,
   updatedAt: item.updated_at,
   payloadJson: JSON.stringify(item),
-})
+});
 
 const fromLocalFocusItem = (item: LocalFocusItem): FocusItem => {
   if (item.payloadJson) {
     try {
-      return JSON.parse(item.payloadJson) as FocusItem
+      return JSON.parse(item.payloadJson) as FocusItem;
     } catch {
       // fall through to minimal mapping
     }
   }
 
-  const now = new Date().toISOString()
+  const now = new Date().toISOString();
   const fallbackNote: Note = {
     id: item.id,
     type: 'task',
@@ -69,7 +70,7 @@ const fromLocalFocusItem = (item: LocalFocusItem): FocusItem => {
     updatedAt: item.updatedAt || now,
     publishedAt: null,
     scheduledFor: null,
-  }
+  };
 
   return {
     id: item.id,
@@ -85,7 +86,8 @@ const fromLocalFocusItem = (item: LocalFocusItem): FocusItem => {
     created_at: item.createdAt || now,
     updated_at: item.updatedAt || now,
     source_note: fallbackNote,
-  }
-}
+  };
+};
 
-export const fromLocalFocusItems = (items: LocalFocusItem[]): FocusItems => items.map(fromLocalFocusItem)
+export const fromLocalFocusItems = (items: LocalFocusItem[]): FocusItems =>
+  items.map(fromLocalFocusItem);

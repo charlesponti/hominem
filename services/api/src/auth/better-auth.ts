@@ -2,6 +2,7 @@ import { expo } from '@better-auth/expo';
 import { kyselyAdapter } from '@better-auth/kysely-adapter';
 import { passkey } from '@better-auth/passkey';
 import { db } from '@hominem/db';
+import { logger } from '@hominem/utils/logger';
 import type { BetterAuthOptions } from 'better-auth';
 import type { BetterAuthPlugin } from 'better-auth';
 import { betterAuth } from 'better-auth';
@@ -24,7 +25,7 @@ const userFieldMappings = {
   emailVerified: 'email_verified',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
-}
+};
 
 const sessionFieldMappings = {
   expiresAt: 'expires_at',
@@ -33,7 +34,7 @@ const sessionFieldMappings = {
   ipAddress: 'ip_address',
   userAgent: 'user_agent',
   userId: 'user_id',
-}
+};
 
 const accountFieldMappings = {
   accountId: 'account_id',
@@ -46,13 +47,13 @@ const accountFieldMappings = {
   refreshTokenExpiresAt: 'refresh_token_expires_at',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
-}
+};
 
 const verificationFieldMappings = {
   expiresAt: 'expires_at',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
-}
+};
 
 const passkeyFieldMappings = {
   publicKey: 'public_key',
@@ -61,14 +62,14 @@ const passkeyFieldMappings = {
   deviceType: 'device_type',
   backedUp: 'backed_up',
   createdAt: 'created_at',
-}
+};
 
 const jwksFieldMappings = {
   publicKey: 'public_key',
   privateKey: 'private_key',
   createdAt: 'created_at',
   expiresAt: 'expires_at',
-}
+};
 
 const deviceCodeFieldMappings = {
   deviceCode: 'device_code',
@@ -78,11 +79,11 @@ const deviceCodeFieldMappings = {
   lastPolledAt: 'last_polled_at',
   pollingInterval: 'polling_interval',
   clientId: 'client_id',
-}
+};
 
 function getTrustedOrigins() {
   const origins = new Set([
-    env.BETTER_AUTH_URL,
+    env.API_URL,
     env.AUTH_PASSKEY_ORIGIN,
     env.FINANCE_URL,
     env.NOTES_URL,
@@ -103,7 +104,7 @@ function getAdvancedOptions() {
   const cookieDomain = env.AUTH_COOKIE_DOMAIN.trim();
   const crossSubDomainEnabled = cookieDomain.length > 0;
   const useSecureCookies =
-    env.NODE_ENV === 'production' || new URL(env.BETTER_AUTH_URL).protocol === 'https:';
+    env.NODE_ENV === 'production' || new URL(env.API_URL).protocol === 'https:';
 
   return {
     database: {
@@ -133,16 +134,7 @@ function getAuthPlugins() {
     passkey({
       rpID: env.AUTH_PASSKEY_RP_ID,
       rpName: 'Hominem',
-      origin: [
-        env.BETTER_AUTH_URL,
-        env.AUTH_PASSKEY_ORIGIN,
-        env.FINANCE_URL,
-        env.NOTES_URL,
-        env.ROCCO_URL,
-        'http://localhost:4444',
-        'http://localhost:4445',
-        'http://localhost:4446',
-      ],
+      origin: getTrustedOrigins(),
       schema: {
         passkey: {
           modelName: 'user_passkey',
@@ -154,6 +146,17 @@ function getAuthPlugins() {
       expiresIn: env.AUTH_EMAIL_OTP_EXPIRES_SECONDS,
       sendVerificationOTP: async ({ email, otp, type }) => {
         recordTestOtp({ email, otp, type });
+
+        // In development mode we want to see OTPs in the server logs so
+        // engineers can sign in without waiting for an email.  This uses
+        // the shared pino logger that's already used across the API.  We
+        // also bypass the real email send because the nodemailer transport
+        // isn't configured in local dev and the test harness doesn't need it.
+        if (env.NODE_ENV === 'development') {
+          logger.info('[auth:email-otp] generated OTP', { email, otp, type });
+          return;
+        }
+
         if (env.NODE_ENV === 'test' && !env.RESEND_FROM_EMAIL) {
           return;
         }
@@ -222,29 +225,6 @@ function getAuthPlugins() {
         },
       },
     }),
-    // API key authentication is not currently available as a built-in plugin in better-auth@1.4.19
-    // The database schema (better_auth_api_key table) is prepared for future support.
-    // TODO: When better-auth adds native apiKey support, uncomment and configure below:
-    // apiKey({
-    //   defaultPrefix: 'hmn_',
-    //   requireName: true,
-    //   enableMetadata: true,
-    //   schema: {
-    //     apikey: {
-    //       modelName: 'betterAuthApiKey',
-    //     },
-    //   },
-    //   keyExpiration: {
-    //     defaultExpiresIn: 1000 * 60 * 60 * 24 * 90,
-    //     minExpiresIn: 1,
-    //     maxExpiresIn: 365,
-    //   },
-    //   rateLimit: {
-    //     enabled: true,
-    //     timeWindow: 1000 * 60 * 60,
-    //     maxRequests: 5000,
-    //   },
-    // }),
     openAPI({
       path: '/reference',
       theme: 'deepSpace',
@@ -271,7 +251,7 @@ function getAuthPlugins() {
 
 const betterAuthOptions: BetterAuthOptions = {
   secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.BETTER_AUTH_URL,
+  baseURL: env.API_URL,
   trustedOrigins: getTrustedOrigins(),
   advanced: getAdvancedOptions(),
   user: {

@@ -44,14 +44,14 @@ function Slider({
         />
       </SliderPrimitive.Track>
       {Array.from({ length: values.length }, (currentValue, index) => {
-        void currentValue
+        void currentValue;
         return (
-        <SliderPrimitive.Thumb
-          data-slot="slider-thumb"
-          key={`slider-thumb-${values[index]}`}
-          className="border-border ring-ring/50 block size-4 shrink-0 border focus-visible:outline-hidden disabled:pointer-events-none disabled:"
-        />
-        )
+          <SliderPrimitive.Thumb
+            data-slot="slider-thumb"
+            key={`slider-thumb-${values[index]}`}
+            className="border-border ring-ring/50 block size-4 shrink-0 border focus-visible:outline-hidden disabled:pointer-events-none disabled:"
+          />
+        );
       })}
     </SliderPrimitive.Root>
   );

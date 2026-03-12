@@ -1,23 +1,32 @@
-import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query'
+import { useApiClient } from '@hominem/hono-client/react';
+import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 
-import { useApiClient } from '@hominem/hono-client/react'
+import { LocalStore } from '~/utils/local-store';
 
-import { LocalStore } from '~/utils/local-store'
-import { noteToFocusItem, toLocalFocusItem } from './local-focus'
-import { focusKeys } from './query-keys'
-import type { FocusItem } from './types'
+import { noteToFocusItem, toLocalFocusItem } from './local-focus';
+import { focusKeys } from './query-keys';
+import type { FocusItem } from './types';
 
 export interface UpdateFocusItemInput {
-  id: string
-  text: string
-  due_date?: Date
-  category: string
-  timezone: string
+  id: string;
+  text: string;
+  due_date?: Date;
+  category: string;
+  timezone: string;
 }
 
 function toNoteType(
   category: string,
-): 'task' | 'note' | 'timer' | 'document' | 'journal' | 'tweet' | 'essay' | 'blog_post' | 'social_post' {
+):
+  | 'task'
+  | 'note'
+  | 'timer'
+  | 'document'
+  | 'journal'
+  | 'tweet'
+  | 'essay'
+  | 'blog_post'
+  | 'social_post' {
   switch (category) {
     case 'task':
     case 'note':
@@ -28,19 +37,15 @@ function toNoteType(
     case 'essay':
     case 'blog_post':
     case 'social_post':
-      return category
+      return category;
     default:
-      return 'task'
+      return 'task';
   }
 }
 
-export const useUpdateFocusItem = (): UseMutationResult<
-  FocusItem,
-  Error,
-  UpdateFocusItemInput
-> => {
-  const client = useApiClient()
-  const queryClient = useQueryClient()
+export const useUpdateFocusItem = (): UseMutationResult<FocusItem, Error, UpdateFocusItemInput> => {
+  const client = useApiClient();
+  const queryClient = useQueryClient();
 
   return useMutation<FocusItem, Error, UpdateFocusItemInput>({
     mutationKey: ['updateFocusItem'],
@@ -51,15 +56,15 @@ export const useUpdateFocusItem = (): UseMutationResult<
         excerpt: input.text,
         content: input.text,
         type: toNoteType(input.category),
-      })
-      const mapped = noteToFocusItem(updatedNote)
+      });
+      const mapped = noteToFocusItem(updatedNote);
 
-      await LocalStore.upsertFocusItem(toLocalFocusItem(mapped))
+      await LocalStore.upsertFocusItem(toLocalFocusItem(mapped));
 
-      return mapped
+      return mapped;
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: focusKeys.all })
+      await queryClient.invalidateQueries({ queryKey: focusKeys.all });
     },
-  })
-}
+  });
+};

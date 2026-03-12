@@ -33,19 +33,19 @@ function normalizeAccountWithTransactions(
     accountType: account.accountType,
     balance: account.balance,
     transactions: account.transactions,
-  }
+  };
 
   if (account.institutionName !== undefined) {
-    normalized.institutionName = account.institutionName
+    normalized.institutionName = account.institutionName;
   }
   if (account.plaidAccountId !== undefined) {
-    normalized.plaidAccountId = account.plaidAccountId
+    normalized.plaidAccountId = account.plaidAccountId;
   }
   if (account.plaidItemId !== undefined) {
-    normalized.plaidItemId = account.plaidItemId
+    normalized.plaidItemId = account.plaidItemId;
   }
 
-  return normalized
+  return normalized;
 }
 
 export interface FilterArgs {
@@ -92,7 +92,7 @@ export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
   const allAccountsQuery = useHonoQuery<AccountAllOutput>(
     ['finance', 'accounts', 'all'],
     async ({ finance }) => {
-      const data = await finance.listAllAccounts()
+      const data = await finance.listAllAccounts();
       return {
         ...data,
         accounts: data.accounts.map((account) => normalizeAccountWithTransactions(account)),

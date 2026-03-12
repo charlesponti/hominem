@@ -7,8 +7,8 @@ import { runOnJS } from 'react-native-reanimated';
 
 import { Button } from '~/components/Button';
 import TextInput from '~/components/text-input';
-import MindsherpaIcon from '~/components/ui/icon';
-import { Text, theme } from '~/theme';
+import AppIcon from '~/components/ui/icon';
+import { Text, theme, makeStyles } from '~/theme';
 import { getTimezone } from '~/utils/dates';
 import queryClient from '~/utils/query-client';
 import type { FocusItem } from '~/utils/services/notes/types';
@@ -18,6 +18,7 @@ import {
 } from '~/utils/services/notes/use-update-focus';
 
 export default function FocusItemView() {
+  const styles = useStyles();
   const { id } = useLocalSearchParams();
   const updateFocusItem = useUpdateFocusItem();
   const focusItems: FocusItem[] = queryClient.getQueryData(['focusItems']) || [];
@@ -86,7 +87,7 @@ export default function FocusItemView() {
         </View>
         {due_date ? (
           <View style={styles.dueDateRow}>
-            <MindsherpaIcon name="calendar" size={16} color={theme.colors.foreground} />
+            <AppIcon name="calendar" size={16} color={theme.colors.foreground} />
             <GestureDetector gesture={dueDateTap}>
               <Text variant="body">
                 {due_date.toLocaleDateString()} {due_date.toLocaleTimeString()}
@@ -111,29 +112,31 @@ export default function FocusItemView() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: theme.colors.background,
-  },
-  formGroup: {
-    rowGap: 24,
-    marginTop: 32,
-  },
-  inputText: {
-    fontSize: 14,
-    color: theme.colors.foreground,
-    fontWeight: 'bold',
-  },
-  dueDateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    columnGap: 12,
-    paddingHorizontal: 12,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-});
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: t.spacing.ml_24,
+      backgroundColor: t.colors.background,
+    },
+    formGroup: {
+      rowGap: t.spacing.ml_24,
+      marginTop: t.spacing.l_32,
+    },
+    inputText: {
+      fontSize: 14,
+      color: t.colors.foreground,
+      fontWeight: 'bold',
+    },
+    dueDateRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      columnGap: t.spacing.sm_12,
+      paddingHorizontal: t.spacing.sm_12,
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
+  }),
+);

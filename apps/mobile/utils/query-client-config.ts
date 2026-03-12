@@ -1,19 +1,19 @@
-import type { DefaultOptions } from '@tanstack/react-query'
+import type { DefaultOptions } from '@tanstack/react-query';
 
-export const QUERY_PERSISTENCE_STRATEGY = 'disabled'
+export const QUERY_PERSISTENCE_STRATEGY = 'disabled';
 
 export function shouldRetryQuery(failureCount: number, error: unknown): boolean {
   if (failureCount > 3) {
-    return false
+    return false;
   }
   if (error instanceof Response && error.status >= 400 && error.status < 500) {
-    return false
+    return false;
   }
-  return true
+  return true;
 }
 
 export function getQueryRetryDelayMs(attemptIndex: number): number {
-  return Math.min(1000 * 2 ** attemptIndex, 30000)
+  return Math.min(1000 * 2 ** attemptIndex, 30000);
 }
 
 export const mobileQueryDefaultOptions: DefaultOptions = {
@@ -30,4 +30,4 @@ export const mobileQueryDefaultOptions: DefaultOptions = {
     retry: 1,
     networkMode: 'offlineFirst',
   },
-}
+};

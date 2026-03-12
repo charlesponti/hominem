@@ -28,7 +28,7 @@ export function useImportTransactionsStore() {
   const [activeJobIds, setActiveJobIds] = useState<string[]>([]);
   const [error, setError] = useState<Error | null>(null);
   // Throttling refs for progress updates
-  const progressUpdateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const progressUpdateTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pendingUpdatesRef = useRef<ImportTransactionsJob[]>([]);
 
   // Cache for stable file objects when converting from jobs

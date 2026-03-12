@@ -97,7 +97,7 @@ export default function NotesPage() {
       {/* Fixed Header */}
       <header className="shrink-0 border-b border-border z-10">
         <div className="py-4 px-4">
-          <h1 className="text-2xl font-bold text-foreground">Notes</h1>
+          <h1 className="heading-3 text-foreground">Notes</h1>
         </div>
       </header>
 

@@ -8,10 +8,13 @@
  * "Think through it" → seed a new session → navigate to chat.$chatId.
  */
 
+import type { ThoughtLifecycleState } from '@hominem/chat-services';
+import { useHonoMutation } from '@hominem/hono-client/react';
+import { Inline, Stack } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { TextArea } from '@hominem/ui/text-area';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useHonoMutation } from '@hominem/hono-client/react';
-import type { ThoughtLifecycleState } from '@hominem/chat-services';
 
 interface CaptureBarProps {
   state?: ThoughtLifecycleState;
@@ -77,8 +80,8 @@ export function CaptureBar({ state = 'idle' }: CaptureBarProps) {
 
   return (
     <div className="border-b border-border bg-background px-4 py-3">
-      <div className="flex flex-col gap-2 max-w-3xl mx-auto">
-        <textarea
+      <Stack gap="sm" className="max-w-3xl mx-auto">
+        <TextArea
           placeholder="What's on your mind?"
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -95,28 +98,30 @@ export function CaptureBar({ state = 'idle' }: CaptureBarProps) {
           data-testid="capture-bar-input"
         />
         {hasInput && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
+          <Inline gap="sm">
+            <Button
+              variant="primary"
+              size="sm"
               onClick={handleThinkThroughIt}
               disabled={isBusy}
-              className="text-xs font-mono bg-foreground text-background px-3 py-1.5 rounded hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="text-xs font-mono"
               data-testid="capture-bar-think"
             >
               Think through it →
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleSave}
               disabled={isBusy}
-              className="text-xs font-mono border border-border text-foreground px-3 py-1.5 rounded hover:bg-muted transition-colors disabled:opacity-50"
+              className="text-xs font-mono"
               data-testid="capture-bar-save"
             >
               {saveNote.isPending ? 'Saving…' : 'Save'}
-            </button>
-          </div>
+            </Button>
+          </Inline>
         )}
-      </div>
+      </Stack>
     </div>
   );
 }

@@ -1,2 +1,2 @@
-export { RootErrorBoundary } from './root-error-boundary'
-export { FeatureErrorBoundary } from './feature-error-boundary'
+export { RootErrorBoundary } from './root-error-boundary';
+export { FeatureErrorBoundary } from './feature-error-boundary';

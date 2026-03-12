@@ -11,9 +11,7 @@ interface ContextAnchorProps {
 
 export function ContextAnchor({ source }: ContextAnchorProps) {
   if (source.kind === 'new') {
-    return (
-      <span className="text-xs text-muted-foreground italic">New session</span>
-    );
+    return <span className="text-xs text-muted-foreground italic">New session</span>;
   }
 
   if (source.kind === 'thought') {

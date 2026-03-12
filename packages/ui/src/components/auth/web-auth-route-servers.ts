@@ -8,17 +8,33 @@ import { redirect, type ActionFunctionArgs } from 'react-router';
 
 import type {
   AuthEntryRouteConfig,
+  AuthEntryServerRouteConfig,
   AuthLogoutRouteConfig,
   AuthPasskeyCallbackRouteConfig,
   AuthVerifyRouteConfig,
+  AuthVerifyServerRouteConfig,
   GetServerAuth,
 } from './web-auth-routes';
 
+export function withAuthApiBaseUrl<T extends AuthEntryRouteConfig | AuthVerifyRouteConfig>(
+  config: T,
+  getApiBaseUrl: () => string,
+) {
+  return {
+    ...config,
+    getApiBaseUrl,
+  };
+}
+
 interface VerifySuccessPayload {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  tokenType: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  tokenType?: string;
+  access_token?: string;
+  refresh_token?: string;
+  expires_in?: number;
+  token_type?: string;
   user: { id: string; email: string; name?: string | null };
 }
 
@@ -29,6 +45,38 @@ interface PasskeyCallbackPayload {
 
 interface EmailOtpErrorPayload {
   message?: string;
+}
+
+interface FormDataReader {
+  get(name: string): FormDataEntryValue | null;
+}
+
+function hasFormDataGet(value: object): value is FormDataReader {
+  return 'get' in value;
+}
+
+function getPayloadAccessToken(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
+  if ('access_token' in payload) {
+    return payload.accessToken ?? payload.access_token;
+  }
+
+  return payload.accessToken;
+}
+
+function getPayloadRefreshToken(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
+  if ('refresh_token' in payload) {
+    return payload.refreshToken ?? payload.refresh_token ?? null;
+  }
+
+  return null;
+}
+
+function getPayloadExpiresIn(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
+  if ('expires_in' in payload) {
+    return payload.expiresIn ?? payload.expires_in;
+  }
+
+  return null;
 }
 
 async function appendTokenCookies(
@@ -50,28 +98,29 @@ async function appendTokenCookies(
 
   const cookieDomain = getAuthCookieDomain();
   const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
-  const maxAge =
-    'expiresIn' in payload && typeof payload.expiresIn === 'number'
-      ? `; Max-Age=${payload.expiresIn}`
-      : '';
+  const accessToken = getPayloadAccessToken(payload);
+  const expiresIn = getPayloadExpiresIn(payload);
+  const maxAge = typeof expiresIn === 'number' ? `; Max-Age=${expiresIn}` : '';
+
+  if (!accessToken) {
+    return;
+  }
 
   headers.append(
     'set-cookie',
-    `hominem_access_token=${encodeURIComponent(payload.accessToken)}; Path=/; HttpOnly; SameSite=Lax${maxAge}${domainAttribute}`,
+    `hominem_access_token=${encodeURIComponent(accessToken)}; Path=/; HttpOnly; SameSite=Lax${maxAge}${domainAttribute}`,
   );
 
-  if ('refreshToken' in payload && payload.refreshToken) {
+  const refreshToken = getPayloadRefreshToken(payload);
+  if (refreshToken) {
     headers.append(
       'set-cookie',
-      `hominem_refresh_token=${encodeURIComponent(payload.refreshToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${domainAttribute}`,
+      `hominem_refresh_token=${encodeURIComponent(refreshToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${domainAttribute}`,
     );
   }
 }
 
-export function createAuthEntryLoader(
-  config: AuthEntryRouteConfig,
-  getServerAuth: GetServerAuth,
-) {
+export function createAuthEntryLoader(config: AuthEntryRouteConfig, getServerAuth: GetServerAuth) {
   return async function loader({ request }: { request: Request }) {
     const { user, headers } = await getServerAuth(request);
     if (user) {
@@ -81,10 +130,15 @@ export function createAuthEntryLoader(
   };
 }
 
-export function createAuthEntryAction(config: AuthEntryRouteConfig) {
+export function createAuthEntryAction(config: AuthEntryServerRouteConfig) {
   return async function action({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
-    const email = String(formData.get('email') ?? '').trim().toLowerCase();
+    if (!hasFormDataGet(formData)) {
+      return { error: 'Invalid form submission' };
+    }
+    const email = String(formData.get('email') ?? '')
+      .trim()
+      .toLowerCase();
     const next = String(formData.get('next') ?? config.defaultRedirect);
 
     if (!email) {
@@ -92,7 +146,7 @@ export function createAuthEntryAction(config: AuthEntryRouteConfig) {
     }
 
     try {
-      const response = await fetch(new URL('/api/auth/email-otp/send', config.apiBaseUrl), {
+      const response = await fetch(new URL('/api/auth/email-otp/send', config.getApiBaseUrl()), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, type: 'sign-in' }),
@@ -133,10 +187,15 @@ export function createAuthVerifyLoader(
   };
 }
 
-export function createAuthVerifyAction(config: AuthVerifyRouteConfig) {
+export function createAuthVerifyAction(config: AuthVerifyServerRouteConfig) {
   return async function action({ request }: { request: Request }) {
     const formData = await request.formData();
-    const email = String(formData.get('email') ?? '').trim().toLowerCase();
+    if (!hasFormDataGet(formData)) {
+      return { error: 'Invalid form submission' };
+    }
+    const email = String(formData.get('email') ?? '')
+      .trim()
+      .toLowerCase();
     const otp = String(formData.get('otp') ?? '').replace(/\D/g, '');
     const next = resolveSafeAuthRedirect(
       String(formData.get('next') ?? config.defaultRedirect),
@@ -148,7 +207,7 @@ export function createAuthVerifyAction(config: AuthVerifyRouteConfig) {
       return { error: 'Email and verification code are required.' };
     }
 
-    const response = await fetch(new URL('/api/auth/email-otp/verify', config.apiBaseUrl), {
+    const response = await fetch(new URL('/api/auth/email-otp/verify', config.getApiBaseUrl()), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, otp }),
@@ -159,7 +218,7 @@ export function createAuthVerifyAction(config: AuthVerifyRouteConfig) {
     }
 
     const result = (await response.json()) as VerifySuccessPayload;
-    if (!result.accessToken) {
+    if (!(result.accessToken ?? result.access_token)) {
       return { error: 'Verification failed. Missing auth token from server.' };
     }
 
@@ -181,7 +240,7 @@ export function createAuthLogoutRoute(config: AuthLogoutRouteConfig) {
     }
 
     try {
-      const response = await fetch(new URL('/api/auth/logout', config.apiBaseUrl), {
+      const response = await fetch(new URL('/api/auth/logout', config.getApiBaseUrl()), {
         method: 'POST',
         headers: upstreamHeaders,
       });
@@ -227,11 +286,9 @@ export function createAuthPasskeyCallbackRoute(config: AuthPasskeyCallbackRouteC
       );
     }
 
-    const next = resolveSafeAuthRedirect(
-      payload.next,
-      config.defaultRedirect,
-      [...config.allowedRedirectPrefixes],
-    );
+    const next = resolveSafeAuthRedirect(payload.next, config.defaultRedirect, [
+      ...config.allowedRedirectPrefixes,
+    ]);
 
     if (!payload.accessToken) {
       return redirect(

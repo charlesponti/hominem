@@ -3,14 +3,16 @@ import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
   extractRows,
+  isIntegrationDatabaseAvailable,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createList, deleteList, updateList } from './list-crud.service';
 
 const nextUserId = createDeterministicIdFactory('lists.crud.integration');
+const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
 
-describe('list-crud integration', () => {
+describeIntegration('list-crud integration', () => {
   let ownerId: string;
   let otherUserId: string;
 

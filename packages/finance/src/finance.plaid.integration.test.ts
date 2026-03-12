@@ -4,7 +4,7 @@ import { db, sql } from '@hominem/db';
 import {
   createDeterministicIdFactory,
   ensureIntegrationUsers,
-  _isIntegrationDatabaseAvailable,
+  isIntegrationDatabaseAvailable,
   tableExists,
 } from '@hominem/db/test/utils';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -23,12 +23,13 @@ import {
 } from './finance';
 
 const nextUserId = createDeterministicIdFactory('finance.plaid.integration');
+const describeIntegration = (await isIntegrationDatabaseAvailable()) ? describe : describe.skip;
 
 async function hasPlaidItemsTable(): Promise<boolean> {
   return await tableExists('plaid_items');
 }
 
-describe('finance plaid integration', () => {
+describeIntegration('finance plaid integration', () => {
   let ownerId: string;
   let otherUserId: string;
 

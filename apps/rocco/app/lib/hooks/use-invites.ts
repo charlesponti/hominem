@@ -35,9 +35,8 @@ const createOptimisticInvite = (variables: InvitesCreateInput): InvitesCreateOut
  * Get received invites
  */
 export const useSentInvites = () =>
-  useHonoQuery<InvitesGetSentOutput>(
-    queryKeys.invites.sent(),
-    async ({ invites }) => invites.getSent({} satisfies InvitesGetSentInput),
+  useHonoQuery<InvitesGetSentOutput>(queryKeys.invites.sent(), async ({ invites }) =>
+    invites.getSent({} satisfies InvitesGetSentInput),
   );
 
 /**

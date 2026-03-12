@@ -1,10 +1,14 @@
-import { useMemo, useRef, useState } from 'react';
-
-import type { ChatsGetOutput, ChatsGetMessagesOutput, ChatsClassifyOutput } from '@hominem/hono-rpc/types/chat.types';
 import type { ArtifactType, SessionSource, ThoughtLifecycleState } from '@hominem/chat-services';
 import { deriveSessionSource } from '@hominem/chat-services';
 import { useHonoQuery, useHonoMutation } from '@hominem/hono-client/react';
+import type {
+  ChatsGetOutput,
+  ChatsGetMessagesOutput,
+  ChatsClassifyOutput,
+} from '@hominem/hono-rpc/types/chat.types';
 import { useToast } from '@hominem/ui';
+import { useMemo, useRef, useState } from 'react';
+
 import { ArtifactActions } from '~/components/artifact-actions';
 import { ChatInput } from '~/components/chat/ChatInput';
 import { ChatMessages } from '~/components/chat/ChatMessages';
@@ -38,9 +42,8 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   const [pendingReview, setPendingReview] = useState<PendingReview | null>(null);
   const [overrideSource, setOverrideSource] = useState<SessionSource | null>(null);
 
-  const { data: chat } = useHonoQuery<ChatsGetOutput>(
-    ['chats', chatId],
-    ({ chats: c }) => c.get({ chatId }),
+  const { data: chat } = useHonoQuery<ChatsGetOutput>(['chats', chatId], ({ chats: c }) =>
+    c.get({ chatId }),
   );
 
   // Same query key as ChatMessages — TanStack Query deduplicates; no extra network request.
@@ -50,13 +53,15 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   );
   const source = useMemo(
     () =>
-      overrideSource ?? deriveSessionSource({
+      overrideSource ??
+      deriveSessionSource({
         artifactId: chat?.noteId ?? null,
         artifactTitle: chat?.title ?? null,
         artifactType: 'note',
         messages: (messages ?? [])
-          .filter((m): m is typeof m & { role: 'user' | 'assistant' | 'system' } =>
-            m.role === 'user' || m.role === 'assistant' || m.role === 'system'
+          .filter(
+            (m): m is typeof m & { role: 'user' | 'assistant' | 'system' } =>
+              m.role === 'user' || m.role === 'assistant' || m.role === 'system',
           )
           .map((message) => ({
             role: message.role,
@@ -110,8 +115,15 @@ export default function ChatPage({ params }: Route.ComponentProps) {
     if (!pendingReview) return;
     setLifecycleState('persisting');
     try {
-      const { noteId } = await acceptMutation.mutateAsync({ reviewItemId: pendingReview.reviewItemId });
-      setOverrideSource({ kind: 'artifact', id: noteId, type: 'note', title: pendingReview.proposedTitle });
+      const { noteId } = await acceptMutation.mutateAsync({
+        reviewItemId: pendingReview.reviewItemId,
+      });
+      setOverrideSource({
+        kind: 'artifact',
+        id: noteId,
+        type: 'note',
+        title: pendingReview.proposedTitle,
+      });
       setLifecycleState('idle');
       setPendingReview(null);
     } catch {
@@ -170,11 +182,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
       />
 
       <div className="border-t p-4 pb-[calc(env(safe-area-inset-bottom)+8px)]">
-        <ChatInput
-          ref={inputRef}
-          chatId={chatId}
-          onStatusChange={handleMessageStatusChange}
-        />
+        <ChatInput ref={inputRef} chatId={chatId} onStatusChange={handleMessageStatusChange} />
       </div>
 
       {lifecycleState === 'reviewing_changes' && pendingReview && (

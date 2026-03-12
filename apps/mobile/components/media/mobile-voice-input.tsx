@@ -1,20 +1,33 @@
-import { MaterialIcons } from '@expo/vector-icons'
-import { useCallback, useEffect } from 'react'
-import { ActivityIndicator, Pressable, StyleSheet, Vibration, View, type PressableProps } from 'react-native'
-import Animated, { interpolateColor, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import { MaterialIcons } from '@expo/vector-icons';
+import { useCallback, useEffect } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Vibration,
+  View,
+  type PressableProps,
+} from 'react-native';
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
-import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
-import { Text, theme } from '~/theme'
-import { useMobileAudioRecorder } from './use-mobile-audio-recorder'
-import { AudioLevelVisualizer } from './audio-meterings'
+import { makeStyles, Text, theme } from '~/theme';
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
+
+import { AudioLevelVisualizer } from './audio-meterings';
+import { useMobileAudioRecorder } from './use-mobile-audio-recorder';
 
 type MobileVoiceInputProps = PressableProps & {
-  autoTranscribe?: boolean
-  onRecordingStateChange?: (isRecording: boolean) => void
-  onAudioReady?: (audioUri: string) => void
-  onAudioTranscribed?: (transcription: string) => void
-  onError?: () => void
-}
+  autoTranscribe?: boolean;
+  onRecordingStateChange?: (isRecording: boolean) => void;
+  onAudioReady?: (audioUri: string) => void;
+  onAudioTranscribed?: (transcription: string) => void;
+  onError?: () => void;
+};
 
 export function MobileVoiceInput({
   autoTranscribe = false,
@@ -25,6 +38,7 @@ export function MobileVoiceInput({
   style,
   ...props
 }: MobileVoiceInputProps) {
+  const styles = useStyles();
   const {
     isRecording,
     isTranscribing,
@@ -39,35 +53,35 @@ export function MobileVoiceInput({
     onAudioReady,
     onAudioTranscribed,
     onError,
-  })
+  });
 
   const onPress = useCallback(async () => {
     if (isRecording) {
-      Vibration.vibrate(40)
-      await stopRecording()
-      onRecordingStateChange?.(false)
-      return
+      Vibration.vibrate(40);
+      await stopRecording();
+      onRecordingStateChange?.(false);
+      return;
     }
 
-    Vibration.vibrate(20)
-    await startRecording()
-    onRecordingStateChange?.(true)
-  }, [isRecording, onRecordingStateChange, startRecording, stopRecording])
+    Vibration.vibrate(20);
+    await startRecording();
+    onRecordingStateChange?.(true);
+  }, [isRecording, onRecordingStateChange, startRecording, stopRecording]);
 
-  const backgroundColor = useSharedValue(0)
+  const backgroundColor = useSharedValue(0);
   const speakButtonBackground = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
       backgroundColor.value,
       [0, 1],
       [theme.colors.muted, theme.colors.destructive],
     ),
-  }))
+  }));
 
   useEffect(() => {
     backgroundColor.value = withTiming(isRecording ? 1 : 0, {
       duration: VOID_MOTION_DURATION_STANDARD,
-    })
-  }, [backgroundColor, isRecording])
+    });
+  }, [backgroundColor, isRecording]);
 
   return (
     <View style={styles.container} testID="voice-input">
@@ -76,10 +90,12 @@ export function MobileVoiceInput({
         disabled={isTranscribing}
         style={[styles.speakButton, speakButtonBackground, style]}
         onPress={() => {
-          void onPress()
+          void onPress();
         }}
         accessibilityLabel={isRecording ? 'Stop recording' : 'Start voice recording'}
-        accessibilityHint={isRecording ? 'Tap to stop and transcribe' : 'Tap to record a voice message'}
+        accessibilityHint={
+          isRecording ? 'Tap to stop and transcribe' : 'Tap to record a voice message'
+        }
         accessibilityRole="button"
         testID={isRecording ? 'voice-stop-button' : 'voice-start-button'}
         {...props}
@@ -107,27 +123,29 @@ export function MobileVoiceInput({
         </Pressable>
       ) : null}
     </View>
-  )
+  );
 }
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    columnGap: 12,
-  },
-  speakButton: {
-    padding: 8,
-    borderRadius: 50,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-  },
-  retryButton: {
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-})
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      columnGap: t.spacing.sm_12,
+    },
+    speakButton: {
+      padding: t.spacing.sm_8,
+      borderRadius: 50,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+    },
+    retryButton: {
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+      paddingHorizontal: t.spacing.sm_8,
+      paddingVertical: t.spacing.xs_4,
+    },
+  }),
+);

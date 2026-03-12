@@ -22,28 +22,33 @@ export default function AboutPage() {
         {
           icon: BookmarkCheck,
           title: 'Lists',
-          description: 'Organize saved places into named collections. Date night spots, neighborhood guides, trip planning — all in one place.',
+          description:
+            'Organize saved places into named collections. Date night spots, neighborhood guides, trip planning — all in one place.',
         },
         {
           icon: MapPin,
           title: 'Map view',
-          description: "See everything on a map. Plan your day around what's actually nearby instead of what you vaguely remember.",
+          description:
+            "See everything on a map. Plan your day around what's actually nearby instead of what you vaguely remember.",
         },
         {
           icon: Share2,
           title: 'Collaboration',
-          description: "Invite friends to a list. Build it together, use it together. No more 'I'll send you the spreadsheet.'",
+          description:
+            "Invite friends to a list. Build it together, use it together. No more 'I'll send you the spreadsheet.'",
         },
         {
           icon: History,
           title: 'Visit log',
-          description: "Mark when you've been somewhere and log a note. Build a personal record of everywhere you've gone.",
+          description:
+            "Mark when you've been somewhere and log a note. Build a personal record of everywhere you've gone.",
         },
       ]}
       steps={[
         {
           label: 'Save a place',
-          description: 'Search by name or paste a link. Rocco pulls in the details — address, type, hours — automatically.',
+          description:
+            'Search by name or paste a link. Rocco pulls in the details — address, type, hours — automatically.',
         },
         {
           label: 'Organize into lists',
