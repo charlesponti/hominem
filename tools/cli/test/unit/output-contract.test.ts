@@ -48,8 +48,11 @@ async function runCapturedSubprocess(
     env: NodeJS.ProcessEnv
   },
 ): Promise<CapturedRun> {
+  const bunExecutable =
+    typeof Bun !== 'undefined' ? Bun.which('bun') ?? process.execPath : process.execPath
+
   return await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ['run', './src/cli.ts', ...argv], {
+    const child = spawn(bunExecutable, ['run', './src/cli.ts', ...argv], {
       cwd: options.cwd,
       env: options.env,
       stdio: ['ignore', 'pipe', 'pipe'],
