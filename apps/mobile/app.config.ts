@@ -101,7 +101,7 @@ export default ({ config }: ConfigContext) => {
     slug: 'hakumi',
     version: '1.0.0',
     scheme: variantConfig.scheme,
-    owner: 'cponti44',
+    owner: 'pontistudios',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'dark',
