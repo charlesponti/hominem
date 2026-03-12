@@ -3,10 +3,9 @@ import { Form, useFetcher, useNavigation, useSearchParams } from 'react-router';
 import { parseAuthError } from '@hominem/utils';
 
 import { Button } from '../ui/button';
-import { NumberInput } from '../ui/number-input';
 import { AuthErrorBanner } from './auth-error-banner';
+import { OtpCodeInput } from './otp-code-input';
 import { PasskeyButton } from './passkey-button';
-import { ResendCodeButton } from './resend-code-button';
 import { useCountdown } from '../../hooks/use-countdown';
 
 interface OtpVerificationFormProps {
@@ -40,15 +39,15 @@ export function OtpVerificationForm({
 }: OtpVerificationFormProps) {
   const navigation = useNavigation();
   const resendFetcher = useFetcher();
-  const submitFetcher = useFetcher();
   const [searchParams] = useSearchParams();
-  const isSubmitting = (navigation.state === 'submitting' && navigation.formAction === action) || submitFetcher.state === 'submitting';
+  const isSubmitting = navigation.state === 'submitting' && navigation.formAction === action;
 
   const [otp, setOtp] = useState('');
   const [expirationCountdown, setExpirationCountdown] = useState<string | null>(null);
   const [attemptCount, setAttemptCount] = useState(0);
   const [isSuccess, setIsSuccess] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const hadPendingSubmissionRef = useRef(false);
 
   // Use countdown hook for resend timer
   const resendTimer = useCountdown(resendCooldown);
@@ -71,12 +70,28 @@ export function OtpVerificationForm({
     }
   }, [navigation.state, isSubmitting, error]);
 
-  // Track failed attempt on error
   useEffect(() => {
-    if (error && attemptCount < maxAttempts) {
-      setAttemptCount((prev) => prev + 1);
+    if (isSubmitting) {
+      hadPendingSubmissionRef.current = true
+      return
     }
-  }, [error, attemptCount, maxAttempts]);
+
+    if (!hadPendingSubmissionRef.current) {
+      return
+    }
+
+    hadPendingSubmissionRef.current = false
+
+    if (error && attemptCount < maxAttempts) {
+      setAttemptCount((prev) => prev + 1)
+    }
+  }, [attemptCount, error, isSubmitting, maxAttempts])
+
+  useEffect(() => {
+    if (!error) {
+      hadPendingSubmissionRef.current = false
+    }
+  }, [error])
 
   // Expiration countdown timer
   useEffect(() => {
@@ -107,21 +122,9 @@ export function OtpVerificationForm({
   }, [expiresAt]);
 
   // Auto-submit when code is complete
-  const handleOtpChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const val = e.target.value;
-      setOtp(val);
-      // Auto-submit when all digits are entered
-      if (val.length === 6 && !isSubmitting && !isAccountLocked) {
-        const formData = new FormData();
-        formData.append('email', resolvedEmail);
-        formData.append('next', next);
-        formData.append('otp', val);
-        submitFetcher.submit(formData, { method: 'post', action });
-      }
-    },
-    [isSubmitting, isAccountLocked, resolvedEmail, next, action, submitFetcher]
-  );
+  const handleOtpChange = useCallback((value: string) => {
+    setOtp(value)
+  }, [])
 
   // Resend is via fetcher since it doesn't need a redirect
   const handleResend = () => {
@@ -162,17 +165,13 @@ export function OtpVerificationForm({
 
         {/* OTP Input */}
         <div className="flex justify-center">
-          <NumberInput
+          <OtpCodeInput
             value={otp}
             onChange={handleOtpChange}
-            maxLength={6}
-            error={!!error}
-            success={isSuccess}
+            error={error}
             disabled={isSubmitting || isAccountLocked}
             autoFocus={!error}
-            placeholder="• • • • • •"
-            className="w-full px-4 py-3 text-center body-2 font-semibold tracking-widest"
-            aria-label="One-time code"
+            className="w-full"
           />
         </div>
 

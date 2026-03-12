@@ -7,6 +7,14 @@ import { getServerSession } from '~/lib/auth.server';
 import type { FailedUpload, UploadedFile, UploadResponse } from '~/lib/types/upload.js';
 import { jsonResponse } from '~/lib/utils/json-response';
 
+interface FormDataReader {
+  getAll(name: string): FormDataValue[];
+}
+
+function hasFormDataGetAll(value: object): value is FormDataReader {
+  return 'getAll' in value;
+}
+
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, { status: 405 });
@@ -20,7 +28,16 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const formData = await request.formData();
-    const files = formData.getAll('files') as File[];
+    if (!hasFormDataGetAll(formData)) {
+      return jsonResponse({ error: 'Invalid form submission' }, { status: 400 });
+    }
+
+    const files: File[] = [];
+    for (const value of formData.getAll('files')) {
+      if (value instanceof File) {
+        files.push(value);
+      }
+    }
 
     if (!files.length) {
       return jsonResponse({ error: 'No files provided' }, { status: 400 });

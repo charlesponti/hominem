@@ -42,7 +42,7 @@ const DEFAULT_OPTIONS: WebSocketOptions = {
 const useWebSocketStore = create<WebSocketStore>((set, get) => {
   let socket: WebSocket | null = null;
   let reconnectAttempts = 0;
-  let reconnectTimer: NodeJS.Timeout | null = null;
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   const messageQueue: WebSocketMessage<unknown>[] = [];
   const listeners = new Map<string, Set<WebSocketListener<unknown>>>();
   let tokenProvider: (() => Promise<string | null>) | undefined;

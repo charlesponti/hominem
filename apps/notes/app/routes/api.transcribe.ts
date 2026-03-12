@@ -4,6 +4,14 @@ import type { ActionFunctionArgs } from 'react-router';
 import { getServerSession } from '~/lib/auth.server';
 import { jsonResponse } from '~/lib/utils/json-response';
 
+interface FormDataReader {
+  get(name: string): FormDataEntryValue | null;
+}
+
+function hasFormDataGet(value: object): value is FormDataReader {
+  return 'get' in value;
+}
+
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== 'POST') {
     return jsonResponse(
@@ -19,6 +27,13 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const formData = await request.formData();
+    if (!hasFormDataGet(formData)) {
+      return jsonResponse(
+        { success: false, error: 'Invalid form submission', code: 'INVALID_FORMAT' },
+        { status: 400 },
+      );
+    }
+
     const audioFile = formData.get('audio');
 
     if (!(audioFile instanceof File)) {

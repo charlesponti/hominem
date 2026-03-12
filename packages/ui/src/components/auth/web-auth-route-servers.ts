@@ -27,10 +27,14 @@ export function withAuthApiBaseUrl<T extends AuthEntryRouteConfig | AuthVerifyRo
 }
 
 interface VerifySuccessPayload {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  tokenType: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  tokenType?: string;
+  access_token?: string;
+  refresh_token?: string;
+  expires_in?: number;
+  token_type?: string;
   user: { id: string; email: string; name?: string | null };
 }
 
@@ -49,6 +53,30 @@ interface FormDataReader {
 
 function hasFormDataGet(value: object): value is FormDataReader {
   return 'get' in value;
+}
+
+function getPayloadAccessToken(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
+  if ('access_token' in payload) {
+    return payload.accessToken ?? payload.access_token
+  }
+
+  return payload.accessToken
+}
+
+function getPayloadRefreshToken(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
+  if ('refresh_token' in payload) {
+    return payload.refreshToken ?? payload.refresh_token ?? null
+  }
+
+  return null
+}
+
+function getPayloadExpiresIn(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
+  if ('expires_in' in payload) {
+    return payload.expiresIn ?? payload.expires_in
+  }
+
+  return null
 }
 
 async function appendTokenCookies(
@@ -70,20 +98,27 @@ async function appendTokenCookies(
 
   const cookieDomain = getAuthCookieDomain();
   const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
+  const accessToken = getPayloadAccessToken(payload)
+  const expiresIn = getPayloadExpiresIn(payload)
   const maxAge =
-    'expiresIn' in payload && typeof payload.expiresIn === 'number'
-      ? `; Max-Age=${payload.expiresIn}`
+    typeof expiresIn === 'number'
+      ? `; Max-Age=${expiresIn}`
       : '';
+
+  if (!accessToken) {
+    return
+  }
 
   headers.append(
     'set-cookie',
-    `hominem_access_token=${encodeURIComponent(payload.accessToken)}; Path=/; HttpOnly; SameSite=Lax${maxAge}${domainAttribute}`,
+    `hominem_access_token=${encodeURIComponent(accessToken)}; Path=/; HttpOnly; SameSite=Lax${maxAge}${domainAttribute}`,
   );
 
-  if ('refreshToken' in payload && payload.refreshToken) {
+  const refreshToken = getPayloadRefreshToken(payload)
+  if (refreshToken) {
     headers.append(
       'set-cookie',
-      `hominem_refresh_token=${encodeURIComponent(payload.refreshToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${domainAttribute}`,
+      `hominem_refresh_token=${encodeURIComponent(refreshToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${domainAttribute}`,
     );
   }
 }
@@ -185,7 +220,7 @@ export function createAuthVerifyAction(config: AuthVerifyServerRouteConfig) {
     }
 
     const result = (await response.json()) as VerifySuccessPayload;
-    if (!result.accessToken) {
+    if (!(result.accessToken ?? result.access_token)) {
       return { error: 'Verification failed. Missing auth token from server.' };
     }
 
