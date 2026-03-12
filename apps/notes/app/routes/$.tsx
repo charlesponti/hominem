@@ -1,5 +1,5 @@
 import { Button } from '@hominem/ui/button';
-import { Bot, Home, Lightbulb, StickyNote } from 'lucide-react';
+import { Bot, Home } from 'lucide-react';
 import { Link } from 'react-router';
 
 export default function NotFoundPage() {
@@ -26,15 +26,9 @@ export default function NotFoundPage() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <Button asChild size="lg" className="flex items-center gap-2">
-            <Link to="/">
+            <Link to="/home">
               <Home className="size-4" />
               Go Home
-            </Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="flex items-center gap-2">
-            <Link to="/notes">
-              <StickyNote className="size-4" />
-              Notes
             </Link>
           </Button>
         </div>
@@ -45,17 +39,9 @@ export default function NotFoundPage() {
             Quick Links
           </p>
           <div className="flex flex-wrap justify-center gap-8 text-sm">
-            <Link to="/notes" className="btn">
-              <StickyNote className="size-4" />
-              Notes
-            </Link>
             <Link to="/chat" className="btn">
               <Bot className="size-4" />
               AI Assistant
-            </Link>
-            <Link to="/content-strategy" className="btn">
-              <Lightbulb className="size-4" />
-              Content Strategy
             </Link>
           </div>
         </div>

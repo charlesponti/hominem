@@ -8,11 +8,23 @@ import { redirect, type ActionFunctionArgs } from 'react-router';
 
 import type {
   AuthEntryRouteConfig,
+  AuthEntryServerRouteConfig,
   AuthLogoutRouteConfig,
   AuthPasskeyCallbackRouteConfig,
   AuthVerifyRouteConfig,
+  AuthVerifyServerRouteConfig,
   GetServerAuth,
 } from './web-auth-routes';
+
+export function withAuthApiBaseUrl<T extends AuthEntryRouteConfig | AuthVerifyRouteConfig>(
+  config: T,
+  getApiBaseUrl: () => string,
+) {
+  return {
+    ...config,
+    getApiBaseUrl,
+  };
+}
 
 interface VerifySuccessPayload {
   accessToken: string;
@@ -89,7 +101,7 @@ export function createAuthEntryLoader(
   };
 }
 
-export function createAuthEntryAction(config: AuthEntryRouteConfig) {
+export function createAuthEntryAction(config: AuthEntryServerRouteConfig) {
   return async function action({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
     if (!hasFormDataGet(formData)) {
@@ -103,7 +115,7 @@ export function createAuthEntryAction(config: AuthEntryRouteConfig) {
     }
 
     try {
-      const response = await fetch(new URL('/api/auth/email-otp/send', config.apiBaseUrl), {
+      const response = await fetch(new URL('/api/auth/email-otp/send', config.getApiBaseUrl()), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, type: 'sign-in' }),
@@ -144,7 +156,7 @@ export function createAuthVerifyLoader(
   };
 }
 
-export function createAuthVerifyAction(config: AuthVerifyRouteConfig) {
+export function createAuthVerifyAction(config: AuthVerifyServerRouteConfig) {
   return async function action({ request }: { request: Request }) {
     const formData = await request.formData();
     if (!hasFormDataGet(formData)) {
@@ -162,7 +174,7 @@ export function createAuthVerifyAction(config: AuthVerifyRouteConfig) {
       return { error: 'Email and verification code are required.' };
     }
 
-    const response = await fetch(new URL('/api/auth/email-otp/verify', config.apiBaseUrl), {
+    const response = await fetch(new URL('/api/auth/email-otp/verify', config.getApiBaseUrl()), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ email, otp }),
@@ -195,7 +207,7 @@ export function createAuthLogoutRoute(config: AuthLogoutRouteConfig) {
     }
 
     try {
-      const response = await fetch(new URL('/api/auth/logout', config.apiBaseUrl), {
+      const response = await fetch(new URL('/api/auth/logout', config.getApiBaseUrl()), {
         method: 'POST',
         headers: upstreamHeaders,
       });

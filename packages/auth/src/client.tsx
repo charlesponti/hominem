@@ -300,6 +300,21 @@ export function AuthProvider({
     void refreshAuth();
   }, [hasInitialAuth, refreshAuth]);
 
+  useEffect(() => {
+    if (!authState.session || authState.status === 'signed_out') {
+      return;
+    }
+
+    const expiresIn = authState.session.expires_in ?? 600;
+    const refreshInterval = Math.max((expiresIn - 60) * 1000, 5 * 60 * 1000);
+
+    const intervalId = setInterval(() => {
+      void refreshAuth();
+    }, refreshInterval);
+
+    return () => clearInterval(intervalId);
+  }, [authState.session, authState.status, refreshAuth]);
+
   const signIn = useCallback(async () => {
     // Default sign-in: redirect to email sign-in page
     window.location.href = '/auth';

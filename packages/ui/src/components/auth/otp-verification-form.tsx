@@ -40,8 +40,9 @@ export function OtpVerificationForm({
 }: OtpVerificationFormProps) {
   const navigation = useNavigation();
   const resendFetcher = useFetcher();
+  const submitFetcher = useFetcher();
   const [searchParams] = useSearchParams();
-  const isSubmitting = navigation.state === 'submitting' && navigation.formAction === action;
+  const isSubmitting = (navigation.state === 'submitting' && navigation.formAction === action) || submitFetcher.state === 'submitting';
 
   const [otp, setOtp] = useState('');
   const [expirationCountdown, setExpirationCountdown] = useState<string | null>(null);
@@ -112,10 +113,14 @@ export function OtpVerificationForm({
       setOtp(val);
       // Auto-submit when all digits are entered
       if (val.length === 6 && !isSubmitting && !isAccountLocked) {
-        setTimeout(() => formRef.current?.requestSubmit(), 0);
+        const formData = new FormData();
+        formData.append('email', resolvedEmail);
+        formData.append('next', next);
+        formData.append('otp', val);
+        submitFetcher.submit(formData, { method: 'post', action });
       }
     },
-    [isSubmitting, isAccountLocked]
+    [isSubmitting, isAccountLocked, resolvedEmail, next, action, submitFetcher]
   );
 
   // Resend is via fetcher since it doesn't need a redirect
