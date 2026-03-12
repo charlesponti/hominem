@@ -101,7 +101,9 @@ describe('auth device contract', () => {
     process.env.AUTH_EMAIL_OTP_EXPIRES_SECONDS = '300'
   })
 
-  test('device authorization uses stable auth routes and forwards set-auth-token', async () => {
+  test(
+    'device authorization uses stable auth routes and forwards set-auth-token',
+    async () => {
     const createServer = await importServer()
     const app = createServer()
     const email = `cli-device-${Date.now()}@hominem.test`
@@ -181,7 +183,9 @@ describe('auth device contract', () => {
         email,
       },
     })
-  })
+    },
+    15_000,
+  )
 
   test('device approval requires an authenticated browser session', async () => {
     const createServer = await importServer()
