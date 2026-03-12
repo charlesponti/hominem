@@ -1,4 +1,5 @@
 import * as React from 'react';
+
 import { cn } from '../../lib/utils';
 
 interface NumberInputProps extends Omit<React.ComponentProps<'input'>, 'type'> {
@@ -53,13 +54,14 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           'disabled:cursor-not-allowed disabled:opacity-50',
           success && 'border-accent bg-accent/5',
           !success && !error && 'border-border-default focus-visible:border-border-focus',
-          error && 'border-destructive focus-visible:shadow-[0_0_0_2px_var(--color-bg-elevated),0_0_0_4px_var(--color-destructive)]',
-          className
+          error &&
+            'border-destructive focus-visible:shadow-[0_0_0_2px_var(--color-bg-elevated),0_0_0_4px_var(--color-destructive)]',
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 
 NumberInput.displayName = 'NumberInput';

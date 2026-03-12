@@ -1,9 +1,10 @@
-import * as React from 'react'
-import { cn } from '../../lib/utils'
-import type { FieldBaseProps } from './field.types'
+import * as React from 'react';
+
+import { cn } from '../../lib/utils';
+import type { FieldBaseProps } from './field.types';
 
 interface FieldProps extends FieldBaseProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 /**
@@ -16,11 +17,19 @@ interface FieldProps extends FieldBaseProps {
  *   <Input type="email" />
  * </Field>
  */
-function Field({ label, helpText, error, required, children, className, id: externalId }: FieldProps) {
-  const generatedId = React.useId()
-  const id = externalId ?? generatedId
-  const descId = `${id}-desc`
-  const errorId = `${id}-error`
+function Field({
+  label,
+  helpText,
+  error,
+  required,
+  children,
+  className,
+  id: externalId,
+}: FieldProps) {
+  const generatedId = React.useId();
+  const id = externalId ?? generatedId;
+  const descId = `${id}-desc`;
+  const errorId = `${id}-error`;
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
@@ -38,11 +47,14 @@ function Field({ label, helpText, error, required, children, className, id: exte
 
       {/* Clone child to inject id and aria attributes */}
       {React.isValidElement(children)
-        ? React.cloneElement(children as React.ReactElement<React.HTMLAttributes<HTMLElement>>, {
-            id,
-            'aria-describedby': error ? errorId : helpText ? descId : undefined,
-            'aria-invalid': error ? true : undefined,
-          } as React.HTMLAttributes<HTMLElement>)
+        ? React.cloneElement(
+            children as React.ReactElement<React.HTMLAttributes<HTMLElement>>,
+            {
+              id,
+              'aria-describedby': error ? errorId : helpText ? descId : undefined,
+              'aria-invalid': error ? true : undefined,
+            } as React.HTMLAttributes<HTMLElement>,
+          )
         : children}
 
       {error ? (
@@ -55,7 +67,7 @@ function Field({ label, helpText, error, required, children, className, id: exte
         </p>
       ) : null}
     </div>
-  )
+  );
 }
 
-export { Field, type FieldProps }
+export { Field, type FieldProps };

@@ -15,10 +15,7 @@ export type ThoughtLifecycleState =
   | 'persisting'
   | 'recovering_error';
 
-export type ThoughtLifecycleTransition = [
-  from: ThoughtLifecycleState,
-  to: ThoughtLifecycleState,
-];
+export type ThoughtLifecycleTransition = [from: ThoughtLifecycleState, to: ThoughtLifecycleState];
 
 /**
  * Every valid state transition. Any transition not listed here is forbidden.
@@ -66,19 +63,14 @@ export const ALLOWED_TRANSITIONS: ThoughtLifecycleTransition[] = [
 /**
  * Returns true if transitioning from `from` to `to` is permitted by the state machine.
  */
-export function isValidTransition(
-  from: ThoughtLifecycleState,
-  to: ThoughtLifecycleState,
-): boolean {
+export function isValidTransition(from: ThoughtLifecycleState, to: ThoughtLifecycleState): boolean {
   return ALLOWED_TRANSITIONS.some(([f, t]) => f === from && t === to);
 }
 
 /**
  * Returns all states reachable from `from` in a single step.
  */
-export function reachableFrom(
-  from: ThoughtLifecycleState,
-): ThoughtLifecycleState[] {
+export function reachableFrom(from: ThoughtLifecycleState): ThoughtLifecycleState[] {
   return ALLOWED_TRANSITIONS.filter(([f]) => f === from).map(([, t]) => t);
 }
 
@@ -87,9 +79,5 @@ export function reachableFrom(
  * should prevent new user input.
  */
 export function isBlockingState(state: ThoughtLifecycleState): boolean {
-  return (
-    state === 'classifying' ||
-    state === 'persisting' ||
-    state === 'transcribing'
-  );
+  return state === 'classifying' || state === 'persisting' || state === 'transcribing';
 }

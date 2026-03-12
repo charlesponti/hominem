@@ -1,5 +1,5 @@
-import { Button } from '@hominem/ui/button';
 import { Inline, Stack } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
 import {
   AlertCircle,
   CheckCircle,

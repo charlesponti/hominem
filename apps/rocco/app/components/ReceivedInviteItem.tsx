@@ -1,5 +1,5 @@
-import { Button } from '@hominem/ui/button';
 import { Inline, Stack } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
 import { ArrowRight, ListCheck } from 'lucide-react';
 import { useCallback } from 'react';
 import { Link } from 'react-router';

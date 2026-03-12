@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 // User Profile Schema
 export const UserProfileSchema = z.object({
@@ -7,9 +7,9 @@ export const UserProfileSchema = z.object({
   name: z.string().nullable(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-})
+});
 
-export type UserProfile = z.infer<typeof UserProfileSchema>
+export type UserProfile = z.infer<typeof UserProfileSchema>;
 
 // Chat Message Schema
 export const ChatMessageSchema = z.object({
@@ -33,9 +33,9 @@ export const ChatMessageSchema = z.object({
   isStreaming: z.boolean().optional(),
   focusItemsJson: z.string().nullable().optional(),
   focusIdsJson: z.string().nullable().optional(),
-})
+});
 
-export type ChatMessage = z.infer<typeof ChatMessageSchema>
+export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 
 // Chat Schema
 export const ChatSchema = z.object({
@@ -43,9 +43,9 @@ export const ChatSchema = z.object({
   createdAt: z.string().datetime(),
   endedAt: z.string().datetime().nullable().optional(),
   title: z.string().nullable().optional(),
-})
+});
 
-export type Chat = z.infer<typeof ChatSchema>
+export type Chat = z.infer<typeof ChatSchema>;
 
 // Focus Item Schema
 export const FocusItemSchema = z.object({
@@ -62,9 +62,9 @@ export const FocusItemSchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   sourceNote: z.record(z.string(), z.unknown()).nullable(),
-})
+});
 
-export type FocusItem = z.infer<typeof FocusItemSchema>
+export type FocusItem = z.infer<typeof FocusItemSchema>;
 
 // Note Schema (from API)
 export const NoteSchema = z.object({
@@ -86,46 +86,48 @@ export const NoteSchema = z.object({
   updatedAt: z.string().datetime(),
   publishedAt: z.string().datetime().nullable(),
   scheduledFor: z.string().datetime().nullable(),
-})
+});
 
-export type Note = z.infer<typeof NoteSchema>
+export type Note = z.infer<typeof NoteSchema>;
 
 // API Response Schemas
 export const NotesResponseSchema = z.object({
   notes: z.array(NoteSchema),
-})
+});
 
 export const ChatMessagesResponseSchema = z.object({
   messages: z.array(ChatMessageSchema),
-})
+});
 
 export const ChatResponseSchema = z.object({
   chat: ChatSchema,
-})
+});
 
 // Validation helpers
 export function validateUserProfile(data: unknown): UserProfile {
-  return UserProfileSchema.parse(data)
+  return UserProfileSchema.parse(data);
 }
 
 export function validateChatMessage(data: unknown): ChatMessage {
-  return ChatMessageSchema.parse(data)
+  return ChatMessageSchema.parse(data);
 }
 
 export function validateFocusItem(data: unknown): FocusItem {
-  return FocusItemSchema.parse(data)
+  return FocusItemSchema.parse(data);
 }
 
 export function validateNote(data: unknown): Note {
-  return NoteSchema.parse(data)
+  return NoteSchema.parse(data);
 }
 
 export function validateNotesResponse(data: unknown): z.infer<typeof NotesResponseSchema> {
-  return NotesResponseSchema.parse(data)
+  return NotesResponseSchema.parse(data);
 }
 
-export function validateChatMessagesResponse(data: unknown): z.infer<typeof ChatMessagesResponseSchema> {
-  return ChatMessagesResponseSchema.parse(data)
+export function validateChatMessagesResponse(
+  data: unknown,
+): z.infer<typeof ChatMessagesResponseSchema> {
+  return ChatMessagesResponseSchema.parse(data);
 }
 
 // Settings Schema
@@ -133,9 +135,9 @@ export const SettingsSchema = z.object({
   id: z.string(),
   theme: z.string().nullable().optional(),
   preferencesJson: z.string().nullable().optional(),
-})
+});
 
-export type Settings = z.infer<typeof SettingsSchema>
+export type Settings = z.infer<typeof SettingsSchema>;
 
 // Media Schema
 export const MediaSchema = z.object({
@@ -143,6 +145,6 @@ export const MediaSchema = z.object({
   type: z.string(),
   localURL: z.string(),
   createdAt: z.string().datetime(),
-})
+});
 
-export type Media = z.infer<typeof MediaSchema>
+export type Media = z.infer<typeof MediaSchema>;

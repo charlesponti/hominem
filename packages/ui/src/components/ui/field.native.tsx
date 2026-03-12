@@ -1,25 +1,32 @@
-import * as React from 'react'
-import { StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native'
+import * as React from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  type StyleProp,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
 
-import { colors, fontFamiliesNative, fontSizes, fontWeights, spacing } from '../../tokens'
-import type { FieldBaseProps } from './field.types'
+import { colors, fontFamiliesNative, fontSizes, fontWeights, spacing } from '../../tokens';
+import type { FieldBaseProps } from './field.types';
 
 interface NativeFieldChildProps {
-  accessibilityHint?: string | undefined
-  accessibilityLabel?: string | undefined
-  accessibilityLabelledBy?: string | string[] | undefined
-  nativeID?: string | undefined
+  accessibilityHint?: string | undefined;
+  accessibilityLabel?: string | undefined;
+  accessibilityLabelledBy?: string | string[] | undefined;
+  nativeID?: string | undefined;
 }
 
 interface FieldProps extends FieldBaseProps {
-  children: React.ReactNode
-  containerStyle?: StyleProp<ViewStyle>
-  labelStyle?: StyleProp<TextStyle>
-  messageStyle?: StyleProp<TextStyle>
+  children: React.ReactNode;
+  containerStyle?: StyleProp<ViewStyle>;
+  labelStyle?: StyleProp<TextStyle>;
+  messageStyle?: StyleProp<TextStyle>;
 }
 
 function normalizeNativeId(value: string) {
-  return value.replace(/[^a-zA-Z0-9_-]/g, '')
+  return value.replace(/[^a-zA-Z0-9_-]/g, '');
 }
 
 function Field({
@@ -34,11 +41,11 @@ function Field({
   messageStyle,
   required,
 }: FieldProps) {
-  const generatedId = React.useId()
-  const id = normalizeNativeId(externalId ?? generatedId)
-  const labelId = `${id}-label`
-  const messageId = `${id}-message`
-  const message = error ?? helpText
+  const generatedId = React.useId();
+  const id = normalizeNativeId(externalId ?? generatedId);
+  const labelId = `${id}-label`;
+  const messageId = `${id}-message`;
+  const message = error ?? helpText;
 
   return (
     <View style={containerStyle}>
@@ -57,12 +64,15 @@ function Field({
           })
         : children}
       {message ? (
-        <Text nativeID={messageId} style={[error ? styles.errorText : styles.helpText, messageStyle]}>
+        <Text
+          nativeID={messageId}
+          style={[error ? styles.errorText : styles.helpText, messageStyle]}
+        >
           {message}
         </Text>
       ) : null}
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -93,7 +103,7 @@ const styles = StyleSheet.create({
   required: {
     color: colors.destructive,
   },
-})
+});
 
-export { Field }
-export type { FieldProps }
+export { Field };
+export type { FieldProps };

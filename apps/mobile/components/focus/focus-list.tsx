@@ -1,48 +1,41 @@
-import { memo, useCallback } from 'react'
-import { StyleSheet } from 'react-native'
-import { fontSizes } from '@hominem/ui/tokens'
-import { FlashList, type ListRenderItem } from '@shopify/flash-list'
-import { makeStyles } from '~/theme'
-import { RefreshControl } from 'react-native-gesture-handler'
-import type { FocusItem } from '~/utils/services/notes/types'
-import { FocusListItem } from './focus-list-item'
+import { fontSizes } from '@hominem/ui/tokens';
+import { FlashList, type ListRenderItem } from '@shopify/flash-list';
+import { memo, useCallback } from 'react';
+import { StyleSheet } from 'react-native';
+import { RefreshControl } from 'react-native-gesture-handler';
+
+import { makeStyles } from '~/theme';
+import type { FocusItem } from '~/utils/services/notes/types';
+
+import { FocusListItem } from './focus-list-item';
 
 // Memoized render item component to prevent unnecessary re-renders
 const RenderFocusItem = memo(({ item, index }: { item: FocusItem; index: number }) => {
-  return (
-    <FocusListItem
-      label={item.text}
-      item={item}
-      itemIndex={index}
-    />
-  )
-})
+  return <FocusListItem label={item.text} item={item} itemIndex={index} />;
+});
 
-RenderFocusItem.displayName = 'RenderFocusItem'
+RenderFocusItem.displayName = 'RenderFocusItem';
 
 // Stable key extractor - just use item.id directly
-const keyExtractor = (item: FocusItem) => item.id
+const keyExtractor = (item: FocusItem) => item.id;
 
 export const FocusList = ({
   data,
   isRefreshing,
   onRefresh,
 }: {
-  data: FocusItem[]
-  isRefreshing: boolean
-  onRefresh: () => void
+  data: FocusItem[];
+  isRefreshing: boolean;
+  onRefresh: () => void;
 }) => {
-  const styles = useStyles()
+  const styles = useStyles();
   // Memoized render function with stable reference
-  const renderItem = useCallback<ListRenderItem<FocusItem>>(
-    ({ item, index }) => {
-      return <RenderFocusItem item={item} index={index} />
-    },
-    []
-  )
+  const renderItem = useCallback<ListRenderItem<FocusItem>>(({ item, index }) => {
+    return <RenderFocusItem item={item} index={index} />;
+  }, []);
 
   if (!data.length) {
-    return null
+    return null;
   }
 
   return (
@@ -58,8 +51,8 @@ export const FocusList = ({
       // FlashList optimizations for smooth scrolling
       removeClippedSubviews={true}
     />
-  )
-}
+  );
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -83,5 +76,5 @@ const useStyles = makeStyles((t) =>
       fontSize: fontSizes.sm,
       color: t.colors['text-tertiary'],
     },
-  })
-)
+  }),
+);

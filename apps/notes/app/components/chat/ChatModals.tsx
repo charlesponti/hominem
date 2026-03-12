@@ -1,7 +1,7 @@
 import type { VoiceErrorCode } from '@hominem/services';
+import { Inline } from '@hominem/ui';
 import { SpeechInput } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';
-import { Inline } from '@hominem/ui';
 import { X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
@@ -94,8 +94,15 @@ export function ChatModals({
         >
           <div className="border p-6 w-full max-w-md space-y-4">
             <Inline justify="between">
-              <h3 className="text-lg font-semibold" id="voice-dialog-title">Record Audio</h3>
-              <Button variant="ghost" size="sm" onClick={onCloseAudioRecorder} aria-label="Close voice input">
+              <h3 className="text-lg font-semibold" id="voice-dialog-title">
+                Record Audio
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onCloseAudioRecorder}
+                aria-label="Close voice input"
+              >
                 <X className="size-4" />
               </Button>
             </Inline>
@@ -111,7 +118,11 @@ export function ChatModals({
                 }}
               />
             </Inline>
-            {voiceError ? <p className="text-sm text-destructive" role="alert">{voiceError}</p> : null}
+            {voiceError ? (
+              <p className="text-sm text-destructive" role="alert">
+                {voiceError}
+              </p>
+            ) : null}
           </div>
         </div>
       ) : null}

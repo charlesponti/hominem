@@ -5,9 +5,7 @@ import { Home, Sparkles } from 'lucide-react';
 
 const APP_NAME = 'Animus';
 
-const navItems: NavItem[] = [
-  { title: 'Home', url: '/home', icon: Home },
-];
+const navItems: NavItem[] = [{ title: 'Home', url: '/home', icon: Home }];
 
 export default function NotesHeader() {
   return (

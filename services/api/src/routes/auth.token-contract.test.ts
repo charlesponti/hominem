@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mockRotateRefreshToken = vi.hoisted(() => vi.fn());
 

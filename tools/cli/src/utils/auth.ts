@@ -176,7 +176,7 @@ async function migrateLegacyConfig(): Promise<void> {
 
     await fs.rm(legacyConfig, { force: true });
     await fs.rm(legacyGoogle, { force: true });
-  } catch  {
+  } catch {
     // ignore missing or malformed legacy config
   }
 }
@@ -417,7 +417,11 @@ export async function interactiveLogin(options: AuthOptions) {
           redirectUri,
         });
 
-        const tokens = buildStoredTokensFromResponse(tokenResponse, issuerBaseUrl, (options.scopes ? { scopes: options.scopes } : {}));
+        const tokens = buildStoredTokensFromResponse(
+          tokenResponse,
+          issuerBaseUrl,
+          options.scopes ? { scopes: options.scopes } : {},
+        );
 
         await saveTokens(tokens);
 

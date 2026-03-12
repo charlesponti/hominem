@@ -53,9 +53,7 @@ const PlaceTypes = ({ limit, types }: { limit?: number; types: string[] }) => {
             return true;
           })
           .map((type) => (
-            <PlaceType key={type}>
-              {type.replace(/_store/gi, '').replace(/_/gi, ' ')}
-            </PlaceType>
+            <PlaceType key={type}>{type.replace(/_store/gi, '').replace(/_/gi, ' ')}</PlaceType>
           ))
       )}
     </div>

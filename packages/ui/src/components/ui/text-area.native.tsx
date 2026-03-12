@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from 'react';
 import {
   StyleSheet,
   TextInput,
@@ -6,43 +6,27 @@ import {
   type TextInputProps,
   type TextStyle,
   type ViewStyle,
-} from 'react-native'
+} from 'react-native';
 
-import { colors, fontFamiliesNative, fontSizes, spacing } from '../../tokens'
-import { Field } from './field.native'
-import type { TextAreaBaseProps } from './text-area.types'
+import { colors, fontFamiliesNative, fontSizes, spacing } from '../../tokens';
+import { Field } from './field.native';
+import type { TextAreaBaseProps } from './text-area.types';
 
 interface TextAreaProps
-  extends Omit<TextInputProps, 'accessibilityLabel' | 'editable' | 'multiline'>,
-    TextAreaBaseProps {
-  containerStyle?: StyleProp<ViewStyle>
-  editable?: boolean | undefined
-  style?: StyleProp<TextStyle>
+  extends Omit<TextInputProps, 'accessibilityLabel' | 'editable' | 'multiline'>, TextAreaBaseProps {
+  containerStyle?: StyleProp<ViewStyle>;
+  editable?: boolean | undefined;
+  style?: StyleProp<TextStyle>;
 }
 
 const TextArea = React.forwardRef<TextInput, TextAreaProps>(function TextArea(
-  {
-    containerStyle,
-    disabled,
-    editable,
-    error,
-    helpText,
-    label,
-    placeholder,
-    style,
-    ...props
-  },
+  { containerStyle, disabled, editable, error, helpText, label, placeholder, style, ...props },
   ref,
 ) {
-  const isEditable = editable ?? !disabled
+  const isEditable = editable ?? !disabled;
 
   return (
-    <Field
-      containerStyle={containerStyle}
-      error={error}
-      helpText={helpText}
-      label={label}
-    >
+    <Field containerStyle={containerStyle} error={error} helpText={helpText} label={label}>
       <TextInput
         ref={ref}
         editable={isEditable}
@@ -59,8 +43,8 @@ const TextArea = React.forwardRef<TextInput, TextAreaProps>(function TextArea(
         {...props}
       />
     </Field>
-  )
-})
+  );
+});
 
 const styles = StyleSheet.create({
   input: {
@@ -81,7 +65,7 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: colors.destructive,
   },
-})
+});
 
-export { TextArea }
-export type { TextAreaProps }
+export { TextArea };
+export type { TextAreaProps };

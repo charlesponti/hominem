@@ -143,11 +143,7 @@ interface AttachmentInfoProps extends HTMLAttributes<HTMLDivElement> {
   showMediaType?: boolean;
 }
 
-export function AttachmentInfo({
-  className,
-  children,
-  ...props
-}: AttachmentInfoProps) {
+export function AttachmentInfo({ className, children, ...props }: AttachmentInfoProps) {
   return (
     <div className={cn('flex flex-col', className)} {...props}>
       {children}

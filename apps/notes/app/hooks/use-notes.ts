@@ -14,8 +14,8 @@ export function useNotesList(options: NotesListInput = {}) {
   return useHonoQuery<Note[]>(
     ['notes', 'list', options],
     async ({ notes }) => {
-      const data = await notes.list(options)
-      return Array.isArray(data.notes) ? data.notes : []
+      const data = await notes.list(options);
+      return Array.isArray(data.notes) ? data.notes : [];
     },
     {
       staleTime: 1000 * 60 * 1, // 1 minute
@@ -24,14 +24,10 @@ export function useNotesList(options: NotesListInput = {}) {
 }
 
 export function useNote(id: string) {
-  return useHonoQuery<NotesGetOutput>(
-    ['notes', id],
-    ({ notes }) => notes.get({ id }),
-    {
-      enabled: !!id,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    },
-  );
+  return useHonoQuery<NotesGetOutput>(['notes', id], ({ notes }) => notes.get({ id }), {
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 }
 
 export function useCreateNote() {

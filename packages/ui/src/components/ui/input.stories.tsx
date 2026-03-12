@@ -1,19 +1,20 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { Label } from './label'
-import { Input } from './input'
-import { Textarea } from './textarea'
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { Input } from './input';
+import { Label } from './label';
+import { Textarea } from './textarea';
 
 const meta: Meta<typeof Input> = {
   title: 'UI/Input',
   component: Input,
   tags: ['autodocs'],
-}
-export default meta
-type Story = StoryObj<typeof Input>
+};
+export default meta;
+type Story = StoryObj<typeof Input>;
 
 export const Default: Story = {
   args: { placeholder: 'Enter text…' },
-}
+};
 
 export const WithLabel: Story = {
   render: () => (
@@ -22,7 +23,7 @@ export const WithLabel: Story = {
       <Input id="email" type="email" placeholder="you@example.com" />
     </div>
   ),
-}
+};
 
 export const States: Story = {
   render: () => (
@@ -32,7 +33,7 @@ export const States: Story = {
       <Input defaultValue="With value" />
     </div>
   ),
-}
+};
 
 export const TextareaStory: Story = {
   name: 'Textarea',
@@ -42,4 +43,4 @@ export const TextareaStory: Story = {
       <Textarea id="notes" placeholder="Write something…" rows={4} />
     </div>
   ),
-}
+};

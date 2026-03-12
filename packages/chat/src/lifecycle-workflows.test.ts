@@ -55,7 +55,9 @@ class LifecycleSimulator {
 
   /** Asserts the state machine is NOT blocking user input at this point. */
   assertNotBlocking(): void {
-    expect(isBlockingState(this.state), `expected non-blocking state, got: ${this.state}`).toBe(false);
+    expect(isBlockingState(this.state), `expected non-blocking state, got: ${this.state}`).toBe(
+      false,
+    );
   }
 }
 
@@ -150,11 +152,19 @@ describe('Journey 2 — Capture → Session → Transform (ArtifactActions)', ()
 
   it('ArtifactActions must not be interactive when state is blocking', () => {
     // classifying, reviewing_changes, and persisting all block artifact actions.
-    const blockingStates: ThoughtLifecycleState[] = ['classifying', 'reviewing_changes', 'persisting'];
+    const blockingStates: ThoughtLifecycleState[] = [
+      'classifying',
+      'reviewing_changes',
+      'persisting',
+    ];
     for (const state of blockingStates) {
       // ArtifactActions component logic: disabled = !enabled || isBlocked
       // isBlocked = ['classifying', 'reviewing_changes', 'persisting'].includes(state)
-      const BLOCKING_FOR_ACTIONS: ThoughtLifecycleState[] = ['classifying', 'reviewing_changes', 'persisting'];
+      const BLOCKING_FOR_ACTIONS: ThoughtLifecycleState[] = [
+        'classifying',
+        'reviewing_changes',
+        'persisting',
+      ];
       expect(BLOCKING_FOR_ACTIONS.includes(state)).toBe(true);
     }
   });

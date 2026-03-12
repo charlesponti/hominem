@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { deriveSessionSource } from '@hominem/chat-services';
+import { describe, expect, it } from 'vitest';
 
 describe('chat source', () => {
   it('preserves the first user thought when the session has no artifact context', () => {

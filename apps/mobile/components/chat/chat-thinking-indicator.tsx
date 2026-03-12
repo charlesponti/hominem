@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { fontSizes } from '@hominem/ui/tokens';
+import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -7,21 +8,20 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
-} from 'react-native-reanimated'
-import { fontSizes } from '@hominem/ui/tokens'
+} from 'react-native-reanimated';
 
-import { makeStyles, Text } from '~/theme'
-import { VOID_EASING_STANDARD } from '~/theme/motion'
+import { makeStyles, Text } from '~/theme';
+import { VOID_EASING_STANDARD } from '~/theme/motion';
 
 // Stagger timing for thinking dots — 3-dot bounce cadence
-const DOT_UP_DURATION = 400
-const DOT_DOWN_DURATION = 230
-const DOT_RETURN_DURATION = 170
-const CYCLE_IDLE = 800 // idle period before repeating
-const STAGGER_OFFSET = 120 // ms between each dot
+const DOT_UP_DURATION = 400;
+const DOT_DOWN_DURATION = 230;
+const DOT_RETURN_DURATION = 170;
+const CYCLE_IDLE = 800; // idle period before repeating
+const STAGGER_OFFSET = 120; // ms between each dot
 
 function useBounceDot(delayMs: number) {
-  const translateY = useSharedValue(0)
+  const translateY = useSharedValue(0);
 
   useEffect(() => {
     translateY.value = withDelay(
@@ -35,17 +35,17 @@ function useBounceDot(delayMs: number) {
         ),
         -1,
       ),
-    )
-  }, [translateY, delayMs])
+    );
+  }, [translateY, delayMs]);
 
-  return useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }))
+  return useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
 }
 
 export function ChatThinkingIndicator() {
-  const styles = useStyles()
-  const dot1Style = useBounceDot(0)
-  const dot2Style = useBounceDot(STAGGER_OFFSET)
-  const dot3Style = useBounceDot(STAGGER_OFFSET * 2)
+  const styles = useStyles();
+  const dot1Style = useBounceDot(0);
+  const dot2Style = useBounceDot(STAGGER_OFFSET);
+  const dot3Style = useBounceDot(STAGGER_OFFSET * 2);
 
   return (
     <View style={styles.row}>
@@ -53,16 +53,20 @@ export function ChatThinkingIndicator() {
         <View style={styles.iconDot} />
       </View>
       <View style={styles.content}>
-        <Text variant="small" style={styles.label}>AI Assistant</Text>
+        <Text variant="small" style={styles.label}>
+          AI Assistant
+        </Text>
         <View style={styles.dotsRow}>
           <Animated.View style={[styles.dot, dot1Style]} />
           <Animated.View style={[styles.dot, dot2Style]} />
           <Animated.View style={[styles.dot, dot3Style]} />
-          <Text variant="small" style={styles.thinkingText}>Thinking...</Text>
+          <Text variant="small" style={styles.thinkingText}>
+            Thinking...
+          </Text>
         </View>
       </View>
     </View>
-  )
+  );
 }
 
 const useStyles = makeStyles((t) =>
@@ -117,5 +121,5 @@ const useStyles = makeStyles((t) =>
       fontSize: fontSizes.xs,
       marginLeft: t.spacing.xs_4,
     },
-  })
-)
+  }),
+);

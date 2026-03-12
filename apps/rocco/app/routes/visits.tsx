@@ -1,6 +1,6 @@
 import { useAuthContext } from '@hominem/auth';
-import { Field } from '@hominem/ui/field';
 import { Inline } from '@hominem/ui';
+import { Field } from '@hominem/ui/field';
 import { Input } from '@hominem/ui/input';
 import { SelectField } from '@hominem/ui/select-field';
 import { TextField } from '@hominem/ui/text-field';
@@ -67,19 +67,11 @@ export default function VisitsPage() {
           />
 
           <Field label="Start date">
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
+            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </Field>
 
           <Field label="End date">
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
+            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
           </Field>
 
           <SelectField

@@ -121,14 +121,14 @@ function RootLayout() {
 
 export default RootLayout;
 
-const rootStyles = makeStyles(t =>
+const rootStyles = makeStyles((t) =>
   StyleSheet.create({
     gestureRoot: {
       flex: 1,
       backgroundColor: t.colors.background,
     },
-  })
-)()
+  }),
+)();
 
 const styles = makeStyles((t) =>
   StyleSheet.create({
@@ -156,5 +156,5 @@ const styles = makeStyles((t) =>
       height: 16,
       opacity: 0.02,
     },
-  })
-)()
+  }),
+)();

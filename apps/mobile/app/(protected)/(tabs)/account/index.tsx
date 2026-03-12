@@ -94,10 +94,7 @@ function Account() {
 
   return (
     <View testID="account-screen" style={styles.root}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text variant="cardHeader" color="foreground">
           ACCOUNT
         </Text>

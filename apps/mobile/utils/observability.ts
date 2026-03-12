@@ -1,3 +1,3 @@
 export const initObservability = () => {
-  return
-}
+  return;
+};

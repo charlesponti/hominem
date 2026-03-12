@@ -4,31 +4,31 @@ import {
   getHttpRequestOutLogMessage,
   logAtLevel,
   logger,
-} from '@hominem/utils/logger'
-import type { MiddlewareHandler } from 'hono'
+} from '@hominem/utils/logger';
+import type { MiddlewareHandler } from 'hono';
 
 export function requestLogger(): MiddlewareHandler {
   return async (c, next) => {
-    const startedAt = performance.now()
+    const startedAt = performance.now();
     const startData = {
       method: c.req.method,
       path: c.req.path,
-    }
+    };
 
-    logger.info(getHttpRequestInLogMessage(), startData)
+    logger.info(getHttpRequestInLogMessage(), startData);
 
-    await next()
+    await next();
 
-    const durationMs = Math.max(0, Math.round(performance.now() - startedAt))
+    const durationMs = Math.max(0, Math.round(performance.now() - startedAt));
     const data = {
       durationMs,
       method: c.req.method,
       path: c.req.path,
       status: c.res.status,
-    }
-    const level = getHttpRequestLogLevel(data)
-    const message = getHttpRequestOutLogMessage()
+    };
+    const level = getHttpRequestLogLevel(data);
+    const message = getHttpRequestOutLogMessage();
 
-    logAtLevel(level, message, data)
-  }
+    logAtLevel(level, message, data);
+  };
 }

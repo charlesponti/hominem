@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { View, Button, Text, StyleSheet, Animated } from 'react-native';
 import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
+
 import { makeStyles } from '~/theme';
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 
@@ -53,14 +54,16 @@ const App = () => {
     <GestureHandlerRootView style={styles.container}>
       <PanGestureHandler
         onGestureEvent={handleGestureEvent}
-        onHandlerStateChange={handleStateChange}>
+        onHandlerStateChange={handleStateChange}
+      >
         <Animated.View
           style={[
             styles.card,
             {
               transform: [{ translateY }],
             },
-          ]}>
+          ]}
+        >
           <Text>Swipe down to dismiss</Text>
         </Animated.View>
       </PanGestureHandler>
@@ -85,7 +88,7 @@ const useStyles = makeStyles((t) =>
       justifyContent: 'center',
       alignItems: 'center',
     },
-  })
+  }),
 );
 
 export default App;

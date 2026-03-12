@@ -6,6 +6,7 @@ import type {
   MessagesUpdateOutput,
 } from '@hominem/hono-rpc/types/chat.types';
 import { Inline } from '@hominem/ui';
+import { ShimmerMessage, ThinkingIndicator } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/components/ui/input';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -19,8 +20,6 @@ import { useScrollDetection } from '~/lib/hooks/use-scroll-detection';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
 import type { ExtendedMessage } from '~/lib/types/chat-message';
 import { findPreviousUserMessage } from '~/lib/utils/message';
-
-import { ShimmerMessage, ThinkingIndicator } from '@hominem/ui/ai-elements';
 
 import { ChatMessage } from './ChatMessage';
 
@@ -147,14 +146,11 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
     const updateMessageMutation = useHonoMutation<
       MessagesUpdateOutput,
       { messageId: string; content: string }
-    >(
-      ({ messages }, variables) => messages.update(variables),
-      {
-        onSuccess: () => {
-          utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
-        },
+    >(({ messages }, variables) => messages.update(variables), {
+      onSuccess: () => {
+        utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
       },
-    );
+    });
 
     const handleRegenerate = useCallback(
       async (messageId: string) => {

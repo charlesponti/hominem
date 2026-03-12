@@ -151,12 +151,7 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
         />
 
         <Field label="Date" required>
-          <Input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-          />
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </Field>
 
         <TextArea

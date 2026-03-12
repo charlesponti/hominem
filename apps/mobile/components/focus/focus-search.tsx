@@ -1,17 +1,18 @@
+import { fontSizes } from '@hominem/ui/tokens';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { fontSizes } from '@hominem/ui/tokens'
+
 import { makeStyles, Text, theme } from '~/theme';
 import { borderStyle } from '~/theme/styles';
 
 export type ActiveSearch = {
-  count: number
-  keyword: string
-}
+  count: number;
+  keyword: string;
+};
 
 export const ActiveSearchSummary = React.memo(
   ({ activeSearch, onCloseClick }: { activeSearch: ActiveSearch; onCloseClick: () => void }) => {
-    const styles = useStyles()
+    const styles = useStyles();
     return (
       <View style={[styles.container]}>
         <View style={styles.resultCount}>
@@ -27,9 +28,9 @@ export const ActiveSearchSummary = React.memo(
           </Pressable>
         </View>
       </View>
-    )
-  }
-)
+    );
+  },
+);
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -63,5 +64,5 @@ const useStyles = makeStyles((t) =>
       paddingHorizontal: t.spacing.sm_12,
       alignItems: 'center',
     },
-  })
-)
+  }),
+);

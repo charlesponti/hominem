@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { Button } from './ui/button'
-import { PageTitle } from './page-title'
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { PageTitle } from './page-title';
+import { Button } from './ui/button';
 
 const meta: Meta<typeof PageTitle> = {
   title: 'UI/PageTitle',
@@ -12,20 +13,20 @@ const meta: Meta<typeof PageTitle> = {
       options: ['serif', 'sans', 'large'],
     },
   },
-}
-export default meta
-type Story = StoryObj<typeof PageTitle>
+};
+export default meta;
+type Story = StoryObj<typeof PageTitle>;
 
 export const Default: Story = {
   args: { title: 'Page Title' },
-}
+};
 
 export const WithSubtitle: Story = {
   args: {
     title: 'My Notes',
     subtitle: '24 notes',
   },
-}
+};
 
 export const WithActions: Story = {
   args: {
@@ -33,7 +34,7 @@ export const WithActions: Story = {
     subtitle: '24 notes',
     actions: <Button size="sm">New Note</Button>,
   },
-}
+};
 
 export const Variants: Story = {
   render: () => (
@@ -52,4 +53,4 @@ export const Variants: Story = {
       </div>
     </div>
   ),
-}
+};

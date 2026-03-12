@@ -14,14 +14,6 @@ interface PageContainerProps {
 
 export function PageContainer({ children, className, width = 'standard' }: PageContainerProps) {
   return (
-    <div
-      className={cn(
-        'w-full',
-        width === 'narrow' && 'max-w-2xl',
-        className,
-      )}
-    >
-      {children}
-    </div>
+    <div className={cn('w-full', width === 'narrow' && 'max-w-2xl', className)}>{children}</div>
   );
 }

@@ -10,7 +10,7 @@ if (process.env.HOMINEM_DISABLE_KEYTAR !== '1') {
   try {
     const keytarModuleName = ['key', 'tar'].join('');
     keytar = await import(keytarModuleName);
-  } catch  {
+  } catch {
     keytar = null;
   }
 }
@@ -238,7 +238,7 @@ export async function loadTokens(): Promise<StoredTokens | null> {
         return loadFallback();
       }
       return normalizeStoredTokens(parsed);
-    } catch  {
+    } catch {
       return loadFallback();
     }
   }

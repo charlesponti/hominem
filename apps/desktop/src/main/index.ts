@@ -1,8 +1,9 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
-import { join } from 'node:path'
-import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { join } from 'node:path';
 
-let mainWindow: BrowserWindow | null = null
+import { electronApp, is, optimizer } from '@electron-toolkit/utils';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
+
+let mainWindow: BrowserWindow | null = null;
 
 function createWindow(): BrowserWindow {
   const window = new BrowserWindow({
@@ -17,57 +18,57 @@ function createWindow(): BrowserWindow {
       preload: join(__dirname, '../preload/index.mjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
-    }
-  })
+      sandbox: false,
+    },
+  });
 
   window.on('ready-to-show', () => {
-    window.show()
-  })
+    window.show();
+  });
 
   window.webContents.setWindowOpenHandler(({ url }) => {
-    void shell.openExternal(url)
-    return { action: 'deny' }
-  })
+    void shell.openExternal(url);
+    return { action: 'deny' };
+  });
 
   if (is.dev && process.env.ELECTRON_RENDERER_URL) {
-    void window.loadURL(process.env.ELECTRON_RENDERER_URL)
+    void window.loadURL(process.env.ELECTRON_RENDERER_URL);
   } else {
-    void window.loadFile(join(__dirname, '../renderer/index.html'))
+    void window.loadFile(join(__dirname, '../renderer/index.html'));
   }
 
-  return window
+  return window;
 }
 
 function registerIpcHandlers(): void {
-  ipcMain.handle('app:is-packaged', () => app.isPackaged)
+  ipcMain.handle('app:is-packaged', () => app.isPackaged);
   ipcMain.handle('window:close', () => {
-    mainWindow?.close()
-  })
+    mainWindow?.close();
+  });
   ipcMain.handle('window:minimize', () => {
-    mainWindow?.minimize()
-  })
+    mainWindow?.minimize();
+  });
 }
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.hominem.desktop')
+  electronApp.setAppUserModelId('com.hominem.desktop');
 
   app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
+    optimizer.watchWindowShortcuts(window);
+  });
 
-  registerIpcHandlers()
-  mainWindow = createWindow()
+  registerIpcHandlers();
+  mainWindow = createWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      mainWindow = createWindow()
+      mainWindow = createWindow();
     }
-  })
-})
+  });
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit()
+    app.quit();
   }
-})
+});

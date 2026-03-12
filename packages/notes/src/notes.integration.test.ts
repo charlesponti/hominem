@@ -18,7 +18,7 @@ describe('notes integration', () => {
   let otherUserId: string;
 
   const cleanupUsersAndNotes = async (userIds: string[]) => {
-    await cleanupTestData(userIds)
+    await cleanupTestData(userIds);
   };
 
   const createNoteFor = async (

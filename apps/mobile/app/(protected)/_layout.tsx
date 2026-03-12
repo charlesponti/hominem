@@ -11,9 +11,7 @@ const bootstrapStyles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
 });
 
-const ProtectedBootstrap = () => (
-  <View testID="protected-bootstrap" style={bootstrapStyles.root} />
-);
+const ProtectedBootstrap = () => <View testID="protected-bootstrap" style={bootstrapStyles.root} />;
 
 const DrawerLayout = () => {
   const { authStatus, isSignedIn } = useAuth();

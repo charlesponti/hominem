@@ -8,13 +8,13 @@
  * "Think through it" → seed a new session → navigate to chat.$chatId.
  */
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
-import { useHonoMutation } from '@hominem/hono-client/react';
 import type { ThoughtLifecycleState } from '@hominem/chat-services';
+import { useHonoMutation } from '@hominem/hono-client/react';
 import { Inline, Stack } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { TextArea } from '@hominem/ui/text-area';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
 interface CaptureBarProps {
   state?: ThoughtLifecycleState;

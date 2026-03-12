@@ -1,16 +1,18 @@
-import { Link } from 'expo-router'
-import type { RelativePathString } from 'expo-router'
-import React, { type PropsWithChildren } from 'react'
-import { StyleSheet, View } from 'react-native'
-import { makeStyles, Text, theme } from '~/theme'
-import AppIcon from './ui/icon'
+import { Link } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
+import React, { type PropsWithChildren } from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import { makeStyles, Text, theme } from '~/theme';
+
+import AppIcon from './ui/icon';
 
 export const ViewHeader = ({ children }: PropsWithChildren) => {
-  const styles = useStyles()
+  const styles = useStyles();
   return (
     <View style={styles.container}>
       <View style={styles.navbar}>
-        <Link href={"/(protected)/(tabs)/focus" as RelativePathString}>
+        <Link href={'/(protected)/(tabs)/focus' as RelativePathString}>
           <View style={styles.backLink}>
             <AppIcon name="arrow-left" size={26} color={theme.colors.foreground} />
             <Text variant="bodyLarge">Today</Text>
@@ -19,8 +21,8 @@ export const ViewHeader = ({ children }: PropsWithChildren) => {
       </View>
       {children}
     </View>
-  )
-}
+  );
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -51,5 +53,5 @@ const useStyles = makeStyles((t) =>
       padding: t.spacing.m_16,
       marginTop: t.spacing.ml_24,
     },
-  })
-)
+  }),
+);

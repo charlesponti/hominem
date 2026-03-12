@@ -26,7 +26,7 @@ interface UseCountdownOptions {
  */
 export function useCountdown(
   initialSeconds: number,
-  options?: UseCountdownOptions
+  options?: UseCountdownOptions,
 ): {
   seconds: number;
   isActive: boolean;

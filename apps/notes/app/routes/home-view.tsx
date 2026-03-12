@@ -10,10 +10,9 @@ import { Link } from 'react-router';
 
 import { useDeleteNote, useNotesList, useUpdateNote } from '~/hooks/use-notes';
 
+import type { Route } from './+types/home-view';
 import { InlineCreateForm } from './notes/components/inline-create-form';
 import { NoteFeedItem } from './notes/components/note-feed-item';
-
-import type { Route } from './+types/home-view';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireAuth } = await import('~/lib/guards');
@@ -30,12 +29,15 @@ export default function HomeView() {
   const [itemToEdit, setItemToEdit] = useState<Note | null>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
 
-  const { data: chats } = useHonoQuery<ChatsListOutput>(
-    ['chats', 'list'],
-    ({ chats: c }) => c.list({ limit: MAX_SESSIONS }),
+  const { data: chats } = useHonoQuery<ChatsListOutput>(['chats', 'list'], ({ chats: c }) =>
+    c.list({ limit: MAX_SESSIONS }),
   );
 
-  const { data: notes = [], isLoading, refetch } = useNotesList({
+  const {
+    data: notes = [],
+    isLoading,
+    refetch,
+  } = useNotesList({
     types: ['note'],
     sortBy: 'updatedAt',
     sortOrder: 'desc',
@@ -230,8 +232,8 @@ export default function HomeView() {
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">No notes yet</h3>
                   <p className="text-muted-foreground max-w-md">
-                    Start capturing your thoughts and ideas. Use the input above to create your first
-                    note.
+                    Start capturing your thoughts and ideas. Use the input above to create your
+                    first note.
                   </p>
                 </div>
               )}

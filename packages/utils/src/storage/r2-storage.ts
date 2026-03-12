@@ -352,7 +352,7 @@ const createPlaceImagesStorageService = () =>
 
 export const csvStorageService: R2StorageService = new Proxy({} as R2StorageService, {
   get(target, prop) {
-    void target
+    void target;
     const service = createCsvStorageService();
     Object.assign(csvStorageService, service);
     return Reflect.get(csvStorageService, prop);
@@ -361,7 +361,7 @@ export const csvStorageService: R2StorageService = new Proxy({} as R2StorageServ
 
 export const fileStorageService: R2StorageService = new Proxy({} as R2StorageService, {
   get(target, prop) {
-    void target
+    void target;
     const service = createFileStorageService();
     Object.assign(fileStorageService, service);
     return Reflect.get(fileStorageService, prop);
@@ -370,7 +370,7 @@ export const fileStorageService: R2StorageService = new Proxy({} as R2StorageSer
 
 export const placeImagesStorageService: R2StorageService = new Proxy({} as R2StorageService, {
   get(target, prop) {
-    void target
+    void target;
     const service = createPlaceImagesStorageService();
     Object.assign(placeImagesStorageService, service);
     return Reflect.get(placeImagesStorageService, prop);

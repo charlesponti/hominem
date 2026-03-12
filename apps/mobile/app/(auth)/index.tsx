@@ -16,14 +16,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import TextInput from '~/components/text-input';
-import { Box, Text, theme as appTheme,makeStyles } from '~/theme';
+import { Box, Text, theme as appTheme, makeStyles } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidEmail, normalizeEmail } from '~/utils/auth/validation';
 import { E2E_TESTING, MOBILE_PASSKEY_ENABLED } from '~/utils/constants';
 import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
 
 export function AuthScreen() {
-  const styles = useStyles()
+  const styles = useStyles();
   const { isSignedIn, completePasskeySignIn, requestEmailOtp } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -85,7 +85,7 @@ export function AuthScreen() {
   }
 
   const displayError = authError || passkeyError;
-  const canUsePasskeys = MOBILE_PASSKEY_ENABLED && isPasskeySupported
+  const canUsePasskeys = MOBILE_PASSKEY_ENABLED && isPasskeySupported;
 
   return (
     <SafeAreaView edges={['top', 'right', 'bottom', 'left']} style={styles.safeArea}>
@@ -101,7 +101,11 @@ export function AuthScreen() {
         >
           <Box flex={1} testID="auth-screen" style={styles.screen}>
             <View style={styles.hero}>
-              <Image source={require('~/assets/icon.png')} contentFit="contain" style={styles.logo} />
+              <Image
+                source={require('~/assets/icon.png')}
+                contentFit="contain"
+                style={styles.logo}
+              />
               <Text variant="header" color="foreground" style={styles.title}>
                 {AUTH_COPY.emailEntry.title.toUpperCase()}
               </Text>
@@ -305,9 +309,8 @@ const useStyles = makeStyles((t) =>
       height: 16,
       opacity: 0.02,
     },
-  })
-)
-
+  }),
+);
 
 const AuthWithErrorBoundary = () => (
   <FeatureErrorBoundary featureName="Auth">

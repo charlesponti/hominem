@@ -1,11 +1,12 @@
-import * as React from 'react'
-import { Field } from './field'
-import { Textarea } from './textarea'
+import * as React from 'react';
+
+import { Field } from './field';
+import { Textarea } from './textarea';
 
 interface TextAreaFieldProps extends React.ComponentProps<'textarea'> {
-  label?: string | undefined
-  helpText?: string | undefined
-  error?: string | undefined
+  label?: string | undefined;
+  helpText?: string | undefined;
+  error?: string | undefined;
 }
 
 /**
@@ -16,16 +17,22 @@ interface TextAreaFieldProps extends React.ComponentProps<'textarea'> {
  * <TextAreaField label="Notes" helpText="Markdown supported" />
  * <TextAreaField label="Bio" error={errors.bio?.message} rows={4} />
  */
-function TextAreaField({ label, helpText, error, className, ...textareaProps }: TextAreaFieldProps) {
+function TextAreaField({
+  label,
+  helpText,
+  error,
+  className,
+  ...textareaProps
+}: TextAreaFieldProps) {
   if (!label && !helpText && !error) {
-    return <Textarea className={className} {...textareaProps} />
+    return <Textarea className={className} {...textareaProps} />;
   }
 
   return (
     <Field label={label} helpText={helpText} error={error}>
       <Textarea className={className} {...textareaProps} />
     </Field>
-  )
+  );
 }
 
-export { TextAreaField, type TextAreaFieldProps }
+export { TextAreaField, type TextAreaFieldProps };

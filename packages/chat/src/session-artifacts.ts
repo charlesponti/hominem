@@ -72,13 +72,14 @@ function toTranscript(messages: SessionArtifactMessage[]): string {
   return messages
     .filter((message) => normalizeContent(message.content).length > 0)
     .map((message) => {
-      const label = message.role === 'assistant'
-        ? 'Assistant'
-        : message.role === 'tool'
-          ? 'Tool'
-        : message.role === 'system'
-          ? 'System'
-          : 'User';
+      const label =
+        message.role === 'assistant'
+          ? 'Assistant'
+          : message.role === 'tool'
+            ? 'Tool'
+            : message.role === 'system'
+              ? 'System'
+              : 'User';
 
       return `${label}: ${message.content.trim()}`;
     })
@@ -88,8 +89,12 @@ function toTranscript(messages: SessionArtifactMessage[]): string {
 export function buildNoteProposal(messages: SessionArtifactMessage[]): NoteProposal {
   const previewContent = toTranscript(messages);
   const thoughtPreview = getThoughtPreview(messages);
-  const relevantMessageCount = messages.filter((message) => normalizeContent(message.content).length > 0).length;
-  const includesAssistant = messages.some((message) => message.role === 'assistant' && normalizeContent(message.content).length > 0);
+  const relevantMessageCount = messages.filter(
+    (message) => normalizeContent(message.content).length > 0,
+  ).length;
+  const includesAssistant = messages.some(
+    (message) => message.role === 'assistant' && normalizeContent(message.content).length > 0,
+  );
   const proposedChanges = [
     `Captured ${relevantMessageCount} message${relevantMessageCount === 1 ? '' : 's'} from this session`,
     ...(includesAssistant ? ['Includes assistant output'] : []),

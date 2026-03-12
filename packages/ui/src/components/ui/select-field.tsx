@@ -1,22 +1,22 @@
-import * as React from 'react'
+import * as React from 'react';
 
-import { cn } from '../../lib/utils'
-import type { FieldBaseProps } from './field.types'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select'
+import { cn } from '../../lib/utils';
+import type { FieldBaseProps } from './field.types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
 
 interface SelectFieldOption {
-  disabled?: boolean
-  label: string
-  value: string
+  disabled?: boolean;
+  label: string;
+  value: string;
 }
 
 interface SelectFieldProps extends FieldBaseProps {
-  defaultValue?: string | undefined
-  disabled?: boolean | undefined
-  options: readonly SelectFieldOption[]
-  onValueChange?: ((value: string) => void) | undefined
-  placeholder?: string | undefined
-  value?: string | undefined
+  defaultValue?: string | undefined;
+  disabled?: boolean | undefined;
+  options: readonly SelectFieldOption[];
+  onValueChange?: ((value: string) => void) | undefined;
+  placeholder?: string | undefined;
+  value?: string | undefined;
 }
 
 function SelectField({
@@ -33,11 +33,11 @@ function SelectField({
   required,
   value,
 }: SelectFieldProps) {
-  const generatedId = React.useId()
-  const id = externalId ?? generatedId
-  const descId = `${id}-desc`
-  const errorId = `${id}-error`
-  const describedBy = error ? errorId : helpText ? descId : undefined
+  const generatedId = React.useId();
+  const id = externalId ?? generatedId;
+  const descId = `${id}-desc`;
+  const errorId = `${id}-error`;
+  const describedBy = error ? errorId : helpText ? descId : undefined;
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
@@ -59,7 +59,12 @@ function SelectField({
         {...(onValueChange ? { onValueChange } : {})}
         {...(value ? { value } : {})}
       >
-        <SelectTrigger id={id} aria-describedby={describedBy} aria-invalid={error ? true : undefined} className="w-full">
+        <SelectTrigger
+          id={id}
+          aria-describedby={describedBy}
+          aria-invalid={error ? true : undefined}
+          className="w-full"
+        >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -85,7 +90,7 @@ function SelectField({
         </p>
       ) : null}
     </div>
-  )
+  );
 }
 
-export { SelectField, type SelectFieldOption, type SelectFieldProps }
+export { SelectField, type SelectFieldOption, type SelectFieldProps };

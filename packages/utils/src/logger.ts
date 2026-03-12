@@ -1,62 +1,62 @@
-import process from 'node:process'
+import process from 'node:process';
 
-import pino from 'pino'
+import pino from 'pino';
 
-const redactFields = ['email', 'password', 'token']
+const redactFields = ['email', 'password', 'token'];
 const isPrettyLoggingEnabled =
-  process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test'
+  process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
 
 export interface HttpRequestLogData {
   durationMs: number;
-  method: string
-  path: string
-  status: number
+  method: string;
+  path: string;
+  status: number;
 }
 
 export interface HttpRequestStartLogData {
-  method: string
-  path: string
+  method: string;
+  path: string;
 }
 
-export type LoggerLevel = 'debug' | 'error' | 'info' | 'warn'
+export type LoggerLevel = 'debug' | 'error' | 'info' | 'warn';
 
 export function getHttpRequestLogLevel({ durationMs, status }: HttpRequestLogData): LoggerLevel {
   if (status >= 500) {
-    return 'error'
+    return 'error';
   }
 
   if (durationMs >= 1000) {
-    return 'warn'
+    return 'warn';
   }
 
-  return 'info'
+  return 'info';
 }
 
 export function getHttpRequestInLogMessage() {
-  return 'http_request_in'
+  return 'http_request_in';
 }
 
 export function getHttpRequestOutLogMessage() {
-  return 'http_request_out'
+  return 'http_request_out';
 }
 
 export function logAtLevel(level: LoggerLevel, message: string, data?: Error | object) {
   if (level === 'error') {
-    logger.error(message, data)
-    return
+    logger.error(message, data);
+    return;
   }
 
   if (level === 'warn') {
-    logger.warn(message, data)
-    return
+    logger.warn(message, data);
+    return;
   }
 
   if (level === 'debug') {
-    logger.debug(message, data)
-    return
+    logger.debug(message, data);
+    return;
   }
 
-  logger.info(message, data)
+  logger.info(message, data);
 }
 
 const transport = isPrettyLoggingEnabled
@@ -70,7 +70,7 @@ const transport = isPrettyLoggingEnabled
         translateTime: 'SYS:standard',
       },
     })
-  : undefined
+  : undefined;
 
 const pinoLogger = pino(
   {
@@ -82,16 +82,16 @@ const pinoLogger = pino(
     },
     formatters: {
       level(label) {
-        return { level: label }
+        return { level: label };
       },
     },
   },
   transport,
-)
+);
 
 export const logger = {
   info: (message: string, data?: object) => pinoLogger.info(data, message),
   error: (message: string, error?: Error | object) => pinoLogger.error(error, message),
   warn: (message: string, data?: object) => pinoLogger.warn(data, message),
   debug: (message: string, data?: object) => pinoLogger.debug(data, message),
-}
+};

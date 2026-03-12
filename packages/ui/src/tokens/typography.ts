@@ -13,13 +13,13 @@
 export const fontFamilies = {
   primary: "'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
   mono: "'Geist Mono', ui-monospace, 'SF Mono', 'Menlo', monospace",
-} as const
+} as const;
 
 /** React Native font family names (short names only, as loaded by expo-font). */
 export const fontFamiliesNative = {
   primary: 'Inter',
   mono: 'Geist Mono',
-} as const
+} as const;
 
 export const fontSizes = {
   xs: 12,
@@ -28,26 +28,26 @@ export const fontSizes = {
   lg: 18,
   xl: 20,
   display: 28,
-} as const
+} as const;
 
 export const fontWeights = {
   regular: '400',
   medium: '500',
   semibold: '600',
   bold: '700',
-} as const
+} as const;
 
 export const lineHeights = {
   tight: 1.2,
   normal: 1.4,
   relaxed: 1.6,
-} as const
+} as const;
 
 export const letterSpacing = {
   tight: -0.05,
   normal: 0,
   relaxed: 0.01,
-} as const
+} as const;
 
-export type FontSizeToken = keyof typeof fontSizes
-export type FontWeightToken = keyof typeof fontWeights
+export type FontSizeToken = keyof typeof fontSizes;
+export type FontWeightToken = keyof typeof fontWeights;

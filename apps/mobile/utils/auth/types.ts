@@ -11,21 +11,21 @@ export type AuthStatus =
   | 'signed_in'
   | 'signing_out'
   | 'degraded'
-  | 'terminal_error'
+  | 'terminal_error';
 
 export interface UserProfile {
-  id: string
-  email: string | null | undefined
-  name: string | null | undefined
-  createdAt: string
-  updatedAt: string
+  id: string;
+  email: string | null | undefined;
+  name: string | null | undefined;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AuthState {
-  status: AuthStatus
-  user: UserProfile | null
-  error: Error | null
-  isLoading: boolean
+  status: AuthStatus;
+  user: UserProfile | null;
+  error: Error | null;
+  isLoading: boolean;
 }
 
 export type AuthEvent =
@@ -50,11 +50,11 @@ export type AuthEvent =
   | { type: 'SYNC_FAILED'; error: Error }
   | { type: 'RESET_TO_SIGNED_OUT' }
   | { type: 'FATAL_ERROR'; error: Error }
-  | { type: 'CLEAR_ERROR' }
+  | { type: 'CLEAR_ERROR' };
 
 export interface AuthContext {
-  state: AuthState
-  dispatch: (event: AuthEvent) => void
+  state: AuthState;
+  dispatch: (event: AuthEvent) => void;
 }
 
 // Initial state
@@ -63,7 +63,7 @@ export const initialAuthState: AuthState = {
   user: null,
   error: null,
   isLoading: false,
-}
+};
 
 export function authStateMachine(state: AuthState, event: AuthEvent): AuthState {
   switch (event.type) {
@@ -74,7 +74,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         user: event.user,
         error: null,
         isLoading: false,
-      }
+      };
 
     case 'SESSION_EXPIRED':
       return {
@@ -83,7 +83,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         user: null,
         error: null,
         isLoading: false,
-      }
+      };
 
     case 'OTP_REQUEST_STARTED':
       return {
@@ -91,7 +91,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'requesting_otp',
         isLoading: true,
         error: null,
-      }
+      };
 
     case 'OTP_REQUESTED':
       return {
@@ -99,7 +99,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'otp_requested',
         isLoading: false,
         error: null,
-      }
+      };
 
     case 'OTP_REQUEST_FAILED':
       return {
@@ -107,7 +107,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'degraded',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'OTP_VERIFICATION_STARTED':
       return {
@@ -115,7 +115,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'verifying_otp',
         error: null,
         isLoading: true,
-      }
+      };
 
     case 'API_TOKEN_MINT_STARTED':
       return {
@@ -123,7 +123,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'minting_api_token',
         error: null,
         isLoading: true,
-      }
+      };
 
     case 'API_TOKEN_MINT_FAILED':
       return {
@@ -131,7 +131,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'degraded',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'PROFILE_SYNC_STARTED':
       return {
@@ -139,7 +139,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'syncing_profile',
         error: null,
         isLoading: true,
-      }
+      };
 
     case 'REFRESH_STARTED':
       return {
@@ -147,7 +147,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'refreshing_session',
         error: null,
         isLoading: true,
-      }
+      };
 
     case 'REFRESH_FAILED':
       return {
@@ -155,7 +155,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'signed_out',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'PASSKEY_AUTH_STARTED':
       return {
@@ -163,7 +163,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'authenticating_passkey',
         error: null,
         isLoading: true,
-      }
+      };
 
     case 'PASSKEY_AUTH_FAILED':
       return {
@@ -171,7 +171,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'degraded',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'OTP_VERIFICATION_FAILED':
       return {
@@ -179,7 +179,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'otp_requested',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'SIGN_OUT_REQUESTED':
       return {
@@ -187,7 +187,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'signing_out',
         isLoading: true,
         error: null,
-      }
+      };
 
     case 'SIGN_OUT_SUCCESS':
       return {
@@ -196,20 +196,20 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         user: null,
         error: null,
         isLoading: false,
-      }
+      };
 
     case 'SYNC_STARTED':
       return {
         ...state,
         isLoading: true,
-      }
+      };
 
     case 'SYNC_COMPLETED':
       return {
         ...state,
         isLoading: false,
         error: null,
-      }
+      };
 
     case 'SYNC_FAILED':
       return {
@@ -217,7 +217,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'degraded',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'RESET_TO_SIGNED_OUT':
       return {
@@ -226,7 +226,7 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         user: null,
         error: null,
         isLoading: false,
-      }
+      };
 
     case 'FATAL_ERROR':
       return {
@@ -234,16 +234,16 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'terminal_error',
         error: event.error,
         isLoading: false,
-      }
+      };
 
     case 'CLEAR_ERROR':
       return {
         ...state,
         error: null,
         status: state.status === 'degraded' ? 'signed_out' : state.status,
-      }
+      };
 
     default:
-      return state
+      return state;
   }
 }

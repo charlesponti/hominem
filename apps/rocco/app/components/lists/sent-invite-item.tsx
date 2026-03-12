@@ -1,5 +1,5 @@
-import { Button } from '@hominem/ui/button';
 import { Inline } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
 import { Check, Link as LinkIcon, Mail } from 'lucide-react';
 import { useCallback, useState } from 'react';
 

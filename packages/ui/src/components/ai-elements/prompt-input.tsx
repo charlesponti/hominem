@@ -544,11 +544,7 @@ interface PromptInputHoverCardProps extends HTMLAttributes<HTMLDivElement> {
   closeDelay?: number;
 }
 
-export function PromptInputHoverCard({
-  className,
-  children,
-  ...props
-}: PromptInputHoverCardProps) {
+export function PromptInputHoverCard({ className, children, ...props }: PromptInputHoverCardProps) {
   return (
     <div className={cn('relative inline-block', className)} {...props}>
       {children}

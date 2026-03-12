@@ -1,7 +1,6 @@
-import * as React from 'react'
-
-import { Text as PrimitiveText } from '@hominem/ui/text'
-import type { ColorToken } from '@hominem/ui/tokens'
+import { Text as PrimitiveText } from '@hominem/ui/text';
+import type { ColorToken } from '@hominem/ui/tokens';
+import * as React from 'react';
 
 type LegacyVariant =
   | 'extra_large'
@@ -16,13 +15,13 @@ type LegacyVariant =
   | 'label'
   | 'small'
   | 'mono'
-  | 'defaults'
+  | 'defaults';
 
-type PrimitiveVariant = 'body-1' | 'body-2' | 'body-3' | 'body-4'
+type PrimitiveVariant = 'body-1' | 'body-2' | 'body-3' | 'body-4';
 
 interface TextProps extends Omit<React.ComponentProps<typeof PrimitiveText>, 'variant'> {
-  color?: ColorToken | undefined
-  variant?: LegacyVariant | PrimitiveVariant | undefined
+  color?: ColorToken | undefined;
+  variant?: LegacyVariant | PrimitiveVariant | undefined;
 }
 
 const variantMap: Record<LegacyVariant, PrimitiveVariant> = {
@@ -39,16 +38,16 @@ const variantMap: Record<LegacyVariant, PrimitiveVariant> = {
   small: 'body-4',
   mono: 'body-4',
   defaults: 'body-3',
-}
+};
 
 function isLegacyVariant(variant: LegacyVariant | PrimitiveVariant): variant is LegacyVariant {
-  return variant in variantMap
+  return variant in variantMap;
 }
 
 function Text({ variant = 'body-2', ...props }: TextProps) {
-  const resolvedVariant = isLegacyVariant(variant) ? variantMap[variant] : variant
+  const resolvedVariant = isLegacyVariant(variant) ? variantMap[variant] : variant;
 
-  return <PrimitiveText variant={resolvedVariant} {...props} />
+  return <PrimitiveText variant={resolvedVariant} {...props} />;
 }
 
-export default Text
+export default Text;

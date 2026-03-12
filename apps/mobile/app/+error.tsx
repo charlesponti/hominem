@@ -1,13 +1,13 @@
-import { useRouter } from 'expo-router'
-import type { RelativePathString } from 'expo-router'
-import { StyleSheet, View } from 'react-native'
+import { useRouter } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 
-import { Button } from '~/components/Button'
-import { makeStyles, Text } from '~/theme'
+import { Button } from '~/components/Button';
+import { makeStyles, Text } from '~/theme';
 
 export default function ErrorScreen({ error }: { error: Error }) {
-  const router = useRouter()
-  const styles = useStyles()
+  const router = useRouter();
+  const styles = useStyles();
 
   return (
     <View style={styles.container}>
@@ -24,7 +24,7 @@ export default function ErrorScreen({ error }: { error: Error }) {
         title="Go Home"
       />
     </View>
-  )
+  );
 }
 
 const useStyles = makeStyles((t) =>
@@ -45,5 +45,5 @@ const useStyles = makeStyles((t) =>
       marginTop: t.spacing.ml_24,
       backgroundColor: t.colors['text-primary'],
     },
-  })
-)
+  }),
+);

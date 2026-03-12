@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react'
+import { Button } from '@hominem/ui/button';
+import { Input } from '@hominem/ui/input';
+import { Label } from '@hominem/ui/label';
+import { useMemo, useState } from 'react';
 
-import { Button } from '@hominem/ui/button'
-import { Input } from '@hominem/ui/input'
-import { Label } from '@hominem/ui/label'
-
-import { AppShell } from '../app-shell'
-import { useDesktopAuth } from './desktop-auth-provider'
+import { AppShell } from '../app-shell';
+import { useDesktopAuth } from './desktop-auth-provider';
 
 function DesktopAuthLoading() {
   return (
@@ -16,24 +15,32 @@ function DesktopAuthLoading() {
         <p className="desktop-auth__body">Restoring the desktop auth state.</p>
       </section>
     </main>
-  )
+  );
 }
 
 function DesktopAuthScreen() {
-  const { clearError, email, isPasskeyAvailable, requestOtp, signInWithPasskey, state, updateEmail, verifyOtp } =
-    useDesktopAuth()
-  const [otp, setOtp] = useState('')
+  const {
+    clearError,
+    email,
+    isPasskeyAvailable,
+    requestOtp,
+    signInWithPasskey,
+    state,
+    updateEmail,
+    verifyOtp,
+  } = useDesktopAuth();
+  const [otp, setOtp] = useState('');
 
-  const isSendingOtp = state.status === 'requesting_otp'
-  const isVerifyingOtp = state.status === 'verifying_otp'
-  const isPasskeyLoading = state.status === 'authenticating_passkey'
-  const isOtpStep = state.status === 'otp_requested' || isVerifyingOtp
+  const isSendingOtp = state.status === 'requesting_otp';
+  const isVerifyingOtp = state.status === 'verifying_otp';
+  const isPasskeyLoading = state.status === 'authenticating_passkey';
+  const isOtpStep = state.status === 'otp_requested' || isVerifyingOtp;
   const helperText = useMemo(() => {
     if (isOtpStep && email) {
-      return `Enter the code sent to ${email}.`
+      return `Enter the code sent to ${email}.`;
     }
-    return 'Use the same authentication backend and account you use in the other Hominem apps.'
-  }, [email, isOtpStep])
+    return 'Use the same authentication backend and account you use in the other Hominem apps.';
+  }, [email, isOtpStep]);
 
   return (
     <main className="desktop-auth">
@@ -55,8 +62,8 @@ function DesktopAuthScreen() {
           <form
             className="desktop-auth__form"
             onSubmit={(event) => {
-              event.preventDefault()
-              void requestOtp(email)
+              event.preventDefault();
+              void requestOtp(email);
             }}
           >
             <div className="desktop-auth__field">
@@ -95,8 +102,8 @@ function DesktopAuthScreen() {
           <form
             className="desktop-auth__form"
             onSubmit={(event) => {
-              event.preventDefault()
-              void verifyOtp(otp)
+              event.preventDefault();
+              void verifyOtp(otp);
             }}
           >
             <div className="desktop-auth__field">
@@ -123,9 +130,9 @@ function DesktopAuthScreen() {
               <Button
                 disabled={isVerifyingOtp}
                 onClick={() => {
-                  setOtp('')
-                  clearError()
-                  updateEmail('')
+                  setOtp('');
+                  clearError();
+                  updateEmail('');
                 }}
                 type="button"
                 variant="outline"
@@ -137,19 +144,19 @@ function DesktopAuthScreen() {
         )}
       </section>
     </main>
-  )
+  );
 }
 
 export function AuthGate() {
-  const { state } = useDesktopAuth()
+  const { state } = useDesktopAuth();
 
   if (state.status === 'booting' || state.status === 'refreshing_session') {
-    return <DesktopAuthLoading />
+    return <DesktopAuthLoading />;
   }
 
   if (state.status === 'signed_in') {
-    return <AppShell />
+    return <AppShell />;
   }
 
-  return <DesktopAuthScreen />
+  return <DesktopAuthScreen />;
 }

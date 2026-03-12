@@ -15,7 +15,7 @@ export const radii = {
   xl: 20,
   /** Squircular icon shape. Web only — use radiiNative.icon on RN. */
   icon: '22%',
-} as const
+} as const;
 
 /** React Native-safe radii (no percentage strings). */
 export const radiiNative = {
@@ -25,6 +25,6 @@ export const radiiNative = {
   xl: 20,
   /** Numeric approximation of the squircular icon shape. */
   icon: 20,
-} as const
+} as const;
 
-export type RadiusToken = keyof typeof radii
+export type RadiusToken = keyof typeof radii;

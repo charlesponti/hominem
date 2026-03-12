@@ -48,7 +48,8 @@ describe('getThoughtPreview', () => {
       getThoughtPreview([
         {
           role: 'user',
-          content: 'This is a very long thought that should be truncated once it exceeds the preview limit for the context anchor component on both surfaces.',
+          content:
+            'This is a very long thought that should be truncated once it exceeds the preview limit for the context anchor component on both surfaces.',
         },
       ]),
     ).toMatch(/…$/);
@@ -65,11 +66,9 @@ describe('buildNoteProposal', () => {
     ).toEqual({
       proposedType: 'note',
       proposedTitle: 'Plan the launch checklist',
-      proposedChanges: [
-        'Captured 2 messages from this session',
-        'Includes assistant output',
-      ],
-      previewContent: 'User: Plan the launch checklist\n\nAssistant: Start with owners, dates, and rollout risks.',
+      proposedChanges: ['Captured 2 messages from this session', 'Includes assistant output'],
+      previewContent:
+        'User: Plan the launch checklist\n\nAssistant: Start with owners, dates, and rollout risks.',
     });
   });
 });

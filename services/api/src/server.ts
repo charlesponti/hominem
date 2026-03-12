@@ -33,37 +33,37 @@ export type AppEnv = {
     user?: HominemUser;
     auth?: AuthContextEnvelope;
   };
-}
+};
 
 function getAppleAppSiteAssociation() {
-  const teamId = env.APPLE_TEAM_ID.trim()
+  const teamId = env.APPLE_TEAM_ID.trim();
   const bundleIdentifiers = [
     'com.pontistudios.hakumi',
     'com.pontistudios.hakumi.preview',
     'com.pontistudios.hakumi.dev',
     'com.pontistudios.hakumi.e2e',
-  ]
+  ];
 
   const appIds = teamId
     ? bundleIdentifiers.map((bundleIdentifier) => `${teamId}.${bundleIdentifier}`)
-    : []
+    : [];
 
   return {
     webcredentials: {
       apps: appIds,
     },
-  }
+  };
 }
 
 export function createServer() {
-  const app = new Hono<AppEnv>()
+  const app = new Hono<AppEnv>();
 
   // Block malicious probe requests before doing anything else.
   // Placing this ahead of the logger keeps the noise out of our logs and
   // prevents the request from traversing any further middleware.
-  app.use('*', blockMaliciousProbes())
+  app.use('*', blockMaliciousProbes());
 
-  app.use('*', requestLogger())
+  app.use('*', requestLogger());
 
   // Pretty JSON middleware
   app.use('*', prettyJSON());

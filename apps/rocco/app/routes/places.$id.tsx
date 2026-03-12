@@ -59,10 +59,7 @@ export default function Place({ loaderData }: Route.ComponentProps) {
       </div>
 
       <Stack gap="xl" className="w-full">
-        <div
-          className="flex flex-col"
-          style={{ viewTransitionName: `place-header-${place.id}` }}
-        >
+        <div className="flex flex-col" style={{ viewTransitionName: `place-header-${place.id}` }}>
           <PageTitle title={place.name} />
 
           <PlaceStatus

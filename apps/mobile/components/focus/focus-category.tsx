@@ -1,31 +1,32 @@
-import { StyleSheet } from 'react-native'
-import { makeStyles, Text } from '~/theme'
+import { StyleSheet } from 'react-native';
+
+import { makeStyles, Text } from '~/theme';
 
 export const FocusCategory = ({ category }: { category: keyof CategoryMap }) => {
-  const styles = useStyles()
-  const foundCategory = CATEGORIES[category]
+  const styles = useStyles();
+  const foundCategory = CATEGORIES[category];
 
   if (!foundCategory) {
     return (
       <Text variant="small" style={styles.muted}>
         {category}
       </Text>
-    )
+    );
   }
 
   return (
     <Text variant="small" style={styles.secondary}>
       {foundCategory.label}
     </Text>
-  )
-}
+  );
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
     muted: { color: t.colors['text-tertiary'] },
     secondary: { color: t.colors['text-secondary'] },
-  })
-)
+  }),
+);
 
 export const CATEGORIES: Record<string, { label: string }> = {
   career: { label: 'Career' },
@@ -46,6 +47,6 @@ export const CATEGORIES: Record<string, { label: string }> = {
   legal: { label: 'Legal' },
   events: { label: 'Events' },
   projects: { label: 'Projects' },
-}
+};
 
-type CategoryMap = typeof CATEGORIES
+type CategoryMap = typeof CATEGORIES;

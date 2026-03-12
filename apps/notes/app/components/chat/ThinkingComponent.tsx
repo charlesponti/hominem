@@ -1,5 +1,5 @@
-import { Bot } from 'lucide-react';
 import { Inline } from '@hominem/ui';
+import { Bot } from 'lucide-react';
 
 export function ThinkingComponent() {
   return (

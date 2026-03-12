@@ -1,12 +1,12 @@
+import { parseAuthError } from '@hominem/utils';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Form, useFetcher, useNavigation, useSearchParams } from 'react-router';
-import { parseAuthError } from '@hominem/utils';
 
+import { useCountdown } from '../../hooks/use-countdown';
 import { Button } from '../ui/button';
 import { AuthErrorBanner } from './auth-error-banner';
 import { OtpCodeInput } from './otp-code-input';
 import { PasskeyButton } from './passkey-button';
-import { useCountdown } from '../../hooks/use-countdown';
 
 interface OtpVerificationFormProps {
   action: string;
@@ -72,26 +72,26 @@ export function OtpVerificationForm({
 
   useEffect(() => {
     if (isSubmitting) {
-      hadPendingSubmissionRef.current = true
-      return
+      hadPendingSubmissionRef.current = true;
+      return;
     }
 
     if (!hadPendingSubmissionRef.current) {
-      return
+      return;
     }
 
-    hadPendingSubmissionRef.current = false
+    hadPendingSubmissionRef.current = false;
 
     if (error && attemptCount < maxAttempts) {
-      setAttemptCount((prev) => prev + 1)
+      setAttemptCount((prev) => prev + 1);
     }
-  }, [attemptCount, error, isSubmitting, maxAttempts])
+  }, [attemptCount, error, isSubmitting, maxAttempts]);
 
   useEffect(() => {
     if (!error) {
-      hadPendingSubmissionRef.current = false
+      hadPendingSubmissionRef.current = false;
     }
-  }, [error])
+  }, [error]);
 
   // Expiration countdown timer
   useEffect(() => {
@@ -123,8 +123,14 @@ export function OtpVerificationForm({
 
   // Auto-submit when code is complete
   const handleOtpChange = useCallback((value: string) => {
-    setOtp(value)
-  }, [])
+    setOtp(value);
+  }, []);
+
+  const handleOtpComplete = useCallback(() => {
+    if (otp.length === 6 && !isSubmitting && !isAccountLocked && !isSuccess) {
+      formRef.current?.requestSubmit();
+    }
+  }, [otp, isSubmitting, isAccountLocked, isSuccess]);
 
   // Resend is via fetcher since it doesn't need a redirect
   const handleResend = () => {
@@ -147,11 +153,12 @@ export function OtpVerificationForm({
           <p className="text-sm text-text-secondary">
             Code sent to <span className="text-text-primary font-medium">{maskedEmail}</span>
           </p>
-          
+
           {/* Attempt counter */}
           {attemptCount > 0 && !isAccountLocked && (
             <p className="text-xs text-text-tertiary">
-              Attempt {attemptCount} of {maxAttempts}{errorsRemaining > 0 && ` (${errorsRemaining} remaining)`}
+              Attempt {attemptCount} of {maxAttempts}
+              {errorsRemaining > 0 && ` (${errorsRemaining} remaining)`}
             </p>
           )}
 
@@ -168,6 +175,7 @@ export function OtpVerificationForm({
           <OtpCodeInput
             value={otp}
             onChange={handleOtpChange}
+            onComplete={handleOtpComplete}
             error={error}
             disabled={isSubmitting || isAccountLocked}
             autoFocus={!error}

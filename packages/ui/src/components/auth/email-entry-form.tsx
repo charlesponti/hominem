@@ -49,7 +49,12 @@ export function EmailEntryForm({
 
         <AuthErrorBanner error={error ?? null} />
 
-        <Button type="submit" variant="outline" disabled={isSubmitting} className="w-full uppercase">
+        <Button
+          type="submit"
+          variant="outline"
+          disabled={isSubmitting}
+          className="w-full uppercase"
+        >
           {isSubmitting ? loadingMessage : 'Continue'}
         </Button>
 

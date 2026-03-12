@@ -52,8 +52,7 @@ function Button({
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
-  } &
-  ButtonBaseProps) {
+  } & ButtonBaseProps) {
   const Comp = asChild ? Slot.Root : 'button';
   const content = children ?? title;
 

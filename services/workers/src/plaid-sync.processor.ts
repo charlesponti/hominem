@@ -89,8 +89,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
         isoCurrencyCode: account.balances.iso_currency_code || 'USD',
         plaidAccountId: account.account_id,
         plaidItemId: plaidItem.id,
-        institutionId:
-          'institutionId' in plaidItem ? (plaidItem.institutionId ?? null) : null,
+        institutionId: 'institutionId' in plaidItem ? (plaidItem.institutionId ?? null) : null,
         lastUpdated: new Date(),
         userId,
       };
@@ -100,8 +99,7 @@ export async function processSyncJob(job: Job<PlaidSyncJob>) {
 
     // 2. Fetch and store transactions using transactions/sync endpoint
     let hasMore = true;
-    let cursor =
-      'transactionsCursor' in plaidItem ? (plaidItem.transactionsCursor ?? null) : null;
+    let cursor = 'transactionsCursor' in plaidItem ? (plaidItem.transactionsCursor ?? null) : null;
     const batchSize = 500;
     let totalTransactions = 0;
 

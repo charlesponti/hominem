@@ -41,7 +41,7 @@ export function useMaskedInput(options?: UseMaskedInputOptions) {
         delete maskTimersRef.current[index];
       }, maskDelay);
     },
-    [maskDelay]
+    [maskDelay],
   );
 
   const clearMasks = useCallback(() => {

@@ -9,7 +9,7 @@ export default createCommand({
   name: 'skills export',
   summary: 'Copy the local `.github/skills` folder to another location',
   description:
-    'This command makes it easy to package up or copy the current repository\'s skill files so they can be reused in a new project.  Destination will be created if necessary.',
+    "This command makes it easy to package up or copy the current repository's skill files so they can be reused in a new project.  Destination will be created if necessary.",
   argNames: ['dest'],
   args: z.object({
     dest: z.string().default('.'),

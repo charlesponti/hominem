@@ -143,9 +143,7 @@ export default function ErrorBoundary({ error }: ErrorBoundaryProps) {
             </div>
 
             {/* Error Details */}
-            <p className="body-1 text-muted-foreground max-w-md">
-              {errorDetails.details}
-            </p>
+            <p className="body-1 text-muted-foreground max-w-md">{errorDetails.details}</p>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">

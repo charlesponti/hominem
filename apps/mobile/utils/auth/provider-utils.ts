@@ -1,7 +1,7 @@
-import type { AuthState } from './types'
+import type { AuthState } from './types';
 
-export type AuthStatusCompat = AuthState['status']
+export type AuthStatusCompat = AuthState['status'];
 
 export function resolveIsLoadingAuth(state: AuthState): boolean {
-  return state.isLoading || state.status === 'booting'
+  return state.isLoading || state.status === 'booting';
 }

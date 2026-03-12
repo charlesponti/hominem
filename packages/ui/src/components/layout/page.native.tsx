@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from 'react';
 import {
   ScrollView,
   View,
@@ -6,11 +6,11 @@ import {
   type StyleProp,
   type ViewProps,
   type ViewStyle,
-} from 'react-native'
-import { SafeAreaView, type Edge } from 'react-native-safe-area-context'
+} from 'react-native';
+import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
-import { spacing } from '../../tokens'
-import type { PageMaxWidth } from './page.types'
+import { spacing } from '../../tokens';
+import type { PageMaxWidth } from './page.types';
 
 const maxWidthMap: Record<PageMaxWidth, number | undefined> = {
   sm: 672,
@@ -18,20 +18,20 @@ const maxWidthMap: Record<PageMaxWidth, number | undefined> = {
   lg: 1024,
   xl: 1280,
   full: undefined,
-}
+};
 
 interface ScreenProps extends Omit<ScrollViewProps, 'contentContainerStyle' | 'style'> {
-  contentContainerStyle?: StyleProp<ViewStyle>
-  edges?: Edge[] | undefined
-  maxWidth?: PageMaxWidth | undefined
-  padded?: boolean | undefined
-  scroll?: boolean | undefined
-  style?: StyleProp<ViewStyle>
+  contentContainerStyle?: StyleProp<ViewStyle>;
+  edges?: Edge[] | undefined;
+  maxWidth?: PageMaxWidth | undefined;
+  padded?: boolean | undefined;
+  scroll?: boolean | undefined;
+  style?: StyleProp<ViewStyle>;
 }
 
 interface ContainerProps extends ViewProps {
-  maxWidth?: PageMaxWidth | undefined
-  padded?: boolean | undefined
+  maxWidth?: PageMaxWidth | undefined;
+  padded?: boolean | undefined;
 }
 
 function getContentStyle(maxWidth: PageMaxWidth, padded: boolean): ViewStyle {
@@ -41,7 +41,7 @@ function getContentStyle(maxWidth: PageMaxWidth, padded: boolean): ViewStyle {
     maxWidth: maxWidthMap[maxWidth],
     paddingHorizontal: padded ? spacing[4] : 0,
     width: '100%',
-  }
+  };
 }
 
 function Screen({
@@ -54,7 +54,7 @@ function Screen({
   style,
   ...props
 }: ScreenProps) {
-  const contentStyle = getContentStyle(maxWidth, padded)
+  const contentStyle = getContentStyle(maxWidth, padded);
 
   return (
     <SafeAreaView edges={edges} style={[styles.safeArea, style]}>
@@ -68,11 +68,11 @@ function Screen({
         </View>
       )}
     </SafeAreaView>
-  )
+  );
 }
 
 function Page(props: ScreenProps) {
-  return <Screen {...props} />
+  return <Screen {...props} />;
 }
 
 function Container({ children, maxWidth = 'lg', padded = true, style, ...props }: ContainerProps) {
@@ -80,14 +80,14 @@ function Container({ children, maxWidth = 'lg', padded = true, style, ...props }
     <View style={[getContentStyle(maxWidth, padded), style]} {...props}>
       {children}
     </View>
-  )
+  );
 }
 
 const styles = {
   safeArea: {
     flex: 1,
   } satisfies ViewStyle,
-}
+};
 
-export { Screen, Page, Container }
-export type { ScreenProps, ContainerProps }
+export { Screen, Page, Container };
+export type { ScreenProps, ContainerProps };

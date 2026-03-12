@@ -1,9 +1,9 @@
-import * as React from 'react'
-import { View, type ViewProps, type ViewStyle } from 'react-native'
+import * as React from 'react';
+import { View, type ViewProps, type ViewStyle } from 'react-native';
 
-import { spacing } from '../../tokens'
-import type { InlineAlign, InlineBaseProps, InlineJustify } from './inline.types'
-import type { GapToken } from './stack.types'
+import { spacing } from '../../tokens';
+import type { InlineAlign, InlineBaseProps, InlineJustify } from './inline.types';
+import type { GapToken } from './stack.types';
 
 const gapMap: Record<GapToken, number> = {
   none: 0,
@@ -12,7 +12,7 @@ const gapMap: Record<GapToken, number> = {
   md: spacing[4],
   lg: spacing[5],
   xl: spacing[6],
-}
+};
 
 const alignMap: Record<InlineAlign, ViewStyle['alignItems']> = {
   start: 'flex-start',
@@ -20,7 +20,7 @@ const alignMap: Record<InlineAlign, ViewStyle['alignItems']> = {
   end: 'flex-end',
   baseline: 'baseline',
   stretch: 'stretch',
-}
+};
 
 const justifyMap: Record<InlineJustify, ViewStyle['justifyContent']> = {
   start: 'flex-start',
@@ -28,7 +28,7 @@ const justifyMap: Record<InlineJustify, ViewStyle['justifyContent']> = {
   end: 'flex-end',
   between: 'space-between',
   around: 'space-around',
-}
+};
 
 interface InlineProps extends ViewProps, InlineBaseProps {}
 
@@ -47,14 +47,14 @@ function Inline({
     flexDirection: 'row',
     flexWrap: wrap ? 'wrap' : 'nowrap',
     justifyContent: justifyMap[justify],
-  }
+  };
 
   return (
     <View style={[inlineStyle, style]} {...props}>
       {children}
     </View>
-  )
+  );
 }
 
-export { Inline }
-export type { InlineProps }
+export { Inline };
+export type { InlineProps };

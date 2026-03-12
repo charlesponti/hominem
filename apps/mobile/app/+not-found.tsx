@@ -14,7 +14,7 @@ export default function NotFoundScreen() {
         <Text variant="title" color="foreground">
           RESOURCE_NOT_FOUND.
         </Text>
-        <Link href={"/" as RelativePathString} style={styles.link}>
+        <Link href={'/' as RelativePathString} style={styles.link}>
           <Text variant="body" color="text-secondary">
             RETURN_TO_ROOT
           </Text>

@@ -1,13 +1,11 @@
-import {
-  createAuthVerifyComponent,
-} from '@hominem/ui'
-import { createAuthVerifyAction, createAuthVerifyLoader } from '@hominem/ui/auth-server-routes'
+import { createAuthVerifyComponent } from '@hominem/ui';
+import { createAuthVerifyAction, createAuthVerifyLoader } from '@hominem/ui/auth-server-routes';
 
-import { AUTH_CONFIG, AUTH_SERVER_ROUTE_CONFIG } from './config'
+import { AUTH_CONFIG, AUTH_SERVER_ROUTE_CONFIG } from './config';
 
 export const loader = createAuthVerifyLoader(AUTH_CONFIG, async (request) => {
-  const { getServerSession } = await import('~/lib/auth.server')
-  const { user, headers } = await getServerSession(request)
+  const { getServerSession } = await import('~/lib/auth.server');
+  const { user, headers } = await getServerSession(request);
 
   return {
     headers,
@@ -18,8 +16,8 @@ export const loader = createAuthVerifyLoader(AUTH_CONFIG, async (request) => {
           ...(user.name ? { name: user.name } : {}),
         }
       : null,
-  }
-})
-export const action = createAuthVerifyAction(AUTH_SERVER_ROUTE_CONFIG)
+  };
+});
+export const action = createAuthVerifyAction(AUTH_SERVER_ROUTE_CONFIG);
 
-export default createAuthVerifyComponent(AUTH_CONFIG)
+export default createAuthVerifyComponent(AUTH_CONFIG);

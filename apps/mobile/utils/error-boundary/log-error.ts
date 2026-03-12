@@ -1,25 +1,25 @@
-import type { ErrorInfo } from 'react'
+import type { ErrorInfo } from 'react';
 
 interface ErrorLogEntry {
-  error: Error
-  errorInfo?: ErrorInfo
-  timestamp: string
-  feature?: string
-  route?: string
-  userId?: string
+  error: Error;
+  errorInfo?: ErrorInfo;
+  timestamp: string;
+  feature?: string;
+  route?: string;
+  userId?: string;
 }
 
-const errorLog: ErrorLogEntry[] = []
-const MAX_LOG_SIZE = 50
+const errorLog: ErrorLogEntry[] = [];
+const MAX_LOG_SIZE = 50;
 
 export function logError(
   error: Error,
   errorInfo?: ErrorInfo,
   context?: {
-    feature?: string
-    route?: string
-    userId?: string
-  }
+    feature?: string;
+    route?: string;
+    userId?: string;
+  },
 ) {
   const entry: ErrorLogEntry = {
     error,
@@ -28,24 +28,24 @@ export function logError(
     feature: context?.feature,
     route: context?.route,
     userId: context?.userId,
-  }
+  };
 
   // Keep log size manageable
-  errorLog.unshift(entry)
+  errorLog.unshift(entry);
   if (errorLog.length > MAX_LOG_SIZE) {
-    errorLog.pop()
+    errorLog.pop();
   }
 
   // Always log to console in development
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
-    console.error('[ErrorBoundary]', error, errorInfo)
+    console.error('[ErrorBoundary]', error, errorInfo);
   }
 }
 
 export function getErrorLog(): ErrorLogEntry[] {
-  return [...errorLog]
+  return [...errorLog];
 }
 
 export function clearErrorLog() {
-  errorLog.length = 0
+  errorLog.length = 0;
 }

@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react';
 
 const meta: Meta = {
   title: 'Design System/Typography',
   tags: ['autodocs'],
-}
-export default meta
-type Story = StoryObj
+};
+export default meta;
+type Story = StoryObj;
 
 export const DisplayScale: Story = {
   render: () => (
@@ -20,7 +20,7 @@ export const DisplayScale: Story = {
       </div>
     </div>
   ),
-}
+};
 
 export const HeadingScale: Story = {
   render: () => (
@@ -33,7 +33,7 @@ export const HeadingScale: Story = {
       ))}
     </div>
   ),
-}
+};
 
 export const SubheadingScale: Story = {
   render: () => (
@@ -46,7 +46,7 @@ export const SubheadingScale: Story = {
       ))}
     </div>
   ),
-}
+};
 
 export const BodyScale: Story = {
   render: () => (
@@ -61,7 +61,7 @@ export const BodyScale: Story = {
       ))}
     </div>
   ),
-}
+};
 
 export const ColorVariants: Story = {
   render: () => (
@@ -80,4 +80,4 @@ export const ColorVariants: Story = {
       ))}
     </div>
   ),
-}
+};

@@ -22,7 +22,7 @@ import { useAuth } from '~/utils/auth-provider';
 import { isValidOtp, normalizeOtp } from '~/utils/auth/validation';
 
 export function VerifyScreen() {
-  const styles = useStyles()
+  const styles = useStyles();
   const { isSignedIn, requestEmailOtp, verifyEmailOtp } = useAuth();
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
@@ -69,9 +69,7 @@ export function VerifyScreen() {
       setAuthError(null);
     } catch (error: unknown) {
       const message =
-        error instanceof Error
-          ? error.message
-          : AUTH_COPY.otpVerification.verifyFailedError;
+        error instanceof Error ? error.message : AUTH_COPY.otpVerification.verifyFailedError;
       setAuthError(message);
     } finally {
       setIsSubmitting(false);
@@ -132,7 +130,11 @@ export function VerifyScreen() {
         >
           <Box flex={1} testID="auth-verify-screen" style={styles.screen}>
             <View style={styles.hero}>
-              <Image source={require('~/assets/icon.png')} contentFit="contain" style={styles.logo} />
+              <Image
+                source={require('~/assets/icon.png')}
+                contentFit="contain"
+                style={styles.logo}
+              />
               <Text variant="header" color="foreground" style={styles.title}>
                 {AUTH_COPY.otpVerification.title.toUpperCase()}
               </Text>
@@ -141,8 +143,12 @@ export function VerifyScreen() {
               </Text>
             </View>
             <View style={styles.formContainer}>
-              <Text style={styles.heading}>{AUTH_COPY.otpVerification.formHeading.toUpperCase()}</Text>
-              <Text style={styles.subheading}>{AUTH_COPY.otpVerification.formSubheading(email)}</Text>
+              <Text style={styles.heading}>
+                {AUTH_COPY.otpVerification.formHeading.toUpperCase()}
+              </Text>
+              <Text style={styles.subheading}>
+                {AUTH_COPY.otpVerification.formSubheading(email)}
+              </Text>
               {authError ? (
                 <View testID="auth-error-banner" style={styles.errorContainer}>
                   <Text testID="auth-error-text" style={styles.errorText}>
@@ -208,9 +214,11 @@ export function VerifyScreen() {
                 title={AUTH_COPY.otpVerification.resendButton.toUpperCase()}
                 style={styles.secondaryButton}
               />
-              <Link href={"/(auth)" as RelativePathString} asChild>
+              <Link href={'/(auth)' as RelativePathString} asChild>
                 <View style={styles.secondaryActionContainer}>
-                  <Text style={styles.secondaryAction}>{AUTH_COPY.otpVerification.changeEmailLink.toUpperCase()}</Text>
+                  <Text style={styles.secondaryAction}>
+                    {AUTH_COPY.otpVerification.changeEmailLink.toUpperCase()}
+                  </Text>
                 </View>
               </Link>
             </View>
@@ -361,9 +369,8 @@ const useStyles = makeStyles((t) =>
       fontSize: 12,
       fontWeight: '600',
     },
-  })
-)
-
+  }),
+);
 
 const VerifyWithErrorBoundary = () => (
   <FeatureErrorBoundary featureName="AuthVerify">

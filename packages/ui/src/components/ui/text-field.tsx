@@ -1,12 +1,11 @@
-import * as React from 'react'
-import { Field } from './field'
-import { Input } from './input'
-import type { TextFieldBaseProps, TextFieldType } from './text-field.types'
+import * as React from 'react';
 
-interface TextFieldProps
-  extends Omit<React.ComponentProps<'input'>, 'type'>,
-    TextFieldBaseProps {
-  type?: TextFieldType | undefined
+import { Field } from './field';
+import { Input } from './input';
+import type { TextFieldBaseProps, TextFieldType } from './text-field.types';
+
+interface TextFieldProps extends Omit<React.ComponentProps<'input'>, 'type'>, TextFieldBaseProps {
+  type?: TextFieldType | undefined;
 }
 
 /**
@@ -27,14 +26,14 @@ function TextField({
   ...inputProps
 }: TextFieldProps) {
   if (!label && !helpText && !error) {
-    return <Input className={className} disabled={disabled} type={type} {...inputProps} />
+    return <Input className={className} disabled={disabled} type={type} {...inputProps} />;
   }
 
   return (
     <Field label={label} helpText={helpText} error={error}>
       <Input className={className} disabled={disabled} type={type} {...inputProps} />
     </Field>
-  )
+  );
 }
 
-export { TextField, type TextFieldProps }
+export { TextField, type TextFieldProps };

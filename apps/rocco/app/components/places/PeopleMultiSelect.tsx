@@ -156,15 +156,15 @@ export function PeopleMultiSelect({
                             handleRemovePerson(person.id);
                           }
                         }}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleRemovePerson(person.id);
-                      }}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemovePerson(person.id);
+                        }}
                       >
                         <X className="size-3" />
                       </span>

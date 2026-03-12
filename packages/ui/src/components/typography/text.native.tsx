@@ -1,15 +1,20 @@
-import * as React from 'react'
-import { Text as RNText, type StyleProp, type TextProps as RNTextProps, type TextStyle } from 'react-native'
+import * as React from 'react';
+import {
+  Text as RNText,
+  type StyleProp,
+  type TextProps as RNTextProps,
+  type TextStyle,
+} from 'react-native';
 
-import { colors, fontFamiliesNative, fontSizes, fontWeights } from '../../tokens'
-import type { ColorToken } from '../../tokens'
-import type { TextVariant } from './text.types'
+import { colors, fontFamiliesNative, fontSizes, fontWeights } from '../../tokens';
+import type { ColorToken } from '../../tokens';
+import type { TextVariant } from './text.types';
 
 interface TextProps extends RNTextProps {
-  color?: ColorToken | undefined
-  muted?: boolean | undefined
-  style?: StyleProp<TextStyle>
-  variant?: TextVariant | undefined
+  color?: ColorToken | undefined;
+  muted?: boolean | undefined;
+  style?: StyleProp<TextStyle>;
+  variant?: TextVariant | undefined;
 }
 
 const variantStyles: Record<TextVariant, TextStyle> = {
@@ -37,19 +42,17 @@ const variantStyles: Record<TextVariant, TextStyle> = {
     fontWeight: fontWeights.regular,
     lineHeight: Math.round(fontSizes.xs * 1.4),
   },
+};
+
+function Text({ color, muted = false, style, variant = 'body-2', ...props }: TextProps) {
+  const resolvedColor = color
+    ? colors[color]
+    : muted
+      ? colors['text-tertiary']
+      : colors['text-primary'];
+
+  return <RNText style={[variantStyles[variant], { color: resolvedColor }, style]} {...props} />;
 }
 
-function Text({
-  color,
-  muted = false,
-  style,
-  variant = 'body-2',
-  ...props
-}: TextProps) {
-  const resolvedColor = color ? colors[color] : muted ? colors['text-tertiary'] : colors['text-primary']
-
-  return <RNText style={[variantStyles[variant], { color: resolvedColor }, style]} {...props} />
-}
-
-export { Text }
-export type { TextProps }
+export { Text };
+export type { TextProps };

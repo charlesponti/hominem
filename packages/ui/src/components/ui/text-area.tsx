@@ -1,12 +1,10 @@
-import * as React from 'react'
+import * as React from 'react';
 
-import { Field } from './field'
-import { Textarea } from './textarea'
-import type { TextAreaBaseProps } from './text-area.types'
+import { Field } from './field';
+import type { TextAreaBaseProps } from './text-area.types';
+import { Textarea } from './textarea';
 
-interface TextAreaProps
-  extends React.ComponentProps<'textarea'>,
-    TextAreaBaseProps {}
+interface TextAreaProps extends React.ComponentProps<'textarea'>, TextAreaBaseProps {}
 
 function TextArea({
   className,
@@ -17,14 +15,14 @@ function TextArea({
   ...textareaProps
 }: TextAreaProps) {
   if (!label && !helpText && !error) {
-    return <Textarea className={className} disabled={disabled} {...textareaProps} />
+    return <Textarea className={className} disabled={disabled} {...textareaProps} />;
   }
 
   return (
     <Field label={label} helpText={helpText} error={error}>
       <Textarea className={className} disabled={disabled} {...textareaProps} />
     </Field>
-  )
+  );
 }
 
-export { TextArea, type TextAreaProps }
+export { TextArea, type TextAreaProps };

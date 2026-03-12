@@ -1,6 +1,7 @@
-import * as React from 'react'
-import { cn } from '../../lib/utils'
-import type { PageMaxWidth } from './page.types'
+import * as React from 'react';
+
+import { cn } from '../../lib/utils';
+import type { PageMaxWidth } from './page.types';
 
 const maxWidthMap: Record<PageMaxWidth, string> = {
   sm: 'max-w-2xl',
@@ -8,7 +9,7 @@ const maxWidthMap: Record<PageMaxWidth, string> = {
   lg: 'max-w-5xl',
   xl: 'max-w-7xl',
   full: 'max-w-full',
-}
+};
 
 interface PageProps extends React.ComponentProps<'main'> {
   /**
@@ -16,9 +17,9 @@ interface PageProps extends React.ComponentProps<'main'> {
    * - `lg` (default) matches AppLayout canonical constraint.
    * - `sm` for focused single-column content (forms, detail views).
    */
-  maxWidth?: PageMaxWidth
+  maxWidth?: PageMaxWidth;
   /** Whether to add standard horizontal padding. Defaults to true. */
-  padded?: boolean
+  padded?: boolean;
 }
 
 /**
@@ -39,20 +40,15 @@ interface PageProps extends React.ComponentProps<'main'> {
 function Page({ maxWidth = 'lg', padded = true, className, ...props }: PageProps) {
   return (
     <main
-      className={cn(
-        'w-full mx-auto',
-        maxWidthMap[maxWidth],
-        padded && 'px-4 sm:px-6',
-        className,
-      )}
+      className={cn('w-full mx-auto', maxWidthMap[maxWidth], padded && 'px-4 sm:px-6', className)}
       {...props}
     />
-  )
+  );
 }
 
 interface ContainerProps extends React.ComponentProps<'div'> {
-  maxWidth?: PageMaxWidth
-  padded?: boolean
+  maxWidth?: PageMaxWidth;
+  padded?: boolean;
 }
 
 /**
@@ -63,15 +59,10 @@ interface ContainerProps extends React.ComponentProps<'div'> {
 function Container({ maxWidth = 'lg', padded = true, className, ...props }: ContainerProps) {
   return (
     <div
-      className={cn(
-        'w-full mx-auto',
-        maxWidthMap[maxWidth],
-        padded && 'px-4 sm:px-6',
-        className,
-      )}
+      className={cn('w-full mx-auto', maxWidthMap[maxWidth], padded && 'px-4 sm:px-6', className)}
       {...props}
     />
-  )
+  );
 }
 
-export { Page, Container, type PageProps, type ContainerProps, type PageMaxWidth }
+export { Page, Container, type PageProps, type ContainerProps, type PageMaxWidth };

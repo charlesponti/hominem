@@ -57,26 +57,26 @@ function hasFormDataGet(value: object): value is FormDataReader {
 
 function getPayloadAccessToken(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
   if ('access_token' in payload) {
-    return payload.accessToken ?? payload.access_token
+    return payload.accessToken ?? payload.access_token;
   }
 
-  return payload.accessToken
+  return payload.accessToken;
 }
 
 function getPayloadRefreshToken(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
   if ('refresh_token' in payload) {
-    return payload.refreshToken ?? payload.refresh_token ?? null
+    return payload.refreshToken ?? payload.refresh_token ?? null;
   }
 
-  return null
+  return null;
 }
 
 function getPayloadExpiresIn(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
   if ('expires_in' in payload) {
-    return payload.expiresIn ?? payload.expires_in
+    return payload.expiresIn ?? payload.expires_in;
   }
 
-  return null
+  return null;
 }
 
 async function appendTokenCookies(
@@ -98,15 +98,12 @@ async function appendTokenCookies(
 
   const cookieDomain = getAuthCookieDomain();
   const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
-  const accessToken = getPayloadAccessToken(payload)
-  const expiresIn = getPayloadExpiresIn(payload)
-  const maxAge =
-    typeof expiresIn === 'number'
-      ? `; Max-Age=${expiresIn}`
-      : '';
+  const accessToken = getPayloadAccessToken(payload);
+  const expiresIn = getPayloadExpiresIn(payload);
+  const maxAge = typeof expiresIn === 'number' ? `; Max-Age=${expiresIn}` : '';
 
   if (!accessToken) {
-    return
+    return;
   }
 
   headers.append(
@@ -114,7 +111,7 @@ async function appendTokenCookies(
     `hominem_access_token=${encodeURIComponent(accessToken)}; Path=/; HttpOnly; SameSite=Lax${maxAge}${domainAttribute}`,
   );
 
-  const refreshToken = getPayloadRefreshToken(payload)
+  const refreshToken = getPayloadRefreshToken(payload);
   if (refreshToken) {
     headers.append(
       'set-cookie',
@@ -123,10 +120,7 @@ async function appendTokenCookies(
   }
 }
 
-export function createAuthEntryLoader(
-  config: AuthEntryRouteConfig,
-  getServerAuth: GetServerAuth,
-) {
+export function createAuthEntryLoader(config: AuthEntryRouteConfig, getServerAuth: GetServerAuth) {
   return async function loader({ request }: { request: Request }) {
     const { user, headers } = await getServerAuth(request);
     if (user) {
@@ -142,7 +136,9 @@ export function createAuthEntryAction(config: AuthEntryServerRouteConfig) {
     if (!hasFormDataGet(formData)) {
       return { error: 'Invalid form submission' };
     }
-    const email = String(formData.get('email') ?? '').trim().toLowerCase();
+    const email = String(formData.get('email') ?? '')
+      .trim()
+      .toLowerCase();
     const next = String(formData.get('next') ?? config.defaultRedirect);
 
     if (!email) {
@@ -197,7 +193,9 @@ export function createAuthVerifyAction(config: AuthVerifyServerRouteConfig) {
     if (!hasFormDataGet(formData)) {
       return { error: 'Invalid form submission' };
     }
-    const email = String(formData.get('email') ?? '').trim().toLowerCase();
+    const email = String(formData.get('email') ?? '')
+      .trim()
+      .toLowerCase();
     const otp = String(formData.get('otp') ?? '').replace(/\D/g, '');
     const next = resolveSafeAuthRedirect(
       String(formData.get('next') ?? config.defaultRedirect),
@@ -288,11 +286,9 @@ export function createAuthPasskeyCallbackRoute(config: AuthPasskeyCallbackRouteC
       );
     }
 
-    const next = resolveSafeAuthRedirect(
-      payload.next,
-      config.defaultRedirect,
-      [...config.allowedRedirectPrefixes],
-    );
+    const next = resolveSafeAuthRedirect(payload.next, config.defaultRedirect, [
+      ...config.allowedRedirectPrefixes,
+    ]);
 
     if (!payload.accessToken) {
       return redirect(

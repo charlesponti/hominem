@@ -1,16 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { expect, within } from '@storybook/test'
+import type { Meta, StoryObj } from '@storybook/react';
+import { expect, within } from '@storybook/test';
 
-import { Stack } from './stack'
+import { Stack } from './stack';
 
 const meta: Meta<typeof Stack> = {
   title: 'Layout/Stack',
   component: Stack,
   tags: ['autodocs'],
-}
+};
 
-export default meta
-type Story = StoryObj<typeof Stack>
+export default meta;
+type Story = StoryObj<typeof Stack>;
 
 export const Default: Story = {
   render: () => (
@@ -21,13 +21,13 @@ export const Default: Story = {
     </Stack>
   ),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
-    await expect(canvas.getByText('First item')).toBeInTheDocument()
-    await expect(canvas.getByText('Second item')).toBeInTheDocument()
-    await expect(canvas.getByText('Third item')).toBeInTheDocument()
+    await expect(canvas.getByText('First item')).toBeInTheDocument();
+    await expect(canvas.getByText('Second item')).toBeInTheDocument();
+    await expect(canvas.getByText('Third item')).toBeInTheDocument();
   },
-}
+};
 
 export const WithDividers: Story = {
   render: () => (
@@ -38,10 +38,10 @@ export const WithDividers: Story = {
     </Stack>
   ),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
-    await expect(canvas.getByText('Profile')).toBeInTheDocument()
-    await expect(canvas.getByText('Security')).toBeInTheDocument()
-    await expect(canvas.getByText('Notifications')).toBeInTheDocument()
+    await expect(canvas.getByText('Profile')).toBeInTheDocument();
+    await expect(canvas.getByText('Security')).toBeInTheDocument();
+    await expect(canvas.getByText('Notifications')).toBeInTheDocument();
   },
-}
+};

@@ -68,9 +68,7 @@ function DesktopNavLink({ item }: { item: NavItem }) {
       aria-current={isActive ? 'page' : undefined}
       className={[
         'flex items-center gap-1.5 px-3 py-2 rounded text-xs font-medium tracking-widest uppercase transition-colors duration-150',
-        isActive
-          ? 'text-text-primary'
-          : 'text-text-tertiary hover:text-text-secondary',
+        isActive ? 'text-text-primary' : 'text-text-tertiary hover:text-text-secondary',
       ].join(' ')}
     >
       {item.icon && <item.icon className="size-4 shrink-0" aria-hidden="true" />}
@@ -198,8 +196,12 @@ export function Header({ brandName, brandIcon, navItems = [] }: HeaderProps) {
           textDecoration: 'none',
           transition: 'top 150ms ease',
         }}
-        onFocus={(e) => { e.currentTarget.style.top = '0'; }}
-        onBlur={(e) => { e.currentTarget.style.top = '-100%'; }}
+        onFocus={(e) => {
+          e.currentTarget.style.top = '0';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.top = '-100%';
+        }}
       >
         Skip to main content
       </a>
@@ -229,11 +231,9 @@ export function Header({ brandName, brandIcon, navItems = [] }: HeaderProps) {
             <span className="text-sm font-semibold tracking-widest uppercase">{brandName}</span>
           </Link>
 
-          {authContext && !isLoading && (
-            isAuthenticated
-              ? <DesktopNav navItems={navItems} />
-              : <SignInButton />
-          )}
+          {authContext &&
+            !isLoading &&
+            (isAuthenticated ? <DesktopNav navItems={navItems} /> : <SignInButton />)}
         </div>
       </header>
 

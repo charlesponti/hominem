@@ -114,7 +114,10 @@ export function createAuthVerifyComponent(config: AuthVerifyRouteConfig) {
     const location = useLocation();
 
     return (
-      <AuthScaffold title={AUTH_COPY.otpVerification.title} description={AUTH_COPY.otpVerification.subtitle}>
+      <AuthScaffold
+        title={AUTH_COPY.otpVerification.title}
+        description={AUTH_COPY.otpVerification.subtitle}
+      >
         <OtpVerificationForm
           action={`/auth/verify${location.search}`}
           email={email}

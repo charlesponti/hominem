@@ -1,12 +1,13 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { Message, MessageAvatar, MessageContent, MessageResponse } from './message'
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { Message, MessageAvatar, MessageContent, MessageResponse } from './message';
 
 const meta: Meta = {
   title: 'AI Elements/Message',
   tags: ['autodocs'],
-}
-export default meta
-type Story = StoryObj
+};
+export default meta;
+type Story = StoryObj;
 
 export const UserMessage: Story = {
   render: () => (
@@ -16,7 +17,7 @@ export const UserMessage: Story = {
       </MessageContent>
     </Message>
   ),
-}
+};
 
 export const AssistantMessage: Story = {
   render: () => (
@@ -30,7 +31,7 @@ export const AssistantMessage: Story = {
       </MessageContent>
     </Message>
   ),
-}
+};
 
 export const Conversation: Story = {
   render: () => (
@@ -51,4 +52,4 @@ export const Conversation: Story = {
       </Message>
     </div>
   ),
-}
+};

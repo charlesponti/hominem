@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from 'react';
 import {
   StyleSheet,
   TextInput,
@@ -6,19 +6,18 @@ import {
   type TextInputProps,
   type TextStyle,
   type ViewStyle,
-} from 'react-native'
+} from 'react-native';
 
-import { colors, fontFamiliesNative, fontSizes, spacing } from '../../tokens'
-import { Field } from './field.native'
-import type { TextFieldBaseProps, TextFieldType } from './text-field.types'
+import { colors, fontFamiliesNative, fontSizes, spacing } from '../../tokens';
+import { Field } from './field.native';
+import type { TextFieldBaseProps, TextFieldType } from './text-field.types';
 
 interface TextFieldProps
-  extends Omit<TextInputProps, 'accessibilityLabel' | 'editable'>,
-    TextFieldBaseProps {
-  style?: StyleProp<TextStyle>
-  containerStyle?: StyleProp<ViewStyle>
-  editable?: boolean | undefined
-  type?: TextFieldType | undefined
+  extends Omit<TextInputProps, 'accessibilityLabel' | 'editable'>, TextFieldBaseProps {
+  style?: StyleProp<TextStyle>;
+  containerStyle?: StyleProp<ViewStyle>;
+  editable?: boolean | undefined;
+  type?: TextFieldType | undefined;
 }
 
 const TextField = React.forwardRef<TextInput, TextFieldProps>(function TextField(
@@ -36,22 +35,13 @@ const TextField = React.forwardRef<TextInput, TextFieldProps>(function TextField
   },
   ref,
 ) {
-  const isEditable = editable ?? !disabled
+  const isEditable = editable ?? !disabled;
   const keyboardType =
-    type === 'email'
-      ? 'email-address'
-      : type === 'search'
-        ? 'web-search'
-        : 'default'
-  const secureTextEntry = type === 'password'
+    type === 'email' ? 'email-address' : type === 'search' ? 'web-search' : 'default';
+  const secureTextEntry = type === 'password';
 
   return (
-    <Field
-      containerStyle={containerStyle}
-      error={error}
-      helpText={helpText}
-      label={label}
-    >
+    <Field containerStyle={containerStyle} error={error} helpText={helpText} label={label}>
       <TextInput
         ref={ref}
         editable={isEditable}
@@ -68,8 +58,8 @@ const TextField = React.forwardRef<TextInput, TextFieldProps>(function TextField
         {...props}
       />
     </Field>
-  )
-})
+  );
+});
 
 const styles = StyleSheet.create({
   input: {
@@ -90,7 +80,7 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: colors.destructive,
   },
-})
+});
 
-export { TextField }
-export type { TextFieldProps }
+export { TextField };
+export type { TextFieldProps };

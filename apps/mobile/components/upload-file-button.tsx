@@ -1,10 +1,11 @@
-import { MaterialIcons } from '@expo/vector-icons'
-import type { PressableProps } from 'react-native'
-import { Pressable, StyleSheet } from 'react-native'
-import { makeStyles, theme } from '~/theme'
+import { MaterialIcons } from '@expo/vector-icons';
+import type { PressableProps } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
+
+import { makeStyles, theme } from '~/theme';
 
 export const UploadFileButton = ({ style, ...props }: PressableProps) => {
-  const styles = useStyles()
+  const styles = useStyles();
   return (
     <Pressable
       style={(state) => [
@@ -16,8 +17,8 @@ export const UploadFileButton = ({ style, ...props }: PressableProps) => {
     >
       <MaterialIcons name="add" size={20} color={theme.colors.foreground} />
     </Pressable>
-  )
-}
+  );
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -32,5 +33,5 @@ const useStyles = makeStyles((t) =>
       opacity: 0.7,
       transform: [{ scale: 0.98 }],
     },
-  })
-)
+  }),
+);

@@ -1,12 +1,12 @@
-import { StyleSheet, View } from 'react-native'
+import type { SessionSource } from '@hominem/chat-services/types';
+import { StyleSheet, View } from 'react-native';
 
-import type { SessionSource } from '@hominem/chat-services/types'
-import { makeStyles, Text } from '~/theme'
+import { makeStyles, Text } from '~/theme';
 
-export type { SessionSource }
+export type { SessionSource };
 
 interface ContextAnchorProps {
-  source: SessionSource
+  source: SessionSource;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -14,21 +14,21 @@ const TYPE_LABELS: Record<string, string> = {
   task: 'TASK',
   task_list: 'LIST',
   tracker: 'TRACKER',
-}
+};
 
 /**
  * ContextAnchor — shows where a session originated.
  * Required in every SessionView header. Never absent.
  */
 export const ContextAnchor = ({ source }: ContextAnchorProps) => {
-  const styles = useStyles()
+  const styles = useStyles();
 
   if (source.kind === 'new') {
     return (
       <Text variant="caption" color="text-secondary" style={styles.italic}>
         New session
       </Text>
-    )
+    );
   }
 
   if (source.kind === 'thought') {
@@ -38,7 +38,7 @@ export const ContextAnchor = ({ source }: ContextAnchorProps) => {
           {source.preview}
         </Text>
       </View>
-    )
+    );
   }
 
   // kind === 'artifact'
@@ -47,13 +47,15 @@ export const ContextAnchor = ({ source }: ContextAnchorProps) => {
       <Text variant="caption" color="text-secondary">
         {TYPE_LABELS[source.type] ?? source.type}
       </Text>
-      <Text variant="caption" color="text-secondary" style={styles.dot}>·</Text>
+      <Text variant="caption" color="text-secondary" style={styles.dot}>
+        ·
+      </Text>
       <Text variant="caption" color="text-secondary" numberOfLines={1} style={styles.title}>
         {source.title}
       </Text>
     </View>
-  )
-}
+  );
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -78,5 +80,5 @@ const useStyles = makeStyles((t) =>
     title: {
       flex: 1,
     },
-  })
-)
+  }),
+);

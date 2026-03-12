@@ -26,11 +26,11 @@ const Onboarding = () => {
   };
 
   if (!isSignedIn) {
-    return <Redirect href={"/(auth)" as RelativePathString} />;
+    return <Redirect href={'/(auth)' as RelativePathString} />;
   }
 
   if (currentUser?.name) {
-    return <Redirect href={"/(protected)/(tabs)/focus" as RelativePathString} />;
+    return <Redirect href={'/(protected)/(tabs)/focus' as RelativePathString} />;
   }
 
   return (

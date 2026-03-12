@@ -25,7 +25,7 @@ export interface ParsedError {
  */
 export function parseAuthError(
   errorMessage?: string,
-  context: 'otp' | 'password' | 'passkey' = 'otp'
+  context: 'otp' | 'password' | 'passkey' = 'otp',
 ): ParsedError {
   if (!errorMessage) {
     return {
@@ -52,11 +52,7 @@ export function parseAuthError(
   }
 
   // Account locked or too many attempts
-  if (
-    lower.includes('locked') ||
-    lower.includes('too many') ||
-    lower.includes('attempt limit')
-  ) {
+  if (lower.includes('locked') || lower.includes('too many') || lower.includes('attempt limit')) {
     return {
       type: 'too-many',
       message:
@@ -104,7 +100,7 @@ export function parseAuthError(
  */
 export function getErrorMessage(
   type: ErrorType,
-  context: 'otp' | 'password' | 'passkey' = 'otp'
+  context: 'otp' | 'password' | 'passkey' = 'otp',
 ): string {
   const messages: Record<ErrorType, Record<'otp' | 'password' | 'passkey', string>> = {
     'wrong-code': {

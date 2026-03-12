@@ -1,1 +1,1 @@
-export { Card } from '@hominem/ui/card'
+export { Card } from '@hominem/ui/card';

@@ -14,48 +14,50 @@ import { useIntentSuggestions } from '~/utils/services/intents/use-intent-sugges
 
 const { width } = Dimensions.get('window');
 
-const useStyles = makeStyles((t) => StyleSheet.create({
-  background: {
-    flex: 1,
-    backgroundColor: t.colors.background,
-  },
-  scrollFlex: {
-    flex: 1,
-  },
-  container: {
-    paddingHorizontal: t.spacing.m_16,
-    paddingBottom: t.spacing.xl_64,
-    gap: t.spacing.m_16,
-  },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: t.spacing.sm_12,
-  },
-  logo: {
-    height: 32,
-    width: 32,
-    borderRadius: t.borderRadii.sm_6,
-  },
-  avatar: {
-    height: 34,
-    width: 34,
-    borderRadius: 17, // special: half of width for circular avatar
-    backgroundColor: t.colors.muted,
-    borderWidth: 1,
-    borderColor: t.colors['border-default'],
-  },
-  headingBlock: {
-    gap: t.spacing.sm_12,
-    marginTop: t.spacing.m_16,
-  },
-  pills: {
-    marginTop: t.spacing.m_16,
-    gap: t.spacing.sm_12,
-    width: width - t.spacing.l_32,
-  },
-}));
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    background: {
+      flex: 1,
+      backgroundColor: t.colors.background,
+    },
+    scrollFlex: {
+      flex: 1,
+    },
+    container: {
+      paddingHorizontal: t.spacing.m_16,
+      paddingBottom: t.spacing.xl_64,
+      gap: t.spacing.m_16,
+    },
+    topBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: t.spacing.sm_12,
+    },
+    logo: {
+      height: 32,
+      width: 32,
+      borderRadius: t.borderRadii.sm_6,
+    },
+    avatar: {
+      height: 34,
+      width: 34,
+      borderRadius: 17, // special: half of width for circular avatar
+      backgroundColor: t.colors.muted,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+    },
+    headingBlock: {
+      gap: t.spacing.sm_12,
+      marginTop: t.spacing.m_16,
+    },
+    pills: {
+      marginTop: t.spacing.m_16,
+      gap: t.spacing.sm_12,
+      width: width - t.spacing.l_32,
+    },
+  }),
+);
 
 export default function StartScreen() {
   const styles = useStyles();
@@ -84,11 +86,7 @@ export default function StartScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.topBar}>
-            <Image
-              source={require('~/assets/icon.png')}
-              contentFit="cover"
-              style={styles.logo}
-            />
+            <Image source={require('~/assets/icon.png')} contentFit="cover" style={styles.logo} />
             <Text variant="title" color="foreground">
               MINDSHERPA
             </Text>
@@ -122,4 +120,3 @@ export default function StartScreen() {
     </>
   );
 }
-

@@ -8,9 +8,7 @@ export default function NotFoundPage() {
       <div className="flex flex-col items-center text-center max-w-2xl w-full">
         {/* Large 404 Number */}
         <div className="mb-6">
-          <h1 className="display-1 text-primary/20 select-none">
-            404
-          </h1>
+          <h1 className="display-1 text-primary/20 select-none">404</h1>
         </div>
 
         {/* Main Message */}
@@ -35,9 +33,7 @@ export default function NotFoundPage() {
 
         {/* Helpful Links */}
         <div className="mt-12 pt-8 border-t border-border/50 w-full">
-          <p className="body-2 text-muted-foreground mb-4 italic">
-            Quick Links
-          </p>
+          <p className="body-2 text-muted-foreground mb-4 italic">Quick Links</p>
           <div className="flex flex-wrap justify-center gap-8 text-sm">
             <Link to="/chat" className="btn">
               <Bot className="size-4" />

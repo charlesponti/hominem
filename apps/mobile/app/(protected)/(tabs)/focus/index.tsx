@@ -18,86 +18,92 @@ import AppIcon from '~/components/ui/icon';
 import { Text, theme, makeStyles } from '~/theme';
 import { useFocusQuery } from '~/utils/services/notes/use-focus-query';
 
-const useStyles = makeStyles((t) => StyleSheet.create({
-  container: {
-    flex: 1,
-    position: 'relative',
-    backgroundColor: t.colors.background,
-  },
-  focusContainer: {
-    flex: 1,
-    rowGap: t.spacing.sm_12,
-    marginTop: t.spacing.m_16,
-  },
-  sessionSection: {
-    paddingHorizontal: t.spacing.sm_12,
-    paddingTop: t.spacing.sm_12,
-  },
-  focuses: {
-    flex: 1,
-    rowGap: t.spacing.ml_24,
-    paddingTop: t.spacing.sm_12,
-    paddingHorizontal: t.spacing.sm_12,
-  },
-  empty: {
-    marginHorizontal: t.spacing.sm_12,
-    paddingVertical: t.spacing.xl_64,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: t.colors.muted,
-    borderRadius: t.borderRadii.sm_6,
-    borderWidth: 1,
-    borderColor: t.colors['border-default'],
-  },
-  scrollContainer: {
-    paddingTop: t.spacing.sm_12,
-  },
-  sherpaButtonContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  sherpaLink: {
-    flex: 1,
-  },
-  sherpaCircleButton: {
-    backgroundColor: t.colors.muted,
-    borderRadius: 999, // special: infinite radius
-    borderWidth: 1,
-    borderColor: t.colors['border-default'],
-    padding: t.spacing.sm_12,
-    maxWidth: 120,
-    marginBottom: t.spacing.ml_24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-}));
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      position: 'relative',
+      backgroundColor: t.colors.background,
+    },
+    focusContainer: {
+      flex: 1,
+      rowGap: t.spacing.sm_12,
+      marginTop: t.spacing.m_16,
+    },
+    sessionSection: {
+      paddingHorizontal: t.spacing.sm_12,
+      paddingTop: t.spacing.sm_12,
+    },
+    focuses: {
+      flex: 1,
+      rowGap: t.spacing.ml_24,
+      paddingTop: t.spacing.sm_12,
+      paddingHorizontal: t.spacing.sm_12,
+    },
+    empty: {
+      marginHorizontal: t.spacing.sm_12,
+      paddingVertical: t.spacing.xl_64,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: t.colors.muted,
+      borderRadius: t.borderRadii.sm_6,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+    },
+    scrollContainer: {
+      paddingTop: t.spacing.sm_12,
+    },
+    sherpaButtonContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+    },
+    sherpaLink: {
+      flex: 1,
+    },
+    sherpaCircleButton: {
+      backgroundColor: t.colors.muted,
+      borderRadius: 999, // special: infinite radius
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+      padding: t.spacing.sm_12,
+      maxWidth: 120,
+      marginBottom: t.spacing.ml_24,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  }),
+);
 
-const useHeaderRightStyles = makeStyles((t) => StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    columnGap: t.spacing.sm_8,
-  },
-}));
+const useHeaderRightStyles = makeStyles((t) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      columnGap: t.spacing.sm_8,
+    },
+  }),
+);
 
-const useErrorStyles = makeStyles((t) => StyleSheet.create({
-  wrapper: {
-    padding: t.spacing.sm_12,
-    marginHorizontal: t.spacing.sm_12,
-  },
-  row: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    columnGap: t.spacing.ml_24,
-  },
-  textCol: {
-    flex: 1,
-  },
-}));
+const useErrorStyles = makeStyles((t) =>
+  StyleSheet.create({
+    wrapper: {
+      padding: t.spacing.sm_12,
+      marginHorizontal: t.spacing.sm_12,
+    },
+    row: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      columnGap: t.spacing.ml_24,
+    },
+    textCol: {
+      flex: 1,
+    },
+  }),
+);
 
 export const FocusView = () => {
   const styles = useStyles();
@@ -141,7 +147,7 @@ export const FocusView = () => {
           title: 'FOCUS',
           headerRight: () => (
             <View style={headerRightStyles.row}>
-              <Link href={"/(protected)/(tabs)/sherpa" as RelativePathString}>
+              <Link href={'/(protected)/(tabs)/sherpa' as RelativePathString}>
                 <Text variant="body" color="text-secondary">
                   SHERPA
                 </Text>
@@ -196,7 +202,7 @@ export const FocusView = () => {
         <View style={[styles.sherpaButtonContainer, { bottom: insets.bottom }]}>
           <View style={styles.sherpaCircleButton}>
             <Link
-              href={"/(protected)/(tabs)/sherpa" as RelativePathString}
+              href={'/(protected)/(tabs)/sherpa' as RelativePathString}
               style={styles.sherpaLink}
               accessibilityLabel="Open Sherpa"
             >
@@ -237,5 +243,3 @@ const FocusLoadingError = React.memo(() => {
     </View>
   );
 });
-
-

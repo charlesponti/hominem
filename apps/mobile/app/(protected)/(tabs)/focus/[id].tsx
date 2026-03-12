@@ -18,7 +18,7 @@ import {
 } from '~/utils/services/notes/use-update-focus';
 
 export default function FocusItemView() {
-  const styles = useStyles()
+  const styles = useStyles();
   const { id } = useLocalSearchParams();
   const updateFocusItem = useUpdateFocusItem();
   const focusItems: FocusItem[] = queryClient.getQueryData(['focusItems']) || [];
@@ -138,6 +138,5 @@ const useStyles = makeStyles((t) =>
       flexDirection: 'row',
       justifyContent: 'center',
     },
-  })
-)
-
+  }),
+);

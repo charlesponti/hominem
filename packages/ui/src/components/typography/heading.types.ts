@@ -1,4 +1,4 @@
-export type HeadingLevel = 1 | 2 | 3 | 4
+export type HeadingLevel = 1 | 2 | 3 | 4;
 
 export type HeadingVariant =
   | 'display-1'
@@ -6,4 +6,4 @@ export type HeadingVariant =
   | 'heading-1'
   | 'heading-2'
   | 'heading-3'
-  | 'heading-4'
+  | 'heading-4';

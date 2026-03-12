@@ -162,7 +162,10 @@ export default function AccountsPage({ loaderData }: Route.ComponentProps) {
   const { accounts: initialAccounts, connections: initialConnections } = loaderData;
 
   const allAccountsQuery = useAllAccounts({
-    initialData: { accounts: initialAccounts.map(normalizeAccount), connections: initialConnections },
+    initialData: {
+      accounts: initialAccounts.map(normalizeAccount),
+      connections: initialConnections,
+    },
   });
 
   const handleConnectionSuccess = (institutionName: string) => {

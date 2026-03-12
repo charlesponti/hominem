@@ -1,24 +1,32 @@
-import type { ReactNode } from 'react'
-import { StyleSheet, View } from 'react-native'
-import { AsciiTexture } from '~/components/ui/ascii-texture'
-import { theme, makeStyles } from '~/theme'
+import type { ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-const useStyles = makeStyles((t) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: t.colors.background,
-  },
-}));
+import { AsciiTexture } from '~/components/ui/ascii-texture';
+import { theme, makeStyles } from '~/theme';
 
-const BlurredGradientBackground = ({ children, testID }: { children: ReactNode; testID?: string }) => {
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: t.colors.background,
+    },
+  }),
+);
+
+const BlurredGradientBackground = ({
+  children,
+  testID,
+}: {
+  children: ReactNode;
+  testID?: string;
+}) => {
   const styles = useStyles();
   return (
     <View testID={testID} style={styles.container}>
       <AsciiTexture />
       {children}
     </View>
-  )
-}
+  );
+};
 
-
-export default BlurredGradientBackground
+export default BlurredGradientBackground;

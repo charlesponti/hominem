@@ -1,16 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { expect, within } from '@storybook/test'
+import type { Meta, StoryObj } from '@storybook/react';
+import { expect, within } from '@storybook/test';
 
-import { Inline } from './inline'
+import { Inline } from './inline';
 
 const meta: Meta<typeof Inline> = {
   title: 'Layout/Inline',
   component: Inline,
   tags: ['autodocs'],
-}
+};
 
-export default meta
-type Story = StoryObj<typeof Inline>
+export default meta;
+type Story = StoryObj<typeof Inline>;
 
 export const Default: Story = {
   render: () => (
@@ -21,13 +21,13 @@ export const Default: Story = {
     </Inline>
   ),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
-    await expect(canvas.getByText('Alpha')).toBeInTheDocument()
-    await expect(canvas.getByText('Beta')).toBeInTheDocument()
-    await expect(canvas.getByText('Gamma')).toBeInTheDocument()
+    await expect(canvas.getByText('Alpha')).toBeInTheDocument();
+    await expect(canvas.getByText('Beta')).toBeInTheDocument();
+    await expect(canvas.getByText('Gamma')).toBeInTheDocument();
   },
-}
+};
 
 export const Wrapped: Story = {
   render: () => (
@@ -39,9 +39,9 @@ export const Wrapped: Story = {
     </Inline>
   ),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
-    await expect(canvas.getByText('Filters')).toBeInTheDocument()
-    await expect(canvas.getByText('Assigned')).toBeInTheDocument()
+    await expect(canvas.getByText('Filters')).toBeInTheDocument();
+    await expect(canvas.getByText('Assigned')).toBeInTheDocument();
   },
-}
+};

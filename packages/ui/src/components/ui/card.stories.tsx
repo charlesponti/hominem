@@ -1,14 +1,15 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { expect, userEvent, within } from '@storybook/test'
-import { Button } from './button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card'
+import type { Meta, StoryObj } from '@storybook/react';
+import { expect, userEvent, within } from '@storybook/test';
+
+import { Button } from './button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
 
 const meta: Meta = {
   title: 'UI/Card',
   tags: ['autodocs'],
-}
-export default meta
-type Story = StoryObj
+};
+export default meta;
+type Story = StoryObj;
 
 export const Default: Story = {
   render: () => (
@@ -23,22 +24,24 @@ export const Default: Story = {
         </p>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
-        <Button variant="outline" size="sm">Cancel</Button>
+        <Button variant="outline" size="sm">
+          Cancel
+        </Button>
         <Button size="sm">Confirm</Button>
       </CardFooter>
     </Card>
   ),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const cancelButton = canvas.getByRole('button', { name: 'Cancel' })
+    const canvas = within(canvasElement);
+    const cancelButton = canvas.getByRole('button', { name: 'Cancel' });
 
-    await userEvent.tab()
+    await userEvent.tab();
 
-    await expect(canvas.getByText('Card Title')).toBeInTheDocument()
-    await expect(cancelButton).toHaveFocus()
-    await expect(canvas.getByRole('button', { name: 'Confirm' })).toBeInTheDocument()
+    await expect(canvas.getByText('Card Title')).toBeInTheDocument();
+    await expect(cancelButton).toHaveFocus();
+    await expect(canvas.getByRole('button', { name: 'Confirm' })).toBeInTheDocument();
   },
-}
+};
 
 export const Minimal: Story = {
   render: () => (
@@ -49,8 +52,8 @@ export const Minimal: Story = {
     </Card>
   ),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
-    await expect(canvas.getByText('Minimal card with only content.')).toBeInTheDocument()
+    await expect(canvas.getByText('Minimal card with only content.')).toBeInTheDocument();
   },
-}
+};

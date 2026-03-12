@@ -1,1 +1,1 @@
-export type PageMaxWidth = 'sm' | 'md' | 'lg' | 'xl' | 'full'
+export type PageMaxWidth = 'sm' | 'md' | 'lg' | 'xl' | 'full';

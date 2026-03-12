@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { expect, userEvent, within } from '@storybook/test'
-import { Plus, Trash2 } from 'lucide-react'
-import { Button } from './button'
+import type { Meta, StoryObj } from '@storybook/react';
+import { expect, userEvent, within } from '@storybook/test';
+import { Plus, Trash2 } from 'lucide-react';
+
+import { Button } from './button';
 
 const meta: Meta<typeof Button> = {
   title: 'UI/Button',
@@ -17,23 +18,23 @@ const meta: Meta<typeof Button> = {
       options: ['sm', 'md', 'lg', 'icon', 'default'],
     },
   },
-}
-export default meta
-type Story = StoryObj<typeof Button>
+};
+export default meta;
+type Story = StoryObj<typeof Button>;
 
 export const Default: Story = {
   args: { children: 'Button' },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const button = canvas.getByRole('button', { name: 'Button' })
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Button' });
 
-    await userEvent.hover(button)
-    await userEvent.click(button)
+    await userEvent.hover(button);
+    await userEvent.click(button);
 
-    await expect(button).toHaveFocus()
-    await expect(button).toBeEnabled()
+    await expect(button).toHaveFocus();
+    await expect(button).toBeEnabled();
   },
-}
+};
 
 export const Variants: Story = {
   render: () => (
@@ -45,7 +46,7 @@ export const Variants: Story = {
       <Button variant="link">Link</Button>
     </div>
   ),
-}
+};
 
 export const Sizes: Story = {
   render: () => (
@@ -53,36 +54,48 @@ export const Sizes: Story = {
       <Button size="sm">Small</Button>
       <Button size="md">Medium</Button>
       <Button size="lg">Large</Button>
-      <Button size="icon"><Plus className="size-4" /></Button>
+      <Button size="icon">
+        <Plus className="size-4" />
+      </Button>
     </div>
   ),
-}
+};
 
 export const WithIcon: Story = {
   render: () => (
     <div className="flex gap-3">
-      <Button><Plus className="size-4" />Create</Button>
-      <Button variant="destructive"><Trash2 className="size-4" />Delete</Button>
+      <Button>
+        <Plus className="size-4" />
+        Create
+      </Button>
+      <Button variant="destructive">
+        <Trash2 className="size-4" />
+        Delete
+      </Button>
     </div>
   ),
-}
+};
 
 export const Disabled: Story = {
   render: () => (
     <div className="flex gap-3">
       <Button disabled>Default</Button>
-      <Button variant="outline" disabled>Outline</Button>
-      <Button variant="destructive" disabled>Destructive</Button>
+      <Button variant="outline" disabled>
+        Outline
+      </Button>
+      <Button variant="destructive" disabled>
+        Destructive
+      </Button>
     </div>
   ),
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
-    await expect(canvas.getByRole('button', { name: 'Default' })).toBeDisabled()
-    await expect(canvas.getByRole('button', { name: 'Outline' })).toBeDisabled()
-    await expect(canvas.getByRole('button', { name: 'Destructive' })).toBeDisabled()
+    await expect(canvas.getByRole('button', { name: 'Default' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Outline' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Destructive' })).toBeDisabled();
   },
-}
+};
 
 export const Loading: Story = {
   args: {
@@ -90,9 +103,9 @@ export const Loading: Story = {
     isLoading: true,
   },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const button = canvas.getByRole('button', { name: 'Saving' })
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: 'Saving' });
 
-    await expect(button).toBeDisabled()
+    await expect(button).toBeDisabled();
   },
-}
+};

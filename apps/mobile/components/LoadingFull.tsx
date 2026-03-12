@@ -1,22 +1,22 @@
-import type { PropsWithChildren } from 'react'
-import { ActivityIndicator, StyleSheet } from 'react-native'
+import type { PropsWithChildren } from 'react';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 
-import { Box, makeStyles, theme } from '~/theme'
+import { Box, makeStyles, theme } from '~/theme';
 
 export const LoadingFull = ({ children }: PropsWithChildren) => {
-  const styles = useStyles()
+  const styles = useStyles();
   return (
     <LoadingContainer>
       {children}
       <ActivityIndicator size="large" color={theme.colors.foreground} />
     </LoadingContainer>
-  )
-}
+  );
+};
 
 export const LoadingContainer = ({ children }: PropsWithChildren) => {
-  const styles = useStyles()
-  return <Box style={styles.loading}>{children}</Box>
-}
+  const styles = useStyles();
+  return <Box style={styles.loading}>{children}</Box>;
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -29,5 +29,5 @@ const useStyles = makeStyles((t) =>
       rowGap: t.spacing.ml_24,
       backgroundColor: t.colors.background,
     },
-  })
-)
+  }),
+);

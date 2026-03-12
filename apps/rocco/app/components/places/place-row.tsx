@@ -1,7 +1,7 @@
+import { Inline } from '@hominem/ui';
 import { Star } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
-import { Inline } from '@hominem/ui';
 
 import { buildImageUrl, cn } from '~/lib/utils';
 

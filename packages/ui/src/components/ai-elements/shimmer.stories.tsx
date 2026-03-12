@@ -1,15 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { ShimmerMessage } from './shimmer'
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { ShimmerMessage } from './shimmer';
 
 const meta: Meta<typeof ShimmerMessage> = {
   title: 'AI Elements/ShimmerMessage',
   component: ShimmerMessage,
   tags: ['autodocs'],
-}
-export default meta
-type Story = StoryObj<typeof ShimmerMessage>
+};
+export default meta;
+type Story = StoryObj<typeof ShimmerMessage>;
 
-export const Default: Story = {}
+export const Default: Story = {};
 
 export const Stacked: Story = {
   render: () => (
@@ -19,4 +20,4 @@ export const Stacked: Story = {
       <ShimmerMessage />
     </div>
   ),
-}
+};

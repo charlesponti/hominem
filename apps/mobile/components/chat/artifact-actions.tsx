@@ -1,8 +1,8 @@
-import { StyleSheet, View } from 'react-native'
+import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types';
+import { StyleSheet, View } from 'react-native';
 
-import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types'
-import { Button } from '~/components/Button'
-import { makeStyles } from '~/theme'
+import { Button } from '~/components/Button';
+import { makeStyles } from '~/theme';
 
 /**
  * ArtifactActions — transformation strip shown in SessionView.
@@ -13,9 +13,9 @@ import { makeStyles } from '~/theme'
  */
 
 interface ArtifactActionsProps {
-  state: ThoughtLifecycleState
-  messageCount: number
-  onTransform: (type: ArtifactType) => void
+  state: ThoughtLifecycleState;
+  messageCount: number;
+  onTransform: (type: ArtifactType) => void;
 }
 
 const ACTIONS: { type: ArtifactType; label: string }[] = [
@@ -23,24 +23,24 @@ const ACTIONS: { type: ArtifactType; label: string }[] = [
   { type: 'task', label: '→ TASK' },
   { type: 'task_list', label: '→ LIST' },
   { type: 'tracker', label: '→ TRACKER' },
-]
+];
 
-const ENABLED: ArtifactType[] = ['note']
-const BLOCKING: ThoughtLifecycleState[] = ['classifying', 'reviewing_changes', 'persisting']
+const ENABLED: ArtifactType[] = ['note'];
+const BLOCKING: ThoughtLifecycleState[] = ['classifying', 'reviewing_changes', 'persisting'];
 
 export const ArtifactActions = ({ state, messageCount, onTransform }: ArtifactActionsProps) => {
-  const styles = useStyles()
-  
-  if (messageCount === 0) return null
+  const styles = useStyles();
 
-  const isComposing = state === 'composing'
-  const isBlocked = BLOCKING.includes(state)
+  if (messageCount === 0) return null;
+
+  const isComposing = state === 'composing';
+  const isBlocked = BLOCKING.includes(state);
 
   return (
     <View style={[styles.row, isComposing && styles.dimmed]}>
       {ACTIONS.map(({ type, label }) => {
-        const enabled = ENABLED.includes(type)
-        const disabled = !enabled || isBlocked
+        const enabled = ENABLED.includes(type);
+        const disabled = !enabled || isBlocked;
 
         return (
           <Button
@@ -54,11 +54,11 @@ export const ArtifactActions = ({ state, messageCount, onTransform }: ArtifactAc
           >
             {label}
           </Button>
-        )
+        );
       })}
     </View>
-  )
-}
+  );
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -76,5 +76,5 @@ const useStyles = makeStyles((t) =>
       backgroundColor: t.colors.muted,
     },
     btnDisabled: { opacity: 0.38 },
-  })
-)
+  }),
+);

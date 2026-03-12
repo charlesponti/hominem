@@ -1,16 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { expect, userEvent, within } from '@storybook/test'
+import type { Meta, StoryObj } from '@storybook/react';
+import { expect, userEvent, within } from '@storybook/test';
 
-import { TextArea } from './text-area'
+import { TextArea } from './text-area';
 
 const meta: Meta<typeof TextArea> = {
   title: 'UI/TextArea',
   component: TextArea,
   tags: ['autodocs'],
-}
+};
 
-export default meta
-type Story = StoryObj<typeof TextArea>
+export default meta;
+type Story = StoryObj<typeof TextArea>;
 
 export const Default: Story = {
   args: {
@@ -19,16 +19,16 @@ export const Default: Story = {
     rows: 5,
   },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const input = canvas.getByLabelText('Notes')
+    const canvas = within(canvasElement);
+    const input = canvas.getByLabelText('Notes');
 
-    await userEvent.click(input)
-    await userEvent.type(input, 'Ship Storybook coverage')
+    await userEvent.click(input);
+    await userEvent.type(input, 'Ship Storybook coverage');
 
-    await expect(input).toHaveFocus()
-    await expect(input).toHaveValue('Ship Storybook coverage')
+    await expect(input).toHaveFocus();
+    await expect(input).toHaveValue('Ship Storybook coverage');
   },
-}
+};
 
 export const WithHelpText: Story = {
   args: {
@@ -37,11 +37,11 @@ export const WithHelpText: Story = {
     rows: 4,
   },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
-    await expect(canvas.getByText('Keep it short and concrete.')).toBeInTheDocument()
+    await expect(canvas.getByText('Keep it short and concrete.')).toBeInTheDocument();
   },
-}
+};
 
 export const Error: Story = {
   args: {
@@ -50,13 +50,13 @@ export const Error: Story = {
     rows: 4,
   },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const input = canvas.getByLabelText('Bio')
+    const canvas = within(canvasElement);
+    const input = canvas.getByLabelText('Bio');
 
-    await expect(input).toHaveAttribute('aria-invalid', 'true')
-    await expect(canvas.getByText('Bio is required')).toBeInTheDocument()
+    await expect(input).toHaveAttribute('aria-invalid', 'true');
+    await expect(canvas.getByText('Bio is required')).toBeInTheDocument();
   },
-}
+};
 
 export const Disabled: Story = {
   args: {
@@ -65,8 +65,8 @@ export const Disabled: Story = {
     rows: 3,
   },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const canvas = within(canvasElement);
 
-    await expect(canvas.getByLabelText('Summary')).toBeDisabled()
+    await expect(canvas.getByLabelText('Summary')).toBeDisabled();
   },
-}
+};

@@ -5,7 +5,7 @@ export type ButtonVariant =
   | 'ghost'
   | 'link'
   | 'outline'
-  | 'secondary'
+  | 'secondary';
 
 export type ButtonSize =
   | 'default'
@@ -16,11 +16,11 @@ export type ButtonSize =
   | 'icon'
   | 'icon-xs'
   | 'icon-sm'
-  | 'icon-lg'
+  | 'icon-lg';
 
 export interface ButtonBaseProps {
-  isLoading?: boolean | undefined
-  size?: ButtonSize
-  title?: string | undefined
-  variant?: ButtonVariant
+  isLoading?: boolean | undefined;
+  size?: ButtonSize;
+  title?: string | undefined;
+  variant?: ButtonVariant;
 }

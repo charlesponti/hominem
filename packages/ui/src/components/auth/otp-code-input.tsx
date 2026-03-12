@@ -1,30 +1,30 @@
-import * as React from 'react'
+import * as React from 'react';
 
-import { cn } from '../../lib/utils'
+import { cn } from '../../lib/utils';
 
 interface OtpCodeInputProps {
-  length?: number
-  value: string
-  onChange: (value: string) => void
-  disabled?: boolean
-  autoFocus?: boolean
-  className?: string
-  error?: string | undefined
-  onComplete?: () => void
-  maskDelay?: number
+  length?: number;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  autoFocus?: boolean;
+  className?: string;
+  error?: string | undefined;
+  onComplete?: () => void;
+  maskDelay?: number;
 }
 
 interface DigitProps {
-  value: string
-  index: number
-  length: number
-  disabled: boolean
-  onChange: (index: number, char: string) => void
-  onKeyDown: (index: number, event: React.KeyboardEvent<HTMLInputElement>) => void
-  onPaste: (event: React.ClipboardEvent<HTMLInputElement>) => void
-  refCallback: (element: HTMLInputElement | null, index: number) => void
-  error?: string | undefined
-  masked: boolean
+  value: string;
+  index: number;
+  length: number;
+  disabled: boolean;
+  onChange: (index: number, char: string) => void;
+  onKeyDown: (index: number, event: React.KeyboardEvent<HTMLInputElement>) => void;
+  onPaste: (event: React.ClipboardEvent<HTMLInputElement>) => void;
+  refCallback: (element: HTMLInputElement | null, index: number) => void;
+  error?: string | undefined;
+  masked: boolean;
 }
 
 const Digit = React.memo(function Digit({
@@ -60,8 +60,8 @@ const Digit = React.memo(function Digit({
       aria-label={`Digit ${index + 1} of ${length}`}
       aria-invalid={Boolean(error)}
     />
-  )
-})
+  );
+});
 
 export function OtpCodeInput({
   length = 6,
@@ -74,129 +74,129 @@ export function OtpCodeInput({
   onComplete,
   maskDelay = 300,
 }: OtpCodeInputProps) {
-  const inputRefs = React.useRef<Array<HTMLInputElement | null>>([])
-  const maskTimersRef = React.useRef<Record<number, ReturnType<typeof setTimeout>>>({})
-  const [maskedIndices, setMaskedIndices] = React.useState<Set<number>>(new Set())
+  const inputRefs = React.useRef<Array<HTMLInputElement | null>>([]);
+  const maskTimersRef = React.useRef<Record<number, ReturnType<typeof setTimeout>>>({});
+  const [maskedIndices, setMaskedIndices] = React.useState<Set<number>>(new Set());
 
   const inputValues = React.useMemo(() => {
-    const characters = value.split('').slice(0, length)
-    const values = Array.from({ length }, () => '')
+    const characters = value.split('').slice(0, length);
+    const values = Array.from({ length }, () => '');
 
     for (const [index, character] of characters.entries()) {
-      values[index] = character
+      values[index] = character;
     }
 
-    return values
-  }, [length, value])
+    return values;
+  }, [length, value]);
 
   React.useEffect(() => {
     if (value) {
-      return
+      return;
     }
 
     for (const timer of Object.values(maskTimersRef.current)) {
-      clearTimeout(timer)
+      clearTimeout(timer);
     }
 
-    maskTimersRef.current = {}
-    setMaskedIndices(new Set())
-  }, [value])
+    maskTimersRef.current = {};
+    setMaskedIndices(new Set());
+  }, [value]);
 
   React.useEffect(() => {
     if (autoFocus) {
-      inputRefs.current[0]?.focus()
+      inputRefs.current[0]?.focus();
     }
-  }, [autoFocus])
+  }, [autoFocus]);
 
   const handleChange = React.useCallback(
     (index: number, rawValue: string) => {
-      const character = rawValue.replace(/\D/g, '').slice(-1)
+      const character = rawValue.replace(/\D/g, '').slice(-1);
       const nextValue = inputValues.map((currentValue, currentIndex) =>
         currentIndex === index ? character : currentValue,
-      )
-      const joinedValue = nextValue.join('')
+      );
+      const joinedValue = nextValue.join('');
 
-      onChange(joinedValue)
+      onChange(joinedValue);
 
       if (!character) {
         setMaskedIndices((current) => {
-          const next = new Set(current)
-          next.delete(index)
-          return next
-        })
-        return
+          const next = new Set(current);
+          next.delete(index);
+          return next;
+        });
+        return;
       }
 
-      const currentTimer = maskTimersRef.current[index]
+      const currentTimer = maskTimersRef.current[index];
       if (currentTimer) {
-        clearTimeout(currentTimer)
+        clearTimeout(currentTimer);
       }
 
       setMaskedIndices((current) => {
-        const next = new Set(current)
-        next.delete(index)
-        return next
-      })
+        const next = new Set(current);
+        next.delete(index);
+        return next;
+      });
 
       maskTimersRef.current[index] = setTimeout(() => {
-        setMaskedIndices((current) => new Set(current).add(index))
-      }, maskDelay)
+        setMaskedIndices((current) => new Set(current).add(index));
+      }, maskDelay);
 
-      inputRefs.current[index + 1]?.focus()
+      inputRefs.current[index + 1]?.focus();
 
       if (joinedValue.length === length) {
-        onComplete?.()
+        onComplete?.();
       }
     },
     [inputValues, length, maskDelay, onChange, onComplete],
-  )
+  );
 
   const handleKeyDown = React.useCallback(
     (index: number, event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Backspace' && !inputValues[index] && index > 0) {
-        inputRefs.current[index - 1]?.focus()
+        inputRefs.current[index - 1]?.focus();
       }
     },
     [inputValues],
-  )
+  );
 
   const handlePaste = React.useCallback(
     (event: React.ClipboardEvent<HTMLInputElement>) => {
-      event.preventDefault()
+      event.preventDefault();
 
-      const pastedValue = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, length)
+      const pastedValue = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, length);
       if (!pastedValue) {
-        return
+        return;
       }
 
-      const nextValue = Array.from({ length }, (_, index) => pastedValue[index] ?? '').join('')
-      onChange(nextValue)
+      const nextValue = Array.from({ length }, (_, index) => pastedValue[index] ?? '').join('');
+      onChange(nextValue);
 
-      setMaskedIndices(new Set())
+      setMaskedIndices(new Set());
 
       for (const [index, character] of pastedValue.split('').entries()) {
-        const currentTimer = maskTimersRef.current[index]
+        const currentTimer = maskTimersRef.current[index];
         if (currentTimer) {
-          clearTimeout(currentTimer)
+          clearTimeout(currentTimer);
         }
 
         if (!character) {
-          continue
+          continue;
         }
 
         maskTimersRef.current[index] = setTimeout(() => {
-          setMaskedIndices((current) => new Set(current).add(index))
-        }, maskDelay)
+          setMaskedIndices((current) => new Set(current).add(index));
+        }, maskDelay);
       }
 
-      inputRefs.current[Math.min(pastedValue.length, length) - 1]?.focus()
+      inputRefs.current[Math.min(pastedValue.length, length) - 1]?.focus();
 
       if (pastedValue.length === length) {
-        onComplete?.()
+        onComplete?.();
       }
     },
     [length, maskDelay, onChange, onComplete],
-  )
+  );
 
   return (
     <fieldset className={cn('w-full', className)}>
@@ -213,7 +213,7 @@ export function OtpCodeInput({
             onKeyDown={handleKeyDown}
             onPaste={handlePaste}
             refCallback={(element, currentIndex) => {
-              inputRefs.current[currentIndex] = element
+              inputRefs.current[currentIndex] = element;
             }}
             error={error}
             masked={maskedIndices.has(index)}
@@ -221,5 +221,5 @@ export function OtpCodeInput({
         ))}
       </div>
     </fieldset>
-  )
+  );
 }

@@ -76,7 +76,6 @@ interface Institution {
 
 type _InstitutionRow = Selectable<Database['financial_institutions']>;
 
-
 function toNumber(value: string | number | null): number {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : 0;
@@ -830,7 +829,10 @@ export async function getTagBreakdown(
     .innerJoin('tags as tg', (join) =>
       join.onRef('tg.id', '=', 'ti.tag_id').on('tg.owner_id', '=', _userId),
     )
-    .select([sql<string>`tg.name`.as('tag'), sql<number>`coalesce(sum(abs(amount)), 0)`.as('total')])
+    .select([
+      sql<string>`tg.name`.as('tag'),
+      sql<number>`coalesce(sum(abs(amount)), 0)`.as('total'),
+    ])
     .where('t.user_id', '=', _userId)
     .where('t.transaction_type', '=', 'expense')
     .groupBy('tg.name')
@@ -849,10 +851,7 @@ export async function getTopMerchants(
 ): Promise<Array<{ merchant: string; total: number }>> {
   const result = await db
     .selectFrom('finance_transactions')
-    .select([
-      'merchant_name as merchant',
-      sql<number>`coalesce(sum(abs(amount)), 0)`.as('total'),
-    ])
+    .select(['merchant_name as merchant', sql<number>`coalesce(sum(abs(amount)), 0)`.as('total')])
     .where('user_id', '=', _userId)
     .where('transaction_type', '=', 'expense')
     .where('merchant_name', 'is not', null)

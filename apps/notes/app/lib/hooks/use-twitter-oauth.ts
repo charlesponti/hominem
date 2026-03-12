@@ -16,9 +16,8 @@ export function useTwitterAccounts() {
     data: accounts,
     isLoading,
     refetch,
-  } = useHonoQuery<TwitterAccountsListOutput>(
-    ['twitter', 'accounts'],
-    ({ twitter }) => twitter.getAccounts(),
+  } = useHonoQuery<TwitterAccountsListOutput>(['twitter', 'accounts'], ({ twitter }) =>
+    twitter.getAccounts(),
   );
 
   const accountsArray = Array.isArray(accounts) ? accounts : [];

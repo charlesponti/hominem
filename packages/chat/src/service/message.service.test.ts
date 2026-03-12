@@ -1,31 +1,31 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { MessageService } from './message.service'
+import { MessageService } from './message.service';
 
 type InsertMessageRow = {
-  id: string
-  chat_id: string
-  user_id: string
-  role: 'user' | 'assistant'
-  content: string
-  files: null
-  tool_calls: null
-  reasoning: string | null
-  parent_message_id: string | null
-}
+  id: string;
+  chat_id: string;
+  user_id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  files: null;
+  tool_calls: null;
+  reasoning: string | null;
+  parent_message_id: string | null;
+};
 
-type InsertMessageRows = InsertMessageRow[]
+type InsertMessageRows = InsertMessageRow[];
 
-const mockInsertExecute = vi.fn()
-const mockChatUpdateExecute = vi.fn()
-const mockTransactionExecute = vi.fn()
-const mockSelectExecute = vi.fn()
+const mockInsertExecute = vi.fn();
+const mockChatUpdateExecute = vi.fn();
+const mockTransactionExecute = vi.fn();
+const mockSelectExecute = vi.fn();
 
 vi.mock('@hominem/utils/logger', () => ({
   logger: {
     error: vi.fn(),
   },
-}))
+}));
 
 vi.mock('@hominem/db', () => {
   const transactionContext = {
@@ -43,7 +43,7 @@ vi.mock('@hominem/db', () => {
         })),
       })),
     })),
-  }
+  };
 
   const selectChain = {
     selectAll: vi.fn(() => selectChain),
@@ -53,24 +53,26 @@ vi.mock('@hominem/db', () => {
     orderBy: vi.fn(() => ({
       execute: mockSelectExecute,
     })),
-  }
+  };
 
   return {
     db: {
       transaction: vi.fn(() => ({
-        execute: mockTransactionExecute.mockImplementation(async (callback) => callback(transactionContext)),
+        execute: mockTransactionExecute.mockImplementation(async (callback) =>
+          callback(transactionContext),
+        ),
       })),
       selectFrom: vi.fn(() => selectChain),
     },
-  }
-})
+  };
+});
 
 describe('MessageService', () => {
-  const service = new MessageService()
+  const service = new MessageService();
 
   beforeEach(() => {
-    vi.clearAllMocks()
-    mockInsertExecute.mockImplementation(async (values) => values)
+    vi.clearAllMocks();
+    mockInsertExecute.mockImplementation(async (values) => values);
     mockTransactionExecute.mockImplementation(async (callback) =>
       callback({
         insertInto: () => ({
@@ -88,12 +90,12 @@ describe('MessageService', () => {
           }),
         }),
       }),
-    )
-  })
+    );
+  });
 
   it('serializes database Date timestamps without replacing them with now', async () => {
-    const createdAt = new Date('2026-03-10T12:00:00.000Z')
-    const updatedAt = new Date('2026-03-10T12:00:01.000Z')
+    const createdAt = new Date('2026-03-10T12:00:00.000Z');
+    const updatedAt = new Date('2026-03-10T12:00:01.000Z');
     mockSelectExecute.mockResolvedValueOnce([
       {
         id: 'message-1',
@@ -108,17 +110,17 @@ describe('MessageService', () => {
         created_at: createdAt,
         updated_at: updatedAt,
       },
-    ])
+    ]);
 
-    const result = await service.getChatMessages('chat-1')
+    const result = await service.getChatMessages('chat-1');
 
     expect(result).toEqual([
       expect.objectContaining({
         createdAt: createdAt.toISOString(),
         updatedAt: updatedAt.toISOString(),
       }),
-    ])
-  })
+    ]);
+  });
 
   it('normalizes blank parent ids to null when persisting batched messages', async () => {
     await service.addMessages([
@@ -129,22 +131,22 @@ describe('MessageService', () => {
         content: 'hello',
         parentMessageId: '   ',
       },
-    ])
+    ]);
 
-    expect(mockInsertExecute).toHaveBeenCalled()
-    const insertedValues = (await mockInsertExecute.mock.results[0]?.value) as InsertMessageRows
+    expect(mockInsertExecute).toHaveBeenCalled();
+    const insertedValues = (await mockInsertExecute.mock.results[0]?.value) as InsertMessageRows;
     expect(insertedValues).toEqual([
       expect.objectContaining({
         parent_message_id: null,
       }),
-    ])
-  })
+    ]);
+  });
 
   it('throws a database error instead of returning an empty message list on query failure', async () => {
-    mockSelectExecute.mockRejectedValueOnce(new Error('db unavailable'))
+    mockSelectExecute.mockRejectedValueOnce(new Error('db unavailable'));
 
     await expect(service.getChatMessages('chat-1')).rejects.toMatchObject({
       type: 'DATABASE_ERROR',
-    })
-  })
-})
+    });
+  });
+});

@@ -19,7 +19,7 @@ export const durations = {
   /** Loop / breezy animations. */
   breezy: 1800,
   spin: 1200,
-} as const
+} as const;
 
 export const translateDistances = {
   /** Enter lift (px). */
@@ -28,11 +28,11 @@ export const translateDistances = {
   exitY: 4,
   enterX: 6,
   exitX: 4,
-} as const
+} as const;
 
 /** CSS cubic-bezier strings — web only. */
 export const easingWeb = {
   enter: 'cubic-bezier(0.0, 0.0, 0.2, 1)',
   exit: 'cubic-bezier(0.4, 0.0, 1, 1)',
   standard: 'cubic-bezier(0.4, 0, 0.2, 1)',
-} as const
+} as const;

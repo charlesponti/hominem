@@ -148,7 +148,7 @@ export const commandRoutes: CommandRoute[] = [
   {
     id: 'skills export',
     summary: 'Copy the local `.github/skills` folder to another location',
-    description: 'Make a copy of the current repo\'s skill definitions.',
+    description: "Make a copy of the current repo's skill definitions.",
     loader: () => import('./commands/skills/export'),
   },
   {

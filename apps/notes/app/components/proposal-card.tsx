@@ -29,7 +29,10 @@ const TYPE_LABEL: Record<string, string> = {
 
 export function ProposalCard({ item, onReview, onReject }: ProposalCardProps) {
   return (
-    <Inline align="start" className="void-anim-enter gap-3 px-3 py-3 border border-border rounded bg-muted">
+    <Inline
+      align="start"
+      className="void-anim-enter gap-3 px-3 py-3 border border-border rounded bg-muted"
+    >
       <FileText className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
 
       <div className="flex-1 min-w-0">
@@ -42,7 +45,13 @@ export function ProposalCard({ item, onReview, onReject }: ProposalCardProps) {
       </div>
 
       <Inline gap="sm" className="shrink-0">
-        <Button type="button" variant="outline" size="sm" onClick={() => onReview(item)} className="text-xs">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onReview(item)}
+          className="text-xs"
+        >
           Review →
         </Button>
         <Button

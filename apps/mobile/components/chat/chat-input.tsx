@@ -1,30 +1,31 @@
-import * as ImagePicker from 'expo-image-picker'
-import { useCallback, useRef, useState } from 'react'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
-import { fontSizes } from '@hominem/ui/tokens'
+import { fontSizes } from '@hominem/ui/tokens';
+import * as ImagePicker from 'expo-image-picker';
+import { useCallback, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { Button } from '~/components/Button'
-import TextArea from '~/components/text-input-autogrow'
-import { makeStyles, theme } from '~/theme'
-import { VoiceSessionModal } from '../media/voice-session-modal'
-import AppIcon from '../ui/icon'
+import { Button } from '~/components/Button';
+import TextArea from '~/components/text-input-autogrow';
+import { makeStyles, theme } from '~/theme';
 
-const MAX_MESSAGE_LENGTH = 10_000
+import { VoiceSessionModal } from '../media/voice-session-modal';
+import AppIcon from '../ui/icon';
+
+const MAX_MESSAGE_LENGTH = 10_000;
 
 const DEFAULT_SUGGESTIONS = [
   'Help me expand this note',
   'Create an outline from this',
   'Summarize the key points',
   'Rewrite in a different style',
-]
+];
 
 type ChatInputProps = {
-  message: string
-  onMessageChange: (message: string) => void
-  onSendMessage: (message: string) => void
-  isPending?: boolean
-  suggestions?: string[]
-}
+  message: string;
+  onMessageChange: (message: string) => void;
+  onSendMessage: (message: string) => void;
+  isPending?: boolean;
+  suggestions?: string[];
+};
 
 export const ChatInput = ({
   message,
@@ -33,67 +34,67 @@ export const ChatInput = ({
   isPending = false,
   suggestions = DEFAULT_SUGGESTIONS,
 }: ChatInputProps) => {
-  const styles = useStyles()
-  const inputRef = useRef<React.ElementRef<typeof TextArea> | null>(null)
-  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
-  const [attachments, setAttachments] = useState<ImagePicker.ImagePickerAsset[]>([])
+  const styles = useStyles();
+  const inputRef = useRef<React.ElementRef<typeof TextArea> | null>(null);
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [attachments, setAttachments] = useState<ImagePicker.ImagePickerAsset[]>([]);
 
-  const characterCount = message.length
-  const isOverLimit = characterCount > MAX_MESSAGE_LENGTH
-  const canSend = message.trim().length > 0 && !isPending && !isOverLimit
-  const showSuggestions = message.length === 0 && !isPending && suggestions.length > 0
+  const characterCount = message.length;
+  const isOverLimit = characterCount > MAX_MESSAGE_LENGTH;
+  const canSend = message.trim().length > 0 && !isPending && !isOverLimit;
+  const showSuggestions = message.length === 0 && !isPending && suggestions.length > 0;
 
   const formatAttachmentContext = useCallback((assets: ImagePicker.ImagePickerAsset[]) => {
-    if (assets.length === 0) return ''
+    if (assets.length === 0) return '';
     return assets
       .map((a) => {
-        const name = a.fileName ?? a.uri.split('/').pop() ?? 'image'
-        return `Attachment: ${name} (${a.type ?? 'image'})`
+        const name = a.fileName ?? a.uri.split('/').pop() ?? 'image';
+        return `Attachment: ${name} (${a.type ?? 'image'})`;
       })
-      .join('\n')
-  }, [])
+      .join('\n');
+  }, []);
 
   const handleSend = useCallback(() => {
-    if (!canSend) return
-    const attachmentContext = formatAttachmentContext(attachments)
+    if (!canSend) return;
+    const attachmentContext = formatAttachmentContext(attachments);
     const fullMessage = attachmentContext
       ? `${message.trim()}\n\nAttached files:\n${attachmentContext}`
-      : message.trim()
-    onSendMessage(fullMessage)
-    onMessageChange('')
-    setAttachments([])
-    inputRef.current?.focus()
-  }, [canSend, message, attachments, formatAttachmentContext, onSendMessage, onMessageChange])
+      : message.trim();
+    onSendMessage(fullMessage);
+    onMessageChange('');
+    setAttachments([]);
+    inputRef.current?.focus();
+  }, [canSend, message, attachments, formatAttachmentContext, onSendMessage, onMessageChange]);
 
   const handleVoiceTranscribed = useCallback(
     (transcription: string) => {
-      onSendMessage(transcription)
+      onSendMessage(transcription);
     },
     [onSendMessage],
-  )
+  );
 
   const handlePickImage = useCallback(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: 'images',
       allowsMultipleSelection: true,
       quality: 0.8,
-    })
+    });
     if (!result.canceled) {
-      setAttachments((prev) => [...prev, ...result.assets])
+      setAttachments((prev) => [...prev, ...result.assets]);
     }
-  }, [])
+  }, []);
 
   const handleRemoveAttachment = useCallback((uri: string) => {
-    setAttachments((prev) => prev.filter((a) => a.uri !== uri))
-  }, [])
+    setAttachments((prev) => prev.filter((a) => a.uri !== uri));
+  }, []);
 
   const handleSuggestionTap = useCallback(
     (suggestion: string) => {
-      onMessageChange(suggestion)
-      inputRef.current?.focus()
+      onMessageChange(suggestion);
+      inputRef.current?.focus();
     },
     [onMessageChange],
-  )
+  );
 
   return (
     <View style={styles.container}>
@@ -129,7 +130,7 @@ export const ChatInput = ({
           contentContainerStyle={styles.attachmentsContent}
         >
           {attachments.map((asset) => {
-            const name = asset.fileName ?? asset.uri.split('/').pop() ?? 'image'
+            const name = asset.fileName ?? asset.uri.split('/').pop() ?? 'image';
             return (
               <View key={asset.uri} style={styles.attachmentChip}>
                 <Text style={styles.attachmentName} numberOfLines={1}>
@@ -145,7 +146,7 @@ export const ChatInput = ({
                   ×
                 </Button>
               </View>
-            )
+            );
           })}
         </ScrollView>
       )}
@@ -200,9 +201,7 @@ export const ChatInput = ({
 
       {/* Character counter / over-limit warning */}
       <View style={styles.footer}>
-        {isOverLimit ? (
-          <Text style={styles.overLimitText}>Message too long</Text>
-        ) : null}
+        {isOverLimit ? <Text style={styles.overLimitText}>Message too long</Text> : null}
         <Text style={[styles.charCount, isOverLimit && styles.charCountError]}>
           {characterCount}/{MAX_MESSAGE_LENGTH}
         </Text>
@@ -214,8 +213,8 @@ export const ChatInput = ({
         onAudioTranscribed={handleVoiceTranscribed}
       />
     </View>
-  )
-}
+  );
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -313,5 +312,5 @@ const useStyles = makeStyles((t) =>
       color: t.colors.destructive,
       flex: 1,
     },
-  })
-)
+  }),
+);

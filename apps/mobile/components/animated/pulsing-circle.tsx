@@ -1,11 +1,11 @@
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native';
 
-import { makeStyles } from '~/theme'
+import { makeStyles } from '~/theme';
 
 export const PulsingCircle = () => {
-  const styles = useStyles()
-  return <View style={styles.circle} />
-}
+  const styles = useStyles();
+  return <View style={styles.circle} />;
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -17,5 +17,5 @@ const useStyles = makeStyles((t) =>
       borderColor: t.colors['border-default'],
       backgroundColor: t.colors.muted,
     },
-  })
-)
+  }),
+);

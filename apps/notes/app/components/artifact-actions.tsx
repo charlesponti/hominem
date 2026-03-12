@@ -50,9 +50,10 @@ export function ArtifactActions({ state, messageCount, onTransform }: ArtifactAc
             aria-label={enabled ? label : `${label} — Coming soon`}
             className={`
               text-xs font-mono
-              ${disabled
-                ? 'border-border text-muted-foreground opacity-[0.38] cursor-not-allowed'
-                : 'border-border text-foreground hover:bg-muted cursor-pointer'
+              ${
+                disabled
+                  ? 'border-border text-muted-foreground opacity-[0.38] cursor-not-allowed'
+                  : 'border-border text-foreground hover:bg-muted cursor-pointer'
               }
             `}
           >

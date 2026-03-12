@@ -1,3 +1,4 @@
+import type { AccountGetOutput } from '@hominem/hono-rpc/types/finance.types';
 import { Button } from '@hominem/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@hominem/ui/components/ui/alert';
 import { Badge } from '@hominem/ui/components/ui/badge';
@@ -15,7 +16,6 @@ import { requireAuth } from '~/lib/guards';
 import { useAccountById, useFinanceTransactions } from '~/lib/hooks/use-finance-data';
 
 import type { Route } from './+types/accounts.$id';
-import type { AccountGetOutput } from '@hominem/hono-rpc/types/finance.types';
 
 function normalizeInitialAccount(account: {
   id: string;

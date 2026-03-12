@@ -1,1 +1,1 @@
-export { Button } from '@hominem/ui/button'
+export { Button } from '@hominem/ui/button';

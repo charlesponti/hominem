@@ -1,4 +1,4 @@
-import * as React from 'react'
+import * as React from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -8,10 +8,10 @@ import {
   type StyleProp,
   type TextStyle,
   type ViewStyle,
-} from 'react-native'
+} from 'react-native';
 
-import { colors, fontFamiliesNative, fontSizes, fontWeights, spacing } from '../../tokens'
-import type { ButtonBaseProps, ButtonSize, ButtonVariant } from './button.types'
+import { colors, fontFamiliesNative, fontSizes, fontWeights, spacing } from '../../tokens';
+import type { ButtonBaseProps, ButtonSize, ButtonVariant } from './button.types';
 
 const sizeStyles = StyleSheet.create<Record<ButtonSize, ViewStyle>>({
   default: {
@@ -63,7 +63,7 @@ const sizeStyles = StyleSheet.create<Record<ButtonSize, ViewStyle>>({
     paddingHorizontal: 0,
     width: 48,
   },
-})
+});
 
 const variantStyles = StyleSheet.create<Record<ButtonVariant, ViewStyle>>({
   default: {
@@ -104,7 +104,7 @@ const variantStyles = StyleSheet.create<Record<ButtonVariant, ViewStyle>>({
     borderColor: colors['border-default'],
     borderWidth: 1,
   },
-})
+});
 
 const labelStyles = StyleSheet.create<Record<ButtonVariant, TextStyle>>({
   default: {
@@ -129,7 +129,7 @@ const labelStyles = StyleSheet.create<Record<ButtonVariant, TextStyle>>({
   secondary: {
     color: colors['text-primary'],
   },
-})
+});
 
 const baseStyles = StyleSheet.create({
   button: {
@@ -151,14 +151,14 @@ const baseStyles = StyleSheet.create({
   loader: {
     marginLeft: spacing[1],
   },
-})
+});
 
 type NativeButtonProps = PressableProps &
   ButtonBaseProps & {
-    children?: React.ReactNode
-    style?: StyleProp<ViewStyle>
-    textStyle?: StyleProp<TextStyle>
-  }
+    children?: React.ReactNode;
+    style?: StyleProp<ViewStyle>;
+    textStyle?: StyleProp<TextStyle>;
+  };
 
 function Button({
   children,
@@ -171,8 +171,8 @@ function Button({
   variant = 'default',
   ...props
 }: NativeButtonProps) {
-  const content = children ?? title
-  const isDisabled = disabled || isLoading
+  const content = children ?? title;
+  const isDisabled = disabled || isLoading;
 
   return (
     <Pressable
@@ -202,8 +202,8 @@ function Button({
         />
       ) : null}
     </Pressable>
-  )
+  );
 }
 
-export { Button }
-export type { NativeButtonProps as ButtonProps }
+export { Button };
+export type { NativeButtonProps as ButtonProps };

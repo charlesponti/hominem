@@ -1,4 +1,5 @@
 import type { ChatMessageToolCall } from '@hominem/hono-rpc/types/chat.types';
+import { Form, Inline, Stack } from '@hominem/ui';
 import {
   Message,
   MessageAction,
@@ -17,7 +18,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@hominem/ui/dropdown';
-import { Form, Inline, Stack } from '@hominem/ui';
 import { Textarea } from '@hominem/ui/textarea';
 import { formatMessageTimestamp } from '@hominem/utils/dates';
 import { Check, Copy, Edit2, MoreVertical, RotateCcw, Save, Trash2, X } from 'lucide-react';
@@ -139,11 +139,21 @@ export const ChatMessage = memo(function ChatMessage({
                 Press Escape to cancel, or Ctrl+Enter to save
               </span>
               <Inline gap="sm" justify="end">
-                <Button variant="outline" size="sm" onClick={cancelEdit} aria-label="Cancel editing">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={cancelEdit}
+                  aria-label="Cancel editing"
+                >
                   <X className="mr-2 size-4" aria-hidden="true" />
                   Cancel
                 </Button>
-                <Button type="submit" size="sm" disabled={!canSave} aria-label="Save edited message">
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!canSave}
+                  aria-label="Save edited message"
+                >
                   <Save className="mr-2 size-4" aria-hidden="true" />
                   Save
                 </Button>
@@ -255,5 +265,5 @@ export const ChatMessage = memo(function ChatMessage({
         </MessageAction>
       )}
     </div>
-  )
+  );
 });

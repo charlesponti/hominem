@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
+
 import { makeStyles } from '~/theme';
 
 // Constants for normalization
@@ -33,7 +34,7 @@ const AudioMeterings = ({ height }: { height: number }) => {
 
 // Component to render the audio levels
 export const AudioLevelVisualizer: React.FC<{ levels: number[] }> = ({ levels }) => {
-  const styles = useStyles()
+  const styles = useStyles();
   const normalizedLevels = useNormalizedLevels(levels);
 
   return (
@@ -45,19 +46,21 @@ export const AudioLevelVisualizer: React.FC<{ levels: number[] }> = ({ levels })
   );
 };
 
-const useStyles = makeStyles((t) => StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    height: MAX_HEIGHT,
-    backgroundColor: t.colors['emphasis-faint'],
-    borderRadius: t.borderRadii.l_12,
-    columnGap: 5, /* small gap for layout */
-  },
-  bar: {
-    width: 3,
-    borderRadius: 25,
-  },
-}))
+const useStyles = makeStyles((t) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      height: MAX_HEIGHT,
+      backgroundColor: t.colors['emphasis-faint'],
+      borderRadius: t.borderRadii.l_12,
+      columnGap: 5 /* small gap for layout */,
+    },
+    bar: {
+      width: 3,
+      borderRadius: 25,
+    },
+  }),
+);

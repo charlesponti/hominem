@@ -1,14 +1,14 @@
-import * as React from 'react'
-import { Text, View, type TextProps, type ViewProps } from 'react-native'
+import * as React from 'react';
+import { Text, View, type TextProps, type ViewProps } from 'react-native';
 
-import { colors, fontFamiliesNative, fontSizes, fontWeights, spacing } from '../../tokens'
+import { colors, fontFamiliesNative, fontSizes, fontWeights, spacing } from '../../tokens';
 
 function Card({ children, style, ...props }: ViewProps) {
   return (
     <View style={[styles.card, style]} {...props}>
       {children}
     </View>
-  )
+  );
 }
 
 function CardHeader({ children, style, ...props }: ViewProps) {
@@ -16,7 +16,7 @@ function CardHeader({ children, style, ...props }: ViewProps) {
     <View style={[styles.header, style]} {...props}>
       {children}
     </View>
-  )
+  );
 }
 
 function CardContent({ children, style, ...props }: ViewProps) {
@@ -24,7 +24,7 @@ function CardContent({ children, style, ...props }: ViewProps) {
     <View style={[styles.content, style]} {...props}>
       {children}
     </View>
-  )
+  );
 }
 
 function CardFooter({ children, style, ...props }: ViewProps) {
@@ -32,7 +32,7 @@ function CardFooter({ children, style, ...props }: ViewProps) {
     <View style={[styles.footer, style]} {...props}>
       {children}
     </View>
-  )
+  );
 }
 
 function CardTitle({ children, style, ...props }: TextProps) {
@@ -40,7 +40,7 @@ function CardTitle({ children, style, ...props }: TextProps) {
     <Text style={[styles.title, style]} {...props}>
       {children}
     </Text>
-  )
+  );
 }
 
 function CardDescription({ children, style, ...props }: TextProps) {
@@ -48,7 +48,7 @@ function CardDescription({ children, style, ...props }: TextProps) {
     <Text style={[styles.description, style]} {...props}>
       {children}
     </Text>
-  )
+  );
 }
 
 function CardAction({ children, style, ...props }: ViewProps) {
@@ -56,7 +56,7 @@ function CardAction({ children, style, ...props }: ViewProps) {
     <View style={[styles.action, style]} {...props}>
       {children}
     </View>
-  )
+  );
 }
 
 const styles = {
@@ -96,6 +96,6 @@ const styles = {
     fontWeight: fontWeights.semibold,
     lineHeight: Math.round(fontSizes.lg * 1.2),
   },
-} as const
+} as const;
 
-export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
+export { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };

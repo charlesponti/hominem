@@ -1,21 +1,21 @@
-import { useEffect } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
   withSequence,
   withTiming,
-} from 'react-native-reanimated'
+} from 'react-native-reanimated';
 
-import { makeStyles } from '~/theme'
-import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
+import { makeStyles } from '~/theme';
+import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 
 // 5x standard duration per direction (~600ms) for a slow, calm loading pulse
-const SHIMMER_DURATION = VOID_MOTION_DURATION_STANDARD * 5
+const SHIMMER_DURATION = VOID_MOTION_DURATION_STANDARD * 5;
 
 function usePulse() {
-  const opacity = useSharedValue(0.4)
+  const opacity = useSharedValue(0.4);
 
   useEffect(() => {
     opacity.value = withRepeat(
@@ -24,15 +24,15 @@ function usePulse() {
         withTiming(0.4, { duration: SHIMMER_DURATION }),
       ),
       -1,
-    )
-  }, [opacity])
+    );
+  }, [opacity]);
 
-  return useAnimatedStyle(() => ({ opacity: opacity.value }))
+  return useAnimatedStyle(() => ({ opacity: opacity.value }));
 }
 
 export function ChatShimmerMessage() {
-  const styles = useStyles()
-  const animatedStyle = usePulse()
+  const styles = useStyles();
+  const animatedStyle = usePulse();
   return (
     <View style={styles.row}>
       <Animated.View style={[styles.avatar, animatedStyle]} />
@@ -41,7 +41,7 @@ export function ChatShimmerMessage() {
         <Animated.View style={[styles.line, styles.lineShort, animatedStyle]} />
       </View>
     </View>
-  )
+  );
 }
 
 const useStyles = makeStyles((t) =>
@@ -74,5 +74,5 @@ const useStyles = makeStyles((t) =>
     lineShort: {
       width: '66%',
     },
-  })
-)
+  }),
+);

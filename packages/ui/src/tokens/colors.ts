@@ -80,6 +80,6 @@ export const colors = {
   // Primitive values used by mobile shadow system
   black: '#0f1113',
   white: '#ffffff',
-} as const
+} as const;
 
-export type ColorToken = keyof typeof colors
+export type ColorToken = keyof typeof colors;
