@@ -31,6 +31,15 @@ describe('authStateMachine', () => {
     expect(expired.user).toBeNull()
   })
 
+  it('moves to degraded when session recovery fails during boot', () => {
+    const error = new Error('network unavailable')
+    const state = authStateMachine(initialAuthState, { type: 'SESSION_RECOVERY_FAILED', error })
+    expect(state.status).toBe('degraded')
+    expect(state.error).toBe(error)
+    expect(state.user).toBeNull()
+    expect(state.isLoading).toBe(false)
+  })
+
   it('moves to otp_requested after OTP request succeeds', () => {
     const state = authStateMachine(
       { ...initialAuthState, status: 'signed_out' },

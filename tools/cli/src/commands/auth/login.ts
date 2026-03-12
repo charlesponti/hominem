@@ -6,7 +6,7 @@ import { createCommand } from '../../command-factory';
 import { CliError } from '../../errors';
 
 const flagsSchema = z.object({
-  baseUrl: z.string().default('http://localhost:3000'),
+  baseUrl: z.string().default('http://localhost:4040'),
   scope: z.string().default(''),
   device: z.boolean().default(false),
   timeoutMs: z.coerce.number().int().positive().default(120000),
@@ -15,7 +15,7 @@ const flagsSchema = z.object({
 export default createCommand({
   name: 'auth login',
   summary: 'Authenticate the CLI',
-  description: 'Starts browser or device-code authentication flow and stores tokens.',
+  description: 'Starts the CLI device-code authentication flow and stores machine-client tokens.',
   argNames: [],
   args: z.object({}),
   flags: flagsSchema,

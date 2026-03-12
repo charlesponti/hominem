@@ -1,13 +1,26 @@
 import { LandingPage } from '@hominem/ui/components/layout/landing-page';
+import { resolveSafeAuthRedirect } from '@hominem/auth/server';
 import { FileText, MessageSquare, Mic, Tag } from 'lucide-react';
 import { data, redirect } from 'react-router';
 import type { LoaderFunctionArgs } from 'react-router';
+import { useSearchParams } from 'react-router';
 
 import { getServerSession } from '~/lib/auth.server';
+import { NOTES_AUTH_CONFIG } from '@hominem/auth';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user, headers } = await getServerSession(request);
-  if (user) return redirect('/home', { headers });
+  if (user) {
+    const requestUrl = new URL(request.url);
+    return redirect(
+      resolveSafeAuthRedirect(
+        requestUrl.searchParams.get('next'),
+        '/home',
+        [...NOTES_AUTH_CONFIG.allowedDestinations],
+      ),
+      { headers },
+    );
+  }
   return data({}, { headers });
 }
 
@@ -23,6 +36,10 @@ export function meta() {
 }
 
 export default function HomePage() {
+  const [searchParams] = useSearchParams();
+  const next = searchParams.get('next');
+  const authHref = next ? `/auth?next=${encodeURIComponent(next)}` : '/auth';
+
   return (
     <LandingPage
       kicker="Notes + AI"
@@ -33,8 +50,8 @@ export default function HomePage() {
         </>
       }
       sub="Animus turns scattered thoughts into organized knowledge — with AI that helps you find connections you'd have missed."
-      ctaPrimary={{ label: 'Open Animus', href: '/auth' }}
-      ctaSecondary={{ label: 'Sign in', href: '/auth' }}
+      ctaPrimary={{ label: 'Open Animus', href: authHref }}
+      ctaSecondary={{ label: 'Sign in', href: authHref }}
       problem="You have the idea in the shower. You voice-note it on the walk. You write half of it down somewhere. Three weeks later you can't find it — or worse, you have the same idea again and don't know you already had it."
       features={[
         {

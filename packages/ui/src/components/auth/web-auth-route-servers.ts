@@ -63,7 +63,15 @@ export function createAuthEntryLoader(config: AuthEntryRouteConfig, getServerAut
   return async function loader({ request }: { request: Request }) {
     const { user, headers } = await getServerAuth(request);
     if (user) {
-      return redirect(config.defaultRedirect, { headers });
+      const requestUrl = new URL(request.url);
+      return redirect(
+        resolveSafeAuthRedirect(
+          requestUrl.searchParams.get('next'),
+          config.defaultRedirect,
+          [...config.allowedRedirectPrefixes],
+        ),
+        { headers },
+      );
     }
     return null;
   };
@@ -112,7 +120,15 @@ export function createAuthVerifyLoader(
   return async function loader({ request }: { request: Request }) {
     const { user, headers } = await getServerAuth(request);
     if (user) {
-      return redirect(config.defaultRedirect, { headers });
+      const requestUrl = new URL(request.url);
+      return redirect(
+        resolveSafeAuthRedirect(
+          requestUrl.searchParams.get('next'),
+          config.defaultRedirect,
+          [...config.allowedRedirectPrefixes],
+        ),
+        { headers },
+      );
     }
 
     const url = new URL(request.url);

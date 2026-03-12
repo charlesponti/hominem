@@ -36,9 +36,6 @@ interface SignInResponse {
     email: string;
     name?: string | null;
   };
-  accessToken?: string;
-  expiresIn?: number;
-  tokenType?: 'Bearer';
 }
 
 interface SessionResponse {
@@ -88,6 +85,7 @@ async function clearLegacyLocalDataOnce() {
 
 type AuthContextType = {
   authStatus: AuthStatusCompat;
+  authError: Error | null;
   isLoadingAuth: boolean;
   isSignedIn: boolean;
   currentUser: LocalUserProfile | null;
@@ -98,6 +96,7 @@ type AuthContextType = {
   updateProfile: (updates: Partial<LocalUserProfile>) => Promise<LocalUserProfile>;
   getAuthHeaders: () => Promise<Record<string, string>>;
   clearError: () => void;
+  retrySessionRecovery: () => Promise<void>;
   resetAuthForE2E: () => Promise<void>;
 };
 
@@ -112,32 +111,25 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [state, dispatch] = useReducer(authStateMachine, initialAuthState);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const apiAccessTokenRef = useRef<string | null>(null);
   const sessionCookieHeaderRef = useRef<string | null>(null);
   const hasBootstrappedRef = useRef(false);
   // Set synchronously before first await to prevent TOCTOU race on concurrent boot invocations
   const isBootingRef = useRef(false);
 
-  useEffect(() => {
-    return () => {
-      abortControllerRef.current?.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    const signal = controller.signal;
-
-    const bootSession = async () => {
-      // Synchronous double-check prevents concurrent boot invocations
-      if (hasBootstrappedRef.current || isBootingRef.current) return;
+  const bootSession = useCallback(
+    async (input?: { force?: boolean; signal?: AbortSignal }) => {
+      if ((!input?.force && hasBootstrappedRef.current) || isBootingRef.current) return;
       isBootingRef.current = true;
+      if (input?.force) {
+        hasBootstrappedRef.current = false;
+      }
 
       markStartupPhase('auth_boot_start');
       markAuthPhaseStart('boot');
       recordAuthEvent('auth_boot_start', 'boot');
 
+      const controller = new AbortController();
+      const signal = input?.signal ?? controller.signal;
       const timeoutId = setTimeout(() => controller.abort(), AUTH_BOOT_TIMEOUT_MS);
 
       try {
@@ -168,7 +160,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
             throw new Error(`session probe failed: ${response.status}`);
           },
           clearTokens: async () => {
-            apiAccessTokenRef.current = null;
             await clearPersistedSessionCookies();
             sessionCookieHeaderRef.current = null;
           },
@@ -191,27 +182,36 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
         markStartupPhase('auth_boot_resolved');
         hasBootstrappedRef.current = true;
-      } catch {
-        // Handles timeout (AbortError), network errors, and unexpected throws.
-        // Always resolve boot to a stable state so the app never hangs.
-        if (!hasBootstrappedRef.current) {
-          dispatch({ type: 'SESSION_EXPIRED' });
-          recordAuthEvent('auth_boot_resolved:error', 'boot');
-          markStartupPhase('auth_boot_resolved');
-          hasBootstrappedRef.current = true;
-        }
+      } catch (error) {
+        const resolvedError =
+          error instanceof Error ? error : new Error('Unable to recover your session right now.');
+        dispatch({ type: 'SESSION_RECOVERY_FAILED', error: resolvedError });
+        recordAuthEvent('auth_boot_resolved:error', 'boot');
+        markStartupPhase('auth_boot_resolved');
+        hasBootstrappedRef.current = true;
       } finally {
         clearTimeout(timeoutId);
         isBootingRef.current = false;
       }
-    };
+    },
+    [],
+  );
 
-    void bootSession();
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    void bootSession({ signal: controller.signal });
 
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [bootSession]);
 
   const requestEmailOtp = useCallback(async (email: string) => {
     const controller = new AbortController();
@@ -292,7 +292,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           throw new Error('Verification succeeded but no session cookie was returned');
         }
         sessionCookieHeaderRef.current = sessionCookieHeader;
-        apiAccessTokenRef.current = null;
 
         dispatch({ type: 'PROFILE_SYNC_STARTED' });
         const localUser = fromSignInUser(signInData.user);
@@ -322,15 +321,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         }
 
         const sessionCookieHeader = await getPersistedSessionCookieHeader();
-        if (!sessionCookieHeader && !input.accessToken) {
+        if (!sessionCookieHeader) {
           throw new Error('Missing Better Auth session cookie after passkey sign-in');
         }
 
         sessionCookieHeaderRef.current = sessionCookieHeader;
-        if (sessionCookieHeader) {
-          await persistSessionCookieHeader(sessionCookieHeader);
-        }
-        apiAccessTokenRef.current = input.accessToken ?? null;
+        await persistSessionCookieHeader(sessionCookieHeader);
 
         dispatch({ type: 'PROFILE_SYNC_STARTED' });
         const localUser = fromSignInUser(input.user);
@@ -353,20 +349,28 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
     try {
       const sessionCookieHeader = sessionCookieHeaderRef.current;
-      if (sessionCookieHeader) {
-        await fetch(new URL('/api/auth/logout', API_BASE_URL).toString(), {
-          method: 'POST',
-          headers: { cookie: sessionCookieHeader },
-        }).catch(() => {
-          // Best-effort server revocation — clear locally regardless
-        });
+      if (!sessionCookieHeader) {
+        throw new Error('Missing Better Auth session for sign-out. Please try again.');
       }
-    } finally {
-      apiAccessTokenRef.current = null;
+
+      const response = await fetch(new URL('/api/auth/logout', API_BASE_URL).toString(), {
+        method: 'POST',
+        headers: { cookie: sessionCookieHeader },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to sign out. Please try again.');
+      }
+
       await clearPersistedSessionCookies();
       sessionCookieHeaderRef.current = null;
       await LocalStore.clearAllData();
       dispatch({ type: 'SIGN_OUT_SUCCESS' });
+    } catch (error) {
+      const resolvedError =
+        error instanceof Error ? error : new Error('Failed to sign out. Please try again.');
+      dispatch({ type: 'FATAL_ERROR', error: resolvedError });
+      throw resolvedError;
     }
   }, []);
 
@@ -393,11 +397,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       return { cookie: sessionCookieHeader } satisfies Record<string, string>;
     }
 
-    const accessToken = apiAccessTokenRef.current;
-    if (accessToken) {
-      return { Authorization: `Bearer ${accessToken}` } satisfies Record<string, string>;
-    }
-
     return {} as Record<string, string>;
   }, []);
 
@@ -408,7 +407,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const resetAuthForE2E = useCallback(async () => {
     if (!E2E_TESTING) return;
     await LocalStore.clearAllData();
-    apiAccessTokenRef.current = null;
     await clearPersistedSessionCookies();
     sessionCookieHeaderRef.current = null;
     dispatch({ type: 'RESET_TO_SIGNED_OUT' });
@@ -417,6 +415,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   }, []);
 
   const authStatus = state.status;
+  const authError = state.error;
   const isLoadingAuth = useMemo(() => resolveIsLoadingAuth(state), [state]);
   const isSignedIn = state.status === 'signed_in';
   const currentUser = useMemo(() => {
@@ -432,6 +431,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const value: AuthContextType = {
     authStatus,
+    authError,
     isLoadingAuth,
     isSignedIn,
     currentUser,
@@ -442,6 +442,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     updateProfile,
     getAuthHeaders,
     clearError,
+    retrySessionRecovery: async () => {
+      dispatch({ type: 'CLEAR_ERROR' });
+      await bootSession({ force: true });
+    },
     resetAuthForE2E,
   };
 

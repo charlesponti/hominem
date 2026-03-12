@@ -9,6 +9,22 @@ interface _SessionResponse {
   isAuthenticated: boolean;
   accessToken?: string;
   expiresIn?: number;
+  auth?: {
+    sub: string;
+    sid: string;
+    scope: string[];
+    role: 'user' | 'admin';
+    amr: string[];
+    authTime: number;
+  };
+  user?: {
+    id: string;
+    email: string;
+    name?: string | null;
+    isAdmin: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+  } | null;
 }
 
 interface VerifyOtpResponse {
@@ -253,7 +269,7 @@ describe('auth email otp contract', () => {
     expect(sessionAfterLogout.status).toBe(401);
   }, 15000);
 
-  test('2.2 session probe returns token contract for cookie-authenticated web sessions', async () => {
+  test('5.1 session probe returns identity-only payload for cookie-authenticated web sessions', async () => {
     const createServer = await importServer();
     const app = createServer();
     const email = `otp-web-session-${Date.now()}@hominem.test`;
@@ -284,8 +300,10 @@ describe('auth email otp contract', () => {
 
     const sessionPayload = (await sessionResponse.json()) as _SessionResponse;
     expect(sessionPayload.isAuthenticated).toBe(true);
-    expect(sessionPayload.accessToken?.length).toBeGreaterThan(0);
-    expect(sessionPayload.expiresIn).toBeGreaterThan(0);
+    expect(sessionPayload.user?.email).toBe(email);
+    expect(sessionPayload.auth?.sub).toBeTruthy();
+    expect(sessionPayload.accessToken).toBeUndefined();
+    expect(sessionPayload.expiresIn).toBeUndefined();
   }, 15000);
 
   test('2.2 session probe ignores legacy refresh-token cookies', async () => {

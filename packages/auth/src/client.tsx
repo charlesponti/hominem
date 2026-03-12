@@ -494,18 +494,35 @@ export function AuthProvider({
       isLoading: true,
       status: 'signing_out',
     }));
-    await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/logout'), {
-      method: 'POST',
-      credentials: 'include',
-    });
-    setAuthState({
-      error: null,
-      isLoading: false,
-      session: null,
-      status: 'signed_out',
-      user: null,
-    });
-    onAuthEvent?.('SIGNED_OUT');
+    try {
+      const response = await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/logout'), {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to sign out. Please try again.');
+      }
+
+      setAuthState({
+        error: null,
+        isLoading: false,
+        session: null,
+        status: 'signed_out',
+        user: null,
+      });
+      onAuthEvent?.('SIGNED_OUT');
+    } catch (error) {
+      const resolvedError =
+        error instanceof Error ? error : new Error('Failed to sign out. Please try again.');
+      setAuthState((currentState) => ({
+        ...currentState,
+        error: resolvedError,
+        isLoading: false,
+        status: currentState.user ? 'signed_in' : 'signed_out',
+      }));
+      throw resolvedError;
+    }
   }, [config.apiBaseUrl, onAuthEvent]);
 
   const getSession = useCallback(async () => {

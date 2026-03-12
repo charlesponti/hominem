@@ -7,7 +7,7 @@ import { getServerSession } from './auth.server';
  * Returns headers that MUST be included in the response
  */
 export async function requireAuth(request: Request) {
-  const { user, session, headers } = await getServerSession(request);
+  const { user, headers } = await getServerSession(request);
 
   if (!user) {
     const url = new URL(request.url);
@@ -15,5 +15,5 @@ export async function requireAuth(request: Request) {
     throw redirect(`/?next=${next}`, { headers });
   }
 
-  return { user, session, headers };
+  return { user, headers };
 }

@@ -20,3 +20,11 @@
 - [x] 4.1 Add or adapt API auth middleware/session resolution so first-party app requests authenticate through Better Auth session state.
 - [x] 4.2 Narrow any remaining custom token endpoints and cookie handling to explicit non-browser or machine-client use cases.
 - [x] 4.3 Update API, web, and mobile auth tests to assert Better Auth session persistence, reload recovery, and logout behavior.
+
+## 5. Post-consolidation auth hardening
+
+- [x] 5.1 Remove first-party dependence on bearer-shaped session payloads from `/api/auth/session`, and update Notes web, desktop, and mobile auth helpers to treat Better Auth session state as the runtime source of truth.
+- [x] 5.2 Fix Notes web auth continuation and guard behavior so `next` survives landing, OTP, passkey, change-email, and protected data-route flows.
+- [x] 5.3 Harden logout semantics across shared auth, desktop, and mobile so local signed-out state does not claim success when Better Auth session invalidation fails.
+- [x] 5.4 Improve mobile boot and session-expiry behavior so transient network or timeout failures surface a deterministic retryable auth-recovery state instead of silently becoming signed-out.
+- [x] 5.5 Clarify CLI machine-client auth behavior by aligning base-url defaults, issuer validation, and logout messaging with the documented device-code token model.

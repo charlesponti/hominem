@@ -81,6 +81,23 @@ describe('auth flow integration', () => {
     expectRedirect(harness.resolveRoute(['(protected)', '(tabs)', 'start']), '/(auth)')
   })
 
+  it('session recovery failure enters a retryable degraded state instead of signed_out', () => {
+    const harness = createAuthIntegrationHarness({
+      status: 'booting',
+      isLoading: true,
+    })
+
+    const next = harness.dispatch({
+      type: 'SESSION_RECOVERY_FAILED',
+      error: new Error('Boot timed out'),
+    })
+
+    expectAuthStatus(next, 'degraded')
+    expectLoadingState(next, false)
+    expectNoRedirect(harness.resolveRoute(['(auth)']))
+    expectRedirect(harness.resolveRoute(['(protected)', '(tabs)', 'start']), '/(auth)')
+  })
+
   it('profile sync keeps auth flow loading until session becomes signed in', () => {
     const harness = createAuthIntegrationHarness({
       status: 'otp_requested',

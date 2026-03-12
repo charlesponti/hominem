@@ -296,10 +296,14 @@ export async function signInWithPasskey(apiBaseUrl: string): Promise<SessionResu
 export async function signOut(apiBaseUrl: string, session: HominemSession | null) {
   void session
 
-  await fetch(`${apiBaseUrl}/api/auth/logout`, {
+  const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {
     credentials: 'include',
     method: 'POST',
-  }).catch(() => undefined);
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to sign out. Please try again.');
+  }
 
   clearStoredSession();
 }

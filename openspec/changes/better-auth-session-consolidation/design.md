@@ -67,6 +67,40 @@ Alternative considered: preserve current SecureStore token model for mobile only
 - Does the current Better Auth Expo integration cover all mobile recovery and background refresh expectations, or is a small adapter still needed?
 - Should device-code flows remain in this repository after first-party app session consolidation, or move to a separate machine-client auth concern later?
 
+## Follow-up Hardening Scope
+
+The first consolidation pass removed the most fragile dual-cookie and refresh behavior, but the audit across Notes web, desktop, CLI, and mobile found that several surfaces still behave like Better Auth is an upstream identity provider feeding a second app-session contract. The next implementation pass should close those gaps without changing the core decision to keep explicit token issuance only for true machine clients.
+
+### Make `/api/auth/session` truly identity-first for first-party sessions
+
+The current `/api/auth/session` response still mints `accessToken` and `expiresIn` for cookie-backed Better Auth sessions. First-party web, desktop, and mobile clients then hydrate local auth state from that bearer-shaped payload and schedule refresh behavior from token expiry rather than from session truth.
+
+The follow-up work should narrow `/api/auth/session` to identity and session-state introspection for first-party callers, then update app clients so they do not require a derived bearer payload to remain signed in.
+
+Alternative considered: keep the bearer-shaped response for convenience and treat it as an internal compatibility layer. Rejected because it preserves the dual-session mental model and keeps logout, boot recovery, and auth guards coupled to token semantics.
+
+### Preserve continuation and fallback intent through auth UX
+
+Notes web currently loses `next` redirect intent across its landing page, OTP entry, and passkey paths. Desktop OTP currently traps users in the verification step when they try to switch email, and mobile exposes generic auth error states without a clear recovery path when session restoration fails.
+
+The follow-up work should make auth continuation explicit and durable across entry, verify, resend, fallback, and logout flows, with API-safe failure behavior for data routes.
+
+Alternative considered: defer UX-only issues until after runtime cleanup. Rejected because broken continuation and misleading auth screens materially change whether the new session model feels reliable to users.
+
+### Make logout and boot recovery truthful
+
+Current clients often clear local state even when server-side sign-out or Better Auth session invalidation fails. Likewise, mobile and some web flows collapse network or timeout errors into a plain signed-out state, which makes outages indistinguishable from real session expiry.
+
+The follow-up work should make logout reflect actual invalidation outcome and should surface a distinct retryable boot/session-recovery state where appropriate.
+
+Alternative considered: keep optimistic local cleanup because it is simpler. Rejected because it can silently leave valid sessions alive and undermines trust in auth state.
+
+### Keep CLI clearly scoped as a machine-client flow
+
+The CLI remains a legitimate bearer-token consumer, but its defaults and messaging still blur the line between browser session auth and device-code token auth. The follow-up work should make the CLI's issuer, login, refresh, and logout behavior obviously machine-client scoped rather than first-party app-session scoped.
+
+Alternative considered: force the CLI into the same Better Auth cookie session model as apps. Rejected because this change explicitly allows token-oriented non-browser clients, and device-code remains the better fit for CLI ergonomics.
+
 ## Implementation Audit
 
 - First-party web sign-in and recovery currently depend on `hominem_*` cookies or token exchange in `services/api/src/routes/auth.ts`, `packages/auth/src/client.tsx`, `packages/auth/src/server.ts`, and `packages/ui/src/components/auth/web-auth-route-servers.ts`.

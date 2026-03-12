@@ -24,7 +24,14 @@ import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
 
 export function AuthScreen() {
   const styles = useStyles();
-  const { isSignedIn, completePasskeySignIn, requestEmailOtp } = useAuth();
+  const {
+    authError: recoveryError,
+    authStatus,
+    isSignedIn,
+    completePasskeySignIn,
+    requestEmailOtp,
+    retrySessionRecovery,
+  } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,7 +91,7 @@ export function AuthScreen() {
     return <Redirect href={SHERPA_AUTH_CONFIG.defaultPostAuthDestination as RelativePathString} />;
   }
 
-  const displayError = authError || passkeyError;
+  const displayError = authError || passkeyError || (authStatus === 'degraded' ? recoveryError?.message ?? null : null);
   const canUsePasskeys = MOBILE_PASSKEY_ENABLED && isPasskeySupported;
 
   return (
@@ -144,6 +151,17 @@ export function AuthScreen() {
                 title={AUTH_COPY.emailEntry.submitButton.toUpperCase()}
                 style={styles.primaryButton}
               />
+              {authStatus === 'degraded' && recoveryError ? (
+                <Button
+                  onPress={() => {
+                    void retrySessionRecovery()
+                  }}
+                  disabled={isSubmitting}
+                  testID="auth-retry-recovery"
+                  title="RETRY SESSION RECOVERY"
+                  style={styles.secondaryButton}
+                />
+              ) : null}
               {canUsePasskeys ? (
                 <Button
                   onPress={handlePasskeySignIn}
@@ -276,6 +294,9 @@ const useStyles = makeStyles((t) =>
       fontWeight: '600',
     },
     primaryButton: {
+      width: '100%',
+    },
+    secondaryButton: {
       width: '100%',
     },
     passkeyButton: {

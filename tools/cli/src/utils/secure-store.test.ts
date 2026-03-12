@@ -93,7 +93,7 @@ describe('secure-store fallback encryption', () => {
         tokenVersion: 2,
         accessToken: 'access-token-value',
         refreshToken: 'refresh-token-value',
-        issuerBaseUrl: 'http://localhost:3000',
+        issuerBaseUrl: 'http://localhost:4040',
       });
 
       const fallbackFile = path.join(homeDir, 'tokens.json');
@@ -106,7 +106,7 @@ describe('secure-store fallback encryption', () => {
         tokenVersion: 2,
         accessToken: 'access-token-value',
         refreshToken: 'refresh-token-value',
-        issuerBaseUrl: 'http://localhost:3000',
+        issuerBaseUrl: 'http://localhost:4040',
       });
 
       await store.clearTokens();

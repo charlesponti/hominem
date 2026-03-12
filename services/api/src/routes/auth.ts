@@ -470,21 +470,14 @@ async function buildSessionResponse(input: {
   sessionId: string;
   userId: string;
   amr: string[];
+  includeBearerToken?: boolean;
 }): Promise<AppSessionResponse | null> {
   const userRecord = await UserAuthService.findByIdOrEmail({ id: input.userId });
   if (!userRecord) {
     return null;
   }
 
-  const access = await issueAccessToken({
-    sub: userRecord.id,
-    sid: input.sessionId,
-    role: userRecord.is_admin ? 'admin' : 'user',
-    scope: ['api:read', 'api:write'],
-    amr: input.amr,
-  });
-
-  return {
+  const response: AppSessionResponse = {
     isAuthenticated: true,
     user: {
       id: userRecord.id,
@@ -502,10 +495,23 @@ async function buildSessionResponse(input: {
       amr: input.amr,
       authTime: Math.floor(Date.now() / 1000),
     },
-    accessToken: access.accessToken,
-    expiresIn: access.expiresIn,
-    tokenType: access.tokenType,
   };
+
+  if (input.includeBearerToken !== false) {
+    const access = await issueAccessToken({
+      sub: userRecord.id,
+      sid: input.sessionId,
+      role: userRecord.is_admin ? 'admin' : 'user',
+      scope: ['api:read', 'api:write'],
+      amr: input.amr,
+    });
+
+    response.accessToken = access.accessToken;
+    response.expiresIn = access.expiresIn;
+    response.tokenType = access.tokenType;
+  }
+
+  return response;
 }
 
 function buildBetterAuthUrl(input: {
@@ -819,6 +825,7 @@ authRoutes.get('/session', async (c) => {
       sessionId: betterAuthSession.sessionId,
       userId: betterAuthSession.userId,
       amr: ['better-auth-session'],
+      includeBearerToken: false,
     });
 
     if (!sessionResponse) {

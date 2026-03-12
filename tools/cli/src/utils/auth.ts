@@ -14,7 +14,7 @@ import {
   type StoredTokens,
 } from './secure-store';
 
-const DEFAULT_AUTH_BASE = 'http://localhost:3000';
+const DEFAULT_AUTH_BASE = 'http://localhost:4040';
 
 interface FetchError extends Error {
   response?: {
@@ -247,7 +247,9 @@ export async function logout(options?: { outputMode?: 'machine' | 'interactive' 
     throw error;
   }
   if ((options?.outputMode ?? 'interactive') === 'interactive') {
-    consola.info(chalk.green('Logged out and cleared stored tokens'));
+    consola.info(
+      chalk.green('Cleared local device-flow credentials. Remote sessions were not revoked.'),
+    );
   }
 }
 
