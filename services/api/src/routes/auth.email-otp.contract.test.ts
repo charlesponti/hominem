@@ -1,9 +1,8 @@
 import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-interface OtpResponse {
-  otp: string;
-}
+import type { AppRequester } from './test-helpers/auth'
+import { fetchOtp, importServer, requestOtp, toCookieHeader } from './test-helpers/auth'
 
 interface _SessionResponse {
   isAuthenticated: boolean;
@@ -39,26 +38,6 @@ interface VerifyOtpResponse {
   };
 }
 
-interface AppRequester {
-  request: (input: string | URL | Request, init?: RequestInit) => Response | Promise<Response>;
-}
-
-async function importServer() {
-  const module = await import('../server');
-  return module.createServer;
-}
-
-async function requestOtp(app: AppRequester, email: string) {
-  return app.request('http://localhost/api/auth/email-otp/send', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      email,
-      type: 'sign-in',
-    }),
-  });
-}
-
 async function requestOtpWithoutOrigin(app: AppRequester, email: string) {
   const request = new Request('http://localhost/api/auth/email-otp/send', {
     method: 'POST',
@@ -71,27 +50,6 @@ async function requestOtpWithoutOrigin(app: AppRequester, email: string) {
 
   request.headers.delete('origin');
   return app.request(request);
-}
-
-async function fetchOtp(app: AppRequester, email: string) {
-  const response = await app.request(
-    `http://localhost/api/auth/test/otp/latest?email=${encodeURIComponent(email)}&type=sign-in`,
-    {
-      method: 'GET',
-      headers: {
-        'x-e2e-auth-secret': 'otp-secret',
-      },
-    },
-  );
-  expect(response.status).toBe(200);
-  return (await response.json()) as OtpResponse;
-}
-
-function toCookieHeader(setCookieValues: string[]) {
-  return setCookieValues
-    .map((value) => value.split(';')[0]?.trim())
-    .filter((value): value is string => Boolean(value && value.length > 0))
-    .join('; ')
 }
 
 describe('auth email otp contract', () => {

@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import { z } from 'zod';
 
-import { getStoredTokens } from '@/utils/auth';
+import { getStoredTokens, hasValidStoredSession } from '@/utils/auth';
 
 import { createCommand } from '../../command-factory';
 import { getConfigPath, loadConfigV2 } from '../../config';
@@ -63,9 +63,20 @@ export default createCommand({
       id: 'auth.token',
       status: tokens?.accessToken ? 'pass' : 'warn',
       message: tokens?.accessToken
-        ? 'auth token available'
+        ? 'auth device-session token stored'
         : "auth token missing; run 'hominem auth login'",
     });
+
+    if (tokens?.issuerBaseUrl) {
+      const authenticated = await hasValidStoredSession(tokens.issuerBaseUrl);
+      checks.push({
+        id: 'auth.session',
+        status: authenticated ? 'pass' : 'warn',
+        message: authenticated
+          ? 'auth session validated remotely'
+          : "stored auth token is not accepted; run 'hominem auth login'",
+      });
+    }
 
     return {
       checks,

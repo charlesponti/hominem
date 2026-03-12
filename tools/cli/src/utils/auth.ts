@@ -28,6 +28,14 @@ function isFetchError(error: unknown): error is FetchError {
 }
 
 async function postJson<T>(url: string, body: unknown): Promise<T> {
+  const result = await postJsonWithHeaders<T>(url, body);
+  return result.data;
+}
+
+async function postJsonWithHeaders<T>(
+  url: string,
+  body: unknown,
+): Promise<{ data: T; headers: Headers }> {
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -45,7 +53,10 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
     throw error;
   }
 
-  return response.json() as Promise<T>;
+  return {
+    data: (await response.json()) as T,
+    headers: response.headers,
+  };
 }
 
 function getLegacyConfigPath(): string {
@@ -65,14 +76,11 @@ interface AuthOptions {
 }
 
 interface TokenResponse {
-  access_token: string;
-  refresh_token?: string;
+  access_token?: string;
   expires_in?: number;
   expires_at?: string;
   scope?: string;
   provider?: 'better-auth';
-  session_id?: string;
-  refresh_family_id?: string;
 }
 
 export class AuthError extends Error {
@@ -189,30 +197,30 @@ function buildStoredTokensFromResponse(
   issuerBaseUrl: string,
   fallback?: Partial<StoredTokens>,
 ): StoredTokens {
+  const accessToken = tokenResponse.access_token ?? fallback?.accessToken
+  if (!accessToken) {
+    throw new AuthError({
+      code: 'AUTH_LOGIN_FAILED',
+      category: 'auth',
+      message: 'No Better Auth bearer token was returned by the device flow',
+    })
+  }
+
   const stored: StoredTokens = {
     tokenVersion: 2,
-    accessToken: tokenResponse.access_token,
+    accessToken,
     provider: tokenResponse.provider ?? fallback?.provider ?? 'better-auth',
     issuedAt: new Date().toISOString(),
     issuerBaseUrl: normalizeBaseUrl(issuerBaseUrl),
-  };
+  }
 
-  const expiresAt = toExpiresAtIso(tokenResponse, fallback?.expiresAt);
-  if (expiresAt) stored.expiresAt = expiresAt;
+  const expiresAt = toExpiresAtIso(tokenResponse, fallback?.expiresAt)
+  if (expiresAt) stored.expiresAt = expiresAt
 
-  const refreshToken = tokenResponse.refresh_token ?? fallback?.refreshToken;
-  if (refreshToken) stored.refreshToken = refreshToken;
+  const scopes = tokenResponse.scope ? tokenResponse.scope.split(' ') : fallback?.scopes
+  if (scopes?.length) stored.scopes = scopes
 
-  const scopes = tokenResponse.scope ? tokenResponse.scope.split(' ') : fallback?.scopes;
-  if (scopes?.length) stored.scopes = scopes;
-
-  const sessionId = tokenResponse.session_id ?? fallback?.sessionId;
-  if (sessionId) stored.sessionId = sessionId;
-
-  const refreshFamilyId = tokenResponse.refresh_family_id ?? fallback?.refreshFamilyId;
-  if (refreshFamilyId) stored.refreshFamilyId = refreshFamilyId;
-
-  return stored;
+  return stored
 }
 
 export async function getStoredTokens(): Promise<StoredTokens | null> {
@@ -274,7 +282,8 @@ export async function interactiveLogin(options: AuthOptions) {
 export async function deviceCodeLogin(_options: AuthOptions) {
   const options = _options;
   const clientId = 'hominem-cli';
-  const scope = options.scopes?.join(' ') ?? 'cli:read';
+  const scope = options.scopes && options.scopes.length > 0 ? options.scopes.join(' ') : 'cli:read';
+  const loginDeadline = Date.now() + options.timeoutMs;
 
   const codeUrl = new URL('/api/auth/device/code', options.authBaseUrl);
   const device = await postJson<DeviceCodeResponse>(codeUrl.toString(), {
@@ -291,32 +300,63 @@ export async function deviceCodeLogin(_options: AuthOptions) {
   if (verifyUrl) {
     emitInfo(options.outputMode, `Open: ${verifyUrl}`);
     if (!options.headless) {
-      await open(verifyUrl).catch(() => undefined);
+      try {
+        await open(verifyUrl);
+      } catch (error) {
+        throw new AuthError({
+          code: 'AUTH_LOGIN_FAILED',
+          category: 'auth',
+          message: error instanceof Error ? error.message : 'Failed to open device verification URL',
+          hint: `Open ${verifyUrl} manually`,
+        });
+      }
     }
   }
 
   const intervalSec = Math.max(2, device.interval ?? 5);
   const expiresAt = Date.now() + (device.expires_in ?? 600) * 1000;
+  const pollDeadline = Math.min(expiresAt, loginDeadline);
   const tokenUrl = new URL('/api/auth/device/token', options.authBaseUrl);
 
-  while (Date.now() < expiresAt) {
-    await new Promise((resolve) => setTimeout(resolve, intervalSec * 1000));
+  while (Date.now() < pollDeadline) {
+    const waitMs = Math.min(intervalSec * 1000, Math.max(0, pollDeadline - Date.now()));
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
 
     try {
-      const data = await postJson<TokenResponse>(tokenUrl.toString(), {
+      const { data, headers } = await postJsonWithHeaders<TokenResponse>(tokenUrl.toString(), {
         grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
         device_code: device.device_code,
         client_id: clientId,
       });
+      const accessToken = headers.get('set-auth-token') ?? data.access_token;
 
-      const tokens = buildStoredTokensFromResponse(data, options.authBaseUrl, {
+      if (!accessToken) {
+        throw new AuthError({
+          code: 'AUTH_LOGIN_FAILED',
+          category: 'auth',
+          message: 'Device token exchange did not return a Better Auth bearer token',
+        });
+      }
+
+      const tokens = buildStoredTokensFromResponse(
+        {
+          ...data,
+          access_token: accessToken,
+          scope: data.scope ?? scope,
+        },
+        options.authBaseUrl,
+        {
         provider: 'better-auth',
-        ...(options.scopes ? { scopes: options.scopes } : {}),
-      });
+          scopes: scope.split(' ').filter(Boolean),
+        },
+      );
       await saveTokens(tokens);
       emitInfo(options.outputMode, chalk.green('Authenticated via device flow'));
       return;
     } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
       if (!isFetchError(error) || !error.response?.data) {
         throw error;
       }
@@ -335,10 +375,8 @@ export async function deviceCodeLogin(_options: AuthOptions) {
 }
 
 export async function getAccessToken(params?: {
-  forceRefresh?: boolean;
   expectedIssuerBaseUrl?: string;
 }): Promise<string | null> {
-  const forceRefresh = params?.forceRefresh ?? false;
   const expectedIssuerBaseUrl = params?.expectedIssuerBaseUrl;
   const stored = await getStoredTokens();
   if (!stored?.accessToken) {
@@ -365,54 +403,39 @@ export async function getAccessToken(params?: {
     });
   }
 
-  const expiresSoon = stored.expiresAt
-    ? Date.now() > new Date(stored.expiresAt).getTime() - 5 * 60 * 1000
-    : false;
+  return stored.accessToken;
+}
 
-  if (!forceRefresh && !expiresSoon) return stored.accessToken;
+export async function hasValidStoredSession(expectedIssuerBaseUrl?: string): Promise<boolean> {
+  const stored = await getStoredTokens();
+  if (!stored?.accessToken || !stored.issuerBaseUrl) {
+    return false;
+  }
 
-  if (!stored.refreshToken) {
-    throw new AuthError({
-      code: 'AUTH_INVALID',
-      category: 'auth',
-      message: 'Auth token expired and no refresh token is available',
-      hint: 'Run `hominem auth login`',
-    });
+  const issuerBaseUrl = expectedIssuerBaseUrl
+    ? normalizeBaseUrl(expectedIssuerBaseUrl)
+    : normalizeBaseUrl(stored.issuerBaseUrl);
+
+  if (normalizeBaseUrl(stored.issuerBaseUrl) !== issuerBaseUrl) {
+    return false;
   }
 
   try {
-    const url = new URL('/api/auth/token', normalizeBaseUrl(stored.issuerBaseUrl));
-    const data = await postJson<TokenResponse>(url.toString(), {
-      grant_type: 'refresh_token',
-      refresh_token: stored.refreshToken,
+    const response = await fetch(new URL('/api/auth/session', issuerBaseUrl).toString(), {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${stored.accessToken}`,
+      },
     });
 
-    const tokens = buildStoredTokensFromResponse(
-      data,
-      normalizeBaseUrl(stored.issuerBaseUrl),
-      stored,
-    );
-
-    await saveTokens(tokens);
-
-    return data.access_token;
-  } catch (error) {
-    if (isFetchError(error)) {
-      const status = error.response?.status;
-      if (status === 401 || status === 403) {
-        throw new AuthError({
-          code: 'AUTH_INVALID',
-          category: 'auth',
-          message: 'Stored credentials are invalid',
-          hint: 'Run `hominem auth login`',
-        });
-      }
+    if (!response.ok) {
+      return false;
     }
-    throw new AuthError({
-      code: 'AUTH_DEPENDENCY_UNAVAILABLE',
-      category: 'dependency',
-      message: error instanceof Error ? error.message : 'Auth refresh dependency unavailable',
-    });
+
+    const payload = (await response.json()) as { isAuthenticated?: boolean };
+    return payload.isAuthenticated === true;
+  } catch {
+    return false;
   }
 }
 

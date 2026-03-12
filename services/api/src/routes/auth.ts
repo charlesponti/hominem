@@ -86,6 +86,12 @@ const deviceTokenSchema = z.object({
   device_code: z.string().min(1),
   client_id: z.string().min(1),
 });
+const deviceVerifySchema = z.object({
+  user_code: z.string().min(1),
+});
+const deviceApproveSchema = z.object({
+  userCode: z.string().min(1),
+});
 
 const mobileE2eLoginSchema = z.object({
   email: z.string().email().optional(),
@@ -184,8 +190,8 @@ function getHeaderCarrier(c: { req: { raw: Request } }) {
  * The standard JWT middleware skips /api/auth paths so these routes must
  * check auth themselves.  We support three mechanisms (in priority order):
  *   1. Middleware-set context variable (set for non-/api/auth routes)
- *   2. Bearer token in the Authorization header (canonical app token)
- *   3. Better Auth session cookie (for direct browser calls to the API)
+ *   2. Better Auth bearer/session auth
+ *   3. Legacy bearer token in the Authorization header
  */
 async function resolveAuthUserId(c: {
   get: (key: string) => string | null;
@@ -195,7 +201,11 @@ async function resolveAuthUserId(c: {
   const fromMiddleware = c.get('userId');
   if (fromMiddleware) return fromMiddleware;
 
-  // 2. Bearer token
+  const betterAuthSession = await getBetterAuthSessionContext(c as Context<AppEnv>);
+  if (betterAuthSession) {
+    return betterAuthSession.userId;
+  }
+
   const authHeader = c.req.header('authorization');
   if (authHeader?.startsWith('Bearer ')) {
     try {
@@ -206,21 +216,21 @@ async function resolveAuthUserId(c: {
     }
   }
 
-  const betterAuthSession = await getBetterAuthSessionContext(c as Context<AppEnv>);
-  if (betterAuthSession) {
-    return betterAuthSession.userId;
-  }
-
   return null;
 }
 
 async function resolveAuthSessionId(c: {
   get: (key: string) => { sid?: string | undefined } | null;
-  req: { header: (name: string) => string | undefined };
+  req: { raw: Request; header: (name: string) => string | undefined };
 }): Promise<string | null> {
   const fromMiddleware = c.get('auth');
   if (fromMiddleware?.sid) {
     return fromMiddleware.sid;
+  }
+
+  const betterAuthSession = await getBetterAuthSessionContext(c as Context<AppEnv>);
+  if (betterAuthSession) {
+    return betterAuthSession.sessionId;
   }
 
   const authHeader = c.req.header('authorization');
@@ -231,11 +241,6 @@ async function resolveAuthSessionId(c: {
     } catch {
       return null;
     }
-  }
-
-  const betterAuthSession = await getBetterAuthSessionContext(c as Context<AppEnv>);
-  if (betterAuthSession) {
-    return betterAuthSession.sessionId;
   }
 
   return null;
@@ -543,11 +548,13 @@ async function callBetterAuthPluginEndpoint(input: {
   request: Request;
   path: string;
   method: 'GET' | 'POST';
+  preserveQuery?: boolean | undefined;
   body?: Record<string, unknown> | undefined;
 }) {
   const url = buildBetterAuthUrl({
     request: input.request,
     path: input.path,
+    ...(input.preserveQuery ? { preserveQuery: true } : {}),
   });
   logger.debug('[auth:plugin] forwarding Better Auth endpoint', {
     method: input.method,
@@ -566,6 +573,39 @@ async function callBetterAuthPluginEndpoint(input: {
       ...(input.body ? { body: JSON.stringify(input.body) } : {}),
     }),
   );
+}
+
+async function forwardBetterAuthPluginResponse(input: {
+  request: Request;
+  path: string;
+  method: 'GET' | 'POST';
+  preserveQuery?: boolean | undefined;
+  body?: Record<string, unknown> | undefined;
+}) {
+  const response = await callBetterAuthPluginEndpoint(input);
+  const responseText = await response.text();
+  const headers = copyHeadersWithSetCookie(response.headers);
+
+  if (input.path === '/device/token' && !headers.get('set-auth-token')) {
+    const payload = JSON.parse(responseText) as { access_token?: string };
+    if (typeof payload.access_token === 'string' && payload.access_token.length > 0) {
+      headers.set('set-auth-token', payload.access_token);
+      const exposedHeaders = headers.get('access-control-expose-headers');
+      const exposed = new Set(
+        (exposedHeaders ?? '')
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean),
+      );
+      exposed.add('set-auth-token');
+      headers.set('access-control-expose-headers', [...exposed].join(', '));
+    }
+  }
+
+  return new Response(responseText, {
+    status: response.status,
+    headers,
+  });
 }
 
 authRoutes.get('/jwks', async (c) => {
@@ -774,6 +814,24 @@ authRoutes.get('/session', async (c) => {
   let bearerToken: string | null = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
   if (bearerToken) {
+    try {
+      const betterAuthSession = await getBetterAuthSessionContext(c);
+      if (betterAuthSession) {
+        const sessionResponse = await buildSessionResponse({
+          sessionId: betterAuthSession.sessionId,
+          userId: betterAuthSession.userId,
+          amr: ['better-auth-session'],
+          includeBearerToken: false,
+        });
+
+        if (sessionResponse) {
+          return c.json(sessionResponse);
+        }
+      }
+    } catch {
+      // Fall through to legacy bearer validation for callers that still use it.
+    }
+
     try {
       const claims = await verifyAccessToken(bearerToken);
       const revoked = await isSessionRevoked(claims.sid);
@@ -1142,6 +1200,33 @@ authRoutes.post('/device/code', zValidator('json', deviceCodeSchema), async (c) 
   }
 });
 
+authRoutes.get('/device', zValidator('query', deviceVerifySchema), async (c) => {
+  try {
+    return await forwardBetterAuthPluginResponse({
+      request: c.req.raw,
+      path: '/device',
+      method: 'GET',
+      preserveQuery: true,
+    });
+  } catch {
+    return c.json({ error: 'device_verify_failed' }, 400);
+  }
+});
+
+authRoutes.post('/device/approve', zValidator('json', deviceApproveSchema), async (c) => {
+  try {
+    const payload = c.req.valid('json');
+    return await forwardBetterAuthPluginResponse({
+      request: c.req.raw,
+      path: '/device/approve',
+      method: 'POST',
+      body: payload as Record<string, unknown>,
+    });
+  } catch {
+    return c.json({ error: 'device_approve_failed' }, 400);
+  }
+});
+
 authRoutes.post('/device/token', zValidator('json', deviceTokenSchema), async (c) => {
   const payload = c.req.valid('json');
   const deviceTokenRateLimit = await enforceAuthRateLimit(c, {
@@ -1155,14 +1240,12 @@ authRoutes.post('/device/token', zValidator('json', deviceTokenSchema), async (c
   }
 
   try {
-    const response = await callBetterAuthPluginEndpoint({
+    return await forwardBetterAuthPluginResponse({
       request: c.req.raw,
       path: '/device/token',
       method: 'POST',
       body: payload as Record<string, unknown>,
     });
-    const body = await response.json();
-    return c.json(body as Record<string, unknown>, response.status as 200 | 400 | 401);
   } catch {
     return c.json({ error: 'device_token_failed' }, 400);
   }

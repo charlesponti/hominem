@@ -27,6 +27,12 @@ declare module 'hono' {
   }
 }
 
+interface BetterAuthSessionContext {
+  auth: AuthContextEnvelope
+  user: HominemUser
+  userId: string
+}
+
 function getBearerToken(headerValue?: string) {
   if (!headerValue || !headerValue.startsWith('Bearer ')) {
     return null;
@@ -125,6 +131,60 @@ function authErrorResponse(code: AuthErrorCode) {
   } as const;
 }
 
+async function applyBetterAuthSession(c: {
+  req: { raw: Request };
+  set: <K extends keyof BetterAuthSessionContext>(
+    key: K,
+    value: BetterAuthSessionContext[K],
+  ) => void;
+}) {
+  const betterAuthSession = await betterAuthServer.api.getSession({
+    headers: c.req.raw.headers,
+  });
+
+  const betterAuthUserId = betterAuthSession?.user?.id;
+  const betterAuthSessionId = betterAuthSession?.session?.id;
+
+  if (!betterAuthUserId || !betterAuthSessionId) {
+    return false;
+  }
+
+  const cached = getCachedUser(betterAuthUserId);
+  if (cached) {
+    c.set('user', cached);
+    c.set('userId', cached.id);
+    c.set('auth', {
+      sub: cached.id,
+      sid: betterAuthSessionId,
+      scope: ['api:read', 'api:write'],
+      role: cached.isAdmin ? 'admin' : 'user',
+      amr: ['better-auth-session'],
+      authTime: Math.floor(Date.now() / 1000),
+    });
+    return true;
+  }
+
+  const dbUser = await UserAuthService.getUserById(betterAuthUserId);
+  if (!dbUser) {
+    return false;
+  }
+
+  const user = toHominemUser(dbUser);
+  setCachedUser(user);
+  c.set('user', user);
+  c.set('userId', dbUser.id);
+  c.set('auth', {
+    sub: dbUser.id,
+    sid: betterAuthSessionId,
+    scope: ['api:read', 'api:write'],
+    role: user.isAdmin ? 'admin' : 'user',
+    amr: ['better-auth-session'],
+    authTime: Math.floor(Date.now() / 1000),
+  });
+
+  return true;
+}
+
 export const authJwtMiddleware = (): MiddlewareHandler => {
   return async (c, next) => {
     const path = c.req.path;
@@ -211,6 +271,14 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
 
     if (bearer) {
       try {
+        if (await applyBetterAuthSession(c)) {
+          return await next();
+        }
+      } catch (error) {
+        logger.warn('[authJwtMiddleware] better auth bearer lookup failed', { error });
+      }
+
+      try {
         const claims = await verifyAccessToken(bearer);
         const revoked = await isSessionRevoked(claims.sid);
         if (revoked) {
@@ -262,45 +330,8 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
     }
 
     try {
-      const betterAuthSession = await betterAuthServer.api.getSession({
-        headers: c.req.raw.headers,
-      });
-
-      const betterAuthUserId = betterAuthSession?.user?.id;
-      const betterAuthSessionId = betterAuthSession?.session?.id;
-
-      if (betterAuthUserId && betterAuthSessionId) {
-        const cached = getCachedUser(betterAuthUserId);
-        if (cached) {
-          c.set('user', cached);
-          c.set('userId', cached.id);
-          c.set('auth', {
-            sub: cached.id,
-            sid: betterAuthSessionId,
-            scope: ['api:read', 'api:write'],
-            role: cached.isAdmin ? 'admin' : 'user',
-            amr: ['better-auth-session'],
-            authTime: Math.floor(Date.now() / 1000),
-          });
-          return await next();
-        }
-
-        const dbUser = await UserAuthService.getUserById(betterAuthUserId);
-        if (dbUser) {
-          const user = toHominemUser(dbUser);
-          setCachedUser(user);
-          c.set('user', user);
-          c.set('userId', dbUser.id);
-          c.set('auth', {
-            sub: dbUser.id,
-            sid: betterAuthSessionId,
-            scope: ['api:read', 'api:write'],
-            role: user.isAdmin ? 'admin' : 'user',
-            amr: ['better-auth-session'],
-            authTime: Math.floor(Date.now() / 1000),
-          });
-          return await next();
-        }
+      if (await applyBetterAuthSession(c)) {
+        return await next();
       }
     } catch (error) {
       logger.warn('[authJwtMiddleware] better auth session lookup failed', { error });

@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { ZodError } from 'zod';
 
 import type {
+  CliWriteStream,
   CommandDefinition,
   CommandFailure,
   CommandSuccess,
@@ -19,6 +20,15 @@ import { findRoute } from './registry';
 
 interface RunResult {
   exitCode: number;
+}
+
+interface RunCliOptions {
+  cwd?: string
+  env?: NodeJS.ProcessEnv
+  stdio?: {
+    out: CliWriteStream
+    err: CliWriteStream
+  }
 }
 
 function serializeJsonValue(input: object): JsonValue {
@@ -60,11 +70,62 @@ function renderCommandHelp(
   return lines.join('\n');
 }
 
-export async function runCli(argv: string[], binaryName = 'hominem'): Promise<RunResult> {
+async function withScopedProcessState<T>(
+  input: { cwd: string; env: NodeJS.ProcessEnv },
+  run: () => Promise<T>,
+): Promise<T> {
+  const previousCwd = process.cwd()
+  const previousEnv = { ...process.env }
+
+  process.chdir(input.cwd)
+
+  for (const key of Object.keys(process.env)) {
+    if (!(key in input.env)) {
+      delete process.env[key]
+    }
+  }
+  for (const [key, value] of Object.entries(input.env)) {
+    if (value === undefined) {
+      delete process.env[key]
+    } else {
+      process.env[key] = value
+    }
+  }
+
+  try {
+    return await run()
+  } finally {
+    process.chdir(previousCwd)
+    for (const key of Object.keys(process.env)) {
+      if (!(key in previousEnv)) {
+        delete process.env[key]
+      }
+    }
+    for (const [key, value] of Object.entries(previousEnv)) {
+      if (value === undefined) {
+        delete process.env[key]
+      } else {
+        process.env[key] = value
+      }
+    }
+  }
+}
+
+export async function runCli(
+  argv: string[],
+  binaryName = 'hominem',
+  options?: RunCliOptions,
+): Promise<RunResult> {
+  const cwd = options?.cwd ?? process.cwd()
+  const env = options?.env ?? process.env
+  const stdio = options?.stdio ?? {
+    out: process.stdout,
+    err: process.stderr,
+  }
   const parsed = parseArgv(argv);
 
   if (parsed.commandTokens.length === 0) {
-    process.stdout.write(`${renderGlobalHelp(binaryName)}\n`);
+    stdio.out.write(`${renderGlobalHelp(binaryName)}\n`);
     return { exitCode: 0 };
   }
 
@@ -89,7 +150,7 @@ export async function runCli(argv: string[], binaryName = 'hominem'): Promise<Ru
       category: 'usage',
       message: `Unknown command '${parsed.commandTokens.join(' ')}'`,
     };
-    writeFailure(parsed.globals.outputFormat, payload, process.stderr);
+    writeFailure(parsed.globals.outputFormat, payload, stdio.err);
     return { exitCode: toExitCode('usage') };
   }
 
@@ -99,7 +160,7 @@ export async function runCli(argv: string[], binaryName = 'hominem'): Promise<Ru
   const command = module.default;
 
   if (parsed.globals.help) {
-    process.stdout.write(`${renderCommandHelp(command, binaryName)}\n`);
+    stdio.out.write(`${renderCommandHelp(command, binaryName)}\n`);
     return { exitCode: 0 };
   }
 
@@ -108,6 +169,7 @@ export async function runCli(argv: string[], binaryName = 'hominem'): Promise<Ru
   process.once('SIGINT', onSigInt);
 
   try {
+    return await withScopedProcessState({ cwd, env }, async () => {
     const argObject: Record<string, string> = {};
     for (let index = 0; index < command.argNames.length; index += 1) {
       const argName = command.argNames[index];
@@ -124,11 +186,11 @@ export async function runCli(argv: string[], binaryName = 'hominem'): Promise<Ru
 
     const outputFormat = parsed.globals.outputFormat as OutputFormat;
     const context = {
-      cwd: process.cwd(),
-      env: process.env,
+      cwd,
+      env,
       stdio: {
-        out: process.stdout,
-        err: process.stderr,
+        out: stdio.out,
+        err: stdio.err,
       },
       outputFormat,
       quiet: parsed.globals.quiet,
@@ -152,8 +214,9 @@ export async function runCli(argv: string[], binaryName = 'hominem'): Promise<Ru
       message: command.summary,
     };
 
-    writeSuccess(outputFormat, payload, process.stdout);
+    writeSuccess(outputFormat, payload, stdio.out);
     return { exitCode: 0 };
+    })
   } catch (error) {
     const outputFormat = parsed.globals.outputFormat;
 
@@ -167,7 +230,7 @@ export async function runCli(argv: string[], binaryName = 'hominem'): Promise<Ru
         message: 'Command input validation failed',
         details: serializeJsonValue({ issues: error.issues }),
       };
-      writeFailure(outputFormat, payload, process.stderr);
+      writeFailure(outputFormat, payload, stdio.err);
       return { exitCode: toExitCode('validation') };
     }
 
@@ -182,7 +245,7 @@ export async function runCli(argv: string[], binaryName = 'hominem'): Promise<Ru
         details: error.details,
         hint: error.hint,
       };
-      writeFailure(outputFormat, payload, process.stderr);
+      writeFailure(outputFormat, payload, stdio.err);
       return { exitCode: toExitCode(error.category) };
     }
 
@@ -194,7 +257,7 @@ export async function runCli(argv: string[], binaryName = 'hominem'): Promise<Ru
       category: 'internal',
       message: error instanceof Error ? error.message : 'Unknown failure',
     };
-    writeFailure(outputFormat, payload, process.stderr);
+    writeFailure(outputFormat, payload, stdio.err);
     return { exitCode: toExitCode('internal') };
   } finally {
     process.removeListener('SIGINT', onSigInt);
