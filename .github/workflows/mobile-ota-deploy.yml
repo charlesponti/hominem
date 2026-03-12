@@ -53,6 +53,14 @@ jobs:
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
 
+      - name: Verify Expo config
+        run: bun run --filter @hominem/mobile verify:expo-config
+        env:
+          APP_VARIANT: preview
+          EXPO_NO_DOTENV: "1"
+          EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
+          EXPO_PUBLIC_E2E_TESTING: "false"
+
       - name: Publish OTA update → preview
         working-directory: apps/mobile
         env:

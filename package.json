@@ -51,7 +51,7 @@
     "validate-db-imports": "node scripts/validate-db-imports.js",
     "validate-db-migrations": "bash scripts/lint-goose-migrations.sh",
     "validate:code-quality-db-setup": "bash scripts/validate-code-quality-db-setup.sh",
-    "verify:mobile": "bunx tsc -p apps/mobile/tsconfig.json --noEmit && bun run verify:mobile:design && bun run --filter @hominem/hono-rpc typecheck",
+    "verify:mobile": "bunx tsc -p apps/mobile/tsconfig.json --noEmit && bun run --filter @hominem/mobile verify:expo-config && bun run verify:mobile:design && bun run --filter @hominem/hono-rpc typecheck",
     "verify:mobile:design": "bash scripts/verify-mobile-design.sh"
   },
   "dependencies": {
@@ -90,7 +90,7 @@
     "@types/react-dom": "19.1.7",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "hono": "^4.12.6",
+    "hono": "^4.12.7",
     "vite": "7.3.1",
     "zod": "4.3.6",
     "axios": "^1.13.6"

@@ -1,6 +1,6 @@
 # Active OpenSpec Change
 
-active_change: none
+active_change: fix-mobile-expo-config
 
 artifacts:
 - proposal.md
