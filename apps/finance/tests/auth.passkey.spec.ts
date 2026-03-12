@@ -370,8 +370,8 @@ test('boot flow with no credentials redirects to auth', async ({ page, context }
   await context.clearCookies()
   await page.goto(`${FINANCE_APP_BASE_URL}/finance`)
 
-  // Should redirect to /auth since there's no session
-  await expect(page).toHaveURL(/\/auth$/, { timeout: 10000 })
+  // Should redirect to /auth and preserve the intended destination
+  await expect(page).toHaveURL(/\/auth\?next=%2Ffinance$/, { timeout: 10000 })
 })
 
 test('session expiry flow verifies access token is sent in requests', async ({ page, context }) => {
