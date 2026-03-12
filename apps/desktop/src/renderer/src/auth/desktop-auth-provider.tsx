@@ -31,6 +31,7 @@ interface DesktopAuthContextValue {
   clearError: () => void;
   email: string;
   isPasskeyAvailable: boolean;
+  restartAuth: () => void;
   requestOtp: (email: string) => Promise<void>;
   session: HominemSession | null;
   signInWithPasskey: () => Promise<void>;
@@ -140,10 +141,6 @@ export function DesktopAuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       dispatch({ type: 'SIGN_OUT_SUCCESS' });
     } catch (error) {
-      setSession(null);
-      dispatch({
-        type: 'RESET_TO_SIGNED_OUT',
-      });
       dispatch({
         type: 'FATAL_ERROR',
         error: toUserFacingError(error, 'Failed to sign out cleanly.'),
@@ -157,6 +154,11 @@ export function DesktopAuthProvider({ children }: { children: ReactNode }) {
       clearError: () => dispatch({ type: 'CLEAR_ERROR' }),
       email,
       isPasskeyAvailable: isPasskeySupported(),
+      restartAuth: () => {
+        setEmail('');
+        setSession(null);
+        dispatch({ type: 'RESET_TO_SIGNED_OUT' });
+      },
       requestOtp: handleRequestOtp,
       session,
       signInWithPasskey: handlePasskeySignIn,

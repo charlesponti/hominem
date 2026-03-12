@@ -42,7 +42,7 @@ export const useAudioTranscribe = ({
   onSuccess?: (data: string) => void;
   onError?: () => void;
 } = {}) => {
-  const { getAccessToken } = useAuth();
+  const { getAuthHeaders } = useAuth();
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const cancel = useCallback(() => {
@@ -55,9 +55,9 @@ export const useAudioTranscribe = ({
       abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
 
-      const token = await getAccessToken();
-      if (!token) {
-        throw new Error('Missing auth token for voice transcription');
+      const authHeaders = await getAuthHeaders();
+      if (Object.keys(authHeaders).length === 0) {
+        throw new Error('Missing auth session for voice transcription');
       }
 
       const formData = new FormData();
@@ -76,9 +76,7 @@ export const useAudioTranscribe = ({
 
       const response = await fetch(`${API_BASE_URL}/api/mobile/voice/transcribe`, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: authHeaders,
         body: formData,
         signal: abortControllerRef.current.signal,
       });

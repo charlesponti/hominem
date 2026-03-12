@@ -135,24 +135,6 @@ async function fetchSession(apiBaseUrl: string): Promise<SessionResponse> {
     return (await res.json()) as SessionResponse;
   }
 
-  if (res.status === 401) {
-    const refreshRes = await fetch(getAbsoluteApiUrl(apiBaseUrl, '/api/auth/refresh'), {
-      method: 'POST',
-      credentials: 'include',
-    });
-
-    if (refreshRes.ok) {
-      const retryRes = await fetch(getAbsoluteApiUrl(apiBaseUrl, '/api/auth/session'), {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (retryRes.ok) {
-        return (await retryRes.json()) as SessionResponse;
-      }
-    }
-  }
-
   return { isAuthenticated: false, user: null, accessToken: null };
 }
 
@@ -264,7 +246,7 @@ export function AuthProvider({
   initialUser = null,
   initialSession = null,
 }: AuthProviderProps) {
-  const hasInitialAuth = Boolean(initialUser && initialSession);
+  const hasInitialAuth = Boolean(initialUser);
   const previousSessionTokenRef = useRef<string | null>(initialSession?.access_token ?? null);
   const [authState, setAuthState] = useState<ClientAuthState>(() => ({
     error: null,
@@ -278,15 +260,14 @@ export function AuthProvider({
     const payload = await fetchSession(config.apiBaseUrl);
     setAuthState((currentState) => {
       const nextSession = toSession(payload.accessToken, payload.expiresIn);
-      const session =
-        nextSession ?? (payload.isAuthenticated && payload.user ? currentState.session : null);
+      const session = payload.isAuthenticated && payload.user ? nextSession ?? currentState.session : null;
       const user = payload.user ?? null;
 
       return {
         error: null,
         isLoading: false,
         session,
-        status: user && session ? 'signed_in' : 'signed_out',
+        status: user ? 'signed_in' : 'signed_out',
         user,
       };
     });
@@ -301,11 +282,11 @@ export function AuthProvider({
   }, [hasInitialAuth, refreshAuth]);
 
   useEffect(() => {
-    if (!authState.session || authState.status === 'signed_out') {
+    if (authState.status !== 'signed_in') {
       return;
     }
 
-    const expiresIn = authState.session.expires_in ?? 600;
+    const expiresIn = authState.session?.expires_in ?? 600;
     const refreshInterval = Math.max((expiresIn - 60) * 1000, 5 * 60 * 1000);
 
     const intervalId = setInterval(() => {
@@ -375,18 +356,6 @@ export function AuthProvider({
 
     if (!verifyRes.ok) {
       throw new Error('Passkey sign-in failed.');
-    }
-
-    const tokenRes = await fetch(
-      getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/token-from-session'),
-      {
-        method: 'POST',
-        credentials: 'include',
-      },
-    );
-
-    if (!tokenRes.ok) {
-      throw new Error('Failed to exchange passkey session for app tokens.');
     }
 
     await refreshAuth();
@@ -525,18 +494,35 @@ export function AuthProvider({
       isLoading: true,
       status: 'signing_out',
     }));
-    await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/logout'), {
-      method: 'POST',
-      credentials: 'include',
-    });
-    setAuthState({
-      error: null,
-      isLoading: false,
-      session: null,
-      status: 'signed_out',
-      user: null,
-    });
-    onAuthEvent?.('SIGNED_OUT');
+    try {
+      const response = await fetch(getAbsoluteApiUrl(config.apiBaseUrl, '/api/auth/logout'), {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to sign out. Please try again.');
+      }
+
+      setAuthState({
+        error: null,
+        isLoading: false,
+        session: null,
+        status: 'signed_out',
+        user: null,
+      });
+      onAuthEvent?.('SIGNED_OUT');
+    } catch (error) {
+      const resolvedError =
+        error instanceof Error ? error : new Error('Failed to sign out. Please try again.');
+      setAuthState((currentState) => ({
+        ...currentState,
+        error: resolvedError,
+        isLoading: false,
+        status: currentState.user ? 'signed_in' : 'signed_out',
+      }));
+      throw resolvedError;
+    }
   }, [config.apiBaseUrl, onAuthEvent]);
 
   const getSession = useCallback(async () => {

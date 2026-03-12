@@ -6,12 +6,13 @@ export function createServerHonoClient(
   accessToken?: string,
   request?: Request,
 ): ApiClient {
+  const cookieHeader = request?.headers.get('Cookie') ?? request?.headers.get('cookie') ?? null
+
   return createApiClientFromRaw(
     createRawHonoClient({
       baseUrl,
-      getAuthToken: async () => accessToken ?? null,
+      getAuthToken: async () => (cookieHeader ? null : accessToken ?? null),
       getHeaders: async () => {
-        const cookieHeader = request?.headers.get('Cookie')
         return cookieHeader ? { cookie: cookieHeader } : {}
       },
       onError: (error) => {

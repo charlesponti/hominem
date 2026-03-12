@@ -7,10 +7,13 @@ import { VerifyScreen } from '../../app/(auth)/verify'
 const mockReplace = jest.fn()
 const mockCompletePasskeySignIn = jest.fn()
 const mockRequestEmailOtp = jest.fn()
+const mockRetrySessionRecovery = jest.fn()
 const mockVerifyEmailOtp = jest.fn()
 const mockPasskeySignIn = jest.fn()
 let mockIsE2ETesting = false
 let mockIsMobilePasskeyEnabled = true
+let mockAuthStatus: 'signed_out' | 'degraded' = 'signed_out'
+let mockRecoveryError: Error | null = null
 
 jest.mock('expo-router', () => ({
   Redirect: ({ href }: { href: string }) => href,
@@ -21,9 +24,12 @@ jest.mock('expo-router', () => ({
 
 jest.mock('../../utils/auth-provider', () => ({
   useAuth: () => ({
+    authError: mockRecoveryError,
+    authStatus: mockAuthStatus,
     isSignedIn: false,
     completePasskeySignIn: mockCompletePasskeySignIn,
     requestEmailOtp: mockRequestEmailOtp,
+    retrySessionRecovery: mockRetrySessionRecovery,
     verifyEmailOtp: mockVerifyEmailOtp,
   }),
 }))
@@ -134,6 +140,8 @@ describe('auth rendered screens', () => {
     jest.clearAllMocks()
     mockIsE2ETesting = false
     mockIsMobilePasskeyEnabled = true
+    mockAuthStatus = 'signed_out'
+    mockRecoveryError = null
   })
 
   it('shows validation error when email is empty', async () => {
@@ -300,6 +308,21 @@ describe('auth rendered screens', () => {
     await waitFor(() => {
       expect(mockPasskeySignIn).toHaveBeenCalledTimes(1)
       expect(mockCompletePasskeySignIn).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('shows retry recovery CTA when boot recovery degrades', async () => {
+    mockAuthStatus = 'degraded'
+    mockRecoveryError = new Error('Boot timed out')
+
+    render(<AuthScreen />)
+
+    expect(screen.getByTestId('auth-error-text')).toHaveTextContent('BOOT TIMED OUT')
+
+    fireEvent.press(screen.getByTestId('auth-retry-recovery'))
+
+    await waitFor(() => {
+      expect(mockRetrySessionRecovery).toHaveBeenCalledTimes(1)
     })
   })
 

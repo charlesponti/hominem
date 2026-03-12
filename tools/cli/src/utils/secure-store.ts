@@ -135,7 +135,7 @@ function normalizeStoredTokens(
     ...(input.sessionId ? { sessionId: input.sessionId } : {}),
     ...(input.refreshFamilyId ? { refreshFamilyId: input.refreshFamilyId } : {}),
     ...(input.issuedAt ? { issuedAt: input.issuedAt } : {}),
-    issuerBaseUrl: input.issuerBaseUrl ?? 'http://localhost:3000',
+    issuerBaseUrl: input.issuerBaseUrl ?? 'http://localhost:4040',
   };
 }
 

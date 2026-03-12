@@ -7,13 +7,13 @@ import { getServerSession } from './auth.server';
  * Returns headers that MUST be included in the response
  */
 export async function requireAuth(request: Request) {
-  const { user, session, headers } = await getServerSession(request);
+  const { user, headers } = await getServerSession(request);
 
-  if (!(user && session)) {
+  if (!user) {
     const url = new URL(request.url);
     const next = encodeURIComponent(url.pathname + url.search);
     throw redirect(`/?next=${next}`, { headers });
   }
 
-  return { user, session, headers };
+  return { user, headers };
 }

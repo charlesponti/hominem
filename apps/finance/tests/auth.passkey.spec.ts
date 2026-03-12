@@ -67,23 +67,10 @@ interface WebAuthnCapability {
   isSecureContext: boolean
 }
 
-async function getAccessToken(context: BrowserContext): Promise<string | null> {
-  const cookies = await context.cookies()
-  const tokenCookie = cookies.find((c) => c.name === 'hominem_access_token')
-  if (!tokenCookie) return null
-  return decodeURIComponent(tokenCookie.value)
-}
-
-async function registerPasskey(page: Page, context: BrowserContext): Promise<PasskeyOperationResult> {
-  // The passkey register endpoints require authentication.  The hominem_access_token
-  // cookie is scoped to localhost:4444 (the finance app) but the API is at localhost:4040.
-  // We extract the token via Playwright's cookie API (which can read HttpOnly cookies)
-  // and pass it as a Bearer header so the API can authenticate the request.
-  const accessToken = await getAccessToken(context)
-
+async function registerPasskey(page: Page): Promise<PasskeyOperationResult> {
   await page.goto(`${AUTH_API_BASE_URL}/api/auth/session`)
 
-  return page.evaluate(async (authToken: string | null) => {
+  return page.evaluate(async () => {
     function decodeBase64Url(value: string) {
       const normalized = value.replace(/-/g, '+').replace(/_/g, '/')
       const padLength = (4 - (normalized.length % 4)) % 4
@@ -154,7 +141,6 @@ async function registerPasskey(page: Page, context: BrowserContext): Promise<Pas
       credentials: 'include',
       headers: {
         'content-type': 'application/json',
-        ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
       },
       body: JSON.stringify({ name: 'Finance E2E Device' }),
     })
@@ -211,7 +197,6 @@ async function registerPasskey(page: Page, context: BrowserContext): Promise<Pas
       credentials: 'include',
       headers: {
         'content-type': 'application/json',
-        ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
       },
       body: JSON.stringify({
         response: serializedCredential,
@@ -227,7 +212,7 @@ async function registerPasskey(page: Page, context: BrowserContext): Promise<Pas
         ? null
         : `${await verifyResponse.text()}|options=${optionsPayloadText}`,
     }
-  }, accessToken)
+  })
 }
 
 async function getWebAuthnCapability(page: Page): Promise<WebAuthnCapability> {
@@ -242,8 +227,7 @@ async function getWebAuthnCapability(page: Page): Promise<WebAuthnCapability> {
 /**
  * Sign in with a passkey via the finance app's UI.
  * Navigates to /auth, clicks the "Use a passkey" button, and waits for the
- * virtual WebAuthn authenticator to complete the flow.  The usePasskeyAuth hook
- * inside the app calls /auth/passkey/callback to set the HttpOnly cookie.
+ * virtual WebAuthn authenticator to complete the flow.
  */
 async function authenticateWithPasskeyUI(page: Page): Promise<{ errors: string[] }> {
   await page.goto(`${FINANCE_APP_BASE_URL}/auth`)
@@ -299,7 +283,7 @@ test('web passkey registration and sign-in flow reaches authenticated finance vi
   const passkeyHandle = await setupVirtualPasskey(context, page)
 
   try {
-    const registerResult = await registerPasskey(page, context)
+    const registerResult = await registerPasskey(page)
     if (
       !registerResult.ok &&
       registerResult.status === 401 &&
@@ -374,7 +358,7 @@ test('boot flow with valid credentials keeps user signed in', async ({ page, con
   expect(sessionResponse.status).toBe(200)
   expect(sessionResponse.body.isAuthenticated).toBe(true)
 
-  // Reload the page — access token cookie should still be valid
+  // Reload the page — Better Auth session cookie should still be valid
   await page.reload()
 
   // Should still be at /finance (not redirected to /auth)
@@ -386,8 +370,8 @@ test('boot flow with no credentials redirects to auth', async ({ page, context }
   await context.clearCookies()
   await page.goto(`${FINANCE_APP_BASE_URL}/finance`)
 
-  // Should redirect to /auth since there's no session
-  await expect(page).toHaveURL(/\/auth$/, { timeout: 10000 })
+  // Should redirect to /auth and preserve the intended destination
+  await expect(page).toHaveURL(/\/auth\?next=%2Ffinance$/, { timeout: 10000 })
 })
 
 test('session expiry flow verifies access token is sent in requests', async ({ page, context }) => {

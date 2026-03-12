@@ -4,15 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
 
 interface PasskeyAuthResult {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  tokenType?: string;
-  user: {
-    id: string;
-    email: string;
-    name?: string;
-  };
+  success: true;
 }
 
 interface PasskeyAuthError {
@@ -109,20 +101,13 @@ function normalizeCreationOptions(
 
 export interface UsePasskeyAuthOptions {
   /**
-   * After successful sign-in, POST the token pair to this app-local route so
-   * the server can set HttpOnly cookies before redirecting.
-   * Defaults to '/auth/passkey/callback'.
-   */
-  callbackRoute?: string;
-  /**
    * Where to redirect after successful sign-in.
-   * Forwarded to the callback route as `next`.
    */
   redirectTo?: string;
 }
 
 export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
-  const { callbackRoute = '/auth/passkey/callback', redirectTo } = options;
+  const { redirectTo } = options;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSupported, setIsSupported] = useState(false);
@@ -197,46 +182,9 @@ export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
         throw new Error(err.message || 'Passkey verification failed');
       }
 
-      // Step 4: Exchange the Better Auth session for canonical app tokens.
-      const tokenResponse = await fetch(`${API_URL}/api/auth/token-from-session`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      window.location.href = redirectTo || '/finance';
 
-      const tokenData = await tokenResponse.json();
-      if (!tokenResponse.ok) {
-        const err = tokenData as PasskeyAuthError;
-        throw new Error(err.message || 'Failed to exchange passkey session for app tokens');
-      }
-
-      const result = tokenData as PasskeyAuthResult;
-
-      if (!result.accessToken) {
-        throw new Error('Server did not return an access token after passkey sign-in');
-      }
-
-      // Step 5: Store the token pair via the server-side callback route.
-      // Use fetch with redirect:follow so the browser applies Set-Cookie from the 302 response,
-      // then navigate to the destination.
-      const callbackBody: Record<string, string | number> = {
-        accessToken: result.accessToken,
-        refreshToken: result.refreshToken,
-        expiresIn: result.expiresIn,
-      };
-      if (redirectTo) callbackBody['next'] = redirectTo;
-
-      const callbackResponse = await fetch(callbackRoute, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(callbackBody),
-        redirect: 'follow',
-      });
-
-      // Navigate to where the callback redirected us (or the default destination)
-      const finalUrl = callbackResponse.url || redirectTo || '/finance';
-      window.location.href = finalUrl;
-
-      return result;
+      return { success: true };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Passkey authentication failed';
       setError(message);
@@ -244,7 +192,7 @@ export function usePasskeyAuth(options: UsePasskeyAuthOptions = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [callbackRoute, redirectTo]);
+  }, [redirectTo]);
 
   const requireStepUp = useCallback(async (action: string): Promise<boolean> => {
     setIsLoading(true);

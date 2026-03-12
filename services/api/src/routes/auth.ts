@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 
 import {
   UserAuthService,
@@ -21,13 +21,11 @@ import { z } from 'zod';
 import { betterAuthServer } from '../auth/better-auth';
 import { getJwks } from '../auth/key-store';
 import {
-  createTokenPairForUser,
   isSessionRevoked,
-  revokeByRefreshToken,
   revokeSession,
   rotateRefreshToken,
 } from '../auth/session-store';
-import { consumeTestOtp, getLatestTestOtp, isTestOtpStoreEnabled } from '../auth/test-otp-store';
+import { getLatestTestOtp, isTestOtpStoreEnabled } from '../auth/test-otp-store';
 import { issueAccessToken, verifyAccessToken } from '../auth/tokens';
 import { env } from '../env';
 import type { AppEnv } from '../server';
@@ -107,7 +105,6 @@ const AUTH_DEVICE_TOKEN_LIMIT_WINDOW_SECONDS = 10 * 60;
 const AUTH_DEVICE_TOKEN_LIMIT_MAX = 120;
 const AUTH_E2E_LOGIN_LIMIT_WINDOW_SECONDS = 60;
 const AUTH_E2E_LOGIN_LIMIT_MAX = 20;
-const AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 interface AuthRateLimitInput {
   bucket: string;
@@ -131,69 +128,40 @@ interface MobileE2eLoginResponse {
   };
 }
 
+interface BetterAuthSessionContext {
+  sessionId: string;
+  userId: string;
+}
+
+interface AppSessionResponse {
+  isAuthenticated: boolean;
+  user: {
+    id: string;
+    email: string;
+    name?: string;
+    isAdmin: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+  } | null;
+  auth?: {
+    sub: string;
+    sid: string;
+    scope: string[];
+    role: 'user' | 'admin';
+    amr: string[];
+    authTime: number;
+  };
+  accessToken?: string;
+  expiresIn?: number;
+  tokenType?: 'Bearer';
+}
+
 function normalizeAuthEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
 function normalizeOtpCode(otp: string) {
   return otp.replace(/\D/g, '');
-}
-
-function getCookieValue(cookieHeader: string, name: string) {
-  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${escapedName}=([^;]+)`));
-  return match?.[1] ?? null;
-}
-
-function appendAuthCookie(headers: Headers, name: string, value: string, maxAge?: number) {
-  const cookieDomain = env.AUTH_COOKIE_DOMAIN.trim();
-  const domainAttribute = cookieDomain.length > 0 ? `; Domain=${cookieDomain}` : '';
-  const maxAgeAttribute = typeof maxAge === 'number' ? `; Max-Age=${maxAge}` : '';
-  headers.append(
-    'set-cookie',
-    `${name}=${encodeURIComponent(value)}; Path=/; HttpOnly; SameSite=Lax${maxAgeAttribute}${domainAttribute}`,
-  );
-}
-
-function appendExpiredAccessTokenCookie(headers: Headers) {
-  appendAuthCookie(headers, 'hominem_access_token', '', 0);
-  headers.append(
-    'set-cookie',
-    `hominem_access_token=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${
-      env.AUTH_COOKIE_DOMAIN.trim().length > 0 ? `; Domain=${env.AUTH_COOKIE_DOMAIN.trim()}` : ''
-    }`,
-  );
-}
-
-function appendRefreshTokenCookie(headers: Headers, refreshToken: string) {
-  appendAuthCookie(
-    headers,
-    'hominem_refresh_token',
-    refreshToken,
-    AUTH_REFRESH_COOKIE_MAX_AGE_SECONDS,
-  );
-}
-
-function appendExpiredRefreshTokenCookie(headers: Headers) {
-  appendAuthCookie(headers, 'hominem_refresh_token', '', 0);
-  headers.append(
-    'set-cookie',
-    `hominem_refresh_token=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT${
-      env.AUTH_COOKIE_DOMAIN.trim().length > 0 ? `; Domain=${env.AUTH_COOKIE_DOMAIN.trim()}` : ''
-    }`,
-  );
-}
-
-function appendTokenPairCookies(
-  headers: Headers,
-  input: {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
-  },
-) {
-  appendAuthCookie(headers, 'hominem_access_token', input.accessToken, input.expiresIn);
-  appendRefreshTokenCookie(headers, input.refreshToken);
 }
 
 function jsonWithHeaders(body: Record<string, unknown>, status: number, headers?: Headers) {
@@ -238,16 +206,9 @@ async function resolveAuthUserId(c: {
     }
   }
 
-  const cookieHeader = c.req.header('cookie') ?? '';
-  const tokenValue = getCookieValue(cookieHeader, 'hominem_access_token');
-  if (tokenValue) {
-    try {
-      const decoded = decodeURIComponent(tokenValue);
-      const claims = await verifyAccessToken(decoded);
-      if (claims?.sub) return claims.sub;
-    } catch {
-      return null;
-    }
+  const betterAuthSession = await getBetterAuthSessionContext(c as Context<AppEnv>);
+  if (betterAuthSession) {
+    return betterAuthSession.userId;
   }
 
   return null;
@@ -272,16 +233,9 @@ async function resolveAuthSessionId(c: {
     }
   }
 
-  const cookieHeader = c.req.header('cookie') ?? '';
-  const tokenValue = getCookieValue(cookieHeader, 'hominem_access_token');
-  if (tokenValue) {
-    try {
-      const decoded = decodeURIComponent(tokenValue);
-      const claims = await verifyAccessToken(decoded);
-      return claims.sid;
-    } catch {
-      return null;
-    }
+  const betterAuthSession = await getBetterAuthSessionContext(c as Context<AppEnv>);
+  if (betterAuthSession) {
+    return betterAuthSession.sessionId;
   }
 
   return null;
@@ -301,14 +255,15 @@ async function createEmailOtpAuthResponse(dbUser: {
   name: string | null;
   is_admin: boolean;
 }) {
-  const tokenPair = await createTokenPairForUser({
-    userId: dbUser.id,
+  const access = await issueAccessToken({
+    sub: dbUser.id,
+    sid: randomUUID(),
     role: dbUser.is_admin ? 'admin' : 'user',
-    amr: ['email_otp'],
+    scope: ['api:read', 'api:write'],
+    amr: ['email_otp', 'better-auth-session'],
   });
 
   const headers = new Headers();
-  appendTokenPairCookies(headers, tokenPair);
 
   return new Response(
     JSON.stringify({
@@ -317,10 +272,9 @@ async function createEmailOtpAuthResponse(dbUser: {
         email: dbUser.email,
         ...(dbUser.name ? { name: dbUser.name } : {}),
       },
-      accessToken: tokenPair.accessToken,
-      refreshToken: tokenPair.refreshToken,
-      expiresIn: tokenPair.expiresIn,
-      tokenType: tokenPair.tokenType,
+      accessToken: access.accessToken,
+      expiresIn: access.expiresIn,
+      tokenType: access.tokenType,
     }),
     {
       status: 200,
@@ -330,32 +284,6 @@ async function createEmailOtpAuthResponse(dbUser: {
       },
     },
   );
-}
-
-async function findOrCreateEmailOtpUser(input: { email: string; name?: string | undefined }) {
-  const existingUser = await db
-    .selectFrom('users')
-    .selectAll()
-    .where('email', '=', input.email)
-    .limit(1)
-    .executeTakeFirst();
-
-  if (existingUser) {
-    return existingUser;
-  }
-
-  return db
-    .insertInto('users')
-    .values({
-      id: randomBytes(16).toString('hex'),
-      email: input.email,
-      name: input.name ?? null,
-      is_admin: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .returningAll()
-    .executeTakeFirst();
 }
 
 async function signInWithBetterAuthEmailOtp(
@@ -396,8 +324,7 @@ async function signInWithBetterAuthEmailOtp(
     }
 
     const authResponse = await createEmailOtpAuthResponse(dbUser);
-    const betterAuthCookies = copyHeadersWithSetCookie(response.headers);
-    const responseHeaders = new Headers(betterAuthCookies);
+    const responseHeaders = copyHeadersWithSetCookie(response.headers);
     responseHeaders.set('content-type', 'application/json');
     const authBody = await authResponse.text();
     return new Response(authBody, { status: 200, headers: responseHeaders });
@@ -461,19 +388,6 @@ function getBearerToken(headerValue?: string) {
   return headerValue.slice(7);
 }
 
-function getRefreshTokenFromCookieHeader(cookieHeader: string) {
-  const rawRefreshToken = getCookieValue(cookieHeader, 'hominem_refresh_token');
-  if (!rawRefreshToken) {
-    return null;
-  }
-
-  try {
-    return decodeURIComponent(rawRefreshToken);
-  } catch {
-    return rawRefreshToken;
-  }
-}
-
 async function hasRecentPasskeyBearerAuth(c: Context<AppEnv>) {
   const bearerToken = getBearerToken(c.req.header('authorization'));
   if (!bearerToken) {
@@ -530,6 +444,74 @@ function copyHeadersWithSetCookie(headers: Headers) {
   }
 
   return copied;
+}
+
+async function getBetterAuthSessionContext(c: Context<AppEnv>): Promise<BetterAuthSessionContext | null> {
+  const session = await betterAuthServer.api.getSession({
+    ...getHeaderCarrier(c),
+  });
+
+  if (!session?.user?.id) {
+    return null;
+  }
+
+  const sessionId = session.session?.id;
+  if (!sessionId) {
+    return null;
+  }
+
+  return {
+    sessionId,
+    userId: session.user.id,
+  };
+}
+
+async function buildSessionResponse(input: {
+  sessionId: string;
+  userId: string;
+  amr: string[];
+  includeBearerToken?: boolean;
+}): Promise<AppSessionResponse | null> {
+  const userRecord = await UserAuthService.findByIdOrEmail({ id: input.userId });
+  if (!userRecord) {
+    return null;
+  }
+
+  const response: AppSessionResponse = {
+    isAuthenticated: true,
+    user: {
+      id: userRecord.id,
+      email: userRecord.email,
+      ...(userRecord.name ? { name: userRecord.name } : {}),
+      isAdmin: userRecord.is_admin ?? false,
+      ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
+      ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
+    },
+    auth: {
+      sub: userRecord.id,
+      sid: input.sessionId,
+      scope: ['api:read', 'api:write'],
+      role: userRecord.is_admin ? 'admin' : 'user',
+      amr: input.amr,
+      authTime: Math.floor(Date.now() / 1000),
+    },
+  };
+
+  if (input.includeBearerToken !== false) {
+    const access = await issueAccessToken({
+      sub: userRecord.id,
+      sid: input.sessionId,
+      role: userRecord.is_admin ? 'admin' : 'user',
+      scope: ['api:read', 'api:write'],
+      amr: input.amr,
+    });
+
+    response.accessToken = access.accessToken;
+    response.expiresIn = access.expiresIn;
+    response.tokenType = access.tokenType;
+  }
+
+  return response;
 }
 
 function buildBetterAuthUrl(input: {
@@ -734,50 +716,6 @@ authRoutes.post('/email-otp/verify', zValidator('json', emailOtpVerifySchema), a
       otp: normalizeOtpCode(payload.otp),
     };
 
-    if (isTestOtpStoreEnabled()) {
-      const consumption = consumeTestOtp({
-        email: normalizedPayload.email,
-        otp: normalizedPayload.otp,
-        type: 'sign-in',
-      });
-
-      if (consumption.status === 'missing') {
-        return c.json({ error: 'invalid_otp' }, 400);
-      }
-
-      if (consumption.status === 'expired') {
-        return c.json({ error: 'otp_expired' }, 400);
-      }
-
-      if (consumption.status === 'replayed') {
-        logger.warn('[auth:email-otp:test] replay attempt rejected', {
-          clientIp: getClientIp(c),
-          emailHash: createHash('sha256')
-            .update(normalizedPayload.email)
-            .digest('hex')
-            .slice(0, 16),
-          type: 'sign-in',
-        });
-        return c.json({ error: 'otp_replayed' }, 400);
-      }
-
-      const dbUser = await findOrCreateEmailOtpUser({
-        email: normalizedPayload.email,
-        name: normalizedPayload.name,
-      });
-
-      if (!dbUser) {
-        return c.json({ error: 'user_not_found' }, 400);
-      }
-
-      try {
-        return await createEmailOtpAuthResponse(dbUser);
-      } catch (error) {
-        logger.error('[auth:email-otp:test] failed to create canonical session', { error });
-        return c.json({ error: 'sign_in_failed' }, 500);
-      }
-    }
-
     return signInWithBetterAuthEmailOtp(c, normalizedPayload);
   } catch {
     return c.json({ error: 'email_otp_verify_failed' }, 400);
@@ -814,162 +752,100 @@ authRoutes.get('/test/otp/latest', zValidator('query', testOtpQuerySchema), asyn
 });
 
 authRoutes.post('/logout', async (c) => {
-  const cookieHeader = c.req.header('cookie') ?? '';
-  const refreshToken = getRefreshTokenFromCookieHeader(cookieHeader);
-
   const sessionId = await resolveAuthSessionId(c);
   if (sessionId) {
     await revokeSession(sessionId);
   }
-  if (refreshToken) {
-    await revokeByRefreshToken(refreshToken);
-  }
-  await betterAuthServer.api.signOut({
-    ...getHeaderCarrier(c),
-  });
-  const headers = new Headers();
-  appendExpiredAccessTokenCookie(headers);
-  appendExpiredRefreshTokenCookie(headers);
+  const response = await callBetterAuthPluginEndpoint({
+    request: c.req.raw,
+    path: '/sign-out',
+    method: 'POST',
+  }).catch(() => null);
+  const headers = response ? copyHeadersWithSetCookie(response.headers) : new Headers();
   return jsonWithHeaders({ success: true }, 200, headers);
 });
 
 authRoutes.get('/session', async (c) => {
   // Identity-only endpoint.
   // The JWT middleware bypasses all /api/auth/* routes, so we validate the
-  // Bearer token directly here. The token may arrive via:
-  //   1. Authorization: Bearer <token> header (standard API client usage)
-  //   2. hominem_access_token cookie (web app SSR loader usage)
+  // bearer token directly here, or fall back to the Better Auth session cookie.
 
   const authHeader = c.req.header('authorization') ?? '';
   let bearerToken: string | null = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  let tokenSource: 'authorization' | 'cookie' | null = bearerToken ? 'authorization' : null;
-  const cookieHeader = c.req.header('cookie') ?? '';
 
-  if (!bearerToken) {
-    const rawValue = getCookieValue(cookieHeader, 'hominem_access_token');
-    if (rawValue) {
-      try {
-        bearerToken = decodeURIComponent(rawValue);
-      } catch {
-        bearerToken = rawValue;
+  if (bearerToken) {
+    try {
+      const claims = await verifyAccessToken(bearerToken);
+      const revoked = await isSessionRevoked(claims.sid);
+      if (revoked) {
+        return c.json({ isAuthenticated: false, user: null }, 401);
       }
-      tokenSource = 'cookie';
+
+      const userRecord = await UserAuthService.findByIdOrEmail({ id: claims.sub });
+      if (!userRecord) {
+        return c.json({ isAuthenticated: false, user: null }, 401);
+      }
+
+      return c.json({
+        isAuthenticated: true,
+        user: {
+          id: userRecord.id,
+          email: userRecord.email,
+          ...(userRecord.name ? { name: userRecord.name } : {}),
+          isAdmin: userRecord.is_admin ?? false,
+          ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
+          ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
+        },
+        auth: {
+          sub: claims.sub,
+          sid: claims.sid,
+          scope: claims.scope,
+          role: claims.role,
+          amr: claims.amr,
+          authTime: claims.auth_time,
+        },
+        accessToken: bearerToken,
+        expiresIn:
+          typeof claims.exp === 'number'
+            ? Math.max(claims.exp - Math.floor(Date.now() / 1000), 0)
+            : undefined,
+      });
+    } catch {
+      return c.json({ isAuthenticated: false, user: null }, 401);
     }
-  }
-
-  const unauthorizedHeaders = new Headers();
-  if (tokenSource === 'cookie') {
-    appendExpiredAccessTokenCookie(unauthorizedHeaders);
-  }
-
-  if (!bearerToken) {
-    return c.json({ isAuthenticated: false, user: null }, 401);
   }
 
   try {
-    const claims = await verifyAccessToken(bearerToken);
-    const revoked = await isSessionRevoked(claims.sid);
-    if (revoked) {
-      return jsonWithHeaders({ isAuthenticated: false, user: null }, 401, unauthorizedHeaders);
+    const betterAuthSession = await getBetterAuthSessionContext(c);
+    if (!betterAuthSession) {
+      return c.json({ isAuthenticated: false, user: null }, 401);
     }
 
-    const userRecord = await UserAuthService.findByIdOrEmail({ id: claims.sub });
-    if (!userRecord) {
-      return jsonWithHeaders({ isAuthenticated: false, user: null }, 401, unauthorizedHeaders);
-    }
-
-    return c.json({
-      isAuthenticated: true,
-      user: {
-        id: userRecord.id,
-        email: userRecord.email,
-        ...(userRecord.name ? { name: userRecord.name } : {}),
-        isAdmin: userRecord.is_admin ?? false,
-        ...(userRecord.created_at ? { createdAt: userRecord.created_at } : {}),
-        ...(userRecord.updated_at ? { updatedAt: userRecord.updated_at } : {}),
-      },
-      accessToken: bearerToken,
-      expiresIn:
-        typeof claims.exp === 'number'
-          ? Math.max(claims.exp - Math.floor(Date.now() / 1000), 0)
-          : undefined,
+    const sessionResponse = await buildSessionResponse({
+      sessionId: betterAuthSession.sessionId,
+      userId: betterAuthSession.userId,
+      amr: ['better-auth-session'],
+      includeBearerToken: false,
     });
+
+    if (!sessionResponse) {
+      return c.json({ isAuthenticated: false, user: null }, 401);
+    }
+
+    return c.json(sessionResponse);
   } catch {
-    return jsonWithHeaders({ isAuthenticated: false, user: null }, 401, unauthorizedHeaders);
+    return c.json({ isAuthenticated: false, user: null }, 401);
   }
 });
 
 authRoutes.post('/refresh', async (c) => {
-  // Clean refresh endpoint matching the single-path architecture spec
-  // POST /api/auth/refresh
-  // Input: { refreshToken } or hominem_refresh_token cookie
-  // Output: { accessToken, refreshToken, expiresIn }
-  const cookieHeader = c.req.header('cookie') ?? '';
-  const cookieRefreshToken = getRefreshTokenFromCookieHeader(cookieHeader);
-  const payload = await c.req.json().catch(() => null);
-  const parsedPayload = payload ? refreshTokenSchema.safeParse(payload) : null;
-
-  if (parsedPayload && !parsedPayload.success) {
-    return c.json({ error: 'invalid_request', message: parsedPayload.error.message }, 400);
-  }
-
-  const refreshToken = parsedPayload?.success
-    ? parsedPayload.data.refreshToken
-    : cookieRefreshToken;
-
-  if (!refreshToken) {
-    return c.json({ error: 'invalid_request', message: 'Refresh token is required.' }, 400);
-  }
-
-  const refreshRateLimit = await enforceAuthRateLimit(c, {
-    bucket: 'refresh-token-standard',
-    identifier: `${getClientIp(c)}:${refreshToken.slice(0, 16)}`,
-    windowSec: AUTH_REFRESH_LIMIT_WINDOW_SECONDS,
-    max: AUTH_REFRESH_LIMIT_MAX,
-  });
-  if (refreshRateLimit) {
-    return refreshRateLimit;
-  }
-
-  const rotated = await rotateRefreshToken(refreshToken);
-
-  if (!rotated.ok) {
-    logger.warn('[auth:refresh] token rotation failed', {
-      error: rotated.error,
-      clientIp: getClientIp(c),
-    });
-    const unauthorizedHeaders = new Headers();
-    if (cookieRefreshToken) {
-      appendExpiredAccessTokenCookie(unauthorizedHeaders);
-      appendExpiredRefreshTokenCookie(unauthorizedHeaders);
-    }
-    return jsonWithHeaders(
-      {
-        error: rotated.error,
-        message:
-          rotated.error === 'expired_refresh_token'
-            ? 'Refresh token expired. Please sign in again.'
-            : 'Invalid or revoked refresh token. Please sign in again.',
-      },
-      401,
-      unauthorizedHeaders,
-    );
-  }
-
-  const headers = new Headers();
-  if (cookieRefreshToken) {
-    appendTokenPairCookies(headers, rotated);
-  }
-
-  return jsonWithHeaders(
+  void c;
+  return c.json(
     {
-      accessToken: rotated.accessToken,
-      refreshToken: rotated.refreshToken,
-      expiresIn: rotated.expiresIn,
-      tokenType: rotated.tokenType,
+      error: 'deprecated_endpoint',
+      message: 'Use Better Auth session cookies for first-party apps or POST /api/auth/token for explicit refresh-token exchanges.',
     },
-    200,
-    headers,
+    410,
   );
 });
 
@@ -1027,9 +903,7 @@ authRoutes.post('/token', async (c) => {
   }
 
   const parsed = refreshTokenSchema.safeParse(payload);
-  const refreshToken = parsed.success
-    ? parsed.data.refreshToken
-    : getRefreshTokenFromCookieHeader(c.req.header('cookie') ?? '');
+  const refreshToken = parsed.success ? parsed.data.refreshToken : null;
 
   if (!refreshToken) {
     return c.json(
@@ -1068,58 +942,14 @@ authRoutes.post('/token', async (c) => {
 });
 
 authRoutes.post('/token-from-session', async (c) => {
-  // Exchange a valid Better Auth session for canonical Hominem app tokens.
-  // Used by mobile after passkey sign-in (where Better Auth session is set
-  // natively via expoClient) to obtain the app token pair.
-  try {
-    const session = await betterAuthServer.api.getSession({
-      ...getHeaderCarrier(c),
-    });
-
-    if (!session?.user?.id) {
-      return c.json({ error: 'no_valid_session' }, 401);
-    }
-
-    const userId = session.user.id;
-
-    const dbUser = await db
-      .selectFrom('users')
-      .selectAll()
-      .where('id', '=', userId)
-      .executeTakeFirst();
-
-    if (!dbUser) {
-      return c.json({ error: 'user_not_found' }, 400);
-    }
-
-    const tokenPair = await createTokenPairForUser({
-      userId,
-      role: dbUser.is_admin ? 'admin' : 'user',
-      amr: ['passkey'],
-    });
-
-    const headers = new Headers();
-    appendTokenPairCookies(headers, tokenPair);
-
-    return jsonWithHeaders(
-      {
-        user: {
-          id: dbUser.id,
-          email: dbUser.email,
-          ...(dbUser.name ? { name: dbUser.name } : {}),
-        },
-        accessToken: tokenPair.accessToken,
-        refreshToken: tokenPair.refreshToken,
-        expiresIn: tokenPair.expiresIn,
-        tokenType: tokenPair.tokenType,
-      },
-      200,
-      headers,
-    );
-  } catch (err) {
-    logger.error('[auth:token-from-session] failed', { err });
-    return c.json({ error: 'token_exchange_failed' }, 500);
-  }
+  void c;
+  return c.json(
+    {
+      error: 'deprecated_endpoint',
+      message: 'First-party apps must use Better Auth session cookies and GET /api/auth/session.',
+    },
+    410,
+  );
 });
 
 authRoutes.post('/passkey/register/options', async (c) => {

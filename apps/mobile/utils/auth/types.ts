@@ -31,6 +31,7 @@ export interface AuthState {
 export type AuthEvent =
   | { type: 'SESSION_LOADED'; user: UserProfile }
   | { type: 'SESSION_EXPIRED' }
+  | { type: 'SESSION_RECOVERY_FAILED'; error: Error }
   | { type: 'OTP_REQUEST_STARTED' }
   | { type: 'OTP_REQUESTED' }
   | { type: 'OTP_REQUEST_FAILED'; error: Error }
@@ -82,6 +83,15 @@ export function authStateMachine(state: AuthState, event: AuthEvent): AuthState 
         status: 'signed_out',
         user: null,
         error: null,
+        isLoading: false,
+      };
+
+    case 'SESSION_RECOVERY_FAILED':
+      return {
+        ...state,
+        status: 'degraded',
+        user: null,
+        error: event.error,
         isLoading: false,
       };
 

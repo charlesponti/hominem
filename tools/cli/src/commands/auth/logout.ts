@@ -8,7 +8,7 @@ import { CliError } from '../../errors';
 export default createCommand({
   name: 'auth logout',
   summary: 'Logout and clear tokens',
-  description: 'Deletes locally stored auth credentials.',
+  description: 'Deletes locally stored machine-client credentials without revoking remote sessions.',
   argNames: [],
   args: z.object({}),
   flags: z.object({}),

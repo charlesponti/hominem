@@ -8,7 +8,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
   }
 
-  const { session } = await requireAuth(request);
+  await requireAuth(request);
   const chatId = params.chatId;
 
   if (!chatId) {
@@ -16,12 +16,17 @@ export async function action({ request, params }: ActionFunctionArgs) {
   }
 
   const body = await request.json();
+  const cookieHeader = request.headers.get('cookie');
+  const headers = new Headers({
+    'Content-Type': 'application/json',
+  });
+  if (cookieHeader) {
+    headers.set('cookie', cookieHeader);
+  }
+
   const upstream = await fetch(`${serverEnv.VITE_PUBLIC_API_URL}/api/chats/${chatId}/ui/send`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify(body),
   });
 

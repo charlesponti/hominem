@@ -21,8 +21,8 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   try {
-    const { user, session } = await getServerSession(request);
-    if (!(user && session)) {
+    const { user } = await getServerSession(request);
+    if (!user) {
       return jsonResponse({ success: false, error: 'Unauthorized', code: 'AUTH' }, { status: 401 });
     }
 

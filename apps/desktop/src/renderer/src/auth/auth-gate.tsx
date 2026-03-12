@@ -24,6 +24,7 @@ function DesktopAuthScreen() {
     email,
     isPasskeyAvailable,
     requestOtp,
+    restartAuth,
     signInWithPasskey,
     state,
     updateEmail,
@@ -132,7 +133,7 @@ function DesktopAuthScreen() {
                 onClick={() => {
                   setOtp('');
                   clearError();
-                  updateEmail('');
+                  restartAuth();
                 }}
                 type="button"
                 variant="outline"

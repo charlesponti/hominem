@@ -6,10 +6,11 @@ import { useAuth } from './auth-provider';
 import { API_BASE_URL } from './constants';
 
 export const ApiProvider = ({ children }: { children: ReactNode }) => {
-  const { getAccessToken } = useAuth();
+  const { getAuthHeaders } = useAuth();
   const config: ClientConfig = {
     baseUrl: API_BASE_URL,
-    getAuthToken: async () => getAccessToken(),
+    getAuthToken: async () => null,
+    getHeaders: getAuthHeaders,
     onError: (error: Error) => {
       console.error('Mobile Hono RPC Error', error);
     },

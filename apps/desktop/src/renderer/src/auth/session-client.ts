@@ -1,8 +1,6 @@
 import type { HominemSession, HominemUser } from '@hominem/auth/types';
 import { z } from 'zod';
 
-const SESSION_STORAGE_KEY = 'hominem.desktop.session';
-
 const userSchema = z.object({
   id: z.string(),
   email: z.string().email(),
@@ -18,18 +16,6 @@ const sessionResponseSchema = z.object({
   user: userSchema.nullable(),
   accessToken: z.string().nullable().optional(),
   expiresIn: z.number().nullable().optional(),
-});
-
-const otpVerifyResponseSchema = z.object({
-  user: z.object({
-    id: z.string(),
-    email: z.string().email(),
-    name: z.string().nullable().optional(),
-  }),
-  accessToken: z.string().min(1),
-  refreshToken: z.string().optional(),
-  expiresIn: z.number().positive(),
-  tokenType: z.string(),
 });
 
 const passkeyOptionsSchema = z.object({
@@ -52,10 +38,6 @@ const passkeyAuthOptionsResponseSchema = z.object({
   options: passkeyOptionsSchema.optional(),
   challenge: passkeyOptionsSchema.optional(),
 });
-
-interface StoredSession {
-  session: HominemSession;
-}
 
 interface SessionResult {
   session: HominemSession | null;
@@ -119,46 +101,8 @@ function normalizeUser(user: z.infer<typeof userSchema>): HominemUser {
   };
 }
 
-function readStoredSession(): HominemSession | null {
-  const raw = window.localStorage.getItem(SESSION_STORAGE_KEY);
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as StoredSession;
-    if (!parsed.session.access_token) {
-      window.localStorage.removeItem(SESSION_STORAGE_KEY);
-      return null;
-    }
-    return parsed.session;
-  } catch {
-    window.localStorage.removeItem(SESSION_STORAGE_KEY);
-    return null;
-  }
-}
-
-function writeStoredSession(session: HominemSession) {
-  window.localStorage.setItem(
-    SESSION_STORAGE_KEY,
-    JSON.stringify({
-      session,
-    }),
-  );
-}
-
 export function clearStoredSession() {
-  window.localStorage.removeItem(SESSION_STORAGE_KEY);
-}
-
-function createAuthHeaders(session: HominemSession | null) {
-  if (!session?.access_token) {
-    return {};
-  }
-
-  return {
-    authorization: `Bearer ${session.access_token}`,
-  };
+  return undefined;
 }
 
 function toBase64Url(buffer: ArrayBuffer) {
@@ -232,19 +176,13 @@ async function readJson<T>(response: Response, schema: z.ZodSchema<T>) {
   return schema.parse(payload);
 }
 
-export async function bootstrapSession(apiBaseUrl: string): Promise<SessionResult> {
-  const storedSession = readStoredSession();
-  if (!storedSession) {
-    return { session: null, user: null };
-  }
-
+async function readAuthenticatedSession(apiBaseUrl: string): Promise<SessionResult> {
   const response = await fetch(`${apiBaseUrl}/api/auth/session`, {
-    headers: createAuthHeaders(storedSession),
+    credentials: 'include',
     method: 'GET',
   });
 
   if (response.status === 401) {
-    clearStoredSession();
     return { session: null, user: null };
   }
 
@@ -254,14 +192,20 @@ export async function bootstrapSession(apiBaseUrl: string): Promise<SessionResul
 
   const payload = await readJson(response, sessionResponseSchema);
   if (!payload.isAuthenticated || !payload.user) {
-    clearStoredSession();
     return { session: null, user: null };
   }
 
   return {
-    session: storedSession,
+    session:
+      payload.accessToken && payload.expiresIn
+        ? createSession(payload.accessToken, payload.expiresIn)
+        : null,
     user: normalizeUser(payload.user),
   };
+}
+
+export async function bootstrapSession(apiBaseUrl: string): Promise<SessionResult> {
+  return readAuthenticatedSession(apiBaseUrl);
 }
 
 export async function requestEmailOtp(apiBaseUrl: string, email: string) {
@@ -285,6 +229,7 @@ export async function verifyEmailOtp(
 ): Promise<SessionResult> {
   const response = await fetch(`${apiBaseUrl}/api/auth/email-otp/verify`, {
     body: JSON.stringify({ email: normalizeAuthEmail(email), otp: normalizeOtpCode(otp) }),
+    credentials: 'include',
     headers: {
       'content-type': 'application/json',
     },
@@ -295,21 +240,7 @@ export async function verifyEmailOtp(
     throw new Error('Verification failed. Please check your code and try again.');
   }
 
-  const payload = await readJson(response, otpVerifyResponseSchema);
-  const session = createSession(payload.accessToken, payload.expiresIn);
-  writeStoredSession(session);
-
-  return {
-    session,
-    user: {
-      id: payload.user.id,
-      email: payload.user.email,
-      ...(payload.user.name ? { name: payload.user.name } : {}),
-      isAdmin: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  };
+  return readAuthenticatedSession(apiBaseUrl);
 }
 
 export function isPasskeySupported() {
@@ -359,45 +290,19 @@ export async function signInWithPasskey(apiBaseUrl: string): Promise<SessionResu
     throw new Error('Passkey sign-in failed.');
   }
 
-  const tokenResponse = await fetch(`${apiBaseUrl}/api/auth/token-from-session`, {
+  return readAuthenticatedSession(apiBaseUrl);
+}
+
+export async function signOut(apiBaseUrl: string, session: HominemSession | null) {
+  void session
+
+  const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {
     credentials: 'include',
     method: 'POST',
   });
 
-  if (!tokenResponse.ok) {
-    throw new Error('Failed to exchange passkey session for app tokens.');
-  }
-
-  const tokenPayload = await readJson(tokenResponse, otpVerifyResponseSchema);
-  const session = createSession(tokenPayload.accessToken, tokenPayload.expiresIn);
-  writeStoredSession(session);
-
-  const response = await fetch(`${apiBaseUrl}/api/auth/session`, {
-    credentials: 'include',
-    method: 'GET',
-  });
-
   if (!response.ok) {
-    throw new Error('Failed to load session after passkey sign-in.');
-  }
-
-  const payload = await readJson(response, sessionResponseSchema);
-  if (!payload.isAuthenticated || !payload.user || !payload.accessToken || !payload.expiresIn) {
-    throw new Error('Passkey sign-in completed without a usable desktop session.');
-  }
-
-  return {
-    session,
-    user: normalizeUser(payload.user),
-  };
-}
-
-export async function signOut(apiBaseUrl: string, session: HominemSession | null) {
-  if (session?.access_token) {
-    await fetch(`${apiBaseUrl}/api/auth/logout`, {
-      headers: createAuthHeaders(session),
-      method: 'POST',
-    }).catch(() => undefined);
+    throw new Error('Failed to sign out. Please try again.');
   }
 
   clearStoredSession();

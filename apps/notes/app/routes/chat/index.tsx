@@ -9,8 +9,8 @@ import { getServerSession } from '~/lib/auth.server';
  * unauthenticated users to the landing page.
  */
 export async function loader({ request }: LoaderFunctionArgs) {
-  const { user, session, headers } = await getServerSession(request);
-  if (!(user && session)) {
+  const { user, headers } = await getServerSession(request);
+  if (!user) {
     return redirect('/', { headers });
   }
   return redirect('/home', { headers });

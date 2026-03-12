@@ -1,4 +1,4 @@
-import { Form, useNavigation } from 'react-router';
+import { Form, useNavigation, useSearchParams } from 'react-router';
 
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -24,12 +24,15 @@ export function EmailEntryForm({
   className,
 }: EmailEntryFormProps) {
   const navigation = useNavigation();
+  const [searchParams] = useSearchParams();
   const isSubmitting = navigation.state === 'submitting' && navigation.formAction === action;
+  const next = searchParams.get('next');
 
   const hasPasskey = onPasskeyClick !== undefined;
 
   return (
     <Form method={method} action={action} className={className}>
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <div className="space-y-3">
         <div>
           <Label htmlFor="email" className="text-foreground">

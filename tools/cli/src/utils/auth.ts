@@ -1,9 +1,6 @@
 import chalk from 'chalk';
 import { consola } from 'consola';
-import getPort from 'get-port';
-import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
-import http from 'node:http';
 import { URL } from 'node:url';
 import open from 'open';
 import ora from 'ora';
@@ -17,7 +14,7 @@ import {
   type StoredTokens,
 } from './secure-store';
 
-const DEFAULT_AUTH_BASE = 'http://localhost:3000';
+const DEFAULT_AUTH_BASE = 'http://localhost:4040';
 
 interface FetchError extends Error {
   response?: {
@@ -132,10 +129,6 @@ function emitError(outputMode: 'machine' | 'interactive', error: Error) {
     return;
   }
   consola.error(error);
-}
-
-interface CliAuthorizeResponse {
-  authorization_url: string;
 }
 
 interface DeviceCodeResponse {
@@ -254,80 +247,15 @@ export async function logout(options?: { outputMode?: 'machine' | 'interactive' 
     throw error;
   }
   if ((options?.outputMode ?? 'interactive') === 'interactive') {
-    consola.info(chalk.green('Logged out and cleared stored tokens'));
+    consola.info(
+      chalk.green('Cleared local device-flow credentials. Remote sessions were not revoked.'),
+    );
   }
-}
-
-function createPkcePair() {
-  const verifier = crypto.randomBytes(32).toString('base64url');
-  const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
-  return { verifier, challenge };
-}
-
-function buildAuthorizePayload(
-  redirectUri: string,
-  state: string,
-  challenge: string,
-  scopes?: string[],
-) {
-  return {
-    redirect_uri: redirectUri,
-    code_challenge: challenge,
-    state,
-    ...(scopes?.length ? { scope: scopes.join(' ') } : {}),
-  };
-}
-
-async function requestCliAuthorizationUrl({
-  baseUrl,
-  redirectUri,
-  state,
-  codeChallenge,
-  scopes,
-}: {
-  baseUrl: string;
-  redirectUri: string;
-  state: string;
-  codeChallenge: string;
-  scopes?: string[];
-}) {
-  const url = new URL('/api/auth/cli/authorize', baseUrl);
-  const payload = buildAuthorizePayload(redirectUri, state, codeChallenge, scopes);
-  const data = await postJson<CliAuthorizeResponse>(url.toString(), payload);
-  if (!data.authorization_url) {
-    throw new Error('CLI authorize endpoint did not return an authorization URL');
-  }
-  return data.authorization_url;
-}
-
-async function exchangeCodeForTokens({
-  baseUrl,
-  code,
-  codeVerifier,
-  redirectUri,
-}: {
-  baseUrl: string;
-  code: string;
-  codeVerifier: string;
-  redirectUri: string;
-}): Promise<TokenResponse> {
-  const url = new URL('/api/auth/cli/exchange', baseUrl);
-  return postJson<TokenResponse>(url.toString(), {
-    code,
-    code_verifier: codeVerifier,
-    redirect_uri: redirectUri,
-  });
 }
 
 export async function interactiveLogin(options: AuthOptions) {
   const spinner =
     options.outputMode === 'interactive' ? ora('Starting browser login').start() : null;
-
-  const port = await getPort();
-  const redirectUri = `http://127.0.0.1:${port}/callback`;
-  const state = crypto.randomBytes(16).toString('hex');
-  const { verifier, challenge } = createPkcePair();
-  const issuerBaseUrl = normalizeBaseUrl(options.authBaseUrl);
 
   if (options.headless) {
     if (spinner) {
@@ -337,140 +265,10 @@ export async function interactiveLogin(options: AuthOptions) {
     return;
   }
 
-  let authUrl: string;
-  try {
-    authUrl = await requestCliAuthorizationUrl({
-      baseUrl: options.authBaseUrl,
-      redirectUri,
-      state,
-      codeChallenge: challenge,
-      ...(options.scopes ? { scopes: options.scopes } : {}),
-    });
-  } catch (error) {
-    if (spinner) {
-      spinner.fail(chalk.red('Failed to initialize CLI authorization flow'));
-    }
-    throw error;
+  if (spinner) {
+    spinner.info('Using browser-assisted device-code login');
   }
-
-  await new Promise<void>((resolve, reject) => {
-    let finished = false;
-    let server: http.Server;
-    const timeout = setTimeout(() => {
-      if (finished) {
-        return;
-      }
-      finished = true;
-      if (spinner) {
-        spinner.fail(chalk.red('Authentication timed out'));
-      }
-      server.close();
-      reject(
-        new AuthError({
-          code: 'AUTH_LOGIN_TIMEOUT',
-          category: 'auth',
-          message: `Authentication timed out after ${options.timeoutMs}ms`,
-          hint: 'Run `hominem auth login` again',
-        }),
-      );
-    }, options.timeoutMs);
-
-    const complete = (error?: Error) => {
-      if (finished) {
-        return;
-      }
-      finished = true;
-      clearTimeout(timeout);
-      server.close();
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-    };
-
-    server = http.createServer(async (req, res) => {
-      if (!req.url) {
-        res.writeHead(400).end('Bad Request');
-        return;
-      }
-
-      const requestUrl = new URL(req.url, redirectUri);
-      if (requestUrl.pathname !== '/callback') {
-        res.writeHead(404).end('Not found');
-        return;
-      }
-
-      const returnedState = requestUrl.searchParams.get('state');
-      const code = requestUrl.searchParams.get('code');
-
-      if (!code || returnedState !== state) {
-        res.writeHead(400).end('Invalid request');
-        return;
-      }
-
-      try {
-        const tokenResponse = await exchangeCodeForTokens({
-          baseUrl: options.authBaseUrl,
-          code,
-          codeVerifier: verifier,
-          redirectUri,
-        });
-
-        const tokens = buildStoredTokensFromResponse(
-          tokenResponse,
-          issuerBaseUrl,
-          options.scopes ? { scopes: options.scopes } : {},
-        );
-
-        await saveTokens(tokens);
-
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end('<h1>Login successful</h1>You can close this window.');
-        if (spinner) {
-          spinner.succeed(chalk.green('Authenticated via browser'));
-        }
-        complete();
-      } catch (error) {
-        if (spinner) {
-          spinner.fail(chalk.red('Failed to exchange auth code'));
-        }
-        if (error instanceof Error) {
-          emitError(options.outputMode, error);
-        }
-        res.writeHead(500).end('Authentication failed');
-        complete(
-          new AuthError({
-            code: 'AUTH_LOGIN_FAILED',
-            category: 'auth',
-            message: error instanceof Error ? error.message : 'Authentication flow failed',
-          }),
-        );
-      }
-    });
-
-    server.listen(port, '127.0.0.1', () => {
-      if (spinner) {
-        spinner.text = 'Waiting for browser authentication';
-      }
-      emitInfo(options.outputMode, `Opening browser to ${authUrl}`);
-      void open(authUrl);
-    });
-
-    server.on('error', (error) => {
-      if (spinner) {
-        spinner.fail(chalk.red('Could not start local redirect server'));
-      }
-      emitError(options.outputMode, error);
-      complete(
-        new AuthError({
-          code: 'AUTH_LOGIN_FAILED',
-          category: 'dependency',
-          message: error.message,
-        }),
-      );
-    });
-  });
+  await deviceCodeLogin(options);
 }
 
 export async function deviceCodeLogin(_options: AuthOptions) {

@@ -1,6 +1,5 @@
 import {
   buildAuthCallbackErrorRedirect,
-  getAuthCookieDomain,
   resolveSafeAuthRedirect,
 } from '@hominem/auth/server';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
@@ -27,19 +26,10 @@ export function withAuthApiBaseUrl<T extends AuthEntryRouteConfig | AuthVerifyRo
 }
 
 interface VerifySuccessPayload {
-  accessToken?: string;
-  refreshToken?: string;
-  expiresIn?: number;
-  tokenType?: string;
-  access_token?: string;
-  refresh_token?: string;
-  expires_in?: number;
-  token_type?: string;
   user: { id: string; email: string; name?: string | null };
 }
 
 interface PasskeyCallbackPayload {
-  accessToken: string;
   next?: string;
 }
 
@@ -55,35 +45,7 @@ function hasFormDataGet(value: object): value is FormDataReader {
   return 'get' in value;
 }
 
-function getPayloadAccessToken(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
-  if ('access_token' in payload) {
-    return payload.accessToken ?? payload.access_token;
-  }
-
-  return payload.accessToken;
-}
-
-function getPayloadRefreshToken(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
-  if ('refresh_token' in payload) {
-    return payload.refreshToken ?? payload.refresh_token ?? null;
-  }
-
-  return null;
-}
-
-function getPayloadExpiresIn(payload: VerifySuccessPayload | PasskeyCallbackPayload) {
-  if ('expires_in' in payload) {
-    return payload.expiresIn ?? payload.expires_in;
-  }
-
-  return null;
-}
-
-async function appendTokenCookies(
-  headers: Headers,
-  responseHeaders: Headers,
-  payload: VerifySuccessPayload | PasskeyCallbackPayload,
-) {
+function appendResponseCookies(headers: Headers, responseHeaders: Headers) {
   const setCookieValues = getSetCookieHeaders(responseHeaders);
   if (setCookieValues.length > 0) {
     for (const value of setCookieValues) {
@@ -95,36 +57,21 @@ async function appendTokenCookies(
       headers.append('set-cookie', setCookie);
     }
   }
-
-  const cookieDomain = getAuthCookieDomain();
-  const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
-  const accessToken = getPayloadAccessToken(payload);
-  const expiresIn = getPayloadExpiresIn(payload);
-  const maxAge = typeof expiresIn === 'number' ? `; Max-Age=${expiresIn}` : '';
-
-  if (!accessToken) {
-    return;
-  }
-
-  headers.append(
-    'set-cookie',
-    `hominem_access_token=${encodeURIComponent(accessToken)}; Path=/; HttpOnly; SameSite=Lax${maxAge}${domainAttribute}`,
-  );
-
-  const refreshToken = getPayloadRefreshToken(payload);
-  if (refreshToken) {
-    headers.append(
-      'set-cookie',
-      `hominem_refresh_token=${encodeURIComponent(refreshToken)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${domainAttribute}`,
-    );
-  }
 }
 
 export function createAuthEntryLoader(config: AuthEntryRouteConfig, getServerAuth: GetServerAuth) {
   return async function loader({ request }: { request: Request }) {
     const { user, headers } = await getServerAuth(request);
     if (user) {
-      return redirect(config.defaultRedirect, { headers });
+      const requestUrl = new URL(request.url);
+      return redirect(
+        resolveSafeAuthRedirect(
+          requestUrl.searchParams.get('next'),
+          config.defaultRedirect,
+          [...config.allowedRedirectPrefixes],
+        ),
+        { headers },
+      );
     }
     return null;
   };
@@ -173,7 +120,15 @@ export function createAuthVerifyLoader(
   return async function loader({ request }: { request: Request }) {
     const { user, headers } = await getServerAuth(request);
     if (user) {
-      return redirect(config.defaultRedirect, { headers });
+      const requestUrl = new URL(request.url);
+      return redirect(
+        resolveSafeAuthRedirect(
+          requestUrl.searchParams.get('next'),
+          config.defaultRedirect,
+          [...config.allowedRedirectPrefixes],
+        ),
+        { headers },
+      );
     }
 
     const url = new URL(request.url);
@@ -218,12 +173,16 @@ export function createAuthVerifyAction(config: AuthVerifyServerRouteConfig) {
     }
 
     const result = (await response.json()) as VerifySuccessPayload;
-    if (!(result.accessToken ?? result.access_token)) {
+    if (!result.user?.id) {
       return { error: 'Verification failed. Missing auth token from server.' };
     }
 
     const headers = new Headers();
-    await appendTokenCookies(headers, response.headers, result);
+    appendResponseCookies(headers, response.headers);
+
+    if (!headers.get('set-cookie')) {
+      return { error: 'Verification failed. Session cookie was not set.' };
+    }
 
     return redirect(next, { headers });
   };
@@ -244,20 +203,9 @@ export function createAuthLogoutRoute(config: AuthLogoutRouteConfig) {
         method: 'POST',
         headers: upstreamHeaders,
       });
-      for (const value of getSetCookieHeaders(response.headers)) {
-        headers.append('set-cookie', value);
-      }
+      appendResponseCookies(headers, response.headers);
     } catch {
-      const cookieDomain = getAuthCookieDomain();
-      const domainAttribute = cookieDomain ? `; Domain=${cookieDomain}` : '';
-      headers.append(
-        'set-cookie',
-        `hominem_access_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${domainAttribute}`,
-      );
-      headers.append(
-        'set-cookie',
-        `hominem_refresh_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${domainAttribute}`,
-      );
+      void headers;
     }
 
     return redirect('/auth', { headers });
@@ -290,21 +238,7 @@ export function createAuthPasskeyCallbackRoute(config: AuthPasskeyCallbackRouteC
       ...config.allowedRedirectPrefixes,
     ]);
 
-    if (!payload.accessToken) {
-      return redirect(
-        buildAuthCallbackErrorRedirect({
-          next: payload.next,
-          fallback: config.defaultRedirect,
-          allowedPrefixes: [...config.allowedRedirectPrefixes],
-          description: 'Passkey sign-in failed. Please try again.',
-        }),
-      );
-    }
-
-    const headers = new Headers();
-    await appendTokenCookies(headers, new Headers(), payload);
-
-    return redirect(next, { headers });
+    return redirect(next);
   }
 
   return { action };

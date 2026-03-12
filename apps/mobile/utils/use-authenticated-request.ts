@@ -11,19 +11,15 @@ type RequestOptions = {
 };
 
 export const useAuthenticatedRequest = () => {
-  const { getAccessToken } = useAuth();
+  const { getAuthHeaders } = useAuth();
 
   return useCallback(
     async <T>(options: RequestOptions): Promise<{ data: T }> => {
-      const token = await getAccessToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...options.headers,
+        ...(await getAuthHeaders()),
       };
-
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
 
       const response = await fetch(`${API_BASE_URL}${options.url}`, {
         method: options.method ?? 'GET',
@@ -35,9 +31,9 @@ export const useAuthenticatedRequest = () => {
         throw new Error(`Request failed (${response.status})`);
       }
 
-      const data = (await response.json()) as T;
-      return { data };
-    },
-    [getAccessToken],
+        const data = (await response.json()) as T;
+        return { data };
+      },
+    [getAuthHeaders],
   );
 };

@@ -1,5 +1,5 @@
 import { AUTH_COPY, readAuthErrorMessage } from '@hominem/auth';
-import { useActionData, useLoaderData, useLocation } from 'react-router';
+import { useActionData, useLoaderData, useLocation, useSearchParams } from 'react-router';
 
 import { usePasskeyAuth } from '../../hooks/use-passkey-auth';
 import { AuthScaffold } from './auth-scaffold';
@@ -17,23 +17,6 @@ export interface AuthLoaderResult {
   user: AuthUser | null;
 }
 
-interface VerifySuccessPayload {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-  tokenType: string;
-  user: { id: string; email: string; name?: string | null };
-}
-
-interface PasskeyCallbackPayload {
-  accessToken: string;
-  next?: string;
-}
-
-interface EmailOtpErrorPayload {
-  message?: string;
-}
-
 interface AuthActionData {
   error?: string;
 }
@@ -46,6 +29,7 @@ export type GetServerAuth = (request: Request) => Promise<AuthLoaderResult>;
 export type GetAuthApiBaseUrl = () => string;
 
 interface SharedAuthComponentConfig {
+  allowedRedirectPrefixes: readonly string[];
   defaultRedirect: string;
 }
 
@@ -79,12 +63,14 @@ export function createAuthEntryComponent(config: AuthEntryRouteConfig) {
   return function Component() {
     const actionData = useActionData<AuthActionData>();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
+    const next = searchParams.get('next') ?? config.defaultRedirect;
     const {
       authenticate,
       isLoading: isPasskeyLoading,
       error: passkeyError,
       isSupported: isPasskeySupported,
-    } = usePasskeyAuth({ redirectTo: config.defaultRedirect });
+    } = usePasskeyAuth({ redirectTo: next });
     const callbackError = readAuthErrorMessage(new URLSearchParams(location.search));
     const resolvedError = actionData?.error ?? callbackError ?? passkeyError ?? undefined;
 
@@ -112,6 +98,9 @@ export function createAuthVerifyComponent(config: AuthVerifyRouteConfig) {
     const { email } = useLoaderData<AuthVerifyLoaderData>();
     const actionData = useActionData<AuthActionData>();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
+    const next = searchParams.get('next') ?? config.defaultRedirect;
+    const { authenticate, isSupported } = usePasskeyAuth({ redirectTo: next });
 
     return (
       <AuthScaffold
@@ -123,8 +112,11 @@ export function createAuthVerifyComponent(config: AuthVerifyRouteConfig) {
           email={email}
           defaultNext={config.defaultRedirect}
           error={actionData?.error ?? undefined}
+          {...(isSupported ? { onPasskeyClick: () => authenticate() } : {})}
           onChangeEmail={() => {
-            window.location.href = '/auth';
+            const authUrl = new URL('/auth', window.location.origin);
+            authUrl.searchParams.set('next', next);
+            window.location.assign(`${authUrl.pathname}${authUrl.search}`);
           }}
         />
       </AuthScaffold>

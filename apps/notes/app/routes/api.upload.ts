@@ -22,8 +22,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
   try {
     // Get authentication
-    const { user, session } = await getServerSession(request);
-    if (!user || !session) {
+    const { user } = await getServerSession(request);
+    if (!user) {
       return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -44,7 +44,7 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     // Create RPC client for vector indexing
-    const client = createServerHonoClient(session.access_token, request);
+    const client = createServerHonoClient(undefined, request);
 
     // Process each file
     const results = await Promise.allSettled(

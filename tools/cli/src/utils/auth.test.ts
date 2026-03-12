@@ -55,7 +55,7 @@ describe('cli auth utils', () => {
       scopes: ['cli:read'],
       sessionId: '11111111-1111-4111-8111-111111111111',
       refreshFamilyId: '22222222-2222-4222-8222-222222222222',
-      issuerBaseUrl: 'http://localhost:3000',
+      issuerBaseUrl: 'http://localhost:4040',
     });
 
     fetchMock.mockResolvedValueOnce({
@@ -77,7 +77,7 @@ describe('cli auth utils', () => {
 
     expect(token).toBe('fresh-access');
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:3000/api/auth/token',
+      'http://localhost:4040/api/auth/token',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -93,7 +93,7 @@ describe('cli auth utils', () => {
         sessionId: '33333333-3333-4333-8333-333333333333',
         refreshFamilyId: '44444444-4444-4444-8444-444444444444',
         scopes: ['cli:read', 'cli:write'],
-        issuerBaseUrl: 'http://localhost:3000',
+        issuerBaseUrl: 'http://localhost:4040',
         tokenVersion: 2,
       }),
     );
@@ -105,12 +105,12 @@ describe('cli auth utils', () => {
       accessToken: 'access',
       refreshToken: 'refresh',
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
-      issuerBaseUrl: 'http://localhost:3000',
+      issuerBaseUrl: 'http://localhost:4040',
     });
 
     await expect(
       getAccessToken({
-        expectedIssuerBaseUrl: 'http://localhost:4040',
+        expectedIssuerBaseUrl: 'http://localhost:3000',
       }),
     ).rejects.toThrow('does not match requested base');
   });
@@ -121,7 +121,7 @@ describe('cli auth utils', () => {
       accessToken: 'stale',
       refreshToken: 'refresh-1',
       expiresAt: new Date(Date.now() - 60_000).toISOString(),
-      issuerBaseUrl: 'http://localhost:3000',
+      issuerBaseUrl: 'http://localhost:4040',
     });
 
     fetchMock.mockImplementationOnce(async () => {
@@ -141,16 +141,20 @@ describe('cli auth utils', () => {
       ok: true,
       status: 200,
       json: async () => ({
-        authorization_url: 'https://example.test/authorize',
+        device_code: 'device-code-1',
+        user_code: 'ABCD-1234',
+        verification_uri: 'https://example.test/activate',
+        expires_in: 0,
+        interval: 1,
       }),
     } as Response);
 
     await expect(
       interactiveLogin({
-        authBaseUrl: 'http://localhost:3000',
-        outputMode: 'machine',
-        timeoutMs: 10,
-      }),
+        authBaseUrl: 'http://localhost:4040',
+      outputMode: 'machine',
+      timeoutMs: 10,
+    }),
     ).rejects.toThrow('timed out');
   });
 });
