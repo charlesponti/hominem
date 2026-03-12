@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
+import type { AppRequester } from './test-helpers/auth'
 import {
   importServer,
   requestJson,
@@ -11,6 +12,55 @@ interface DeviceCodeResponse {
   user_code: string
   verification_uri: string
   verification_uri_complete: string
+}
+
+async function createApprovedDeviceFlow(app: AppRequester) {
+  const email = `cli-device-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@hominem.test`
+  const { cookieHeader } = await signInWithEmailOtp(app, email)
+
+  const codeResponse = await requestJson({
+    app,
+    path: '/api/auth/device/code',
+    method: 'POST',
+    body: {
+      client_id: 'hominem-cli',
+      scope: 'cli:read',
+    },
+  })
+
+  expect(codeResponse.status).toBe(200)
+  const deviceCode = (await codeResponse.json()) as DeviceCodeResponse
+
+  const verifyResponse = await requestJson({
+    app,
+    path: `/api/auth/device?user_code=${encodeURIComponent(deviceCode.user_code)}`,
+  })
+
+  expect(verifyResponse.status).toBe(200)
+  await expect(verifyResponse.json()).resolves.toMatchObject({
+    user_code: deviceCode.user_code,
+    status: 'pending',
+  })
+
+  const approveResponse = await requestJson({
+    app,
+    path: '/api/auth/device/approve',
+    method: 'POST',
+    headers: {
+      cookie: cookieHeader,
+    },
+    body: {
+      userCode: deviceCode.user_code,
+    },
+  })
+
+  expect(approveResponse.status).toBe(200)
+  await expect(approveResponse.json()).resolves.toEqual({ success: true })
+
+  return {
+    email,
+    deviceCode,
+  }
 }
 
 describe('auth device contract', () => {
@@ -25,86 +75,46 @@ describe('auth device contract', () => {
   test(
     'device authorization uses stable auth routes and forwards set-auth-token',
     async () => {
-    const createServer = await importServer()
-    const app = createServer()
-    const email = `cli-device-${Date.now()}@hominem.test`
-    const { response: signInResponse, cookieHeader } = await signInWithEmailOtp(app, email)
-    expect(signInResponse.status).toBe(200)
+      const createServer = await importServer()
+      const app = createServer()
+      const { email, deviceCode } = await createApprovedDeviceFlow(app)
 
-    const codeResponse = await requestJson({
-      app,
-      path: '/api/auth/device/code',
-      method: 'POST',
-      body: {
-        client_id: 'hominem-cli',
-        scope: 'cli:read',
-      },
-    })
+      expect(new URL(deviceCode.verification_uri).pathname).toBe('/api/auth/device')
+      expect(new URL(deviceCode.verification_uri_complete).pathname).toBe('/api/auth/device')
+      expect(new URL(deviceCode.verification_uri_complete).searchParams.get('user_code')).toBe(
+        deviceCode.user_code,
+      )
 
-    expect(codeResponse.status).toBe(200)
-    const deviceCode = (await codeResponse.json()) as DeviceCodeResponse
-    expect(new URL(deviceCode.verification_uri).pathname).toBe('/api/auth/device')
-    expect(new URL(deviceCode.verification_uri_complete).pathname).toBe('/api/auth/device')
-    expect(new URL(deviceCode.verification_uri_complete).searchParams.get('user_code')).toBe(
-      deviceCode.user_code,
-    )
+      const tokenResponse = await requestJson({
+        app,
+        path: '/api/auth/device/token',
+        method: 'POST',
+        body: {
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+          device_code: deviceCode.device_code,
+          client_id: 'hominem-cli',
+        },
+      })
 
-    const verifyResponse = await requestJson({
-      app,
-      path: `/api/auth/device?user_code=${encodeURIComponent(deviceCode.user_code)}`,
-    })
+      expect(tokenResponse.status).toBe(200)
+      const bearerToken = tokenResponse.headers.get('set-auth-token')
+      expect(bearerToken).toBeTruthy()
 
-    expect(verifyResponse.status).toBe(200)
-    await expect(verifyResponse.json()).resolves.toMatchObject({
-      user_code: deviceCode.user_code,
-      status: 'pending',
-    })
+      const sessionResponse = await requestJson({
+        app,
+        path: '/api/auth/session',
+        headers: {
+          authorization: `Bearer ${bearerToken}`,
+        },
+      })
 
-    const approveResponse = await requestJson({
-      app,
-      path: '/api/auth/device/approve',
-      method: 'POST',
-      headers: {
-        cookie: cookieHeader,
-      },
-      body: {
-        userCode: deviceCode.user_code,
-      },
-    })
-
-    expect(approveResponse.status).toBe(200)
-    await expect(approveResponse.json()).resolves.toEqual({ success: true })
-
-    const tokenResponse = await requestJson({
-      app,
-      path: '/api/auth/device/token',
-      method: 'POST',
-      body: {
-        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-        device_code: deviceCode.device_code,
-        client_id: 'hominem-cli',
-      },
-    })
-
-    expect(tokenResponse.status).toBe(200)
-    const bearerToken = tokenResponse.headers.get('set-auth-token')
-    expect(bearerToken).toBeTruthy()
-
-    const sessionResponse = await requestJson({
-      app,
-      path: '/api/auth/session',
-      headers: {
-        authorization: `Bearer ${bearerToken}`,
-      },
-    })
-
-    expect(sessionResponse.status).toBe(200)
-    await expect(sessionResponse.json()).resolves.toMatchObject({
-      isAuthenticated: true,
-      user: {
-        email,
-      },
-    })
+      expect(sessionResponse.status).toBe(200)
+      await expect(sessionResponse.json()).resolves.toMatchObject({
+        isAuthenticated: true,
+        user: {
+          email,
+        },
+      })
     },
     15_000,
   )
@@ -143,44 +153,7 @@ describe('auth device contract', () => {
   test('device token exchange still works when verify route is queried before approval', async () => {
     const createServer = await importServer()
     const app = createServer()
-    const email = `cli-device-preflight-${Date.now()}@hominem.test`
-    const { response: signInResponse, cookieHeader } = await signInWithEmailOtp(app, email)
-    expect(signInResponse.status).toBe(200)
-
-    const codeResponse = await requestJson({
-      app,
-      path: '/api/auth/device/code',
-      method: 'POST',
-      body: {
-        client_id: 'hominem-cli',
-        scope: 'cli:read',
-      },
-    })
-
-    expect(codeResponse.status).toBe(200)
-    const deviceCode = (await codeResponse.json()) as DeviceCodeResponse
-
-    const verifyResponse = await requestJson({
-      app,
-      path: `/api/auth/device?user_code=${encodeURIComponent(deviceCode.user_code)}`,
-    })
-    expect(verifyResponse.status).toBe(200)
-    await expect(verifyResponse.json()).resolves.toMatchObject({
-      status: 'pending',
-    })
-
-    const approveResponse = await requestJson({
-      app,
-      path: '/api/auth/device/approve',
-      method: 'POST',
-      headers: {
-        cookie: cookieHeader,
-      },
-      body: {
-        userCode: deviceCode.user_code,
-      },
-    })
-    expect(approveResponse.status).toBe(200)
+    const { deviceCode } = await createApprovedDeviceFlow(app)
 
     const tokenResponse = await requestJson({
       app,

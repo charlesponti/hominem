@@ -35,7 +35,16 @@ export async function fetchOtp(app: AppRequester, email: string) {
     },
   )
 
-  return (await response.json()) as OtpResponse
+  if (response.status !== 200) {
+    throw new Error(`Expected OTP fetch to succeed for ${email}, got ${response.status}`)
+  }
+
+  const payload = (await response.json()) as OtpResponse
+  if (!payload.otp) {
+    throw new Error(`Expected OTP payload for ${email}`)
+  }
+
+  return payload
 }
 
 export function toCookieHeader(setCookieValues: string[]) {
@@ -46,7 +55,10 @@ export function toCookieHeader(setCookieValues: string[]) {
 }
 
 export async function signInWithEmailOtp(app: AppRequester, email: string) {
-  await requestOtp(app, email)
+  const otpRequest = await requestOtp(app, email)
+  if (otpRequest.status !== 200) {
+    throw new Error(`Expected OTP request to succeed for ${email}, got ${otpRequest.status}`)
+  }
   const otp = await fetchOtp(app, email)
   const response = await app.request('http://localhost/api/auth/email-otp/verify', {
     method: 'POST',
@@ -56,6 +68,10 @@ export async function signInWithEmailOtp(app: AppRequester, email: string) {
       otp: otp.otp,
     }),
   })
+
+  if (response.status !== 200) {
+    throw new Error(`Expected OTP verification to succeed for ${email}, got ${response.status}`)
+  }
 
   return {
     response,
