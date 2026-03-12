@@ -403,7 +403,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
     fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
     minHeight: 36,
-    paddingVertical: t.spacing.xs_6,
+    paddingVertical: t.spacing.sm_8,
   },
   searchResultCount: {
     color: t.colors['text-tertiary'],

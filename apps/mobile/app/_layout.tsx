@@ -142,8 +142,8 @@ const styles = makeStyles((t) =>
     },
     e2eAction: {
       position: 'absolute',
-      top: t.spacing.s_8,
-      right: t.spacing.s_8,
+      top: t.spacing.sm_8,
+      right: t.spacing.sm_8,
       width: 16,
       height: 16,
       opacity: 0.02,
@@ -151,7 +151,7 @@ const styles = makeStyles((t) =>
     e2eActionAlt: {
       position: 'absolute',
       top: t.spacing.ml_24,
-      right: t.spacing.s_8,
+      right: t.spacing.sm_8,
       width: 16,
       height: 16,
       opacity: 0.02,

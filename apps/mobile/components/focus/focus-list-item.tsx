@@ -69,7 +69,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
   itemContent: {
     flex: 1,
     flexDirection: 'column',
-    rowGap: t.spacing.s_8,
+    rowGap: t.spacing.sm_8,
   },
   triggerFull: {
     flex: 1,
@@ -77,7 +77,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
   },
   icon: {
     borderRadius: 999, /* ensures circular shape */
-    padding: t.spacing.s_8,
+    padding: t.spacing.sm_8,
     paddingHorizontal: t.spacing.sm_12,
     flexDirection: 'row',
     alignItems: 'center',

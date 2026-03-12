@@ -20,7 +20,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
     borderRadius: t.borderRadii.sm_6,
     backgroundColor: t.colors.background,
     padding: t.spacing.sm_12,
-    gap: t.spacing.s_8,
+    gap: t.spacing.sm_8,
   },
   input: {
     color: t.colors.foreground,
@@ -30,7 +30,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
-    gap: t.spacing.s_8,
+    gap: t.spacing.sm_8,
   },
   primaryAction: {
     backgroundColor: t.colors.foreground,

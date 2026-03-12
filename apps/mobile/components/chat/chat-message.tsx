@@ -80,7 +80,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: t.spacing.xs_4,
-    marginTop: t.spacing.s_8,
+    marginTop: t.spacing.sm_8,
     opacity: 0.7,
   },
   metadataText: {
@@ -91,7 +91,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: t.spacing.sm_8,
-    marginTop: t.spacing.s_8,
+    marginTop: t.spacing.sm_8,
   },
   actionButton: {
     backgroundColor: t.colors['border-default'],
@@ -111,7 +111,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
     opacity: 0.8,
   },
   toolCalls: {
-    marginTop: t.spacing.s_8,
+    marginTop: t.spacing.sm_8,
     gap: t.spacing.xs_4,
   },
   toolCall: {

@@ -18,7 +18,7 @@ const TYPE_LABEL: Record<ArtifactType, string> = {
 }
 
 const useStyles = makeStyles((t) => StyleSheet.create({
-  list: { gap: t.spacing.s_8 },
+  list: { gap: t.spacing.sm_8 },
   sectionLabel: {
     letterSpacing: 1,
     marginBottom: t.spacing.xs_4,
@@ -38,7 +38,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
   content: { flex: 1, gap: t.spacing.xs_4 },
   typeLabel: { letterSpacing: 1 },
   title: { fontWeight: '500' },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.s_8 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm_8 },
   reviewBtn: {
     minHeight: 30,
   },

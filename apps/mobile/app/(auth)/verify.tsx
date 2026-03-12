@@ -298,7 +298,7 @@ const useStyles = makeStyles((t) =>
     },
     otpSlots: {
       flexDirection: 'row',
-      columnGap: t.spacing.s_8,
+      columnGap: t.spacing.sm_8,
       justifyContent: 'space-between',
     },
     otpSlot: {

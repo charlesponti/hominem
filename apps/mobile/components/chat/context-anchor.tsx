@@ -65,7 +65,7 @@ const useStyles = makeStyles((t) =>
       alignItems: 'center',
       gap: t.spacing.xs_4,
       paddingHorizontal: t.spacing.sm_8,
-      paddingVertical: t.spacing.xs_3,
+      paddingVertical: t.spacing.xs_4,
       borderRadius: t.borderRadii.s_3,
       borderWidth: 1,
       borderColor: t.colors['border-default'],

@@ -105,7 +105,7 @@ const useStyles = makeStyles((t) =>
     dotsRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: t.spacing.xs_6,
+      gap: t.spacing.sm_8,
     },
     dot: {
       width: 8,
@@ -115,7 +115,7 @@ const useStyles = makeStyles((t) =>
     thinkingText: {
       color: t.colors['text-tertiary'],
       fontSize: fontSizes.xs,
-      marginLeft: t.spacing.xs_2,
+      marginLeft: t.spacing.xs_4,
     },
   })
 )

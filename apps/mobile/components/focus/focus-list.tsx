@@ -75,7 +75,7 @@ const useStyles = makeStyles((t) =>
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      columnGap: t.spacing.xs_6,
+      columnGap: t.spacing.sm_8,
       paddingHorizontal: t.spacing.m_16,
       paddingVertical: t.spacing.xs_4,
     },

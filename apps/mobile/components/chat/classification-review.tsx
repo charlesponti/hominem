@@ -35,7 +35,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
   typeLabel: { letterSpacing: 1 },
   title: { fontWeight: '500' },
   changesList: { gap: t.spacing.xs_4 },
-  changeRow: { flexDirection: 'row', gap: t.spacing.s_8, alignItems: 'flex-start' },
+  changeRow: { flexDirection: 'row', gap: t.spacing.sm_8, alignItems: 'flex-start' },
   dash: { opacity: 0.4, marginTop: 1 },
   changeText: { flex: 1 },
   preview: {
@@ -47,7 +47,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
     padding: t.spacing.sm_12,
   },
   previewText: { fontFamily: 'Geist Mono' },
-  actions: { flexDirection: 'row', gap: t.spacing.s_8 },
+  actions: { flexDirection: 'row', gap: t.spacing.sm_8 },
   btn: {
     flex: 1,
   },

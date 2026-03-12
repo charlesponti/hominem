@@ -219,7 +219,6 @@ export default FocusViewWithErrorBoundary;
 
 const FocusLoadingError = React.memo(() => {
   const errorStyles = useErrorStyles();
-  const errorStyles = useErrorStyles();
   return (
     <View style={errorStyles.wrapper}>
       <FeedbackBlock error>

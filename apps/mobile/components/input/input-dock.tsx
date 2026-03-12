@@ -161,8 +161,8 @@ const useStyles = makeStyles((t) => StyleSheet.create({
     borderWidth: 1,
     borderColor: t.colors['border-default'],
     paddingHorizontal: t.spacing.sm_12,
-    paddingVertical: t.spacing.s_8,
-    gap: t.spacing.s_8,
+    paddingVertical: t.spacing.sm_8,
+    gap: t.spacing.sm_8,
     width: '94%',
     alignSelf: 'center',
     position: 'absolute',
@@ -173,7 +173,7 @@ const useStyles = makeStyles((t) => StyleSheet.create({
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: t.spacing.s_8,
+    gap: t.spacing.sm_8,
   },
   grabber: {
     width: 36,
@@ -184,14 +184,14 @@ const useStyles = makeStyles((t) => StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: t.spacing.s_8,
+    gap: t.spacing.sm_8,
   },
   input: {
     flex: 1,
     color: t.colors.foreground,
     fontSize: fontSizes.sm,
     fontFamily: 'Geist Mono',
-    paddingVertical: t.spacing.s_8,
+    paddingVertical: t.spacing.sm_8,
   },
   iconButton: {
     height: 42,

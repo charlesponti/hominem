@@ -66,7 +66,7 @@ const useStyles = makeStyles((t) =>
       flexDirection: 'row',
       gap: t.spacing.sm_8,
       paddingHorizontal: t.spacing.m_16,
-      paddingVertical: t.spacing.sm_10,
+      paddingVertical: t.spacing.sm_12,
       borderTopWidth: 1,
       borderTopColor: t.colors['border-default'],
       backgroundColor: t.colors.background,

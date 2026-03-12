@@ -28,8 +28,7 @@ export const useNormalizedLevels = (levels: number[]) => {
 
 // Animated bar component
 const AudioMeterings = ({ height }: { height: number }) => {
-  return <View style={[styles.bar, { height, backgroundColor: theme.colors.foreground }]} />;
-  // return <Animated.View style={[styles.bar, animatedStyles]} />;
+  return <View style={{ height, width: 3, borderRadius: 25 }} />;
 };
 
 // Component to render the audio levels
