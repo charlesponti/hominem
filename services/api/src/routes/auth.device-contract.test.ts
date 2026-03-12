@@ -1,95 +1,16 @@
-import { getSetCookieHeaders } from '@hominem/utils/headers'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-interface AppRequester {
-  request: (input: string | URL | Request, init?: RequestInit) => Response | Promise<Response>
-}
-
-interface OtpResponse {
-  otp: string
-}
+import {
+  importServer,
+  requestJson,
+  signInWithEmailOtp,
+} from './test-helpers/auth'
 
 interface DeviceCodeResponse {
   device_code: string
   user_code: string
   verification_uri: string
   verification_uri_complete: string
-}
-
-function requestJson(input: {
-  app: AppRequester
-  path: string
-  method?: 'GET' | 'POST'
-  headers?: Record<string, string>
-  body?: Record<string, unknown>
-}) {
-  return input.app.request(`http://localhost${input.path}`, {
-    method: input.method ?? 'GET',
-    ...(input.headers ? { headers: input.headers } : {}),
-    ...(input.body
-      ? {
-          body: JSON.stringify(input.body),
-          headers: {
-            'content-type': 'application/json',
-            ...input.headers,
-          },
-        }
-      : {}),
-  })
-}
-
-async function importServer() {
-  const module = await import('../server')
-  return module.createServer
-}
-
-async function requestOtp(app: AppRequester, email: string) {
-  return app.request('http://localhost/api/auth/email-otp/send', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      email,
-      type: 'sign-in',
-    }),
-  })
-}
-
-async function fetchOtp(app: AppRequester, email: string) {
-  const response = await app.request(
-    `http://localhost/api/auth/test/otp/latest?email=${encodeURIComponent(email)}&type=sign-in`,
-    {
-      method: 'GET',
-      headers: {
-        'x-e2e-auth-secret': 'otp-secret',
-      },
-    },
-  )
-
-  expect(response.status).toBe(200)
-  return (await response.json()) as OtpResponse
-}
-
-function toCookieHeader(setCookieValues: string[]) {
-  return setCookieValues
-    .map((value) => value.split(';')[0]?.trim())
-    .filter((value): value is string => Boolean(value && value.length > 0))
-    .join('; ')
-}
-
-async function signInWithEmailOtp(app: AppRequester, email: string) {
-  await requestOtp(app, email)
-  const otp = await fetchOtp(app, email)
-  const response = await app.request('http://localhost/api/auth/email-otp/verify', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      email,
-      otp: otp.otp,
-    }),
-  })
-
-  expect(response.status).toBe(200)
-  return toCookieHeader(getSetCookieHeaders(response.headers))
 }
 
 describe('auth device contract', () => {
@@ -107,7 +28,8 @@ describe('auth device contract', () => {
     const createServer = await importServer()
     const app = createServer()
     const email = `cli-device-${Date.now()}@hominem.test`
-    const cookieHeader = await signInWithEmailOtp(app, email)
+    const { response: signInResponse, cookieHeader } = await signInWithEmailOtp(app, email)
+    expect(signInResponse.status).toBe(200)
 
     const codeResponse = await requestJson({
       app,
@@ -216,5 +138,62 @@ describe('auth device contract', () => {
     })
 
     expect(response.status).toBe(400)
+  })
+
+  test('device token exchange still works when verify route is queried before approval', async () => {
+    const createServer = await importServer()
+    const app = createServer()
+    const email = `cli-device-preflight-${Date.now()}@hominem.test`
+    const { response: signInResponse, cookieHeader } = await signInWithEmailOtp(app, email)
+    expect(signInResponse.status).toBe(200)
+
+    const codeResponse = await requestJson({
+      app,
+      path: '/api/auth/device/code',
+      method: 'POST',
+      body: {
+        client_id: 'hominem-cli',
+        scope: 'cli:read',
+      },
+    })
+
+    expect(codeResponse.status).toBe(200)
+    const deviceCode = (await codeResponse.json()) as DeviceCodeResponse
+
+    const verifyResponse = await requestJson({
+      app,
+      path: `/api/auth/device?user_code=${encodeURIComponent(deviceCode.user_code)}`,
+    })
+    expect(verifyResponse.status).toBe(200)
+    await expect(verifyResponse.json()).resolves.toMatchObject({
+      status: 'pending',
+    })
+
+    const approveResponse = await requestJson({
+      app,
+      path: '/api/auth/device/approve',
+      method: 'POST',
+      headers: {
+        cookie: cookieHeader,
+      },
+      body: {
+        userCode: deviceCode.user_code,
+      },
+    })
+    expect(approveResponse.status).toBe(200)
+
+    const tokenResponse = await requestJson({
+      app,
+      path: '/api/auth/device/token',
+      method: 'POST',
+      body: {
+        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+        device_code: deviceCode.device_code,
+        client_id: 'hominem-cli',
+      },
+    })
+
+    expect(tokenResponse.status).toBe(200)
+    expect(tokenResponse.headers.get('set-auth-token')).toBeTruthy()
   })
 })

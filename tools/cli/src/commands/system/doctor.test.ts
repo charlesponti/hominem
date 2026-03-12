@@ -83,4 +83,26 @@ describe('system doctor command', () => {
       message: "stored auth token is not accepted; run 'hominem auth login'",
     })
   })
+
+  test('does not emit auth.session when no issuer base URL is stored', async () => {
+    getStoredTokensMock.mockResolvedValueOnce({
+      tokenVersion: 2,
+      accessToken: 'stored-bearer',
+      provider: 'better-auth',
+    })
+
+    const result = await commandModule.default.run({
+      args: {},
+      flags: {},
+      context: createTestCommandContext(),
+    })
+
+    expect(result.checks).toContainEqual({
+      id: 'auth.token',
+      status: 'pass',
+      message: 'auth device-session token stored',
+    })
+    expect(result.checks.some((check) => check.id === 'auth.session')).toBe(false)
+    expect(hasValidStoredSessionMock).not.toHaveBeenCalled()
+  })
 })
