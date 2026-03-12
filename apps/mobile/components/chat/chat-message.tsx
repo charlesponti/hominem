@@ -4,7 +4,7 @@ import { Modal, StyleSheet, View } from 'react-native';
 
 import { Button } from '~/components/Button';
 import TextArea from '~/components/text-input-autogrow';
-import { Text, theme as appTheme, makeStyles } from '~/theme';
+import { Text, makeStyles } from '~/theme';
 import { getLocalDate } from '~/utils/dates';
 import type { MessageOutput } from '~/utils/services/chat';
 

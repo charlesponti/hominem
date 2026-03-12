@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AsciiTexture } from '~/components/ui/ascii-texture';
-import { theme, makeStyles } from '~/theme';
+import { makeStyles } from '~/theme';
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({

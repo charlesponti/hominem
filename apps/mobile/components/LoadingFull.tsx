@@ -4,7 +4,6 @@ import { ActivityIndicator, StyleSheet } from 'react-native';
 import { Box, makeStyles, theme } from '~/theme';
 
 export const LoadingFull = ({ children }: PropsWithChildren) => {
-  const styles = useStyles();
   return (
     <LoadingContainer>
       {children}

@@ -2,7 +2,7 @@ import { fontSizes } from '@hominem/ui/tokens';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { makeStyles, Text, theme } from '~/theme';
+import { makeStyles, Text } from '~/theme';
 import { borderStyle } from '~/theme/styles';
 
 export type ActiveSearch = {

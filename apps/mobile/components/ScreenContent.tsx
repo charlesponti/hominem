@@ -12,7 +12,7 @@ export const ScreenContent = ({ style, children, ...props }: SafeAreaViewProps) 
   );
 };
 
-const useStyles = makeStyles((t) =>
+const useStyles = makeStyles(() =>
   StyleSheet.create({
     container: {
       flex: 1,

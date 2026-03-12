@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IntentPill } from '~/components/start/intent-pill';
 import { AsciiTexture } from '~/components/ui/ascii-texture';
-import { Text, theme, makeStyles } from '~/theme';
+import { Text, makeStyles } from '~/theme';
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 import { useIntentSuggestions } from '~/utils/services/intents/use-intent-suggestions';
 
