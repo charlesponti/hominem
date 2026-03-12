@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONFIG_JSON="$(zsh -lc 'bunx expo config --json --type public')"
+CONFIG_JSON="$(bash -lc 'bunx expo config --json --type public')"
 
 export CONFIG_JSON
 
