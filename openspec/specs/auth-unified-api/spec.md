@@ -44,3 +44,17 @@ External code shall only access it via explicit path
 - **WHEN** app code writes `import { LocalMockAuthProvider } from '@hominem/auth'`
 - **THEN** TypeScript reports an error indicating the symbol is not exported
 
+### Requirement: API authentication accepts both canonical bearer contracts
+Protected API routes SHALL attempt Better Auth bearer-session resolution before
+falling back to the legacy custom JWT verifier so browser-originated and CLI
+machine flows can share the same API surface.
+
+#### Scenario: Better Auth bearer authenticates protected route
+- **WHEN** a protected API route receives an `Authorization: Bearer` header for a valid Better Auth session
+- **THEN** the API authenticates the request via Better Auth session resolution
+- **AND** the request succeeds without requiring a legacy custom JWT
+
+#### Scenario: Legacy JWT bearer still authenticates protected route
+- **WHEN** a protected API route receives an `Authorization: Bearer` header for a valid legacy custom JWT
+- **THEN** the API authenticates the request via the legacy verifier
+- **AND** the request succeeds

@@ -1,6 +1,6 @@
 # Active OpenSpec Change
 
-active_change: pure-better-auth-cli-flow
+active_change: none
 
 artifacts:
 - proposal.md
