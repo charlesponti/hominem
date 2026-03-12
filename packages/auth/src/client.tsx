@@ -246,7 +246,7 @@ export function AuthProvider({
   initialUser = null,
   initialSession = null,
 }: AuthProviderProps) {
-  const hasInitialAuth = Boolean(initialUser && initialSession);
+  const hasInitialAuth = Boolean(initialUser);
   const previousSessionTokenRef = useRef<string | null>(initialSession?.access_token ?? null);
   const [authState, setAuthState] = useState<ClientAuthState>(() => ({
     error: null,
@@ -260,15 +260,14 @@ export function AuthProvider({
     const payload = await fetchSession(config.apiBaseUrl);
     setAuthState((currentState) => {
       const nextSession = toSession(payload.accessToken, payload.expiresIn);
-      const session =
-        nextSession ?? (payload.isAuthenticated && payload.user ? currentState.session : null);
+      const session = payload.isAuthenticated && payload.user ? nextSession ?? currentState.session : null;
       const user = payload.user ?? null;
 
       return {
         error: null,
         isLoading: false,
         session,
-        status: user && session ? 'signed_in' : 'signed_out',
+        status: user ? 'signed_in' : 'signed_out',
         user,
       };
     });
@@ -283,11 +282,11 @@ export function AuthProvider({
   }, [hasInitialAuth, refreshAuth]);
 
   useEffect(() => {
-    if (!authState.session || authState.status === 'signed_out') {
+    if (authState.status !== 'signed_in') {
       return;
     }
 
-    const expiresIn = authState.session.expires_in ?? 600;
+    const expiresIn = authState.session?.expires_in ?? 600;
     const refreshInterval = Math.max((expiresIn - 60) * 1000, 5 * 60 * 1000);
 
     const intervalId = setInterval(() => {

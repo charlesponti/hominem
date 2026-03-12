@@ -1,7 +1,6 @@
 import { useAuthContext, useSafeAuth } from '@hominem/auth';
 import type { ClientConfig } from '@hominem/hono-client';
 import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
-import { useCallback } from 'react';
 import type { ReactNode } from 'react';
 
 import { getQueryClient } from '~/lib/get-query-client';
@@ -21,26 +20,12 @@ interface HonoProviderProps {
 }
 
 function HonoProviderInner({ children, baseUrl }: HonoProviderProps) {
-  const { authClient } = useAuthContext();
+  useAuthContext();
   const queryClient = getQueryClient();
-
-  const getAuthToken = useCallback(async () => {
-    try {
-      const { data } = await authClient.auth.getSession();
-      return data?.session?.access_token || null;
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error('Failed to get auth token:', error.message);
-      } else {
-        console.error('Failed to get auth token:', error);
-      }
-      return null;
-    }
-  }, [authClient]);
 
   const config: ClientConfig = {
     baseUrl,
-    getAuthToken,
+    getAuthToken: async () => null,
     onError: (error) => {
       console.error('Hono API error:', error);
     },

@@ -164,6 +164,10 @@ export function createAuthVerifyAction(config: AuthVerifyServerRouteConfig) {
     const headers = new Headers();
     appendResponseCookies(headers, response.headers);
 
+    if (!headers.get('set-cookie')) {
+      return { error: 'Verification failed. Session cookie was not set.' };
+    }
+
     return redirect(next, { headers });
   };
 }

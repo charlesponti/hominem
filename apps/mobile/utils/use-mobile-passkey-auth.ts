@@ -8,9 +8,6 @@ import { useAuth } from '~/utils/auth-provider';
 import { API_BASE_URL, E2E_AUTH_SECRET, E2E_TESTING } from '~/utils/constants';
 
 interface PasskeySignInResult {
-  accessToken: string;
-  expiresIn: number;
-  tokenType: 'Bearer';
   user: {
     id: string;
     email: string;
@@ -31,7 +28,7 @@ interface UseMobilePasskeyAuthReturn {
 export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { getAccessToken } = useAuth();
+  const { getAuthHeaders } = useAuth();
 
   // Passkeys require iOS 16+. Earlier versions and non-iOS platforms are not supported.
   const isSupported =
@@ -88,9 +85,6 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
           };
 
           return {
-            accessToken: payload.access_token,
-            expiresIn: payload.expires_in,
-            tokenType: payload.token_type,
             user: payload.user ?? {
               id: `mobile-passkey-${Date.now()}`,
               email,
@@ -137,11 +131,6 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
 
         const result = (await tokenResponse.json()) as PasskeySignInResult;
 
-        if (!result.accessToken) {
-          setError('Server did not return an app session payload');
-          return null;
-        }
-
         if (cookieHeader) {
           await persistSessionCookieHeader(cookieHeader);
         }
@@ -184,12 +173,12 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
 
   const listPasskeys = useCallback(async () => {
     try {
-      const token = await getAccessToken();
-      if (!token) return [];
+      const authHeaders = await getAuthHeaders();
+      if (Object.keys(authHeaders).length === 0) return [];
 
       const response = await fetch(new URL('/api/auth/passkeys', API_BASE_URL).toString(), {
         method: 'GET',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders,
       });
 
       if (!response.ok) return [];
@@ -202,7 +191,7 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
     } catch {
       return [];
     }
-  }, [getAccessToken]);
+  }, [getAuthHeaders]);
 
   const deletePasskey = useCallback(
     async (id: string) => {
@@ -210,37 +199,37 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
       setError(null);
 
       try {
-        let token = await getAccessToken();
-        if (!token) {
+        let authHeaders = await getAuthHeaders();
+        if (Object.keys(authHeaders).length === 0) {
           setError('Not authenticated');
           return { success: false, error: 'Not authenticated' };
         }
 
-        const requestDelete = async (accessToken: string) => {
+        const requestDelete = async (headers: Record<string, string>) => {
           return fetch(new URL('/api/auth/passkey/delete', API_BASE_URL).toString(), {
             method: 'DELETE',
             headers: {
               'content-type': 'application/json',
-              Authorization: `Bearer ${accessToken}`,
+              ...headers,
             },
             body: JSON.stringify({ id }),
           });
         };
 
-        let response = await requestDelete(token);
+        let response = await requestDelete(authHeaders);
 
         if (response.status === 403) {
           const body = (await response.json()) as { error?: string; action?: string };
           if (body.error === 'step_up_required' && body.action === STEP_UP_ACTIONS.PASSKEY_DELETE) {
             const stepUpResult = await signIn('real');
-            if (!stepUpResult?.accessToken) {
+            if (!stepUpResult) {
               const message = 'Passkey step-up required';
               setError(message);
               return { success: false, error: message };
             }
 
-            token = stepUpResult.accessToken;
-            response = await requestDelete(token);
+            authHeaders = await getAuthHeaders();
+            response = await requestDelete(authHeaders);
           } else {
             const message = body.error ?? 'Failed to delete passkey';
             setError(message);
@@ -264,7 +253,7 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
         setIsLoading(false);
       }
     },
-    [getAccessToken],
+    [getAuthHeaders, signIn],
   );
 
   return {

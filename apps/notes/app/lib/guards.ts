@@ -9,7 +9,7 @@ import { getServerSession } from './auth.server';
 export async function requireAuth(request: Request) {
   const { user, session, headers } = await getServerSession(request);
 
-  if (!(user && session)) {
+  if (!user) {
     const url = new URL(request.url);
     const next = encodeURIComponent(url.pathname + url.search);
     throw redirect(`/?next=${next}`, { headers });

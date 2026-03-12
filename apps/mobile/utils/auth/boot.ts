@@ -1,8 +1,6 @@
 import type { AuthState } from './types';
 
 export interface AuthBootStoredTokens {
-  accessToken: string | null;
-  expiresAtStr: string | null;
   sessionCookieHeader: string | null;
 }
 
@@ -16,7 +14,7 @@ export type AuthBootResult =
   | {
       type: 'SESSION_LOADED';
       user: NonNullable<AuthState['user']>;
-      tokens: { accessToken: string; expiresAtStr: string | null; sessionCookieHeader: string | null };
+      tokens: { sessionCookieHeader: string };
     }
   | { type: 'SESSION_EXPIRED' };
 
@@ -30,10 +28,9 @@ export interface AuthBootDeps {
    * - Throws on network errors or AbortError — caller handles without clearing tokens.
    */
   probeSession: (input: {
-    accessToken: string | null;
     sessionCookieHeader: string | null;
     signal: AbortSignal;
-  }) => Promise<{ user: AuthBootUser; accessToken: string; expiresAtStr: string | null } | null>;
+  }) => Promise<{ user: AuthBootUser } | null>;
   /** Clear all stored tokens. Called only when probeSession returns null (invalid token). */
   clearTokens: () => Promise<void>;
   /** Upsert the user profile in local store and return the normalized profile. */
@@ -42,14 +39,6 @@ export interface AuthBootDeps {
   clearLegacyData: () => Promise<void>;
   /** AbortSignal tied to the boot lifecycle. Throws AbortError on timeout or unmount. */
   signal: AbortSignal;
-}
-
-function isValidExpiresAt(expiresAtStr: string | null) {
-  if (!expiresAtStr) {
-    return false;
-  }
-  const value = Number(expiresAtStr);
-  return Number.isFinite(value) && value > 0;
 }
 
 /**
@@ -72,21 +61,10 @@ export async function runAuthBoot(deps: AuthBootDeps): Promise<AuthBootResult> {
 
   await clearLegacyData();
 
-  const { accessToken, expiresAtStr, sessionCookieHeader } = await getStoredTokens();
+  const { sessionCookieHeader } = await getStoredTokens();
 
-  if (!accessToken && expiresAtStr) {
-    await clearTokens();
-    return { type: 'SESSION_EXPIRED' };
-  }
-
-  if (accessToken && !isValidExpiresAt(expiresAtStr)) {
-    await clearTokens();
-    return { type: 'SESSION_EXPIRED' };
-  }
-
-  if (accessToken || sessionCookieHeader) {
+  if (sessionCookieHeader) {
     const probeResult = await probeSession({
-      accessToken,
       sessionCookieHeader,
       signal,
     });
@@ -97,11 +75,7 @@ export async function runAuthBoot(deps: AuthBootDeps): Promise<AuthBootResult> {
         return {
           type: 'SESSION_LOADED',
           user: userProfile,
-          tokens: {
-            accessToken: probeResult.accessToken,
-            expiresAtStr: probeResult.expiresAtStr,
-            sessionCookieHeader,
-          },
+          tokens: { sessionCookieHeader },
         };
       }
     } else {
