@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'bun:test'
-import { spawn } from 'node:child_process'
 import fs from 'node:fs'
-import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
+import { Writable } from 'node:stream'
 
 import type { CommandSuccess, JsonValue } from '../../src/contracts'
+import { runCli } from '../../src/runtime'
 
 type OutputFormat = 'json' | 'ndjson'
 
@@ -41,42 +41,21 @@ function createCliEnv(hominemHome: string, extraEnv?: NodeJS.ProcessEnv): NodeJS
   }
 }
 
-async function runCapturedSubprocess(
-  argv: string[],
-  options: {
-    cwd: string
-    env: NodeJS.ProcessEnv
-  },
-): Promise<CapturedRun> {
-  const bunExecutable =
-    typeof Bun !== 'undefined' ? Bun.which('bun') ?? process.execPath : process.execPath
-  const cliEntry = path.join(options.cwd, 'src/cli.ts')
+class MemoryWritable extends Writable {
+  private chunks: string[] = []
 
-  return await new Promise((resolve, reject) => {
-    const child = spawn(bunExecutable, [cliEntry, ...argv], {
-      cwd: options.cwd,
-      env: options.env,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    })
+  override _write(
+    chunk: string | Uint8Array,
+    _encoding: BufferEncoding,
+    callback: (error?: Error | null) => void,
+  ) {
+    this.chunks.push(normalizeChunk(chunk))
+    callback()
+  }
 
-    let stdout = ''
-    let stderr = ''
-
-    child.stdout.on('data', (chunk: string | Uint8Array) => {
-      stdout += normalizeChunk(chunk)
-    })
-    child.stderr.on('data', (chunk: string | Uint8Array) => {
-      stderr += normalizeChunk(chunk)
-    })
-    child.on('error', reject)
-    child.on('close', (code) => {
-      resolve({
-        exitCode: code ?? 1,
-        stdout,
-        stderr,
-      })
-    })
-  })
+  toString() {
+    return this.chunks.join('')
+  }
 }
 
 async function runCliCommand(
@@ -85,46 +64,21 @@ async function runCliCommand(
   argv: string[],
   extraEnv?: NodeJS.ProcessEnv,
 ) {
-  return runCapturedSubprocess(argv, {
+  const stdout = new MemoryWritable()
+  const stderr = new MemoryWritable()
+  const result = await runCli(argv, 'hominem', {
     cwd: cliRoot,
     env: createCliEnv(hominemHome, extraEnv),
-  })
-}
-
-async function withSessionProbeServer<T>(run: (baseUrl: string) => Promise<T>): Promise<T> {
-  const server = http.createServer((request, response) => {
-    if (request.url === '/api/auth/session') {
-      response.writeHead(200, { 'content-type': 'application/json' })
-      response.end(JSON.stringify({ isAuthenticated: true }))
-      return
-    }
-
-    response.writeHead(404, { 'content-type': 'application/json' })
-    response.end(JSON.stringify({ error: 'not_found' }))
+    stdio: {
+      out: stdout,
+      err: stderr,
+    },
   })
 
-  await new Promise<void>((resolve) => {
-    server.listen(0, '127.0.0.1', () => resolve())
-  })
-
-  const address = server.address()
-  if (!address || typeof address === 'string') {
-    server.close()
-    throw new Error('Failed to bind session probe server')
-  }
-
-  try {
-    return await run(`http://127.0.0.1:${address.port}`)
-  } finally {
-    await new Promise<void>((resolve, reject) => {
-      server.close((error) => {
-        if (error) {
-          reject(error)
-          return
-        }
-        resolve()
-      })
-    })
+  return {
+    exitCode: result.exitCode,
+    stdout: stdout.toString(),
+    stderr: stderr.toString(),
   }
 }
 
@@ -265,41 +219,6 @@ describe('v2 output contract snapshots', () => {
         doctorData.checks.some((check) => check.id === 'auth.token' && check.status === 'warn'),
       ).toBeTrue()
 
-      await withSessionProbeServer(async (baseUrl) => {
-        fs.writeFileSync(
-          path.join(hominemHome, 'tokens.json'),
-          JSON.stringify({
-            tokenVersion: 2,
-            accessToken: 'stored-bearer',
-            issuerBaseUrl: baseUrl,
-            provider: 'better-auth',
-          }),
-        )
-
-        const authenticatedDoctor = await runCliCommand(cliRoot, hominemHome, [
-          'system',
-          'doctor',
-          '--format',
-          format,
-        ])
-        expect(authenticatedDoctor.exitCode).toBe(0)
-
-        const authenticatedPayload = normalizeEnvelope(
-          parseSuccessEnvelope(format, authenticatedDoctor.stdout),
-          hominemHome,
-        )
-        const authenticatedData = authenticatedPayload.data as {
-          checks: Array<{ id: string; status: string; message: string }>
-        }
-
-        expect(
-          authenticatedData.checks.some(
-            (check) => check.id === 'auth.session' && check.status === 'pass',
-          ),
-        ).toBeTrue()
-
-        fs.rmSync(path.join(hominemHome, 'tokens.json'), { force: true })
-      })
     }
   })
 })

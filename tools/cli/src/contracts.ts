@@ -10,6 +10,7 @@ export type ExitCode = 0 | 2 | 3 | 4 | 5 | 10;
 
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+export type CliWriteStream = Pick<NodeJS.WriteStream, 'write'>
 
 export interface CommandSuccess<T> {
   ok: true;
@@ -52,8 +53,8 @@ export interface CommandContext {
   cwd: string;
   env: NodeJS.ProcessEnv;
   stdio: {
-    out: NodeJS.WriteStream;
-    err: NodeJS.WriteStream;
+    out: CliWriteStream;
+    err: CliWriteStream;
   };
   outputFormat: OutputFormat;
   quiet: boolean;

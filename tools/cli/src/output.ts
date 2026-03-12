@@ -1,9 +1,9 @@
-import type { CommandFailure, CommandSuccess, OutputFormat } from './contracts';
+import type { CliWriteStream, CommandFailure, CommandSuccess, OutputFormat } from './contracts';
 
 export function writeSuccess<T>(
   format: OutputFormat,
   payload: CommandSuccess<T>,
-  stdout: NodeJS.WriteStream,
+  stdout: CliWriteStream,
 ) {
   if (format === 'json') {
     stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
@@ -24,7 +24,7 @@ export function writeSuccess<T>(
 export function writeFailure(
   format: OutputFormat,
   payload: CommandFailure,
-  stderr: NodeJS.WriteStream,
+  stderr: CliWriteStream,
 ) {
   if (format === 'json') {
     stderr.write(`${JSON.stringify(payload, null, 2)}\n`);
