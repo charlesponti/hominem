@@ -19,7 +19,7 @@ import { getLocalDate } from '~/utils/dates'
 import type { FocusItem } from '~/utils/services/notes/types'
 import { useDeleteFocus } from '~/utils/services/notes/use-delete-focus'
 import { useFocusItemComplete } from '../../utils/services/notes/use-focus-item-complete'
-import MindsherpaIcon, { type MindsherpaIconName } from '../ui/icon'
+import AppIcon, { type AppIconName } from '../ui/icon'
 
 const SWIPE_THRESHOLD = 80
 
@@ -29,7 +29,7 @@ const FocusDueDate = memo(({ dueDate }: { dueDate: Date | null }) => {
   const { localDateString } = getLocalDate(dueDate)
 
   return (
-    <MSText variant="small" color="text-tertiary" fontSize={12}>
+    <MSText variant="small" color="text-tertiary">
       {localDateString} {dueDate.toLocaleTimeString()}
     </MSText>
   )
@@ -49,7 +49,7 @@ export const FocusListItem = ({
   const translateX = useSharedValue(0)
   const itemHeight = useSharedValue(64)
   const iconBackgroundColor = useSharedValue<string>(theme.colors.muted)
-  const iconName = useSharedValue<MindsherpaIconName>('check')
+  const iconName = useSharedValue<AppIconName>('check')
   const isMutating = useSharedValue(false)
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dueDate = item.due_date ? new Date(item.due_date) : null
@@ -170,7 +170,7 @@ export const FocusListItem = ({
           <FocusDueDate dueDate={dueDate} />
         </View>
         <Reanimated.View style={[styles.icon, iconStyle]}>
-          <MindsherpaIcon name={iconName.value} size={20} color={theme.colors.foreground} />
+          <AppIcon name={iconName.value} size={20} color={theme.colors.foreground} />
         </Reanimated.View>
       </View>
     </Reanimated.View>

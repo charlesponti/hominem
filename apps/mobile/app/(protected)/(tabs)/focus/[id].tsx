@@ -7,7 +7,7 @@ import { runOnJS } from 'react-native-reanimated';
 
 import { Button } from '~/components/Button';
 import TextInput from '~/components/text-input';
-import MindsherpaIcon from '~/components/ui/icon';
+import AppIcon from '~/components/ui/icon';
 import { Text, theme } from '~/theme';
 import { getTimezone } from '~/utils/dates';
 import queryClient from '~/utils/query-client';
@@ -86,7 +86,7 @@ export default function FocusItemView() {
         </View>
         {due_date ? (
           <View style={styles.dueDateRow}>
-            <MindsherpaIcon name="calendar" size={16} color={theme.colors.foreground} />
+            <AppIcon name="calendar" size={16} color={theme.colors.foreground} />
             <GestureDetector gesture={dueDateTap}>
               <Text variant="body">
                 {due_date.toLocaleDateString()} {due_date.toLocaleTimeString()}

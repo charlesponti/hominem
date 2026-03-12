@@ -14,7 +14,7 @@ import { FocusHeader } from '~/components/focus/focus-header';
 import { FocusList } from '~/components/focus/focus-list';
 import { ActiveSearchSummary, type ActiveSearch } from '~/components/focus/focus-search';
 import { LoadingContainer } from '~/components/LoadingFull';
-import MindsherpaIcon from '~/components/ui/icon';
+import AppIcon from '~/components/ui/icon';
 import { Text, theme } from '~/theme';
 import { useFocusQuery } from '~/utils/services/notes/use-focus-query';
 
@@ -117,7 +117,7 @@ export const FocusView = () => {
               style={styles.sherpaLink}
               accessibilityLabel="Open Sherpa"
             >
-              <MindsherpaIcon name="hat-wizard" size={32} color={theme.colors.white} />
+              <AppIcon name="hat-wizard" size={32} color={theme.colors.white} />
             </Link>
           </View>
         </View>
@@ -197,7 +197,7 @@ const FocusLoadingError = React.memo(() => {
     <View style={errorStyles.wrapper}>
       <FeedbackBlock error>
         <View style={errorStyles.row}>
-          <MindsherpaIcon name="circle-exclamation" size={24} color={theme.colors.destructive} />
+          <AppIcon name="circle-exclamation" size={24} color={theme.colors.destructive} />
           <View style={errorStyles.textCol}>
             <Text variant="body" color="foreground">
               FOCUS LOAD FAILED.

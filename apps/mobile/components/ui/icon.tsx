@@ -4,16 +4,16 @@ import { Text } from 'react-native'
 import { theme } from '~/theme'
 import unicodeMap from './fa-unicode-map.json'
 
-export type MindsherpaIconName = keyof typeof unicodeMap
+export type AppIconName = keyof typeof unicodeMap
 
 interface IconProps {
   color?: string
-  name: MindsherpaIconName
+  name: AppIconName
   size: number
   style?: TextStyle | TextStyle[]
 }
 
-const MindsherpaIcon = ({ color = theme.colors.foreground, name, size, style }: IconProps) => {
+const AppIcon = ({ color = theme.colors.foreground, name, size, style }: IconProps) => {
   const icon = unicodeMap[name]
     ? String.fromCharCode(Number.parseInt(unicodeMap[name].slice(2), 16))
     : ''
@@ -21,4 +21,4 @@ const MindsherpaIcon = ({ color = theme.colors.foreground, name, size, style }: 
   return <Text style={[{ fontFamily: 'fa-regular-400', color, fontSize: size }, style]}>{icon}</Text>
 }
 
-export default MindsherpaIcon
+export default AppIcon

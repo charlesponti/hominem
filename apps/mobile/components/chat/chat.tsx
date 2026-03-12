@@ -22,7 +22,7 @@ import { ArtifactActions } from './artifact-actions'
 import { ClassificationReview } from './classification-review'
 import { ContextAnchor, type SessionSource } from './context-anchor'
 import { Text, theme } from '~/theme'
-import MindsherpaIcon from '../ui/icon'
+import AppIcon from '../ui/icon'
 
 const keyExtractor = (item: MessageOutput) => item.id
 
@@ -276,7 +276,7 @@ export const Chat = (props: ChatProps) => {
           accessibilityLabel={showSearch ? 'Close search' : 'Search messages'}
           testID="chat-search-toggle"
         >
-          <MindsherpaIcon
+          <AppIcon
             name={showSearch ? 'x' : 'magnifying-glass'}
             size={18}
             color={showSearch ? theme.colors.foreground : theme.colors['text-tertiary']}

@@ -3,7 +3,7 @@ import type { RelativePathString } from 'expo-router'
 import React, { useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Text, theme } from '~/theme'
-import MindsherpaIcon from '../ui/icon'
+import AppIcon from '../ui/icon'
 
 export const FocusHeader = React.memo(() => {
   const todaysDate = useMemo(
@@ -21,7 +21,7 @@ export const FocusHeader = React.memo(() => {
         </View>
         <View style={[styles.iconWrap]}>
           <Link href={"/(protected)/(tabs)/account" as RelativePathString} style={[styles.iconLink]}>
-            <MindsherpaIcon name="user" size={16} />
+            <AppIcon name="user" size={16} />
           </Link>
         </View>
       </View>

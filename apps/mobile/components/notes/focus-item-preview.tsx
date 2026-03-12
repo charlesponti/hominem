@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View, type ViewProps } from 'react-native'
 import { Text, theme } from '~/theme'
 import type { FocusItemInput } from '~/utils/services/notes/types'
-import MindsherpaIcon from '../ui/icon'
+import AppIcon from '../ui/icon'
 
 function getReadableDate(date: FocusItemInput['due_date']) {
   if (!date) return null
@@ -49,10 +49,10 @@ const FocusItemPreview = ({
         {focusItem.due_date && readableDate ? <Text variant="caption">{readableDate}</Text> : null}
       </View>
       <Pressable disabled={disabled} style={[focusItemStyles.icon]} onPress={onDeleteIconPress}>
-        <MindsherpaIcon name="trash" size={24} color={theme.colors.destructive} />
+        <AppIcon name="trash" size={24} color={theme.colors.destructive} />
       </Pressable>
       <Pressable disabled={disabled} style={[focusItemStyles.icon]} onPress={onIconPress}>
-        <MindsherpaIcon name="list-tree" size={24} color={theme.colors.foreground} />
+        <AppIcon name="list-tree" size={24} color={theme.colors.foreground} />
       </Pressable>
     </View>
   )

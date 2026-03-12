@@ -17,7 +17,7 @@ import { Text, theme } from '~/theme'
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion'
 import { useAuth } from '~/utils/auth-provider'
 import { useStartChat } from '~/utils/services/chat'
-import MindsherpaIcon from '../ui/icon'
+import AppIcon from '../ui/icon'
 import { useInputContext } from './input-context'
 
 type InputDockProps = {
@@ -119,7 +119,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
             onPress={handleTextModePress}
             accessibilityLabel="Add attachment"
           >
-            <MindsherpaIcon name="circle-plus" size={22} color={theme.colors.white} />
+            <AppIcon name="circle-plus" size={22} color={theme.colors.white} />
           </Pressable>
           <TextInput
             placeholder="Where should we start?"
@@ -137,7 +137,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
             accessibilityLabel="Voice input"
             testID="voice-input-button"
           >
-            <MindsherpaIcon name="microphone" size={22} color={theme.colors.white} />
+            <AppIcon name="microphone" size={22} color={theme.colors.white} />
           </Pressable>
           <Pressable
             style={[styles.iconButton, styles.sendButton, isPending ? styles.disabled : null]}
@@ -146,7 +146,7 @@ export const InputDock = ({ seedPrompt }: InputDockProps) => {
             accessibilityLabel="Send"
             testID="send-message-button"
           >
-            <MindsherpaIcon name="arrow-up" size={20} color={theme.colors.foreground} />
+            <AppIcon name="arrow-up" size={20} color={theme.colors.foreground} />
           </Pressable>
         </View>
       </Animated.View>

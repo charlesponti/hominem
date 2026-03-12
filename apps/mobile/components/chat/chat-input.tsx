@@ -7,7 +7,7 @@ import { Button } from '~/components/Button'
 import TextArea from '~/components/text-input-autogrow'
 import { theme } from '~/theme'
 import { VoiceSessionModal } from '../media/voice-session-modal'
-import MindsherpaIcon from '../ui/icon'
+import AppIcon from '../ui/icon'
 
 const MAX_MESSAGE_LENGTH = 10_000
 
@@ -171,7 +171,7 @@ export const ChatInput = ({
           accessibilityLabel="Attach image"
           testID="chat-attach-button"
         >
-          <MindsherpaIcon name="paperclip" size={18} color={theme.colors['text-tertiary']} />
+          <AppIcon name="paperclip" size={18} color={theme.colors['text-tertiary']} />
         </Button>
         <Button
           variant="primary"
@@ -182,7 +182,7 @@ export const ChatInput = ({
           accessibilityHint="Opens a full-screen voice recording panel"
           testID="chat-voice-input-button"
         >
-          <MindsherpaIcon name="microphone" size={20} color={theme.colors.white} />
+          <AppIcon name="microphone" size={20} color={theme.colors.white} />
         </Button>
         <Button
           variant="outline"
@@ -193,7 +193,7 @@ export const ChatInput = ({
           accessibilityLabel="Send message"
           testID="chat-send-message-button"
         >
-          <MindsherpaIcon name="arrow-up" size={20} color={theme.colors.foreground} />
+          <AppIcon name="arrow-up" size={20} color={theme.colors.foreground} />
         </Button>
       </View>
 

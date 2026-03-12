@@ -73,7 +73,7 @@ Verified as of Phase 6 audit. Each row documents alignment status and any platfo
 | Rule | Notes (web) | Rocco (web) | Mobile |
 |---|---|---|---|
 | No decorative emojis | ✓ None found | ✓ Removed Phase 5 | ✓ Removed Phase 5 |
-| Icons communicate info | ✓ Lucide icons only where informational | ✓ | ✓ `MindsherpaIcon` only where informational |
+| Icons communicate info | ✓ Lucide icons only where informational | ✓ | ✓ `AppIcon` only where informational |
 
 ---
 

@@ -3,7 +3,7 @@ import type { RelativePathString } from 'expo-router'
 import React, { type PropsWithChildren } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { Text, theme } from '~/theme'
-import MindsherpaIcon from './ui/icon'
+import AppIcon from './ui/icon'
 
 export const ViewHeader = ({ children }: PropsWithChildren) => {
   return (
@@ -11,7 +11,7 @@ export const ViewHeader = ({ children }: PropsWithChildren) => {
       <View style={styles.navbar}>
         <Link href={"/(protected)/(tabs)/focus" as RelativePathString}>
           <View style={styles.backLink}>
-            <MindsherpaIcon name="arrow-left" size={26} color={theme.colors.foreground} />
+            <AppIcon name="arrow-left" size={26} color={theme.colors.foreground} />
             <Text variant="bodyLarge">Today</Text>
           </View>
         </Link>

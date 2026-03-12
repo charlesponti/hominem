@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import MindsherpaIcon from '~/components/ui/icon';
+import AppIcon from '~/components/ui/icon';
 import { Text, theme } from '~/theme';
 
 export default function FocusInsightsSheet() {
@@ -20,13 +20,13 @@ export default function FocusInsightsSheet() {
           LIVE METRICS
         </Text>
         <View style={styles.metricRow}>
-          <MindsherpaIcon name="sparkles" size={18} color={theme.colors.foreground} />
+          <AppIcon name="sparkles" size={18} color={theme.colors.foreground} />
           <Text variant="bodyLarge" color="foreground">
             ENERGY: HIGH
           </Text>
         </View>
         <View style={styles.metricRow}>
-          <MindsherpaIcon name="bolt" size={18} color={theme.colors.foreground} />
+          <AppIcon name="bolt" size={18} color={theme.colors.foreground} />
           <Text variant="bodyLarge" color="foreground">
             MOMENTUM: 4 STREAKS
           </Text>
