@@ -1,5 +1,7 @@
 import type { ErrorInfo } from 'react';
 
+import { posthog } from '~/lib/posthog';
+
 interface ErrorLogEntry {
   error: Error;
   errorInfo?: ErrorInfo;
@@ -36,10 +38,16 @@ export function logError(
     errorLog.pop();
   }
 
-  // Always log to console in development
   if (typeof __DEV__ !== 'undefined' && __DEV__) {
     console.error('[ErrorBoundary]', error, errorInfo);
+    return;
   }
+
+  posthog.captureException(error, {
+    feature: context?.feature,
+    route: context?.route,
+    userId: context?.userId,
+  });
 }
 
 export function getErrorLog(): ErrorLogEntry[] {

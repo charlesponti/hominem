@@ -9,10 +9,6 @@ function getExpoExtraConfig(env) {
     apiBaseUrl: getEnvValue(env.EXPO_PUBLIC_API_BASE_URL, ''),
     e2eTesting: getEnvValue(env.EXPO_PUBLIC_E2E_TESTING, 'false'),
     e2eAuthSecret: getEnvValue(env.EXPO_PUBLIC_E2E_AUTH_SECRET, ''),
-    aiSdkChatWebEnabled: getEnvValue(env.EXPO_PUBLIC_AI_SDK_CHAT_WEB_ENABLED, 'false'),
-    aiSdkChatMobileEnabled: getEnvValue(env.EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED, 'false'),
-    aiSdkTranscribeEnabled: getEnvValue(env.EXPO_PUBLIC_AI_SDK_TRANSCRIBE_ENABLED, 'false'),
-    aiSdkSpeechEnabled: getEnvValue(env.EXPO_PUBLIC_AI_SDK_SPEECH_ENABLED, 'false'),
     mobilePasskeyEnabled: getEnvValue(env.EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED, 'false'),
   }
 }

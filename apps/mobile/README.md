@@ -18,6 +18,7 @@ The mobile app uses explicit runtime variants. `APP_VARIANT` controls app identi
 - `APP_VARIANT` is the single source of truth for app identity, bundle identifier, URL scheme, dev-client inclusion, and Expo updates behavior.
 - Only `dev` includes `expo-dev-client` and connects to Metro.
 - `e2e`, `preview`, and `production` exclude the dev client and generate standalone native projects.
+- Only `dev` and `e2e` may source local `.env.*.local` files. `preview` and `production` must use EAS-managed environments.
 - `bun run prebuild:dev` and `bun run prebuild:e2e` are variant-aware and regenerate `ios/` when the requested native shape changes.
 - Do not hand-edit generated `ios/Podfile`, `Expo.plist`, or project naming to switch variants. Regenerate through the variant prebuild scripts instead.
 
@@ -48,19 +49,34 @@ EXPO_PUBLIC_E2E_TESTING="true"
 EXPO_PUBLIC_E2E_AUTH_SECRET="<shared-non-prod-secret>"
 ```
 
-### Preview (`.env.preview.local`, `APP_VARIANT=preview`)
+### Preview (`APP_VARIANT=preview`, EAS environment: `preview`)
+
+Set these in the project `preview` environment on EAS, not in a local `.env` file:
 
 ```bash
 EXPO_PUBLIC_API_BASE_URL="https://api.hominem.test"
 EXPO_PUBLIC_E2E_TESTING="false"
+EXPO_PUBLIC_E2E_AUTH_SECRET=""
+EXPO_PUBLIC_AI_SDK_CHAT_WEB_ENABLED="false"
+EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED="false"
+EXPO_PUBLIC_AI_SDK_TRANSCRIBE_ENABLED="false"
+EXPO_PUBLIC_AI_SDK_SPEECH_ENABLED="false"
+EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED="false"
 ```
 
-### Production (`.env.production.local`, `APP_VARIANT=production`)
+### Production (`APP_VARIANT=production`, EAS environment: `production`)
+
+Set these in the project `production` environment on EAS, not in a local `.env` file:
 
 ```bash
 EXPO_PUBLIC_API_BASE_URL="https://api.ponti.io"
 EXPO_PUBLIC_E2E_TESTING="false"
 EXPO_PUBLIC_E2E_AUTH_SECRET=""
+EXPO_PUBLIC_AI_SDK_CHAT_WEB_ENABLED="true"
+EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED="true"
+EXPO_PUBLIC_AI_SDK_TRANSCRIBE_ENABLED="true"
+EXPO_PUBLIC_AI_SDK_SPEECH_ENABLED="true"
+EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED="false"
 ```
 
 ## Development
@@ -175,6 +191,8 @@ bun run build:development
 bun run build:e2e
 bun run build:preview
 bun run build:production
+bun run build:update:preview
+bun run build:update:production
 ```
 
 ### TestFlight Deployment

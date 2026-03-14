@@ -1,76 +1,93 @@
-# Expo and React Native Makefile
+EAS := eas
+EXPO := expo
 
-# Variables
-EXPO_CLI := npx expo
-EAS_CLI := npx eas
+# ─── Preflight ────────────────────────────────────────────────────────────────
 
-# Expo commands
-.PHONY: start
-start:
-	$(EXPO_CLI) start
+.PHONY: preflight-dev
+preflight-dev:
+	bash scripts/validate-eas-profile.sh
+	bash scripts/verify-expo-config.sh
 
-.PHONY: ios
-ios:
-	$(EXPO_CLI) run:ios
+.PHONY: preflight-preview
+preflight-preview:
+	bash scripts/validate-eas-profile.sh
+	bash scripts/verify-expo-config.sh
+	$(EAS) env:exec preview 'bash scripts/verify-release-env.sh preview'
 
-.PHONY: android
-android:
-	$(EXPO_CLI) run:android
+.PHONY: preflight-production
+preflight-production:
+	bash scripts/validate-eas-profile.sh
+	bash scripts/verify-expo-config.sh
+	$(EAS) env:exec production 'bash scripts/verify-release-env.sh production'
 
-.PHONY: web
-web:
-	$(EXPO_CLI) start --web
+# ─── Builds ───────────────────────────────────────────────────────────────────
 
-# Build commands
 .PHONY: build-dev
-build-dev:
-	$(EAS_CLI) build --profile development
+build-dev: preflight-dev
+	$(EAS) build --profile development --platform ios --non-interactive
+
+.PHONY: build-e2e
+build-e2e: preflight-dev
+	$(EAS) build --profile e2e --platform ios --non-interactive
 
 .PHONY: build-preview
-build-preview:
-	$(EAS_CLI) build --profile preview
+build-preview: preflight-preview
+	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview --platform ios --non-interactive
 
-.PHONY: build-prod
-build-prod:
-	$(EAS_CLI) build --profile production
+.PHONY: build-production
+build-production: preflight-production
+	APP_VARIANT=production EXPO_NO_DOTENV=1 $(EAS) build --profile production --platform ios --non-interactive
 
-# Development commands
-.PHONY: prebuild
-prebuild:
-	cd ios && pod install && cd ..
-	$(EXPO_CLI) prebuild
+# ─── OTA Updates ──────────────────────────────────────────────────────────────
 
-# Dependency management
-.PHONY: install
-install:
-	npm install
+.PHONY: update-preview
+update-preview: preflight-preview
+	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) update \
+		--platform ios --branch preview --clear-cache \
+		--environment preview --rollout-percentage 10
 
-.PHONY: update
-update:
-	npm update
+.PHONY: update-preview-50
+update-preview-50:
+	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) update \
+		--platform ios --branch preview \
+		--environment preview --rollout-percentage 50
 
-# Clean
-.PHONY: clean
-clean:
-	rm -rf node_modules
-	rm -rf ios/Pods
-	rm -rf android/app/build
+.PHONY: update-preview-100
+update-preview-100:
+	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) update \
+		--platform ios --branch preview \
+		--environment preview --rollout-percentage 100
 
-# Help
+.PHONY: update-preview-rollback
+update-preview-rollback:
+	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) update:revert-update-rollout --branch preview
+
+.PHONY: update-production
+update-production: preflight-production
+	APP_VARIANT=production EXPO_NO_DOTENV=1 $(EAS) update \
+		--platform ios --branch production --clear-cache \
+		--environment production
+
+# ─── Local Dev ────────────────────────────────────────────────────────────────
+
+.PHONY: prebuild-dev
+prebuild-dev:
+	bash scripts/ensure-ios-variant.sh dev
+
+.PHONY: prebuild-e2e
+prebuild-e2e:
+	bash scripts/ensure-ios-variant.sh e2e
+
+.PHONY: ios
+ios: prebuild-dev
+	bash scripts/run-variant.sh dev $(EXPO) run:ios
+
+# ─── Help ─────────────────────────────────────────────────────────────────────
+
 .PHONY: help
 help:
-	@echo "Available commands:"
-	@echo "  start         - Start Expo development server"
-	@echo "  ios           - Run on iOS simulator"
-	@echo "  android       - Run on Android emulator"
-	@echo "  web           - Run on web browser"
-	@echo "  build-dev     - Build for development"
-	@echo "  build-preview - Build for preview"
-	@echo "  build-prod    - Build for production"
-	@echo "  lint          - Run linter"
-	@echo "  format        - Format code"
-	@echo "  prebuild      - Run Expo prebuild"
-	@echo "  install       - Install dependencies"
-	@echo "  update        - Update dependencies"
-	@echo "  clean         - Clean build artifacts and dependencies"
-	@echo "  help          - Show this help message"
+	@echo "Preflight:              preflight-dev | preflight-preview | preflight-production"
+	@echo "Builds:                 build-dev | build-e2e | build-preview | build-production"
+	@echo "OTA updates (preview):  update-preview | update-preview-50 | update-preview-100 | update-preview-rollback"
+	@echo "OTA updates (prod):     update-production"
+	@echo "Local dev:              ios | prebuild-dev | prebuild-e2e"

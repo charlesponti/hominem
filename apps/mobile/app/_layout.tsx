@@ -1,10 +1,13 @@
 import { ThemeProvider } from '@shopify/restyle';
 import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
+import { PostHogProvider } from 'posthog-react-native';
 import React, { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+
+import { posthog } from '~/lib/posthog';
 
 import { RootErrorBoundary } from '~/components/error-boundary/root-error-boundary';
 import { theme, makeStyles } from '~/theme';
@@ -21,7 +24,7 @@ markStartupPhase('app_start');
 function InnerRootLayout() {
   const router = useRouter();
   const segments = useSegments() as string[];
-  const { authStatus, isSignedIn, resetAuthForE2E, signOut } = useAuth();
+  const { authStatus, isSignedIn, currentUser, resetAuthForE2E, signOut } = useAuth();
   const hasMarkedShellReady = React.useRef(false);
 
   useEffect(() => {
@@ -40,6 +43,14 @@ function InnerRootLayout() {
     const timeout = setTimeout(hide, 1500);
     return () => clearTimeout(timeout);
   }, []);
+
+  useEffect(() => {
+    if (authStatus === 'signed_in' && currentUser?.id) {
+      posthog.identify(currentUser.id, { email: currentUser.email ?? undefined });
+    } else if (authStatus === 'signed_out') {
+      posthog.reset();
+    }
+  }, [authStatus, currentUser]);
 
   useEffect(() => {
     if (!hasMarkedShellReady.current && authStatus !== 'booting') {
@@ -105,17 +116,19 @@ function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider theme={theme}>
-      <SafeAreaProvider>
-        <GestureHandlerRootView style={rootStyles.gestureRoot}>
-          <RootErrorBoundary>
-            <AuthProvider>
-              <InnerRootLayout />
-            </AuthProvider>
-          </RootErrorBoundary>
-        </GestureHandlerRootView>
-      </SafeAreaProvider>
-    </ThemeProvider>
+    <PostHogProvider client={posthog}>
+      <ThemeProvider theme={theme}>
+        <SafeAreaProvider>
+          <GestureHandlerRootView style={rootStyles.gestureRoot}>
+            <RootErrorBoundary>
+              <AuthProvider>
+                <InnerRootLayout />
+              </AuthProvider>
+            </RootErrorBoundary>
+          </GestureHandlerRootView>
+        </SafeAreaProvider>
+      </ThemeProvider>
+    </PostHogProvider>
   );
 }
 

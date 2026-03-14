@@ -2,10 +2,6 @@ import Constants from 'expo-constants';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as {
   apiBaseUrl?: string;
-  aiSdkChatWebEnabled?: string;
-  aiSdkChatMobileEnabled?: string;
-  aiSdkTranscribeEnabled?: string;
-  aiSdkSpeechEnabled?: string;
   mobilePasskeyEnabled?: string;
   e2eTesting?: string;
   e2eAuthSecret?: string;
@@ -58,10 +54,6 @@ export const APP_VARIANT = appVariant;
 export const APP_SCHEME = extra.appScheme || 'hakumi';
 
 const toBooleanFlag = (value: string | undefined) => value === 'true';
-
-export const AI_SDK_CHAT_MOBILE_ENABLED = toBooleanFlag(
-  extra.aiSdkChatMobileEnabled || process.env.EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED,
-);
 
 export const MOBILE_PASSKEY_ENABLED = toBooleanFlag(
   extra.mobilePasskeyEnabled || process.env.EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED,

@@ -10,10 +10,6 @@ const { EXPO_OWNER, EXPO_PROJECT_ID, EXPO_PROJECT_SLUG, getExpoExtraConfig } = r
     apiBaseUrl: string
     e2eTesting: string
     e2eAuthSecret: string
-    aiSdkChatWebEnabled: string
-    aiSdkChatMobileEnabled: string
-    aiSdkTranscribeEnabled: string
-    aiSdkSpeechEnabled: string
     mobilePasskeyEnabled: string
   }
 }
@@ -30,10 +26,6 @@ describe('expo config helpers', () => {
       apiBaseUrl: '',
       e2eTesting: 'false',
       e2eAuthSecret: '',
-      aiSdkChatWebEnabled: 'false',
-      aiSdkChatMobileEnabled: 'false',
-      aiSdkTranscribeEnabled: 'false',
-      aiSdkSpeechEnabled: 'false',
       mobilePasskeyEnabled: 'false',
     })
   })
@@ -44,20 +36,12 @@ describe('expo config helpers', () => {
         EXPO_PUBLIC_API_BASE_URL: 'https://api.ponti.io',
         EXPO_PUBLIC_E2E_TESTING: 'true',
         EXPO_PUBLIC_E2E_AUTH_SECRET: 'secret',
-        EXPO_PUBLIC_AI_SDK_CHAT_WEB_ENABLED: 'true',
-        EXPO_PUBLIC_AI_SDK_CHAT_MOBILE_ENABLED: 'true',
-        EXPO_PUBLIC_AI_SDK_TRANSCRIBE_ENABLED: 'true',
-        EXPO_PUBLIC_AI_SDK_SPEECH_ENABLED: 'true',
         EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED: 'true',
       }),
     ).toEqual({
       apiBaseUrl: 'https://api.ponti.io',
       e2eTesting: 'true',
       e2eAuthSecret: 'secret',
-      aiSdkChatWebEnabled: 'true',
-      aiSdkChatMobileEnabled: 'true',
-      aiSdkTranscribeEnabled: 'true',
-      aiSdkSpeechEnabled: 'true',
       mobilePasskeyEnabled: 'true',
     })
   })

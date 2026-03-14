@@ -1,6 +1,6 @@
 # Active OpenSpec Change
 
-active_change: fix-mobile-expo-config
+active_change: harden-mobile-release-env
 
 artifacts:
 - proposal.md

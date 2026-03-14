@@ -22,10 +22,6 @@ const { EXPO_OWNER, EXPO_PROJECT_ID, getExpoExtraConfig } = require('./config/ex
     apiBaseUrl: string
     e2eTesting: string
     e2eAuthSecret: string
-    aiSdkChatWebEnabled: string
-    aiSdkChatMobileEnabled: string
-    aiSdkTranscribeEnabled: string
-    aiSdkSpeechEnabled: string
     mobilePasskeyEnabled: string
   }
 }
@@ -98,6 +94,7 @@ export default ({ config }: ConfigContext) => {
       },
     ],
     ['expo-secure-store'],
+    'expo-localization',
     'expo-web-browser',
   ]
 
@@ -140,7 +137,7 @@ export default ({ config }: ConfigContext) => {
     },
     newArchEnabled: true,
     ios: {
-      appleTeamId: process.env.EXPO_APPLE_TEAM_ID,
+      appleTeamId: process.env.EXPO_APPLE_TEAM_ID ?? '3QHJ2KN8AL',
       associatedDomains: getAssociatedDomains(),
       bundleIdentifier: variantConfig.bundleIdentifier,
       supportsTablet: true,

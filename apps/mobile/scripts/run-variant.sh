@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 MOBILE_DIR="${ROOT_DIR}/apps/mobile"
+RELEASE_ENV_POLICY="${MOBILE_DIR}/config/release-env-policy.js"
 
 if [[ $# -lt 2 ]]; then
   echo "usage: run-variant.sh <variant> <command> [args...]" >&2
@@ -12,18 +13,19 @@ fi
 VARIANT="$1"
 shift
 
+CAN_USE_LOCAL_ENV="$(node -e "const { canUseLocalEnvFile } = require('${RELEASE_ENV_POLICY}'); process.stdout.write(canUseLocalEnvFile('${VARIANT}') ? 'true' : 'false')")"
+
+if [[ "${CAN_USE_LOCAL_ENV}" != "true" ]]; then
+  echo "variant ${VARIANT} must use EAS-managed env and cannot source a local env file" >&2
+  exit 1
+fi
+
 case "${VARIANT}" in
   dev)
     ENV_FILE="${MOBILE_DIR}/.env.development.local"
     ;;
   e2e)
     ENV_FILE="${MOBILE_DIR}/.env.e2e.local"
-    ;;
-  preview)
-    ENV_FILE="${MOBILE_DIR}/.env.preview.local"
-    ;;
-  production)
-    ENV_FILE="${MOBILE_DIR}/.env.production.local"
     ;;
   *)
     echo "unsupported variant: ${VARIANT}" >&2

@@ -61,6 +61,9 @@ jobs:
           EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
           EXPO_PUBLIC_E2E_TESTING: "false"
 
+      - name: Verify preview EAS env
+        run: bun run --filter @hominem/mobile verify:eas-env:preview
+
       - name: Publish OTA update → preview
         working-directory: apps/mobile
         env:
@@ -68,4 +71,4 @@ jobs:
           EXPO_NO_DOTENV: "1"
           EXPO_PUBLIC_API_BASE_URL: ${{ secrets.EXPO_PUBLIC_API_BASE_URL }}
           EXPO_PUBLIC_E2E_TESTING: "false"
-        run: eas update --auto --platform ios --branch preview --clear-cache --non-interactive
+        run: eas update --auto --platform ios --branch preview --clear-cache --non-interactive --environment preview

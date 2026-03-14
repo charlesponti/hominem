@@ -48,7 +48,7 @@
   "submit": {
     "production": {
       "ios": {
-        "appleTeamId": "$(EXPO_APPLE_TEAM_ID)"
+        "appleTeamId": "3QHJ2KN8AL"
       }
     },
     "development": {},
