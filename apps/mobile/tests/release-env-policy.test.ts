@@ -28,7 +28,7 @@ describe('release env policy', () => {
   it('accepts populated release env values', () => {
     expect(() =>
       assertReleaseEnv('preview', {
-        EXPO_PUBLIC_API_BASE_URL: 'https://api.hominem.test',
+        EXPO_PUBLIC_API_BASE_URL: 'https://api.ponti.io',
       }),
     ).not.toThrow()
 

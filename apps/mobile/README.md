@@ -54,7 +54,7 @@ EXPO_PUBLIC_E2E_AUTH_SECRET="<shared-non-prod-secret>"
 Set these in the project `preview` environment on EAS, not in a local `.env` file:
 
 ```bash
-EXPO_PUBLIC_API_BASE_URL="https://api.hominem.test"
+EXPO_PUBLIC_API_BASE_URL="https://api.ponti.io"
 EXPO_PUBLIC_E2E_TESTING="false"
 EXPO_PUBLIC_E2E_AUTH_SECRET=""
 EXPO_PUBLIC_AI_SDK_CHAT_WEB_ENABLED="false"

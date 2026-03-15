@@ -44,9 +44,9 @@ export function logError(
   }
 
   posthog.captureException(error, {
-    feature: context?.feature,
-    route: context?.route,
-    userId: context?.userId,
+    feature: context?.feature ?? null,
+    route: context?.route ?? null,
+    userId: context?.userId ?? null,
   });
 }
 

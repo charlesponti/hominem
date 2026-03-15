@@ -1,4 +1,6 @@
 export { AppLayout } from './app-layout';
+export { Header } from './header';
+export type { HeaderProps, NavItem } from './header';
 export { LandingPage } from './landing-page';
 export type { LandingPageProps, LandingFeature, LandingStep } from './landing-page';
 export { PageContainer } from './page-container';

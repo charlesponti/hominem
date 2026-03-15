@@ -137,6 +137,7 @@ export default ({ config }: ConfigContext) => {
     },
     newArchEnabled: true,
     ios: {
+      icon: './assets/icon.png',
       appleTeamId: process.env.EXPO_APPLE_TEAM_ID ?? '3QHJ2KN8AL',
       associatedDomains: getAssociatedDomains(),
       bundleIdentifier: variantConfig.bundleIdentifier,

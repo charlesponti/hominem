@@ -41,11 +41,15 @@ const configuredApiBaseUrl = toDeviceReachableApiBaseUrl(
 );
 const fallbackApiBaseUrl = localHost ? `http://${localHost}:3000` : 'http://localhost:3000';
 const appVariant = extra.appVariant ?? process.env.APP_VARIANT ?? 'dev';
-const isProductionRuntime = appVariant === 'production';
+export function isReleaseAppVariant(variant: string) {
+  return variant === 'preview' || variant === 'production';
+}
 
-if (!configuredApiBaseUrl && isProductionRuntime) {
+const isReleaseRuntime = isReleaseAppVariant(appVariant);
+
+if (!configuredApiBaseUrl && isReleaseRuntime) {
   throw new Error(
-    'Missing API base URL. Set EXPO_PUBLIC_API_BASE_URL in mobile runtime configuration.',
+    `Missing API base URL. Set EXPO_PUBLIC_API_BASE_URL in mobile runtime configuration for ${appVariant}.`,
   );
 }
 

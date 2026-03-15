@@ -11,6 +11,7 @@ import React, {
 } from 'react';
 
 import { markAuthPhaseStart, recordAuthEvent } from './auth/auth-event-log';
+import { captureAuthAnalyticsEvent, captureAuthAnalyticsFailure } from './auth/auth-analytics';
 import { runAuthBoot } from './auth/boot';
 import {
   clearPersistedSessionCookies,
@@ -124,9 +125,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         hasBootstrappedRef.current = false;
       }
 
+      const startedAt = Date.now();
+
       markStartupPhase('auth_boot_start');
       markAuthPhaseStart('boot');
       recordAuthEvent('auth_boot_start', 'boot');
+      captureAuthAnalyticsEvent('auth_boot_started', {
+        phase: 'boot',
+      });
 
       const controller = new AbortController();
       const signal = input?.signal ?? controller.signal;
@@ -175,9 +181,18 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           sessionCookieHeaderRef.current = result.tokens.sessionCookieHeader;
           dispatch({ type: 'SESSION_LOADED', user: result.user });
           recordAuthEvent('auth_boot_resolved:session_loaded', 'boot');
+          captureAuthAnalyticsEvent('auth_boot_succeeded', {
+            phase: 'boot',
+            durationMs: Date.now() - startedAt,
+            email: result.user.email,
+          });
         } else {
           dispatch({ type: 'SESSION_EXPIRED' });
           recordAuthEvent('auth_boot_resolved:session_expired', 'boot');
+          captureAuthAnalyticsEvent('auth_boot_signed_out', {
+            phase: 'boot',
+            durationMs: Date.now() - startedAt,
+          });
         }
 
         markStartupPhase('auth_boot_resolved');
@@ -187,6 +202,12 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           error instanceof Error ? error : new Error('Unable to recover your session right now.');
         dispatch({ type: 'SESSION_RECOVERY_FAILED', error: resolvedError });
         recordAuthEvent('auth_boot_resolved:error', 'boot');
+        captureAuthAnalyticsFailure('auth_boot_failed', {
+          phase: 'boot',
+          durationMs: Date.now() - startedAt,
+          error: resolvedError,
+          failureStage: 'network',
+        });
         markStartupPhase('auth_boot_resolved');
         hasBootstrappedRef.current = true;
       } finally {
@@ -216,8 +237,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const requestEmailOtp = useCallback(async (email: string) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), OTP_REQUEST_TIMEOUT_MS);
+    const startedAt = Date.now();
 
     dispatch({ type: 'OTP_REQUEST_STARTED' });
+    captureAuthAnalyticsEvent('auth_email_otp_request_started', {
+      phase: 'email_otp_request',
+      email,
+    });
 
     let response: Response;
     try {
@@ -235,6 +261,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
             ? error
             : new Error('Unable to send verification code.');
       dispatch({ type: 'OTP_REQUEST_FAILED', error: resolvedError });
+      captureAuthAnalyticsFailure('auth_email_otp_request_failed', {
+        phase: 'email_otp_request',
+        durationMs: Date.now() - startedAt,
+        email,
+        error: resolvedError,
+        failureStage: 'network',
+      });
       throw resolvedError;
     } finally {
       clearTimeout(timeoutId);
@@ -248,18 +281,37 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       } catch {}
       const error = new Error(message);
       dispatch({ type: 'OTP_REQUEST_FAILED', error });
+      captureAuthAnalyticsFailure('auth_email_otp_request_failed', {
+        phase: 'email_otp_request',
+        durationMs: Date.now() - startedAt,
+        email,
+        error,
+        failureStage: 'response',
+        statusCode: response.status,
+      });
       throw error;
     }
 
     dispatch({ type: 'OTP_REQUESTED' });
+    captureAuthAnalyticsEvent('auth_email_otp_request_succeeded', {
+      phase: 'email_otp_request',
+      durationMs: Date.now() - startedAt,
+      email,
+      statusCode: response.status,
+    });
   }, []);
 
   const verifyEmailOtp = useCallback(
     async (input: { email: string; otp: string; name?: string }) => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), OTP_VERIFY_TIMEOUT_MS);
+      const startedAt = Date.now();
 
       dispatch({ type: 'OTP_VERIFICATION_STARTED' });
+      captureAuthAnalyticsEvent('auth_email_otp_verify_started', {
+        phase: 'email_otp_verify',
+        email: input.email,
+      });
 
       try {
         const response = await fetch(
@@ -300,9 +352,22 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         if (!userProfile) throw new Error('Failed to create user profile');
 
         dispatch({ type: 'SESSION_LOADED', user: userProfile });
+        captureAuthAnalyticsEvent('auth_email_otp_verify_succeeded', {
+          phase: 'email_otp_verify',
+          durationMs: Date.now() - startedAt,
+          email: input.email,
+          statusCode: response.status,
+        });
       } catch (error) {
         const resolvedError = error instanceof Error ? error : new Error('Sign-in failed');
         dispatch({ type: 'OTP_VERIFICATION_FAILED', error: resolvedError });
+        captureAuthAnalyticsFailure('auth_email_otp_verify_failed', {
+          phase: 'email_otp_verify',
+          durationMs: Date.now() - startedAt,
+          email: input.email,
+          error: resolvedError,
+          failureStage: 'unknown',
+        });
         throw resolvedError;
       } finally {
         clearTimeout(timeoutId);
@@ -313,7 +378,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
   const completePasskeySignIn = useCallback(
     async (input: SignInResponse) => {
+      const startedAt = Date.now();
+
       dispatch({ type: 'PASSKEY_AUTH_STARTED' });
+      captureAuthAnalyticsEvent('auth_passkey_sign_in_started', {
+        phase: 'passkey_sign_in',
+        email: input.user.email,
+      });
 
       try {
         if (!hasValidSignInResponse(input)) {
@@ -335,9 +406,21 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         if (!userProfile) throw new Error('Failed to create passkey user profile');
 
         dispatch({ type: 'SESSION_LOADED', user: userProfile });
+        captureAuthAnalyticsEvent('auth_passkey_sign_in_succeeded', {
+          phase: 'passkey_sign_in',
+          durationMs: Date.now() - startedAt,
+          email: input.user.email,
+        });
       } catch (error) {
         const resolvedError = error instanceof Error ? error : new Error('Passkey sign-in failed');
         dispatch({ type: 'PASSKEY_AUTH_FAILED', error: resolvedError });
+        captureAuthAnalyticsFailure('auth_passkey_sign_in_failed', {
+          phase: 'passkey_sign_in',
+          durationMs: Date.now() - startedAt,
+          email: input.user.email,
+          error: resolvedError,
+          failureStage: 'storage',
+        });
         throw resolvedError;
       }
     },
@@ -345,7 +428,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   );
 
   const signOut = useCallback(async () => {
+    const startedAt = Date.now();
+
     dispatch({ type: 'SIGN_OUT_REQUESTED' });
+    captureAuthAnalyticsEvent('auth_sign_out_started', {
+      phase: 'sign_out',
+      email: state.user?.email ?? undefined,
+    });
 
     try {
       const sessionCookieHeader = sessionCookieHeaderRef.current;
@@ -366,13 +455,26 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       sessionCookieHeaderRef.current = null;
       await LocalStore.clearAllData();
       dispatch({ type: 'SIGN_OUT_SUCCESS' });
+      captureAuthAnalyticsEvent('auth_sign_out_succeeded', {
+        phase: 'sign_out',
+        durationMs: Date.now() - startedAt,
+        email: state.user?.email ?? undefined,
+        statusCode: response.status,
+      });
     } catch (error) {
       const resolvedError =
         error instanceof Error ? error : new Error('Failed to sign out. Please try again.');
       dispatch({ type: 'FATAL_ERROR', error: resolvedError });
+      captureAuthAnalyticsFailure('auth_sign_out_failed', {
+        phase: 'sign_out',
+        durationMs: Date.now() - startedAt,
+        email: state.user?.email ?? undefined,
+        error: resolvedError,
+        failureStage: 'network',
+      });
       throw resolvedError;
     }
-  }, []);
+  }, [state.user?.email]);
 
   const updateProfile = useCallback(async (updates: Partial<LocalUserProfile>) => {
     const current = await LocalStore.getUserProfile();
@@ -444,6 +546,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     clearError,
     retrySessionRecovery: async () => {
       dispatch({ type: 'CLEAR_ERROR' });
+      captureAuthAnalyticsEvent('auth_session_recovery_requested', {
+        phase: 'session_recovery',
+        email: state.user?.email ?? undefined,
+      });
       await bootSession({ force: true });
     },
     resetAuthForE2E,

@@ -46,7 +46,7 @@ function InnerRootLayout() {
 
   useEffect(() => {
     if (authStatus === 'signed_in' && currentUser?.id) {
-      posthog.identify(currentUser.id, { email: currentUser.email ?? undefined });
+      posthog.identify(currentUser.id, { email: currentUser.email ?? null });
     } else if (authStatus === 'signed_out') {
       posthog.reset();
     }
