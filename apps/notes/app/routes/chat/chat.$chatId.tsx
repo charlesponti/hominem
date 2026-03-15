@@ -1,5 +1,5 @@
-import type { ArtifactType, SessionSource, ThoughtLifecycleState } from '@hominem/chat-services';
-import { deriveSessionSource } from '@hominem/chat-services';
+import type { ArtifactType, SessionSource, ThoughtLifecycleState } from '@hominem/chat-services/types';
+import { deriveSessionSource } from '@hominem/chat-services/types';
 import { useHonoQuery, useHonoMutation } from '@hominem/hono-client/react';
 import type {
   ChatsGetOutput,
@@ -9,11 +9,10 @@ import type {
 import { useToast } from '@hominem/ui';
 import { useMemo, useRef, useState } from 'react';
 
-import { ArtifactActions } from '~/components/artifact-actions';
+import { ChatHeader } from '~/components/chat/ChatHeader';
 import { ChatInput } from '~/components/chat/ChatInput';
 import { ChatMessages } from '~/components/chat/ChatMessages';
 import { ClassificationReview } from '~/components/classification-review';
-import { ContextAnchor } from '~/components/context-anchor';
 import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
 
@@ -36,11 +35,13 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   const { toast } = useToast();
   const [status, setStatus] = useState<'idle' | 'submitted' | 'streaming' | 'error'>('idle');
   const [error, setError] = useState<Error | null>(null);
+  const messageControlsRef = useRef<{ showSearch: () => void }>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   const [lifecycleState, setLifecycleState] = useState<ThoughtLifecycleState>('idle');
   const [pendingReview, setPendingReview] = useState<PendingReview | null>(null);
   const [overrideSource, setOverrideSource] = useState<SessionSource | null>(null);
+  const [isDebugEnabled, setIsDebugEnabled] = useState(false);
 
   const { data: chat } = useHonoQuery<ChatsGetOutput>(['chats', chatId], ({ chats: c }) =>
     c.get({ chatId }),
@@ -166,23 +167,31 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   });
 
   return (
-    <div className="flex flex-col size-full mx-auto text-foreground">
-      <div className="flex items-center px-4 py-2 border-b border-border">
-        <ContextAnchor source={source} />
-      </div>
-
-      <div className="flex-1" ref={messagesRef}>
-        <ChatMessages chatId={chatId} status={status} error={error} />
-      </div>
-
-      <ArtifactActions
-        state={lifecycleState}
+    <div className="flex min-h-0 flex-1 flex-col bg-white text-foreground">
+      <ChatHeader
+        source={source}
+        lifecycleState={lifecycleState}
         messageCount={messageCount}
+        isDebugEnabled={isDebugEnabled}
+        onDebugChange={setIsDebugEnabled}
+        onOpenSearch={() => messageControlsRef.current?.showSearch()}
         onTransform={handleTransform}
       />
 
-      <div className="border-t p-4 pb-[calc(env(safe-area-inset-bottom)+8px)]">
-        <ChatInput ref={inputRef} chatId={chatId} onStatusChange={handleMessageStatusChange} />
+      <div className="min-h-0 flex-1" ref={messagesRef}>
+        <ChatMessages
+          ref={messageControlsRef}
+          chatId={chatId}
+          status={status}
+          error={error}
+          showDebug={isDebugEnabled}
+        />
+      </div>
+
+      <div className="shrink-0 border-t border-slate-200/50 bg-white px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 sm:px-6">
+        <div className="mx-auto w-full max-w-200">
+          <ChatInput ref={inputRef} chatId={chatId} onStatusChange={handleMessageStatusChange} />
+        </div>
       </div>
 
       {lifecycleState === 'reviewing_changes' && pendingReview && (

@@ -1,10 +1,23 @@
-import process from 'node:process';
+let pino: any = null;
 
-import pino from 'pino';
+// Only import and initialize in Node.js environment
+if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+  try {
+    // Using require for Node.js environments
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, global-require
+    pino = require('pino');
+  } catch {
+    // Fallback if require is not available
+    pino = null;
+  }
+}
 
 const redactFields = ['email', 'password', 'token'];
 const isPrettyLoggingEnabled =
-  process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+  typeof process !== 'undefined' &&
+  process.env &&
+  process.env.NODE_ENV !== 'production' &&
+  process.env.NODE_ENV !== 'test';
 
 export interface HttpRequestLogData {
   durationMs: number;
@@ -59,39 +72,51 @@ export function logAtLevel(level: LoggerLevel, message: string, data?: Error | o
   logger.info(message, data);
 }
 
-const transport = isPrettyLoggingEnabled
-  ? pino.transport({
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        ignore: 'pid,hostname',
-        messageFormat: '{msg}',
-        singleLine: true,
-        translateTime: 'SYS:standard',
-      },
-    })
-  : undefined;
+const transport =
+  pino !== null && isPrettyLoggingEnabled
+    ? pino.transport({
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          ignore: 'pid,hostname',
+          messageFormat: '{msg}',
+          singleLine: true,
+          translateTime: 'SYS:standard',
+        },
+      })
+    : undefined;
 
-const pinoLogger = pino(
-  {
-    base: null,
-    level: process.env.LOG_LEVEL || 'debug',
-    redact: {
-      paths: redactFields.map((field) => `*.${field}`),
-      censor: '[REDACTED]',
-    },
-    formatters: {
-      level(label) {
-        return { level: label };
-      },
-    },
-  },
-  transport,
-);
+const pinoLogger =
+  pino !== null
+    ? pino(
+        {
+          base: null,
+          level: (typeof process !== 'undefined' && process.env?.LOG_LEVEL) || 'debug',
+          redact: {
+            paths: redactFields.map((field) => `*.${field}`),
+            censor: '[REDACTED]',
+          },
+          formatters: {
+            level(label: string) {
+              return { level: label };
+            },
+          },
+        },
+        transport,
+      )
+    : null;
 
 export const logger = {
-  info: (message: string, data?: object) => pinoLogger.info(data, message),
-  error: (message: string, error?: Error | object) => pinoLogger.error(error, message),
-  warn: (message: string, data?: object) => pinoLogger.warn(data, message),
-  debug: (message: string, data?: object) => pinoLogger.debug(data, message),
+  info: (message: string, data?: object) => {
+    if (pinoLogger) pinoLogger.info(data, message);
+  },
+  error: (message: string, error?: Error | object) => {
+    if (pinoLogger) pinoLogger.error(error, message);
+  },
+  warn: (message: string, data?: object) => {
+    if (pinoLogger) pinoLogger.warn(data, message);
+  },
+  debug: (message: string, data?: object) => {
+    if (pinoLogger) pinoLogger.debug(data, message);
+  },
 };

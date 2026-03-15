@@ -8,7 +8,7 @@
  * "Think through it" → seed a new session → navigate to chat.$chatId.
  */
 
-import type { ThoughtLifecycleState } from '@hominem/chat-services';
+import type { ThoughtLifecycleState } from '@hominem/chat-services/types';
 import { useHonoMutation } from '@hominem/hono-client/react';
 import { Inline, Stack } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';

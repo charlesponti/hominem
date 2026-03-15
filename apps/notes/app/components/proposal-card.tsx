@@ -9,7 +9,7 @@
  * ready to wire once the classification API ships.
  */
 
-import type { ReviewItem } from '@hominem/chat-services';
+import type { ReviewItem } from '@hominem/chat-services/types';
 import { Inline, Stack } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { FileText } from 'lucide-react';

@@ -12,7 +12,7 @@ import { Input } from '@hominem/ui/components/ui/input';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, X } from 'lucide-react';
 import type React from 'react';
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { useAutoScroll } from '~/lib/hooks/use-auto-scroll';
 import { useMessageSearch } from '~/lib/hooks/use-message-search';
@@ -27,10 +27,11 @@ interface ChatMessagesProps {
   chatId: string;
   status?: string;
   error?: Error | null;
+  showDebug?: boolean;
 }
 
 export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesProps>(
-  function ChatMessages({ chatId, status = 'idle', error }, ref) {
+  function ChatMessages({ chatId, status = 'idle', error, showDebug = false }, ref) {
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const parentRef = useRef<HTMLDivElement>(null);
 
@@ -197,45 +198,62 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       return virtualizer.getVirtualItems();
     }, [shouldUseVirtualScrolling, virtualizer]);
 
+    useEffect(() => {
+      if (shouldUseVirtualScrolling) {
+        virtualizer.measure();
+      }
+    }, [showDebug, shouldUseVirtualScrolling, virtualizer]);
+
     return (
-      <div className="flex flex-col h-full">
-        {/* Search Bar */}
+      <div className="relative flex h-full min-h-0 flex-col">
         {showSearch && (
-          <div className="border-b p-2 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-            <Inline gap="sm">
-              <Search className="size-4 text-muted-foreground" />
-              <Input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search messages..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1"
-                autoFocus
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowSearch(false);
-                  setSearchQuery('');
-                }}
-                aria-label="Close search"
-              >
-                <X className="size-4" />
-              </Button>
-            </Inline>
-            {searchQuery && (
-              <div className="text-xs text-muted-foreground mt-1 px-1">
-                {filteredMessages.length} {filteredMessages.length === 1 ? 'result' : 'results'}
+          <div className="pointer-events-none absolute inset-x-0 top-4 z-20 px-4 sm:px-6">
+            <div className="pointer-events-auto mx-auto w-full max-w-160 rounded-lg border border-border/20 bg-background/95 p-4 shadow-md shadow-black/5 backdrop-blur supports-backdrop-filter:bg-background/90">
+              <div className="mb-3 text-xs font-medium tracking-[0.05em] text-muted-foreground/60">
+                Search messages
               </div>
-            )}
+          <Inline gap="sm">
+                <Search className="size-4 text-muted-foreground/50" />
+                <Input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search messages..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground/50 border-0 focus:ring-0"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      setShowSearch(false);
+                      setSearchQuery('');
+                    }
+                  }}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowSearch(false);
+                    setSearchQuery('');
+                  }}
+                  aria-label="Close search"
+                  className="text-muted-foreground/60 hover:text-foreground hover:bg-transparent"
+                >
+                  <X className="size-4" />
+                </Button>
+              </Inline>
+              {searchQuery && (
+                <div className="mt-2 px-1 text-xs text-muted-foreground/60">
+                  {filteredMessages.length} {filteredMessages.length === 1 ? 'match' : 'matches'}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         <div
           ref={shouldUseVirtualScrolling ? parentRef : messagesContainerRef}
-          className="flex-1 overflow-y-auto p-4"
+          className="flex-1 overflow-y-auto px-4 pb-8 pt-8 sm:px-6"
           role="log"
           aria-label="Chat messages"
           aria-live="polite"
@@ -252,9 +270,9 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         >
           {/* Error Display */}
           {displayError && (
-            <div className="bg-destructive/10 border border-destructive/20 p-4">
-              <div className="text-sm font-medium text-destructive mb-1">Chat Error</div>
-              <div className="text-xs text-destructive/80">
+            <div className="mx-auto mb-6 w-full max-w-200 rounded-xl border border-destructive/30 bg-gradient-to-r from-destructive/5 to-destructive/10 p-4 shadow-sm">
+              <div className="text-sm font-semibold text-destructive mb-1">Something went wrong</div>
+              <div className="text-xs text-destructive/70">
                 {displayError instanceof Error ? displayError.message : String(displayError)}
               </div>
             </div>
@@ -262,7 +280,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
 
           {/* Loading state when fetching messages */}
           {isLoading && extendedMessages.length === 0 && (
-            <div className="space-y-4">
+            <div className="mx-auto w-full max-w-200 space-y-5">
               <ShimmerMessage />
               <ShimmerMessage />
               <ShimmerMessage />
@@ -272,6 +290,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           {/* Messages */}
           {shouldUseVirtualScrolling ? (
             <div
+              className="mx-auto w-full max-w-200"
               style={{
                 height: `${virtualizer.getTotalSize()}px`,
                 width: '100%',
@@ -296,9 +315,10 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
                       transform: `translateY(${virtualItem.start}px)`,
                     }}
                   >
-                    <div className="pb-4">
+                    <div className="py-4">
                       <ChatMessage
                         message={message}
+                        showDebug={showDebug}
                         isStreaming={
                           (status === 'streaming' &&
                             virtualItem.index === displayMessages.length - 1 &&
@@ -320,17 +340,19 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
               })}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="mx-auto w-full max-w-200 space-y-4">
               {displayMessages.length === 0 && searchQuery ? (
                 <div className="text-center text-muted-foreground py-8">
                   <Search className="size-8 mx-auto mb-2 " />
                   <p>No messages found matching &quot;{searchQuery}&quot;</p>
                 </div>
               ) : (
-                displayMessages.map((message, index) => (
-                  <ChatMessage
+                <div className="space-y-4">
+                  {displayMessages.map((message, index) => (
+                    <ChatMessage
                     key={message.id}
                     message={message}
+                    showDebug={showDebug}
                     isStreaming={
                       (status === 'streaming' &&
                         index === displayMessages.length - 1 &&
@@ -346,7 +368,8 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
                     })}
                     onDelete={() => handleDeleteMessage(message.id)}
                   />
-                ))
+                ))}
+                </div>
               )}
             </div>
           )}

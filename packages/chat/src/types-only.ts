@@ -8,3 +8,4 @@
 export * from './contracts';
 export * from './lifecycle-state';
 export * from './thought-types';
+export * from './session-artifacts';

@@ -1,6 +1,6 @@
 # Active OpenSpec Change
 
-active_change: harden-mobile-release-env
+active_change: redesign-notes-chat-surface
 
 artifacts:
 - proposal.md

@@ -4,9 +4,10 @@
  * The user accepts (persist) or rejects (idle). No backdrop-dismiss.
  */
 
-import type { ClassificationReviewProps } from '@hominem/chat-services';
+import type { ClassificationReviewProps } from '@hominem/chat-services/types';
 import { Inline, Stack } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '@hominem/ui/dialog';
 
 export function ClassificationReview({
   proposedType,
@@ -17,24 +18,19 @@ export function ClassificationReview({
   onReject,
 }: ClassificationReviewProps) {
   return (
-    <dialog
-      open
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-background/80 w-full h-full m-0 p-0 border-0 max-w-none max-h-none"
-    >
-      <div
-        className="void-anim-enter-bottom w-full sm:w-[480px] bg-background border border-border rounded-t-xl sm:rounded-xl p-6 flex flex-col gap-4"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cr-title"
+    <Dialog open onOpenChange={(open) => !open && onReject()}>
+      <DialogContent
+        showCloseButton={false}
+        className="top-auto bottom-0 max-w-xl translate-x-[-50%] translate-y-0 rounded-t-2xl px-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-6 sm:top-[50%] sm:bottom-auto sm:translate-y-[-50%] sm:rounded-2xl sm:pb-6"
       >
         {/* Header */}
         <Stack gap="xs">
           <p className="text-xs text-muted-foreground uppercase tracking-wider font-mono">
             Save as {proposedType.replace('_', ' ')}
           </p>
-          <h2 id="cr-title" className="text-base font-medium text-foreground">
+          <DialogTitle id="cr-title" className="text-base font-medium text-foreground">
             {proposedTitle}
-          </h2>
+          </DialogTitle>
         </Stack>
 
         {/* Change summary */}
@@ -66,7 +62,7 @@ export function ClassificationReview({
             Discard
           </Button>
         </Inline>
-      </div>
-    </dialog>
+      </DialogContent>
+    </Dialog>
   );
 }

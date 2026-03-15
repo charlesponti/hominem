@@ -6,8 +6,8 @@
  * 'classifying', 'reviewing_changes', 'persisting'.
  */
 
-import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services';
-import { isArtifactTypeEnabled } from '@hominem/chat-services';
+import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types';
+import { isArtifactTypeEnabled } from '@hominem/chat-services/types';
 import { Button } from '@hominem/ui/button';
 
 interface ArtifactActionsProps {

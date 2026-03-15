@@ -1,4 +1,4 @@
-import { deriveSessionSource } from '@hominem/chat-services';
+import { deriveSessionSource } from '@hominem/chat-services/types';
 import { describe, expect, it } from 'vitest';
 
 describe('chat source', () => {

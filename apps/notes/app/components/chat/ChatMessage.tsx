@@ -32,6 +32,7 @@ import { MarkdownContent } from './MarkdownContent';
 
 interface ChatMessageProps {
   message: ExtendedMessage;
+  showDebug?: boolean;
   isStreaming?: boolean;
   onRegenerate?: () => void;
   onEdit?: (messageId: string, newContent: string) => void;
@@ -40,6 +41,7 @@ interface ChatMessageProps {
 
 export const ChatMessage = memo(function ChatMessage({
   message,
+  showDebug = false,
   isStreaming = false,
   onRegenerate,
   onEdit,
@@ -71,19 +73,25 @@ export const ChatMessage = memo(function ChatMessage({
 
   return (
     <div
-      className="relative"
+      className="group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       role="article"
       aria-label={`${isUser ? 'Your' : 'AI Assistant'} message${timestamp ? ` from ${timestamp}` : ''}`}
     >
-      <Message
-        from={isUser ? 'user' : 'assistant'}
-        className={cn({
-          'ml-12': isUser,
-          'mr-12': !isUser,
-        })}
-      >
+      <div className={cn(
+        'rounded-xl px-4 py-3.5 transition-all',
+        isUser 
+          ? 'bg-gradient-to-br from-blue-50 to-blue-50/80 border border-blue-100/60 ml-12 shadow-sm'
+          : 'bg-gradient-to-br from-slate-50 to-slate-50/80 border border-slate-100/60 mr-12 shadow-sm'
+      )}>
+        <Message
+          from={isUser ? 'user' : 'assistant'}
+          className={cn({
+            'ml-8': isUser,
+            'mr-8': !isUser,
+          })}
+        >
         <MessageContent className="gap-3">
           {/* Reasoning section (shown first for assistant messages) */}
           {!isUser && hasReasoning && <Reasoning>{message.reasoning}</Reasoning>}
@@ -171,6 +179,19 @@ export const ChatMessage = memo(function ChatMessage({
             )
           )}
 
+          {showDebug && (
+            <div className="rounded-md border border-border/70 bg-muted/40 px-3 py-2 text-[11px] font-mono leading-relaxed text-muted-foreground">
+              <div>ID: {message.id}</div>
+              <div>Role: {message.role}</div>
+              <div>Created: {message.createdAt}</div>
+              <div>Updated: {message.updatedAt}</div>
+              <div>Streaming: {isStreaming ? 'true' : 'false'}</div>
+              <div>Reasoning: {hasReasoning ? 'present' : 'none'}</div>
+              <div>Tool calls: {message.toolCalls?.length ?? 0}</div>
+              {message.parentMessageId && <div>Parent: {message.parentMessageId}</div>}
+            </div>
+          )}
+
           {/* Message metadata */}
           <MessageAnnotations
             className={cn('text-xs opacity-70 mt-1', {
@@ -190,22 +211,19 @@ export const ChatMessage = memo(function ChatMessage({
           </MessageAnnotations>
         </MessageContent>
       </Message>
+      </div>
 
       {/* Message actions menu */}
       {isHovered && !isStreaming && (
-        <MessageAction
-          className={cn('absolute top-6', {
-            'right-2': isUser,
-            'left-2': !isUser,
-          })}
-        >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 opacity-70 hover:opacity-100"
-                aria-label="Message actions menu"
+        <div className={cn('flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity', isUser ? 'justify-end' : 'justify-start')}>
+          <MessageAction>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 opacity-70 hover:opacity-100 text-muted-foreground hover:text-foreground"
+                  aria-label="Message actions menu"
                 aria-haspopup="true"
                 aria-expanded="false"
               >
@@ -263,6 +281,7 @@ export const ChatMessage = memo(function ChatMessage({
             </DropdownMenuContent>
           </DropdownMenu>
         </MessageAction>
+        </div>
       )}
     </div>
   );

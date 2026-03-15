@@ -40,10 +40,16 @@ function useLogout() {
 
 /** Tracks scroll direction. Returns true when the user is scrolling down. */
 function useScrollDown() {
+  const { pathname } = useLocation();
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
 
   useEffect(() => {
+    if (pathname.startsWith('/chat/')) {
+      setHidden(false);
+      return;
+    }
+
     const onScroll = () => {
       const y = window.scrollY;
       if (Math.abs(y - lastY.current) < 10) return;
@@ -52,7 +58,7 @@ function useScrollDown() {
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [pathname]);
 
   return hidden;
 }
@@ -125,7 +131,7 @@ function MobileTabItem({ item }: { item: NavItem }) {
         prefetch="intent"
         aria-current={isActive ? 'page' : undefined}
         className={[
-          'flex flex-col items-center justify-center gap-1 w-full h-full min-h-[44px] transition-colors duration-150',
+          'flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 transition-colors duration-150',
           isActive ? 'text-text-primary' : 'text-text-tertiary',
         ].join(' ')}
       >
