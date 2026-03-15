@@ -112,7 +112,8 @@ function InnerRootLayout() {
 
 function RootLayout() {
   useEffect(() => {
-    initObservability();
+    const cleanup = initObservability();
+    return cleanup;
   }, []);
 
   return (

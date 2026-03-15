@@ -58,14 +58,18 @@ function buildAuthAnalyticsProperties(context: AuthAnalyticsContext) {
 }
 
 export function captureAuthAnalyticsEvent(event: string, context: AuthAnalyticsContext) {
-  posthog.capture(event, buildAuthAnalyticsProperties(context));
+  const properties = buildAuthAnalyticsProperties(context);
+  console.log('[PostHog] Capturing event:', event, properties);
+  posthog.capture(event, properties);
 }
 
 export function captureAuthAnalyticsFailure(event: string, context: AuthAnalyticsContext) {
   const properties = buildAuthAnalyticsProperties(context);
+  console.log('[PostHog] Capturing failure event:', event, properties);
   posthog.capture(event, properties);
 
   if (context.error) {
+    console.log('[PostHog] Capturing exception:', context.error.message);
     posthog.captureException(context.error, properties);
   }
 }

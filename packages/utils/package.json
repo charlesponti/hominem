@@ -15,6 +15,7 @@
     "./http": "./src/http.ts",
     "./location": "./src/location/index.ts",
     "./logger": "./src/logger.ts",
+    "./client-logger": "./src/client-logger.ts",
     "./markdown": "./src/markdown/index.ts",
     "./schemas": "./src/schemas/index.ts",
     "./scraping": "./src/scraping/index.ts",
