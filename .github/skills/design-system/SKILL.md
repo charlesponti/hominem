@@ -63,6 +63,86 @@ Never use raw Tailwind `text-xl`, `text-2xl`, `text-3xl`, `text-[x]` etc. for he
 
 Mobile apps use Restyle `variant` prop on `<Text>`: `header`, `large`, `cardHeader`, `bodyLarge`, `body`, `title`, `label`, `caption`, `small`, `mono`. These map to the same visual scale.
 
+## Color Token Reference
+
+All colors come from `@hominem/ui/tokens/colors.ts` — the canonical source for web, mobile, and desktop. The design system uses a **light-mode-only palette aligned with Apple Human Interface Guidelines**.
+
+### Backgrounds
+
+| Token | Value | Use | WCAG Contrast (against primary text) |
+|-------|-------|-----|------|
+| `bg-base` | `#ffffff` | Primary view background | ✓ 21:1 |
+| `bg-surface` | `#f5f5f7` | Secondary surfaces, cards, panels | ✓ 19:1 |
+| `bg-elevated` | `#f2f2f7` | Tertiary surfaces, modals, elevation | ✓ 18.5:1 |
+| `bg-overlay` | `rgba(0, 0, 0, 0.04)` | Subtle overlay for hover/focus states | — |
+
+### Foreground Text
+
+| Token | Value | Use | WCAG Contrast |
+|-------|-------|-----|------|
+| `text-primary` | `#000000` | Main text, labels, headings | ✓ 21:1 |
+| `text-secondary` | `#555555` | Subtext, secondary descriptions | ✓ 7.1:1 |
+| `text-tertiary` | `#888888` | Metadata, captions, less important text | ✓ 4.5:1 |
+| `text-disabled` | `#cccccc` | Disabled controls, inactive state | ✓ 3.2:1 (⚠️ use sparingly for non-critical UI) |
+
+### Borders & Separators
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `border-default` | `rgba(0, 0, 0, 0.1)` | Default borders, separators |
+| `border-subtle` | `rgba(0, 0, 0, 0.05)` | Subtle dividers, low-emphasis lines |
+| `border-focus` | `rgba(0, 0, 0, 0.15)` | Focus rings, interactive indicators |
+
+### Semantic Status (Apple System Colors)
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `success` | `#34c759` | Success states, positive feedback |
+| `warning` | `#ff9500` | Warnings, caution feedback |
+| `destructive` | `#ff3b30` | Errors, destructive actions |
+
+### Accent (Brand Color)
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `accent` | `#007AFF` | Primary button actions, links, focus indicators, accent highlights |
+| `accent-foreground` | `#ffffff` | Text/icon on accent backgrounds |
+
+### Emphasis Scale (Opacity-Based)
+
+For subtle variations in visual hierarchy, use the emphasis scale. All values are opacities of black (`rgba(0, 0, 0, x)`):
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `emphasis-highest` | `rgba(0, 0, 0, 0.9)` | Strongest emphasis, near-black |
+| `emphasis-high` | `rgba(0, 0, 0, 0.7)` | High emphasis |
+| `emphasis-medium` | `rgba(0, 0, 0, 0.5)` | Medium emphasis |
+| `emphasis-low` | `rgba(0, 0, 0, 0.3)` | Low emphasis |
+| `emphasis-lower` | `rgba(0, 0, 0, 0.2)` | Lower emphasis |
+| `emphasis-subtle` | `rgba(0, 0, 0, 0.15)` | Subtle emphasis |
+| `emphasis-minimal` | `rgba(0, 0, 0, 0.1)` | Minimal emphasis |
+| `emphasis-faint` | `rgba(0, 0, 0, 0.05)` | Faint emphasis, nearly invisible |
+
+### Icon Colors
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `icon-primary` | `#000000` | Primary icons |
+| `icon-muted` | `#888888` | Secondary, muted icons |
+
+### Sidebar (Kanso Monochrome)
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `sidebar` | `#000000` | Sidebar background |
+| `sidebar-foreground` | `#ffffff` | Sidebar text |
+| `sidebar-primary` | `#ffffff` | Sidebar primary text |
+| `sidebar-primary-foreground` | `#000000` | Text on sidebar primary |
+| `sidebar-accent` | `rgba(255, 255, 255, 0.15)` | Sidebar accent background |
+| `sidebar-accent-foreground` | `#ffffff` | Text on sidebar accent |
+| `sidebar-border` | `rgba(255, 255, 255, 0.1)` | Sidebar borders |
+| `sidebar-ring` | `#ffffff` | Sidebar focus ring |
+
 ## Cross-Platform Parity
 
 Web and mobile must render identically for the same content and affordances. Strategy:
