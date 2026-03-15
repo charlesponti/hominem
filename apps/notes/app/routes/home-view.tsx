@@ -239,20 +239,21 @@ export default function HomeView() {
               )}
 
               {allNotes.length > 0 && (
-                <div className="border border-border overflow-hidden mt-4">
+                <ul className="border border-border overflow-hidden mt-4 list-none m-0 p-0">
                   {allNotes.map((note: Note) => (
-                    <NoteFeedItem
-                      key={note.id}
-                      note={note}
-                      onEdit={handleEditItem}
-                      onDelete={handleDeleteItem}
-                      onRemoveTag={removeTagFromNote}
-                      onExpand={handleExpand}
-                      onOutline={handleOutline}
-                      onRewrite={handleRewrite}
-                    />
+                    <li key={note.id} className="block">
+                      <NoteFeedItem
+                        note={note}
+                        onEdit={handleEditItem}
+                        onDelete={handleDeleteItem}
+                        onRemoveTag={removeTagFromNote}
+                        onExpand={handleExpand}
+                        onOutline={handleOutline}
+                        onRewrite={handleRewrite}
+                      />
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
             </section>
           </div>

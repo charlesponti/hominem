@@ -25,7 +25,7 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           name: 'Notes',
           short_name: 'Notes',
           description: 'Personal note-taking app',
-          theme_color: '#ffffff',
+          theme_color: '#000000',
           background_color: '#ffffff',
           display: 'standalone',
           start_url: '/',

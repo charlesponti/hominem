@@ -1,5 +1,5 @@
 import { AuthProvider } from '@hominem/auth';
-import { COMMON_FONT_LINKS, COMMON_ICON_LINKS, UpdateGuard } from '@hominem/ui';
+import { COMMON_FONT_LINKS, UpdateGuard } from '@hominem/ui';
 import type React from 'react';
 import { useCallback } from 'react';
 import {
@@ -22,6 +22,18 @@ import { HonoProvider } from './lib/api';
 import { authConfig, getServerSession } from './lib/auth.server';
 import './lib/i18n';
 import { serverEnv } from './lib/env';
+
+const ICON_VERSION = '20260314';
+
+const NOTES_ICON_LINKS = [
+  { rel: 'icon', type: 'image/x-icon', href: `/favicon.ico?v=${ICON_VERSION}` },
+  { rel: 'icon', type: 'image/png', sizes: '16x16', href: `/icons/favicon-16x16.png?v=${ICON_VERSION}` },
+  { rel: 'icon', type: 'image/png', sizes: '32x32', href: `/icons/favicon-32x32.png?v=${ICON_VERSION}` },
+  { rel: 'icon', type: 'image/png', sizes: '96x96', href: `/icons/favicon-96x96.png?v=${ICON_VERSION}` },
+  { rel: 'apple-touch-icon', href: `/icons/apple-touch-icon.png?v=${ICON_VERSION}` },
+  { rel: 'apple-touch-icon', sizes: '180x180', href: `/icons/apple-touch-icon-180x180.png?v=${ICON_VERSION}` },
+  { rel: 'manifest', href: `/manifest.json?v=${ICON_VERSION}` },
+] as const;
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { user, session, headers } = await getServerSession(request);
@@ -46,7 +58,7 @@ export const meta: Route.MetaFunction = () => {
   ];
 };
 
-export const links: Route.LinksFunction = () => [...COMMON_FONT_LINKS, ...COMMON_ICON_LINKS];
+export const links: Route.LinksFunction = () => [...COMMON_FONT_LINKS, ...NOTES_ICON_LINKS];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
