@@ -74,3 +74,6 @@ test-import.ts
 # local logs
 tmp/
 
+
+# git worktrees
+.worktrees/
