@@ -3,11 +3,10 @@ import type { RelativePathString } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PulsingCircle } from '~/components/animated/pulsing-circle';
 import { CaptureBar } from '~/components/capture/capture-bar';
-import { SessionList } from '~/components/chat/session-card';
+import { SessionList, useResumableSessions } from '~/components/chat/session-card';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { FeedbackBlock } from '~/components/feedback-block';
 import { FocusHeader } from '~/components/focus/focus-header';
@@ -22,58 +21,38 @@ const useStyles = makeStyles((t) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      position: 'relative',
       backgroundColor: t.colors.background,
     },
     focusContainer: {
       flex: 1,
-      rowGap: t.spacing.sm_12,
+      rowGap: t.spacing.m_16,
       marginTop: t.spacing.m_16,
     },
+    captureSection: {
+      paddingHorizontal: t.spacing.m_16,
+      rowGap: t.spacing.sm_8,
+    },
     sessionSection: {
-      paddingHorizontal: t.spacing.sm_12,
-      paddingTop: t.spacing.sm_12,
+      paddingHorizontal: t.spacing.m_16,
+      rowGap: t.spacing.sm_8,
     },
     focuses: {
       flex: 1,
-      rowGap: t.spacing.ml_24,
-      paddingTop: t.spacing.sm_12,
-      paddingHorizontal: t.spacing.sm_12,
+      rowGap: t.spacing.sm_12,
+      paddingHorizontal: t.spacing.m_16,
     },
     empty: {
-      marginHorizontal: t.spacing.sm_12,
+      marginHorizontal: t.spacing.m_16,
       paddingVertical: t.spacing.xl_64,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: t.colors.muted,
-      borderRadius: t.borderRadii.sm_6,
+      backgroundColor: t.colors.background,
+      borderRadius: t.borderRadii.xl_20,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
     },
-    scrollContainer: {
-      paddingTop: t.spacing.sm_12,
-    },
-    sherpaButtonContainer: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-    },
-    sherpaLink: {
-      flex: 1,
-    },
-    sherpaCircleButton: {
-      backgroundColor: t.colors.muted,
-      borderRadius: 999, // special: infinite radius
-      borderWidth: 1,
-      borderColor: t.colors['border-default'],
-      padding: t.spacing.sm_12,
-      maxWidth: 120,
-      marginBottom: t.spacing.ml_24,
-      alignItems: 'center',
-      justifyContent: 'center',
+    sectionLabel: {
+      letterSpacing: 1,
     },
   }),
 );
@@ -108,9 +87,9 @@ const useErrorStyles = makeStyles((t) =>
 export const FocusView = () => {
   const styles = useStyles();
   const headerRightStyles = useHeaderRightStyles();
-  const insets = useSafeAreaInsets();
   const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const { data: sessions } = useResumableSessions();
   const {
     data: focusItems,
     refetch,
@@ -144,12 +123,12 @@ export const FocusView = () => {
     <>
       <Stack.Screen
         options={{
-          title: 'FOCUS',
+          title: 'Notes',
           headerRight: () => (
             <View style={headerRightStyles.row}>
               <Link href={'/(protected)/(tabs)/sherpa' as RelativePathString}>
                 <Text variant="body" color="text-secondary">
-                  SHERPA
+                  Sherpa
                 </Text>
               </Link>
               <Text
@@ -166,12 +145,7 @@ export const FocusView = () => {
       />
 
       <GestureHandlerRootView testID="focus-screen" style={styles.container}>
-        <FocusHeader />
-        <CaptureBar />
-
-        <View style={styles.sessionSection}>
-          <SessionList />
-        </View>
+        <FocusHeader sessionCount={sessions?.length ?? 0} noteCount={focusItems?.length ?? 0} />
 
         <View style={styles.focusContainer}>
           {isLoading && !isRefetching && !refreshing ? (
@@ -184,31 +158,54 @@ export const FocusView = () => {
 
           {(isLoaded || isRefetching) && hasFocusItems ? (
             <View style={styles.focuses}>
+              <View style={styles.captureSection}>
+                <Text variant="caption" color="text-secondary" style={styles.sectionLabel}>
+                  Capture
+                </Text>
+                <CaptureBar />
+              </View>
+
+              <View style={styles.sessionSection}>
+                <SessionList />
+              </View>
+
               {activeSearch ? (
                 <ActiveSearchSummary onCloseClick={onSearchClose} activeSearch={activeSearch} />
               ) : null}
+
+              <Text variant="caption" color="text-secondary" style={styles.sectionLabel}>
+                Notes
+              </Text>
               <FocusList data={focusItems} isRefreshing={isRefetching} onRefresh={refetch} />
             </View>
           ) : null}
           {isLoaded && !hasFocusItems && !activeSearch ? (
-            <View style={styles.empty}>
-              <Text variant="bodyLarge" color="primary">
-                NO ACTIVE FOCUS ITEMS.
+            <View style={styles.focuses}>
+              <View style={styles.captureSection}>
+                <Text variant="caption" color="text-secondary" style={styles.sectionLabel}>
+                  Capture
+                </Text>
+                <CaptureBar />
+              </View>
+
+              <View style={styles.sessionSection}>
+                <SessionList />
+              </View>
+
+              <Text variant="caption" color="text-secondary" style={styles.sectionLabel}>
+                Notes
               </Text>
+              <View style={styles.empty}>
+                <Text variant="bodyLarge" color="foreground">
+                  Start with a thought
+                </Text>
+                <Text variant="body" color="text-secondary">
+                  Capture something above and it will join the same stream as the rest of your
+                  notes.
+                </Text>
+              </View>
             </View>
           ) : null}
-        </View>
-
-        <View style={[styles.sherpaButtonContainer, { bottom: insets.bottom }]}>
-          <View style={styles.sherpaCircleButton}>
-            <Link
-              href={'/(protected)/(tabs)/sherpa' as RelativePathString}
-              style={styles.sherpaLink}
-              accessibilityLabel="Open Sherpa"
-            >
-              <AppIcon name="hat-wizard" size={32} color={theme.colors.white} />
-            </Link>
-          </View>
         </View>
       </GestureHandlerRootView>
     </>

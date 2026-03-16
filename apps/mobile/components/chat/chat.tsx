@@ -1,12 +1,12 @@
 import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types';
 import { buildNoteProposal, deriveSessionSource } from '@hominem/chat-services/ui';
 import { useApiClient } from '@hominem/hono-client/react';
-import { fontSizes } from '@hominem/ui/tokens';
+import { chatTokensNative, fontFamiliesNative, fontSizes } from '@hominem/ui/tokens';
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { useMutation } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { Alert, Platform, Share, StyleSheet, View } from 'react-native';
+import { Alert, Modal, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 
 import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
@@ -17,7 +17,6 @@ import { useChatMessages, useEndChat, useSendMessage } from '~/utils/services/ch
 import type { MessageOutput } from '~/utils/services/chat';
 
 import AppIcon from '../ui/icon';
-import { ArtifactActions } from './artifact-actions';
 import { ChatInput } from './chat-input';
 import { loadMarkdown, renderMessage, type MarkdownComponent } from './chat-message';
 import { ChatShimmerMessage } from './chat-shimmer-message';
@@ -39,8 +38,11 @@ type ChatProps = {
   onChatEnd: () => void;
   source: SessionSource;
 };
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export const Chat = (props: ChatProps) => {
   const styles = useStyles();
+  const { top, bottom } = useSafeAreaInsets();
   const { chatId, onChatEnd, source } = props;
   const client = useApiClient();
   const { isPending: isMessagesLoading, data: messages } = useChatMessages({ chatId });
@@ -58,8 +60,8 @@ export const Chat = (props: ChatProps) => {
   const [lifecycleState, setLifecycleState] = useState<ThoughtLifecycleState>('idle');
   const [pendingReview, setPendingReview] = useState<PendingReview | null>(null);
   const [persistedSource, setPersistedSource] = useState<SessionSource | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
 
-  // Search state
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<React.ElementRef<typeof TextInputField> | null>(null);
@@ -74,6 +76,21 @@ export const Chat = (props: ChatProps) => {
     const lower = searchQuery.toLowerCase();
     return formattedMessages.filter((m) => m.message?.toLowerCase().includes(lower));
   }, [formattedMessages, searchQuery]);
+  const isLifecycleBlocked =
+    lifecycleState === 'classifying' ||
+    lifecycleState === 'reviewing_changes' ||
+    lifecycleState === 'persisting';
+  const canTransform = formattedMessages.length > 0 && !isLifecycleBlocked;
+  const statusCopy =
+    lifecycleState === 'classifying'
+      ? 'Preparing note review'
+      : lifecycleState === 'reviewing_changes'
+        ? 'Review ready'
+        : lifecycleState === 'persisting'
+          ? 'Saving note'
+          : formattedMessages.length > 0
+            ? `${formattedMessages.length} ${formattedMessages.length === 1 ? 'message' : 'messages'}`
+            : 'New conversation';
 
   const proposalMessages = useMemo(
     () => formattedMessages.map((message) => ({ role: message.role, content: message.message })),
@@ -113,6 +130,16 @@ export const Chat = (props: ChatProps) => {
       abortControllerRef.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    if (!showSearch) return;
+
+    const timeout = setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 50);
+
+    return () => clearTimeout(timeout);
+  }, [showSearch]);
 
   const onEndChatPress = useCallback(() => {
     endChat();
@@ -211,12 +238,20 @@ export const Chat = (props: ChatProps) => {
   const renderItem = useCallback<ListRenderItem<MessageOutput>>(
     ({ item }) =>
       renderMessage(item, Markdown, {
+        showDebug,
         onCopy: handleCopyMessage,
         onEdit: handleEditMessage,
         onRegenerate: handleRegenerate,
         onDelete: handleDeleteMessage,
       }),
-    [Markdown, handleCopyMessage, handleEditMessage, handleRegenerate, handleDeleteMessage],
+    [
+      Markdown,
+      handleCopyMessage,
+      handleDeleteMessage,
+      handleEditMessage,
+      handleRegenerate,
+      showDebug,
+    ],
   );
 
   // Phase 7: classification API not yet implemented.
@@ -259,63 +294,127 @@ export const Chat = (props: ChatProps) => {
     setPendingReview(null);
   }, []);
 
-  const handleToggleSearch = useCallback(() => {
-    setShowSearch((prev) => {
-      if (prev) {
-        setSearchQuery('');
-      } else {
-        setTimeout(() => searchInputRef.current?.focus(), 50);
-      }
-      return !prev;
-    });
+  const handleOpenSearch = useCallback(() => {
+    setShowSearch(true);
   }, []);
+
+  const handleCloseSearch = useCallback(() => {
+    setShowSearch(false);
+    setSearchQuery('');
+  }, []);
+
+  const handleOpenMenu = useCallback(() => {
+    const buttons: Array<{
+      text: string;
+      onPress?: () => void;
+      style?: 'cancel' | 'default' | 'destructive';
+    }> = [
+      {
+        text: 'Search messages',
+        onPress: handleOpenSearch,
+      },
+      {
+        text: showDebug ? 'Hide debug metadata' : 'Show debug metadata',
+        onPress: () => setShowDebug((current) => !current),
+      },
+    ];
+
+    if (canTransform) {
+      buttons.push({
+        text: 'Transform to note',
+        onPress: () => handleTransform('note'),
+      });
+    }
+
+    buttons.push(
+      {
+        text: isEnding ? 'Ending…' : 'End chat',
+        onPress: onEndChatPress,
+        style: 'destructive',
+      },
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+    );
+
+    Alert.alert('Conversation', undefined, buttons);
+  }, [canTransform, handleOpenSearch, handleTransform, isEnding, onEndChatPress, showDebug]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <ContextAnchor source={resolvedSource} />
+      <View style={[styles.header, { paddingTop: Math.max(top, 16) }]}>
+        <View style={styles.headerCopy}>
+          <Text style={styles.headerStatus}>{statusCopy}</Text>
+          <ContextAnchor source={resolvedSource} />
+        </View>
         <Button
           variant="ghost"
           size="icon-xs"
-          onPress={handleToggleSearch}
-          style={styles.searchToggle}
-          accessibilityLabel={showSearch ? 'Close search' : 'Search messages'}
+          onPress={handleOpenSearch}
+          style={styles.headerIconButton}
+          accessibilityLabel="Search messages"
           testID="chat-search-toggle"
         >
-          <AppIcon
-            name={showSearch ? 'x' : 'magnifying-glass'}
-            size={18}
-            color={showSearch ? '#000' : '#999'}
-          />
+          <AppIcon name="magnifying-glass" size={16} style={styles.headerIcon} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onPress={handleOpenMenu}
+          style={styles.headerIconButton}
+          accessibilityLabel="Conversation actions"
+        >
+          <AppIcon name="ellipsis" size={16} style={styles.headerIcon} />
         </Button>
       </View>
 
-      {/* Search bar */}
-      {showSearch && (
-        <View style={styles.searchBar}>
-          <TextInputField
-            ref={searchInputRef}
-            containerStyle={styles.searchInputContainer}
-            style={styles.searchInput}
-            placeholder="Search messages…"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoFocus
-            returnKeyType="search"
-            testID="chat-search-input"
-          />
-          {searchQuery.length > 0 && (
+      <Modal
+        visible={showSearch}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCloseSearch}
+      >
+        <Pressable style={styles.searchBackdrop} onPress={handleCloseSearch}>
+          <View style={styles.searchPanel}>
+            <View style={styles.searchPanelHeader}>
+              <Text style={styles.searchTitle}>Search messages</Text>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onPress={handleCloseSearch}
+                style={styles.headerIconButton}
+                accessibilityLabel="Close search"
+              >
+                <AppIcon name="x" size={16} style={styles.headerIcon} />
+              </Button>
+            </View>
+
+            <TextInputField
+              ref={searchInputRef}
+              containerStyle={styles.searchInputContainer}
+              style={styles.searchInput}
+              placeholder="Search messages…"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+              returnKeyType="search"
+              testID="chat-search-input"
+            />
+
             <Text style={styles.searchResultCount}>
-              {displayMessages.length} result{displayMessages.length !== 1 ? 's' : ''}
+              {searchQuery.trim().length > 0
+                ? `${displayMessages.length} result${displayMessages.length !== 1 ? 's' : ''}`
+                : 'Search the current conversation'}
             </Text>
-          )}
-        </View>
-      )}
+          </View>
+        </Pressable>
+      </Modal>
 
       {isMessagesLoading ? (
         <View style={styles.shimmerContainer}>
           <ChatShimmerMessage />
-          <ChatShimmerMessage />
+          <ChatShimmerMessage variant="user" />
           <ChatShimmerMessage />
         </View>
       ) : (
@@ -336,27 +435,16 @@ export const Chat = (props: ChatProps) => {
           />
           {chatSendStatus === 'submitted' && <ChatShimmerMessage />}
           {chatSendStatus === 'streaming' && <ChatThinkingIndicator />}
-          <ArtifactActions
-            state={lifecycleState}
-            messageCount={formattedMessages.length}
-            onTransform={handleTransform}
-          />
           <ChatInput
             message={message}
             onMessageChange={setMessage}
             onSendMessage={handleSendMessage}
+            onTransformNote={canTransform ? () => handleTransform('note') : undefined}
+            canTransformNote={canTransform}
             isPending={isChatSending}
           />
         </>
       )}
-
-      <Button
-        variant="primary"
-        style={styles.endButton}
-        onPress={onEndChatPress}
-        disabled={isEnding}
-        title={isEnding ? 'Ending…' : 'End Chat'}
-      />
 
       {lifecycleState === 'reviewing_changes' && pendingReview && (
         <ClassificationReview
@@ -383,46 +471,55 @@ const useStyles = makeStyles((t) =>
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: t.spacing.m_16,
-      paddingVertical: t.spacing.sm_8,
-      borderBottomWidth: 1,
-      borderBottomColor: t.colors['border-default'],
-    },
-    searchToggle: {
-      marginLeft: 'auto',
-    },
-    searchBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: t.spacing.m_16,
-      paddingVertical: t.spacing.sm_8,
+      paddingVertical: t.spacing.sm_12,
       borderBottomWidth: 1,
       borderBottomColor: t.colors['border-default'],
       gap: t.spacing.sm_8,
     },
-    searchInputContainer: {
+    headerCopy: {
       flex: 1,
+      gap: t.spacing.xs_4,
+    },
+    headerStatus: {
+      color: t.colors['text-tertiary'],
+      fontSize: fontSizes.xs,
+      fontFamily: fontFamiliesNative.mono,
+    },
+    headerIconButton: {
+      backgroundColor: t.colors['bg-surface'],
+      borderColor: t.colors['border-default'],
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+    },
+    headerIcon: {
+      color: t.colors['text-tertiary'],
+    },
+    searchInputContainer: {
+      width: '100%',
     },
     searchInput: {
       color: t.colors.foreground,
       fontSize: fontSizes.sm,
-      fontFamily: 'Geist Mono',
+      fontFamily: fontFamiliesNative.mono,
       minHeight: 36,
       paddingVertical: t.spacing.sm_8,
     },
     searchResultCount: {
       color: t.colors['text-tertiary'],
       fontSize: fontSizes.xs,
-      fontFamily: 'Geist Mono',
+      fontFamily: fontFamiliesNative.mono,
     },
     messagesContainer: {
       flexGrow: 1,
-      paddingTop: t.spacing.sm_12,
-      paddingHorizontal: t.spacing.sm_8 + t.spacing.sm_12,
-      rowGap: t.spacing.sm_12,
+      paddingTop: t.spacing.m_16,
+      paddingHorizontal: t.spacing.m_16,
+      paddingBottom: t.spacing.sm_12,
+      rowGap: chatTokensNative.turnGap,
     },
     shimmerContainer: {
       flex: 1,
-      paddingTop: t.spacing.sm_8,
+      paddingTop: t.spacing.sm_12,
     },
     emptySearch: {
       paddingTop: t.spacing.xl_48,
@@ -431,12 +528,34 @@ const useStyles = makeStyles((t) =>
     emptySearchText: {
       color: t.colors['text-tertiary'],
       fontSize: fontSizes.sm,
-      fontFamily: 'Geist Mono',
+      fontFamily: fontFamiliesNative.mono,
     },
-    endButton: {
-      alignSelf: 'center',
-      backgroundColor: t.colors['text-primary'],
-      marginBottom: t.spacing.ml_24,
+    searchBackdrop: {
+      flex: 1,
+      backgroundColor: t.colors['overlay-modal-medium'],
+      justifyContent: 'flex-start',
+      paddingHorizontal: t.spacing.m_16,
+      paddingTop: t.spacing.xl_48,
+    },
+    searchPanel: {
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+      borderRadius: chatTokensNative.radii.composer,
+      backgroundColor: t.colors.background,
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.m_16,
+      gap: t.spacing.sm_12,
+    },
+    searchPanelHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: t.spacing.sm_8,
+    },
+    searchTitle: {
+      color: t.colors.foreground,
+      fontSize: 17,
+      lineHeight: 24,
     },
   }),
 );

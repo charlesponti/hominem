@@ -1,27 +1,30 @@
+import { Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { getStoredTokens, hasValidStoredSession } from '@/utils/auth';
+import { validateWithZod } from '@/utils/zod-validation';
 
-import { createCommand } from '../../command-factory';
+const outputSchema = z.object({
+  tokenStored: z.boolean(),
+  authenticated: z.boolean(),
+  tokenVersion: z.number().nullable(),
+  provider: z.string().nullable(),
+  issuerBaseUrl: z.string().nullable(),
+  expiresAt: z.string().nullable(),
+  ttlSeconds: z.number().nullable(),
+  scopes: z.array(z.string()),
+});
 
-export default createCommand({
-  name: 'auth status',
-  summary: 'Show authentication status',
-  description: 'Reports whether CLI tokens are available and their TTL state.',
-  argNames: [],
-  args: z.object({}),
-  flags: z.object({}),
-  outputSchema: z.object({
-    tokenStored: z.boolean(),
-    authenticated: z.boolean(),
-    tokenVersion: z.number().nullable(),
-    provider: z.string().nullable(),
-    issuerBaseUrl: z.string().nullable(),
-    expiresAt: z.string().nullable(),
-    ttlSeconds: z.number().nullable(),
-    scopes: z.array(z.string()),
-  }),
-  async run() {
+export default class AuthStatus extends Command {
+  static description = 'Reports whether CLI tokens are available and their TTL state.';
+  static summary = 'Show authentication status';
+
+  static override flags = {};
+  static override args = {};
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
     const tokens = await getStoredTokens();
     const tokenStored = Boolean(tokens?.accessToken);
     const authenticated = tokens?.issuerBaseUrl
@@ -31,7 +34,7 @@ export default createCommand({
     const ttlSeconds =
       expiresAtMs === null ? null : Math.max(0, Math.floor((expiresAtMs - Date.now()) / 1000));
 
-    return {
+    const output = {
       tokenStored,
       authenticated,
       tokenVersion: tokens?.tokenVersion ?? null,
@@ -41,5 +44,8 @@ export default createCommand({
       ttlSeconds,
       scopes: tokens?.scopes ?? [],
     };
-  },
-});
+
+    return validateWithZod(outputSchema, output);
+  }
+}
+

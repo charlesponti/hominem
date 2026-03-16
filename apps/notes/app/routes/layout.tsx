@@ -1,13 +1,13 @@
-'use client';
-
 import { PasskeyEnrollmentBanner, usePasskeyAuth, useToast } from '@hominem/ui';
 import { AppLayout } from '@hominem/ui/components/layout/app-layout';
 import { Toaster } from '@hominem/ui/components/ui/toaster';
-import { Suspense, useCallback, useEffect } from 'react';
+import React, { Suspense, useCallback, useEffect } from 'react';
 import { Outlet, useSearchParams } from 'react-router';
 
-import Header from '~/components/header';
+import { HyperForm } from '~/components/hyper-form';
+import { ComposerProvider } from '~/components/hyper-form/composer-provider';
 import { LoadingScreen } from '~/components/loading';
+import NotesSidebar from '~/components/notes-sidebar';
 
 export default function Layout() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,7 +21,6 @@ export default function Layout() {
     const error = searchParams.get('error');
     const description = searchParams.get('description') || searchParams.get('error_description');
 
-    // Show toast for errors from URL params
     if (error) {
       toast({
         variant: 'destructive',
@@ -29,7 +28,6 @@ export default function Layout() {
         description: description ?? undefined,
       });
 
-      // Clear the error params from URL without refreshing
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('error');
       newParams.delete('description');
@@ -39,14 +37,24 @@ export default function Layout() {
   }, [searchParams, toast, setSearchParams]);
 
   return (
-    <>
-      <PasskeyEnrollmentBanner onEnroll={handleEnroll} />
-      <AppLayout navigation={<Header />}>
-        <Suspense fallback={<LoadingScreen />}>
-          <Outlet />
-        </Suspense>
-      </AppLayout>
-      <Toaster />
-    </>
+    // CSS var consumed by all Notes route scroll containers for bottom padding
+    <ComposerProvider>
+      <div
+        style={
+          {
+            '--hyper-form-resting-height': 'calc(env(safe-area-inset-bottom) + 112px)',
+          } as React.CSSProperties
+        }
+      >
+        <PasskeyEnrollmentBanner onEnroll={handleEnroll} />
+        <AppLayout sidebar={<NotesSidebar />} contentMode="full-bleed">
+          <Suspense fallback={<LoadingScreen />}>
+            <Outlet />
+          </Suspense>
+        </AppLayout>
+        <HyperForm />
+        <Toaster />
+      </div>
+    </ComposerProvider>
   );
 }

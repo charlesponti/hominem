@@ -57,12 +57,12 @@ export const SessionCard = ({ chat, isActive }: SessionCardProps) => {
           <Text variant="body" color="foreground" numberOfLines={1} style={styles.title}>
             {label}
           </Text>
-          <Text variant="caption" color="text-secondary">
-            {isActive ? 'Active' : formatAge(chat.activityAt)}
+          <Text variant="caption" color="text-secondary" style={styles.meta}>
+            {isActive ? 'Active conversation' : formatAge(chat.activityAt)}
           </Text>
         </View>
-        <Text variant="caption" color="text-secondary" style={styles.arrow}>
-          →
+        <Text variant="caption" color="text-secondary" style={styles.resume}>
+          Resume
         </Text>
       </Button>
     </FadeIn>
@@ -80,7 +80,7 @@ export const SessionList = () => {
   return (
     <View style={styles.list}>
       <Text variant="caption" color="text-secondary" style={styles.sectionLabel}>
-        SESSIONS
+        RECENT CONVERSATIONS
       </Text>
       {sessions.map((chat, i) => (
         <SessionCard key={chat.id} chat={chat} isActive={i === 0 && !chat.endedAt} />
@@ -104,27 +104,30 @@ const useStyles = makeStyles((t) =>
     sectionLabel: {
       letterSpacing: 1 /* text kerning */,
       marginBottom: t.spacing.xs_4,
-      paddingHorizontal: t.spacing.xs_4,
     },
     card: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: t.spacing.sm_12,
       borderColor: t.colors['border-default'],
-      backgroundColor: t.colors.muted,
+      backgroundColor: t.colors.background,
       justifyContent: 'flex-start',
+      borderRadius: t.borderRadii.xl_20,
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.sm_12,
     },
     activeCard: {
-      borderColor: t.colors.success,
+      borderColor: t.colors['border-focus'],
     },
     activeDot: {
       width: t.spacing.xs_4,
       height: t.spacing.xs_4,
       borderRadius: 999 /* full radius */,
-      backgroundColor: t.colors.success,
+      backgroundColor: t.colors.foreground,
     },
     content: { flex: 1, gap: 1 /* minimal gap */ },
     title: { fontWeight: '500' },
-    arrow: { opacity: 0.4 },
+    meta: { letterSpacing: 0.3 },
+    resume: { letterSpacing: 0.5 },
   }),
 );

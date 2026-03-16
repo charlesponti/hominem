@@ -24,6 +24,20 @@ import AppIcon, { type AppIconName } from '../ui/icon';
 
 const SWIPE_THRESHOLD = 80;
 
+function getPrimaryLine(value: string) {
+  return (
+    value
+      .split('\n')
+      .map((line) => line.trim())
+      .find(Boolean) ?? 'Untitled note'
+  );
+}
+
+function getPreviewLine(value: string) {
+  const preview = value.replace(/\s+/g, ' ').trim();
+  return preview.length > 120 ? `${preview.slice(0, 117)}...` : preview;
+}
+
 const FocusDueDate = memo(({ dueDate }: { dueDate: Date | null }) => {
   if (!dueDate) return null;
 
@@ -42,23 +56,30 @@ const useStyles = makeStyles((t) =>
   StyleSheet.create({
     container: {
       backgroundColor: theme.colors.background,
-      ...borderStyle.borderBottom,
-      borderRadius: t.borderRadii.md_10,
+      borderRadius: t.borderRadii.xl_20,
       overflow: 'hidden',
     },
     itemContainer: {
       flexDirection: 'row',
       paddingVertical: t.spacing.m_16,
-      paddingHorizontal: t.spacing.ml_24,
+      paddingHorizontal: t.spacing.m_16,
       paddingRight: t.spacing.m_16,
-      borderRadius: t.borderRadii.md_10,
-      backgroundColor: theme.colors.muted,
+      borderRadius: t.borderRadii.xl_20,
+      backgroundColor: theme.colors.background,
       borderWidth: 1,
       borderColor: theme.colors['border-default'],
     },
     focusInfoContainer: {
       flex: 1,
-      fontWeight: 500,
+      rowGap: t.spacing.xs_4,
+    },
+    title: {
+      fontWeight: '600',
+      fontSize: fontSizes.sm,
+      lineHeight: 20,
+      color: theme.colors.foreground,
+    },
+    preview: {
       fontSize: fontSizes.sm,
       lineHeight: 20,
       color: theme.colors['text-secondary'],
@@ -85,6 +106,7 @@ const useStyles = makeStyles((t) =>
       alignItems: 'center',
       borderWidth: 1,
       borderColor: theme.colors['border-default'],
+      backgroundColor: theme.colors['bg-surface'],
     },
     leftAction: {
       position: 'absolute',
@@ -131,6 +153,8 @@ export const FocusListItem = ({
   const isMutating = useSharedValue(false);
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dueDate = item.due_date ? new Date(item.due_date) : null;
+  const title = getPrimaryLine(label);
+  const preview = getPreviewLine(label);
 
   useEffect(() => {
     return () => {
@@ -234,17 +258,10 @@ export const FocusListItem = ({
     <Reanimated.View style={[styles.itemContainer, animatedStyle]}>
       <View style={styles.itemRow}>
         <View style={styles.itemContent}>
-          <Reanimated.Text
-            style={[
-              listStyles.text,
-              styles.focusInfoContainer,
-              {
-                flex: 1,
-              },
-            ]}
-          >
-            {label}
-          </Reanimated.Text>
+          <View style={styles.focusInfoContainer}>
+            <Reanimated.Text style={[listStyles.text, styles.title]}>{title}</Reanimated.Text>
+            <Reanimated.Text style={[listStyles.text, styles.preview]}>{preview}</Reanimated.Text>
+          </View>
           <FocusDueDate dueDate={dueDate} />
         </View>
         <Reanimated.View style={[styles.icon, iconStyle]}>

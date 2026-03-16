@@ -1,0 +1,55 @@
+{
+  "name": "@hominem/finance-react",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./accounts": "./src/components/accounts/index.ts",
+    "./analytics": "./src/components/analytics/index.ts",
+    "./finance": "./src/components/finance/index.ts",
+    "./plaid": "./src/components/plaid/index.ts",
+    "./hooks": "./src/hooks/index.ts",
+    "./stores": "./src/stores/index.ts"
+  },
+  "scripts": {
+    "clean": "rm -rf build",
+    "format": "bunx oxfmt ./src",
+    "lint": "bunx oxlint ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:ui": "vitest --ui",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
+  },
+  "dependencies": {
+    "@hominem/auth": "workspace:*",
+    "@hominem/ui": "workspace:*",
+    "@hominem/finance-services": "workspace:*",
+    "@hominem/hono-client": "workspace:*",
+    "@hominem/hono-rpc": "workspace:*",
+    "@tanstack/react-query": "5.90.16",
+    "date-fns": "^3.6.0",
+    "lucide-react": "^0.575.0",
+    "react": "19.2.0",
+    "react-plaid-link": "^3.6.1",
+    "recharts": "^2.15.1",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@storybook/addon-essentials": "^8.0.0",
+    "@storybook/addon-interactions": "^8.0.0",
+    "@storybook/react": "^8.0.0",
+    "@storybook/react-vite": "^8.0.0",
+    "@storybook/test": "^8.0.0",
+    "@types/react": "19.2.10",
+    "@types/react-dom": "19.1.7",
+    "storybook": "^8.0.0",
+    "typescript": "5.9.3",
+    "vite": "7.3.1",
+    "vite-tsconfig-paths": "6.0.3",
+    "vitest": "4.0.16"
+  },
+  "peerDependencies": {
+    "react": "19.2.0"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "extends": "../../tsconfig.profiles/react-bundler-lib.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../.cache/invites-react.tsbuildinfo",
+    "rootDir": "src",
+    "outDir": "./build",
+    "types": [
+      "vite/client",
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts",
+    "../../types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    ".turbo",
+    ".cache",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/__tests__",
+    "**/__mocks__",
+    "*.tsbuildinfo"
+  ]
+}

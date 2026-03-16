@@ -23,12 +23,12 @@ interface RunResult {
 }
 
 interface RunCliOptions {
-  cwd?: string
-  env?: NodeJS.ProcessEnv
+  cwd?: string;
+  env?: NodeJS.ProcessEnv;
   stdio?: {
-    out: CliWriteStream
-    err: CliWriteStream
-  }
+    out: CliWriteStream;
+    err: CliWriteStream;
+  };
 }
 
 function serializeJsonValue(input: object): JsonValue {
@@ -74,38 +74,38 @@ async function withScopedProcessState<T>(
   input: { cwd: string; env: NodeJS.ProcessEnv },
   run: () => Promise<T>,
 ): Promise<T> {
-  const previousCwd = process.cwd()
-  const previousEnv = { ...process.env }
+  const previousCwd = process.cwd();
+  const previousEnv = { ...process.env };
 
-  process.chdir(input.cwd)
+  process.chdir(input.cwd);
 
   for (const key of Object.keys(process.env)) {
     if (!(key in input.env)) {
-      delete process.env[key]
+      delete process.env[key];
     }
   }
   for (const [key, value] of Object.entries(input.env)) {
     if (value === undefined) {
-      delete process.env[key]
+      delete process.env[key];
     } else {
-      process.env[key] = value
+      process.env[key] = value;
     }
   }
 
   try {
-    return await run()
+    return await run();
   } finally {
-    process.chdir(previousCwd)
+    process.chdir(previousCwd);
     for (const key of Object.keys(process.env)) {
       if (!(key in previousEnv)) {
-        delete process.env[key]
+        delete process.env[key];
       }
     }
     for (const [key, value] of Object.entries(previousEnv)) {
       if (value === undefined) {
-        delete process.env[key]
+        delete process.env[key];
       } else {
-        process.env[key] = value
+        process.env[key] = value;
       }
     }
   }
@@ -116,12 +116,12 @@ export async function runCli(
   binaryName = 'hominem',
   options?: RunCliOptions,
 ): Promise<RunResult> {
-  const cwd = options?.cwd ?? process.cwd()
-  const env = options?.env ?? process.env
+  const cwd = options?.cwd ?? process.cwd();
+  const env = options?.env ?? process.env;
   const stdio = options?.stdio ?? {
     out: process.stdout,
     err: process.stderr,
-  }
+  };
   const parsed = parseArgv(argv);
 
   if (parsed.commandTokens.length === 0) {
@@ -170,53 +170,53 @@ export async function runCli(
 
   try {
     return await withScopedProcessState({ cwd, env }, async () => {
-    const argObject: Record<string, string> = {};
-    for (let index = 0; index < command.argNames.length; index += 1) {
-      const argName = command.argNames[index];
-      const value = remainingPositional[index];
-      if (value) {
-        argObject[argName] = value;
+      const argObject: Record<string, string> = {};
+      for (let index = 0; index < command.argNames.length; index += 1) {
+        const argName = command.argNames[index];
+        const value = remainingPositional[index];
+        if (value) {
+          argObject[argName] = value;
+        }
       }
-    }
 
-    const flagsObject = normalizeFlagRecord(parsed.flags);
+      const flagsObject = normalizeFlagRecord(parsed.flags);
 
-    const args = command.args.parse(argObject);
-    const flags = command.flags.parse(flagsObject);
+      const args = command.args.parse(argObject);
+      const flags = command.flags.parse(flagsObject);
 
-    const outputFormat = parsed.globals.outputFormat as OutputFormat;
-    const context = {
-      cwd,
-      env,
-      stdio: {
-        out: stdio.out,
-        err: stdio.err,
-      },
-      outputFormat,
-      quiet: parsed.globals.quiet,
-      verbose: parsed.globals.verbose,
-      interactive: parsed.globals.interactive,
-      telemetry: {
-        requestId: crypto.randomUUID(),
-        startedAt: new Date().toISOString(),
-      },
-      abortSignal: abortController.signal,
-    };
+      const outputFormat = parsed.globals.outputFormat as OutputFormat;
+      const context = {
+        cwd,
+        env,
+        stdio: {
+          out: stdio.out,
+          err: stdio.err,
+        },
+        outputFormat,
+        quiet: parsed.globals.quiet,
+        verbose: parsed.globals.verbose,
+        interactive: parsed.globals.interactive,
+        telemetry: {
+          requestId: crypto.randomUUID(),
+          startedAt: new Date().toISOString(),
+        },
+        abortSignal: abortController.signal,
+      };
 
-    const result = await command.run({ args, flags, context });
-    const output = command.outputSchema.parse(result);
+      const result = await command.run({ args, flags, context });
+      const output = command.outputSchema.parse(result);
 
-    const payload: CommandSuccess<typeof output> = {
-      ok: true,
-      command: command.name,
-      timestamp: new Date().toISOString(),
-      data: output,
-      message: command.summary,
-    };
+      const payload: CommandSuccess<typeof output> = {
+        ok: true,
+        command: command.name,
+        timestamp: new Date().toISOString(),
+        data: output,
+        message: command.summary,
+      };
 
-    writeSuccess(outputFormat, payload, stdio.out);
-    return { exitCode: 0 };
-    })
+      writeSuccess(outputFormat, payload, stdio.out);
+      return { exitCode: 0 };
+    });
   } catch (error) {
     const outputFormat = parsed.globals.outputFormat;
 

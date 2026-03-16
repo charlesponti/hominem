@@ -1,30 +1,32 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test'
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
 
-const loadTokensMock = mock()
-const saveTokensMock = mock()
-const clearTokensMock = mock()
-const openMock = mock()
+const loadTokensMock = mock();
+const saveTokensMock = mock();
+const clearTokensMock = mock();
+const openMock = mock();
 
 mock.module('./secure-store', () => ({
   SecureStoreError: class SecureStoreError extends Error {},
   loadTokens: loadTokensMock,
   saveTokens: saveTokensMock,
   clearTokens: clearTokensMock,
-}))
+}));
 
 mock.module('open', () => ({
   default: openMock,
-}))
+}));
 
-const { deviceCodeLogin, getAccessToken, interactiveLogin } = await import('./auth')
+const { deviceCodeLogin, getAccessToken, interactiveLogin } = await import('./auth');
 
-function createDeviceCodeResponse(overrides?: Partial<{
-  device_code: string
-  user_code: string
-  verification_uri: string
-  expires_in: number
-  interval: number
-}>) {
+function createDeviceCodeResponse(
+  overrides?: Partial<{
+    device_code: string;
+    user_code: string;
+    verification_uri: string;
+    expires_in: number;
+    interval: number;
+  }>,
+) {
   return {
     ok: true,
     status: 200,
@@ -36,14 +38,14 @@ function createDeviceCodeResponse(overrides?: Partial<{
       interval: 1,
       ...overrides,
     }),
-  } as Response
+  } as Response;
 }
 
 function createDeviceTokenResponse(input?: {
-  headerToken?: string | null
-  bodyToken?: string
-  scope?: string
-  expiresIn?: number
+  headerToken?: string | null;
+  bodyToken?: string;
+  scope?: string;
+  expiresIn?: number;
 }) {
   return {
     ok: true,
@@ -51,12 +53,12 @@ function createDeviceTokenResponse(input?: {
     headers: {
       get: (name: string) => {
         if (name !== 'set-auth-token') {
-          return null
+          return null;
         }
         if (input && 'headerToken' in input) {
-          return input.headerToken ?? null
+          return input.headerToken ?? null;
         }
-        return 'header-token'
+        return 'header-token';
       },
     },
     json: async () => ({
@@ -65,7 +67,7 @@ function createDeviceTokenResponse(input?: {
       expires_in: input?.expiresIn ?? 604799,
       scope: input?.scope ?? 'cli:read',
     }),
-  } as Response
+  } as Response;
 }
 
 function createPendingTokenResponse() {
@@ -76,27 +78,27 @@ function createPendingTokenResponse() {
     json: async () => ({
       error: 'authorization_pending',
     }),
-  } as Response
+  } as Response;
 }
 
 describe('cli auth utils', () => {
-  let fetchMock: ReturnType<typeof mock>
-  const originalFetch = globalThis.fetch
+  let fetchMock: ReturnType<typeof mock>;
+  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
-    loadTokensMock.mockReset()
-    saveTokensMock.mockReset()
-    clearTokensMock.mockReset()
-    openMock.mockReset()
-    openMock.mockResolvedValue(undefined)
+    loadTokensMock.mockReset();
+    saveTokensMock.mockReset();
+    clearTokensMock.mockReset();
+    openMock.mockReset();
+    openMock.mockResolvedValue(undefined);
 
-    fetchMock = mock()
-    globalThis.fetch = fetchMock as unknown as typeof fetch
-  })
+    fetchMock = mock();
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+  });
 
   afterEach(() => {
-    globalThis.fetch = originalFetch
-  })
+    globalThis.fetch = originalFetch;
+  });
 
   test('getAccessToken returns stored Better Auth bearer without refresh exchange', async () => {
     loadTokensMock.mockResolvedValueOnce({
@@ -106,14 +108,14 @@ describe('cli auth utils', () => {
       provider: 'better-auth',
       scopes: ['cli:read'],
       issuerBaseUrl: 'http://localhost:4040',
-    })
+    });
 
-    const token = await getAccessToken()
+    const token = await getAccessToken();
 
-    expect(token).toBe('stored-bearer')
-    expect(fetchMock).not.toHaveBeenCalled()
-    expect(saveTokensMock).not.toHaveBeenCalled()
-  })
+    expect(token).toBe('stored-bearer');
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(saveTokensMock).not.toHaveBeenCalled();
+  });
 
   test('getAccessToken throws when issuer mismatches requested base', async () => {
     loadTokensMock.mockResolvedValueOnce({
@@ -122,14 +124,14 @@ describe('cli auth utils', () => {
       refreshToken: 'refresh',
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
       issuerBaseUrl: 'http://localhost:4040',
-    })
+    });
 
     await expect(
       getAccessToken({
         expectedIssuerBaseUrl: 'http://localhost:3000',
       }),
-    ).rejects.toThrow('does not match requested base')
-  })
+    ).rejects.toThrow('does not match requested base');
+  });
 
   test('getAccessToken returns stored bearer even when local expiry metadata is stale', async () => {
     loadTokensMock.mockResolvedValueOnce({
@@ -137,22 +139,22 @@ describe('cli auth utils', () => {
       expiresAt: new Date(Date.now() - 60_000).toISOString(),
       tokenVersion: 2,
       issuerBaseUrl: 'http://localhost:4040',
-    })
+    });
 
-    await expect(getAccessToken()).resolves.toBe('stale')
-    expect(fetchMock).not.toHaveBeenCalled()
-  })
+    await expect(getAccessToken()).resolves.toBe('stale');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 
   test('deviceCodeLogin stores Better Auth bearer token from set-auth-token header', async () => {
-    fetchMock.mockResolvedValueOnce(createDeviceCodeResponse())
-    fetchMock.mockResolvedValueOnce(createDeviceTokenResponse())
+    fetchMock.mockResolvedValueOnce(createDeviceCodeResponse());
+    fetchMock.mockResolvedValueOnce(createDeviceTokenResponse());
 
     await deviceCodeLogin({
       authBaseUrl: 'http://localhost:4040',
       scopes: [],
       outputMode: 'machine',
       timeoutMs: 1000,
-    })
+    });
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -163,7 +165,7 @@ describe('cli auth utils', () => {
           scope: 'cli:read',
         }),
       }),
-    )
+    );
 
     expect(saveTokensMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -172,36 +174,36 @@ describe('cli auth utils', () => {
         scopes: ['cli:read'],
         tokenVersion: 2,
       }),
-    )
-  })
+    );
+  });
 
   test('deviceCodeLogin falls back to access_token from the response body when header is absent', async () => {
-    fetchMock.mockResolvedValueOnce(createDeviceCodeResponse())
+    fetchMock.mockResolvedValueOnce(createDeviceCodeResponse());
     fetchMock.mockResolvedValueOnce(
       createDeviceTokenResponse({
         headerToken: null,
         bodyToken: 'body-only-token',
       }),
-    )
+    );
 
     await deviceCodeLogin({
       authBaseUrl: 'http://localhost:4040',
       scopes: [],
       outputMode: 'machine',
       timeoutMs: 1000,
-    })
+    });
 
     expect(saveTokensMock).toHaveBeenCalledWith(
       expect.objectContaining({
         accessToken: 'body-only-token',
         scopes: ['cli:read'],
       }),
-    )
-  })
+    );
+  });
 
   test('interactiveLogin fails loudly when the browser verification URL cannot be opened', async () => {
-    openMock.mockRejectedValueOnce(new Error('open failed'))
-    fetchMock.mockResolvedValueOnce(createDeviceCodeResponse())
+    openMock.mockRejectedValueOnce(new Error('open failed'));
+    fetchMock.mockResolvedValueOnce(createDeviceCodeResponse());
 
     await expect(
       interactiveLogin({
@@ -212,14 +214,14 @@ describe('cli auth utils', () => {
     ).rejects.toMatchObject({
       code: 'AUTH_LOGIN_FAILED',
       hint: 'Open http://localhost:4040/api/auth/device manually',
-    })
+    });
 
-    expect(saveTokensMock).not.toHaveBeenCalled()
-  })
+    expect(saveTokensMock).not.toHaveBeenCalled();
+  });
 
   test('interactiveLogin honors timeoutMs while device authorization remains pending', async () => {
-    fetchMock.mockResolvedValueOnce(createDeviceCodeResponse({ interval: 0 }))
-    fetchMock.mockResolvedValue(createPendingTokenResponse())
+    fetchMock.mockResolvedValueOnce(createDeviceCodeResponse({ interval: 0 }));
+    fetchMock.mockResolvedValue(createPendingTokenResponse());
 
     await expect(
       interactiveLogin({
@@ -227,6 +229,6 @@ describe('cli auth utils', () => {
         outputMode: 'machine',
         timeoutMs: 10,
       }),
-    ).rejects.toThrow('timed out')
-  })
-})
+    ).rejects.toThrow('timed out');
+  });
+});

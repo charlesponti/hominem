@@ -1,7 +1,4 @@
-import {
-  buildAuthCallbackErrorRedirect,
-  resolveSafeAuthRedirect,
-} from '@hominem/auth/server';
+import { buildAuthCallbackErrorRedirect, resolveSafeAuthRedirect } from '@hominem/auth/server';
 import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { redirect, type ActionFunctionArgs } from 'react-router';
 
@@ -65,11 +62,9 @@ export function createAuthEntryLoader(config: AuthEntryRouteConfig, getServerAut
     if (user) {
       const requestUrl = new URL(request.url);
       return redirect(
-        resolveSafeAuthRedirect(
-          requestUrl.searchParams.get('next'),
-          config.defaultRedirect,
-          [...config.allowedRedirectPrefixes],
-        ),
+        resolveSafeAuthRedirect(requestUrl.searchParams.get('next'), config.defaultRedirect, [
+          ...config.allowedRedirectPrefixes,
+        ]),
         { headers },
       );
     }
@@ -122,11 +117,9 @@ export function createAuthVerifyLoader(
     if (user) {
       const requestUrl = new URL(request.url);
       return redirect(
-        resolveSafeAuthRedirect(
-          requestUrl.searchParams.get('next'),
-          config.defaultRedirect,
-          [...config.allowedRedirectPrefixes],
-        ),
+        resolveSafeAuthRedirect(requestUrl.searchParams.get('next'), config.defaultRedirect, [
+          ...config.allowedRedirectPrefixes,
+        ]),
         { headers },
       );
     }

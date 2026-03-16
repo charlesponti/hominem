@@ -83,7 +83,7 @@
   /* ====== COLORS: ACCENT (Per-Product Override) ====== */
   /* Default: Apple Blue. Override with [data-product="*"] */
 
-  --color-accent: #007AFF; /* Apple Blue per HIG */
+  --color-accent: #007aff; /* Apple Blue per HIG */
   --color-accent-foreground: #ffffff;
 
   /* ====== COLORS: SYSTEM (Backward Compatibility) ====== */
@@ -100,7 +100,7 @@
   --color-popover: #f5f5f7;
   --color-popover-foreground: #000000;
   --color-input: #f5f5f7;
-  --color-ring: #007AFF;
+  --color-ring: #007aff;
 
   /* ====== COLORS: EMPHASIS SCALE ====== */
   /* Opacity layers for subtle differentiation on black */
@@ -157,16 +157,21 @@
   --glass-background: rgba(255, 255, 255, 0.8);
 
   /* ====== SIDEBAR COLORS ====== */
-  /* Kanso Monochrome */
+  /* ChatGPT-style light sidebar */
 
-  --color-sidebar: #000000;
-  --color-sidebar-foreground: #ffffff;
-  --color-sidebar-primary: #ffffff;
-  --color-sidebar-primary-foreground: #000000;
-  --color-sidebar-accent: rgba(255, 255, 255, 0.15);
-  --color-sidebar-accent-foreground: #ffffff;
-  --color-sidebar-border: rgba(255, 255, 255, 0.1);
-  --color-sidebar-ring: #ffffff;
+  --color-sidebar: #f9f9f9;
+  --color-sidebar-foreground: #0d0d0d;
+  --color-sidebar-primary: #0d0d0d;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: rgba(0, 0, 0, 0.06);
+  --color-sidebar-accent-foreground: #0d0d0d;
+  --color-sidebar-border: rgba(0, 0, 0, 0.08);
+  --color-sidebar-ring: #0d0d0d;
+
+  /* ====== CHAT INPUT ====== */
+  --color-prompt-bg: #ffffff;
+  --color-prompt-border: rgba(0, 0, 0, 0.15);
+  --color-prompt-border-focus: rgba(0, 0, 0, 0.25);
 }
 
 /* ====== SAFE AREA UTILITIES ====== */

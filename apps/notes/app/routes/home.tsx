@@ -1,23 +1,21 @@
-import { LandingPage } from '@hominem/ui/components/layout/landing-page';
+import { NOTES_AUTH_CONFIG } from '@hominem/auth';
 import { resolveSafeAuthRedirect } from '@hominem/auth/server';
+import { LandingPage } from '@hominem/ui/components/layout/landing-page';
 import { FileText, MessageSquare, Mic, Tag } from 'lucide-react';
 import { data, redirect } from 'react-router';
 import type { LoaderFunctionArgs } from 'react-router';
 import { useSearchParams } from 'react-router';
 
 import { getServerSession } from '~/lib/auth.server';
-import { NOTES_AUTH_CONFIG } from '@hominem/auth';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user, headers } = await getServerSession(request);
   if (user) {
     const requestUrl = new URL(request.url);
     return redirect(
-      resolveSafeAuthRedirect(
-        requestUrl.searchParams.get('next'),
-        '/home',
-        [...NOTES_AUTH_CONFIG.allowedDestinations],
-      ),
+      resolveSafeAuthRedirect(requestUrl.searchParams.get('next'), '/home', [
+        ...NOTES_AUTH_CONFIG.allowedDestinations,
+      ]),
       { headers },
     );
   }

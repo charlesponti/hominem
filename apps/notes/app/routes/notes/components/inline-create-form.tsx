@@ -120,97 +120,100 @@ export function InlineCreateForm({
 
   if (!isVisible) return null;
 
-  // Edit mode - show full form in a modal-like container
   if (isEditMode) {
     return (
-      <div className="w-full max-w-4xl mx-auto mb-6 border border-border void-anim-breezy">
-        <div className="p-4">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-foreground">Edit Note</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCancel}
-              className="size-8 p-0 text-muted-foreground hover:text-foreground"
-              aria-label="Close edit form"
-              title="Close edit form"
-            >
-              <X className="size-4" />
-            </Button>
+      <div className="w-full rounded-3xl border border-border/60 bg-bg-surface px-4 py-4 void-anim-breezy sm:px-5">
+        <div className="flex items-center justify-between border-b border-border/50 pb-3">
+          <div>
+            <div className="body-4 uppercase tracking-[0.12em] text-text-tertiary">Editing</div>
+            <h3 className="heading-4 text-foreground">Refine note</h3>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCancel}
+            className="size-8 rounded-full p-0 text-muted-foreground hover:text-foreground"
+            aria-label="Close edit form"
+            title="Close edit form"
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
 
-          <div className="space-y-4">
-            <Input
-              placeholder="Note title (optional)"
-              value={inputTitle}
-              onChange={(e) => setInputTitle(e.target.value)}
-              className="text-sm bg-transparent text-foreground border-border placeholder-muted-foreground focus:border-border focus:ring-2 focus:ring-accent"
-            />
+        <div className="mt-4 space-y-4">
+          <Input
+            placeholder="Title"
+            value={inputTitle}
+            onChange={(e) => setInputTitle(e.target.value)}
+            className="body-2 h-11 border-border/60 bg-background text-foreground placeholder:text-text-tertiary"
+          />
 
-            <Textarea
-              placeholder="Type your note... Use #tag to add tags"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              rows={4}
-              className="text-sm bg-transparent text-foreground border border-border placeholder-muted-foreground focus:border-border focus:ring-2 focus:ring-accent resize-none"
-            />
+          <Textarea
+            placeholder="Rewrite the note without breaking the thread of thought"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            rows={6}
+            className="body-1 min-h-44 resize-none border-border/60 bg-background text-foreground placeholder:text-text-tertiary"
+          />
 
-            {/* Action buttons */}
+          <div className="flex items-center justify-between gap-3 border-t border-border/50 pt-3">
+            <div className="body-4 text-text-tertiary">Changes stay lightweight until you save.</div>
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                className="h-8 px-4"
-                title="Cancel edit"
-              >
+              <Button variant="outline" onClick={handleCancel} className="rounded-full px-4" title="Cancel edit">
                 Cancel
               </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isSaveDisabled}
-                className="h-8 px-4 bg-primary text-primary-foreground disabled:bg-muted disabled:text-muted-foreground void-anim-breezy"
-              >
-                {isSaving ? <RefreshCw className="size-4" /> : 'Save'}
+              <Button onClick={handleSave} disabled={isSaveDisabled} className="rounded-full px-4">
+                {isSaving ? <RefreshCw className="size-4 animate-spin" /> : 'Save'}
               </Button>
             </div>
-
-            {/* Error message */}
-            {error && (
-              <div className="text-foreground text-sm p-3 text-center border border-muted-foreground/30">
-                {error.message}
-              </div>
-            )}
           </div>
+
+          {error && (
+            <div className="body-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-destructive">
+              {error.message}
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
-  // Create mode - simple always-visible form
   return (
     <div className="w-full">
-      <div className="space-y-3">
-        <Textarea
-          placeholder="What's on your mind? Use #tag to add tags..."
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          rows={3}
-          className="text-base text-foreground border-border placeholder-muted-foreground focus:border-border focus:ring-2 focus:ring-accent resize-none"
-        />
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <div className="body-4 uppercase tracking-[0.12em] text-text-tertiary">New note</div>
+          <Textarea
+            placeholder="Write the thought before you organize it"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            rows={4}
+            className="body-1 min-h-32 resize-none border-0 bg-transparent px-0 py-0 text-foreground placeholder:text-text-tertiary focus-visible:ring-0"
+          />
+        </div>
 
-        <div className="flex justify-end">
-          <Button
-            onClick={handleSave}
-            disabled={isSaveDisabled}
-            className="h-9 px-6 bg-primary text-primary-foreground disabled:bg-muted disabled:text-muted-foreground void-anim-breezy"
-          >
-            {isSaving ? <RefreshCw className="size-4" /> : 'Save'}
-          </Button>
+        <div className="flex items-center justify-between gap-3 border-t border-border/50 pt-3">
+          <Input
+            placeholder="Title optional"
+            value={inputTitle}
+            onChange={(e) => setInputTitle(e.target.value)}
+            className="body-3 h-10 max-w-56 border-0 bg-transparent px-0 text-text-secondary placeholder:text-text-tertiary focus-visible:ring-0"
+          />
+
+          <div className="flex items-center gap-2">
+            <div className="body-4 text-text-tertiary">Supports #tags inline</div>
+            <Button
+              onClick={handleSave}
+              disabled={isSaveDisabled}
+              className="rounded-full px-5"
+            >
+              {isSaving ? <RefreshCw className="size-4 animate-spin" /> : 'Save'}
+            </Button>
+          </div>
         </div>
 
         {error && (
-          <div className="text-foreground text-sm p-3 text-center bg-muted border border-border">
+          <div className="body-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-destructive">
             {error.message}
           </div>
         )}

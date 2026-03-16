@@ -50,7 +50,8 @@ function buildAuthAnalyticsProperties(context: AuthAnalyticsContext) {
     errorMessage: context.error?.message ?? null,
     errorName: context.error?.name ?? null,
     failureStage: context.failureStage ?? null,
-    isTimeout: context.error?.name === 'AbortError' || context.error?.message.includes('timed out') === true,
+    isTimeout:
+      context.error?.name === 'AbortError' || context.error?.message.includes('timed out') === true,
     phase: context.phase,
     source: context.source ?? 'auth_provider',
     statusCode: context.statusCode ?? null,

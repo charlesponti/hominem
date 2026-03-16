@@ -197,13 +197,13 @@ function buildStoredTokensFromResponse(
   issuerBaseUrl: string,
   fallback?: Partial<StoredTokens>,
 ): StoredTokens {
-  const accessToken = tokenResponse.access_token ?? fallback?.accessToken
+  const accessToken = tokenResponse.access_token ?? fallback?.accessToken;
   if (!accessToken) {
     throw new AuthError({
       code: 'AUTH_LOGIN_FAILED',
       category: 'auth',
       message: 'No Better Auth bearer token was returned by the device flow',
-    })
+    });
   }
 
   const stored: StoredTokens = {
@@ -212,15 +212,15 @@ function buildStoredTokensFromResponse(
     provider: tokenResponse.provider ?? fallback?.provider ?? 'better-auth',
     issuedAt: new Date().toISOString(),
     issuerBaseUrl: normalizeBaseUrl(issuerBaseUrl),
-  }
+  };
 
-  const expiresAt = toExpiresAtIso(tokenResponse, fallback?.expiresAt)
-  if (expiresAt) stored.expiresAt = expiresAt
+  const expiresAt = toExpiresAtIso(tokenResponse, fallback?.expiresAt);
+  if (expiresAt) stored.expiresAt = expiresAt;
 
-  const scopes = tokenResponse.scope ? tokenResponse.scope.split(' ') : fallback?.scopes
-  if (scopes?.length) stored.scopes = scopes
+  const scopes = tokenResponse.scope ? tokenResponse.scope.split(' ') : fallback?.scopes;
+  if (scopes?.length) stored.scopes = scopes;
 
-  return stored
+  return stored;
 }
 
 export async function getStoredTokens(): Promise<StoredTokens | null> {
@@ -306,7 +306,8 @@ export async function deviceCodeLogin(_options: AuthOptions) {
         throw new AuthError({
           code: 'AUTH_LOGIN_FAILED',
           category: 'auth',
-          message: error instanceof Error ? error.message : 'Failed to open device verification URL',
+          message:
+            error instanceof Error ? error.message : 'Failed to open device verification URL',
           hint: `Open ${verifyUrl} manually`,
         });
       }
@@ -346,7 +347,7 @@ export async function deviceCodeLogin(_options: AuthOptions) {
         },
         options.authBaseUrl,
         {
-        provider: 'better-auth',
+          provider: 'better-auth',
           scopes: scope.split(' ').filter(Boolean),
         },
       );

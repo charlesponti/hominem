@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@hominem/ui/dropdown';
+import { cn } from '@hominem/ui/lib/utils';
 import { LogOut, Settings, type LucideIcon } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
@@ -72,10 +73,12 @@ function DesktopNavLink({ item }: { item: NavItem }) {
       to={item.url}
       prefetch="intent"
       aria-current={isActive ? 'page' : undefined}
-      className={[
-        'flex items-center gap-1.5 px-3 py-2 rounded text-xs font-medium tracking-widest uppercase transition-colors duration-150',
-        isActive ? 'text-text-primary' : 'text-text-tertiary hover:text-text-secondary',
-      ].join(' ')}
+      className={cn(
+        'flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium uppercase tracking-widest transition-colors duration-150',
+        isActive
+          ? 'bg-background text-foreground shadow-sm'
+          : 'text-text-tertiary hover:text-foreground',
+      )}
     >
       {item.icon && <item.icon className="size-4 shrink-0" aria-hidden="true" />}
       <span>{item.title}</span>
@@ -87,10 +90,18 @@ function DesktopNav({ navItems }: { navItems: NavItem[] }) {
   const onLogoutClick = useLogout();
 
   return (
-    <div className="hidden md:flex items-center gap-1">
-      {navItems.map((item) => (
-        <DesktopNavLink key={item.url} item={item} />
-      ))}
+    <div className="hidden items-center gap-2 md:flex">
+      {navItems.length > 0 ? (
+        <nav
+          role="navigation"
+          aria-label="Main"
+          className="flex items-center gap-1 rounded-full border border-border/60 bg-bg-surface/80 p-1"
+        >
+          {navItems.map((item) => (
+            <DesktopNavLink key={item.url} item={item} />
+          ))}
+        </nav>
+      ) : null}
 
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
@@ -98,7 +109,7 @@ function DesktopNav({ navItems }: { navItems: NavItem[] }) {
             variant="ghost"
             size="icon"
             aria-label="Account and settings"
-            className="ml-2 text-text-tertiary hover:text-text-primary focus-visible:ring-2 ring-white/20"
+            className="text-text-tertiary hover:bg-bg-surface hover:text-foreground focus-visible:ring-2 focus-visible:ring-border"
           >
             <Settings className="size-4" aria-hidden="true" />
           </Button>
@@ -130,10 +141,10 @@ function MobileTabItem({ item }: { item: NavItem }) {
         to={item.url}
         prefetch="intent"
         aria-current={isActive ? 'page' : undefined}
-        className={[
-          'flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 transition-colors duration-150',
-          isActive ? 'text-text-primary' : 'text-text-tertiary',
-        ].join(' ')}
+        className={cn(
+          'flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 rounded-2xl transition-colors duration-150',
+          isActive ? 'bg-background text-foreground shadow-sm' : 'text-text-tertiary',
+        )}
       >
         {item.icon && <item.icon className="size-6 shrink-0" aria-hidden="true" />}
         <span className="text-[10px] font-medium tracking-widest uppercase leading-none">
@@ -149,16 +160,10 @@ function MobileTabBar({ navItems }: { navItems: NavItem[] }) {
     <nav
       role="navigation"
       aria-label="Main"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50"
-      style={{
-        background: 'rgba(255, 255, 255, 0.92)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderTop: '1px solid rgba(0, 0, 0, 0.1)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/70 bg-background/95 supports-[backdrop-filter]:bg-background/85 supports-[backdrop-filter]:backdrop-blur-md md:hidden"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <ul role="list" className="flex h-14 m-0 p-0 list-none">
+      <ul role="list" className="mx-auto flex h-14 max-w-200 list-none gap-2 px-3 py-2">
         {navItems.map((item) => (
           <MobileTabItem key={item.url} item={item} />
         ))}
@@ -185,56 +190,38 @@ export function Header({ brandName, brandIcon, navItems = [] }: HeaderProps) {
 
   return (
     <>
-      {/* Skip link — first focusable element (WCAG 2.4.1) */}
       <a
         href="#main-content"
-        style={{
-          position: 'absolute',
-          top: '-100%',
-          left: '1rem',
-          zIndex: 9999,
-          padding: '0.5rem 1rem',
-          background: '#000000',
-          color: '#ffffff',
-          borderRadius: '0 0 6px 6px',
-          fontSize: '0.9375rem',
-          fontWeight: 600,
-          textDecoration: 'none',
-          transition: 'top 150ms ease',
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.top = '0';
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.top = '-100%';
-        }}
+        className="absolute left-4 top-0 z-[9999] -translate-y-full rounded-b-md bg-foreground px-4 py-2 text-[0.9375rem] font-semibold text-background no-underline transition-transform focus:translate-y-0"
       >
         Skip to main content
       </a>
 
-      {/* Top bar — hides on scroll down (matching minimizeBehavior="onScrollDown") */}
       <header
         role="banner"
-        className="fixed top-0 left-0 z-50 w-full"
+        className="fixed left-0 top-0 z-50 w-full border-b border-border/70 bg-background/95 supports-[backdrop-filter]:bg-background/85 supports-[backdrop-filter]:backdrop-blur-md"
         style={{
-          background: 'rgba(255, 255, 255, 0.92)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
           transform: scrolledDown ? 'translateY(-100%)' : 'translateY(0)',
           transition: 'transform 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
           paddingRight: 'var(--removed-body-scroll-bar-size, 0px)',
         }}
       >
-        <div className="flex h-14 md:h-16 px-4 md:px-8 items-center justify-between">
+        <div className="mx-auto flex h-14 w-full max-w-200 items-center justify-between px-4 sm:px-6 md:h-16 lg:px-8">
           <Link
             to="/"
             prefetch="intent"
             aria-label={`${brandName} home`}
-            className="flex items-center gap-2 text-text-primary"
+            className="flex items-center gap-2 text-foreground"
           >
-            {brandIcon && <span aria-hidden="true">{brandIcon}</span>}
-            <span className="text-sm font-semibold tracking-widest uppercase">{brandName}</span>
+            {brandIcon ? (
+              <span
+                aria-hidden="true"
+                className="flex size-8 items-center justify-center rounded-2xl border border-border/60 bg-bg-surface"
+              >
+                {brandIcon}
+              </span>
+            ) : null}
+            <span className="text-sm font-semibold uppercase tracking-[0.16em]">{brandName}</span>
           </Link>
 
           {authContext &&

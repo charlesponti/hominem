@@ -1,8 +1,8 @@
 import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import type { AppRequester } from './test-helpers/auth'
-import { fetchOtp, importServer, requestOtp, toCookieHeader } from './test-helpers/auth'
+import type { AppRequester } from './test-helpers/auth';
+import { fetchOtp, importServer, requestOtp, toCookieHeader } from './test-helpers/auth';
 
 interface _SessionResponse {
   isAuthenticated: boolean;

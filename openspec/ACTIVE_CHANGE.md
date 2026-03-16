@@ -1,12 +1,8 @@
 # Active OpenSpec Change
 
-active_change: redesign-notes-chat-surface
+active_change: none
 
-artifacts:
-- proposal.md
-- design.md
-- specs/
-- tasks.md
+artifacts: []
 
 ## Enforcement
 

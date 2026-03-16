@@ -91,7 +91,10 @@ export function AuthScreen() {
     return <Redirect href={SHERPA_AUTH_CONFIG.defaultPostAuthDestination as RelativePathString} />;
   }
 
-  const displayError = authError || passkeyError || (authStatus === 'degraded' ? recoveryError?.message ?? null : null);
+  const displayError =
+    authError ||
+    passkeyError ||
+    (authStatus === 'degraded' ? (recoveryError?.message ?? null) : null);
   const canUsePasskeys = MOBILE_PASSKEY_ENABLED && isPasskeySupported;
 
   return (
@@ -154,7 +157,7 @@ export function AuthScreen() {
               {authStatus === 'degraded' && recoveryError ? (
                 <Button
                   onPress={() => {
-                    void retrySessionRecovery()
+                    void retrySessionRecovery();
                   }}
                   disabled={isSubmitting}
                   testID="auth-retry-recovery"

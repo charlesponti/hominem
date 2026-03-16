@@ -1,4 +1,16 @@
-let pino: any = null;
+type PinoInstance = ((
+  options: object,
+  transport?: unknown,
+) => {
+  info: (data: object | undefined, message: string) => void;
+  error: (error: Error | object | undefined, message: string) => void;
+  warn: (data: object | undefined, message: string) => void;
+  debug: (data: object | undefined, message: string) => void;
+}) & {
+  transport: (options: object) => unknown;
+};
+
+let pino: PinoInstance | null = null;
 
 // Only import and initialize in Node.js environment
 if (typeof process !== 'undefined' && process.versions && process.versions.node) {

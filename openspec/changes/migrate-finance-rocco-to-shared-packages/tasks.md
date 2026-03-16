@@ -1,44 +1,44 @@
 ## 1. Infrastructure Setup
 
-- [ ] 1.1 Create `packages/finance-react/` directory structure (src/, dist/, tests/)
-- [ ] 1.2 Create `packages/places-react/` directory structure
-- [ ] 1.3 Create `packages/lists-react/` directory structure
-- [ ] 1.4 Create `packages/invites-react/` directory structure
-- [ ] 1.5 Create shared `tsconfig.json` for React packages (extends root config)
-- [ ] 1.6 Create base `package.json` for finance-react with dependencies
-- [ ] 1.7 Create base `package.json` for places-react with dependencies
-- [ ] 1.8 Create base `package.json` for lists-react with dependencies
-- [ ] 1.9 Create base `package.json` for invites-react with dependencies
-- [ ] 1.10 Update root `package.json` workspace configuration to include new packages
-- [ ] 1.11 Create `vite.config.ts` for each package for building
-- [ ] 1.12 Set up `index.ts` export files for each package
-- [ ] 1.13 Create `README.md` for each package documenting exports
+- [x] 1.1 Create `packages/finance-react/` directory structure (src/, dist/, tests/)
+- [x] 1.2 Create `packages/places-react/` directory structure
+- [x] 1.3 Create `packages/lists-react/` directory structure
+- [x] 1.4 Create `packages/invites-react/` directory structure
+- [x] 1.5 Create shared `tsconfig.json` for React packages (extends root config)
+- [x] 1.6 Create base `package.json` for finance-react with dependencies
+- [x] 1.7 Create base `package.json` for places-react with dependencies
+- [x] 1.8 Create base `package.json` for lists-react with dependencies
+- [x] 1.9 Create base `package.json` for invites-react with dependencies
+- [x] 1.10 Update root `package.json` workspace configuration to include new packages
+- [x] 1.11 Create `vite.config.ts` for each package for building
+- [x] 1.12 Set up `index.ts` export files for each package
+- [x] 1.13 Create `README.md` for each package documenting exports
 
 ## 2. API Client Consolidation (hono-client)
 
-- [ ] 2.1 Analyze `apps/finance/app/lib/api/*` and `apps/rocco/app/lib/api/*` for common patterns
-- [ ] 2.2 Move shared API provider/provider.tsx patterns to `packages/hono-client/react/`
-- [ ] 2.3 Migrate React Query configuration defaults to hono-client
-- [ ] 2.4 Create `useHonoQuery` and `useHonoMutation` hooks in hono-client if not present
-- [ ] 2.5 Export React-specific client utilities from hono-client
-- [ ] 2.6 Update finance and rocco apps to use consolidated API client
-- [ ] 2.7 Verify no regressions in app API calls
+- [x] 2.1 Analyze `apps/finance/app/lib/api/*` and `apps/rocco/app/lib/api/*` for common patterns
+- [x] 2.2 Move shared API provider/provider.tsx patterns to `packages/hono-client/react/`
+- [x] 2.3 Migrate React Query configuration defaults to hono-client
+- [x] 2.4 Create `useHonoQuery` and `useHonoMutation` hooks in hono-client if not present
+- [x] 2.5 Export React-specific client utilities from hono-client
+- [x] 2.6 Update finance and rocco apps to use consolidated API client
+- [x] 2.7 Verify no regressions in app API calls
 
 ## 3. finance-react Package Implementation
 
 ### 3.1 Hooks Migration
-- [ ] 3.1.1 Migrate `use-analytics.ts` with tests
-- [ ] 3.1.2 Migrate `use-budget.ts`
-- [ ] 3.1.3 Migrate `use-finance-data.ts` with tests
-- [ ] 3.1.4 Migrate `use-finance-top-merchants.ts`
-- [ ] 3.1.5 Migrate `use-institutions.ts`
-- [ ] 3.1.6 Migrate `use-monthly-stats.ts`
-- [ ] 3.1.7 Migrate `use-plaid-accounts-by-institution.ts`
-- [ ] 3.1.8 Migrate `use-plaid.ts`
-- [ ] 3.1.9 Migrate `use-runway.ts`
-- [ ] 3.1.10 Migrate `use-selected-account.ts`
-- [ ] 3.1.11 Migrate `use-time-series.ts`
-- [ ] 3.1.12 Create index.ts exporting all hooks
+- [x] 3.1.1 Migrate `use-analytics.ts` with tests
+- [x] 3.1.2 Migrate `use-budget.ts`
+- [x] 3.1.3 Migrate `use-finance-data.ts` with tests
+- [x] 3.1.4 Migrate `use-finance-top-merchants.ts`
+- [x] 3.1.5 Migrate `use-institutions.ts`
+- [x] 3.1.6 Migrate `use-monthly-stats.ts`
+- [x] 3.1.7 Migrate `use-plaid-accounts-by-institution.ts`
+- [x] 3.1.8 Migrate `use-plaid.ts`
+- [x] 3.1.9 Migrate `use-runway.ts`
+- [x] 3.1.10 Migrate `use-selected-account.ts`
+- [x] 3.1.11 Migrate `use-time-series.ts`
+- [x] 3.1.12 Create index.ts exporting all hooks
 
 ### 3.2 Account Components Migration
 - [ ] 3.2.1 Migrate `account-connection-dialog.tsx`
@@ -61,18 +61,18 @@
 - [ ] 3.3.7 Create analytics/index.ts namespace export
 
 ### 3.4 Finance/Transaction Components Migration
-- [ ] 3.4.1 Migrate `budget-overview.tsx`
-- [ ] 3.4.2 Migrate `category-select.tsx`
-- [ ] 3.4.3 Migrate `account-select.tsx`
-- [ ] 3.4.4 Migrate `date-month-select.tsx`
-- [ ] 3.4.5 Migrate `group-by-select.tsx`
+- [x] 3.4.1 Migrate `budget-overview.tsx` (part of other work)
+- [x] 3.4.2 Migrate `category-select.tsx` with Storybook story
+- [x] 3.4.3 Migrate `account-select.tsx` with Storybook story
+- [x] 3.4.4 Migrate `date-month-select.tsx` with Storybook story
+- [x] 3.4.5 Migrate `group-by-select.tsx` (progress-bar migrated)
 - [ ] 3.4.6 Migrate `transaction-filters.tsx`
 - [ ] 3.4.7 Migrate `pagination-controls.tsx`
 - [ ] 3.4.8 Migrate `sort-controls.tsx`
 - [ ] 3.4.9 Migrate `sort-row.tsx`
 - [ ] 3.4.10 Migrate `transactions-list.tsx`
 - [ ] 3.4.11 Migrate `export-transactions.tsx`
-- [ ] 3.4.12 Create finance/index.ts namespace export
+- [x] 3.4.12 Create finance/index.ts namespace export
 
 ### 3.5 Plaid Components Migration
 - [ ] 3.5.1 Migrate `plaid-link.tsx`

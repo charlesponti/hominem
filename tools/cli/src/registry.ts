@@ -1,66 +1,68 @@
 import type { CommandRoute } from './contracts';
 
+// NOTE: When migrating to oclif, commands are auto-discovered from src/commands/
+// Migrated commands are commented out below and handled by oclif instead.
 export const commandRoutes: CommandRoute[] = [
-  {
-    id: 'auth',
-    summary: 'Authentication domain',
-    description: 'Authentication commands: login, status, logout.',
-    loader: () => import('./commands/auth/root'),
-  },
-  {
-    id: 'auth login',
-    summary: 'Authenticate via browser or device flow',
-    description: 'Authenticate and persist access tokens for CLI operations.',
-    loader: () => import('./commands/auth/login'),
-  },
-  {
-    id: 'auth logout',
-    summary: 'Clear local auth tokens',
-    description: 'Deletes persisted authentication tokens.',
-    loader: () => import('./commands/auth/logout'),
-  },
-  {
-    id: 'auth status',
-    summary: 'Show current authentication status',
-    description: 'Prints token metadata and expiry health.',
-    loader: () => import('./commands/auth/status'),
-  },
-  {
-    id: 'config',
-    summary: 'Configuration domain',
-    description: 'Config commands: init, get, set.',
-    loader: () => import('./commands/config/root'),
-  },
-  {
-    id: 'config init',
-    summary: 'Initialize config v2',
-    description: 'Creates canonical config v2 at ~/.hominem/config.json.',
-    loader: () => import('./commands/config/init'),
-  },
-  {
-    id: 'config get',
-    summary: 'Read config values',
-    description: 'Reads full config or a dot-path selector.',
-    loader: () => import('./commands/config/get'),
-  },
-  {
-    id: 'config set',
-    summary: 'Write config values',
-    description: 'Writes a value to a dot-path selector in config v2.',
-    loader: () => import('./commands/config/set'),
-  },
+  // {
+  //   id: 'auth',
+  //   summary: 'Authentication domain',
+  //   description: 'Authentication commands: login, status, logout.',
+  //   loader: () => import('./commands/auth/root'),
+  // },
+  // {
+  //   id: 'auth login',
+  //   summary: 'Authenticate via browser or device flow',
+  //   description: 'Authenticate and persist access tokens for CLI operations.',
+  //   loader: () => import('./commands/auth/login'),
+  // },
+  // {
+  //   id: 'auth logout',
+  //   summary: 'Clear local auth tokens',
+  //   description: 'Deletes persisted authentication tokens.',
+  //   loader: () => import('./commands/auth/logout'),
+  // },
+  // {
+  //   id: 'auth status',
+  //   summary: 'Show current authentication status',
+  //   description: 'Prints token metadata and expiry health.',
+  //   loader: () => import('./commands/auth/status'),
+  // },
+  // {
+  //   id: 'config',
+  //   summary: 'Configuration domain',
+  //   description: 'Config commands: init, get, set.',
+  //   loader: () => import('./commands/config/root'),
+  // },
+  // {
+  //   id: 'config init',
+  //   summary: 'Initialize config v2',
+  //   description: 'Creates canonical config v2 at ~/.hominem/config.json.',
+  //   loader: () => import('./commands/config/init'),
+  // },
+  // {
+  //   id: 'config get',
+  //   summary: 'Read config values',
+  //   description: 'Reads full config or a dot-path selector.',
+  //   loader: () => import('./commands/config/get'),
+  // },
+  // {
+  //   id: 'config set',
+  //   summary: 'Write config values',
+  //   description: 'Writes a value to a dot-path selector in config v2.',
+  //   loader: () => import('./commands/config/set'),
+  // },
   {
     id: 'system',
     summary: 'System domain',
     description: 'System commands: doctor, generate command.',
     loader: () => import('./commands/system/root'),
   },
-  {
-    id: 'system doctor',
-    summary: 'Run diagnostics',
-    description: 'Checks environment and config preconditions.',
-    loader: () => import('./commands/system/doctor'),
-  },
+  // {
+  //   id: 'system doctor',
+  //   summary: 'Run diagnostics',
+  //   description: 'Checks environment and config preconditions.',
+  //   loader: () => import('./commands/system/doctor'),
+  // },
   {
     id: 'system generate command',
     summary: 'Generate command scaffolding',
@@ -127,12 +129,12 @@ export const commandRoutes: CommandRoute[] = [
     description: 'Scans files under a path with deterministic output.',
     loader: () => import('./commands/files/inventory'),
   },
-  {
-    id: 'files head',
-    summary: 'Preview top lines from a file',
-    description: 'Reads first N lines from a text file.',
-    loader: () => import('./commands/files/head'),
-  },
+  // {
+  //   id: 'files head',
+  //   summary: 'Preview top lines from a file',
+  //   description: 'Reads first N lines from a text file.',
+  //   loader: () => import('./commands/files/head'),
+  // },
   {
     id: 'files rename-markdown',
     summary: 'Normalize markdown file names',

@@ -1,4 +1,5 @@
 import { useAuthContext } from '@hominem/auth';
+import type { ThoughtLifecycleState } from '@hominem/chat-services/types';
 import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
 import type {
   ChatsGetMessagesOutput,
@@ -9,6 +10,7 @@ import { Inline } from '@hominem/ui';
 import { ShimmerMessage, ThinkingIndicator } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';
 import { Input } from '@hominem/ui/components/ui/input';
+import { chatTokens } from '@hominem/ui/tokens';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Search, X } from 'lucide-react';
 import type React from 'react';
@@ -28,10 +30,14 @@ interface ChatMessagesProps {
   status?: string;
   error?: Error | null;
   showDebug?: boolean;
+  lifecycleState?: ThoughtLifecycleState;
 }
 
 export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesProps>(
-  function ChatMessages({ chatId, status = 'idle', error, showDebug = false }, ref) {
+  function ChatMessages(
+    { chatId, status = 'idle', error, showDebug = false, lifecycleState: _lifecycleState = 'idle' },
+    ref,
+  ) {
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const parentRef = useRef<HTMLDivElement>(null);
 
@@ -208,19 +214,25 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       <div className="relative flex h-full min-h-0 flex-col">
         {showSearch && (
           <div className="pointer-events-none absolute inset-x-0 top-4 z-20 px-4 sm:px-6">
-            <div className="pointer-events-auto mx-auto w-full max-w-160 rounded-lg border border-border/20 bg-background/95 p-4 shadow-md shadow-black/5 backdrop-blur supports-backdrop-filter:bg-background/90">
-              <div className="mb-3 text-xs font-medium tracking-[0.05em] text-muted-foreground/60">
+            <div
+              className="pointer-events-auto mx-auto w-full rounded-lg border border-border-subtle bg-background/95 p-4 shadow-md shadow-black/5 backdrop-blur supports-backdrop-filter:bg-background/90"
+              style={{ maxWidth: chatTokens.searchMaxWidth }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Search messages"
+            >
+              <div className="mb-3 text-xs font-medium tracking-[0.05em] text-text-tertiary">
                 Search messages
               </div>
-          <Inline gap="sm">
-                <Search className="size-4 text-muted-foreground/50" />
+              <Inline gap="sm">
+                <Search className="size-4 text-text-tertiary" />
                 <Input
                   ref={searchInputRef}
                   type="text"
                   placeholder="Search messages..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground/50 border-0 focus:ring-0"
+                  className="flex-1 bg-transparent text-sm placeholder:text-text-tertiary border-0 focus:ring-0"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
@@ -237,13 +249,13 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
                     setSearchQuery('');
                   }}
                   aria-label="Close search"
-                  className="text-muted-foreground/60 hover:text-foreground hover:bg-transparent"
+                  className="text-text-tertiary hover:text-foreground hover:bg-transparent"
                 >
                   <X className="size-4" />
                 </Button>
               </Inline>
               {searchQuery && (
-                <div className="mt-2 px-1 text-xs text-muted-foreground/60">
+                <div className="mt-2 px-1 text-xs text-text-tertiary">
                   {filteredMessages.length} {filteredMessages.length === 1 ? 'match' : 'matches'}
                 </div>
               )}
@@ -253,7 +265,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
 
         <div
           ref={shouldUseVirtualScrolling ? parentRef : messagesContainerRef}
-          className="flex-1 overflow-y-auto px-4 pb-8 pt-8 sm:px-6"
+          className="flex-1 overflow-y-auto px-4 pb-8 pt-6 sm:px-6"
           role="log"
           aria-label="Chat messages"
           aria-live="polite"
@@ -270,8 +282,13 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         >
           {/* Error Display */}
           {displayError && (
-            <div className="mx-auto mb-6 w-full max-w-200 rounded-xl border border-destructive/30 bg-gradient-to-r from-destructive/5 to-destructive/10 p-4 shadow-sm">
-              <div className="text-sm font-semibold text-destructive mb-1">Something went wrong</div>
+            <div
+              className="mx-auto mb-6 w-full rounded-xl border border-destructive/30 bg-destructive/5 p-4 shadow-sm"
+              style={{ maxWidth: chatTokens.transcriptMaxWidth }}
+            >
+              <div className="text-sm font-semibold text-destructive mb-1">
+                Something went wrong
+              </div>
               <div className="text-xs text-destructive/70">
                 {displayError instanceof Error ? displayError.message : String(displayError)}
               </div>
@@ -280,7 +297,10 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
 
           {/* Loading state when fetching messages */}
           {isLoading && extendedMessages.length === 0 && (
-            <div className="mx-auto w-full max-w-200 space-y-5">
+            <div
+              className="mx-auto w-full space-y-5"
+              style={{ maxWidth: chatTokens.transcriptMaxWidth }}
+            >
               <ShimmerMessage />
               <ShimmerMessage />
               <ShimmerMessage />
@@ -290,8 +310,9 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           {/* Messages */}
           {shouldUseVirtualScrolling ? (
             <div
-              className="mx-auto w-full max-w-200"
+              className="mx-auto w-full"
               style={{
+                maxWidth: chatTokens.transcriptMaxWidth,
                 height: `${virtualizer.getTotalSize()}px`,
                 width: '100%',
                 position: 'relative',
@@ -340,35 +361,38 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
               })}
             </div>
           ) : (
-            <div className="mx-auto w-full max-w-200 space-y-4">
+            <div
+              className="mx-auto w-full space-y-4"
+              style={{ maxWidth: chatTokens.transcriptMaxWidth }}
+            >
               {displayMessages.length === 0 && searchQuery ? (
-                <div className="text-center text-muted-foreground py-8">
-                  <Search className="size-8 mx-auto mb-2 " />
+                <div className="text-center text-text-secondary py-8">
+                  <Search className="size-8 mx-auto mb-2" />
                   <p>No messages found matching &quot;{searchQuery}&quot;</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {displayMessages.map((message, index) => (
                     <ChatMessage
-                    key={message.id}
-                    message={message}
-                    showDebug={showDebug}
-                    isStreaming={
-                      (status === 'streaming' &&
-                        index === displayMessages.length - 1 &&
-                        message.role === 'assistant') ||
-                      (message.isStreaming ?? false)
-                    }
-                    {...(message.role === 'assistant' && {
-                      onRegenerate: () => handleRegenerate(message.id),
-                    })}
-                    {...(message.role === 'user' && {
-                      onEdit: (messageId: string, newContent: string) =>
-                        handleEditMessage(messageId, newContent),
-                    })}
-                    onDelete={() => handleDeleteMessage(message.id)}
-                  />
-                ))}
+                      key={message.id}
+                      message={message}
+                      showDebug={showDebug}
+                      isStreaming={
+                        (status === 'streaming' &&
+                          index === displayMessages.length - 1 &&
+                          message.role === 'assistant') ||
+                        (message.isStreaming ?? false)
+                      }
+                      {...(message.role === 'assistant' && {
+                        onRegenerate: () => handleRegenerate(message.id),
+                      })}
+                      {...(message.role === 'user' && {
+                        onEdit: (messageId: string, newContent: string) =>
+                          handleEditMessage(messageId, newContent),
+                      })}
+                      onDelete={() => handleDeleteMessage(message.id)}
+                    />
+                  ))}
                 </div>
               )}
             </div>

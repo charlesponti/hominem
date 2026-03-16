@@ -28,9 +28,9 @@ declare module 'hono' {
 }
 
 interface BetterAuthSessionContext {
-  auth: AuthContextEnvelope
-  user: HominemUser
-  userId: string
+  auth: AuthContextEnvelope;
+  user: HominemUser;
+  userId: string;
 }
 
 function getBearerToken(headerValue?: string) {

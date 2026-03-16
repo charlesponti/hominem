@@ -1,19 +1,20 @@
+import { useHonoQuery } from '@hominem/hono-client/react';
+import type { ChatsListOutput } from '@hominem/hono-rpc/types/chat.types';
 import type { Note } from '@hominem/hono-rpc/types/notes.types';
-import { Sparkles } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useDeleteNote, useNotesList, useUpdateNote } from '~/hooks/use-notes';
 
-import { InlineCreateForm } from './components/inline-create-form';
 import { NoteFeedItem } from './components/note-feed-item';
+import { NotesBrowseScreen } from './components/notes-browse-screen';
 
 export default function NotesPage() {
   const feedContainerRef = useRef<HTMLDivElement>(null);
   const prevFeedLengthRef = useRef<number>(0);
 
-  // State for edit mode
-  const [itemToEdit, setItemToEdit] = useState<Note | null>(null);
-  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const { data: chats } = useHonoQuery<ChatsListOutput>(['chats', 'list'], ({ chats: c }) =>
+    c.list({ limit: 6 }),
+  );
 
   const {
     data: notes,
@@ -27,6 +28,7 @@ export default function NotesPage() {
   });
 
   const allContentItems = (notes ?? []) as Note[];
+  const recentSessions = chats ?? [];
   const updateItem = useUpdateNote();
   const deleteItem = useDeleteNote();
 
@@ -47,127 +49,36 @@ export default function NotesPage() {
     prevFeedLengthRef.current = allContentItems.length;
   }, [allContentItems.length]);
 
-  function handleEditItem(item: Note) {
-    setItemToEdit(item);
-    setFormMode('edit');
-  }
-
   function removeTagFromNote(noteId: string, tagValue: string) {
     const item = allContentItems.find((n) => n.id === noteId);
-    if (!item) {
-      return;
-    }
-
+    if (!item) return;
     const newTags = (item.tags || []).filter((tag: { value: string }) => tag.value !== tagValue);
-    updateItem.mutate({
-      id: noteId,
-      tags: newTags,
-    });
+    updateItem.mutate({ id: noteId, tags: newTags });
   }
 
   function handleDeleteItem(id: string) {
     deleteItem.mutate({ id });
   }
 
-  function handleFormSuccess() {
-    setItemToEdit(null);
-    setFormMode('create');
-  }
-
-  function handleFormCancel() {
-    setItemToEdit(null);
-    setFormMode('create');
-  }
-
-  // Development action handlers
-  function handleExpand(note: Note) {
-    console.log('Expand note:', note.id);
-  }
-
-  function handleOutline(note: Note) {
-    console.log('Outline note:', note.id);
-  }
-
-  function handleRewrite(note: Note) {
-    console.log('Rewrite note:', note.id);
-  }
-
   return (
-    <div className="flex flex-col h-screen w-full max-w-2xl mx-auto">
-      {/* Fixed Header */}
-      <header className="shrink-0 border-b border-border z-10">
-        <div className="py-4 px-4">
-          <h1 className="heading-3 text-foreground">Notes</h1>
-        </div>
-      </header>
-
-      {/* Scrollable Main Content */}
-      <main className="flex-1 overflow-hidden">
-        <div ref={feedContainerRef} className="h-full overflow-y-auto">
-          <div className="px-4 py-4 space-y-4">
-            {/* Create form */}
-            <div className="border border-border p-4">
-              <InlineCreateForm
-                isVisible={formMode === 'create'}
-                onSuccess={handleFormSuccess}
-                onCancel={handleFormCancel}
-                itemToEdit={itemToEdit}
-                mode={formMode}
-              />
-            </div>
-
-            {/* Edit form (shown when editing) */}
-            {formMode === 'edit' && itemToEdit && (
-              <div className="border border-border p-4">
-                <InlineCreateForm
-                  isVisible={true}
-                  onSuccess={handleFormSuccess}
-                  onCancel={handleFormCancel}
-                  itemToEdit={itemToEdit}
-                  mode="edit"
-                />
-              </div>
-            )}
-
-            {isLoading && (
-              <div className="flex flex-col items-center justify-center py-16">
-                <div className="w-8 h-8 border-4 border-primary/30 border-t-primary mb-4" />
-                <p className="text-muted-foreground">Loading notes...</p>
-              </div>
-            )}
-
-            {!isLoading && allContentItems.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-24 h-24 border border-dashed border-border flex items-center justify-center mb-6">
-                  <Sparkles className="w-12 h-12 text-foreground" />
-                </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">No notes yet</h3>
-                <p className="text-muted-foreground max-w-md">
-                  Start capturing your thoughts and ideas. Use the input above to create your first
-                  note.
-                </p>
-              </div>
-            )}
-
-            {allContentItems.length > 0 && (
-              <div className="border border-border overflow-hidden">
-                {allContentItems.map((item: Note) => (
-                  <NoteFeedItem
-                    key={item.id}
-                    note={item}
-                    onEdit={handleEditItem}
-                    onDelete={handleDeleteItem}
-                    onRemoveTag={removeTagFromNote}
-                    onExpand={handleExpand}
-                    onOutline={handleOutline}
-                    onRewrite={handleRewrite}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
-    </div>
+    <NotesBrowseScreen
+      eyebrow="Notes"
+      title="Browse notes as one living stream instead of a pile of separate records."
+      description="The notes view should feel like the same product as home: capture at the top, recent context nearby, and the rest of your writing in one calm chronology."
+      scrollRef={feedContainerRef}
+      sessions={recentSessions}
+      notes={allContentItems}
+      isLoading={isLoading}
+      renderNote={(item) => (
+        <li key={item.id} className="block">
+          <NoteFeedItem
+            note={item}
+            onEdit={() => {}}
+            onDelete={handleDeleteItem}
+            onRemoveTag={removeTagFromNote}
+          />
+        </li>
+      )}
+    />
   );
 }

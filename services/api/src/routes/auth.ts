@@ -20,11 +20,7 @@ import { z } from 'zod';
 
 import { betterAuthServer } from '../auth/better-auth';
 import { getJwks } from '../auth/key-store';
-import {
-  isSessionRevoked,
-  revokeSession,
-  rotateRefreshToken,
-} from '../auth/session-store';
+import { isSessionRevoked, revokeSession, rotateRefreshToken } from '../auth/session-store';
 import { getLatestTestOtp, isTestOtpStoreEnabled } from '../auth/test-otp-store';
 import { issueAccessToken, verifyAccessToken } from '../auth/tokens';
 import { env } from '../env';
@@ -451,7 +447,9 @@ function copyHeadersWithSetCookie(headers: Headers) {
   return copied;
 }
 
-async function getBetterAuthSessionContext(c: Context<AppEnv>): Promise<BetterAuthSessionContext | null> {
+async function getBetterAuthSessionContext(
+  c: Context<AppEnv>,
+): Promise<BetterAuthSessionContext | null> {
   const session = await betterAuthServer.api.getSession({
     ...getHeaderCarrier(c),
   });
@@ -901,7 +899,8 @@ authRoutes.post('/refresh', async (c) => {
   return c.json(
     {
       error: 'deprecated_endpoint',
-      message: 'Use Better Auth session cookies for first-party apps or POST /api/auth/token for explicit refresh-token exchanges.',
+      message:
+        'Use Better Auth session cookies for first-party apps or POST /api/auth/token for explicit refresh-token exchanges.',
     },
     410,
   );

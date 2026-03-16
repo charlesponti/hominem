@@ -10,16 +10,16 @@ import React, {
   type PropsWithChildren,
 } from 'react';
 
-import { markAuthPhaseStart, recordAuthEvent } from './auth/auth-event-log';
 import { captureAuthAnalyticsEvent, captureAuthAnalyticsFailure } from './auth/auth-analytics';
+import { markAuthPhaseStart, recordAuthEvent } from './auth/auth-event-log';
 import { runAuthBoot } from './auth/boot';
+import { resolveIsLoadingAuth, type AuthStatusCompat } from './auth/provider-utils';
 import {
   clearPersistedSessionCookies,
   getPersistedSessionCookieHeader,
   persistSessionCookieFromHeaders,
   persistSessionCookieHeader,
 } from './auth/session-cookie';
-import { resolveIsLoadingAuth, type AuthStatusCompat } from './auth/provider-utils';
 import { authStateMachine, initialAuthState, type AuthState } from './auth/types';
 import { API_BASE_URL, E2E_TESTING } from './constants';
 import { LocalStore } from './local-store';
@@ -117,106 +117,103 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   // Set synchronously before first await to prevent TOCTOU race on concurrent boot invocations
   const isBootingRef = useRef(false);
 
-  const bootSession = useCallback(
-    async (input?: { force?: boolean; signal?: AbortSignal }) => {
-      if ((!input?.force && hasBootstrappedRef.current) || isBootingRef.current) return;
-      isBootingRef.current = true;
-      if (input?.force) {
-        hasBootstrappedRef.current = false;
-      }
+  const bootSession = useCallback(async (input?: { force?: boolean; signal?: AbortSignal }) => {
+    if ((!input?.force && hasBootstrappedRef.current) || isBootingRef.current) return;
+    isBootingRef.current = true;
+    if (input?.force) {
+      hasBootstrappedRef.current = false;
+    }
 
-      const startedAt = Date.now();
+    const startedAt = Date.now();
 
-      markStartupPhase('auth_boot_start');
-      markAuthPhaseStart('boot');
-      recordAuthEvent('auth_boot_start', 'boot');
-      captureAuthAnalyticsEvent('auth_boot_started', {
-        phase: 'boot',
+    markStartupPhase('auth_boot_start');
+    markAuthPhaseStart('boot');
+    recordAuthEvent('auth_boot_start', 'boot');
+    captureAuthAnalyticsEvent('auth_boot_started', {
+      phase: 'boot',
+    });
+
+    const controller = new AbortController();
+    const signal = input?.signal ?? controller.signal;
+    const timeoutId = setTimeout(() => controller.abort(), AUTH_BOOT_TIMEOUT_MS);
+
+    try {
+      const result = await runAuthBoot({
+        getStoredTokens: async () => {
+          const sessionCookieHeader = await getPersistedSessionCookieHeader();
+          return { sessionCookieHeader };
+        },
+        probeSession: async ({ sessionCookieHeader, signal: sig }) => {
+          const headers: Record<string, string> = {};
+          if (sessionCookieHeader) {
+            headers.cookie = sessionCookieHeader;
+          }
+
+          const response = await fetch(new URL('/api/auth/session', API_BASE_URL).toString(), {
+            method: 'GET',
+            headers,
+            signal: sig,
+          });
+          if (response.ok) {
+            const data = (await response.json()) as SessionResponse;
+            if (data.isAuthenticated && data.user) {
+              return { user: data.user };
+            }
+            return null;
+          }
+          if (response.status === 401) return null;
+          throw new Error(`session probe failed: ${response.status}`);
+        },
+        clearTokens: async () => {
+          await clearPersistedSessionCookies();
+          sessionCookieHeaderRef.current = null;
+        },
+        upsertProfile: async (user) => {
+          const saved = await LocalStore.upsertUserProfile(fromSignInUser(user));
+          return toAuthUserProfile(saved);
+        },
+        clearLegacyData: clearLegacyLocalDataOnce,
+        signal,
       });
 
-      const controller = new AbortController();
-      const signal = input?.signal ?? controller.signal;
-      const timeoutId = setTimeout(() => controller.abort(), AUTH_BOOT_TIMEOUT_MS);
-
-      try {
-        const result = await runAuthBoot({
-          getStoredTokens: async () => {
-            const sessionCookieHeader = await getPersistedSessionCookieHeader();
-            return { sessionCookieHeader };
-          },
-          probeSession: async ({ sessionCookieHeader, signal: sig }) => {
-            const headers: Record<string, string> = {};
-            if (sessionCookieHeader) {
-              headers.cookie = sessionCookieHeader;
-            }
-
-            const response = await fetch(new URL('/api/auth/session', API_BASE_URL).toString(), {
-              method: 'GET',
-              headers,
-              signal: sig,
-            });
-            if (response.ok) {
-              const data = (await response.json()) as SessionResponse;
-              if (data.isAuthenticated && data.user) {
-                return { user: data.user };
-              }
-              return null;
-            }
-            if (response.status === 401) return null;
-            throw new Error(`session probe failed: ${response.status}`);
-          },
-          clearTokens: async () => {
-            await clearPersistedSessionCookies();
-            sessionCookieHeaderRef.current = null;
-          },
-          upsertProfile: async (user) => {
-            const saved = await LocalStore.upsertUserProfile(fromSignInUser(user));
-            return toAuthUserProfile(saved);
-          },
-          clearLegacyData: clearLegacyLocalDataOnce,
-          signal,
-        });
-
-        if (result.type === 'SESSION_LOADED') {
-          sessionCookieHeaderRef.current = result.tokens.sessionCookieHeader;
-          dispatch({ type: 'SESSION_LOADED', user: result.user });
-          recordAuthEvent('auth_boot_resolved:session_loaded', 'boot');
-          captureAuthAnalyticsEvent('auth_boot_succeeded', {
-            phase: 'boot',
-            durationMs: Date.now() - startedAt,
-            email: result.user.email,
-          });
-        } else {
-          dispatch({ type: 'SESSION_EXPIRED' });
-          recordAuthEvent('auth_boot_resolved:session_expired', 'boot');
-          captureAuthAnalyticsEvent('auth_boot_signed_out', {
-            phase: 'boot',
-            durationMs: Date.now() - startedAt,
-          });
-        }
-
-        markStartupPhase('auth_boot_resolved');
-        hasBootstrappedRef.current = true;
-      } catch (error) {
-        const resolvedError =
-          error instanceof Error ? error : new Error('Unable to recover your session right now.');
-        dispatch({ type: 'SESSION_RECOVERY_FAILED', error: resolvedError });
-        recordAuthEvent('auth_boot_resolved:error', 'boot');
-        captureAuthAnalyticsFailure('auth_boot_failed', {
+      if (result.type === 'SESSION_LOADED') {
+        sessionCookieHeaderRef.current = result.tokens.sessionCookieHeader;
+        dispatch({ type: 'SESSION_LOADED', user: result.user });
+        recordAuthEvent('auth_boot_resolved:session_loaded', 'boot');
+        captureAuthAnalyticsEvent('auth_boot_succeeded', {
           phase: 'boot',
           durationMs: Date.now() - startedAt,
-          error: resolvedError,
-          failureStage: 'network',
+          email: result.user.email,
         });
-        markStartupPhase('auth_boot_resolved');
-        hasBootstrappedRef.current = true;
-      } finally {
-        clearTimeout(timeoutId);
-        isBootingRef.current = false;
+      } else {
+        dispatch({ type: 'SESSION_EXPIRED' });
+        recordAuthEvent('auth_boot_resolved:session_expired', 'boot');
+        captureAuthAnalyticsEvent('auth_boot_signed_out', {
+          phase: 'boot',
+          durationMs: Date.now() - startedAt,
+        });
       }
-    },
-    [],
-  );
+
+      markStartupPhase('auth_boot_resolved');
+      hasBootstrappedRef.current = true;
+    } catch (error) {
+      const resolvedError =
+        error instanceof Error ? error : new Error('Unable to recover your session right now.');
+      dispatch({ type: 'SESSION_RECOVERY_FAILED', error: resolvedError });
+      recordAuthEvent('auth_boot_resolved:error', 'boot');
+      captureAuthAnalyticsFailure('auth_boot_failed', {
+        phase: 'boot',
+        durationMs: Date.now() - startedAt,
+        error: resolvedError,
+        failureStage: 'network',
+      });
+      markStartupPhase('auth_boot_resolved');
+      hasBootstrappedRef.current = true;
+    } finally {
+      clearTimeout(timeoutId);
+      isBootingRef.current = false;
+    }
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -376,56 +373,53 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     [],
   );
 
-  const completePasskeySignIn = useCallback(
-    async (input: SignInResponse) => {
-      const startedAt = Date.now();
+  const completePasskeySignIn = useCallback(async (input: SignInResponse) => {
+    const startedAt = Date.now();
 
-      dispatch({ type: 'PASSKEY_AUTH_STARTED' });
-      captureAuthAnalyticsEvent('auth_passkey_sign_in_started', {
+    dispatch({ type: 'PASSKEY_AUTH_STARTED' });
+    captureAuthAnalyticsEvent('auth_passkey_sign_in_started', {
+      phase: 'passkey_sign_in',
+      email: input.user.email,
+    });
+
+    try {
+      if (!hasValidSignInResponse(input)) {
+        throw new Error('Invalid passkey sign-in response from API');
+      }
+
+      const sessionCookieHeader = await getPersistedSessionCookieHeader();
+      if (!sessionCookieHeader) {
+        throw new Error('Missing Better Auth session cookie after passkey sign-in');
+      }
+
+      sessionCookieHeaderRef.current = sessionCookieHeader;
+      await persistSessionCookieHeader(sessionCookieHeader);
+
+      dispatch({ type: 'PROFILE_SYNC_STARTED' });
+      const localUser = fromSignInUser(input.user);
+      const saved = await LocalStore.upsertUserProfile(localUser);
+      const userProfile = toAuthUserProfile(saved);
+      if (!userProfile) throw new Error('Failed to create passkey user profile');
+
+      dispatch({ type: 'SESSION_LOADED', user: userProfile });
+      captureAuthAnalyticsEvent('auth_passkey_sign_in_succeeded', {
         phase: 'passkey_sign_in',
+        durationMs: Date.now() - startedAt,
         email: input.user.email,
       });
-
-      try {
-        if (!hasValidSignInResponse(input)) {
-          throw new Error('Invalid passkey sign-in response from API');
-        }
-
-        const sessionCookieHeader = await getPersistedSessionCookieHeader();
-        if (!sessionCookieHeader) {
-          throw new Error('Missing Better Auth session cookie after passkey sign-in');
-        }
-
-        sessionCookieHeaderRef.current = sessionCookieHeader;
-        await persistSessionCookieHeader(sessionCookieHeader);
-
-        dispatch({ type: 'PROFILE_SYNC_STARTED' });
-        const localUser = fromSignInUser(input.user);
-        const saved = await LocalStore.upsertUserProfile(localUser);
-        const userProfile = toAuthUserProfile(saved);
-        if (!userProfile) throw new Error('Failed to create passkey user profile');
-
-        dispatch({ type: 'SESSION_LOADED', user: userProfile });
-        captureAuthAnalyticsEvent('auth_passkey_sign_in_succeeded', {
-          phase: 'passkey_sign_in',
-          durationMs: Date.now() - startedAt,
-          email: input.user.email,
-        });
-      } catch (error) {
-        const resolvedError = error instanceof Error ? error : new Error('Passkey sign-in failed');
-        dispatch({ type: 'PASSKEY_AUTH_FAILED', error: resolvedError });
-        captureAuthAnalyticsFailure('auth_passkey_sign_in_failed', {
-          phase: 'passkey_sign_in',
-          durationMs: Date.now() - startedAt,
-          email: input.user.email,
-          error: resolvedError,
-          failureStage: 'storage',
-        });
-        throw resolvedError;
-      }
-    },
-    [],
-  );
+    } catch (error) {
+      const resolvedError = error instanceof Error ? error : new Error('Passkey sign-in failed');
+      dispatch({ type: 'PASSKEY_AUTH_FAILED', error: resolvedError });
+      captureAuthAnalyticsFailure('auth_passkey_sign_in_failed', {
+        phase: 'passkey_sign_in',
+        durationMs: Date.now() - startedAt,
+        email: input.user.email,
+        error: resolvedError,
+        failureStage: 'storage',
+      });
+      throw resolvedError;
+    }
+  }, []);
 
   const signOut = useCallback(async () => {
     const startedAt = Date.now();
@@ -493,7 +487,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   }, []);
 
   const getAuthHeaders = useCallback(async () => {
-    const sessionCookieHeader = sessionCookieHeaderRef.current ?? (await getPersistedSessionCookieHeader());
+    const sessionCookieHeader =
+      sessionCookieHeaderRef.current ?? (await getPersistedSessionCookieHeader());
     if (sessionCookieHeader) {
       sessionCookieHeaderRef.current = sessionCookieHeader;
       return { cookie: sessionCookieHeader } satisfies Record<string, string>;

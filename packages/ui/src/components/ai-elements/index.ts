@@ -1,6 +1,7 @@
 export {
   Message,
   MessageContent,
+  MessageSurface,
   MessageAvatar,
   MessageResponse,
   MessageAction,

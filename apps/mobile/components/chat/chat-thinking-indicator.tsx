@@ -49,9 +49,6 @@ export function ChatThinkingIndicator() {
 
   return (
     <View style={styles.row}>
-      <View style={styles.iconBox}>
-        <View style={styles.iconDot} />
-      </View>
       <View style={styles.content}>
         <Text variant="small" style={styles.label}>
           AI Assistant
@@ -72,32 +69,11 @@ export function ChatThinkingIndicator() {
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
     row: {
-      flexDirection: 'row',
-      gap: t.spacing.sm_12,
       paddingHorizontal: t.spacing.m_16,
-      paddingVertical: t.spacing.xs_4,
-    },
-    iconBox: {
-      width: 32,
-      height: 32,
-      backgroundColor: `${t.colors.primary}1A`,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    },
-    iconDot: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-      backgroundColor: t.colors.primary,
-      opacity: 0.6,
+      paddingVertical: t.spacing.sm_8,
     },
     content: {
-      flex: 1,
-      backgroundColor: t.colors.muted,
-      borderWidth: 1,
-      borderColor: t.colors['border-subtle'],
-      padding: t.spacing.m_16,
+      width: '100%',
       gap: t.spacing.sm_8,
     },
     label: {
@@ -114,7 +90,9 @@ const useStyles = makeStyles((t) =>
     dot: {
       width: 8,
       height: 8,
-      backgroundColor: t.colors.primary,
+      borderRadius: 4,
+      backgroundColor: t.colors.foreground,
+      opacity: 0.65,
     },
     thinkingText: {
       color: t.colors['text-tertiary'],

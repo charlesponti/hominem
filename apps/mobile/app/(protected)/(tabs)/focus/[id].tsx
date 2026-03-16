@@ -74,25 +74,42 @@ export default function FocusItemView() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text variant="caption" color="text-tertiary" style={styles.eyebrow}>
+          Workspace
+        </Text>
+        <Text variant="header" color="foreground">
+          {focusItem.text || 'Untitled note'}
+        </Text>
+        <Text variant="body" color="text-secondary">
+          Edit the note directly and keep supporting metadata subordinate to the writing itself.
+        </Text>
+      </View>
+
       <View style={styles.formGroup}>
-        <View>
+        <View style={styles.editorCard}>
           <TextInput
             aria-disabled
-            placeholder="FOCUS ITEM"
-            label="Focus"
+            placeholder="Focus item"
+            label="Note"
             value={text}
             style={styles.inputText}
             onChange={(e) => setText(e.nativeEvent.text)}
           />
         </View>
         {due_date ? (
-          <View style={styles.dueDateRow}>
-            <AppIcon name="calendar" size={16} color={theme.colors.foreground} />
-            <GestureDetector gesture={dueDateTap}>
-              <Text variant="body">
-                {due_date.toLocaleDateString()} {due_date.toLocaleTimeString()}
-              </Text>
-            </GestureDetector>
+          <View style={styles.metadataCard}>
+            <Text variant="caption" color="text-tertiary" style={styles.eyebrow}>
+              Due date
+            </Text>
+            <View style={styles.dueDateRow}>
+              <AppIcon name="calendar" size={16} color={theme.colors.foreground} />
+              <GestureDetector gesture={dueDateTap}>
+                <Text variant="body">
+                  {due_date.toLocaleDateString()} {due_date.toLocaleTimeString()}
+                </Text>
+              </GestureDetector>
+            </View>
             {open ? (
               <DateTimePicker
                 value={due_date}
@@ -104,7 +121,6 @@ export default function FocusItemView() {
           </View>
         ) : null}
         <View style={styles.footer}>
-          {/* keep buttons centered */}
           <Button onPress={onFormSubmit}>Save</Button>
         </View>
       </View>
@@ -116,27 +132,49 @@ const useStyles = makeStyles((t) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      padding: t.spacing.ml_24,
+      paddingHorizontal: t.spacing.m_16,
+      paddingTop: t.spacing.l_32,
       backgroundColor: t.colors.background,
+    },
+    header: {
+      rowGap: t.spacing.sm_8,
+    },
+    eyebrow: {
+      letterSpacing: 1,
     },
     formGroup: {
       rowGap: t.spacing.ml_24,
       marginTop: t.spacing.l_32,
     },
+    editorCard: {
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+      borderRadius: t.borderRadii.xl_20,
+      backgroundColor: t.colors.background,
+      padding: t.spacing.m_16,
+    },
     inputText: {
-      fontSize: 14,
+      fontSize: 16,
       color: t.colors.foreground,
-      fontWeight: 'bold',
+      fontWeight: '600',
+    },
+    metadataCard: {
+      rowGap: t.spacing.sm_8,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
+      borderRadius: t.borderRadii.xl_20,
+      backgroundColor: t.colors.background,
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.sm_12,
     },
     dueDateRow: {
       flexDirection: 'row',
       alignItems: 'center',
       columnGap: t.spacing.sm_12,
-      paddingHorizontal: t.spacing.sm_12,
     },
     footer: {
       flexDirection: 'row',
-      justifyContent: 'center',
+      justifyContent: 'flex-start',
     },
   }),
 );

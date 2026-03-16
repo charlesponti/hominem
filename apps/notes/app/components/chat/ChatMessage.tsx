@@ -2,10 +2,8 @@ import type { ChatMessageToolCall } from '@hominem/hono-rpc/types/chat.types';
 import { Form, Inline, Stack } from '@hominem/ui';
 import {
   Message,
-  MessageAction,
   MessageAnnotations,
   MessageContent,
-  MessageResponse,
   Reasoning,
   Tool,
   ToolInput,
@@ -73,32 +71,28 @@ export const ChatMessage = memo(function ChatMessage({
 
   return (
     <div
-      className="group"
+      className="group py-4"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       role="article"
       aria-label={`${isUser ? 'Your' : 'AI Assistant'} message${timestamp ? ` from ${timestamp}` : ''}`}
     >
-      <div className={cn(
-        'rounded-xl px-4 py-3.5 transition-all',
-        isUser 
-          ? 'bg-gradient-to-br from-blue-50 to-blue-50/80 border border-blue-100/60 ml-12 shadow-sm'
-          : 'bg-gradient-to-br from-slate-50 to-slate-50/80 border border-slate-100/60 mr-12 shadow-sm'
-      )}>
-        <Message
-          from={isUser ? 'user' : 'assistant'}
-          className={cn({
-            'ml-8': isUser,
-            'mr-8': !isUser,
-          })}
+      <Message from={isUser ? 'user' : 'assistant'}>
+        <MessageContent
+          align={isUser ? 'end' : 'start'}
+          width={isUser ? 'bubble' : 'transcript'}
+          className="gap-3"
         >
-        <MessageContent className="gap-3">
           {/* Reasoning section (shown first for assistant messages) */}
-          {!isUser && hasReasoning && <Reasoning>{message.reasoning}</Reasoning>}
+          {!isUser && hasReasoning && (
+            <Reasoning className="text-text-tertiary border-l-2 border-border-subtle pl-4 py-1 my-2">
+              {message.reasoning}
+            </Reasoning>
+          )}
 
           {/* Tool calls section */}
           {hasToolCalls && (
-            <Stack gap="sm">
+            <Stack gap="sm" className="w-full">
               {message.toolCalls!.map((toolCall: ChatMessageToolCall, index: number) => (
                 <Tool
                   key={toolCall.toolCallId || `tool-${index}`}
@@ -106,7 +100,7 @@ export const ChatMessage = memo(function ChatMessage({
                   status={toolCall.type === 'tool-call' ? 'running' : 'completed'}
                 >
                   <ToolInput
-                    className="text-xs bg-muted/50 p-2 rounded overflow-x-auto"
+                    className="overflow-x-auto text-xs text-text-secondary bg-transparent my-1"
                     children={
                       toolCall.args && Object.keys(toolCall.args).length > 0
                         ? JSON.stringify(toolCall.args, null, 2)
@@ -121,7 +115,7 @@ export const ChatMessage = memo(function ChatMessage({
           {/* Main content with markdown rendering or edit mode */}
           {isEditing && isUser ? (
             <Form
-              className="flex flex-col"
+              className="flex w-full flex-col gap-3"
               aria-label="Edit message"
               onSubmit={(e) => {
                 e.preventDefault();
@@ -131,7 +125,7 @@ export const ChatMessage = memo(function ChatMessage({
               <Textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="min-h-[100px] resize-none"
+                className="min-h-[100px] resize-none rounded-xl border-default bg-background"
                 autoFocus
                 aria-label="Message content"
                 aria-describedby="edit-instructions"
@@ -168,19 +162,26 @@ export const ChatMessage = memo(function ChatMessage({
               </Inline>
             </Form>
           ) : (
-            hasContent && (
-              <MessageResponse>
+            hasContent &&
+            (isUser ? (
+              // User message - compact bubble style
+              <div className="inline-block max-w-[85%] sm:max-w-[75%] rounded-2xl bg-bg-surface border border-subtle px-4 py-3 text-foreground shadow-sm">
                 <MarkdownContent
                   content={message.content}
                   isStreaming={isStreaming}
-                  className={isUser ? 'prose-invert' : ''}
+                  className="prose-p:text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-code:text-foreground prose-pre:bg-bg-elevated"
                 />
-              </MessageResponse>
-            )
+              </div>
+            ) : (
+              // Assistant message - full width transcript style (no bubble)
+              <div className="w-full text-foreground">
+                <MarkdownContent content={message.content} isStreaming={isStreaming} />
+              </div>
+            ))
           )}
 
           {showDebug && (
-            <div className="rounded-md border border-border/70 bg-muted/40 px-3 py-2 text-[11px] font-mono leading-relaxed text-muted-foreground">
+            <div className="w-full rounded-md border border-subtle bg-bg-surface px-3 py-2 text-[11px] font-mono leading-relaxed text-text-secondary">
               <div>ID: {message.id}</div>
               <div>Role: {message.role}</div>
               <div>Created: {message.createdAt}</div>
@@ -192,9 +193,9 @@ export const ChatMessage = memo(function ChatMessage({
             </div>
           )}
 
-          {/* Message metadata */}
+          {/* Message metadata - minimal */}
           <MessageAnnotations
-            className={cn('text-xs opacity-70 mt-1', {
+            className={cn('mt-0.5 text-xs text-text-tertiary/70', {
               'justify-end': isUser,
               'justify-start': !isUser,
             })}
@@ -203,86 +204,74 @@ export const ChatMessage = memo(function ChatMessage({
             {timestamp && (
               <>
                 <span>·</span>
-                <span className="opacity-60" title={message.createdAt}>
-                  {timestamp}
-                </span>
+                <span title={message.createdAt}>{timestamp}</span>
               </>
             )}
           </MessageAnnotations>
+
+          {/* Actions - appear on hover */}
+          {isHovered && !isStreaming && (
+            <div
+              className={cn(
+                'flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100',
+                {
+                  'justify-end': isUser,
+                  'justify-start': !isUser,
+                },
+              )}
+            >
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 text-text-tertiary hover:text-foreground"
+                    aria-label="Message actions"
+                  >
+                    <MoreVertical className="size-3.5" aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align={isUser ? 'end' : 'start'}>
+                  <DropdownMenuItem onClick={handleCopyMessage}>
+                    {copied ? (
+                      <>
+                        <Check className="mr-2 size-3.5" aria-hidden="true" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="mr-2 size-3.5" aria-hidden="true" />
+                        Copy
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                  {isUser && onEdit && (
+                    <DropdownMenuItem onClick={startEdit}>
+                      <Edit2 className="mr-2 size-3.5" aria-hidden="true" />
+                      Edit
+                    </DropdownMenuItem>
+                  )}
+                  {!isUser && onRegenerate && (
+                    <DropdownMenuItem onClick={onRegenerate}>
+                      <RotateCcw className="mr-2 size-3.5" aria-hidden="true" />
+                      Regenerate
+                    </DropdownMenuItem>
+                  )}
+                  {onDelete && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={onDelete} className="text-destructive">
+                        <Trash2 className="mr-2 size-3.5" aria-hidden="true" />
+                        Delete
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </MessageContent>
       </Message>
-      </div>
-
-      {/* Message actions menu */}
-      {isHovered && !isStreaming && (
-        <div className={cn('flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity', isUser ? 'justify-end' : 'justify-start')}>
-          <MessageAction>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 opacity-70 hover:opacity-100 text-muted-foreground hover:text-foreground"
-                  aria-label="Message actions menu"
-                aria-haspopup="true"
-                aria-expanded="false"
-              >
-                <MoreVertical className="size-4" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align={isUser ? 'end' : 'start'} role="menu">
-              <DropdownMenuItem
-                onClick={handleCopyMessage}
-                role="menuitem"
-                aria-label={copied ? 'Message copied to clipboard' : 'Copy message to clipboard'}
-              >
-                {copied ? (
-                  <>
-                    <Check className="mr-2 size-4" aria-hidden="true" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="mr-2 size-4" aria-hidden="true" />
-                    Copy
-                  </>
-                )}
-              </DropdownMenuItem>
-              {isUser && onEdit && (
-                <DropdownMenuItem onClick={startEdit} role="menuitem" aria-label="Edit message">
-                  <Edit2 className="mr-2 size-4" aria-hidden="true" />
-                  Edit
-                </DropdownMenuItem>
-              )}
-              {!isUser && onRegenerate && (
-                <DropdownMenuItem
-                  onClick={onRegenerate}
-                  role="menuitem"
-                  aria-label="Regenerate response"
-                >
-                  <RotateCcw className="mr-2 size-4" aria-hidden="true" />
-                  Regenerate
-                </DropdownMenuItem>
-              )}
-              {onDelete && (
-                <>
-                  <DropdownMenuSeparator role="separator" />
-                  <DropdownMenuItem
-                    onClick={onDelete}
-                    className="text-destructive"
-                    role="menuitem"
-                    aria-label="Delete message"
-                  >
-                    <Trash2 className="mr-2 size-4" aria-hidden="true" />
-                    Delete
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </MessageAction>
-        </div>
-      )}
     </div>
   );
 });

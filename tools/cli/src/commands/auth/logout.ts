@@ -1,38 +1,39 @@
+import { Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { AuthError, logout } from '@/utils/auth';
+import { validateWithZod } from '@/utils/zod-validation';
 
-import { createCommand } from '../../command-factory';
-import { CliError } from '../../errors';
+const outputSchema = z.object({
+  loggedOut: z.literal(true),
+});
 
-export default createCommand({
-  name: 'auth logout',
-  summary: 'Logout and clear tokens',
-  description: 'Deletes locally stored machine-client credentials without revoking remote sessions.',
-  argNames: [],
-  args: z.object({}),
-  flags: z.object({}),
-  outputSchema: z.object({
-    loggedOut: z.literal(true),
-  }),
-  async run({ context }) {
+export default class AuthLogout extends Command {
+  static description = 'Deletes locally stored machine-client credentials without revoking remote sessions.';
+  static summary = 'Logout and clear tokens';
+
+  static override flags = {};
+  static override args = {};
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
     try {
       await logout({
-        outputMode: context.outputFormat === 'text' ? 'interactive' : 'machine',
+        outputMode: this.jsonEnabled() ? 'machine' : 'interactive',
       });
     } catch (error) {
       if (error instanceof AuthError) {
-        throw new CliError({
+        this.error(`Logout failed: ${error.message}`, {
+          exit: 2,
           code: error.code,
-          category: error.category,
-          message: error.message,
-          hint: error.hint,
         });
       }
       throw error;
     }
-    return {
-      loggedOut: true,
-    };
-  },
-});
+
+    const output = { loggedOut: true };
+    return validateWithZod(outputSchema, output);
+  }
+}
+

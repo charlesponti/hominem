@@ -1,30 +1,45 @@
+import { Args, Command, Flags } from '@oclif/core';
 import { z } from 'zod';
 
 import { AuthError, interactiveLogin } from '@/utils/auth';
+import { validateWithZod } from '@/utils/zod-validation';
 
-import { createCommand } from '../../command-factory';
-import { CliError } from '../../errors';
-
-const flagsSchema = z.object({
-  baseUrl: z.string().default('http://localhost:4040'),
-  scope: z.string().default(''),
-  device: z.boolean().default(false),
-  timeoutMs: z.coerce.number().int().positive().default(120000),
+const outputSchema = z.object({
+  authenticated: z.literal(true),
+  mode: z.enum(['browser', 'device']),
+  baseUrl: z.string(),
 });
 
-export default createCommand({
-  name: 'auth login',
-  summary: 'Authenticate the CLI',
-  description: 'Starts the CLI device-code authentication flow and stores machine-client tokens.',
-  argNames: [],
-  args: z.object({}),
-  flags: flagsSchema,
-  outputSchema: z.object({
-    authenticated: z.literal(true),
-    mode: z.enum(['browser', 'device']),
-    baseUrl: z.string(),
-  }),
-  async run({ flags, context }) {
+export default class AuthLogin extends Command {
+  static description = 'Starts the CLI device-code authentication flow and stores machine-client tokens.';
+  static summary = 'Authenticate the CLI';
+
+  static override flags = {
+    baseUrl: Flags.string({
+      description: 'Authentication base URL',
+      default: 'http://localhost:4040',
+    }),
+    scope: Flags.string({
+      description: 'Comma-separated list of auth scopes',
+      default: '',
+    }),
+    device: Flags.boolean({
+      description: 'Use device code flow instead of browser',
+      default: false,
+    }),
+    timeoutMs: Flags.integer({
+      description: 'Timeout in milliseconds',
+      default: 120000,
+    }),
+  };
+
+  static override args = {};
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
+    const { flags } = await this.parse(AuthLogin);
+
     const scopes = flags.scope
       .split(',')
       .map((scope) => scope.trim())
@@ -35,29 +50,28 @@ export default createCommand({
         authBaseUrl: flags.baseUrl,
         scopes,
         headless: flags.device,
-        outputMode: context.outputFormat === 'text' ? 'interactive' : 'machine',
+        outputMode: this.jsonEnabled() ? 'machine' : 'interactive',
         timeoutMs: flags.timeoutMs,
       });
     } catch (error) {
       if (error instanceof AuthError) {
-        throw new CliError({
+        this.error(`Authentication failed: ${error.message}`, {
+          exit: 2,
           code: error.code,
-          category: error.category,
-          message: error.message,
-          hint: error.hint,
         });
       }
-      throw new CliError({
-        code: 'AUTH_LOGIN_FAILED',
-        category: 'auth',
-        message: error instanceof Error ? error.message : 'Authentication flow failed',
+      this.error(`Authentication flow failed: ${error instanceof Error ? error.message : 'Unknown error'}`, {
+        exit: 2,
       });
     }
 
-    return {
+    const output = {
       authenticated: true,
       mode: flags.device ? 'device' : 'browser',
       baseUrl: flags.baseUrl,
     };
-  },
-});
+
+    return validateWithZod(outputSchema, output);
+  }
+}
+

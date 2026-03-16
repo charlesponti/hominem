@@ -1,0 +1,12 @@
+import type {
+  RunwayCalculateInput,
+  RunwayCalculateOutput,
+} from '@hominem/hono-rpc/types/finance.types';
+
+import { useHonoMutation } from '@hominem/hono-client/react';
+
+export const useCalculateRunway = () => {
+  return useHonoMutation<RunwayCalculateOutput, RunwayCalculateInput>(({ finance }, variables) =>
+    finance.calculateRunway(variables),
+  );
+};

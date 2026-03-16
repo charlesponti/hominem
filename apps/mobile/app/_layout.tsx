@@ -7,9 +7,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { posthog } from '~/lib/posthog';
-
 import { RootErrorBoundary } from '~/components/error-boundary/root-error-boundary';
+import { posthog } from '~/lib/posthog';
 import { theme, makeStyles } from '~/theme';
 import { AuthProvider, useAuth } from '~/utils/auth-provider';
 import { E2E_TESTING } from '~/utils/constants';

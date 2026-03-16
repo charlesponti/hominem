@@ -4,6 +4,7 @@ import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import { Edit, Trash2, X, Maximize2, List, RefreshCw } from 'lucide-react';
 import { type ReactNode, useCallback, useMemo, type MouseEvent } from 'react';
+import { Link } from 'react-router';
 
 import { cn } from '~/lib/utils';
 
@@ -91,120 +92,123 @@ export function NoteFeedItem({
   const handleDelete = useCallback(() => onDelete(note.id), [note.id, onDelete]);
 
   return (
-    <div className={cn('border-b border-border py-4 px-4 group', className)}>
-      <div className="space-y-3">
-        {/* Header */}
-        <Inline justify="between">
-          <Inline gap="sm">
-            {note.title && (
-              <h3 className="font-semibold text-base text-foreground">{note.title}</h3>
-            )}
-            {versionLabel && (
-              <Badge
-                variant="secondary"
-                className="text-xs border border-foreground text-foreground"
+    <div className={cn('group px-5 py-5', className)}>
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to={`/notes/${note.id}`}
+                className="heading-4 truncate text-foreground hover:underline"
               >
-                {versionLabel}
-              </Badge>
-            )}
-          </Inline>
-        </Inline>
+                {note.title || 'Untitled note'}
+              </Link>
+              {versionLabel ? (
+                <Badge
+                  variant="secondary"
+                  className="rounded-full border border-border/60 bg-bg-surface px-2.5 py-0.5 body-4 text-text-secondary"
+                >
+                  {versionLabel}
+                </Badge>
+              ) : null}
+            </div>
 
-        {/* Content */}
-        <div>
-          <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
-            {formattedContent}
-          </p>
+            <p className="body-2 whitespace-pre-wrap text-text-secondary">{formattedContent}</p>
+          </div>
+
+          <div className="body-4 shrink-0 text-text-tertiary">
+            {new Date(note.updatedAt).toLocaleDateString()}
+          </div>
         </div>
 
-        {/* Tags */}
-        {allTags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+        {allTags.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
             {allTags.map((tag: { value: string }) => (
               <Badge
                 key={tag.value}
                 variant="secondary"
-                className="flex items-center gap-1 px-2 py-0.5  text-xs font-medium border border-foreground text-secondary-foreground"
+                className="flex items-center gap-1 rounded-full border border-border/60 bg-bg-surface px-2.5 py-1 body-4 text-text-secondary"
               >
-                {tag.value}
-                {!extractHashtags.includes(tag.value) && (
+                #{tag.value}
+                {!extractHashtags.includes(tag.value) ? (
                   <Button
                     variant="ghost"
                     size="icon-xs"
                     onClick={handleRemoveTag}
                     data-tag-value={tag.value}
-                    className="ml-1 text-muted-foreground hover:text-foreground"
+                    className="ml-0.5 rounded-full text-muted-foreground hover:text-foreground"
                     title={`Remove ${tag.value}`}
                     aria-label={`Remove tag ${tag.value}`}
                   >
                     <X className="size-3" />
                   </Button>
-                )}
+                ) : null}
               </Badge>
             ))}
           </div>
-        )}
+        ) : null}
 
-        {/* Action bar */}
-        <div className="flex items-center justify-between pt-2 border-t border-border">
-          <p className="text-xs text-muted-foreground">
-            {new Date(note.createdAt).toLocaleDateString()}
-          </p>
+        <div className="flex items-center justify-between gap-4 border-t border-border/50 pt-3">
+          <div className="body-4 text-text-tertiary">
+            Created {new Date(note.createdAt).toLocaleDateString()}
+          </div>
+
           <Inline gap="xs">
-            {/* Development actions - subtle buttons */}
-            {onExpand && (
+            {onExpand ? (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleExpand}
-                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent "
+                className="rounded-full px-3 text-text-secondary"
                 title="Expand"
               >
-                <Maximize2 className="size-3.5" />
+                <Maximize2 className="mr-1 size-3.5" />
+                Expand
               </Button>
-            )}
-            {onOutline && (
+            ) : null}
+            {onOutline ? (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleOutline}
-                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent "
+                className="rounded-full px-3 text-text-secondary"
                 title="Outline"
               >
-                <List className="size-3.5" />
+                <List className="mr-1 size-3.5" />
+                Outline
               </Button>
-            )}
-            {onRewrite && (
+            ) : null}
+            {onRewrite ? (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleRewrite}
-                className="size-7 p-0 text-muted-foreground hover:text-foreground hover:bg-accent "
+                className="rounded-full px-3 text-text-secondary"
                 title="Rewrite"
               >
-                <RefreshCw className="size-3.5" />
+                <RefreshCw className="mr-1 size-3.5" />
+                Rewrite
               </Button>
-            )}
-
-            <div className="w-px h-4 bg-border mx-1" />
-
+            ) : null}
             <Button
               variant="ghost"
               size="sm"
               onClick={handleEdit}
-              className="size-8 p-0 text-secondary-foreground hover:text-foreground "
+              className="rounded-full px-3 text-text-secondary"
               title="Edit note"
             >
-              <Edit className="size-4" />
+              <Edit className="mr-1 size-3.5" />
+              Edit
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleDelete}
-              className="size-8 p-0 text-secondary-foreground hover:text-foreground "
+              className="rounded-full px-3 text-text-secondary"
               title="Delete note"
             >
-              <Trash2 className="size-4" />
+              <Trash2 className="mr-1 size-3.5" />
+              Delete
             </Button>
           </Inline>
         </div>

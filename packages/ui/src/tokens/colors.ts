@@ -77,6 +77,21 @@ export const colors = {
   'chart-4': 'rgba(0, 0, 0, 0.3)',
   'chart-5': 'rgba(0, 0, 0, 0.15)',
 
+  // Sidebar — ChatGPT-style light sidebar
+  sidebar: '#f9f9f9',
+  'sidebar-foreground': '#0d0d0d',
+  'sidebar-primary': '#0d0d0d',
+  'sidebar-primary-foreground': '#ffffff',
+  'sidebar-accent': 'rgba(0, 0, 0, 0.06)',
+  'sidebar-accent-foreground': '#0d0d0d',
+  'sidebar-border': 'rgba(0, 0, 0, 0.08)',
+  'sidebar-ring': '#0d0d0d',
+
+  // Prompt input
+  'prompt-bg': '#ffffff',
+  'prompt-border': 'rgba(0, 0, 0, 0.15)',
+  'prompt-border-focus': 'rgba(0, 0, 0, 0.25)',
+
   // Primitive values used by mobile shadow system
   black: '#000000',
   white: '#ffffff',

@@ -1,18 +1,64 @@
 import { useNavigation } from 'react-router';
 
+import { SidebarInset, SidebarProvider } from '../ui/sidebar';
+
 interface AppLayoutProps {
   children: React.ReactNode;
   navigation?: React.ReactNode;
+  sidebar?: React.ReactNode;
   backgroundImage?: string;
+  contentMode?: 'default' | 'full-bleed';
 }
 
-export function AppLayout({ children, navigation, backgroundImage }: AppLayoutProps) {
+export function AppLayout({
+  children,
+  navigation,
+  sidebar,
+  backgroundImage,
+  contentMode = 'default',
+}: AppLayoutProps) {
   const navigationState = useNavigation();
   const isNavigating = navigationState.state !== 'idle';
 
+  // If sidebar is provided, render in ChatGPT sidebar layout mode
+  if (sidebar) {
+    return (
+      <>
+        {isNavigating && (
+          <div className="fixed top-0 left-0 w-full z-50" aria-hidden="true">
+            <div className="h-0.5 bg-foreground/30 animate-pulse" />
+          </div>
+        )}
+
+        {backgroundImage && (
+          <div
+            className="fixed inset-0 -z-10 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url('${backgroundImage}')` }}
+          />
+        )}
+
+        <SidebarProvider>
+          {sidebar}
+          <SidebarInset className="bg-background">
+            <main
+              id="main-content"
+              className={
+                contentMode === 'full-bleed'
+                  ? 'flex flex-col min-h-svh w-full'
+                  : 'flex flex-col min-h-svh w-full px-4 sm:px-8 lg:px-12'
+              }
+            >
+              {children}
+            </main>
+          </SidebarInset>
+        </SidebarProvider>
+      </>
+    );
+  }
+
+  // Legacy layout: top-header based (for pages that haven't migrated yet)
   return (
     <>
-      {/* Page-load progress bar — aria-hidden: purely visual, router state announced by page title change */}
       {isNavigating && (
         <div className="fixed top-0 left-0 w-full z-50" aria-hidden="true">
           <div className="h-0.5 bg-foreground/40 animate-pulse" />
@@ -26,7 +72,7 @@ export function AppLayout({ children, navigation, backgroundImage }: AppLayoutPr
         />
       )}
 
-      <div className="flex flex-col">
+      <div className="flex min-h-dvh flex-col bg-background">
         {navigation}
 
         {/*
@@ -38,12 +84,13 @@ export function AppLayout({ children, navigation, backgroundImage }: AppLayoutPr
           id="main-content"
           className="flex-1 mt-14 md:mt-16 pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-12"
         >
-          {/*
-            Canonical content constraint — single source of truth for all apps.
-            max-w-5xl (1024px) centers content; responsive px prevents content touching edges.
-            Never override this in app-level layout.tsx files.
-          */}
-          <div className="w-full max-w-5xl px-4 sm:px-8 lg:px-12">{children}</div>
+          <div
+            className={
+              contentMode === 'full-bleed' ? 'w-full' : 'w-full max-w-5xl px-4 sm:px-8 lg:px-12'
+            }
+          >
+            {children}
+          </div>
         </main>
       </div>
     </>

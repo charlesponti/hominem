@@ -1,4 +1,8 @@
-import type { ArtifactType, SessionSource, ThoughtLifecycleState } from '@hominem/chat-services/types';
+import type {
+  ArtifactType,
+  SessionSource,
+  ThoughtLifecycleState,
+} from '@hominem/chat-services/types';
 import { deriveSessionSource } from '@hominem/chat-services/types';
 import { useHonoQuery, useHonoMutation } from '@hominem/hono-client/react';
 import type {
@@ -7,14 +11,15 @@ import type {
   ChatsClassifyOutput,
 } from '@hominem/hono-rpc/types/chat.types';
 import { useToast } from '@hominem/ui';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { ChatHeader } from '~/components/chat/ChatHeader';
-import { ChatInput } from '~/components/chat/ChatInput';
 import { ChatMessages } from '~/components/chat/ChatMessages';
 import { ClassificationReview } from '~/components/classification-review';
+import { useComposer } from '~/components/hyper-form/composer-provider';
 import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
+import { useSendMessage } from '~/lib/hooks/use-send-message';
 
 import type { Route } from './+types/chat.$chatId';
 
@@ -33,21 +38,30 @@ interface PendingReview {
 export default function ChatPage({ params }: Route.ComponentProps) {
   const { chatId } = params;
   const { toast } = useToast();
-  const [status, setStatus] = useState<'idle' | 'submitted' | 'streaming' | 'error'>('idle');
-  const [error, setError] = useState<Error | null>(null);
+  const sendMessage = useSendMessage({ chatId });
+  const status = sendMessage.status ?? 'idle';
+  const error = sendMessage.error ?? null;
   const messageControlsRef = useRef<{ showSearch: () => void }>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
   const [lifecycleState, setLifecycleState] = useState<ThoughtLifecycleState>('idle');
   const [pendingReview, setPendingReview] = useState<PendingReview | null>(null);
   const [overrideSource, setOverrideSource] = useState<SessionSource | null>(null);
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
 
+  const { setChatContext, clearChatContext } = useComposer();
+
+  // Register chat context so HyperForm switches to chat-continuation mode
+  useEffect(() => {
+    setChatContext(chatId);
+    return () => {
+      clearChatContext();
+    };
+  }, [chatId, setChatContext, clearChatContext]);
+
   const { data: chat } = useHonoQuery<ChatsGetOutput>(['chats', chatId], ({ chats: c }) =>
     c.get({ chatId }),
   );
 
-  // Same query key as ChatMessages — TanStack Query deduplicates; no extra network request.
   const { data: messages } = useHonoQuery<ChatsGetMessagesOutput>(
     ['chats', 'getMessages', { chatId, limit: 50 }],
     ({ chats: c }) => c.getMessages({ chatId, limit: 50 }),
@@ -84,11 +98,6 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   const rejectMutation = useHonoMutation<{ success: boolean }, { reviewItemId: string }>(
     (client, vars) => client.review.reject({ reviewItemId: vars.reviewItemId }),
   );
-
-  const handleMessageStatusChange = (newStatus: typeof status, newError?: Error | null) => {
-    setStatus(newStatus);
-    setError(newError || null);
-  };
 
   const handleTransform = async (type: ArtifactType) => {
     setLifecycleState('classifying');
@@ -152,11 +161,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
     }
   };
 
-  // Keyboard shortcuts
   useChatKeyboardShortcuts({
-    onFocusInput: () => {
-      inputRef.current?.focus();
-    },
     onScrollToTop: () => {
       messagesRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     },
@@ -167,7 +172,8 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   });
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-white text-foreground">
+    <div className="flex h-dvh min-h-0 flex-col bg-background text-foreground pb-[var(--hyper-form-resting-height,112px)]">
+      {/* Sticky chat header */}
       <ChatHeader
         source={source}
         lifecycleState={lifecycleState}
@@ -178,20 +184,16 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         onTransform={handleTransform}
       />
 
-      <div className="min-h-0 flex-1" ref={messagesRef}>
+      {/* Scrollable message list */}
+      <div className="min-h-0 flex-1 overflow-hidden" ref={messagesRef}>
         <ChatMessages
           ref={messageControlsRef}
           chatId={chatId}
           status={status}
           error={error}
           showDebug={isDebugEnabled}
+          lifecycleState={lifecycleState}
         />
-      </div>
-
-      <div className="shrink-0 border-t border-slate-200/50 bg-white px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 sm:px-6">
-        <div className="mx-auto w-full max-w-200">
-          <ChatInput ref={inputRef} chatId={chatId} onStatusChange={handleMessageStatusChange} />
-        </div>
       </div>
 
       {lifecycleState === 'reviewing_changes' && pendingReview && (

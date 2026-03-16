@@ -7,6 +7,7 @@ import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Button } from '~/components/Button';
+import TextInput from '~/components/text-input';
 import TextArea from '~/components/text-input-autogrow';
 import { makeStyles } from '~/theme';
 import { useStartChat } from '~/utils/services/chat/use-chat-messages-new';
@@ -14,20 +15,23 @@ import { useStartChat } from '~/utils/services/chat/use-chat-messages-new';
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
     container: {
-      marginHorizontal: t.spacing.sm_12,
-      marginTop: t.spacing.sm_12,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
-      borderRadius: t.borderRadii.sm_6,
+      borderRadius: t.borderRadii.xl_20,
       backgroundColor: t.colors.background,
-      padding: t.spacing.sm_12,
-      gap: t.spacing.sm_8,
+      padding: t.spacing.m_16,
+      gap: t.spacing.sm_12,
+    },
+    titleInput: {
+      color: t.colors.foreground,
+      fontSize: fontSizes.sm,
+      fontFamily: 'Geist',
     },
     input: {
       color: t.colors.foreground,
       fontSize: fontSizes.sm,
       fontFamily: 'Geist Mono',
-      minHeight: 40,
+      minHeight: 80,
     },
     actions: {
       flexDirection: 'row',
@@ -53,6 +57,7 @@ export const CaptureBar = () => {
   const router = useRouter();
   const client = useApiClient();
   const [text, setText] = useState('');
+  const [title, setTitle] = useState('');
   const styles = useStyles();
 
   const { mutate: startChat, isPending: isStarting } = useStartChat({
@@ -60,6 +65,7 @@ export const CaptureBar = () => {
     _sherpaMessage: "Let's think through it.",
     onSuccess: () => {
       setText('');
+      setTitle('');
       router.push('/(protected)/(tabs)/sherpa' as RelativePathString);
     },
   });
@@ -69,11 +75,12 @@ export const CaptureBar = () => {
       const trimmed = text.trim();
       return client.notes.create({
         content: trimmed,
-        title: trimmed.slice(0, 64) || undefined,
+        title: title.trim() || trimmed.slice(0, 64) || undefined,
       });
     },
     onSuccess: () => {
       setText('');
+      setTitle('');
     },
   });
 
@@ -92,9 +99,16 @@ export const CaptureBar = () => {
 
   return (
     <View style={styles.container}>
+      <TextInput
+        label="Title optional"
+        placeholder="Title optional"
+        value={title}
+        style={styles.titleInput}
+        onChange={(event) => setTitle(event.nativeEvent.text)}
+      />
       <TextArea
         label="Capture your thought"
-        placeholder="What's on your mind?"
+        placeholder="Write the thought before you organize it"
         style={styles.input}
         value={text}
         onChange={(event) => setText(event.nativeEvent.text)}

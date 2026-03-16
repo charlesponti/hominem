@@ -178,7 +178,7 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
               <Suggestion
                 key={suggestion}
                 suggestion={suggestion}
-                className="[&_button]:rounded-lg [&_button]:border [&_button]:border-slate-200/70 [&_button]:bg-white [&_button]:px-4 [&_button]:py-2.5 [&_button]:text-xs [&_button]:font-medium [&_button]:text-slate-700 [&_button]:transition-all [&_button]:hover:bg-slate-50 [&_button]:hover:border-slate-300 [&_button]:hover:text-slate-900 [&_button]:shadow-sm"
+                className="[&_button]:rounded-2xl [&_button]:border [&_button]:border-[rgba(0,0,0,0.12)] [&_button]:bg-white [&_button]:px-3.5 [&_button]:py-2 [&_button]:text-sm [&_button]:font-normal [&_button]:text-[rgba(0,0,0,0.7)] [&_button]:transition-colors [&_button]:hover:bg-[rgba(0,0,0,0.04)] [&_button]:hover:text-[rgba(0,0,0,0.9)]"
                 onSuggestionClick={handleSuggestionClick}
               />
             ))}
@@ -191,24 +191,24 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
           <div className="text-xs text-destructive">{uploadState.errors[0]}</div>
         )}
 
-        {/* PromptInput - AI Elements style */}
+        {/* PromptInput - ChatGPT style with elevated shadow */}
         <PromptInput
           onSubmit={handlePromptSubmit}
-          className="rounded-xl border border-slate-200/60 bg-white shadow-lg shadow-black/5 transition-all focus-within:border-blue-400/50 focus-within:ring-2 focus-within:ring-blue-500/10"
+          className="rounded-[1.75rem] border border-[rgba(0,0,0,0.08)] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.12)]"
         >
-          <div className="flex items-end gap-3">
+          <div className="flex items-end gap-3 px-4 py-3">
             <PromptInputTextarea
               ref={textareaRef}
               value={textInput.value}
               onValueChange={textInput.setInput}
-              placeholder="Ask a follow-up or drop in a new thought"
+              placeholder="Ask anything"
               disabled={isSubmitting}
-              className="min-h-12 flex-1 text-[15px] leading-6 placeholder:text-muted-foreground/60 bg-transparent"
+              className="min-h-12 flex-1 border-0 bg-transparent px-0 py-0 text-[15px] leading-relaxed placeholder:text-[rgba(0,0,0,0.35)] focus-visible:ring-0 resize-none"
             />
             <PromptInputSubmit
               status={isSubmitting ? 'streaming' : 'ready'}
               disabled={!canSubmit}
-              className="transition-all"
+              className="rounded-full bg-[#0d0d0d] text-white hover:bg-[#1a1a1a] disabled:bg-[rgba(0,0,0,0.08)] disabled:text-[rgba(0,0,0,0.3)] size-9 shrink-0 transition-colors"
             />
           </div>
 
@@ -224,10 +224,10 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
             </Attachments>
           ) : null}
 
-          <PromptInputFooter className="border-t border-border/20">
-            <PromptInputTools>
+          <PromptInputFooter className="border-t border-[rgba(0,0,0,0.06)] pt-2 pb-1 px-4">
+            <PromptInputTools className="gap-1">
               <PromptInputActionMenu>
-                <PromptInputActionMenuTrigger title="Attach files" disabled={isSubmitting} className="text-muted-foreground/70 hover:text-foreground transition-colors" />
+                <PromptInputActionMenuTrigger title="Attach files" disabled={isSubmitting} className="text-[rgba(0,0,0,0.35)] hover:text-[rgba(0,0,0,0.6)] transition-colors h-7 w-7" />
                 <PromptInputActionMenuContent>
                   <PromptInputActionAddAttachments label="Attach files" />
                 </PromptInputActionMenuContent>
@@ -240,7 +240,7 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
                 onClick={handleAudioRecord}
                 disabled={isSubmitting}
                 title="Record audio"
-                className="text-muted-foreground/70 hover:text-foreground hover:bg-transparent transition-colors"
+                className="text-[rgba(0,0,0,0.35)] hover:text-[rgba(0,0,0,0.6)] hover:bg-transparent transition-colors h-7 w-7 p-0"
               >
                 <Mic className="size-4" />
               </Button>
@@ -253,18 +253,18 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
                   disabled={isSubmitting}
                   onClick={onSaveAsNote}
                   title="Save as Note"
-                  className="text-muted-foreground/70 hover:text-foreground hover:bg-transparent transition-colors"
+                  className="text-[rgba(0,0,0,0.35)] hover:text-[rgba(0,0,0,0.6)] hover:bg-transparent transition-colors h-7 w-7 p-0"
                 >
                   <FileText className="size-4" />
                 </Button>
               )}
             </PromptInputTools>
 
-              <span className="text-xs text-muted-foreground/60">
-                {shouldShowCharacterCount
-                  ? `${characterCount.toLocaleString()}/${MAX_MESSAGE_LENGTH.toLocaleString()}`
-                  : 'Enter to send · Shift+Enter for newline'}
-              </span>
+            <span className="text-[11px] text-[rgba(0,0,0,0.35)]">
+              {shouldShowCharacterCount
+                ? `${characterCount.toLocaleString()}/${MAX_MESSAGE_LENGTH.toLocaleString()}`
+                : 'Enter ↵ · Shift+Enter for newline'}
+            </span>
           </PromptInputFooter>
         </PromptInput>
       </Stack>

@@ -294,7 +294,7 @@ export async function signInWithPasskey(apiBaseUrl: string): Promise<SessionResu
 }
 
 export async function signOut(apiBaseUrl: string, session: HominemSession | null) {
-  void session
+  void session;
 
   const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {
     credentials: 'include',

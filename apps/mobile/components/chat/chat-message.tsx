@@ -1,4 +1,4 @@
-import { fontSizes } from '@hominem/ui/tokens';
+import { chatTokensNative, fontFamiliesNative, fontSizes } from '@hominem/ui/tokens';
 import React, { memo, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 
@@ -16,6 +16,7 @@ type ChatMessageProps = {
     children: React.ReactNode;
     style?: Record<string, unknown>;
   }> | null;
+  showDebug?: boolean;
   onCopy?: (message: MessageOutput) => void;
   onEdit?: (messageId: string, content: string) => void;
   onRegenerate?: (messageId: string) => void;
@@ -38,67 +39,97 @@ const botMarkdownStyle = { body: {} as Record<string, unknown> };
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
-    bubble: {
-      maxWidth: '90%',
+    row: {
+      width: '100%',
+      paddingVertical: chatTokensNative.turnPaddingY,
+    },
+    rowUser: {
+      alignItems: 'flex-end',
+    },
+    rowAssistant: {
+      alignItems: 'flex-start',
+    },
+    contentColumn: {
+      width: '100%',
+      gap: chatTokensNative.contentGap,
+    },
+    contentColumnUser: {
+      width: '100%',
+      alignItems: 'flex-end',
+    },
+    transcriptBlock: {
+      width: '100%',
+      gap: chatTokensNative.contentGap,
+    },
+    userSurface: {
+      width: '100%',
+      maxWidth: chatTokensNative.userBubbleMaxWidth,
       paddingHorizontal: t.spacing.m_16,
       paddingVertical: t.spacing.sm_12,
-      borderRadius: t.borderRadii.xl_20,
-      marginBottom: t.spacing.xs_4,
-    },
-    botMessage: {
-      alignSelf: 'flex-start',
-      backgroundColor: t.colors['bg-surface'],
+      borderRadius: chatTokensNative.radii.bubble,
+      backgroundColor: chatTokensNative.surfaces.user,
       borderWidth: 1,
-      borderColor: t.colors['border-subtle'],
-    },
-    userMessage: {
-      alignSelf: 'flex-end',
-      backgroundColor: t.colors['emphasis-lower'],
-      borderWidth: 1,
-      borderColor: t.colors['emphasis-subtle'],
+      borderColor: chatTokensNative.borders.user,
     },
     userMessageText: {
       fontSize: 17,
       lineHeight: 24,
-      color: t.colors.foreground,
+      color: chatTokensNative.foregrounds.user,
     },
-    botMessageText: {
+    assistantMessageText: {
       fontSize: 18,
       lineHeight: 24,
       color: t.colors.foreground,
+    },
+    transcriptSurface: {
+      width: '100%',
+      borderRadius: chatTokensNative.radii.debug,
+      borderWidth: 1,
+      borderColor: chatTokensNative.borders.debug,
+      backgroundColor: chatTokensNative.surfaces.debug,
+      paddingHorizontal: t.spacing.sm_12,
+      paddingVertical: t.spacing.sm_12,
+      gap: t.spacing.xs_4,
     },
     focusItems: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: t.spacing.sm_12,
-      paddingHorizontal: t.spacing.sm_12,
-      paddingVertical: t.spacing.sm_8,
     },
     focusItem: {
-      backgroundColor: t.colors['border-default'],
+      backgroundColor: t.colors['bg-surface'],
       paddingHorizontal: t.spacing.sm_12,
       paddingVertical: t.spacing.sm_8,
       borderRadius: t.borderRadii.l_12,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
     },
     metadata: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: t.spacing.xs_4,
-      marginTop: t.spacing.sm_8,
+      gap: chatTokensNative.metadataGap,
       opacity: 0.7,
+    },
+    metadataEnd: {
+      justifyContent: 'flex-end',
     },
     metadataText: {
       color: t.colors['text-tertiary'],
       fontSize: fontSizes.xs,
+      fontFamily: fontFamiliesNative.mono,
     },
     actions: {
       flexDirection: 'row',
       alignItems: 'center',
+      flexWrap: 'wrap',
       gap: t.spacing.sm_8,
-      marginTop: t.spacing.sm_8,
+    },
+    actionsEnd: {
+      justifyContent: 'flex-end',
     },
     actionButton: {
-      backgroundColor: t.colors['border-default'],
+      backgroundColor: t.colors['bg-surface'],
+      borderColor: t.colors['border-default'],
     },
     actionButtonDisabled: {
       opacity: 0.35,
@@ -109,13 +140,12 @@ const useStyles = makeStyles((t) =>
       textTransform: 'uppercase',
     },
     reasoningText: {
-      marginTop: t.spacing.sm_12,
       color: t.colors.foreground,
       fontSize: fontSizes.xs,
       opacity: 0.8,
+      fontFamily: fontFamiliesNative.mono,
     },
     toolCalls: {
-      marginTop: t.spacing.sm_8,
       gap: t.spacing.xs_4,
     },
     toolCall: {
@@ -134,7 +164,7 @@ const useStyles = makeStyles((t) =>
     toolCallArgs: {
       color: t.colors['text-secondary'],
       fontSize: fontSizes.xs,
-      fontFamily: t.textVariants.mono.fontFamily,
+      fontFamily: fontFamiliesNative.mono,
     },
     editBackdrop: {
       position: 'absolute',
@@ -160,7 +190,6 @@ const useStyles = makeStyles((t) =>
     editTitle: {
       color: t.colors.foreground,
       fontSize: 16,
-      marginBottom: t.spacing.xs_4,
     },
     editInput: {
       minHeight: 90,
@@ -174,12 +203,19 @@ const useStyles = makeStyles((t) =>
 );
 
 const ChatMessage = memo(
-  ({ message, Markdown, onCopy, onEdit, onRegenerate, onDelete }: ChatMessageProps) => {
+  ({
+    message,
+    Markdown,
+    showDebug = false,
+    onCopy,
+    onEdit,
+    onRegenerate,
+    onDelete,
+  }: ChatMessageProps) => {
     const styles = useStyles();
     const { role, message: content } = message;
     const isUser = role.toLowerCase() === 'user';
-    const chatBubbleStyle = isUser ? styles.userMessage : styles.botMessage;
-    const textStyle = isUser ? styles.userMessageText : styles.botMessageText;
+    const textStyle = isUser ? styles.userMessageText : styles.assistantMessageText;
     const timestamp = message.created_at
       ? getLocalDate(new Date(message.created_at)).localDateString
       : '';
@@ -196,11 +232,11 @@ const ChatMessage = memo(
 
     // Assign lazily so StyleSheet objects are used (avoids per-render allocation)
     userMarkdownStyle.body = styles.userMessageText as unknown as Record<string, unknown>;
-    botMarkdownStyle.body = styles.botMessageText as unknown as Record<string, unknown>;
+    botMarkdownStyle.body = styles.assistantMessageText as unknown as Record<string, unknown>;
     const markdownStyle = isUser ? userMarkdownStyle : botMarkdownStyle;
 
     return (
-      <View style={[styles.bubble, chatBubbleStyle]}>
+      <View style={[styles.row, isUser ? styles.rowUser : styles.rowAssistant]}>
         <Modal
           visible={isEditing}
           transparent
@@ -247,93 +283,128 @@ const ChatMessage = memo(
           </View>
         </Modal>
 
-        {Markdown ? (
-          <Markdown style={markdownStyle}>{content}</Markdown>
-        ) : (
-          <Text style={textStyle}>{content}</Text>
-        )}
-        {hasReasoning && <Text style={styles.reasoningText}>{message.reasoning}</Text>}
-        {hasToolCalls && (
-          <View style={styles.toolCalls}>
-            {renderedToolCalls.map((toolCall: ToolCall, index: number) => (
-              <View key={toolCall.toolCallId || `tool-call-${index}`} style={styles.toolCall}>
-                <Text style={styles.toolCallName}>{toolCall.toolName}</Text>
-                <Text style={styles.toolCallArgs}>
-                  {toolCall.args ? JSON.stringify(toolCall.args, null, 2) : ''}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
-        <View style={styles.actions}>
-          <Button
-            variant="ghost"
-            size="xs"
-            onPress={() => onCopy?.(message)}
-            disabled={!canCopy}
-            style={[styles.actionButton, !canCopy && styles.actionButtonDisabled]}
-          >
-            copy
-          </Button>
-          {canEdit ? (
-            <Button
-              variant="ghost"
-              size="xs"
-              onPress={() => {
-                setDraftMessage(content);
-                setIsEditing(true);
-              }}
-              style={styles.actionButton}
-            >
-              edit
-            </Button>
+        <View style={[styles.contentColumn, isUser ? styles.contentColumnUser : null]}>
+          {!isUser && hasReasoning ? (
+            <View style={styles.transcriptSurface}>
+              <Text style={styles.reasoningText}>{message.reasoning}</Text>
+            </View>
           ) : null}
-          {canRegenerate ? (
-            <Button
-              variant="ghost"
-              size="xs"
-              onPress={() => onRegenerate?.(message.id)}
-              style={styles.actionButton}
-            >
-              regenerate
-            </Button>
-          ) : null}
-          {canDelete ? (
-            <Button
-              variant="ghost"
-              size="xs"
-              onPress={() => onDelete?.(message.id)}
-              style={styles.actionButton}
-            >
-              delete
-            </Button>
-          ) : null}
-        </View>
-        {message.focus_items && message.focus_items.length > 0 ? (
-          <View style={[styles.focusItems]}>
-            {message.focus_items.map((focusItem) => (
-              <View key={focusItem.id} style={[styles.focusItem]}>
-                <Text variant="body" color="white">
-                  {focusItem.text}
-                </Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
-        <View style={styles.metadata}>
-          <Text variant="caption" color="text-secondary" style={styles.metadataText}>
-            {senderLabel}
-          </Text>
-          {timestamp ? (
-            <>
-              <Text variant="caption" color="text-secondary">
-                {' · '}
+
+          {hasToolCalls && (
+            <View style={styles.toolCalls}>
+              {renderedToolCalls.map((toolCall: ToolCall, index: number) => (
+                <View key={toolCall.toolCallId || `tool-call-${index}`} style={styles.toolCall}>
+                  <Text style={styles.toolCallName}>{toolCall.toolName}</Text>
+                  <Text style={styles.toolCallArgs}>
+                    {toolCall.args ? JSON.stringify(toolCall.args, null, 2) : ''}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {isUser ? (
+            <View style={styles.userSurface}>
+              {Markdown ? (
+                <Markdown style={markdownStyle}>{content}</Markdown>
+              ) : (
+                <Text style={textStyle}>{content}</Text>
+              )}
+            </View>
+          ) : (
+            <View style={styles.transcriptBlock}>
+              {Markdown ? (
+                <Markdown style={markdownStyle}>{content}</Markdown>
+              ) : (
+                <Text style={textStyle}>{content}</Text>
+              )}
+            </View>
+          )}
+
+          {showDebug ? (
+            <View style={styles.transcriptSurface}>
+              <Text style={styles.reasoningText}>ID: {message.id}</Text>
+              <Text style={styles.reasoningText}>Role: {message.role}</Text>
+              <Text style={styles.reasoningText}>Created: {message.created_at ?? 'unknown'}</Text>
+              <Text style={styles.reasoningText}>
+                Reasoning: {hasReasoning ? 'present' : 'none'}
               </Text>
-              <Text variant="caption" color="text-secondary" style={styles.metadataText}>
-                {timestamp}
-              </Text>
-            </>
+              <Text style={styles.reasoningText}>Tool calls: {message.toolCalls?.length ?? 0}</Text>
+            </View>
           ) : null}
+
+          {message.focus_items && message.focus_items.length > 0 ? (
+            <View style={styles.focusItems}>
+              {message.focus_items.map((focusItem) => (
+                <View key={focusItem.id} style={styles.focusItem}>
+                  <Text variant="body" color="foreground">
+                    {focusItem.text}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
+          <View style={[styles.metadata, isUser ? styles.metadataEnd : null]}>
+            <Text variant="caption" color="text-secondary" style={styles.metadataText}>
+              {senderLabel}
+            </Text>
+            {timestamp ? (
+              <>
+                <Text variant="caption" color="text-secondary">
+                  {' · '}
+                </Text>
+                <Text variant="caption" color="text-secondary" style={styles.metadataText}>
+                  {timestamp}
+                </Text>
+              </>
+            ) : null}
+          </View>
+
+          <View style={[styles.actions, isUser ? styles.actionsEnd : null]}>
+            <Button
+              variant="ghost"
+              size="xs"
+              onPress={() => onCopy?.(message)}
+              disabled={!canCopy}
+              style={[styles.actionButton, !canCopy && styles.actionButtonDisabled]}
+            >
+              copy
+            </Button>
+            {canEdit ? (
+              <Button
+                variant="ghost"
+                size="xs"
+                onPress={() => {
+                  setDraftMessage(content);
+                  setIsEditing(true);
+                }}
+                style={styles.actionButton}
+              >
+                edit
+              </Button>
+            ) : null}
+            {canRegenerate ? (
+              <Button
+                variant="ghost"
+                size="xs"
+                onPress={() => onRegenerate?.(message.id)}
+                style={styles.actionButton}
+              >
+                regenerate
+              </Button>
+            ) : null}
+            {canDelete ? (
+              <Button
+                variant="ghost"
+                size="xs"
+                onPress={() => onDelete?.(message.id)}
+                style={styles.actionButton}
+              >
+                delete
+              </Button>
+            ) : null}
+          </View>
         </View>
       </View>
     );
@@ -346,6 +417,7 @@ export const renderMessage = (
   item: MessageOutput,
   Markdown?: MarkdownComponent | null,
   actions?: {
+    showDebug?: boolean;
     onCopy?: (message: MessageOutput) => void;
     onEdit?: (messageId: string, content: string) => void;
     onRegenerate?: (messageId: string) => void;

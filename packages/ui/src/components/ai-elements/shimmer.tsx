@@ -50,17 +50,25 @@ export function ShimmerMessage({
 }: ShimmerMessageProps) {
   const isUser = variant === 'user';
 
-  return (
-    <div
-      className={cn('flex w-full gap-4 p-4', isUser ? 'flex-row-reverse' : 'flex-row', className)}
-      {...props}
-    >
-      <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-      <div className={cn('flex flex-col gap-1 max-w-[80%]', isUser && 'items-end')}>
-        <div className={cn('rounded-2xl px-4 py-3 space-y-2', isUser ? 'bg-primary' : 'bg-muted')}>
-          <div className="h-4 w-48 rounded bg-muted-foreground/20 animate-pulse" />
-          <div className="h-4 w-32 rounded bg-muted-foreground/20 animate-pulse" />
+  if (isUser) {
+    return (
+      <div className={cn('flex w-full justify-end py-2', className)} {...props}>
+        <div className="w-full max-w-136 items-end">
+          <div className="ml-auto space-y-2 rounded-xl bg-emphasis-highest px-4 py-3 shadow-low">
+            <div className="h-4 w-40 rounded bg-primary-foreground/20 animate-pulse" />
+            <div className="h-4 w-28 rounded bg-primary-foreground/20 animate-pulse" />
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn('flex w-full justify-start py-2', className)} {...props}>
+      <div className="w-full max-w-3xl space-y-3">
+        <div className="h-4 w-52 rounded bg-muted animate-pulse" />
+        <div className="h-4 w-full rounded bg-muted animate-pulse" />
+        <div className="h-4 w-4/5 rounded bg-muted animate-pulse" />
       </div>
     </div>
   );

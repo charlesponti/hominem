@@ -3,8 +3,11 @@ import { useCallback, useState } from 'react';
 import { Platform } from 'react-native';
 
 import { authClient } from '~/lib/auth-client';
-import { getPersistedSessionCookieHeader, persistSessionCookieHeader } from '~/utils/auth/session-cookie';
 import { useAuth } from '~/utils/auth-provider';
+import {
+  getPersistedSessionCookieHeader,
+  persistSessionCookieHeader,
+} from '~/utils/auth/session-cookie';
 import { API_BASE_URL, E2E_AUTH_SECRET, E2E_TESTING } from '~/utils/constants';
 
 interface PasskeySignInResult {
@@ -115,13 +118,10 @@ export function useMobilePasskeyAuth(): UseMobilePasskeyAuthReturn {
           headers['cookie'] = cookieHeader;
         }
 
-        const tokenResponse = await fetch(
-          new URL('/api/auth/session', API_BASE_URL).toString(),
-          {
-            method: 'GET',
-            headers,
-          },
-        );
+        const tokenResponse = await fetch(new URL('/api/auth/session', API_BASE_URL).toString(), {
+          method: 'GET',
+          headers,
+        });
 
         if (!tokenResponse.ok) {
           const body = (await tokenResponse.json()) as { error?: string };

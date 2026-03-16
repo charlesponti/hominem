@@ -31,9 +31,9 @@ export const useAuthenticatedRequest = () => {
         throw new Error(`Request failed (${response.status})`);
       }
 
-        const data = (await response.json()) as T;
-        return { data };
-      },
+      const data = (await response.json()) as T;
+      return { data };
+    },
     [getAuthHeaders],
   );
 };

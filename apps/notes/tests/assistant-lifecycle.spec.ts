@@ -6,7 +6,7 @@ import {
 } from './auth.flow-helpers'
 
 test.describe('Notes: HomeView → chat.$chatId critical path', () => {
-  test('authenticated user reaches HomeView with CaptureBar', async ({ page, context }) => {
+  test('authenticated user reaches HomeView with HyperForm', async ({ page, context }) => {
     await context.clearCookies()
     const email = createAuthTestEmail('notes-home-lifecycle')
 
@@ -15,46 +15,48 @@ test.describe('Notes: HomeView → chat.$chatId critical path', () => {
     await page.goto('/home')
     await expect(page).toHaveURL(/\/home/, { timeout: 15_000 })
 
-    // CaptureBar should be present
-    const captureInput = page.getByTestId('capture-bar-input')
-    await expect(captureInput).toBeVisible({ timeout: 10_000 })
+    // HyperForm should be present
+    const hyperFormInput = page.getByTestId('hyper-form-input')
+    await expect(hyperFormInput).toBeVisible({ timeout: 10_000 })
   })
 
-  test('CaptureBar Think button creates a chat and navigates to it', async ({ page, context }) => {
+  test('HyperForm primary action creates a chat and navigates to it', async ({ page, context }) => {
     await context.clearCookies()
     const email = createAuthTestEmail('notes-capture-think')
 
     await signInWithEmailOtp(page, email, /\/home/)
     await page.goto('/home')
 
-    const captureInput = page.getByTestId('capture-bar-input')
-    await expect(captureInput).toBeVisible({ timeout: 10_000 })
-    await captureInput.fill('What should I focus on today?')
+    const hyperFormInput = page.getByTestId('hyper-form-input')
+    await expect(hyperFormInput).toBeVisible({ timeout: 10_000 })
+    await hyperFormInput.fill('What should I focus on today?')
 
-    const thinkButton = page.getByTestId('capture-bar-think')
-    await expect(thinkButton).toBeVisible({ timeout: 5_000 })
-    await thinkButton.click()
+    const primaryButton = page.getByTestId('hyper-form-primary')
+    await expect(primaryButton).toBeVisible({ timeout: 5_000 })
+    await primaryButton.click()
 
     // Should navigate to a chat session
     await expect(page).toHaveURL(/\/chat\/[^/]+$/, { timeout: 20_000 })
 
-    // Chat input should be present
-    const chatInput = page.locator('textarea').first()
+    // Chat input (HyperForm in chat-continuation mode) should be present
+    const chatInput = page.getByTestId('hyper-form-input')
     await expect(chatInput).toBeVisible({ timeout: 10_000 })
   })
 
-  test('CaptureBar Save button persists note without navigating away', async ({ page, context }) => {
+  test('HyperForm secondary action saves note without navigating away', async ({ page, context }) => {
     await context.clearCookies()
     const email = createAuthTestEmail('notes-capture-save')
 
     await signInWithEmailOtp(page, email, /\/home/)
     await page.goto('/home')
 
-    const captureInput = page.getByTestId('capture-bar-input')
-    await expect(captureInput).toBeVisible({ timeout: 10_000 })
-    await captureInput.fill('Quick thought to save')
+    const hyperFormInput = page.getByTestId('hyper-form-input')
+    await expect(hyperFormInput).toBeVisible({ timeout: 10_000 })
+    await hyperFormInput.fill('Quick thought to save')
 
-    const saveButton = page.getByTestId('capture-bar-save')
+    // Focus the input to expand the form and reveal the secondary action
+    await hyperFormInput.focus()
+    const saveButton = page.getByTestId('hyper-form-secondary')
     await expect(saveButton).toBeVisible({ timeout: 5_000 })
     await saveButton.click()
 
@@ -62,26 +64,26 @@ test.describe('Notes: HomeView → chat.$chatId critical path', () => {
     await expect(page).toHaveURL(/\/home/, { timeout: 10_000 })
 
     // Input should be cleared after save
-    await expect(captureInput).toHaveValue('', { timeout: 5_000 })
+    await expect(hyperFormInput).toHaveValue('', { timeout: 5_000 })
   })
 
-  test('voice input populates chat input for review before sending', async ({ page, context }) => {
+  test('voice input populates HyperForm input for review before sending', async ({ page, context }) => {
     await context.clearCookies()
     const email = createAuthTestEmail('notes-voice-confirm')
 
     await signInWithEmailOtp(page, email, /\/home/)
     await page.goto('/home')
 
-    const captureInput = page.getByTestId('capture-bar-input')
-    await captureInput.fill('Test session for voice input')
+    const hyperFormInput = page.getByTestId('hyper-form-input')
+    await hyperFormInput.fill('Test session for voice input')
 
-    const thinkButton = page.getByTestId('capture-bar-think')
-    await thinkButton.click()
+    const primaryButton = page.getByTestId('hyper-form-primary')
+    await primaryButton.click()
 
     await expect(page).toHaveURL(/\/chat\/[^/]+$/, { timeout: 20_000 })
 
-    // Voice mic button should be visible in chat input toolbar
-    const micButton = page.getByTitle('Record audio')
+    // Voice mic button should be visible in HyperForm (chat-continuation mode)
+    const micButton = page.getByTitle('Voice input')
     await expect(micButton).toBeVisible({ timeout: 10_000 })
     await expect(micButton).not.toBeDisabled()
   })

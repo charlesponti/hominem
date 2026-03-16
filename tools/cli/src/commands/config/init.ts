@@ -1,33 +1,42 @@
+import { Command } from '@oclif/core';
 import { z } from 'zod';
 
-import { createCommand } from '../../command-factory';
-import { defaultConfigV2, getConfigPath, saveConfigV2 } from '../../config';
-import { CliError } from '../../errors';
+import { defaultConfigV2, getConfigPath, saveConfigV2 } from '@/config';
+import { validateWithZod } from '@/utils/zod-validation';
 
-export default createCommand({
-  name: 'config init',
-  summary: 'Initialize config v2',
-  description: 'Writes default config v2 payload to canonical config path.',
-  argNames: [],
-  args: z.object({}),
-  flags: z.object({}),
-  outputSchema: z.object({
-    path: z.string(),
-    version: z.literal(2),
-  }),
-  async run() {
+const outputSchema = z.object({
+  path: z.string(),
+  version: z.literal(2),
+});
+
+export default class ConfigInit extends Command {
+  static description = 'Writes default config v2 payload to canonical config path.';
+  static summary = 'Initialize config v2';
+
+  static override flags = {};
+  static override args = {};
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
     try {
       await saveConfigV2(defaultConfigV2);
     } catch (error) {
-      throw new CliError({
-        code: 'CONFIG_WRITE_FAILED',
-        category: 'dependency',
-        message: error instanceof Error ? error.message : 'Failed to initialize config',
-      });
+      this.error(
+        `Failed to initialize config: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        {
+          exit: 3,
+          code: 'CONFIG_WRITE_FAILED',
+        }
+      );
     }
-    return {
+
+    const output = {
       path: getConfigPath(),
-      version: 2,
+      version: 2 as const,
     };
-  },
-});
+
+    return validateWithZod(outputSchema, output);
+  }
+}
+

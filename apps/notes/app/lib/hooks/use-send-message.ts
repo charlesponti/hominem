@@ -5,6 +5,14 @@ import { useMemo } from 'react';
 
 import { useFeatureFlag } from './use-feature-flags';
 
+type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error';
+
+function legacyStatusToChat(mutationStatus: string): ChatStatus {
+  if (mutationStatus === 'pending') return 'submitted';
+  if (mutationStatus === 'error') return 'error';
+  return 'idle';
+}
+
 export function useSendMessage({ chatId }: { chatId: string; userId?: string }) {
   const utils = useHonoUtils();
   const aiSdkChatWebEnabled = useFeatureFlag('aiSdkChatWeb');
@@ -12,7 +20,7 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
   // TODO: Fix useChat types - currently has type conflicts with @ai-sdk/react@^3.0.110
   // const chat = useChat({
   //   id: `chat-${chatId}`,
-  //   api: `/api/chat-ui/${chatId}`,
+  //   api: `/api/chats/${chatId}/ui/send`,
   //   streamProtocol: 'data',
   //   onFinish: () => {
   //     utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
@@ -61,9 +69,11 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
       isPending: aiSdkChatWebEnabled
         ? chat.status === 'submitted' || chat.status === 'streaming'
         : legacySend.isPending,
-      status: aiSdkChatWebEnabled ? chat.status : legacySend.status,
+      status: (aiSdkChatWebEnabled
+        ? (chat.status as ChatStatus)
+        : legacyStatusToChat(legacySend.status)) satisfies ChatStatus,
       stop: chat.stop,
-      error: aiSdkChatWebEnabled ? chat.error : legacySend.error,
+      error: (aiSdkChatWebEnabled ? chat.error : legacySend.error) as Error | null,
     }),
     [
       aiSdkChatWebEnabled,

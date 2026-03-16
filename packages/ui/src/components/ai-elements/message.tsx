@@ -1,6 +1,7 @@
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react';
 
 import { cn } from '../../lib/utils';
+import { chatTokens } from '../../tokens/chat';
 
 interface MessageProps extends HTMLAttributes<HTMLDivElement> {
   from: 'user' | 'assistant' | 'system';
@@ -11,34 +12,86 @@ export const Message = forwardRef<HTMLDivElement, MessageProps>(function Message
   ref,
 ) {
   const isUser = from === 'user';
+  const isSystem = from === 'system';
 
   return (
     <div
       ref={ref}
-      className={cn('flex w-full gap-4 p-4', isUser ? 'flex-row-reverse' : 'flex-row', className)}
+      data-role={from}
+      className={cn(
+        'flex w-full py-2',
+        isSystem ? 'justify-center' : isUser ? 'justify-end' : 'justify-start',
+        className,
+      )}
       {...props}
     >
-      <div className={cn('flex flex-col gap-1 max-w-[80%]', isUser && 'items-end')}>
-        <div
-          className={cn(
-            'rounded-2xl px-4 py-3 text-sm',
-            isUser ? 'bg-primary text-primary-foreground' : 'bg-muted',
-          )}
-        >
-          {children}
-        </div>
-      </div>
+      {children}
     </div>
   );
 });
 
 interface MessageContentProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
+  align?: 'start' | 'end' | 'center';
+  width?: 'transcript' | 'bubble' | 'full';
 }
 
-export function MessageContent({ children, className, ...props }: MessageContentProps) {
+export function MessageContent({
+  children,
+  className,
+  align = 'start',
+  width = 'transcript',
+  style,
+  ...props
+}: MessageContentProps) {
+  const maxWidth =
+    width === 'bubble'
+      ? chatTokens.userBubbleMaxWidth
+      : width === 'transcript'
+        ? chatTokens.transcriptMaxWidth
+        : undefined;
+
   return (
-    <div className={cn('flex flex-col gap-2', className)} {...props}>
+    <div
+      className={cn(
+        'flex min-w-0 flex-col',
+        align === 'end' && 'items-end text-right',
+        align === 'center' && 'items-center text-center',
+        width !== 'full' && 'w-full',
+        className,
+      )}
+      style={{ ...(style as CSSProperties), ...(maxWidth ? { maxWidth } : {}) }}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+interface MessageSurfaceProps extends HTMLAttributes<HTMLDivElement> {
+  tone?: 'assistant' | 'user' | 'system' | 'debug';
+}
+
+export function MessageSurface({
+  tone = 'assistant',
+  className,
+  children,
+  ...props
+}: MessageSurfaceProps) {
+  return (
+    <div
+      className={cn(
+        'min-w-0',
+        tone === 'user' &&
+          'rounded-xl bg-emphasis-highest px-4 py-3 text-primary-foreground shadow-low',
+        tone === 'system' &&
+          'rounded-lg border border-subtle bg-bg-surface px-3 py-2 text-text-secondary',
+        tone === 'debug' &&
+          'rounded-md border border-subtle bg-bg-surface px-3 py-2 text-text-secondary',
+        className,
+      )}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -53,7 +106,7 @@ export function MessageAvatar({ fallback, className }: MessageAvatarProps) {
   return (
     <div
       className={cn(
-        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium',
+        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-bg-surface text-xs font-medium',
         className,
       )}
     >
@@ -68,7 +121,7 @@ interface MessageResponseProps extends HTMLAttributes<HTMLDivElement> {
 
 export function MessageResponse({ children, className, ...props }: MessageResponseProps) {
   return (
-    <div className={cn('text-sm whitespace-pre-wrap', className)} {...props}>
+    <div className={cn('body-1 whitespace-pre-wrap text-foreground', className)} {...props}>
       {children}
     </div>
   );
@@ -92,7 +145,10 @@ interface MessageAnnotationsProps extends HTMLAttributes<HTMLDivElement> {
 
 export function MessageAnnotations({ children, className, ...props }: MessageAnnotationsProps) {
   return (
-    <div className={cn('flex flex-wrap gap-1 mt-2', className)} {...props}>
+    <div
+      className={cn('mt-2 flex flex-wrap gap-1 body-4 text-text-tertiary', className)}
+      {...props}
+    >
       {children}
     </div>
   );

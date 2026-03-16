@@ -1,4 +1,5 @@
 import { AppState, type AppStateStatus } from 'react-native';
+
 import { posthog } from '~/lib/posthog';
 
 export const initObservability = () => {

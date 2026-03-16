@@ -30,12 +30,24 @@ function usePulse() {
   return useAnimatedStyle(() => ({ opacity: opacity.value }));
 }
 
-export function ChatShimmerMessage() {
+interface ChatShimmerMessageProps {
+  variant?: 'assistant' | 'user';
+}
+
+export function ChatShimmerMessage({ variant = 'assistant' }: ChatShimmerMessageProps) {
   const styles = useStyles();
   const animatedStyle = usePulse();
+
+  if (variant === 'user') {
+    return (
+      <View style={[styles.row, styles.userRow]}>
+        <Animated.View style={[styles.userBubble, animatedStyle]} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.row}>
-      <Animated.View style={[styles.avatar, animatedStyle]} />
       <View style={styles.lines}>
         <Animated.View style={[styles.line, styles.lineFull, animatedStyle]} />
         <Animated.View style={[styles.line, styles.lineShort, animatedStyle]} />
@@ -47,21 +59,23 @@ export function ChatShimmerMessage() {
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
     row: {
-      flexDirection: 'row',
-      gap: t.spacing.sm_12,
-      padding: t.spacing.m_16,
+      width: '100%',
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.sm_12,
     },
-    avatar: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: t.colors.muted,
-      flexShrink: 0,
+    userRow: {
+      alignItems: 'flex-end',
+    },
+    userBubble: {
+      width: '78%',
+      maxWidth: 420,
+      height: 56,
+      borderRadius: t.borderRadii.xl_20,
+      backgroundColor: t.colors['emphasis-minimal'],
     },
     lines: {
       flex: 1,
       gap: t.spacing.sm_8,
-      paddingTop: t.spacing.xs_4,
     },
     line: {
       height: 16,

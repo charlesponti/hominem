@@ -35,7 +35,12 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
   };
 
   return (
-    <div className={cn('prose prose-sm dark:prose-invert max-w-none', className)}>
+    <div
+      className={cn(
+        'prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-code:text-foreground',
+        className,
+      )}
+    >
       <ReactMarkdown
         components={{
           // Code blocks with syntax highlighting
@@ -49,8 +54,8 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
               const isCopied = copiedCodeBlocks.has(blockId);
               return (
                 <div className="relative group my-4">
-                  <div className="flex items-center justify-between bg-muted/50 px-3 py-1.5 border-b border-border">
-                    <span className="text-xs font-mono text-muted-foreground">{language}</span>
+                  <div className="flex items-center justify-between bg-bg-surface px-3 py-1.5 border-b border-border-subtle">
+                    <span className="text-xs font-mono text-text-tertiary">{language}</span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -88,7 +93,9 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
 
             // Inline code
             return (
-              <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>
+              <code className="bg-bg-surface px-1.5 py-0.5 rounded text-sm font-mono">
+                {children}
+              </code>
             );
           },
           // Headings
@@ -118,7 +125,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
           ),
           // Block quotes
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-muted-foreground/30 pl-4 italic my-4">
+            <blockquote className="border-l-4 border-border-subtle pl-4 italic my-4">
               {children}
             </blockquote>
           ),
@@ -128,7 +135,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
               <table className="min-w-full border-collapse border border-border">{children}</table>
             </div>
           ),
-          thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
+          thead: ({ children }) => <thead className="bg-bg-surface">{children}</thead>,
           tbody: ({ children }) => <tbody>{children}</tbody>,
           tr: ({ children }) => <tr className="border-b border-border">{children}</tr>,
           th: ({ children }) => (

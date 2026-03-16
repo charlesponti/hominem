@@ -1,15 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
-import { ChatInput } from '~/components/chat/ChatInput';
-import { ChatMessages } from '~/components/chat/ChatMessages';
-import { useNoteChat } from '~/hooks/use-note-chat';
+import { useComposer } from '~/components/hyper-form/composer-provider';
 import { useNote } from '~/hooks/use-notes';
 import { requireAuth } from '~/lib/guards';
-import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
 
 import { NoteEditor } from './components/note-editor';
-import { SplitPane } from './components/split-pane';
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   await requireAuth(request);
@@ -24,38 +20,20 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 export default function NoteSplitView({ loaderData }: { loaderData: { noteId: string } }) {
   const { noteId } = loaderData;
-  const [status, setStatus] = useState<'idle' | 'submitted' | 'streaming' | 'error'>('idle');
-  const [error, setError] = useState<Error | null>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const messagesRef = useRef<HTMLDivElement>(null);
-  const messagesComponentRef = useRef<{ showSearch: () => void }>(null);
-
   const { data: note, isLoading: isNoteLoading } = useNote(noteId);
-  const { data: chat, isLoading: isChatLoading } = useNoteChat(noteId);
+  const { setNoteContext, clearNoteContext } = useComposer();
 
-  const handleMessageStatusChange = (newStatus: typeof status, newError?: Error | null) => {
-    setStatus(newStatus);
-    setError(newError || null);
-  };
+  // Register note context so HyperForm switches to note-aware mode
+  useEffect(() => {
+    if (note) {
+      setNoteContext(noteId, note.title || 'Untitled note');
+    }
+    return () => {
+      clearNoteContext();
+    };
+  }, [note, noteId, setNoteContext, clearNoteContext]);
 
-  useChatKeyboardShortcuts({
-    onFocusInput: () => {
-      inputRef.current?.focus();
-    },
-    onScrollToTop: () => {
-      messagesRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-    onScrollToBottom: () => {
-      messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight, behavior: 'smooth' });
-    },
-    enabled: true,
-  });
-
-  const handleAIAction = (action: string) => {
-    console.log('AI Action:', action, note?.content);
-  };
-
-  if (isNoteLoading || isChatLoading) {
+  if (isNoteLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="w-8 h-8 border-4 border-primary/30 border-t-primary animate-spin" />
@@ -66,31 +44,23 @@ export default function NoteSplitView({ loaderData }: { loaderData: { noteId: st
   if (!note) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">Note not found</p>
+        <p className="text-text-secondary">Note not found</p>
       </div>
     );
   }
 
-  const leftPanel = <NoteEditor note={note} chatId={chat?.id || ''} onAIAction={handleAIAction} />;
+  return (
+    <div className="flex h-full min-h-0 flex-col bg-background pb-[var(--hyper-form-resting-height,72px)]">
+      <div className="mx-auto flex w-full max-w-3xl flex-1 min-h-0 flex-col px-4 pt-6 pb-6 sm:px-6">
+        <header className="mb-6 flex flex-col gap-3 border-b border-border/60 pb-5">
+          <div className="body-4 uppercase tracking-[0.12em] text-text-tertiary">Workspace</div>
+          <h1 className="heading-2 text-foreground">{note.title || 'Untitled note'}</h1>
+        </header>
 
-  const rightPanel = (
-    <div className="flex flex-col h-full">
-      <div className="flex-1" ref={messagesRef}>
-        {chat ? (
-          <ChatMessages ref={messagesComponentRef} chatId={chat.id} status={status} error={error} />
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center p-4">
-            <p className="text-muted-foreground">Chat not available</p>
-          </div>
-        )}
+        <section className="min-h-0 flex-1 rounded-4xl border border-border/60 bg-background px-5 py-5 sm:px-6">
+          <NoteEditor note={note} />
+        </section>
       </div>
-      {chat && (
-        <div className="border-t p-4 pb-[calc(env(safe-area-inset-bottom)+8px)]">
-          <ChatInput ref={inputRef} chatId={chat.id} onStatusChange={handleMessageStatusChange} />
-        </div>
-      )}
     </div>
   );
-
-  return <SplitPane leftPanel={leftPanel} rightPanel={rightPanel} />;
 }
