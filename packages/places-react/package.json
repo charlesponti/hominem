@@ -21,6 +21,8 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@hominem/auth": "workspace:*",
+    "@hominem/lists-services": "workspace:*",
     "@hominem/ui": "workspace:*",
     "@hominem/places-services": "workspace:*",
     "@hominem/hono-client": "workspace:*",
@@ -28,7 +30,8 @@
     "@tanstack/react-query": "5.90.16",
     "@vis.gl/react-google-maps": "^1.7.1",
     "lucide-react": "^0.575.0",
-    "react": "19.2.0"
+    "react": "19.2.0",
+    "react-router": "7.12.0"
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^8.0.0",
