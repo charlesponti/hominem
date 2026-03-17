@@ -2,7 +2,7 @@ import { AUTH_COPY, SHERPA_AUTH_CONFIG } from '@hominem/auth';
 import { Image } from 'expo-image';
 import { Redirect, useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -17,6 +17,7 @@ import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import TextInput from '~/components/text-input';
 import { Box, Text, makeStyles } from '~/theme';
+import { posthog } from '~/lib/posthog';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidEmail, normalizeEmail } from '~/utils/auth/validation';
 import { E2E_TESTING, MOBILE_PASSKEY_ENABLED } from '~/utils/constants';
@@ -35,6 +36,10 @@ export function AuthScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    posthog.capture('auth_screen_viewed');
+  }, []);
   const [authError, setAuthError] = useState<string | null>(null);
   const {
     signIn: signInWithPasskey,
@@ -44,12 +49,14 @@ export function AuthScreen() {
   } = useMobilePasskeyAuth();
 
   const handleSendCode = useCallback(async () => {
+    posthog.capture('auth_send_code_pressed');
     const normalizedEmail = normalizeEmail(email);
     if (!normalizedEmail) {
       setAuthError(AUTH_COPY.emailEntry.emailRequiredError);
       return;
     }
     if (!isValidEmail(normalizedEmail)) {
+      posthog.capture('auth_email_invalid');
       setAuthError(AUTH_COPY.emailEntry.emailInvalidError);
       return;
     }
@@ -57,12 +64,7 @@ export function AuthScreen() {
     try {
       setIsSubmitting(true);
       await requestEmailOtp(normalizedEmail);
-      // Navigate to verify screen after OTP is sent
-      // Note: Using setTimeout to bypass static route typing for newly added route
-      const verifyPath = '/(auth)/verify?email=' + encodeURIComponent(normalizedEmail);
-      setTimeout(() => {
-        (router as typeof router & { replace(path: string): void }).replace(verifyPath);
-      }, 0);
+      router.replace({ pathname: '/(auth)/verify', params: { email: normalizedEmail } });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : AUTH_COPY.emailEntry.sendFailedError;
       setAuthError(message);
@@ -72,6 +74,7 @@ export function AuthScreen() {
   }, [email, requestEmailOtp, router]);
 
   const handlePasskeySignIn = useCallback(async () => {
+    posthog.capture('auth_passkey_pressed');
     try {
       setIsSubmitting(true);
       setAuthError(null);
@@ -144,6 +147,13 @@ export function AuthScreen() {
                 onChangeText={(text) => {
                   setEmail(text);
                   setAuthError(null);
+                }}
+                onBlur={() => {
+                  if (email.trim()) {
+                    posthog.capture('auth_email_entered', {
+                      valid: isValidEmail(normalizeEmail(email)),
+                    });
+                  }
                 }}
               />
               <Button

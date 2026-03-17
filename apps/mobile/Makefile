@@ -34,6 +34,10 @@ build-e2e: preflight-dev
 build-preview: preflight-preview
 	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview --platform ios --non-interactive
 
+.PHONY: build-preview-simulator
+build-preview-simulator: preflight-preview
+	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview-simulator --platform ios --non-interactive
+
 .PHONY: build-production
 build-production: preflight-production
 	APP_VARIANT=production EXPO_NO_DOTENV=1 $(EAS) build --profile production --platform ios --non-interactive
@@ -87,7 +91,7 @@ ios: prebuild-dev
 .PHONY: help
 help:
 	@echo "Preflight:              preflight-dev | preflight-preview | preflight-production"
-	@echo "Builds:                 build-dev | build-e2e | build-preview | build-production"
+	@echo "Builds:                 build-dev | build-e2e | build-preview | build-preview-simulator | build-production"
 	@echo "OTA updates (preview):  update-preview | update-preview-50 | update-preview-100 | update-preview-rollback"
 	@echo "OTA updates (prod):     update-production"
 	@echo "Local dev:              ios | prebuild-dev | prebuild-e2e"

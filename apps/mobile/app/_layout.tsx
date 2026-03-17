@@ -112,6 +112,7 @@ function InnerRootLayout() {
 function RootLayout() {
   useEffect(() => {
     const cleanup = initObservability();
+    posthog.capture('app_health_check', { source: 'root_layout' });
     return cleanup;
   }, []);
 

@@ -18,6 +18,7 @@ import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import TextInput from '~/components/text-input';
 import { Box, Text, makeStyles } from '~/theme';
+import { posthog } from '~/lib/posthog';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidOtp, normalizeOtp } from '~/utils/auth/validation';
 
@@ -39,12 +40,17 @@ export function VerifyScreen() {
   }, [otp]);
 
   useEffect(() => {
+    posthog.capture('auth_verify_screen_viewed');
+  }, []);
+
+  useEffect(() => {
     if (!email) {
       router.replace('/(auth)' as RelativePathString);
     }
   }, [email, router]);
 
   const handleVerify = useCallback(async () => {
+    posthog.capture('auth_verify_pressed');
     if (!email) {
       setAuthError('Email is required.');
       return;
@@ -77,9 +83,13 @@ export function VerifyScreen() {
   }, [email, otp, verifyEmailOtp]);
 
   const handleOtpChange = useCallback((text: string) => {
-    setOtp(normalizeOtp(text));
+    const normalized = normalizeOtp(text);
+    setOtp(normalized);
     setAuthError(null);
     setResendMessage(null);
+    if (normalized.length === 6) {
+      posthog.capture('auth_otp_complete');
+    }
   }, []);
 
   const focusOtpInput = useCallback(() => {
@@ -87,6 +97,7 @@ export function VerifyScreen() {
   }, []);
 
   const handleResend = useCallback(async () => {
+    posthog.capture('auth_resend_pressed');
     if (!email) {
       setAuthError('Email is required.');
       return;
@@ -214,7 +225,11 @@ export function VerifyScreen() {
                 title={AUTH_COPY.otpVerification.resendButton.toUpperCase()}
                 style={styles.secondaryButton}
               />
-              <Link href={'/(auth)' as RelativePathString} asChild>
+              <Link
+                href={'/(auth)' as RelativePathString}
+                asChild
+                onPress={() => posthog.capture('auth_change_email_pressed')}
+              >
                 <View style={styles.secondaryActionContainer}>
                   <Text style={styles.secondaryAction}>
                     {AUTH_COPY.otpVerification.changeEmailLink.toUpperCase()}

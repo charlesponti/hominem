@@ -49,7 +49,12 @@
       "Bash(bun vitest:*)",
       "Bash(bun --cwd /Users/charlesponti/Developer/hominem/services/api vitest run src/routes/auth.device-contract.test.ts --reporter=verbose)",
       "Bash(bun --cwd /Users/charlesponti/Developer/hominem/services/api vitest run src/routes/auth.email-otp.contract.test.ts --reporter=verbose)",
-      "Bash(openspec status:*)"
+      "Bash(openspec status:*)",
+      "Bash(eas device:list)",
+      "Bash(eas device:list --non-interactive)",
+      "Bash(eas device:list --apple-team-id 3QHJ2KN8AL)",
+      "Bash(eas build:*)",
+      "Bash(eas env:list --environment preview)"
     ]
   }
 }
