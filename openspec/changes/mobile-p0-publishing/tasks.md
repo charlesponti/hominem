@@ -38,7 +38,7 @@
 
 ## 6. Validation
 
-- [ ] 6.1 Trigger a test error in preview build and confirm it appears in PostHog dashboard
-- [ ] 6.2 Publish a preview OTA update and confirm rollout starts at 10%
-- [ ] 6.3 Promote rollout to 100% and confirm all devices receive the update
+- [x] 6.1 Trigger a test error in preview build and confirm it appears in PostHog dashboard
+- [x] 6.2 Publish a preview OTA update and confirm rollout starts at 10%
+- [x] 6.3 Promote rollout to 100% and confirm all devices receive the update
 - [ ] 6.4 Do a dry-run of the production release workflow (`workflow_dispatch`) and confirm it reaches the submit step

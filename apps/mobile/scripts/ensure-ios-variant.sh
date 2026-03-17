@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 MOBILE_DIR="${ROOT_DIR}/apps/mobile"
@@ -8,7 +9,7 @@ PODFILE="${MOBILE_DIR}/ios/Podfile"
 STAMP_FILE="${MOBILE_DIR}/ios/.app-variant"
 
 if [[ -z "${VARIANT}" ]]; then
-  echo "usage: ensure-ios-variant.sh <dev|e2e|preview|production>" >&2
+  fail "usage: ensure-ios-variant.sh <dev|e2e|preview|production>"
   exit 1
 fi
 
@@ -23,10 +24,12 @@ if [[ -f "${STAMP_FILE}" ]]; then
 fi
 
 if [[ -f "${PODFILE}" ]] && [[ "${CURRENT_VARIANT}" == "${VARIANT}" ]] && grep -Fqx "${EXPECTED_LINE}" "${PODFILE}"; then
-  echo "iOS native project already matches variant: ${VARIANT}"
+  info "iOS project already configured for variant: ${VARIANT}"
   exit 0
 fi
 
+step "Configuring iOS project for variant: ${VARIANT}"
 cd "${MOBILE_DIR}"
 bash scripts/run-variant.sh "${VARIANT}" expo prebuild --platform ios --clean
 printf '%s\n' "${VARIANT}" > "${STAMP_FILE}"
+ok "iOS project ready (${VARIANT})"

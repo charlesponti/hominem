@@ -28,7 +28,7 @@
     },
     "preview": {
       "channel": "preview",
-      "distribution": "internal",
+      "distribution": "store",
       "autoIncrement": true,
       "environment": "preview",
       "env": {
@@ -63,6 +63,10 @@
       }
     },
     "development": {},
-    "preview": {}
+    "preview": {
+      "ios": {
+        "appleTeamId": "3QHJ2KN8AL"
+      }
+    }
   }
 }

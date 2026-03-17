@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
 
 CONFIG_JSON="$(bash -lc 'bunx expo config --json --type public')"
 
@@ -32,6 +33,6 @@ if (JSON.stringify(resolvedConfig) !== JSON.stringify(expectedConfig)) {
 if (config.extra?.mobilePasskeyEnabled === undefined) {
   throw new Error('Expo config mismatch: extra.mobilePasskeyEnabled must be present')
 }
-
-console.log('Expo config verification passed')
 "
+
+ok "Expo config"

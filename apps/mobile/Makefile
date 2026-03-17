@@ -1,97 +1,108 @@
-EAS := eas
+EAS  := eas
 EXPO := expo
 
-# ─── Preflight ────────────────────────────────────────────────────────────────
+# Defaults for parameterized commands
+CHANNEL ?= preview
+ROLLOUT ?= 10
 
-.PHONY: preflight-dev
-preflight-dev:
-	bash scripts/validate-eas-profile.sh
-	bash scripts/verify-expo-config.sh
+# ─── Primary Commands ─────────────────────────────────────────────────────────
 
-.PHONY: preflight-preview
-preflight-preview:
-	bash scripts/validate-eas-profile.sh
-	bash scripts/verify-expo-config.sh
-	$(EAS) env:exec preview 'bash scripts/verify-release-env.sh preview'
+## Start local iOS dev server
+.PHONY: dev
+dev: _prebuild-dev
+	bash scripts/run-variant.sh dev $(EXPO) run:ios
 
-.PHONY: preflight-production
-preflight-production:
-	bash scripts/validate-eas-profile.sh
-	bash scripts/verify-expo-config.sh
-	$(EAS) env:exec production 'bash scripts/verify-release-env.sh production'
+## Run unit + integration tests
+.PHONY: test
+test:
+	bunx vitest run --config vitest.config.ts \
+		tests/auth-state-machine.test.ts \
+		tests/auth-provider-utils.test.ts \
+		tests/auth-route-guard.test.ts \
+		tests/startup-metrics.test.ts \
+		tests/auth-validation.test.ts \
+		tests/auth-boot.test.ts \
+		tests/integration/auth-contract.integration.test.ts \
+		tests/integration/auth-flow.integration.test.ts
 
-# ─── Builds ───────────────────────────────────────────────────────────────────
-
-.PHONY: build-dev
-build-dev: preflight-dev
-	$(EAS) build --profile development --platform ios --non-interactive
-
-.PHONY: build-e2e
-build-e2e: preflight-dev
-	$(EAS) build --profile e2e --platform ios --non-interactive
-
-.PHONY: build-preview
-build-preview: preflight-preview
-	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview --platform ios --non-interactive
-
-.PHONY: build-preview-simulator
-build-preview-simulator: preflight-preview
+## Build preview → auto-submit to TestFlight. Use SIM=1 for simulator.
+.PHONY: preview
+preview: _preflight-preview
+ifdef SIM
 	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview-simulator --platform ios --non-interactive
+else
+	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview --platform ios --non-interactive --auto-submit
+endif
 
-.PHONY: build-production
-build-production: preflight-production
-	APP_VARIANT=production EXPO_NO_DOTENV=1 $(EAS) build --profile production --platform ios --non-interactive
+## Push OTA update. Defaults: CHANNEL=preview ROLLOUT=10
+## Examples: make update ROLLOUT=100   make update CHANNEL=production
+.PHONY: update
+update: _preflight-$(CHANNEL)
+	APP_VARIANT=$(CHANNEL) EXPO_NO_DOTENV=1 $(EAS) update \
+		--platform ios --branch $(CHANNEL) --clear-cache \
+		--environment $(CHANNEL) --rollout-percentage $(ROLLOUT)
 
-# ─── OTA Updates ──────────────────────────────────────────────────────────────
-
-.PHONY: update-preview
-update-preview: preflight-preview
-	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) update \
-		--platform ios --branch preview --clear-cache \
-		--environment preview --rollout-percentage 10
-
-.PHONY: update-preview-50
-update-preview-50:
-	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) update \
-		--platform ios --branch preview \
-		--environment preview --rollout-percentage 50
-
-.PHONY: update-preview-100
-update-preview-100:
-	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) update \
-		--platform ios --branch preview \
-		--environment preview --rollout-percentage 100
-
-.PHONY: update-preview-rollback
-update-preview-rollback:
+## Revert the latest preview OTA update
+.PHONY: rollback
+rollback:
 	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) update:revert-update-rollout --branch preview
 
-.PHONY: update-production
-update-production: preflight-production
-	APP_VARIANT=production EXPO_NO_DOTENV=1 $(EAS) update \
-		--platform ios --branch production --clear-cache \
-		--environment production
+## Build production → auto-submit to TestFlight
+.PHONY: release
+release: _preflight-production
+	APP_VARIANT=production EXPO_NO_DOTENV=1 $(EAS) build \
+		--profile production --platform ios --non-interactive --auto-submit
 
-# ─── Local Dev ────────────────────────────────────────────────────────────────
+# ─── Internal / CI ────────────────────────────────────────────────────────────
 
-.PHONY: prebuild-dev
-prebuild-dev:
+.PHONY: _prebuild-dev
+_prebuild-dev:
 	bash scripts/ensure-ios-variant.sh dev
 
-.PHONY: prebuild-e2e
-prebuild-e2e:
+.PHONY: _prebuild-e2e
+_prebuild-e2e:
 	bash scripts/ensure-ios-variant.sh e2e
 
-.PHONY: ios
-ios: prebuild-dev
-	bash scripts/run-variant.sh dev $(EXPO) run:ios
+.PHONY: _preflight-dev
+_preflight-dev:
+	bash scripts/preflight.sh dev
+
+.PHONY: _preflight-preview
+_preflight-preview:
+	bash scripts/preflight.sh preview
+
+.PHONY: _preflight-production
+_preflight-production:
+	bash scripts/preflight.sh production
+
+## EAS dev client build (CI / device provisioning)
+.PHONY: build-dev
+build-dev: _preflight-dev
+	$(EAS) build --profile development --platform ios --non-interactive
+
+## EAS e2e simulator build (CI)
+.PHONY: build-e2e
+build-e2e: _preflight-dev
+	$(EAS) build --profile e2e --platform ios --non-interactive
 
 # ─── Help ─────────────────────────────────────────────────────────────────────
 
 .PHONY: help
 help:
-	@echo "Preflight:              preflight-dev | preflight-preview | preflight-production"
-	@echo "Builds:                 build-dev | build-e2e | build-preview | build-preview-simulator | build-production"
-	@echo "OTA updates (preview):  update-preview | update-preview-50 | update-preview-100 | update-preview-rollback"
-	@echo "OTA updates (prod):     update-production"
-	@echo "Local dev:              ios | prebuild-dev | prebuild-e2e"
+	@echo ""
+	@echo "Primary commands:"
+	@echo "  make dev                           Start local iOS dev"
+	@echo "  make test                          Run unit + integration tests"
+	@echo "  make preview                       Build preview → TestFlight"
+	@echo "  make preview SIM=1                 Build preview for simulator"
+	@echo "  make update                        OTA update (preview, 10% rollout)"
+	@echo "  make update ROLLOUT=50             OTA update at 50% rollout"
+	@echo "  make update ROLLOUT=100            OTA update at 100% rollout"
+	@echo "  make update CHANNEL=production     OTA update to production"
+	@echo "  make rollback                      Revert latest preview OTA"
+	@echo "  make release                       Build production → TestFlight"
+	@echo ""
+	@echo "CI / internal:"
+	@echo "  make build-dev                     EAS dev client build"
+	@echo "  make build-e2e                     EAS e2e simulator build"
+	@echo ""

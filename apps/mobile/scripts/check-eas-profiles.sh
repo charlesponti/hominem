@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
+source "$(dirname "$0")/_lib.sh"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 EAS_FILE="${ROOT_DIR}/apps/mobile/eas.json"
 
 if [[ ! -f "${EAS_FILE}" ]]; then
-  echo "Missing eas.json at ${EAS_FILE}" >&2
+  fail "Missing eas.json at ${EAS_FILE}"
   exit 1
 fi
 
@@ -44,6 +45,9 @@ if (cfg.build.preview.env?.APP_VARIANT !== 'preview') {
 if (cfg.build.preview.developmentClient === true) {
   throw new Error('preview profile must not enable developmentClient')
 }
+if (cfg.build.preview.distribution !== 'store') {
+  throw new Error('preview profile must use distribution=store (TestFlight) — not ad-hoc/internal, which requires device registration')
+}
 if (cfg.build.production.channel !== 'production') {
   throw new Error('production profile must use channel=production')
 }
@@ -59,5 +63,6 @@ if (cfg.build.production.autoIncrement !== true) {
 if (cfg.build.preview.autoIncrement !== true) {
   throw new Error('preview profile must enable autoIncrement')
 }
-console.log('EAS profile validation passed')
 " "${EAS_FILE}"
+
+ok "EAS profiles"
