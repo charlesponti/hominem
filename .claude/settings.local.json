@@ -64,7 +64,9 @@
       "Bash(PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"postgresql://user:password@crossover.proxy.rlwy.net:50724/hominem\" status)",
       "Bash(PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"postgresql://postgres:oI7UiOOcwUXhtZ3wFRKK7v7dp45dXTuktfBDiD@crossover.proxy.rlwy.net:50724/hominem\" status)",
       "Bash(PATH=\"$HOME/.local/bin:$PATH\" psql \"postgresql://postgres:oI7UiOOcwUXhtZ3wFRKK7v7dp45dXTuktfBDiD@crossover.proxy.rlwy.net:50724/hominem\" -c \"\\\\dt user*\")",
-      "Bash(PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"postgresql://postgres:oI7UiOOcwUXhtZ3wFRKK7v7dp45dXTuktfBDiD@crossover.proxy.rlwy.net:50724/hominem\" up)"
+      "Bash(PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"postgresql://postgres:oI7UiOOcwUXhtZ3wFRKK7v7dp45dXTuktfBDiD@crossover.proxy.rlwy.net:50724/hominem\" up)",
+      "Bash(PATH=\"$HOME/.local/bin:$PATH\" psql \"postgresql://postgres:oI7UiOOcwUXhtZ3wFRKK7v7dp45dXTuktfBDiD@crossover.proxy.rlwy.net:50724/hominem\" -c \"\\\\dt public.*\")",
+      "Bash(PATH=\"$HOME/.local/bin:$PATH\" psql \"postgresql://postgres:oI7UiOOcwUXhtZ3wFRKK7v7dp45dXTuktfBDiD@crossover.proxy.rlwy.net:50724/hominem\" -c \"SELECT * FROM goose_db_version ORDER BY id;\")"
     ]
   }
 }

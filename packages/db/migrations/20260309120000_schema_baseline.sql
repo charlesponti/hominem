@@ -23,7 +23,7 @@ SET row_security = off;
 -- Name: drizzle; Type: SCHEMA; Schema: -; Owner: -
 --
 
-CREATE SCHEMA drizzle;
+CREATE SCHEMA IF NOT EXISTS drizzle;
 
 
 --
