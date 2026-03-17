@@ -39,7 +39,11 @@
     "test:e2e:auth:mobile": "bun run test:e2e:auth:critical",
     "test:e2e:deep-links": "detox test -c ios.sim.e2e --testPathPattern=e2e/deep-links.mobile.e2e.js --cleanup --retries 0",
     "test:e2e:smoke": "detox test -c ios.sim.e2e --testPathPattern=e2e/smoke.mobile.e2e.js --cleanup",
-    "android": "expo run:android"
+    "android": "expo run:android",
+    "verify:expo-config": "bash scripts/verify-expo-config.sh",
+    "verify:eas-env:preview": "bash scripts/verify-release-env.sh preview",
+    "verify:eas-env:production": "bash scripts/verify-release-env.sh production",
+    "verify:eas-profiles": "bash scripts/validate-eas-profile.sh"
   },
   "dependencies": {
     "@ai-sdk/react": "^1.2.12",
