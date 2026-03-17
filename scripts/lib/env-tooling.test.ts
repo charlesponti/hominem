@@ -14,16 +14,6 @@ import {
 } from './env-tooling';
 
 describe('env-tooling', () => {
-  it('maps florin to the finance app env files', () => {
-    const config = getServiceConfig('florin');
-
-    expect(config).toEqual({
-      name: 'florin',
-      envFiles: ['apps/finance/.env.production', 'apps/finance/.env'],
-      railwayService: 'Florin',
-    });
-  });
-
   it('compares missing, extra, and mismatched variables', () => {
     const localVars = new Map([
       ['DATABASE_URL', 'postgres://local'],

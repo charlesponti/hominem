@@ -338,9 +338,7 @@ jobs:
           environment: test
       - name: 🌐 Install Playwright browsers
         run: |
-          cd apps/finance && bunx playwright install --with-deps chromium
-          cd ../notes && bunx playwright install --with-deps chromium
-          cd ../rocco && bunx playwright install --with-deps chromium
+          cd apps/notes && bunx playwright install --with-deps chromium
         timeout-minutes: 20
       - name: 🌐 Web auth E2E tests
         run: bun run test:e2e:auth:app

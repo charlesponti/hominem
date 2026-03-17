@@ -49,10 +49,10 @@
   - No hardcoded Restyle colors requiring manual update
 
 ### 5. Verify Web Builds ✓
-- **Task:** Build `apps/finance` and `apps/notes` to verify light-mode compilation
-- **Completed:** Both apps build successfully
+
+- **Task:** Build `apps/notes` to verify light-mode compilation
+- **Completed:** Build successful
 - **Details:**
-  - `@hominem/finance` built in 17.2s
   - `@hominem/notes` built in 27.37s
   - No color-related compilation errors
   - CSS theme properly Applied via Tailwind
@@ -70,13 +70,12 @@
 ### 7. Visual Testing (Recommended)
 - **Task:** Visually confirm light-mode rendering
 - **Acceptance:**
-  - [ ] Web apps (finance, notes) rendering with light backgrounds and dark text
+  - [ ] Web app (notes) rendering with light backgrounds and dark text
   - [ ] Mobile app rendering with light colors
   - [ ] All text legible and meets WCAG 2.2 AA contrast
   - [ ] Focus rings visible and properly styled with Apple Blue
   - [ ] Interactive elements responding correctly
 - **Steps:**
-  - Run `bun run dev --filter @hominem/finance` and visually inspect
   - Run mobile app in Expo and visually inspect
   - Check button, card, input, and badge components
   - Verify form validation colors (success, warning, destructive)

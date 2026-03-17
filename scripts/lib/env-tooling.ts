@@ -37,16 +37,6 @@ export const SERVICE_CONFIGS: ServiceConfig[] = [
     railwayService: 'hominem-db',
   },
   {
-    name: 'florin',
-    envFiles: ['apps/finance/.env.production', 'apps/finance/.env'],
-    railwayService: 'Florin',
-  },
-  {
-    name: 'rocco',
-    envFiles: ['apps/rocco/.env.production', 'apps/rocco/.env'],
-    railwayService: 'Rocco',
-  },
-  {
     name: 'notes',
     envFiles: ['apps/notes/.env.production', 'apps/notes/.env'],
     railwayService: 'Notes',
@@ -66,8 +56,6 @@ const RAILWAY_SYSTEM_VARS = new Set([
   'COOKIE_NAME',
   'COOKIE_SALT',
   'COOKIE_SECRET',
-  'FLORIN_URL',
-  'ROCCO_URL',
   'NOTES_URL',
 ]);
 

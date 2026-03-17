@@ -13,9 +13,7 @@ const serverSchema = z.object({
     ? z.url().default('postgresql://postgres:postgres@localhost:5432/hominem_test')
     : z.url(),
 
-  FINANCE_URL: z.url().default('http://localhost:4444'),
   NOTES_URL: z.url().default('http://localhost:4445'),
-  ROCCO_URL: z.url().default('http://localhost:4446'),
 
   // AUTH
   COOKIE_SECRET: z.string().default('supersecret'),

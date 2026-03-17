@@ -131,14 +131,13 @@ Migration from dark-mode-only to light-mode-only design system, aligning impleme
 
 ### Build Test
 ```bash
-bun run build --filter @hominem/finance
 bun run build --filter @hominem/notes
 bun run typecheck
 ```
 ✓ All builds succeed with no color-related errors
 
 ### Visual Test (Manual)
-- [ ] Open finance app dev server; inspect light background and dark text
+
 - [ ] Open notes app dev server; inspect light background and dark text
 - [ ] Open mobile app; inspect light colors rendering
 - [ ] Verify focus ring appears in Apple Blue on interactive elements

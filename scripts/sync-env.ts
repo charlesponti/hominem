@@ -305,7 +305,7 @@ Examples:
   bun scripts/sync-env.ts diagnose api
   bun scripts/sync-env.ts sync api services/api/.env.production
   bun scripts/sync-env.ts set api MY_VAR=myvalue
-  bun scripts/sync-env.ts list florin
+  bun scripts/sync-env.ts list api
     `);
     process.exit(0);
   }

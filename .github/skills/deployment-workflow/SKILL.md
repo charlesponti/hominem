@@ -12,8 +12,6 @@ description: Use for repo-level deployment work, Railway releases, environment d
 | API | `services/api/railway.json` | `DOCKERFILE` | Health check: `/api/status` |
 | Workers | `services/workers/railway.json` | `DOCKERFILE` | Dockerized worker runtime |
 | Notes | `apps/notes/railway.json` | `RAILPACK` | Starts from `apps/notes` |
-| Finance | `apps/finance/railway.json` | `RAILPACK` | Starts from `apps/finance` |
-| Rocco | `apps/rocco/railway.json` | `RAILPACK` | Starts from `apps/rocco` |
 
 ## Rules
 

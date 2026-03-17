@@ -73,7 +73,7 @@ export function createServer() {
     '*',
     cors({
       origin: (origin) => {
-        const allowedOrigins = [env.API_URL, env.ROCCO_URL, env.NOTES_URL, env.FINANCE_URL];
+        const allowedOrigins = [env.API_URL, env.NOTES_URL];
         return allowedOrigins.includes(origin || '') ? origin : null;
       },
       credentials: true,

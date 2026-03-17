@@ -85,12 +85,8 @@ function getTrustedOrigins() {
   const origins = new Set([
     env.API_URL,
     env.AUTH_PASSKEY_ORIGIN,
-    env.FINANCE_URL,
     env.NOTES_URL,
-    env.ROCCO_URL,
-    'http://localhost:4444',
     'http://localhost:4445',
-    'http://localhost:4446',
     'hakumi://',
     'hakumi-dev://',
     'hakumi-e2e://',

@@ -44,16 +44,6 @@
 	}
 }
 
-rocco.hominem.test {
-	import common
-	reverse_proxy 127.0.0.1:4446
-}
-
-finance.hominem.test {
-	import common
-	reverse_proxy 127.0.0.1:4444
-}
-
 notes.hominem.test {
 	import common
 	reverse_proxy 127.0.0.1:4445

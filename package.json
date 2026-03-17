@@ -41,7 +41,6 @@
     "test": "turbo run test",
     "test:e2e:auth": "bun run test:e2e:auth:api && bun run test:e2e:auth:live",
     "test:e2e:auth:api": "bun run --filter @hominem/api test -- src/routes/auth.cli-bridge.test.ts src/routes/auth.rate-limit.test.ts src/routes/auth.token-contract.test.ts src/routes/auth.middleware.test.ts",
-    "test:e2e:auth:app": "bun run --filter @hominem/finance test:e2e -- tests/auth.email-otp.spec.ts tests/auth.passkey.spec.ts",
     "test:e2e:auth:live": "bun scripts/auth-e2e-smoke.ts",
     "test:e2e:auth:live:local": "AUTH_E2E_BASE_URL=http://localhost:4040 bun scripts/auth-e2e-smoke.ts",
     "test:e2e:auth:mobile": "bun run --filter @hominem/mobile test:e2e:auth:mobile",

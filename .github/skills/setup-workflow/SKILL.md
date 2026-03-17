@@ -41,7 +41,6 @@ Target a surface when helpful:
 
 ```bash
 bun run dev --filter @hominem/mobile
-bun run dev --filter @hominem/finance
 bun run dev --filter @hominem/notes
 ```
 
@@ -70,7 +69,5 @@ Default development does not require a local reverse proxy.
 The checked-in `Caddyfile` supports:
 
 - `notes.hominem.test`
-- `finance.hominem.test`
-- `rocco.hominem.test`
 
 Use that only when a workflow truly needs browser-facing local HTTPS.

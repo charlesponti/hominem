@@ -38,13 +38,6 @@
       "url": "ws://localhost:6499/"
     },
     {
-      "type": "chrome",
-      "request": "launch",
-      "name": "Debug Chat App (Chrome)",
-      "url": "http://localhost:4446",
-      "webRoot": "${workspaceFolder}/apps/chat/app"
-    },
-    {
       "type": "node",
       "request": "attach",
       "name": "Debug Chat API (Node.js)",
@@ -82,20 +75,6 @@
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "skipFiles": ["<node_internals>/**"]
-    },
-    {
-      "type": "chrome",
-      "request": "launch",
-      "name": "Debug Finance App (Chrome)",
-      "url": "http://localhost:4444",
-      "webRoot": "${workspaceFolder}/apps/finance/app"
-    },
-    {
-      "type": "node",
-      "request": "attach",
-      "name": "Debug Finance API (Node.js)",
-      "processId": "${command:PickProcess}",
-      "restart": true
     },
     {
       "type": "chrome",
