@@ -9,7 +9,6 @@
   },
   "scripts": {
     "backfill:place-images": "bun src/backfill-place-images.ts",
-    "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",

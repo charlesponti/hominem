@@ -18,8 +18,7 @@ description: Use for schema, type flow, TypeScript project graph, and tsconfig d
 ## TypeScript Baseline
 
 - Keep root solution references in `tsconfig.json`.
-- Use `tsconfig.editor.json` as the focused editor solution.
-- Keep `disableReferencedProjectLoad: true` and `disableSolutionSearching: true` in the solution configs.
+- Keep `disableReferencedProjectLoad: true` and `disableSolutionSearching: true` in `tsconfig.json` for tsserver performance.
 - Use `composite: true` for referenced workspace projects.
 - Prefer declaration boundaries with `disableSourceOfProjectReferenceRedirect: true`.
 - Use `moduleResolution: 'Bundler'` for Bun, Vite, and Expo targets.

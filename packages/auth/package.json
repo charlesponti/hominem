@@ -11,7 +11,6 @@
     "./tools": "./src/tools.ts"
   },
   "scripts": {
-    "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

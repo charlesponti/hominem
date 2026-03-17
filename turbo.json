@@ -23,10 +23,7 @@
       "dependsOn": ["^build"],
       "outputs": [".react-router/**", "build/**", "dist/**", "**/*.d.ts", "**/*.d.ts.map"]
     },
-    "clean": {
-      "cache": false
-    },
-    "dev": {
+"dev": {
       "cache": false,
       "persistent": true,
       "dependsOn": ["^build"]

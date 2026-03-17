@@ -17,7 +17,7 @@ DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install start dev build test lint format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local mobile-test-e2e-preflight mobile-build-dev-ios dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-migration-generate db-migration-apply db-schema-update help-db auth-test-up auth-test-down auth-test-status validate-db-setup
+.PHONY: install start dev build test lint typecheck format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-migration-generate db-migration-apply db-schema-update help-db auth-test-up auth-test-down auth-test-status validate-db-setup
 
 # Install dependencies
 install:
@@ -92,19 +92,25 @@ test:
 
 # Build the application
 build:
-	bun turbo run lint --force --parallel
 	bun turbo run build --force
 
-# Run linter
+# Run all linting: CSS, DB constraints, workspace code quality
 lint:
-	bun turbo run lint --force --parallel
+	bunx stylelint "{apps,packages,services}/**/*.css" --config packages/ui/tools/stylelint-config-void.cjs
+	node scripts/validate-db-imports.js
+	bash scripts/lint-goose-migrations.sh
+	bun turbo run lint --no-cache
+
+# Typecheck the entire monorepo
+typecheck:
+	NODE_OPTIONS="--max-old-space-size=4096" bun turbo run typecheck --concurrency=4 --continue --no-cache
+
+# Full pre-merge check: lint + typecheck
+check: lint typecheck
 
 # Clean build artifacts and dependencies
 clean:
 	@./scripts/clean.sh
-
-# Run all tests and linting
-check: test lint
 
 # Test database management
 test-db-start:
@@ -168,20 +174,6 @@ auth-test-status:
 
 validate-db-setup:
 	@bash scripts/validate-code-quality-db-setup.sh
-
-mobile-test-e2e-preflight:
-	@bun run --filter @hominem/mobile test:e2e:preflight
-
-mobile-build-dev-ios:
-	@bun run --filter @hominem/mobile build:dev:ios
-
-blt:
-	@echo "Running lint..."
-	@bun run lint --force > /dev/null && echo "Lint passed" || echo "Lint failed"
-	@echo "Running build..."
-	@bun run build --force > /dev/null && echo "Build passed" || echo "Build failed"
-	@echo "Running typecheck..."
-	@bun run typecheck --force > /dev/null && echo "Typecheck passed" || echo "Typecheck failed"
 
 # Database Operations Help
 help-db:

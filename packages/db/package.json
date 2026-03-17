@@ -56,7 +56,6 @@
     "build": "tsc",
     "dev": "tsc --watch --preserveWatchOutput",
     "prepare": "bun run build",
-    "clean": "rm -rf build",
     "typecheck": "tsc --noEmit",
     "goose:install": "bash ../../scripts/install-goose.sh",
     "goose:up": "bash ../../scripts/install-goose.sh && PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"$DATABASE_URL\" up",

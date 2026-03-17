@@ -12,7 +12,6 @@
     "./stores": "./src/stores/index.ts"
   },
   "scripts": {
-    "clean": "rm -rf build",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
     "typecheck": "tsc --noEmit",
