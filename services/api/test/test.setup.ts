@@ -14,6 +14,11 @@ vi.mock('zod', async (importOriginal) => {
 // Set NODE_ENV to test for environment variable defaults
 process.env.NODE_ENV = 'test'
 
+// Disable captcha in tests — the captcha plugin uses substring matching so
+// `/sign-in/email` would match `/sign-in/email-otp`, blocking OTP sign-in.
+// Setting this to '' before any module imports prevents the plugin from loading.
+process.env.AUTH_CAPTCHA_SECRET_KEY = ''
+
 // Mock R2 environment variables for tests
 process.env.R2_ENDPOINT = 'https://test.r2.cloudflarestorage.com'
 process.env.R2_ACCESS_KEY_ID = 'test-access-key-id'

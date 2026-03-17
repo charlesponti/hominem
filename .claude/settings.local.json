@@ -45,7 +45,11 @@
       "Bash(mise plugins:*)",
       "Bash(find:*)",
       "Bash(cd:*)",
-      "Bash(mise use:*)"
+      "Bash(mise use:*)",
+      "Bash(bun vitest:*)",
+      "Bash(bun --cwd /Users/charlesponti/Developer/hominem/services/api vitest run src/routes/auth.device-contract.test.ts --reporter=verbose)",
+      "Bash(bun --cwd /Users/charlesponti/Developer/hominem/services/api vitest run src/routes/auth.email-otp.contract.test.ts --reporter=verbose)",
+      "Bash(openspec status:*)"
     ]
   }
 }

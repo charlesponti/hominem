@@ -1,2 +1,1 @@
-// Placeholder - will be populated with migrated components
-export const invitesActionsPlaceholder = true;
+export { DeleteInviteButton } from './delete-invite-button'

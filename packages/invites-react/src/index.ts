@@ -1,4 +1,4 @@
-export * from './received';
-export * from './sent';
-export * from './actions';
+export * from './components/received';
+export * from './components/sent';
+export * from './components/actions';
 export * from './hooks';

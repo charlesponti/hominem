@@ -1,2 +1,2 @@
-// Placeholder - will be populated with migrated components
-export const placesMapPlaceholder = true;
+export { LazyPlaceMap } from './place-map-lazy'
+export { PlaceMap } from './place-map'

@@ -1,2 +1,1 @@
-// Placeholder - will be populated with migrated components
-export const placeholder = true;
+export { PlaidLink, PlaidConnectButton } from './plaid-link'

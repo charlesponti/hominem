@@ -1,2 +1,1 @@
-// Placeholder - will be populated with migrated components
-export const listsCollabPlaceholder = true;
+export { RemoveCollaboratorButton } from './remove-collaborator-button'

@@ -1,0 +1,325 @@
+import { Button } from '@hominem/ui/button'
+import { DatePicker } from '@hominem/ui/components/date-picker'
+import { Badge } from '@hominem/ui/components/ui/badge'
+import { Card } from '@hominem/ui/components/ui/card'
+import { Label } from '@hominem/ui/components/ui/label'
+import { Skeleton } from '@hominem/ui/components/ui/skeleton'
+import { Switch } from '@hominem/ui/components/ui/switch'
+import * as Dialog from '@radix-ui/react-dialog'
+import { Filter, X } from 'lucide-react'
+import { type Dispatch, type SetStateAction, useId, useState } from 'react'
+
+import { useFinanceTags } from '../../hooks/use-analytics'
+import { useFinanceAccounts } from '../../hooks/use-finance-data'
+import { AccountSelect } from '../finance/account-select'
+import { TagSelect } from '../finance/category-select'
+import { GroupBySelect } from '../finance/group-by-select'
+
+interface AnalyticsFiltersProps {
+  dateFrom: Date | undefined
+  setDateFrom: Dispatch<SetStateAction<Date | undefined>>
+  dateTo: Date | undefined
+  setDateTo: Dispatch<SetStateAction<Date | undefined>>
+  selectedAccount: string
+  setSelectedAccount: Dispatch<SetStateAction<string>>
+  selectedTag: string
+  setSelectedTag: Dispatch<SetStateAction<string>>
+  groupBy: 'month' | 'week' | 'day'
+  setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>
+  includeStats: boolean
+  setIncludeStats: Dispatch<SetStateAction<boolean>>
+  compareToPrevious: boolean
+  setCompareToPrevious: Dispatch<SetStateAction<boolean>>
+}
+
+interface FilterChipsProps {
+  dateFrom: Date | undefined
+  setDateFrom: Dispatch<SetStateAction<Date | undefined>>
+  dateTo: Date | undefined
+  setDateTo: Dispatch<SetStateAction<Date | undefined>>
+  selectedAccount: string
+  setSelectedAccount: Dispatch<SetStateAction<string>>
+  selectedTag: string
+  setSelectedTag: Dispatch<SetStateAction<string>>
+  groupBy: 'month' | 'week' | 'day'
+  setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>
+  includeStats: boolean
+  setIncludeStats: Dispatch<SetStateAction<boolean>>
+  compareToPrevious: boolean
+  setCompareToPrevious: Dispatch<SetStateAction<boolean>>
+  accounts: Array<{ id: string; name: string }>
+  tags: { id: string; name: string }[]
+  isLoading: boolean
+}
+
+function FilterChips({
+  dateFrom,
+  setDateFrom,
+  dateTo,
+  setDateTo,
+  selectedAccount,
+  setSelectedAccount,
+  selectedTag,
+  setSelectedTag,
+  groupBy,
+  setGroupBy,
+  includeStats,
+  setIncludeStats,
+  compareToPrevious,
+  setCompareToPrevious,
+  accounts,
+  tags,
+  isLoading,
+}: FilterChipsProps) {
+  if (isLoading) {
+    return <Skeleton className="h-6 w-32" />
+  }
+
+  const chips = []
+  if (dateFrom) {
+    chips.push({
+      key: 'dateFrom',
+      label: `From: ${dateFrom.toLocaleDateString()}`,
+      onRemove: () => setDateFrom(undefined),
+    })
+  }
+  if (dateTo) {
+    chips.push({
+      key: 'dateTo',
+      label: `To: ${dateTo.toLocaleDateString()}`,
+      onRemove: () => setDateTo(undefined),
+    })
+  }
+  if (selectedAccount && selectedAccount !== 'all') {
+    const accountLabel = Array.isArray(accounts)
+      ? accounts.find((a) => a.id === selectedAccount)?.name || 'Account'
+      : 'Account'
+    chips.push({
+      key: 'account',
+      label: accountLabel,
+      onRemove: () => setSelectedAccount('all'),
+    })
+  }
+  if (selectedTag && selectedTag !== 'all') {
+    const tagLabel = tags.find((t) => t.id === selectedTag)?.name || selectedTag
+    chips.push({
+      key: 'tag',
+      label: tagLabel,
+      onRemove: () => setSelectedTag('all'),
+    })
+  }
+  if (groupBy !== 'month') {
+    chips.push({
+      key: 'groupBy',
+      label: `Grouped: ${groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}`,
+      onRemove: () => setGroupBy('month'),
+    })
+  }
+  if (includeStats) {
+    chips.push({
+      key: 'includeStats',
+      label: 'Stats',
+      onRemove: () => setIncludeStats(false),
+    })
+  }
+  if (compareToPrevious) {
+    chips.push({
+      key: 'compareToPrevious',
+      label: 'Trends',
+      onRemove: () => setCompareToPrevious(false),
+    })
+  }
+  if (!chips.length) {
+    return <span className="text-xs text-muted-foreground">No filters</span>
+  }
+  return (
+    <div className="flex flex-wrap gap-1.5 max-w-full">
+      {chips.map((chip) => (
+        <Badge
+          key={chip.key}
+          className="flex items-center gap-1 pr-1 border border-foreground text-foreground text-xs max-w-full"
+        >
+          <span className="truncate">{chip.label}</span>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="size-4 p-0 ml-1 shrink-0"
+            aria-label={`Remove ${chip.label}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              chip.onRemove()
+            }}
+          >
+            <X className="size-3" />
+          </Button>
+        </Badge>
+      ))}
+    </div>
+  )
+}
+
+export function AnalyticsFilters({
+  dateFrom,
+  setDateFrom,
+  dateTo,
+  setDateTo,
+  selectedAccount,
+  setSelectedAccount,
+  selectedTag,
+  setSelectedTag,
+  groupBy,
+  setGroupBy,
+  includeStats,
+  setIncludeStats,
+  compareToPrevious,
+  setCompareToPrevious,
+}: AnalyticsFiltersProps) {
+  const accountsQuery = useFinanceAccounts()
+  const tagsQuery = useFinanceTags()
+  const tags = (Array.isArray(tagsQuery.data) ? tagsQuery.data : []) as Array<
+    string | { id: string; name: string }
+  >
+  const tagsLoading = tagsQuery.isLoading
+
+  const isLoading = accountsQuery.isLoading || tagsLoading
+  const dateFromId = useId()
+  const dateToId = useId()
+  const includeStatsId = useId()
+  const compareToPreviousId = useId()
+
+  const safeAccounts: Array<{ id: string; name: string }> = (
+    Array.isArray(accountsQuery.data) ? accountsQuery.data : []
+  ).map((acc) => ({ id: acc.id, name: acc.name }))
+  const safeTags = tags
+    .map((tag) => ({
+      id: typeof tag === 'string' ? tag : tag.id,
+      name: typeof tag === 'string' ? tag : tag.name,
+    }))
+    .filter((tag) => tag.id && tag.name)
+
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Card className="border-none">
+      <div className="px-4 py-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <Dialog.Root open={open} onOpenChange={setOpen}>
+            <Dialog.Trigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Filter className="size-4" />
+                Filters
+              </Button>
+            </Dialog.Trigger>
+            <Dialog.Portal>
+              <Dialog.Overlay className="fixed inset-0 z-40 bg-black/20" />
+              <Dialog.Content className="fixed right-0 top-0 z-50 h-full w-full sm:max-w-md overflow-y-auto bg-white focus:outline-none">
+                <div className="p-6">
+                  <div className="mb-6">
+                    <Dialog.Title className="text-lg font-bold">Customize Filters</Dialog.Title>
+                    <Dialog.Description className="text-sm text-muted-foreground">
+                      Refine your analytics view with these filter options
+                    </Dialog.Description>
+                  </div>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor={dateFromId}>From Date</Label>
+                        <DatePicker
+                          value={dateFrom}
+                          onSelect={setDateFrom}
+                          placeholder="Start date"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={dateToId}>To Date</Label>
+                        <DatePicker value={dateTo} onSelect={setDateTo} placeholder="End date" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <AccountSelect
+                        selectedAccount={selectedAccount}
+                        onAccountChange={setSelectedAccount}
+                        isLoading={isLoading}
+                        showLabel={true}
+                      />
+                      <TagSelect
+                        selectedTag={selectedTag}
+                        onTagChange={setSelectedTag}
+                        tags={safeTags}
+                        isLoading={isLoading}
+                      />
+                    </div>
+
+                    <GroupBySelect groupBy={groupBy} onGroupByChange={setGroupBy} />
+
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor={includeStatsId}>Include Statistics</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Show summary statistics with the data
+                          </p>
+                        </div>
+                        <Switch
+                          id={includeStatsId}
+                          checked={includeStats}
+                          onCheckedChange={setIncludeStats}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor={compareToPreviousId}>Compare to Previous Period</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Show trend information compared to the previous period
+                          </p>
+                        </div>
+                        <Switch
+                          id={compareToPreviousId}
+                          checked={compareToPrevious}
+                          onCheckedChange={setCompareToPrevious}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <Dialog.Close asChild>
+                    <button
+                      type="button"
+                      className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+                      aria-label="Close"
+                    >
+                      <span className="sr-only">Close</span>×
+                    </button>
+                  </Dialog.Close>
+                </div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
+
+          <div className="flex-1 min-w-0">
+            <FilterChips
+              dateFrom={dateFrom}
+              setDateFrom={setDateFrom}
+              dateTo={dateTo}
+              setDateTo={setDateTo}
+              selectedAccount={selectedAccount}
+              setSelectedAccount={setSelectedAccount}
+              selectedTag={selectedTag}
+              setSelectedTag={setSelectedTag}
+              groupBy={groupBy}
+              setGroupBy={setGroupBy}
+              includeStats={includeStats}
+              setIncludeStats={setIncludeStats}
+              compareToPrevious={compareToPrevious}
+              setCompareToPrevious={setCompareToPrevious}
+              accounts={safeAccounts}
+              tags={safeTags}
+              isLoading={isLoading}
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
+  )
+}

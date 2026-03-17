@@ -1,2 +1,3 @@
-// Placeholder - will be populated with migrated components
-export const invitesSentPlaceholder = true;
+export { SentInviteForm } from './sent-invite-form'
+export { SentInviteItem } from './sent-invite-item'
+export { SentInvites } from './sent-invites'

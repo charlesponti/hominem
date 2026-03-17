@@ -4,12 +4,6 @@ import { useHonoQuery } from '@hominem/hono-client/react';
 
 import type { CategoriesListOutput, TagBreakdownOutput } from '@hominem/hono-rpc/types/finance.types';
 
-type FinanceTagOption = {
-  id: string;
-  name: string;
-};
-
-type FinanceTagsOutput = Array<string | FinanceTagOption>;
 
 interface TagBreakdownParams {
   from?: Date | undefined;
