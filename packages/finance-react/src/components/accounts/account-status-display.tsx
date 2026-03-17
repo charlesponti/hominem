@@ -6,16 +6,15 @@ import { PlaidAccountStatus } from './plaid-account-status'
 
 interface AccountStatusDisplayProps {
   account: AccountWithPlaidInfo
-  showDialog?: boolean
   onRefresh?: (() => void) | undefined
 }
 
-export function AccountStatusDisplay({ account, showDialog = true, onRefresh }: AccountStatusDisplayProps) {
+export function AccountStatusDisplay({ account, onRefresh }: AccountStatusDisplayProps) {
   if (account.plaidItemId) {
     return <PlaidAccountStatus account={account} onRefresh={onRefresh} />
   }
   if (account.institutionName) {
-    return <ManualInstitutionStatus account={account} showDialog={showDialog} />
+    return <ManualInstitutionStatus account={account} />
   }
-  return <NotConnectedStatus account={account} showDialog={showDialog} />
+  return <NotConnectedStatus />
 }

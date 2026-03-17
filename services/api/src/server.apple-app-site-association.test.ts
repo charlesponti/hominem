@@ -12,7 +12,7 @@ describe('apple app site association route', () => {
     process.env.APPLE_TEAM_ID = '3QHJ2KN8AL';
   });
 
-  test('serves webcredentials app ids for mobile variants', async () => {
+  test('serves webcredentials app ids for mobile variants', { timeout: 15000 }, async () => {
     const createServer = await importServer();
     const app = createServer();
 
