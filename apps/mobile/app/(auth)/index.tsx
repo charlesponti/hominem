@@ -64,7 +64,9 @@ export function AuthScreen() {
     try {
       setIsSubmitting(true);
       await requestEmailOtp(normalizedEmail);
-      router.replace({ pathname: '/(auth)/verify', params: { email: normalizedEmail } });
+      router.replace(
+        `/(auth)/verify?email=${encodeURIComponent(normalizedEmail)}` as RelativePathString,
+      );
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : AUTH_COPY.emailEntry.sendFailedError;
       setAuthError(message);
