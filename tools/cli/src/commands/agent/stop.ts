@@ -1,11 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { getHominemHomeDir } from '@/utils/paths';
-
-import { createCommand } from '../../command-factory';
-import { CliError } from '../../errors';
+import { validateWithZod } from '@/utils/zod-validation';
 
 function getPidPath(): string {
   return path.join(getHominemHomeDir(), 'agent', 'agent.pid');
@@ -20,36 +19,37 @@ function isProcessAlive(pid: number): boolean {
   }
 }
 
-export default createCommand({
-  name: 'agent stop',
-  summary: 'Stop local agent server',
-  description: 'Stops background agent by PID.',
-  argNames: [],
-  args: z.object({}),
-  flags: z.object({}),
-  outputSchema: z.object({
-    stopped: z.boolean(),
-    pid: z.number().nullable(),
-  }),
-  async run() {
+const outputSchema = z.object({
+  stopped: z.boolean(),
+  pid: z.number().nullable(),
+});
+
+export default class AgentStop extends Command {
+  static description = 'Stop local agent server';
+  static summary = 'Stop local agent server';
+
+  static override flags = {};
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
     const pidPath = getPidPath();
     let pid: number;
+
     try {
       const raw = await fs.readFile(pidPath, 'utf-8');
       pid = Number.parseInt(raw.trim(), 10);
     } catch {
-      throw new CliError({
+      this.error('No agent PID file found', {
+        exit: 3,
         code: 'AGENT_NOT_RUNNING',
-        category: 'dependency',
-        message: 'No agent PID file found',
       });
     }
 
     if (!Number.isFinite(pid) || pid <= 0) {
-      throw new CliError({
+      this.error('Agent PID file is invalid', {
+        exit: 5,
         code: 'AGENT_PID_INVALID',
-        category: 'internal',
-        message: 'Agent PID file is invalid',
       });
     }
 
@@ -57,33 +57,45 @@ export default createCommand({
       try {
         await fs.rm(pidPath, { force: true });
       } catch (error) {
-        throw new CliError({
-          code: 'AGENT_PID_REMOVE_FAILED',
-          category: 'dependency',
-          message: error instanceof Error ? error.message : 'Failed to remove stale pid file',
-        });
+        this.error(
+          error instanceof Error ? error.message : 'Failed to remove stale pid file',
+          {
+            exit: 3,
+            code: 'AGENT_PID_REMOVE_FAILED',
+          }
+        );
       }
-      return { stopped: false, pid };
+      const output = { stopped: false, pid };
+      validateWithZod(outputSchema, output);
+      return output;
     }
 
     try {
       process.kill(pid, 'SIGTERM');
     } catch (error) {
-      throw new CliError({
-        code: 'AGENT_STOP_SIGNAL_FAILED',
-        category: 'dependency',
-        message: error instanceof Error ? error.message : 'Failed to stop agent process',
-      });
+      this.error(
+        error instanceof Error ? error.message : 'Failed to stop agent process',
+        {
+          exit: 3,
+          code: 'AGENT_STOP_SIGNAL_FAILED',
+        }
+      );
     }
+
     try {
       await fs.rm(pidPath, { force: true });
     } catch (error) {
-      throw new CliError({
-        code: 'AGENT_PID_REMOVE_FAILED',
-        category: 'dependency',
-        message: error instanceof Error ? error.message : 'Failed to remove pid file',
-      });
+      this.error(
+        error instanceof Error ? error.message : 'Failed to remove pid file',
+        {
+          exit: 3,
+          code: 'AGENT_PID_REMOVE_FAILED',
+        }
+      );
     }
-    return { stopped: true, pid };
-  },
-});
+
+    const output = { stopped: true, pid };
+    validateWithZod(outputSchema, output);
+    return output;
+  }
+}

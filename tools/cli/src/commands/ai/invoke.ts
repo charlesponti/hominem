@@ -1,9 +1,9 @@
+import { Args, Command, Flags } from '@oclif/core';
 import { z } from 'zod';
 
-import { createCommand } from '../../command-factory';
-import { CliError } from '../../errors';
 import { requestJson } from '../../http';
 import { parseJsonPayload } from '../../http';
+import { validateWithZod } from '../../utils/zod-validation';
 
 const createChatSchema = z.object({
   id: z.string(),
@@ -28,79 +28,108 @@ const sendMessageSchema = z.object({
     .optional(),
 });
 
-export default createCommand({
-  name: 'ai invoke',
-  summary: 'Invoke AI message flow',
-  description: 'Creates a chat and sends a single prompt message.',
-  argNames: ['message'],
-  args: z.object({
-    message: z.string().min(1),
+const outputSchema = z.object({
+  baseUrl: z.string(),
+  chatId: z.string(),
+  assistant: z.object({
+    content: z.string().nullable(),
+    toolCalls: z.array(
+      z.object({
+        toolName: z.string(),
+      }),
+    ),
   }),
-  flags: z.object({
-    baseUrl: z.string().default('http://localhost:4040'),
-    showToolCalls: z.boolean().default(false),
-  }),
-  outputSchema: z.object({
-    baseUrl: z.string(),
-    chatId: z.string(),
-    assistant: z.object({
-      content: z.string().nullable(),
-      toolCalls: z.array(
-        z.object({
-          toolName: z.string(),
-        }),
-      ),
-    }),
-  }),
-  async run({ args, flags, context }) {
-    const createdRaw = await requestJson({
-      method: 'POST',
-      baseUrl: flags.baseUrl,
-      path: '/api/chats',
-      body: JSON.stringify({ title: 'CLI' }),
-      abortSignal: context.abortSignal,
-    });
-    const createdParsed = parseJsonPayload(createdRaw, '/api/chats');
-    const createdResult = createChatSchema.safeParse(createdParsed);
-    if (!createdResult.success) {
-      throw new CliError({
-        code: 'DEPENDENCY_RESPONSE_INVALID',
-        category: 'dependency',
-        message: 'Chat creation response schema was invalid',
-      });
-    }
-    const created = createdResult.data;
-
-    const sentRaw = await requestJson({
-      method: 'POST',
-      baseUrl: flags.baseUrl,
-      path: `/api/chats/${created.id}/send`,
-      body: JSON.stringify({ message: args.message }),
-      abortSignal: context.abortSignal,
-    });
-    const sentParsed = parseJsonPayload(sentRaw, `/api/chats/${created.id}/send`);
-    const sentResult = sendMessageSchema.safeParse(sentParsed);
-    if (!sentResult.success) {
-      throw new CliError({
-        code: 'DEPENDENCY_RESPONSE_INVALID',
-        category: 'dependency',
-        message: 'Chat send response schema was invalid',
-      });
-    }
-    const sent = sentResult.data;
-
-    const toolCalls = sent.messages?.assistant?.toolCalls ?? [];
-    const filteredToolCalls = flags.showToolCalls ? toolCalls : [];
-
-    return {
-      baseUrl: flags.baseUrl,
-      chatId: created.id,
-      assistant: {
-        content: sent.messages?.assistant?.content ?? null,
-        toolCalls: filteredToolCalls.map((toolCall) => ({
-          toolName: toolCall.toolName,
-        })),
-      },
-    };
-  },
 });
+
+type InvokeOutput = z.infer<typeof outputSchema>;
+
+export default class AiInvoke extends Command {
+  static override description = 'Creates a chat and sends a single prompt message.';
+
+  static override examples = ['<%= config.bin %> <%= command.id %> "What is 2+2?"'];
+
+  static override args = {
+    message: Args.string({
+      description: 'Message to send to the AI',
+      required: true,
+    }),
+  };
+
+  static override flags = {
+    baseUrl: Flags.string({
+      description: 'Base URL of the agent service',
+      default: 'http://localhost:4040',
+    }),
+    showToolCalls: Flags.boolean({
+      description: 'Show tool calls in output',
+      default: false,
+    }),
+  };
+
+  static override enableJsonFlag = true;
+
+  async run(): Promise<InvokeOutput> {
+    const { args, flags } = await this.parse(AiInvoke);
+
+    try {
+      const createdRaw = await requestJson({
+        method: 'POST',
+        baseUrl: flags.baseUrl,
+        path: '/api/chats',
+        body: JSON.stringify({ title: 'CLI' }),
+        abortSignal: undefined,
+      });
+      const createdParsed = parseJsonPayload(createdRaw, '/api/chats');
+      const createdResult = createChatSchema.safeParse(createdParsed);
+      if (!createdResult.success) {
+        this.error('Chat creation response schema was invalid', {
+          exit: 3,
+          code: 'DEPENDENCY_RESPONSE_INVALID',
+        });
+      }
+      const created = createdResult.data;
+
+      const sentRaw = await requestJson({
+        method: 'POST',
+        baseUrl: flags.baseUrl,
+        path: `/api/chats/${created.id}/send`,
+        body: JSON.stringify({ message: args.message }),
+        abortSignal: undefined,
+      });
+      const sentParsed = parseJsonPayload(sentRaw, `/api/chats/${created.id}/send`);
+      const sentResult = sendMessageSchema.safeParse(sentParsed);
+      if (!sentResult.success) {
+        this.error('Chat send response schema was invalid', {
+          exit: 3,
+          code: 'DEPENDENCY_RESPONSE_INVALID',
+        });
+      }
+      const sent = sentResult.data;
+
+      const toolCalls = sent.messages?.assistant?.toolCalls ?? [];
+      const filteredToolCalls = flags.showToolCalls ? toolCalls : [];
+
+      const output: InvokeOutput = {
+        baseUrl: flags.baseUrl,
+        chatId: created.id,
+        assistant: {
+          content: sent.messages?.assistant?.content ?? null,
+          toolCalls: filteredToolCalls.map((toolCall) => ({
+            toolName: toolCall.toolName,
+          })),
+        },
+      };
+
+      validateWithZod(outputSchema, output);
+      return output;
+    } catch (error) {
+      if (error instanceof Error && !('exit' in error)) {
+        this.error(`Failed to invoke AI: ${error.message}`, {
+          exit: 5,
+          code: 'INTERNAL_ERROR',
+        });
+      }
+      throw error;
+    }
+  }
+}

@@ -1,40 +1,47 @@
+import { Command } from '@oclif/core';
 import { z } from 'zod';
 
-import { createCommand } from '../../command-factory';
-import { loadConfigV2 } from '../../config';
-import { CliError } from '../../errors';
+import { loadConfigV2 } from '@/config';
+import { validateWithZod } from '@/utils/zod-validation';
 
-export default createCommand({
-  name: 'data profiles',
-  summary: 'List configured data profiles',
-  description: 'Reads profile definitions from config v2.',
-  argNames: [],
-  args: z.object({}),
-  flags: z.object({}),
-  outputSchema: z.object({
-    profileCount: z.number(),
-    profiles: z.array(
-      z.object({
-        name: z.string(),
-        apiUrl: z.string(),
-      }),
-    ),
-  }),
-  async run() {
+const outputSchema = z.object({
+  profileCount: z.number(),
+  profiles: z.array(
+    z.object({
+      name: z.string(),
+      apiUrl: z.string(),
+    }),
+  ),
+});
+
+export default class DataProfiles extends Command {
+  static description = 'List configured data profiles';
+  static summary = 'List configured data profiles';
+
+  static override flags = {};
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
     let config: Awaited<ReturnType<typeof loadConfigV2>>;
     try {
       config = await loadConfigV2();
     } catch (error) {
-      throw new CliError({
-        code: 'CONFIG_READ_FAILED',
-        category: 'dependency',
-        message: error instanceof Error ? error.message : 'Failed to load config',
-      });
+      this.error(
+        error instanceof Error ? error.message : 'Failed to load config',
+        {
+          exit: 3,
+          code: 'CONFIG_READ_FAILED',
+        }
+      );
     }
 
-    return {
+    const output = {
       profileCount: config.profiles.length,
       profiles: config.profiles,
     };
-  },
-});
+
+    validateWithZod(outputSchema, output);
+    return output;
+  }
+}

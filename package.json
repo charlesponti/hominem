@@ -30,6 +30,7 @@
     "check": "bun run validate-db-imports && bun run validate-db-migrations && bun run typecheck && bun run lint",
     "clean": "turbo run clean",
     "dev": "turbo dev",
+    "dev:web": "turbo dev --filter @hominem/api --filter @hominem/notes",
     "dev:doctor": "bun scripts/dev-doctor.ts",
     "doctor:react": "bunx react-doctor@latest . --yes --offline --verbose",
     "format": "turbo run format",

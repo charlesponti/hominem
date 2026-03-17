@@ -10,7 +10,7 @@ interface HttpJsonOptions {
   path: string;
   body?: string;
   requireAuth?: boolean;
-  abortSignal: AbortSignal;
+  abortSignal?: AbortSignal;
 }
 
 export function parseJsonPayload(raw: string, source: string): JsonValue {

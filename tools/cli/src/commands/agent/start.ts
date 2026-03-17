@@ -1,12 +1,11 @@
 import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { Flags, Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { getHominemHomeDir } from '@/utils/paths';
-
-import { createCommand } from '../../command-factory';
-import { CliError } from '../../errors';
+import { validateWithZod } from '@/utils/zod-validation';
 
 function getRuntimePaths() {
   const runtimeDir = path.join(getHominemHomeDir(), 'agent');
@@ -35,42 +34,59 @@ async function resolveAgentEntrypoint(cwd: string): Promise<string> {
     }
   }
 
-  throw new CliError({
-    code: 'AGENT_ENTRYPOINT_MISSING',
-    category: 'dependency',
-    message: 'Agent entrypoint was not found',
-    hint: 'Run `bun run --filter @hominem/cli build:features`',
-  });
+  throw new Error('Agent entrypoint was not found');
 }
 
-export default createCommand({
-  name: 'agent start',
-  summary: 'Start local agent server',
-  description: 'Starts the local agent in background by default.',
-  argNames: [],
-  args: z.object({}),
-  flags: z.object({
-    port: z.coerce.number().int().positive().default(4567),
-    foreground: z.boolean().default(false),
+const outputSchema = z.object({
+  started: z.boolean(),
+  background: z.boolean(),
+  pid: z.number().nullable(),
+  port: z.number(),
+  entrypoint: z.string(),
+  logs: z.object({
+    out: z.string().nullable(),
+    err: z.string().nullable(),
   }),
-  outputSchema: z.object({
-    started: z.boolean(),
-    background: z.boolean(),
-    pid: z.number().nullable(),
-    port: z.number(),
-    entrypoint: z.string(),
-    logs: z.object({
-      out: z.string().nullable(),
-      err: z.string().nullable(),
+});
+
+export default class AgentStart extends Command {
+  static description = 'Start local agent server';
+  static summary = 'Start local agent server';
+
+  static override flags = {
+    port: Flags.integer({
+      description: 'Port to listen on',
+      default: 4567,
     }),
-  }),
-  async run({ flags, context }) {
+    foreground: Flags.boolean({
+      description: 'Run in foreground instead of background',
+      default: false,
+    }),
+  };
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
+    const { flags } = await this.parse(AgentStart);
+
     const runtimePaths = getRuntimePaths();
-    const entrypoint = await resolveAgentEntrypoint(context.cwd);
+    let entrypoint: string;
+
+    try {
+      entrypoint = await resolveAgentEntrypoint(process.cwd());
+    } catch (error) {
+      this.error(
+        'Agent entrypoint was not found - Run `bun run --filter @hominem/cli build:features`',
+        {
+          exit: 3,
+          code: 'AGENT_ENTRYPOINT_MISSING',
+        }
+      );
+    }
 
     if (flags.foreground) {
       const child = spawn('bun', [entrypoint], {
-        env: { ...context.env, PORT: String(flags.port) },
+        env: { ...process.env, PORT: String(flags.port) },
         stdio: 'inherit',
       });
 
@@ -80,14 +96,16 @@ export default createCommand({
           child.once('exit', () => resolve());
         });
       } catch (error) {
-        throw new CliError({
-          code: 'AGENT_START_FAILED',
-          category: 'dependency',
-          message: error instanceof Error ? error.message : 'Failed to run agent in foreground',
-        });
+        this.error(
+          error instanceof Error ? error.message : 'Failed to run agent in foreground',
+          {
+            exit: 3,
+            code: 'AGENT_START_FAILED',
+          }
+        );
       }
 
-      return {
+      const output = {
         started: true,
         background: false,
         pid: child.pid ?? null,
@@ -98,16 +116,21 @@ export default createCommand({
           err: null,
         },
       };
+
+      validateWithZod(outputSchema, output);
+      return output;
     }
 
     try {
       await fs.mkdir(runtimePaths.runtimeDir, { recursive: true });
     } catch (error) {
-      throw new CliError({
-        code: 'AGENT_RUNTIME_DIR_FAILED',
-        category: 'dependency',
-        message: error instanceof Error ? error.message : 'Failed to create runtime directory',
-      });
+      this.error(
+        error instanceof Error ? error.message : 'Failed to create runtime directory',
+        {
+          exit: 3,
+          code: 'AGENT_RUNTIME_DIR_FAILED',
+        }
+      );
     }
 
     let out: Awaited<ReturnType<typeof fs.open>>;
@@ -116,52 +139,57 @@ export default createCommand({
       out = await fs.open(runtimePaths.outLogPath, 'a');
       err = await fs.open(runtimePaths.errLogPath, 'a');
     } catch (error) {
-      throw new CliError({
-        code: 'AGENT_LOG_OPEN_FAILED',
-        category: 'dependency',
-        message: error instanceof Error ? error.message : 'Failed to open agent log files',
-      });
+      this.error(
+        error instanceof Error ? error.message : 'Failed to open agent log files',
+        {
+          exit: 3,
+          code: 'AGENT_LOG_OPEN_FAILED',
+        }
+      );
     }
 
     let child;
     try {
       child = spawn('bun', [entrypoint], {
         detached: true,
-        env: { ...context.env, PORT: String(flags.port) },
+        env: { ...process.env, PORT: String(flags.port) },
         stdio: ['ignore', out.fd, err.fd],
       });
     } catch (error) {
       await out.close();
       await err.close();
-      throw new CliError({
-        code: 'AGENT_START_FAILED',
-        category: 'dependency',
-        message: error instanceof Error ? error.message : 'Failed to spawn agent process',
-      });
+      this.error(
+        error instanceof Error ? error.message : 'Failed to spawn agent process',
+        {
+          exit: 3,
+          code: 'AGENT_START_FAILED',
+        }
+      );
     }
     child.unref();
 
     if (!child.pid) {
-      throw new CliError({
+      this.error('Failed to start background agent process', {
+        exit: 5,
         code: 'AGENT_START_FAILED',
-        category: 'internal',
-        message: 'Failed to start background agent process',
       });
     }
 
     try {
       await fs.writeFile(runtimePaths.pidPath, `${child.pid}\n`, 'utf-8');
     } catch (error) {
-      throw new CliError({
-        code: 'AGENT_PID_WRITE_FAILED',
-        category: 'dependency',
-        message: error instanceof Error ? error.message : 'Failed to persist agent pid file',
-      });
+      this.error(
+        error instanceof Error ? error.message : 'Failed to persist agent pid file',
+        {
+          exit: 3,
+          code: 'AGENT_PID_WRITE_FAILED',
+        }
+      );
     }
     await out.close();
     await err.close();
 
-    return {
+    const output = {
       started: true,
       background: true,
       pid: child.pid,
@@ -172,5 +200,8 @@ export default createCommand({
         err: runtimePaths.errLogPath,
       },
     };
-  },
-});
+
+    validateWithZod(outputSchema, output);
+    return output;
+  }
+}

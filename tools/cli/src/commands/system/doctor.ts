@@ -1,29 +1,30 @@
 import fs from 'node:fs/promises';
+import { Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { getStoredTokens, hasValidStoredSession } from '@/utils/auth';
+import { getConfigPath, loadConfigV2 } from '@/config';
+import { validateWithZod } from '@/utils/zod-validation';
 
-import { createCommand } from '../../command-factory';
-import { getConfigPath, loadConfigV2 } from '../../config';
-import { CliError } from '../../errors';
+const outputSchema = z.object({
+  checks: z.array(
+    z.object({
+      id: z.string(),
+      status: z.enum(['pass', 'warn', 'fail']),
+      message: z.string(),
+    }),
+  ),
+});
 
-export default createCommand({
-  name: 'system doctor',
-  summary: 'Run CLI diagnostics',
-  description: 'Evaluates runtime prerequisites and emits deterministic diagnostics.',
-  argNames: [],
-  args: z.object({}),
-  flags: z.object({}),
-  outputSchema: z.object({
-    checks: z.array(
-      z.object({
-        id: z.string(),
-        status: z.enum(['pass', 'warn', 'fail']),
-        message: z.string(),
-      }),
-    ),
-  }),
-  async run() {
+export default class SystemDoctor extends Command {
+  static description = 'Run CLI diagnostics';
+  static summary = 'Run CLI diagnostics';
+
+  static override flags = {};
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
     const checks: Array<{ id: string; status: 'pass' | 'warn' | 'fail'; message: string }> = [];
     const configPath = getConfigPath();
 
@@ -53,12 +54,15 @@ export default createCommand({
     try {
       tokens = await getStoredTokens();
     } catch (error) {
-      throw new CliError({
-        code: 'AUTH_STATUS_FAILED',
-        category: 'dependency',
-        message: error instanceof Error ? error.message : 'Failed to read auth state',
-      });
+      this.error(
+        error instanceof Error ? error.message : 'Failed to read auth state',
+        {
+          exit: 3,
+          code: 'AUTH_STATUS_FAILED',
+        }
+      );
     }
+
     checks.push({
       id: 'auth.token',
       status: tokens?.accessToken ? 'pass' : 'warn',
@@ -78,8 +82,11 @@ export default createCommand({
       });
     }
 
-    return {
+    const output = {
       checks,
     };
-  },
-});
+
+    validateWithZod(outputSchema, output);
+    return output;
+  }
+}

@@ -1,45 +1,58 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { Args, Command } from '@oclif/core';
 import { z } from 'zod';
 
-import { createCommand } from '../../command-factory';
-import { CliError } from '../../errors';
+import { validateWithZod } from '@/utils/zod-validation';
 
-export default createCommand({
-  name: 'skills import',
-  summary: 'Copy skills from another location into `.github/skills`',
-  description:
-    'Typically used after running `skills export` in another repository.  Any existing files in the destination will be overwritten.',
-  argNames: ['src'],
-  args: z.object({
-    src: z.string().default('.'),
-  }),
-  flags: z.object({}),
-  outputSchema: z.object({
-    source: z.string(),
-    dest: z.string(),
-    fileCount: z.number(),
-  }),
-  async run({ args, context }) {
-    const source = path.resolve(context.cwd, args.src);
-    const dest = path.resolve(context.cwd, '.github/skills');
+const outputSchema = z.object({
+  source: z.string(),
+  dest: z.string(),
+  fileCount: z.number(),
+});
+
+export default class SkillsImport extends Command {
+  static description = 'Copy skills from another location into `.github/skills`';
+  static summary = 'Copy skills from another location into `.github/skills`';
+
+  static override args = {
+    src: Args.string({
+      name: 'src',
+      required: false,
+      description: 'Source directory',
+      default: '.',
+    }),
+  };
+
+  static override flags = {};
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
+    const { args } = await this.parse(SkillsImport);
+
+    const source = path.resolve(process.cwd(), args.src);
+    const dest = path.resolve(process.cwd(), '.github/skills');
 
     try {
       const stat = await fs.stat(source);
       if (!stat.isDirectory()) {
-        throw new CliError({
+        this.error(`source path is not a directory: ${source}`, {
+          exit: 4,
           code: 'SKILLS_SOURCE_NOT_DIRECTORY',
-          category: 'validation',
-          message: `source path is not a directory: ${source}`,
         });
       }
     } catch (err) {
-      if (err instanceof CliError) throw err;
-      throw new CliError({
-        code: 'SKILLS_SOURCE_MISSING',
-        category: 'dependency',
-        message: `failed to read skills directory at ${source}`,
-      });
+      if (err instanceof Error && 'code' in err) {
+        throw err;
+      }
+      this.error(
+        `failed to read skills directory at ${source}`,
+        {
+          exit: 3,
+          code: 'SKILLS_SOURCE_MISSING',
+        }
+      );
     }
 
     try {
@@ -60,17 +73,22 @@ export default createCommand({
       }
       await countFiles(dest);
 
-      return {
+      const output = {
         source,
         dest,
         fileCount,
       };
+
+      validateWithZod(outputSchema, output);
+      return output;
     } catch (err) {
-      throw new CliError({
-        code: 'SKILLS_IMPORT_FAILED',
-        category: 'dependency',
-        message: err instanceof Error ? err.message : 'import failed',
-      });
+      this.error(
+        err instanceof Error ? err.message : 'import failed',
+        {
+          exit: 3,
+          code: 'SKILLS_IMPORT_FAILED',
+        }
+      );
     }
-  },
-});
+  }
+}

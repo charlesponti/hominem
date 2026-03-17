@@ -1,11 +1,11 @@
+import { Flags, Command } from '@oclif/core';
 import { z } from 'zod';
 
-import type { JsonValue } from '../../contracts';
+import type { JsonValue } from '@/contracts';
 
-import { createCommand } from '../../command-factory';
-import { CliError } from '../../errors';
-import { requestJson } from '../../http';
-import { parseJsonPayload } from '../../http';
+import { requestJson } from '@/http';
+import { parseJsonPayload } from '@/http';
+import { validateWithZod } from '@/utils/zod-validation';
 
 function normalizeModels(jsonText: string): string[] {
   const parsed = parseJsonPayload(jsonText, '/api/ai/models');
@@ -44,39 +44,55 @@ function normalizeModels(jsonText: string): string[] {
       }
     }
   }
-  throw new CliError({
-    code: 'DEPENDENCY_RESPONSE_INVALID',
-    category: 'dependency',
-    message: 'Model inventory response did not include a model list',
-  });
+  throw new Error('Model inventory response did not include a model list');
 }
 
-export default createCommand({
-  name: 'ai models',
-  summary: 'List available AI models',
-  description: 'Returns provider model inventory from API.',
-  argNames: [],
-  args: z.object({}),
-  flags: z.object({
-    baseUrl: z.string().default('http://localhost:4040'),
-  }),
-  outputSchema: z.object({
-    baseUrl: z.string(),
-    modelCount: z.number(),
-    models: z.array(z.string()),
-  }),
-  async run({ flags, context }) {
-    const raw = await requestJson({
-      baseUrl: flags.baseUrl,
-      path: '/api/ai/models',
-      abortSignal: context.abortSignal,
-    });
-    const models = normalizeModels(raw);
+const outputSchema = z.object({
+  baseUrl: z.string(),
+  modelCount: z.number(),
+  models: z.array(z.string()),
+});
 
-    return {
+export default class AiModels extends Command {
+  static description = 'List available AI models';
+  static summary = 'List available AI models';
+
+  static override flags = {
+    baseUrl: Flags.string({
+      description: 'API base URL',
+      default: 'http://localhost:4040',
+    }),
+  };
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
+    const { flags } = await this.parse(AiModels);
+
+    let models: string[];
+    try {
+      const raw = await requestJson({
+        baseUrl: flags.baseUrl,
+        path: '/api/ai/models',
+      });
+      models = normalizeModels(raw);
+    } catch (error) {
+      this.error(
+        error instanceof Error ? error.message : 'Failed to fetch models',
+        {
+          exit: 3,
+          code: 'DEPENDENCY_RESPONSE_INVALID',
+        }
+      );
+    }
+
+    const output = {
       baseUrl: flags.baseUrl,
       modelCount: models.length,
       models,
     };
-  },
-});
+
+    validateWithZod(outputSchema, output);
+    return output;
+  }
+}

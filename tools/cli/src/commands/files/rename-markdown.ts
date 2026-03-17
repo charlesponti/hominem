@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { Args, Flags, Command } from '@oclif/core';
 import { z } from 'zod';
 
-import { createCommand } from '../../command-factory';
-import { CliError } from '../../errors';
+import { validateWithZod } from '@/utils/zod-validation';
 
 function slugify(input: string): string {
   return input
@@ -81,68 +81,96 @@ function extractTopic(raw: string, fallbackName: string): string {
   return fallback || 'untitled';
 }
 
-export default createCommand({
-  name: 'files rename-markdown',
-  summary: 'Normalize markdown file names',
-  description: 'Renames markdown files into a stable date/type/topic format.',
-  argNames: ['path'],
-  args: z.object({
-    path: z.string().default('.'),
-  }),
-  flags: z.object({
-    recursive: z.boolean().default(false),
-    dryRun: z.boolean().default(false),
-    type: z.string().default('note'),
-    limit: z.coerce.number().int().positive().nullable().default(null),
-  }),
-  outputSchema: z.object({
-    root: z.string(),
-    dryRun: z.boolean(),
-    processed: z.number(),
-    renamed: z.array(
-      z.object({
-        oldPath: z.string(),
-        newPath: z.string(),
-      }),
-    ),
-  }),
-  async run({ args, flags, context }) {
-    const root = path.resolve(context.cwd, args.path);
+const outputSchema = z.object({
+  root: z.string(),
+  dryRun: z.boolean(),
+  processed: z.number(),
+  renamed: z.array(
+    z.object({
+      oldPath: z.string(),
+      newPath: z.string(),
+    }),
+  ),
+});
+
+export default class FilesRenameMarkdown extends Command {
+  static description = 'Normalize markdown file names';
+  static summary = 'Normalize markdown file names';
+
+  static override args = {
+    path: Args.string({
+      name: 'path',
+      required: false,
+      description: 'Directory path',
+      default: '.',
+    }),
+  };
+
+  static override flags = {
+    recursive: Flags.boolean({
+      description: 'Search recursively',
+      default: false,
+    }),
+    'dry-run': Flags.boolean({
+      description: 'Show what would be renamed without making changes',
+      default: false,
+    }),
+    type: Flags.string({
+      description: 'File type prefix',
+      default: 'note',
+    }),
+    limit: Flags.integer({
+      description: 'Maximum number of files to rename',
+      required: false,
+    }),
+  };
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
+    const { args, flags } = await this.parse(FilesRenameMarkdown);
+
+    const root = path.resolve(process.cwd(), args.path);
     let selected: string[];
+
     try {
       const rootStat = await fs.stat(root);
       if (!rootStat.isDirectory()) {
-        throw new CliError({
+        this.error(`Path is not a directory: ${root}`, {
+          exit: 4,
           code: 'PATH_NOT_DIRECTORY',
-          category: 'validation',
-          message: `Path is not a directory: ${root}`,
         });
       }
       const markdownFiles = await collectMarkdown(root, flags.recursive);
-      selected = flags.limit === null ? markdownFiles : markdownFiles.slice(0, flags.limit);
+      selected = flags.limit === undefined ? markdownFiles : markdownFiles.slice(0, flags.limit);
     } catch (error) {
-      if (error instanceof CliError) {
+      if (error instanceof Error && 'code' in error) {
         throw error;
       }
-      throw new CliError({
-        code: 'FILES_RENAME_FAILED',
-        category: 'dependency',
-        message: error instanceof Error ? error.message : 'Failed to read markdown files',
-      });
+      this.error(
+        error instanceof Error ? error.message : 'Failed to read markdown files',
+        {
+          exit: 3,
+          code: 'FILES_RENAME_FAILED',
+        }
+      );
     }
 
-    const renamed: Array<Record<string, string>> = [];
+    const renamed: Array<{ oldPath: string; newPath: string }> = [];
     for (const absolute of selected) {
       let content: string;
       try {
         content = await fs.readFile(absolute, 'utf-8');
       } catch (error) {
-        throw new CliError({
-          code: 'FILES_READ_FAILED',
-          category: 'dependency',
-          message: error instanceof Error ? error.message : `Failed to read ${absolute}`,
-        });
+        this.error(
+          error instanceof Error ? error.message : `Failed to read ${absolute}`,
+          {
+            exit: 3,
+            code: 'FILES_READ_FAILED',
+          }
+        );
       }
+
       const topic = extractTopic(content, absolute);
       const normalizedType = slugify(flags.type) || 'note';
       const name = `${datePrefix()}-${normalizedType}-${topic}.md`;
@@ -153,22 +181,23 @@ export default createCommand({
         continue;
       }
 
-      if (!flags.dryRun) {
+      if (!flags['dry-run']) {
         if (!destination.startsWith(root)) {
-          throw new CliError({
+          this.error('Refusing to write outside requested root path', {
+            exit: 4,
             code: 'WRITE_BOUNDARY_VIOLATION',
-            category: 'validation',
-            message: 'Refusing to write outside requested root path',
           });
         }
         try {
           await fs.rename(absolute, destination);
         } catch (error) {
-          throw new CliError({
-            code: 'FILES_RENAME_FAILED',
-            category: 'dependency',
-            message: error instanceof Error ? error.message : `Failed to rename ${absolute}`,
-          });
+          this.error(
+            error instanceof Error ? error.message : `Failed to rename ${absolute}`,
+            {
+              exit: 3,
+              code: 'FILES_RENAME_FAILED',
+            }
+          );
         }
       }
 
@@ -178,11 +207,14 @@ export default createCommand({
       });
     }
 
-    return {
+    const output = {
       root,
-      dryRun: flags.dryRun,
+      dryRun: flags['dry-run'],
       processed: selected.length,
       renamed,
     };
-  },
-});
+
+    validateWithZod(outputSchema, output);
+    return output;
+  }
+}

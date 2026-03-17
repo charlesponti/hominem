@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { Args, Flags, Command } from '@oclif/core';
 import { z } from 'zod';
 
-import { createCommand } from '../../command-factory';
-import { CliError } from '../../errors';
+import { validateWithZod } from '@/utils/zod-validation';
 
 async function collectFiles(
   root: string,
@@ -35,55 +35,78 @@ async function collectFiles(
   return files;
 }
 
-export default createCommand({
-  name: 'files inventory',
-  summary: 'Inventory files in a directory',
-  description: 'Scans files under a path with deterministic output.',
-  argNames: ['path'],
-  args: z.object({
-    path: z.string().default('.'),
-  }),
-  flags: z.object({
-    recursive: z.boolean().default(false),
-    extension: z.string().default('*'),
-  }),
-  outputSchema: z.object({
-    root: z.string(),
-    recursive: z.boolean(),
-    extension: z.string(),
-    fileCount: z.number(),
-    files: z.array(z.string()),
-  }),
-  async run({ args, flags, context }) {
-    const root = path.resolve(context.cwd, args.path);
+const outputSchema = z.object({
+  root: z.string(),
+  recursive: z.boolean(),
+  extension: z.string(),
+  fileCount: z.number(),
+  files: z.array(z.string()),
+});
+
+export default class FilesInventory extends Command {
+  static description = 'Inventory files in a directory';
+  static summary = 'Inventory files in a directory';
+
+  static override args = {
+    path: Args.string({
+      name: 'path',
+      required: false,
+      description: 'Directory path to inventory',
+      default: '.',
+    }),
+  };
+
+  static override flags = {
+    recursive: Flags.boolean({
+      description: 'Search recursively',
+      default: false,
+    }),
+    extension: Flags.string({
+      description: 'Filter by extension',
+      default: '*',
+    }),
+  };
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
+    const { args, flags } = await this.parse(FilesInventory);
+
+    const root = path.resolve(process.cwd(), args.path);
     let files: string[];
+
     try {
       const rootStat = await fs.stat(root);
       if (!rootStat.isDirectory()) {
-        throw new CliError({
+        this.error(`Path is not a directory: ${root}`, {
+          exit: 4,
           code: 'PATH_NOT_DIRECTORY',
-          category: 'validation',
-          message: `Path is not a directory: ${root}`,
         });
       }
       files = await collectFiles(root, flags.recursive, flags.extension);
     } catch (error) {
-      if (error instanceof CliError) {
+      if (error instanceof Error && 'code' in error) {
+        // Re-throw oclif errors
         throw error;
       }
-      throw new CliError({
-        code: 'FILES_INVENTORY_FAILED',
-        category: 'dependency',
-        message: error instanceof Error ? error.message : 'Failed to inventory files',
-      });
+      this.error(
+        error instanceof Error ? error.message : 'Failed to inventory files',
+        {
+          exit: 3,
+          code: 'FILES_INVENTORY_FAILED',
+        }
+      );
     }
 
-    return {
+    const output = {
       root,
       recursive: flags.recursive,
       extension: flags.extension,
       fileCount: files.length,
       files: files.sort((a, b) => a.localeCompare(b)),
     };
-  },
-});
+
+    validateWithZod(outputSchema, output);
+    return output;
+  }
+}

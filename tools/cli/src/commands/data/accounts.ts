@@ -1,11 +1,11 @@
+import { Flags, Command } from '@oclif/core';
 import { z } from 'zod';
 
-import type { JsonValue } from '../../contracts';
+import type { JsonValue } from '@/contracts';
 
-import { createCommand } from '../../command-factory';
-import { CliError } from '../../errors';
-import { requestJson } from '../../http';
-import { parseJsonPayload } from '../../http';
+import { requestJson } from '@/http';
+import { parseJsonPayload } from '@/http';
+import { validateWithZod } from '@/utils/zod-validation';
 
 function toStringRecord(input: Record<string, JsonValue>): Record<string, string> {
   const result: Record<string, string> = {};
@@ -46,39 +46,55 @@ function normalizeAccounts(raw: string): Array<Record<string, string>> {
       }
     }
   }
-  throw new CliError({
-    code: 'DEPENDENCY_RESPONSE_INVALID',
-    category: 'dependency',
-    message: 'Accounts response did not include an account list',
-  });
+  throw new Error('Accounts response did not include an account list');
 }
 
-export default createCommand({
-  name: 'data accounts',
-  summary: 'List account data',
-  description: 'Fetches finance account data from API.',
-  argNames: [],
-  args: z.object({}),
-  flags: z.object({
-    baseUrl: z.string().default('http://localhost:4040'),
-  }),
-  outputSchema: z.object({
-    baseUrl: z.string(),
-    accountCount: z.number(),
-    accounts: z.array(z.record(z.string(), z.string())),
-  }),
-  async run({ flags, context }) {
-    const raw = await requestJson({
-      baseUrl: flags.baseUrl,
-      path: '/api/finance/accounts',
-      abortSignal: context.abortSignal,
-    });
-    const accounts = normalizeAccounts(raw);
+const outputSchema = z.object({
+  baseUrl: z.string(),
+  accountCount: z.number(),
+  accounts: z.array(z.record(z.string(), z.string())),
+});
 
-    return {
+export default class DataAccounts extends Command {
+  static description = 'List account data';
+  static summary = 'List account data';
+
+  static override flags = {
+    baseUrl: Flags.string({
+      description: 'API base URL',
+      default: 'http://localhost:4040',
+    }),
+  };
+
+  static enableJsonFlag = true;
+
+  async run(): Promise<z.infer<typeof outputSchema>> {
+    const { flags } = await this.parse(DataAccounts);
+
+    let accounts: Array<Record<string, string>>;
+    try {
+      const raw = await requestJson({
+        baseUrl: flags.baseUrl,
+        path: '/api/finance/accounts',
+      });
+      accounts = normalizeAccounts(raw);
+    } catch (error) {
+      this.error(
+        error instanceof Error ? error.message : 'Failed to fetch accounts',
+        {
+          exit: 3,
+          code: 'DEPENDENCY_RESPONSE_INVALID',
+        }
+      );
+    }
+
+    const output = {
       baseUrl: flags.baseUrl,
       accountCount: accounts.length,
       accounts,
     };
-  },
-});
+
+    validateWithZod(outputSchema, output);
+    return output;
+  }
+}

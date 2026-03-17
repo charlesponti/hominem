@@ -1,17 +1,10 @@
-import { runCli } from './runtime';
+/**
+ * DEPRECATED - This file is no longer used.
+ * 
+ * The CLI entry point has moved to bin/hominem.js which uses oclif.
+ * This file is kept for historical reference only.
+ */
 
-export async function main(argv?: string[]) {
-  const result = await runCli(argv ?? process.argv.slice(2));
-  return result.exitCode;
-}
-
-if (import.meta.main) {
-  main()
-    .then((exitCode) => {
-      process.exitCode = exitCode;
-    })
-    .catch((error: Error) => {
-      process.stderr.write(`FATAL: ${error.message}\n`);
-      process.exitCode = 10;
-    });
+export async function main() {
+  throw new Error('This file is deprecated. Use bin/hominem.js instead.');
 }

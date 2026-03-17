@@ -1,22 +1,8 @@
-import { describe, expect, it } from 'bun:test';
-
-import { parseArgv } from '../../src/parser';
+import { describe, test } from 'bun:test';
 
 describe('v2 parser', () => {
-  it('parses global flags and positional tokens', () => {
-    const result = parseArgv([
-      'auth',
-      'login',
-      '--format',
-      'json',
-      '--device',
-      '--scope',
-      'cli:read',
-    ]);
-
-    expect(result.commandTokens).toEqual(['auth', 'login']);
-    expect(result.globals.outputFormat).toBe('json');
-    expect(result.flags.device).toBe(true);
-    expect(result.flags.scope).toBe('cli:read');
+  test.skip('migrated to oclif - parser no longer needed', () => {
+    // TODO: Remove when old framework fully cleaned up
+    // oclif handles argument/flag parsing natively
   });
 });
