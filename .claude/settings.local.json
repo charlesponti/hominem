@@ -54,7 +54,17 @@
       "Bash(eas device:list --non-interactive)",
       "Bash(eas device:list --apple-team-id 3QHJ2KN8AL)",
       "Bash(eas build:*)",
-      "Bash(eas env:list --environment preview)"
+      "Bash(eas env:list --environment preview)",
+      "Bash(railway status:*)",
+      "Bash(railway service:*)",
+      "Bash(railway variables:*)",
+      "Bash(railway ps:*)",
+      "Bash(railway list:*)",
+      "Bash(railway run:*)",
+      "Bash(PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"postgresql://user:password@crossover.proxy.rlwy.net:50724/hominem\" status)",
+      "Bash(PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"postgresql://postgres:oI7UiOOcwUXhtZ3wFRKK7v7dp45dXTuktfBDiD@crossover.proxy.rlwy.net:50724/hominem\" status)",
+      "Bash(PATH=\"$HOME/.local/bin:$PATH\" psql \"postgresql://postgres:oI7UiOOcwUXhtZ3wFRKK7v7dp45dXTuktfBDiD@crossover.proxy.rlwy.net:50724/hominem\" -c \"\\\\dt user*\")",
+      "Bash(PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"postgresql://postgres:oI7UiOOcwUXhtZ3wFRKK7v7dp45dXTuktfBDiD@crossover.proxy.rlwy.net:50724/hominem\" up)"
     ]
   }
 }
