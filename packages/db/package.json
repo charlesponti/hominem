@@ -57,11 +57,9 @@
     "dev": "tsc --watch --preserveWatchOutput",
     "prepare": "bun run build",
     "typecheck": "tsc --noEmit",
-    "goose:install": "bash ../../scripts/install-goose.sh",
-    "goose:up": "bash ../../scripts/install-goose.sh && PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"$DATABASE_URL\" up",
-    "goose:down": "bash ../../scripts/install-goose.sh && PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"$DATABASE_URL\" down",
-    "goose:status": "bash ../../scripts/install-goose.sh && PATH=\"$HOME/.local/bin:$PATH\" goose-migrate -dir ./migrations postgres \"$DATABASE_URL\" status",
-    "goose:baseline:pull": "bash ../../scripts/pull-goose-baseline.sh"
+    "goose:up": "goose -dir ./migrations postgres \"$DATABASE_URL\" up",
+    "goose:down": "goose -dir ./migrations postgres \"$DATABASE_URL\" down",
+    "goose:status": "goose -dir ./migrations postgres \"$DATABASE_URL\" status"
   },
   "dependencies": {
     "@hominem/utils": "workspace:*",

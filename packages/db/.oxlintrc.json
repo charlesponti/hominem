@@ -1,0 +1,16 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["**/migrations/schema", "**/migrations/schema/*"],
+            "message": "Do not import from migrations/schema directly. Services must import from packages/db/src/schema/<domain>.ts; schema files must be generated, not re-exported."
+          }
+        ]
+      }
+    ]
+  }
+}

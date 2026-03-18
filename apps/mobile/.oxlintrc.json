@@ -1,0 +1,20 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["expo-blur", "expo-blur/*"],
+            "message": "expo-blur is not part of the approved mobile design system. Use the approved blur/overlay primitives instead."
+          },
+          {
+            "group": ["expo-linear-gradient", "expo-linear-gradient/*", "react-native-linear-gradient", "react-native-linear-gradient/*"],
+            "message": "LinearGradient is not part of the approved mobile design system. Use flat color backgrounds instead."
+          }
+        ]
+      }
+    ]
+  }
+}

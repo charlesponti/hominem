@@ -1,0 +1,16 @@
+{
+  "$schema": "../node_modules/oxlint/configuration_schema.json",
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@hominem/db", "@hominem/db/*"],
+            "message": "Apps must not import directly from @hominem/db. Use @hominem/hono-client for data access or @hominem/hono-rpc/types for types."
+          }
+        ]
+      }
+    ]
+  }
+}

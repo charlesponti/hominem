@@ -30,14 +30,15 @@ For auth or mobile-sensitive changes:
 
 ```bash
 bun run test:e2e:auth
-bun run test:e2e:auth:live
 ```
 
-Check environment drift:
+Check or manage environment variables:
 
 ```bash
-bun scripts/sync-env.ts check
-bun scripts/sync-env.ts diagnose api
+railway variables --service api          # list vars
+railway variables set KEY=value          # set a var
+railway variables delete KEY             # delete a var
+railway run -- bun dev                   # inject prod vars locally
 ```
 
 Railway operations:

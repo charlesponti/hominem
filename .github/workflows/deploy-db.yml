@@ -36,16 +36,14 @@ jobs:
         run: bun install
 
       - name: Install Goose CLI
-        run: |
-          bash scripts/install-goose.sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+        run: go install github.com/pressly/goose/v3/cmd/goose@v3.27.0
 
       - name: Check migration status
-        run: goose-migrate -dir packages/db/migrations postgres "${DATABASE_URL}" status
+        run: goose -dir packages/db/migrations postgres "${DATABASE_URL}" status
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Run database migrations
-        run: goose-migrate -dir packages/db/migrations postgres "${DATABASE_URL}" up
+        run: goose -dir packages/db/migrations postgres "${DATABASE_URL}" up
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

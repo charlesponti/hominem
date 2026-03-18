@@ -1,0 +1,32 @@
+# Squawk PostgreSQL migration linter configuration
+# https://squawkhq.com/docs/
+
+# Exclude the baseline schema dump - it's a pg_dump output, not an incremental migration
+excluded_paths = [
+    "20260309120000_schema_baseline.sql",
+]
+
+excluded_rules = [
+    # Goose wraps migrations in transactions — CREATE INDEX CONCURRENTLY is not
+    # allowed inside a transaction. These rules conflict with that constraint.
+    "require-concurrent-index-creation",
+    "require-concurrent-index-deletion",
+
+    # Type preference rules conflict with the existing schema conventions.
+    # Enforcing these would require rewriting the baseline, not just new migrations.
+    "prefer-bigint-over-int",
+    "prefer-bigint-over-smallint",
+    "prefer-text-field",
+    "prefer-timestamptz",
+    "prefer-identity",
+    "ban-char-field",
+
+    # These are useful at greenfield stage but add friction mid-project.
+    # Enable individually once the team is ready to enforce them.
+    "adding-foreign-key-constraint",
+    "constraint-missing-not-valid",
+    "disallowed-unique-constraint",
+    "adding-field-with-default",
+    "adding-serial-primary-key-field",
+    "require-enum-value-ordering",
+]

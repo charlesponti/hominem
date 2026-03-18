@@ -16,9 +16,7 @@ runs:
   steps:
     - name: Install Goose CLI
       shell: bash
-      run: |
-        bash "${GITHUB_WORKSPACE}/scripts/install-goose.sh"
-        echo "$HOME/.local/bin" >> $GITHUB_PATH
+      run: go install github.com/pressly/goose/v3/cmd/goose@v3.27.0
 
     - name: Ensure database URL available
       shell: bash
@@ -36,4 +34,4 @@ runs:
           echo "Migrations directory not found: $MIGRATIONS_DIR"
           exit 1
         fi
-        goose-migrate -dir "$MIGRATIONS_DIR" postgres "$DATABASE_URL" up
+        goose -dir "$MIGRATIONS_DIR" postgres "$DATABASE_URL" up

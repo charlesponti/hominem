@@ -17,7 +17,7 @@ DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install start dev build test lint typecheck format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e auth-e2e-live auth-e2e-live-local dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-migration-generate db-migration-apply db-schema-update help-db auth-test-up auth-test-down auth-test-status validate-db-setup
+.PHONY: install start dev build test lint typecheck format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-migration-generate db-migration-apply db-schema-update help-db auth-test-up auth-test-down auth-test-status
 
 # Install dependencies
 install:
@@ -94,11 +94,10 @@ test:
 build:
 	bun turbo run build --force
 
-# Run all linting: CSS, DB constraints, workspace code quality
+# Run all linting: CSS, DB migrations, workspace code quality
 lint:
 	bunx stylelint "{apps,packages,services}/**/*.css" --config packages/ui/tools/stylelint-config-void.cjs
-	node scripts/validate-db-imports.js
-	bash scripts/lint-goose-migrations.sh
+	cd packages/db && bunx squawk-cli migrations/*.sql
 	bun turbo run lint --no-cache
 
 # Typecheck the entire monorepo
@@ -114,16 +113,19 @@ clean:
 
 # Test database management
 test-db-start:
-	./scripts/test-db.sh start
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d test-db
+	@until docker exec hominem-test-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
+	@cd packages/db && DATABASE_URL="$(TEST_DATABASE_URL)" bun run goose:up
 
 test-db-stop:
-	./scripts/test-db.sh stop
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml stop test-db
 
 test-db-restart:
-	./scripts/test-db.sh restart
+	$(MAKE) test-db-stop
+	$(MAKE) test-db-start
 
 test-db-status:
-	./scripts/test-db.sh status
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps test-db
 
 # Run tests with test database
 test-with-db: test-db-start
@@ -154,12 +156,6 @@ apple-client-secret:
 auth-e2e:
 	@bun run test:e2e:auth
 
-auth-e2e-live:
-	@bun run test:e2e:auth:live
-
-auth-e2e-live-local:
-	@bun run test:e2e:auth:live:local
-
 auth-test-up:
 	$(MAKE) dev-up
 	$(MAKE) db-migrate-test
@@ -172,8 +168,6 @@ auth-test-down:
 auth-test-status:
 	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps redis db test-db
 
-validate-db-setup:
-	@bash scripts/validate-code-quality-db-setup.sh
 
 # Database Operations Help
 help-db:
@@ -210,15 +204,9 @@ docker-up-full:
 docker-down:
 	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down -v
 
-docker-test-up:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d test-db
-	@echo "Waiting for test database to be ready..."
-	@sleep 3
-	@cd packages/db && DATABASE_URL="postgres://postgres:postgres@localhost:4433/hominem-test" bun run goose:up
-	@echo "Test database ready on port 4433"
+docker-test-up: test-db-start
 
-docker-test-down:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml stop test-db
+docker-test-down: test-db-stop
 
 # Default target
 all: install build
