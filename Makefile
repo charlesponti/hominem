@@ -17,7 +17,7 @@ DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install build test lint typecheck check clean reset all dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down apple-client-secret auth-test-up auth-test-down auth-test-status
+.PHONY: install build test lint typecheck check clean reset all dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down apple-client-secret auth-test-up auth-test-down auth-test-status storybook
 
 # Install dependencies
 install:
@@ -83,7 +83,8 @@ check: lint typecheck
 
 # Clean build artifacts and dependencies
 clean:
-	@./scripts/clean.sh
+	bun turbo run clean
+	find . -name '*.tsbuildinfo' -not -path '*/node_modules/*' -delete
 
 # Test database management
 test-db-start:
@@ -161,7 +162,7 @@ docker-up:
 	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d
 
 docker-up-full:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml -f compose/monitoring.yml up -d
+	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d
 
 docker-down:
 	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down -v
@@ -169,6 +170,15 @@ docker-down:
 docker-test-up: test-db-start
 
 docker-test-down: test-db-stop
+
+# Run all Storybooks in parallel (ui:6006, places:6007, lists:6008, invites:6009, finance:6010)
+storybook:
+	bun run --filter @hominem/ui storybook & \
+	bun run --filter @hominem/places-react storybook & \
+	bun run --filter @hominem/lists-react storybook & \
+	bun run --filter @hominem/invites-react storybook & \
+	bun run --filter @hominem/finance-react storybook & \
+	wait
 
 all: install build
 

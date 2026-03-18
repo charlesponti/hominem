@@ -1,5 +1,5 @@
 EAS  := eas
-EXPO := expo
+EXPO := bunx expo
 
 # Defaults for parameterized commands
 CHANNEL ?= preview

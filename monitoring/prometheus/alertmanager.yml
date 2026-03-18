@@ -1,8 +1,0 @@
-global:
-  resolve_timeout: 5m
-route:
-  receiver: "devnull"
-receivers:
-  - name: "devnull"
-    # no-op receiver for local/dev (drops alerts)
-    # add webhook/email config here for real notifications
