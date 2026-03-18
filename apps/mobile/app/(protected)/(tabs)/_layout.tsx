@@ -10,7 +10,7 @@ export default function TabsLayout() {
       tintColor={theme.colors.primary}
       disableTransparentOnScrollEdge
     >
-      <NativeTabs.Trigger name="start" role="search">
+      <NativeTabs.Trigger name="start">
         <NativeTabs.Trigger.Label>START</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'sparkles', selected: 'sparkles' }} />
       </NativeTabs.Trigger>
@@ -20,9 +20,9 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Icon sf={{ default: 'bolt.fill', selected: 'bolt.fill' }} />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="sherpa" role="search">
+      <NativeTabs.Trigger name="sherpa">
         <NativeTabs.Trigger.Label>SHERPA</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'sparkles', selected: 'sparkles' }} />
+        <NativeTabs.Trigger.Icon sf={{ default: 'bubble.left.fill', selected: 'bubble.left.fill' }} />
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="account">

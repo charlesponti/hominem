@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { TopMerchants } from './top-merchants'
 
 const meta: Meta<typeof TopMerchants> = {
-  title: 'Analytics/TopMerchants',
+  title: 'Finance/Analytics/TopMerchants',
   component: TopMerchants,
   tags: ['autodocs'],
 }

@@ -1,7 +1,6 @@
 import Constants from 'expo-constants';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as {
-  apiBaseUrl?: string;
   mobilePasskeyEnabled?: string;
   e2eTesting?: string;
   e2eAuthSecret?: string;
@@ -34,7 +33,7 @@ function toDeviceReachableApiBaseUrl(baseUrl: string, host: string | null) {
   }
 }
 
-const configuredApiBaseUrlRaw = extra.apiBaseUrl || process.env.EXPO_PUBLIC_API_BASE_URL || '';
+const configuredApiBaseUrlRaw = process.env.EXPO_PUBLIC_API_BASE_URL || '';
 const configuredApiBaseUrl = toDeviceReachableApiBaseUrl(
   configuredApiBaseUrlRaw,
   localHost ?? null,

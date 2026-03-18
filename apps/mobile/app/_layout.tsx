@@ -1,4 +1,5 @@
 import { ThemeProvider } from '@shopify/restyle';
+import { useFonts } from 'expo-font';
 import { SplashScreen, Stack, useRouter, useSegments } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
 import { PostHogProvider } from 'posthog-react-native';
@@ -110,11 +111,22 @@ function InnerRootLayout() {
 }
 
 function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    'Geist Mono': require('../assets/fonts/GeistMono-Regular.ttf'),
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    'fa-regular-400': require('../assets/fonts/icons/fa-regular-400.ttf'),
+  });
+
   useEffect(() => {
     const cleanup = initObservability();
     posthog.capture('app_health_check', { source: 'root_layout' });
     return cleanup;
   }, []);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <PostHogProvider client={posthog}>

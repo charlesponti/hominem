@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, userEvent, within } from '@storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 import { Plus, Trash2 } from 'lucide-react';
 
 import { Button } from './button';
 
 const meta: Meta<typeof Button> = {
-  title: 'UI/Button',
+  title: 'Primitives/Button',
   component: Button,
   tags: ['autodocs'],
   argTypes: {

@@ -1,16 +1,29 @@
 import type { StorybookConfig } from '@storybook/react-vite'
 import tailwindcss from '@tailwindcss/vite'
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 const config: StorybookConfig = {
-  stories: ['../src/**/*.stories.@(ts|tsx)'],
-  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  staticDirs: ['../public'],
+  stories: [
+    '../src/**/*.stories.@(ts|tsx)',
+    '../../finance-react/src/**/*.stories.@(ts|tsx)',
+    '../../places-react/src/**/*.stories.@(ts|tsx)',
+    '../../lists-react/src/**/*.stories.@(ts|tsx)',
+    '../../invites-react/src/**/*.stories.@(ts|tsx)',
+  ],
+  addons: ['@storybook/addon-docs', '@storybook/addon-vitest'],
   framework: {
     name: '@storybook/react-vite',
-    options: {},
+    options: {
+      reactDocgenTypescriptOptions: {
+        propFilter: (prop) =>
+          prop.parent ? !prop.parent.fileName.includes('node_modules') : true,
+      },
+    },
   },
   docs: { autodocs: 'tag' },
   viteFinal: async (config) => {
-    config.plugins = [...(config.plugins ?? []), tailwindcss()]
+    config.plugins = [tailwindcss(), tsconfigPaths(), ...(config.plugins ?? [])]
     return config
   },
 }

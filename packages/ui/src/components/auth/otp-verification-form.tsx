@@ -126,11 +126,16 @@ export function OtpVerificationForm({
     setOtp(value);
   }, []);
 
-  const handleOtpComplete = useCallback(() => {
-    if (otp.length === 6 && !isSubmitting && !isAccountLocked && !isSuccess) {
-      formRef.current?.requestSubmit();
-    }
-  }, [otp, isSubmitting, isAccountLocked, isSuccess]);
+  const handleOtpComplete = useCallback(
+    (completeValue: string) => {
+      if (!isSubmitting && !isAccountLocked && !isSuccess) {
+        setOtp(completeValue);
+        // Use setTimeout to allow the state update to flush before submitting
+        setTimeout(() => formRef.current?.requestSubmit(), 0);
+      }
+    },
+    [isSubmitting, isAccountLocked, isSuccess],
+  );
 
   // Resend is via fetcher since it doesn't need a redirect
   const handleResend = () => {
@@ -175,7 +180,7 @@ export function OtpVerificationForm({
           <OtpCodeInput
             value={otp}
             onChange={handleOtpChange}
-            onComplete={handleOtpComplete}
+            onComplete={(v) => handleOtpComplete(v)}
             error={error}
             disabled={isSubmitting || isAccountLocked}
             autoFocus={!error}

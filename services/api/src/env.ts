@@ -23,10 +23,6 @@ const serverSchema = z.object({
   AUTH_PASSKEY_RP_ID: z.string().default('api.ponti.io'),
   AUTH_PASSKEY_ORIGIN: z.url().default('https://api.ponti.io'),
   AUTH_COOKIE_DOMAIN: z.string().default(''),
-  AUTH_CAPTCHA_PROVIDER: z
-    .enum(['cloudflare-turnstile', 'google-recaptcha', 'hcaptcha', 'captchafox'])
-    .default('cloudflare-turnstile'),
-  AUTH_CAPTCHA_SECRET_KEY: z.string().default(''),
   AUTH_E2E_ENABLED: z.coerce.boolean().default(false),
   AUTH_E2E_SECRET: z.string().default(''),
   AUTH_TEST_OTP_ENABLED: isTest

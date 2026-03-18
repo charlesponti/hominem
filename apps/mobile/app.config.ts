@@ -19,16 +19,20 @@ const { EXPO_OWNER, EXPO_PROJECT_ID, getExpoExtraConfig } = require('./config/ex
   EXPO_OWNER: string
   EXPO_PROJECT_ID: string
   getExpoExtraConfig: (env: Record<string, string | undefined>) => {
-    apiBaseUrl: string
     e2eTesting: string
     e2eAuthSecret: string
     mobilePasskeyEnabled: string
   }
 }
 
-function getAssociatedDomains() {
-  const passkeyRpDomain = process.env.EXPO_PUBLIC_PASSKEY_RP_DOMAIN?.trim() || 'api.ponti.io'
+function getAssociatedDomains(appVariant: AppVariant) {
+  // Only release variants need Associated Domains (for passkey webcredentials).
+  // Dev/e2e provisioning profiles don't include the entitlement.
+  if (appVariant === 'dev' || appVariant === 'e2e') {
+    return undefined
+  }
 
+  const passkeyRpDomain = process.env.EXPO_PUBLIC_PASSKEY_RP_DOMAIN?.trim() || 'api.ponti.io'
   return [`webcredentials:${passkeyRpDomain}`]
 }
 
@@ -96,6 +100,9 @@ export default ({ config }: ConfigContext) => {
     ['expo-secure-store'],
     'expo-localization',
     'expo-web-browser',
+    'expo-asset',
+    'expo-audio',
+    'expo-sqlite',
   ]
 
   if (variantConfig.usesDevClient) {
@@ -118,7 +125,7 @@ export default ({ config }: ConfigContext) => {
     owner: EXPO_OWNER,
     orientation: 'portrait',
     icon: './assets/icon.png',
-    userInterfaceStyle: 'dark',
+    userInterfaceStyle: 'light',
     assetBundlePatterns: ['**/*'],
     splash: {
       image: './assets/splash.png',
@@ -139,7 +146,7 @@ export default ({ config }: ConfigContext) => {
     ios: {
       icon: './assets/icon.png',
       appleTeamId: process.env.EXPO_APPLE_TEAM_ID ?? '3QHJ2KN8AL',
-      associatedDomains: getAssociatedDomains(),
+      associatedDomains: getAssociatedDomains(appVariant),
       bundleIdentifier: variantConfig.bundleIdentifier,
       supportsTablet: true,
       infoPlist: {

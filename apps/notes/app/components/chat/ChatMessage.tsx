@@ -1,6 +1,7 @@
 import type { ChatMessageToolCall } from '@hominem/hono-rpc/types/chat.types';
 import { Form, Inline, Stack } from '@hominem/ui';
 import {
+  MarkdownContent,
   Message,
   MessageAnnotations,
   MessageContent,
@@ -25,8 +26,6 @@ import { useMessageEdit } from '~/lib/hooks/use-message-edit';
 import type { ExtendedMessage } from '~/lib/types/chat-message';
 import { cn } from '~/lib/utils';
 import { copyToClipboard } from '~/lib/utils/clipboard';
-
-import { MarkdownContent } from './MarkdownContent';
 
 interface ChatMessageProps {
   message: ExtendedMessage;

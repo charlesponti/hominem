@@ -5,7 +5,7 @@ import { Label } from './label';
 import { Textarea } from './textarea';
 
 const meta: Meta<typeof Input> = {
-  title: 'UI/Input',
+  title: 'Forms/Input',
   component: Input,
   tags: ['autodocs'],
 };

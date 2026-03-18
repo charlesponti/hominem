@@ -1,15 +1,21 @@
 import type { Preview } from '@storybook/react'
+import { HonoProvider } from '@hominem/hono-client/react'
+import { initialize, mswLoader } from 'msw-storybook-addon'
+import { MemoryRouter } from 'react-router'
+import { handlers } from '../src/mocks/handlers'
 import '../src/styles/globals.css'
 import '../src/styles/animations.css'
+
+initialize()
 
 const preview: Preview = {
   parameters: {
     backgrounds: {
       default: 'base',
       values: [
-        { name: 'base', value: '#0f1113' },
-        { name: 'surface', value: '#14171a' },
-        { name: 'elevated', value: '#1a1e22' },
+        { name: 'base', value: '#ffffff' },
+        { name: 'surface', value: '#f5f5f7' },
+        { name: 'elevated', value: '#f2f2f7' },
       ],
     },
     controls: {
@@ -18,12 +24,20 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
+    msw: {
+      handlers,
+    },
   },
+  loaders: [mswLoader],
   decorators: [
     (Story) => (
-      <div className="p-8 min-h-screen">
-        <Story />
-      </div>
+      <HonoProvider config={{ baseUrl: 'http://localhost:3000', getAuthToken: async () => null }}>
+        <MemoryRouter>
+          <div className="p-8 min-h-screen">
+            <Story />
+          </div>
+        </MemoryRouter>
+      </HonoProvider>
     ),
   ],
 }

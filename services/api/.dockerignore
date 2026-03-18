@@ -66,10 +66,6 @@ docs
 tsconfig.json
 tsconfig.test.json
 vitest.config.mts
-.eslintrc*
-.prettierrc*
-prettier.config.*
-eslintignore
 
 # Logs
 logs

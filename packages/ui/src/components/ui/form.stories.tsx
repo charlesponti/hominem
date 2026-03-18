@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, fn, userEvent, within } from '@storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { Button } from './button';
 import { Form } from './form';
 import { TextField } from './text-field';
 
 const meta: Meta<typeof Form> = {
-  title: 'UI/Form',
+  title: 'Forms/Form',
   component: Form,
   tags: ['autodocs'],
 };

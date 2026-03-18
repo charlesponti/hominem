@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, userEvent, within } from '@storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Button } from './button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
 
 const meta: Meta = {
-  title: 'UI/Card',
+  title: 'Data Display/Card',
   tags: ['autodocs'],
 };
 export default meta;

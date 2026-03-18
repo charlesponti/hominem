@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, userEvent, within } from '@storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Field } from './field';
 import { Input } from './input';
 import { Textarea } from './textarea';
 
 const meta: Meta<typeof Field> = {
-  title: 'UI/Field',
+  title: 'Forms/Field',
   component: Field,
   tags: ['autodocs'],
 };

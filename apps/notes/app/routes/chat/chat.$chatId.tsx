@@ -15,7 +15,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { ChatHeader } from '~/components/chat/ChatHeader';
 import { ChatMessages } from '~/components/chat/ChatMessages';
-import { ClassificationReview } from '~/components/classification-review';
+import { ClassificationReview } from '@hominem/ui/ai-elements';
 import { useComposer } from '~/components/hyper-form/composer-provider';
 import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';

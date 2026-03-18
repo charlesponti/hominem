@@ -4,7 +4,7 @@ import { PageTitle } from './page-title';
 import { Button } from './ui/button';
 
 const meta: Meta<typeof PageTitle> = {
-  title: 'UI/PageTitle',
+  title: 'Layout/PageTitle',
   component: PageTitle,
   tags: ['autodocs'],
   argTypes: {

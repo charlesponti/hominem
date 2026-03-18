@@ -12,12 +12,15 @@ NODE_ENV ?= development
 APPLE_KEY_PATH ?= $(CURDIR)/.auth/AuthKey_2438T5MGLH.p8
 APPLE_EXPIRES_DAYS ?= 150
 APPLE_KEY_ID ?= 2438T5MGLH
-CLOUDFLARED ?= cloudflared
 DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install build test lint typecheck check clean reset all dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down apple-client-secret auth-test-up auth-test-down auth-test-status storybook
+.PHONY: install build test lint typecheck check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down apple-client-secret auth-test-up auth-test-down auth-test-status storybook storybook-test
+
+# Start the mobile dev server (Expo dev client, dev variant)
+dev:
+	bun run --filter @hominem/mobile start
 
 # Install dependencies
 install:
@@ -171,14 +174,13 @@ docker-test-up: test-db-start
 
 docker-test-down: test-db-stop
 
-# Run all Storybooks in parallel (ui:6006, places:6007, lists:6008, invites:6009, finance:6010)
+# Run unified Storybook (all components at port 6006)
 storybook:
-	bun run --filter @hominem/ui storybook & \
-	bun run --filter @hominem/places-react storybook & \
-	bun run --filter @hominem/lists-react storybook & \
-	bun run --filter @hominem/invites-react storybook & \
-	bun run --filter @hominem/finance-react storybook & \
-	wait
+	bun run --filter @hominem/ui storybook
+
+# Run story-based tests with Vitest + Playwright
+storybook-test:
+	cd packages/ui && bunx vitest --config vitest.stories.ts
 
 all: install build
 

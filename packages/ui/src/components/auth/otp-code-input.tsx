@@ -10,7 +10,7 @@ interface OtpCodeInputProps {
   autoFocus?: boolean;
   className?: string;
   error?: string | undefined;
-  onComplete?: () => void;
+  onComplete?: (value: string) => void;
   maskDelay?: number;
 }
 
@@ -145,7 +145,7 @@ export function OtpCodeInput({
       inputRefs.current[index + 1]?.focus();
 
       if (joinedValue.length === length) {
-        onComplete?.();
+        onComplete?.(joinedValue);
       }
     },
     [inputValues, length, maskDelay, onChange, onComplete],
@@ -192,7 +192,7 @@ export function OtpCodeInput({
       inputRefs.current[Math.min(pastedValue.length, length) - 1]?.focus();
 
       if (pastedValue.length === length) {
-        onComplete?.();
+        onComplete?.(nextValue);
       }
     },
     [length, maskDelay, onChange, onComplete],

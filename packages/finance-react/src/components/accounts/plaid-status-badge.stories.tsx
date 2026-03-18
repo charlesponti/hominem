@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { PlaidStatusBadge } from './plaid-status-badge'
 
 const meta: Meta<typeof PlaidStatusBadge> = {
-  title: 'Finance/PlacidStatusBadge',
+  title: 'Finance/PlaidStatusBadge',
   component: PlaidStatusBadge,
   tags: ['autodocs'],
   argTypes: {

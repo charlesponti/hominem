@@ -8,7 +8,6 @@ import type { BetterAuthPlugin } from 'better-auth';
 import { betterAuth } from 'better-auth';
 import {
   bearer,
-  captcha,
   deviceAuthorization,
   emailOTP,
   jwt,
@@ -227,21 +226,6 @@ function getAuthPlugins() {
       theme: 'deepSpace',
     }),
   ];
-
-  if (env.AUTH_CAPTCHA_SECRET_KEY) {
-    const captchaPlugin = captcha({
-      provider: env.AUTH_CAPTCHA_PROVIDER,
-      secretKey: env.AUTH_CAPTCHA_SECRET_KEY,
-      endpoints: [
-        '/sign-in/social',
-        '/sign-in/email',
-        '/sign-up/email',
-        '/passkey/verify-authentication',
-        '/api-key/create',
-      ],
-    }) as BetterAuthPlugin;
-    plugins.push(captchaPlugin);
-  }
 
   return plugins;
 }

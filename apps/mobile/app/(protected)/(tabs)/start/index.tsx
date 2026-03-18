@@ -7,7 +7,6 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IntentPill } from '~/components/start/intent-pill';
-import { AsciiTexture } from '~/components/ui/ascii-texture';
 import { Text, makeStyles } from '~/theme';
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 import { useIntentSuggestions } from '~/utils/services/intents/use-intent-suggestions';
@@ -78,7 +77,6 @@ export default function StartScreen() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView testID="start-screen" style={styles.background}>
-        <AsciiTexture />
         <ScrollView
           style={styles.scrollFlex}
           contentContainerStyle={styles.container}

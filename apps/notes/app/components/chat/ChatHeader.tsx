@@ -28,7 +28,7 @@ import {
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
 
-import { ContextAnchor } from '~/components/context-anchor';
+import { ContextAnchor } from '@hominem/ui/ai-elements';
 
 interface ChatHeaderProps {
   source: SessionSource;

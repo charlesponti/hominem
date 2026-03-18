@@ -13,7 +13,6 @@ mock.module('expo-constants', () => ({
   default: {
     expoConfig: {
       extra: {
-        apiBaseUrl: 'https://test-api.example.com',
         appScheme: 'hakumi-e2e',
         appVariant: 'e2e',
       },

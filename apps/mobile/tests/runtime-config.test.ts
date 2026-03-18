@@ -12,11 +12,11 @@ describe('mobile runtime config', () => {
   })
 
   it('treats preview and production as release variants', async () => {
+    process.env.EXPO_PUBLIC_API_BASE_URL = 'https://api.ponti.io'
     vi.doMock('expo-constants', () => ({
       default: {
         expoConfig: {
           extra: {
-            apiBaseUrl: 'https://api.ponti.io',
             appVariant: 'preview',
           },
         },
@@ -35,7 +35,6 @@ describe('mobile runtime config', () => {
       default: {
         expoConfig: {
           extra: {
-            apiBaseUrl: '',
             appVariant: 'preview',
           },
         },
