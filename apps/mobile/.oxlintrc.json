@@ -1,6 +1,17 @@
 {
   "$schema": "../../node_modules/oxlint/configuration_schema.json",
   "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "CallExpression[callee.name='withSpring']",
+        "message": "withSpring is not part of the approved animation system. Use the approved animation primitives instead."
+      },
+      {
+        "selector": "CallExpression[callee.name=/^springify/]",
+        "message": "springify is not part of the approved animation system. Use the approved animation primitives instead."
+      }
+    ],
     "no-restricted-imports": [
       "error",
       {

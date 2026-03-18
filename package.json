@@ -40,7 +40,7 @@
     "test:e2e:auth:api": "bun run --filter @hominem/api test -- src/routes/auth.cli-bridge.test.ts src/routes/auth.rate-limit.test.ts src/routes/auth.token-contract.test.ts src/routes/auth.middleware.test.ts",
     "typecheck": "make typecheck",
     "update:turbo": "bunx @turbo/codemod@latest update",
-"verify:mobile": "bash scripts/verify-mobile.sh"
+"verify:mobile": "bun run --filter @hominem/mobile verify:expo-config"
   },
   "dependencies": {
     "@better-auth/kysely-adapter": "^1.5.4",

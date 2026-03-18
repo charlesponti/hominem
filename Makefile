@@ -1,4 +1,4 @@
-# Makefile for Node.js, Docker, Fastify, and Goose migrations
+# Makefile for local development, Docker, and database operations
 
 # Load root environment variables when present.
 ifneq (,$(wildcard .env))
@@ -17,24 +17,11 @@ DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install start dev build test lint typecheck format clean docker-up docker-up-full docker-down docker-start docker-stop docker-test-up docker-test-down check reset all test-db-start test-db-stop test-db-restart test-db-status apple-client-secret auth-e2e dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-migration-generate db-migration-apply db-schema-update help-db auth-test-up auth-test-down auth-test-status
+.PHONY: install build test lint typecheck check clean reset all dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down apple-client-secret auth-test-up auth-test-down auth-test-status
 
 # Install dependencies
 install:
 	bun install
-
-# Start the application in production mode
-start:
-	bun start
-
-# Start the application in development mode
-dev:
-	@echo "Starting development server..."
-	pm2 start bun --name="hominem" -- run dev
-
-run-redis:
-	@echo "Starting Redis..."
-	pm2 start bun --name="hominem-redis" -- run redis
 
 # Full local development setup (deps + infra + migrations)
 dev-setup: install dev-up db-migrate-all dev-status
@@ -72,19 +59,6 @@ db-migrate-test:
 
 # Run all local database migrations required for development
 db-migrate-all: db-migrate db-migrate-test
-
-# Database migration workflow targets
-db-migration-generate:
-	@echo "Goose uses SQL-first migrations. Create a new file in packages/db/migrations with UTC timestamp prefix."
-
-# Step 2: Apply generated migrations to databases
-db-migration-apply: db-migrate-all
-
-# Full workflow: add a new Goose migration file, then run this
-# Example: make db-schema-update
-db-schema-update: db-migration-generate db-migration-apply
-	@echo "✓ Database schema updated and migrations applied"
-	@echo "Remember to commit: git add packages/db/migrations/"
 
 # Run tests
 test:
@@ -127,11 +101,6 @@ test-db-restart:
 test-db-status:
 	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps test-db
 
-# Run tests with test database
-test-with-db: test-db-start
-	bun test
-	$(MAKE) test-db-stop
-
 # Full cleanup and reinstall
 reset: clean install
 
@@ -152,9 +121,6 @@ apple-client-secret:
 		--client-id "$(APPLE_CLIENT_ID)" \
 		--key-id "$(APPLE_KEY_ID)" \
 		--expires-days "$(APPLE_EXPIRES_DAYS)"
-
-auth-e2e:
-	@bun run test:e2e:auth
 
 auth-test-up:
 	$(MAKE) dev-up
@@ -182,7 +148,7 @@ help-db:
 	@echo "  4. Run: make db-migrate-all"
 	@echo ""
 	@echo "Individual Steps:"
-	@echo "  make db-migration-apply    # Apply migrations to dev + test databases"
+	@echo "  make db-migrate-all    # Apply migrations to dev + test databases"
 	@echo ""
 	@echo "Safety rules:"
 	@echo "  - Expand -> Backfill -> Contract"
@@ -191,10 +157,6 @@ help-db:
 	@echo ""
 
 # Docker compose targets
-docker-start: docker-up
-
-docker-stop: docker-down
-
 docker-up:
 	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d
 
@@ -208,5 +170,5 @@ docker-test-up: test-db-start
 
 docker-test-down: test-db-stop
 
-# Default target
 all: install build
+
