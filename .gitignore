@@ -21,6 +21,7 @@ build
 logs
 dist
 results.json
+storybook-static/
 
 # misc
 .DS_Store
