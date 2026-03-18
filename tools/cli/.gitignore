@@ -1,3 +1,6 @@
 .samples
 node_modules
 dist
+.logs
+debug-error.json
+*.log
