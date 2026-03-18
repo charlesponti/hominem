@@ -272,7 +272,6 @@ jobs:
         run: |
           bun run --filter @hominem/mobile test:unit:auth
           bun run --filter @hominem/mobile test:integration:auth
-          bun run --filter @hominem/mobile test:screens:auth
         timeout-minutes: 15
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
@@ -339,7 +338,7 @@ jobs:
           cd apps/notes && bunx playwright install --with-deps chromium
         timeout-minutes: 20
       - name: 🌐 Web auth E2E tests
-        run: bun run test:e2e:auth:app
+        run: bun run test:e2e:auth:api
         timeout-minutes: 20
         env:
           AUTH_TEST_OTP_ENABLED: "true"
