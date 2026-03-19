@@ -1,4 +1,3 @@
-import { fontSizes } from '@hominem/ui/tokens';
 import { Link } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
 import { memo, useCallback, useEffect, useRef } from 'react';
@@ -61,49 +60,52 @@ const useStyles = makeStyles((t) =>
     },
     itemContainer: {
       flexDirection: 'row',
-      paddingVertical: t.spacing.m_16,
+      alignItems: 'center',
+      paddingVertical: t.spacing.sm_12,
       paddingHorizontal: t.spacing.m_16,
-      paddingRight: t.spacing.m_16,
       borderRadius: t.borderRadii.xl_20,
       backgroundColor: theme.colors.background,
       borderWidth: 1,
       borderColor: theme.colors['border-default'],
+      gap: t.spacing.sm_12,
     },
     focusInfoContainer: {
       flex: 1,
-      rowGap: t.spacing.xs_4,
+      gap: 2,
     },
     title: {
       fontWeight: '600',
-      fontSize: fontSizes.sm,
+      fontSize: 14,
       lineHeight: 20,
       color: theme.colors.foreground,
     },
     preview: {
-      fontSize: fontSizes.sm,
-      lineHeight: 20,
+      fontSize: 13,
+      lineHeight: 18,
       color: theme.colors['text-secondary'],
     },
     itemRow: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
+      gap: t.spacing.sm_12,
     },
     itemContent: {
       flex: 1,
       flexDirection: 'column',
-      rowGap: t.spacing.sm_8,
+      gap: t.spacing.xs_4,
     },
     triggerFull: {
       flex: 1,
       width: '100%',
     },
     icon: {
-      borderRadius: 999 /* ensures circular shape */,
-      padding: t.spacing.sm_8,
-      paddingHorizontal: t.spacing.sm_12,
+      width: 36,
+      height: 36,
+      borderRadius: 18,
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
       borderWidth: 1,
       borderColor: theme.colors['border-default'],
       backgroundColor: theme.colors['bg-surface'],

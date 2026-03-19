@@ -25,12 +25,6 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Icon sf={{ default: 'bubble.left.fill', selected: 'bubble.left.fill' }} />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="account">
-        <NativeTabs.Trigger.Label>ACCOUNT</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }}
-        />
-      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
