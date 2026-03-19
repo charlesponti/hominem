@@ -128,53 +128,97 @@ export const ChatInput = ({
         </ScrollView>
       )}
 
-      <View style={styles.composerShell}>
-        {attachments.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.attachmentsScroll}
-            contentContainerStyle={styles.attachmentsContent}
-          >
-            {attachments.map((asset) => {
-              const name = asset.fileName ?? asset.uri.split('/').pop() ?? 'image';
-              return (
-                <View key={asset.uri} style={styles.attachmentChip}>
-                  <Text style={styles.attachmentName} numberOfLines={1}>
-                    {name}
-                  </Text>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onPress={() => handleRemoveAttachment(asset.uri)}
-                    textStyle={styles.removeAttachment}
-                    accessibilityLabel={`Remove ${name}`}
-                  >
-                    ×
-                  </Button>
-                </View>
-              );
-            })}
-          </ScrollView>
-        )}
+      {attachments.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.attachmentsScroll}
+          contentContainerStyle={styles.attachmentsContent}
+        >
+          {attachments.map((asset) => {
+            const name = asset.fileName ?? asset.uri.split('/').pop() ?? 'image';
+            return (
+              <View key={asset.uri} style={styles.attachmentChip}>
+                <Text style={styles.attachmentName} numberOfLines={1}>
+                  {name}
+                </Text>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onPress={() => handleRemoveAttachment(asset.uri)}
+                  textStyle={styles.removeAttachment}
+                  accessibilityLabel={`Remove ${name}`}
+                >
+                  ×
+                </Button>
+              </View>
+            );
+          })}
+        </ScrollView>
+      )}
 
-        <View style={styles.inputRow}>
-          <TextArea
-            ref={inputRef}
-            containerStyle={styles.inputContainer}
-            placeholder="Ask a follow-up or drop in a new thought"
-            style={[styles.input, isOverLimit && styles.inputError]}
-            editable={!isPending}
-            value={message}
-            onChangeText={onMessageChange}
-            testID="chat-input-message"
-            onSubmitEditing={handleSend}
-            returnKeyType="send"
-          />
+      <TextArea
+        ref={inputRef}
+        containerStyle={styles.inputContainer}
+        placeholder="Reply to Sherpa"
+        style={[styles.input, isOverLimit && styles.inputError]}
+        editable={!isPending}
+        value={message}
+        onChangeText={onMessageChange}
+        testID="chat-input-message"
+        onSubmitEditing={handleSend}
+        returnKeyType="send"
+      />
+
+      <View style={styles.toolbar}>
+        <View style={styles.toolsLeft}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            style={styles.toolButton}
+            onPress={handlePickImage}
+            disabled={isPending}
+            accessibilityLabel="Attach image"
+            testID="chat-attach-button"
+          >
+            <AppIcon name="plus" size={20} style={styles.toolIcon} />
+          </Button>
+          {onTransformNote ? (
+            <Button
+              variant="ghost"
+              size="xs"
+              style={[styles.toolButton, !canTransformNote ? styles.disabled : null]}
+              onPress={onTransformNote}
+              disabled={!canTransformNote}
+              accessibilityLabel="Transform conversation into a note"
+            >
+              <Text style={styles.toolText}>note</Text>
+            </Button>
+          ) : null}
+          {shouldShowCharacterCount ? (
+            <Text style={[styles.charCount, isOverLimit && styles.charCountError]}>
+              {isOverLimit ? 'Too long' : `${characterCount}/${MAX_MESSAGE_LENGTH}`}
+            </Text>
+          ) : null}
+        </View>
+
+        <View style={styles.toolsRight}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            style={styles.toolButton}
+            onPress={() => setIsVoiceModalOpen(true)}
+            disabled={isPending}
+            accessibilityLabel="Open voice input"
+            accessibilityHint="Opens a full-screen voice recording panel"
+            testID="chat-voice-input-button"
+          >
+            <AppIcon name="microphone" size={18} style={styles.toolIcon} />
+          </Button>
           <Button
             variant="primary"
             size="icon-sm"
-            style={[styles.sendButton, !canSend ? styles.disabled : null]}
+            style={[styles.sendButton, !canSend ? styles.sendButtonDisabled : null]}
             disabled={!canSend}
             onPress={handleSend}
             accessibilityLabel="Send message"
@@ -182,55 +226,6 @@ export const ChatInput = ({
           >
             <AppIcon name="arrow-up" size={18} style={styles.sendIcon} />
           </Button>
-        </View>
-
-        <View style={styles.footer}>
-          <View style={styles.toolsRow}>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              style={styles.toolButton}
-              onPress={handlePickImage}
-              disabled={isPending}
-              accessibilityLabel="Attach image"
-              testID="chat-attach-button"
-            >
-              <AppIcon name="paperclip" size={16} style={styles.toolIcon} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              style={styles.toolButton}
-              onPress={() => setIsVoiceModalOpen(true)}
-              disabled={isPending}
-              accessibilityLabel="Open voice input"
-              accessibilityHint="Opens a full-screen voice recording panel"
-              testID="chat-voice-input-button"
-            >
-              <AppIcon name="microphone" size={16} style={styles.toolIcon} />
-            </Button>
-            {onTransformNote ? (
-              <Button
-                variant="ghost"
-                size="xs"
-                style={[styles.noteButton, !canTransformNote ? styles.disabled : null]}
-                onPress={onTransformNote}
-                disabled={!canTransformNote}
-                accessibilityLabel="Transform conversation into a note"
-              >
-                note
-              </Button>
-            ) : null}
-          </View>
-
-          <View style={styles.footerMeta}>
-            {isOverLimit ? <Text style={styles.overLimitText}>Message too long</Text> : null}
-            <Text style={[styles.charCount, isOverLimit && styles.charCountError]}>
-              {shouldShowCharacterCount
-                ? `${characterCount}/${MAX_MESSAGE_LENGTH}`
-                : 'Return to send'}
-            </Text>
-          </View>
         </View>
       </View>
 
@@ -247,11 +242,12 @@ const useStyles = makeStyles((t) =>
   StyleSheet.create({
     container: {
       paddingHorizontal: t.spacing.m_16,
-      paddingVertical: t.spacing.sm_12,
+      paddingTop: t.spacing.sm_12,
+      paddingBottom: t.spacing.xs_4,
       borderTopWidth: 1,
       borderTopColor: t.colors['border-default'],
       backgroundColor: t.colors.background,
-      gap: chatTokensNative.composerGap,
+      gap: t.spacing.xs_4,
     },
     suggestionsScroll: {
       flexGrow: 0,
@@ -264,15 +260,6 @@ const useStyles = makeStyles((t) =>
       backgroundColor: chatTokensNative.surfaces.suggestion,
       borderColor: chatTokensNative.borders.suggestion,
       borderRadius: chatTokensNative.radii.suggestion,
-    },
-    composerShell: {
-      borderWidth: 1,
-      borderColor: chatTokensNative.borders.composer,
-      borderRadius: chatTokensNative.radii.composer,
-      backgroundColor: chatTokensNative.surfaces.composer,
-      paddingHorizontal: chatTokensNative.composerPadding,
-      paddingVertical: chatTokensNative.composerPadding,
-      gap: chatTokensNative.composerFooterGap,
     },
     attachmentsScroll: {
       flexGrow: 0,
@@ -302,13 +289,8 @@ const useStyles = makeStyles((t) =>
     removeAttachment: {
       color: t.colors['text-tertiary'],
     },
-    inputRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      gap: t.spacing.sm_12,
-    },
     inputContainer: {
-      flex: 1,
+      width: '100%',
     },
     input: {
       color: t.colors.foreground,
@@ -316,15 +298,44 @@ const useStyles = makeStyles((t) =>
       fontFamily: fontFamiliesNative.primary,
       lineHeight: 24,
       maxHeight: 140,
-      minHeight: 48,
+      minHeight: 44,
       backgroundColor: 'transparent',
       borderWidth: 0,
       borderRadius: 0,
       paddingHorizontal: 0,
-      paddingVertical: 0,
+      paddingVertical: t.spacing.xs_4,
     },
     inputError: {
       borderColor: t.colors.destructive,
+    },
+    toolbar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    toolsLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.xs_4,
+    },
+    toolsRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.sm_8,
+    },
+    toolButton: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+      width: 40,
+      height: 40,
+    },
+    toolIcon: {
+      color: t.colors['text-tertiary'],
+    },
+    toolText: {
+      fontSize: fontSizes.xs,
+      fontFamily: fontFamiliesNative.mono,
+      color: t.colors['text-tertiary'],
     },
     sendButton: {
       backgroundColor: t.colors['emphasis-highest'],
@@ -333,40 +344,14 @@ const useStyles = makeStyles((t) =>
       height: 40,
       borderRadius: 20,
     },
-    disabled: {
-      opacity: 0.5,
-    },
-    footer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: t.spacing.sm_8,
-    },
-    toolsRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: t.spacing.xs_4,
-    },
-    toolButton: {
-      backgroundColor: 'transparent',
-      borderColor: 'transparent',
-    },
-    toolIcon: {
-      color: t.colors['text-tertiary'],
-    },
-    noteButton: {
-      backgroundColor: t.colors['bg-surface'],
-      borderColor: t.colors['border-default'],
+    sendButtonDisabled: {
+      opacity: 0.4,
     },
     sendIcon: {
       color: t.colors.white,
     },
-    footerMeta: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: t.spacing.sm_8,
-      flex: 1,
+    disabled: {
+      opacity: 0.5,
     },
     charCount: {
       fontSize: fontSizes.xs,
@@ -374,11 +359,6 @@ const useStyles = makeStyles((t) =>
       color: t.colors['text-tertiary'],
     },
     charCountError: {
-      color: t.colors.destructive,
-    },
-    overLimitText: {
-      fontSize: fontSizes.xs,
-      fontFamily: fontFamiliesNative.mono,
       color: t.colors.destructive,
     },
   }),
