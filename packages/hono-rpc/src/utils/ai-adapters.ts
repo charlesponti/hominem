@@ -6,7 +6,7 @@
  * adapters to bridge the gap.
  */
 
-import type { CoreMessage, ToolSet } from 'ai';
+import type { CoreMessage } from 'ai';
 import type { ChatMessageRole } from '@hominem/chat-services';
 
 /**
@@ -56,30 +56,3 @@ export function toCoreMessage(message: {
   }
 }
 
-/**
- * Type the tools array for Vercel AI SDK
- *
- * FRAMEWORK INTEROPERABILITY NOTE:
- * Our tools use TanStack AI's toolDefinition() which returns a different
- * Tool type than Vercel AI SDK's Tool type. However, at runtime they're
- * compatible because both follow similar conventions (description, parameters,
- * execute function).
- *
- * The type assertion here is necessary because we're deliberately bridging
- * two different AI frameworks. The alternative would be to rewrite all tools
- * to use Vercel AI SDK's tool() function instead of TanStack AI's toolDefinition().
- */
-export function typeToolsForAI(tools: unknown[]): ToolSet {
-  const toolsObject: Record<string, unknown> = {};
-
-  tools.forEach((tool, index) => {
-    // TanStack AI tools have a 'name' property we can use as the key
-    const toolWithName = tool as { name?: string };
-    const key = toolWithName.name || `tool_${index}`;
-    toolsObject[key] = tool;
-  });
-
-  // Type assertion: TanStack AI Tool -> Vercel AI SDK Tool
-  // These are structurally compatible at runtime
-  return toolsObject as ToolSet;
-}

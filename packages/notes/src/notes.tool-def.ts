@@ -1,4 +1,4 @@
-import { toolDefinition } from '@tanstack/ai';
+import { tool } from 'ai';
 import * as z from 'zod';
 
 import {
@@ -19,13 +19,6 @@ const NoteOutputSchema = z.object({
   tags: z.array(z.object({ value: z.string() })).nullable(),
   createdAt: z.string(),
   updatedAt: z.string(),
-});
-
-export const createNoteDef = toolDefinition({
-  name: 'create_note',
-  description: 'Create a new note with a title and content',
-  inputSchema: CreateNoteInputSchema,
-  outputSchema: NoteOutputSchema,
 });
 
 export const createNoteServerForUser =
@@ -49,13 +42,6 @@ export const createNoteServerForUser =
     };
   };
 
-export const listNotesDef = toolDefinition({
-  name: 'list_notes',
-  description: 'List all notes for the authenticated user',
-  inputSchema: ListNotesInputSchema,
-  outputSchema: ListNotesOutputSchema,
-});
-
 export const listNotesServerForUser =
   (userId: string) =>
   async (
@@ -75,3 +61,17 @@ export const listNotesServerForUser =
       total: result.total,
     };
   };
+
+export const createNoteTool = (userId: string) =>
+  tool({
+    description: 'Create a new note with a title and content',
+    parameters: CreateNoteInputSchema,
+    execute: createNoteServerForUser(userId),
+  });
+
+export const listNotesTool = (userId: string) =>
+  tool({
+    description: 'List all notes for the authenticated user',
+    parameters: ListNotesInputSchema,
+    execute: listNotesServerForUser(userId),
+  });

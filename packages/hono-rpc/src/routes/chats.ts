@@ -35,7 +35,7 @@ import {
   chatsSendSchema,
   chatsUISendSchema,
 } from '../types/chat.types'
-import { toCoreMessage, typeToolsForAI } from '../utils/ai-adapters'
+import { toCoreMessage } from '../utils/ai-adapters'
 import { getOpenAIAdapter } from '../utils/llm'
 import { getAvailableTools } from '../utils/tools'
 
@@ -184,6 +184,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     try {
       const result = await generateText({
         model: adapter,
+        tools: getAvailableTools(userId),
         messages: messagesWithNewUser,
       })
       logger.info('[chats.send] generateText complete', {
@@ -291,7 +292,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     try {
       result = streamText({
         model: getOpenAIAdapter(),
-        tools: typeToolsForAI(getAvailableTools(userId)),
+        tools: getAvailableTools(userId),
         messages: coreMessages,
         async onFinish(event) {
           const persistedToolCalls = toPersistedToolCalls(

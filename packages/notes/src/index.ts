@@ -2,8 +2,8 @@ export * from './notes.service';
 export * from './contracts';
 export * from './types';
 export {
-  createNoteDef,
+  createNoteTool,
   createNoteServerForUser,
-  listNotesDef,
+  listNotesTool,
   listNotesServerForUser,
 } from './notes.tool-def';

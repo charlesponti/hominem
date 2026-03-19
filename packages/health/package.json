@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@hominem/db": "workspace:*",
-    "@tanstack/ai": "0.2.0",
+    "ai": "^4.3.0",
     "zod": "4.3.6"
   },
   "devDependencies": {

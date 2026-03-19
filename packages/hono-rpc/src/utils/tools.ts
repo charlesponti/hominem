@@ -1,26 +1,14 @@
+import type { ToolSet } from 'ai';
+
 import {
-  recommendWorkoutDef,
-  assessMentalWellnessDef,
-  recommendWorkoutServer,
-  assessMentalWellnessServer,
+  recommendWorkoutTool,
+  assessMentalWellnessTool,
 } from '@hominem/health-services/tools';
-import {
-  createNoteDef,
-  listNotesDef,
-  createNoteServerForUser,
-  listNotesServerForUser,
-} from '@hominem/notes-services';
+import { createNoteTool, listNotesTool } from '@hominem/notes-services';
 
-/**
- * Export TanStack AI tools with server implementations
- * Each tool is set up with its `.server()` implementation for execution
- */
-export const getAvailableTools = (userId: string): unknown[] => [
-  // Notes
-  createNoteDef.server(createNoteServerForUser(userId)),
-  listNotesDef.server(listNotesServerForUser(userId)),
-
-  // Wellness
-  recommendWorkoutDef.server(recommendWorkoutServer),
-  assessMentalWellnessDef.server(assessMentalWellnessServer),
-];
+export const getAvailableTools = (userId: string): ToolSet => ({
+  create_note: createNoteTool(userId),
+  list_notes: listNotesTool(userId),
+  recommend_workout: recommendWorkoutTool,
+  assess_mental_wellness: assessMentalWellnessTool,
+});

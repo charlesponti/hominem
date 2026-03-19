@@ -1,4 +1,4 @@
-import { toolDefinition } from '@tanstack/ai';
+import { tool } from 'ai';
 import * as z from 'zod';
 
 import {
@@ -29,13 +29,6 @@ export const logHealthActivityOutputSchema = z.object({
   activityId: z.string().optional(),
 });
 
-export const logHealthActivityDef = toolDefinition({
-  name: 'log_health_activity',
-  description: 'Log a health activity',
-  inputSchema: logHealthActivityInputSchema,
-  outputSchema: logHealthActivityOutputSchema,
-});
-
 export const logHealthActivityServer = async (
   input: z.infer<typeof logHealthActivityInputSchema>,
 ) => {
@@ -46,22 +39,6 @@ export const logHealthActivityServer = async (
   };
 };
 
-export const getHealthActivitiesServer = async (
-  _input: z.infer<typeof getHealthActivitiesInputSchema>,
-) => {
-  return { activities: [] as z.infer<typeof ActivitySchema>[] };
-};
-
-export const updateHealthActivityServer = async (
-  input: z.infer<typeof updateHealthActivityInputSchema>,
-) => {
-  return { message: `Updated health activity ${input.activityId}`, updatedActivity: { ...input } };
-};
-
-export const deleteHealthActivityServer = async (
-  input: z.infer<typeof deleteHealthActivityInputSchema>,
-) => ({ message: `Deleted health activity ${input.activityId}`, deleted: true });
-
 // Get activities
 export const getHealthActivitiesInputSchema = z.object({
   startDate: z.string().optional().describe('Start date (YYYY-MM-DD)'),
@@ -70,12 +47,11 @@ export const getHealthActivitiesInputSchema = z.object({
 });
 export const getHealthActivitiesOutputSchema = z.object({ activities: z.array(ActivitySchema) });
 
-export const getHealthActivitiesDef = toolDefinition({
-  name: 'get_health_activities',
-  description: 'Get health activities',
-  inputSchema: getHealthActivitiesInputSchema,
-  outputSchema: getHealthActivitiesOutputSchema,
-});
+export const getHealthActivitiesServer = async (
+  _input: z.infer<typeof getHealthActivitiesInputSchema>,
+) => {
+  return { activities: [] as z.infer<typeof ActivitySchema>[] };
+};
 
 // Update activity
 export const updateHealthActivityInputSchema = z.object({
@@ -90,12 +66,11 @@ export const updateHealthActivityOutputSchema = z.object({
   updatedActivity: ActivitySchema.optional(),
 });
 
-export const updateHealthActivityDef = toolDefinition({
-  name: 'update_health_activity',
-  description: 'Update a health activity',
-  inputSchema: updateHealthActivityInputSchema,
-  outputSchema: updateHealthActivityOutputSchema,
-});
+export const updateHealthActivityServer = async (
+  input: z.infer<typeof updateHealthActivityInputSchema>,
+) => {
+  return { message: `Updated health activity ${input.activityId}`, updatedActivity: { ...input } };
+};
 
 // Delete activity
 export const deleteHealthActivityInputSchema = z.object({
@@ -106,26 +81,9 @@ export const deleteHealthActivityOutputSchema = z.object({
   deleted: z.boolean(),
 });
 
-export const deleteHealthActivityDef = toolDefinition({
-  name: 'delete_health_activity',
-  description: 'Delete a health activity',
-  inputSchema: deleteHealthActivityInputSchema,
-  outputSchema: deleteHealthActivityOutputSchema,
-});
-
-export const recommendWorkoutDef = toolDefinition({
-  name: 'recommend_workout',
-  description: 'Get personalized workout recommendations based on fitness level and goals',
-  inputSchema: recommendWorkoutInputSchema,
-  outputSchema: recommendWorkoutOutputSchema,
-});
-
-export const assessMentalWellnessDef = toolDefinition({
-  name: 'assess_mental_wellness',
-  description: 'Assess mental wellness and get personalized coping strategies and recommendations',
-  inputSchema: assessMentalWellnessInputSchema,
-  outputSchema: assessMentalWellnessOutputSchema,
-});
+export const deleteHealthActivityServer = async (
+  input: z.infer<typeof deleteHealthActivityInputSchema>,
+) => ({ message: `Deleted health activity ${input.activityId}`, deleted: true });
 
 export const recommendWorkoutServer = async (input: z.infer<typeof recommendWorkoutInputSchema>) =>
   workoutService.recommend(input);
@@ -133,3 +91,39 @@ export const recommendWorkoutServer = async (input: z.infer<typeof recommendWork
 export const assessMentalWellnessServer = async (
   input: z.infer<typeof assessMentalWellnessInputSchema>,
 ) => mentalHealthService.assess(input);
+
+export const logHealthActivityTool = tool({
+  description: 'Log a health activity',
+  parameters: logHealthActivityInputSchema,
+  execute: logHealthActivityServer,
+});
+
+export const getHealthActivitiesTool = tool({
+  description: 'Get health activities',
+  parameters: getHealthActivitiesInputSchema,
+  execute: getHealthActivitiesServer,
+});
+
+export const updateHealthActivityTool = tool({
+  description: 'Update a health activity',
+  parameters: updateHealthActivityInputSchema,
+  execute: updateHealthActivityServer,
+});
+
+export const deleteHealthActivityTool = tool({
+  description: 'Delete a health activity',
+  parameters: deleteHealthActivityInputSchema,
+  execute: deleteHealthActivityServer,
+});
+
+export const recommendWorkoutTool = tool({
+  description: 'Get personalized workout recommendations based on fitness level and goals',
+  parameters: recommendWorkoutInputSchema,
+  execute: recommendWorkoutServer,
+});
+
+export const assessMentalWellnessTool = tool({
+  description: 'Assess mental wellness and get personalized coping strategies and recommendations',
+  parameters: assessMentalWellnessInputSchema,
+  execute: assessMentalWellnessServer,
+});
