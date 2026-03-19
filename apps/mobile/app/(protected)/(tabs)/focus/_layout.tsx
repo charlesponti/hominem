@@ -4,7 +4,7 @@ import React from 'react';
 export default function FocusLayout() {
   return (
     <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="index" />
       <Stack.Screen name="[id]" options={{ presentation: 'modal', headerShown: false }} />
       <Stack.Screen
         name="insights"

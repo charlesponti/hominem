@@ -12,7 +12,7 @@ import * as fieldStories from '../components/ui/field.stories';
 import * as formStories from '../components/ui/form.stories';
 import * as textAreaStories from '../components/ui/text-area.stories';
 import * as textFieldStories from '../components/ui/text-field.stories';
-import { render } from '../test-utils';
+import { render } from '@testing-library/react';
 
 setProjectAnnotations(preview);
 

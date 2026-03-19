@@ -42,7 +42,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const Chat = (props: ChatProps) => {
   const styles = useStyles();
-  const { top, bottom } = useSafeAreaInsets();
+  const { top } = useSafeAreaInsets();
   const { chatId, onChatEnd, source } = props;
   const client = useApiClient();
   const { isPending: isMessagesLoading, data: messages } = useChatMessages({ chatId });
@@ -344,9 +344,18 @@ export const Chat = (props: ChatProps) => {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: Math.max(top, 16) }]}>
-        <View style={styles.headerCopy}>
-          <Text style={styles.headerStatus}>{statusCopy}</Text>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          onPress={onEndChatPress}
+          style={styles.headerBack}
+          accessibilityLabel="Back"
+        >
+          <AppIcon name="arrow-left" size={20} style={styles.headerBackIcon} />
+        </Button>
+        <View style={styles.headerCenter}>
           <ContextAnchor source={resolvedSource} />
+          {statusCopy ? <Text style={styles.headerStatus}>{statusCopy}</Text> : null}
         </View>
         <Button
           variant="ghost"
@@ -359,13 +368,13 @@ export const Chat = (props: ChatProps) => {
           <AppIcon name="magnifying-glass" size={16} style={styles.headerIcon} />
         </Button>
         <Button
-          variant="ghost"
+          variant="primary"
           size="icon-xs"
           onPress={handleOpenMenu}
-          style={styles.headerIconButton}
+          style={styles.headerNewButton}
           accessibilityLabel="Conversation actions"
         >
-          <AppIcon name="ellipsis" size={16} style={styles.headerIcon} />
+          <AppIcon name="plus" size={18} style={styles.headerNewIcon} />
         </Button>
       </View>
 
@@ -470,14 +479,25 @@ const useStyles = makeStyles((t) =>
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: t.spacing.m_16,
+      paddingHorizontal: t.spacing.sm_12,
       paddingVertical: t.spacing.sm_12,
       borderBottomWidth: 1,
       borderBottomColor: t.colors['border-default'],
       gap: t.spacing.sm_8,
     },
-    headerCopy: {
+    headerBack: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+    },
+    headerBackIcon: {
+      color: t.colors.foreground,
+    },
+    headerCenter: {
       flex: 1,
+      alignItems: 'center',
       gap: t.spacing.xs_4,
     },
     headerStatus: {
@@ -494,6 +514,14 @@ const useStyles = makeStyles((t) =>
     },
     headerIcon: {
       color: t.colors['text-tertiary'],
+    },
+    headerNewButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+    },
+    headerNewIcon: {
+      color: t.colors.white,
     },
     searchInputContainer: {
       width: '100%',

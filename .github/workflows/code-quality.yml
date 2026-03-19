@@ -102,7 +102,9 @@ jobs:
       - name: 🛡️ Validate DB migrations (lint)
         run: cd packages/db && bunx squawk-cli migrations/*.sql
       - name: 🔧 Install Goose CLI
-        run: go install github.com/pressly/goose/v3/cmd/goose@v3.27.0
+        run: |
+          go install github.com/pressly/goose/v3/cmd/goose@v3.27.0
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
       - name: 🗄️ Validate migrations run and are idempotent
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/hominem-test?sslmode=disable

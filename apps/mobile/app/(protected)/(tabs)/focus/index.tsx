@@ -6,10 +6,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { PulsingCircle } from '~/components/animated/pulsing-circle';
 import { CaptureBar } from '~/components/capture/capture-bar';
-import { SessionList, useResumableSessions } from '~/components/chat/session-card';
+import { SessionList } from '~/components/chat/session-card';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { FeedbackBlock } from '~/components/feedback-block';
-import { FocusHeader } from '~/components/focus/focus-header';
 import { FocusList } from '~/components/focus/focus-list';
 import { ActiveSearchSummary, type ActiveSearch } from '~/components/focus/focus-search';
 import { LoadingContainer } from '~/components/LoadingFull';
@@ -54,42 +53,18 @@ const useStyles = makeStyles((t) =>
     sectionLabel: {
       letterSpacing: 1,
     },
-  }),
-);
-
-const useHeaderRightStyles = makeStyles((t) =>
-  StyleSheet.create({
-    row: {
-      flexDirection: 'row',
-      columnGap: t.spacing.sm_8,
-    },
-  }),
-);
-
-const useErrorStyles = makeStyles((t) =>
-  StyleSheet.create({
-    wrapper: {
-      padding: t.spacing.sm_12,
-      marginHorizontal: t.spacing.sm_12,
-    },
-    row: {
-      flex: 1,
+    headerRight: {
       flexDirection: 'row',
       alignItems: 'center',
-      columnGap: t.spacing.ml_24,
-    },
-    textCol: {
-      flex: 1,
+      columnGap: t.spacing.sm_12,
     },
   }),
 );
 
 export const FocusView = () => {
   const styles = useStyles();
-  const headerRightStyles = useHeaderRightStyles();
   const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const { data: sessions } = useResumableSessions();
   const {
     data: focusItems,
     refetch,
@@ -125,12 +100,7 @@ export const FocusView = () => {
         options={{
           title: 'Notes',
           headerRight: () => (
-            <View style={headerRightStyles.row}>
-              <Link href={'/(protected)/(tabs)/sherpa' as RelativePathString}>
-                <Text variant="body" color="text-secondary">
-                  Sherpa
-                </Text>
-              </Link>
+            <View style={styles.headerRight}>
               <Text
                 variant="body"
                 color="text-secondary"
@@ -139,14 +109,15 @@ export const FocusView = () => {
               >
                 REFRESH
               </Text>
+              <Link href={'/(protected)/(tabs)/account' as RelativePathString}>
+                <AppIcon name="user" size={18} color={theme.colors.foreground} />
+              </Link>
             </View>
           ),
         }}
       />
 
       <GestureHandlerRootView testID="focus-screen" style={styles.container}>
-        <FocusHeader sessionCount={sessions?.length ?? 0} noteCount={focusItems?.length ?? 0} />
-
         <View style={styles.focusContainer}>
           {isLoading && !isRefetching && !refreshing ? (
             <LoadingContainer>
@@ -240,3 +211,21 @@ const FocusLoadingError = React.memo(() => {
     </View>
   );
 });
+
+const useErrorStyles = makeStyles((t) =>
+  StyleSheet.create({
+    wrapper: {
+      padding: t.spacing.sm_12,
+      marginHorizontal: t.spacing.sm_12,
+    },
+    row: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      columnGap: t.spacing.ml_24,
+    },
+    textCol: {
+      flex: 1,
+    },
+  }),
+);
