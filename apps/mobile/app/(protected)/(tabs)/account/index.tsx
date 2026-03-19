@@ -1,7 +1,9 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useReducer } from 'react';
+import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { getPreventScreenshots, setPreventScreenshots } from '~/lib/use-screen-capture';
+import { getAppLockEnabled, setAppLockEnabled } from '~/lib/use-app-lock';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
@@ -11,6 +13,67 @@ import { Text, theme } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { MOBILE_PASSKEY_ENABLED } from '~/utils/constants';
 import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
+
+interface AccountState {
+  name: string
+  isSaving: boolean
+  passkeys: { id: string; name: string }[]
+  preventScreenshots: boolean
+  appLock: boolean
+}
+
+type AccountAction =
+  | { type: 'set-name'; name: string }
+  | { type: 'set-saving'; isSaving: boolean }
+  | { type: 'set-passkeys'; passkeys: { id: string; name: string }[] }
+  | { type: 'remove-passkey'; passkeyId: string }
+  | { type: 'set-prevent-screenshots'; preventScreenshots: boolean }
+  | { type: 'set-app-lock'; appLock: boolean }
+
+function createInitialAccountState(name: string): AccountState {
+  return {
+    name,
+    isSaving: false,
+    passkeys: [],
+    preventScreenshots: getPreventScreenshots(),
+    appLock: getAppLockEnabled(),
+  }
+}
+
+function accountReducer(state: AccountState, action: AccountAction): AccountState {
+  switch (action.type) {
+    case 'set-name':
+      return {
+        ...state,
+        name: action.name,
+      }
+    case 'set-saving':
+      return {
+        ...state,
+        isSaving: action.isSaving,
+      }
+    case 'set-passkeys':
+      return {
+        ...state,
+        passkeys: action.passkeys,
+      }
+    case 'remove-passkey':
+      return {
+        ...state,
+        passkeys: state.passkeys.filter((passkey) => passkey.id !== action.passkeyId),
+      }
+    case 'set-prevent-screenshots':
+      return {
+        ...state,
+        preventScreenshots: action.preventScreenshots,
+      }
+    case 'set-app-lock':
+      return {
+        ...state,
+        appLock: action.appLock,
+      }
+  }
+}
 
 function Account() {
   const insets = useSafeAreaInsets();
@@ -24,15 +87,13 @@ function Account() {
     isLoading: isPasskeyLoading,
   } = useMobilePasskeyAuth();
   const initialName = currentUser?.name ?? '';
-  const [name, setName] = useState(initialName);
-  const [isSaving, setIsSaving] = useState(false);
-  const [passkeys, setPasskeys] = useState<{ id: string; name: string }[]>([]);
+  const [state, dispatch] = useReducer(accountReducer, initialName, createInitialAccountState);
 
   const onSavePress = () => {
-    setIsSaving(true);
-    updateProfile({ name })
+    dispatch({ type: 'set-saving', isSaving: true });
+    updateProfile({ name: state.name })
       .catch(() => undefined)
-      .finally(() => setIsSaving(false));
+      .finally(() => dispatch({ type: 'set-saving', isSaving: false }));
   };
 
   const onLogoutPress = () => {
@@ -55,7 +116,7 @@ function Account() {
     const result = await addPasskey();
     if (result.success) {
       const updated = await listPasskeys();
-      setPasskeys(updated);
+      dispatch({ type: 'set-passkeys', passkeys: updated });
     } else {
       Alert.alert('Passkey error', result.error ?? 'Could not add passkey.');
     }
@@ -70,7 +131,7 @@ function Account() {
         onPress: async () => {
           const result = await deletePasskey(id);
           if (result.success) {
-            setPasskeys((prev) => prev.filter((p) => p.id !== id));
+            dispatch({ type: 'remove-passkey', passkeyId: id });
           } else {
             Alert.alert('Error', result.error ?? 'Could not remove passkey.');
           }
@@ -88,12 +149,12 @@ function Account() {
 
   useFocusEffect(useCallback(() => {
     if (!MOBILE_PASSKEY_ENABLED) {
-      setPasskeys([]);
+      dispatch({ type: 'set-passkeys', passkeys: [] });
       return;
     }
     if (isSignedIn) {
       listPasskeys()
-        .then(setPasskeys)
+        .then((passkeys) => dispatch({ type: 'set-passkeys', passkeys }))
         .catch(() => undefined);
     }
   }, [isSignedIn, listPasskeys]));
@@ -123,9 +184,9 @@ function Account() {
               aria-disabled
               label="Name"
               placeholder="ENTER NAME"
-              value={name}
+              value={state.name}
               style={styles.inputFlex}
-              onChange={(e) => setName(e.nativeEvent.text)}
+              onChange={(e) => dispatch({ type: 'set-name', name: e.nativeEvent.text })}
             />
           </View>
           <View>
@@ -137,28 +198,54 @@ function Account() {
               style={styles.inputFlex}
             />
           </View>
-          {name !== initialName ? (
+          {state.name !== initialName ? (
             <View style={styles.saveRow}>
               <Button
                 title="[SAVE]"
-                disabled={isSaving}
-                isLoading={isSaving}
+                disabled={state.isSaving}
+                isLoading={state.isSaving}
                 onPress={onSavePress}
               />
             </View>
           ) : null}
+
+          <View style={styles.sectionCard}>
+            <Text variant="cardHeader" color="foreground">
+              PRIVACY
+            </Text>
+            <View style={styles.settingRow}>
+              <Text color="foreground">Prevent screenshots</Text>
+              <Switch
+                value={state.preventScreenshots}
+                onValueChange={(value) => {
+                  dispatch({ type: 'set-prevent-screenshots', preventScreenshots: value });
+                  setPreventScreenshots(value);
+                }}
+              />
+            </View>
+            <View style={styles.settingRow}>
+              <Text color="foreground">Lock with Face ID</Text>
+              <Switch
+                value={state.appLock}
+                onValueChange={(value) => {
+                  dispatch({ type: 'set-app-lock', appLock: value });
+                  setAppLockEnabled(value);
+                }}
+              />
+            </View>
+          </View>
 
           {MOBILE_PASSKEY_ENABLED ? (
             <View style={styles.passkeysSection}>
               <Text variant="cardHeader" color="foreground">
                 PASSKEYS
               </Text>
-              {passkeys.length === 0 ? (
+              {state.passkeys.length === 0 ? (
                 <Text color="text-tertiary" style={styles.noPasskeysText}>
                   No passkeys registered.
                 </Text>
               ) : (
-                passkeys.map((pk) => (
+                state.passkeys.map((pk) => (
                   <View key={pk.id} style={styles.passkeyRow}>
                     <Text color="foreground" style={styles.passkeyName}>
                       {pk.name}
@@ -247,6 +334,11 @@ const styles = StyleSheet.create({
   },
   passkeyDeleteButton: {
     minWidth: 72,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   footer: {
     paddingHorizontal: theme.spacing.sm_12,

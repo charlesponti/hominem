@@ -1,18 +1,16 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useCallback } from 'react';
 import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
-  Vibration,
   View,
   type PressableProps,
 } from 'react-native';
 import Animated, {
   interpolateColor,
-  useAnimatedReaction,
+  useDerivedValue,
   useAnimatedStyle,
-  useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -20,6 +18,7 @@ import { makeStyles, Text, theme } from '~/theme';
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 
 import { AudioLevelVisualizer } from './audio-meterings';
+import AppIcon from '../ui/icon';
 import { useMobileAudioRecorder } from './use-mobile-audio-recorder';
 
 type MobileVoiceInputProps = PressableProps & {
@@ -58,36 +57,32 @@ export function MobileVoiceInput({
 
   const onPress = useCallback(async () => {
     if (isRecording) {
-      Vibration.vibrate(40);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await stopRecording();
       onRecordingStateChange?.(false);
       return;
     }
 
-    Vibration.vibrate(20);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await startRecording();
     onRecordingStateChange?.(true);
   }, [isRecording, onRecordingStateChange, startRecording, stopRecording]);
 
-  const backgroundColor = useSharedValue(0);
+  const recordingProgress = useDerivedValue(
+    () =>
+      withTiming(isRecording ? 1 : 0, {
+        duration: VOID_MOTION_DURATION_STANDARD,
+      }),
+    [isRecording],
+  );
+
   const speakButtonBackground = useAnimatedStyle(() => ({
     backgroundColor: interpolateColor(
-      backgroundColor.value,
+      recordingProgress.value,
       [0, 1],
       [theme.colors.muted, theme.colors.destructive],
     ),
   }));
-
-  useAnimatedReaction(
-    () => isRecording,
-    (current, prev) => {
-      'worklet';
-      if (current === prev) return;
-      backgroundColor.value = withTiming(current ? 1 : 0, {
-        duration: VOID_MOTION_DURATION_STANDARD,
-      });
-    },
-  );
 
   return (
     <View style={styles.container} testID="voice-input">
@@ -108,10 +103,10 @@ export function MobileVoiceInput({
       >
         {isTranscribing ? <ActivityIndicator size="small" color={theme.colors.foreground} /> : null}
         {!isTranscribing && isRecording ? (
-          <MaterialIcons name="stop" size={24} color={theme.colors.foreground} />
+          <AppIcon name="stop" size={24} color={theme.colors.foreground} useSymbol />
         ) : null}
         {!isTranscribing && !isRecording ? (
-          <MaterialIcons name="mic" size={24} color={theme.colors.foreground} />
+          <AppIcon name="microphone" size={24} color={theme.colors.foreground} useSymbol />
         ) : null}
       </AnimatedPressable>
       {hasRetryRecording && autoTranscribe ? (

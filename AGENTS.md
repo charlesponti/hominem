@@ -1,19 +1,5 @@
 # AGENTS.md - Coding Guidelines for Hominem
 
-## Active Change Guardrail (MANDATORY)
-
-Before starting implementation work:
-
-1. Read `openspec/ACTIVE_CHANGE.md`.
-2. Confirm your edits map to the active change artifacts listed there.
-3. If a request implies a different change, ask for explicit re-activation before switching scope.
-
-Do not silently mix work across multiple OpenSpec changes.
-
-OpenSpec layout:
-- Open work: `openspec/changes`
-- Canonical completed specs: `openspec/specs`
-
 ## Core Workflow Commands
 
 Always run commands from the monorepo root. Do NOT `cd` into packages.

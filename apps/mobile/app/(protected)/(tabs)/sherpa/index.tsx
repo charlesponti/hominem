@@ -1,8 +1,8 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
 import type { Chat as ChatType } from '@hominem/hono-rpc/types';
-import React from 'react';
 import { useCallback, useRef, useState } from 'react';
+import { useChatLiveActivity } from '~/lib/use-chat-live-activity';
 
 import BlurredGradientBackground from '~/components/chat/blurred-background';
 import { Chat } from '~/components/chat/chat';
@@ -12,6 +12,10 @@ import { useMobileWorkspace } from '~/components/workspace/mobile-workspace-cont
 import { Text } from '~/theme';
 import { useActiveChat, useStartChat } from '~/utils/services/chat';
 
+const isChatRecord = (value: ChatType | null | undefined): value is ChatType => {
+  return Boolean(value && typeof value.id === 'string' && typeof value.userId === 'string')
+}
+
 export default function Sherpa() {
   const router = useRouter();
   const { setActiveContext, setHeader } = useMobileWorkspace();
@@ -19,10 +23,7 @@ export default function Sherpa() {
   const [activeChat, setActiveChat] = useState<ChatType | null>(null);
   const hasInitialized = useRef(false);
   const { isPending: isLoadingActiveChat, refetch: getActiveChat } = useActiveChat(params.chatId);
-
-  const isChatRecord = (value: ChatType | null | undefined): value is ChatType => {
-    return Boolean(value && typeof value.id === 'string' && typeof value.userId === 'string')
-  }
+  const seed = params.seed ?? ''
 
   const updateHeader = useCallback((title?: string | null) => {
     setActiveContext('chat');
@@ -33,7 +34,7 @@ export default function Sherpa() {
   }, [setActiveContext, setHeader]);
 
   const { mutateAsync: startChat, isPending: isStartingChat } = useStartChat({
-    userMessage: params.seed || '',
+    userMessage: seed,
     _sherpaMessage: 'Starting now.',
     onSuccess: (chat) => {
       setActiveChat(chat);
@@ -49,23 +50,25 @@ export default function Sherpa() {
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
-    async function initialLoad() {
-      const response = await getActiveChat();
-
+    void getActiveChat().then(async (response) => {
       if (isChatRecord(response.data)) {
         setActiveChat(response.data);
         updateHeader(response.data.title);
-      } else if (params.seed) {
+        return;
+      }
+
+      if (seed) {
         await startChat();
       }
-    }
-    initialLoad();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getActiveChat, params.seed, updateHeader]));
+    });
+  }, [getActiveChat, seed, startChat, updateHeader]));
+
+  const { stop: stopLiveActivity } = useChatLiveActivity(activeChat?.id, activeChat?.title ?? undefined);
 
   const onChatArchive = useCallback(() => {
+    stopLiveActivity();
     router.push('/(protected)/(tabs)/focus' as RelativePathString);
-  }, [router]);
+  }, [router, stopLiveActivity]);
 
   // Local store Chat has no noteId — source is always 'new' on mobile.
   // AX-001: noteId not tracked in LocalStore.

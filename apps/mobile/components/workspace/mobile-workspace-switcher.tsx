@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics'
 import { useRouter } from 'expo-router'
 import type { Href } from 'expo-router'
 import React, { useCallback } from 'react'
@@ -39,12 +40,14 @@ export const MobileWorkspaceSwitcher = () => {
   const isContextualView = activeContext === 'note' || activeContext === 'chat'
 
   const onReturnToInbox = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
     setActiveContext('inbox')
     router.push(INBOX_ROUTE)
   }, [router, setActiveContext])
 
   const onPress = useCallback(
     (context: MobileWorkspaceContext) => {
+      void Haptics.selectionAsync()
       setActiveContext(context)
 
       const route = MOBILE_WORKSPACE_ROUTES[context]
@@ -109,6 +112,7 @@ export const MobileWorkspaceSwitcher = () => {
                     size={16}
                     color={isActive ? theme.colors.background : theme.colors.foreground}
                     style={iconStyle}
+                    useSymbol
                   />
                 </Pressable>
               )

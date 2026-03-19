@@ -1,6 +1,6 @@
 import { useApiClient } from '@hominem/hono-client/react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
+import { storage } from '~/lib/storage';
 
 export type IntentSuggestion = {
   id: string;
@@ -19,22 +19,21 @@ const STATIC_DEFAULTS: IntentSuggestion[] = [
 
 const CACHE_KEY = '@intent_suggestions_cache';
 
-async function readCachedSuggestions() {
+function readCachedSuggestions(): IntentSuggestion[] {
   try {
-    const cached = await AsyncStorage.getItem(CACHE_KEY);
+    const cached = storage.getString(CACHE_KEY);
     if (!cached) return [];
     return JSON.parse(cached) as IntentSuggestion[];
-  } catch (error) {
-    console.error('[intent-suggestions] cache read failed', error);
+  } catch {
     return [];
   }
 }
 
-async function writeCachedSuggestions(suggestions: IntentSuggestion[]) {
+function writeCachedSuggestions(suggestions: IntentSuggestion[]) {
   try {
-    await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(suggestions));
-  } catch (error) {
-    console.error('[intent-suggestions] cache write failed', error);
+    storage.set(CACHE_KEY, JSON.stringify(suggestions));
+  } catch {
+    // ignore write failures
   }
 }
 
@@ -47,7 +46,7 @@ export function useIntentSuggestions() {
   }>({
     queryKey: ['intentSuggestions'],
     queryFn: async () => {
-      const cached = await readCachedSuggestions();
+      const cached = readCachedSuggestions();
 
       try {
         const data = await client.mobile.getIntentSuggestions();

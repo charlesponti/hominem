@@ -1,16 +1,19 @@
 import * as ImagePicker from 'expo-image-picker'
 import { useApiClient } from '@hominem/hono-client/react'
+import { recordPositiveSignal } from '~/lib/review-prompt'
+import { CameraModal } from '../media/camera-modal'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
 import React, { useState } from 'react'
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { StyleSheet, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import AppIcon from '../ui/icon'
 import { useMobileWorkspace } from '../workspace/mobile-workspace-context'
 import { appendPickedAssetsToDraft, applyVoiceTranscriptToDraft, removeAttachmentFromDraft } from './mobile-hyper-form-actions'
+import { MobileHyperFormAttachments } from './mobile-hyper-form-attachments'
 import { deriveMobileHyperFormPresentation } from './mobile-hyper-form-config'
+import { MobileHyperFormFooter } from './mobile-hyper-form-footer'
 import { useInputContext } from './input-context'
 import { VoiceSessionModal } from '../media/voice-session-modal'
 import { theme } from '~/theme'
@@ -42,6 +45,7 @@ export const MobileHyperForm = () => {
     setMode,
   } = useInputContext()
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
+  const [isCameraOpen, setIsCameraOpen] = useState(false)
 
   const clearDraft = () => {
     setAttachments([])
@@ -61,6 +65,7 @@ export const MobileHyperForm = () => {
     })
     await invalidateInboxQueries(queryClient)
     clearDraft()
+    void recordPositiveSignal()
   }
 
   const createChatFromDraft = async () => {
@@ -174,6 +179,15 @@ export const MobileHyperForm = () => {
     setIsVoiceModalOpen(false)
   }
 
+  const handleCameraCapture = (photo: { uri: string; fileName?: string }) => {
+    const nextState = appendPickedAssetsToDraft(
+      { attachments, context: activeContext, isRecording, mode, text: message },
+      [{ fileName: photo.fileName ?? null, type: 'image', uri: photo.uri }],
+    )
+    setAttachments(nextState.attachments)
+    setIsCameraOpen(false)
+  }
+
   const handleRemoveAttachment = (attachmentId: string) => {
     const nextState = removeAttachmentFromDraft(
       {
@@ -215,79 +229,31 @@ export const MobileHyperForm = () => {
           testID="mobile-hyper-form-input"
           value={message}
         />
-        {attachments.length > 0 ? (
-          <View style={styles.attachments} testID="mobile-hyper-form-attachments">
-            {attachments.map((attachment) => (
-              <Pressable
-                key={attachment.id}
-                onPress={() => handleRemoveAttachment(attachment.id)}
-                style={styles.attachmentChip}
-                testID={`mobile-hyper-form-attachment-${attachment.id}`}
-              >
-                <Text style={styles.attachmentLabel}>{attachment.name}</Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-        <View style={styles.footer}>
-          <View style={styles.tools}>
-            {presentation.showsAttachmentButton ? (
-              <Pressable
-                onPress={() => {
-                  void handlePickAttachment()
-                }}
-                accessibilityLabel="Add attachment"
-                style={styles.toolButton}
-                testID="mobile-hyper-form-attach"
-              >
-                <AppIcon name="plus" size={18} style={styles.icon} />
-              </Pressable>
-            ) : null}
-            {presentation.showsVoiceButton ? (
-              <Pressable
-                onPress={() => {
-                  setMode('voice')
-                  setIsRecording(true)
-                  setIsVoiceModalOpen(true)
-                }}
-                accessibilityLabel="Record voice note"
-                style={styles.toolButton}
-                testID="mobile-hyper-form-voice"
-              >
-                <AppIcon name="microphone" size={18} style={styles.icon} />
-              </Pressable>
-            ) : null}
-          </View>
-          <View style={styles.actions}>
-            {presentation.secondaryActionLabel ? (
-              <Pressable
-                accessibilityLabel={presentation.secondaryActionLabel}
-                onPress={handleSecondaryAction}
-                style={styles.secondaryAction}
-                testID="mobile-hyper-form-secondary-action"
-              >
-                <AppIcon
-                  name={activeContext === 'chat' ? 'circle-plus' : 'comment'}
-                  size={18}
-                  style={styles.icon}
-                />
-              </Pressable>
-            ) : null}
-            <Pressable
-              accessibilityLabel={presentation.primaryActionLabel}
-              onPress={handlePrimaryAction}
-              style={styles.primaryAction}
-              testID="mobile-hyper-form-primary-action"
-            >
-              <AppIcon
-                name={activeContext === 'chat' ? 'arrow-up' : 'circle-plus'}
-                size={18}
-                style={styles.primaryIcon}
-              />
-            </Pressable>
-          </View>
-        </View>
+        <MobileHyperFormAttachments
+          attachments={attachments}
+          onRemoveAttachment={handleRemoveAttachment}
+        />
+        <MobileHyperFormFooter
+          activeContext={activeContext}
+          presentation={presentation}
+          onPickAttachment={() => {
+            void handlePickAttachment()
+          }}
+          onOpenCamera={() => setIsCameraOpen(true)}
+          onOpenVoice={() => {
+            setMode('voice')
+            setIsRecording(true)
+            setIsVoiceModalOpen(true)
+          }}
+          onSecondaryAction={handleSecondaryAction}
+          onPrimaryAction={handlePrimaryAction}
+        />
       </View>
+      <CameraModal
+        visible={isCameraOpen}
+        onCapture={handleCameraCapture}
+        onClose={() => setIsCameraOpen(false)}
+      />
       <VoiceSessionModal
         onAudioTranscribed={handleVoiceTranscript}
         onClose={() => {
@@ -333,69 +299,5 @@ const styles = StyleSheet.create({
   inputDraft: {
     minHeight: 104,
     textAlignVertical: 'top',
-  },
-  footer: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  attachments: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm_8,
-  },
-  attachmentChip: {
-    backgroundColor: theme.colors['bg-surface'],
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    paddingHorizontal: theme.spacing.sm_8,
-    paddingVertical: theme.spacing.xs_4,
-  },
-  attachmentLabel: {
-    color: theme.colors.foreground,
-    fontSize: 12,
-  },
-  tools: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm_8,
-  },
-  toolButton: {
-    alignItems: 'center',
-    backgroundColor: theme.colors['bg-surface'],
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    justifyContent: 'center',
-    minHeight: 38,
-    minWidth: 38,
-  },
-  icon: {
-    color: theme.colors.foreground,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: theme.spacing.sm_8,
-  },
-  secondaryAction: {
-    alignItems: 'center',
-    backgroundColor: theme.colors['bg-surface'],
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: theme.colors['border-default'],
-    justifyContent: 'center',
-    minHeight: 38,
-    minWidth: 38,
-  },
-  primaryAction: {
-    alignItems: 'center',
-    backgroundColor: theme.colors.foreground,
-    borderRadius: 999,
-    justifyContent: 'center',
-    minHeight: 42,
-    minWidth: 42,
-  },
-  primaryIcon: {
-    color: theme.colors.background,
   },
 })

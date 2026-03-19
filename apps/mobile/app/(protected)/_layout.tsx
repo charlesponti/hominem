@@ -1,12 +1,13 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { InputProvider } from '~/components/input/input-context';
 import { MobileHyperForm } from '~/components/input/mobile-hyper-form';
 import { MobileWorkspaceProvider } from '~/components/workspace/mobile-workspace-context';
-import { theme } from '~/theme';
+import { useAppLock } from '~/lib/use-app-lock';
+import { Text, theme } from '~/theme';
 import { ApiProvider } from '~/utils/api-provider';
 import { useAuth } from '~/utils/auth-provider';
 import queryClient from '~/utils/query-client';
@@ -17,11 +18,44 @@ const bootstrapStyles = StyleSheet.create({
 
 const ProtectedBootstrap = () => <View testID="protected-bootstrap" style={bootstrapStyles.root} />;
 
+const LockScreen = ({ onUnlock }: { onUnlock: () => void }) => (
+  <View style={lockStyles.container}>
+    <Text variant="header" color="foreground">Hakumi</Text>
+    <Text variant="body" color="text-secondary">Locked</Text>
+    <Pressable onPress={onUnlock} style={lockStyles.button}>
+      <Text variant="body" color="foreground">Unlock with Face ID</Text>
+    </Pressable>
+  </View>
+);
+
+const lockStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.m_16,
+  },
+  button: {
+    borderWidth: 1,
+    borderColor: theme.colors['border-default'],
+    borderRadius: theme.borderRadii.md_10,
+    paddingHorizontal: theme.spacing.m_16,
+    paddingVertical: theme.spacing.sm_8,
+    marginTop: theme.spacing.m_16,
+  },
+});
+
 const DrawerLayout = () => {
   const { authStatus, isSignedIn } = useAuth();
+  const { isUnlocked, authenticate } = useAppLock();
 
   if (authStatus === 'booting' || !isSignedIn) {
     return <ProtectedBootstrap />;
+  }
+
+  if (!isUnlocked) {
+    return <LockScreen onUnlock={() => void authenticate()} />;
   }
 
   return (

@@ -7,6 +7,18 @@
  * CSS easing strings are web-only. Mobile uses react-native-reanimated
  * Easing.* functions which cannot be expressed as strings — the mobile
  * motion.ts keeps those local and imports only the numeric constants here.
+ *
+ * ## Animation mandate
+ *
+ * Web interactive animations MUST use GSAP via `@hominem/ui/lib/gsap`.
+ * The canonical sequences (playFocusExpand, playFocusCollapse,
+ * playContextSwitch, playSubmitPulse, playEnterRow, playExitRow,
+ * playShimmer) read the numeric constants from this file so all motion
+ * stays in sync.
+ *
+ * CSS `void-anim-*` classes (animations.css) are reserved for Radix UI
+ * component enter/exit only — do not add new CSS keyframe animations for
+ * interactive product surfaces.
  */
 
 export const durations = {

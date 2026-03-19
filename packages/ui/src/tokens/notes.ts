@@ -4,13 +4,16 @@
  * Defines the shared layout geometry, spacing, surface colors, and metadata
  * hierarchy for the Notes product family across web and mobile.
  *
- * These tokens cover five canonical surfaces:
+ * These tokens cover six canonical surfaces:
+ *   - Stream shell   — unified feed of notes + chats, full-height two-column layout
  *   - Capture shell  — quick-capture input, top-of-feed
- *   - Browse shell   — home and notes index, section lists
+ *   - Browse shell   — home and notes index, section lists (legacy; being replaced by stream)
  *   - Note item      — list row: title, preview, metadata, tags, actions
- *   - Workspace      — note detail / edit, two-column geometry on desktop
- *   - Chat panel     — conversation aside within the workspace
+ *   - Workspace      — note detail / edit, max-width centered
+ *   - Chat surface   — full-height conversation route, max-width message column
  *
+ * Notes and chats are independent first-class stream items. Chats reference
+ * notes for context but do not belong to them.
  * Chat transcript/composer semantics are in chat.ts.
  * Colors are in colors.ts. Radii and spacing are referenced here by value.
  */
@@ -23,6 +26,31 @@ import { spacing } from './spacing';
 
 /** Max content width shared across all primary Notes surfaces (px). */
 export const NOTES_MAX_WIDTH = 768;
+
+/**
+ * Stream feed tokens.
+ *
+ * The stream is a full-height two-column layout (sidebar + feed).
+ * No max-width constraint on the feed column — items fill available space.
+ */
+export const notesStream = {
+  /** Feed item background. */
+  itemSurface: colors['bg-base'],
+  /** Feed item border (divide-y). */
+  itemBorder: colors['border-subtle'],
+  /** Feed item hover/active background. */
+  itemHover: colors['bg-surface'],
+  /** Feed item border radius. */
+  itemRadius: radii.lg,
+  /** Feed item horizontal padding. */
+  itemPaddingX: spacing[5],
+  /** Feed item vertical padding. */
+  itemPaddingY: spacing[4],
+  /** Gap between feed items. */
+  itemGap: spacing[1],
+  /** Icon badge size for chat vs note type indicator (px). */
+  typeIconSize: 16,
+} as const;
 
 /**
  * Notes workspace two-column aside width (px).
@@ -171,6 +199,7 @@ export const notesTypography = {
 export const notesTokens = {
   maxWidth: NOTES_MAX_WIDTH,
   workspaceAsideWidth: NOTES_WORKSPACE_ASIDE_WIDTH,
+  stream: notesStream,
   spacing: notesSpacing,
   surfaces: notesSurfaces,
   borders: notesBorders,

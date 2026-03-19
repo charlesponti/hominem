@@ -104,6 +104,48 @@ export default ({ config }: ConfigContext) => {
     'expo-asset',
     'expo-audio',
     'expo-sqlite',
+    [
+      'expo-notifications',
+      {
+        icon: './assets/icon.png',
+        color: '#000000',
+      },
+    ],
+    [
+      'expo-camera',
+      {
+        cameraPermission: 'Allow Hakumi to access your camera to capture photos for notes.',
+      },
+    ],
+    [
+      'expo-media-library',
+      {
+        photosPermission: 'Allow Hakumi to save photos to your library.',
+        savePhotosPermission: 'Allow Hakumi to save photos to your library.',
+        isAccessMediaLocationEnabled: false,
+      },
+    ],
+    [
+      'expo-local-authentication',
+      {
+        faceIDPermission: 'Allow Hakumi to use Face ID to lock your app.',
+      },
+    ],
+    [
+      'expo-calendar',
+      {
+        calendarPermission: 'Allow Hakumi to access your calendar to add events.',
+        remindersPermission: 'Allow Hakumi to access your reminders.',
+      },
+    ],
+    [
+      'react-native-vision-camera',
+      {
+        cameraPermissionText: 'Allow Hakumi to access your camera to capture photos for notes.',
+        enableMicrophonePermission: false,
+      },
+    ],
+    'expo-live-activity',
   ]
 
   if (variantConfig.usesDevClient) {
@@ -152,6 +194,7 @@ export default ({ config }: ConfigContext) => {
       supportsTablet: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        UIBackgroundModes: ['fetch'],
       },
     },
     android: {

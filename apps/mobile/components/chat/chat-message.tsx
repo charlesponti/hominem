@@ -1,5 +1,5 @@
 import { chatTokensNative, fontFamiliesNative, fontSizes } from '@hominem/ui/tokens';
-import React, { memo, useState } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 
 import { Button } from '~/components/Button';
@@ -21,6 +21,9 @@ type ChatMessageProps = {
   onEdit?: (messageId: string, content: string) => void;
   onRegenerate?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
+  onSpeak?: (message: MessageOutput) => void;
+  isSpeaking?: boolean;
+  onShare?: (message: MessageOutput) => void;
 };
 
 export type MarkdownComponent = React.ComponentType<{
@@ -32,10 +35,6 @@ export const loadMarkdown = async () => {
   const mod = await import('react-native-markdown-display');
   return mod.default as MarkdownComponent;
 };
-
-// Hoisted markdown style maps — stable references, no per-render allocation
-const userMarkdownStyle = { body: {} as Record<string, unknown> };
-const botMarkdownStyle = { body: {} as Record<string, unknown> };
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -211,6 +210,9 @@ const ChatMessage = memo(
     onEdit,
     onRegenerate,
     onDelete,
+    onSpeak,
+    isSpeaking = false,
+    onShare,
   }: ChatMessageProps) => {
     const styles = useStyles();
     const { role, message: content } = message;
@@ -224,16 +226,22 @@ const ChatMessage = memo(
     const canEdit = isUser && onEdit !== undefined;
     const canDelete = onDelete !== undefined;
     const canCopy = onCopy !== undefined;
+    const canSpeak = !isUser && onSpeak !== undefined && Boolean(content?.trim());
+    const canShare = !isUser && onShare !== undefined && Boolean(content?.trim());
     const hasToolCalls = Array.isArray(message.toolCalls) && message.toolCalls.length > 0;
     const hasReasoning = Boolean(message.reasoning && message.reasoning.trim().length > 0);
     const renderedToolCalls = message.toolCalls ?? [];
     const [isEditing, setIsEditing] = useState(false);
     const [draftMessage, setDraftMessage] = useState(content);
-
-    // Assign lazily so StyleSheet objects are used (avoids per-render allocation)
-    userMarkdownStyle.body = styles.userMessageText as unknown as Record<string, unknown>;
-    botMarkdownStyle.body = styles.assistantMessageText as unknown as Record<string, unknown>;
-    const markdownStyle = isUser ? userMarkdownStyle : botMarkdownStyle;
+    const markdownStyle = useMemo(
+      () => ({
+        body: (isUser ? styles.userMessageText : styles.assistantMessageText) as Record<
+          string,
+          unknown
+        >,
+      }),
+      [isUser, styles.assistantMessageText, styles.userMessageText],
+    );
 
     return (
       <View style={[styles.row, isUser ? styles.rowUser : styles.rowAssistant]}>
@@ -257,17 +265,17 @@ const ChatMessage = memo(
                 <Button
                   variant="outline"
                   size="sm"
+                  title="cancel"
                   style={styles.actionButton}
                   onPress={() => {
                     setDraftMessage(content);
                     setIsEditing(false);
                   }}
-                >
-                  cancel
-                </Button>
+                />
                 <Button
                   variant="primary"
                   size="sm"
+                  title="save"
                   style={styles.actionButton}
                   onPress={() => {
                     const trimmedContent = draftMessage.trim();
@@ -275,9 +283,7 @@ const ChatMessage = memo(
                     onEdit?.(message.id, trimmedContent);
                     setIsEditing(false);
                   }}
-                >
-                  save
-                </Button>
+                />
               </View>
             </View>
           </View>
@@ -365,44 +371,60 @@ const ChatMessage = memo(
             <Button
               variant="ghost"
               size="xs"
+              title="copy"
               onPress={() => onCopy?.(message)}
               disabled={!canCopy}
               style={[styles.actionButton, !canCopy && styles.actionButtonDisabled]}
-            >
-              copy
-            </Button>
+            />
+            {canSpeak ? (
+              <Button
+                variant="ghost"
+                size="xs"
+                title={isSpeaking ? 'stop' : 'read'}
+                onPress={() => onSpeak?.(message)}
+                style={styles.actionButton}
+                accessibilityLabel={isSpeaking ? 'Stop reading' : 'Read aloud'}
+              />
+            ) : null}
+            {canShare ? (
+              <Button
+                variant="ghost"
+                size="xs"
+                title="share"
+                onPress={() => onShare?.(message)}
+                style={styles.actionButton}
+                accessibilityLabel="Share message"
+              />
+            ) : null}
             {canEdit ? (
               <Button
                 variant="ghost"
                 size="xs"
+                title="edit"
                 onPress={() => {
                   setDraftMessage(content);
                   setIsEditing(true);
                 }}
                 style={styles.actionButton}
-              >
-                edit
-              </Button>
+              />
             ) : null}
             {canRegenerate ? (
               <Button
                 variant="ghost"
                 size="xs"
+                title="regenerate"
                 onPress={() => onRegenerate?.(message.id)}
                 style={styles.actionButton}
-              >
-                regenerate
-              </Button>
+              />
             ) : null}
             {canDelete ? (
               <Button
                 variant="ghost"
                 size="xs"
+                title="delete"
                 onPress={() => onDelete?.(message.id)}
                 style={styles.actionButton}
-              >
-                delete
-              </Button>
+              />
             ) : null}
           </View>
         </View>
@@ -422,7 +444,18 @@ export const renderMessage = (
     onEdit?: (messageId: string, content: string) => void;
     onRegenerate?: (messageId: string) => void;
     onDelete?: (messageId: string) => void;
+    onSpeak?: (message: MessageOutput) => void;
+    speakingId?: string | null;
+    onShare?: (message: MessageOutput) => void;
   },
 ) => {
-  return <ChatMessage message={item} Markdown={Markdown} {...actions} />;
+  const { speakingId, ...rest } = actions ?? {};
+  return (
+    <ChatMessage
+      message={item}
+      Markdown={Markdown}
+      isSpeaking={speakingId === item.id}
+      {...rest}
+    />
+  );
 };

@@ -16,6 +16,9 @@ interface NoteEditingSheetProps {
   onTextChange: (value: string) => void
   onScheduledForChange: (value: Date | null) => void
   onSave: () => void | Promise<void>
+  onShare?: () => void
+  onAddToCalendar?: () => void
+  onPrint?: () => void
 }
 
 export function NoteEditingSheet({
@@ -26,6 +29,9 @@ export function NoteEditingSheet({
   onTextChange,
   onScheduledForChange,
   onSave,
+  onShare,
+  onAddToCalendar,
+  onPrint,
 }: NoteEditingSheetProps) {
   const styles = useStyles()
   const insets = useSafeAreaInsets()
@@ -86,9 +92,21 @@ export function NoteEditingSheet({
           <Text variant="caption" color="text-tertiary" style={styles.kicker}>
             Workspace
           </Text>
-          <Text variant="header" color="foreground">
-            {title}
-          </Text>
+          <View style={styles.headerRow}>
+            <Text variant="header" color="foreground" style={styles.headerTitle}>
+              {title}
+            </Text>
+            {onShare ? (
+              <Pressable
+                onPress={onShare}
+                accessibilityLabel="Share note"
+                accessibilityRole="button"
+                style={styles.shareButton}
+              >
+                <AppIcon name="share-from-square" size={16} color={theme.colors['text-secondary']} />
+              </Pressable>
+            ) : null}
+          </View>
         </View>
 
         <View style={styles.editorCard} testID="note-editing-sheet-editor">
@@ -162,6 +180,26 @@ export function NoteEditingSheet({
         style={[styles.footer, { paddingBottom: insets.bottom + footerPaddingBottom }]}
         testID="note-editing-sheet-footer"
       >
+        <View style={styles.footerActions}>
+          {onAddToCalendar && scheduledFor ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onPress={onAddToCalendar}
+              style={styles.footerSecondaryButton}
+              title="Calendar"
+            />
+          ) : null}
+          {onPrint ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onPress={onPrint}
+              style={styles.footerSecondaryButton}
+              title="Print"
+            />
+          ) : null}
+        </View>
         <Button
           disabled={isSaving}
           isLoading={isSaving}
@@ -195,6 +233,23 @@ const useStyles = makeStyles((t) => {
     },
     header: {
       rowGap: t.spacing.sm_8,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.sm_8,
+    },
+    headerTitle: {
+      flex: 1,
+    },
+    shareButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
     },
     kicker: {
       letterSpacing: 1,
@@ -249,6 +304,14 @@ const useStyles = makeStyles((t) => {
       borderColor: t.colors['border-default'],
       paddingHorizontal: t.spacing.m_16,
       paddingTop: t.spacing.sm_12,
+      gap: t.spacing.sm_8,
+    },
+    footerActions: {
+      flexDirection: 'row',
+      gap: t.spacing.sm_8,
+    },
+    footerSecondaryButton: {
+      flex: 1,
     },
   })
 })
