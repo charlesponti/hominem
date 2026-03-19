@@ -1,6 +1,8 @@
 import Constants from 'expo-constants';
+import * as Device from 'expo-device';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as {
+  apiBaseUrl?: string;
   mobilePasskeyEnabled?: string;
   e2eTesting?: string;
   e2eAuthSecret?: string;
@@ -11,8 +13,12 @@ const extra = (Constants.expoConfig?.extra ?? {}) as {
 const hostUri = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoClient?.hostUri;
 const localHost = hostUri ? hostUri.split(':').shift() : null;
 
-function toDeviceReachableApiBaseUrl(baseUrl: string, host: string | null) {
-  if (!baseUrl || !host) {
+function toDeviceReachableApiBaseUrl(
+  baseUrl: string,
+  host: string | null,
+  isPhysicalDevice: boolean,
+) {
+  if (!baseUrl || !host || !isPhysicalDevice) {
     return baseUrl;
   }
 
@@ -33,12 +39,13 @@ function toDeviceReachableApiBaseUrl(baseUrl: string, host: string | null) {
   }
 }
 
-const configuredApiBaseUrlRaw = process.env.EXPO_PUBLIC_API_BASE_URL || '';
+const configuredApiBaseUrlRaw = extra.apiBaseUrl || process.env.EXPO_PUBLIC_API_BASE_URL || '';
 const configuredApiBaseUrl = toDeviceReachableApiBaseUrl(
   configuredApiBaseUrlRaw,
   localHost ?? null,
+  Device.isDevice,
 );
-const fallbackApiBaseUrl = localHost ? `http://${localHost}:3000` : 'http://localhost:3000';
+const fallbackApiBaseUrl = localHost && Device.isDevice ? `http://${localHost}:4040` : 'http://localhost:4040';
 const appVariant = extra.appVariant ?? process.env.APP_VARIANT ?? 'dev';
 export function isReleaseAppVariant(variant: string) {
   return variant === 'preview' || variant === 'production';

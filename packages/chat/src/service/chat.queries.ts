@@ -9,21 +9,29 @@ import type { CreateChatParams } from './chat.types';
 
 type ChatRow = Selectable<Database['chat']>;
 
+function toIsoString(value: Date | string | null | undefined): string {
+  if (value === null || value === undefined) {
+    return new Date().toISOString()
+  }
+
+  return value instanceof Date ? value.toISOString() : value
+}
+
 function toChatOutput(row: ChatRow): ChatOutput {
   return {
-    archivedAt: row.ended_at ?? null,
+    archivedAt: null,
     id: row.id,
     title: row.title,
     userId: row.user_id,
     noteId: row.note_id ?? null,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    createdAt: toIsoString(row.created_at),
+    updatedAt: toIsoString(row.updated_at),
   };
 }
 
 export async function createChatQuery(params: CreateChatParams): Promise<ChatOutput> {
   const chatId = crypto.randomUUID();
-  const now = new Date().toISOString();
+  const now = new Date();
 
   const newChat = await db
     .insertInto('chat')
@@ -33,7 +41,6 @@ export async function createChatQuery(params: CreateChatParams): Promise<ChatOut
       user_id: params.userId,
       note_id: params.noteId ?? null,
       created_at: now,
-      ended_at: null,
       updated_at: now,
     })
     .returningAll()
@@ -82,7 +89,6 @@ export async function getOrCreateActiveChatQuery(
       id: crypto.randomUUID(),
       title: 'New Chat',
       user_id: userId,
-      ended_at: null,
       note_id: null,
     })
     .returningAll()
@@ -131,7 +137,7 @@ export async function updateChatTitleQuery(
     .updateTable('chat')
     .set({
       title: title,
-      updated_at: new Date().toISOString(),
+      updated_at: new Date(),
     })
     .where('id', '=', chatId)
     .where('user_id', '=', userId)
@@ -142,11 +148,10 @@ export async function updateChatTitleQuery(
 }
 
 export async function archiveChatQuery(chatId: string, userId: string): Promise<ChatOutput | null> {
-  const timestamp = new Date().toISOString();
+  const timestamp = new Date();
   const archivedChat = await db
     .updateTable('chat')
     .set({
-      ended_at: timestamp,
       updated_at: timestamp,
     })
     .where('id', '=', chatId)
@@ -154,7 +159,14 @@ export async function archiveChatQuery(chatId: string, userId: string): Promise<
     .returningAll()
     .executeTakeFirst();
 
-  return archivedChat ? toChatOutput(archivedChat) : null;
+  if (!archivedChat) {
+    return null
+  }
+
+  return {
+    ...toChatOutput(archivedChat),
+    archivedAt: timestamp.toISOString(),
+  }
 }
 
 export async function deleteChatQuery(chatId: string, userId: string): Promise<boolean> {

@@ -4,13 +4,13 @@ import { StyleSheet, View } from 'react-native'
 
 import { Text, makeStyles } from '~/theme'
 import type { ChatWithActivity } from '~/utils/services/chat/session-state'
-import type { FocusItem } from '~/utils/services/notes/types'
+import type { Note } from '@hominem/hono-rpc/types'
 
 import { InboxStreamItem } from './inbox-stream-item'
 import { toInboxStreamItems, type InboxStreamItem as InboxStreamItemModel } from './inbox-stream-items'
 
 interface InboxStreamProps {
-  focusItems: FocusItem[]
+  focusItems: Note[]
   sessions: ChatWithActivity[]
 }
 
@@ -57,14 +57,16 @@ const useStyles = makeStyles((t) =>
     listContent: {
       paddingHorizontal: t.spacing.sm_12,
       paddingTop: t.spacing.xs_4,
-      paddingBottom: 220,
+      paddingBottom:
+        t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.ml_24 + t.spacing.xs_4,
     },
     empty: {
       borderRadius: t.borderRadii.l_12,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
       gap: t.spacing.sm_8,
-      marginBottom: 220,
+      marginBottom:
+        t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.ml_24 + t.spacing.xs_4,
       marginHorizontal: t.spacing.sm_12,
       paddingHorizontal: t.spacing.m_16,
       paddingVertical: t.spacing.xl_48,

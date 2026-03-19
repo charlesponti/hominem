@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, View } from 'react-native'
 import { FadeIn } from '~/components/animated/fade-in'
 import AppIcon from '~/components/ui/icon'
 import { Text, makeStyles } from '~/theme'
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
 
 import type { InboxStreamItem as InboxStreamItemModel } from './inbox-stream-items'
 
@@ -48,8 +49,13 @@ export const InboxStreamItem = ({ item }: InboxStreamItemProps) => {
   )
 }
 
+function toDate(value: string): Date {
+  return parseInboxTimestamp(value)
+}
+
 function formatTimestamp(value: string): string {
-  const date = new Date(value)
+  const date = toDate(value)
+
   return `${date.getMonth() + 1}/${date.getDate()}`
 }
 

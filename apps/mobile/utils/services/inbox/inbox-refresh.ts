@@ -1,8 +1,10 @@
 import type { QueryClient } from '@tanstack/react-query'
 
 import type { ChatWithActivity } from '../chat/session-state'
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
+import { chatKeys, focusKeys } from '~/utils/services/notes/query-keys'
 
-export const INBOX_REFRESH_QUERY_KEYS = [['focusItems'], ['resumableSessions']] as const
+export const INBOX_REFRESH_QUERY_KEYS = [focusKeys.all, chatKeys.resumableSessions] as const
 
 export interface ChatInboxRefreshSnapshot {
   chatId: string
@@ -39,7 +41,8 @@ export function upsertInboxSessionActivity(
       }
 
   return [...sessions.filter((session) => session.id !== snapshot.chatId), nextSession].sort(
-    (left, right) => new Date(right.activityAt).getTime() - new Date(left.activityAt).getTime(),
+    (left, right) =>
+      parseInboxTimestamp(right.activityAt).getTime() - parseInboxTimestamp(left.activityAt).getTime(),
   )
 }
 

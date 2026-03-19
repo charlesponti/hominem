@@ -19,6 +19,7 @@ const { EXPO_OWNER, EXPO_PROJECT_ID, getExpoExtraConfig } = require('./config/ex
   EXPO_OWNER: string
   EXPO_PROJECT_ID: string
   getExpoExtraConfig: (env: Record<string, string | undefined>) => {
+    apiBaseUrl: string
     e2eTesting: string
     e2eAuthSecret: string
     mobilePasskeyEnabled: string

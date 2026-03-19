@@ -18,9 +18,9 @@ function serializeHealthRecord(record: HealthRecordRow) {
   return {
     ...record,
     recorded_at:
-      typeof record.recorded_at === 'string' ? record.recorded_at : new Date().toISOString(),
+      record.recorded_at instanceof Date ? record.recorded_at.toISOString() : new Date().toISOString(),
     created_at:
-      typeof record.created_at === 'string' ? record.created_at : new Date().toISOString(),
+      record.created_at instanceof Date ? record.created_at.toISOString() : new Date().toISOString(),
   };
 }
 
@@ -109,7 +109,7 @@ healthRoutes.post('/', zValidator('json', healthDataSchema), async (c) => {
     const result = await createHealthRecord({
       user_id: validated.userId,
       record_type: validated.activityType,
-      recorded_at: validated.date,
+      recorded_at: new Date(validated.date),
       value: String(validated.duration),
       unit: 'minutes',
       source: null,
@@ -133,7 +133,7 @@ healthRoutes.put('/:id', zValidator('json', updateHealthDataSchema), async (c) =
     const validated = c.req.valid('json');
 
     const updates: Partial<Omit<HealthRecordRow, 'id' | 'created_at'>> = {};
-    if (validated.date !== undefined) updates.recorded_at = validated.date;
+    if (validated.date !== undefined) updates.recorded_at = new Date(validated.date);
     if (validated.activityType !== undefined) updates.record_type = validated.activityType;
     if (validated.duration !== undefined) updates.value = String(validated.duration);
     if (validated.notes !== undefined) updates.metadata = { notes: validated.notes };

@@ -19,5 +19,5 @@ export function getLMStudioAdapter(): LanguageModelV1 {
  * Create OpenAI adapter
  */
 export function getOpenAIAdapter(): LanguageModelV1 {
-  return openai('gpt-5-mini');
+  return openai('gpt-5.4-mini');
 }

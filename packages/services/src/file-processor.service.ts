@@ -68,7 +68,7 @@ export class FileProcessorService {
       try {
         const base64Image = Buffer.from(buffer).toString('base64');
         const response = await openai.chat.completions.create({
-          model: 'gpt-5-mini',
+          model: 'gpt-5.4-mini',
           messages: [
             {
               role: 'user',
@@ -140,7 +140,7 @@ export class FileProcessorService {
       if (textContent.length > 1000) {
         try {
           const response = await openai.chat.completions.create({
-            model: 'gpt-5-mini',
+            model: 'gpt-5.4-mini',
             messages: [
               {
                 role: 'system',

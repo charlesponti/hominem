@@ -229,7 +229,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
           return await next();
         }
 
-        const createdUser = await db
+        await db
           .insertInto('users')
           .values({
             id: testUserId,
@@ -237,16 +237,9 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
             is_admin: false,
           })
           .onConflict((oc) => oc.column('id').doNothing())
-          .returningAll()
-          .executeTakeFirst();
+          .execute();
 
-        const fallbackUser =
-          createdUser ??
-          (await db
-            .selectFrom('users')
-            .selectAll()
-            .where('id', '=', testUserId)
-            .executeTakeFirst());
+        const fallbackUser = await UserAuthService.getUserById(testUserId);
 
         if (fallbackUser) {
           const user = toHominemUser(fallbackUser);

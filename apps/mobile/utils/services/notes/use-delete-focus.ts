@@ -1,8 +1,6 @@
 import { useApiClient } from '@hominem/hono-client/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { LocalStore } from '~/utils/local-store';
-
 import { focusKeys } from './query-keys';
 
 interface UseDeleteFocusOptions {
@@ -17,8 +15,6 @@ export const useDeleteFocus = (options?: UseDeleteFocusOptions) => {
   return useMutation<string, Error, string>({
     mutationFn: async (id: string) => {
       await client.notes.delete({ id });
-
-      await LocalStore.deleteFocusItem(id);
       return id;
     },
     onSuccess: async (data) => {

@@ -1,30 +1,28 @@
 import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
+import type { Note } from '@hominem/hono-rpc/types';
 
 import { Text, makeStyles } from '~/theme';
-import type { FocusItemInput } from '~/utils/services/notes/types';
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
 
 import AppIcon from '../ui/icon';
 
-function getReadableDate(date: FocusItemInput['due_date']) {
+function getReadableDate(date: Note['scheduledFor']) {
   if (!date) return null;
 
-  try {
-    const dateObject = new Date(date);
-    return dateObject.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  } catch {
-    return null;
-  }
+  const dateObject = parseInboxTimestamp(date)
+
+  return dateObject.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 type FocusItemPreviewProps = {
   disabled: boolean;
-  focusItem: FocusItemInput;
-  onDeleteClick: (focusItem: FocusItemInput) => void;
-  onCreateClick: (focusItem: FocusItemInput) => void;
+  focusItem: Pick<Note, 'id' | 'title' | 'excerpt' | 'content' | 'scheduledFor'>;
+  onDeleteClick: (focusItem: Pick<Note, 'id' | 'title' | 'excerpt' | 'content' | 'scheduledFor'>) => void;
+  onCreateClick: (focusItem: Pick<Note, 'id' | 'title' | 'excerpt' | 'content' | 'scheduledFor'>) => void;
 } & ViewProps;
 const FocusItemPreview = ({
   disabled,
@@ -34,7 +32,7 @@ const FocusItemPreview = ({
   ...props
 }: FocusItemPreviewProps) => {
   const styles = useFocusItemStyles();
-  const readableDate = getReadableDate(focusItem.due_date);
+  const readableDate = getReadableDate(focusItem.scheduledFor);
   const onDeleteIconPress = () => {
     onDeleteClick(focusItem);
   };
@@ -47,9 +45,9 @@ const FocusItemPreview = ({
     <View style={[styles.item]} {...props}>
       <View style={[styles.info]}>
         <Text variant="body" color="black">
-          {focusItem.text}
+          {focusItem.title || focusItem.excerpt || focusItem.content}
         </Text>
-        {focusItem.due_date && readableDate ? <Text variant="caption">{readableDate}</Text> : null}
+        {focusItem.scheduledFor && readableDate ? <Text variant="caption">{readableDate}</Text> : null}
       </View>
       <Pressable disabled={disabled} style={[styles.icon]} onPress={onDeleteIconPress}>
         <AppIcon name="trash" size={24} color="#d32f2f" />

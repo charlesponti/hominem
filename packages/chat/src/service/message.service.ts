@@ -106,7 +106,7 @@ export class MessageService {
 
         await trx
           .updateTable('chat')
-          .set({ updated_at: new Date().toISOString() })
+          .set({ updated_at: new Date() })
           .where('id', '=', chatId)
           .execute();
 
@@ -192,7 +192,7 @@ export class MessageService {
         .set({
           content,
           tool_calls: toolCalls as Json,
-          updated_at: new Date().toISOString(),
+          updated_at: new Date(),
         })
         .where('id', '=', messageId)
         .returningAll()
@@ -256,7 +256,7 @@ export class MessageService {
       const deletedMessages = await db
         .deleteFrom('chat_message')
         .where('chat_id', '=', chatId)
-        .where('created_at', '>', new Date(afterTimestamp).toISOString())
+        .where('created_at', '>', new Date(afterTimestamp))
         .returningAll()
         .execute();
 

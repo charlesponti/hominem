@@ -1,5 +1,7 @@
 import type { Chat } from '@hominem/hono-rpc/types';
 
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
+
 export const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface ChatWithActivity extends Chat {
@@ -10,8 +12,12 @@ export function getChatActivityAt(chat: Chat): string {
   return chat.updatedAt ?? chat.createdAt;
 }
 
+function parseChatActivityAt(chat: Chat): Date {
+  return parseInboxTimestamp(getChatActivityAt(chat))
+}
+
 export function isChatResumable(chat: Chat, now = Date.now()): boolean {
-  return now - new Date(getChatActivityAt(chat)).getTime() <= THIRTY_DAYS_MS;
+  return now - parseChatActivityAt(chat).getTime() <= THIRTY_DAYS_MS;
 }
 
 export function toChatsWithActivity(chats: Chat[], now = Date.now()): ChatWithActivity[] {
@@ -21,7 +27,9 @@ export function toChatsWithActivity(chats: Chat[], now = Date.now()): ChatWithAc
       activityAt: getChatActivityAt(chat),
     }))
     .filter((chat) => isChatResumable(chat, now))
-    .sort((a, b) => new Date(b.activityAt).getTime() - new Date(a.activityAt).getTime());
+    .sort(
+      (a, b) => parseInboxTimestamp(b.activityAt).getTime() - parseInboxTimestamp(a.activityAt).getTime(),
+    );
 }
 
 export function getInboxChatsWithActivity(chats: Chat[], now = Date.now()): ChatWithActivity[] {

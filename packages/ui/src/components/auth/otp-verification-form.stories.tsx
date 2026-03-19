@@ -1,4 +1,3 @@
-import type { Meta, StoryObj } from '@storybook/react';
 import { OtpCodeInput } from './otp-code-input';
 import { AuthErrorBanner } from './auth-error-banner';
 import { PasskeyButton } from './passkey-button';

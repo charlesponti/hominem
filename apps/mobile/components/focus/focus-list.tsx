@@ -5,32 +5,33 @@ import { StyleSheet } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 
 import { makeStyles } from '~/theme';
-import type { FocusItem } from '~/utils/services/notes/types';
+import type { Note } from '@hominem/hono-rpc/types';
 
 import { FocusListItem } from './focus-list-item';
 
 // Memoized render item component to prevent unnecessary re-renders
-const RenderFocusItem = memo(({ item, index }: { item: FocusItem; index: number }) => {
-  return <FocusListItem label={item.text} item={item} itemIndex={index} />;
+const RenderFocusItem = memo(({ item, index }: { item: Note; index: number }) => {
+  const label = item.title || item.excerpt || item.content || '';
+  return <FocusListItem label={label} item={item} itemIndex={index} />;
 });
 
 RenderFocusItem.displayName = 'RenderFocusItem';
 
 // Stable key extractor - just use item.id directly
-const keyExtractor = (item: FocusItem) => item.id;
+const keyExtractor = (item: Note) => item.id;
 
 export const FocusList = ({
   data,
   isRefreshing,
   onRefresh,
 }: {
-  data: FocusItem[];
+  data: Note[];
   isRefreshing: boolean;
   onRefresh: () => void;
 }) => {
   const styles = useStyles();
   // Memoized render function with stable reference
-  const renderItem = useCallback<ListRenderItem<FocusItem>>(({ item, index }) => {
+  const renderItem = useCallback<ListRenderItem<Note>>(({ item, index }) => {
     return <RenderFocusItem item={item} index={index} />;
   }, []);
 

@@ -1,4 +1,8 @@
 import * as ImagePicker from 'expo-image-picker'
+import { useApiClient } from '@hominem/hono-client/react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'expo-router'
+import type { RelativePathString } from 'expo-router'
 import React, { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -10,8 +14,20 @@ import { deriveMobileHyperFormPresentation } from './mobile-hyper-form-config'
 import { useInputContext } from './input-context'
 import { VoiceSessionModal } from '../media/voice-session-modal'
 import { theme } from '~/theme'
+import type { ChatWithActivity } from '~/utils/services/chat/session-state'
+import {
+  createChatInboxRefreshSnapshot,
+  invalidateInboxQueries,
+  upsertInboxSessionActivity,
+} from '~/utils/services/inbox/inbox-refresh'
+import { useCreateFocusItem } from '~/utils/services/notes/use-create-focus-item'
+import { chatKeys } from '~/utils/services/notes/query-keys'
 
 export const MobileHyperForm = () => {
+  const client = useApiClient()
+  const router = useRouter()
+  const queryClient = useQueryClient()
+  const { mutateAsync: createFocusItem } = useCreateFocusItem()
   const { activeContext } = useMobileWorkspace()
   const insets = useSafeAreaInsets()
   const {
@@ -28,6 +44,83 @@ export const MobileHyperForm = () => {
     setMode,
   } = useInputContext()
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
+
+  const clearDraft = () => {
+    setAttachments([])
+    setIsRecording(false)
+    setMessage('')
+    setMode('text')
+  }
+
+  const createNoteFromDraft = async () => {
+    const trimmedMessage = message.trim()
+    if (!trimmedMessage) {
+      return
+    }
+
+    await createFocusItem({
+      text: trimmedMessage,
+    })
+    await invalidateInboxQueries(queryClient)
+    clearDraft()
+  }
+
+  const createChatFromDraft = async () => {
+    const trimmedMessage = message.trim()
+    const chatTitle = trimmedMessage.slice(0, 64) || 'New conversation'
+    const chat = await client.chats.create({
+      title: chatTitle,
+    })
+
+    if (trimmedMessage) {
+      await client.chats.send({
+        chatId: chat.id,
+        message: trimmedMessage,
+      })
+    }
+
+    queryClient.setQueryData<ChatWithActivity[] | undefined>(chatKeys.resumableSessions, (previousSessions) =>
+      upsertInboxSessionActivity(
+        previousSessions ?? [],
+        createChatInboxRefreshSnapshot({
+          chatId: chat.id,
+          noteId: chat.noteId,
+          title: chat.title,
+          timestamp: chat.createdAt,
+          userId: chat.userId,
+        }),
+      ),
+    )
+    await invalidateInboxQueries(queryClient)
+    clearDraft()
+    router.push(`/(protected)/(tabs)/sherpa?chatId=${chat.id}` as RelativePathString)
+  }
+
+  const handlePrimaryAction = () => {
+    if (activeContext === 'chat') {
+      submitAction?.()
+      return
+    }
+
+    if (activeContext === 'search') {
+      return
+    }
+
+    void createNoteFromDraft()
+  }
+
+  const handleSecondaryAction = () => {
+    if (activeContext === 'search') {
+      return
+    }
+
+    if (activeContext === 'chat') {
+      void createNoteFromDraft()
+      return
+    }
+
+    void createChatFromDraft()
+  }
 
   useEffect(() => {
     if (context !== activeContext) {
@@ -176,6 +269,7 @@ export const MobileHyperForm = () => {
             {presentation.secondaryActionLabel ? (
               <Pressable
                 accessibilityLabel={presentation.secondaryActionLabel}
+                onPress={handleSecondaryAction}
                 style={styles.secondaryAction}
                 testID="mobile-hyper-form-secondary-action"
               >
@@ -188,11 +282,7 @@ export const MobileHyperForm = () => {
             ) : null}
             <Pressable
               accessibilityLabel={presentation.primaryActionLabel}
-              onPress={() => {
-                if (activeContext === 'chat') {
-                  submitAction?.()
-                }
-              }}
+              onPress={handlePrimaryAction}
               style={styles.primaryAction}
               testID="mobile-hyper-form-primary-action"
             >
@@ -221,20 +311,20 @@ export const MobileHyperForm = () => {
 const styles = StyleSheet.create({
   shell: {
     left: 0,
-    paddingHorizontal: 8,
+    paddingHorizontal: theme.spacing.sm_8,
     position: 'absolute',
     right: 0,
   },
   container: {
-    gap: 12,
+    gap: theme.spacing.sm_12,
     backgroundColor: theme.colors.background,
     boxShadow: '0 -10px 30px rgba(15, 23, 42, 0.08)',
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
     borderRadius: 30,
-    paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 10,
+    paddingHorizontal: theme.spacing.sm_12,
+    paddingTop: theme.spacing.sm_12,
+    paddingBottom: theme.spacing.sm_8,
     overflow: 'hidden',
   },
   containerDraft: {
@@ -259,15 +349,15 @@ const styles = StyleSheet.create({
   attachments: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: theme.spacing.sm_8,
   },
   attachmentChip: {
     backgroundColor: theme.colors['bg-surface'],
     borderRadius: 999,
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: theme.spacing.sm_8,
+    paddingVertical: theme.spacing.xs_4,
   },
   attachmentLabel: {
     color: theme.colors.foreground,
@@ -275,7 +365,7 @@ const styles = StyleSheet.create({
   },
   tools: {
     flexDirection: 'row',
-    gap: 8,
+    gap: theme.spacing.sm_8,
   },
   toolButton: {
     alignItems: 'center',
@@ -292,7 +382,7 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: theme.spacing.sm_8,
   },
   secondaryAction: {
     alignItems: 'center',

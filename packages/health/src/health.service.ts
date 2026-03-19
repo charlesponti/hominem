@@ -19,11 +19,11 @@ export async function listHealthRecords(filters: {
   }
 
   if (filters.startDate) {
-    query = query.where('recorded_at', '>=', filters.startDate.toISOString());
+    query = query.where('recorded_at', '>=', filters.startDate);
   }
 
   if (filters.endDate) {
-    query = query.where('recorded_at', '<=', filters.endDate.toISOString());
+    query = query.where('recorded_at', '<=', filters.endDate);
   }
 
   if (filters.recordType) {
@@ -46,7 +46,7 @@ export async function getHealthRecord(id: string): Promise<HealthRecordRow | nul
 export async function createHealthRecord(
   data: Omit<HealthRecordRow, 'id' | 'created_at'>,
 ): Promise<HealthRecordRow> {
-  const now = new Date().toISOString();
+  const now = new Date();
 
   return db
     .insertInto('health_records')

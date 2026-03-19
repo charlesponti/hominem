@@ -6,15 +6,6 @@ export type UserProfile = {
   updatedAt: string;
 };
 
-export type FocusItem = {
-  id: string;
-  text: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  payloadJson?: string | null;
-};
-
 export type Settings = {
   id: string;
   theme?: string | null;

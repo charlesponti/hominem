@@ -1,17 +1,14 @@
-import { useApiClient } from '@hominem/hono-client/react';
-import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
+import type { Note } from '@hominem/hono-rpc/types'
+import { useApiClient } from '@hominem/hono-client/react'
+import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query'
 
-import { LocalStore } from '~/utils/local-store';
-
-import { noteToFocusItem, toLocalFocusItem } from './local-focus';
-import { focusKeys } from './query-keys';
-import type { FocusItem } from './types';
+import { focusKeys } from './query-keys'
 
 export interface UpdateFocusItemInput {
   id: string;
   text: string;
-  due_date?: Date;
   category: string;
+  scheduledFor?: Date;
   timezone: string;
 }
 
@@ -43,11 +40,11 @@ function toNoteType(
   }
 }
 
-export const useUpdateFocusItem = (): UseMutationResult<FocusItem, Error, UpdateFocusItemInput> => {
+export const useUpdateFocusItem = (): UseMutationResult<Note, Error, UpdateFocusItemInput> => {
   const client = useApiClient();
   const queryClient = useQueryClient();
 
-  return useMutation<FocusItem, Error, UpdateFocusItemInput>({
+  return useMutation<Note, Error, UpdateFocusItemInput>({
     mutationKey: ['updateFocusItem'],
     mutationFn: async (input: UpdateFocusItemInput) => {
       const updatedNote = await client.notes.update({
@@ -57,11 +54,8 @@ export const useUpdateFocusItem = (): UseMutationResult<FocusItem, Error, Update
         content: input.text,
         type: toNoteType(input.category),
       });
-      const mapped = noteToFocusItem(updatedNote);
 
-      await LocalStore.upsertFocusItem(toLocalFocusItem(mapped));
-
-      return mapped;
+      return updatedNote;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: focusKeys.all });

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router'
-import type { Href, RelativePathString } from 'expo-router'
+import type { Href } from 'expo-router'
 import React, { useCallback } from 'react'
 import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import type { TextStyle } from 'react-native'
@@ -124,8 +124,8 @@ export const MobileWorkspaceSwitcher = () => {
 const styles = StyleSheet.create({
   shell: {
     backgroundColor: theme.colors.background,
-    paddingHorizontal: 12,
-    paddingBottom: 8,
+    paddingHorizontal: theme.spacing.sm_12,
+    paddingBottom: theme.spacing.sm_8,
   },
   headerRow: {
     alignItems: 'center',
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 8,
+    gap: theme.spacing.sm_8,
   },
   item: {
     backgroundColor: theme.colors.background,
@@ -189,6 +189,6 @@ const styles = StyleSheet.create({
   divider: {
     backgroundColor: theme.colors['border-default'],
     height: StyleSheet.hairlineWidth,
-    marginTop: 8,
+    marginTop: theme.spacing.sm_8,
   },
 })

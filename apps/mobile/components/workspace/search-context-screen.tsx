@@ -45,7 +45,8 @@ const useStyles = makeStyles((t) =>
     container: {
       flex: 1,
       gap: t.spacing.sm_12,
-      paddingBottom: 220,
+      paddingBottom:
+        t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.ml_24 + t.spacing.xs_4,
       paddingHorizontal: t.spacing.m_16,
       paddingTop: t.spacing.m_16,
     },

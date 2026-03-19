@@ -16,8 +16,9 @@ import { Text as MSText, makeStyles, theme } from '~/theme';
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 import { listStyles } from '~/theme/styles';
 import { getLocalDate } from '~/utils/dates';
-import type { FocusItem } from '~/utils/services/notes/types';
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
 import { useDeleteFocus } from '~/utils/services/notes/use-delete-focus';
+import type { Note } from '@hominem/hono-rpc/types';
 
 import { useFocusItemComplete } from '../../utils/services/notes/use-focus-item-complete';
 import AppIcon, { type AppIconName } from '../ui/icon';
@@ -36,6 +37,10 @@ function getPrimaryLine(value: string) {
 function getPreviewLine(value: string) {
   const preview = value.replace(/\s+/g, ' ').trim();
   return preview.length > 120 ? `${preview.slice(0, 117)}...` : preview;
+}
+
+function parseScheduledForValue(value: string): Date {
+  return parseInboxTimestamp(value)
 }
 
 const FocusDueDate = memo(({ dueDate }: { dueDate: Date | null }) => {
@@ -144,7 +149,7 @@ export const FocusListItem = ({
   label,
   itemIndex,
 }: {
-  item: FocusItem;
+  item: Note;
   label: string;
   itemIndex?: number;
 }) => {
@@ -155,7 +160,7 @@ export const FocusListItem = ({
   const iconName = useSharedValue<AppIconName>('check');
   const isMutating = useSharedValue(false);
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dueDate = item.due_date ? new Date(item.due_date) : null;
+  const dueDate = item.scheduledFor ? parseScheduledForValue(item.scheduledFor) : null;
   const title = getPrimaryLine(label);
   const preview = getPreviewLine(label);
 
@@ -274,7 +279,7 @@ export const FocusListItem = ({
     </Reanimated.View>
   );
 
-  if (item.state === 'completed') {
+  if (item.status === 'archived') {
     return (
       <View
         testID={typeof itemIndex === 'number' ? `focus-item-${itemIndex}` : undefined}

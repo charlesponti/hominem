@@ -1,5 +1,6 @@
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useLocalSearchParams } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -8,29 +9,36 @@ import { runOnJS } from 'react-native-reanimated';
 import { Button } from '~/components/Button';
 import TextInput from '~/components/text-input';
 import AppIcon from '~/components/ui/icon';
+import type { Note } from '@hominem/hono-rpc/types';
 import { Text, theme, makeStyles } from '~/theme';
 import { getTimezone } from '~/utils/dates';
-import queryClient from '~/utils/query-client';
-import type { FocusItem } from '~/utils/services/notes/types';
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
 import {
   useUpdateFocusItem,
   type UpdateFocusItemInput,
 } from '~/utils/services/notes/use-update-focus';
+import { focusKeys } from '~/utils/services/notes/query-keys';
 
 export default function FocusItemView() {
   const styles = useStyles();
   const { id } = useLocalSearchParams();
+  const noteId = String(id ?? '')
   const updateFocusItem = useUpdateFocusItem();
-  const focusItems: FocusItem[] = queryClient.getQueryData(['focusItems']) || [];
-  const focusItem = focusItems?.find((item) => item.id === String(id));
+  const queryClient = useQueryClient();
+  const focusItemsByKey = queryClient.getQueryData<Note[]>(
+    focusKeys.all,
+  );
+  const focusItem = focusItemsByKey?.find((item) => item.id === noteId);
 
   if (!focusItem) {
     return null;
   }
 
-  const [text, setText] = useState(focusItem.text || '');
-  const [category, _setCategory] = useState(focusItem.category || '');
-  const [due_date, setDueDate] = useState(focusItem.due_date ? new Date(focusItem.due_date) : null);
+  const [text, setText] = useState(focusItem.title || focusItem.excerpt || focusItem.content || '');
+  const [category] = useState(focusItem.type || 'note');
+  const [scheduledFor, setScheduledFor] = useState(
+    focusItem.scheduledFor ? parseInboxTimestamp(focusItem.scheduledFor) : null,
+  );
   const [open, setOpen] = useState(false);
 
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -45,7 +53,7 @@ export default function FocusItemView() {
     }
 
     setOpen(false);
-    setDueDate(selectedDate);
+    setScheduledFor(selectedDate);
   };
 
   const dueDateTap = Gesture.Tap().onStart(() => {
@@ -61,7 +69,7 @@ export default function FocusItemView() {
       id: focusItem.id,
       text,
       category,
-      ...(due_date ? { due_date } : {}),
+      ...(scheduledFor ? { scheduledFor } : {}),
       timezone: getTimezone(),
     };
 
@@ -70,7 +78,7 @@ export default function FocusItemView() {
     } catch (error) {
       console.error(error);
     }
-  }, [focusItem, updateFocusItem, category, due_date, text]);
+  }, [focusItem, updateFocusItem, category, scheduledFor, text]);
 
   return (
     <View style={styles.container}>
@@ -79,7 +87,7 @@ export default function FocusItemView() {
           Workspace
         </Text>
         <Text variant="header" color="foreground">
-          {focusItem.text || 'Untitled note'}
+          {focusItem.title || focusItem.excerpt || focusItem.content || 'Untitled note'}
         </Text>
         <Text variant="body" color="text-secondary">
           Edit the note directly and keep supporting metadata subordinate to the writing itself.
@@ -97,7 +105,7 @@ export default function FocusItemView() {
             onChange={(e) => setText(e.nativeEvent.text)}
           />
         </View>
-        {due_date ? (
+        {scheduledFor ? (
           <View style={styles.metadataCard}>
             <Text variant="caption" color="text-tertiary" style={styles.eyebrow}>
               Due date
@@ -106,13 +114,13 @@ export default function FocusItemView() {
               <AppIcon name="calendar" size={16} color={theme.colors.foreground} />
               <GestureDetector gesture={dueDateTap}>
                 <Text variant="body">
-                  {due_date.toLocaleDateString()} {due_date.toLocaleTimeString()}
+                  {scheduledFor.toLocaleDateString()} {scheduledFor.toLocaleTimeString()}
                 </Text>
               </GestureDetector>
             </View>
             {open ? (
               <DateTimePicker
-                value={due_date}
+                value={scheduledFor}
                 mode="datetime"
                 display="spinner"
                 onChange={handleDateChange}

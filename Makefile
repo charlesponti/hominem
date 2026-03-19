@@ -126,7 +126,7 @@ build:
 # Run all linting: CSS, DB migrations, workspace code quality
 lint:
 	bunx stylelint "{apps,packages,services}/**/*.css" --config packages/ui/tools/stylelint-config-void.cjs
-	cd packages/db && bunx squawk-cli migrations/*.sql
+	cd packages/db && npx --yes squawk-cli migrations/*.sql
 	bun turbo run lint --no-cache
 
 # Typecheck the entire monorepo

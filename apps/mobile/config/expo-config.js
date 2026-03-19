@@ -6,6 +6,7 @@ const getEnvValue = (value, fallback) => value ?? fallback
 
 function getExpoExtraConfig(env) {
   return {
+    apiBaseUrl: getEnvValue(env.EXPO_PUBLIC_API_BASE_URL, ''),
     e2eTesting: getEnvValue(env.EXPO_PUBLIC_E2E_TESTING, 'false'),
     e2eAuthSecret: getEnvValue(env.EXPO_PUBLIC_E2E_AUTH_SECRET, ''),
     mobilePasskeyEnabled: getEnvValue(env.EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED, 'false'),

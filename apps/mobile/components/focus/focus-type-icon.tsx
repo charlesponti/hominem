@@ -1,10 +1,10 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import type { Note } from '@hominem/hono-rpc/types';
 
 import { theme } from '~/theme';
-import type { FocusItem } from '~/utils/services/notes/types';
 
 const ITEM_ICON_SIZE = 20;
-export const FocusItemIcon = ({ item }: { item: FocusItem }) => {
+export const FocusItemIcon = ({ item }: { item: Note }) => {
   switch (item.type) {
     case 'task':
       return (
@@ -14,7 +14,7 @@ export const FocusItemIcon = ({ item }: { item: FocusItem }) => {
           size={ITEM_ICON_SIZE}
         />
       );
-    case 'event':
+    case 'timer':
       return (
         <MaterialIcons
           name="calendar-today"
@@ -22,7 +22,13 @@ export const FocusItemIcon = ({ item }: { item: FocusItem }) => {
           size={ITEM_ICON_SIZE}
         />
       );
-    case 'reminder':
+    case 'journal':
+    case 'document':
+    case 'essay':
+    case 'blog_post':
+    case 'social_post':
+    case 'tweet':
+    case 'note':
       return (
         <MaterialIcons
           name="notifications"
@@ -31,6 +37,12 @@ export const FocusItemIcon = ({ item }: { item: FocusItem }) => {
         />
       );
     default:
-      return null;
+      return (
+        <MaterialIcons
+          name="note"
+          color={theme.colors['emphasis-low']}
+          size={ITEM_ICON_SIZE}
+        />
+      )
   }
 };

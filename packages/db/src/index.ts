@@ -11,7 +11,7 @@
  */
 
 export { db, healthCheck, pool, sql } from './db'
-export type { Database } from './types/database'
+export type { DB as Database } from './types/database'
 export type { Selectable } from 'kysely'
 export type { Json, JsonValue, JsonObject, JsonArray } from './types/database'
 

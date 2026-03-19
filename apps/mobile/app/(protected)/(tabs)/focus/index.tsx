@@ -1,5 +1,4 @@
-import { Link, Stack } from 'expo-router';
-import type { RelativePathString } from 'expo-router';
+import { Stack } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -15,6 +14,7 @@ import { InboxStream } from '~/components/workspace/inbox-stream';
 import { useMobileWorkspace } from '~/components/workspace/mobile-workspace-context';
 import { Text, theme, makeStyles } from '~/theme';
 import { useFocusQuery } from '~/utils/services/notes/use-focus-query';
+import type { Note } from '@hominem/hono-rpc/types'
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -62,14 +62,15 @@ export const FocusView = () => {
     isLoading,
     isRefetching,
     isError,
-  } = useFocusQuery({
-    onSuccess: () => {
+  } = useFocusQuery({});
+
+  const resolvedFocusItems: Note[] = focusItems ?? []
+
+  useEffect(() => {
+    if (refreshing && !isRefetching) {
       setRefreshing(false);
-    },
-    onError: () => {
-      setRefreshing(false);
-    },
-  });
+    }
+  }, [isRefetching, refreshing]);
 
   const onRefresh = useCallback(() => {
     setActiveSearch(null);
@@ -83,7 +84,8 @@ export const FocusView = () => {
   }, [onRefresh]);
 
   const isLoaded = Boolean(!isLoading && !isRefetching && !refreshing);
-  const hasFocusItems = !!focusItems && focusItems.length > 0;
+  const hasFocusItems = resolvedFocusItems.length > 0;
+  const hasInboxItems = hasFocusItems || sessions.length > 0;
 
   useEffect(() => {
     setHeader({
@@ -110,13 +112,13 @@ export const FocusView = () => {
 
           {isError ? <FocusLoadingError /> : null}
 
-          {(isLoaded || isRefetching) && hasFocusItems ? (
+          {(isLoaded || isRefetching) && hasInboxItems ? (
             <View style={styles.focuses}>
               {activeSearch ? (
                 <ActiveSearchSummary onCloseClick={onSearchClose} activeSearch={activeSearch} />
               ) : null}
 
-              <InboxStream focusItems={focusItems} sessions={sessions} />
+              <InboxStream focusItems={resolvedFocusItems} sessions={sessions} />
             </View>
           ) : null}
           {isLoaded && !hasFocusItems && !activeSearch ? (

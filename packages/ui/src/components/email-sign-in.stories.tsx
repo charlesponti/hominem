@@ -1,5 +1,3 @@
-import type { Meta, StoryObj } from '@storybook/react';
-
 // EmailSignIn uses react-router's useFetcher which requires a router context.
 // This story shows the visual composition without the router dependency.
 

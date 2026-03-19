@@ -100,7 +100,7 @@ jobs:
       - name: 📦 Install dependencies
         run: bun install --force
       - name: 🛡️ Validate DB migrations (lint)
-        run: cd packages/db && bunx squawk-cli migrations/*.sql
+        run: cd packages/db && npx --yes squawk-cli migrations/*.sql
       - name: 🔧 Install Goose CLI
         run: |
           go install github.com/pressly/goose/v3/cmd/goose@v3.27.0

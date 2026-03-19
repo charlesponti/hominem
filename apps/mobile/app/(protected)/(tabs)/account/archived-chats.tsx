@@ -6,9 +6,11 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { useArchivedSessions } from '~/components/chat/session-card'
 import AppIcon from '~/components/ui/icon'
 import { Text, theme } from '~/theme'
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
 
 function formatAge(activityAt: string): string {
-  const diffMs = Date.now() - new Date(activityAt).getTime()
+  const parsed = parseInboxTimestamp(activityAt)
+  const diffMs = Date.now() - parsed.getTime()
   const diffH = Math.floor(diffMs / (1000 * 60 * 60))
   if (diffH < 1) return 'Just now'
   if (diffH < 24) return `${diffH}h ago`
@@ -96,7 +98,7 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: theme.spacing.sm_12,
-    paddingBottom: 48,
+    paddingBottom: theme.spacing.xl_48,
     paddingHorizontal: theme.spacing.m_16,
     paddingTop: theme.spacing.m_16,
   },

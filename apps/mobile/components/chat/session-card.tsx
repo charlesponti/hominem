@@ -10,6 +10,8 @@ import { FadeIn } from '~/components/animated/fade-in';
 import { makeStyles, Text, theme } from '~/theme';
 import type { ChatWithActivity } from '~/utils/services/chat/session-state';
 import { getArchivedChatsWithActivity, getInboxChatsWithActivity } from '~/utils/services/chat/session-state';
+import { chatKeys } from '~/utils/services/notes/query-keys';
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
 
 import AppIcon from '../ui/icon';
 
@@ -17,7 +19,7 @@ export const useResumableSessions = () => {
   const client = useApiClient();
 
   return useQuery<ChatWithActivity[]>({
-    queryKey: ['resumableSessions'],
+    queryKey: chatKeys.resumableSessions,
     queryFn: async () => {
       const chats = await client.chats.list({ limit: 50 });
       return getInboxChatsWithActivity(chats);
@@ -29,7 +31,7 @@ export const useArchivedSessions = () => {
   const client = useApiClient();
 
   return useQuery<ChatWithActivity[]>({
-    queryKey: ['archivedSessions'],
+    queryKey: chatKeys.archivedSessions,
     queryFn: async () => {
       const chats = await client.chats.list({ limit: 100 });
       return getArchivedChatsWithActivity(chats);
@@ -112,7 +114,8 @@ export const SessionList = () => {
 };
 
 function formatAge(activityAt: string): string {
-  const diffMs = Date.now() - new Date(activityAt).getTime();
+  const parsed = parseInboxTimestamp(activityAt)
+  const diffMs = Date.now() - parsed.getTime()
   const diffH = Math.floor(diffMs / (1000 * 60 * 60));
   if (diffH < 1) return 'Just now';
   if (diffH < 24) return `${diffH}h ago`;

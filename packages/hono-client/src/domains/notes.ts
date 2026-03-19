@@ -89,7 +89,6 @@ export function createNotesClient(rawClient: RawHonoClient): NotesClient {
       const res = await rawClient.api.notes.$get({
         query: {
           status: 'draft,published',
-          types: 'task,todo,goal,note',
         },
       })
       return res.json() as Promise<NotesListOutput>

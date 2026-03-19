@@ -1,34 +1,23 @@
-import { useApiClient } from '@hominem/hono-client/react';
-import { useQuery } from '@tanstack/react-query';
+import type { Note } from '@hominem/hono-rpc/types'
+import { useApiClient } from '@hominem/hono-client/react'
+import { useQuery } from '@tanstack/react-query'
 
-import { validateNotesResponse } from '~/utils/validation/schemas';
-
-import { noteToFocusItem } from './local-focus';
-import { focusKeys } from './query-keys';
-import type { FocusItems, FocusResponse } from './types';
+import { focusKeys } from './query-keys'
 
 export const useFocusQuery = ({
-  onError,
-  onSuccess,
+  enabled = true,
 }: {
-  onError?: (error: Error) => void;
-  onSuccess?: (data: FocusResponse) => void;
+  enabled?: boolean
 }) => {
-  const client = useApiClient();
+  const client = useApiClient()
 
-  return useQuery<FocusItems | null>({
+  return useQuery<Note[]>({
     queryKey: focusKeys.all,
     queryFn: async () => {
-      try {
-        const payload = validateNotesResponse(await client.notes.listFocusItems());
-        const mapped = payload.notes.map(noteToFocusItem);
-
-        onSuccess?.({ items: mapped });
-        return mapped;
-      } catch (error) {
-        onError?.(error as Error);
-        return null;
-      }
+      const payload = await client.notes.listFocusItems()
+      return payload.notes
     },
-  });
-};
+    initialData: [],
+    enabled,
+  })
+}

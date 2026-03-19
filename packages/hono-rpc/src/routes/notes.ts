@@ -34,6 +34,14 @@ import { authMiddleware, type AppContext } from '../middleware/auth'
 
 type NoteRow = Selectable<Database['notes']>
 
+function toIsoString(value: Date | string | null | undefined): string {
+  if (value === null || value === undefined) {
+    return new Date().toISOString()
+  }
+
+  return value instanceof Date ? value.toISOString() : value
+}
+
 // Helper to convert database row to Note type
 function dbToNote(row: NoteRow): Note {
   return {
@@ -51,10 +59,10 @@ function dbToNote(row: NoteRow): Note {
     parentNoteId: row.parent_note_id,
     versionNumber: row.version_number,
     isLatestVersion: row.is_latest_version,
-    publishedAt: row.published_at,
-    scheduledFor: row.scheduled_for,
-    createdAt: row.created_at || new Date().toISOString(),
-    updatedAt: row.updated_at || new Date().toISOString(),
+    publishedAt: row.published_at ? toIsoString(row.published_at) : null,
+    scheduledFor: row.scheduled_for ? toIsoString(row.scheduled_for) : null,
+    createdAt: toIsoString(row.created_at),
+    updatedAt: toIsoString(row.updated_at),
   }
 }
 
@@ -200,7 +208,7 @@ export const notesRoutes = new Hono<AppContext>()
 
     // Filter by created_at if since is provided
     if (queryParams.since) {
-      query = query.where('created_at', '>=', queryParams.since)
+      query = query.where('created_at', '>=', new Date(queryParams.since))
     }
 
     // Filter by content or title if query is provided

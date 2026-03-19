@@ -12,12 +12,13 @@ import {
   reconcileMessagesAfterSend,
   type MessageOutput,
 } from './chat-contract';
-import { selectSherpaChat, type ChatWithActivity } from './session-state';
+import { getChatActivityAt, selectSherpaChat, type ChatWithActivity } from './session-state';
 import {
   createChatInboxRefreshSnapshot,
   invalidateInboxQueries,
   upsertInboxSessionActivity,
 } from '../inbox/inbox-refresh';
+import { chatKeys } from '../notes/query-keys';
 
 type SendChatMessageOutput = {
   messages: MessageOutput[];
@@ -58,7 +59,7 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
   const _queryClient = useQueryClient();
 
   return useQuery<MessageOutput[]>({
-    queryKey: ['chatMessages', chatId],
+    queryKey: chatKeys.messages(chatId),
     queryFn: async () => {
       const messages = await client.chats.getMessages({
         chatId,
@@ -105,18 +106,17 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
       }
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['chatMessages', chatId] });
+      await queryClient.cancelQueries({ queryKey: chatKeys.messages(chatId) });
 
       // Snapshot previous value
-      const previousMessages =
-        queryClient.getQueryData<MessageOutput[]>(['chatMessages', chatId]) || [];
+      const previousMessages = queryClient.getQueryData<MessageOutput[]>(chatKeys.messages(chatId)) || [];
 
       // Optimistically add user message
       const optimisticMessage = createOptimisticMessage(chatId, text, generateId());
       const now = new Date().toISOString();
 
-      queryClient.setQueryData(['chatMessages', chatId], [...previousMessages, optimisticMessage]);
-      queryClient.setQueryData(['resumableSessions'], (previousSessions: ChatWithActivity[] | undefined) =>
+      queryClient.setQueryData(chatKeys.messages(chatId), [...previousMessages, optimisticMessage]);
+      queryClient.setQueryData(chatKeys.resumableSessions, (previousSessions: ChatWithActivity[] | undefined) =>
         updateSessionCache(
           previousSessions,
           createChatInboxRefreshSnapshot({
@@ -160,7 +160,7 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
     onSuccess: (data) => {
       setSendChatError(false);
       setChatSendStatus('idle');
-      queryClient.setQueryData(['chatMessages', chatId], (old: MessageOutput[] | undefined) => {
+      queryClient.setQueryData(chatKeys.messages(chatId), (old: MessageOutput[] | undefined) => {
         if (!old) {
           return data.messages;
         }
@@ -175,7 +175,7 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
       setSendChatError(true);
       setChatSendStatus('error');
       if (context?.previousMessages) {
-        queryClient.setQueryData(['chatMessages', chatId], context.previousMessages);
+        queryClient.setQueryData(chatKeys.messages(chatId), context.previousMessages);
       }
     },
   });
@@ -235,7 +235,7 @@ export const useStartChat = ({
     },
 
     onSuccess: (chat) => {
-      queryClient.setQueryData(['resumableSessions'], (previousSessions: ChatWithActivity[] | undefined) =>
+      queryClient.setQueryData(chatKeys.resumableSessions, (previousSessions: ChatWithActivity[] | undefined) =>
         updateSessionCache(
           previousSessions,
           createChatInboxRefreshSnapshot({
@@ -247,7 +247,7 @@ export const useStartChat = ({
           }),
         ),
       );
-      queryClient.invalidateQueries({ queryKey: ['activeChat', chat.id] });
+      queryClient.invalidateQueries({ queryKey: chatKeys.activeChat(chat.id) });
       void invalidateInboxQueries(queryClient);
     },
     ...props,
@@ -267,18 +267,23 @@ export const useArchiveChat = ({
       return client.chats.archive({ chatId });
     },
     onSuccess: (chat) => {
-      queryClient.setQueryData(['resumableSessions'], (previousSessions: Chat[] | undefined) =>
-        (previousSessions ?? []).map((session) =>
-          session.id === chatId
-            ? {
-                ...session,
-                archivedAt: chat.archivedAt,
-                updatedAt: chat.updatedAt,
-              }
-            : session,
-        ),
+      const activityAt = getChatActivityAt(chat);
+      queryClient.setQueryData<ChatWithActivity[] | undefined>(
+        chatKeys.resumableSessions,
+        (previousSessions) => {
+          const previous = previousSessions ?? []
+          const snapshot = createChatInboxRefreshSnapshot({
+            chatId: chat.id,
+            noteId: chat.noteId,
+            title: chat.title ?? null,
+            timestamp: activityAt,
+            userId: chat.userId,
+          })
+
+          return upsertInboxSessionActivity(previous, snapshot)
+        },
       );
-      queryClient.invalidateQueries({ queryKey: ['activeChat', chatId] });
+      queryClient.invalidateQueries({ queryKey: chatKeys.activeChat(chatId) });
       void invalidateInboxQueries(queryClient);
     },
     ...props,
@@ -289,7 +294,7 @@ export const useActiveChat = (chatId?: string | null) => {
   const client = useApiClient();
 
   return useQuery<Chat | null>({
-    queryKey: ['activeChat', chatId ?? null],
+    queryKey: chatKeys.activeChat(chatId ?? null),
     queryFn: async () => {
       if (chatId) {
         const chat = await client.chats.get({ chatId });

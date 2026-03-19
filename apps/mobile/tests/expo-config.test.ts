@@ -7,6 +7,7 @@ const { EXPO_OWNER, EXPO_PROJECT_ID, EXPO_PROJECT_SLUG, getExpoExtraConfig } = r
   EXPO_PROJECT_ID: string
   EXPO_PROJECT_SLUG: string
   getExpoExtraConfig: (env: Record<string, string | undefined>) => {
+    apiBaseUrl: string
     e2eTesting: string
     e2eAuthSecret: string
     mobilePasskeyEnabled: string
@@ -22,6 +23,7 @@ describe('expo config helpers', () => {
 
   it('fills release-sensitive extra fields with deterministic defaults', () => {
     expect(getExpoExtraConfig({})).toEqual({
+      apiBaseUrl: '',
       e2eTesting: 'false',
       e2eAuthSecret: '',
       mobilePasskeyEnabled: 'false',
@@ -34,8 +36,10 @@ describe('expo config helpers', () => {
         EXPO_PUBLIC_E2E_TESTING: 'true',
         EXPO_PUBLIC_E2E_AUTH_SECRET: 'secret',
         EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED: 'true',
+        EXPO_PUBLIC_API_BASE_URL: 'http://localhost:4040',
       }),
     ).toEqual({
+      apiBaseUrl: 'http://localhost:4040',
       e2eTesting: 'true',
       e2eAuthSecret: 'secret',
       mobilePasskeyEnabled: 'true',

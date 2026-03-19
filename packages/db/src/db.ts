@@ -1,6 +1,6 @@
 import { Kysely, PostgresDialect, sql as kyselySql, type Compilable } from 'kysely'
 import pg from 'pg'
-import type { Database } from './types/database'
+import type { DB as Database } from './types/database'
 import { env } from './env'
 
 const { Pool, types } = pg

@@ -3,7 +3,7 @@ import { buildNoteProposal, deriveSessionSource } from '@hominem/chat-services/u
 import { useApiClient } from '@hominem/hono-client/react';
 import { chatTokensNative, fontFamiliesNative, fontSizes } from '@hominem/ui/tokens';
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Alert, Modal, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
@@ -13,10 +13,10 @@ import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { useInputContext } from '~/components/input/input-context';
 import TextInputField from '~/components/text-input';
 import { Text, makeStyles } from '~/theme';
-import queryClient from '~/utils/query-client';
 import { invalidateInboxQueries } from '~/utils/services/inbox/inbox-refresh';
 import { useArchiveChat, useChatMessages, useSendMessage } from '~/utils/services/chat';
 import type { MessageOutput } from '~/utils/services/chat';
+import { chatKeys } from '~/utils/services/notes/query-keys';
 
 import AppIcon from '../ui/icon';
 import { loadMarkdown, renderMessage, type MarkdownComponent } from './chat-message';
@@ -48,14 +48,16 @@ export const Chat = (props: ChatProps) => {
   const { message, setMessage, setSubmitAction } = useInputContext();
   const client = useApiClient();
   const { isPending: isMessagesLoading, data: messages } = useChatMessages({ chatId });
+  const queryClient = useQueryClient();
+
   const { mutate: archiveChat, isPending: isArchiving } = useArchiveChat({
     chatId,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chatMessages', chatId] });
+      queryClient.invalidateQueries({ queryKey: chatKeys.messages(chatId) });
       onChatArchive();
     },
   });
-  const { sendChatMessage, isChatSending, chatSendStatus } = useSendMessage({ chatId });
+  const { sendChatMessage, isChatSending: _isChatSending, chatSendStatus } = useSendMessage({ chatId });
   const [Markdown, setMarkdown] = useState<MarkdownComponent | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [lifecycleState, setLifecycleState] = useState<ThoughtLifecycleState>('idle');
@@ -243,7 +245,7 @@ export const Chat = (props: ChatProps) => {
   const handleDeleteMessage = useCallback(
     (messageId: string) => {
       void client.messages.delete({ messageId }).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['chatMessages', chatId] });
+        queryClient.invalidateQueries({ queryKey: chatKeys.messages(chatId) });
       });
     },
     [chatId, client.messages],

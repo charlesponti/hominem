@@ -20,6 +20,14 @@ import {
 
 type NotesRow = Selectable<Database['notes']>;
 
+function toDateOrNull(value: string | Date | null | undefined): Date | null {
+  if (value === null || value === undefined) {
+    return null
+  }
+
+  return value instanceof Date ? value : new Date(value)
+}
+
 function rowToNote(row: NotesRow, tags: NoteOutput['tags'] = []): NoteOutput {
   const toDateStr = (d: string | Date | null | undefined): string | null =>
     typeof d === 'string' ? d : d instanceof Date ? d.toISOString() : (d ?? null);
@@ -200,10 +208,10 @@ export class NotesService {
         parent_note_id: input.parentNoteId,
         version_number: input.versionNumber,
         is_latest_version: input.isLatestVersion,
-        published_at: input.publishedAt,
-        scheduled_for: input.scheduledFor,
-        created_at: input.createdAt,
-        updated_at: input.updatedAt,
+        published_at: toDateOrNull(input.publishedAt),
+        scheduled_for: toDateOrNull(input.scheduledFor),
+        created_at: toDateOrNull(input.createdAt) ?? new Date(),
+        updated_at: toDateOrNull(input.updatedAt) ?? new Date(),
       })
       .returningAll()
       .executeTakeFirst();
@@ -267,7 +275,7 @@ export class NotesService {
     // Date filtering
     if (filters?.since) {
       try {
-        const sinceDate = new Date(filters.since).toISOString();
+        const sinceDate = new Date(filters.since);
         query = query.where('updated_at', '>', sinceDate);
       } catch {
         console.warn(`Invalid 'since' date format: ${filters.since}`);
@@ -365,7 +373,7 @@ export class NotesService {
       await this.syncNoteTags(validatedInput.id, validatedInput.userId, validatedInput.tags ?? []);
       return this.getById(validatedInput.id, validatedInput.userId);
     }
-    updateData.updated_at = new Date().toISOString();
+    updateData.updated_at = new Date();
 
     const item = await db
       .updateTable('notes')
@@ -428,7 +436,7 @@ export class NotesService {
     }
 
     const existingNote = await this.getById(id, userId);
-    const now = new Date().toISOString();
+    const now = new Date();
     const updateData: Partial<Omit<NotesRow, 'id'>> = {
       status: 'published',
       updated_at: now,
@@ -440,7 +448,7 @@ export class NotesService {
         throw new ConflictError(`Cannot schedule note from ${existingNote.status} state`);
       }
       updateData.status = 'draft'; // Keep as draft until scheduled time
-      updateData.scheduled_for = publishData.scheduledFor;
+      updateData.scheduled_for = new Date(publishData.scheduledFor);
     } else {
       assertAllowedTransition(existingNote.status, 'published', 'publish');
       updateData.published_at = now;
@@ -491,7 +499,7 @@ export class NotesService {
       .updateTable('notes')
       .set({
         status: 'archived',
-        updated_at: new Date().toISOString(),
+        updated_at: new Date(),
       })
       .where('id', '=', id)
       .where('user_id', '=', userId)
@@ -522,7 +530,7 @@ export class NotesService {
       .set({
         status: 'draft',
         published_at: null,
-        updated_at: new Date().toISOString(),
+        updated_at: new Date(),
       })
       .where('id', '=', id)
       .where('user_id', '=', userId)
@@ -699,7 +707,7 @@ export class NotesService {
     // Date filtering
     if (filters?.since) {
       try {
-        const sinceDate = new Date(filters.since).toISOString();
+        const sinceDate = new Date(filters.since);
         query = query.where('updated_at', '>', sinceDate);
       } catch {
         console.warn(`Invalid 'since' date format: ${filters.since}`);

@@ -3,7 +3,6 @@ import { _z } from 'zod'
 import {
   ChatMessageSchema,
   ChatSchema,
-  FocusItemSchema,
   NoteSchema,
   NotesResponseSchema,
   UserProfileSchema,
@@ -169,61 +168,6 @@ describe('Zod Schemas', () => {
       }
 
       expect(() => ChatSchema.parse(chat)).not.toThrow()
-    })
-  })
-
-  describe('FocusItemSchema', () => {
-    it('should validate a valid focus item', () => {
-      const validItem = {
-        id: 'focus-123',
-        text: 'My task',
-        type: 'task' as const,
-        category: 'work',
-        dueDate: null,
-        state: 'active' as const,
-        priority: 5,
-        sentiment: 'positive' as const,
-        taskSize: 'medium' as const,
-        profileId: 'user-123',
-        createdAt: '2024-01-01T00:00:00.000Z',
-        updatedAt: '2024-01-02T00:00:00.000Z',
-      }
-
-      expect(() => FocusItemSchema.parse(validItem)).not.toThrow()
-    })
-
-    it('should reject invalid type', () => {
-      const invalidItem = {
-        id: 'focus-123',
-        text: 'My task',
-        type: 'invalid',
-        state: 'active',
-        priority: 5,
-        sentiment: 'positive',
-        taskSize: 'medium',
-        profileId: 'user-123',
-        createdAt: '2024-01-01T00:00:00.000Z',
-        updatedAt: '2024-01-02T00:00:00.000Z',
-      }
-
-      expect(() => FocusItemSchema.parse(invalidItem)).toThrow()
-    })
-
-    it('should reject invalid state', () => {
-      const invalidItem = {
-        id: 'focus-123',
-        text: 'My task',
-        type: 'task',
-        state: 'invalid',
-        priority: 5,
-        sentiment: 'positive',
-        taskSize: 'medium',
-        profileId: 'user-123',
-        createdAt: '2024-01-01T00:00:00.000Z',
-        updatedAt: '2024-01-02T00:00:00.000Z',
-      }
-
-      expect(() => FocusItemSchema.parse(invalidItem)).toThrow()
     })
   })
 

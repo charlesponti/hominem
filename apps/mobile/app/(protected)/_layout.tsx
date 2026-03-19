@@ -9,6 +9,7 @@ import { MobileWorkspaceProvider } from '~/components/workspace/mobile-workspace
 import { theme } from '~/theme';
 import { ApiProvider } from '~/utils/api-provider';
 import { useAuth } from '~/utils/auth-provider';
+import queryClient from '~/utils/query-client';
 
 const bootstrapStyles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.colors.background },
@@ -25,7 +26,7 @@ const DrawerLayout = () => {
 
   return (
     <FeatureErrorBoundary featureName="Protected">
-      <ApiProvider>
+      <ApiProvider queryClient={queryClient}>
         <MobileWorkspaceProvider>
           <InputProvider>
             <View style={bootstrapStyles.root}>

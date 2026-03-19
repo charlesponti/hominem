@@ -47,25 +47,6 @@ export const ChatSchema = z.object({
 
 export type Chat = z.infer<typeof ChatSchema>;
 
-// Focus Item Schema
-export const FocusItemSchema = z.object({
-  id: z.string(),
-  text: z.string(),
-  type: z.enum(['task', 'todo', 'goal', 'note'] as const),
-  category: z.string().nullable(),
-  dueDate: z.string().datetime().nullable(),
-  state: z.enum(['active', 'completed'] as const),
-  priority: z.number(),
-  sentiment: z.enum(['positive', 'negative', 'neutral'] as const),
-  taskSize: z.enum(['small', 'medium', 'large'] as const),
-  profileId: z.string(),
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-  sourceNote: z.record(z.string(), z.unknown()).nullable(),
-});
-
-export type FocusItem = z.infer<typeof FocusItemSchema>;
-
 // Note Schema (from API)
 export const NoteSchema = z.object({
   id: z.string(),
@@ -110,10 +91,6 @@ export function validateUserProfile(data: unknown): UserProfile {
 
 export function validateChatMessage(data: unknown): ChatMessage {
   return ChatMessageSchema.parse(data);
-}
-
-export function validateFocusItem(data: unknown): FocusItem {
-  return FocusItemSchema.parse(data);
 }
 
 export function validateNote(data: unknown): Note {

@@ -87,6 +87,27 @@ function toNumber(value: string | number | null): number {
   return 0;
 }
 
+function toIsoString(value: string | Date | null | undefined): string {
+  if (value instanceof Date) {
+    return value.toISOString()
+  }
+  if (typeof value === 'string') {
+    return value
+  }
+  return new Date(0).toISOString()
+}
+
+function toIsoStringOrNull(value: string | Date | null | undefined): string | null {
+  if (value === null || value === undefined) {
+    return null
+  }
+  return toIsoString(value)
+}
+
+function toDateOnlyString(value: string | Date | null | undefined): string {
+  return toIsoString(value).slice(0, 10)
+}
+
 function getAffectedRows(result: unknown): number {
   if (!result || typeof result !== 'object') {
     return 0;
@@ -122,7 +143,7 @@ function toFinanceTransaction(row: FinanceTransactionRow): FinanceTransaction {
     accountId: row.account_id,
     amount: toNumber(row.amount),
     description: row.description,
-    date: String(row.date),
+    date: toDateOnlyString(row.date),
     category: row.category,
     merchantName: row.merchant_name,
   };
@@ -361,7 +382,7 @@ export async function exportFinanceData(userId: string): Promise<{
       transactionsCursor: row.cursor,
       accessToken: row.access_token,
       status: row.status,
-      lastSyncedAt: row.last_synced_at,
+      lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
     }));
   }
 
@@ -461,7 +482,7 @@ export async function updateAccount(
       account_type: nextType,
       balance: nextBalance,
       data: nextData,
-      updated_at: new Date().toISOString(),
+      updated_at: new Date(),
     })
     .where('id', '=', input.id)
     .where('user_id', '=', existing.userId)
@@ -523,7 +544,7 @@ export async function listPlaidConnectionsForUser(userId: string): Promise<Plaid
     transactionsCursor: row.cursor,
     accessToken: row.access_token,
     status: row.status,
-    lastSyncedAt: row.last_synced_at,
+    lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
   }));
 }
 
@@ -906,10 +927,10 @@ export async function queryAnalyticsTransactionsByContract(
     query = query.where('t.account_id', '=', parsed.accountId);
   }
   if (parsed.dateFrom) {
-    query = query.where('t.date', '>=', parsed.dateFrom);
+    query = query.where('t.date', '>=', new Date(parsed.dateFrom));
   }
   if (parsed.dateTo) {
-    query = query.where('t.date', '<=', parsed.dateTo);
+    query = query.where('t.date', '<=', new Date(parsed.dateTo));
   }
 
   if (tagIds.length > 0 && tagNames.length > 0) {
@@ -939,7 +960,7 @@ export async function queryAnalyticsTransactionsByContract(
     accountId: row.account_id,
     amount: toNumber(row.amount),
     description: row.description ?? '',
-    date: row.date,
+    date: toDateOnlyString(row.date),
     category: row.category,
     merchantName: row.merchant_name,
     classification: row.classification,
@@ -1240,10 +1261,10 @@ export async function queryTransactionsByContract(
     query = query.where('t.account_id', '=', parsed.accountId);
   }
   if (parsed.dateFrom) {
-    query = query.where('t.date', '>=', parsed.dateFrom);
+    query = query.where('t.date', '>=', new Date(parsed.dateFrom));
   }
   if (parsed.dateTo) {
-    query = query.where('t.date', '<=', parsed.dateTo);
+    query = query.where('t.date', '<=', new Date(parsed.dateTo));
   }
   if (tagIds.length > 0 && tagNames.length > 0) {
     query = query.where(
@@ -1480,7 +1501,7 @@ export async function getPlaidItemByUserAndItemId(
     transactionsCursor: row.cursor,
     accessToken: row.access_token,
     status: row.status,
-    lastSyncedAt: row.last_synced_at,
+    lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
   };
 }
 
@@ -1505,7 +1526,7 @@ export async function getPlaidItemById(id: string, userId?: string): Promise<Pla
       transactionsCursor: row.cursor,
       accessToken: row.access_token,
       status: row.status,
-      lastSyncedAt: row.last_synced_at,
+      lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
     };
   }
 
@@ -1527,7 +1548,7 @@ export async function getPlaidItemById(id: string, userId?: string): Promise<Pla
     transactionsCursor: row.cursor,
     accessToken: row.access_token,
     status: row.status,
-    lastSyncedAt: row.last_synced_at,
+    lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
   };
 }
 
@@ -1552,7 +1573,7 @@ export async function getPlaidItemByItemId(itemId: string): Promise<PlaidItem | 
     transactionsCursor: row.cursor,
     accessToken: row.access_token,
     status: row.status,
-    lastSyncedAt: row.last_synced_at,
+    lastSyncedAt: toIsoStringOrNull(row.last_synced_at),
   };
 }
 
@@ -1590,8 +1611,8 @@ export async function upsertPlaidItem(
         cursor: input.transactionsCursor ?? null,
         access_token: input.accessToken ?? null,
         status: input.status ?? 'healthy',
-        last_synced_at: input.lastSyncedAt ?? null,
-        updated_at: new Date().toISOString(),
+        last_synced_at: input.lastSyncedAt ? new Date(input.lastSyncedAt) : null,
+        updated_at: new Date(),
       })
       .where('id', '=', existing.id)
       .returningAll()
@@ -1608,7 +1629,7 @@ export async function upsertPlaidItem(
       transactionsCursor: updated.cursor,
       accessToken: updated.access_token,
       status: updated.status,
-      lastSyncedAt: updated.last_synced_at,
+      lastSyncedAt: toIsoStringOrNull(updated.last_synced_at),
     };
   }
 
@@ -1622,7 +1643,7 @@ export async function upsertPlaidItem(
       cursor: input.transactionsCursor ?? null,
       access_token: input.accessToken ?? null,
       status: input.status ?? 'healthy',
-      last_synced_at: input.lastSyncedAt ?? null,
+      last_synced_at: input.lastSyncedAt ? new Date(input.lastSyncedAt) : null,
     })
     .returningAll()
     .executeTakeFirst();
@@ -1638,7 +1659,7 @@ export async function upsertPlaidItem(
     transactionsCursor: created.cursor,
     accessToken: created.access_token,
     status: created.status,
-    lastSyncedAt: created.last_synced_at,
+    lastSyncedAt: toIsoStringOrNull(created.last_synced_at),
   };
 }
 
@@ -1651,7 +1672,7 @@ export async function updatePlaidItemStatusByItemId(
     .updateTable('plaid_items')
     .set({
       status,
-      updated_at: new Date().toISOString(),
+      updated_at: new Date(),
     })
     .where('user_id', '=', userId)
     .where('item_id', '=', itemId)
@@ -1668,7 +1689,7 @@ export async function updatePlaidItemStatusById(
     .updateTable('plaid_items')
     .set({
       status,
-      updated_at: new Date().toISOString(),
+      updated_at: new Date(),
     })
     .where('id', '=', id)
     .where('user_id', '=', userId)
@@ -1681,7 +1702,7 @@ export async function updatePlaidItemCursor(id: string, cursor: string | null): 
     .updateTable('plaid_items')
     .set({
       cursor,
-      updated_at: new Date().toISOString(),
+      updated_at: new Date(),
     })
     .where('id', '=', id)
     .executeTakeFirst();
@@ -1698,8 +1719,8 @@ export async function updatePlaidItemSyncStatus(
     .set({
       status,
       error: error ?? null,
-      last_synced_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      last_synced_at: new Date(),
+      updated_at: new Date(),
     })
     .where('id', '=', id)
     .executeTakeFirst();
@@ -1711,7 +1732,7 @@ export async function updatePlaidItemError(id: string, error: string | null): Pr
     .updateTable('plaid_items')
     .set({
       error,
-      updated_at: new Date().toISOString(),
+      updated_at: new Date(),
     })
     .where('id', '=', id)
     .executeTakeFirst();

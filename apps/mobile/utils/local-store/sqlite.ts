@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-import type { FocusItem, Media, Settings, UserProfile } from './types';
+import type { Media, Settings, UserProfile } from './types';
 
 type QueryResult = {
   rows: Array<Record<string, unknown>>;
@@ -16,15 +16,6 @@ const normalizeProfile = (row: Record<string, unknown>): UserProfile => ({
   email: typeof row.email === 'string' ? row.email : null,
   createdAt: String(row.created_at),
   updatedAt: String(row.updated_at),
-});
-
-const normalizeFocusItem = (row: Record<string, unknown>): FocusItem => ({
-  id: String(row.id),
-  text: String(row.text),
-  status: String(row.status),
-  createdAt: String(row.created_at),
-  updatedAt: String(row.updated_at),
-  payloadJson: typeof row.payload_json === 'string' ? row.payload_json : null,
 });
 
 const normalizeSettings = (row: Record<string, unknown>): Settings => ({
@@ -66,32 +57,12 @@ const getFirst = async (
   return rows[0] ?? null;
 };
 
-const normalizeColumn = async (
-  db: SQLite.SQLiteDatabase,
-  tableName: string,
-  columnName: string,
-  columnType: string,
-) => {
-  const columns = (await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${tableName})`)) as {
-    name: string;
-  }[];
-  const exists = columns.some((column) => column.name === columnName);
-
-  if (!exists) {
-    await execute(db, `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnType}`);
-  }
-};
-
 export const createSQLiteStore = async () => {
   const db = await SQLite.openDatabaseAsync(DB_NAME);
 
   await execute(
     db,
     'CREATE TABLE IF NOT EXISTS user_profile (id TEXT PRIMARY KEY, name TEXT, email TEXT, created_at TEXT, updated_at TEXT)',
-  );
-  await execute(
-    db,
-    'CREATE TABLE IF NOT EXISTS focus_items (id TEXT PRIMARY KEY, text TEXT, status TEXT, created_at TEXT, updated_at TEXT, payload_json TEXT)',
   );
   await execute(
     db,
@@ -117,24 +88,6 @@ export const createSQLiteStore = async () => {
         [profile.id, profile.name ?? null, profile.email ?? null, createdAt, updatedAt],
       );
       return { ...profile, createdAt, updatedAt };
-    },
-    upsertFocusItem: async (item: FocusItem) => {
-      const createdAt = toISO(item.createdAt);
-      const updatedAt = toISO(item.updatedAt);
-      await execute(
-        db,
-        'INSERT OR REPLACE INTO focus_items (id, text, status, created_at, updated_at, payload_json) VALUES (?, ?, ?, ?, ?, ?)',
-        [item.id, item.text, item.status, createdAt, updatedAt, item.payloadJson ?? null],
-      );
-      return { ...item, createdAt, updatedAt };
-    },
-    listFocusItems: async () => {
-      const rows = await getAll(db, 'SELECT * FROM focus_items ORDER BY created_at DESC');
-      return rows.map(normalizeFocusItem);
-    },
-    deleteFocusItem: async (id: string) => {
-      await execute(db, 'DELETE FROM focus_items WHERE id = ?', [id]);
-      return id;
     },
     upsertSettings: async (nextSettings: Settings) => {
       await execute(
@@ -163,7 +116,6 @@ export const createSQLiteStore = async () => {
     },
     clearAllData: async () => {
       await execute(db, 'DELETE FROM user_profile');
-      await execute(db, 'DELETE FROM focus_items');
       await execute(db, 'DELETE FROM settings');
       await execute(db, 'DELETE FROM media');
       return true;
@@ -176,7 +128,6 @@ export const migrateInMemoryToSQLite = async (
   snapshot: {
     userProfile: UserProfile | null;
     settings: Settings | null;
-    focusItems: FocusItem[];
     mediaItems: Media[];
   },
 ) => {
@@ -185,9 +136,6 @@ export const migrateInMemoryToSQLite = async (
   }
   if (snapshot.settings) {
     await store.upsertSettings(snapshot.settings);
-  }
-  for (const item of snapshot.focusItems) {
-    await store.upsertFocusItem(item);
   }
   for (const item of snapshot.mediaItems) {
     await store.upsertMedia(item);

@@ -71,7 +71,7 @@ ${strategyPrompt}
 Return only the tweet text, nothing else.`;
 
     const result = await generateText({
-      model: openai('gpt-5-mini'),
+      model: openai('gpt-5.4-mini'),
       system: systemPrompt,
       prompt: `Convert this content into an engaging tweet using the ${strategyName} strategy:\n\n${content}`,
       maxTokens: 100,

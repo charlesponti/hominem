@@ -6,7 +6,7 @@ import {
   MediaSchema,
 } from '../validation/schemas';
 import { createSQLiteStore } from './sqlite';
-import type { FocusItem, Media, Settings, UserProfile } from './types';
+import type { Media, Settings, UserProfile } from './types';
 
 let store: Awaited<ReturnType<typeof createSQLiteStore>> | null = null;
 let initializationPromise: Promise<boolean> | null = null;
@@ -71,21 +71,6 @@ export const LocalStore = {
     const s = await getStore();
     const result = await s.upsertUserProfile(profile);
     return validateOrThrow(UserProfileSchema, result);
-  },
-
-  upsertFocusItem: async (item: FocusItem): Promise<FocusItem> => {
-    const s = await getStore();
-    return s.upsertFocusItem(item);
-  },
-
-  listFocusItems: async (): Promise<FocusItem[]> => {
-    const s = await getStore();
-    return s.listFocusItems();
-  },
-
-  deleteFocusItem: async (id: string): Promise<string> => {
-    const s = await getStore();
-    return s.deleteFocusItem(id);
   },
 
   upsertSettings: async (settings: Settings): Promise<Settings> => {

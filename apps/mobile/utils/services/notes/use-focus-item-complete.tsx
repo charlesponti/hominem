@@ -1,39 +1,28 @@
-import { useApiClient } from '@hominem/hono-client/react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-import { LocalStore } from '~/utils/local-store';
-import type { FocusItem } from '~/utils/services/notes/types';
-
-import { noteToFocusItem, toLocalFocusItem } from './local-focus';
-import { focusKeys } from './query-keys';
+import { useApiClient } from '@hominem/hono-client/react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { focusKeys } from './query-keys'
+import type { Note } from '@hominem/hono-rpc/types'
 
 interface UseFocusItemCompleteOptions {
-  onSuccess?: (data: FocusItem) => void;
-  onError?: (error: Error) => void;
+  onSuccess?: (data: Note) => void
+  onError?: (error: Error) => void
 }
 
 export const useFocusItemComplete = (options?: UseFocusItemCompleteOptions) => {
-  const client = useApiClient();
-  const queryClient = useQueryClient();
+  const client = useApiClient()
+  const queryClient = useQueryClient()
 
-  return useMutation({
+  return useMutation<Note, Error, string>({
     mutationKey: ['completeItem'],
     mutationFn: async (id: string) => {
-      const archivedNote = await client.notes.archive({ id });
-      const mapped = {
-        ...noteToFocusItem(archivedNote),
-        state: 'completed' as const,
-      };
-
-      await LocalStore.upsertFocusItem(toLocalFocusItem(mapped));
-      return mapped;
+      return client.notes.archive({ id })
     },
     onSuccess: async (data) => {
-      await queryClient.invalidateQueries({ queryKey: focusKeys.all });
-      options?.onSuccess?.(data);
+      await queryClient.invalidateQueries({ queryKey: focusKeys.all })
+      options?.onSuccess?.(data)
     },
     onError: (error) => {
-      options?.onError?.(error as Error);
+      options?.onError?.(error as Error)
     },
-  });
-};
+  })
+}

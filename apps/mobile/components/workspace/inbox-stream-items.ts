@@ -1,5 +1,6 @@
+import type { Note } from '@hominem/hono-rpc/types'
 import type { ChatWithActivity } from '~/utils/services/chat/session-state'
-import type { FocusItem } from '~/utils/services/notes/types'
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
 
 export interface InboxStreamItem {
   id: string
@@ -11,38 +12,56 @@ export interface InboxStreamItem {
 }
 
 interface ToInboxStreamItemsInput {
-  focusItems: FocusItem[]
+  focusItems: Note[]
   sessions: ChatWithActivity[]
 }
 
-function toNoteStreamItem(item: FocusItem): InboxStreamItem {
-  const trimmedText = item.text.trim()
-  const title = item.source_note?.title ?? (trimmedText.length > 0 ? trimmedText : 'Untitled note')
+function getFocusTitle(item: Note): string {
+  if (item.title && item.title.trim().length > 0) {
+    return item.title
+  }
+  if (item.excerpt && item.excerpt.trim().length > 0) {
+    return item.excerpt
+  }
+  if (item.content && item.content.trim().length > 0) {
+    return item.content.slice(0, 80)
+  }
+  return 'Untitled note'
+}
+
+function toNoteStreamItem(item: Note): InboxStreamItem {
+  const timestamp = item.createdAt
 
   return {
     id: item.id,
     kind: 'note',
-    title,
+    title: getFocusTitle(item),
     preview: 'Note',
-    timestamp: item.updated_at,
+    timestamp,
     route: `/(protected)/(tabs)/focus/${item.id}`,
   }
 }
 
 function toChatStreamItem(session: ChatWithActivity): InboxStreamItem {
+  const timestamp = session.activityAt
+
   return {
     id: session.id,
     kind: 'chat',
     title: session.title ?? 'Untitled session',
     preview: 'Conversation activity',
-    timestamp: session.activityAt,
+    timestamp,
     route: `/(protected)/(tabs)/sherpa?chatId=${session.id}`,
   }
+}
+
+function toSortTime(value: string): number {
+  return parseInboxTimestamp(value).getTime()
 }
 
 export function toInboxStreamItems(input: ToInboxStreamItemsInput): InboxStreamItem[] {
   return [
     ...input.focusItems.map(toNoteStreamItem),
     ...input.sessions.map(toChatStreamItem),
-  ].sort((left, right) => new Date(right.timestamp).getTime() - new Date(left.timestamp).getTime())
+  ].sort((left, right) => toSortTime(right.timestamp) - toSortTime(left.timestamp))
 }
