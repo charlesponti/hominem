@@ -75,7 +75,9 @@ SessionCard.displayName = 'SessionCard';
 
 const keyExtractor = (item: ChatWithActivity) => item.id;
 
-const ESTIMATED_ITEM_SIZE = 64;
+const overrideItemLayout = (layout: { size?: number }) => {
+  layout.size = 64;
+};
 
 export const SessionList = () => {
   const styles = useStyles();
@@ -94,7 +96,7 @@ export const SessionList = () => {
         data={sessions}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
-        estimatedItemSize={ESTIMATED_ITEM_SIZE}
+        overrideItemLayout={overrideItemLayout}
         scrollEnabled={false}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
