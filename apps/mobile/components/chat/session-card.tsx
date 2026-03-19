@@ -161,7 +161,7 @@ const useStyles = makeStyles((t) =>
     },
     content: {
       flex: 1,
-      gap: 2,
+      gap: t.spacing.xs_4,
     },
     title: {
       fontSize: 14,

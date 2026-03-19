@@ -71,7 +71,7 @@ const useStyles = makeStyles((t) =>
     },
     focusInfoContainer: {
       flex: 1,
-      gap: 2,
+      gap: t.spacing.xs_4,
     },
     title: {
       fontWeight: '600',
