@@ -6,7 +6,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { PulsingCircle } from '~/components/animated/pulsing-circle';
 import { CaptureBar } from '~/components/capture/capture-bar';
-import { SessionList, useResumableSessions } from '~/components/chat/session-card';
+import { SessionList } from '~/components/chat/session-card';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { FeedbackBlock } from '~/components/feedback-block';
 import { FocusList } from '~/components/focus/focus-list';
@@ -65,7 +65,6 @@ export const FocusView = () => {
   const styles = useStyles();
   const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const { data: sessions } = useResumableSessions();
   const {
     data: focusItems,
     refetch,

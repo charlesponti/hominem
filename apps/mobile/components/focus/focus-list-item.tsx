@@ -13,7 +13,7 @@ import * as ContextMenu from 'zeego/context-menu';
 
 import { Text as MSText, makeStyles, theme } from '~/theme';
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
-import { borderStyle, listStyles } from '~/theme/styles';
+import { listStyles } from '~/theme/styles';
 import { getLocalDate } from '~/utils/dates';
 import type { FocusItem } from '~/utils/services/notes/types';
 import { useDeleteFocus } from '~/utils/services/notes/use-delete-focus';

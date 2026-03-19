@@ -42,7 +42,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const Chat = (props: ChatProps) => {
   const styles = useStyles();
-  const { top, bottom } = useSafeAreaInsets();
+  const { top } = useSafeAreaInsets();
   const { chatId, onChatEnd, source } = props;
   const client = useApiClient();
   const { isPending: isMessagesLoading, data: messages } = useChatMessages({ chatId });

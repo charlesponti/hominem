@@ -75,10 +75,6 @@ SessionCard.displayName = 'SessionCard';
 
 const keyExtractor = (item: ChatWithActivity) => item.id;
 
-const overrideItemLayout = (layout: { size?: number }) => {
-  layout.size = 64;
-};
-
 export const SessionList = () => {
   const styles = useStyles();
   const { data: sessions } = useResumableSessions();
@@ -96,7 +92,6 @@ export const SessionList = () => {
         data={sessions}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
-        overrideItemLayout={overrideItemLayout}
         scrollEnabled={false}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
