@@ -1,12 +1,12 @@
 # Active OpenSpec Change
 
-active_change: shared-design-system-governance
+active_change: mobile-rpc-inbox-stability
 
 artifacts:
-  - openspec/changes/shared-design-system-governance/proposal.md
-  - openspec/changes/shared-design-system-governance/design.md
-  - openspec/changes/shared-design-system-governance/specs/shared-design-system-governance/spec.md
-  - openspec/changes/shared-design-system-governance/tasks.md
+  - openspec/changes/mobile-rpc-inbox-stability/proposal.md
+  - openspec/changes/mobile-rpc-inbox-stability/design.md
+  - openspec/changes/mobile-rpc-inbox-stability/specs/mobile-rpc-inbox-stability/spec.md
+  - openspec/changes/mobile-rpc-inbox-stability/tasks.md
 
 ## Enforcement
 
