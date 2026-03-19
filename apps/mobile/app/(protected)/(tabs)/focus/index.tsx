@@ -1,5 +1,5 @@
-import { Stack } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import { Stack, useFocusEffect } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -66,16 +66,14 @@ export const FocusView = () => {
 
   const resolvedFocusItems: Note[] = focusItems ?? []
 
-  useEffect(() => {
-    if (refreshing && !isRefetching) {
-      setRefreshing(false);
-    }
-  }, [isRefetching, refreshing]);
-
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setActiveSearch(null);
     setRefreshing(true);
-    refetch();
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
   }, [refetch]);
 
   const onSearchClose = useCallback(() => {
@@ -87,12 +85,12 @@ export const FocusView = () => {
   const hasFocusItems = resolvedFocusItems.length > 0;
   const hasInboxItems = hasFocusItems || sessions.length > 0;
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     setHeader({
       kicker: 'Notes-first assistant',
       title: 'Workspace',
     });
-  }, [setHeader]);
+  }, [setHeader]));
 
   return (
     <>

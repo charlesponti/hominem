@@ -1,6 +1,6 @@
-import { useEffect, type PropsWithChildren } from 'react';
+import { type PropsWithChildren } from 'react';
 import { StyleSheet, ViewStyle } from 'react-native';
-import Animated, { useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedReaction, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { makeStyles } from '~/theme';
 import { VOID_EASING_ENTER, VOID_MOTION_ENTER } from '~/theme/motion';
@@ -16,10 +16,16 @@ export const FeedbackBlock = ({
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.98);
 
-  useEffect(() => {
-    opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
-    scale.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
-  }, [opacity, scale]);
+  useAnimatedReaction(
+    () => opacity.value,
+    (_, prev) => {
+      'worklet';
+      if (prev === null) {
+        opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
+        scale.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
+      }
+    },
+  );
 
   const styles = useStyles();
 

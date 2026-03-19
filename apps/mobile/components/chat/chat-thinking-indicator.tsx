@@ -1,7 +1,7 @@
 import { fontSizes } from '@hominem/ui/tokens';
-import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -23,20 +23,26 @@ const STAGGER_OFFSET = 120; // ms between each dot
 function useBounceDot(delayMs: number) {
   const translateY = useSharedValue(0);
 
-  useEffect(() => {
-    translateY.value = withDelay(
-      delayMs,
-      withRepeat(
-        withSequence(
-          withTiming(-4, { duration: DOT_UP_DURATION, easing: VOID_EASING_STANDARD }),
-          withTiming(2, { duration: DOT_DOWN_DURATION, easing: VOID_EASING_STANDARD }),
-          withTiming(0, { duration: DOT_RETURN_DURATION, easing: VOID_EASING_STANDARD }),
-          withTiming(0, { duration: CYCLE_IDLE }),
-        ),
-        -1,
-      ),
-    );
-  }, [translateY, delayMs]);
+  useAnimatedReaction(
+    () => translateY.value,
+    (_, prev) => {
+      'worklet';
+      if (prev === null) {
+        translateY.value = withDelay(
+          delayMs,
+          withRepeat(
+            withSequence(
+              withTiming(-4, { duration: DOT_UP_DURATION, easing: VOID_EASING_STANDARD }),
+              withTiming(2, { duration: DOT_DOWN_DURATION, easing: VOID_EASING_STANDARD }),
+              withTiming(0, { duration: DOT_RETURN_DURATION, easing: VOID_EASING_STANDARD }),
+              withTiming(0, { duration: CYCLE_IDLE }),
+            ),
+            -1,
+          ),
+        );
+      }
+    },
+  );
 
   return useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
 }

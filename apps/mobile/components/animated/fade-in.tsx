@@ -1,5 +1,10 @@
 import React from 'react';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import {
   VOID_EASING_ENTER,
@@ -18,10 +23,16 @@ export const FadeIn = ({ children }: { children: React.ReactNode }) => {
   const opacity = useSharedValue<number>(0);
   const translateY = useSharedValue<number>(VOID_ENTER_TRANSLATE_Y);
 
-  React.useEffect(() => {
-    opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
-    translateY.value = withTiming(0, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
-  }, [opacity, translateY]);
+  useAnimatedReaction(
+    () => opacity.value,
+    (_, prev) => {
+      'worklet';
+      if (prev === null) {
+        opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
+        translateY.value = withTiming(0, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
+      }
+    },
+  );
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,

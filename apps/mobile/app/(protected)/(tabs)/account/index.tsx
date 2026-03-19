@@ -1,6 +1,6 @@
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -23,7 +23,7 @@ function Account() {
     deletePasskey,
     isLoading: isPasskeyLoading,
   } = useMobilePasskeyAuth();
-  const initialName = currentUser?.name || '';
+  const initialName = currentUser?.name ?? '';
   const [name, setName] = useState(initialName);
   const [isSaving, setIsSaving] = useState(false);
   const [passkeys, setPasskeys] = useState<{ id: string; name: string }[]>([]);
@@ -79,20 +79,14 @@ function Account() {
     ]);
   };
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     setHeader({
       kicker: 'Settings',
       title: 'Your account',
     });
-  }, [setHeader]);
+  }, [setHeader]));
 
-  useEffect(() => {
-    if (currentUser?.name) {
-      setName(currentUser.name);
-    }
-  }, [currentUser]);
-
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!MOBILE_PASSKEY_ENABLED) {
       setPasskeys([]);
       return;
@@ -102,7 +96,7 @@ function Account() {
         .then(setPasskeys)
         .catch(() => undefined);
     }
-  }, [isSignedIn, listPasskeys]);
+  }, [isSignedIn, listPasskeys]));
 
   if (!isSignedIn) {
     return null;

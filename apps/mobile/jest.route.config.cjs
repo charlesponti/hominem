@@ -6,6 +6,7 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/screens/jest.setup.ts'],
   moduleNameMapper: {
     ...preset.moduleNameMapper,
+    '^~/lib/posthog$': '<rootDir>/tests/__mocks__/posthog.ts',
     '^~/(.*)$': '<rootDir>/$1',
     '^theme$': '<rootDir>/theme',
   },

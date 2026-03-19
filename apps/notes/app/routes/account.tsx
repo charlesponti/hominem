@@ -1,8 +1,8 @@
 import { useAuthContext } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@hominem/ui/card';
-import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router';
+import { useEffect } from 'react';
+import { Navigate, useSearchParams } from 'react-router';
 
 import { ConnectTwitterAccount } from '~/components/connect-twitter-account';
 import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth';
@@ -10,29 +10,16 @@ import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth';
 export default function AccountPage() {
   const { userId, isLoading, logout } = useAuthContext();
   const { refetch } = useTwitterOAuth();
-
-  const [urlParams, setUrlParams] = useState<URLSearchParams | null>(null);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setUrlParams(new URLSearchParams(window.location.search));
-    }
-  }, []);
+  const [searchParams] = useSearchParams();
+  const twitterStatus = searchParams.get('twitter');
 
   useEffect(() => {
-    if (urlParams) {
-      const twitterStatus = urlParams.get('twitter');
-      if (twitterStatus === 'connected') {
-        // Clean up URL
-        window.history.replaceState({}, '', window.location.pathname);
-        // Refresh accounts
-        refetch();
-      } else if (twitterStatus === 'error') {
-        // Clean up URL
-        window.history.replaceState({}, '', window.location.pathname);
-      }
+    if (!twitterStatus) return;
+    window.history.replaceState({}, '', window.location.pathname);
+    if (twitterStatus === 'connected') {
+      refetch();
     }
-  }, [urlParams, refetch]);
+  }, [twitterStatus, refetch]);
 
   if (isLoading) {
     return <div>Loading...</div>;

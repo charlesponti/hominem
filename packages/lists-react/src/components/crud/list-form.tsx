@@ -17,7 +17,6 @@ const STORAGE_KEY = 'hominem:list-draft'
 export function ListForm() {
   const [name, setName] = useState('')
   const [status, setStatus] = useState<FormStatus>('idle')
-  const inputRef = useRef<HTMLInputElement>(null)
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { isAuthenticated } = useAuthContext()
   const navigate = useNavigate()
@@ -55,12 +54,6 @@ export function ListForm() {
       // ignore
     }
   }, [])
-
-  useEffect(() => {
-    if (status === 'open' && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [status])
 
   useEffect(() => {
     return () => {
@@ -129,7 +122,7 @@ export function ListForm() {
                 })}
               >
                 <TextField
-                  ref={inputRef}
+                  autoFocus={status === 'open'}
                   label="List name"
                   placeholder="Enter list name..."
                   value={name}

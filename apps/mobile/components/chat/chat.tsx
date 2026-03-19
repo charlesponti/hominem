@@ -5,7 +5,8 @@ import { chatTokensNative, fontFamiliesNative, fontSizes } from '@hominem/ui/tok
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useState, useRef } from 'react';
 import { Alert, Modal, Platform, Pressable, Share, StyleSheet, View } from 'react-native';
 
 import { Button } from '~/components/Button';
@@ -120,32 +121,26 @@ export const Chat = (props: ChatProps) => {
     },
   });
 
-  useEffect(() => {
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
+  const markdownLoadedRef = useRef(false);
+  useFocusEffect(useCallback(() => {
+    if (markdownLoadedRef.current) return;
+    markdownLoadedRef.current = true;
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     loadMarkdown()
       .then((component) => {
-        if (!signal.aborted) setMarkdown(() => component);
+        if (!controller.signal.aborted) setMarkdown(() => component);
       })
       .catch(() => {
-        if (!signal.aborted) setMarkdown(null);
+        if (!controller.signal.aborted) setMarkdown(null);
       });
 
     return () => {
-      abortControllerRef.current?.abort();
+      controller.abort();
     };
-  }, []);
-
-  useEffect(() => {
-    if (!showSearch) return;
-
-    const timeout = setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, 50);
-
-    return () => clearTimeout(timeout);
-  }, [showSearch]);
+  }, []));
 
   const onArchiveChatPress = useCallback(() => {
     archiveChat();
@@ -160,15 +155,19 @@ export const Chat = (props: ChatProps) => {
     [sendChatMessage],
   );
 
-  useEffect(() => {
-    setSubmitAction(() => () => {
-      handleSendMessage(message);
-    });
+  const messageRef = useRef(message);
+  messageRef.current = message;
+  const handleSendMessageRef = useRef(handleSendMessage);
+  handleSendMessageRef.current = handleSendMessage;
 
+  useFocusEffect(useCallback(() => {
+    setSubmitAction(() => () => {
+      handleSendMessageRef.current(messageRef.current);
+    });
     return () => {
       setSubmitAction(null);
     };
-  }, [handleSendMessage, message, setSubmitAction]);
+  }, [setSubmitAction]));
 
   const handleCopyMessage = useCallback((copiedMessage: MessageOutput) => {
     const text = copiedMessage.message;
@@ -312,6 +311,9 @@ export const Chat = (props: ChatProps) => {
 
   const handleOpenSearch = useCallback(() => {
     setShowSearch(true);
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 50);
   }, []);
 
   const handleCloseSearch = useCallback(() => {

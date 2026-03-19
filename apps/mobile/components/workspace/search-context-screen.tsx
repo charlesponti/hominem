@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react'
+import { useFocusEffect } from 'expo-router'
+import React, { useCallback } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import { useInputContext } from '~/components/input/input-context'
@@ -10,12 +11,12 @@ export const SearchContextScreen = () => {
   const { message } = useInputContext()
   const { setHeader } = useMobileWorkspace()
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     setHeader({
       kicker: 'Search',
       title: 'Find anything',
     })
-  }, [setHeader])
+  }, [setHeader]))
 
   return (
     <View style={styles.container} testID="search-context-screen">

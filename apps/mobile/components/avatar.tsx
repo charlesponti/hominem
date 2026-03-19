@@ -1,6 +1,6 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Alert, Button, StyleSheet, View } from 'react-native';
 
 import { makeStyles } from '~/theme';
@@ -14,12 +14,9 @@ interface Props {
 export default function Avatar({ url, size = 150, onUpload }: Props) {
   const styles = useStyles();
   const [uploading, setUploading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [localUploadUrl, setLocalUploadUrl] = useState<string | null>(null);
+  const displayUrl = localUploadUrl ?? url;
   const avatarSize = { height: size, width: size };
-
-  useEffect(() => {
-    if (url) setAvatarUrl(url);
-  }, [url]);
 
   async function uploadAvatar() {
     try {
@@ -50,7 +47,7 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
       const filename = `avatar-${Date.now()}.${fileExt}`;
       const destination = `${FileSystem.documentDirectory}${filename}`;
       await FileSystem.copyAsync({ from: image.uri, to: destination });
-      setAvatarUrl(destination);
+      setLocalUploadUrl(destination);
       onUpload(destination);
     } catch (error) {
       if (error instanceof Error) {
@@ -65,9 +62,9 @@ export default function Avatar({ url, size = 150, onUpload }: Props) {
 
   return (
     <View style={styles.container}>
-      {avatarUrl ? (
+      {displayUrl ? (
         <Image
-          source={{ uri: avatarUrl }}
+          source={{ uri: displayUrl }}
           accessibilityLabel="Avatar"
           contentFit="cover"
           style={[avatarSize, styles.avatar]}

@@ -3,7 +3,7 @@ import { Button } from '@hominem/ui/button';
 import { Textarea } from '@hominem/ui/components/ui/textarea';
 import { Input } from '@hominem/ui/input';
 import { RefreshCw, X } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { useCreateNote, useUpdateNote } from '~/hooks/use-notes';
 
@@ -34,6 +34,8 @@ export function InlineCreateForm({
   const updateItem = useUpdateNote();
   const [error, setError] = useState<Error | null>(null);
 
+  const [prevItemToEdit, setPrevItemToEdit] = useState(itemToEdit);
+  const [prevIsVisible, setPrevIsVisible] = useState(isVisible);
   const [inputValue, setInputValue] = useState(itemToEdit?.content || '');
   const [inputTitle, setInputTitle] = useState(itemToEdit?.title || '');
 
@@ -43,24 +45,26 @@ export function InlineCreateForm({
     setError(null);
   }, []);
 
-  const hydrateFromItem = useCallback((item: Note) => {
-    setInputValue(item.content);
-    setInputTitle(item.title || '');
-  }, []);
-
-  useEffect(() => {
+  // Sync form state with prop changes during render (avoids double-render from useEffect)
+  if (isVisible !== prevIsVisible) {
+    setPrevIsVisible(isVisible);
     if (!isVisible) {
       resetForm();
-      return;
+    } else if (itemToEdit) {
+      setInputValue(itemToEdit.content);
+      setInputTitle(itemToEdit.title || '');
+    } else {
+      resetForm();
     }
-
+  } else if (itemToEdit !== prevItemToEdit) {
+    setPrevItemToEdit(itemToEdit);
     if (itemToEdit) {
-      hydrateFromItem(itemToEdit);
-      return;
+      setInputValue(itemToEdit.content);
+      setInputTitle(itemToEdit.title || '');
+    } else {
+      resetForm();
     }
-
-    resetForm();
-  }, [itemToEdit, isVisible, hydrateFromItem, resetForm]);
+  }
 
   const isEditMode = mode === 'edit' && !!itemToEdit;
   const trimmedTitle = inputTitle.trim();

@@ -1,7 +1,11 @@
 import type { ArtifactType } from '@hominem/chat-services/types';
-import { useEffect } from 'react';
 import { Modal, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
@@ -96,10 +100,16 @@ export const ClassificationReview = ({
   const translateY = useSharedValue(80);
   const opacity = useSharedValue(0);
 
-  useEffect(() => {
-    translateY.value = withTiming(0, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
-    opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
-  }, [translateY, opacity]);
+  useAnimatedReaction(
+    () => opacity.value,
+    (_, prev) => {
+      'worklet';
+      if (prev === null) {
+        translateY.value = withTiming(0, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
+        opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
+      }
+    },
+  );
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],

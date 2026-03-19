@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo } from 'react'
+import { useFocusEffect } from 'expo-router'
+import React, { useCallback, useMemo } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import { useInputContext } from '~/components/input/input-context'
@@ -19,12 +20,12 @@ export const NoteContextScreen = () => {
     return firstLine.slice(0, 40)
   }, [message])
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     setHeader({
       kicker: 'Note',
       title: draftTitle,
     })
-  }, [draftTitle, setHeader])
+  }, [draftTitle, setHeader]))
 
   return (
     <View style={styles.container} testID="note-context-screen">

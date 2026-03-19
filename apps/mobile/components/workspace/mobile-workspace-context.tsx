@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react'
+import React, { createContext, useCallback, useContext, useMemo, useState, type PropsWithChildren } from 'react'
 
 import {
   MOBILE_WORKSPACE_CONTEXTS,
@@ -29,6 +29,13 @@ export const MobileWorkspaceProvider = ({ children }: PropsWithChildren) => {
   const [headerKicker, setHeaderKicker] = useState<string | null>('Workspace')
   const [headerTitle, setHeaderTitle] = useState('Inbox')
 
+  const setHeader = useCallback(({ kicker, title }: MobileWorkspaceHeaderInput) => {
+    const nextKicker = kicker ?? null
+
+    setHeaderKicker((currentKicker) => (currentKicker === nextKicker ? currentKicker : nextKicker))
+    setHeaderTitle((currentTitle) => (currentTitle === title ? currentTitle : title))
+  }, [])
+
   const value = useMemo<MobileWorkspaceContextValue>(
     () => ({
       activeContext,
@@ -36,12 +43,9 @@ export const MobileWorkspaceProvider = ({ children }: PropsWithChildren) => {
       headerKicker,
       headerTitle,
       setActiveContext,
-      setHeader: ({ kicker, title }: MobileWorkspaceHeaderInput) => {
-        setHeaderKicker(kicker ?? null)
-        setHeaderTitle(title)
-      },
+      setHeader,
     }),
-    [activeContext, headerKicker, headerTitle],
+    [activeContext, headerKicker, headerTitle, setHeader],
   )
 
   return <MobileWorkspaceContext.Provider value={value}>{children}</MobileWorkspaceContext.Provider>

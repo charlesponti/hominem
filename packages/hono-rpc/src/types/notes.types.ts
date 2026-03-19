@@ -102,10 +102,10 @@ export type NotesUpdateInput = {
   title?: string | null;
   content?: string;
   excerpt?: string | null;
+  scheduledFor?: string | null;
   tags?: ContentTag[] | null;
   publishingMetadata?: PublishingMetadata | null;
   analysis?: NoteAnalysis | null;
-  scheduledFor?: string | null;
 };
 
 // ============================================================================

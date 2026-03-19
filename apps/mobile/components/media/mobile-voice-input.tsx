@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Animated, {
   interpolateColor,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -77,11 +78,16 @@ export function MobileVoiceInput({
     ),
   }));
 
-  useEffect(() => {
-    backgroundColor.value = withTiming(isRecording ? 1 : 0, {
-      duration: VOID_MOTION_DURATION_STANDARD,
-    });
-  }, [backgroundColor, isRecording]);
+  useAnimatedReaction(
+    () => isRecording,
+    (current, prev) => {
+      'worklet';
+      if (current === prev) return;
+      backgroundColor.value = withTiming(current ? 1 : 0, {
+        duration: VOID_MOTION_DURATION_STANDARD,
+      });
+    },
+  );
 
   return (
     <View style={styles.container} testID="voice-input">

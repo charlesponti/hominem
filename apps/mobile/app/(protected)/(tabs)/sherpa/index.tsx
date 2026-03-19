@@ -1,8 +1,8 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
 import type { Chat as ChatType } from '@hominem/hono-rpc/types';
 import React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import BlurredGradientBackground from '~/components/chat/blurred-background';
 import { Chat } from '~/components/chat/chat';
@@ -17,41 +17,51 @@ export default function Sherpa() {
   const { setActiveContext, setHeader } = useMobileWorkspace();
   const params = useLocalSearchParams<{ chatId?: string; intentId?: string; seed?: string }>();
   const [activeChat, setActiveChat] = useState<ChatType | null>(null);
+  const hasInitialized = useRef(false);
   const { isPending: isLoadingActiveChat, refetch: getActiveChat } = useActiveChat(params.chatId);
-  const { mutateAsync: startChat, isPending: isStartingChat } = useStartChat({
-    userMessage: params.seed || '',
-    _sherpaMessage: 'Starting now.',
-    onSuccess: (chat) => {
-      setActiveChat(chat);
-    },
-  });
 
   const isChatRecord = (value: ChatType | null | undefined): value is ChatType => {
     return Boolean(value && typeof value.id === 'string' && typeof value.userId === 'string')
   }
 
-  useEffect(() => {
+  const updateHeader = useCallback((title?: string | null) => {
     setActiveContext('chat');
     setHeader({
       kicker: 'Chat',
-      title: activeChat?.title?.trim() || 'New conversation',
+      title: title?.trim() || 'New conversation',
     });
-  }, [activeChat?.title, setActiveContext, setHeader]);
+  }, [setActiveContext, setHeader]);
 
-  useEffect(() => {
+  const { mutateAsync: startChat, isPending: isStartingChat } = useStartChat({
+    userMessage: params.seed || '',
+    _sherpaMessage: 'Starting now.',
+    onSuccess: (chat) => {
+      setActiveChat(chat);
+      updateHeader(chat.title);
+    },
+  });
+
+  useFocusEffect(useCallback(() => {
+    updateHeader(activeChat?.title);
+  }, [activeChat?.title, updateHeader]));
+
+  useFocusEffect(useCallback(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     async function initialLoad() {
       const response = await getActiveChat();
 
       if (isChatRecord(response.data)) {
         setActiveChat(response.data);
+        updateHeader(response.data.title);
       } else if (params.seed) {
         await startChat();
       }
     }
     initialLoad();
-    // we intentionally exclude startChat from deps to avoid duplicate start
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getActiveChat, params.seed]);
+  }, [getActiveChat, params.seed, updateHeader]));
 
   const onChatArchive = useCallback(() => {
     router.push('/(protected)/(tabs)/focus' as RelativePathString);

@@ -11,7 +11,7 @@ import {
 import { TextArea } from '@hominem/ui/text-area'
 import { TextField } from '@hominem/ui/text-field'
 import { Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { useDeleteList, useUpdateList } from '../../hooks/use-lists'
@@ -28,17 +28,19 @@ interface ListEditDialogProps {
 
 export function ListEditDialog({ list, isOpen, onOpenChange }: ListEditDialogProps) {
   const navigate = useNavigate()
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
   const [name, setName] = useState(list.name)
   const [description, setDescription] = useState(list.description || '')
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
 
-  useEffect(() => {
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen)
     if (isOpen) {
       setName(list.name)
       setDescription(list.description || '')
       setShowDeleteConfirmation(false)
     }
-  }, [list.name, list.description, isOpen])
+  }
 
   const updateList = useUpdateList({
     onSuccess: () => {

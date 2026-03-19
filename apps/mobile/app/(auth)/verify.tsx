@@ -1,9 +1,9 @@
 import { AUTH_COPY, SHERPA_AUTH_CONFIG } from '@hominem/auth';
 import { Image } from 'expo-image';
-import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Link } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
-import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -25,7 +25,6 @@ import { isValidOtp, normalizeOtp } from '~/utils/auth/validation';
 export function VerifyScreen() {
   const styles = useStyles();
   const { isSignedIn, requestEmailOtp, verifyEmailOtp } = useAuth();
-  const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
   const [otp, setOtp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,15 +38,9 @@ export function VerifyScreen() {
     return Array.from({ length: 6 }, (_, index) => normalized[index] ?? '');
   }, [otp]);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     posthog.capture('auth_verify_screen_viewed');
-  }, []);
-
-  useEffect(() => {
-    if (!email) {
-      router.replace('/(auth)' as RelativePathString);
-    }
-  }, [email, router]);
+  }, []));
 
   const handleVerify = useCallback(async () => {
     posthog.capture('auth_verify_pressed');

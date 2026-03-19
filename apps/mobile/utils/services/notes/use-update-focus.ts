@@ -1,4 +1,5 @@
 import type { Note } from '@hominem/hono-rpc/types'
+import type { NotesUpdateByIdInput } from '@hominem/hono-client'
 import { useApiClient } from '@hominem/hono-client/react'
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query'
 
@@ -34,9 +35,24 @@ function toNoteType(
     case 'essay':
     case 'blog_post':
     case 'social_post':
-      return category;
+      return category
     default:
-      return 'task';
+      return 'task'
+  }
+}
+
+export function buildUpdateFocusNoteInput(
+  input: Omit<UpdateFocusItemInput, 'timezone'>,
+): NotesUpdateByIdInput {
+  const scheduledFor = input.scheduledFor ? input.scheduledFor.toISOString() : null
+
+  return {
+    id: input.id,
+    title: input.text,
+    excerpt: input.text,
+    content: input.text,
+    type: toNoteType(input.category),
+    ...(input.scheduledFor !== undefined ? { scheduledFor } : {}),
   }
 }
 
@@ -47,15 +63,7 @@ export const useUpdateFocusItem = (): UseMutationResult<Note, Error, UpdateFocus
   return useMutation<Note, Error, UpdateFocusItemInput>({
     mutationKey: ['updateFocusItem'],
     mutationFn: async (input: UpdateFocusItemInput) => {
-      const scheduledFor = input.scheduledFor ? input.scheduledFor.toISOString() : null
-      const updatedNote = await client.notes.update({
-        id: input.id,
-        title: input.text,
-        excerpt: input.text,
-        content: input.text,
-        type: toNoteType(input.category),
-        ...(input.scheduledFor !== undefined ? { scheduledFor } : {}),
-      })
+      const updatedNote = await client.notes.update(buildUpdateFocusNoteInput(input))
 
       return updatedNote
     },

@@ -1,6 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { makeStyles, Text } from '~/theme';
 import {
@@ -26,21 +31,26 @@ export const BottomSheet = ({
   const offset = useSharedValue<number>(VOID_ENTER_TRANSLATE_Y);
   const opacity = useSharedValue<number>(0);
 
-  useEffect(() => {
-    if (isOpen) {
-      setIsVisible(true);
-      offset.value = withTiming(0, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
-      opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
-    } else {
-      offset.value = withTiming(VOID_EXIT_TRANSLATE_Y, {
-        duration: VOID_MOTION_EXIT,
-        easing: VOID_EASING_EXIT,
-      });
-      opacity.value = withTiming(0, { duration: VOID_MOTION_EXIT, easing: VOID_EASING_EXIT });
-      const timer = setTimeout(() => setIsVisible(false), VOID_MOTION_EXIT);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, offset, opacity]);
+  useAnimatedReaction(
+    () => isOpen,
+    (current, prev) => {
+      'worklet';
+      if (current === prev) return;
+      if (current) {
+        setIsVisible(true);
+        offset.value = withTiming(0, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
+        opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
+      } else {
+        offset.value = withTiming(VOID_EXIT_TRANSLATE_Y, {
+          duration: VOID_MOTION_EXIT,
+          easing: VOID_EASING_EXIT,
+        });
+        opacity.value = withTiming(0, { duration: VOID_MOTION_EXIT, easing: VOID_EASING_EXIT }, () => {
+          setIsVisible(false);
+        });
+      }
+    },
+  );
 
   const containerStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: offset.value }],

@@ -19,7 +19,6 @@ export default function NotesPage() {
   const {
     data: notes,
     isLoading,
-    refetch,
   } = useNotesList({
     types: ['note'],
     sortBy: 'updatedAt',
@@ -31,10 +30,6 @@ export default function NotesPage() {
   const recentSessions = chats ?? [];
   const updateItem = useUpdateNote();
   const deleteItem = useDeleteNote();
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
 
   useEffect(() => {
     if (!feedContainerRef.current) {

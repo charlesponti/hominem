@@ -1,49 +1,45 @@
+import type { Note } from '@hominem/hono-rpc/types'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams } from 'expo-router'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
-import type { Note } from '@hominem/hono-rpc/types'
 import { NoteEditingSheet } from '~/components/focus/note-editing-sheet'
-import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
 import { getTimezone } from '~/utils/dates'
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
 import { focusKeys } from '~/utils/services/notes/query-keys'
 import {
   useUpdateFocusItem,
   type UpdateFocusItemInput,
 } from '~/utils/services/notes/use-update-focus'
 
+function getFocusItemLabel(focusItem: Note): string {
+  return focusItem.title || focusItem.excerpt || focusItem.content || 'Untitled note'
+}
+
 export default function FocusItemView() {
   const { id } = useLocalSearchParams()
   const noteId = String(id ?? '')
+  const updateFocusItem = useUpdateFocusItem()
   const queryClient = useQueryClient()
-  const focusItems = queryClient.getQueryData<Note[]>(focusKeys.all)
-  const focusItem = focusItems?.find((item) => item.id === noteId)
+  const focusItemsByKey = queryClient.getQueryData<Note[]>(focusKeys.all)
+  const focusItem = focusItemsByKey?.find((item) => item.id === noteId)
 
   if (!focusItem) {
     return null
   }
 
-  return <FocusItemEditor key={focusItem.id} note={focusItem} />
-}
-
-interface FocusItemEditorProps {
-  note: Note
-}
-
-function FocusItemEditor({ note }: FocusItemEditorProps) {
-  const updateFocusItem = useUpdateFocusItem()
-  const [text, setText] = useState(note.content || note.excerpt || note.title || '')
+  const [text, setText] = useState(getFocusItemLabel(focusItem))
+  const [category] = useState(focusItem.type || 'note')
   const [scheduledFor, setScheduledFor] = useState<Date | null>(
-    note.scheduledFor ? parseInboxTimestamp(note.scheduledFor) : null,
+    focusItem.scheduledFor ? parseInboxTimestamp(focusItem.scheduledFor) : null,
   )
-  const category = note.type || 'note'
 
-  const handleSave = async () => {
+  const onSave = useCallback(async () => {
     const input: UpdateFocusItemInput = {
-      id: note.id,
+      id: focusItem.id,
       text,
       category,
-      ...(scheduledFor !== undefined ? { scheduledFor } : {}),
+      scheduledFor,
       timezone: getTimezone(),
     }
 
@@ -52,17 +48,18 @@ function FocusItemEditor({ note }: FocusItemEditorProps) {
     } catch (error) {
       console.error(error)
     }
-  }
+  }, [category, focusItem.id, scheduledFor, text, updateFocusItem])
 
   return (
     <NoteEditingSheet
-      title={note.title || note.excerpt || note.content || 'Untitled note'}
+      title={getFocusItemLabel(focusItem)}
       text={text}
       scheduledFor={scheduledFor}
       isSaving={updateFocusItem.isPending}
       onTextChange={setText}
       onScheduledForChange={setScheduledFor}
-      onSave={handleSave}
+      onSave={onSave}
     />
   )
 }
+

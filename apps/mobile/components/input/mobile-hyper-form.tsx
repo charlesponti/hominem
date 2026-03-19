@@ -3,7 +3,7 @@ import { useApiClient } from '@hominem/hono-client/react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -32,13 +32,11 @@ export const MobileHyperForm = () => {
   const insets = useSafeAreaInsets()
   const {
     attachments,
-    context,
     isRecording,
     message,
     mode,
     submitAction,
     setAttachments,
-    setContext,
     setIsRecording,
     setMessage,
     setMode,
@@ -122,11 +120,6 @@ export const MobileHyperForm = () => {
     void createChatFromDraft()
   }
 
-  useEffect(() => {
-    if (context !== activeContext) {
-      setContext(activeContext)
-    }
-  }, [activeContext, context, setContext])
 
   const presentation = deriveMobileHyperFormPresentation({
     context: activeContext,
@@ -148,7 +141,7 @@ export const MobileHyperForm = () => {
     const nextState = appendPickedAssetsToDraft(
       {
         attachments,
-        context,
+        context: activeContext,
         isRecording,
         mode,
         text: message,
@@ -167,7 +160,7 @@ export const MobileHyperForm = () => {
     const nextState = applyVoiceTranscriptToDraft(
       {
         attachments,
-        context,
+        context: activeContext,
         isRecording,
         mode,
         text: message,
@@ -185,7 +178,7 @@ export const MobileHyperForm = () => {
     const nextState = removeAttachmentFromDraft(
       {
         attachments,
-        context,
+        context: activeContext,
         isRecording,
         mode,
         text: message,
