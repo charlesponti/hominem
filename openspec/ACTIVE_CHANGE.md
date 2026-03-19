@@ -1,8 +1,14 @@
 # Active OpenSpec Change
 
-active_change: none
+active_change: mobile-unified-workspace
 
-artifacts: []
+artifacts:
+  - openspec/changes/mobile-unified-workspace/proposal.md
+  - openspec/changes/mobile-unified-workspace/design.md
+  - openspec/changes/mobile-unified-workspace/specs/mobile-unified-workspace/spec.md
+  - openspec/changes/mobile-unified-workspace/specs/universal-composer/spec.md
+  - openspec/changes/mobile-unified-workspace/specs/notes-chat-surface/spec.md
+  - openspec/changes/mobile-unified-workspace/tasks.md
 
 ## Enforcement
 

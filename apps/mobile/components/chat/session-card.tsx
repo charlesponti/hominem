@@ -5,6 +5,7 @@ import type { RelativePathString } from 'expo-router';
 import { memo, useCallback } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { FadeIn } from '~/components/animated/fade-in';
 import { makeStyles, Text, theme } from '~/theme';
 import { LocalStore } from '~/utils/local-store';
 import type { ChatWithActivity } from '~/utils/services/chat/session-state';
@@ -43,29 +44,31 @@ export const SessionCard = memo(({ chat, isActive }: SessionCardProps) => {
   const label = chat.title ?? 'Untitled session';
 
   return (
-    <Pressable
-      onPress={handlePress}
-      style={({ pressed }) => [styles.card, isActive && styles.activeCard, pressed && styles.pressed]}
-      accessibilityLabel={`Resume session: ${label}`}
-      accessibilityRole="button"
-    >
-      <View style={[styles.iconWrap, isActive && styles.activeIconWrap]}>
-        <AppIcon
-          name="comment"
-          size={14}
-          color={isActive ? theme.colors.background : theme.colors['text-tertiary']}
-        />
-      </View>
-      <View style={styles.content}>
-        <Text numberOfLines={1} style={styles.title}>
-          {label}
-        </Text>
-        <Text style={styles.meta}>
-          {isActive ? 'Active' : formatAge(chat.activityAt)}
-        </Text>
-      </View>
-      <AppIcon name="chevron-right" size={12} color={theme.colors['text-tertiary']} />
-    </Pressable>
+    <FadeIn>
+      <Pressable
+        onPress={handlePress}
+        style={({ pressed }) => [styles.card, isActive && styles.activeCard, pressed && styles.pressed]}
+        accessibilityLabel={`Resume session: ${label}`}
+        accessibilityRole="button"
+      >
+        <View style={[styles.iconWrap, isActive && styles.activeIconWrap]}>
+          <AppIcon
+            name="comment"
+            size={14}
+            color={isActive ? theme.colors.background : theme.colors['text-tertiary']}
+          />
+        </View>
+        <View style={styles.content}>
+          <Text variant="label" color="foreground" numberOfLines={1}>
+            {label}
+          </Text>
+          <Text variant="small" color="text-tertiary">
+            {isActive ? 'Active' : formatAge(chat.activityAt)}
+          </Text>
+        </View>
+        <AppIcon name="chevron-right" size={12} color={theme.colors['text-tertiary']} />
+      </Pressable>
+    </FadeIn>
   );
 });
 
@@ -87,7 +90,7 @@ export const SessionList = () => {
 
   return (
     <View style={styles.list}>
-      <Text style={styles.sectionLabel}>RECENT CONVERSATIONS</Text>
+      <Text variant="small" color="text-tertiary" style={styles.sectionLabel}>RECENT CONVERSATIONS</Text>
       <FlashList
         data={sessions}
         keyExtractor={keyExtractor}
@@ -114,10 +117,7 @@ const useStyles = makeStyles((t) =>
       gap: t.spacing.sm_8,
     },
     sectionLabel: {
-      fontSize: 11,
       letterSpacing: 1.2,
-      color: t.colors['text-tertiary'],
-      fontWeight: '500',
       marginBottom: t.spacing.xs_4,
     },
     separator: {
@@ -157,17 +157,6 @@ const useStyles = makeStyles((t) =>
     content: {
       flex: 1,
       gap: t.spacing.xs_4,
-    },
-    title: {
-      fontSize: 14,
-      fontWeight: '600',
-      lineHeight: 20,
-      color: t.colors.foreground,
-    },
-    meta: {
-      fontSize: 12,
-      lineHeight: 16,
-      color: t.colors['text-tertiary'],
     },
   }),
 );

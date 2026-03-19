@@ -1,3 +1,4 @@
+import { fontSizes } from '@hominem/ui/tokens';
 import { Link } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
 import { memo, useCallback, useEffect, useRef } from 'react';
@@ -75,12 +76,12 @@ const useStyles = makeStyles((t) =>
     },
     title: {
       fontWeight: '600',
-      fontSize: 14,
+      fontSize: fontSizes.sm,
       lineHeight: 20,
       color: theme.colors.foreground,
     },
     preview: {
-      fontSize: 13,
+      fontSize: fontSizes.xs,
       lineHeight: 18,
       color: theme.colors['text-secondary'],
     },
