@@ -72,6 +72,10 @@ export interface ChatsClassifyClientInput extends ChatsClassifyInput {
   chatId: string
 }
 
+export interface ChatsDeleteInput {
+  chatId: string
+}
+
 export interface ChatsClient {
   list(input: ChatsListInput): Promise<Chat[]>
   get(input: ChatsGetInput): Promise<ChatsGetOutput>
@@ -79,6 +83,7 @@ export interface ChatsClient {
   getByNote(input: ChatsGetByNoteInput): Promise<Chat>
   create(input: ChatsCreateInput): Promise<ChatsCreateOutput>
   archive(input: ChatsArchiveInput): Promise<Chat>
+  delete(input: ChatsDeleteInput): Promise<{ success: boolean }>
   send(input: ChatsSendMessageInput): Promise<ChatsSendOutput>
   classify(input: ChatsClassifyClientInput): Promise<ChatsClassifyOutput>
 }
@@ -124,6 +129,12 @@ export function createChatsClient(rawClient: RawHonoClient): ChatsClient {
         param: { id: input.chatId },
       })
       return res.json() as Promise<Chat>
+    },
+    async delete(input) {
+      const res = await rawClient.api.chats[':id'].$delete({
+        param: { id: input.chatId },
+      })
+      return res.json() as Promise<{ success: boolean }>
     },
     async send(input) {
       const res = await rawClient.api.chats[':id'].send.$post({

@@ -14,11 +14,13 @@ import type {
 } from '../types/chat.types'
 
 import { authMiddleware, type AppContext } from '../middleware/auth'
+import { toIsoStringOr } from '../utils/to-iso-string'
 
 function toChatMessage(row: Selectable<Database['chat_message']>): ChatMessage {
-  const createdAtStr = typeof row.created_at === 'string' ? row.created_at : row.created_at ?? new Date().toISOString()
-  const updatedAtStr = typeof row.updated_at === 'string' ? row.updated_at : row.updated_at ?? new Date().toISOString()
-  
+  const now = new Date().toISOString()
+  const createdAtStr = toIsoStringOr(row.created_at, now)
+  const updatedAtStr = toIsoStringOr(row.updated_at, now)
+
   return {
     id: row.id,
     chatId: row.chat_id,
@@ -71,7 +73,13 @@ async function getMessageWithOwnershipCheck(messageId: string, userId: string) {
 }
 
 // Helper: Delete messages after timestamp
-async function deleteMessagesAfterTimestamp(chatId: string, afterTimestamp: string, userId: string) {
+async function deleteMessagesAfterTimestamp(
+  chatId: string,
+  afterTimestamp: Date | string,
+  userId: string,
+) {
+  const afterDate = afterTimestamp instanceof Date ? afterTimestamp : new Date(afterTimestamp)
+
   // Verify chat ownership
   const chat = await db
     .selectFrom('chat')
@@ -88,7 +96,7 @@ async function deleteMessagesAfterTimestamp(chatId: string, afterTimestamp: stri
   const result = await db
     .deleteFrom('chat_message')
     .where('chat_id', '=', chatId)
-    .where('created_at', '>', afterTimestamp)
+    .where('created_at', '>', afterDate)
     .execute()
 
   return result.length

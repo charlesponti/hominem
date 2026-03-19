@@ -8,6 +8,7 @@ import { redis } from '@hominem/services/redis'
 import type { Selectable } from 'kysely'
 import type { Database } from '@hominem/db'
 import { NotFoundError } from '../errors'
+import { toIsoString, toIsoStringOr } from '../utils/to-iso-string'
 
 import type { AppContext } from '../middleware/auth'
 import { authMiddleware } from '../middleware/auth'
@@ -69,7 +70,7 @@ function toTransactionData(row: Selectable<Database['finance_transactions']>): T
     accountId: row.account_id,
     amount,
     description: row.description ?? '',
-    date: row.date,
+    date: toIsoString(row.date),
     type: (amount < 0 ? 'expense' : 'income') as TransactionType,
   }
 }
@@ -89,8 +90,8 @@ function toPlaidConnection(
   row: Selectable<Database['plaid_items']>,
   institutionName?: string,
 ): PlaidConnection {
-  const createdAtStr = row.created_at ?? new Date(0).toISOString()
-  
+  const createdAtStr = toIsoStringOr(row.created_at, new Date(0).toISOString())
+
   return {
     id: row.id,
     institutionId: row.institution_id ?? '',

@@ -1,11 +1,17 @@
 'use client';
 
 import { useSafeAuth } from '@hominem/auth';
-import { LogOut, PenSquare, Search, Settings, type LucideIcon } from 'lucide-react';
+import { LogOut, MoreHorizontal, PenSquare, Search, Settings, Trash2, type LucideIcon } from 'lucide-react';
 import { useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 
 import { cn } from '../../lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +37,7 @@ export interface RecentItem {
   title: string;
   url: string;
   updatedAt?: string | Date;
+  onDelete?: (id: string) => void;
 }
 
 export interface AppSidebarProps {
@@ -191,14 +198,36 @@ export function AppSidebar({
             <SidebarGroupContent>
               <ul className="flex flex-col gap-0.5">
                 {recentItems.map((item) => (
-                  <li key={item.id}>
+                  <li key={item.id} className="group/item flex items-center rounded-lg hover:bg-transparent">
                     <Link
                       to={item.url}
                       prefetch="intent"
-                      className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground/90 hover:bg-transparent transition-colors truncate"
+                      className="flex-1 min-w-0 px-2.5 py-2 text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground/90 transition-colors truncate"
                     >
                       <span className="truncate">{item.title || 'Untitled'}</span>
                     </Link>
+                    {item.onDelete && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="shrink-0 flex items-center justify-center size-7 mr-1 rounded-md text-sidebar-foreground/0 group-hover/item:text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors"
+                            aria-label={`Options for ${item.title}`}
+                          >
+                            <MoreHorizontal className="size-3.5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent side="right" align="start">
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={() => item.onDelete?.(item.id)}
+                          >
+                            <Trash2 className="size-3.5" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </li>
                 ))}
               </ul>

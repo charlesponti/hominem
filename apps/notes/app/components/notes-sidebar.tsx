@@ -4,6 +4,7 @@ import type { ChatsListOutput } from '@hominem/hono-rpc/types/chat.types';
 import { AppSidebar, type RecentItem } from '@hominem/ui';
 import { FileText, Home } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useDeleteChat } from '../hooks/use-chats';
 
 const APP_NAME = 'Animus';
 
@@ -17,6 +18,7 @@ const RECENT_CHATS_LIMIT = 20;
 export default function NotesSidebar() {
   const auth = useAuthContext();
   const navigate = useNavigate();
+  const deleteChat = useDeleteChat();
 
   const { data: chats } = useHonoQuery<ChatsListOutput>(
     ['chats', 'sidebar', 'list'],
@@ -28,6 +30,7 @@ export default function NotesSidebar() {
     title: chat.title || 'Untitled conversation',
     url: `/chat/${chat.id}`,
     updatedAt: chat.updatedAt,
+    onDelete: (id) => deleteChat.mutate({ chatId: id }),
   }));
 
   function handleNewChat() {

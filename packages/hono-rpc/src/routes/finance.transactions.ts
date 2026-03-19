@@ -8,6 +8,7 @@ import * as z from 'zod'
 
 import { authMiddleware, type AppContext } from '../middleware/auth'
 import { NotFoundError } from '../errors'
+import { toIsoString } from '../utils/to-iso-string'
 
 import {
   TransactionInsertSchema,
@@ -62,7 +63,7 @@ function toTransactionData(row: Selectable<Database['finance_transactions']>): T
     accountId: row.account_id,
     amount,
     description: row.description ?? '',
-    date: row.date,
+    date: toIsoString(row.date),
     type: (amount < 0 ? 'expense' : 'income') as TransactionType,
   }
 }
@@ -149,6 +150,8 @@ export const transactionsRoutes = new Hono<AppContext>()
     const offset = input.offset ?? 0
 
     const hasTagFilters = tagIds.length > 0 || tagNames.length > 0
+    const dateFrom = input.dateFrom ? new Date(input.dateFrom) : null
+    const dateTo = input.dateTo ? new Date(input.dateTo) : null
 
     let query = db
       .selectFrom('finance_transactions')
@@ -160,8 +163,8 @@ export const transactionsRoutes = new Hono<AppContext>()
       .offset(offset)
 
     if (accountId) query = query.where('account_id', '=', accountId)
-    if (input.dateFrom) query = query.where('date', '>=', input.dateFrom)
-    if (input.dateTo) query = query.where('date', '<=', input.dateTo)
+    if (dateFrom) query = query.where('date', '>=', dateFrom)
+    if (dateTo) query = query.where('date', '<=', dateTo)
 
     if (hasTagFilters) {
       const taggedIds = await getTaggedTransactionIds(userId, tagIds, tagNames)

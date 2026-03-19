@@ -12,16 +12,10 @@ export {
 } from './workout.service';
 
 export {
-  logHealthActivityDef,
   logHealthActivityServer,
-  getHealthActivitiesDef,
   getHealthActivitiesServer,
-  updateHealthActivityDef,
   updateHealthActivityServer,
-  deleteHealthActivityDef,
   deleteHealthActivityServer,
-  recommendWorkoutDef,
   recommendWorkoutServer,
-  assessMentalWellnessDef,
   assessMentalWellnessServer,
 } from './health.tools';

@@ -8,7 +8,6 @@ import {
   getChatByNoteIdQuery,
   updateChatTitleQuery,
   deleteChatQuery,
-  clearChatMessagesQuery,
   MessageService,
 } from '@hominem/chat-services'
 import type { ArtifactType, ClassificationResponse } from '@hominem/chat-services/types'
@@ -23,8 +22,6 @@ import { setReviewItem } from '../services/review-store'
 
 import { authMiddleware, type AppContext } from '../middleware/auth'
 import {
-  type Chat,
-  type ChatMessage,
   type ChatsListOutput,
   type ChatsGetOutput,
   type ChatsArchiveOutput,

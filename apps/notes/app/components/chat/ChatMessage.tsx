@@ -19,7 +19,7 @@ import {
 } from '@hominem/ui/dropdown';
 import { Textarea } from '@hominem/ui/textarea';
 import { formatMessageTimestamp } from '@hominem/utils/dates';
-import { Check, Copy, Edit2, MoreVertical, RotateCcw, Save, Trash2, X } from 'lucide-react';
+import { AlertCircle, Check, Copy, Edit2, MoreVertical, RotateCcw, Save, Trash2, X } from 'lucide-react';
 import { memo, useState } from 'react';
 
 import { useMessageEdit } from '~/lib/hooks/use-message-edit';
@@ -49,8 +49,8 @@ export const ChatMessage = memo(function ChatMessage({
   const hasToolCalls =
     message.toolCalls && Array.isArray(message.toolCalls) && message.toolCalls.length > 0;
   const hasReasoning = message.reasoning && message.reasoning.trim().length > 0;
+  const isErrorMessage = !isUser && message.content?.startsWith('[Error:');
   const [copied, setCopied] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   const handleCopyMessage = async () => {
     const success = await copyToClipboard(message.content || '');
@@ -71,8 +71,6 @@ export const ChatMessage = memo(function ChatMessage({
   return (
     <div
       className="group py-4"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       role="article"
       aria-label={`${isUser ? 'Your' : 'AI Assistant'} message${timestamp ? ` from ${timestamp}` : ''}`}
     >
@@ -111,8 +109,16 @@ export const ChatMessage = memo(function ChatMessage({
             </Stack>
           )}
 
+          {/* Error message */}
+          {isErrorMessage && (
+            <div className="flex items-center gap-2 text-sm text-destructive/60 py-0.5">
+              <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
+              <span>Failed to generate a response</span>
+            </div>
+          )}
+
           {/* Main content with markdown rendering or edit mode */}
-          {isEditing && isUser ? (
+          {!isErrorMessage && isEditing && isUser ? (
             <Form
               className="flex w-full flex-col gap-3"
               aria-label="Edit message"
@@ -161,7 +167,7 @@ export const ChatMessage = memo(function ChatMessage({
               </Inline>
             </Form>
           ) : (
-            hasContent &&
+            !isErrorMessage && hasContent &&
             (isUser ? (
               // User message - compact bubble style
               <div className="inline-block max-w-[85%] sm:max-w-[75%] rounded-2xl bg-bg-surface border border-subtle px-4 py-3 text-foreground shadow-sm">
@@ -209,7 +215,7 @@ export const ChatMessage = memo(function ChatMessage({
           </MessageAnnotations>
 
           {/* Actions - appear on hover */}
-          {isHovered && !isStreaming && (
+          {!isStreaming && (
             <div
               className={cn(
                 'flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100',
