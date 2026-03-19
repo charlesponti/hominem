@@ -383,6 +383,7 @@ export const notesRoutes = new Hono<AppContext>()
       excerpt?: string | null
       analysis?: NoteAnalysis | null
       publishing_metadata?: PublishingMetadata | null
+      scheduled_for?: string | null
     }
 
     const updateValues: UpdateValues = { updated_at: now }
@@ -394,6 +395,7 @@ export const notesRoutes = new Hono<AppContext>()
     if (data.excerpt !== undefined) updateValues.excerpt = data.excerpt
     if (data.analysis !== undefined) updateValues.analysis = data.analysis
     if (data.publishingMetadata !== undefined) updateValues.publishing_metadata = data.publishingMetadata
+    if (data.scheduledFor !== undefined) updateValues.scheduled_for = data.scheduledFor
 
     await db.updateTable('notes').set(updateValues).where('id', '=', id).execute()
 

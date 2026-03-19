@@ -121,7 +121,7 @@ export const FocusView = () => {
               <InboxStream focusItems={resolvedFocusItems} sessions={sessions} />
             </View>
           ) : null}
-          {isLoaded && !hasFocusItems && !activeSearch ? (
+          {isLoaded && !hasInboxItems && !activeSearch ? (
             <View style={styles.focuses}>
               <InboxStream focusItems={[]} sessions={sessions} />
             </View>

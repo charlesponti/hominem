@@ -14,7 +14,7 @@ import {
 import type { ArtifactType, ClassificationResponse } from '@hominem/chat-services/types'
 import { logger } from '@hominem/utils/logger'
 import { zValidator } from '@hono/zod-validator'
-import { convertToCoreMessages, streamText, generateObject, type CoreMessage, type Message } from 'ai'
+import { convertToCoreMessages, streamText, generateText, generateObject, type CoreMessage, type Message } from 'ai'
 import { Hono } from 'hono'
 import * as z from 'zod'
 
@@ -137,11 +137,15 @@ const chatByIdRoutes = new Hono<AppContext>()
     const chatId = c.req.param('id') as string
     const { message } = c.req.valid('json')
 
+    logger.info('[chats.send] Request received', { chatId, userId, messageLength: message.length })
+
     // Get or verify chat exists
     let currentChat = await getChatByIdQuery(chatId, userId)
     if (!currentChat) {
       throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' })
     }
+
+    logger.info('[chats.send] Chat found', { chatId })
 
     const startTime = Date.now()
 
@@ -149,6 +153,8 @@ const chatByIdRoutes = new Hono<AppContext>()
       limit: 20,
       orderBy: 'asc',
     })
+
+    logger.info('[chats.send] History loaded', { messageCount: historyMessages.length })
 
     const messagesWithNewUser: CoreMessage[] = [
       ...historyMessages.map((m) =>
@@ -164,21 +170,7 @@ const chatByIdRoutes = new Hono<AppContext>()
     ]
 
     const adapter = getOpenAIAdapter()
-    let textStream: AsyncIterable<string>
-    let toolCalls: Promise<Array<{ toolName: string; toolCallId: string; args: Record<string, unknown> }>>
-
-    try {
-      const result = await streamText({
-        model: adapter,
-        tools: typeToolsForAI(getAvailableTools(userId)),
-        messages: messagesWithNewUser,
-      })
-      textStream = result.textStream
-      toolCalls = result.toolCalls
-    } catch (error) {
-      logger.error('[chats.send] Failed to start generation', { error })
-      throw new UnavailableError('Failed to generate assistant response')
-    }
+    logger.info('[chats.send] Calling generateText', { model: adapter.modelId, totalMessages: messagesWithNewUser.length })
 
     let accumulatedContent = ''
     interface ToolCallEntry {
@@ -190,23 +182,31 @@ const chatByIdRoutes = new Hono<AppContext>()
     let didGenerationFail = false
 
     try {
-      const textPromise = (async () => {
-        for await (const chunk of textStream) {
-          accumulatedContent += chunk
-        }
-      })()
-
-      const toolsPromise = (async () => {
-        const calls = await toolCalls
-        for (const call of calls) {
-          accumulatedToolCalls.push(call)
-        }
-      })()
-
-      await Promise.all([textPromise, toolsPromise])
-    } catch (streamError) {
+      const result = await generateText({
+        model: adapter,
+        messages: messagesWithNewUser,
+      })
+      logger.info('[chats.send] generateText complete', {
+        elapsedMs: Date.now() - startTime,
+        contentLength: result.text.length,
+        toolCallCount: result.toolCalls.length,
+      })
+      accumulatedContent = result.text
+      for (const call of result.toolCalls) {
+        accumulatedToolCalls.push({
+          toolName: call.toolName,
+          toolCallId: call.toolCallId,
+          args: call.args as Record<string, unknown>,
+        })
+      }
+    } catch (error) {
       didGenerationFail = true
-      logger.error('[chats.send] Error consuming stream', { error: streamError })
+      logger.error('[chats.send] generateText failed', {
+        message: error instanceof Error ? error.message : String(error),
+        name: error instanceof Error ? error.name : undefined,
+        cause: error instanceof Error ? String(error.cause) : undefined,
+        stack: error instanceof Error ? error.stack : undefined,
+      })
     }
 
     const persistedMessages = await messageService.addMessages([

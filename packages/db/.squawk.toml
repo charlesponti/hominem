@@ -1,11 +1,6 @@
 # Squawk PostgreSQL migration linter configuration
 # https://squawkhq.com/docs/
 
-# Exclude the baseline schema dump - it's a pg_dump output, not an incremental migration
-excluded_paths = [
-    "20260309120000_schema_baseline.sql",
-]
-
 excluded_rules = [
     # Goose wraps migrations in transactions — CREATE INDEX CONCURRENTLY is not
     # allowed inside a transaction. These rules conflict with that constraint.
@@ -28,5 +23,4 @@ excluded_rules = [
     "disallowed-unique-constraint",
     "adding-field-with-default",
     "adding-serial-primary-key-field",
-    "require-enum-value-ordering",
 ]

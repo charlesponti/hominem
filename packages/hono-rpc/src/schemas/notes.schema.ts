@@ -72,6 +72,7 @@ export const UpdateNoteInputSchema = z.object({
   tags: z.array(ContentTagSchema).nullish(),
   publishingMetadata: PublishingMetadataSchema.optional().nullish(),
   analysis: NoteAnalysisSchema.optional().nullish(),
+  scheduledFor: z.string().nullish(),
 });
 
 const SyncNoteItemSchema = z.object({

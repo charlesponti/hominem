@@ -2,11 +2,12 @@ import type { DefaultOptions } from '@tanstack/react-query';
 
 export const QUERY_PERSISTENCE_STRATEGY = 'disabled';
 
-export function shouldRetryQuery(failureCount: number, error: unknown): boolean {
+export function shouldRetryQuery(failureCount: number, error: Error | Response): boolean {
   if (failureCount > 3) {
     return false;
   }
-  if (error instanceof Response && error.status >= 400 && error.status < 500) {
+
+  if ('status' in error && typeof error.status === 'number') {
     return false;
   }
   return true;

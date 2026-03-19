@@ -2,6 +2,7 @@ import { createHonoClient as createRpcClient } from '@hominem/hono-rpc/client';
 import type { HonoClientType } from '@hominem/hono-rpc/client';
 
 import type { ClientConfig } from './api-client';
+import { HonoHttpError } from './http-error';
 
 export type RawHonoClient = HonoClientType;
 
@@ -30,9 +31,10 @@ export function createRawHonoClient(config: ClientConfig): RawHonoClient {
         });
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ error: 'Request failed' }));
-          const errorMessage = errorData.error || `Request failed with status ${response.status}`;
-          throw new Error(errorMessage);
+          const errorText = await response.text().catch(() => '');
+          const errorMessage =
+            errorText.length > 0 ? errorText : `Request failed with status ${response.status}`;
+          throw new HonoHttpError(errorMessage, response.status, errorText);
         }
 
         return response;

@@ -22,6 +22,11 @@ describe('query client contract integration', () => {
     expect(shouldRetryQuery(1, error)).toBe(false)
   })
 
+  it('does not retry HTTP RPC errors', () => {
+    const error = Object.assign(new Error('Request failed with status 500'), { status: 500 })
+    expect(shouldRetryQuery(0, error)).toBe(false)
+  })
+
   it('retries transient failures up to the configured max', () => {
     expect(shouldRetryQuery(0, new Error('network fail'))).toBe(true)
     expect(shouldRetryQuery(2, new Error('network fail'))).toBe(true)

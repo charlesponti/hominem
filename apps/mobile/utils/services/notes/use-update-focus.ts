@@ -5,11 +5,11 @@ import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/r
 import { focusKeys } from './query-keys'
 
 export interface UpdateFocusItemInput {
-  id: string;
-  text: string;
-  category: string;
-  scheduledFor?: Date;
-  timezone: string;
+  id: string
+  text: string
+  category: string
+  scheduledFor?: Date | null
+  timezone: string
 }
 
 function toNoteType(
@@ -41,24 +41,26 @@ function toNoteType(
 }
 
 export const useUpdateFocusItem = (): UseMutationResult<Note, Error, UpdateFocusItemInput> => {
-  const client = useApiClient();
-  const queryClient = useQueryClient();
+  const client = useApiClient()
+  const queryClient = useQueryClient()
 
   return useMutation<Note, Error, UpdateFocusItemInput>({
     mutationKey: ['updateFocusItem'],
     mutationFn: async (input: UpdateFocusItemInput) => {
+      const scheduledFor = input.scheduledFor ? input.scheduledFor.toISOString() : null
       const updatedNote = await client.notes.update({
         id: input.id,
         title: input.text,
         excerpt: input.text,
         content: input.text,
         type: toNoteType(input.category),
-      });
+        ...(input.scheduledFor !== undefined ? { scheduledFor } : {}),
+      })
 
-      return updatedNote;
+      return updatedNote
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: focusKeys.all });
+      await queryClient.invalidateQueries({ queryKey: focusKeys.all })
     },
-  });
-};
+  })
+}

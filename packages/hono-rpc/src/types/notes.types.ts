@@ -105,6 +105,7 @@ export type NotesUpdateInput = {
   tags?: ContentTag[] | null;
   publishingMetadata?: PublishingMetadata | null;
   analysis?: NoteAnalysis | null;
+  scheduledFor?: string | null;
 };
 
 // ============================================================================

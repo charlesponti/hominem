@@ -1,4 +1,5 @@
 export { createApiClient, createApiClientFromRaw, createHonoClient } from './core/api-client';
+export { HonoHttpError } from './core/http-error';
 export type { ApiClient, ClientConfig, HonoClient, HonoClientInstance } from './core/api-client';
 export type { AdminClient } from './domains/admin';
 export type { ChatsClient } from './domains/chats';
