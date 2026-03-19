@@ -28,6 +28,8 @@
     "**/*.spec.tsx",
     "**/__tests__",
     "**/__mocks__",
-    "*.tsbuildinfo"
+    "*.tsbuildinfo",
+    "**/*.stories.ts",
+    "**/*.stories.tsx"
   ]
 }
