@@ -19,6 +19,7 @@ export interface ChatMessageFile {
 }
 
 export interface Chat {
+  archivedAt: string | null;
   id: string;
   userId: string;
   title: string;
@@ -28,6 +29,7 @@ export interface Chat {
 }
 
 export interface ChatInsert {
+  archivedAt?: string | null;
   id?: string;
   userId: string;
   title?: string;

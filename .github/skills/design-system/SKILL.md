@@ -37,7 +37,7 @@ description: Use for app-layer visual and interaction work. Covers the repo’s 
 ## Interaction Rules
 
 - Motion should clarify, not decorate.
-- All components must animate in and out. Use the canonical primitives — no ad-hoc transitions.
+- All web components must animate in and out using GSAP canonical sequences. No ad-hoc CSS transitions.
 - Do not use hover transforms or decorative interaction gimmicks that break the visual system.
 - Use icons only when they communicate information.
 
@@ -155,21 +155,38 @@ Web and mobile must render identically for the same content and affordances. Str
 
 ## Animation Primitives
 
-### Web (`packages/ui/src/styles/animations.css`)
+### Web (GSAP)
 
-**Enter/exit (component lifecycle):**
-- `.void-anim-enter` — 150ms, decelerate. Use for components appearing.
-- `.void-anim-exit` — 120ms, accelerate. Use for components disappearing.
-- Directional variants: `.void-anim-enter-top`, `.void-anim-enter-bottom`, `.void-anim-enter-left`, `.void-anim-enter-right` (and matching exit variants) — use for positioned elements (dropdowns, tooltips, sheets).
-- Radix UI `data-[state=open/closed]` attributes are wired automatically.
+All web animations use **GSAP**. No app-level `@keyframes`, no CSS `transition:` inline styles, and no `.void-anim-*` utility classes on web. GSAP is the single animation authority.
 
-**Content animations (in-situ, not enter/exit):**
-- `.void-anim-breezy` — one-shot wave, for newly rendered content rows.
-- `.void-anim-breezy-loop` — repeating wave, for loading states.
-- `.void-anim-breezy-progress` — horizontal shimmer, for progress indicators.
-- `.void-anim-breezy-stagger` — staggered wave on children, for thinking dots.
+**Canonical sequences (defined in `packages/ui/src/lib/gsap/sequences.ts`):**
 
-No app-level `@keyframes` allowed. All animation through these utility classes.
+| Sequence | Use |
+|---|---|
+| `focusExpand` | Component expanding into view (e.g. HyperForm open) |
+| `focusCollapse` | Component collapsing out of view (e.g. HyperForm close) |
+| `contextSwitch` | In-place label/content transition when context changes |
+| `submitPulse` | Brief pulse on submit before the form clears |
+| `enterRow` | One-shot enter for a newly rendered list row |
+| `exitRow` | Exit for a list row being removed |
+| `shimmer` | Repeating shimmer for loading states |
+
+**Timing constants (use these — never hardcode ms values):**
+
+| Constant | Value | Use |
+|---|---|---|
+| `GSAP_DURATION_ENTER` | `0.15` | Component appearing |
+| `GSAP_DURATION_EXIT` | `0.12` | Component disappearing |
+| `GSAP_DURATION_STANDARD` | `0.12` | State/content transitions |
+| `GSAP_EASE_ENTER` | `"power2.out"` | Decelerate on enter |
+| `GSAP_EASE_EXIT` | `"power2.in"` | Accelerate on exit |
+| `GSAP_EASE_STANDARD` | `"power2.inOut"` | State transitions |
+
+**Rules:**
+- Always use `gsap.context()` scoped to the component ref to prevent leaks.
+- Clean up with the returned `ctx.revert()` in the component's unmount/cleanup.
+- Respect `prefers-reduced-motion`: check `window.matchMedia('(prefers-reduced-motion: reduce)')` and set `gsap.globalTimeline.timeScale(0)` or skip non-essential sequences.
+- Never animate properties that affect layout (width, height, padding) — animate `opacity` and `transform` only.
 
 ### Mobile (`apps/mobile/theme/motion.ts`)
 
@@ -209,7 +226,10 @@ When reviewing a PR that touches UI code, verify:
 - [ ] No arbitrary `text-[x]` bracket notation
 
 **Motion**
-- [ ] Web: animations use `.void-anim-*` classes only — no custom `@keyframes` or `transition:` inline
+- [ ] Web: animations use GSAP canonical sequences from `packages/ui/src/lib/gsap/sequences.ts` — no `@keyframes`, no `.void-anim-*`, no inline `transition:`
+- [ ] Web: GSAP timing uses `GSAP_DURATION_*` and `GSAP_EASE_*` constants — no hardcoded ms or easing strings
+- [ ] Web: `gsap.context()` is scoped to a component ref and cleaned up on unmount
+- [ ] Web: `prefers-reduced-motion` is respected (skip or instant-complete non-essential sequences)
 - [ ] Mobile: animations use `VOID_MOTION_DURATION_STANDARD` / `VOID_EASING_STANDARD` — no hardcoded ms values
 - [ ] No `transform: scale()` or `transform: translateY()` on hover/press for decoration
 

@@ -84,6 +84,8 @@ export type ChatsCreateInput = {
   title: string;
 };
 
+export type ChatsArchiveOutput = Chat;
+
 // ============================================================================
 // Output Types (Inferred from returns - these are optional aliases)
 // ============================================================================

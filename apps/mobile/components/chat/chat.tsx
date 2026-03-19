@@ -10,14 +10,15 @@ import { Alert, Modal, Platform, Pressable, Share, StyleSheet, View } from 'reac
 
 import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
+import { useInputContext } from '~/components/input/input-context';
 import TextInputField from '~/components/text-input';
 import { Text, makeStyles } from '~/theme';
 import queryClient from '~/utils/query-client';
-import { useChatMessages, useEndChat, useSendMessage } from '~/utils/services/chat';
+import { invalidateInboxQueries } from '~/utils/services/inbox/inbox-refresh';
+import { useArchiveChat, useChatMessages, useSendMessage } from '~/utils/services/chat';
 import type { MessageOutput } from '~/utils/services/chat';
 
 import AppIcon from '../ui/icon';
-import { ChatInput } from './chat-input';
 import { loadMarkdown, renderMessage, type MarkdownComponent } from './chat-message';
 import { ChatShimmerMessage } from './chat-shimmer-message';
 import { ChatThinkingIndicator } from './chat-thinking-indicator';
@@ -35,7 +36,7 @@ interface PendingReview {
 
 type ChatProps = {
   chatId: string;
-  onChatEnd: () => void;
+  onChatArchive: () => void;
   source: SessionSource;
 };
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -43,18 +44,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export const Chat = (props: ChatProps) => {
   const styles = useStyles();
   const { top } = useSafeAreaInsets();
-  const { chatId, onChatEnd, source } = props;
+  const { chatId, onChatArchive, source } = props;
+  const { message, setMessage, setSubmitAction } = useInputContext();
   const client = useApiClient();
   const { isPending: isMessagesLoading, data: messages } = useChatMessages({ chatId });
-  const { mutate: endChat, isPending: isEnding } = useEndChat({
+  const { mutate: archiveChat, isPending: isArchiving } = useArchiveChat({
     chatId,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chatMessages', chatId] });
-      onChatEnd();
+      onChatArchive();
     },
   });
   const { sendChatMessage, isChatSending, chatSendStatus } = useSendMessage({ chatId });
-  const [message, setMessage] = useState('');
   const [Markdown, setMarkdown] = useState<MarkdownComponent | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [lifecycleState, setLifecycleState] = useState<ThoughtLifecycleState>('idle');
@@ -112,6 +113,9 @@ export const Chat = (props: ChatProps) => {
         type: 'note',
       });
     },
+    onSuccess: async () => {
+      await invalidateInboxQueries(queryClient);
+    },
   });
 
   useEffect(() => {
@@ -141,9 +145,9 @@ export const Chat = (props: ChatProps) => {
     return () => clearTimeout(timeout);
   }, [showSearch]);
 
-  const onEndChatPress = useCallback(() => {
-    endChat();
-  }, [endChat]);
+  const onArchiveChatPress = useCallback(() => {
+    archiveChat();
+  }, [archiveChat]);
 
   const handleSendMessage = useCallback(
     (messageText: string) => {
@@ -153,6 +157,16 @@ export const Chat = (props: ChatProps) => {
     },
     [sendChatMessage],
   );
+
+  useEffect(() => {
+    setSubmitAction(() => () => {
+      handleSendMessage(message);
+    });
+
+    return () => {
+      setSubmitAction(null);
+    };
+  }, [handleSendMessage, message, setSubmitAction]);
 
   const handleCopyMessage = useCallback((copiedMessage: MessageOutput) => {
     const text = copiedMessage.message;
@@ -328,8 +342,8 @@ export const Chat = (props: ChatProps) => {
 
     buttons.push(
       {
-        text: isEnding ? 'Ending…' : 'End chat',
-        onPress: onEndChatPress,
+        text: isArchiving ? 'Archiving…' : 'Archive chat',
+        onPress: onArchiveChatPress,
         style: 'destructive',
       },
       {
@@ -339,7 +353,7 @@ export const Chat = (props: ChatProps) => {
     );
 
     Alert.alert('Conversation', undefined, buttons);
-  }, [canTransform, handleOpenSearch, handleTransform, isEnding, onEndChatPress, showDebug]);
+  }, [canTransform, handleOpenSearch, handleTransform, isArchiving, onArchiveChatPress, showDebug]);
 
   return (
     <View style={styles.container}>
@@ -347,7 +361,7 @@ export const Chat = (props: ChatProps) => {
         <Button
           variant="ghost"
           size="icon-xs"
-          onPress={onEndChatPress}
+          onPress={onArchiveChatPress}
           style={styles.headerBack}
           accessibilityLabel="Back"
         >
@@ -444,14 +458,6 @@ export const Chat = (props: ChatProps) => {
           />
           {chatSendStatus === 'submitted' && <ChatShimmerMessage />}
           {chatSendStatus === 'streaming' && <ChatThinkingIndicator />}
-          <ChatInput
-            message={message}
-            onMessageChange={setMessage}
-            onSendMessage={handleSendMessage}
-            onTransformNote={canTransform ? () => handleTransform('note') : undefined}
-            canTransformNote={canTransform}
-            isPending={isChatSending}
-          />
         </>
       )}
 

@@ -33,6 +33,24 @@ export interface ChatsSendMessageInput {
   message: string
 }
 
+export interface ChatsArchiveInput {
+  chatId: string
+}
+
+interface ArchiveRouteClient {
+  api: {
+    chats: {
+      ':id': {
+        archive: {
+          $post(args: { param: { id: string } }): Promise<{
+            json(): Promise<Chat>
+          }>
+        }
+      }
+    }
+  }
+}
+
 function toMessageQuery(input: ChatsGetMessagesInput): Record<string, string> {
   const query: Record<string, string> = {}
 
@@ -60,6 +78,7 @@ export interface ChatsClient {
   getMessages(input: ChatsGetMessagesInput): Promise<ChatsGetMessagesOutput>
   getByNote(input: ChatsGetByNoteInput): Promise<Chat>
   create(input: ChatsCreateInput): Promise<ChatsCreateOutput>
+  archive(input: ChatsArchiveInput): Promise<Chat>
   send(input: ChatsSendMessageInput): Promise<ChatsSendOutput>
   classify(input: ChatsClassifyClientInput): Promise<ChatsClassifyOutput>
 }
@@ -98,6 +117,13 @@ export function createChatsClient(rawClient: RawHonoClient): ChatsClient {
         json: input,
       })
       return res.json() as Promise<ChatsCreateOutput>
+    },
+    async archive(input) {
+      const archiveClient = rawClient as RawHonoClient & ArchiveRouteClient
+      const res = await archiveClient.api.chats[':id'].archive.$post({
+        param: { id: input.chatId },
+      })
+      return res.json() as Promise<Chat>
     },
     async send(input) {
       const res = await rawClient.api.chats[':id'].send.$post({

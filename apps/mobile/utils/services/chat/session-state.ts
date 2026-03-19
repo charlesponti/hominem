@@ -1,4 +1,4 @@
-import type { Chat, ChatMessage } from '~/utils/local-store/types';
+import type { Chat } from '@hominem/hono-rpc/types';
 
 export const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -6,27 +6,30 @@ export interface ChatWithActivity extends Chat {
   activityAt: string;
 }
 
-export function getChatActivityAt(chat: Chat, messages: ChatMessage[]): string {
-  const lastMessage = messages[messages.length - 1];
-  return lastMessage?.createdAt ?? chat.createdAt;
+export function getChatActivityAt(chat: Chat): string {
+  return chat.updatedAt ?? chat.createdAt;
 }
 
-export function isChatResumable(chat: Chat, messages: ChatMessage[], now = Date.now()): boolean {
-  return now - new Date(getChatActivityAt(chat, messages)).getTime() <= THIRTY_DAYS_MS;
+export function isChatResumable(chat: Chat, now = Date.now()): boolean {
+  return now - new Date(getChatActivityAt(chat)).getTime() <= THIRTY_DAYS_MS;
 }
 
-export function toChatsWithActivity(
-  chats: Chat[],
-  messagesByChatId: Record<string, ChatMessage[]>,
-  now = Date.now(),
-): ChatWithActivity[] {
+export function toChatsWithActivity(chats: Chat[], now = Date.now()): ChatWithActivity[] {
   return chats
     .map((chat) => ({
       ...chat,
-      activityAt: getChatActivityAt(chat, messagesByChatId[chat.id] ?? []),
+      activityAt: getChatActivityAt(chat),
     }))
-    .filter((chat) => isChatResumable(chat, messagesByChatId[chat.id] ?? [], now))
+    .filter((chat) => isChatResumable(chat, now))
     .sort((a, b) => new Date(b.activityAt).getTime() - new Date(a.activityAt).getTime());
+}
+
+export function getInboxChatsWithActivity(chats: Chat[], now = Date.now()): ChatWithActivity[] {
+  return toChatsWithActivity(chats, now).filter((chat) => !chat.archivedAt)
+}
+
+export function getArchivedChatsWithActivity(chats: Chat[], now = Date.now()): ChatWithActivity[] {
+  return toChatsWithActivity(chats, now).filter((chat) => Boolean(chat.archivedAt))
 }
 
 export function selectSherpaChat(chats: Chat[], requestedChatId?: string | null): Chat | null {
@@ -34,5 +37,5 @@ export function selectSherpaChat(chats: Chat[], requestedChatId?: string | null)
     return chats.find((chat) => chat.id === requestedChatId) ?? null;
   }
 
-  return chats.find((chat) => !chat.endedAt) ?? null;
+  return chats.find((chat) => !chat.archivedAt) ?? null;
 }

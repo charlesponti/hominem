@@ -1,17 +1,20 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
+import type { Chat as ChatType } from '@hominem/hono-rpc/types';
+import React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 import BlurredGradientBackground from '~/components/chat/blurred-background';
 import { Chat } from '~/components/chat/chat';
 import type { SessionSource } from '~/components/chat/context-anchor';
 import { LoadingFull } from '~/components/LoadingFull';
+import { useMobileWorkspace } from '~/components/workspace/mobile-workspace-context';
 import { Text } from '~/theme';
-import type { Chat as ChatType } from '~/utils/local-store/types';
 import { useActiveChat, useStartChat } from '~/utils/services/chat';
 
 export default function Sherpa() {
   const router = useRouter();
+  const { setActiveContext, setHeader } = useMobileWorkspace();
   const params = useLocalSearchParams<{ chatId?: string; intentId?: string; seed?: string }>();
   const [activeChat, setActiveChat] = useState<ChatType | null>(null);
   const { isPending: isLoadingActiveChat, refetch: getActiveChat } = useActiveChat(params.chatId);
@@ -23,11 +26,23 @@ export default function Sherpa() {
     },
   });
 
+  const isChatRecord = (value: ChatType | null | undefined): value is ChatType => {
+    return Boolean(value && typeof value.id === 'string' && typeof value.userId === 'string')
+  }
+
+  useEffect(() => {
+    setActiveContext('chat');
+    setHeader({
+      kicker: 'Chat',
+      title: activeChat?.title?.trim() || 'New conversation',
+    });
+  }, [activeChat?.title, setActiveContext, setHeader]);
+
   useEffect(() => {
     async function initialLoad() {
       const response = await getActiveChat();
 
-      if (response.data) {
+      if (isChatRecord(response.data)) {
         setActiveChat(response.data);
       } else if (params.seed) {
         await startChat();
@@ -38,7 +53,7 @@ export default function Sherpa() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getActiveChat, params.seed]);
 
-  const onChatEnd = useCallback(() => {
+  const onChatArchive = useCallback(() => {
     router.push('/(protected)/(tabs)/focus' as RelativePathString);
   }, [router]);
 
@@ -55,7 +70,7 @@ export default function Sherpa() {
           </Text>
         </LoadingFull>
       ) : null}
-      {activeChat ? <Chat chatId={activeChat.id} onChatEnd={onChatEnd} source={source} /> : null}
+      {activeChat ? <Chat chatId={activeChat.id} onChatArchive={onChatArchive} source={source} /> : null}
     </BlurredGradientBackground>
   );
 }

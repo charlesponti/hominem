@@ -28,7 +28,7 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
 export type Numeric = ColumnType<string, number | string, number | string>;
 
-export type Timestamp = string;
+export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface AuthRefreshTokens {
   created_at: Generated<Timestamp | null>;
@@ -122,7 +122,7 @@ export interface CalendarEvents {
 }
 
 export interface CareerApplications {
-  applied_at: string | null;
+  applied_at: Timestamp | null;
   created_at: Generated<Timestamp | null>;
   id: Generated<string>;
   job_id: string;
@@ -240,7 +240,7 @@ export interface FinanceTransactions {
   category_id: string | null;
   created_at: Generated<Timestamp | null>;
   data: Generated<Json | null>;
-  date: string;
+  date: Timestamp;
   date_raw: string | null;
   description: string | null;
   external_id: string | null;
@@ -530,7 +530,7 @@ export interface Possessions {
   id: Generated<string>;
   location: string | null;
   name: string;
-  purchase_date: string | null;
+  purchase_date: Timestamp | null;
   purchase_price: Numeric | null;
   serial_number: string | null;
   user_id: string;
@@ -542,11 +542,11 @@ export interface PossessionsUsage {
   container_id: string | null;
   created_at: Generated<Timestamp | null>;
   data: Generated<Json | null>;
-  end_date: string | null;
+  end_date: Timestamp | null;
   id: Generated<string>;
   method: string | null;
   possession_id: string;
-  start_date: string | null;
+  start_date: Timestamp | null;
   timestamp: Timestamp | null;
   type: string | null;
   user_id: string;
@@ -670,8 +670,8 @@ export interface TravelFlights {
 
 export interface TravelHotels {
   address: string | null;
-  check_in: string | null;
-  check_out: string | null;
+  check_in: Timestamp | null;
+  check_out: Timestamp | null;
   confirmation_code: string | null;
   created_at: Generated<Timestamp | null>;
   data: Generated<Json | null>;
@@ -686,10 +686,10 @@ export interface TravelTrips {
   created_at: Generated<Timestamp | null>;
   data: Generated<Json | null>;
   description: string | null;
-  end_date: string | null;
+  end_date: Timestamp | null;
   id: Generated<string>;
   name: string;
-  start_date: string;
+  start_date: Timestamp;
   status: Generated<string | null>;
   user_id: string;
 }
@@ -921,5 +921,3 @@ export interface DB {
   video_subscriptions: VideoSubscriptions;
   video_viewings: VideoViewings;
 }
-
-export type Database = DB;

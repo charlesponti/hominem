@@ -2,13 +2,11 @@ import { z } from 'zod';
 
 import {
   UserProfileSchema,
-  ChatSchema,
-  ChatMessageSchema,
   SettingsSchema,
   MediaSchema,
 } from '../validation/schemas';
 import { createSQLiteStore } from './sqlite';
-import type { Chat, ChatMessage, FocusItem, Media, Settings, UserProfile } from './types';
+import type { FocusItem, Media, Settings, UserProfile } from './types';
 
 let store: Awaited<ReturnType<typeof createSQLiteStore>> | null = null;
 let initializationPromise: Promise<boolean> | null = null;
@@ -73,40 +71,6 @@ export const LocalStore = {
     const s = await getStore();
     const result = await s.upsertUserProfile(profile);
     return validateOrThrow(UserProfileSchema, result);
-  },
-
-  createChat: async (chat: Chat): Promise<Chat> => {
-    const s = await getStore();
-    const result = await s.createChat(chat);
-    return validateOrThrow(ChatSchema, result);
-  },
-
-  listChats: async (): Promise<Chat[]> => {
-    const s = await getStore();
-    const results = await s.listChats();
-    return results
-      .map((chat) => validateOrNull(ChatSchema, chat))
-      .filter((chat): chat is NonNullable<typeof chat> => chat !== null) as Chat[];
-  },
-
-  endChat: async (chatId: string, endedAt: string): Promise<Chat> => {
-    const s = await getStore();
-    const result = await s.endChat(chatId, endedAt);
-    return validateOrThrow(ChatSchema, result);
-  },
-
-  addMessage: async (message: ChatMessage): Promise<ChatMessage> => {
-    const s = await getStore();
-    const result = await s.addMessage(message);
-    return validateOrThrow(ChatMessageSchema, result);
-  },
-
-  listMessages: async (chatId: string): Promise<ChatMessage[]> => {
-    const s = await getStore();
-    const results = await s.listMessages(chatId);
-    return results
-      .map((msg) => validateOrNull(ChatMessageSchema, msg))
-      .filter((msg): msg is NonNullable<typeof msg> => msg !== null) as ChatMessage[];
   },
 
   upsertFocusItem: async (item: FocusItem): Promise<FocusItem> => {

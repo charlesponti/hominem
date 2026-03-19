@@ -1,12 +1,30 @@
 import React, { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react';
 
+import {
+  createInitialMobileHyperFormState,
+  setMobileHyperFormAttachments,
+  setMobileHyperFormContext,
+  setMobileHyperFormMode,
+  setMobileHyperFormRecording,
+  setMobileHyperFormText,
+  type MobileHyperFormAttachment,
+  type MobileHyperFormMode,
+} from './mobile-hyper-form-state';
+import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config';
+
 type InputContextValue = {
   message: string;
   setMessage: (value: string) => void;
+  attachments: MobileHyperFormAttachment[];
+  setAttachments: (value: MobileHyperFormAttachment[]) => void;
   isRecording: boolean;
   setIsRecording: (value: boolean) => void;
-  mode: 'text' | 'voice';
-  setMode: (value: 'text' | 'voice') => void;
+  mode: MobileHyperFormMode;
+  setMode: (value: MobileHyperFormMode) => void;
+  context: MobileWorkspaceContext;
+  setContext: (value: MobileWorkspaceContext) => void;
+  submitAction: (() => void) | null;
+  setSubmitAction: (value: (() => void) | null) => void;
 };
 
 const InputContext = createContext<InputContextValue | null>(null);
@@ -18,13 +36,45 @@ export const useInputContext = () => {
 };
 
 export const InputProvider = ({ children }: PropsWithChildren) => {
-  const [message, setMessage] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const [mode, setMode] = useState<'text' | 'voice'>('text');
+  const [state, setState] = useState(createInitialMobileHyperFormState);
+  const [submitAction, setSubmitAction] = useState<(() => void) | null>(null);
+
+  const setMessage = (value: string) => {
+    setState((currentState) => setMobileHyperFormText(currentState, value));
+  };
+
+  const setAttachments = (value: MobileHyperFormAttachment[]) => {
+    setState((currentState) => setMobileHyperFormAttachments(currentState, value));
+  };
+
+  const setIsRecording = (value: boolean) => {
+    setState((currentState) => setMobileHyperFormRecording(currentState, value));
+  };
+
+  const setMode = (value: MobileHyperFormMode) => {
+    setState((currentState) => setMobileHyperFormMode(currentState, value));
+  };
+
+  const setContext = (value: MobileWorkspaceContext) => {
+    setState((currentState) => setMobileHyperFormContext(currentState, value));
+  };
 
   const value = useMemo(
-    () => ({ message, setMessage, isRecording, setIsRecording, mode, setMode }),
-    [message, isRecording, mode],
+    () => ({
+      message: state.text,
+      setMessage,
+      attachments: state.attachments,
+      setAttachments,
+      isRecording: state.isRecording,
+      setIsRecording,
+      mode: state.mode,
+      setMode,
+      context: state.context,
+      setContext,
+      submitAction,
+      setSubmitAction,
+    }),
+    [state, submitAction],
   );
 
   return <InputContext.Provider value={value}>{children}</InputContext.Provider>;

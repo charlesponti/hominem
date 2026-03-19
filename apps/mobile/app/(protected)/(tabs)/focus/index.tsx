@@ -1,18 +1,18 @@
 import { Link, Stack } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { PulsingCircle } from '~/components/animated/pulsing-circle';
-import { CaptureBar } from '~/components/capture/capture-bar';
-import { SessionList } from '~/components/chat/session-card';
+import { useResumableSessions } from '~/components/chat/session-card';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { FeedbackBlock } from '~/components/feedback-block';
-import { FocusList } from '~/components/focus/focus-list';
 import { ActiveSearchSummary, type ActiveSearch } from '~/components/focus/focus-search';
 import { LoadingContainer } from '~/components/LoadingFull';
 import AppIcon from '~/components/ui/icon';
+import { InboxStream } from '~/components/workspace/inbox-stream';
+import { useMobileWorkspace } from '~/components/workspace/mobile-workspace-context';
 import { Text, theme, makeStyles } from '~/theme';
 import { useFocusQuery } from '~/utils/services/notes/use-focus-query';
 
@@ -24,21 +24,10 @@ const useStyles = makeStyles((t) =>
     },
     focusContainer: {
       flex: 1,
-      rowGap: t.spacing.m_16,
-      marginTop: t.spacing.m_16,
-    },
-    captureSection: {
-      paddingHorizontal: t.spacing.m_16,
-      rowGap: t.spacing.sm_8,
-    },
-    sessionSection: {
-      paddingHorizontal: t.spacing.m_16,
-      rowGap: t.spacing.sm_8,
     },
     focuses: {
       flex: 1,
       rowGap: t.spacing.sm_12,
-      paddingHorizontal: t.spacing.m_16,
     },
     empty: {
       marginHorizontal: t.spacing.m_16,
@@ -63,8 +52,10 @@ const useStyles = makeStyles((t) =>
 
 export const FocusView = () => {
   const styles = useStyles();
+  const { setHeader } = useMobileWorkspace();
   const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const { data: sessions = [] } = useResumableSessions();
   const {
     data: focusItems,
     refetch,
@@ -94,26 +85,18 @@ export const FocusView = () => {
   const isLoaded = Boolean(!isLoading && !isRefetching && !refreshing);
   const hasFocusItems = !!focusItems && focusItems.length > 0;
 
+  useEffect(() => {
+    setHeader({
+      kicker: 'Notes-first assistant',
+      title: 'Workspace',
+    });
+  }, [setHeader]);
+
   return (
     <>
       <Stack.Screen
         options={{
-          title: 'Notes',
-          headerRight: () => (
-            <View style={styles.headerRight}>
-              <Text
-                variant="body"
-                color="text-secondary"
-                onPress={onRefresh}
-                accessibilityRole="button"
-              >
-                REFRESH
-              </Text>
-              <Link href={'/(protected)/(tabs)/account' as RelativePathString}>
-                <AppIcon name="user" size={18} color={theme.colors.foreground} />
-              </Link>
-            </View>
-          ),
+          headerShown: false,
         }}
       />
 
@@ -129,52 +112,16 @@ export const FocusView = () => {
 
           {(isLoaded || isRefetching) && hasFocusItems ? (
             <View style={styles.focuses}>
-              <View style={styles.captureSection}>
-                <Text variant="caption" color="text-secondary" style={styles.sectionLabel}>
-                  Capture
-                </Text>
-                <CaptureBar />
-              </View>
-
-              <View style={styles.sessionSection}>
-                <SessionList />
-              </View>
-
               {activeSearch ? (
                 <ActiveSearchSummary onCloseClick={onSearchClose} activeSearch={activeSearch} />
               ) : null}
 
-              <Text variant="caption" color="text-secondary" style={styles.sectionLabel}>
-                Notes
-              </Text>
-              <FocusList data={focusItems} isRefreshing={isRefetching} onRefresh={refetch} />
+              <InboxStream focusItems={focusItems} sessions={sessions} />
             </View>
           ) : null}
           {isLoaded && !hasFocusItems && !activeSearch ? (
             <View style={styles.focuses}>
-              <View style={styles.captureSection}>
-                <Text variant="caption" color="text-secondary" style={styles.sectionLabel}>
-                  Capture
-                </Text>
-                <CaptureBar />
-              </View>
-
-              <View style={styles.sessionSection}>
-                <SessionList />
-              </View>
-
-              <Text variant="caption" color="text-secondary" style={styles.sectionLabel}>
-                Notes
-              </Text>
-              <View style={styles.empty}>
-                <Text variant="bodyLarge" color="foreground">
-                  Start with a thought
-                </Text>
-                <Text variant="body" color="text-secondary">
-                  Capture something above and it will join the same stream as the rest of your
-                  notes.
-                </Text>
-              </View>
+              <InboxStream focusItems={[]} sessions={sessions} />
             </View>
           ) : null}
         </View>

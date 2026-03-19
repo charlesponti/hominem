@@ -39,9 +39,9 @@ export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 
 // Chat Schema
 export const ChatSchema = z.object({
+  archivedAt: z.string().datetime().nullable().optional(),
   id: z.string(),
   createdAt: z.string().datetime(),
-  endedAt: z.string().datetime().nullable().optional(),
   title: z.string().nullable().optional(),
 });
 

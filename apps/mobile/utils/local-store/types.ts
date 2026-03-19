@@ -6,31 +6,6 @@ export type UserProfile = {
   updatedAt: string;
 };
 
-export type Chat = {
-  id: string;
-  createdAt: string;
-  endedAt?: string | null;
-  title?: string | null;
-};
-
-export type ChatMessage = {
-  id: string;
-  chatId: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  createdAt: string;
-  reasoning?: string | null;
-  toolCalls?: Array<{
-    toolName: string;
-    type: 'tool-call';
-    toolCallId: string;
-    args: Record<string, string>;
-  }> | null;
-  isStreaming?: boolean;
-  focusItemsJson?: string | null;
-  focusIdsJson?: string | null;
-};
-
 export type FocusItem = {
   id: string;
   text: string;

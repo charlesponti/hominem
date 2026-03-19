@@ -151,21 +151,21 @@ describe('Zod Schemas', () => {
       expect(() => ChatSchema.parse(chat)).not.toThrow()
     })
 
-    it('should allow endedAt', () => {
+    it('should allow archivedAt', () => {
       const chat = {
         id: 'chat-123',
         createdAt: '2024-01-01T00:00:00.000Z',
-        endedAt: '2024-01-02T00:00:00.000Z',
+        archivedAt: '2024-01-02T00:00:00.000Z',
       }
 
       expect(() => ChatSchema.parse(chat)).not.toThrow()
     })
 
-    it('should allow null endedAt', () => {
+    it('should allow null archivedAt', () => {
       const chat = {
         id: 'chat-123',
         createdAt: '2024-01-01T00:00:00.000Z',
-        endedAt: null,
+        archivedAt: null,
       }
 
       expect(() => ChatSchema.parse(chat)).not.toThrow()

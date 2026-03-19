@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 
 import {
+  archiveChatQuery,
   createChatQuery,
   getChatByIdQuery,
   getUserChatsQuery,
@@ -26,6 +27,7 @@ import {
   type ChatMessage,
   type ChatsListOutput,
   type ChatsGetOutput,
+  type ChatsArchiveOutput,
   type ChatsCreateOutput,
   type ChatsUpdateOutput,
   type ChatsSendOutput,
@@ -109,12 +111,24 @@ const chatByIdRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!
     const { title } = c.req.valid('json')
 
-    const updated = await updateChatTitleQuery(chatId, userId, title)
+    const updated = await updateChatTitleQuery(chatId, title, userId)
     if (!updated) {
       throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' })
     }
 
     return c.json<ChatsUpdateOutput>({ success: true })
+  })
+
+  .post('/archive', async (c) => {
+    const chatId = c.req.param('id') as string
+    const userId = c.get('userId')!
+
+    const archived = await archiveChatQuery(chatId, userId)
+    if (!archived) {
+      throw new ForbiddenError('Chat not found or access denied', { reason: 'ownership' })
+    }
+
+    return c.json<ChatsArchiveOutput>(archived)
   })
 
   // Send message with streaming

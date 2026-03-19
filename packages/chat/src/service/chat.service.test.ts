@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ChatOutput } from '../contracts';
 import {
+  archiveChatQuery,
   clearChatMessagesQuery,
   createChatQuery,
   deleteChatQuery,
@@ -14,6 +15,7 @@ import {
 import { ChatService } from './chat.service';
 
 vi.mock('./chat.queries', () => ({
+  archiveChatQuery: vi.fn(),
   createChatQuery: vi.fn(),
   getChatByIdQuery: vi.fn(),
   getOrCreateActiveChatQuery: vi.fn(),
@@ -25,6 +27,7 @@ vi.mock('./chat.queries', () => ({
 }));
 
 const buildChat = (overrides: Partial<ChatOutput> = {}): ChatOutput => ({
+  archivedAt: overrides.archivedAt ?? null,
   id: overrides.id ?? 'chat_1',
   userId: overrides.userId ?? 'user_1',
   title: overrides.title ?? 'New Chat',
@@ -58,6 +61,16 @@ describe('ChatService', () => {
 
     expect(result.title).toBe('Renamed');
     expect(updateChatTitleQuery).toHaveBeenCalledWith('chat_1', 'Renamed', 'user_1');
+  });
+
+  it('archives chat with caller ownership scope', async () => {
+    const chat = buildChat({ archivedAt: '2026-03-19T00:00:00.000Z' });
+    vi.mocked(archiveChatQuery).mockResolvedValue(chat);
+
+    const result = await service.archiveChat('chat_1', 'user_1');
+
+    expect(result.archivedAt).toBe('2026-03-19T00:00:00.000Z');
+    expect(archiveChatQuery).toHaveBeenCalledWith('chat_1', 'user_1');
   });
 
   it('treats delete as idempotent when scoped chat does not exist', async () => {

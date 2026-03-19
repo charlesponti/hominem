@@ -1,7 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-import type { MessageOutput } from '../services/chat';
-import type { Chat, ChatMessage, FocusItem, Media, Settings, UserProfile } from './types';
+import type { FocusItem, Media, Settings, UserProfile } from './types';
 
 type QueryResult = {
   rows: Array<Record<string, unknown>>;
@@ -18,53 +17,6 @@ const normalizeProfile = (row: Record<string, unknown>): UserProfile => ({
   createdAt: String(row.created_at),
   updatedAt: String(row.updated_at),
 });
-
-const normalizeChat = (row: Record<string, unknown>): Chat => ({
-  id: String(row.id),
-  createdAt: String(row.created_at),
-  endedAt: typeof row.ended_at === 'string' ? row.ended_at : null,
-  title: typeof row.title === 'string' ? row.title : null,
-});
-
-const normalizeMessage = (row: Record<string, unknown>): ChatMessage => ({
-  id: String(row.id),
-  chatId: String(row.chat_id),
-  role: row.role === 'assistant' || row.role === 'system' ? row.role : 'user',
-  content: String(row.content),
-  createdAt: String(row.created_at),
-  reasoning: typeof row.reasoning === 'string' ? row.reasoning : null,
-  toolCalls: parseToolCalls(row.tool_calls_json),
-  isStreaming: row.is_streaming === 1 || row.is_streaming === true || row.is_streaming === '1',
-  focusItemsJson: typeof row.focus_items_json === 'string' ? row.focus_items_json : null,
-  focusIdsJson: typeof row.focus_ids_json === 'string' ? row.focus_ids_json : null,
-});
-
-const parseToolCalls = (value: unknown): MessageOutput['toolCalls'] | null => {
-  if (typeof value !== 'string') return null;
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(value);
-  } catch {
-    return null;
-  }
-
-  if (!Array.isArray(parsed)) return null;
-
-  return parsed.every(
-    (item) =>
-      typeof item === 'object' &&
-      item !== null &&
-      typeof item.type === 'string' &&
-      item.type === 'tool-call' &&
-      typeof item.toolName === 'string' &&
-      typeof item.toolCallId === 'string' &&
-      typeof item.args === 'object' &&
-      item.args !== null,
-  )
-    ? (parsed as MessageOutput['toolCalls'])
-    : null;
-};
 
 const normalizeFocusItem = (row: Record<string, unknown>): FocusItem => ({
   id: String(row.id),
@@ -139,17 +91,6 @@ export const createSQLiteStore = async () => {
   );
   await execute(
     db,
-    'CREATE TABLE IF NOT EXISTS chats (id TEXT PRIMARY KEY, title TEXT, created_at TEXT, ended_at TEXT)',
-  );
-  await execute(
-    db,
-    'CREATE TABLE IF NOT EXISTS chat_messages (id TEXT PRIMARY KEY, chat_id TEXT, role TEXT, content TEXT, created_at TEXT, focus_items_json TEXT, focus_ids_json TEXT, is_streaming INTEGER)',
-  );
-  await normalizeColumn(db, 'chat_messages', 'reasoning', 'TEXT');
-  await normalizeColumn(db, 'chat_messages', 'tool_calls_json', 'TEXT');
-  await normalizeColumn(db, 'chat_messages', 'is_streaming', 'INTEGER');
-  await execute(
-    db,
     'CREATE TABLE IF NOT EXISTS focus_items (id TEXT PRIMARY KEY, text TEXT, status TEXT, created_at TEXT, updated_at TEXT, payload_json TEXT)',
   );
   await execute(
@@ -176,53 +117,6 @@ export const createSQLiteStore = async () => {
         [profile.id, profile.name ?? null, profile.email ?? null, createdAt, updatedAt],
       );
       return { ...profile, createdAt, updatedAt };
-    },
-    createChat: async (chat: Chat) => {
-      const createdAt = toISO(chat.createdAt);
-      await execute(
-        db,
-        'INSERT OR REPLACE INTO chats (id, title, created_at, ended_at) VALUES (?, ?, ?, ?)',
-        [chat.id, chat.title ?? null, createdAt, chat.endedAt ?? null],
-      );
-      return { ...chat, createdAt };
-    },
-    listChats: async () => {
-      const rows = await getAll(db, 'SELECT * FROM chats ORDER BY created_at DESC');
-      return rows.map(normalizeChat);
-    },
-    endChat: async (chatId: string, endedAt: string) => {
-      await execute(db, 'UPDATE chats SET ended_at = ? WHERE id = ?', [endedAt, chatId]);
-      const row = await getFirst(db, 'SELECT * FROM chats WHERE id = ?', [chatId]);
-      if (row) return normalizeChat(row);
-      return { id: chatId, createdAt: endedAt, endedAt };
-    },
-    addMessage: async (message: ChatMessage) => {
-      const createdAt = toISO(message.createdAt);
-      await execute(
-        db,
-        'INSERT OR REPLACE INTO chat_messages (id, chat_id, role, content, created_at, focus_items_json, focus_ids_json, reasoning, tool_calls_json, is_streaming) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [
-          message.id,
-          message.chatId,
-          message.role,
-          message.content,
-          createdAt,
-          message.focusItemsJson ?? null,
-          message.focusIdsJson ?? null,
-          message.reasoning ?? null,
-          message.toolCalls ? JSON.stringify(message.toolCalls) : null,
-          typeof message.isStreaming === 'boolean' ? Number(message.isStreaming) : null,
-        ],
-      );
-      return { ...message, createdAt };
-    },
-    listMessages: async (chatId: string) => {
-      const rows = await getAll(
-        db,
-        'SELECT * FROM chat_messages WHERE chat_id = ? ORDER BY created_at ASC',
-        [chatId],
-      );
-      return rows.map(normalizeMessage);
     },
     upsertFocusItem: async (item: FocusItem) => {
       const createdAt = toISO(item.createdAt);
@@ -269,8 +163,6 @@ export const createSQLiteStore = async () => {
     },
     clearAllData: async () => {
       await execute(db, 'DELETE FROM user_profile');
-      await execute(db, 'DELETE FROM chats');
-      await execute(db, 'DELETE FROM chat_messages');
       await execute(db, 'DELETE FROM focus_items');
       await execute(db, 'DELETE FROM settings');
       await execute(db, 'DELETE FROM media');
@@ -284,8 +176,6 @@ export const migrateInMemoryToSQLite = async (
   snapshot: {
     userProfile: UserProfile | null;
     settings: Settings | null;
-    chats: Chat[];
-    messages: ChatMessage[];
     focusItems: FocusItem[];
     mediaItems: Media[];
   },
@@ -295,12 +185,6 @@ export const migrateInMemoryToSQLite = async (
   }
   if (snapshot.settings) {
     await store.upsertSettings(snapshot.settings);
-  }
-  for (const chat of snapshot.chats) {
-    await store.createChat(chat);
-  }
-  for (const message of snapshot.messages) {
-    await store.addMessage(message);
   }
   for (const item of snapshot.focusItems) {
     await store.upsertFocusItem(item);

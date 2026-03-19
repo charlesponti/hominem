@@ -1,30 +1,41 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { Stack } from 'expo-router';
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import { theme } from '~/theme';
+import { NoteContextScreen } from '~/components/workspace/note-context-screen';
+import { SearchContextScreen } from '~/components/workspace/search-context-screen';
+import { MobileWorkspaceSwitcher } from '~/components/workspace/mobile-workspace-switcher';
+import { useMobileWorkspace } from '~/components/workspace/mobile-workspace-context';
+import { resolveMobileWorkspaceView } from '~/components/workspace/mobile-workspace-view';
 
 export default function TabsLayout() {
+  const { activeContext } = useMobileWorkspace();
+  const view = resolveMobileWorkspaceView(activeContext);
+
   return (
-    <NativeTabs
-      minimizeBehavior="onScrollDown"
-      tintColor={theme.colors.primary}
-      disableTransparentOnScrollEdge
-    >
-      <NativeTabs.Trigger name="start">
-        <NativeTabs.Trigger.Label>START</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'sparkles', selected: 'sparkles' }} />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="focus">
-        <NativeTabs.Trigger.Label>FOCUS</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'bolt.fill', selected: 'bolt.fill' }} />
-      </NativeTabs.Trigger>
-
-      <NativeTabs.Trigger name="sherpa">
-        <NativeTabs.Trigger.Label>SHERPA</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'bubble.left.fill', selected: 'bubble.left.fill' }} />
-      </NativeTabs.Trigger>
-
-    </NativeTabs>
+    <View style={styles.container}>
+      <MobileWorkspaceSwitcher />
+      <View style={styles.content}>
+        {view === 'note' ? <NoteContextScreen /> : null}
+        {view === 'search' ? <SearchContextScreen /> : null}
+        {view === 'stack' ? (
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="focus" />
+            <Stack.Screen name="sherpa" />
+            <Stack.Screen name="start" />
+            <Stack.Screen name="account" />
+          </Stack>
+        ) : null}
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+})

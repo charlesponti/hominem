@@ -1,5 +1,4 @@
 const {
-  launchMobileApp,
   stopMobileAppSync,
   waitForAuthState,
   resetToSignedOut,
@@ -11,9 +10,6 @@ const {
 
 const SIGN_IN_TIMEOUT = 30000
 
-/**
- * Signs in and waits for the protected home (focus) screen.
- */
 async function signInAndReachFocus(email) {
   await waitFor(element(by.id('auth-email-input')))
     .toBeVisible()
@@ -40,7 +36,7 @@ async function signInAndReachFocus(email) {
     .withTimeout(10000)
 }
 
-describe('Mobile: focus → sherpa critical path', () => {
+describe('Mobile: unified workspace critical path', () => {
   beforeEach(async () => {
     await device.clearKeychain()
     await device.launchApp({ newInstance: true })
@@ -52,79 +48,55 @@ describe('Mobile: focus → sherpa critical path', () => {
     await stopMobileAppSync()
   })
 
-  it('focus screen loads with CaptureBar after sign-in', async () => {
-    const email = `mobile-e2e-${Date.now()}-focus@hominem.test`
+  it('focus screen loads with the shared HyperForm after sign-in', async () => {
+    const email = 'mobile-e2e-' + Date.now() + '-workspace@hominem.test'
     await signInAndReachFocus(email)
 
     await waitFor(element(by.id('focus-screen')))
       .toBeVisible()
       .withTimeout(5000)
 
-    await waitFor(element(by.id('capture-bar-input')))
+    await waitFor(element(by.id('mobile-hyper-form')))
       .toBeVisible()
       .withTimeout(5000)
   })
 
-  it('capture bar Think navigates to sherpa session', async () => {
-    const email = `mobile-e2e-${Date.now()}-think@hominem.test`
+  it('preserves the HyperForm draft while switching workspace contexts', async () => {
+    const email = 'mobile-e2e-' + Date.now() + '-draft@hominem.test'
     await signInAndReachFocus(email)
 
-    // Type a thought into the capture bar
-    await element(by.id('capture-bar-input')).tap()
-    await element(by.id('capture-bar-input')).typeText('What should I focus on today?')
+    await element(by.id('mobile-hyper-form-input')).tap()
+    await element(by.id('mobile-hyper-form-input')).typeText('Persistent workspace draft')
     await dismissKeyboard()
 
-    // Tap "Think through it" to start a session
-    await waitFor(element(by.id('capture-bar-think')))
+    await element(by.id('mobile-workspace-context-note')).tap()
+
+    await waitFor(element(by.id('note-context-screen')))
       .toBeVisible()
       .withTimeout(5000)
-    await element(by.id('capture-bar-think')).tap()
 
-    // Should navigate to sherpa with a new chat session
-    await waitFor(element(by.id('sherpa-screen')))
-      .toBeVisible()
-      .withTimeout(10000)
+    await expect(element(by.id('mobile-hyper-form-input'))).toHaveText('Persistent workspace draft')
 
-    // Chat input should be present
-    await waitFor(element(by.id('chat-input-message')))
+    await element(by.id('mobile-workspace-context-search')).tap()
+
+    await waitFor(element(by.id('search-context-screen')))
       .toBeVisible()
-      .withTimeout(10000)
+      .withTimeout(5000)
+
+    await expect(element(by.id('mobile-hyper-form-input'))).toHaveText('Persistent workspace draft')
   })
 
-  it('sherpa screen shows voice input button', async () => {
-    const email = `mobile-e2e-${Date.now()}-voice@hominem.test`
+  it('switches into chat context and keeps the shared voice affordance visible', async () => {
+    const email = 'mobile-e2e-' + Date.now() + '-chat@hominem.test'
     await signInAndReachFocus(email)
 
-    // Navigate directly to sherpa via header link
-    await waitFor(element(by.text('SHERPA')))
-      .toBeVisible()
-      .withTimeout(5000)
-    await element(by.text('SHERPA')).tap()
+    await element(by.id('mobile-workspace-context-chat')).tap()
 
     await waitFor(element(by.id('sherpa-screen')))
       .toBeVisible()
       .withTimeout(10000)
 
-    await waitFor(element(by.id('chat-voice-input-button')))
-      .toBeVisible()
-      .withTimeout(5000)
-  })
-
-  it('capture bar Save persists a note and stays on focus screen', async () => {
-    const email = `mobile-e2e-${Date.now()}-save@hominem.test`
-    await signInAndReachFocus(email)
-
-    await element(by.id('capture-bar-input')).tap()
-    await element(by.id('capture-bar-input')).typeText('Quick note to save')
-    await dismissKeyboard()
-
-    await waitFor(element(by.id('capture-bar-save')))
-      .toBeVisible()
-      .withTimeout(5000)
-    await element(by.id('capture-bar-save')).tap()
-
-    // Should stay on focus screen after save
-    await waitFor(element(by.id('focus-screen')))
+    await waitFor(element(by.id('mobile-hyper-form-voice')))
       .toBeVisible()
       .withTimeout(5000)
   })

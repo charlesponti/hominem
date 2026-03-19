@@ -182,7 +182,6 @@ See `.github/skills/` for reusable scoped guidance.
 
 _These are things you are not able to do._
 
-- Create sql migration files.
 - Modify database schema using `psql` or other direct calls.
 - Commit code without running `bun run check` first.
 - Use hardcoded credentials or secrets in code.

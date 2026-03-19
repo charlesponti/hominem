@@ -1,6 +1,7 @@
 import { logger } from '@hominem/utils/logger';
 
 import {
+  archiveChatQuery,
   createChatQuery,
   getChatByIdQuery,
   getOrCreateActiveChatQuery,
@@ -110,6 +111,22 @@ export class ChatService {
       logger.error(`Failed to update chat title:: ${error}`);
       if (error instanceof ChatError) throw error;
       throw new ChatError('DATABASE_ERROR', 'Failed to update chat title');
+    }
+  }
+
+  async archiveChat(chatId: string, userId: string): Promise<ChatOutput> {
+    try {
+      const archivedChat = await archiveChatQuery(chatId, userId);
+      if (!archivedChat) {
+        throw new ChatError('CHAT_NOT_FOUND', 'Chat not found');
+      }
+
+      logger.info(`Chat archived: ${chatId}`);
+      return archivedChat;
+    } catch (error) {
+      logger.error(`Failed to archive chat:: ${error}`);
+      if (error instanceof ChatError) throw error;
+      throw new ChatError('DATABASE_ERROR', 'Failed to archive chat');
     }
   }
 

@@ -1,6 +1,7 @@
 import type { ChatMessageOutput, ChatOutput } from '../contracts';
 
 export interface CreateChatParams {
+  archivedAt?: string | null;
   title: string;
   userId: string;
   noteId?: string;

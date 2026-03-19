@@ -1,9 +1,12 @@
+import { useRouter } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
 import TextInput from '~/components/text-input';
+import { useMobileWorkspace } from '~/components/workspace/mobile-workspace-context';
 import { Text, theme } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { MOBILE_PASSKEY_ENABLED } from '~/utils/constants';
@@ -11,6 +14,8 @@ import { useMobilePasskeyAuth } from '~/utils/use-mobile-passkey-auth';
 
 function Account() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const { setHeader } = useMobileWorkspace();
   const { isSignedIn, signOut, currentUser, updateProfile } = useAuth();
   const {
     addPasskey,
@@ -42,6 +47,10 @@ function Account() {
     );
   };
 
+  const onArchivedChatsPress = () => {
+    router.push('/(protected)/(tabs)/account/archived-chats' as RelativePathString);
+  };
+
   const onAddPasskeyPress = async () => {
     const result = await addPasskey();
     if (result.success) {
@@ -69,6 +78,13 @@ function Account() {
       },
     ]);
   };
+
+  useEffect(() => {
+    setHeader({
+      kicker: 'Settings',
+      title: 'Your account',
+    });
+  }, [setHeader]);
 
   useEffect(() => {
     if (currentUser?.name) {
@@ -99,6 +115,15 @@ function Account() {
           ACCOUNT
         </Text>
         <View style={styles.formSection}>
+          <View style={styles.sectionCard}>
+            <Text variant="cardHeader" color="foreground">
+              CHAT HISTORY
+            </Text>
+            <Text color="text-tertiary" style={styles.sectionDescription}>
+              Archived chats live outside inbox so current work stays focused.
+            </Text>
+            <Button title="[ARCHIVED_CHATS]" onPress={onArchivedChatsPress} />
+          </View>
           <View>
             <TextInput
               aria-disabled
@@ -192,6 +217,16 @@ const styles = StyleSheet.create({
   formSection: {
     rowGap: theme.spacing.ml_24,
     marginTop: theme.spacing.l_32,
+  },
+  sectionCard: {
+    borderColor: theme.colors['border-default'],
+    borderRadius: theme.borderRadii.xl_20,
+    borderWidth: 1,
+    padding: theme.spacing.m_16,
+    rowGap: theme.spacing.sm_8,
+  },
+  sectionDescription: {
+    fontSize: 12,
   },
   inputFlex: {
     flex: 1,

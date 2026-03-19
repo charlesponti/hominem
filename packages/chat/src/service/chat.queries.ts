@@ -11,6 +11,7 @@ type ChatRow = Selectable<Database['chat']>;
 
 function toChatOutput(row: ChatRow): ChatOutput {
   return {
+    archivedAt: row.ended_at ?? null,
     id: row.id,
     title: row.title,
     userId: row.user_id,
@@ -32,6 +33,7 @@ export async function createChatQuery(params: CreateChatParams): Promise<ChatOut
       user_id: params.userId,
       note_id: params.noteId ?? null,
       created_at: now,
+      ended_at: null,
       updated_at: now,
     })
     .returningAll()
@@ -80,6 +82,7 @@ export async function getOrCreateActiveChatQuery(
       id: crypto.randomUUID(),
       title: 'New Chat',
       user_id: userId,
+      ended_at: null,
       note_id: null,
     })
     .returningAll()
@@ -136,6 +139,22 @@ export async function updateChatTitleQuery(
     .executeTakeFirst();
 
   return updatedChat ? toChatOutput(updatedChat) : null;
+}
+
+export async function archiveChatQuery(chatId: string, userId: string): Promise<ChatOutput | null> {
+  const timestamp = new Date().toISOString();
+  const archivedChat = await db
+    .updateTable('chat')
+    .set({
+      ended_at: timestamp,
+      updated_at: timestamp,
+    })
+    .where('id', '=', chatId)
+    .where('user_id', '=', userId)
+    .returningAll()
+    .executeTakeFirst();
+
+  return archivedChat ? toChatOutput(archivedChat) : null;
 }
 
 export async function deleteChatQuery(chatId: string, userId: string): Promise<boolean> {

@@ -1,4 +1,5 @@
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
+import { useApiClient } from '@hominem/hono-client/react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
@@ -7,23 +8,31 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { FadeIn } from '~/components/animated/fade-in';
 import { makeStyles, Text, theme } from '~/theme';
-import { LocalStore } from '~/utils/local-store';
 import type { ChatWithActivity } from '~/utils/services/chat/session-state';
-import { toChatsWithActivity } from '~/utils/services/chat/session-state';
+import { getArchivedChatsWithActivity, getInboxChatsWithActivity } from '~/utils/services/chat/session-state';
 
 import AppIcon from '../ui/icon';
 
 export const useResumableSessions = () => {
+  const client = useApiClient();
+
   return useQuery<ChatWithActivity[]>({
     queryKey: ['resumableSessions'],
     queryFn: async () => {
-      const chats = await LocalStore.listChats();
-      const messagesByChatId = Object.fromEntries(
-        await Promise.all(
-          chats.map(async (chat) => [chat.id, await LocalStore.listMessages(chat.id)] as const),
-        ),
-      );
-      return toChatsWithActivity(chats, messagesByChatId);
+      const chats = await client.chats.list({ limit: 50 });
+      return getInboxChatsWithActivity(chats);
+    },
+  });
+};
+
+export const useArchivedSessions = () => {
+  const client = useApiClient();
+
+  return useQuery<ChatWithActivity[]>({
+    queryKey: ['archivedSessions'],
+    queryFn: async () => {
+      const chats = await client.chats.list({ limit: 100 });
+      return getArchivedChatsWithActivity(chats);
     },
   });
 };
@@ -83,7 +92,7 @@ export const SessionList = () => {
   const { data: sessions } = useResumableSessions();
 
   const renderItem = useCallback<ListRenderItem<ChatWithActivity>>(({ item, index }) => {
-    return <SessionCard chat={item} isActive={index === 0 && !item.endedAt} />;
+    return <SessionCard chat={item} isActive={index === 0 && !item.archivedAt} />;
   }, []);
 
   if (!sessions || sessions.length === 0) return null;

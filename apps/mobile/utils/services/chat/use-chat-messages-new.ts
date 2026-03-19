@@ -6,22 +6,30 @@ import { useMutation, useQuery, useQueryClient, type MutationOptions } from '@ta
 import { randomUUID } from 'expo-crypto';
 import { useState } from 'react';
 
-import { LocalStore } from '~/utils/local-store';
-import type { Chat as LocalChat } from '~/utils/local-store/types';
-
 import { log } from '../../logger';
 import {
   createOptimisticMessage,
-  getChatRetryDelayMs,
   reconcileMessagesAfterSend,
   type MessageOutput,
 } from './chat-contract';
-import { selectSherpaChat } from './session-state';
+import { selectSherpaChat, type ChatWithActivity } from './session-state';
+import {
+  createChatInboxRefreshSnapshot,
+  invalidateInboxQueries,
+  upsertInboxSessionActivity,
+} from '../inbox/inbox-refresh';
 
 type SendChatMessageOutput = {
   messages: MessageOutput[];
   function_calls: string[];
 };
+
+function updateSessionCache(
+  previousSessions: ChatWithActivity[] | undefined,
+  snapshot: ReturnType<typeof createChatInboxRefreshSnapshot>,
+) {
+  return upsertInboxSessionActivity(previousSessions ?? [], snapshot)
+}
 
 function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
   if (message.role === 'tool') {
@@ -60,10 +68,6 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
       const mapped = messages.flatMap((message) => {
         const output = toMessageOutput(message);
         return output ? [output] : [];
-      });
-
-      persistMessages(chatId, mapped).catch((err) => {
-        console.warn('[chat] Failed to persist messages:', err);
       });
 
       return mapped;
@@ -109,8 +113,21 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
 
       // Optimistically add user message
       const optimisticMessage = createOptimisticMessage(chatId, text, generateId());
+      const now = new Date().toISOString();
 
       queryClient.setQueryData(['chatMessages', chatId], [...previousMessages, optimisticMessage]);
+      queryClient.setQueryData(['resumableSessions'], (previousSessions: ChatWithActivity[] | undefined) =>
+        updateSessionCache(
+          previousSessions,
+          createChatInboxRefreshSnapshot({
+            chatId,
+            noteId: null,
+            title: null,
+            timestamp: now,
+            userId: '',
+          }),
+        ),
+      );
 
       return { previousMessages };
     },
@@ -133,9 +150,6 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
         },
       );
 
-      // Persist to SQLite
-      await persistMessages(chatId, mappedMessages);
-
       return {
         messages: mappedMessages,
         function_calls: [],
@@ -152,6 +166,7 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
         }
         return reconcileMessagesAfterSend(old, data.messages);
       });
+      void invalidateInboxQueries(queryClient);
     },
 
     // Rollback on error
@@ -199,14 +214,14 @@ export const useStartChat = ({
   _sherpaMessage: string;
   _intentId?: string;
   _seedPrompt?: string;
-} & MutationOptions<LocalChat, Error, void>) => {
+} & MutationOptions<Chat, Error, void>) => {
   const client = useApiClient();
   const queryClient = useQueryClient();
 
-  return useMutation<LocalChat, Error, void>({
+  return useMutation<Chat, Error, void>({
     mutationKey: ['startChat'],
     retry: 3,
-    retryDelay: getChatRetryDelayMs,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
 
     mutationFn: async () => {
       const status = await NetInfo.fetch();
@@ -216,71 +231,73 @@ export const useStartChat = ({
       }
 
       const chat = await startRemoteChat(client, userMessage);
-
-      await LocalStore.createChat({
-        id: chat.id,
-        createdAt: chat.createdAt,
-        endedAt: null,
-        title: chat.title ?? null,
-      });
-
-      if (userMessage) {
-        await persistMessages(chat.id, [
-          {
-            id: generateId(),
-            role: 'user',
-            message: userMessage,
-            created_at: new Date().toISOString(),
-            chat_id: chat.id,
-            profile_id: '',
-            focus_ids: null,
-            focus_items: null,
-            toolCalls: null,
-          },
-        ]);
-      }
-
-      return {
-        id: chat.id,
-        createdAt: chat.createdAt,
-        endedAt: null,
-        title: chat.title,
-      };
+      return chat;
     },
 
-    onSuccess: () => {
-      // Invalidate active chat list
-      queryClient.invalidateQueries({ queryKey: ['activeChatLocal'] });
+    onSuccess: (chat) => {
+      queryClient.setQueryData(['resumableSessions'], (previousSessions: ChatWithActivity[] | undefined) =>
+        updateSessionCache(
+          previousSessions,
+          createChatInboxRefreshSnapshot({
+            chatId: chat.id,
+            noteId: chat.noteId,
+            title: chat.title ?? null,
+            timestamp: chat.createdAt,
+            userId: chat.userId,
+          }),
+        ),
+      );
+      queryClient.invalidateQueries({ queryKey: ['activeChat', chat.id] });
+      void invalidateInboxQueries(queryClient);
     },
     ...props,
   });
 };
 
-export const useEndChat = ({
+export const useArchiveChat = ({
   chatId,
   ...props
-}: { chatId: string } & MutationOptions<LocalChat, Error, void>) => {
+}: { chatId: string } & MutationOptions<Chat, Error, void>) => {
+  const client = useApiClient();
   const queryClient = useQueryClient();
 
-  return useMutation<LocalChat, Error, void>({
-    mutationKey: ['endChat', chatId],
+  return useMutation<Chat, Error, void>({
+    mutationKey: ['archiveChat', chatId],
     mutationFn: async () => {
-      const endedAt = new Date().toISOString();
-      const updatedChat = await LocalStore.endChat(chatId, endedAt);
-      return updatedChat;
+      return client.chats.archive({ chatId });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['activeChatLocal'] });
+    onSuccess: (chat) => {
+      queryClient.setQueryData(['resumableSessions'], (previousSessions: Chat[] | undefined) =>
+        (previousSessions ?? []).map((session) =>
+          session.id === chatId
+            ? {
+                ...session,
+                archivedAt: chat.archivedAt,
+                updatedAt: chat.updatedAt,
+              }
+            : session,
+        ),
+      );
+      queryClient.invalidateQueries({ queryKey: ['activeChat', chatId] });
+      void invalidateInboxQueries(queryClient);
     },
     ...props,
   });
 };
 
 export const useActiveChat = (chatId?: string | null) => {
-  return useQuery<LocalChat | null>({
-    queryKey: ['activeChatLocal', chatId ?? null],
+  const client = useApiClient();
+
+  return useQuery<Chat | null>({
+    queryKey: ['activeChat', chatId ?? null],
     queryFn: async () => {
-      const chats = await LocalStore.listChats();
+      if (chatId) {
+        const chat = await client.chats.get({ chatId });
+        const { messages: _messages, ...chatRecord } = chat;
+        return chatRecord;
+      }
+
+      const chats = await client.chats.list({ limit: 50 });
       return selectSherpaChat(chats, chatId);
     },
   });
@@ -304,22 +321,3 @@ async function startRemoteChat(client: ApiClient, initialMessage: string): Promi
 }
 
 const generateId = () => randomUUID();
-
-const persistMessages = async (chatId: string, messages: MessageOutput[]) => {
-  await Promise.all(
-    messages.map((msg) =>
-      LocalStore.addMessage({
-        id: msg.id ?? generateId(),
-        chatId,
-        role: msg.role,
-        content: msg.message ?? '',
-        reasoning: msg.reasoning ?? null,
-        toolCalls: msg.toolCalls ?? null,
-        isStreaming: msg.isStreaming,
-        focusItemsJson: msg.focus_items ? JSON.stringify(msg.focus_items) : null,
-        focusIdsJson: msg.focus_ids ? JSON.stringify(msg.focus_ids) : null,
-        createdAt: msg.created_at ?? new Date().toISOString(),
-      }),
-    ),
-  );
-};

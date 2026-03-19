@@ -35,11 +35,13 @@ The note detail and edit experience SHALL present note content as the dominant p
 - **AND** the UI does not rely on a detached development-style action toolbar as the primary AI affordance
 
 ### Requirement: Notes chat SHALL render as a dedicated conversation surface
-The Notes `chat/:chatId` route SHALL render as a responsive single-column conversation surface with route-local layout behavior rather than inheriting the default document-page geometry of the shared app shell.
+The Notes `chat/:chatId` route SHALL render on mobile as a dedicated conversation surface inside the shared workspace shell, with the shell-owned HyperForm remaining accessible as the active chat composer.
 
 #### Scenario: Mobile chat session renders
 - **WHEN** an authenticated user opens a Notes chat session on a mobile viewport
-- **THEN** the page renders a dedicated chat surface with a compact local header, a scrollable conversation thread, and a composer that remains accessible above the mobile tab bar
+- **THEN** the page renders a dedicated chat surface with a compact local header and a scrollable conversation thread
+- **AND** the shell-owned HyperForm remains accessible in chat mode above the safe area
+- **AND** the chat surface reads as a focused context of the same shared workspace
 
 #### Scenario: Desktop chat session renders
 - **WHEN** an authenticated user opens a Notes chat session on a larger viewport

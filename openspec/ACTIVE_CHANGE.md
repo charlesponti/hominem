@@ -1,14 +1,12 @@
 # Active OpenSpec Change
 
-active_change: mobile-unified-workspace
+active_change: shared-design-system-governance
 
 artifacts:
-  - openspec/changes/mobile-unified-workspace/proposal.md
-  - openspec/changes/mobile-unified-workspace/design.md
-  - openspec/changes/mobile-unified-workspace/specs/mobile-unified-workspace/spec.md
-  - openspec/changes/mobile-unified-workspace/specs/universal-composer/spec.md
-  - openspec/changes/mobile-unified-workspace/specs/notes-chat-surface/spec.md
-  - openspec/changes/mobile-unified-workspace/tasks.md
+  - openspec/changes/shared-design-system-governance/proposal.md
+  - openspec/changes/shared-design-system-governance/design.md
+  - openspec/changes/shared-design-system-governance/specs/shared-design-system-governance/spec.md
+  - openspec/changes/shared-design-system-governance/tasks.md
 
 ## Enforcement
 

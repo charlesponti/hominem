@@ -16,7 +16,7 @@ DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install build test lint typecheck check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down apple-client-secret auth-test-up auth-test-down auth-test-status storybook storybook-test
+.PHONY: install build test lint typecheck check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-generate-types db-migrate-sync help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down apple-client-secret auth-test-up auth-test-down auth-test-status storybook storybook-test
 
 # Start the mobile dev server (Expo dev client, dev variant)
 dev:
@@ -62,6 +62,14 @@ db-migrate-test:
 
 # Run all local database migrations required for development
 db-migrate-all: db-migrate db-migrate-test
+
+# Refresh generated Kysely database types from the development database schema
+db-generate-types:
+	@echo "Refreshing generated Kysely database types..."
+	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bunx kysely-codegen --out-file ./src/types/database.ts
+
+# Apply local migrations and refresh generated Kysely database types
+db-migrate-sync: db-migrate-all db-generate-types
 
 # Run tests
 test:
@@ -149,10 +157,12 @@ help-db:
 	@echo "  1. Create a new SQL file in packages/db/migrations/"
 	@echo "  2. Use UTC timestamp prefix (YYYYMMDDHHMMSS_description.sql)"
 	@echo "  3. Add -- +goose Up and -- +goose Down blocks"
-	@echo "  4. Run: make db-migrate-all"
+	@echo "  4. Run: make db-migrate-sync"
 	@echo ""
 	@echo "Individual Steps:"
 	@echo "  make db-migrate-all    # Apply migrations to dev + test databases"
+	@echo "  make db-generate-types # Refresh generated Kysely database types"
+	@echo "  make db-migrate-sync   # Apply migrations and refresh generated Kysely types"
 	@echo ""
 	@echo "Safety rules:"
 	@echo "  - Expand -> Backfill -> Contract"
@@ -183,4 +193,3 @@ storybook-test:
 	cd packages/ui && bunx vitest --config vitest.stories.ts
 
 all: install build
-
