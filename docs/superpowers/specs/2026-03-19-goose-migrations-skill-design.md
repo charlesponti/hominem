@@ -7,7 +7,7 @@ Add a repo-local skill that teaches Codex how to author, inspect, validate, and 
 ## Scope
 
 - Create a new `.codex/skills/goose-migrations/` skill.
-- Encode Hominem-specific migration paths, commands, file structure, safety rules, and the canonical `make` target for migration plus Kysely refresh.
+- Encode Hominem-specific migration paths, commands, file structure, safety rules, scaffold helpers, rollback helpers, verify-only helpers, and the canonical `make` targets for migration plus Kysely refresh.
 - Require Kysely generated type refreshes whenever migrations change schema shape.
 - Update `AGENTS.md` so SQL migration authoring is allowed only when work is performed under the `goose-migrations` skill.
 - Keep the skill focused on migration lifecycle work rather than all `packages/db` concerns.
@@ -17,7 +17,7 @@ Add a repo-local skill that teaches Codex how to author, inspect, validate, and 
 The skill is workflow-based and uses progressive disclosure.
 
 - `SKILL.md` contains the trigger, scope, lifecycle steps, authoring rules, validation rules, and scope boundaries.
-- `references/hominem-goose-workflow.md` contains the exact repo commands, SQL template, authoring checklist, Kysely sync requirement, validation flow, and reporting expectations.
+- `references/hominem-goose-workflow.md` contains the exact repo commands, SQL template, authoring checklist, Kysely sync requirement, validation flow, rollback guidance, and reporting expectations.
 - `agents/openai.yaml` provides UI metadata and a default prompt snippet.
 
 This design keeps the trigger narrow while still making the Hominem-specific details easy to load on demand.
@@ -37,6 +37,7 @@ This preserves a strong default prohibition while allowing the agent to perform 
 - Run the skill creator validator against the new skill directory.
 - Verify the documented commands match `Makefile` and `packages/db/package.json`.
 - Confirm the new `AGENTS.md` wording no longer contradicts the migration workflow.
+- Verify the root `check` target enforces Kysely type freshness.
 
 ## Risks
 

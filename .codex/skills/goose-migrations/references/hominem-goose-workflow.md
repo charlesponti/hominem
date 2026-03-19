@@ -7,8 +7,14 @@
 - `make db-migrate` applies migrations to the local development database.
 - `make db-migrate-test` applies migrations to the local test database.
 - `make db-migrate-all` applies migrations to both local databases.
+- `make db-rollback` rolls back the latest migration on the local development database.
+- `make db-rollback-test` rolls back the latest migration on the local test database.
+- `make db-rollback-all` rolls back the latest migration on both local databases.
 - `make db-generate-types` refreshes `packages/db/src/types/database.ts` from the development database schema.
+- `make db-verify-types` verifies `packages/db/src/types/database.ts` matches the development database schema.
 - `make db-migrate-sync` is the canonical local workflow: apply dev and test migrations, then refresh generated Kysely types.
+- `make db-rollback-sync` is the canonical local rollback workflow: roll back dev and test, then refresh generated Kysely types.
+- `make db-new-migration NAME=add_example_table` scaffolds a timestamped migration file with Goose blocks.
 - `DATABASE_URL=... bun run --filter @hominem/db goose:status` checks status for a specific database.
 - `DATABASE_URL=... bun run --filter @hominem/db goose:up` applies pending migrations for a specific database.
 - `DATABASE_URL=... bun run --filter @hominem/db goose:down` rolls back the latest migration for a specific database.
@@ -35,7 +41,7 @@ Use `-- +goose StatementBegin` / `-- +goose StatementEnd` around multi-statement
 ## Authoring checklist
 
 1. Inspect existing migrations to avoid duplicating tables, indexes, or constraints.
-2. Name the new file `YYYYMMDDHHMMSS_description.sql`.
+2. Prefer `make db-new-migration NAME=descriptive_change` to scaffold the file and keep naming consistent.
 3. Write a focused `Up` block for one schema change or one tightly related set of changes.
 4. Write a `Down` block that safely reverses the change when practical.
 5. Prefer additive changes first, then backfill, then contract in a later migration.
@@ -64,8 +70,9 @@ Use `-- +goose StatementBegin` / `-- +goose StatementEnd` around multi-statement
 Run the smallest set that proves the migration is correct:
 
 1. `make db-migrate-sync`
-2. `DATABASE_URL=... bun run --filter @hominem/db goose:status` when you need explicit per-database verification
-3. `bun run check` when downstream packages, compiled types, or repo-wide validation may be affected
+2. `make db-verify-types`
+3. `DATABASE_URL=... bun run --filter @hominem/db goose:status` when you need explicit per-database verification
+4. `bun run check` when downstream packages, compiled types, or repo-wide validation may be affected
 
 If local infra is not running, bring it up through the repo's normal Docker or Make targets before applying migrations.
 
@@ -75,6 +82,7 @@ Always tell the user:
 
 - which migration file was added or updated
 - whether `packages/db/src/types/database.ts` was refreshed
+- whether `make db-verify-types` passed
 - which commands ran
 - whether each command passed
 - any irreversible or rollout-sensitive aspects of the change

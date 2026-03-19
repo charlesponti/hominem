@@ -13,16 +13,19 @@ Read `references/hominem-goose-workflow.md` before editing or running migrations
 
 1. Confirm the task actually requires a database migration rather than an app-layer change.
 2. Inspect the current migration set in `packages/db/migrations/` and any active OpenSpec change that depends on the schema change.
-3. Author a new timestamped SQL file only in `packages/db/migrations/`.
+3. Scaffold new migrations with `make db-new-migration NAME=descriptive_change`, then edit only the generated file in `packages/db/migrations/`.
 4. Write both `-- +goose Up` and `-- +goose Down` blocks.
 5. Keep the migration additive by default and follow expand -> backfill -> contract.
 6. Refresh the generated Kysely types whenever the migration changes the schema shape.
 7. Run `make db-migrate-sync` from the monorepo root for the canonical local apply-and-refresh workflow.
-8. Report what changed, what ran, and any follow-up rollout risks.
+8. Use `make db-verify-types` and `bun run check` to prove generated types and the repo still agree with the schema.
+9. Use `make db-rollback-sync` when you intentionally roll back a local migration and need Kysely types regenerated to match.
+10. Report what changed, what ran, and any follow-up rollout risks.
 
 ## Authoring Rules
 
 - Create files named `YYYYMMDDHHMMSS_description.sql`.
+- Prefer `make db-new-migration NAME=...` over creating files by hand.
 - Use SQL files only. Do not generate Drizzle migrations or edit schema through direct database commands.
 - Keep `Up` and `Down` blocks explicit and reversible when feasible.
 - Avoid destructive operations such as `DROP COLUMN`, `DROP TABLE`, and incompatible type rewrites in normal migrations.
@@ -34,8 +37,9 @@ Read `references/hominem-goose-workflow.md` before editing or running migrations
 - Run migration commands from the monorepo root unless the referenced workflow explicitly requires otherwise.
 - Validate both development and test databases when the change should apply to local environments.
 - Use `make db-migrate-sync` as the default command after schema-changing migrations so `packages/db/src/types/database.ts` stays aligned with the live schema.
+- Use `make db-verify-types` before finishing migration work, especially before commits or review handoff.
 - Use the repo's migration linting and safety checks from the root `Makefile`.
-- Run `bun run check` when the schema change can affect generated types, downstream packages, or repo-wide integrity.
+- Run `bun run check` when the schema change can affect generated types, downstream packages, or repo-wide integrity. This repo's `check` target also verifies generated Kysely types.
 - Never claim a migration is complete without telling the user exactly which commands ran and whether they passed.
 
 ## Scope Boundary

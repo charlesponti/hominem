@@ -16,7 +16,7 @@ DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install build test lint typecheck check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-generate-types db-migrate-sync help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down apple-client-secret auth-test-up auth-test-down auth-test-status storybook storybook-test
+.PHONY: install build test lint typecheck check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down apple-client-secret auth-test-up auth-test-down auth-test-status storybook storybook-test
 
 # Start the mobile dev server (Expo dev client, dev variant)
 dev:
@@ -63,13 +63,57 @@ db-migrate-test:
 # Run all local database migrations required for development
 db-migrate-all: db-migrate db-migrate-test
 
+# Roll back the latest migration on the local development database
+db-rollback:
+	@echo "Waiting for dev database to be ready..."
+	@until docker exec hominem-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
+	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bun run goose:down
+
+# Roll back the latest migration on the local test database
+db-rollback-test:
+	@echo "Waiting for test database to be ready..."
+	@until docker exec hominem-test-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
+	@cd packages/db && DATABASE_URL="$(TEST_DATABASE_URL)" bun run goose:down
+
+# Roll back the latest migration on both local databases
+db-rollback-all: db-rollback db-rollback-test
+
 # Refresh generated Kysely database types from the development database schema
 db-generate-types:
 	@echo "Refreshing generated Kysely database types..."
 	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bunx kysely-codegen --out-file ./src/types/database.ts
 
+# Verify generated Kysely database types are up to date
+db-verify-types:
+	@echo "Verifying generated Kysely database types..."
+	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bunx kysely-codegen --verify --out-file ./src/types/database.ts
+
 # Apply local migrations and refresh generated Kysely database types
 db-migrate-sync: db-migrate-all db-generate-types
+
+# Roll back local migrations and refresh generated Kysely database types
+db-rollback-sync: db-rollback-all db-generate-types
+
+# Create a new Goose migration file with the standard template
+db-new-migration:
+	@if [ -z "$(NAME)" ]; then \
+		echo "ERROR: NAME is required"; \
+		echo "Usage: make db-new-migration NAME=add_users_table"; \
+		exit 1; \
+	fi
+	@name="$$(printf '%s' "$(NAME)" | tr '[:upper:]' '[:lower:]' | tr ' -' '__' | tr -cd 'a-z0-9_')"; \
+	if [ -z "$$name" ]; then \
+		echo "ERROR: NAME must contain letters or numbers"; \
+		exit 1; \
+	fi; \
+	timestamp="$$(date -u +"%Y%m%d%H%M%S")"; \
+	file="packages/db/migrations/$${timestamp}_$${name}.sql"; \
+	if [ -e "$$file" ]; then \
+		echo "ERROR: Migration already exists: $$file"; \
+		exit 1; \
+	fi; \
+	printf '%s\n' '-- +goose Up' '-- +goose StatementBegin' '-- TODO: add migration SQL here' '-- +goose StatementEnd' '' '-- +goose Down' '-- TODO: add rollback SQL here' > "$$file"; \
+	echo "Created $$file"
 
 # Run tests
 test:
@@ -89,8 +133,8 @@ lint:
 typecheck:
 	NODE_OPTIONS="--max-old-space-size=4096" bun turbo run typecheck --concurrency=4 --continue --no-cache
 
-# Full pre-merge check: lint + typecheck
-check: lint typecheck
+# Full pre-merge check: lint + generated DB types + typecheck
+check: lint db-verify-types typecheck
 
 # Clean build artifacts and dependencies
 clean:
@@ -154,15 +198,19 @@ help-db:
 	@echo "======================================"
 	@echo ""
 	@echo "To add a schema change:"
-	@echo "  1. Create a new SQL file in packages/db/migrations/"
+	@echo "  1. Run: make db-new-migration NAME=add_example_table"
 	@echo "  2. Use UTC timestamp prefix (YYYYMMDDHHMMSS_description.sql)"
-	@echo "  3. Add -- +goose Up and -- +goose Down blocks"
+	@echo "  3. Fill in the -- +goose Up and -- +goose Down blocks"
 	@echo "  4. Run: make db-migrate-sync"
 	@echo ""
 	@echo "Individual Steps:"
 	@echo "  make db-migrate-all    # Apply migrations to dev + test databases"
+	@echo "  make db-rollback-all   # Roll back the latest migration on dev + test databases"
 	@echo "  make db-generate-types # Refresh generated Kysely database types"
+	@echo "  make db-verify-types   # Verify generated Kysely database types are current"
 	@echo "  make db-migrate-sync   # Apply migrations and refresh generated Kysely types"
+	@echo "  make db-rollback-sync  # Roll back migrations and refresh generated Kysely types"
+	@echo "  make db-new-migration NAME=add_example_table # Scaffold a migration file"
 	@echo ""
 	@echo "Safety rules:"
 	@echo "  - Expand -> Backfill -> Contract"
