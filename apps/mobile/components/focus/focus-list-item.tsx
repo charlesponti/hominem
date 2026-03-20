@@ -5,7 +5,6 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Reanimated, {
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -233,11 +232,11 @@ export const FocusListItem = ({
       if (translateX.value > SWIPE_THRESHOLD) {
         isMutating.value = true;
         translateX.value = withTiming(0);
-        runOnJS(completeItem.mutate)(item.id);
+        completeItem.mutate(item.id);
       } else if (translateX.value < -SWIPE_THRESHOLD) {
         isMutating.value = true;
         translateX.value = withTiming(-itemHeight.value, {}, () => {
-          runOnJS(deleteFocusItem.mutate)(item.id);
+          deleteFocusItem.mutate(item.id);
         });
       } else {
         translateX.value = withTiming(0, { duration: VOID_MOTION_DURATION_STANDARD });

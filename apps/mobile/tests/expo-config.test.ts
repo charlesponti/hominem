@@ -52,7 +52,7 @@ describe('expo config helpers', () => {
 
     process.env.APP_VARIANT = 'dev'
 
-    const config = appConfig({ config: {} as never })
+    const config = appConfig({ config: {}, packageJsonPath: '', projectRoot: '', staticConfigPath: '' })
 
     expect(config.ios?.infoPlist).toMatchObject({
       ITSAppUsesNonExemptEncryption: false,
