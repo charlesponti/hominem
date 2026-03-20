@@ -28,7 +28,7 @@
     "build": "turbo run build",
     "check": "make check",
 "dev": "turbo dev",
-    "dev:web": "turbo dev --filter @hominem/api --filter @hominem/notes",
+    "dev:web": "turbo dev --filter @hominem/api --filter @hominem/web",
     "doctor": "bash scripts/dev-doctor.sh",
     "doctor:react": "bunx react-doctor@latest . --yes --offline --verbose",
     "format": "turbo run format",

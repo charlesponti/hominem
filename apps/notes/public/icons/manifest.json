@@ -1,12 +1,12 @@
 {
-  "name": "My Website",
-  "short_name": "My Website",
-  "description": "My Website - Web Application",
+  "name": "Hakumi",
+  "short_name": "Hakumi",
+  "description": "Hakumi brings notes, voice capture, and AI assistance into one workspace.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "theme_color": "#000000",
   "icons": [
     {
       "src": "./icon-192x192.png",

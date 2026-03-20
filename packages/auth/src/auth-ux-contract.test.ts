@@ -86,6 +86,10 @@ describe('AppAuthConfig — per-app destination policy', () => {
       expect(NOTES_AUTH_CONFIG.appName.length).toBeGreaterThan(0)
     })
 
+    it('uses the Hakumi brand name', () => {
+      expect(NOTES_AUTH_CONFIG.appName).toBe('Hakumi')
+    })
+
     it('has a valid web post-auth destination', () => {
       expect(NOTES_AUTH_CONFIG.defaultPostAuthDestination).toMatch(/^\//)
     })
@@ -105,6 +109,10 @@ describe('AppAuthConfig — per-app destination policy', () => {
   describe('SHERPA_AUTH_CONFIG', () => {
     it('has a non-empty appName', () => {
       expect(SHERPA_AUTH_CONFIG.appName.length).toBeGreaterThan(0)
+    })
+
+    it('uses the Hakumi brand name', () => {
+      expect(SHERPA_AUTH_CONFIG.appName).toBe('Hakumi')
     })
 
     it('has a valid mobile post-auth destination', () => {

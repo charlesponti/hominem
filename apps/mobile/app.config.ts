@@ -105,6 +105,7 @@ export default ({ config }: ConfigContext) => {
     'expo-asset',
     'expo-audio',
     'expo-sqlite',
+    'expo-background-task',
     [
       'expo-notifications',
       {
@@ -195,7 +196,6 @@ export default ({ config }: ConfigContext) => {
       supportsTablet: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        UIBackgroundModes: ['fetch'],
       },
     },
     android: {

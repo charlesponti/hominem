@@ -7,6 +7,7 @@ import type { LoaderFunctionArgs } from 'react-router';
 import { useSearchParams } from 'react-router';
 
 import { getServerSession } from '~/lib/auth.server';
+import { WEB_BRAND } from '~/lib/brand';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { user, headers } = await getServerSession(request);
@@ -24,13 +25,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export function meta() {
   return [
-    { title: 'Animus — Notes + AI' },
+    { title: WEB_BRAND.marketing.title },
     {
       name: 'description',
-      content:
-        'Think in notes. Move in action. Animus turns your ideas into organized knowledge with AI that helps you make sense of it all.',
+      content: WEB_BRAND.meta.description,
     },
-  ];
+  ]
 }
 
 export default function HomePage() {
@@ -40,15 +40,15 @@ export default function HomePage() {
 
   return (
     <LandingPage
-      kicker="Notes + AI"
+      kicker={WEB_BRAND.marketing.kicker}
       headline={
         <>
           Think in notes.{'\n'}
           Move in action.
         </>
       }
-      sub="Animus turns scattered thoughts into organized knowledge — with AI that helps you find connections you'd have missed."
-      ctaPrimary={{ label: 'Open Animus', href: authHref }}
+      sub="Hakumi turns scattered thoughts into organized knowledge with AI that helps you find connections you'd have missed."
+      ctaPrimary={{ label: WEB_BRAND.marketing.ctaLabel, href: authHref }}
       ctaSecondary={{ label: 'Sign in', href: authHref }}
       problem="You have the idea in the shower. You voice-note it on the walk. You write half of it down somewhere. Three weeks later you can't find it — or worse, you have the same idea again and don't know you already had it."
       features={[
@@ -68,7 +68,7 @@ export default function HomePage() {
           icon: Mic,
           title: 'Voice capture',
           description:
-            "Record a thought on the go. Animus transcribes it and surfaces the key ideas when you're back at your desk.",
+            "Record a thought on the go. Hakumi transcribes it and surfaces the key ideas when you're back at your desk.",
         },
         {
           icon: Tag,
@@ -86,7 +86,7 @@ export default function HomePage() {
         {
           label: 'Let AI make connections',
           description:
-            'Animus surfaces related notes and extracts key ideas. Your past thinking becomes a resource instead of a graveyard.',
+            'Hakumi surfaces related notes and extracts key ideas. Your past thinking becomes a resource instead of a graveyard.',
         },
         {
           label: 'Ask your notes questions',

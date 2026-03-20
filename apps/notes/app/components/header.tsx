@@ -2,8 +2,7 @@
 
 import { Header, type NavItem } from '@hominem/ui';
 import { FileText, Home } from 'lucide-react';
-
-const APP_NAME = 'Animus';
+import { WEB_BRAND } from '~/lib/brand';
 
 const navItems: NavItem[] = [
   { title: 'Home', url: '/home', icon: Home },
@@ -13,8 +12,8 @@ const navItems: NavItem[] = [
 export default function NotesHeader() {
   return (
     <Header
-      brandName={APP_NAME}
-      brandIcon={<img src="/logo.png" alt={APP_NAME} className="size-6 rounded-sm object-cover" />}
+      brandName={WEB_BRAND.appName}
+      brandIcon={<img src={WEB_BRAND.logoPath} alt={WEB_BRAND.appName} className="size-6 rounded-sm object-cover" />}
       navItems={navItems}
     />
   );

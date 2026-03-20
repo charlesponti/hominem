@@ -4,9 +4,8 @@ import type { ChatsListOutput } from '@hominem/hono-rpc/types/chat.types';
 import { AppSidebar, type RecentItem } from '@hominem/ui';
 import { FileText, Home } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { WEB_BRAND } from '~/lib/brand';
 import { useDeleteChat } from '../hooks/use-chats';
-
-const APP_NAME = 'Animus';
 
 const navItems = [
   { title: 'Home', url: '/home', icon: Home },
@@ -42,8 +41,8 @@ export default function NotesSidebar() {
 
   return (
     <AppSidebar
-      brandName={APP_NAME}
-      brandIcon={<img src="/logo.png" alt={APP_NAME} className="size-6 rounded-sm object-cover" />}
+      brandName={WEB_BRAND.appName}
+      brandIcon={<img src={WEB_BRAND.logoPath} alt={WEB_BRAND.appName} className="size-6 rounded-sm object-cover" />}
       navItems={navItems}
       recentItems={recentItems}
       onNewChat={handleNewChat}

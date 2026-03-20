@@ -118,7 +118,7 @@ export function NotesBrowseScreen({
                 <p className="body-2 mt-2 max-w-lg text-text-secondary">
                   {hasAnything
                     ? 'Capture something above and it will join the same stream as the rest of your notes.'
-                    : 'Write one raw thought, question, or plan. Animus should feel like an empty page with memory, not a dashboard waiting for setup.'}
+                    : 'Write one raw thought, question, or plan. Hakumi should feel like an empty page with memory, not a dashboard waiting for setup.'}
                 </p>
               </div>
             )}

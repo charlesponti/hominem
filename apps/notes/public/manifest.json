@@ -1,7 +1,7 @@
 {
-  "name": "Notes",
-  "short_name": "Notes",
-  "description": "Notes - Fast personal note-taking app",
+  "name": "Hakumi",
+  "short_name": "Hakumi",
+  "description": "Hakumi brings notes, voice capture, and AI assistance into one workspace.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

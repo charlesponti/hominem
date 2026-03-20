@@ -49,7 +49,7 @@
     "expo-application": "~55.0.10",
     "expo-asset": "~55.0.10",
     "expo-audio": "~55.0.9",
-    "expo-background-fetch": "^55.0.10",
+    "expo-background-task": "~55.0.10",
     "expo-build-properties": "~55.0.10",
     "expo-calendar": "^55.0.10",
     "expo-camera": "^55.0.10",

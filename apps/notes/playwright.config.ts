@@ -34,7 +34,7 @@ export default defineConfig({
       },
     },
     {
-      command: 'bun dev --filter @hominem/notes',
+      command: 'bun dev --filter @hominem/web',
       cwd: workspaceRoot,
       url: 'http://localhost:4445/',
       reuseExistingServer,

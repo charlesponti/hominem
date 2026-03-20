@@ -14,6 +14,7 @@ import {
 } from 'react-router';
 
 import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags';
+import { WEB_BRAND } from '~/lib/brand';
 
 import type { Route } from './+types/root';
 
@@ -72,12 +73,12 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export const meta: Route.MetaFunction = () => {
   return [
-    { title: 'Animus' },
-    { name: 'description', content: 'Organize and manage your personal notes and knowledge' },
-  ];
-};
+    { title: WEB_BRAND.meta.title },
+    { name: 'description', content: WEB_BRAND.meta.description },
+  ]
+}
 
-export const links: Route.LinksFunction = () => [...COMMON_FONT_LINKS, ...NOTES_ICON_LINKS];
+export const links: Route.LinksFunction = () => [...COMMON_FONT_LINKS, ...NOTES_ICON_LINKS]
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -129,7 +130,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
     >
       <HonoProvider baseUrl={apiBaseUrl}>
         <FeatureFlagsProvider>
-          <UpdateGuard logo="/logo.png" appName="Notes">
+          <UpdateGuard logo={WEB_BRAND.logoPath} appName={WEB_BRAND.appName}>
             <Outlet />
           </UpdateGuard>
         </FeatureFlagsProvider>

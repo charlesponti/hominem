@@ -5,6 +5,7 @@ import type { ConfigEnv, PluginOption, UserConfig } from 'vite';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { WEB_BRAND } from './app/lib/brand';
 
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const isProd = mode === 'production';
@@ -22,9 +23,9 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           enabled: false,
         },
         manifest: {
-          name: 'Notes',
-          short_name: 'Notes',
-          description: 'Personal note-taking app',
+          name: WEB_BRAND.manifest.name,
+          short_name: WEB_BRAND.manifest.shortName,
+          description: WEB_BRAND.manifest.description,
           theme_color: '#000000',
           background_color: '#ffffff',
           display: 'standalone',
