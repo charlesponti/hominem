@@ -21,7 +21,6 @@
  * as on mobile. Enter commits the primary action.
  */
 
-import { useGSAP } from '@gsap/react';
 import { useHonoMutation } from '@hominem/hono-client/react';
 import {
   ArrowUp,
@@ -43,12 +42,10 @@ import { useCreateNote, useUpdateNote } from '~/hooks/use-notes';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
 import { cn } from '~/lib/utils';
 
-import { playEntry, playSubmitPulse } from './animations';
 import { useComposer } from './composer-provider';
 import { deriveComposerPresentation } from './composer-presentation';
 import { useComposerMode } from './use-composer-mode';
 import { NotePicker } from './note-picker';
-import { useSwipeGesture } from './mobile-gestures';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -120,17 +117,14 @@ function PrimaryBtn({
   label,
   onClick,
   disabled,
-  btnRef,
 }: {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
   disabled?: boolean;
-  btnRef?: React.RefObject<HTMLButtonElement | null>;
 }) {
   return (
     <button
-      ref={btnRef}
       type="button"
       aria-label={label}
       data-testid="composer-primary"
@@ -191,7 +185,6 @@ export function Composer() {
     clearAttachedNotes,
     detachNote,
     containerRef: cardRef,
-    submitBtnRef,
     inputRef,
   } = useComposer();
 
@@ -199,7 +192,6 @@ export function Composer() {
   const [showNotePicker, setShowNotePicker] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const presentation = deriveComposerPresentation(mode, isRecording);
   if (presentation.posture === 'hidden') return null;
@@ -222,18 +214,6 @@ export function Composer() {
     },
   );
 
-  const { onTouchStart, onTouchMove, onTouchEnd } = useSwipeGesture({
-    containerRef: cardRef,
-    isExpanded,
-    setIsExpanded,
-  });
-
-  // ─── GSAP entry ─────────────────────────────────────────────────────────
-
-  useGSAP(() => {
-    if (cardRef.current) playEntry(cardRef.current);
-  }, { scope: cardRef });
-
   // ─── Note context injection ──────────────────────────────────────────────
 
   function buildNoteContext(): string {
@@ -243,18 +223,6 @@ export function Composer() {
     );
     return `<context>\n${sections.join('\n\n---\n\n')}\n</context>\n\n`;
   }
-
-  // ─── Submit pulse ────────────────────────────────────────────────────────
-
-  const doSubmitPulse = useCallback(
-    (then: () => void) => {
-      const btn = submitBtnRef.current;
-      const inp = inputRef.current;
-      if (btn && inp) playSubmitPulse(btn, inp, then);
-      else then();
-    },
-    [submitBtnRef, inputRef],
-  );
 
   // ─── Primary action ──────────────────────────────────────────────────────
   // capture  → save as note
@@ -266,46 +234,32 @@ export function Composer() {
     if (!text || isSubmitting) return;
     setIsSubmitting(true);
 
-    if (presentation.posture === 'reply' && chatId) {
-      const prefix = buildNoteContext();
-      const fullMessage = prefix ? `${prefix}${text}` : text;
-      doSubmitPulse(async () => {
-        try {
-          await sendMessage.mutateAsync({ message: fullMessage, chatId });
-          clearDraft();
-          clearAttachedNotes();
-        } finally {
-          setIsSubmitting(false);
-        }
-      });
-      return;
-    }
-
-    if (presentation.posture === 'draft' && noteId) {
-      doSubmitPulse(async () => {
-        try {
-          await updateNote.mutateAsync({ id: noteId, content: text });
-          clearDraft();
-        } finally {
-          setIsSubmitting(false);
-        }
-      });
-      return;
-    }
-
-    // capture → save as note
-    doSubmitPulse(async () => {
-      try {
-        const title = text.slice(0, 64);
-        await createNote.mutateAsync({ content: text, ...(title ? { title } : {}) });
+    try {
+      if (presentation.posture === 'reply' && chatId) {
+        const prefix = buildNoteContext();
+        const fullMessage = prefix ? `${prefix}${text}` : text;
+        await sendMessage.mutateAsync({ message: fullMessage, chatId });
         clearDraft();
-      } finally {
-        setIsSubmitting(false);
+        clearAttachedNotes();
+        return;
       }
-    });
+
+      if (presentation.posture === 'draft' && noteId) {
+        await updateNote.mutateAsync({ id: noteId, content: text });
+        clearDraft();
+        return;
+      }
+
+      // capture → save as note
+      const title = text.slice(0, 64);
+      await createNote.mutateAsync({ content: text, ...(title ? { title } : {}) });
+      clearDraft();
+    } finally {
+      setIsSubmitting(false);
+    }
   }, [
     draftText, isSubmitting, presentation.posture, chatId, noteId,
-    doSubmitPulse, sendMessage, updateNote, createNote, clearDraft, clearAttachedNotes,
+    sendMessage, updateNote, createNote, clearDraft, clearAttachedNotes,
     attachedNotes,
   ]);
 
@@ -319,54 +273,39 @@ export function Composer() {
     if (!text || isSubmitting) return;
     setIsSubmitting(true);
 
-    if (presentation.posture === 'reply') {
-      // Save as note without sending to chat
-      doSubmitPulse(async () => {
-        try {
-          const title = text.slice(0, 64);
-          await createNote.mutateAsync({ content: text, ...(title ? { title } : {}) });
-          clearDraft();
-        } finally {
-          setIsSubmitting(false);
-        }
-      });
-      return;
-    }
+    try {
+      if (presentation.posture === 'reply') {
+        const title = text.slice(0, 64);
+        await createNote.mutateAsync({ content: text, ...(title ? { title } : {}) });
+        clearDraft();
+        return;
+      }
 
-    if (presentation.posture === 'draft' && noteId) {
-      // Discuss note — start chat with note as context
-      const contextMsg = noteTitle ? `[Regarding note: "${noteTitle}"]\n\n${text}` : text;
-      doSubmitPulse(async () => {
-        try {
-          const chat = await createChatMutation.mutateAsync({
-            seedText: contextMsg,
-            title: text.slice(0, 64) || 'Note chat',
-          });
-          clearDraft();
-          void navigate(`/chat/${chat.id}`);
-        } finally {
-          setIsSubmitting(false);
-        }
-      });
-      return;
-    }
-
-    // capture → ask assistant (start a new chat)
-    doSubmitPulse(async () => {
-      try {
+      if (presentation.posture === 'draft' && noteId) {
+        // Discuss note — start chat with note as context
+        const contextMsg = noteTitle ? `[Regarding note: "${noteTitle}"]\n\n${text}` : text;
         const chat = await createChatMutation.mutateAsync({
-          seedText: text,
-          title: text.slice(0, 64) || 'New session',
+          seedText: contextMsg,
+          title: text.slice(0, 64) || 'Note chat',
         });
         clearDraft();
         void navigate(`/chat/${chat.id}`);
-      } finally {
-        setIsSubmitting(false);
+        return;
       }
-    });
+
+      // capture → ask assistant (start a new chat)
+      const chat = await createChatMutation.mutateAsync({
+        seedText: text,
+        title: text.slice(0, 64) || 'New session',
+      });
+      clearDraft();
+      void navigate(`/chat/${chat.id}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   }, [
     draftText, isSubmitting, presentation.posture, noteId, noteTitle,
-    doSubmitPulse, createNote, createChatMutation, clearDraft, navigate,
+    createNote, createChatMutation, clearDraft, navigate,
   ]);
 
   const handleKeyDown = useCallback(
@@ -408,16 +347,12 @@ export function Composer() {
             className={cn(
               'pointer-events-auto w-full',
               'flex flex-col gap-3',
-              'rounded-[30px]',
+              'rounded-3xl',
               'border border-border bg-background',
-              'overflow-hidden',
-              'px-3 pb-2 pt-3',
-              '[box-shadow:0_-10px_30px_rgba(15,23,42,0.08)]',
-              isDraftMode && 'min-h-[160px]',
+              'px-4 pb-3 pt-4',
+              '[box-shadow:0_-8px_24px_rgba(15,23,42,0.06)]',
+              isDraftMode && 'min-h-40',
             )}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
           >
             {/* Textarea */}
             <textarea
@@ -427,18 +362,15 @@ export function Composer() {
               onChange={(e) => setDraftText(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={presentation.placeholder}
-              rows={1}
               disabled={isSubmitting}
               className={cn(
                 'w-full resize-none bg-transparent',
-                'text-[16px] leading-relaxed text-foreground',
+                'text-base leading-normal text-foreground',
                 'placeholder:text-text-tertiary',
                 'border-0 p-0 outline-none focus:outline-none',
-                // capture / reply: compact
-                !isDraftMode && 'min-h-[38px]',
-                // draft: expanded textarea matching mobile inputDraft
-                isDraftMode && 'min-h-[104px] text-top',
-                'max-h-48 overflow-y-auto field-sizing-content',
+                'field-sizing-content overflow-y-auto',
+                !isDraftMode && 'max-h-48 min-h-6',
+                isDraftMode && 'min-h-24 max-h-64',
               )}
               aria-label="Compose message or note"
             />
@@ -446,8 +378,8 @@ export function Composer() {
             {/* Attached note chips (chat mode — Phase 2) */}
             <AttachedNotes notes={attachedNotes} onRemove={detachNote} />
 
-            {/* Footer — identical structure to MobileComposerFooter */}
-            <div className="flex items-center justify-between">
+            {/* Footer */}
+            <div className="mt-auto flex shrink-0 items-center justify-between">
               {/* Left: tool buttons */}
               <div className="flex items-center gap-2">
                 {presentation.showsNotePicker ? (
@@ -504,7 +436,6 @@ export function Composer() {
                   disabled={!hasContent || isSubmitting}
                 />
                 <PrimaryBtn
-                  btnRef={submitBtnRef}
                   icon={
                     presentation.primaryActionIcon === 'circle-plus'
                       ? <CirclePlus className="size-[18px]" />
