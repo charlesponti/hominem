@@ -69,14 +69,11 @@ describe('auth email otp contract', () => {
     process.env.AUTH_TEST_OTP_ENABLED = 'true';
     process.env.AUTH_EMAIL_OTP_EXPIRES_SECONDS = '300';
 
-    const spy = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
-    vi.doMock('@hominem/utils/logger', async (importOriginal) => {
-      const actual = await importOriginal<typeof import('@hominem/utils/logger')>();
-      return {
-        ...actual,
-        logger: spy,
-      };
-    });
+    // Import logger first so the server shares the same instance when it loads.
+    // Using vi.doMock with importOriginal causes a deadlock: the factory calls
+    // importOriginal while the module is already mid-load in the pipeline.
+    const { logger } = await import('@hominem/utils/logger');
+    const infoSpy = vi.spyOn(logger, 'info');
 
     const createServer = await importServer();
     const app = createServer();
@@ -85,12 +82,12 @@ describe('auth email otp contract', () => {
     const okResponse = await requestOtp(app, email);
     expect(okResponse.status).toBe(200);
 
-    // import the mocked logger and assert it received a call
-    expect(spy.info).toHaveBeenCalledWith(
+    expect(infoSpy).toHaveBeenCalledWith(
       '[auth:email-otp] generated OTP',
       expect.objectContaining({ email, otp: expect.any(String), type: 'sign-in' }),
     );
 
+    infoSpy.mockRestore();
     // restore test environment for subsequent beforeEach hooks
     process.env.NODE_ENV = 'test';
   }, 10000);
