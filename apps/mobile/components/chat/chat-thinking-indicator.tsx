@@ -11,14 +11,14 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { makeStyles, Text } from '~/theme';
-import { VOID_EASING_STANDARD } from '~/theme/motion';
+import { VOID_EASING_STANDARD, VOID_MOTION_ENTER, VOID_MOTION_EXIT, VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 
 // Stagger timing for thinking dots — 3-dot bounce cadence
-const DOT_UP_DURATION = 400;
-const DOT_DOWN_DURATION = 230;
-const DOT_RETURN_DURATION = 170;
-const CYCLE_IDLE = 800; // idle period before repeating
-const STAGGER_OFFSET = 120; // ms between each dot
+const DOT_UP_DURATION = VOID_MOTION_ENTER;
+const DOT_DOWN_DURATION = VOID_MOTION_EXIT;
+const DOT_RETURN_DURATION = VOID_MOTION_DURATION_STANDARD;
+const CYCLE_IDLE = VOID_MOTION_DURATION_STANDARD * 6; // idle period before repeating
+const STAGGER_OFFSET = VOID_MOTION_ENTER; // ms between each dot
 
 function useBounceDot(delayMs: number) {
   const translateY = useSharedValue(0);

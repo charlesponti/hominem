@@ -34,9 +34,25 @@
       "types": "./src/logger.ts",
       "default": "./src/logger.ts"
     },
+    "./types": {
+      "types": "./src/types.ts",
+      "default": "./src/types.ts"
+    },
     "./env": {
       "types": "./src/env.ts",
       "default": "./src/env.ts"
+    },
+    "./ai-model": {
+      "types": "./src/ai-model.ts",
+      "default": "./src/ai-model.ts"
+    },
+    "./voice-transcription": {
+      "types": "./src/voice-transcription.service.ts",
+      "default": "./src/voice-transcription.service.ts"
+    },
+    "./voice-speech": {
+      "types": "./src/voice-speech.service.ts",
+      "default": "./src/voice-speech.service.ts"
     },
     "./queues": {
       "types": "./src/queues.ts",

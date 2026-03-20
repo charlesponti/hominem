@@ -3,12 +3,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { HominemUser } from '@hominem/auth/server'
 import type { AppContext } from '../src/middleware/auth'
-import { errorMiddleware } from '../src/middleware/error'
+import { apiErrorHandler } from '../src/middleware/error'
 
 const mockGetChatByIdQuery = vi.fn()
 const mockGetChatMessages = vi.fn()
 const mockAddMessages = vi.fn()
 const mockStreamText = vi.fn()
+const mockGenerateText = vi.fn()
 const mockGetAvailableTools = vi.fn()
 const mockGetOpenAIAdapter = vi.fn()
 
@@ -33,6 +34,7 @@ vi.mock('@hominem/chat-services', () => {
 vi.mock('ai', () => ({
   convertToCoreMessages: vi.fn((messages: unknown) => messages),
   generateObject: vi.fn(),
+  generateText: mockGenerateText,
   streamText: mockStreamText,
 }))
 
@@ -77,7 +79,7 @@ async function createApp() {
   const { chatsRoutes } = await import('../src/routes/chats')
 
   return new Hono<AppContext>()
-    .use('*', errorMiddleware)
+    .onError(apiErrorHandler)
     .use('*', async (c, next) => {
       c.set('user', user)
       c.set('userId', user.id)
@@ -105,6 +107,10 @@ describe('chat send routes', () => {
       createMessage('user', 'hello', '22222222-2222-2222-2222-222222222222'),
       createMessage('assistant', 'hello back', '33333333-3333-3333-3333-333333333333'),
     ])
+    mockGenerateText.mockResolvedValue({
+      text: 'hello back',
+      toolCalls: [],
+    })
     mockStreamText.mockImplementation((options?: {
       onFinish?: (event: {
         text: string
@@ -157,32 +163,8 @@ describe('chat send routes', () => {
     ])
   })
 
-  it('does not persist send messages when provider setup fails', async () => {
-    mockStreamText.mockRejectedValueOnce(new Error('provider unavailable'))
-    const app = await createApp()
-
-    const response = await app.request('/chats/11111111-1111-1111-1111-111111111111/send', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: 'hello',
-      }),
-    })
-
-    expect(response.status).toBeGreaterThanOrEqual(400)
-    expect(mockAddMessages).not.toHaveBeenCalled()
-  })
-
-  it('persists an explicit assistant error instead of an empty placeholder when generation breaks mid-stream', async () => {
-    mockStreamText.mockImplementationOnce(() => ({
-      textStream: (async function* () {
-        yield 'partial'
-        throw new Error('stream broke')
-      })(),
-      toolCalls: Promise.resolve([]),
-    }))
+  it('persists a useful assistant error when provider setup fails', async () => {
+    mockGenerateText.mockRejectedValueOnce(new Error('provider unavailable'))
     const app = await createApp()
 
     const response = await app.request('/chats/11111111-1111-1111-1111-111111111111/send', {
@@ -203,7 +185,38 @@ describe('chat send routes', () => {
       }),
       expect.objectContaining({
         role: 'assistant',
-        content: 'partial',
+        content: '[Error: provider unavailable]',
+      }),
+    ])
+  })
+
+  it('persists a useful assistant error when generation fails before text is returned', async () => {
+    mockGenerateText.mockRejectedValueOnce(
+      new Error(
+        'Failed after 3 attempts. Last error: You exceeded your current quota, please check your plan and billing details.',
+      ),
+    )
+    const app = await createApp()
+
+    const response = await app.request('/chats/11111111-1111-1111-1111-111111111111/send', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: 'hello',
+      }),
+    })
+
+    expect(response.status).toBe(200)
+    expect(mockAddMessages).toHaveBeenCalledWith([
+      expect.objectContaining({
+        role: 'user',
+        content: 'hello',
+      }),
+      expect.objectContaining({
+        role: 'assistant',
+        content: expect.stringContaining('You exceeded your current quota'),
       }),
     ])
   })
@@ -263,7 +276,13 @@ describe('chat send routes', () => {
       }),
     })
 
-    expect(response.status).toBeGreaterThanOrEqual(400)
+    expect(response.status).toBe(403)
+    await expect(response.json()).resolves.toEqual({
+      error: 'forbidden',
+      code: 'FORBIDDEN',
+      message: 'Chat not found or access denied',
+      details: { reason: 'ownership' },
+    })
     expect(mockAddMessages).not.toHaveBeenCalled()
   })
 })

@@ -1,28 +1,16 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 
-async function importServer() {
-  const module = await import('../server');
-  return module.createServer;
-}
-
-async function importTestOtpStore() {
-  return import('../auth/test-otp-store');
-}
+import { clearTestOtpStore, recordTestOtp } from '../auth/test-otp-store';
+import { createServer } from '../server';
 
 describe('auth test otp route', () => {
   beforeEach(() => {
-    vi.resetModules();
-    process.env.NODE_ENV = 'test';
-    process.env.AUTH_TEST_OTP_ENABLED = 'true';
-    process.env.AUTH_E2E_SECRET = 'otp-secret';
+    clearTestOtpStore();
   });
 
   test('returns latest otp with valid secret', async () => {
-    const otpStore = await importTestOtpStore();
-    otpStore.clearTestOtpStore();
-    otpStore.recordTestOtp({ email: 'route-test@example.com', otp: '555111', type: 'sign-in' });
+    recordTestOtp({ email: 'route-test@example.com', otp: '555111', type: 'sign-in' });
 
-    const createServer = await importServer();
     const app = createServer();
     const response = await app.request(
       'http://localhost/api/auth/test/otp/latest?email=route-test%40example.com',
@@ -41,11 +29,8 @@ describe('auth test otp route', () => {
   }, 15000);
 
   test('returns forbidden with wrong secret', async () => {
-    const otpStore = await importTestOtpStore();
-    otpStore.clearTestOtpStore();
-    otpStore.recordTestOtp({ email: 'route-test@example.com', otp: '555111', type: 'sign-in' });
+    recordTestOtp({ email: 'route-test@example.com', otp: '555111', type: 'sign-in' });
 
-    const createServer = await importServer();
     const app = createServer();
     const response = await app.request(
       'http://localhost/api/auth/test/otp/latest?email=route-test%40example.com',

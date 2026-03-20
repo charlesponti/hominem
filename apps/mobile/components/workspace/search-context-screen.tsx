@@ -1,22 +1,12 @@
-import { useFocusEffect } from 'expo-router'
-import React, { useCallback } from 'react'
+import React from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import { useInputContext } from '~/components/input/input-context'
 import { Text, makeStyles } from '~/theme'
-import { useMobileWorkspace } from './mobile-workspace-context'
 
 export const SearchContextScreen = () => {
   const styles = useStyles()
   const { message } = useInputContext()
-  const { setHeader } = useMobileWorkspace()
-
-  useFocusEffect(useCallback(() => {
-    setHeader({
-      kicker: 'Search',
-      title: 'Find anything',
-    })
-  }, [setHeader]))
 
   return (
     <View style={styles.container} testID="search-context-screen">

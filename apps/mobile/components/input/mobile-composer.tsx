@@ -2,7 +2,7 @@ import * as ImagePicker from 'expo-image-picker'
 import { useApiClient } from '@hominem/hono-client/react'
 import { CameraModal } from '../media/camera-modal'
 import { useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
 import React, { useState } from 'react'
 import { StyleSheet, TextInput, View } from 'react-native'
@@ -22,12 +22,14 @@ import {
   invalidateInboxQueries,
   upsertInboxSessionActivity,
 } from '~/utils/services/inbox/inbox-refresh'
+import { useSendMessage } from '~/utils/services/chat'
 import { useCreateFocusItem } from '~/utils/services/notes/use-create-focus-item'
 import { chatKeys } from '~/utils/services/notes/query-keys'
 
 export const MobileComposer = () => {
   const client = useApiClient()
   const router = useRouter()
+  const params = useLocalSearchParams<{ chatId?: string }>()
   const queryClient = useQueryClient()
   const { mutateAsync: createFocusItem } = useCreateFocusItem()
   const { activeContext } = useMobileWorkspace()
@@ -37,12 +39,12 @@ export const MobileComposer = () => {
     isRecording,
     message,
     mode,
-    submitAction,
     setAttachments,
     setIsRecording,
     setMessage,
     setMode,
   } = useInputContext()
+  const { sendChatMessage } = useSendMessage({ chatId: params.chatId ?? '' })
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
 
@@ -99,7 +101,13 @@ export const MobileComposer = () => {
 
   const handlePrimaryAction = () => {
     if (activeContext === 'chat') {
-      submitAction?.()
+      const trimmedMessage = message.trim()
+      if (!trimmedMessage || !params.chatId) {
+        return
+      }
+
+      void sendChatMessage(trimmedMessage)
+      setMessage('')
       return
     }
 

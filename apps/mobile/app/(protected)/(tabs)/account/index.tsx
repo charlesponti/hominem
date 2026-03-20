@@ -1,6 +1,6 @@
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
-import { useCallback, useReducer } from 'react';
+import { useCallback, useEffect, useReducer } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { getPreventScreenshots, setPreventScreenshots } from '~/lib/use-screen-capture';
 import { getAppLockEnabled, setAppLockEnabled } from '~/lib/use-app-lock';
@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
 import TextInput from '~/components/text-input';
-import { useMobileWorkspace } from '~/components/workspace/mobile-workspace-context';
 import { Text, theme } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { MOBILE_PASSKEY_ENABLED } from '~/utils/constants';
@@ -78,7 +77,6 @@ function accountReducer(state: AccountState, action: AccountAction): AccountStat
 function Account() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { setHeader } = useMobileWorkspace();
   const { isSignedIn, signOut, currentUser, updateProfile } = useAuth();
   const {
     addPasskey,
@@ -140,14 +138,7 @@ function Account() {
     ]);
   };
 
-  useFocusEffect(useCallback(() => {
-    setHeader({
-      kicker: 'Settings',
-      title: 'Your account',
-    });
-  }, [setHeader]));
-
-  useFocusEffect(useCallback(() => {
+  useEffect(() => {
     if (!MOBILE_PASSKEY_ENABLED) {
       dispatch({ type: 'set-passkeys', passkeys: [] });
       return;
@@ -157,7 +148,7 @@ function Account() {
         .then((passkeys) => dispatch({ type: 'set-passkeys', passkeys }))
         .catch(() => undefined);
     }
-  }, [isSignedIn, listPasskeys]));
+  }, [isSignedIn, listPasskeys]);
 
   if (!isSignedIn) {
     return null;

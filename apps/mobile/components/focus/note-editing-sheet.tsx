@@ -1,3 +1,5 @@
+import React from 'react'
+import type { Note } from '@hominem/hono-rpc/types'
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker'
 import { useCallback, useMemo, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
@@ -9,7 +11,7 @@ import AppIcon from '~/components/ui/icon'
 import { Text, makeStyles, theme } from '~/theme'
 
 interface NoteEditingSheetProps {
-  title: string
+  note?: Note
   text: string
   scheduledFor: Date | null
   isSaving?: boolean
@@ -22,7 +24,7 @@ interface NoteEditingSheetProps {
 }
 
 export function NoteEditingSheet({
-  title,
+  note,
   text,
   scheduledFor,
   isSaving = false,
@@ -50,6 +52,10 @@ export function NoteEditingSheet({
       timeStyle: 'short',
     })
   }, [scheduledFor])
+
+  const title = useMemo(() => {
+    return note?.title || note?.excerpt || note?.content || 'Untitled note'
+  }, [note?.content, note?.excerpt, note?.title])
 
   const openDatePicker = useCallback(() => {
     if (isSaving) {

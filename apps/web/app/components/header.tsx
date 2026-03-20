@@ -1,7 +1,7 @@
 'use client';
 
 import { Header, type NavItem } from '@hominem/ui';
-import { FileText, Home, MessageSquare } from 'lucide-react';
+import { FileText, MessageSquare } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { useInboxStream } from '~/hooks/use-inbox-stream';
@@ -15,9 +15,8 @@ export default function NotesHeader() {
     const latestChat = items.find((item) => item.kind === 'chat');
 
     return [
-      { title: 'Home', url: '/home', icon: Home },
       { title: 'Notes', url: latestNote ? `/notes/${latestNote.id}` : '/notes/new', icon: FileText },
-      { title: 'Chats', url: latestChat ? `/chat/${latestChat.id}` : '/home', icon: MessageSquare },
+      { title: 'Chats', url: latestChat ? `/chat/${latestChat.id}` : '/chat', icon: MessageSquare },
     ];
   }, [items]);
 

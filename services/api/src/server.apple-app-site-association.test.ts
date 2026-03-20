@@ -1,19 +1,10 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 
-async function importServer() {
-  const module = await import('./server');
-  return module.createServer;
-}
+import { importServerWithEnv } from './routes/test-helpers/auth';
 
 describe('apple app site association route', () => {
-  beforeEach(() => {
-    vi.resetModules();
-    process.env.NODE_ENV = 'test';
-    process.env.APPLE_TEAM_ID = '3QHJ2KN8AL';
-  });
-
   test('serves webcredentials app ids for mobile variants', { timeout: 15000 }, async () => {
-    const createServer = await importServer();
+    const createServer = await importServerWithEnv({ APPLE_TEAM_ID: '3QHJ2KN8AL' });
     const app = createServer();
 
     const response = await app.request('http://localhost/.well-known/apple-app-site-association');

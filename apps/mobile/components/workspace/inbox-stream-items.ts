@@ -16,27 +16,57 @@ interface ToInboxStreamItemsInput {
   sessions: ChatWithActivity[]
 }
 
+function compactWhitespace(value: string): string {
+  return value.replace(/\s+/g, ' ').trim()
+}
+
+function getLines(value: string): string[] {
+  return value
+    .split('\n')
+    .map(compactWhitespace)
+    .filter(Boolean)
+}
+
 function getFocusTitle(item: Note): string {
-  if (item.title && item.title.trim().length > 0) {
-    return item.title
+  const title = compactWhitespace(item.title ?? '')
+  if (title.length > 0) {
+    return title
   }
-  if (item.excerpt && item.excerpt.trim().length > 0) {
-    return item.excerpt
+
+  const excerptLines = getLines(item.excerpt ?? '')
+  if (excerptLines[0]) {
+    return excerptLines[0]
   }
-  if (item.content && item.content.trim().length > 0) {
-    return item.content.slice(0, 80)
+
+  const contentLines = getLines(item.content ?? '')
+  if (contentLines[0]) {
+    return contentLines[0].slice(0, 80)
   }
+
   return 'Untitled note'
 }
 
+function getFocusPreview(item: Note, title: string): string | null {
+  const bodyLines = [...getLines(item.excerpt ?? ''), ...getLines(item.content ?? '')]
+
+  for (const line of bodyLines) {
+    if (line !== title) {
+      return line.slice(0, 140)
+    }
+  }
+
+  return null
+}
+
 function toNoteStreamItem(item: Note): InboxStreamItem {
-  const timestamp = item.createdAt
+  const title = getFocusTitle(item)
+  const timestamp = item.updatedAt || item.createdAt
 
   return {
     id: item.id,
     kind: 'note',
-    title: getFocusTitle(item),
-    preview: null,
+    title,
+    preview: getFocusPreview(item, title),
     timestamp,
     route: `/(protected)/(tabs)/focus/${item.id}`,
   }

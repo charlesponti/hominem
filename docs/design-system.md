@@ -1,7 +1,7 @@
 # Hominem Design System
 
 **Maintained by:** Ponti Studios
-**Last updated:** 2026-03-19
+**Last updated:** 2026-03-20
 **Status:** Law
 **Base system:** [Ponti Studios Design System](https://github.com/charlesponti/jinn) — all rules defined there apply here in full. This document adds Hominem-specific overrides, token paths, and product surface guidance only.
 
@@ -134,10 +134,303 @@ Never use a web-only value in mobile code and vice versa.
 | `chatTokens.transcriptMaxWidth` | 768px — chat transcript max width |
 | `chatTokens.searchMaxWidth` | 640px — search overlay max width |
 | `chatTokens.userBubbleMaxWidth` | 544px — user message bubble max width |
+| `chatTokens.turnGap` | 20px — vertical gap between message turns |
+| `chatTokens.turnPaddingY` | 8px — vertical padding per message row |
+| `chatTokens.contentGap` | 8px — gap between content blocks (reasoning, tools, message) |
+| `chatTokens.metadataGap` | 4px — gap in metadata row |
+| `chatTokens.composerPadding` | 16px — composer internal padding |
+| `chatTokens.composerGap` | 12px — gap between composer sections |
+| `chatTokens.surfaces.user` | `colors['emphasis-highest']` — user bubble background |
+| `chatTokens.surfaces.assistant` | `transparent` — assistant message surface |
+| `chatTokens.surfaces.composer` | `colors['prompt-bg']` — composer background |
+| `chatTokens.surfaces.suggestion` | `colors['bg-base']` — suggestion chip surface |
+| `chatTokens.borders.user` | `colors['border-subtle']` — user bubble border |
+| `chatTokens.borders.composer` | `colors['prompt-border']` — composer border |
+| `chatTokens.foregrounds.user` | `colors.white` — user bubble text |
+| `chatTokens.foregrounds.metadata` | `colors['text-tertiary']` — timestamp/label text |
+| `chatTokens.radii.bubble` | `radii.md` — message bubble radius |
+| `chatTokens.radii.composer` | `radii.md` — composer radius |
+| `chatTokens.radii.suggestion` | `radii.md` — suggestion chip radius |
+
+**Native tokens** (`chatTokensNative`): identical structure, uses `radiiNative.md` for all radii.
 
 ---
 
 ## Product surface guidance
+
+### Chat — Full Design Specification
+
+This is the canonical reference for all chat UI across web and mobile. Every chat component must follow these rules.
+
+#### Anatomy
+
+A chat screen consists of four regions, top to bottom:
+
+```
+┌──────────────────────────────────────┐
+│  ChatHeader                          │  ← Fixed, non-scrolling
+├──────────────────────────────────────┤
+│                                      │
+│  ChatMessages (scrollable)           │  ← Virtualised if > 50 items
+│    └── ChatMessage (per turn)        │
+│                                      │
+│                                      │
+├──────────────────────────────────────┤
+│  Composer (pinned)                   │  ← Always visible
+└──────────────────────────────────────┘
+```
+
+#### ChatHeader (web)
+
+| Property | Value |
+|----------|-------|
+| Background | `colors['bg-elevated']` with `bg-overlay` backdrop |
+| Height | 56px mobile, 60px desktop |
+| Border bottom | `1px solid colors['border-subtle']` |
+| Back button | Left-aligned, 44×44px touch target |
+| Title area | Centre-aligned, max-width 50% of header |
+| Context anchor | `body-3` text, `colors['text-tertiary']` |
+| Status copy | `body-4` text, `colors['text-tertiary']` |
+| Actions | Right-aligned, icon buttons 44×44px |
+
+**States:**
+- New conversation: "New conversation"
+- With messages: "{n} messages"
+- Classifying: "Preparing note review"
+- Reviewing: "Review ready"
+- Persisting: "Saving note"
+
+**Mobile header extras:**
+- Safe area insets applied to top padding
+- Context anchor shows above status copy
+- Icon buttons 36×36px minimum
+
+#### ChatMessages — Scroll Container
+
+| Property | Web | Mobile |
+|----------|-----|--------|
+| Max width | `chatTokens.transcriptMaxWidth` (768px) | Full width |
+| Horizontal padding | 24px desktop, 16px mobile | 16px |
+| Vertical padding | 24px top, 32px bottom (clearance for composer) | 4px top |
+| Scroll | Native overflow-y | `FlatList` with `inverted` or standard |
+| Composer clearance | 32px bottom padding | `CHAT_COMPOSER_CLEARANCE` token |
+| Auto-scroll | On new message if user is near bottom | Same |
+| Virtualisation threshold | 50 messages | Same |
+
+#### ChatMessage — Per-turn rendering
+
+Each turn consists of:
+1. Optional reasoning block (assistant only, above main content)
+2. Tool calls (if any, shown in order)
+3. Main message content
+4. Focus items (referenced notes, collapsed by default)
+5. Metadata row (sender label + timestamp)
+6. Actions row (copy, edit, regenerate, delete, speak, share)
+
+**Turn spacing:** `chatTokens.turnGap` (20px) between adjacent turns.
+
+**Content gaps:** `chatTokens.contentGap` (8px) between reasoning → tools → content.
+
+#### User message bubble
+
+| Property | Web | Mobile |
+|----------|-----|--------|
+| Max width | `chatTokens.userBubbleMaxWidth` (544px) | 85% of screen width |
+| Background | `chatTokens.surfaces.user` = `colors['emphasis-highest']` | Same token |
+| Border | `1px solid chatTokens.borders.user` | Same |
+| Border radius | `chatTokens.radii.bubble` = `radii.md` (10px) | Same (numeric on mobile) |
+| Padding | `spacing[4]` (16px) horizontal, `spacing[3]` (12px) vertical | Same |
+| Text color | `chatTokens.foregrounds.user` = `colors.white` | Same |
+| Font | `body-1` (16px / 400) | 17px / 400 (mobile body-1 equivalent) |
+| Alignment | Right | Right |
+| Shadow | `shadows.low` | RN shadow equivalent |
+| Margin | 0 — bubble is inline, row handles alignment | Same |
+
+**Forbidden:** Never add a visible avatar for the user. Never show "You" label inside the bubble.
+
+#### Assistant message surface
+
+| Property | Web | Mobile |
+|----------|-----|--------|
+| Width | Full transcript width (up to 768px) | Full width |
+| Background | `transparent` | `transparent` |
+| Border | None | None |
+| Text color | `colors['text-primary']` | `colors.foreground` |
+| Font | `body-1` (16px / 400) | 18px / 400 (slightly larger for readability) |
+| Line height | 1.6 | 1.5 |
+| Alignment | Left | Left |
+
+**Never wrap assistant messages in a bubble.** The transcript is prose; bubbles are for user messages only.
+
+#### Metadata row
+
+| Property | Value |
+|----------|-------|
+| Font | `body-4` (12px) |
+| Color | `chatTokens.foregrounds.metadata` = `colors['text-tertiary']` |
+| Gap | `chatTokens.metadataGap` (4px) |
+| Opacity | 0.7 |
+| Content | Sender label · Relative timestamp |
+| Alignment | Matches message alignment (user → right, assistant → left) |
+
+**Rules:**
+- "You" for user messages, "AI Assistant" for assistant messages — never initials
+- Show relative timestamp: "just now", "2m ago", "Yesterday"
+- Never show absolute timestamps in the transcript (they're in the debug panel)
+
+#### Actions row
+
+| Property | Value |
+|----------|-------|
+| Visibility | Hidden by default, visible on hover (web) / always visible (mobile) |
+| Transition | CSS `opacity 120ms ease` on group hover |
+| Gap | `spacing[1]` (4px) between actions |
+| Alignment | Matches message alignment |
+| Icons | 20px, `colors['text-tertiary']`, hover → `colors['text-primary']` |
+| Touch target | 44×44px minimum (add invisible padding if needed) |
+| aria-label | Required on every icon-only button |
+
+**Web only:** Actions row is inside `.group` — visible when message row is hovered.
+
+**Actions per message type:**
+
+| Action | User | Assistant |
+|--------|------|-----------|
+| Copy | ✅ | ✅ |
+| Edit | ✅ | ❌ |
+| Regenerate | ❌ | ✅ |
+| Delete | ✅ | ✅ |
+| Speak (TTS) | ❌ | ✅ |
+| Share | ❌ | ✅ |
+
+#### Reasoning block (assistant)
+
+| Property | Value |
+|----------|-------|
+| Background | `colors['bg-surface']` |
+| Border left | `3px solid colors['border-default']` |
+| Padding | `spacing[4]` (16px) left, `spacing[2]` (8px) vertical |
+| Font | `body-4` (12px), `fontFamiliesNative.mono` |
+| Color | `colors['text-tertiary']` |
+| Label | "Reasoning" or icon (optional, can be omitted) |
+| Collapsed | Default to visible if content is short (< 200 chars), collapsed if long |
+
+#### Tool calls
+
+| Property | Value |
+|----------|-------|
+| Surface | `colors['bg-surface']` with `1px border border-subtle` |
+| Radius | `chatTokens.radii.bubble` = `radii.md` |
+| Padding | `spacing[3]` (12px) |
+| Tool name | `body-4` (12px), `fontWeight: 600` |
+| Args | `fontFamiliesNative.mono`, 12px, `colors['text-secondary']` |
+| Status indicator | Dot: `accent` = running, `success` = completed, `destructive` = error |
+| Gap between tools | `chatTokens.contentGap` (8px) |
+
+#### Focus items (referenced notes)
+
+| Property | Value |
+|----------|-------|
+| Surface | `colors['bg-base']` with `1px border border-default` |
+| Radius | `radii.md` |
+| Padding | `spacing[2]` (8px) horizontal, `spacing[1]` (4px) vertical |
+| Font | `body-4` (12px) |
+| Icon | 14px, inline with text |
+| State | Collapsed by default (show count only) |
+| On tap | Expand to show note title/preview |
+
+#### Composer (web)
+
+| Property | Value |
+|----------|-------|
+| Container | `Stack gap="md"`, full width up to `NOTES_MAX_WIDTH` (768px) |
+| Surface | `chatTokens.surfaces.composer` = `colors['prompt-bg']` |
+| Border | `1px solid chatTokens.borders.composer` |
+| Radius | `1.75rem` (28px) — **exception**: this radius does not map to a token; document the exception here |
+| Shadow | `shadows.low` |
+| Padding | `chatTokens.composerPadding` (16px) |
+| Shadow on focus | Upgrade to `shadows.medium` |
+| Textarea | `body-1` (16px), `colors['text-primary']`, no border |
+| Placeholder | `colors['text-tertiary']`, 15px |
+| Submit button | 36×36px, circular, `colors.foreground` background, white icon |
+
+**Composer toolbar:**
+- Attach files: icon button 28×28px, `colors['text-tertiary']`
+- Audio: icon button 28×28px, `colors['text-tertiary']`
+- Note picker: icon button 28×28px, `colors['text-tertiary']`
+
+**Suggestions strip (shown when input is empty):**
+- Surface: `chatTokens.surfaces.suggestion` = `colors['bg-base']`
+- Border: `1px solid border-default`
+- Radius: `radii.md`
+- Padding: `spacing[2]` (8px) horizontal, `spacing[1]` (4px) vertical
+- Font: `body-2` (14px), `colors['text-secondary']`
+- On tap: insert suggestion text into textarea, focus textarea
+
+#### Composer (mobile)
+
+| Property | Value |
+|----------|-------|
+| Container | Full width, safe-area aware |
+| Surface | `colors['bg-elevated']` |
+| Border top | `1px solid colors['border-default']` |
+| Shadow | `shadows.low` (iOS only) |
+| Textarea | 17px font, `colors.foreground`, min-height 44px |
+| Placeholder | `colors['text-tertiary']` |
+| Submit | 44×44px touch target, `colors.accent` background |
+| Clearance | `CHAT_COMPOSER_CLEARANCE` (220px default, adjust for safe areas) |
+
+#### Thinking indicator (streaming)
+
+| Property | Web | Mobile |
+|----------|-----|--------|
+| Label | "AI Assistant" in `body-4` | Same |
+| Indicator | 3 dots, 8px each, `colors['text-tertiary']` | Same |
+| Animation | CSS `animate-pulse` (web) | react-native-reanimated bounce dots |
+| Timing | Use motion tokens: `durations.enter`, `durations.exit` | Same |
+| Text | "Thinking…" in `body-4`, `colors['text-tertiary']` |
+
+**Web:** Use a custom CSS animation class, not Tailwind's `animate-pulse`. Define it in `animations.css`.
+
+**Mobile:** Use react-native-reanimated `withSequence` + `withTiming`. Do not use `Animated` from React Native core.
+
+#### Shimmer / skeleton messages
+
+| Property | Web | Mobile |
+|----------|-----|--------|
+| Structure | Match the shape of real messages | Same |
+| Background | `colors['bg-surface']` | `colors.muted` or `colors['emphasis-minimal']` |
+| Animation | `playShimmer(el)` — GSAP (web) | react-native-reanimated pulse (mobile) |
+| Duration | Per motion tokens | Same |
+| Rows | 3 skeleton rows for initial load | Same |
+| Stagger | `i * 0.04`, max 5 rows | Same |
+| Kill on resolve | Yes — always `.kill()` the shimmer | Cancel the animation |
+
+**Rules:**
+- Never show skeleton for < 300ms (perceived as a flash)
+- If load resolves in < 300ms, skip skeleton entirely
+- Match the radius of real content bubbles
+
+#### Error display
+
+| Property | Value |
+|----------|-------|
+| Surface | `colors['bg-surface']` with `1px border border-destructive/30` |
+| Background tint | `colors['destructive']` at 5% opacity |
+| Radius | `radii.md` |
+| Padding | `spacing[4]` (16px) |
+| Headline | `body-2`, `fontWeight: 600`, `colors.destructive` |
+| Body | `body-4`, `colors.destructive` at 70% opacity |
+
+#### Empty state
+
+| Property | Value |
+|----------|-------|
+| Icon | 48px, `colors['text-tertiary']` |
+| Headline | `heading-3`, `colors['text-primary']` |
+| Body | `body-2`, `colors['text-secondary']` |
+
+---
 
 ### Focus route (`/`)
 
@@ -185,13 +478,6 @@ The sidebar is a single chronological stream navigator — not two typed lists.
 - Active item: `colors['sidebar-accent']` background, `colors['sidebar-accent-foreground']` text
 - Item enter animation: `playEnterRow(el, index * 0.04)`
 - No "View all" links — the sidebar IS the full navigator
-
-### Chat transcript
-
-- Max width: `chatTokens.transcriptMaxWidth` (768px), centred
-- User bubble max width: `chatTokens.userBubbleMaxWidth` (544px)
-- Referenced notes: compact context block (note title + icon) above assistant reply, collapsed by default
-- HyperForm pinned at bottom, full width up to `NOTES_MAX_WIDTH`
 
 ### Note detail (`/notes/:noteId`)
 
@@ -242,3 +528,51 @@ Never import entire icon sets. Never use emoji as icons in UI chrome.
 | `@hominem/ui/lib/gsap` export | `packages/ui/package.json` | ✅ |
 | Global CSS | `packages/ui/src/styles/globals.css` | ✅ |
 | CSS animations | `packages/ui/src/styles/animations.css` | ✅ |
+
+---
+
+## Chat component inventory
+
+This table tracks the implementation status of every chat component. Components marked ❌ need work to meet the design spec above.
+
+### Web (`apps/web/app/components/chat/`)
+
+| Component | File | Status | Notes |
+|-----------|------|--------|-------|
+| ChatMessage | `ChatMessage.tsx` | ❌ | Hardcoded Tailwind classes, no message enter animation, inconsistent token usage |
+| ChatMessages | `ChatMessages.tsx` | ❌ | Uses raw `space-y-4`, no GSAP enter animation on messages, shimmer needs work |
+| ChatInput | `ChatInput.tsx` | ❌ | Raw rgba() values, non-token radius, non-token submit button |
+| ChatHeader | `ChatHeader.tsx` | ⚠️ | Mostly OK, minor token fixes needed |
+| ChatModals | `ChatModals.tsx` | ⚠️ | Review for token usage |
+| FileUploader | `FileUploader.tsx` | ⚠️ | Review for token usage |
+
+### Mobile (`apps/mobile/components/chat/`)
+
+| Component | File | Status | Notes |
+|-----------|------|--------|-------|
+| Chat | `chat.tsx` | ⚠️ | Container OK, composer clearance needs token |
+| ChatMessage | `chat-message.tsx` | ❌ | Hardcoded font sizes, raw color values, no message enter animation, edit modal is bare |
+| ChatMessageList | `chat-message-list.tsx` | ⚠️ | FlatList without keyExtractor issues, no enter animations |
+| ChatInput | `chat-input.tsx` | ❌ | **Stub — returns null. Must be implemented.** |
+| ChatHeader | `chat-header.tsx` | ❌ | Raw spacing values, inconsistent button sizing |
+| ChatShimmerMessage | `chat-shimmer-message.tsx` | ❌ | Wrong background color token, non-token animation timing |
+| ChatThinkingIndicator | `chat-thinking-indicator.tsx` | ❌ | Hardcoded timing values instead of motion tokens |
+
+### Shared UI (`packages/ui/src/components/ai-elements/`)
+
+| Component | File | Status | Notes |
+|-----------|------|--------|-------|
+| Message | `message.tsx` | ❌ | Uses Tailwind prose classes, `bg-emphasis-highest` not a proper token, no animations |
+| Conversation | `conversation.tsx` | ⚠️ | Mostly decorative, review tokens |
+| Response | `response.tsx` | ❌ | Uses `prose` and `muted` classes instead of tokens, `animate-pulse` should be CSS class |
+| MarkdownContent | `response.tsx` | ⚠️ | Wraps markdown, needs design system prose token config |
+| Reasoning | `response.tsx` | ⚠️ | Needs consistent styling |
+| Tool | `response.tsx` | ⚠️ | Needs consistent styling |
+| ToolInput | `response.tsx` | ⚠️ | Needs consistent styling |
+| ContextAnchor | `context-anchor.tsx` | ⚠️ | Review for token usage |
+| ConversationEmptyState | `conversation.tsx` | ⚠️ | Uses `muted-foreground` instead of `text-tertiary` |
+
+**Legend:**
+- ✅ = Compliant with design spec
+- ⚠️ = Mostly compliant, minor fixes needed
+- ❌ = Needs significant rework to comply with spec

@@ -1,4 +1,4 @@
-import type { VoiceErrorCode } from '@hominem/services';
+import type { VoiceErrorCode } from '@hominem/services/voice-transcription';
 
 type VoiceEventName =
   | 'voice_record_started'

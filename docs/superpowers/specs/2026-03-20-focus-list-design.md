@@ -1,190 +1,234 @@
 # Focus List Design
 
 Date: 2026-03-20
-Area: `apps/mobile/components/workspace`, future shared list patterns for mobile, desktop, and web
+Area: `apps/mobile/components/workspace`, `apps/web/app/components`, future shared list patterns for mobile, desktop, and web
 
 ## Goal
 
-Define one cross-platform list design language for focus items, chats, and adjacent list surfaces that closely follows Apple Notes: airy page framing, grouped rounded section containers, and internal rows separated by dividers instead of standalone bordered cards.
+Define one minimal, native-feeling list system for notes and chats that works across mobile, desktop, and web without relying on per-item cards, badges, or heavy chrome.
+
+## Product Job
+
+The list exists to help people scan and recognize items quickly.
+
+That means the design must prioritize:
+
+- fast recognition
+- stable vertical rhythm
+- minimal chrome
+- calm grouping
+- native-feeling interaction
+
+Beauty should come from spacing, hierarchy, and restraint rather than decoration.
 
 ## Problems To Solve
 
-- The current focus list treatment relies on per-item borders, card spacing, and container padding that make the list feel fragmented.
-- A flat continuous list still misses the stronger Apple Notes pattern, where items live inside grouped section sheets rather than floating independently.
-- Notes and chats appear in the same workspace stream, but the current presentation does not yet feel like one coherent list system.
-- Metadata currently risks taking up more attention than it deserves for a notes-first product.
+- The current list treatments spend too much visual weight on containers, borders, or extra row signals.
+- Notes and chats do not yet feel like one coherent cross-platform list language.
+- The interface has drifted toward reference-copying rather than solving the app’s actual scanning problem.
+- Metadata and type cues have taken up more space than they deserve.
 
 ## Non-Goals
 
-- No schema, RPC, or routing changes.
-- No redesign of note detail or chat detail screens.
-- No dense preview snippets by default.
-- No separate structural pattern for notes versus chats.
+- No schema, RPC, or route changes.
+- No separate row architecture for notes and chats.
+- No default snippets or excerpts.
+- No badge-heavy or label-heavy type indicators.
+- No attempt to mimic a specific third-party screenshot literally.
 
 ## Decision
 
-Use a shared Apple Notes-style grouped list pattern across mobile, desktop, and web.
+Use a grouped native list pattern.
 
-The page should feel open and soft. Rows should not appear as independent cards. Instead, each logical section should render as a rounded white sheet, and each item should render as a row inside that sheet with thin internal dividers.
+The page gets a soft background. Content lives in rounded list groups. Rows inside those groups are simple and quiet: one tiny leading icon, one strong title line, and one metadata line. Notes and chats share the exact same row structure.
 
-This means:
+This should feel native on mobile and still read as restrained and intentional on desktop and web.
 
-- section containers provide the visual grouping
-- rows inside sections are simple and borderless
-- title is the dominant content
-- metadata is quiet and stacked under the title
-- snippets stay off by default
+## Core Principles
 
-## Core Structure
+### 1. One Row Primitive
 
-Every list surface should be built from the same hierarchy:
+Notes and chats should use the same row layout everywhere.
 
-1. Page background with generous outer breathing room.
-2. Optional section heading such as pinned, notes, or a future grouping label.
-3. Rounded section surface.
-4. Rows inside that surface with internal dividers.
+They should differ only by:
 
-This is the main shift from the earlier continuous-sheet idea: the dominant container is the section, not the entire list.
+- icon
+- destination
+- rare exceptional state treatment
 
-## Section Containers
+They should not differ by shape, spacing, or row structure.
 
-Section containers should feel very close to Apple Notes:
+### 2. One Type Cue
 
-- white or elevated surface against a softer page background
-- large rounded corners
-- no visible per-row border around the outside edge
-- clipped internal dividers
-- enough inset to feel calm, not cramped
+The row gets one small cue for note versus chat: a tiny leading icon.
 
-Pinned content should be allowed to live in its own dedicated rounded container. Regular notes and mixed stream content should live in a larger rounded container below.
+Do not add:
 
-## Row Model
+- source words
+- badges
+- pills
+- duplicate cues in metadata
 
-Every row should use the same base structure:
+### 3. Title First
 
-1. Primary title line.
-2. Quiet metadata line directly beneath it.
-3. Tiny source or type line beneath the metadata when needed.
+The title is the primary scanning target.
 
-Rows should not look like their own cards. Their identity comes from typography and the section surface around them.
+Rules:
 
-Notes and chats should share the same row skeleton. Type differences should come from small icon or label changes, not from a different component shape.
+- single line by default
+- strongest contrast in the row
+- semibold but not oversized
+- no competing text at the same emphasis
+
+### 4. One Metadata Line
+
+Each row gets one quiet metadata line beneath the title.
+
+That line should hold:
+
+- timestamp first
+- at most one extra fragment in the future if the product truly needs it
+
+The metadata line should never become a mini-dashboard.
+
+### 5. Group the Surface, Not the Row
+
+The section container is the design object.
+
+Rows are content inside that object.
+
+That means:
+
+- grouped rounded containers
+- inset dividers
+- no per-item borders
+- no floating row cards
+- no visual need for every row to announce itself separately
+
+## Visual Structure
+
+The full list should read like this:
+
+1. Soft page background
+2. Section heading only when needed
+3. Rounded grouped container
+4. Rows with inset dividers
+
+The list should feel airy, but not spacious to the point of inefficiency.
+
+## Spacing
+
+Spacing should feel deliberate and stable:
+
+- page padding gives the content room to breathe
+- grouped containers sit comfortably within the page
+- row padding is generous enough for touch but compact enough for scanning
+- divider inset starts at the text column, not the icon edge
+- repeated row rhythm matters more than dramatic spacing moments
 
 ## Typography
 
-Typography should closely follow the screenshot reference:
+Typography should do most of the work.
 
-- title is bold and visually dominant
-- metadata line is medium-small and gray
-- source/type line is smallest and quietest
-- snippet text is omitted unless absolutely necessary
+Title:
 
-The default row should be title plus metadata, not title plus excerpt.
+- primary text color
+- semibold
+- compact line height
 
-## Metadata
+Metadata:
 
-Metadata should sit under the title, not dominate the trailing edge.
+- secondary text color
+- smaller than title
+- one line
 
-Guidelines:
+Avoid adding a third text line in the default state.
 
-- timestamp belongs in the metadata line
-- any secondary label should read as supporting information, not a badge
-- source/type should be tiny and very quiet
-- metadata should never feel louder than the title
+## Color And Surfaces
 
-This is more faithful to Apple Notes than a title-left, timestamp-right dominant row.
+- page background should be softer than the grouped container
+- grouped container should read as a clean content surface
+- pressed, hover, and selected states should be soft fills
+- dividers should be subtle and quiet
 
-## Spacing And Density
+The palette should feel native and calm, not glossy or high-contrast.
 
-The target is close to Apple Notes:
+## Interaction
 
-- page has generous top and side breathing room
-- section headings float above the section surface
-- section surfaces use calm internal padding
-- rows have comfortable vertical spacing
-- dividers sit between rows with consistent insets
-
-The design should feel relaxed, native, and obviously list-based, but not loose enough to waste screen space.
-
-## Interaction Model
-
-Interaction should stay subtle:
-
-- row press/hover states should lightly tint within the section surface
-- selected/active states should read as filled state changes, not borders
-- swipe, context menu, and secondary actions should attach to the row without changing the structural design
-
-Rows should still feel like part of one grouped surface when interacted with.
+- hover and pressed states should gently tint the row
+- selection should be visible but restrained
+- rows should remain visually stable during scrolling
+- context menus or swipe actions should layer on top of the row pattern, not change it
 
 ## Notes And Chats
 
-Notes and chats should use the same primitive.
-
 Shared:
 
-- same section container pattern
-- same row padding
-- same title and metadata hierarchy
-- same divider behavior
+- same grouped container model
+- same row spacing
+- same title/meta hierarchy
 - same interaction treatment
 
-Variable:
+Different:
 
-- icon glyph or source label
+- icon glyph
 - route behavior
-- special status indicator only when required
 
-This preserves one product language across all list surfaces.
+That is enough.
 
-## Empty And Transitional States
+## Empty States
 
-Empty states should match the grouped Apple Notes approach:
+Empty states should follow the same philosophy:
 
-- no bordered empty card
-- no detached callout box unless the surface genuinely needs one
-- use simple copy inside the page flow or inside a calm section shell
+- grouped, calm, and simple
+- no loud bordered callout
+- no extra illustration unless truly necessary
 
-Loading and insertion states should animate within section containers rather than as detached card blocks.
+## Design-System Changes
 
-## Accessibility
+The design system should explicitly support this list pattern:
 
-- rows must retain comfortable touch targets
-- section grouping should remain clear in screen-reader order
-- title content must remain readable at a glance
-- metadata contrast should stay accessible even if visually quiet
-- type cues should not depend on color alone
+- grouped list page background token
+- grouped list surface token
+- grouped list radius token
+- row horizontal padding token
+- row vertical padding token
+- divider inset token
+- leading icon size/color token
+- title/meta emphasis tokens
+
+This is a system primitive, not a one-off screen treatment.
 
 ## Implementation Boundaries
 
-Start with the shared workspace stream row and list container on mobile and web.
-
 The first implementation pass should:
 
-1. Replace per-item bordered cards with grouped rounded section containers.
-2. Move row hierarchy closer to Apple Notes: title, metadata, then source/type.
-3. Keep snippets off by default.
-4. Keep note and chat rows on the same primitive.
-5. Reuse the same section-container and row logic across platforms.
+1. Update the shared notes/list tokens to support grouped native lists.
+2. Refactor the mobile focus stream to the new grouped row primitive.
+3. Refactor the web notes/chat sidebar to the same primitive.
+4. Keep notes and chats structurally identical.
+5. Keep snippets off by default.
 
 ## Testing Strategy
 
-- update component tests that depend on row and section structure
-- verify rows still navigate correctly for both notes and chats
-- verify section containers replace standalone card treatment
-- verify title and metadata hierarchy stays intact without default snippets
-- verify interactive states still work inside grouped surfaces
+- verify the shared tokens describe grouped list behavior
+- verify notes and chats keep the same row structure
+- verify source words do not reappear
+- verify metadata remains one line
+- verify grouped surfaces replace row-card treatment
+- verify mobile and web still navigate correctly
 
 ## Risks
 
-- copying Apple Notes too literally can create awkward fit with mixed note/chat content
-- over-grouping can make the list feel heavier if section spacing is wrong
-- subtle metadata can become too faint if contrast is pushed too far
-- different platform chrome can tempt unnecessary divergence from the shared pattern
+- over-styling can break the minimal-native goal
+- under-styling can make the list feel unfinished
+- adding more than one type cue will make the system busy quickly
+- platform-specific improvisation can fragment the shared pattern
 
 ## Implementation Outline
 
-1. Refactor list containers to render grouped rounded section surfaces.
-2. Refactor rows to use title-plus-stacked-metadata hierarchy.
-3. Remove remaining standalone card chrome.
-4. Align mobile and web surfaces to the same grouped Notes pattern.
-5. Tune interaction states without breaking the grouped-shell illusion.
+1. Codify grouped-native list tokens.
+2. Simplify row content to icon, title, metadata.
+3. Remove any remaining source words, badges, or extra row signals.
+4. Move grouping responsibility to section containers.
+5. Tune spacing and divider insets until the list feels calm and fast to scan.

@@ -1,4 +1,4 @@
-import { VoiceTranscriptionError, transcribeVoiceBuffer } from '@hominem/services';
+import { VoiceTranscriptionError, transcribeVoiceBuffer } from '@hominem/services/voice-transcription';
 import type { ActionFunctionArgs } from 'react-router';
 
 import { getServerSession } from '~/lib/auth.server';

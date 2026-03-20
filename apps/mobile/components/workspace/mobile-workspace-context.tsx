@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useContext, useMemo, useState, type PropsWithChildren } from 'react'
+import { usePathname } from 'expo-router'
+import React, { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react'
 
 import {
   MOBILE_WORKSPACE_CONTEXTS,
@@ -11,41 +12,45 @@ export { MOBILE_WORKSPACE_CONTEXTS, type MobileWorkspaceContext }
 interface MobileWorkspaceContextValue {
   activeContext: MobileWorkspaceContext
   contexts: MobileWorkspaceContext[]
-  headerKicker: string | null
-  headerTitle: string
   setActiveContext: (context: MobileWorkspaceContext) => void
-  setHeader: (input: { kicker?: string | null; title: string }) => void
-}
-
-interface MobileWorkspaceHeaderInput {
-  kicker?: string | null
-  title: string
 }
 
 const MobileWorkspaceContext = createContext<MobileWorkspaceContextValue | null>(null)
 
+function resolveRouteWorkspaceContext(
+  pathname: string,
+  selectedContext: MobileWorkspaceContext,
+): MobileWorkspaceContext {
+  if (pathname.includes('/sherpa')) {
+    return 'chat'
+  }
+
+  if (pathname.includes('/account')) {
+    return 'settings'
+  }
+
+  if (selectedContext === 'note' || selectedContext === 'search') {
+    return selectedContext
+  }
+
+  return 'inbox'
+}
+
 export const MobileWorkspaceProvider = ({ children }: PropsWithChildren) => {
-  const [activeContext, setActiveContext] = useState<MobileWorkspaceContext>('inbox')
-  const [headerKicker, setHeaderKicker] = useState<string | null>('Workspace')
-  const [headerTitle, setHeaderTitle] = useState('Inbox')
-
-  const setHeader = useCallback(({ kicker, title }: MobileWorkspaceHeaderInput) => {
-    const nextKicker = kicker ?? null
-
-    setHeaderKicker((currentKicker) => (currentKicker === nextKicker ? currentKicker : nextKicker))
-    setHeaderTitle((currentTitle) => (currentTitle === title ? currentTitle : title))
-  }, [])
+  const pathname = usePathname()
+  const [selectedContext, setActiveContext] = useState<MobileWorkspaceContext>('inbox')
+  const activeContext = useMemo(
+    () => resolveRouteWorkspaceContext(pathname, selectedContext),
+    [pathname, selectedContext],
+  )
 
   const value = useMemo<MobileWorkspaceContextValue>(
     () => ({
       activeContext,
       contexts: resolveVisibleWorkspaceContexts(activeContext),
-      headerKicker,
-      headerTitle,
       setActiveContext,
-      setHeader,
     }),
-    [activeContext, headerKicker, headerTitle, setHeader],
+    [activeContext],
   )
 
   return <MobileWorkspaceContext.Provider value={value}>{children}</MobileWorkspaceContext.Provider>

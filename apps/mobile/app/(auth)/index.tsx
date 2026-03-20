@@ -1,8 +1,8 @@
 import { AUTH_COPY, SHERPA_AUTH_CONFIG } from '@hominem/auth';
 import { Image } from 'expo-image';
-import { Redirect, useFocusEffect, useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -37,9 +37,9 @@ export function AuthScreen() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useFocusEffect(useCallback(() => {
+  useEffect(() => {
     posthog.capture('auth_screen_viewed');
-  }, []));
+  }, []);
   const [authError, setAuthError] = useState<string | null>(null);
   const {
     signIn: signInWithPasskey,

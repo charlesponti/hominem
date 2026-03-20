@@ -12,15 +12,12 @@
     "moduleDetection": "force",
     "maxNodeModuleJsDepth": 0,
     "disableSourceOfProjectReferenceRedirect": true,
+    "types": ["vitest/globals"],
     "paths": {
-      "theme": [
-        "./theme/index.ts"
-      ],
-      "~/*": [
-        "./*"
-      ]
+      "theme": ["./theme/index.ts"],
+      "~/*": ["./*"],
     },
-    "noEmit": true
+    "noEmit": true,
   },
   "include": [
     "app/**/*.ts",
@@ -35,7 +32,7 @@
     "utils/**/*.tsx",
     "app.config.ts",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
   ],
   "exclude": [
     "node_modules",
@@ -54,6 +51,6 @@
     "**/*.spec.tsx",
     "**/__tests__",
     "**/__mocks__",
-    "*.tsbuildinfo"
-  ]
+    "*.tsbuildinfo",
+  ],
 }

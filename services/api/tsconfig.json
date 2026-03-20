@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.profiles/service-noemit.json",
   "compilerOptions": {
     "tsBuildInfoFile": "../../.cache/service-api.tsbuildinfo",
-    "rootDir": ".",
+    "composite": false,
     "paths": {
       "@/*": ["./*"]
     }

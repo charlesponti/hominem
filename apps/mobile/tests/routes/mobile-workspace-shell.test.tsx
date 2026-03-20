@@ -1,5 +1,5 @@
 import React from 'react'
-import TestRenderer, { act } from 'react-test-renderer'
+import { act, render, waitFor } from '@testing-library/react-native'
 
 import {
   MOBILE_WORKSPACE_BASE_CONTEXTS,
@@ -39,14 +39,12 @@ describe('mobile workspace shell state', () => {
     setActiveContextRef = null
   })
 
-  it('defaults the shared mobile workspace to inbox and exposes all contexts', () => {
-    act(() => {
-      TestRenderer.create(
-        <MobileWorkspaceProvider>
-          <WorkspaceProbe />
-        </MobileWorkspaceProvider>,
-      )
-    })
+  it('defaults the shared mobile workspace to inbox and exposes all contexts', async () => {
+    await render(
+      <MobileWorkspaceProvider>
+        <WorkspaceProbe />
+      </MobileWorkspaceProvider>,
+    )
 
     expect(workspaceSnapshot).toEqual({
       activeContext: 'inbox',
@@ -54,22 +52,22 @@ describe('mobile workspace shell state', () => {
     })
   })
 
-  it('allows the active context to switch without remounting the provider', () => {
-    act(() => {
-      TestRenderer.create(
-        <MobileWorkspaceProvider>
-          <WorkspaceProbe />
-        </MobileWorkspaceProvider>,
-      )
-    })
+  it('allows the active context to switch to note without remounting the provider', async () => {
+    await render(
+      <MobileWorkspaceProvider>
+        <WorkspaceProbe />
+      </MobileWorkspaceProvider>,
+    )
 
     expect(setActiveContextRef).toBeTypeOf('function')
 
-    act(() => {
-      setActiveContextRef?.('chat')
+    await act(() => {
+      setActiveContextRef?.('note')
     })
 
-    expect(workspaceSnapshot?.activeContext).toBe('chat')
+    await waitFor(() => {
+      expect(workspaceSnapshot?.activeContext).toBe('note')
+    })
   })
 
   it('defines labels and routes for the top workspace shell', () => {

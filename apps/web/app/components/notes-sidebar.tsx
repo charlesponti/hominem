@@ -70,55 +70,63 @@ function SidebarFocusItem({
   const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <li
-      className={cn(
-        'group/item list-row rounded-md',
-        'transition-colors duration-150',
-        isActive
-          ? 'bg-sidebar-accent/60'
-          : 'hover:bg-sidebar-accent/40 focus-within:bg-sidebar-accent/40',
-      )}
-    >
-      <Link
-        to={href}
-        prefetch="intent"
+    <li className="group/item border-b border-sidebar-border/40 last:border-b-0">
+      <div
         className={cn(
-          'min-w-0 flex-1 gap-2 px-2.5 py-2 transition-colors duration-150',
+          'flex items-start gap-2 px-4 py-3 transition-colors duration-150',
           isActive
-            ? 'text-sidebar-foreground font-medium'
-            : 'text-sidebar-foreground/60 hover:text-sidebar-foreground',
+            ? 'bg-sidebar-accent/55'
+            : 'hover:bg-sidebar-accent/30 focus-within:bg-sidebar-accent/30',
         )}
       >
         {item.kind === 'note' ? (
-          <FileText className="size-3.5 shrink-0 opacity-50" aria-hidden />
+          <FileText className="mt-0.5 size-3.5 shrink-0 opacity-40" aria-hidden />
         ) : (
-          <MessageSquare className="size-3.5 shrink-0 opacity-50" aria-hidden />
+          <MessageSquare className="mt-0.5 size-3.5 shrink-0 opacity-40" aria-hidden />
         )}
-        <span className="truncate text-sm">{item.title || 'Untitled'}</span>
-      </Link>
+        <Link
+          to={href}
+          prefetch="intent"
+          className={cn(
+            'min-w-0 flex-1 transition-colors duration-150',
+            isActive
+              ? 'text-sidebar-foreground'
+              : 'text-sidebar-foreground/70 hover:text-sidebar-foreground',
+          )}
+        >
+          <div className="truncate text-sm font-medium">{item.title || 'Untitled'}</div>
+          <div className="truncate text-xs text-sidebar-foreground/50">{formatTimestamp(item.updatedAt)}</div>
+        </Link>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            className="mr-1 w-7 shrink-0 justify-center rounded-md text-sidebar-foreground/0 transition-colors duration-150 group-hover/item:text-sidebar-foreground/40 hover:text-sidebar-foreground"
-            aria-label={`Options for ${item.title}`}
-          >
-            <MoreHorizontal className="size-3.5" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" align="start">
-          <DropdownMenuItem
-            className="text-destructive focus:text-destructive"
-            onSelect={() => onDelete(item.id)}
-          >
-            <Trash2 className="size-3.5" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/0 transition-colors duration-150 group-hover/item:text-sidebar-foreground/35 hover:text-sidebar-foreground"
+              aria-label={`Options for ${item.title}`}
+            >
+              <MoreHorizontal className="size-3.5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="start">
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onSelect={() => onDelete(item.id)}
+            >
+              <Trash2 className="size-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </li>
   );
+}
+
+function formatTimestamp(value: string): string {
+  const date = new Date(value);
+
+  return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
 // ─── UserAvatar ───────────────────────────────────────────────────────────────
@@ -283,21 +291,23 @@ export default function NotesSidebar() {
                   <div className="space-y-1 px-2">
                     {Array.from({ length: 6 }).map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: stable skeleton
-                      <div key={i} className="h-7 animate-pulse rounded-md bg-sidebar-accent/40" />
+                      <div key={i} className="h-12 animate-pulse rounded-3xl bg-sidebar-accent/30" />
                     ))}
                   </div>
                 ) : visible.length === 0 ? (
                   <p className="px-3 py-4 text-xs text-sidebar-foreground/40">Nothing here yet</p>
                 ) : (
-                  <ul ref={listRef} className="flex flex-col gap-0.5">
-                    {visible.map((item) => (
-                      <SidebarFocusItem
-                        key={`${item.kind}:${item.id}`}
-                        item={item}
-                        onDelete={() => handleDelete(item)}
-                      />
-                    ))}
-                  </ul>
+                  <div className="rounded-[28px] bg-white/90 shadow-[0_12px_30px_rgba(15,23,42,0.06)] overflow-hidden">
+                    <ul ref={listRef}>
+                      {visible.map((item) => (
+                        <SidebarFocusItem
+                          key={`${item.kind}:${item.id}`}
+                          item={item}
+                          onDelete={() => handleDelete(item)}
+                        />
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </SidebarGroupContent>
             </SidebarGroup>

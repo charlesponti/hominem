@@ -1,3 +1,4 @@
+import type { Context } from 'hono'
 import { createMiddleware } from 'hono/factory';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { isServiceError, type ErrorCode } from '../errors';
@@ -18,57 +19,60 @@ export interface ApiErrorResponse {
   details?: Record<string, unknown> | undefined;  // Additional error context
 }
 
-/**
- * Global error middleware
- * 
- * Catches all unhandled exceptions and converts them to REST error responses.
- * Must be registered FIRST in the middleware chain.
- * 
- * Handles:
- * - ServiceError: Converts to formatted REST response with appropriate status code
- * - Other errors: Returns 500 Internal Server Error
- * - Validation errors: Already handled by zValidator, not caught here
- * 
- * @example
- * ```typescript
- * export const app = new Hono<AppContext>()
- *   .use(errorMiddleware)  // Must be first!
- *   .basePath('/api')
- *   // ... routes ...
- * ```
- */
-export const errorMiddleware = createMiddleware<AppContext>(async (c, next) => {
+function findServiceError(value: unknown, depth = 0) {
+  if (isServiceError(value)) {
+    return value;
+  }
+
+  if (!(value instanceof Error) || depth >= 3) {
+    return null;
+  }
+
+  return findServiceError(value.cause, depth + 1);
+}
+
+export function apiErrorHandler(err: unknown, c: Context<AppContext>) {
   const requestId = c.get('requestId') || crypto.randomUUID().slice(0, 8);
   const path = c.req.path;
   const method = c.req.method;
 
-  try {
-    return await next();
-  } catch (err) {
-    logger.error(`[API Error] ${method} ${path} [${requestId}]`, { error: err, name: err instanceof Error ? err.name : 'unknown', message: err instanceof Error ? err.message : 'unknown' });
+  logger.error(`[API Error] ${method} ${path} [${requestId}]`, {
+    error: err,
+    name: err instanceof Error ? err.name : 'unknown',
+    message: err instanceof Error ? err.message : 'unknown',
+  });
 
-    // Handle service errors (thrown by business logic)
-    if (isServiceError(err)) {
-      return c.json<ApiErrorResponse>(
-        {
-          error: err.code.toLowerCase().replace(/_/g, '_'),
-          code: err.code,
-          message: err.message,
-          details: err.details,
-        },
-        err.statusCode as ContentfulStatusCode,
-      );
-    }
+  const serviceError = findServiceError(err);
 
-    // Handle unexpected errors
-    const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+  if (serviceError) {
     return c.json<ApiErrorResponse>(
       {
-        error: 'internal_error',
-        code: 'INTERNAL_ERROR',
-        message: errorMessage,
+        error: serviceError.code.toLowerCase().replace(/_/g, '_'),
+        code: serviceError.code,
+        message: serviceError.message,
+        details: serviceError.details,
       },
-      500,
+      serviceError.statusCode as ContentfulStatusCode,
     );
   }
-});
+
+  const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+  return c.json<ApiErrorResponse>(
+    {
+      error: 'internal_error',
+      code: 'INTERNAL_ERROR',
+      message: errorMessage,
+    },
+    500,
+  );
+}
+
+/**
+ * Legacy error middleware
+ * 
+ * Hono does not route async handler exceptions through middleware reliably.
+ * Register `apiErrorHandler` with `.onError(...)` for real application error handling.
+ * 
+ * This export remains as a pass-through for backwards compatibility in tests.
+ */
+export const errorMiddleware = createMiddleware<AppContext>(async (_c, next) => next());

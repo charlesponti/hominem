@@ -1,5 +1,5 @@
 import React from 'react'
-import TestRenderer, { act } from 'react-test-renderer'
+import { act, render, waitFor } from '@testing-library/react-native'
 
 import { InputProvider, useInputContext } from '../../components/input/input-context'
 import {
@@ -39,25 +39,25 @@ describe('mobile composer draft persistence', () => {
     setActiveContextRef = null
   })
 
-  it('preserves the draft while workspace context changes', () => {
-    act(() => {
-      TestRenderer.create(
-        <MobileWorkspaceProvider>
-          <InputProvider>
-            <Probe />
-          </InputProvider>
-        </MobileWorkspaceProvider>,
-      )
-    })
+  it('preserves the draft while workspace context changes', async () => {
+    await render(
+      <MobileWorkspaceProvider>
+        <InputProvider>
+          <Probe />
+        </InputProvider>
+      </MobileWorkspaceProvider>,
+    )
 
-    act(() => {
+    await act(() => {
       setMessageRef?.('Draft that should survive')
-      setActiveContextRef?.('chat')
+      setActiveContextRef?.('note')
     })
 
-    expect(snapshot).toEqual({
-      activeContext: 'chat',
-      message: 'Draft that should survive',
+    await waitFor(() => {
+      expect(snapshot).toEqual({
+        activeContext: 'note',
+        message: 'Draft that should survive',
+      })
     })
   })
 })

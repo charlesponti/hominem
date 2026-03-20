@@ -7,6 +7,7 @@ export type { SessionSource };
 
 interface ContextAnchorProps {
   source: SessionSource;
+  showTitle?: boolean;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -20,65 +21,68 @@ const TYPE_LABELS: Record<string, string> = {
  * ContextAnchor — shows where a session originated.
  * Required in every SessionView header. Never absent.
  */
-export const ContextAnchor = ({ source }: ContextAnchorProps) => {
+export const ContextAnchor = ({ source, showTitle = true }: ContextAnchorProps) => {
   const styles = useStyles();
 
   if (source.kind === 'new') {
     return (
-      <Text variant="caption" color="text-secondary" style={styles.italic}>
-        New session
+      <Text variant="body" color="foreground" numberOfLines={1} style={styles.primaryTitle}>
+        New conversation
       </Text>
     );
   }
 
   if (source.kind === 'thought') {
-    return (
-      <View style={styles.pill}>
-        <Text variant="caption" color="text-secondary" numberOfLines={1}>
-          {source.preview}
+    if (!showTitle) {
+      return (
+        <Text variant="caption" color="text-secondary" numberOfLines={1} style={styles.secondaryLabel}>
+          Conversation
         </Text>
-      </View>
+      );
+    }
+
+    return (
+      <Text variant="body" color="foreground" numberOfLines={1} style={styles.primaryTitle}>
+        {source.preview}
+      </Text>
     );
   }
 
   // kind === 'artifact'
-  return (
-    <View style={styles.pill}>
-      <Text variant="caption" color="text-secondary">
+  if (!showTitle) {
+    return (
+      <Text variant="caption" color="text-secondary" numberOfLines={1} style={styles.secondaryLabel}>
         {TYPE_LABELS[source.type] ?? source.type}
       </Text>
-      <Text variant="caption" color="text-secondary" style={styles.dot}>
-        ·
-      </Text>
-      <Text variant="caption" color="text-secondary" numberOfLines={1} style={styles.title}>
+    );
+  }
+
+  return (
+    <>
+      <Text variant="body" color="foreground" numberOfLines={1} style={styles.primaryTitle}>
         {source.title}
       </Text>
-    </View>
+      <Text variant="caption" color="text-secondary" numberOfLines={1} style={styles.secondaryLabel}>
+        {TYPE_LABELS[source.type] ?? source.type}
+      </Text>
+    </>
   );
 };
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
-    italic: {
-      fontStyle: 'italic',
-    },
-    pill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: t.spacing.xs_4,
-      paddingHorizontal: t.spacing.sm_8,
-      paddingVertical: t.spacing.xs_4,
-      borderRadius: t.borderRadii.md,
-      borderWidth: 1,
-      borderColor: t.colors['border-default'],
-      backgroundColor: t.colors.muted,
+    primaryTitle: {
       maxWidth: 240,
+      fontSize: 17,
+      fontWeight: '600',
+      letterSpacing: -0.2,
+      lineHeight: 22,
+      textAlign: 'center',
     },
-    dot: {
-      opacity: 0.4,
-    },
-    title: {
-      flex: 1,
+    secondaryLabel: {
+      letterSpacing: 0.8,
+      opacity: 0.72,
+      textTransform: 'uppercase',
     },
   }),
 );

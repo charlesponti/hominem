@@ -1,4 +1,4 @@
-import { Stack, useFocusEffect } from 'expo-router';
+import { Stack } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -11,16 +11,19 @@ import { ActiveSearchSummary, type ActiveSearch } from '~/components/focus/focus
 import { LoadingContainer } from '~/components/LoadingFull';
 import AppIcon from '~/components/ui/icon';
 import { InboxStream } from '~/components/workspace/inbox-stream';
-import { useMobileWorkspace } from '~/components/workspace/mobile-workspace-context';
 import { Text, theme, makeStyles } from '~/theme';
 import { useFocusQuery } from '~/utils/services/notes/use-focus-query';
 import type { Note } from '@hominem/hono-rpc/types'
+
+const FOCUS_SCREEN_OPTIONS = {
+  headerShown: false,
+} as const
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: t.colors.background,
+      backgroundColor: t.colors['bg-elevated'],
     },
     focusContainer: {
       flex: 1,
@@ -52,7 +55,6 @@ const useStyles = makeStyles((t) =>
 
 export const FocusView = () => {
   const styles = useStyles();
-  const { setHeader } = useMobileWorkspace();
   const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const { data: sessions = [] } = useResumableSessions();
@@ -85,19 +87,10 @@ export const FocusView = () => {
   const hasFocusItems = resolvedFocusItems.length > 0;
   const hasInboxItems = hasFocusItems || sessions.length > 0;
 
-  useFocusEffect(useCallback(() => {
-    setHeader({
-      kicker: 'Notes-first assistant',
-      title: 'Workspace',
-    });
-  }, [setHeader]));
-
   return (
     <>
       <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
+        options={FOCUS_SCREEN_OPTIONS}
       />
 
       <GestureHandlerRootView testID="focus-screen" style={styles.container}>

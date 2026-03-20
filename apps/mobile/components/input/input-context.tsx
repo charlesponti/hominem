@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type PropsWithChildren,
+} from 'react';
 
 import {
   createInitialMobileComposerState,
@@ -23,8 +31,6 @@ type InputContextValue = {
   setMode: (value: MobileComposerMode) => void;
   context: MobileWorkspaceContext;
   setContext: (value: MobileWorkspaceContext) => void;
-  submitAction: (() => void) | null;
-  setSubmitAction: (value: (() => void) | null) => void;
 };
 
 const InputContext = createContext<InputContextValue | null>(null);
@@ -37,27 +43,26 @@ export const useInputContext = () => {
 
 export const InputProvider = ({ children }: PropsWithChildren) => {
   const [state, setState] = useState(createInitialMobileComposerState);
-  const [submitAction, setSubmitAction] = useState<(() => void) | null>(null);
 
-  const setMessage = (value: string) => {
+  const setMessage = useCallback((value: string) => {
     setState((currentState) => setMobileComposerText(currentState, value));
-  };
+  }, []);
 
-  const setAttachments = (value: MobileComposerAttachment[]) => {
+  const setAttachments = useCallback((value: MobileComposerAttachment[]) => {
     setState((currentState) => setMobileComposerAttachments(currentState, value));
-  };
+  }, []);
 
-  const setIsRecording = (value: boolean) => {
+  const setIsRecording = useCallback((value: boolean) => {
     setState((currentState) => setMobileComposerRecording(currentState, value));
-  };
+  }, []);
 
-  const setMode = (value: MobileComposerMode) => {
+  const setMode = useCallback((value: MobileComposerMode) => {
     setState((currentState) => setMobileComposerMode(currentState, value));
-  };
+  }, []);
 
-  const setContext = (value: MobileWorkspaceContext) => {
+  const setContext = useCallback((value: MobileWorkspaceContext) => {
     setState((currentState) => setMobileComposerContext(currentState, value));
-  };
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -71,10 +76,15 @@ export const InputProvider = ({ children }: PropsWithChildren) => {
       setMode,
       context: state.context,
       setContext,
-      submitAction,
-      setSubmitAction,
     }),
-    [state, submitAction],
+    [
+      setAttachments,
+      setContext,
+      setIsRecording,
+      setMessage,
+      setMode,
+      state,
+    ],
   );
 
   return <InputContext.Provider value={value}>{children}</InputContext.Provider>;

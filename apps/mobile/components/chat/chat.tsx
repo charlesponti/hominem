@@ -1,5 +1,4 @@
 import { StyleSheet, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { FeatureErrorBoundary } from '~/components/error-boundary'
 import { makeStyles } from '~/theme'
@@ -19,16 +18,14 @@ type ChatProps = {
 
 export const Chat = ({ chatId, onChatArchive, source }: ChatProps) => {
   const styles = useStyles()
-  const { top } = useSafeAreaInsets()
   const controller = useChatController({ chatId, onChatArchive, source })
 
   return (
     <View style={styles.container}>
       <ChatHeader
-        topInset={top}
+        topInset={0}
         resolvedSource={controller.resolvedSource}
         statusCopy={controller.statusCopy}
-        onArchiveChatPress={controller.handleArchiveChat}
         onOpenSearch={controller.handleOpenSearch}
         onOpenMenu={controller.handleOpenMenu}
       />
@@ -74,7 +71,7 @@ const useStyles = makeStyles((t) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: t.colors.background,
+      backgroundColor: t.colors['bg-elevated'],
       flexDirection: 'column',
     },
   }),

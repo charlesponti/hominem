@@ -1,5 +1,5 @@
 import type { users } from '@hominem/db/all-schema';
-import type { Queues } from '@hominem/services';
+import type { Queues } from '@hominem/services/types';
 
 import type { AuthContextEnvelope } from '../auth/types';
 

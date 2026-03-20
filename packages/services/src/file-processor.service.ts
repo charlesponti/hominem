@@ -1,10 +1,9 @@
 import { Buffer } from 'node:buffer';
 
 import mammoth from 'mammoth';
-import OpenAI from 'openai';
 import PDFParser from 'pdf2json';
 
-import { env } from './env';
+import { getSharedAiModelConfig, getSharedOpenAIClient } from './ai-model';
 
 export interface ProcessedFile {
   id: string;
@@ -18,9 +17,8 @@ export interface ProcessedFile {
   metadata?: Record<string, unknown>;
 }
 
-const openai = new OpenAI({
-  apiKey: env.OPENAI_API_KEY || '',
-});
+const openai = getSharedOpenAIClient();
+const { modelId: textModelId } = getSharedAiModelConfig();
 
 export class FileProcessorService {
   static async processFile(
@@ -68,7 +66,7 @@ export class FileProcessorService {
       try {
         const base64Image = Buffer.from(buffer).toString('base64');
         const response = await openai.chat.completions.create({
-          model: 'gpt-5-mini',
+          model: textModelId,
           messages: [
             {
               role: 'user',
@@ -140,7 +138,7 @@ export class FileProcessorService {
       if (textContent.length > 1000) {
         try {
           const response = await openai.chat.completions.create({
-            model: 'gpt-5-mini',
+            model: textModelId,
             messages: [
               {
                 role: 'system',

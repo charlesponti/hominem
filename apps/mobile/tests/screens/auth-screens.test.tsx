@@ -1,28 +1,29 @@
 import React from 'react'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native'
+import { vi } from 'vitest'
 
 import { AuthScreen } from '../../app/(auth)/index'
 import { VerifyScreen } from '../../app/(auth)/verify'
 
-const mockReplace = jest.fn()
-const mockCompletePasskeySignIn = jest.fn()
-const mockRequestEmailOtp = jest.fn()
-const mockRetrySessionRecovery = jest.fn()
-const mockVerifyEmailOtp = jest.fn()
-const mockPasskeySignIn = jest.fn()
+const mockReplace = vi.fn()
+const mockCompletePasskeySignIn = vi.fn()
+const mockRequestEmailOtp = vi.fn()
+const mockRetrySessionRecovery = vi.fn()
+const mockVerifyEmailOtp = vi.fn()
+const mockPasskeySignIn = vi.fn()
 let mockIsE2ETesting = false
 let mockIsMobilePasskeyEnabled = true
 let mockAuthStatus: 'signed_out' | 'degraded' = 'signed_out'
 let mockRecoveryError: Error | null = null
 
-jest.mock('expo-router', () => ({
+vi.mock('expo-router', () => ({
   Redirect: ({ href }: { href: string }) => href,
   Link: ({ children }: { children: React.ReactNode }) => children,
   useRouter: () => ({ replace: mockReplace }),
   useLocalSearchParams: () => ({ email: 'mobile-test@hominem.test' }),
 }))
 
-jest.mock('../../utils/auth-provider', () => ({
+vi.mock('../../utils/auth-provider', () => ({
   useAuth: () => ({
     authError: mockRecoveryError,
     authStatus: mockAuthStatus,
@@ -34,7 +35,7 @@ jest.mock('../../utils/auth-provider', () => ({
   }),
 }))
 
-jest.mock('../../utils/use-mobile-passkey-auth', () => ({
+vi.mock('../../utils/use-mobile-passkey-auth', () => ({
   useMobilePasskeyAuth: () => ({
     signIn: mockPasskeySignIn,
     isLoading: false,
@@ -43,7 +44,7 @@ jest.mock('../../utils/use-mobile-passkey-auth', () => ({
   }),
 }))
 
-jest.mock('../../utils/constants', () => ({
+vi.mock('../../utils/constants', () => ({
   get E2E_TESTING() {
     return mockIsE2ETesting
   },
@@ -52,14 +53,12 @@ jest.mock('../../utils/constants', () => ({
   },
 }))
 
-jest.mock('../../theme', () => ({
+vi.mock('../../theme', () => ({
   Box: ({ children, testID }: { children: React.ReactNode; testID?: string }) => {
-    const { View } = require('react-native')
-    return <View testID={testID}>{children}</View>
+    return React.createElement('View', { testID }, children)
   },
   Text: ({ children, testID }: { children: React.ReactNode; testID?: string }) => {
-    const { Text } = require('react-native')
-    return <Text testID={testID}>{children}</Text>
+    return React.createElement('Text', { testID }, children)
   },
   theme: {
     colors: {
@@ -96,48 +95,51 @@ jest.mock('../../theme', () => ({
   makeStyles: () => () => ({}),
 }))
 
-jest.mock('../../components/Button', () => ({
+vi.mock('../../components/Button', () => ({
   Button: ({ title, testID, onPress, disabled }: {
     title?: string
     testID?: string
     onPress?: () => void
     disabled?: boolean
   }) => {
-    const { Text, TouchableOpacity } = require('react-native')
-    return (
-      <TouchableOpacity accessibilityRole="button" disabled={disabled} onPress={onPress} testID={testID}>
-        <Text>{title}</Text>
-      </TouchableOpacity>
+    return React.createElement(
+      'TouchableOpacity',
+      {
+        accessibilityRole: 'button',
+        accessibilityState: { disabled },
+        disabled,
+        onPress,
+        testID,
+      },
+      React.createElement('Text', null, title),
     )
   },
 }))
 
-jest.mock('../../components/text-input', () => {
-  return function MockTextInput(props: {
-    testID?: string
-    value?: string
-    onChangeText?: (value: string) => void
-    placeholder?: string
-  }) {
-    const { TextInput } = require('react-native')
-    return (
-      <TextInput
-        onChangeText={props.onChangeText}
-        placeholder={props.placeholder}
-        testID={props.testID}
-        value={props.value}
-      />
-    )
+vi.mock('../../components/text-input', () => {
+  return {
+    default: (props: {
+      testID?: string
+      value?: string
+      onChangeText?: (value: string) => void
+      placeholder?: string
+    }) =>
+      React.createElement('TextInput', {
+        onChangeText: props.onChangeText,
+        placeholder: props.placeholder,
+        testID: props.testID,
+        value: props.value,
+      }),
   }
 })
 
-jest.mock('../../components/error-boundary', () => ({
+vi.mock('../../components/error-boundary', () => ({
   FeatureErrorBoundary: ({ children }: { children: React.ReactNode }) => children,
 }))
 
 describe('auth rendered screens', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
     mockIsE2ETesting = false
     mockIsMobilePasskeyEnabled = true
     mockAuthStatus = 'signed_out'
@@ -145,9 +147,9 @@ describe('auth rendered screens', () => {
   })
 
   it('shows validation error when email is empty', async () => {
-    render(<AuthScreen />)
+    await render(<AuthScreen />)
 
-    fireEvent.press(screen.getByTestId('auth-send-otp'))
+    await fireEvent.press(screen.getByTestId('auth-send-otp'))
 
     expect(await screen.findByTestId('auth-error-text')).toHaveTextContent('EMAIL IS REQUIRED.')
     expect(mockRequestEmailOtp).not.toHaveBeenCalled()
@@ -155,19 +157,19 @@ describe('auth rendered screens', () => {
 
   it('submits normalized email and routes to verify screen', async () => {
     mockRequestEmailOtp.mockResolvedValue(undefined)
-    jest.useFakeTimers()
+    vi.useFakeTimers()
 
-    render(<AuthScreen />)
+    await render(<AuthScreen />)
 
-    fireEvent.changeText(screen.getByTestId('auth-email-input'), '  USER@Example.com  ')
-    fireEvent.press(screen.getByTestId('auth-send-otp'))
+    await fireEvent.changeText(screen.getByTestId('auth-email-input'), '  USER@Example.com  ')
+    await fireEvent.press(screen.getByTestId('auth-send-otp'))
 
     await waitFor(() => {
       expect(mockRequestEmailOtp).toHaveBeenCalledWith('user@example.com')
     })
 
-    act(() => {
-      jest.runAllTimers()
+    await act(() => {
+      vi.runAllTimers()
     })
 
     await waitFor(() => {
@@ -175,14 +177,14 @@ describe('auth rendered screens', () => {
     })
 
     expect(mockReplace).toHaveBeenCalledWith('/(auth)/verify?email=user%40example.com')
-    jest.useRealTimers()
+    vi.useRealTimers()
   })
 
   it('shows verify screen validation error when OTP is invalid', async () => {
-    render(<VerifyScreen />)
+    await render(<VerifyScreen />)
 
-    fireEvent.changeText(screen.getByTestId('auth-otp-input'), '12')
-    fireEvent.press(screen.getByTestId('auth-verify-otp'))
+    await fireEvent.changeText(screen.getByTestId('auth-otp-input'), '12')
+    await fireEvent.press(screen.getByTestId('auth-verify-otp'))
 
     expect(await screen.findByTestId('auth-error-text')).toHaveTextContent('CODE MUST BE 6 DIGITS.')
     expect(mockVerifyEmailOtp).not.toHaveBeenCalled()
@@ -191,10 +193,10 @@ describe('auth rendered screens', () => {
   it('submits normalized OTP to verify flow', async () => {
     mockVerifyEmailOtp.mockResolvedValue(undefined)
 
-    render(<VerifyScreen />)
+    await render(<VerifyScreen />)
 
-    fireEvent.changeText(screen.getByTestId('auth-otp-input'), '12 34-56')
-    fireEvent.press(screen.getByTestId('auth-verify-otp'))
+    await fireEvent.changeText(screen.getByTestId('auth-otp-input'), '12 34-56')
+    await fireEvent.press(screen.getByTestId('auth-verify-otp'))
 
     await waitFor(() => {
       expect(mockVerifyEmailOtp).toHaveBeenCalledWith({
@@ -209,9 +211,9 @@ describe('auth rendered screens', () => {
   })
 
   it('renders six OTP slots and mirrors pasted digits into the slots', async () => {
-    render(<VerifyScreen />)
+    await render(<VerifyScreen />)
 
-    fireEvent.changeText(screen.getByTestId('auth-otp-input'), '12 34-56')
+    await fireEvent.changeText(screen.getByTestId('auth-otp-input'), '12 34-56')
 
     expect(screen.getByTestId('auth-otp-slot-0')).toHaveTextContent('1')
     expect(screen.getByTestId('auth-otp-slot-1')).toHaveTextContent('2')
@@ -224,9 +226,9 @@ describe('auth rendered screens', () => {
   it('resends the code and shows resend confirmation', async () => {
     mockRequestEmailOtp.mockResolvedValue(undefined)
 
-    render(<VerifyScreen />)
+    await render(<VerifyScreen />)
 
-    fireEvent.press(screen.getByTestId('auth-resend-otp'))
+    await fireEvent.press(screen.getByTestId('auth-resend-otp'))
 
     await waitFor(() => {
       expect(mockRequestEmailOtp).toHaveBeenCalledWith('mobile-test@hominem.test')
@@ -238,10 +240,10 @@ describe('auth rendered screens', () => {
   it('shows inline error and re-enables submit on OTP verify failure', async () => {
     mockVerifyEmailOtp.mockRejectedValue(new Error('Invalid or expired code.'))
 
-    render(<VerifyScreen />)
+    await render(<VerifyScreen />)
 
-    fireEvent.changeText(screen.getByTestId('auth-otp-input'), '123456')
-    fireEvent.press(screen.getByTestId('auth-verify-otp'))
+    await fireEvent.changeText(screen.getByTestId('auth-otp-input'), '123456')
+    await fireEvent.press(screen.getByTestId('auth-verify-otp'))
 
     expect(await screen.findByTestId('auth-error-text')).toHaveTextContent('INVALID OR EXPIRED CODE.')
 
@@ -255,15 +257,18 @@ describe('auth rendered screens', () => {
     let resolveOtp!: () => void
     mockRequestEmailOtp.mockReturnValue(new Promise<void>((res) => { resolveOtp = res }))
 
-    render(<AuthScreen />)
-    fireEvent.changeText(screen.getByTestId('auth-email-input'), 'user@example.com')
-    fireEvent.press(screen.getByTestId('auth-send-otp'))
+    await render(<AuthScreen />)
+    await fireEvent.changeText(screen.getByTestId('auth-email-input'), 'user@example.com')
+    const submitPromise = fireEvent.press(screen.getByTestId('auth-send-otp'))
 
-    expect(screen.getByTestId('auth-send-otp')).toBeDisabled()
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-send-otp')).toBeDisabled()
+    })
 
     await act(async () => {
       resolveOtp()
     })
+    await submitPromise
 
     await waitFor(() => {
       expect(screen.getByTestId('auth-send-otp')).not.toBeDisabled()
@@ -274,15 +279,18 @@ describe('auth rendered screens', () => {
     let resolveVerify!: () => void
     mockVerifyEmailOtp.mockReturnValue(new Promise<void>((res) => { resolveVerify = res }))
 
-    render(<VerifyScreen />)
-    fireEvent.changeText(screen.getByTestId('auth-otp-input'), '123456')
-    fireEvent.press(screen.getByTestId('auth-verify-otp'))
+    await render(<VerifyScreen />)
+    await fireEvent.changeText(screen.getByTestId('auth-otp-input'), '123456')
+    const verifyPromise = fireEvent.press(screen.getByTestId('auth-verify-otp'))
 
-    expect(screen.getByTestId('auth-verify-otp')).toBeDisabled()
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-verify-otp')).toBeDisabled()
+    })
 
     await act(async () => {
       resolveVerify()
     })
+    await verifyPromise
 
     await waitFor(() => {
       expect(screen.getByTestId('auth-verify-otp')).not.toBeDisabled()
@@ -301,9 +309,9 @@ describe('auth rendered screens', () => {
       },
     })
 
-    render(<AuthScreen />)
+    await render(<AuthScreen />)
 
-    fireEvent.press(screen.getByTestId('auth-passkey-button'))
+    await fireEvent.press(screen.getByTestId('auth-passkey-button'))
 
     await waitFor(() => {
       expect(mockPasskeySignIn).toHaveBeenCalledTimes(1)
@@ -315,21 +323,21 @@ describe('auth rendered screens', () => {
     mockAuthStatus = 'degraded'
     mockRecoveryError = new Error('Boot timed out')
 
-    render(<AuthScreen />)
+    await render(<AuthScreen />)
 
     expect(screen.getByTestId('auth-error-text')).toHaveTextContent('BOOT TIMED OUT')
 
-    fireEvent.press(screen.getByTestId('auth-retry-recovery'))
+    await fireEvent.press(screen.getByTestId('auth-retry-recovery'))
 
     await waitFor(() => {
       expect(mockRetrySessionRecovery).toHaveBeenCalledTimes(1)
     })
   })
 
-  it('hides passkey CTA when the mobile passkey flag is disabled', () => {
+  it('hides passkey CTA when the mobile passkey flag is disabled', async () => {
     mockIsMobilePasskeyEnabled = false
 
-    render(<AuthScreen />)
+    await render(<AuthScreen />)
 
     expect(screen.queryByTestId('auth-passkey-button')).toBeNull()
     expect(screen.queryByTestId('auth-e2e-passkey-success')).toBeNull()

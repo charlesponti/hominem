@@ -1,4 +1,4 @@
-import type { VoiceErrorCode } from '@hominem/services';
+import type { VoiceErrorCode } from '@hominem/services/voice-transcription';
 import { Inline } from '@hominem/ui';
 import { SpeechInput } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';

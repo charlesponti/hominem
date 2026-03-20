@@ -1,4 +1,4 @@
-import { openai } from '@ai-sdk/openai';
+import { getSharedTextModel } from '@hominem/services/ai-model';
 import { ValidationError } from '../errors';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
@@ -71,7 +71,7 @@ ${strategyPrompt}
 Return only the tweet text, nothing else.`;
 
     const result = await generateText({
-      model: openai('gpt-5-mini'),
+      model: getSharedTextModel(),
       system: systemPrompt,
       prompt: `Convert this content into an engaging tweet using the ${strategyName} strategy:\n\n${content}`,
       maxTokens: 100,

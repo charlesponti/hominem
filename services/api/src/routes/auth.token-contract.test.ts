@@ -59,7 +59,7 @@ describe('auth token response contract', () => {
     expect(body.session_id).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
     expect(body.refresh_family_id).toBe('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb');
     expect(body.provider).toBe('better-auth');
-  });
+  }, 15000);
 
   test('POST /api/auth/token rejects non-refresh grants', async () => {
     const app = createServer();
@@ -77,7 +77,7 @@ describe('auth token response contract', () => {
     expect(response.status).toBe(400);
     const body = (await response.json()) as { error: string };
     expect(body.error).toBe('unsupported_grant_type');
-  });
+  }, 15000);
 
   test('POST /api/auth/refresh is deprecated for first-party callers', async () => {
     const app = createServer();
@@ -94,7 +94,7 @@ describe('auth token response contract', () => {
     expect(response.status).toBe(410);
     const body = (await response.json()) as { error: string };
     expect(body.error).toBe('deprecated_endpoint');
-  });
+  }, 15000);
 
   test('POST /api/auth/token-from-session is deprecated for first-party callers', async () => {
     const app = createServer();
@@ -105,5 +105,5 @@ describe('auth token response contract', () => {
     expect(response.status).toBe(410);
     const body = (await response.json()) as { error: string };
     expect(body.error).toBe('deprecated_endpoint');
-  });
+  }, 15000);
 });

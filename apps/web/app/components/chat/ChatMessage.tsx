@@ -1,4 +1,5 @@
 import type { ChatMessageToolCall } from '@hominem/hono-rpc/types/chat.types';
+import { chatTokens } from '@hominem/ui/tokens';
 import { Form, Inline, Stack } from '@hominem/ui';
 import {
   MarkdownContent,
@@ -20,8 +21,9 @@ import {
 import { Textarea } from '@hominem/ui/textarea';
 import { formatMessageTimestamp } from '@hominem/utils/dates';
 import { AlertCircle, Check, Copy, Edit2, MoreVertical, RotateCcw, Save, Trash2, X } from 'lucide-react';
-import { memo, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 
+import { playEnterRow, reducedMotion } from '@hominem/ui/lib/gsap';
 import { useMessageEdit } from '~/lib/hooks/use-message-edit';
 import type { ExtendedMessage } from '~/lib/types/chat-message';
 import { cn } from '~/lib/utils';
@@ -51,6 +53,13 @@ export const ChatMessage = memo(function ChatMessage({
   const hasReasoning = message.reasoning && message.reasoning.trim().length > 0;
   const isErrorMessage = !isUser && message.content?.startsWith('[Error:');
   const [copied, setCopied] = useState(false);
+  const rowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!rowRef.current) return;
+    if (reducedMotion()) return;
+    playEnterRow(rowRef.current, 0);
+  }, []);
 
   const handleCopyMessage = async () => {
     const success = await copyToClipboard(message.content || '');
@@ -70,7 +79,9 @@ export const ChatMessage = memo(function ChatMessage({
 
   return (
     <div
-      className="group py-4"
+      ref={rowRef}
+      className="group"
+      style={{ paddingTop: 'var(--spacing-2)', paddingBottom: 'var(--spacing-2)' }}
       role="article"
       aria-label={`${isUser ? 'Your' : 'AI Assistant'} message${timestamp ? ` from ${timestamp}` : ''}`}
     >
@@ -82,7 +93,7 @@ export const ChatMessage = memo(function ChatMessage({
         >
           {/* Reasoning section (shown first for assistant messages) */}
           {!isUser && hasReasoning && (
-            <Reasoning className="text-text-tertiary border-l-2 border-border-subtle pl-4 py-1 my-2">
+            <Reasoning className="text-text-tertiary border-l-2 border-border-default pl-4 py-1 my-2">
               {message.reasoning}
             </Reasoning>
           )}
@@ -169,16 +180,27 @@ export const ChatMessage = memo(function ChatMessage({
           ) : (
             !isErrorMessage && hasContent &&
             (isUser ? (
-              // User message - compact bubble style
-              <div className="inline-block max-w-[85%] sm:max-w-[75%] rounded-md bg-bg-surface border border-subtle px-4 py-3 text-foreground shadow-sm">
+              <div
+                className="inline-block"
+                style={{
+                  maxWidth: chatTokens.userBubbleMaxWidth,
+                  borderRadius: chatTokens.radii.bubble,
+                  backgroundColor: chatTokens.surfaces.user,
+                  borderWidth: 1,
+                  borderStyle: 'solid',
+                  borderColor: chatTokens.borders.user,
+                  padding: 'var(--spacing-3) var(--spacing-4)',
+                  color: chatTokens.foregrounds.user,
+                  boxShadow: 'var(--shadow-low)',
+                }}
+              >
                 <MarkdownContent
                   content={message.content}
                   isStreaming={isStreaming}
-                  className="prose-p:text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-code:text-foreground prose-pre:bg-bg-elevated"
+                  className="prose-p:text-white prose-headings:text-white prose-strong:text-white prose-li:text-white prose-code:text-white prose-pre:bg-bg-elevated"
                 />
               </div>
             ) : (
-              // Assistant message - full width transcript style (no bubble)
               <div className="w-full text-foreground">
                 <MarkdownContent content={message.content} isStreaming={isStreaming} />
               </div>

@@ -1,17 +1,17 @@
 import type { Note } from '@hominem/hono-rpc/types'
-import { useQueryClient } from '@tanstack/react-query'
 import * as Calendar from 'expo-calendar'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as Print from 'expo-print'
 import { useLocalSearchParams } from 'expo-router'
 import * as Sharing from 'expo-sharing'
+import React from 'react'
 import { useCallback, useState } from 'react'
 import { Alert } from 'react-native'
 
 import { NoteEditingSheet } from '~/components/focus/note-editing-sheet'
 import { getTimezone } from '~/utils/dates'
 import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
-import { focusKeys } from '~/utils/services/notes/query-keys'
+import { useFocusItemQuery } from '~/utils/services/notes/use-focus-item-query'
 import {
   useUpdateFocusItem,
   type UpdateFocusItemInput,
@@ -28,9 +28,10 @@ function getFocusItemBody(focusItem: Note): string {
 export default function FocusItemView() {
   const { id } = useLocalSearchParams()
   const noteId = String(id ?? '')
-  const queryClient = useQueryClient()
-  const focusItemsByKey = queryClient.getQueryData<Note[]>(focusKeys.all)
-  const focusItem = focusItemsByKey?.find((item) => item.id === noteId)
+  const { data: focusItem } = useFocusItemQuery({
+    noteId,
+    enabled: noteId.length > 0,
+  })
 
   if (!focusItem) {
     return null
@@ -58,24 +59,24 @@ function FocusItemEditor({ focusItem }: { focusItem: Note }) {
     if (!defaultCalendar) return
     await Calendar.createEventAsync(defaultCalendar.id, {
       title: getFocusItemLabel(focusItem),
-      notes: getFocusItemBody(focusItem),
+      notes: text,
       startDate: scheduledFor,
       endDate: new Date(scheduledFor.getTime() + 60 * 60 * 1000),
     })
     Alert.alert('Added to Calendar', 'Event created successfully.')
-  }, [focusItem, scheduledFor])
+  }, [focusItem, scheduledFor, text])
 
   const onPrint = useCallback(async () => {
-    const html = `<h1>${getFocusItemLabel(focusItem)}</h1><p>${getFocusItemBody(focusItem).replace(/\n/g, '<br/>')}</p>`
+    const html = `<h1>${getFocusItemLabel(focusItem)}</h1><p>${text.replace(/\n/g, '<br/>')}</p>`
     await Print.printAsync({ html })
-  }, [focusItem])
+  }, [focusItem, text])
 
   const onShare = useCallback(async () => {
-    const content = `${getFocusItemLabel(focusItem)}\n\n${getFocusItemBody(focusItem)}`
+    const content = `${getFocusItemLabel(focusItem)}\n\n${text}`
     const uri = `${FileSystem.cacheDirectory}note_${focusItem.id}.txt`
     await FileSystem.writeAsStringAsync(uri, content, { encoding: FileSystem.EncodingType.UTF8 })
     await Sharing.shareAsync(uri, { mimeType: 'text/plain', UTI: 'public.plain-text' })
-  }, [focusItem])
+  }, [focusItem, text])
 
   const onSave = useCallback(async () => {
     const input: UpdateFocusItemInput = {
@@ -95,7 +96,7 @@ function FocusItemEditor({ focusItem }: { focusItem: Note }) {
 
   return (
     <NoteEditingSheet
-      title={getFocusItemLabel(focusItem)}
+      note={focusItem}
       text={text}
       scheduledFor={scheduledFor}
       isSaving={updateFocusItem.isPending}

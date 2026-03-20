@@ -1,5 +1,5 @@
 import React from 'react'
-import { act, create } from 'react-test-renderer'
+import { act, render, waitFor } from '@testing-library/react-native'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -7,42 +7,39 @@ import {
   useMobileWorkspace,
 } from '../../components/workspace/mobile-workspace-context'
 
-interface HeaderControls {
-  setHeader: ({ kicker, title }: { kicker?: string | null; title: string }) => void
+interface WorkspaceControls {
+  setActiveContext: (context: 'inbox' | 'note' | 'chat' | 'search' | 'settings') => void
 }
 
-function createHeaderProbe(ref: { current: HeaderControls | null }) {
-  return function HeaderProbe() {
-    const { setHeader } = useMobileWorkspace()
-    ref.current = { setHeader }
+function createWorkspaceProbe(ref: { current: WorkspaceControls | null }) {
+  return function WorkspaceProbe() {
+    const { setActiveContext } = useMobileWorkspace()
+    ref.current = { setActiveContext }
     return null
   }
 }
 
 describe('mobile workspace context', () => {
-  it('keeps setHeader stable after header updates', () => {
-    const ref: { current: HeaderControls | null } = { current: null }
-    const HeaderProbe = createHeaderProbe(ref)
+  it('keeps setActiveContext stable after context updates', async () => {
+    const ref: { current: WorkspaceControls | null } = { current: null }
+    const WorkspaceProbe = createWorkspaceProbe(ref)
 
-    act(() => {
-      create(
-        <MobileWorkspaceProvider>
-          <HeaderProbe />
-        </MobileWorkspaceProvider>,
-      )
+    await render(
+      <MobileWorkspaceProvider>
+        <WorkspaceProbe />
+      </MobileWorkspaceProvider>,
+    )
+
+    const firstSetActiveContext = ref.current?.setActiveContext
+
+    expect(firstSetActiveContext).toBeTypeOf('function')
+
+    await act(() => {
+      firstSetActiveContext?.('chat')
     })
 
-    const firstSetHeader = ref.current?.setHeader
-
-    expect(firstSetHeader).toBeTypeOf('function')
-
-    act(() => {
-      firstSetHeader?.({
-        kicker: 'Notes-first assistant',
-        title: 'Workspace',
-      })
+    await waitFor(() => {
+      expect(ref.current?.setActiveContext).toBe(firstSetActiveContext)
     })
-
-    expect(ref.current?.setHeader).toBe(firstSetHeader)
   })
 })

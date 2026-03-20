@@ -1,5 +1,5 @@
 import React from 'react'
-import TestRenderer, { act } from 'react-test-renderer'
+import { render, waitFor } from '@testing-library/react-native'
 
 import Sherpa from '../../app/(protected)/(tabs)/sherpa/index'
 import {
@@ -14,6 +14,7 @@ let workspaceContext = 'inbox'
 
 vi.mock('expo-router', () => ({
   useLocalSearchParams: () => ({ chatId: 'chat-1' }),
+  usePathname: () => '/(protected)/(tabs)/sherpa',
   useRouter: () => ({ push: mockPush }),
 }))
 
@@ -25,12 +26,19 @@ vi.mock('../../components/chat/chat', () => ({
   Chat: () => null,
 }))
 
+vi.mock('../../lib/use-chat-live-activity', () => ({
+  useChatLiveActivity: () => ({
+    stop: () => undefined,
+  }),
+}))
+
 vi.mock('../../components/LoadingFull', () => ({
   LoadingFull: ({ children }: { children: React.ReactNode }) => children,
 }))
 
 vi.mock('../../theme', () => ({
   Text: ({ children }: { children: React.ReactNode }) => children,
+  makeStyles: () => () => ({}),
 }))
 
 vi.mock('../../utils/services/chat', () => ({
@@ -63,15 +71,15 @@ describe('mobile chat workspace context', () => {
   })
 
   it('switches the shared workspace context to chat when the sherpa route mounts', async () => {
-    await act(async () => {
-      TestRenderer.create(
-        <MobileWorkspaceProvider>
-          <WorkspaceProbe />
-          <Sherpa />
-        </MobileWorkspaceProvider>,
-      )
-    })
+    await render(
+      <MobileWorkspaceProvider>
+        <WorkspaceProbe />
+        <Sherpa />
+      </MobileWorkspaceProvider>,
+    )
 
-    expect(workspaceContext).toBe('chat')
+    await waitFor(() => {
+      expect(workspaceContext).toBe('chat')
+    })
   })
 })

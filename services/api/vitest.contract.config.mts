@@ -4,12 +4,12 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
+    name: '@hominem/api-contract',
     deps: {
       interopDefault: true,
     },
     globals: true,
     environment: 'node',
-    fileParallelism: false,
     setupFiles: './test/test.setup.contract.ts',
     clearMocks: true,
     slowTestThreshold: 1_500,

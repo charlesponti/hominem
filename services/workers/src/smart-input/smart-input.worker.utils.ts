@@ -1,4 +1,4 @@
-import { openai } from '@ai-sdk/openai';
+import { getSharedTextModel } from '@hominem/services/ai-model';
 import { logger } from '@hominem/utils/logger';
 import { generateObject } from 'ai';
 import type { Attachment } from 'mailparser';
@@ -61,7 +61,7 @@ export async function processAttachments(
       });
 
       const response = await generateObject<SubmissionAttachment>({
-        model: openai('gpt-5-mini', { structuredOutputs: true }),
+        model: getSharedTextModel({ structuredOutputs: true }),
         messages: [
           {
             role: 'system',

@@ -5,7 +5,7 @@ import { STEP_UP_ACTIONS } from '@hominem/auth/step-up-actions'
 import type { HominemUser } from '@hominem/auth/server'
 
 import type { AppContext } from '../src/middleware/auth'
-import { errorMiddleware } from '../src/middleware/error'
+import { apiErrorHandler } from '../src/middleware/error'
 import { accountsRoutes } from '../src/routes/finance.accounts'
 
 const proofStore = vi.hoisted(() => new Map<string, string>())
@@ -30,7 +30,7 @@ const user: HominemUser = {
 
 function createAuthedApp() {
   return new Hono<AppContext>()
-    .use('*', errorMiddleware)
+    .onError(apiErrorHandler)
     .use('*', async (c, next) => {
       c.set('user', user)
       c.set('userId', user.id)

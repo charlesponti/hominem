@@ -12,6 +12,10 @@ const envSchema = z.object({
   VITE_APP_BASE_URL: z.string().url().optional(),
   APP_BASE_URL: z.string().url().optional(),
   OPENAI_API_KEY: z.string().optional(),
+  AI_PROVIDER: z.enum(['openai', 'opencode-zen']).optional().default('openai'),
+  AI_MODEL: z.string().optional(),
+  OPENCODE_ZEN_API_KEY: z.string().optional(),
+  OPENCODE_ZEN_BASE_URL: z.string().url().optional(),
   AI_SDK_TRANSCRIBE_ENABLED: z
     .enum(['true', 'false'])
     .optional()

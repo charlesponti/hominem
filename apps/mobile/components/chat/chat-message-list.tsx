@@ -1,7 +1,6 @@
 import { chatTokensNative, fontFamiliesNative, fontSizes } from '@hominem/ui/tokens'
-import { FlashList, type ListRenderItem } from '@shopify/flash-list'
-import { useCallback } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { useCallback, useMemo, useState } from 'react'
+import { FlatList, Pressable, StyleSheet, View } from 'react-native'
 
 import { Text, makeStyles } from '~/theme'
 import type { MessageOutput } from '~/utils/services/chat'
@@ -11,6 +10,7 @@ import { ChatShimmerMessage } from './chat-shimmer-message'
 import { ChatThinkingIndicator } from './chat-thinking-indicator'
 
 const keyExtractor = (item: MessageOutput) => item.id
+const CHAT_COMPOSER_CLEARANCE = 220
 
 interface ChatMessageListProps {
   isMessagesLoading: boolean
@@ -46,10 +46,13 @@ export function ChatMessageList({
   onShare,
 }: ChatMessageListProps) {
   const styles = useStyles()
+  const hasSearchQuery = showSearch && searchQuery.length > 0
+  const [activeActionMessageId, setActiveActionMessageId] = useState<string | null>(null)
 
-  const renderItem = useCallback<ListRenderItem<MessageOutput>>(
-    ({ item }) =>
+  const renderItem = useCallback(
+    ({ item }: { item: MessageOutput }) =>
       renderMessage(item, markdown, {
+        isActive: activeActionMessageId === item.id,
         showDebug,
         onCopy,
         onEdit,
@@ -58,9 +61,36 @@ export function ChatMessageList({
         onSpeak,
         speakingId,
         onShare,
+        onActivate: () =>
+          setActiveActionMessageId((currentMessageId) =>
+            currentMessageId === item.id ? null : item.id,
+          ),
       }),
-    [markdown, onCopy, onDelete, onEdit, onRegenerate, onShare, onSpeak, showDebug, speakingId],
+    [
+      activeActionMessageId,
+      markdown,
+      onCopy,
+      onDelete,
+      onEdit,
+      onRegenerate,
+      onShare,
+      onSpeak,
+      showDebug,
+      speakingId,
+    ],
   )
+
+  const emptySearch = useMemo(() => {
+    if (!hasSearchQuery) {
+      return null
+    }
+
+    return (
+      <View style={styles.emptySearch}>
+        <Text style={styles.emptySearchText}>No messages matching "{searchQuery}"</Text>
+      </View>
+    )
+  }, [hasSearchQuery, searchQuery, styles.emptySearch, styles.emptySearchText])
 
   if (isMessagesLoading) {
     return (
@@ -74,19 +104,20 @@ export function ChatMessageList({
 
   return (
     <>
-      <FlashList
+      <FlatList
         contentContainerStyle={styles.messagesContainer}
         data={displayMessages}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         scrollEnabled={displayMessages.length > 0}
-        ListEmptyComponent={
-          showSearch && searchQuery.length > 0 ? (
-            <View style={styles.emptySearch}>
-              <Text style={styles.emptySearchText}>No messages matching "{searchQuery}"</Text>
-            </View>
+        ListEmptyComponent={emptySearch}
+        ListFooterComponent={
+          displayMessages.length > 0 ? (
+            <Pressable onPress={() => setActiveActionMessageId(null)} style={styles.dismissArea} />
           ) : null
         }
+        onScrollBeginDrag={() => setActiveActionMessageId(null)}
+        removeClippedSubviews={false}
       />
       {chatSendStatus === 'submitted' && <ChatShimmerMessage />}
       {chatSendStatus === 'streaming' && <ChatThinkingIndicator />}
@@ -98,9 +129,9 @@ const useStyles = makeStyles((t) =>
   StyleSheet.create({
     messagesContainer: {
       flexGrow: 1,
-      paddingTop: t.spacing.m_16,
+      paddingTop: t.spacing.xs_4,
       paddingHorizontal: t.spacing.m_16,
-      paddingBottom: t.spacing.sm_12,
+      paddingBottom: CHAT_COMPOSER_CLEARANCE,
       rowGap: chatTokensNative.turnGap,
     },
     shimmerContainer: {
@@ -110,6 +141,10 @@ const useStyles = makeStyles((t) =>
     emptySearch: {
       paddingTop: t.spacing.xl_48,
       alignItems: 'center',
+    },
+    dismissArea: {
+      flexGrow: 1,
+      minHeight: t.spacing.xl_64,
     },
     emptySearchText: {
       color: t.colors['text-tertiary'],

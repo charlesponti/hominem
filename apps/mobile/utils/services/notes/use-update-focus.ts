@@ -67,8 +67,25 @@ export const useUpdateFocusItem = (): UseMutationResult<Note, Error, UpdateFocus
 
       return updatedNote
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: focusKeys.all })
+    onSuccess: async (updatedNote, input) => {
+      queryClient.setQueryData<Note[]>(focusKeys.all, (current) => {
+        if (!current) {
+          return [updatedNote]
+        }
+
+        const hasNote = current.some((item) => item.id === updatedNote.id)
+        if (hasNote) {
+          return current.map((item) => (item.id === updatedNote.id ? updatedNote : item))
+        }
+
+        return [updatedNote, ...current]
+      })
+      queryClient.setQueryData(focusKeys.detail(input.id), updatedNote)
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: focusKeys.all }),
+        queryClient.invalidateQueries({ queryKey: focusKeys.detail(input.id) }),
+      ])
     },
   })
 }

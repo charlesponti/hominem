@@ -1,6 +1,7 @@
 ---
 name: design-system
-description: Apply when writing, reviewing, or modifying any UI code — components, styles, animations, tokens, or layout. Enforces the Ponti Studios design system: Apple HIG alignment, strict token usage, GSAP-only interactive animations, minimalism, and performance.
+description: |
+  Apply when writing, reviewing, or modifying any UI code — components, styles, animations, tokens, or layout. Enforces the Ponti Studios design system: Apple HIG alignment, strict token usage, GSAP-only interactive animations, minimalism, and performance.
 license: MIT
 compatibility: Any frontend project using React (web or React Native)
 metadata:
@@ -159,6 +160,128 @@ Never use `max-width` media queries — never style down, always style up.
 
 ---
 
+## Chat-specific rules
+
+These rules apply to all chat UI components: web (`apps/web/app/components/chat/`) and mobile (`apps/mobile/components/chat/`), plus shared UI components (`packages/ui/src/components/ai-elements/`).
+
+### Token usage — no exceptions
+
+Chat components must use `chatTokens` from `@hominem/ui/tokens` for all chat-specific values. Common violations to avoid:
+
+- ❌ `bg-white`, `bg-bg-surface`, `text-foreground`, `text-text-primary` — use tokens
+- ❌ `border-subtle`, `border-border-default` — use `colors['border-subtle']` from token
+- ❌ `rounded-md`, `rounded-lg`, `rounded-[1.75rem]` — use `radii.md` or `chatTokens.radii.bubble`
+- ❌ `rgba(0,0,0,0.08)`, `rgba(0,0,0,0.35)` — use `chatTokens.borders.composer`, `chatTokens.foregrounds.metadata`
+- ❌ `shadow-sm`, `shadow-[0_2px_12px_...]` — use `shadows.low` / `shadows.medium`
+- ❌ `space-y-4`, `py-4`, `px-4` — use `chatTokens.turnGap`, `chatTokens.turnPaddingY`, `chatTokens.composerPadding`
+- ❌ Hardcoded font sizes (17, 18, 24) — use `fontSizes` from tokens or `body-1` class
+
+### Bubble rules — the most important chat rule
+
+**User messages:** Wrapped in a bubble.
+- Background: `chatTokens.surfaces.user`
+- Border: `1px solid chatTokens.borders.user`
+- Radius: `chatTokens.radii.bubble`
+- Max width: `chatTokens.userBubbleMaxWidth`
+- Text: white, `body-1`
+- Shadow: `shadows.low`
+- Alignment: right
+
+**Assistant messages:** Never wrapped in a bubble. Plain text, full transcript width.
+- Background: transparent
+- Text: `colors['text-primary']`, `body-1`
+- Alignment: left
+
+**Forbidden:**
+- Never put assistant messages in a bubble
+- Never show a user avatar
+- Never put "You" inside the user bubble
+- Never use `rounded-full` for message bubbles
+
+### Message structure
+
+Every message turn (user or assistant) consists of these layers, in order:
+
+1. **Message row** — `py-2` (chatTokens.turnPaddingY), handles alignment
+2. **MessageContent** — column container, handles max-width
+3. **Reasoning** (assistant only) — above main content, 3px left border
+4. **Tool calls** — below reasoning, above main content
+5. **Main content** — bubble (user) or plain (assistant)
+6. **Focus items** — referenced notes, collapsed
+7. **Metadata** — sender label · timestamp, `body-4`, `text-tertiary`
+8. **Actions** — hidden on hover (web), visible (mobile)
+
+**Gap between layers:** `chatTokens.contentGap` (8px)
+
+**Turn gap (between messages):** `chatTokens.turnGap` (20px)
+
+### Animation requirements
+
+**Message enter animation (web):** Every message rendered into the DOM must animate in:
+```ts
+playEnterRow(el, 0) // No stagger for new messages — stagger only on initial load
+```
+
+**Initial load shimmer:** Use `playShimmer` on each skeleton row. Kill on data resolve.
+```ts
+shimmerTween = playShimmer(skeletonEl)
+dataResolve => shimmerTween.kill()
+```
+
+**Streaming cursor:** CSS custom animation class (not Tailwind `animate-pulse`). Define in `animations.css`.
+
+**Reduced motion:** All animations must check `reducedMotion()`. The canonical sequences handle this automatically when imported correctly.
+
+### Composer rules
+
+**Web:**
+- Border radius: `1.75rem` (28px) — documented exception in design-system.md
+- Shadow upgrade on focus: `shadows.low` → `shadows.medium`
+- Submit button: circular, 36×36px, foreground background, white icon
+- Toolbar icons: 28×28px, `text-tertiary`
+
+**Mobile:**
+- **If the component returns `null`, it's a stub. It must be implemented.**
+- Full width, safe-area aware
+- Submit: 44×44px, accent background
+
+### Mobile-specific
+
+- Never use `Animated` from React Native core — use react-native-reanimated only
+- Font sizes: 17px for body text (not 16px — iOS minimum)
+- Line height: 1.5 for messages (iOS readability)
+- `borderRadii.md` (numeric, not percentage)
+- Safe area insets on header and composer
+- Composer clearance: 220px minimum from bottom (accounts for keyboard + safe area)
+
+### Chat shared components (`packages/ui/src/components/ai-elements/`)
+
+These components are used by both platforms. They must:
+- Use `chatTokens` for all chat-specific values
+- Not hardcode any Tailwind color, spacing, or radius values
+- Support both web and native via platform-correct token keys
+- Not use `prose` classes — use design system typography classes instead
+- Not use `animate-pulse` — use a custom CSS class or GSAP
+
+### Common violations
+
+| Violation | Fix |
+|-----------|-----|
+| `bg-white` or `bg-bg-surface` in chat | `chatTokens.surfaces.user` / `colors['bg-surface']` |
+| `border-subtle` Tailwind class | `colors['border-subtle']` |
+| `rounded-[1.75rem]` | Document exception or use `radii.lg` |
+| `rounded-full` on message | `radii.md` or `chatTokens.radii.bubble` |
+| Hardcoded font size (17, 18, 24) | `body-1` class or `fontSizes.body1` token |
+| `rgba(0,0,0,0.35)` for muted text | `colors['text-tertiary']` |
+| `space-y-4` between messages | `chatTokens.turnGap` |
+| `animate-pulse` for streaming cursor | Custom CSS class in `animations.css` |
+| `Animated` from react-native | react-native-reanimated worklet |
+| Stub component returning `null` | Implement it |
+| No message enter animation | `playEnterRow(el, 0)` on mount |
+| No shimmer `.kill()` on data resolve | Call `.kill()` in `finally()` or data callback |
+
+---
+
 ## Review checklist
 
 Fail the review if any of the following are violated:
@@ -216,3 +339,20 @@ Fail the review if any of the following are violated:
 - [ ] Routes lazy-loaded
 - [ ] Named icon imports only
 - [ ] Explicit width/height on images
+
+### Chat UI
+- [ ] `chatTokens` used for all chat-specific values (surfaces, borders, radii, spacing)
+- [ ] User messages in bubble, assistant messages plain (no assistant bubble)
+- [ ] No hardcoded Tailwind color classes (no `bg-white`, `text-foreground`, `border-subtle`)
+- [ ] No hardcoded rgba values — tokens only
+- [ ] No hardcoded font sizes or radii
+- [ ] No `animate-pulse` — custom CSS class or GSAP for streaming cursor
+- [ ] Mobile: react-native-reanimated used, not `Animated` from React Native core
+- [ ] Message enter animation on mount (`playEnterRow` web, reanimated equivalent mobile)
+- [ ] Shimmer tweens killed on data resolve (never left running)
+- [ ] Composer shadow upgrade on focus (shadows.low → shadows.medium)
+- [ ] Actions row has 44px minimum touch targets
+- [ ] aria-label on all icon-only buttons
+- [ ] No stub components returning `null`
+- [ ] Mobile composer clearance accounts for keyboard + safe area
+- [ ] Scroll containers have proper key extractors (never array index as key)

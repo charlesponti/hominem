@@ -19,6 +19,16 @@ export type ErrorCode =
   | 'INTERNAL_ERROR'
   | 'UNAVAILABLE';
 
+const ERROR_CODES: ReadonlySet<ErrorCode> = new Set([
+  'VALIDATION_ERROR',
+  'NOT_FOUND',
+  'UNAUTHORIZED',
+  'FORBIDDEN',
+  'CONFLICT',
+  'INTERNAL_ERROR',
+  'UNAVAILABLE',
+]);
+
 /**
  * Base error class for all service errors
  *
@@ -96,5 +106,28 @@ export class InternalError extends ServiceError {
 }
 
 export function isServiceError(value: unknown): value is ServiceError {
-  return value instanceof ServiceError;
+  if (value instanceof ServiceError) {
+    return true;
+  }
+
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as {
+    message?: string;
+    code?: string;
+    statusCode?: number;
+    details?: Record<string, unknown> | undefined;
+  };
+
+  return (
+    typeof candidate.message === 'string' &&
+    typeof candidate.code === 'string' &&
+    ERROR_CODES.has(candidate.code as ErrorCode) &&
+    typeof candidate.statusCode === 'number' &&
+    Number.isInteger(candidate.statusCode) &&
+    candidate.statusCode >= 400 &&
+    candidate.statusCode <= 599
+  );
 }

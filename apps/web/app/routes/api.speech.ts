@@ -1,4 +1,4 @@
-import { VoiceSpeechError, generateSpeechBuffer } from '@hominem/services';
+import { VoiceSpeechError, generateSpeechBuffer } from '@hominem/services/voice-speech';
 import { fileStorageService } from '@hominem/utils/storage';
 import type { ActionFunctionArgs } from 'react-router';
 import { z } from 'zod';

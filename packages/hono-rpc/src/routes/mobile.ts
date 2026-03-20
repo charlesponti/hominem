@@ -3,7 +3,8 @@ import { generateObject } from 'ai'
 import * as z from 'zod'
 import { zValidator } from '@hono/zod-validator'
 
-import { VoiceTranscriptionError, transcribeVoiceBuffer, generateSpeechBuffer, VoiceSpeechError } from '@hominem/services'
+import { generateSpeechBuffer, VoiceSpeechError } from '@hominem/services/voice-speech'
+import { VoiceTranscriptionError, transcribeVoiceBuffer } from '@hominem/services/voice-transcription'
 import { authMiddleware, type AppContext } from '../middleware/auth'
 import type {
   MobileIntentDeriveOutputV1,

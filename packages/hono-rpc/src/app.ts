@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 
 import type { AppContext } from './middleware/auth';
 
-import { errorMiddleware } from './middleware/error';
+import { apiErrorHandler } from './middleware/error';
 import { validationErrorMiddleware } from './middleware/validation';
 import { requestIdMiddleware } from './middleware/auth';
 import { economyRoutes } from './routes/economy';
@@ -30,9 +30,9 @@ import { worldRoutes } from './routes/world';
  */
 function buildApp() {
   return new Hono<AppContext>()
+    .onError(apiErrorHandler)
     .use(requestIdMiddleware)
     .use(validationErrorMiddleware)
-    .use(errorMiddleware)
     .basePath('/api')
     .route('', vitalRoutes)
     .route('', knowledgeRoutes)

@@ -11,7 +11,6 @@ interface ChatHeaderProps {
   topInset: number
   resolvedSource: SessionSource
   statusCopy: string
-  onArchiveChatPress: () => void
   onOpenSearch: () => void
   onOpenMenu: () => void
 }
@@ -20,46 +19,40 @@ export function ChatHeader({
   topInset,
   resolvedSource,
   statusCopy,
-  onArchiveChatPress,
   onOpenSearch,
   onOpenMenu,
 }: ChatHeaderProps) {
   const styles = useStyles()
 
   return (
-    <View style={[styles.header, { paddingTop: Math.max(topInset, 16) }]}>
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        onPress={onArchiveChatPress}
-        style={styles.headerBack}
-        accessibilityLabel="Back"
-      >
-        <AppIcon name="arrow-left" size={20} style={styles.headerBackIcon} />
-      </Button>
-      <View style={styles.headerCenter}>
-        <ContextAnchor source={resolvedSource} />
-        {statusCopy ? <Text style={styles.headerStatus}>{statusCopy}</Text> : null}
+    <View style={[styles.header, { paddingTop: Math.max(topInset, 6) }]}>
+      <View style={styles.headerRow}>
+        <View style={styles.headerCenter}>
+          <ContextAnchor source={resolvedSource} showTitle={false} />
+          {statusCopy ? <Text style={styles.headerStatus}>{statusCopy}</Text> : null}
+        </View>
+        <View style={styles.headerActions}>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onPress={onOpenSearch}
+            style={styles.headerIconButton}
+            accessibilityLabel="Search messages"
+            testID="chat-search-toggle"
+          >
+            <AppIcon name="magnifying-glass" size={14} style={styles.headerIcon} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onPress={onOpenMenu}
+            style={styles.headerIconButton}
+            accessibilityLabel="Conversation actions"
+          >
+            <AppIcon name="plus" size={15} style={styles.headerIcon} />
+          </Button>
+        </View>
       </View>
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        onPress={onOpenSearch}
-        style={styles.headerIconButton}
-        accessibilityLabel="Search messages"
-        testID="chat-search-toggle"
-      >
-        <AppIcon name="magnifying-glass" size={16} style={styles.headerIcon} />
-      </Button>
-      <Button
-        variant="primary"
-        size="icon-xs"
-        onPress={onOpenMenu}
-        style={styles.headerNewButton}
-        accessibilityLabel="Conversation actions"
-      >
-        <AppIcon name="plus" size={18} style={styles.headerNewIcon} />
-      </Button>
     </View>
   )
 }
@@ -67,51 +60,46 @@ export function ChatHeader({
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
     header: {
-      flexDirection: 'row',
-      alignItems: 'center',
       paddingHorizontal: t.spacing.sm_12,
-      paddingBottom: t.spacing.sm_12,
+      paddingBottom: t.spacing.xs_4,
       borderBottomWidth: 1,
       borderBottomColor: t.colors['border-default'],
+      backgroundColor: t.colors['bg-elevated'],
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      minHeight: 40,
       gap: t.spacing.sm_8,
-    },
-    headerBack: {
-      backgroundColor: 'transparent',
-      borderColor: 'transparent',
-      width: 36,
-      height: 36,
-      borderRadius: t.borderRadii.md,
-    },
-    headerBackIcon: {
-      color: t.colors.foreground,
     },
     headerCenter: {
       flex: 1,
       alignItems: 'center',
-      gap: t.spacing.xs_4,
+      gap: 1,
+      paddingHorizontal: t.spacing.sm_8,
+      minWidth: 0,
     },
     headerStatus: {
       color: t.colors['text-tertiary'],
       fontSize: fontSizes.xs,
       fontFamily: fontFamiliesNative.mono,
+      opacity: 0.7,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: t.spacing.xs_4,
     },
     headerIconButton: {
-      backgroundColor: t.colors['bg-surface'],
-      borderColor: t.colors['border-default'],
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
       width: 36,
       height: 36,
-      borderRadius: t.borderRadii.md,
+      borderRadius: t.borderRadii.full,
     },
     headerIcon: {
-      color: t.colors['text-tertiary'],
-    },
-    headerNewButton: {
-      width: 36,
-      height: 36,
-      borderRadius: t.borderRadii.md,
-    },
-    headerNewIcon: {
-      color: t.colors.white,
+      color: t.colors.foreground,
+      opacity: 0.72,
     },
   }),
 )

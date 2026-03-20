@@ -72,8 +72,10 @@ describe('inbox stream items', () => {
         {
           id: 'note-1',
           title: 'Capture this thought for later refinement',
-          content: 'Capture this thought for later refinement',
-          excerpt: 'Capture this thought for later refinement',
+          content:
+            'Capture this thought for later refinement\n\nTurn it into a tighter weekly plan with milestones.',
+          excerpt:
+            'Capture this thought for later refinement\n\nTurn it into a tighter weekly plan with milestones.',
           status: 'published',
           type: 'note',
           tags: [],
@@ -105,7 +107,7 @@ describe('inbox stream items', () => {
     expect(chatItem.title).toBe('Untitled session')
     expect(chatItem.preview).toBeNull()
     expect(noteItem.title).toBe('Capture this thought for later refinement')
-    expect(noteItem.preview).toBeNull()
+    expect(noteItem.preview).toBe('Turn it into a tighter weekly plan with milestones.')
   })
 
   it('keeps previews optional for the default row contract', () => {
@@ -137,5 +139,78 @@ describe('inbox stream items', () => {
 
     expect(item.title).toBe('A single line title')
     expect(item.preview).toBeNull()
+  })
+
+  it('maps notes and chats to stable destinations and timestamps', () => {
+    const [chatItem, noteItem] = toInboxStreamItems({
+      focusItems: [
+        {
+          id: 'note-9',
+          title: 'Reference note',
+          content: 'Reference note body',
+          excerpt: 'Reference note body',
+          status: 'published',
+          type: 'note',
+          tags: [],
+          mentions: [],
+          analysis: null,
+          publishingMetadata: null,
+          parentNoteId: null,
+          versionNumber: 1,
+          isLatestVersion: true,
+          userId: 'user-1',
+          createdAt: '2026-03-18T09:00:00.000Z',
+          updatedAt: '2026-03-18T09:30:00.000Z',
+          publishedAt: null,
+          scheduledFor: null,
+        },
+      ],
+      sessions: [
+        {
+          archivedAt: null,
+          id: 'chat-9',
+          title: 'Reference chat',
+          createdAt: '2026-03-18T10:00:00.000Z',
+          updatedAt: '2026-03-18T10:00:00.000Z',
+          activityAt: '2026-03-18T10:30:00.000Z',
+        },
+      ],
+    })
+
+    expect(chatItem.route).toBe('/(protected)/(tabs)/sherpa?chatId=chat-9')
+    expect(chatItem.timestamp).toBe('2026-03-18T10:30:00.000Z')
+    expect(noteItem.route).toBe('/(protected)/(tabs)/focus/note-9')
+    expect(noteItem.timestamp).toBe('2026-03-18T09:30:00.000Z')
+  })
+
+  it('falls back to content for titles and trims duplicate preview text', () => {
+    const [item] = toInboxStreamItems({
+      focusItems: [
+        {
+          id: 'note-10',
+          title: '',
+          content: 'Ship the mobile inbox refresh\n\nShip the mobile inbox refresh\n\nPolish row spacing.',
+          excerpt: '',
+          status: 'published',
+          type: 'note',
+          tags: [],
+          mentions: [],
+          analysis: null,
+          publishingMetadata: null,
+          parentNoteId: null,
+          versionNumber: 1,
+          isLatestVersion: true,
+          userId: 'user-1',
+          createdAt: '2026-03-18T09:00:00.000Z',
+          updatedAt: '2026-03-18T09:30:00.000Z',
+          publishedAt: null,
+          scheduledFor: null,
+        },
+      ],
+      sessions: [],
+    })
+
+    expect(item.title).toBe('Ship the mobile inbox refresh')
+    expect(item.preview).toBe('Polish row spacing.')
   })
 })

@@ -194,7 +194,7 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
         {/* PromptInput - ChatGPT style with elevated shadow */}
         <PromptInput
           onSubmit={handlePromptSubmit}
-          className="rounded-[1.75rem] border border-[rgba(0,0,0,0.08)] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] transition-shadow focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.12)]"
+          className="rounded-[1.75rem] border transition-shadow focus-within:shadow-[0_4px_20px_rgba(0,0,0,0.12)]"
         >
           <div className="flex items-end gap-3 px-4 py-3">
             <PromptInputTextarea
@@ -208,7 +208,7 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
             <PromptInputSubmit
               status={isSubmitting ? 'streaming' : 'ready'}
               disabled={!canSubmit}
-              className="rounded-full bg-[#0d0d0d] text-white hover:bg-[#1a1a1a] disabled:bg-[rgba(0,0,0,0.08)] disabled:text-[rgba(0,0,0,0.3)] size-9 shrink-0 transition-colors"
+              className="rounded-full size-9 shrink-0 transition-colors"
             />
           </div>
 

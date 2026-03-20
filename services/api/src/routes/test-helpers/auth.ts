@@ -1,4 +1,5 @@
 import { getSetCookieHeaders } from '@hominem/utils/headers';
+import { vi } from 'vitest';
 
 export interface AppRequester {
   request: (input: string | URL | Request, init?: RequestInit) => Response | Promise<Response>;
@@ -7,6 +8,8 @@ export interface AppRequester {
 interface OtpResponse {
   otp: string;
 }
+
+type ApiEnv = typeof import('../../env').env;
 
 let authTestSequence = 0;
 
@@ -19,6 +22,35 @@ export function createAuthTestEmail(prefix: string) {
 export async function importServer() {
   const module = await import('../../server');
   return module.createServer;
+}
+
+export async function importServerWithEnv(envOverrides: Partial<ApiEnv>) {
+  vi.resetModules();
+  vi.doMock('../../env', async () => {
+    const actual = await vi.importActual<typeof import('../../env')>('../../env');
+    return {
+      ...actual,
+      env: new Proxy(actual.env, {
+        get(target, prop, receiver) {
+          if (
+            typeof prop === 'string' &&
+            Object.prototype.hasOwnProperty.call(envOverrides, prop)
+          ) {
+            return envOverrides[prop as keyof ApiEnv];
+          }
+
+          return Reflect.get(target, prop, receiver);
+        },
+      }),
+    };
+  });
+
+  try {
+    const module = await import('../../server');
+    return module.createServer;
+  } finally {
+    vi.doUnmock('../../env');
+  }
 }
 
 export async function requestOtp(app: AppRequester, email: string) {

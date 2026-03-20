@@ -1,8 +1,8 @@
 export default [
   './apps/web/vitest.config.ts',
   './packages/env/vitest.config.ts',
-  './packages/ui/vitest.config.ts',
-  './packages/ui/vitest.stories.ts',
+  './packages/ui/vitest.config.mts',
+  './packages/ui/vitest.stories.config.mts',
   './packages/invites/vitest.config.ts',
   './packages/utils/vitest.config.mts',
   './services/api/vitest.config.mts',

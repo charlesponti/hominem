@@ -67,6 +67,17 @@ const toPersistedToolCalls = (
     args: toolCall.args as Record<string, string>,
   }))
 
+const GENERATION_ERROR_FALLBACK = '[Error: Stream processing failed]'
+
+const toAssistantErrorContent = (error: unknown) => {
+  const message = (error instanceof Error ? error.message : String(error)).replace(/\s+/g, ' ').trim()
+  if (!message) {
+    return GENERATION_ERROR_FALLBACK
+  }
+
+  return `[Error: ${message}]`
+}
+
 /**
  * Sub-router for routes starting with /api/chats/:id
  */
@@ -199,6 +210,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       }
     } catch (error) {
       didGenerationFail = true
+      accumulatedContent = toAssistantErrorContent(error)
       logger.error('[chats.send] generateText failed', {
         message: error instanceof Error ? error.message : String(error),
         name: error instanceof Error ? error.name : undefined,
@@ -218,7 +230,7 @@ const chatByIdRoutes = new Hono<AppContext>()
         chatId: currentChat.id,
         userId,
         role: 'assistant',
-        content: didGenerationFail ? accumulatedContent || '[Error: Stream processing failed]' : accumulatedContent,
+        content: didGenerationFail ? accumulatedContent || GENERATION_ERROR_FALLBACK : accumulatedContent,
         ...(didGenerationFail
           ? {}
           : {

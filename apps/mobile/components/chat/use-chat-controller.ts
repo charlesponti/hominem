@@ -6,8 +6,7 @@ import * as Clipboard from 'expo-clipboard'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as Haptics from 'expo-haptics'
 import * as Sharing from 'expo-sharing'
-import { useFocusEffect } from 'expo-router'
-import { useCallback, useMemo, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { Alert, Platform, Share } from 'react-native'
 
 import { useInputContext } from '~/components/input/input-context'
@@ -98,7 +97,7 @@ interface UseChatControllerInput {
 }
 
 export function useChatController({ chatId, onChatArchive, source }: UseChatControllerInput) {
-  const { message, setMessage, setSubmitAction } = useInputContext()
+  const { message, setMessage } = useInputContext()
   const { speakingId, speak } = useSpeech()
   const client = useApiClient()
   const queryClient = useQueryClient()
@@ -170,7 +169,7 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
   })
 
   const markdownLoadedRef = useRef(false)
-  useFocusEffect(useCallback(() => {
+  useEffect(() => {
     if (markdownLoadedRef.current) return
     markdownLoadedRef.current = true
 
@@ -187,26 +186,11 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
     return () => {
       controller.abort()
     }
-  }, []))
+  }, [])
 
   const handleArchiveChat = useCallback(() => {
     archiveChat()
   }, [archiveChat])
-
-  const submitCurrentMessage = useCallback(() => {
-    runChatSubmitAction({
-      message,
-      sendChatMessage,
-      setMessage,
-    })
-  }, [message, sendChatMessage, setMessage])
-
-  useFocusEffect(useCallback(() => {
-    setSubmitAction(() => submitCurrentMessage)
-    return () => {
-      setSubmitAction(null)
-    }
-  }, [setSubmitAction, submitCurrentMessage]))
 
   const handleCopyMessage = useCallback((copiedMessage: MessageOutput) => {
     const text = copiedMessage.message

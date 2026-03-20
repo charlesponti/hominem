@@ -127,9 +127,6 @@ export const MobileWorkspaceSwitcher = () => {
 
 const styles = StyleSheet.create({
   shell: {
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.sm_12,
-    paddingBottom: theme.spacing.sm_8,
   },
   headerRow: {
     alignItems: 'center',
@@ -193,6 +190,5 @@ const styles = StyleSheet.create({
   divider: {
     backgroundColor: theme.colors['border-default'],
     height: StyleSheet.hairlineWidth,
-    marginTop: theme.spacing.sm_8,
   },
 })

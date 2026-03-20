@@ -1,31 +1,12 @@
-import { useFocusEffect } from 'expo-router'
-import React, { useCallback, useMemo } from 'react'
+import React from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import { useInputContext } from '~/components/input/input-context'
 import { Text, makeStyles } from '~/theme'
-import { useMobileWorkspace } from './mobile-workspace-context'
 
 export const NoteContextScreen = () => {
   const styles = useStyles()
   const { attachments, message } = useInputContext()
-  const { setHeader } = useMobileWorkspace()
-  const draftTitle = useMemo(() => {
-    const trimmed = message.trim()
-    if (!trimmed) {
-      return 'Draft in progress'
-    }
-
-    const [firstLine = 'Draft in progress'] = trimmed.split('\n')
-    return firstLine.slice(0, 40)
-  }, [message])
-
-  useFocusEffect(useCallback(() => {
-    setHeader({
-      kicker: 'Note',
-      title: draftTitle,
-    })
-  }, [draftTitle, setHeader]))
 
   return (
     <View style={styles.container} testID="note-context-screen">

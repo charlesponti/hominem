@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { openai } from '@ai-sdk/openai';
 import { redis } from '@hominem/services/redis';
+import { getSharedTextModel } from '@hominem/services/ai-model';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { generateObject } from 'ai';
@@ -84,7 +84,7 @@ async function processEmailBody(emailBody: string): Promise<Candidates> {
   });
   try {
     const response = await generateObject<Candidates>({
-      model: openai('gpt-5-mini', { structuredOutputs: true }),
+      model: getSharedTextModel({ structuredOutputs: true }),
       messages: [
         {
           role: 'user',

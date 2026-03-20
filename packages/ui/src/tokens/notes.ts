@@ -50,6 +50,8 @@ export const notesStream = {
   itemGap: 0,
   /** Icon badge size for chat vs note type indicator (px). */
   typeIconSize: 14,
+  /** Divider inset aligns with the text column, not the icon edge. */
+  dividerInset: spacing[6],
 } as const;
 
 /**
@@ -83,6 +85,8 @@ export const notesSpacing = {
   noteContentGap: spacing[1],
   /** Gap between content and tag/action rows in a note item. */
   noteSecondaryGap: spacing[3],
+  /** Extra breathing room around grouped list shells. */
+  groupOuterGap: spacing[3],
   /** Gap between the workspace two-column panes. */
   workspacePaneGap: spacing[5],
   /** Internal padding of the workspace header. */
@@ -95,7 +99,7 @@ export const notesSpacing = {
 
 export const notesSurfaces = {
   /** Page background — same as design-system base. */
-  page: colors['bg-base'],
+  page: colors['bg-elevated'],
   /** Slightly lifted surface for cards, panels, and feed containers. */
   panel: colors['bg-base'],
   /** Hover state for interactive feed rows. */
@@ -140,7 +144,7 @@ export const notesForegrounds = {
 
 export const notesRadii = {
   /** Outer radius of major panels (capture shell, notes list wrapper). */
-  panel: radii.md,
+  panel: 24,
   /** Individual feed item — typically no visible radius (full bleed list). */
   feedItem: 0,
   /** Tag / badge pill. */
@@ -154,7 +158,7 @@ export const notesRadii = {
 /** React Native-safe notes radii. */
 export const notesRadiiNative = {
   ...notesRadii,
-  panel: radiiNative.md,
+  panel: 24,
   badge: radiiNative.md,
   iconWell: radiiNative.md,
   actionButton: radiiNative.md,

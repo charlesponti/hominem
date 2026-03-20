@@ -1,28 +1,28 @@
 import React from 'react'
-import TestRenderer from 'react-test-renderer'
+import { render } from '@testing-library/react-native'
 
 import { CaptureBar } from '../../components/capture/capture-bar'
 import { ChatInput } from '../../components/chat/chat-input'
 import { InputDock } from '../../components/input/input-dock'
 
 describe('mobile legacy input components', () => {
-  it('renders the retired capture bar as null', () => {
-    const tree = TestRenderer.create(<CaptureBar />)
+  it('renders the retired capture bar as null', async () => {
+    const root = await render(<CaptureBar />)
 
-    expect(tree.toJSON()).toBeNull()
+    expect(root.toJSON()).toBeNull()
   })
 
-  it('renders the retired input dock as null', () => {
-    const tree = TestRenderer.create(<InputDock />)
+  it('renders the retired input dock as null', async () => {
+    const root = await render(<InputDock />)
 
-    expect(tree.toJSON()).toBeNull()
+    expect(root.toJSON()).toBeNull()
   })
 
-  it('renders the retired chat input as null', () => {
-    const tree = TestRenderer.create(
+  it('renders the retired chat input as null', async () => {
+    const root = await render(
       <ChatInput message="" onMessageChange={() => undefined} onSendMessage={() => undefined} />,
     )
 
-    expect(tree.toJSON()).toBeNull()
+    expect(root.toJSON()).toBeNull()
   })
 })

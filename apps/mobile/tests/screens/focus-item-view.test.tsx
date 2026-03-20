@@ -1,5 +1,10 @@
 import React from 'react'
-import TestRenderer, { act } from 'react-test-renderer'
+import { render, screen } from '@testing-library/react-native'
+import { vi } from 'vitest'
+import {
+  getLastNoteEditingSheetProps,
+  resetLastNoteEditingSheetProps,
+} from '../__mocks__/note-editing-sheet'
 
 type MockNote = {
   id: string
@@ -11,108 +16,107 @@ type MockNote = {
 }
 
 let mockCachedNotes: MockNote[] | undefined
-let mockLastSheetProps: Record<string, unknown> | null = null
-
-jest.mock('expo-router', () => ({
+let mockFocusItem: MockNote | undefined
+vi.mock('expo-router', () => ({
   useLocalSearchParams: () => ({ id: 'note-1' }),
 }))
 
-jest.mock('@tanstack/react-query', () => ({
-  useQueryClient: () => ({
-    getQueryData: () => mockCachedNotes,
-  }),
-}))
-
-jest.mock('~/components/focus/note-editing-sheet', () => ({
-  NoteEditingSheet: (props: Record<string, unknown>) => {
-    mockLastSheetProps = props
-    return null
+vi.mock('react-native', () => ({
+  Alert: {
+    alert: vi.fn(),
   },
 }))
 
-jest.mock('~/utils/dates', () => ({
+vi.mock('@hominem/hono-client/react', () => ({
+  useApiClient: () => ({
+    notes: {
+      get: vi.fn(async () => mockFocusItem),
+    },
+  }),
+}))
+
+vi.mock('@tanstack/react-query', () => ({
+  useQueryClient: () => ({
+    getQueryData: () => mockCachedNotes,
+    setQueryData: vi.fn(),
+  }),
+  useQuery: () => ({
+    data: mockFocusItem ?? mockCachedNotes?.find((item) => item.id === 'note-1'),
+  }),
+}))
+
+vi.mock('~/utils/dates', () => ({
   getTimezone: () => 'America/Los_Angeles',
 }))
 
-jest.mock('~/utils/date/parse-inbox-timestamp', () => ({
+vi.mock('~/utils/date/parse-inbox-timestamp', () => ({
   parseInboxTimestamp: (value: string) => new Date(value),
 }))
 
-jest.mock('~/utils/services/notes/query-keys', () => ({
+vi.mock('~/utils/services/notes/query-keys', () => ({
   focusKeys: {
     all: ['focus'],
+    detail: (id: string) => ['focus', 'detail', id],
   },
 }))
 
-jest.mock('~/utils/services/notes/use-update-focus', () => ({
-  useUpdateFocusItem: () => ({
-    isPending: false,
-    mutateAsync: jest.fn(),
-  }),
-}))
-
-jest.mock('expo-file-system/legacy', () => ({
+vi.mock('expo-file-system/legacy', () => ({
   cacheDirectory: 'file:///tmp/',
-  writeAsStringAsync: jest.fn(),
+  writeAsStringAsync: vi.fn(),
   EncodingType: {
     UTF8: 'utf8',
   },
 }))
 
-jest.mock('expo-sharing', () => ({
-  shareAsync: jest.fn(),
+vi.mock('expo-sharing', () => ({
+  shareAsync: vi.fn(),
 }))
 
-jest.mock('expo-print', () => ({
-  printAsync: jest.fn(),
+vi.mock('expo-print', () => ({
+  printAsync: vi.fn(),
 }))
 
-jest.mock('expo-calendar', () => ({
-  requestCalendarPermissionsAsync: jest.fn(),
-  getCalendarsAsync: jest.fn(),
-  createEventAsync: jest.fn(),
+vi.mock('expo-calendar', () => ({
+  requestCalendarPermissionsAsync: vi.fn(),
+  getCalendarsAsync: vi.fn(),
+  createEventAsync: vi.fn(),
   EntityTypes: {
     EVENT: 'event',
   },
 }))
 
-jest.mock('@react-native-community/datetimepicker', () => () => null)
-
-const FocusItemView = require('../../app/(protected)/(tabs)/focus/[id]').default
+vi.mock('@react-native-community/datetimepicker', () => ({ default: () => null }))
 
 describe('focus item view', () => {
   beforeEach(() => {
     mockCachedNotes = undefined
-    mockLastSheetProps = null
+    mockFocusItem = undefined
+    resetLastNoteEditingSheetProps()
   })
 
-  it('can recover from an empty cache without triggering a hook order error', () => {
-    let renderer: TestRenderer.ReactTestRenderer
+  it('can recover from an empty cache without triggering a hook order error', async () => {
+    const { default: FocusItemView } = await import('../../app/(protected)/(tabs)/focus/[id]')
 
-    act(() => {
-      renderer = TestRenderer.create(<FocusItemView />)
-    })
+    const rendered = await render(<FocusItemView />)
 
-    expect(renderer!.toJSON()).toBeNull()
+    expect(getLastNoteEditingSheetProps()).toBeNull()
+    expect(screen.queryByTestId('note-editing-sheet')).toBeNull()
 
-    mockCachedNotes = [
-      {
+    mockFocusItem = {
+      id: 'note-1',
+      title: 'Recovered note',
+      content: 'Restored from cache',
+      type: 'note',
+      scheduledFor: null,
+    }
+
+    await expect(rendered.rerender(<FocusItemView />)).resolves.toBeUndefined()
+
+    expect(getLastNoteEditingSheetProps()).toMatchObject({
+      note: expect.objectContaining({
         id: 'note-1',
         title: 'Recovered note',
-        content: 'Restored from cache',
-        type: 'note',
-        scheduledFor: null,
-      },
-    ]
-
-    expect(() => {
-      act(() => {
-        renderer!.update(<FocusItemView />)
-      })
-    }).not.toThrow()
-
-    expect(mockLastSheetProps).toMatchObject({
-      title: 'Recovered note',
+      }),
       text: 'Restored from cache',
       isSaving: false,
     })

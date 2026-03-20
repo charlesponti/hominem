@@ -1,8 +1,10 @@
 import { chatTokensNative, fontFamiliesNative, fontSizes } from '@hominem/ui/tokens';
 import React, { memo, useMemo, useState } from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import Reanimated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 
 import { Button } from '~/components/Button';
+import AppIcon from '~/components/ui/icon';
 import TextArea from '~/components/text-input-autogrow';
 import { Text, makeStyles } from '~/theme';
 import { getLocalDate } from '~/utils/dates';
@@ -24,6 +26,8 @@ type ChatMessageProps = {
   onSpeak?: (message: MessageOutput) => void;
   isSpeaking?: boolean;
   onShare?: (message: MessageOutput) => void;
+  isActive?: boolean;
+  onActivate?: () => void;
 };
 
 export type MarkdownComponent = React.ComponentType<{
@@ -36,11 +40,15 @@ export const loadMarkdown = async () => {
   return mod.default as MarkdownComponent;
 };
 
+const ACTIONS_ENTERING = FadeInDown.duration(240).springify().damping(20).stiffness(220).mass(0.9)
+const ACTIONS_EXITING = FadeOutUp.duration(180).springify().damping(24).stiffness(260).mass(0.8)
+const ACTIONS_LAYOUT = LinearTransition.duration(200)
+
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
     row: {
       width: '100%',
-      paddingVertical: chatTokensNative.turnPaddingY,
+      paddingVertical: t.spacing.sm_8,
     },
     rowUser: {
       alignItems: 'flex-end',
@@ -50,7 +58,7 @@ const useStyles = makeStyles((t) =>
     },
     contentColumn: {
       width: '100%',
-      gap: chatTokensNative.contentGap,
+      gap: t.spacing.sm_8,
     },
     contentColumnUser: {
       width: '100%',
@@ -58,34 +66,45 @@ const useStyles = makeStyles((t) =>
     },
     transcriptBlock: {
       width: '100%',
-      gap: chatTokensNative.contentGap,
+      gap: t.spacing.sm_12,
     },
     userSurface: {
       width: '100%',
       maxWidth: chatTokensNative.userBubbleMaxWidth,
       paddingHorizontal: t.spacing.m_16,
       paddingVertical: t.spacing.sm_12,
-      borderRadius: chatTokensNative.radii.bubble,
-      backgroundColor: chatTokensNative.surfaces.user,
+      borderRadius: t.borderRadii.md,
+      backgroundColor: t.colors['emphasis-highest'],
       borderWidth: 1,
-      borderColor: chatTokensNative.borders.user,
+      borderColor: t.colors['emphasis-highest'],
     },
     userMessageText: {
-      fontSize: 17,
-      lineHeight: 24,
-      color: chatTokensNative.foregrounds.user,
+      fontSize: fontSizes.md,
+      lineHeight: fontSizes.md * 1.5,
+      color: t.colors.white,
+    },
+    assistantSurface: {
+      width: '100%',
+      maxWidth: chatTokensNative.userBubbleMaxWidth,
+      paddingHorizontal: t.spacing.m_16,
+      paddingVertical: t.spacing.sm_12,
+      borderRadius: t.borderRadii.md,
+      borderTopLeftRadius: 6,
+      backgroundColor: t.colors['bg-base'],
+      borderWidth: 1,
+      borderColor: t.colors['border-subtle'],
     },
     assistantMessageText: {
-      fontSize: 18,
-      lineHeight: 24,
+      fontSize: fontSizes.md,
+      lineHeight: fontSizes.md * 1.55,
       color: t.colors.foreground,
     },
     transcriptSurface: {
       width: '100%',
-      borderRadius: chatTokensNative.radii.debug,
+      borderRadius: t.borderRadii.md,
       borderWidth: 1,
-      borderColor: chatTokensNative.borders.debug,
-      backgroundColor: chatTokensNative.surfaces.debug,
+      borderColor: t.colors['border-default'],
+      backgroundColor: t.colors['bg-base'],
       paddingHorizontal: t.spacing.sm_12,
       paddingVertical: t.spacing.sm_12,
       gap: t.spacing.xs_4,
@@ -96,7 +115,7 @@ const useStyles = makeStyles((t) =>
       gap: t.spacing.sm_12,
     },
     focusItem: {
-      backgroundColor: t.colors['bg-surface'],
+      backgroundColor: t.colors['bg-base'],
       paddingHorizontal: t.spacing.sm_12,
       paddingVertical: t.spacing.sm_8,
       borderRadius: t.borderRadii.md,
@@ -107,7 +126,7 @@ const useStyles = makeStyles((t) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: chatTokensNative.metadataGap,
-      opacity: 0.7,
+      opacity: 0.64,
     },
     metadataEnd: {
       justifyContent: 'flex-end',
@@ -120,23 +139,28 @@ const useStyles = makeStyles((t) =>
     actions: {
       flexDirection: 'row',
       alignItems: 'center',
-      flexWrap: 'wrap',
+      flexWrap: 'nowrap',
       gap: t.spacing.sm_8,
-    },
-    actionsEnd: {
       justifyContent: 'flex-end',
     },
+    actionsWrap: {
+      marginTop: t.spacing.xs_4,
+    },
     actionButton: {
-      backgroundColor: t.colors['bg-surface'],
-      borderColor: t.colors['border-default'],
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+      width: 32,
+      height: 32,
+      borderRadius: t.borderRadii.full,
+      paddingHorizontal: 0,
+      paddingVertical: 0,
     },
     actionButtonDisabled: {
-      opacity: 0.35,
+      opacity: 0.3,
     },
-    actionLabel: {
-      color: t.colors['text-secondary'],
-      fontSize: fontSizes.xs,
-      textTransform: 'uppercase',
+    actionIcon: {
+      color: t.colors['text-tertiary'],
+      opacity: 0.9,
     },
     reasoningText: {
       color: t.colors.foreground,
@@ -151,7 +175,7 @@ const useStyles = makeStyles((t) =>
       borderRadius: t.borderRadii.md,
       borderWidth: 1,
       borderColor: t.colors['border-subtle'],
-      backgroundColor: t.colors.muted,
+      backgroundColor: t.colors['bg-base'],
       padding: t.spacing.sm_12,
       gap: t.spacing.xs_4,
     },
@@ -179,7 +203,7 @@ const useStyles = makeStyles((t) =>
     editSheet: {
       width: '100%',
       borderRadius: t.borderRadii.md,
-      backgroundColor: t.colors.background,
+      backgroundColor: t.colors['bg-base'],
       borderWidth: 1,
       borderColor: t.colors['border-subtle'],
       paddingHorizontal: t.spacing.m_16,
@@ -213,6 +237,8 @@ const ChatMessage = memo(
     onSpeak,
     isSpeaking = false,
     onShare,
+    isActive = false,
+    onActivate,
   }: ChatMessageProps) => {
     const styles = useStyles();
     const { role, message: content } = message;
@@ -221,7 +247,6 @@ const ChatMessage = memo(
     const timestamp = message.created_at
       ? getLocalDate(new Date(message.created_at)).localDateString
       : '';
-    const senderLabel = isUser ? 'You' : 'AI Assistant';
     const canRegenerate = !isUser && onRegenerate !== undefined;
     const canEdit = isUser && onEdit !== undefined;
     const canDelete = onDelete !== undefined;
@@ -244,7 +269,7 @@ const ChatMessage = memo(
     );
 
     return (
-      <View style={[styles.row, isUser ? styles.rowUser : styles.rowAssistant]}>
+      <Pressable onPress={onActivate} style={[styles.row, isUser ? styles.rowUser : styles.rowAssistant]}>
         <Modal
           visible={isEditing}
           transparent
@@ -319,11 +344,13 @@ const ChatMessage = memo(
             </View>
           ) : (
             <View style={styles.transcriptBlock}>
-              {Markdown ? (
-                <Markdown style={markdownStyle}>{content}</Markdown>
-              ) : (
-                <Text style={textStyle}>{content}</Text>
-              )}
+              <View style={styles.assistantSurface}>
+                {Markdown ? (
+                  <Markdown style={markdownStyle}>{content}</Markdown>
+                ) : (
+                  <Text style={textStyle}>{content}</Text>
+                )}
+              </View>
             </View>
           )}
 
@@ -351,84 +378,97 @@ const ChatMessage = memo(
             </View>
           ) : null}
 
-          <View style={[styles.metadata, isUser ? styles.metadataEnd : null]}>
-            <Text variant="caption" color="text-secondary" style={styles.metadataText}>
-              {senderLabel}
-            </Text>
-            {timestamp ? (
-              <>
-                <Text variant="caption" color="text-secondary">
-                  {' · '}
-                </Text>
+          {isActive ? (
+            <Reanimated.View
+              entering={ACTIONS_ENTERING}
+              exiting={ACTIONS_EXITING}
+              layout={ACTIONS_LAYOUT}
+              style={styles.actionsWrap}
+            >
+            <View style={styles.actions}>
+              {timestamp ? (
                 <Text variant="caption" color="text-secondary" style={styles.metadataText}>
                   {timestamp}
                 </Text>
-              </>
-            ) : null}
-          </View>
-
-          <View style={[styles.actions, isUser ? styles.actionsEnd : null]}>
-            <Button
-              variant="ghost"
-              size="xs"
-              title="copy"
-              onPress={() => onCopy?.(message)}
-              disabled={!canCopy}
-              style={[styles.actionButton, !canCopy && styles.actionButtonDisabled]}
-            />
-            {canSpeak ? (
+              ) : null}
               <Button
                 variant="ghost"
-                size="xs"
-                title={isSpeaking ? 'stop' : 'read'}
-                onPress={() => onSpeak?.(message)}
-                style={styles.actionButton}
-                accessibilityLabel={isSpeaking ? 'Stop reading' : 'Read aloud'}
-              />
-            ) : null}
-            {canShare ? (
-              <Button
-                variant="ghost"
-                size="xs"
-                title="share"
-                onPress={() => onShare?.(message)}
-                style={styles.actionButton}
-                accessibilityLabel="Share message"
-              />
-            ) : null}
-            {canEdit ? (
-              <Button
-                variant="ghost"
-                size="xs"
-                title="edit"
-                onPress={() => {
-                  setDraftMessage(content);
-                  setIsEditing(true);
-                }}
-                style={styles.actionButton}
-              />
-            ) : null}
-            {canRegenerate ? (
-              <Button
-                variant="ghost"
-                size="xs"
-                title="regenerate"
-                onPress={() => onRegenerate?.(message.id)}
-                style={styles.actionButton}
-              />
-            ) : null}
-            {canDelete ? (
-              <Button
-                variant="ghost"
-                size="xs"
-                title="delete"
-                onPress={() => onDelete?.(message.id)}
-                style={styles.actionButton}
-              />
-            ) : null}
-          </View>
+                size="icon-xs"
+                onPress={() => onCopy?.(message)}
+                disabled={!canCopy}
+                accessibilityLabel="Copy message"
+                style={[styles.actionButton, !canCopy && styles.actionButtonDisabled]}
+              >
+                <AppIcon name="copy" size={15} style={styles.actionIcon} useSymbol />
+              </Button>
+              {canSpeak ? (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onPress={() => onSpeak?.(message)}
+                  style={styles.actionButton}
+                  accessibilityLabel={isSpeaking ? 'Stop reading' : 'Read aloud'}
+                >
+                  <AppIcon
+                    name={isSpeaking ? 'stop' : 'speaker'}
+                    size={15}
+                    style={styles.actionIcon}
+                    useSymbol
+                  />
+                </Button>
+              ) : null}
+              {canShare ? (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onPress={() => onShare?.(message)}
+                  style={styles.actionButton}
+                  accessibilityLabel="Share message"
+                >
+                  <AppIcon name="share-from-square" size={15} style={styles.actionIcon} useSymbol />
+                </Button>
+              ) : null}
+              {canEdit ? (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onPress={() => {
+                    setDraftMessage(content);
+                    setIsEditing(true);
+                  }}
+                  style={styles.actionButton}
+                  accessibilityLabel="Edit message"
+                >
+                  <AppIcon name="pen-to-square" size={15} style={styles.actionIcon} useSymbol />
+                </Button>
+              ) : null}
+              {canRegenerate ? (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onPress={() => onRegenerate?.(message.id)}
+                  style={styles.actionButton}
+                  accessibilityLabel="Regenerate response"
+                >
+                  <AppIcon name="arrows-rotate" size={15} style={styles.actionIcon} useSymbol />
+                </Button>
+              ) : null}
+              {canDelete ? (
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  onPress={() => onDelete?.(message.id)}
+                  style={styles.actionButton}
+                  accessibilityLabel="Delete message"
+                >
+                  <AppIcon name="trash" size={15} style={styles.actionIcon} useSymbol />
+                </Button>
+              ) : null}
+            </View>
+            </Reanimated.View>
+          ) : null}
         </View>
-      </View>
+      </Pressable>
     );
   },
 );
@@ -447,6 +487,8 @@ export const renderMessage = (
     onSpeak?: (message: MessageOutput) => void;
     speakingId?: string | null;
     onShare?: (message: MessageOutput) => void;
+    isActive?: boolean;
+    onActivate?: () => void;
   },
 ) => {
   const { speakingId, ...rest } = actions ?? {};

@@ -283,13 +283,22 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           {/* Error Display */}
           {displayError && (
             <div
-              className="mx-auto mb-6 w-full rounded-md border border-destructive/30 bg-destructive/5 p-4 shadow-sm"
-              style={{ maxWidth: chatTokens.transcriptMaxWidth }}
+              className="mx-auto mb-6 w-full"
+              style={{
+                maxWidth: chatTokens.transcriptMaxWidth,
+                borderRadius: chatTokens.radii.bubble,
+                borderWidth: 1,
+                borderStyle: 'solid',
+                borderColor: 'var(--color-destructive-muted)',
+                backgroundColor: 'rgba(255, 59, 48, 0.05)',
+                padding: 'var(--spacing-4)',
+                boxShadow: 'var(--shadow-low)',
+              }}
             >
-              <div className="text-sm font-semibold text-destructive mb-1">
+              <div className="text-sm font-semibold" style={{ color: 'var(--color-destructive)', marginBottom: 'var(--spacing-1)' }}>
                 Something went wrong
               </div>
-              <div className="text-xs text-destructive/70">
+              <div className="text-xs" style={{ color: 'var(--color-destructive-muted)' }}>
                 {displayError instanceof Error ? displayError.message : String(displayError)}
               </div>
             </div>
@@ -336,7 +345,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
                       transform: `translateY(${virtualItem.start}px)`,
                     }}
                   >
-                    <div className="py-4">
+                    <div style={{ paddingTop: 'var(--spacing-2)', paddingBottom: 'var(--spacing-2)' }}>
                       <ChatMessage
                         message={message}
                         showDebug={showDebug}
@@ -362,39 +371,40 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
             </div>
           ) : (
             <div
-              className="mx-auto w-full space-y-4"
+              className="mx-auto w-full"
               style={{ maxWidth: chatTokens.transcriptMaxWidth }}
             >
-              {displayMessages.length === 0 && searchQuery ? (
-                <div className="text-center text-text-secondary py-8">
-                  <Search className="size-8 mx-auto mb-2" />
-                  <p>No messages found matching &quot;{searchQuery}&quot;</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {displayMessages.map((message, index) => (
-                    <ChatMessage
-                      key={message.id}
-                      message={message}
-                      showDebug={showDebug}
-                      isStreaming={
-                        (status === 'streaming' &&
-                          index === displayMessages.length - 1 &&
-                          message.role === 'assistant') ||
-                        (message.isStreaming ?? false)
-                      }
-                      {...(message.role === 'assistant' && {
-                        onRegenerate: () => handleRegenerate(message.id),
-                      })}
-                      {...(message.role === 'user' && {
-                        onEdit: (messageId: string, newContent: string) =>
-                          handleEditMessage(messageId, newContent),
-                      })}
-                      onDelete={() => handleDeleteMessage(message.id)}
-                    />
-                  ))}
-                </div>
-              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: chatTokens.turnGap }}>
+                {displayMessages.length === 0 && searchQuery ? (
+                  <div className="text-center text-text-secondary py-8">
+                    <Search className="size-8 mx-auto mb-2" />
+                    <p>No messages found matching &quot;{searchQuery}&quot;</p>
+                  </div>
+                ) : (
+                  displayMessages.map((message, index) => (
+                    <div key={message.id} style={{ paddingTop: 'var(--spacing-2)', paddingBottom: 'var(--spacing-2)' }}>
+                      <ChatMessage
+                        message={message}
+                        showDebug={showDebug}
+                        isStreaming={
+                          (status === 'streaming' &&
+                            index === displayMessages.length - 1 &&
+                            message.role === 'assistant') ||
+                          (message.isStreaming ?? false)
+                        }
+                        {...(message.role === 'assistant' && {
+                          onRegenerate: () => handleRegenerate(message.id),
+                        })}
+                        {...(message.role === 'user' && {
+                          onEdit: (messageId: string, newContent: string) =>
+                            handleEditMessage(messageId, newContent),
+                        })}
+                        onDelete={() => handleDeleteMessage(message.id)}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           )}
         </div>

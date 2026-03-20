@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { openai } from '@ai-sdk/openai';
 import { UnauthorizedError, ValidationError, InternalError } from '@hominem/hono-rpc';
+import { getSharedTextModel } from '@hominem/services/ai-model';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { generateObject } from 'ai';
@@ -87,7 +87,7 @@ aiTourRoutes.post('/', zValidator('json', inputSchema), async (c) => {
     prompt = prompt.replace('{{genresForOptimization}}', genresForOptimization);
 
     const { object: tourBreakdown } = await generateObject({
-      model: openai('gpt-5-mini'),
+      model: getSharedTextModel(),
       prompt,
       schema: TourCostBreakdown,
       temperature: 0.7,

@@ -11,7 +11,7 @@ import Animated, {
 import { makeStyles } from '~/theme';
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 
-// 5x standard duration per direction (~600ms) for a slow, calm loading pulse
+// 5x standard duration per direction for a slow, calm loading pulse
 const SHIMMER_DURATION = VOID_MOTION_DURATION_STANDARD * 5;
 
 function usePulse() {
@@ -77,7 +77,7 @@ const useStyles = makeStyles((t) =>
       maxWidth: 420,
       height: 56,
       borderRadius: t.borderRadii.md,
-      backgroundColor: t.colors['emphasis-minimal'],
+      backgroundColor: t.colors['bg-surface'],
     },
     lines: {
       flex: 1,
@@ -86,7 +86,7 @@ const useStyles = makeStyles((t) =>
     line: {
       height: 16,
       borderRadius: t.borderRadii.md,
-      backgroundColor: t.colors.muted,
+      backgroundColor: t.colors['bg-surface'],
     },
     lineFull: {
       width: '100%',

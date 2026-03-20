@@ -1,9 +1,9 @@
 import { AUTH_COPY, SHERPA_AUTH_CONFIG } from '@hominem/auth';
 import { Image } from 'expo-image';
-import { Redirect, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import { Link } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -38,9 +38,9 @@ export function VerifyScreen() {
     return Array.from({ length: 6 }, (_, index) => normalized[index] ?? '');
   }, [otp]);
 
-  useFocusEffect(useCallback(() => {
+  useEffect(() => {
     posthog.capture('auth_verify_screen_viewed');
-  }, []));
+  }, []);
 
   const handleVerify = useCallback(async () => {
     posthog.capture('auth_verify_pressed');

@@ -1,4 +1,4 @@
-import type { VoiceErrorCode } from '@hominem/services'
+import type { VoiceErrorCode } from '@hominem/services/voice-transcription'
 
 export type MobileIntentSuggestion = {
   id: string

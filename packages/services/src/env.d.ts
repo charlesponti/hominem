@@ -15,6 +15,10 @@ export declare const env: {
   VITE_APP_BASE_URL?: string | undefined;
   APP_BASE_URL?: string | undefined;
   OPENAI_API_KEY?: string | undefined;
+  AI_PROVIDER: 'openai' | 'opencode-zen';
+  AI_MODEL?: string | undefined;
+  OPENCODE_ZEN_API_KEY?: string | undefined;
+  OPENCODE_ZEN_BASE_URL?: string | undefined;
   GOOGLE_CLIENT_ID?: string | undefined;
   GOOGLE_CLIENT_SECRET?: string | undefined;
   GOOGLE_REDIRECT_URI?: string | undefined;
