@@ -11,12 +11,11 @@ import type {
   ChatsClassifyOutput,
 } from '@hominem/hono-rpc/types/chat.types';
 import { useToast } from '@hominem/ui';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { ChatHeader } from '~/components/chat/ChatHeader';
 import { ChatMessages } from '~/components/chat/ChatMessages';
 import { ClassificationReview } from '@hominem/ui/ai-elements';
-import { useComposer } from '~/components/composer/composer-provider';
 import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
@@ -47,16 +46,6 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   const [pendingReview, setPendingReview] = useState<PendingReview | null>(null);
   const [overrideSource, setOverrideSource] = useState<SessionSource | null>(null);
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
-
-  const { setChatContext, clearChatContext } = useComposer();
-
-  // Register chat context so Composer switches to chat-continuation mode
-  useEffect(() => {
-    setChatContext(chatId);
-    return () => {
-      clearChatContext();
-    };
-  }, [chatId, setChatContext, clearChatContext]);
 
   const { data: chat } = useHonoQuery<ChatsGetOutput>(['chats', chatId], ({ chats: c }) =>
     c.get({ chatId }),

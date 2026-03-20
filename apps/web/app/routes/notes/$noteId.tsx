@@ -21,29 +21,25 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export default function NoteSplitView({ loaderData }: { loaderData: { noteId: string } }) {
   const { noteId } = loaderData;
   const { data: note, isLoading: isNoteLoading } = useNote(noteId);
-  const { setNoteContext, clearNoteContext } = useComposer();
+  const { setNoteTitle } = useComposer();
 
-  // Register note context so Composer switches to note-aware mode
+  // Push note title to Composer once data loads — mode is derived from the URL
   useEffect(() => {
-    if (note) {
-      setNoteContext(noteId, note.title || 'Untitled note');
-    }
-    return () => {
-      clearNoteContext();
-    };
-  }, [note, noteId, setNoteContext, clearNoteContext]);
+    setNoteTitle(note?.title ?? null);
+    return () => setNoteTitle(null);
+  }, [note?.title, setNoteTitle]);
 
   if (isNoteLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-8 h-8 border-4 border-primary/30 border-t-primary animate-spin" />
+      <div className="flex h-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
       </div>
     );
   }
 
   if (!note) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex h-full items-center justify-center">
         <p className="text-text-secondary">Note not found</p>
       </div>
     );
@@ -51,7 +47,7 @@ export default function NoteSplitView({ loaderData }: { loaderData: { noteId: st
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background pb-[var(--composer-resting-height,72px)]">
-      <div className="mx-auto flex w-full max-w-3xl flex-1 min-h-0 flex-col px-4 pt-6 pb-6 sm:px-6">
+      <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col px-4 pb-6 pt-6 sm:px-6">
         <header className="mb-6 flex flex-col gap-3 border-b border-border/60 pb-5">
           <div className="body-4 uppercase tracking-[0.12em] text-text-tertiary">Workspace</div>
           <h1 className="heading-2 text-foreground">{note.title || 'Untitled note'}</h1>

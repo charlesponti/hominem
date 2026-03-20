@@ -1,29 +1,42 @@
+/**
+ * ComposerProvider
+ *
+ * Manages only the state that CANNOT be derived from the URL:
+ *   - draftText         the textarea value
+ *   - noteTitle         pushed by the note route once data loads
+ *   - defaultIntent     'note' | 'chat' — which action the send button commits to
+ *                       when the Composer is in generic (home) mode
+ *   - isExpanded        mobile swipe state
+ *   - DOM refs          GSAP animation targets
+ *
+ * Route context (mode, noteId, chatId) is derived from the URL inside
+ * useComposerMode — routes no longer need to call setChatContext etc.
+ */
+
 import { createContext, useContext, useRef, useState, type ReactNode } from 'react';
 
 export type ComposerMode = 'generic' | 'note-aware' | 'chat-continuation';
+export type DefaultIntent = 'note' | 'chat';
 
 export interface ComposerContext {
-  // Draft state
+  // Draft
   draftText: string;
   setDraftText: (text: string) => void;
   clearDraft: () => void;
 
-  // Route context — updated by individual routes via useEffect
-  mode: ComposerMode;
-  setMode: (mode: ComposerMode) => void;
-  noteId: string | null;
+  // Note title — set by the note route once its data loads
   noteTitle: string | null;
-  setNoteContext: (id: string, title: string) => void;
-  clearNoteContext: () => void;
-  chatId: string | null;
-  setChatContext: (id: string) => void;
-  clearChatContext: () => void;
+  setNoteTitle: (title: string | null) => void;
 
-  // Expanded state (for GSAP to read)
+  // Default-mode intent toggle (Note vs Chat on the home/focus route)
+  defaultIntent: DefaultIntent;
+  setDefaultIntent: (intent: DefaultIntent) => void;
+
+  // Mobile swipe
   isExpanded: boolean;
   setIsExpanded: (v: boolean) => void;
 
-  // Refs for GSAP targets
+  // GSAP targets
   containerRef: React.RefObject<HTMLDivElement | null>;
   submitBtnRef: React.RefObject<HTMLButtonElement | null>;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -33,60 +46,24 @@ const Ctx = createContext<ComposerContext | null>(null);
 
 export function ComposerProvider({ children }: { children: ReactNode }) {
   const [draftText, setDraftText] = useState('');
-  const [mode, setMode] = useState<ComposerMode>('generic');
-  const [noteId, setNoteId] = useState<string | null>(null);
   const [noteTitle, setNoteTitle] = useState<string | null>(null);
-  const [chatId, setChatId] = useState<string | null>(null);
+  const [defaultIntent, setDefaultIntent] = useState<DefaultIntent>('note');
   const [isExpanded, setIsExpanded] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  function clearDraft() {
-    setDraftText('');
-  }
-
-  function setNoteContext(id: string, title: string) {
-    setNoteId(id);
-    setNoteTitle(title);
-    setMode('note-aware');
-    setChatId(null);
-  }
-
-  function clearNoteContext() {
-    setNoteId(null);
-    setNoteTitle(null);
-    if (mode === 'note-aware') setMode('generic');
-  }
-
-  function setChatContext(id: string) {
-    setChatId(id);
-    setMode('chat-continuation');
-    setNoteId(null);
-    setNoteTitle(null);
-  }
-
-  function clearChatContext() {
-    setChatId(null);
-    if (mode === 'chat-continuation') setMode('generic');
-  }
-
   return (
     <Ctx.Provider
       value={{
         draftText,
         setDraftText,
-        clearDraft,
-        mode,
-        setMode,
-        noteId,
+        clearDraft: () => setDraftText(''),
         noteTitle,
-        setNoteContext,
-        clearNoteContext,
-        chatId,
-        setChatContext,
-        clearChatContext,
+        setNoteTitle,
+        defaultIntent,
+        setDefaultIntent,
         isExpanded,
         setIsExpanded,
         containerRef,
