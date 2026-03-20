@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { InputProvider } from '~/components/input/input-context';
-import { MobileHyperForm } from '~/components/input/mobile-hyper-form';
+import { MobileComposer } from '~/components/input/mobile-composer';
 import { MobileWorkspaceProvider } from '~/components/workspace/mobile-workspace-context';
 import { useAppLock } from '~/lib/use-app-lock';
 import { Text, theme } from '~/theme';
@@ -70,7 +70,7 @@ const DrawerLayout = () => {
                   <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 </Stack>
               </View>
-              <MobileHyperForm />
+              <MobileComposer />
             </View>
           </InputProvider>
         </MobileWorkspaceProvider>

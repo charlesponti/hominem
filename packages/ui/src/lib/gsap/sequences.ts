@@ -20,7 +20,7 @@ export function reducedMotion(): boolean {
 }
 
 // ─── focusExpand ─────────────────────────────────────────────────────────────
-// Component expanding into view (e.g. HyperForm open, sheet entering).
+// Component expanding into view (e.g. Composer open, sheet entering).
 
 export function playFocusExpand(el: HTMLElement, onComplete?: () => void) {
   if (reducedMotion()) {
@@ -39,7 +39,7 @@ export function playFocusExpand(el: HTMLElement, onComplete?: () => void) {
 }
 
 // ─── focusCollapse ────────────────────────────────────────────────────────────
-// Component collapsing out of view (e.g. HyperForm close, sheet exiting).
+// Component collapsing out of view (e.g. Composer close, sheet exiting).
 
 export function playFocusCollapse(el: HTMLElement, onComplete?: () => void) {
   if (reducedMotion()) {
@@ -58,7 +58,7 @@ export function playFocusCollapse(el: HTMLElement, onComplete?: () => void) {
 }
 
 // ─── contextSwitch ───────────────────────────────────────────────────────────
-// In-place label or content transition when context changes (e.g. HyperForm
+// In-place label or content transition when context changes (e.g. Composer
 // mode switch: generic → note-aware → chat-continuation).
 
 export function playContextSwitch(els: HTMLElement | HTMLElement[]) {

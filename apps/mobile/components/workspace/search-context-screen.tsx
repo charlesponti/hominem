@@ -34,7 +34,7 @@ export const SearchContextScreen = () => {
           Query
         </Text>
         <Text variant="bodyLarge" color="foreground">
-          {message.trim().length > 0 ? message : 'Type in the HyperForm to start searching'}
+          {message.trim().length > 0 ? message : 'Type in the composer to start searching'}
         </Text>
       </View>
     </View>

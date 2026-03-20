@@ -1,6 +1,5 @@
 import * as ImagePicker from 'expo-image-picker'
 import { useApiClient } from '@hominem/hono-client/react'
-import { recordPositiveSignal } from '~/lib/review-prompt'
 import { CameraModal } from '../media/camera-modal'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
@@ -10,10 +9,10 @@ import { StyleSheet, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useMobileWorkspace } from '../workspace/mobile-workspace-context'
-import { appendPickedAssetsToDraft, applyVoiceTranscriptToDraft, removeAttachmentFromDraft } from './mobile-hyper-form-actions'
-import { MobileHyperFormAttachments } from './mobile-hyper-form-attachments'
-import { deriveMobileHyperFormPresentation } from './mobile-hyper-form-config'
-import { MobileHyperFormFooter } from './mobile-hyper-form-footer'
+import { appendPickedAssetsToDraft, applyVoiceTranscriptToDraft, removeAttachmentFromDraft } from './mobile-composer-actions'
+import { MobileComposerAttachments } from './mobile-composer-attachments'
+import { deriveMobileComposerPresentation } from './mobile-composer-config'
+import { MobileComposerFooter } from './mobile-composer-footer'
 import { useInputContext } from './input-context'
 import { VoiceSessionModal } from '../media/voice-session-modal'
 import { theme } from '~/theme'
@@ -26,7 +25,7 @@ import {
 import { useCreateFocusItem } from '~/utils/services/notes/use-create-focus-item'
 import { chatKeys } from '~/utils/services/notes/query-keys'
 
-export const MobileHyperForm = () => {
+export const MobileComposer = () => {
   const client = useApiClient()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -65,7 +64,6 @@ export const MobileHyperForm = () => {
     })
     await invalidateInboxQueries(queryClient)
     clearDraft()
-    void recordPositiveSignal()
   }
 
   const createChatFromDraft = async () => {
@@ -126,7 +124,7 @@ export const MobileHyperForm = () => {
   }
 
 
-  const presentation = deriveMobileHyperFormPresentation({
+  const presentation = deriveMobileComposerPresentation({
     context: activeContext,
     hasText: message.trim().length > 0 || attachments.length > 0,
     isRecording,
@@ -219,21 +217,21 @@ export const MobileHyperForm = () => {
           styles.container,
           presentation.posture === 'draft' ? styles.containerDraft : null,
         ]}
-        testID="mobile-hyper-form"
+        testID="mobile-composer"
       >
         <TextInput
           onChangeText={setMessage}
           placeholder={presentation.placeholder}
           placeholderTextColor={theme.colors['text-tertiary']}
           style={[styles.input, presentation.posture === 'draft' ? styles.inputDraft : null]}
-          testID="mobile-hyper-form-input"
+          testID="mobile-composer-input"
           value={message}
         />
-        <MobileHyperFormAttachments
+        <MobileComposerAttachments
           attachments={attachments}
           onRemoveAttachment={handleRemoveAttachment}
         />
-        <MobileHyperFormFooter
+        <MobileComposerFooter
           activeContext={activeContext}
           presentation={presentation}
           onPickAttachment={() => {

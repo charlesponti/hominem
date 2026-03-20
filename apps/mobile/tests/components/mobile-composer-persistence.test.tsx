@@ -32,7 +32,7 @@ function Probe() {
   return null
 }
 
-describe('mobile hyper form draft persistence', () => {
+describe('mobile composer draft persistence', () => {
   beforeEach(() => {
     snapshot = null
     setMessageRef = null

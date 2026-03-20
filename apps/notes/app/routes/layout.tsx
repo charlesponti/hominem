@@ -4,8 +4,8 @@ import { Toaster } from '@hominem/ui/components/ui/toaster';
 import React, { Suspense, useCallback, useEffect } from 'react';
 import { Outlet, useSearchParams } from 'react-router';
 
-import { HyperForm } from '~/components/hyper-form';
-import { ComposerProvider } from '~/components/hyper-form/composer-provider';
+import { Composer } from '~/components/composer';
+import { ComposerProvider } from '~/components/composer/composer-provider';
 import { LoadingScreen } from '~/components/loading';
 import NotesSidebar from '~/components/notes-sidebar';
 
@@ -42,7 +42,7 @@ export default function Layout() {
       <div
         style={
           {
-            '--hyper-form-resting-height': 'calc(env(safe-area-inset-bottom) + 112px)',
+            '--composer-resting-height': 'calc(env(safe-area-inset-bottom) + 112px)',
           } as React.CSSProperties
         }
       >
@@ -52,7 +52,7 @@ export default function Layout() {
             <Outlet />
           </Suspense>
         </AppLayout>
-        <HyperForm />
+        <Composer />
         <Toaster />
       </div>
     </ComposerProvider>

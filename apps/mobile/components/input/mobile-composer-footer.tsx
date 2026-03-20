@@ -4,11 +4,11 @@ import { theme } from '~/theme'
 
 import AppIcon from '../ui/icon'
 import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config'
-import type { MobileHyperFormPresentation } from './mobile-hyper-form-config'
+import type { MobileComposerPresentation } from './mobile-composer-config'
 
-interface MobileHyperFormFooterProps {
+interface MobileComposerFooterProps {
   activeContext: MobileWorkspaceContext
-  presentation: MobileHyperFormPresentation
+  presentation: MobileComposerPresentation
   onPickAttachment: () => void
   onOpenCamera: () => void
   onOpenVoice: () => void
@@ -16,7 +16,7 @@ interface MobileHyperFormFooterProps {
   onPrimaryAction: () => void
 }
 
-export function MobileHyperFormFooter({
+export function MobileComposerFooter({
   activeContext,
   presentation,
   onPickAttachment,
@@ -24,7 +24,7 @@ export function MobileHyperFormFooter({
   onOpenVoice,
   onSecondaryAction,
   onPrimaryAction,
-}: MobileHyperFormFooterProps) {
+}: MobileComposerFooterProps) {
   return (
     <View style={styles.footer}>
       <View style={styles.tools}>
@@ -33,7 +33,7 @@ export function MobileHyperFormFooter({
             onPress={onPickAttachment}
             accessibilityLabel="Add attachment"
             style={styles.toolButton}
-            testID="mobile-hyper-form-attach"
+            testID="mobile-composer-attach"
           >
             <AppIcon name="plus" size={18} style={styles.icon} />
           </Pressable>
@@ -43,7 +43,7 @@ export function MobileHyperFormFooter({
             onPress={onOpenCamera}
             accessibilityLabel="Take photo"
             style={styles.toolButton}
-            testID="mobile-hyper-form-camera"
+            testID="mobile-composer-camera"
           >
             <AppIcon name="camera" size={18} style={styles.icon} />
           </Pressable>
@@ -53,7 +53,7 @@ export function MobileHyperFormFooter({
             onPress={onOpenVoice}
             accessibilityLabel="Record voice note"
             style={styles.toolButton}
-            testID="mobile-hyper-form-voice"
+            testID="mobile-composer-voice"
           >
             <AppIcon name="microphone" size={18} style={styles.icon} />
           </Pressable>
@@ -65,7 +65,7 @@ export function MobileHyperFormFooter({
             accessibilityLabel={presentation.secondaryActionLabel}
             onPress={onSecondaryAction}
             style={styles.secondaryAction}
-            testID="mobile-hyper-form-secondary-action"
+            testID="mobile-composer-secondary-action"
           >
             <AppIcon
               name={activeContext === 'chat' ? 'circle-plus' : 'comment'}
@@ -78,7 +78,7 @@ export function MobileHyperFormFooter({
           accessibilityLabel={presentation.primaryActionLabel}
           onPress={onPrimaryAction}
           style={styles.primaryAction}
-          testID="mobile-hyper-form-primary-action"
+          testID="mobile-composer-primary-action"
         >
           <AppIcon
             name={activeContext === 'chat' ? 'arrow-up' : 'circle-plus'}

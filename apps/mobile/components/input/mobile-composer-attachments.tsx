@@ -2,29 +2,29 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { theme } from '~/theme'
 
-import type { MobileHyperFormAttachment } from './mobile-hyper-form-state'
+import type { MobileComposerAttachment } from './mobile-composer-state'
 
-interface MobileHyperFormAttachmentsProps {
-  attachments: MobileHyperFormAttachment[]
+interface MobileComposerAttachmentsProps {
+  attachments: MobileComposerAttachment[]
   onRemoveAttachment: (attachmentId: string) => void
 }
 
-export function MobileHyperFormAttachments({
+export function MobileComposerAttachments({
   attachments,
   onRemoveAttachment,
-}: MobileHyperFormAttachmentsProps) {
+}: MobileComposerAttachmentsProps) {
   if (attachments.length === 0) {
     return null
   }
 
   return (
-    <View style={styles.attachments} testID="mobile-hyper-form-attachments">
+    <View style={styles.attachments} testID="mobile-composer-attachments">
       {attachments.map((attachment) => (
         <Pressable
           key={attachment.id}
           onPress={() => onRemoveAttachment(attachment.id)}
           style={styles.attachmentChip}
-          testID={`mobile-hyper-form-attachment-${attachment.id}`}
+          testID={`mobile-composer-attachment-${attachment.id}`}
         >
           <Text style={styles.attachmentLabel}>{attachment.name}</Text>
         </Pressable>

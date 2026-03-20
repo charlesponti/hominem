@@ -37,7 +37,7 @@ export default function NoteEditPage({ loaderData }: { loaderData: { noteId: str
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background pb-[var(--hyper-form-resting-height,72px)]">
+    <div className="flex h-full min-h-0 flex-col bg-background pb-[var(--composer-resting-height,72px)]">
       <div className="mx-auto flex w-full max-w-160 flex-1 min-h-0 flex-col px-4 pb-8 pt-6 sm:px-6">
         <header className="mb-6 border-b border-border/60 pb-5">
           <div className="body-4 uppercase tracking-[0.12em] text-text-tertiary">Editor</div>

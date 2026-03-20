@@ -4,12 +4,12 @@ import {
   appendPickedAssetsToDraft,
   applyVoiceTranscriptToDraft,
   removeAttachmentFromDraft,
-} from '../../components/input/mobile-hyper-form-actions'
-import { createInitialMobileHyperFormState } from '../../components/input/mobile-hyper-form-state'
+} from '../../components/input/mobile-composer-actions'
+import { createInitialMobileComposerState } from '../../components/input/mobile-composer-state'
 
-describe('mobile hyper form actions', () => {
+describe('mobile composer actions', () => {
   it('maps picked assets into shared draft attachments', () => {
-    const state = appendPickedAssetsToDraft(createInitialMobileHyperFormState(), [
+    const state = appendPickedAssetsToDraft(createInitialMobileComposerState(), [
       {
         uri: 'file:///tmp/receipt.png',
         fileName: 'receipt.png',
@@ -30,7 +30,7 @@ describe('mobile hyper form actions', () => {
 
   it('appends a voice transcript to existing draft text', () => {
     const initialState = {
-      ...createInitialMobileHyperFormState(),
+      ...createInitialMobileComposerState(),
       text: 'Existing draft',
     }
 
@@ -44,7 +44,7 @@ describe('mobile hyper form actions', () => {
 
   it('removes an attachment from the shared draft', () => {
     const initialState = {
-      ...createInitialMobileHyperFormState(),
+      ...createInitialMobileComposerState(),
       attachments: [
         { id: 'one', name: 'one.png', type: 'image' },
         { id: 'two', name: 'two.pdf', type: 'document' },

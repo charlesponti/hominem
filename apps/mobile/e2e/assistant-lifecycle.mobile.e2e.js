@@ -48,7 +48,7 @@ describe('Mobile: unified workspace critical path', () => {
     await stopMobileAppSync()
   })
 
-  it('focus screen loads with the shared HyperForm after sign-in', async () => {
+  it('focus screen loads with the shared composer after sign-in', async () => {
     const email = 'mobile-e2e-' + Date.now() + '-workspace@hominem.test'
     await signInAndReachFocus(email)
 
@@ -56,17 +56,17 @@ describe('Mobile: unified workspace critical path', () => {
       .toBeVisible()
       .withTimeout(5000)
 
-    await waitFor(element(by.id('mobile-hyper-form')))
+    await waitFor(element(by.id('mobile-composer')))
       .toBeVisible()
       .withTimeout(5000)
   })
 
-  it('preserves the HyperForm draft while switching workspace contexts', async () => {
+  it('preserves the composer draft while switching workspace contexts', async () => {
     const email = 'mobile-e2e-' + Date.now() + '-draft@hominem.test'
     await signInAndReachFocus(email)
 
-    await element(by.id('mobile-hyper-form-input')).tap()
-    await element(by.id('mobile-hyper-form-input')).typeText('Persistent workspace draft')
+    await element(by.id('mobile-composer-input')).tap()
+    await element(by.id('mobile-composer-input')).typeText('Persistent workspace draft')
     await dismissKeyboard()
 
     await element(by.id('mobile-workspace-context-note')).tap()
@@ -75,7 +75,7 @@ describe('Mobile: unified workspace critical path', () => {
       .toBeVisible()
       .withTimeout(5000)
 
-    await expect(element(by.id('mobile-hyper-form-input'))).toHaveText('Persistent workspace draft')
+    await expect(element(by.id('mobile-composer-input'))).toHaveText('Persistent workspace draft')
 
     await element(by.id('mobile-workspace-context-search')).tap()
 
@@ -83,7 +83,7 @@ describe('Mobile: unified workspace critical path', () => {
       .toBeVisible()
       .withTimeout(5000)
 
-    await expect(element(by.id('mobile-hyper-form-input'))).toHaveText('Persistent workspace draft')
+    await expect(element(by.id('mobile-composer-input'))).toHaveText('Persistent workspace draft')
   })
 
   it('switches into chat context and keeps the shared voice affordance visible', async () => {
@@ -96,7 +96,7 @@ describe('Mobile: unified workspace critical path', () => {
       .toBeVisible()
       .withTimeout(10000)
 
-    await waitFor(element(by.id('mobile-hyper-form-voice')))
+    await waitFor(element(by.id('mobile-composer-voice')))
       .toBeVisible()
       .withTimeout(5000)
   })

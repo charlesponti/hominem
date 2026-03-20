@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { deriveMobileHyperFormPresentation } from '../../components/input/mobile-hyper-form-config'
+import { deriveMobileComposerPresentation } from '../../components/input/mobile-composer-config'
 
-describe('mobile hyper form presentation', () => {
+describe('mobile composer presentation', () => {
   it('returns inbox capture defaults', () => {
     expect(
-      deriveMobileHyperFormPresentation({
+      deriveMobileComposerPresentation({
         context: 'inbox',
         hasText: false,
         isRecording: false,
@@ -22,7 +22,7 @@ describe('mobile hyper form presentation', () => {
 
   it('returns note drafting defaults', () => {
     expect(
-      deriveMobileHyperFormPresentation({
+      deriveMobileComposerPresentation({
         context: 'note',
         hasText: true,
         isRecording: false,
@@ -39,7 +39,7 @@ describe('mobile hyper form presentation', () => {
 
   it('returns chat reply posture', () => {
     expect(
-      deriveMobileHyperFormPresentation({
+      deriveMobileComposerPresentation({
         context: 'chat',
         hasText: true,
         isRecording: false,
@@ -56,7 +56,7 @@ describe('mobile hyper form presentation', () => {
 
   it('returns search posture without create actions', () => {
     expect(
-      deriveMobileHyperFormPresentation({
+      deriveMobileComposerPresentation({
         context: 'search',
         hasText: false,
         isRecording: false,

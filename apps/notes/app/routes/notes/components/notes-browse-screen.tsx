@@ -32,7 +32,7 @@ export function NotesBrowseScreen({
   return (
     <div className="flex h-dvh min-h-0 flex-col bg-background">
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 pb-[calc(var(--hyper-form-resting-height,72px)+2rem)] pt-8 sm:px-6">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 pb-[calc(var(--composer-resting-height,72px)+2rem)] pt-8 sm:px-6">
           <header className="flex flex-col gap-5 border-b border-border/60 pb-6">
             <div className="body-4 uppercase tracking-[0.14em] text-text-tertiary">{eyebrow}</div>
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -56,7 +56,7 @@ export function NotesBrowseScreen({
             </div>
           </header>
 
-          {/* capture section removed — HyperForm handles all capture */}
+          {/* capture section removed — Composer handles all capture */}
 
           {sessions.length > 0 ? (
             <section className="mx-auto flex w-full max-w-3xl flex-col gap-3">

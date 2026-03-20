@@ -30,9 +30,9 @@ const COPY = {
   },
 } as const;
 
-// ─── HyperForm ───────────────────────────────────────────────────────────────
+// ─── Composer ───────────────────────────────────────────────────────────────
 
-export function HyperForm() {
+export function Composer() {
   const navigate = useNavigate();
   const {
     draftText,
@@ -252,7 +252,7 @@ export function HyperForm() {
           <div className="px-4 pt-3 pb-2">
             <textarea
               ref={inputRef}
-              data-testid="hyper-form-input"
+              data-testid="composer-input"
               value={draftText}
               onChange={(e) => setDraftText(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -328,7 +328,7 @@ export function HyperForm() {
               <button
                 ref={submitBtnRef}
                 type="button"
-                data-testid="hyper-form-primary"
+                data-testid="composer-primary"
                 onClick={() => void handleSend()}
                 disabled={!hasInput || isSubmitting}
                 className={cn(

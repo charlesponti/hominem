@@ -16,7 +16,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChatHeader } from '~/components/chat/ChatHeader';
 import { ChatMessages } from '~/components/chat/ChatMessages';
 import { ClassificationReview } from '@hominem/ui/ai-elements';
-import { useComposer } from '~/components/hyper-form/composer-provider';
+import { useComposer } from '~/components/composer/composer-provider';
 import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
@@ -50,7 +50,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
 
   const { setChatContext, clearChatContext } = useComposer();
 
-  // Register chat context so HyperForm switches to chat-continuation mode
+  // Register chat context so Composer switches to chat-continuation mode
   useEffect(() => {
     setChatContext(chatId);
     return () => {
@@ -172,7 +172,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   });
 
   return (
-    <div className="flex h-dvh min-h-0 flex-col bg-background text-foreground pb-[var(--hyper-form-resting-height,112px)]">
+    <div className="flex h-dvh min-h-0 flex-col bg-background text-foreground pb-[var(--composer-resting-height,112px)]">
       {/* Sticky chat header */}
       <ChatHeader
         source={source}

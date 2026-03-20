@@ -7,12 +7,12 @@ import {
 
 test.describe('Chat UI: migrated AI Elements components', () => {
   async function navigateToChatSession(page: import('@playwright/test').Page) {
-    // Use HyperForm to create a session from home
-    const hyperFormInput = page.getByTestId('hyper-form-input')
-    await expect(hyperFormInput).toBeVisible({ timeout: 10_000 })
-    await hyperFormInput.fill('Test prompt for chat UI')
+    // Use Composer to create a session from home
+    const composerInput = page.getByTestId('composer-input')
+    await expect(composerInput).toBeVisible({ timeout: 10_000 })
+    await composerInput.fill('Test prompt for chat UI')
 
-    const primaryButton = page.getByTestId('hyper-form-primary')
+    const primaryButton = page.getByTestId('composer-primary')
     await expect(primaryButton).toBeVisible({ timeout: 5_000 })
     await primaryButton.click()
 
@@ -27,8 +27,8 @@ test.describe('Chat UI: migrated AI Elements components', () => {
       await page.goto('/home')
       await navigateToChatSession(page)
 
-      // HyperForm in chat-continuation mode should be present
-      const textarea = page.getByTestId('hyper-form-input')
+      // Composer in chat-continuation mode should be present
+      const textarea = page.getByTestId('composer-input')
       await expect(textarea).toBeVisible({ timeout: 10_000 })
       await expect(textarea).toHaveValue('')
 
@@ -38,15 +38,15 @@ test.describe('Chat UI: migrated AI Elements components', () => {
       await expect(textarea).toBeVisible({ timeout: 5_000 })
     })
 
-    test('shows character counter in HyperForm footer', async ({ page, context }) => {
+    test('shows character counter in Composer footer', async ({ page, context }) => {
       await context.clearCookies()
       const email = createAuthTestEmail('chat-char-counter')
       await signInWithEmailOtp(page, email, /\/home/)
       await page.goto('/home')
       await navigateToChatSession(page)
 
-      // Focus HyperForm to expand it and reveal footer
-      const textarea = page.getByTestId('hyper-form-input')
+      // Focus Composer to expand it and reveal footer
+      const textarea = page.getByTestId('composer-input')
       await expect(textarea).toBeVisible({ timeout: 10_000 })
       await textarea.fill('Hello')
       // Counter should appear in footer
@@ -54,30 +54,30 @@ test.describe('Chat UI: migrated AI Elements components', () => {
       await expect(counter).toBeVisible({ timeout: 10_000 })
     })
 
-    test('attachment button is visible in the HyperForm toolbar', async ({ page, context }) => {
+    test('attachment button is visible in the Composer toolbar', async ({ page, context }) => {
       await context.clearCookies()
       const email = createAuthTestEmail('chat-attach-btn')
       await signInWithEmailOtp(page, email, /\/home/)
       await page.goto('/home')
       await navigateToChatSession(page)
 
-      // Focus HyperForm to expand it
-      const textarea = page.getByTestId('hyper-form-input')
+      // Focus Composer to expand it
+      const textarea = page.getByTestId('composer-input')
       await textarea.focus()
 
       const attachButton = page.getByTitle('Attach file')
       await expect(attachButton).toBeVisible({ timeout: 10_000 })
     })
 
-    test('voice button is visible in the HyperForm toolbar', async ({ page, context }) => {
+    test('voice button is visible in the Composer toolbar', async ({ page, context }) => {
       await context.clearCookies()
       const email = createAuthTestEmail('chat-voice-btn')
       await signInWithEmailOtp(page, email, /\/home/)
       await page.goto('/home')
       await navigateToChatSession(page)
 
-      // Focus HyperForm to expand it
-      const textarea = page.getByTestId('hyper-form-input')
+      // Focus Composer to expand it
+      const textarea = page.getByTestId('composer-input')
       await textarea.focus()
 
       const micButton = page.getByTitle('Voice input')
@@ -91,12 +91,12 @@ test.describe('Chat UI: migrated AI Elements components', () => {
       await page.goto('/home')
       await navigateToChatSession(page)
 
-      const textarea = page.getByTestId('hyper-form-input')
+      const textarea = page.getByTestId('composer-input')
       await expect(textarea).toBeVisible({ timeout: 10_000 })
       await expect(textarea).toHaveValue('')
 
       // Primary submit button should be disabled when input is empty
-      const primaryButton = page.getByTestId('hyper-form-primary')
+      const primaryButton = page.getByTestId('composer-primary')
       await expect(primaryButton).toBeDisabled()
     })
 
@@ -107,7 +107,7 @@ test.describe('Chat UI: migrated AI Elements components', () => {
       await page.goto('/home')
       await navigateToChatSession(page)
 
-      const textarea = page.getByTestId('hyper-form-input')
+      const textarea = page.getByTestId('composer-input')
       await expect(textarea).toBeVisible({ timeout: 10_000 })
 
       await textarea.fill('Hello from the test suite')
@@ -125,7 +125,7 @@ test.describe('Chat UI: migrated AI Elements components', () => {
       await page.goto('/home')
       await navigateToChatSession(page)
 
-      const textarea = page.getByTestId('hyper-form-input')
+      const textarea = page.getByTestId('composer-input')
       await expect(textarea).toBeVisible({ timeout: 10_000 })
 
       // Type a 10001-character string
@@ -144,9 +144,9 @@ test.describe('Chat UI: migrated AI Elements components', () => {
       await signInWithEmailOtp(page, email, /\/home/)
       await page.goto('/home')
 
-      const hyperFormInput = page.getByTestId('hyper-form-input')
-      await hyperFormInput.fill('What are the key benefits of async programming?')
-      const primaryButton = page.getByTestId('hyper-form-primary')
+      const composerInput = page.getByTestId('composer-input')
+      await composerInput.fill('What are the key benefits of async programming?')
+      const primaryButton = page.getByTestId('composer-primary')
       await primaryButton.click()
 
       await expect(page).toHaveURL(/\/chat\/[^/]+$/, { timeout: 20_000 })
@@ -163,8 +163,8 @@ test.describe('Chat UI: migrated AI Elements components', () => {
       await page.goto('/home')
       await navigateToChatSession(page)
 
-      // Focus HyperForm to expand it
-      const textarea = page.getByTestId('hyper-form-input')
+      // Focus Composer to expand it
+      const textarea = page.getByTestId('composer-input')
       await textarea.focus()
 
       const micButton = page.getByTitle('Voice input')

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
-import { useComposer } from '~/components/hyper-form/composer-provider';
+import { useComposer } from '~/components/composer/composer-provider';
 import { useNote } from '~/hooks/use-notes';
 import { requireAuth } from '~/lib/guards';
 
@@ -23,7 +23,7 @@ export default function NoteSplitView({ loaderData }: { loaderData: { noteId: st
   const { data: note, isLoading: isNoteLoading } = useNote(noteId);
   const { setNoteContext, clearNoteContext } = useComposer();
 
-  // Register note context so HyperForm switches to note-aware mode
+  // Register note context so Composer switches to note-aware mode
   useEffect(() => {
     if (note) {
       setNoteContext(noteId, note.title || 'Untitled note');
@@ -50,7 +50,7 @@ export default function NoteSplitView({ loaderData }: { loaderData: { noteId: st
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background pb-[var(--hyper-form-resting-height,72px)]">
+    <div className="flex h-full min-h-0 flex-col bg-background pb-[var(--composer-resting-height,72px)]">
       <div className="mx-auto flex w-full max-w-3xl flex-1 min-h-0 flex-col px-4 pt-6 pb-6 sm:px-6">
         <header className="mb-6 flex flex-col gap-3 border-b border-border/60 pb-5">
           <div className="body-4 uppercase tracking-[0.12em] text-text-tertiary">Workspace</div>

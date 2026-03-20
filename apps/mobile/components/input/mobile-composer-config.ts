@@ -1,25 +1,25 @@
 import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config'
 
-export type MobileHyperFormPosture = 'capture' | 'draft' | 'reply' | 'search' | 'hidden'
+export type MobileComposerPosture = 'capture' | 'draft' | 'reply' | 'search' | 'hidden'
 
-export interface MobileHyperFormPresentation {
+export interface MobileComposerPresentation {
   placeholder: string
   primaryActionLabel: string
   secondaryActionLabel: string | null
   showsAttachmentButton: boolean
   showsVoiceButton: boolean
-  posture: MobileHyperFormPosture
+  posture: MobileComposerPosture
 }
 
-interface DeriveMobileHyperFormPresentationInput {
+interface DeriveMobileComposerPresentationInput {
   context: MobileWorkspaceContext
   hasText: boolean
   isRecording: boolean
 }
 
-export function deriveMobileHyperFormPresentation(
-  input: DeriveMobileHyperFormPresentationInput,
-): MobileHyperFormPresentation {
+export function deriveMobileComposerPresentation(
+  input: DeriveMobileComposerPresentationInput,
+): MobileComposerPresentation {
   if (input.context === 'note') {
     return {
       placeholder: 'Keep writing this note',

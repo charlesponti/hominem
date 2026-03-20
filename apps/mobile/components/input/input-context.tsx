@@ -1,26 +1,26 @@
 import React, { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react';
 
 import {
-  createInitialMobileHyperFormState,
-  setMobileHyperFormAttachments,
-  setMobileHyperFormContext,
-  setMobileHyperFormMode,
-  setMobileHyperFormRecording,
-  setMobileHyperFormText,
-  type MobileHyperFormAttachment,
-  type MobileHyperFormMode,
-} from './mobile-hyper-form-state';
+  createInitialMobileComposerState,
+  setMobileComposerAttachments,
+  setMobileComposerContext,
+  setMobileComposerMode,
+  setMobileComposerRecording,
+  setMobileComposerText,
+  type MobileComposerAttachment,
+  type MobileComposerMode,
+} from './mobile-composer-state';
 import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config';
 
 type InputContextValue = {
   message: string;
   setMessage: (value: string) => void;
-  attachments: MobileHyperFormAttachment[];
-  setAttachments: (value: MobileHyperFormAttachment[]) => void;
+  attachments: MobileComposerAttachment[];
+  setAttachments: (value: MobileComposerAttachment[]) => void;
   isRecording: boolean;
   setIsRecording: (value: boolean) => void;
-  mode: MobileHyperFormMode;
-  setMode: (value: MobileHyperFormMode) => void;
+  mode: MobileComposerMode;
+  setMode: (value: MobileComposerMode) => void;
   context: MobileWorkspaceContext;
   setContext: (value: MobileWorkspaceContext) => void;
   submitAction: (() => void) | null;
@@ -36,27 +36,27 @@ export const useInputContext = () => {
 };
 
 export const InputProvider = ({ children }: PropsWithChildren) => {
-  const [state, setState] = useState(createInitialMobileHyperFormState);
+  const [state, setState] = useState(createInitialMobileComposerState);
   const [submitAction, setSubmitAction] = useState<(() => void) | null>(null);
 
   const setMessage = (value: string) => {
-    setState((currentState) => setMobileHyperFormText(currentState, value));
+    setState((currentState) => setMobileComposerText(currentState, value));
   };
 
-  const setAttachments = (value: MobileHyperFormAttachment[]) => {
-    setState((currentState) => setMobileHyperFormAttachments(currentState, value));
+  const setAttachments = (value: MobileComposerAttachment[]) => {
+    setState((currentState) => setMobileComposerAttachments(currentState, value));
   };
 
   const setIsRecording = (value: boolean) => {
-    setState((currentState) => setMobileHyperFormRecording(currentState, value));
+    setState((currentState) => setMobileComposerRecording(currentState, value));
   };
 
-  const setMode = (value: MobileHyperFormMode) => {
-    setState((currentState) => setMobileHyperFormMode(currentState, value));
+  const setMode = (value: MobileComposerMode) => {
+    setState((currentState) => setMobileComposerMode(currentState, value));
   };
 
   const setContext = (value: MobileWorkspaceContext) => {
-    setState((currentState) => setMobileHyperFormContext(currentState, value));
+    setState((currentState) => setMobileComposerContext(currentState, value));
   };
 
   const value = useMemo(

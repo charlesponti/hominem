@@ -1,21 +1,31 @@
 import * as StoreReview from 'expo-store-review';
 import { storage } from './storage';
 
-const SIGNAL_COUNT_KEY = 'review_signal_count';
+const ACTIVE_DAYS_KEY = 'review_active_days';
 const PROMPTED_KEY = 'review_prompted';
-const THRESHOLD = 5;
+const THRESHOLD = 7;
 
-export async function recordPositiveSignal() {
+function todayKey() {
+  return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+}
+
+export async function recordActiveDay() {
   const alreadyPrompted = storage.getBoolean(PROMPTED_KEY) ?? false;
   if (alreadyPrompted) return;
 
   const isAvailable = await StoreReview.isAvailableAsync();
   if (!isAvailable) return;
 
-  const count = (storage.getNumber(SIGNAL_COUNT_KEY) ?? 0) + 1;
-  storage.set(SIGNAL_COUNT_KEY, count);
+  const raw = storage.getString(ACTIVE_DAYS_KEY) ?? '[]';
+  const days: string[] = JSON.parse(raw);
+  const today = todayKey();
 
-  if (count >= THRESHOLD) {
+  if (!days.includes(today)) {
+    days.push(today);
+    storage.set(ACTIVE_DAYS_KEY, JSON.stringify(days));
+  }
+
+  if (days.length >= THRESHOLD) {
     storage.set(PROMPTED_KEY, true);
     await StoreReview.requestReview();
   }

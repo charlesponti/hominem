@@ -1,5 +1,5 @@
-import type { MobileHyperFormAttachment, MobileHyperFormState } from './mobile-hyper-form-state'
-import { setMobileHyperFormAttachments, setMobileHyperFormMode, setMobileHyperFormRecording, setMobileHyperFormText } from './mobile-hyper-form-state'
+import type { MobileComposerAttachment, MobileComposerState } from './mobile-composer-state'
+import { setMobileComposerAttachments, setMobileComposerMode, setMobileComposerRecording, setMobileComposerText } from './mobile-composer-state'
 
 export interface PickedMobileAsset {
   uri: string
@@ -7,7 +7,7 @@ export interface PickedMobileAsset {
   type: string | null
 }
 
-function mapPickedAssetToAttachment(asset: PickedMobileAsset): MobileHyperFormAttachment {
+function mapPickedAssetToAttachment(asset: PickedMobileAsset): MobileComposerAttachment {
   const fallbackName = asset.uri.split('/').pop() ?? 'attachment'
 
   return {
@@ -18,33 +18,33 @@ function mapPickedAssetToAttachment(asset: PickedMobileAsset): MobileHyperFormAt
 }
 
 export function appendPickedAssetsToDraft(
-  state: MobileHyperFormState,
+  state: MobileComposerState,
   assets: PickedMobileAsset[],
-): MobileHyperFormState {
-  return setMobileHyperFormAttachments(state, [
+): MobileComposerState {
+  return setMobileComposerAttachments(state, [
     ...state.attachments,
     ...assets.map(mapPickedAssetToAttachment),
   ])
 }
 
 export function applyVoiceTranscriptToDraft(
-  state: MobileHyperFormState,
+  state: MobileComposerState,
   transcript: string,
-): MobileHyperFormState {
+): MobileComposerState {
   const trimmedTranscript = transcript.trim()
   const nextText = state.text.trim().length > 0 ? `${state.text}\n${trimmedTranscript}` : trimmedTranscript
 
-  return setMobileHyperFormMode(
-    setMobileHyperFormRecording(setMobileHyperFormText(state, nextText), false),
+  return setMobileComposerMode(
+    setMobileComposerRecording(setMobileComposerText(state, nextText), false),
     'text',
   )
 }
 
 export function removeAttachmentFromDraft(
-  state: MobileHyperFormState,
+  state: MobileComposerState,
   attachmentId: string,
-): MobileHyperFormState {
-  return setMobileHyperFormAttachments(
+): MobileComposerState {
+  return setMobileComposerAttachments(
     state,
     state.attachments.filter((attachment) => attachment.id !== attachmentId),
   )

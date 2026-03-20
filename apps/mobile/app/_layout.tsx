@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { RootErrorBoundary } from '~/components/error-boundary/root-error-boundary';
 import { registerBackgroundSync } from '~/lib/background-sync';
+import { recordActiveDay } from '~/lib/review-prompt';
 import { useScreenCapture } from '~/lib/use-screen-capture';
 import { posthog } from '~/lib/posthog';
 import { theme, makeStyles } from '~/theme';
@@ -125,6 +126,7 @@ function RootLayout() {
     const cleanup = initObservability();
     posthog.capture('app_health_check', { source: 'root_layout' });
     void registerBackgroundSync();
+    void recordActiveDay();
     return cleanup;
   }, []);
 
