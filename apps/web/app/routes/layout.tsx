@@ -47,7 +47,7 @@ export default function Layout() {
         }
       >
         <PasskeyEnrollmentBanner onEnroll={handleEnroll} />
-        <AppLayout navigation={<NotesHeader />} contentMode="full-bleed">
+        <AppLayout navigation={<NotesHeader />}>
           <Suspense fallback={<LoadingScreen />}>
             <Outlet />
           </Suspense>

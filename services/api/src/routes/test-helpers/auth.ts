@@ -8,6 +8,14 @@ interface OtpResponse {
   otp: string;
 }
 
+let authTestSequence = 0;
+
+export function createAuthTestEmail(prefix: string) {
+  authTestSequence += 1;
+  const workerId = process.env.VITEST_WORKER_ID ?? '0';
+  return `${prefix}-${workerId}-${authTestSequence}@hominem.test`;
+}
+
 export async function importServer() {
   const module = await import('../../server');
   return module.createServer;

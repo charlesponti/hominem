@@ -6,7 +6,9 @@
     "outDir": "./build",
     "types": [
       "vite/client",
-      "node"
+      "node",
+      "vitest/globals",
+      "@testing-library/jest-dom"
     ]
   },
   "include": [
@@ -22,8 +24,6 @@
     ".turbo",
     ".cache",
     "coverage",
-    "**/*.test.ts",
-    "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "**/__tests__",
