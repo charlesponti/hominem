@@ -14,7 +14,7 @@ const maxWidthMap: Record<PageMaxWidth, string> = {
 interface PageProps extends React.ComponentProps<'main'> {
   /**
    * Maximum content width.
-   * - `lg` (default) matches AppLayout canonical constraint.
+   * - `lg` (default) matches the shared max-w-5xl content constraint.
    * - `sm` for focused single-column content (forms, detail views).
    */
   maxWidth?: PageMaxWidth;

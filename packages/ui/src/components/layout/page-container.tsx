@@ -5,7 +5,7 @@ interface PageContainerProps {
   className?: string;
   /**
    * Use `narrow` only for focused single-column content like forms or detail views.
-   * The default (`standard`) matches the AppLayout canonical constraint (max-w-5xl).
+   * The default (`standard`) matches the shared max-w-5xl content constraint.
    * Never set this to bypass the layout system — if you think you need a wider container,
    * the content belongs outside PageContainer entirely.
    */
