@@ -6,5 +6,5 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function FocusView() {
-  return <div className="h-dvh bg-background" />;
+  return <div className="bg-background" />;
 }

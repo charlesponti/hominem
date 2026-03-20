@@ -75,18 +75,17 @@ export function AppLayout({
       <div className="flex min-h-dvh flex-col bg-background">
         {navigation}
 
-        {/*
-          mt-14/md:mt-16 = header height (56px mobile, 64px desktop).
-          pb-[calc(56px+env(safe-area-inset-bottom))] on mobile = tab bar clearance.
-          id="main-content" = skip-link target (WCAG 2.4.1).
-        */}
         <main
           id="main-content"
-          className="flex-1 mt-14 md:mt-16 pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-12"
+          className={
+            contentMode === 'full-bleed'
+              ? 'mt-14 md:mt-16 h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)]'
+              : 'flex-1 mt-14 md:mt-16 pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-12'
+          }
         >
           <div
             className={
-              contentMode === 'full-bleed' ? 'w-full' : 'w-full max-w-5xl px-4 sm:px-8 lg:px-12'
+              contentMode === 'full-bleed' ? 'w-full h-full' : 'w-full max-w-5xl px-4 sm:px-8 lg:px-12'
             }
           >
             {children}
