@@ -12,9 +12,10 @@ export default defineConfig({
     setupFiles: './test/test.setup.ts',
     clearMocks: true,
     include: [
-      'src/auth/test-otp-store.test.ts',
-      'src/middleware/auth.test.ts',
-      'src/middleware/request-logger.test.ts',
+      'src/auth/session-store.test.ts',
+      'src/routes/auth.step-up.test.ts',
+      'src/routes/finance/plaid/finance.plaid.router.test.ts',
+      'src/routes/status.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/build/**'],
   },

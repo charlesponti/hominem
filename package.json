@@ -37,7 +37,7 @@
     "lint": "make lint",
     "test": "turbo run test",
     "test:e2e:auth": "bun run test:e2e:auth:api",
-    "test:e2e:auth:api": "bun run --filter @hominem/api test -- src/routes/auth.cli-bridge.test.ts src/routes/auth.rate-limit.test.ts src/routes/auth.token-contract.test.ts src/routes/auth.middleware.test.ts",
+    "test:e2e:auth:api": "bun run --filter @hominem/api test:contract:auth",
     "typecheck:native": "bun run ./scripts/typecheck-native.mjs",
     "typecheck": "make typecheck",
     "update:turbo": "bunx @turbo/codemod@latest update",

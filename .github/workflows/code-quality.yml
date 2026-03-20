@@ -192,6 +192,63 @@ jobs:
         run: bun run test
         timeout-minutes: 15
 
+  test-api-integration:
+    name: test:api-integration
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    services:
+      postgres:
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hominem-test
+        image: ghcr.io/hackefeller/postgres:latest
+        options: >-
+          --health-cmd "pg_isready -h localhost -p 5432 -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 4433:5432
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      - uses: ./.github/actions/setup
+        with:
+          install-flags: "--force"
+      - name: 🏗️ Wait for services
+        run: |
+          until pg_isready -h localhost -p 4433; do
+            echo "Waiting for postgres..."
+            sleep 2
+          done
+          until nc -z localhost 6379; do
+            echo "Waiting for redis..."
+            sleep 2
+          done
+          echo "All services are ready!"
+      - name: 🗄️ Initialize test database schema
+        uses: ./.github/actions/db-setup
+        with:
+          environment: test
+      - name: 🧪 API integration tests
+        run: bun run --filter @hominem/api test:integration
+        timeout-minutes: 10
+
   test-auth-contract:
     name: test:auth-contract
     runs-on: ubuntu-latest
@@ -246,7 +303,7 @@ jobs:
         with:
           environment: test
       - name: 🔐 API auth contract tests
-        run: bun run test:e2e:auth:api
+        run: bun run --filter @hominem/api test:contract:auth
         timeout-minutes: 10
 
   test-mobile:

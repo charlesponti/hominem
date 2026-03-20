@@ -1,8 +1,7 @@
 import { PasskeyEnrollmentBanner, usePasskeyAuth, useToast } from '@hominem/ui';
-import { AppLayout } from '@hominem/ui/components/layout/app-layout';
 import { Toaster } from '@hominem/ui/components/ui/toaster';
 import React, { Suspense, useCallback, useEffect } from 'react';
-import { Outlet, useSearchParams } from 'react-router';
+import { Outlet, useNavigation, useSearchParams } from 'react-router';
 
 import NotesHeader from '~/components/header';
 import { Composer } from '~/components/composer';
@@ -11,8 +10,10 @@ import { LoadingScreen } from '~/components/loading';
 
 export default function Layout() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigationState = useNavigation();
   const { toast } = useToast();
   const { register } = usePasskeyAuth();
+  const isNavigating = navigationState.state !== 'idle';
   const handleEnroll = useCallback(async () => {
     await register();
   }, [register]);
@@ -47,11 +48,28 @@ export default function Layout() {
         }
       >
         <PasskeyEnrollmentBanner onEnroll={handleEnroll} />
-        <AppLayout navigation={<NotesHeader />}>
-          <Suspense fallback={<LoadingScreen />}>
-            <Outlet />
-          </Suspense>
-        </AppLayout>
+        {isNavigating && (
+          <div
+            className="fixed top-0 left-0 z-50 w-full"
+            aria-label="Navigation progress"
+            role="status"
+          >
+            <div className="h-0.5 animate-pulse bg-foreground/40" />
+          </div>
+        )}
+        <div className="flex min-h-dvh flex-col bg-background">
+          <NotesHeader />
+          <main
+            id="main-content"
+            className="mt-14 flex-1 pb-[calc(56px+env(safe-area-inset-bottom))] md:mt-16 md:pb-12"
+          >
+            <div className="w-full max-w-5xl px-4 sm:px-8 lg:px-12">
+              <Suspense fallback={<LoadingScreen />}>
+                <Outlet />
+              </Suspense>
+            </div>
+          </main>
+        </div>
         <Composer />
         <Toaster />
       </div>
