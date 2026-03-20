@@ -103,8 +103,39 @@ describe('inbox stream items', () => {
     })
 
     expect(chatItem.title).toBe('Untitled session')
-    expect(chatItem.preview).toBe('Conversation activity')
+    expect(chatItem.preview).toBeNull()
     expect(noteItem.title).toBe('Capture this thought for later refinement')
-    expect(noteItem.preview).toBe('Note')
+    expect(noteItem.preview).toBeNull()
+  })
+
+  it('keeps previews optional for the default row contract', () => {
+    const [item] = toInboxStreamItems({
+      focusItems: [
+        {
+          id: 'note-3',
+          title: 'A single line title',
+          content: 'A single line title',
+          excerpt: 'A single line title',
+          status: 'published',
+          type: 'note',
+          tags: [],
+          mentions: [],
+          analysis: null,
+          publishingMetadata: null,
+          parentNoteId: null,
+          versionNumber: 1,
+          isLatestVersion: true,
+          userId: 'user-1',
+          createdAt: '2026-03-18T11:00:00.000Z',
+          updatedAt: '2026-03-18T11:00:00.000Z',
+          publishedAt: null,
+          scheduledFor: null,
+        },
+      ],
+      sessions: [],
+    })
+
+    expect(item.title).toBe('A single line title')
+    expect(item.preview).toBeNull()
   })
 })

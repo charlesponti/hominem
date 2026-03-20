@@ -6,7 +6,7 @@ export interface InboxStreamItem {
   id: string
   kind: 'note' | 'chat'
   title: string
-  preview: string
+  preview: string | null
   timestamp: string
   route: string
 }
@@ -36,7 +36,7 @@ function toNoteStreamItem(item: Note): InboxStreamItem {
     id: item.id,
     kind: 'note',
     title: getFocusTitle(item),
-    preview: 'Note',
+    preview: null,
     timestamp,
     route: `/(protected)/(tabs)/focus/${item.id}`,
   }
@@ -49,7 +49,7 @@ function toChatStreamItem(session: ChatWithActivity): InboxStreamItem {
     id: session.id,
     kind: 'chat',
     title: session.title ?? 'Untitled session',
-    preview: 'Conversation activity',
+    preview: null,
     timestamp,
     route: `/(protected)/(tabs)/sherpa?chatId=${session.id}`,
   }

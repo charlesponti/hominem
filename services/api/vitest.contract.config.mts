@@ -9,8 +9,9 @@ export default defineConfig({
     },
     globals: true,
     environment: 'node',
-    setupFiles: './test/test.setup.ts',
+    setupFiles: './test/test.setup.contract.ts',
     clearMocks: true,
+    slowTestThreshold: 1_500,
     include: [
       'src/routes/auth.email-otp.contract.test.ts',
       'src/routes/auth.test-otp-route.test.ts',

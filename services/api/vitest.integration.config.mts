@@ -9,8 +9,9 @@ export default defineConfig({
     },
     globals: true,
     environment: 'node',
-    setupFiles: './test/test.setup.ts',
+    setupFiles: './test/test.setup.integration.ts',
     clearMocks: true,
+    slowTestThreshold: 1_000,
     include: [
       'src/auth/session-store.test.ts',
       'src/routes/auth.step-up.test.ts',

@@ -3,6 +3,8 @@ import { db } from '@hominem/db';
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { cleanupApiAuthTestState } from '../../test/setup/auth-state.cleanup';
+
 const proofStore = vi.hoisted(() => new Map<string, string>());
 const STEP_UP_USER_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const FIRST_TIME_USER_ID = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
@@ -49,11 +51,7 @@ function createAuthedAppForUser(userId: string) {
 describe('auth step-up enforcement', () => {
   beforeEach(async () => {
     proofStore.clear();
-    await db
-      .deleteFrom('user_passkey')
-      .where('user_id', 'in', [STEP_UP_USER_ID, FIRST_TIME_USER_ID])
-      .execute();
-    await db.deleteFrom('users').where('id', 'in', [STEP_UP_USER_ID, FIRST_TIME_USER_ID]).execute();
+    await cleanupApiAuthTestState();
 
     await db
       .insertInto('users')

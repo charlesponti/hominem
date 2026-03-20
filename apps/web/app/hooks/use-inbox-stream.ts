@@ -21,7 +21,7 @@ export interface InboxNoteItem {
   kind: 'note';
   id: string;
   title: string;
-  preview: string;
+  preview: string | null;
   updatedAt: string;
   /** Full note for web-specific actions (delete, tag management) */
   note: Note;
@@ -31,7 +31,7 @@ export interface InboxChatItem {
   kind: 'chat';
   id: string;
   title: string;
-  preview: string;
+  preview: string | null;
   updatedAt: string;
   /** Full chat for web-specific actions (delete) */
   chat: Chat;
@@ -48,16 +48,12 @@ function noteTitle(note: Note): string {
   return 'Untitled note';
 }
 
-function notePreview(note: Note): string {
-  return note.excerpt ?? note.content.slice(0, 140);
-}
-
 function toNoteItem(note: Note): InboxNoteItem {
   return {
     kind: 'note',
     id: note.id,
     title: noteTitle(note),
-    preview: notePreview(note),
+    preview: null,
     updatedAt: note.updatedAt,
     note,
   };
@@ -67,8 +63,8 @@ function toChatItem(chat: Chat): InboxChatItem {
   return {
     kind: 'chat',
     id: chat.id,
-    title: chat.title?.trim() || 'Untitled conversation',
-    preview: 'Conversation',
+    title: chat.title?.trim() || 'Untitled session',
+    preview: null,
     updatedAt: chat.updatedAt,
     chat,
   };

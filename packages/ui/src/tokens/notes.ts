@@ -41,15 +41,15 @@ export const notesStream = {
   /** Feed item hover/active background. */
   itemHover: colors['bg-surface'],
   /** Feed item border radius. */
-  itemRadius: radii.md,
+  itemRadius: 0,
   /** Feed item horizontal padding. */
   itemPaddingX: spacing[5],
   /** Feed item vertical padding. */
   itemPaddingY: spacing[4],
   /** Gap between feed items. */
-  itemGap: spacing[1],
+  itemGap: 0,
   /** Icon badge size for chat vs note type indicator (px). */
-  typeIconSize: 16,
+  typeIconSize: 14,
 } as const;
 
 /**
@@ -75,14 +75,14 @@ export const notesSpacing = {
   /** Gap between a section eyebrow label and the section body. */
   eyebrowGap: spacing[2],
   /** Vertical gap between items in a feed/list. */
-  feedItemGap: spacing[1],
+  feedItemGap: 0,
   /** Padding inside each feed item row. */
   feedItemPaddingX: spacing[5],
-  feedItemPaddingY: spacing[5],
+  feedItemPaddingY: spacing[4],
   /** Gap between note title and preview content. */
-  noteContentGap: spacing[2],
+  noteContentGap: spacing[1],
   /** Gap between content and tag/action rows in a note item. */
-  noteSecondaryGap: spacing[4],
+  noteSecondaryGap: spacing[3],
   /** Gap between the workspace two-column panes. */
   workspacePaneGap: spacing[5],
   /** Internal padding of the workspace header. */
