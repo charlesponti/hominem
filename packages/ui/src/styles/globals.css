@@ -100,7 +100,7 @@
   --color-popover: #f5f5f7;
   --color-popover-foreground: #000000;
   --color-input: #f5f5f7;
-  --color-ring: #007aff;
+  --color-ring: #1c1c1e;
 
   /* ====== COLORS: EMPHASIS SCALE ====== */
   /* Opacity layers for subtle differentiation on black */
@@ -136,10 +136,7 @@
   /* ====== BORDER RADIUS ====== */
   /* Soft rounded corners for modern aesthetic */
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
+  --radius-md: 8px;
 
   /* Icon radius: 22% for squircular appearance */
   --radius-icon: 22%;
@@ -209,6 +206,22 @@
     color-scheme: light;
     background-color: var(--color-bg-base);
     color: var(--color-text-primary);
+  }
+
+  /* ── Universal focus reset ──────────────────────────────────────────────
+   * Suppress the browser's default blue outline on every element.
+   * Keyboard focus (focus-visible) gets a consistent 2px near-black ring
+   * drawn from --color-ring so all surfaces match the design system.
+   * Mouse/touch focus (:focus but not :focus-visible) shows nothing.
+   * ─────────────────────────────────────────────────────────────────────── */
+  *:focus {
+    outline: none;
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: inherit;
   }
 
   /* Enable smooth transitions globally (no more transition: none !important) */
@@ -574,17 +587,18 @@
 
 /* ====== INTERACTION & TRANSITION UTILITIES ====== */
 
+/* focus-ring: apply when you need to force the ring visible (e.g. programmatic focus) */
 @utility focus-ring {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
 
-/* void-focus: canonical focus state for interactive elements.
-   Suppresses browser default; shows accent outline on keyboard focus only. */
+/* void-focus: explicit opt-in for components that need to override Radix defaults.
+   Base layer handles the universal case — this is kept for surgical overrides. */
 @utility void-focus {
   outline: none;
   &:focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
 }
@@ -624,7 +638,7 @@
 /* ====== BORDER RADIUS UTILITIES ====== */
 
 @utility rounded-sm {
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
 }
 
 @utility rounded-md {
@@ -632,11 +646,33 @@
 }
 
 @utility rounded-lg {
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
 }
 
 @utility rounded-xl {
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
+}
+
+/* ── list-row ────────────────────────────────────────────────────────────────
+ * Apply to every <li> in an interactive list (sidebar nav, menu, feed rows).
+ *
+ * Rule: all direct children of a list item must occupy the full height of
+ * the row — no child may be shorter than its siblings. Each child is
+ * responsible for centering its own content (items-center / justify-center).
+ *
+ * Usage:  <li className="list-row …">
+ *           <a className="flex flex-1 items-center …">…</a>   ← stretches
+ *           <button className="flex items-center …">…</button> ← stretches
+ *         </li>
+ * ─────────────────────────────────────────────────────────────────────────── */
+@utility list-row {
+  display: flex;
+  align-items: stretch;
+
+  & > * {
+    display: flex;
+    align-items: center;
+  }
 }
 
 /* ====== GLASS MORPHISM UTILITY ====== */
@@ -740,7 +776,7 @@
   .card {
     background-color: var(--color-bg-surface);
     border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: 1rem;
     box-shadow: var(--shadow-low);
   }
@@ -769,9 +805,7 @@
     outline: none;
     border-color: var(--color-border-focus);
     background-color: var(--color-bg-elevated);
-    box-shadow:
-      0 0 0 2px var(--color-accent),
-      0 0 0 4px rgba(0, 122, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(28, 28, 30, 0.08);
   }
 
   .input:disabled {
@@ -793,7 +827,7 @@
   .input-error:focus {
     box-shadow:
       0 0 0 2px var(--color-destructive),
-      0 0 0 4px rgba(255, 59, 48, 0.1);
+      0 0 0 4px rgba(255, 59, 48, 0.08);
   }
 
   /* Badge component */
@@ -802,7 +836,7 @@
     align-items: center;
     gap: 0.25rem;
     padding: 0.25rem 0.5rem;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     background-color: var(--color-bg-elevated);
     color: var(--color-text-primary);
     font-size: 0.75rem;

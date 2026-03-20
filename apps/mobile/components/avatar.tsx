@@ -90,7 +90,7 @@ const useStyles = makeStyles((t) =>
       alignItems: 'center',
     },
     avatar: {
-      borderRadius: 1000,
+      borderRadius: t.borderRadii.full,
       overflow: 'hidden',
       maxWidth: '100%',
     },
@@ -98,7 +98,7 @@ const useStyles = makeStyles((t) =>
       backgroundColor: t.colors['emphasis-faint'],
       borderColor: t.colors['border-default'],
       borderWidth: 1,
-      borderRadius: 1000,
+      borderRadius: t.borderRadii.full,
       justifyContent: 'center',
       alignItems: 'center',
     },

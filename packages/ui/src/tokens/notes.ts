@@ -41,7 +41,7 @@ export const notesStream = {
   /** Feed item hover/active background. */
   itemHover: colors['bg-surface'],
   /** Feed item border radius. */
-  itemRadius: radii.lg,
+  itemRadius: radii.md,
   /** Feed item horizontal padding. */
   itemPaddingX: spacing[5],
   /** Feed item vertical padding. */
@@ -140,24 +140,24 @@ export const notesForegrounds = {
 
 export const notesRadii = {
   /** Outer radius of major panels (capture shell, notes list wrapper). */
-  panel: radii.xl,
+  panel: radii.md,
   /** Individual feed item — typically no visible radius (full bleed list). */
   feedItem: 0,
   /** Tag / badge pill. */
-  badge: radii.xl,
+  badge: radii.md,
   /** Icon well circle. */
-  iconWell: radii.xl,
+  iconWell: radii.md,
   /** Action button pill shape. */
-  actionButton: radii.xl,
+  actionButton: radii.md,
 } as const;
 
 /** React Native-safe notes radii. */
 export const notesRadiiNative = {
   ...notesRadii,
-  panel: radiiNative.xl,
-  badge: radiiNative.xl,
-  iconWell: radiiNative.xl,
-  actionButton: radiiNative.xl,
+  panel: radiiNative.md,
+  badge: radiiNative.md,
+  iconWell: radiiNative.md,
+  actionButton: radiiNative.md,
 } as const;
 
 // ─── Typography role semantics ───────────────────────────────────────────────

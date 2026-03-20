@@ -120,7 +120,7 @@ export function ConfirmationBanner({
 
   return (
     <div
-      className={cn('flex items-start gap-3 p-4 rounded-lg border', typeStyles[type], className)}
+      className={cn('flex items-start gap-3 p-4 rounded-md border', typeStyles[type], className)}
       {...props}
     >
       <div className="mt-0.5">{icons[type]}</div>

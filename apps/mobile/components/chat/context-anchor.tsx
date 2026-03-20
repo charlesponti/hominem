@@ -68,7 +68,7 @@ const useStyles = makeStyles((t) =>
       gap: t.spacing.xs_4,
       paddingHorizontal: t.spacing.sm_8,
       paddingVertical: t.spacing.xs_4,
-      borderRadius: t.borderRadii.s_3,
+      borderRadius: t.borderRadii.md,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
       backgroundColor: t.colors.muted,

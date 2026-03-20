@@ -45,7 +45,7 @@ export const CategoryBadge = ({ category }: { category: string }) => {
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
     badge: {
-      borderRadius: t.borderRadii.xl_20,
+      borderRadius: t.borderRadii.md,
       fontSize: 10,
       paddingVertical: t.spacing.xs_4,
       paddingHorizontal: t.spacing.sm_8,

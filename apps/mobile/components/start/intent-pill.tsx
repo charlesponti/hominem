@@ -46,7 +46,7 @@ const useStyles = makeStyles((t) =>
       backgroundColor: t.colors.muted,
       paddingVertical: t.spacing.sm_12,
       paddingHorizontal: t.spacing.m_16,
-      borderRadius: t.borderRadii.sm_6,
+      borderRadius: t.borderRadii.md,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
     },
@@ -56,7 +56,7 @@ const useStyles = makeStyles((t) =>
     emojiCircle: {
       height: 36,
       width: 36,
-      borderRadius: t.borderRadii.sm_6,
+      borderRadius: t.borderRadii.md,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: t.colors.muted,

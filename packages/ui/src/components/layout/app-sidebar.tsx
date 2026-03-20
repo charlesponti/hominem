@@ -99,7 +99,7 @@ function NavItem({ item }: { item: SidebarNavItem }) {
         asChild
         isActive={isActive}
         className={cn(
-          'h-9 rounded-lg text-sm font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-transparent transition-colors px-2.5',
+          'h-9 rounded-md text-sm font-medium text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-transparent transition-colors px-2.5',
           isActive && 'text-sidebar-foreground font-semibold bg-transparent',
         )}
       >
@@ -154,7 +154,7 @@ export function AppSidebar({
               <button
                 type="button"
                 onClick={onNewChat}
-                className="flex items-center justify-center size-8 rounded-lg text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-transparent transition-colors"
+                className="flex items-center justify-center size-8 rounded-md text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-transparent transition-colors"
                 title="New chat"
                 aria-label="New chat"
               >
@@ -198,7 +198,7 @@ export function AppSidebar({
             <SidebarGroupContent>
               <ul className="flex flex-col gap-0.5">
                 {recentItems.map((item) => (
-                  <li key={item.id} className="group/item flex items-center rounded-lg hover:bg-transparent">
+                  <li key={item.id} className="group/item flex items-center rounded-md hover:bg-transparent">
                     <Link
                       to={item.url}
                       prefetch="intent"

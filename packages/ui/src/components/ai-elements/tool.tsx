@@ -35,7 +35,7 @@ export function Tool({
   };
 
   return (
-    <div className={cn('rounded-lg border', statusColors[status], className)} {...props}>
+    <div className={cn('rounded-md border', statusColors[status], className)} {...props}>
       <Button
         variant="ghost"
         size="sm"

@@ -83,9 +83,9 @@ export function MessageSurface({
       className={cn(
         'min-w-0',
         tone === 'user' &&
-          'rounded-xl bg-emphasis-highest px-4 py-3 text-primary-foreground shadow-low',
+          'rounded-md bg-emphasis-highest px-4 py-3 text-primary-foreground shadow-low',
         tone === 'system' &&
-          'rounded-lg border border-subtle bg-bg-surface px-3 py-2 text-text-secondary',
+          'rounded-md border border-subtle bg-bg-surface px-3 py-2 text-text-secondary',
         tone === 'debug' &&
           'rounded-md border border-subtle bg-bg-surface px-3 py-2 text-text-secondary',
         className,

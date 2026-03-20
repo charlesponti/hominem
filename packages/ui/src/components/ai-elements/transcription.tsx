@@ -35,7 +35,7 @@ export function TranscriptionSegment({
   return (
     <div
       className={cn(
-        'flex items-start gap-3 p-3 rounded-lg',
+        'flex items-start gap-3 p-3 rounded-md',
         isUser ? 'bg-primary/10' : 'bg-muted',
         className,
       )}

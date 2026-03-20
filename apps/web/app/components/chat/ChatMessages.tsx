@@ -215,7 +215,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         {showSearch && (
           <div className="pointer-events-none absolute inset-x-0 top-4 z-20 px-4 sm:px-6">
             <div
-              className="pointer-events-auto mx-auto w-full rounded-lg border border-border-subtle bg-background/95 p-4 shadow-md shadow-black/5 backdrop-blur supports-backdrop-filter:bg-background/90"
+              className="pointer-events-auto mx-auto w-full rounded-md border border-border-subtle bg-background/95 p-4 shadow-md shadow-black/5 backdrop-blur supports-backdrop-filter:bg-background/90"
               style={{ maxWidth: chatTokens.searchMaxWidth }}
               role="dialog"
               aria-modal="true"
@@ -283,7 +283,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
           {/* Error Display */}
           {displayError && (
             <div
-              className="mx-auto mb-6 w-full rounded-xl border border-destructive/30 bg-destructive/5 p-4 shadow-sm"
+              className="mx-auto mb-6 w-full rounded-md border border-destructive/30 bg-destructive/5 p-4 shadow-sm"
               style={{ maxWidth: chatTokens.transcriptMaxWidth }}
             >
               <div className="text-sm font-semibold text-destructive mb-1">

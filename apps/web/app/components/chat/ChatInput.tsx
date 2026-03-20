@@ -178,7 +178,7 @@ const InnerChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function 
               <Suggestion
                 key={suggestion}
                 suggestion={suggestion}
-                className="[&_button]:rounded-2xl [&_button]:border [&_button]:border-[rgba(0,0,0,0.12)] [&_button]:bg-white [&_button]:px-3.5 [&_button]:py-2 [&_button]:text-sm [&_button]:font-normal [&_button]:text-[rgba(0,0,0,0.7)] [&_button]:transition-colors [&_button]:hover:bg-[rgba(0,0,0,0.04)] [&_button]:hover:text-[rgba(0,0,0,0.9)]"
+                className="[&_button]:rounded-md [&_button]:border [&_button]:border-[rgba(0,0,0,0.12)] [&_button]:bg-white [&_button]:px-3.5 [&_button]:py-2 [&_button]:text-sm [&_button]:font-normal [&_button]:text-[rgba(0,0,0,0.7)] [&_button]:transition-colors [&_button]:hover:bg-[rgba(0,0,0,0.04)] [&_button]:hover:text-[rgba(0,0,0,0.9)]"
                 onSuggestionClick={handleSuggestionClick}
               />
             ))}

@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   },
   attachmentChip: {
     backgroundColor: theme.colors['bg-surface'],
-    borderRadius: 999,
+    borderRadius: theme.borderRadii.full,
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
     paddingHorizontal: theme.spacing.sm_8,

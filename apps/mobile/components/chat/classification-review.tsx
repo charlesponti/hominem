@@ -21,8 +21,8 @@ const useStyles = makeStyles((t) =>
     },
     sheet: {
       backgroundColor: t.colors.background,
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
+      borderTopLeftRadius: t.borderRadii.md,
+      borderTopRightRadius: t.borderRadii.md,
       borderTopWidth: 1,
       borderColor: t.colors['border-default'],
       padding: t.spacing.ml_24,
@@ -31,7 +31,7 @@ const useStyles = makeStyles((t) =>
     handle: {
       width: 36,
       height: 4,
-      borderRadius: 999, // special: infinite radius for pill
+      borderRadius: t.borderRadii.full, // special: infinite radius for pill
       backgroundColor: t.colors['border-default'],
       alignSelf: 'center',
       marginBottom: t.spacing.xs_4,
@@ -46,7 +46,7 @@ const useStyles = makeStyles((t) =>
     preview: {
       maxHeight: 120,
       backgroundColor: t.colors.muted,
-      borderRadius: t.borderRadii.sm_6,
+      borderRadius: t.borderRadii.md,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
       padding: t.spacing.sm_12,

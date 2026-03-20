@@ -148,13 +148,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: theme.borderRadii.md,
     backgroundColor: 'rgba(0,0,0,0.4)',
   },
   captureButton: {
     width: 72,
     height: 72,
-    borderRadius: 36,
+    borderRadius: theme.borderRadii.full,
     borderWidth: 4,
     borderColor: theme.colors.white,
     alignItems: 'center',
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   captureInner: {
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: theme.borderRadii.md,
     backgroundColor: theme.colors.white,
   },
   permissionContainer: {
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   permissionButton: {
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
-    borderRadius: theme.borderRadii.md_10,
+    borderRadius: theme.borderRadii.md,
     paddingHorizontal: theme.spacing.m_16,
     paddingVertical: theme.spacing.sm_8,
   },

@@ -74,7 +74,7 @@ function DesktopNavLink({ item }: { item: NavItem }) {
       prefetch="intent"
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium uppercase tracking-widest transition-colors duration-150',
+        'flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium uppercase tracking-widest transition-colors duration-150',
         isActive
           ? 'bg-background text-foreground shadow-sm'
           : 'text-text-tertiary hover:text-foreground',
@@ -95,7 +95,7 @@ function DesktopNav({ navItems }: { navItems: NavItem[] }) {
         <nav
           role="navigation"
           aria-label="Main"
-          className="flex items-center gap-1 rounded-full border border-border/60 bg-bg-surface/80 p-1"
+          className="flex items-center gap-1 rounded-md border border-border/60 bg-bg-surface/80 p-1"
         >
           {navItems.map((item) => (
             <DesktopNavLink key={item.url} item={item} />
@@ -142,7 +142,7 @@ function MobileTabItem({ item }: { item: NavItem }) {
         prefetch="intent"
         aria-current={isActive ? 'page' : undefined}
         className={cn(
-          'flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 rounded-2xl transition-colors duration-150',
+          'flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 rounded-md transition-colors duration-150',
           isActive ? 'bg-background text-foreground shadow-sm' : 'text-text-tertiary',
         )}
       >
@@ -216,7 +216,7 @@ export function Header({ brandName, brandIcon, navItems = [] }: HeaderProps) {
             {brandIcon ? (
               <span
                 aria-hidden="true"
-                className="flex size-8 items-center justify-center rounded-2xl border border-border/60 bg-bg-surface"
+                className="flex size-8 items-center justify-center rounded-md border border-border/60 bg-bg-surface"
               >
                 {brandIcon}
               </span>

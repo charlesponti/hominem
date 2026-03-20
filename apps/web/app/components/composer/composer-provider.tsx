@@ -1,42 +1,39 @@
 /**
  * ComposerProvider
  *
- * Manages only the state that CANNOT be derived from the URL:
- *   - draftText         the textarea value
- *   - noteTitle         pushed by the note route once data loads
- *   - defaultIntent     'note' | 'chat' — which action the send button commits to
- *                       when the Composer is in generic (home) mode
- *   - isExpanded        mobile swipe state
- *   - DOM refs          GSAP animation targets
+ * Holds only state that cannot be derived from the URL:
  *
- * Route context (mode, noteId, chatId) is derived from the URL inside
- * useComposerMode — routes no longer need to call setChatContext etc.
+ *   draftText        textarea value
+ *   noteTitle        pushed by the note route once data loads
+ *   attachedNotes    notes selected as LLM context in chat mode (Phase 2)
+ *   isExpanded       mobile swipe state
+ *   DOM refs         GSAP animation targets
+ *
+ * Mode, posture, and button behaviour are derived via useComposerMode
+ * + deriveComposerPresentation — no imperative push from routes.
  */
 
-import { createContext, useContext, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
+import type { Note } from '@hominem/hono-rpc/types/notes.types';
 
 export type ComposerMode = 'generic' | 'note-aware' | 'chat-continuation';
-export type DefaultIntent = 'note' | 'chat';
 
 export interface ComposerContext {
-  // Draft
   draftText: string;
   setDraftText: (text: string) => void;
   clearDraft: () => void;
 
-  // Note title — set by the note route once its data loads
   noteTitle: string | null;
   setNoteTitle: (title: string | null) => void;
 
-  // Default-mode intent toggle (Note vs Chat on the home/focus route)
-  defaultIntent: DefaultIntent;
-  setDefaultIntent: (intent: DefaultIntent) => void;
+  attachedNotes: Note[];
+  attachNote: (note: Note) => void;
+  detachNote: (noteId: string) => void;
+  clearAttachedNotes: () => void;
 
-  // Mobile swipe
   isExpanded: boolean;
   setIsExpanded: (v: boolean) => void;
 
-  // GSAP targets
   containerRef: React.RefObject<HTMLDivElement | null>;
   submitBtnRef: React.RefObject<HTMLButtonElement | null>;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -47,12 +44,20 @@ const Ctx = createContext<ComposerContext | null>(null);
 export function ComposerProvider({ children }: { children: ReactNode }) {
   const [draftText, setDraftText] = useState('');
   const [noteTitle, setNoteTitle] = useState<string | null>(null);
-  const [defaultIntent, setDefaultIntent] = useState<DefaultIntent>('note');
+  const [attachedNotes, setAttachedNotes] = useState<Note[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const submitBtnRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const attachNote = useCallback((note: Note) => {
+    setAttachedNotes((prev) => (prev.some((n) => n.id === note.id) ? prev : [...prev, note]));
+  }, []);
+
+  const detachNote = useCallback((noteId: string) => {
+    setAttachedNotes((prev) => prev.filter((n) => n.id !== noteId));
+  }, []);
 
   return (
     <Ctx.Provider
@@ -62,8 +67,10 @@ export function ComposerProvider({ children }: { children: ReactNode }) {
         clearDraft: () => setDraftText(''),
         noteTitle,
         setNoteTitle,
-        defaultIntent,
-        setDefaultIntent,
+        attachedNotes,
+        attachNote,
+        detachNote,
+        clearAttachedNotes: () => setAttachedNotes([]),
         isExpanded,
         setIsExpanded,
         containerRef,

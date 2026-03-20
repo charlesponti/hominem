@@ -130,7 +130,7 @@ export const ChatMessage = memo(function ChatMessage({
               <Textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="min-h-[100px] resize-none rounded-xl border-default bg-background"
+                className="min-h-[100px] resize-none rounded-md border-default bg-background"
                 autoFocus
                 aria-label="Message content"
                 aria-describedby="edit-instructions"
@@ -170,7 +170,7 @@ export const ChatMessage = memo(function ChatMessage({
             !isErrorMessage && hasContent &&
             (isUser ? (
               // User message - compact bubble style
-              <div className="inline-block max-w-[85%] sm:max-w-[75%] rounded-2xl bg-bg-surface border border-subtle px-4 py-3 text-foreground shadow-sm">
+              <div className="inline-block max-w-[85%] sm:max-w-[75%] rounded-md bg-bg-surface border border-subtle px-4 py-3 text-foreground shadow-sm">
                 <MarkdownContent
                   content={message.content}
                   isStreaming={isStreaming}

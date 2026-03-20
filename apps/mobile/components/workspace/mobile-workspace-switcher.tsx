@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   backButton: {
     alignItems: 'center',
     borderColor: theme.colors['border-default'],
-    borderRadius: 999,
+    borderRadius: theme.borderRadii.full,
     borderWidth: 1,
     height: 36,
     justifyContent: 'center',
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
-    borderRadius: 999,
+    borderRadius: theme.borderRadii.full,
     alignItems: 'center',
     justifyContent: 'center',
     height: 36,

@@ -64,7 +64,7 @@ const useStyles = makeStyles((t) =>
     card: {
       borderWidth: 1,
       borderColor: t.colors['border-default'],
-      borderRadius: t.borderRadii.l_12,
+      borderRadius: t.borderRadii.md,
       gap: t.spacing.xs_4,
       paddingHorizontal: t.spacing.sm_12,
       paddingVertical: t.spacing.sm_8,

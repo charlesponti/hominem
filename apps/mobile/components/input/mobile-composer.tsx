@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     boxShadow: '0 -10px 30px rgba(15, 23, 42, 0.08)',
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
-    borderRadius: 30,
+    borderRadius: theme.borderRadii.md,
     paddingHorizontal: theme.spacing.sm_12,
     paddingTop: theme.spacing.sm_12,
     paddingBottom: theme.spacing.sm_8,

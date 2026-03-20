@@ -117,7 +117,7 @@ export function AudioPlayer({
   };
 
   return (
-    <div className={cn('flex flex-col gap-2 p-3 rounded-lg border', className)} {...props}>
+    <div className={cn('flex flex-col gap-2 p-3 rounded-md border', className)} {...props}>
       {src && <audio ref={audioRef} src={src} />}
 
       <div className="flex items-center gap-3">

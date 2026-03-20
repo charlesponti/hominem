@@ -57,7 +57,7 @@ const useStyles = makeStyles((t) =>
       paddingVertical: t.spacing.sm_8,
     },
     clearButton: {
-      borderRadius: t.borderRadii.l_12,
+      borderRadius: t.borderRadii.md,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
       paddingVertical: t.spacing.sm_8,

@@ -70,8 +70,8 @@ const useStyles = makeStyles((t) =>
     },
     container: {
       backgroundColor: t.colors.background,
-      borderTopLeftRadius: t.borderRadii.xl_20,
-      borderTopRightRadius: t.borderRadii.xl_20,
+      borderTopLeftRadius: t.borderRadii.md,
+      borderTopRightRadius: t.borderRadii.md,
       paddingBottom: t.spacing.xl_48,
       paddingHorizontal: t.spacing.ml_24,
       paddingTop: t.spacing.m_16,
@@ -93,7 +93,7 @@ const useStyles = makeStyles((t) =>
     micButton: {
       width: 72,
       height: 72,
-      borderRadius: 36 /* half of 72 for circle */,
+      borderRadius: t.borderRadii.full /* half of 72 for circle */,
     },
     hint: {
       textAlign: 'center',

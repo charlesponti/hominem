@@ -1,0 +1,53 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@apply",
+      "description": "Inline existing utility classes into a custom rule."
+    },
+    {
+      "name": "@reference",
+      "description": "Import another stylesheet for reference-only access to theme values, utilities, and variants."
+    },
+    {
+      "name": "@theme",
+      "description": "Define design tokens that Tailwind exposes as theme variables and utilities."
+    },
+    {
+      "name": "@source",
+      "description": "Add extra source paths for Tailwind class detection."
+    },
+    {
+      "name": "@utility",
+      "description": "Register a custom utility so Tailwind can treat it like a first-class utility class."
+    },
+    {
+      "name": "@variant",
+      "description": "Apply a variant to a block of styles."
+    },
+    {
+      "name": "@custom-variant",
+      "description": "Define a reusable custom variant."
+    },
+    {
+      "name": "@layer",
+      "description": "Assign styles to Tailwind's base, components, or utilities layer."
+    },
+    {
+      "name": "@config",
+      "description": "Load a Tailwind configuration file for compatibility with config-based setups."
+    },
+    {
+      "name": "@plugin",
+      "description": "Load a Tailwind plugin from CSS for compatibility with plugin-based setups."
+    },
+    {
+      "name": "@tailwind",
+      "description": "Insert Tailwind's generated base, components, or utilities output in config-based setups."
+    },
+    {
+      "name": "@screen",
+      "description": "Apply styles at a configured breakpoint in legacy Tailwind syntax."
+    }
+  ]
+}

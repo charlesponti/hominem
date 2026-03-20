@@ -20,7 +20,7 @@ type Story = StoryObj<typeof PromptInput>;
 
 export const Default: Story = {
   render: () => (
-    <PromptInput className="max-w-lg border rounded-lg p-2">
+    <PromptInput className="max-w-lg border rounded-md p-2">
       <PromptInputBody>
         <PromptInputTextarea placeholder="Type your message..." />
       </PromptInputBody>
@@ -38,7 +38,7 @@ export const Default: Story = {
 
 export const Streaming: Story = {
   render: () => (
-    <PromptInput className="max-w-lg border rounded-lg p-2">
+    <PromptInput className="max-w-lg border rounded-md p-2">
       <PromptInputBody>
         <PromptInputTextarea placeholder="Type your message..." disabled />
       </PromptInputBody>

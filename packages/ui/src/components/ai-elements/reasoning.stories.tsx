@@ -34,7 +34,7 @@ export const Open: Story = {
 
 export const ContentOnly: Story = {
   render: () => (
-    <ReasoningContent className="max-w-md text-sm text-muted-foreground p-4 bg-muted rounded-lg">
+    <ReasoningContent className="max-w-md text-sm text-muted-foreground p-4 bg-muted rounded-md">
       Analyzing the request... The user wants to understand Storybook story patterns. I'll focus
       on practical, copy-paste examples.
     </ReasoningContent>

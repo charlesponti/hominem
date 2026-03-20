@@ -12,7 +12,7 @@ const useStyles = makeStyles((t) =>
     circle: {
       width: 42,
       height: 42,
-      borderRadius: 42,
+      borderRadius: t.borderRadii.full,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
       backgroundColor: t.colors.muted,

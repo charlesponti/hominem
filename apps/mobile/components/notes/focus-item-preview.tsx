@@ -64,7 +64,7 @@ const useFocusItemStyles = makeStyles((t) =>
     item: {
       flexDirection: 'row',
       backgroundColor: t.colors['emphasis-faint'],
-      borderRadius: t.borderRadii.l_12,
+      borderRadius: t.borderRadii.md,
     },
     info: {
       flex: 1,

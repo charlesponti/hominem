@@ -43,10 +43,6 @@
   --space-6: 32px;
   --space-7: 48px;
   --space-8: 64px;
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
-  --radius-xl: 24px;
   --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-3: 0 12px 40px rgba(0, 0, 0, 0.15);
@@ -106,7 +102,7 @@ body {
 }
 
 .desktop-shell__topbar {
-  @apply rounded-lg;
+  @apply rounded-md;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -139,7 +135,7 @@ body {
 }
 
 .desktop-shell__button {
-  @apply rounded-sm;
+  @apply rounded-md;
   appearance: none;
   border: 1px solid var(--border-strong);
   background: var(--surface-elevated);
@@ -160,7 +156,7 @@ body {
 }
 
 .desktop-shell__hero {
-  @apply rounded-xl;
+  @apply rounded-md;
   display: grid;
   gap: var(--space-5);
   margin-top: var(--space-6);
@@ -226,7 +222,7 @@ body {
 }
 
 .desktop-shell__panel {
-  @apply rounded-lg;
+  @apply rounded-md;
   padding: var(--space-5);
 }
 
@@ -282,7 +278,7 @@ body {
 }
 
 .desktop-auth__panel {
-  @apply rounded-xl shadow-medium;
+  @apply rounded-md shadow-medium;
   width: min(100%, 480px);
   padding: var(--space-6);
   border: 1px solid var(--border);

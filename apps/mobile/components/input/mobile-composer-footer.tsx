@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   toolButton: {
     alignItems: 'center',
     backgroundColor: theme.colors['bg-surface'],
-    borderRadius: 999,
+    borderRadius: theme.borderRadii.full,
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
     justifyContent: 'center',
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   secondaryAction: {
     alignItems: 'center',
     backgroundColor: theme.colors['bg-surface'],
-    borderRadius: 999,
+    borderRadius: theme.borderRadii.full,
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
     justifyContent: 'center',
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   primaryAction: {
     alignItems: 'center',
     backgroundColor: theme.colors.foreground,
-    borderRadius: 999,
+    borderRadius: theme.borderRadii.full,
     justifyContent: 'center',
     minHeight: 42,
     minWidth: 42,

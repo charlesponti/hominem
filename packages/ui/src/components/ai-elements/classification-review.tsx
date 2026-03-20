@@ -15,7 +15,7 @@ export function ClassificationReview({
     <Dialog open onOpenChange={(open) => !open && onReject()}>
       <DialogContent
         showCloseButton={false}
-        className="top-auto bottom-0 max-w-xl translate-x-[-50%] translate-y-0 rounded-t-2xl px-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-6 sm:top-[50%] sm:bottom-auto sm:translate-y-[-50%] sm:rounded-2xl sm:pb-6"
+        className="top-auto bottom-0 max-w-xl translate-x-[-50%] translate-y-0 rounded-t-2xl px-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-6 sm:top-[50%] sm:bottom-auto sm:translate-y-[-50%] sm:rounded-md sm:pb-6"
       >
         <Stack gap="xs">
           <p className="text-xs text-muted-foreground uppercase tracking-wider font-mono">

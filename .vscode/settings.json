@@ -44,5 +44,8 @@
         "speckit.plan": true,
         "speckit.tasks": true,
         "speckit.implement": true
-    }
+    },
+    "css.customData": [
+        ".vscode/tailwind.custom-data.json"
+    ]
 }

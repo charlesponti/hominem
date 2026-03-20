@@ -80,7 +80,7 @@ const useStyles = makeStyles((t) =>
       borderColor: 'transparent',
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: t.borderRadii.md,
     },
     headerBackIcon: {
       color: t.colors.foreground,
@@ -100,7 +100,7 @@ const useStyles = makeStyles((t) =>
       borderColor: t.colors['border-default'],
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: t.borderRadii.md,
     },
     headerIcon: {
       color: t.colors['text-tertiary'],
@@ -108,7 +108,7 @@ const useStyles = makeStyles((t) =>
     headerNewButton: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: t.borderRadii.md,
     },
     headerNewIcon: {
       color: t.colors.white,

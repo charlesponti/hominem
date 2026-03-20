@@ -53,7 +53,7 @@ export default function NoteSplitView({ loaderData }: { loaderData: { noteId: st
           <h1 className="heading-2 text-foreground">{note.title || 'Untitled note'}</h1>
         </header>
 
-        <section className="min-h-0 flex-1 rounded-4xl border border-border/60 bg-background px-5 py-5 sm:px-6">
+        <section className="min-h-0 flex-1 rounded-md border border-border/60 bg-background px-5 py-5 sm:px-6">
           <NoteEditor note={note} />
         </section>
       </div>

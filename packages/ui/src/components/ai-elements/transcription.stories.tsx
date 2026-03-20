@@ -17,7 +17,7 @@ type Story = StoryObj<typeof Transcription>;
 
 export const Default: Story = {
   render: () => (
-    <Transcription className="max-w-md border rounded-lg overflow-hidden">
+    <Transcription className="max-w-md border rounded-md overflow-hidden">
       <TranscriptionHeader />
       <TranscriptionContent>
         <TranscriptionSegment
@@ -42,7 +42,7 @@ export const Default: Story = {
 
 export const Loading: Story = {
   render: () => (
-    <div className="max-w-sm border rounded-lg">
+    <div className="max-w-sm border rounded-md">
       <TranscriptionLoading text="Listening..." />
     </div>
   ),

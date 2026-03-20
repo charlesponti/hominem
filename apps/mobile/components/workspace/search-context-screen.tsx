@@ -57,7 +57,7 @@ const useStyles = makeStyles((t) =>
     queryCard: {
       borderWidth: 1,
       borderColor: t.colors['border-default'],
-      borderRadius: t.borderRadii.xl_20,
+      borderRadius: t.borderRadii.md,
       gap: t.spacing.sm_8,
       paddingHorizontal: t.spacing.m_16,
       paddingVertical: t.spacing.m_16,

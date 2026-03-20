@@ -95,7 +95,7 @@ export const Attachment = forwardRef<HTMLDivElement, AttachmentProps>(function A
     <div
       ref={ref}
       className={cn(
-        'relative group flex flex-col items-center justify-center p-4 rounded-lg border bg-muted/50 hover:bg-muted transition-colors',
+        'relative group flex flex-col items-center justify-center p-4 rounded-md border bg-muted/50 hover:bg-muted transition-colors',
         category === 'image' && 'aspect-square',
         className,
       )}

@@ -61,7 +61,7 @@ const useStyles = makeStyles((t) =>
         t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.ml_24 + t.spacing.xs_4,
     },
     empty: {
-      borderRadius: t.borderRadii.l_12,
+      borderRadius: t.borderRadii.md,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
       gap: t.spacing.sm_8,

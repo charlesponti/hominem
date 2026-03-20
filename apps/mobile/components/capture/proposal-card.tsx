@@ -32,7 +32,7 @@ const useStyles = makeStyles((t) =>
       gap: t.spacing.sm_12,
       paddingHorizontal: t.spacing.sm_12,
       paddingVertical: t.spacing.sm_12,
-      borderRadius: t.borderRadii.md_10,
+      borderRadius: t.borderRadii.md,
       borderWidth: 1,
       borderColor: theme.colors['border-default'],
       backgroundColor: theme.colors.muted,

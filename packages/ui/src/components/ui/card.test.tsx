@@ -12,7 +12,7 @@ describe('Card', () => {
     const card = screen.getByTestId('card');
 
     expect(card.className).toContain('border');
-    expect(card.className).toContain('rounded-xl');
+    expect(card.className).toContain('rounded-md');
     expect(card.className).toContain('py-6');
   });
 });

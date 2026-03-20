@@ -13,7 +13,7 @@ export default meta;
 
 export const Default = {
   render: () => (
-    <div className="max-w-sm space-y-4 p-4 border rounded-lg">
+    <div className="max-w-sm space-y-4 p-4 border rounded-md">
       <div className="text-center space-y-2">
         <h2 className="text-lg font-semibold">Verify your email</h2>
         <p className="text-sm text-muted-foreground">
@@ -42,7 +42,7 @@ export const Default = {
 
 export const WithError = {
   render: () => (
-    <div className="max-w-sm space-y-4 p-4 border rounded-lg">
+    <div className="max-w-sm space-y-4 p-4 border rounded-md">
       <div className="text-center">
         <p className="text-sm text-muted-foreground">
           Code sent to <span className="font-medium text-foreground">jo***@example.com</span>

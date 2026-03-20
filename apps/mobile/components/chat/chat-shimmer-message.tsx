@@ -76,7 +76,7 @@ const useStyles = makeStyles((t) =>
       width: '78%',
       maxWidth: 420,
       height: 56,
-      borderRadius: t.borderRadii.xl_20,
+      borderRadius: t.borderRadii.md,
       backgroundColor: t.colors['emphasis-minimal'],
     },
     lines: {
@@ -85,7 +85,7 @@ const useStyles = makeStyles((t) =>
     },
     line: {
       height: 16,
-      borderRadius: t.borderRadii.s_3,
+      borderRadius: t.borderRadii.md,
       backgroundColor: t.colors.muted,
     },
     lineFull: {

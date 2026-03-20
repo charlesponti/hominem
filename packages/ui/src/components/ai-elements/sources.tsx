@@ -19,7 +19,7 @@ export function Sources({ sources, className, children, ...props }: SourcesProps
   if (!sources?.length && !children) return null;
 
   return (
-    <div className={cn('rounded-lg border', className)} {...props}>
+    <div className={cn('rounded-md border', className)} {...props}>
       <Button
         variant="ghost"
         size="sm"

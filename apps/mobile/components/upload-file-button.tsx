@@ -25,7 +25,7 @@ const useStyles = makeStyles((t) =>
     button: {
       backgroundColor: t.colors.muted,
       padding: t.spacing.sm_8,
-      borderRadius: 999,
+      borderRadius: t.borderRadii.full,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
     },

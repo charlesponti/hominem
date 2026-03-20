@@ -69,12 +69,12 @@ export function NoteEditor({ note }: NoteEditorProps) {
               size="sm"
               onClick={handleSave}
               disabled={!hasChanges || isSaving}
-              className="rounded-full px-4"
+              className="rounded-md px-4"
             >
               <Save className="mr-1 size-4" />
               {isSaving ? 'Saving...' : 'Save'}
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleDelete} className="rounded-full px-3">
+            <Button variant="ghost" size="sm" onClick={handleDelete} className="rounded-md px-3">
               <Trash2 className="size-4" />
             </Button>
           </Inline>

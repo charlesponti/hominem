@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     borderColor: theme.colors['border-default'],
-    borderRadius: theme.borderRadii.xl_20,
+    borderRadius: theme.borderRadii.md,
     borderWidth: 1,
     padding: theme.spacing.m_16,
     rowGap: theme.spacing.sm_8,

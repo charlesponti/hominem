@@ -126,7 +126,7 @@ export function InlineCreateForm({
 
   if (isEditMode) {
     return (
-      <div className="w-full rounded-3xl border border-border/60 bg-bg-surface px-4 py-4 void-anim-breezy sm:px-5">
+      <div className="w-full rounded-md border border-border/60 bg-bg-surface px-4 py-4 void-anim-breezy sm:px-5">
         <div className="flex items-center justify-between border-b border-border/50 pb-3">
           <div>
             <div className="body-4 uppercase tracking-[0.12em] text-text-tertiary">Editing</div>
@@ -163,17 +163,17 @@ export function InlineCreateForm({
           <div className="flex items-center justify-between gap-3 border-t border-border/50 pt-3">
             <div className="body-4 text-text-tertiary">Changes stay lightweight until you save.</div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={handleCancel} className="rounded-full px-4" title="Cancel edit">
+              <Button variant="outline" onClick={handleCancel} className="rounded-md px-4" title="Cancel edit">
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={isSaveDisabled} className="rounded-full px-4">
+              <Button onClick={handleSave} disabled={isSaveDisabled} className="rounded-md px-4">
                 {isSaving ? <RefreshCw className="size-4 animate-spin" /> : 'Save'}
               </Button>
             </div>
           </div>
 
           {error && (
-            <div className="body-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-destructive">
+            <div className="body-3 rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-destructive">
               {error.message}
             </div>
           )}
@@ -209,7 +209,7 @@ export function InlineCreateForm({
             <Button
               onClick={handleSave}
               disabled={isSaveDisabled}
-              className="rounded-full px-5"
+              className="rounded-md px-5"
             >
               {isSaving ? <RefreshCw className="size-4 animate-spin" /> : 'Save'}
             </Button>
@@ -217,7 +217,7 @@ export function InlineCreateForm({
         </div>
 
         {error && (
-          <div className="body-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-destructive">
+          <div className="body-3 rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-destructive">
             {error.message}
           </div>
         )}

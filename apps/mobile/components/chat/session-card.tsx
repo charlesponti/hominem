@@ -141,7 +141,7 @@ const useStyles = makeStyles((t) =>
       gap: t.spacing.sm_12,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
-      borderRadius: t.borderRadii.xl_20,
+      borderRadius: t.borderRadii.md,
       backgroundColor: t.colors.background,
       paddingHorizontal: t.spacing.m_16,
       paddingVertical: t.spacing.sm_12,
@@ -155,7 +155,7 @@ const useStyles = makeStyles((t) =>
     iconWrap: {
       width: 32,
       height: 32,
-      borderRadius: 16,
+      borderRadius: t.borderRadii.md,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
       backgroundColor: t.colors['bg-surface'],

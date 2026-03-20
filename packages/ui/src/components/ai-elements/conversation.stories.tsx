@@ -11,15 +11,15 @@ type Story = StoryObj<typeof Conversation>;
 
 export const Default: Story = {
   render: () => (
-    <Conversation className="max-w-md border rounded-lg overflow-hidden">
+    <Conversation className="max-w-md border rounded-md overflow-hidden">
       <ConversationContent className="p-4">
-        <div className="bg-muted rounded-lg p-3 max-w-[80%] self-start">
+        <div className="bg-muted rounded-md p-3 max-w-[80%] self-start">
           <p className="text-sm">Hello! How can I help you today?</p>
         </div>
-        <div className="bg-primary text-primary-foreground rounded-lg p-3 max-w-[80%] self-end ml-auto">
+        <div className="bg-primary text-primary-foreground rounded-md p-3 max-w-[80%] self-end ml-auto">
           <p className="text-sm">I need help writing a report.</p>
         </div>
-        <div className="bg-muted rounded-lg p-3 max-w-[80%] self-start">
+        <div className="bg-muted rounded-md p-3 max-w-[80%] self-start">
           <p className="text-sm">I'd be happy to help you write a report. What's the topic?</p>
         </div>
       </ConversationContent>

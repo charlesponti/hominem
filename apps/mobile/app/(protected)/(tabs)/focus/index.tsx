@@ -35,7 +35,7 @@ const useStyles = makeStyles((t) =>
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: t.colors.background,
-      borderRadius: t.borderRadii.xl_20,
+      borderRadius: t.borderRadii.md,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
     },

@@ -5,7 +5,7 @@ exports[`primitive story snapshots > Data Display/Card/Default 1`] = `
   class="p-8 min-h-screen"
 >
   <div
-    class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm w-80"
+    class="bg-card text-card-foreground flex flex-col gap-6 rounded-md border py-6 shadow-sm w-80"
     data-slot="card"
   >
     <div
@@ -67,7 +67,7 @@ exports[`primitive story snapshots > Data Display/Card/Minimal 1`] = `
   class="p-8 min-h-screen"
 >
   <div
-    class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm w-80"
+    class="bg-card text-card-foreground flex flex-col gap-6 rounded-md border py-6 shadow-sm w-80"
     data-slot="card"
   >
     <div

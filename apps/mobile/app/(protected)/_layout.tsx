@@ -39,7 +39,7 @@ const lockStyles = StyleSheet.create({
   button: {
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
-    borderRadius: theme.borderRadii.md_10,
+    borderRadius: theme.borderRadii.md,
     paddingHorizontal: theme.spacing.m_16,
     paddingVertical: theme.spacing.sm_8,
     marginTop: theme.spacing.m_16,

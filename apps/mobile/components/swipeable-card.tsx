@@ -82,7 +82,7 @@ const useStyles = makeStyles((t) =>
     card: {
       backgroundColor: t.colors.muted,
       padding: t.spacing.ml_24,
-      borderRadius: t.borderRadii.md_10,
+      borderRadius: t.borderRadii.md,
       width: '100%',
       minHeight: 100,
       justifyContent: 'center',

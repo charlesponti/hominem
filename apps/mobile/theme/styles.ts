@@ -13,7 +13,7 @@ export const borderStyle = StyleSheet.create({
   border: {
     borderColor: theme.colors['border-default'],
     borderWidth: 1,
-    borderRadius: theme.borderRadii.sm_6,
+    borderRadius: theme.borderRadii.md,
   },
 });
 

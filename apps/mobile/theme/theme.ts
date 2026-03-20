@@ -35,14 +35,8 @@ const theme = createTheme({
 
   // Border radii — named keys for Restyle, values from canonical tokens
   borderRadii: {
-    s_3: 3,
-    sm_6: radiiNative.sm,
-    m_6: radiiNative.sm,
-    md_10: radiiNative.md,
-    l_12: 12,
-    lg_14: radiiNative.lg,
-    xl_20: radiiNative.xl,
-    xl_24: 24,
+    md: radiiNative.md,
+    full: radiiNative.full,
   },
 
   // Typography — Apple HIG aligned scales

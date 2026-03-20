@@ -84,8 +84,8 @@ const useStyles = makeStyles((t) =>
     },
     container: {
       height: 420,
-      borderTopLeftRadius: t.borderRadii.l_12,
-      borderTopRightRadius: t.borderRadii.l_12,
+      borderTopLeftRadius: t.borderRadii.md,
+      borderTopRightRadius: t.borderRadii.md,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
       paddingTop: t.spacing.ml_24,

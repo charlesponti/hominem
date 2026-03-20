@@ -96,7 +96,7 @@ const useStyles = makeStyles((t) =>
     dot: {
       width: 8,
       height: 8,
-      borderRadius: 4,
+      borderRadius: t.borderRadii.md,
       backgroundColor: t.colors.foreground,
       opacity: 0.65,
     },

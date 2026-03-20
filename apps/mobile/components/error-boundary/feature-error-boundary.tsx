@@ -71,7 +71,7 @@ const useStyles = makeStyles((t) =>
     container: {
       padding: t.spacing.m_16,
       backgroundColor: t.colors.muted,
-      borderRadius: t.borderRadii.sm_6,
+      borderRadius: t.borderRadii.md,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
       alignItems: 'center',

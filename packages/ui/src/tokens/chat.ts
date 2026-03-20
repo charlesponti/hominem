@@ -35,9 +35,9 @@ export const chatTokens = {
     system: colors['text-secondary'],
   },
   radii: {
-    bubble: radii.xl,
-    composer: radii.xl,
-    suggestion: radii.lg,
+    bubble: radii.md,
+    composer: radii.md,
+    suggestion: radii.md,
     debug: radii.md,
   },
 } as const;
@@ -45,9 +45,9 @@ export const chatTokens = {
 export const chatTokensNative = {
   ...chatTokens,
   radii: {
-    bubble: radiiNative.xl,
-    composer: radiiNative.xl,
-    suggestion: radiiNative.lg,
+    bubble: radiiNative.md,
+    composer: radiiNative.md,
+    suggestion: radiiNative.md,
     debug: radiiNative.md,
   },
 } as const;

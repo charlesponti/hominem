@@ -10,10 +10,10 @@ interface ShimmerProps extends HTMLAttributes<HTMLDivElement> {
 
 export function Shimmer({ isLoading = true, className, children, ...props }: ShimmerProps) {
   return (
-    <div className={cn('relative', className)} {...props}>
+    <div className={cn('relative overflow-hidden', className)} {...props}>
       {children}
       {isLoading && (
-        <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-muted-foreground/20 to-transparent" />
+        <div className="void-anim-breezy-progress absolute inset-0 bg-gradient-to-r from-transparent via-muted-foreground/20 to-transparent" />
       )}
     </div>
   );
@@ -30,7 +30,7 @@ export function ShimmerText({ lines = 1, className, ...props }: ShimmerTextProps
         <div
           key={i}
           className={cn(
-            'h-4 rounded bg-muted animate-pulse',
+            'h-4 rounded-md bg-muted animate-pulse',
             i === lines - 1 && lines > 1 ? 'w-3/4' : 'w-full',
           )}
         />
@@ -53,10 +53,10 @@ export function ShimmerMessage({
   if (isUser) {
     return (
       <div className={cn('flex w-full justify-end py-2', className)} {...props}>
-        <div className="w-full max-w-136 items-end">
-          <div className="ml-auto space-y-2 rounded-xl bg-emphasis-highest px-4 py-3 shadow-low">
-            <div className="h-4 w-40 rounded bg-primary-foreground/20 animate-pulse" />
-            <div className="h-4 w-28 rounded bg-primary-foreground/20 animate-pulse" />
+        <div className="w-full max-w-136">
+          <div className="ml-auto space-y-2 rounded-md bg-emphasis-highest px-4 py-3 shadow-low">
+            <div className="h-4 w-40 rounded-md bg-primary-foreground/20 animate-pulse" />
+            <div className="h-4 w-28 rounded-md bg-primary-foreground/20 animate-pulse" />
           </div>
         </div>
       </div>
@@ -66,9 +66,9 @@ export function ShimmerMessage({
   return (
     <div className={cn('flex w-full justify-start py-2', className)} {...props}>
       <div className="w-full max-w-3xl space-y-3">
-        <div className="h-4 w-52 rounded bg-muted animate-pulse" />
-        <div className="h-4 w-full rounded bg-muted animate-pulse" />
-        <div className="h-4 w-4/5 rounded bg-muted animate-pulse" />
+        <div className="h-4 w-52 rounded-md bg-muted animate-pulse" />
+        <div className="h-4 w-full rounded-md bg-muted animate-pulse" />
+        <div className="h-4 w-4/5 rounded-md bg-muted animate-pulse" />
       </div>
     </div>
   );

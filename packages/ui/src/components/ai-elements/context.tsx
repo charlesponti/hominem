@@ -11,7 +11,7 @@ interface ContextProps extends HTMLAttributes<HTMLDivElement> {
 
 export function Context({ children, className, ...props }: ContextProps) {
   return (
-    <div className={cn('rounded-lg border', className)} {...props}>
+    <div className={cn('rounded-md border', className)} {...props}>
       {children}
     </div>
   );

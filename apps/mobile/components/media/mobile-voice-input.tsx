@@ -138,7 +138,7 @@ const useStyles = makeStyles((t) =>
     },
     speakButton: {
       padding: t.spacing.sm_8,
-      borderRadius: 50,
+      borderRadius: t.borderRadii.full,
       borderWidth: 1,
       borderColor: t.colors['border-default'],
     },

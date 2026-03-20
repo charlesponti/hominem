@@ -91,7 +91,7 @@ export function ChatHeader({
           variant="ghost"
           size="sm"
           onClick={handleBack}
-          className="h-10 shrink-0 gap-2 rounded-lg px-2.5 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-surface sm:h-11 sm:px-3"
+          className="h-10 shrink-0 gap-2 rounded-md px-2.5 text-xs font-medium text-text-secondary transition-colors hover:bg-bg-surface sm:h-11 sm:px-3"
           aria-label="Go back"
         >
           <ArrowLeft className="size-4" aria-hidden="true" />

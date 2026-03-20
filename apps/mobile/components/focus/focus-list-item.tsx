@@ -60,7 +60,7 @@ const useStyles = makeStyles((t) =>
   StyleSheet.create({
     container: {
       backgroundColor: theme.colors.background,
-      borderRadius: t.borderRadii.xl_20,
+      borderRadius: t.borderRadii.md,
       overflow: 'hidden',
     },
     itemContainer: {
@@ -68,7 +68,7 @@ const useStyles = makeStyles((t) =>
       alignItems: 'center',
       paddingVertical: t.spacing.sm_12,
       paddingHorizontal: t.spacing.m_16,
-      borderRadius: t.borderRadii.xl_20,
+      borderRadius: t.borderRadii.md,
       backgroundColor: theme.colors.background,
       borderWidth: 1,
       borderColor: theme.colors['border-default'],
@@ -107,7 +107,7 @@ const useStyles = makeStyles((t) =>
     icon: {
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: t.borderRadii.md,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',

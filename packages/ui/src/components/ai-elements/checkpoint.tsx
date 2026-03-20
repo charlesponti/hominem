@@ -40,7 +40,7 @@ export function Checkpoint({
   return (
     <div
       className={cn(
-        'flex items-start gap-3 p-3 rounded-lg border',
+        'flex items-start gap-3 p-3 rounded-md border',
         isActive && 'bg-primary/5',
         className,
       )}

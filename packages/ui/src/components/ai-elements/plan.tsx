@@ -13,7 +13,7 @@ interface PlanProps extends HTMLAttributes<HTMLDivElement> {
 
 export function Plan({ children, className, ...props }: PlanProps) {
   return (
-    <div className={cn('rounded-lg border', className)} {...props}>
+    <div className={cn('rounded-md border', className)} {...props}>
       {children}
     </div>
   );

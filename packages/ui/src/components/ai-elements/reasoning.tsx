@@ -20,7 +20,7 @@ export function Reasoning({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className={cn('rounded-lg border bg-muted/50', className)} {...props}>
+    <div className={cn('rounded-md border bg-muted/50', className)} {...props}>
       <Button
         variant="ghost"
         size="sm"

@@ -114,7 +114,7 @@ const useStyles = makeStyles((t) =>
       borderColor: t.colors['border-default'],
       width: 36,
       height: 36,
-      borderRadius: 18,
+      borderRadius: t.borderRadii.md,
     },
     headerIcon: {
       color: t.colors['text-tertiary'],
