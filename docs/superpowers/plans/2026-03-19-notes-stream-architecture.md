@@ -65,7 +65,7 @@ CSS `void-anim-*` classes remain for Radix component enter/exit only.
 
 Tasks:
 - Add `GET /stream` API endpoint: union query of notes + chats, sorted by `updatedAt`, paginated
-- Create `/` stream route in `apps/notes/app/routes/`
+- Create `/` stream route in `apps/web/app/routes/`
 - Build `StreamItem` component: renders `NoteStreamItem` or `ChatStreamItem` based on item type
 - `NoteStreamItem`: title, preview (first 120 chars), timestamp, tags
 - `ChatStreamItem`: last message preview, participant count, referenced note count, timestamp
@@ -141,7 +141,7 @@ Tasks:
 - Stream route: full-height, no max-width constraint, sidebar + feed two-column
 - Note detail (`/notes/:noteId`): `NOTES_MAX_WIDTH` (768px) centered, HyperForm hidden
 - Chat (`/chat/:chatId`): full-height, `NOTES_MAX_WIDTH` message column, HyperForm at bottom
-- Migrate `apps/notes/app/components/hyper-form/animations.ts` to import from `@hominem/ui/lib/gsap` and delete local copies of `playSubmitPulse` and `playContextSwitch`
+- Migrate `apps/web/app/components/hyper-form/animations.ts` to import from `@hominem/ui/lib/gsap` and delete local copies of `playSubmitPulse` and `playContextSwitch`
 - Audit and remove any `pb-composer` CSS variable fallback hacks
 
 ---
@@ -149,20 +149,20 @@ Tasks:
 ## Files to create or modify
 
 ### New files
-- `apps/notes/app/routes/_layout.stream.tsx` — stream route
-- `apps/notes/app/components/stream/stream-item.tsx`
-- `apps/notes/app/components/stream/note-stream-item.tsx`
-- `apps/notes/app/components/stream/chat-stream-item.tsx`
-- `apps/notes/app/components/stream/sidebar-stream-item.tsx`
-- `apps/notes/app/components/hyper-form/note-picker-sheet.tsx`
-- `apps/notes/app/hooks/use-hyper-form-mode.ts`
+- `apps/web/app/routes/_layout.stream.tsx` — stream route
+- `apps/web/app/components/stream/stream-item.tsx`
+- `apps/web/app/components/stream/note-stream-item.tsx`
+- `apps/web/app/components/stream/chat-stream-item.tsx`
+- `apps/web/app/components/stream/sidebar-stream-item.tsx`
+- `apps/web/app/components/hyper-form/note-picker-sheet.tsx`
+- `apps/web/app/hooks/use-hyper-form-mode.ts`
 - `packages/hono-rpc/src/routes/stream.ts` — unified stream API route
 
 ### Files to modify
 - `packages/ui/src/tokens/notes.ts` — add `stream` surface tokens
 - `packages/ui/src/tokens/motion.ts` — add GSAP mandate note
-- `apps/notes/app/components/hyper-form/animations.ts` — migrate to `@hominem/ui/lib/gsap`
-- `apps/notes/app/components/notes-sidebar.tsx` — replace typed sections with stream navigator
+- `apps/web/app/components/hyper-form/animations.ts` — migrate to `@hominem/ui/lib/gsap`
+- `apps/web/app/components/notes-sidebar.tsx` — replace typed sections with stream navigator
 - `packages/hono-rpc/src/routes/chats.ts` — add `referencedNotes` field
 
 ---

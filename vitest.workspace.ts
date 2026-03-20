@@ -1,5 +1,5 @@
 export default [
-  './apps/notes/vitest.config.ts',
+  './apps/web/vitest.config.ts',
   './packages/env/vitest.config.ts',
   './packages/ui/vitest.config.ts',
   './packages/ui/vitest.stories.ts',

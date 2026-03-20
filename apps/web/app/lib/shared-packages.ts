@@ -1,6 +1,6 @@
 /**
  * Proof-of-concept: verifies that all shared React packages can be imported
- * and their exports are accessible from apps/notes.
+ * and their exports are accessible from apps/web.
  *
  * This file is not used at runtime — it exists to validate the package graph
  * and surface any missing exports during typecheck.

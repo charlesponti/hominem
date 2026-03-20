@@ -171,7 +171,7 @@
         "react-native-svg": "15.15.3",
       },
     },
-    "apps/notes": {
+    "apps/web": {
       "name": "@hominem/web",
       "dependencies": {
         "@ai-sdk/react": "^3.0.110",
@@ -1458,7 +1458,7 @@
 
     "@hominem/utils": ["@hominem/utils@workspace:packages/utils"],
 
-    "@hominem/web": ["@hominem/web@workspace:apps/notes"],
+    "@hominem/web": ["@hominem/web@workspace:apps/web"],
 
     "@hominem/workers": ["@hominem/workers@workspace:services/workers"],
 

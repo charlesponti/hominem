@@ -110,19 +110,19 @@ Motion timing constants live in `packages/ui/src/tokens/motion.ts`:
   - `FocusItem` discriminated union: `{ type: 'note', ...NoteFields } | { type: 'chat', ...ChatFields }`
 
 **Client**
-- Create `apps/notes/app/routes/_layout.focus.tsx` as the `/` index route
+- Create `apps/web/app/routes/_layout.focus.tsx` as the `/` index route
 - `useInfiniteQuery` against `/focus`; `IntersectionObserver` sentinel triggers next page
 - Skeleton rows on load: `playShimmer` on each skeleton element; kill tween on data resolve
 - New rows entering: `playEnterRow(el, index * 0.04)` for a staggered cascade
 
 **Components**
-- `apps/notes/app/components/focus/focus-item.tsx` — discriminated switch: `NoteStreamItem | ChatStreamItem`
-- `apps/notes/app/components/focus/note-focus-item.tsx`
+- `apps/web/app/components/focus/focus-item.tsx` — discriminated switch: `NoteStreamItem | ChatStreamItem`
+- `apps/web/app/components/focus/note-focus-item.tsx`
   - Title: `notesTypography.noteTitle`
   - Preview: first 120 chars, `notesTypography.noteBody`
   - Tags: badge pills, `notesRadii.badge`
   - Timestamp: `notesTypography.timestamp`
-- `apps/notes/app/components/focus/chat-focus-item.tsx`
+- `apps/web/app/components/focus/chat-focus-item.tsx`
   - Last message preview
   - Referenced note count badge
   - Timestamp
@@ -136,7 +136,7 @@ Motion timing constants live in `packages/ui/src/tokens/motion.ts`:
 **Goal:** HyperForm knows its mode from the route and animates all transitions via GSAP.
 
 **Hook**
-- `apps/notes/app/hooks/use-hyper-form-mode.ts`
+- `apps/web/app/hooks/use-hyper-form-mode.ts`
 - `HyperFormMode = 'default' | 'chat' | 'note'`
 - Derived from `useMatch`: `/chat/:chatId` → `'chat'`, `/notes/:noteId` → `'note'`, `/` → `'default'`
 - No component state — pure route derivation
@@ -171,7 +171,7 @@ Motion timing constants live in `packages/ui/src/tokens/motion.ts`:
 - API resolves note content server-side when building LLM context window
 
 **UI**
-- `apps/notes/app/components/hyper-form/note-picker-sheet.tsx`
+- `apps/web/app/components/hyper-form/note-picker-sheet.tsx`
   - Bottom sheet; searchable note list; multi-select
   - Selected notes held in local state, passed to submit payload
 - Context strip above HyperForm input in chat mode: pill per attached note, with remove button
@@ -183,7 +183,7 @@ Motion timing constants live in `packages/ui/src/tokens/motion.ts`:
 
 **Goal:** The sidebar is a single chronological navigator, not two typed lists.
 
-**Changes to `apps/notes/app/components/notes-sidebar.tsx`**
+**Changes to `apps/web/app/components/notes-sidebar.tsx`**
 - Remove "Recent Chats" and "Notes" sections
 - Replace with `SidebarStreamItem` list: shared chronological feed from the same `/focus` query (first page, no pagination in sidebar)
 - Filter pills at top: **All | Notes | Chats** — client-side filter, no re-fetch
@@ -192,7 +192,7 @@ Motion timing constants live in `packages/ui/src/tokens/motion.ts`:
 - Remove "View all chats →" and "View all notes →" links — the focus is the full list
 
 **New component**
-- `apps/notes/app/components/focus/sidebar-focus-item.tsx`
+- `apps/web/app/components/focus/sidebar-focus-item.tsx`
   - Type icon (note or chat), title (truncated), relative timestamp
 
 ---
@@ -208,7 +208,7 @@ Motion timing constants live in `packages/ui/src/tokens/motion.ts`:
 - Chat (`/chat/:chatId`): full-height, `NOTES_MAX_WIDTH` message column, HyperForm pinned at bottom
 
 **HyperForm animation migration**
-- `apps/notes/app/components/hyper-form/animations.ts`: replace local `playSubmitPulse` and `playContextSwitch` with imports from `@hominem/ui/lib/gsap`
+- `apps/web/app/components/hyper-form/animations.ts`: replace local `playSubmitPulse` and `playContextSwitch` with imports from `@hominem/ui/lib/gsap`
 - Delete the local implementations once imported; retain `playEntry` → rename to `playFocusExpand` call
 
 **CSS cleanup**
@@ -222,20 +222,20 @@ Motion timing constants live in `packages/ui/src/tokens/motion.ts`:
 ### New
 | File | Purpose |
 |---|---|
-| `apps/notes/app/routes/_layout.focus.tsx` | Focus index route |
-| `apps/notes/app/components/focus/focus-item.tsx` | Discriminated focus item |
-| `apps/notes/app/components/focus/note-focus-item.tsx` | Note row |
-| `apps/notes/app/components/focus/chat-focus-item.tsx` | Chat row |
-| `apps/notes/app/components/focus/sidebar-focus-item.tsx` | Sidebar row |
-| `apps/notes/app/components/hyper-form/note-picker-sheet.tsx` | Note context picker |
-| `apps/notes/app/hooks/use-hyper-form-mode.ts` | Route → mode derivation |
+| `apps/web/app/routes/_layout.focus.tsx` | Focus index route |
+| `apps/web/app/components/focus/focus-item.tsx` | Discriminated focus item |
+| `apps/web/app/components/focus/note-focus-item.tsx` | Note row |
+| `apps/web/app/components/focus/chat-focus-item.tsx` | Chat row |
+| `apps/web/app/components/focus/sidebar-focus-item.tsx` | Sidebar row |
+| `apps/web/app/components/hyper-form/note-picker-sheet.tsx` | Note context picker |
+| `apps/web/app/hooks/use-hyper-form-mode.ts` | Route → mode derivation |
 | `packages/hono-rpc/src/routes/focus.ts` | Unified focus API route |
 
 ### Modify
 | File | Change |
 |---|---|
-| `apps/notes/app/components/hyper-form/animations.ts` | Import from `@hominem/ui/lib/gsap`; remove local duplicates |
-| `apps/notes/app/components/notes-sidebar.tsx` | Replace typed sections with focus navigator |
+| `apps/web/app/components/hyper-form/animations.ts` | Import from `@hominem/ui/lib/gsap`; remove local duplicates |
+| `apps/web/app/components/notes-sidebar.tsx` | Replace typed sections with focus navigator |
 | `packages/hono-rpc/src/routes/chats.ts` | Add `referencedNotes` field |
 
 ---

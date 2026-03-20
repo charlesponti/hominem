@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const roots = ['apps/notes/app']; // limit to app UI surfaces
+const roots = ['apps/web/app']; // limit to app UI surfaces
 const exts = new Set(['.tsx']);
 const ignoreDirs = new Set([
   'node_modules',

@@ -5,7 +5,7 @@
     "buildCommand": "bun turbo run build --filter=@hominem/web --force"
   },
   "deploy": {
-    "startCommand": "cd apps/notes && bun run start",
+    "startCommand": "cd apps/web && bun run start",
     "healthcheckPath": "/",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",

@@ -29,7 +29,7 @@ import { isArtifactTypeEnabled } from './thought-types';
  *
  * Mirrors the shape of the `lifecycleState` + `handleTransform` logic that
  * lives inside both `apps/mobile/components/chat/chat.tsx` and
- * `apps/notes/app/routes/chat/chat.$chatId.tsx`.
+ * `apps/web/app/routes/chat/chat.$chatId.tsx`.
  */
 class LifecycleSimulator {
   state: ThoughtLifecycleState = 'idle';
@@ -321,7 +321,7 @@ describe('Journey 5 — Error recovery', () => {
 describe('Cross-surface parity — classification → review → persist', () => {
   /**
    * Both mobile (apps/mobile/components/chat/chat.tsx) and Notes web
-   * (apps/notes/app/routes/chat/chat.$chatId.tsx) use the same state machine.
+   * (apps/web/app/routes/chat/chat.$chatId.tsx) use the same state machine.
    * This test asserts the canonical sub-path is identical on both surfaces.
    */
   it('canonical sub-path is valid: classifying → reviewing_changes → persisting → idle', () => {
