@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { Note } from '@hominem/hono-rpc/types/notes.types'
+import type { UploadedFile } from '~/lib/types/upload'
 
 import { resolveComposerActions } from './composer-actions'
 
@@ -36,10 +37,25 @@ function createDeps() {
     createChat: vi.fn<(input: { seedText: string; title: string }) => Promise<{ id: string }>>(),
     clearDraft: vi.fn(),
     clearAttachedNotes: vi.fn(),
+    clearUploadedFiles: vi.fn(),
     navigate: vi.fn(),
     runWithSubmitLock: vi.fn<(task: () => Promise<void>) => Promise<void>>(async (task) => {
       await task()
     }),
+  }
+}
+
+function createUploadedFileFixture(overrides: Partial<UploadedFile> = {}): UploadedFile {
+  return {
+    id: 'upload-1',
+    originalName: 'brief.pdf',
+    type: 'document',
+    mimetype: 'application/pdf',
+    size: 512,
+    content: 'Quarterly brief',
+    url: 'https://example.test/brief.pdf',
+    uploadedAt: new Date(),
+    ...overrides,
   }
 }
 
@@ -55,6 +71,8 @@ describe('resolveComposerActions', () => {
       noteTitle: null,
       chatId: null,
       attachedNotes: [],
+      uploadedFiles: [],
+      isUploadingAttachments: false,
       isSubmitting: false,
       ...deps,
     })
@@ -77,6 +95,8 @@ describe('resolveComposerActions', () => {
       noteTitle: 'Roadmap',
       chatId: null,
       attachedNotes: [],
+      uploadedFiles: [],
+      isUploadingAttachments: false,
       isSubmitting: false,
       ...deps,
     })
@@ -102,6 +122,8 @@ describe('resolveComposerActions', () => {
       noteTitle: null,
       chatId: 'chat-1',
       attachedNotes: [createNoteFixture()],
+      uploadedFiles: [],
+      isUploadingAttachments: false,
       isSubmitting: false,
       ...deps,
     })
@@ -114,5 +136,31 @@ describe('resolveComposerActions', () => {
     })
     expect(deps.clearDraft).toHaveBeenCalledTimes(1)
     expect(deps.clearAttachedNotes).toHaveBeenCalledTimes(1)
+  })
+
+  it('adds uploaded file context to reply send actions', async () => {
+    const deps = createDeps()
+    deps.sendMessage.mockResolvedValue()
+
+    const actions = resolveComposerActions({
+      posture: 'reply',
+      draftText: 'Question',
+      noteId: null,
+      noteTitle: null,
+      chatId: 'chat-1',
+      attachedNotes: [],
+      uploadedFiles: [createUploadedFileFixture()],
+      isUploadingAttachments: false,
+      isSubmitting: false,
+      ...deps,
+    })
+
+    await actions.primary.execute()
+
+    expect(deps.sendMessage).toHaveBeenCalledWith({
+      chatId: 'chat-1',
+      message: expect.stringContaining('Attached files context:'),
+    })
+    expect(deps.clearUploadedFiles).toHaveBeenCalledTimes(1)
   })
 })

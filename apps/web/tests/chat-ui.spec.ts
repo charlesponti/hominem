@@ -47,7 +47,7 @@ test.describe('Chat UI: migrated AI Elements components', () => {
       await expect(notePickerButton).toBeEnabled()
     })
 
-    test('attachment button is visible but disabled until wiring lands', async ({ page, context }) => {
+    test('attachment button uploads a file into the composer before send', async ({ page, context }) => {
       await context.clearCookies()
       const email = createAuthTestEmail('chat-attach-btn')
       await signInWithEmailOtp(page, email, /\/home/)
@@ -60,7 +60,15 @@ test.describe('Chat UI: migrated AI Elements components', () => {
 
       const attachButton = page.getByTitle('Add attachment')
       await expect(attachButton).toBeVisible({ timeout: 10_000 })
-      await expect(attachButton).toBeDisabled()
+      await expect(attachButton).toBeEnabled()
+
+      await page.getByTestId('composer-file-input').setInputFiles({
+        name: 'chat-attachment.txt',
+        mimeType: 'text/plain',
+        buffer: Buffer.from('Attachment for chat flow'),
+      })
+
+      await expect(page.getByText('chat-attachment.txt')).toBeVisible({ timeout: 10_000 })
     })
 
     test('voice button is visible in the Composer toolbar', async ({ page, context }) => {

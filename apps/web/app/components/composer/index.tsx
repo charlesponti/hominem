@@ -22,13 +22,16 @@
  */
 
 import { useHonoMutation } from '@hominem/hono-client/react';
-import { useCallback, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router';
 
 import { ChatModals } from '~/components/chat/ChatModals';
 import { useCreateNote, useUpdateNote } from '~/hooks/use-notes';
+import { useFileUpload } from '~/lib/hooks/use-file-upload';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
+import type { UploadedFile } from '~/lib/types/upload';
 
+import { ComposerAttachmentList } from './composer-attachment-list';
 import { AttachedNotesList } from './attached-notes-list';
 import { resolveComposerActions } from './composer-actions';
 import { ComposerActionsRow } from './composer-actions-row';
@@ -59,7 +62,10 @@ export function Composer() {
   const [showNotePicker, setShowNotePicker] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const isSubmittingRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const presentation = deriveComposerPresentation(mode, isRecording);
   if (presentation.posture === 'hidden') return null;
@@ -69,6 +75,7 @@ export function Composer() {
   const createNote = useCreateNote();
   const updateNote = useUpdateNote();
   const sendMessage = useSendMessage({ chatId: chatId ?? '' });
+  const { uploadFiles, uploadState, removeFile, clearAll } = useFileUpload();
 
   const createChatMutation = useHonoMutation<{ id: string }, { seedText: string; title: string }>(
     async ({ chats }, body) => {
@@ -101,6 +108,8 @@ export function Composer() {
     noteTitle,
     chatId,
     attachedNotes,
+    uploadedFiles,
+    isUploadingAttachments: uploadState.isUploading,
     isSubmitting,
     createNote: createNote.mutateAsync,
     updateNote: updateNote.mutateAsync,
@@ -108,6 +117,10 @@ export function Composer() {
     createChat: createChatMutation.mutateAsync,
     clearDraft,
     clearAttachedNotes,
+    clearUploadedFiles: () => {
+      setUploadedFiles([]);
+      clearAll();
+    },
     navigate: (path: string) => {
       void navigate(path);
     },
@@ -142,8 +155,51 @@ export function Composer() {
 
   const isDraftMode = presentation.posture === 'draft';
 
+  const handleFilesSelected = useCallback(async (files: FileList | File[] | null) => {
+    if (!files || Array.from(files).length === 0) return;
+    const newFiles = await uploadFiles(files);
+    if (newFiles.length === 0) return;
+    setUploadedFiles((prev) => [...prev, ...newFiles.filter((file) => !prev.some((current) => current.id === file.id))]);
+  }, [uploadFiles]);
+
+  const handleFileInputChange = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      await handleFilesSelected(event.target.files);
+      event.target.value = '';
+      inputRef.current?.focus();
+    },
+    [handleFilesSelected, inputRef],
+  );
+
+  const handleRemoveUploadedFile = useCallback((fileId: string) => {
+    setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
+    removeFile(fileId);
+  }, [removeFile]);
+
   return (
     <>
+      <input
+        ref={fileInputRef}
+        data-testid="composer-file-input"
+        type="file"
+        multiple
+        className="hidden"
+        onChange={(event) => {
+          void handleFileInputChange(event);
+        }}
+      />
+      <input
+        ref={cameraInputRef}
+        data-testid="composer-camera-input"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(event) => {
+          void handleFileInputChange(event);
+        }}
+      />
+
       <ComposerShell
         cardRef={cardRef}
         draftText={draftText}
@@ -153,7 +209,16 @@ export function Composer() {
         onDraftTextChange={setDraftText}
         onKeyDown={handleKeyDown}
         placeholder={presentation.placeholder}
-        attachments={<AttachedNotesList notes={attachedNotes} onRemove={detachNote} />}
+        attachments={(
+          <>
+            <ComposerAttachmentList
+              errors={uploadState.errors}
+              files={uploadedFiles}
+              onRemove={handleRemoveUploadedFile}
+            />
+            <AttachedNotesList notes={attachedNotes} onRemove={detachNote} />
+          </>
+        )}
         tools={
           <ComposerTools
             attachedNotesCount={attachedNotes.length}
@@ -161,6 +226,8 @@ export function Composer() {
             showsAttachmentButton={presentation.showsAttachmentButton}
             showsNotePicker={presentation.showsNotePicker}
             showsVoiceButton={presentation.showsVoiceButton}
+            onAttachmentClick={() => fileInputRef.current?.click()}
+            onCameraClick={() => cameraInputRef.current?.click()}
             onNotePickerClick={() => setShowNotePicker(true)}
             onVoiceClick={() => {
               if (isRecording) {

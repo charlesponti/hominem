@@ -53,6 +53,12 @@ test.describe('Notes: HomeView → chat.$chatId critical path', () => {
     const composerInput = page.getByTestId('composer-input')
     await expect(composerInput).toBeVisible({ timeout: 10_000 })
     await composerInput.fill('Quick thought to save')
+    await page.getByTestId('composer-file-input').setInputFiles({
+      name: 'note-attachment.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('Attachment for note flow'),
+    })
+    await expect(page.getByText('note-attachment.txt')).toBeVisible({ timeout: 10_000 })
 
     const saveButton = page.getByTestId('composer-primary')
     await expect(saveButton).toBeVisible({ timeout: 5_000 })
@@ -63,6 +69,7 @@ test.describe('Notes: HomeView → chat.$chatId critical path', () => {
 
     // Input should be cleared after save
     await expect(composerInput).toHaveValue('', { timeout: 5_000 })
+    await expect(page.getByText('note-attachment.txt')).not.toBeVisible({ timeout: 5_000 })
   })
 
   test('voice input populates Composer input for review before sending', async ({ page, context }) => {
