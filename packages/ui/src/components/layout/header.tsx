@@ -74,10 +74,10 @@ function DesktopNavLink({ item }: { item: NavItem }) {
       prefetch="intent"
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium uppercase tracking-widest transition-colors duration-150',
+        'flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150',
         isActive
-          ? 'bg-background text-foreground shadow-sm'
-          : 'text-text-tertiary hover:text-foreground',
+          ? 'text-accent'
+          : 'text-text-secondary hover:text-text-primary',
       )}
     >
       {item.icon && <item.icon className="size-4 shrink-0" aria-hidden="true" />}
@@ -90,13 +90,9 @@ function DesktopNav({ navItems }: { navItems: NavItem[] }) {
   const onLogoutClick = useLogout();
 
   return (
-    <div className="hidden items-center gap-2 md:flex">
+    <div className="hidden items-center gap-1 md:flex">
       {navItems.length > 0 ? (
-        <nav
-          role="navigation"
-          aria-label="Main"
-          className="flex items-center gap-1 rounded-md border border-border/60 bg-bg-surface/80 p-1"
-        >
+        <nav role="navigation" aria-label="Main" className="flex items-center">
           {navItems.map((item) => (
             <DesktopNavLink key={item.url} item={item} />
           ))}
@@ -109,7 +105,7 @@ function DesktopNav({ navItems }: { navItems: NavItem[] }) {
             variant="ghost"
             size="icon"
             aria-label="Account and settings"
-            className="text-text-tertiary hover:bg-bg-surface hover:text-foreground focus-visible:ring-2 focus-visible:ring-border"
+            className="text-text-tertiary hover:text-text-primary"
           >
             <Settings className="size-4" aria-hidden="true" />
           </Button>
@@ -131,7 +127,7 @@ function DesktopNav({ navItems }: { navItems: NavItem[] }) {
   );
 }
 
-// ─── Mobile: bottom tab bar, mirrors NativeTabs exactly ───────────────────────
+// ─── Mobile: bottom tab bar ────────────────────────────────────────────────────
 
 function MobileTabItem({ item }: { item: NavItem }) {
   const isActive = useIsActive(item.url);
@@ -142,14 +138,12 @@ function MobileTabItem({ item }: { item: NavItem }) {
         prefetch="intent"
         aria-current={isActive ? 'page' : undefined}
         className={cn(
-          'flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 rounded-md transition-colors duration-150',
-          isActive ? 'bg-background text-foreground shadow-sm' : 'text-text-tertiary',
+          'flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 transition-colors duration-150',
+          isActive ? 'text-accent' : 'text-text-tertiary',
         )}
       >
         {item.icon && <item.icon className="size-6 shrink-0" aria-hidden="true" />}
-        <span className="text-[10px] font-medium tracking-widest uppercase leading-none">
-          {item.title}
-        </span>
+        <span className="text-[11px] font-medium leading-none">{item.title}</span>
       </Link>
     </li>
   );
@@ -160,10 +154,10 @@ function MobileTabBar({ navItems }: { navItems: NavItem[] }) {
     <nav
       role="navigation"
       aria-label="Main"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/70 bg-background/95 supports-[backdrop-filter]:bg-background/85 supports-[backdrop-filter]:backdrop-blur-md md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border-subtle bg-background/95 supports-backdrop-filter:bg-background/85 supports-backdrop-filter:backdrop-blur-md md:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <ul role="list" className="mx-auto flex h-14 max-w-200 list-none gap-2 px-3 py-2">
+      <ul role="list" className="mx-auto flex h-14 max-w-200 list-none px-2 py-1">
         {navItems.map((item) => (
           <MobileTabItem key={item.url} item={item} />
         ))}
@@ -192,14 +186,14 @@ export function Header({ brandName, brandIcon, navItems = [] }: HeaderProps) {
     <>
       <a
         href="#main-content"
-        className="absolute left-4 top-0 z-[9999] -translate-y-full rounded-b-md bg-foreground px-4 py-2 text-[0.9375rem] font-semibold text-background no-underline transition-transform focus:translate-y-0"
+        className="absolute left-4 top-0 z-9999 -translate-y-full rounded-b-md bg-foreground px-4 py-2 text-sm font-semibold text-background no-underline transition-transform focus:translate-y-0"
       >
         Skip to main content
       </a>
 
       <header
         role="banner"
-        className="fixed left-0 top-0 z-50 w-full border-b border-border/70 bg-background/95 supports-[backdrop-filter]:bg-background/85 supports-[backdrop-filter]:backdrop-blur-md"
+        className="fixed left-0 top-0 z-50 w-full border-b border-border-subtle bg-background/95 supports-backdrop-filter:bg-background/85 supports-backdrop-filter:backdrop-blur-md"
         style={{
           transform: scrolledDown ? 'translateY(-100%)' : 'translateY(0)',
           transition: 'transform 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -211,17 +205,17 @@ export function Header({ brandName, brandIcon, navItems = [] }: HeaderProps) {
             to="/"
             prefetch="intent"
             aria-label={`${brandName} home`}
-            className="flex items-center gap-2 text-foreground"
+            className="flex items-center gap-2 text-text-primary"
           >
             {brandIcon ? (
               <span
                 aria-hidden="true"
-                className="flex size-8 items-center justify-center rounded-md border border-border/60 bg-bg-surface"
+                className="flex size-7 items-center justify-center rounded-md border border-border-subtle bg-bg-surface"
               >
                 {brandIcon}
               </span>
             ) : null}
-            <span className="text-sm font-semibold uppercase tracking-[0.16em]">{brandName}</span>
+            <span className="text-sm font-semibold">{brandName}</span>
           </Link>
 
           {authContext &&
@@ -230,7 +224,7 @@ export function Header({ brandName, brandIcon, navItems = [] }: HeaderProps) {
         </div>
       </header>
 
-      {/* Mobile bottom tab bar — visible only on mobile, mirrors NativeTabs */}
+      {/* Mobile bottom tab bar */}
       {authContext && !isLoading && isAuthenticated && navItems.length > 0 && (
         <MobileTabBar navItems={navItems} />
       )}

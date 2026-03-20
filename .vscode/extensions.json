@@ -1,7 +1,8 @@
 {
   "recommendations": [
     "oxc.oxc-vscode",
-    "bradlc.vscode-tailwindcss"
+    "bradlc.vscode-tailwindcss",
+    "TypeScriptTeam.native-preview"
   ],
   "unwantedRecommendations": [
     "dbaeumer.vscode-eslint"

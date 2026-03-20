@@ -1,15 +1,26 @@
 'use client';
 
 import { Header, type NavItem } from '@hominem/ui';
-import { FileText, Home } from 'lucide-react';
+import { FileText, Home, MessageSquare } from 'lucide-react';
+import { useMemo } from 'react';
+
+import { useInboxStream } from '~/hooks/use-inbox-stream';
 import { WEB_BRAND } from '~/lib/brand';
 
-const navItems: NavItem[] = [
-  { title: 'Home', url: '/home', icon: Home },
-  { title: 'Notes', url: '/notes', icon: FileText },
-];
-
 export default function NotesHeader() {
+  const { items } = useInboxStream();
+
+  const navItems = useMemo<NavItem[]>(() => {
+    const latestNote = items.find((item) => item.kind === 'note');
+    const latestChat = items.find((item) => item.kind === 'chat');
+
+    return [
+      { title: 'Home', url: '/home', icon: Home },
+      { title: 'Notes', url: latestNote ? `/notes/${latestNote.id}` : '/notes/new', icon: FileText },
+      { title: 'Chats', url: latestChat ? `/chat/${latestChat.id}` : '/home', icon: MessageSquare },
+    ];
+  }, [items]);
+
   return (
     <Header
       brandName={WEB_BRAND.appName}

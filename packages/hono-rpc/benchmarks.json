@@ -3,7 +3,7 @@
     "package": "@hominem/hono-rpc",
     "description": "Type optimization benchmarks tracking",
     "started": "2026-02-05",
-    "lastUpdated": "2026-02-05"
+    "lastUpdated": "2026-03-19"
   },
   "phases": {
     "baseline": {
@@ -199,6 +199,52 @@
         }
       }
     },
+    "typescript7_upgrade": {
+      "date": "2026-03-19",
+      "description": "After upgrading to TypeScript 7 — compiler performance jump on top of Phase 1 type deduplication",
+      "status": "measured",
+      "compilation": {
+        "coldCacheSeconds": 5.017,
+        "warmCacheSeconds": 1.277,
+        "warmCacheRuns": [null, null, null],
+        "improvementVsColdCache": "75%",
+        "improvementVsPhase1CompleteWarm": "78%",
+        "improvementVsPhase1CompleteCold": "58%",
+        "notes": "TypeScript 7 isolatedDeclarations + faster checker internals; warm cache now under 2s"
+      },
+      "codeMetrics": {
+        "totalTypeFiles": 31,
+        "totalTypeLines": 2569,
+        "totalTypeBytes": 67800,
+        "typeDefinitions": 175,
+        "serializationFunctions": 6,
+        "anyUsageCount": 0
+      },
+      "typeScript": {
+        "filesCompiled": 1486,
+        "identifiers": 240857,
+        "symbols": 135367,
+        "types": 89,
+        "typeInstantiations": 0,
+        "notes": "88% fewer identifiers and 87% fewer symbols vs Phase 1 baseline — TS7 dramatically reduces internal work"
+      },
+      "improvements": {
+        "vsPhase1Complete": {
+          "coldCacheSpeedupPercent": 58,
+          "warmCacheSpeedupPercent": 78,
+          "filesCompiledReduction": 44,
+          "identifiersReduction": 88,
+          "symbolsReduction": 87,
+          "anyUsageReduced": 1,
+          "serializationFunctionsChange": 1
+        },
+        "vsBaseline": {
+          "compilationSpeedupPercentWarm": null,
+          "compilationSpeedupPercentCold": null,
+          "notes": "Baseline had no compilation times recorded"
+        }
+      }
+    },
     "phase2_serialization_elimination": {
       "date": null,
       "description": "Phase 2: Complete elimination of remaining serialization functions",
@@ -221,26 +267,27 @@
     }
   },
   "summary": {
-    "currentPhase": "phase1_complete",
+    "currentPhase": "typescript7_upgrade",
     "progress": {
       "modulesOptimized": 5,
       "totalModules": 5,
       "percentComplete": 100
     },
     "achievements": {
-      "compilationSpeedImprovement": 51,
-      "linesEliminated": 151,
-      "serializationFunctionsRemoved": 3,
-      "anyUsageReduced": 12,
-      "typeFileSizeReduction": 13
+      "warmCacheSpeedupPercentVsPhase1": 78,
+      "coldCacheSpeedupPercentVsPhase1": 58,
+      "warmCacheSeconds": 1.277,
+      "coldCacheSeconds": 5.017,
+      "filesCompiledReductionPercent": 44,
+      "identifiersReductionPercent": 88,
+      "symbolsReductionPercent": 87,
+      "serializationFunctionsRemaining": 6,
+      "anyUsageCount": 0
     },
-    "projectedFinalResults": {
-      "compilationSpeedImprovement": 67,
-      "linesEliminated": 300,
-      "serializationFunctionsRemoved": 12,
-      "anyUsageReduced": 12,
-      "typeFileSizeReduction": 12
-    }
+    "nextSteps": [
+      "Phase 2: eliminate remaining 6 serialization functions",
+      "Phase 3: leverage Hono RPC automatic type inference"
+    ]
   },
   "notes": [
     "Baseline measurements are estimated from code history as changes were already committed",
@@ -249,6 +296,7 @@
     "Type instantiations of 0 indicates excellent type reuse through re-exports",
     "Schema update time improvements measured by eliminating manual type maintenance",
     "Only 1 'any' usage remains in optimized code (external AI SDK integration)",
-    "All measurements taken on macOS Darwin 25.3.0 with Bun runtime and TypeScript 5.9.3"
+    "All measurements taken on macOS Darwin 25.3.0 with Bun runtime",
+    "TypeScript 7 upgrade (2026-03-19): warm cache 1.277s, cold cache 5.017s — 78% faster warm vs Phase 1 complete"
   ]
 }

@@ -3,9 +3,9 @@
 	"compilerOptions": {
 		"outDir": "dist",
 		"rootDir": ".",
-		"baseUrl": "src",
+		"types": ["node", "bun"],
 		"paths": {
-			"@/*": ["*"]
+			"@/*": ["./src/*"]
 		}
 	},
 	"include": ["src/**/*", "test/**/*.ts", "test/**/*.tsx"],

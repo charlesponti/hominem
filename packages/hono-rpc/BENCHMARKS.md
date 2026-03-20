@@ -245,6 +245,7 @@ git commit -m "chore: update benchmarks after notes module optimization"
 ## Interpreting Results
 
 ### Good Signs
+
 ✅ Compilation time decreasing
 ✅ Lines of code decreasing
 ✅ Serialization functions decreasing
@@ -252,6 +253,7 @@ git commit -m "chore: update benchmarks after notes module optimization"
 ✅ Database imports increasing
 
 ### Warning Signs
+
 ⚠️ Compilation time increasing
 ⚠️ Lines of code increasing
 ⚠️ New serialization functions added

@@ -11,10 +11,10 @@ import { reducedMotion } from '../../lib/gsap/sequences';
 import { cn } from '../../lib/utils';
 import { Button } from './button';
 import { Input } from './input';
-import { Separator } from './separator';
+import { Separator, type SeparatorProps } from './separator';
 import { Sheet, SheetContent } from './sheet';
 import { Skeleton } from './skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
+import { Tooltip, TooltipContent, type TooltipContentProps, TooltipProvider, TooltipTrigger } from './tooltip';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_WIDTH_PX = 256;
@@ -465,7 +465,11 @@ const SidebarFooter = React.forwardRef<HTMLDivElement, React.ComponentProps<'div
 );
 SidebarFooter.displayName = 'SidebarFooter';
 
-const SidebarSeparator = React.forwardRef<
+type SidebarSeparatorComponent = React.ForwardRefExoticComponent<
+  SeparatorProps & React.RefAttributes<React.ComponentRef<typeof Separator>>
+>
+
+const SidebarSeparator: SidebarSeparatorComponent = React.forwardRef<
   React.ComponentRef<typeof Separator>,
   React.ComponentProps<typeof Separator>
 >(({ className, ...props }, ref) => {
@@ -477,10 +481,7 @@ const SidebarSeparator = React.forwardRef<
       {...props}
     />
   );
-}) as React.ForwardRefRenderFunction<
-  React.ComponentRef<typeof Separator>,
-  React.ComponentProps<typeof Separator>
->;
+});
 SidebarSeparator.displayName = 'SidebarSeparator';
 
 const SidebarContent = React.forwardRef<HTMLDivElement, React.ComponentProps<'div'>>(
@@ -616,13 +617,19 @@ const sidebarMenuButtonVariants = cva(
   },
 );
 
-const SidebarMenuButton = React.forwardRef<
+interface SidebarMenuButtonProps extends React.ComponentProps<'button'>, VariantProps<typeof sidebarMenuButtonVariants> {
+  asChild?: boolean;
+  isActive?: boolean;
+  tooltip?: string | TooltipContentProps;
+}
+
+type SidebarMenuButtonComponent = React.ForwardRefExoticComponent<
+  SidebarMenuButtonProps & React.RefAttributes<HTMLButtonElement>
+>
+
+const SidebarMenuButton: SidebarMenuButtonComponent = React.forwardRef<
   HTMLButtonElement,
-  React.ComponentProps<'button'> & {
-    asChild?: boolean;
-    isActive?: boolean;
-    tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-  } & VariantProps<typeof sidebarMenuButtonVariants>
+  SidebarMenuButtonProps
 >(
   (
     {

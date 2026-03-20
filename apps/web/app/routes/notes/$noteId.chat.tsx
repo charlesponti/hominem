@@ -27,16 +27,16 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export default function NoteChatRedirect({ loaderData }: { loaderData: { noteId: string } }) {
   const { noteId } = loaderData;
   const { data: note } = useNote(noteId);
-  const { setNoteContext, clearNoteContext } = useComposer();
+  const { setNoteTitle } = useComposer();
 
   useEffect(() => {
     if (note) {
-      setNoteContext(noteId, note.title || 'Untitled note');
+      setNoteTitle(note.title || 'Untitled note');
     }
     return () => {
-      clearNoteContext();
+      setNoteTitle(null);
     };
-  }, [note, noteId, setNoteContext, clearNoteContext]);
+  }, [note, setNoteTitle]);
 
   return (
     <div className="flex h-full min-h-0 flex-col items-center justify-center bg-background pb-[var(--composer-resting-height,72px)]">

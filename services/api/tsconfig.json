@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.profiles/service-noemit.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "tsBuildInfoFile": "../../.cache/service-api.tsbuildinfo",
     "rootDir": ".",
     "paths": {

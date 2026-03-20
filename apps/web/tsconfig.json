@@ -1,7 +1,6 @@
 {
   "extends": "../../tsconfig.profiles/vite-app.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "tsBuildInfoFile": "../../.cache/app-web.tsbuildinfo",
     "rootDirs": [
       ".",
@@ -10,6 +9,7 @@
     "types": [
       "node",
       "vite/client",
+      "vitest/globals",
       "@testing-library/jest-dom"
     ],
     "paths": {
@@ -34,8 +34,6 @@
     "coverage",
     ".react-router/cache",
     "tests",
-    "**/*.test.ts",
-    "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "**/__tests__",

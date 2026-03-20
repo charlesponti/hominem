@@ -4,10 +4,10 @@ import { Toaster } from '@hominem/ui/components/ui/toaster';
 import React, { Suspense, useCallback, useEffect } from 'react';
 import { Outlet, useSearchParams } from 'react-router';
 
+import NotesHeader from '~/components/header';
 import { Composer } from '~/components/composer';
 import { ComposerProvider } from '~/components/composer/composer-provider';
 import { LoadingScreen } from '~/components/loading';
-import NotesSidebar from '~/components/notes-sidebar';
 
 export default function Layout() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -47,7 +47,7 @@ export default function Layout() {
         }
       >
         <PasskeyEnrollmentBanner onEnroll={handleEnroll} />
-        <AppLayout sidebar={<NotesSidebar />} contentMode="full-bleed">
+        <AppLayout navigation={<NotesHeader />} contentMode="full-bleed">
           <Suspense fallback={<LoadingScreen />}>
             <Outlet />
           </Suspense>

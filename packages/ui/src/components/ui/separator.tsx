@@ -5,12 +5,14 @@ import * as React from 'react';
 
 import { cn } from '../../lib/utils';
 
+type SeparatorProps = React.ComponentProps<typeof SeparatorPrimitive.Root>
+
 function Separator({
   className,
   orientation = 'horizontal',
   decorative = true,
   ...props
-}: React.ComponentProps<typeof SeparatorPrimitive.Root>) {
+}: SeparatorProps) {
   return (
     <SeparatorPrimitive.Root
       data-slot="separator"
@@ -26,3 +28,4 @@ function Separator({
 }
 
 export { Separator };
+export type { SeparatorProps };

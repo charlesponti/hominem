@@ -3,12 +3,10 @@ import * as z from 'zod';
 
 import {
   assessMentalWellnessInputSchema,
-  assessMentalWellnessOutputSchema,
   mentalHealthService,
 } from './mental-health.service';
 import {
   recommendWorkoutInputSchema,
-  recommendWorkoutOutputSchema,
   workoutService,
 } from './workout.service';
 

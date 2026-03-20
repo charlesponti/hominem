@@ -5,6 +5,8 @@ import * as React from 'react';
 
 import { cn } from '../../lib/utils';
 
+type TooltipContentProps = React.ComponentProps<typeof TooltipPrimitive.Content>
+
 function TooltipProvider({
   delayDuration = 0,
   ...props
@@ -31,7 +33,7 @@ function TooltipContent({
   sideOffset = 0,
   children,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+}: TooltipContentProps) {
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
@@ -51,3 +53,4 @@ function TooltipContent({
 }
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };
+export type { TooltipContentProps };
