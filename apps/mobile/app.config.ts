@@ -196,6 +196,10 @@ export default ({ config }: ConfigContext) => {
       supportsTablet: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        NSCalendarsUsageDescription: 'Allow Hakumi to access your calendar to add events.',
+        NSCalendarsFullAccessUsageDescription: 'Allow Hakumi to access your calendar to add events.',
+        NSRemindersUsageDescription: 'Allow Hakumi to access your reminders.',
+        NSRemindersFullAccessUsageDescription: 'Allow Hakumi to access your reminders.',
       },
     },
     android: {

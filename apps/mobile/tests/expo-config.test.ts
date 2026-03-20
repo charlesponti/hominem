@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import appConfig from '../app.config'
 
 const { EXPO_OWNER, EXPO_PROJECT_ID, EXPO_PROJECT_SLUG, getExpoExtraConfig } = require(
   '../config/expo-config.js',
@@ -44,5 +45,27 @@ describe('expo config helpers', () => {
       e2eAuthSecret: 'secret',
       mobilePasskeyEnabled: 'true',
     })
+  })
+
+  it('includes calendar usage descriptions in ios info plist', () => {
+    const previousVariant = process.env.APP_VARIANT
+
+    process.env.APP_VARIANT = 'dev'
+
+    const config = appConfig({ config: {} as never })
+
+    expect(config.ios?.infoPlist).toMatchObject({
+      ITSAppUsesNonExemptEncryption: false,
+      NSCalendarsUsageDescription: 'Allow Hakumi to access your calendar to add events.',
+      NSCalendarsFullAccessUsageDescription: 'Allow Hakumi to access your calendar to add events.',
+      NSRemindersUsageDescription: 'Allow Hakumi to access your reminders.',
+      NSRemindersFullAccessUsageDescription: 'Allow Hakumi to access your reminders.',
+    })
+
+    if (previousVariant === undefined) {
+      delete process.env.APP_VARIANT
+    } else {
+      process.env.APP_VARIANT = previousVariant
+    }
   })
 })
