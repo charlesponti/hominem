@@ -24,26 +24,28 @@ export const InboxStreamItem = ({ item }: InboxStreamItemProps) => {
 
   return (
     <FadeIn>
-      <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}>
-        <Text numberOfLines={1} variant="body" color="foreground" style={styles.title}>
-          {item.title}
-        </Text>
-        <View style={styles.footer}>
-          <Text numberOfLines={1} variant="small" color="text-secondary" style={styles.preview}>
-            {item.preview}
-          </Text>
-          <View style={styles.meta}>
-            <Text variant="small" color="text-tertiary">
-              {formatTimestamp(item.timestamp)}
-            </Text>
-            <AppIcon
-              name={item.kind === 'note' ? 'pen-to-square' : 'comment'}
-              size={11}
-              color="#9A9A9A"
-              style={styles.cornerIcon}
-            />
-          </View>
+      <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed ? styles.pressed : null]}>
+        <View style={styles.leading}>
+          <AppIcon
+            name={item.kind === 'note' ? 'pen-to-square' : 'comment'}
+            size={11}
+            color="#9A9A9A"
+            style={styles.cornerIcon}
+          />
         </View>
+        <View style={styles.content}>
+          <Text numberOfLines={1} variant="body" color="foreground" style={styles.title}>
+            {item.title}
+          </Text>
+          {item.preview ? (
+            <Text numberOfLines={1} variant="small" color="text-secondary" style={styles.preview}>
+              {item.preview}
+            </Text>
+          ) : null}
+        </View>
+        <Text numberOfLines={1} variant="small" color="text-tertiary" style={styles.timestamp}>
+          {formatTimestamp(item.timestamp)}
+        </Text>
       </Pressable>
     </FadeIn>
   )
@@ -61,38 +63,38 @@ function formatTimestamp(value: string): string {
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
-    card: {
-      borderWidth: 1,
-      borderColor: t.colors['border-default'],
-      borderRadius: t.borderRadii.md,
+    row: {
+      alignItems: 'flex-start',
+      flexDirection: 'row',
       gap: t.spacing.xs_4,
       paddingHorizontal: t.spacing.sm_12,
       paddingVertical: t.spacing.sm_8,
     },
-    title: {
-      marginTop: 1,
+    leading: {
+      paddingTop: 2,
     },
-    footer: {
-      alignItems: 'flex-end',
-      flexDirection: 'row',
+    content: {
+      flex: 1,
       gap: t.spacing.xs_4,
-      justifyContent: 'space-between',
+      minWidth: 0,
+    },
+    title: {
+      color: t.colors.foreground,
     },
     preview: {
-      flex: 1,
-    },
-    meta: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: t.spacing.xs_4,
+      color: t.colors['text-secondary'],
     },
     cornerIcon: {
       lineHeight: 11,
-      opacity: 0.7,
+      opacity: 0.55,
       textAlign: 'center',
     },
+    timestamp: {
+      paddingTop: 1,
+      color: t.colors['text-tertiary'],
+    },
     pressed: {
-      opacity: 0.74,
+      backgroundColor: t.colors['bg-surface'],
     },
   }),
 )

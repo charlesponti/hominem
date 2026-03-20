@@ -261,7 +261,7 @@ jobs:
             echo
             grep -E 'Test Files|Tests |Duration' api-integration.log | tail -n 20 || true
             echo
-            node scripts/summarize-vitest-report.mjs api-integration.vitest.json '### API integration slowest tests'
+            node scripts/summarize-vitest-report.mjs api-integration.vitest.json '### API integration slowest tests' 5 1000
           } >> "$GITHUB_STEP_SUMMARY"
         timeout-minutes: 10
 
@@ -327,7 +327,7 @@ jobs:
             echo
             grep -E 'Test Files|Tests |Duration' api-auth-contract.log | tail -n 20 || true
             echo
-            node scripts/summarize-vitest-report.mjs api-auth-contract.vitest.json '### API auth contract slowest tests'
+            node scripts/summarize-vitest-report.mjs api-auth-contract.vitest.json '### API auth contract slowest tests' 5 1500
           } >> "$GITHUB_STEP_SUMMARY"
         timeout-minutes: 10
 
@@ -363,13 +363,13 @@ jobs:
             echo
             grep -E 'Test Files|Tests |Duration' mobile-auth-unit.log | tail -n 20 || true
             echo
-            node scripts/summarize-vitest-report.mjs mobile-auth-unit.vitest.json '### Mobile auth unit slowest tests'
+            node scripts/summarize-vitest-report.mjs mobile-auth-unit.vitest.json '### Mobile auth unit slowest tests' 5 250
             echo
             echo '### Mobile auth integration test summary'
             echo
             grep -E 'Test Files|Tests |Duration' mobile-auth-integration.log | tail -n 20 || true
             echo
-            node scripts/summarize-vitest-report.mjs mobile-auth-integration.vitest.json '### Mobile auth integration slowest tests'
+            node scripts/summarize-vitest-report.mjs mobile-auth-integration.vitest.json '### Mobile auth integration slowest tests' 5 250
           } >> "$GITHUB_STEP_SUMMARY"
         timeout-minutes: 15
         env:

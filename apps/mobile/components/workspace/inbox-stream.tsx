@@ -16,6 +16,12 @@ interface InboxStreamProps {
 
 const keyExtractor = (item: InboxStreamItemModel) => `${item.kind}:${item.id}`
 
+const InboxStreamDivider = () => {
+  const styles = useStyles()
+
+  return <View style={styles.divider} />
+}
+
 export const InboxStream = ({ focusItems, sessions }: InboxStreamProps) => {
   const styles = useStyles()
   const items = useMemo(() => toInboxStreamItems({ focusItems, sessions }), [focusItems, sessions])
@@ -38,7 +44,7 @@ export const InboxStream = ({ focusItems, sessions }: InboxStreamProps) => {
       <FlashList
         contentContainerStyle={styles.listContent}
         data={items}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ItemSeparatorComponent={InboxStreamDivider}
         keyExtractor={keyExtractor}
         renderItem={({ item }) => <InboxStreamItem item={item} />}
       />
@@ -51,25 +57,25 @@ const useStyles = makeStyles((t) =>
     container: {
       flex: 1,
     },
-    separator: {
-      height: t.spacing.xs_4,
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      marginHorizontal: t.spacing.sm_12,
+      backgroundColor: t.colors['border-subtle'],
     },
     listContent: {
       paddingHorizontal: t.spacing.sm_12,
-      paddingTop: t.spacing.xs_4,
+      paddingTop: t.spacing.sm_8,
       paddingBottom:
         t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.ml_24 + t.spacing.xs_4,
     },
     empty: {
-      borderRadius: t.borderRadii.md,
-      borderWidth: 1,
-      borderColor: t.colors['border-default'],
-      gap: t.spacing.sm_8,
+      alignItems: 'center',
+      gap: t.spacing.xs_4,
       marginBottom:
         t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.ml_24 + t.spacing.xs_4,
       marginHorizontal: t.spacing.sm_12,
       paddingHorizontal: t.spacing.m_16,
-      paddingVertical: t.spacing.xl_48,
+      paddingVertical: t.spacing.l_32,
     },
   }),
 )

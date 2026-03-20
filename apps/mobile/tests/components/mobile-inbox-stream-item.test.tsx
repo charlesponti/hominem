@@ -1,70 +1,16 @@
-import React from 'react'
-import { render } from '@testing-library/react-native'
-import { describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 
-vi.mock('expo-router', () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-  }),
-}))
+import { describe, expect, it } from 'vitest'
 
-vi.mock('../../components/animated/fade-in', () => ({
-  FadeIn: ({ children }: { children: React.ReactNode }) => children,
-}))
+const root = process.cwd()
 
-vi.mock('../../components/ui/icon', () => ({
-  __esModule: true,
-  default: () => null,
-}))
+describe('InboxStreamItem source contract', () => {
+  it('uses a continuous row surface instead of a bordered card', () => {
+    const source = readFileSync(`${root}/apps/mobile/components/workspace/inbox-stream-item.tsx`, 'utf8')
 
-vi.mock('../../theme', () => ({
-  Text: ({ children }: { children: React.ReactNode }) => {
-    const { Text } = require('react-native')
-    return <Text>{children}</Text>
-  },
-  makeStyles: () => () => ({}),
-}))
-
-import { InboxStreamItem } from '../../components/workspace/inbox-stream-item'
-
-function countNodesByType(node: { children?: Array<{ children?: unknown; type?: string }>; type?: string } | null, type: string): number {
-  if (node === null) {
-    return 0
-  }
-
-  let total = node.type === type ? 1 : 0
-
-  if (Array.isArray(node.children)) {
-    for (const child of node.children) {
-      if (child !== null && typeof child === 'object') {
-        total += countNodesByType(child, type)
-      }
-    }
-  }
-
-  return total
-}
-
-describe('InboxStreamItem', () => {
-  it('does not render preview content when preview is null', () => {
-    const { toJSON } = render(
-      <InboxStreamItem
-        item={{
-          id: 'note-1',
-          kind: 'note',
-          title: 'Morning capture',
-          preview: null,
-          timestamp: '2026-03-20T09:30:00.000Z',
-          route: '/(protected)/(tabs)/focus/note-1',
-        }}
-      />,
-    )
-
-    const json = toJSON() as { children?: Array<{ children?: unknown; type?: string }>; type?: string } | null
-    const spans = countNodesByType(json, 'span')
-
-    expect(spans).toBe(2)
-    expect(JSON.stringify(json)).toContain('Morning capture')
-    expect(JSON.stringify(json)).not.toContain('Note')
+    expect(source).toContain('style={({ pressed }) => [styles.row, pressed ? styles.pressed : null]}')
+    expect(source).not.toContain('styles.card')
+    expect(source).not.toContain('borderWidth: 1')
+    expect(source).not.toContain('borderRadius: t.borderRadii.md')
   })
 })

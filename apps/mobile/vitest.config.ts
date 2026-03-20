@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
+    slowTestThreshold: 250,
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     alias: {
       '~/lib/posthog': new URL('./tests/__mocks__/posthog.ts', import.meta.url).pathname,

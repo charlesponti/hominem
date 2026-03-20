@@ -31,10 +31,22 @@ vi.mock('./use-notes', () => ({
 
 import { useInboxStream } from './use-inbox-stream'
 
+interface InboxStreamResultItem {
+  kind: 'note' | 'chat'
+  title: string
+  preview: string | null
+}
+
+interface InboxStreamResult {
+  items: InboxStreamResultItem[]
+  noteCount: number
+  chatCount: number
+}
+
 function HookProbe({
   onValue,
 }: {
-  onValue: (value: ReturnType<typeof useInboxStream>) => void
+  onValue: (value: InboxStreamResult) => void
 }) {
   const value = useInboxStream()
 
@@ -89,7 +101,7 @@ describe('useInboxStream', () => {
     mocks.notesList.mockReturnValue([createNote()])
     mocks.chatsList.mockReturnValue([createChat()])
 
-    let value: ReturnType<typeof useInboxStream> | null = null
+    let value: InboxStreamResult | null = null
 
     render(
       <HookProbe
@@ -103,14 +115,20 @@ describe('useInboxStream', () => {
       expect(value).not.toBeNull()
     })
 
-    expect(value?.items).toHaveLength(2)
-    const chatItem = value?.items.find((item) => item.kind === 'chat')
-    const noteItem = value?.items.find((item) => item.kind === 'note')
+    if (value === null) {
+      throw new Error('Expected hook result')
+    }
+
+    const result = value as InboxStreamResult
+
+    expect(result.items).toHaveLength(2)
+    const chatItem = result.items.find((item: InboxStreamResultItem) => item.kind === 'chat')
+    const noteItem = result.items.find((item: InboxStreamResultItem) => item.kind === 'note')
 
     expect(chatItem?.title).toBe('Untitled session')
     expect(chatItem?.preview).toBeNull()
     expect(noteItem?.preview).toBeNull()
-    expect(value?.noteCount).toBe(1)
-    expect(value?.chatCount).toBe(1)
+    expect(result.noteCount).toBe(1)
+    expect(result.chatCount).toBe(1)
   })
 })

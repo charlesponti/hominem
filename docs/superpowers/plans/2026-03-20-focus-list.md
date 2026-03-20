@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace bordered-card focus rows with one calmer continuous list-row pattern that works for notes and chats across mobile and web, and establishes the shared direction for future desktop work.
+**Goal:** Replace bordered-card focus rows with an Apple Notes-style grouped list pattern that uses rounded section containers, internal dividers, and stacked metadata for notes and chats across mobile and web.
 
-**Architecture:** Keep the merged inbox data model in place and refactor presentation around a single continuous-surface row language. Start by codifying the list rhythm in shared notes tokens, then update the mobile workspace stream as the reference implementation, then align the web notes sidebar to the same row hierarchy and metadata rules.
+**Architecture:** Keep the merged inbox data model in place and refactor presentation around grouped section shells rather than standalone cards. Start by codifying the grouped Notes-style container and row rhythm in shared tokens, then update the mobile workspace stream as the reference implementation, then align the web notes sidebar to the same section-shell and stacked-metadata rules.
 
 **Tech Stack:** Bun, React, React Native, Expo Router, React Router, FlashList, Vitest, Testing Library, `@hominem/ui` tokens
 
@@ -13,36 +13,39 @@
 ## File Map
 
 - Modify: `packages/ui/src/tokens/notes.ts`
-  Purpose: define the shared continuous-list spacing, divider, hover, and title-first presentation tokens.
+  Purpose: define the shared grouped-list spacing, section-shell, divider, and stacked-metadata presentation tokens.
+- Modify: `packages/ui/src/tokens/notes.test.ts`
+  Purpose: lock the token contract to the grouped Apple Notes model.
 - Modify: `apps/mobile/components/workspace/inbox-stream.tsx`
-  Purpose: remove card-like list spacing and make the stream read as one surface.
+  Purpose: render the mobile stream inside grouped rounded section shells instead of standalone row cards.
 - Modify: `apps/mobile/components/workspace/inbox-stream-item.tsx`
-  Purpose: implement the new row presentation, quiet metadata, and no-snippet default.
+  Purpose: implement the title-first stacked metadata row hierarchy used inside section shells.
 - Modify: `apps/mobile/components/workspace/inbox-stream-items.ts`
-  Purpose: make snippet/preview optional in the shared item model and align note/chat metadata semantics.
+  Purpose: keep preview optional and align shared row metadata semantics.
+- Modify: `apps/mobile/tests/components/mobile-inbox-stream-item.test.tsx`
+  Purpose: guard the mobile row structure against regressions back to card-like layout.
 - Modify: `apps/mobile/tests/components/mobile-inbox-stream-items.test.ts`
-  Purpose: lock the mobile stream item model to the new title-first, preview-optional behavior.
-- Modify: `apps/mobile/tests/design-system-radius.test.ts`
-  Purpose: include any new mobile list files if the implementation gets split.
+  Purpose: lock the shared mobile item model to the no-snippet default.
 - Modify: `apps/web/app/hooks/use-inbox-stream.ts`
-  Purpose: align the web inbox item model with the mobile row contract.
+  Purpose: align the web inbox item model with the shared grouped-row contract.
+- Modify: `apps/web/app/hooks/use-inbox-stream.test.tsx`
+  Purpose: verify the web hook keeps preview nullable and fallback titles aligned.
 - Modify: `apps/web/app/components/notes-sidebar.tsx`
-  Purpose: replace the sidebar’s pseudo-card rows with the continuous list row hierarchy.
+  Purpose: replace individual pseudo-card rows with a grouped Notes-style shell and stacked metadata rows.
 - Create: `apps/web/app/components/notes-sidebar.test.tsx`
-  Purpose: verify the shared row semantics and note/chat parity on the web surface.
+  Purpose: verify the grouped-shell and shared row semantics on web.
 
 ## Chunk 1: Shared Row Contract
 
-### Task 1: Update shared notes tokens for the new list rhythm
+### Task 1: Update shared notes tokens for grouped Apple Notes rhythm
 
 **Files:**
 - Modify: `packages/ui/src/tokens/notes.ts`
+- Modify: `packages/ui/src/tokens/notes.test.ts`
 
 - [ ] **Step 1: Write the failing token assertions**
 
-Add or update a token test near the notes-token consumer tests if one exists. If there is no existing token-focused test, add a small Vitest file beside the token module:
-
-`packages/ui/src/tokens/notes.test.ts`
+Add or update a token test beside the notes token module:
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -50,9 +53,11 @@ import { describe, expect, it } from 'vitest'
 import { notesTokens } from './notes'
 
 describe('notesTokens.stream', () => {
-  it('uses continuous list row semantics', () => {
+  it('uses grouped list row semantics', () => {
     expect(notesTokens.stream.itemGap).toBe(0)
     expect(notesTokens.stream.itemRadius).toBe(0)
+    expect(notesTokens.stream.typeIconSize).toBe(14)
+    expect(notesTokens.radii.panel).toBeGreaterThan(0)
     expect(notesTokens.spacing.noteContentGap).toBeLessThan(notesTokens.spacing.noteSecondaryGap)
   })
 })
@@ -60,13 +65,13 @@ describe('notesTokens.stream', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `bun run test --filter @hominem/ui`
+Run: `bunx vitest run --root packages/ui --config vitest.config.ts src/tokens/notes.test.ts`
 
-Expected: FAIL because the current stream tokens still describe bordered rows with visible gaps and radius.
+Expected: FAIL because the current tokens do not fully encode the grouped section-shell contract.
 
 - [ ] **Step 3: Write the minimal token changes**
 
-Update `packages/ui/src/tokens/notes.ts` so the stream tokens encode the approved design:
+Update `packages/ui/src/tokens/notes.ts` so the row internals and shells match the approved design:
 
 ```ts
 export const notesStream = {
@@ -81,7 +86,7 @@ export const notesStream = {
 } as const
 ```
 
-Also tighten the note-item semantics so preview is subordinate and optional:
+Keep the row internals tight enough for stacked metadata:
 
 ```ts
 export const notesSpacing = {
@@ -95,197 +100,152 @@ export const notesSpacing = {
 } as const
 ```
 
+Retain rounded panel tokens so section shells stay visibly grouped.
+
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `bun run test --filter @hominem/ui`
+Run: `bunx vitest run --root packages/ui --config vitest.config.ts src/tokens/notes.test.ts`
 
-Expected: PASS with the new continuous-list token contract.
+Expected: PASS with the grouped-list token contract.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add packages/ui/src/tokens/notes.ts packages/ui/src/tokens/notes.test.ts
-git commit -m "refactor(ui): define continuous focus list tokens"
+git commit -m "refactor(ui): define grouped focus list tokens"
 ```
 
-### Task 2: Make preview metadata optional in the shared inbox item model
+### Task 2: Keep preview metadata optional in the shared inbox item model
 
 **Files:**
 - Modify: `apps/mobile/components/workspace/inbox-stream-items.ts`
 - Modify: `apps/mobile/tests/components/mobile-inbox-stream-items.test.ts`
 - Modify: `apps/web/app/hooks/use-inbox-stream.ts`
+- Modify: `apps/web/app/hooks/use-inbox-stream.test.tsx`
 
-- [ ] **Step 1: Write the failing mobile data-shape test**
+- [ ] **Step 1: Write the failing model tests**
 
-Extend `apps/mobile/tests/components/mobile-inbox-stream-items.test.ts` with assertions that the default stream rows do not depend on a visible preview:
+Extend the focused tests so both mobile and web prove the grouped-row data contract:
 
 ```ts
-it('keeps previews optional for the default row contract', () => {
-  const [item] = toInboxStreamItems({
-    focusItems: [makeNote({ title: 'A single line title' })],
-    sessions: [],
-  })
-
-  expect(item.title).toBe('A single line title')
-  expect(item.preview).toBeNull()
-})
+expect(item.preview).toBeNull()
+expect(chatItem.title).toBe('Untitled session')
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run tests to verify they fail**
 
-Run: `bun run test --filter mobile-inbox-stream-items`
+Run: `bunx vitest run --root apps/mobile --config vitest.config.ts tests/components/mobile-inbox-stream-items.test.ts`
 
-Expected: FAIL because the mobile mapper currently returns hard-coded preview copy.
+Run: `bunx vitest run --root apps/web --config vitest.config.ts app/hooks/use-inbox-stream.test.tsx`
+
+Expected: FAIL if either surface still manufactures preview copy or uses divergent fallback titles.
 
 - [ ] **Step 3: Write the minimal shared-model implementation**
 
-Update the shared item contract in `apps/mobile/components/workspace/inbox-stream-items.ts`:
+Keep `preview` nullable in both mobile and web item models:
 
 ```ts
-export interface InboxStreamItem {
-  id: string
-  kind: 'note' | 'chat'
-  title: string
-  preview: string | null
-  timestamp: string
-  route: string
-}
+preview: string | null
 ```
 
-Update both mappers to return `preview: null` for the default state. Keep the fallback title logic, but stop manufacturing secondary copy that the new row will not render.
-
-Mirror that contract in `apps/web/app/hooks/use-inbox-stream.ts`:
-
-```ts
-export interface InboxNoteItem {
-  ...
-  preview: string | null
-  ...
-}
-
-export interface InboxChatItem {
-  ...
-  preview: string | null
-  ...
-}
-```
+Return `preview: null` for the default state and align fallback chat titles to the shared contract.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `bun run test --filter mobile-inbox-stream-items`
+Run: `bunx vitest run --root apps/mobile --config vitest.config.ts tests/components/mobile-inbox-stream-items.test.ts`
 
-Expected: PASS with `preview` now optional and title logic unchanged.
+Run: `bunx vitest run --root apps/web --config vitest.config.ts app/hooks/use-inbox-stream.test.tsx`
+
+Expected: PASS with no-snippet default and aligned fallback titles.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add apps/mobile/components/workspace/inbox-stream-items.ts apps/mobile/tests/components/mobile-inbox-stream-items.test.ts apps/web/app/hooks/use-inbox-stream.ts
-git commit -m "refactor(inbox): make list previews optional"
+git add apps/mobile/components/workspace/inbox-stream-items.ts apps/mobile/tests/components/mobile-inbox-stream-items.test.ts apps/web/app/hooks/use-inbox-stream.ts apps/web/app/hooks/use-inbox-stream.test.tsx
+git commit -m "refactor(inbox): align grouped row item model"
 ```
 
 ## Chunk 2: Mobile Reference Implementation
 
-### Task 3: Convert the mobile inbox stream from cards to a continuous list
+### Task 3: Convert the mobile inbox stream from cards to grouped Apple Notes sections
 
 **Files:**
 - Modify: `apps/mobile/components/workspace/inbox-stream.tsx`
 - Modify: `apps/mobile/components/workspace/inbox-stream-item.tsx`
-- Test: `apps/mobile/tests/design-system-radius.test.ts`
+- Modify: `apps/mobile/tests/components/mobile-inbox-stream-item.test.tsx`
+- Modify: `apps/mobile/tests/design-system-radius.test.ts` only if new files are introduced
 
 - [ ] **Step 1: Write the failing mobile row presentation test**
 
-Create a focused component test if one does not already exist:
+Use a focused regression around the grouped Notes structure:
 
-`apps/mobile/tests/components/mobile-inbox-stream-item.test.tsx`
-
-```tsx
-import { render, screen } from '@testing-library/react-native'
-import { describe, expect, it } from 'vitest'
-
-import { InboxStreamItem } from '../../components/workspace/inbox-stream-item'
-
-describe('InboxStreamItem', () => {
-  it('renders a title-first row without default preview copy', () => {
-    render(
-      <InboxStreamItem
-        item={{
-          id: 'note-1',
-          kind: 'note',
-          title: 'Morning capture',
-          preview: null,
-          timestamp: '2026-03-20T09:30:00.000Z',
-          route: '/(protected)/(tabs)/focus/note-1',
-        }}
-      />,
-    )
-
-    expect(screen.getByText('Morning capture')).toBeTruthy()
-    expect(screen.queryByText('Note')).toBeNull()
-  })
-})
+```ts
+expect(source).not.toContain('borderWidth: 1')
+expect(source).toContain('item.kind === \'note\' ? \'Notes\' : \'Chats\'')
+expect(source).toContain('formatTimestamp(item.timestamp)')
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `bun run test --filter mobile-inbox-stream-item`
+Run: `bunx vitest run --root apps/mobile --config vitest.config.ts tests/components/mobile-inbox-stream-item.test.tsx`
 
-Expected: FAIL because the current row still renders footer preview copy and card styling assumptions.
+Expected: FAIL because the current row still uses card styling or non-Notes hierarchy.
 
-- [ ] **Step 3: Write the minimal presentation refactor**
+- [ ] **Step 3: Write the minimal mobile implementation**
 
 In `apps/mobile/components/workspace/inbox-stream-item.tsx`:
 
-- remove the bordered `card` treatment
-- replace it with one full-width row surface
-- keep the title as the dominant text
-- render timestamp as quiet trailing metadata
-- render the note/chat icon as a subtle cue, not a badge
-- only render `preview` when `item.preview` is non-null
+- remove the bordered card treatment
+- make the row read as content inside a section shell
+- use title as the dominant line
+- stack metadata beneath the title
+- add a quiet source/type line beneath metadata
+- keep preview conditional and subordinate if it appears
+- keep the icon subtle
 
 Target structure:
 
 ```tsx
 <Pressable style={({ pressed }) => [styles.row, pressed ? styles.pressed : null]}>
-  <View style={styles.leading}>
+  <View style={styles.leadingIcon}>
     <AppIcon ... />
   </View>
   <View style={styles.content}>
     <Text numberOfLines={1} style={styles.title}>{item.title}</Text>
+    <Text numberOfLines={1} style={styles.metadata}>{formatTimestamp(item.timestamp)}</Text>
+    <Text numberOfLines={1} style={styles.sourceLabel}>{item.kind === 'note' ? 'Notes' : 'Chats'}</Text>
     {item.preview ? <Text numberOfLines={1} style={styles.preview}>{item.preview}</Text> : null}
   </View>
-  <Text style={styles.timestamp}>{formatTimestamp(item.timestamp)}</Text>
 </Pressable>
 ```
 
 In `apps/mobile/components/workspace/inbox-stream.tsx`:
 
-- remove the artificial card-gap separator
-- move to divider-based separation
-- keep one continuous content container with consistent horizontal padding
-- simplify the empty state so it is not another bordered card
-
-If the implementation needs a dedicated divider component or extracted row styles, add those files and then append them to `apps/mobile/tests/design-system-radius.test.ts`.
+- wrap rows in one rounded section shell
+- use internal dividers instead of free-floating row gaps
+- keep page-level breathing room around the shell
+- make the empty state align with the grouped-shell language rather than another bordered box
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `bun run test --filter mobile-inbox-stream-item`
+Run: `bunx vitest run --root apps/mobile --config vitest.config.ts tests/components/mobile-inbox-stream-item.test.tsx`
 
-Run: `bun run test --filter mobile-inbox-stream-items`
+Run: `bunx vitest run --root apps/mobile --config vitest.config.ts tests/components/mobile-inbox-stream-items.test.ts`
 
-Run: `bun run test --filter design-system-radius`
+Run: `bunx tsc --noEmit -p apps/mobile/tsconfig.json`
 
-Expected: PASS, with no hard-coded radius regressions and the new row semantics in place.
+Expected: PASS with the grouped mobile surface in place.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add apps/mobile/components/workspace/inbox-stream.tsx apps/mobile/components/workspace/inbox-stream-item.tsx apps/mobile/tests/components/mobile-inbox-stream-item.test.tsx apps/mobile/tests/components/mobile-inbox-stream-items.test.ts apps/mobile/tests/design-system-radius.test.ts
-git commit -m "refactor(mobile): adopt continuous inbox list rows"
+git commit -m "refactor(mobile): adopt grouped inbox sections"
 ```
 
 ## Chunk 3: Web Rollout
 
-### Task 4: Align the web notes sidebar with the shared row primitive
+### Task 4: Align the web notes sidebar with the grouped Apple Notes primitive
 
 **Files:**
 - Modify: `apps/web/app/components/notes-sidebar.tsx`
@@ -294,89 +254,66 @@ git commit -m "refactor(mobile): adopt continuous inbox list rows"
 
 - [ ] **Step 1: Write the failing web sidebar test**
 
-Create `apps/web/app/components/notes-sidebar.test.tsx` with a focused regression around title-first rows:
+Create a focused regression around the grouped-shell structure:
 
 ```tsx
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router'
-import { describe, expect, it, vi } from 'vitest'
-
-import NotesSidebar from './notes-sidebar'
-
-vi.mock('~/hooks/use-inbox-stream', () => ({
-  useInboxStream: () => ({
-    isLoading: false,
-    items: [
-      { kind: 'note', id: 'note-1', title: 'Morning capture', preview: null, updatedAt: '2026-03-20T09:30:00.000Z', note: {} },
-      { kind: 'chat', id: 'chat-1', title: 'Planning thread', preview: null, updatedAt: '2026-03-20T09:00:00.000Z', chat: {} },
-    ],
-    noteCount: 1,
-    chatCount: 1,
-  }),
-}))
-
-describe('NotesSidebar', () => {
-  it('renders note and chat rows with the same title-first structure', () => {
-    render(
-      <MemoryRouter>
-        <NotesSidebar />
-      </MemoryRouter>,
-    )
-
-    expect(screen.getByText('Morning capture')).toBeInTheDocument()
-    expect(screen.getByText('Planning thread')).toBeInTheDocument()
-    expect(screen.queryByText('Conversation')).not.toBeInTheDocument()
-  })
-})
+expect(screen.getByText('Morning capture')).toBeInTheDocument()
+expect(screen.getByText('Planning thread')).toBeInTheDocument()
+expect(screen.getAllByText(/Notes|Chats/).length).toBeGreaterThan(0)
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `bun run test --filter notes-sidebar`
+Run: `bunx vitest run --root apps/web --config vitest.config.ts app/components/notes-sidebar.test.tsx`
 
-Expected: FAIL because the current sidebar still relies on rounded row blocks and older item semantics.
+Expected: FAIL because the current sidebar still uses individual rounded rows and does not match the grouped Notes shell.
 
 - [ ] **Step 3: Write the minimal web implementation**
 
 In `apps/web/app/components/notes-sidebar.tsx`:
 
-- remove the rounded pseudo-card row treatment
-- use a continuous `<ul>` with divider-driven rows
+- remove the individual rounded row treatment
+- wrap rows in a rounded grouped shell
+- use internal dividers
 - keep note and chat rows structurally identical
-- de-emphasize type icons and action affordances
-- keep title as the only always-visible content line
-- show timestamp only if it can stay visually quiet in the trailing area
+- stack metadata below the title
+- add a tiny source/type line
+- keep snippets off by default
 
-Refactor `SidebarFocusItem` toward:
+Target shape:
 
 ```tsx
-<li className="group/item border-b border-sidebar-border/40 last:border-b-0">
-  <div className="flex items-center gap-2 px-3 py-2.5">
-    <Icon className="size-3.5 shrink-0 opacity-40" />
-    <Link ... className="min-w-0 flex-1 truncate text-sm text-sidebar-foreground">
-      {item.title || 'Untitled'}
-    </Link>
-    <span className="text-xs text-sidebar-foreground/40">{formatDate(item.updatedAt)}</span>
-    <DropdownMenuTrigger ... />
-  </div>
-</li>
+<div className="rounded-[28px] bg-sidebar p-0 overflow-hidden">
+  <ul>
+    <li className="border-b border-sidebar-border/40 last:border-b-0">
+      <Link ... className="flex items-start gap-2 px-4 py-3">
+        <Icon className="mt-0.5 size-3.5 shrink-0 opacity-40" />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-medium text-sidebar-foreground">{item.title}</div>
+          <div className="truncate text-xs text-sidebar-foreground/50">{formatDate(item.updatedAt)}</div>
+          <div className="truncate text-[11px] text-sidebar-foreground/35">{item.kind === 'note' ? 'Notes' : 'Chats'}</div>
+        </div>
+      </Link>
+    </li>
+  </ul>
+</div>
 ```
-
-In `apps/web/app/hooks/use-inbox-stream.ts`, keep the data contract aligned with mobile by using `preview: null` in the default state.
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `bun run test --filter notes-sidebar`
+Run: `bunx vitest run --root apps/web --config vitest.config.ts app/components/notes-sidebar.test.tsx`
 
-Run: `bun run test --filter header`
+Run: `bunx vitest run --root apps/web --config vitest.config.ts app/components/header.test.tsx`
 
-Expected: PASS, with the sidebar rows now matching the shared row rules and no regression in latest-destination logic.
+Run: `bunx vitest run --root apps/web --config vitest.config.ts app/hooks/use-inbox-stream.test.tsx`
+
+Expected: PASS with the sidebar now matching the grouped Notes model and no regression in latest-destination logic.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add apps/web/app/components/notes-sidebar.tsx apps/web/app/components/notes-sidebar.test.tsx apps/web/app/hooks/use-inbox-stream.ts apps/web/app/components/header.test.tsx
-git commit -m "refactor(web): align notes sidebar with continuous list rows"
+git add apps/web/app/components/notes-sidebar.tsx apps/web/app/components/notes-sidebar.test.tsx apps/web/app/hooks/use-inbox-stream.ts apps/web/app/hooks/use-inbox-stream.test.tsx apps/web/app/components/header.test.tsx
+git commit -m "refactor(web): align notes sidebar with grouped list shells"
 ```
 
 ## Chunk 4: Final Verification
@@ -388,23 +325,19 @@ git commit -m "refactor(web): align notes sidebar with continuous list rows"
 
 - [ ] **Step 1: Run targeted mobile and web tests**
 
-Run: `bun run test --filter mobile-inbox-stream-item`
+Run: `bunx vitest run --root apps/mobile --config vitest.config.ts tests/components/mobile-inbox-stream-item.test.tsx tests/components/mobile-inbox-stream-items.test.ts`
 
-Run: `bun run test --filter mobile-inbox-stream-items`
+Run: `bunx vitest run --root apps/web --config vitest.config.ts app/hooks/use-inbox-stream.test.tsx app/components/notes-sidebar.test.tsx app/components/header.test.tsx`
 
-Run: `bun run test --filter design-system-radius`
+Run: `bunx vitest run --root packages/ui --config vitest.config.ts src/tokens/notes.test.ts`
 
-Run: `bun run test --filter notes-sidebar`
-
-Run: `bun run test --filter header`
-
-Expected: PASS for all targeted list and sidebar coverage.
+Expected: PASS for all targeted grouped-list coverage.
 
 - [ ] **Step 2: Run typecheck**
 
 Run: `bun run typecheck`
 
-Expected: PASS with the new row contract shared across mobile and web.
+Expected: PASS with the grouped row contract shared across mobile and web.
 
 - [ ] **Step 3: Run repo safety checks**
 
@@ -416,7 +349,7 @@ Expected: PASS after rebuilding types and running the standard safety suite.
 
 ```bash
 git add docs/superpowers/specs/2026-03-20-focus-list-design.md
-git commit -m "chore: finalize focus list rollout verification"
+git commit -m "chore: finalize grouped focus list rollout verification"
 ```
 
 - [ ] **Step 5: Prepare handoff summary**
@@ -424,6 +357,6 @@ git commit -m "chore: finalize focus list rollout verification"
 Document:
 
 - which list surfaces were updated
-- whether timestamp rendering stayed visible on both platforms
+- whether metadata stacked correctly on both platforms
 - whether preview stayed disabled by default
 - any desktop follow-up still pending because no desktop surface currently consumes the shared row pattern

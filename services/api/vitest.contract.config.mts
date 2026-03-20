@@ -9,6 +9,7 @@ export default defineConfig({
     },
     globals: true,
     environment: 'node',
+    fileParallelism: false,
     setupFiles: './test/test.setup.contract.ts',
     clearMocks: true,
     slowTestThreshold: 1_500,

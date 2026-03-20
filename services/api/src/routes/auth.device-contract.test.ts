@@ -15,14 +15,21 @@ interface DeviceCodeResponse {
   verification_uri_complete: string;
 }
 
+let deviceAuthFlowSequence = 0;
+
 async function createApprovedDeviceFlow(app: AppRequester) {
+  deviceAuthFlowSequence += 1;
   const email = createAuthTestEmail('cli-device');
+  const forwardedFor = `198.51.100.${deviceAuthFlowSequence}`;
   const { cookieHeader } = await signInWithEmailOtp(app, email);
 
   const codeResponse = await requestJson({
     app,
     path: '/api/auth/device/code',
     method: 'POST',
+    headers: {
+      'x-forwarded-for': forwardedFor,
+    },
     body: {
       client_id: 'hominem-cli',
       scope: 'cli:read',
@@ -61,6 +68,7 @@ async function createApprovedDeviceFlow(app: AppRequester) {
   return {
     email,
     deviceCode,
+    forwardedFor,
   };
 }
 
@@ -76,7 +84,7 @@ describe('auth device contract', () => {
   test('device authorization uses stable auth routes and forwards set-auth-token', async () => {
     const createServer = await importServer();
     const app = createServer();
-    const { email, deviceCode } = await createApprovedDeviceFlow(app);
+    const { email, deviceCode, forwardedFor } = await createApprovedDeviceFlow(app);
 
     expect(new URL(deviceCode.verification_uri).pathname).toBe('/api/auth/device');
     expect(new URL(deviceCode.verification_uri_complete).pathname).toBe('/api/auth/device');
@@ -88,6 +96,9 @@ describe('auth device contract', () => {
       app,
       path: '/api/auth/device/token',
       method: 'POST',
+      headers: {
+        'x-forwarded-for': forwardedFor,
+      },
       body: {
         grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
         device_code: deviceCode.device_code,
@@ -150,12 +161,15 @@ describe('auth device contract', () => {
   test('device token exchange still works when verify route is queried before approval', async () => {
     const createServer = await importServer();
     const app = createServer();
-    const { deviceCode } = await createApprovedDeviceFlow(app);
+    const { deviceCode, forwardedFor } = await createApprovedDeviceFlow(app);
 
     const tokenResponse = await requestJson({
       app,
       path: '/api/auth/device/token',
       method: 'POST',
+      headers: {
+        'x-forwarded-for': forwardedFor,
+      },
       body: {
         grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
         device_code: deviceCode.device_code,
