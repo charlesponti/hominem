@@ -62,34 +62,46 @@ describe('auth email otp contract', () => {
   });
 
   test('logs OTP info in development environment', async () => {
-    // reinitialize modules under development env so plugin logs for us
     vi.resetModules();
-    process.env.NODE_ENV = 'development';
     process.env.AUTH_E2E_SECRET = 'otp-secret';
     process.env.AUTH_TEST_OTP_ENABLED = 'true';
     process.env.AUTH_EMAIL_OTP_EXPIRES_SECONDS = '300';
 
-    // Import logger first so the server shares the same instance when it loads.
-    // Using vi.doMock with importOriginal causes a deadlock: the factory calls
-    // importOriginal while the module is already mid-load in the pipeline.
+    vi.doMock('../env', async () => {
+      const actual = await vi.importActual<typeof import('../env')>('../env');
+      return {
+        ...actual,
+        env: new Proxy(actual.env, {
+          get(target, prop, receiver) {
+            if (prop === 'NODE_ENV') {
+              return 'development';
+            }
+
+            return Reflect.get(target, prop, receiver);
+          },
+        }),
+      };
+    });
+
     const { logger } = await import('@hominem/utils/logger');
     const infoSpy = vi.spyOn(logger, 'info');
 
-    const createServer = await importServer();
-    const app = createServer();
-    const email = `otp-log-${Date.now()}@hominem.test`;
+    try {
+      const createServer = await importServer();
+      const app = createServer();
+      const email = `otp-log-${Date.now()}@hominem.test`;
 
-    const okResponse = await requestOtp(app, email);
-    expect(okResponse.status).toBe(200);
+      const okResponse = await requestOtp(app, email);
+      expect(okResponse.status).toBe(200);
 
-    expect(infoSpy).toHaveBeenCalledWith(
-      '[auth:email-otp] generated OTP',
-      expect.objectContaining({ email, otp: expect.any(String), type: 'sign-in' }),
-    );
-
-    infoSpy.mockRestore();
-    // restore test environment for subsequent beforeEach hooks
-    process.env.NODE_ENV = 'test';
+      expect(infoSpy).toHaveBeenCalledWith(
+        '[auth:email-otp] generated OTP',
+        expect.objectContaining({ email, otp: expect.any(String), type: 'sign-in' }),
+      );
+    } finally {
+      infoSpy.mockRestore();
+      vi.doUnmock('../env');
+    }
   }, 10000);
 
   test('2.1 sends otp for valid email and rejects invalid email', async () => {
