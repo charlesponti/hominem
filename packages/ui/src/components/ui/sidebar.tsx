@@ -1,10 +1,13 @@
 import './sidebar.css';
 import { Slot } from '@radix-ui/react-slot';
+import { useHotkey } from '@tanstack/react-hotkeys';
 import { cva, type VariantProps } from 'class-variance-authority';
+import gsap from 'gsap';
 import { PanelLeft } from 'lucide-react';
 import * as React from 'react';
 
 import { useIsMobile } from '../../hooks/use-mobile';
+import { reducedMotion } from '../../lib/gsap/sequences';
 import { cn } from '../../lib/utils';
 import { Button } from './button';
 import { Input } from './input';
@@ -14,11 +17,26 @@ import { Skeleton } from './skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = '16rem';
-const SIDEBAR_WIDTH_MOBILE = '18rem';
-const SIDEBAR_WIDTH_ICON = '3rem';
-const SIDEBAR_KEYBOARD_SHORTCUT = 'b';
+const SIDEBAR_WIDTH_PX = 256;
+const SIDEBAR_WIDTH_MOBILE_PX = 288;
+const SIDEBAR_WIDTH_ICON_PX = 48;
+const SIDEBAR_WIDTH = `${SIDEBAR_WIDTH_PX}px`;
+const SIDEBAR_WIDTH_MOBILE = `${SIDEBAR_WIDTH_MOBILE_PX}px`;
+const SIDEBAR_WIDTH_ICON = `${SIDEBAR_WIDTH_ICON_PX}px`;
+const SIDEBAR_STORAGE_KEY = SIDEBAR_COOKIE_NAME;
+
+function getStoredSidebarOpen(defaultOpen: boolean) {
+  if (typeof window === 'undefined') {
+    return defaultOpen;
+  }
+
+  const stored = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
+
+  if (stored === 'true') return true;
+  if (stored === 'false') return false;
+
+  return defaultOpen;
+}
 
 type SidebarContext = {
   state: 'expanded' | 'collapsed';
@@ -66,7 +84,7 @@ const SidebarProvider = React.forwardRef<
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
-    const [_open, _setOpen] = React.useState(defaultOpen);
+    const [_open, _setOpen] = React.useState(() => getStoredSidebarOpen(defaultOpen));
     const open = openProp ?? _open;
     const setOpen = React.useCallback(
       (value: boolean | ((value: boolean) => boolean)) => {
@@ -77,9 +95,7 @@ const SidebarProvider = React.forwardRef<
           _setOpen(openState);
         }
 
-        // This sets the cookie to keep the sidebar state.
-        // biome-ignore lint/suspicious/noDocumentCookie: Comes from shadcn/ui
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+        window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(openState));
       },
       [setOpenProp, open],
     );
@@ -89,18 +105,9 @@ const SidebarProvider = React.forwardRef<
       return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
     }, [isMobile, setOpen]);
 
-    // Adds a keyboard shortcut to toggle the sidebar.
-    React.useEffect(() => {
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === SIDEBAR_KEYBOARD_SHORTCUT && (event.metaKey || event.ctrlKey)) {
-          event.preventDefault();
-          toggleSidebar();
-        }
-      };
-
-      window.addEventListener('keydown', handleKeyDown);
-      return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [toggleSidebar]);
+    useHotkey('Mod+B', () => {
+      toggleSidebar();
+    });
 
     // We add a state so that we can do data-state="expanded" or "collapsed".
     // This makes it easier to style the sidebar with Tailwind classes.
@@ -166,6 +173,84 @@ const Sidebar = React.forwardRef<
     ref,
   ) => {
     const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+    const desktopGapRef = React.useRef<HTMLDivElement>(null);
+    const desktopPanelRef = React.useRef<HTMLDivElement>(null);
+    const desktopSurfaceRef = React.useRef<HTMLDivElement>(null);
+    const desktopTriggerRef = React.useRef<HTMLDivElement>(null);
+
+    React.useLayoutEffect(() => {
+      if (
+        isMobile ||
+        !desktopGapRef.current ||
+        !desktopPanelRef.current ||
+        !desktopSurfaceRef.current ||
+        !desktopTriggerRef.current
+      ) {
+        return;
+      }
+
+      const isExpanded = state === 'expanded';
+      const isLeft = side === 'left';
+      const collapsedWidth = collapsible === 'icon' ? SIDEBAR_WIDTH_ICON_PX : 0;
+      const panelOffset = isExpanded ? 0 : isLeft ? -SIDEBAR_WIDTH_PX : SIDEBAR_WIDTH_PX;
+      const gapWidth = isExpanded ? SIDEBAR_WIDTH_PX : collapsedWidth;
+      const transformOrigin = isLeft ? 'left center' : 'right center';
+
+      gsap.killTweensOf([
+        desktopGapRef.current,
+        desktopPanelRef.current,
+        desktopSurfaceRef.current,
+        desktopTriggerRef.current,
+      ]);
+
+      if (reducedMotion()) {
+        gsap.set(desktopGapRef.current, { width: gapWidth });
+        gsap.set(desktopPanelRef.current, { x: panelOffset });
+        gsap.set(desktopSurfaceRef.current, { clearProps: 'transform' });
+        gsap.set(desktopTriggerRef.current, { clearProps: 'transform' });
+        return;
+      }
+
+      const tl = gsap.timeline({
+        defaults: {
+          duration: 0.58,
+          ease: 'power3.out',
+        },
+      });
+
+      tl.to(desktopGapRef.current, { width: gapWidth }, 0)
+        .to(desktopPanelRef.current, { x: panelOffset }, 0)
+        .fromTo(
+          desktopSurfaceRef.current,
+          {
+            skewY: isExpanded ? (isLeft ? 1.8 : -1.8) : isLeft ? -1.2 : 1.2,
+            scaleY: isExpanded ? 0.985 : 1.01,
+            transformOrigin,
+          },
+          {
+            skewY: 0,
+            scaleY: 1,
+            duration: 0.74,
+            ease: 'elastic.out(1, 0.6)',
+          },
+          0,
+        )
+        .fromTo(
+          desktopTriggerRef.current,
+          {
+            x: isExpanded ? (isLeft ? -8 : 8) : 0,
+            rotation: isExpanded ? (isLeft ? -5 : 5) : isLeft ? 3 : -3,
+            transformOrigin,
+          },
+          {
+            x: 0,
+            rotation: 0,
+            duration: 0.68,
+            ease: 'power2.out',
+          },
+          0.08,
+        );
+    }, [isMobile, state]);
 
     if (collapsible === 'none') {
       return (
@@ -184,21 +269,24 @@ const Sidebar = React.forwardRef<
 
     if (isMobile) {
       return (
-        <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-          <SheetContent
-            data-sidebar="sidebar"
-            data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-            style={
-              {
-                '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
-              } as React.CSSProperties
-            }
-            side={side}
-          >
-            <div className="flex h-full w-full flex-col">{children}</div>
-          </SheetContent>
-        </Sheet>
+        <>
+          <SidebarTrigger className="fixed left-3 top-3 z-40 size-9 rounded-full border border-border/70 bg-background/90 shadow-sm backdrop-blur md:hidden supports-[backdrop-filter]:bg-background/75" />
+          <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+            <SheetContent
+              data-sidebar="sidebar"
+              data-mobile="true"
+              className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+              style={
+                {
+                  '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
+                } as React.CSSProperties
+              }
+              side={side}
+            >
+              <div className="flex h-full w-full flex-col">{children}</div>
+            </SheetContent>
+          </Sheet>
+        </>
       );
     }
 
@@ -213,9 +301,10 @@ const Sidebar = React.forwardRef<
       >
         {/* This is what handles the sidebar gap on desktop */}
         <div
+          ref={desktopGapRef}
+          data-sidebar="gap"
           className={cn(
-            'relative h-svh w-[--sidebar-width] bg-transparent',
-            'group-data-[collapsible=offcanvas]:w-0',
+            'relative h-svh bg-transparent',
             'group-data-[side=right]:rotate-180',
             variant === 'floating' || variant === 'inset'
               ? 'group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]'
@@ -223,11 +312,11 @@ const Sidebar = React.forwardRef<
           )}
         />
         <div
+          ref={desktopPanelRef}
+          data-sidebar="panel"
           className={cn(
             'fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] md:flex',
-            side === 'left'
-              ? 'left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]'
-              : 'right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]',
+            side === 'left' ? 'left-0' : 'right-0',
             // Adjust the padding for floating and inset variants.
             variant === 'floating' || variant === 'inset'
               ? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]'
@@ -236,11 +325,24 @@ const Sidebar = React.forwardRef<
           )}
           {...props}
         >
-          <div
-            data-sidebar="sidebar"
-            className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border"
-          >
-            {children}
+          <div className="relative flex h-full w-full">
+            <div
+              ref={desktopSurfaceRef}
+              data-sidebar="sidebar"
+              className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border"
+            >
+              {children}
+            </div>
+            <div
+              ref={desktopTriggerRef}
+              data-sidebar="floating-trigger"
+              className={cn(
+                'absolute top-4 z-20 hidden md:block',
+                side === 'left' ? 'left-full ml-3' : 'right-full mr-3',
+              )}
+            >
+              <SidebarTrigger className="size-9 rounded-full border border-border/70 bg-background/90 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/75" />
+            </div>
           </div>
         </div>
       </div>
