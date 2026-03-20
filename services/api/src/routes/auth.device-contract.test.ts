@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { AppRequester } from './test-helpers/auth';
-import { importServer, requestJson, signInWithEmailOtp } from './test-helpers/auth';
+import {
+  createAuthTestEmail,
+  importServer,
+  requestJson,
+  signInWithEmailOtp,
+} from './test-helpers/auth';
 
 interface DeviceCodeResponse {
   device_code: string;
@@ -11,7 +16,7 @@ interface DeviceCodeResponse {
 }
 
 async function createApprovedDeviceFlow(app: AppRequester) {
-  const email = `cli-device-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@hominem.test`;
+  const email = createAuthTestEmail('cli-device');
   const { cookieHeader } = await signInWithEmailOtp(app, email);
 
   const codeResponse = await requestJson({

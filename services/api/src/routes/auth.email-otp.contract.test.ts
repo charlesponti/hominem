@@ -2,7 +2,13 @@ import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import type { AppRequester } from './test-helpers/auth';
-import { fetchOtp, importServer, requestOtp, toCookieHeader } from './test-helpers/auth';
+import {
+  createAuthTestEmail,
+  fetchOtp,
+  importServer,
+  requestOtp,
+  toCookieHeader,
+} from './test-helpers/auth';
 
 interface _SessionResponse {
   isAuthenticated: boolean;
@@ -55,6 +61,7 @@ async function requestOtpWithoutOrigin(app: AppRequester, email: string) {
 describe('auth email otp contract', () => {
   beforeEach(() => {
     vi.resetModules();
+    vi.useRealTimers();
     process.env.NODE_ENV = 'test';
     process.env.AUTH_E2E_SECRET = 'otp-secret';
     process.env.AUTH_TEST_OTP_ENABLED = 'true';
@@ -89,7 +96,7 @@ describe('auth email otp contract', () => {
     try {
       const createServer = await importServer();
       const app = createServer();
-      const email = `otp-log-${Date.now()}@hominem.test`;
+      const email = createAuthTestEmail('otp-log');
 
       const okResponse = await requestOtp(app, email);
       expect(okResponse.status).toBe(200);
@@ -107,7 +114,7 @@ describe('auth email otp contract', () => {
   test('2.1 sends otp for valid email and rejects invalid email', async () => {
     const createServer = await importServer();
     const app = createServer();
-    const email = `otp-request-${Date.now()}@hominem.test`;
+    const email = createAuthTestEmail('otp-request');
 
     const okResponse = await requestOtp(app, email);
     expect(okResponse.status).toBe(200);
@@ -122,7 +129,7 @@ describe('auth email otp contract', () => {
   test('2.1 native-style requests without origin still send otp successfully', async () => {
     const createServer = await importServer();
     const app = createServer();
-    const email = `otp-native-${Date.now()}@hominem.test`;
+    const email = createAuthTestEmail('otp-native');
 
     const response = await requestOtpWithoutOrigin(app, email);
     expect(response.status).toBe(200);
@@ -134,7 +141,7 @@ describe('auth email otp contract', () => {
   test('2.1 burst requests are handled without server errors', async () => {
     const createServer = await importServer();
     const app = createServer();
-    const email = `otp-burst-${Date.now()}@hominem.test`;
+    const email = createAuthTestEmail('otp-burst');
 
     const statuses: number[] = [];
     for (let i = 0; i < 12; i += 1) {
@@ -148,7 +155,7 @@ describe('auth email otp contract', () => {
   test('2.2 valid otp creates authenticated session', async () => {
     const createServer = await importServer();
     const app = createServer();
-    const email = `otp-signin-${Date.now()}@hominem.test`;
+    const email = createAuthTestEmail('otp-signin');
     await requestOtp(app, email);
     const otpResponse = await fetchOtp(app, email);
 
@@ -173,7 +180,7 @@ describe('auth email otp contract', () => {
   test('2.2 valid otp accepts normalized email and formatted otp input', async () => {
     const createServer = await importServer();
     const app = createServer();
-    const email = `otp-normalized-${Date.now()}@hominem.test`;
+    const email = createAuthTestEmail('otp-normalized');
     await requestOtp(app, email.toUpperCase());
     const otpResponse = await fetchOtp(app, email);
 
@@ -195,7 +202,7 @@ describe('auth email otp contract', () => {
   test('2.2 bearer logout revokes the authenticated session', async () => {
     const createServer = await importServer();
     const app = createServer();
-    const email = `otp-logout-${Date.now()}@hominem.test`;
+    const email = createAuthTestEmail('otp-logout');
     await requestOtp(app, email);
     const otpResponse = await fetchOtp(app, email);
 
@@ -239,7 +246,7 @@ describe('auth email otp contract', () => {
   test('5.1 session probe returns identity-only payload for cookie-authenticated web sessions', async () => {
     const createServer = await importServer();
     const app = createServer();
-    const email = `otp-web-session-${Date.now()}@hominem.test`;
+    const email = createAuthTestEmail('otp-web-session');
     await requestOtp(app, email);
     const otpResponse = await fetchOtp(app, email);
 
@@ -307,7 +314,7 @@ describe('auth email otp contract', () => {
   test('2.2 invalid otp is rejected and does not create authenticated session', async () => {
     const createServer = await importServer();
     const app = createServer();
-    const email = `otp-invalid-${Date.now()}@hominem.test`;
+    const email = createAuthTestEmail('otp-invalid');
     await requestOtp(app, email);
 
     const signInResponse = await app.request('http://localhost/api/auth/email-otp/verify', {
@@ -334,16 +341,16 @@ describe('auth email otp contract', () => {
   }, 15000);
 
   test('2.2 expired otp is rejected and session remains unauthenticated', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-05T00:00:00.000Z'));
     process.env.AUTH_EMAIL_OTP_EXPIRES_SECONDS = '1';
     const createServer = await importServer();
     const app = createServer();
-    const email = `otp-expired-${Date.now()}@hominem.test`;
+    const email = createAuthTestEmail('otp-expired');
     await requestOtp(app, email);
     const otpResponse = await fetchOtp(app, email);
 
-    await new Promise((resolve) => {
-      setTimeout(resolve, 1200);
-    });
+    vi.setSystemTime(new Date('2026-03-05T00:00:01.200Z'));
 
     const signInResponse = await app.request('http://localhost/api/auth/email-otp/verify', {
       method: 'POST',
@@ -370,7 +377,7 @@ describe('auth email otp contract', () => {
   test('2.3 replayed otp verification attempts fail deterministically in test mode', async () => {
     const createServer = await importServer();
     const app = createServer();
-    const email = `otp-replay-${Date.now()}@hominem.test`;
+    const email = createAuthTestEmail('otp-replay');
     await requestOtp(app, email);
     const otpResponse = await fetchOtp(app, email);
 

@@ -1,98 +1,44 @@
-import userEvent from '@testing-library/user-event'
-import { beforeEach } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { render, screen } from '../../test-utils'
-import { Sidebar, useSidebar } from '../ui/sidebar'
 import { AppLayout } from './app-layout'
 
-function SidebarStateProbe() {
-  const { state } = useSidebar()
+const mocks = vi.hoisted(() => ({
+  navigationState: {
+    state: 'idle' as 'idle' | 'loading' | 'submitting',
+  },
+}))
 
-  return <div>{state}</div>
-}
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router')
 
-function setDesktopViewport() {
-  Object.defineProperty(window, 'innerWidth', {
-    configurable: true,
-    value: 1024,
-    writable: true,
-  })
-
-  Object.defineProperty(window, 'matchMedia', {
-    configurable: true,
-    value: (query: string) => ({
-      matches: query === '(max-width: 767px)' ? false : false,
-      media: query,
-      onchange: null,
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      addListener: () => {},
-      removeListener: () => {},
-      dispatchEvent: () => false,
-    }),
-  })
-}
-
-function renderSidebarLayout(children: React.ReactNode = <SidebarStateProbe />) {
-  return render(
-    <AppLayout sidebar={<Sidebar><div>Sidebar</div></Sidebar>} contentMode="full-bleed">
-      {children}
-    </AppLayout>,
-  )
-}
-
-beforeEach(() => {
-  window.localStorage.clear()
+  return {
+    ...actual,
+    useNavigation: () => mocks.navigationState,
+  }
 })
 
 describe('AppLayout', () => {
-  it('shows the sidebar-owned trigger in sidebar mode', async () => {
-    setDesktopViewport()
+  it('renders navigation and children in the single top-header shell', () => {
+    render(
+      <AppLayout navigation={<div>Header</div>}>
+        <div>Content</div>
+      </AppLayout>,
+    )
 
-    renderSidebarLayout(<div>Content</div>)
-
-    expect(screen.getByRole('button', { name: 'Toggle Sidebar' })).toBeInTheDocument()
+    expect(screen.getByText('Header')).toBeInTheDocument()
+    expect(screen.getByText('Content')).toBeInTheDocument()
   })
 
-  it('toggles the shared sidebar state with Mod+B', async () => {
-    setDesktopViewport()
-    const user = userEvent.setup()
+  it('shows the navigation progress bar when routing is pending', () => {
+    mocks.navigationState.state = 'loading'
 
-    renderSidebarLayout()
+    render(
+      <AppLayout>
+        <div>Content</div>
+      </AppLayout>,
+    )
 
-    expect(screen.getByText('expanded')).toBeInTheDocument()
-
-    await user.keyboard('{Control>}b{/Control}')
-
-    expect(screen.getByText('collapsed')).toBeInTheDocument()
-  })
-
-  it('restores the saved desktop sidebar state from browser storage', async () => {
-    setDesktopViewport()
-    window.localStorage.setItem('sidebar_state', 'false')
-
-    renderSidebarLayout()
-
-    expect(screen.getByText('collapsed')).toBeInTheDocument()
-  })
-
-  it('saves the desktop sidebar state to browser storage when toggled', async () => {
-    setDesktopViewport()
-    const user = userEvent.setup()
-
-    renderSidebarLayout()
-
-    await user.click(screen.getByRole('button', { name: 'Toggle Sidebar' }))
-
-    expect(window.localStorage.getItem('sidebar_state')).toBe('false')
-  })
-
-  it('renders the desktop sidebar motion structure for shared GSAP animation', async () => {
-    setDesktopViewport()
-    const { container } = renderSidebarLayout()
-
-    expect(container.querySelector('[data-sidebar="gap"]')).toBeInTheDocument()
-    expect(container.querySelector('[data-sidebar="panel"]')).toBeInTheDocument()
-    expect(container.querySelector('[data-sidebar="floating-trigger"]')).toBeInTheDocument()
+    expect(screen.getByLabelText('Navigation progress')).toBeInTheDocument()
   })
 })
