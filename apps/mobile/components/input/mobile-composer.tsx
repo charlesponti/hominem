@@ -1,5 +1,5 @@
 import * as ImagePicker from 'expo-image-picker'
-import { useApiClient } from '@hominem/hono-client/react'
+import { useApiClient } from '@hominem/rpc/react'
 import { CameraModal } from '../media/camera-modal'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'

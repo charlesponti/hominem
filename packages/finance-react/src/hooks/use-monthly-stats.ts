@@ -1,6 +1,6 @@
-import type { MonthlyStatsOutput } from '@hominem/hono-rpc/types/finance.types';
+import type { MonthlyStatsOutput } from '@hominem/rpc/types/finance.types';
 
-import { useHonoQuery } from '@hominem/hono-client/react';
+import { useHonoQuery } from '@hominem/rpc/react';
 
 export type MonthlyStatsContract = MonthlyStatsOutput & {
   topTag?: string;

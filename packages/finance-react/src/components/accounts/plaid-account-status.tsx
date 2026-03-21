@@ -13,7 +13,7 @@ import {
 } from '@hominem/ui/components/ui/alert-dialog'
 import { RefreshCcw, Trash2 } from 'lucide-react'
 
-import type { AccountWithPlaidInfo } from '@hominem/hono-rpc/types/finance.types'
+import type { AccountWithPlaidInfo } from '@hominem/rpc/types/finance.types'
 
 import { useRemovePlaidConnection, useSyncPlaidItem } from '../../hooks/use-plaid'
 

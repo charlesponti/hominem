@@ -1,4 +1,4 @@
-import type { Note } from '@hominem/hono-rpc/types/notes.types'
+import type { Note } from '@hominem/rpc/types/notes.types'
 import type { UploadedFile } from '~/lib/types/upload'
 
 import { appendChatAttachmentContext, appendNoteAttachments } from './composer-attachments'

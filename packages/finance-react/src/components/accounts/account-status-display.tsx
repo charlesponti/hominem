@@ -1,4 +1,4 @@
-import type { AccountWithPlaidInfo } from '@hominem/hono-rpc/types/finance.types'
+import type { AccountWithPlaidInfo } from '@hominem/rpc/types/finance.types'
 
 import { ManualInstitutionStatus } from './manual-institution-status'
 import { NotConnectedStatus } from './not-connected-status'

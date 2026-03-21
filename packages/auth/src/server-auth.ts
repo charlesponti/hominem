@@ -1,6 +1,6 @@
 /**
  * Server-side authentication exports (non-React)
- * These exports are safe to use from server packages like @hominem/hono-rpc
+ * These exports are safe to use from server packages like @hominem/rpc
  * They do NOT include React components to avoid JSX dependency
  */
 

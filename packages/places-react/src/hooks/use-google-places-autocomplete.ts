@@ -1,4 +1,4 @@
-import type { PlaceAutocompleteOutput } from '@hominem/hono-rpc/types/places.types'
+import type { PlaceAutocompleteOutput } from '@hominem/rpc/types/places.types'
 
 import { usePlacesAutocomplete } from './use-places'
 

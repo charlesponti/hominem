@@ -13,7 +13,7 @@ import AppIcon from '~/components/ui/icon';
 import { InboxStream } from '~/components/workspace/inbox-stream';
 import { Text, theme, makeStyles } from '~/theme';
 import { useFocusQuery } from '~/utils/services/notes/use-focus-query';
-import type { Note } from '@hominem/hono-rpc/types'
+import type { Note } from '@hominem/rpc/types'
 
 const FOCUS_SCREEN_OPTIONS = {
   headerShown: false,

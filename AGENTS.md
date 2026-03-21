@@ -60,15 +60,14 @@ Always run commands from the monorepo root. Do NOT `cd` into packages.
 ## Database Access Rules (CRITICAL)
 
 - Only the RPC server can access the database (`@hominem/db`)
-- Apps must use the RPC client (`@hominem/hono-client`) for data access.
+- Apps must use the RPC client (`@hominem/rpc`) for data access.
 
 ### For Applications (apps/\*)
 
 **ALLOWED:**
 
-- `@hominem/hono-client` - For RPC queries/mutations
-- `@hominem/hono-rpc` - For types and client configuration
-- `@hominem/hono-rpc/types` - For API input/output types only (never DB structure)
+- `@hominem/rpc` - For RPC queries, mutations, and client configuration
+- `@hominem/rpc/types/*` - For API input/output types only (never DB structure)
 
 **FORBIDDEN:**
 
@@ -81,8 +80,8 @@ Always run commands from the monorepo root. Do NOT `cd` into packages.
 
 ```typescript
 // ✅ Good - Using RPC client for data access
-import { useHonoQuery } from '@hominem/hono-client/react';
-import type { TaskStatus } from '@hominem/hono-rpc/types';
+import { useHonoQuery } from '@hominem/rpc/react';
+import type { TaskStatus } from '@hominem/rpc/types/tasks.types';
 
 export function useTasks() {
   return useHonoQuery(['tasks'], async (client) => {
@@ -104,7 +103,7 @@ export async function getTasks() {
 }
 ```
 
-### For API Layer (services/api, packages/hono-rpc)
+### For API Layer (services/api, packages/rpc)
 
 Direct DB access is permitted and expected. Services should:
 

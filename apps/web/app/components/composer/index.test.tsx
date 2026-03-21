@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Note } from '@hominem/hono-rpc/types/notes.types'
+import type { Note } from '@hominem/rpc/types/notes.types'
 import type { UploadedFile } from '~/lib/types/upload'
 
 import { ComposerProvider, useComposer } from './composer-provider'
@@ -47,7 +47,7 @@ vi.mock('react-router', () => ({
   useNavigate: () => mocks.navigate,
 }))
 
-vi.mock('@hominem/hono-client/react', () => ({
+vi.mock('@hominem/rpc/react', () => ({
   useHonoMutation: () => ({
     mutateAsync: mocks.createChatMutateAsync,
   }),

@@ -1,9 +1,9 @@
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react'
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react'
 import type {
   PeopleListOutput,
   PeopleCreateInput,
   PeopleCreateOutput,
-} from '@hominem/hono-rpc/types/people.types'
+} from '@hominem/rpc/types/people.types'
 
 const queryKeys = {
   people: {

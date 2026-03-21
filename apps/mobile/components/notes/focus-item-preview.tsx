@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
-import type { Note } from '@hominem/hono-rpc/types';
+import type { Note } from '@hominem/rpc/types';
 
 import { Text, makeStyles } from '~/theme';
 import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';

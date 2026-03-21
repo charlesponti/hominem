@@ -5,7 +5,7 @@ import { StyleSheet } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 
 import { makeStyles } from '~/theme';
-import type { Note } from '@hominem/hono-rpc/types';
+import type { Note } from '@hominem/rpc/types';
 
 import { FocusListItem } from './focus-list-item';
 

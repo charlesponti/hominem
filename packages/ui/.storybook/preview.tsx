@@ -1,5 +1,5 @@
 import type { Preview } from '@storybook/react'
-import { HonoProvider } from '@hominem/hono-client/react'
+import { HonoProvider } from '@hominem/rpc/react'
 import { initialize, mswLoader } from 'msw-storybook-addon'
 import { MemoryRouter } from 'react-router'
 import { handlers } from '../src/mocks/handlers'

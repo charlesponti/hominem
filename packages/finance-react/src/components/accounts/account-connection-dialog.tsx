@@ -17,7 +17,7 @@ import {
 import { LinkIcon, UnlinkIcon } from 'lucide-react'
 import { useState } from 'react'
 
-import type { AccountWithPlaidInfo } from '@hominem/hono-rpc/types/finance.types'
+import type { AccountWithPlaidInfo } from '@hominem/rpc/types/finance.types'
 
 import { useFinancialInstitutions } from '../../hooks/use-finance-data'
 import {

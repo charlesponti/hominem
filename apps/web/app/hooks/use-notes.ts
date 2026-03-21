@@ -1,4 +1,4 @@
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react';
 import type {
   Note,
   NotesListInput,
@@ -8,7 +8,7 @@ import type {
   NotesUpdateInput,
   NotesUpdateOutput,
   NotesDeleteOutput,
-} from '@hominem/hono-rpc/types/notes.types';
+} from '@hominem/rpc/types/notes.types';
 
 export function useNotesList(options: NotesListInput = {}) {
   return useHonoQuery<Note[]>(

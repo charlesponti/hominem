@@ -5,7 +5,7 @@ import {
   ForbiddenError,
   UnavailableError,
   InternalError,
-} from '@hominem/hono-rpc';
+} from '../errors';
 import { isValidGoogleHost } from '@hominem/utils/google';
 import { logger } from '@hominem/utils/logger';
 import type { Context } from 'hono';

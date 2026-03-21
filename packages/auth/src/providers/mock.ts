@@ -6,6 +6,26 @@
 import type { AuthResponse, Session, User } from '../auth.types'
 import { MOCK_USERS, DEFAULT_MOCK_USER } from '../mock-users'
 
+function toBase64(value: string): string {
+  if (typeof btoa === 'function') {
+    return btoa(value)
+  }
+
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+  const bytes = new TextEncoder().encode(value)
+  let encoded = ''
+
+  for (let i = 0; i < bytes.length; i += 3) {
+    const chunk = ((bytes[i] ?? 0) << 16) | ((bytes[i + 1] ?? 0) << 8) | (bytes[i + 2] ?? 0)
+    encoded += chars[(chunk >> 18) & 63] ?? ''
+    encoded += chars[(chunk >> 12) & 63] ?? ''
+    encoded += i + 1 < bytes.length ? (chars[(chunk >> 6) & 63] ?? '') : '='
+    encoded += i + 2 < bytes.length ? (chars[chunk & 63] ?? '') : '='
+  }
+
+  return encoded
+}
+
 /**
  * Generates a simple mock token (not cryptographically valid)
  * In production with real Apple Auth, tokens are validated server-side
@@ -14,7 +34,7 @@ function generateMockToken(userId: string): string {
   // Simple base64-encoded token that includes the user ID
   // Format: "mock_" + base64(userId + timestamp)
   const data = `${userId}:${Date.now()}`
-  return `mock_${Buffer.from(data).toString('base64')}`
+  return `mock_${toBase64(data)}`
 }
 
 /**

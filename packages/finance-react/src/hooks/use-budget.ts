@@ -4,9 +4,9 @@ import type {
   BudgetCalculateInput,
   BudgetCalculateOutput,
   TransactionCategoryAnalysisOutput,
-} from '@hominem/hono-rpc/types/finance.types';
+} from '@hominem/rpc/types/finance.types';
 
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react';
 
 const BUDGET_API_UNAVAILABLE_MESSAGE = 'Budget write endpoints are unavailable';
 

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
-import type { Chat as ChatType } from '@hominem/hono-rpc/types';
+import type { Chat as ChatType } from '@hominem/rpc/types';
 import React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useChatLiveActivity } from '~/lib/use-chat-live-activity';

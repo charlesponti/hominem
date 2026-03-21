@@ -1,5 +1,5 @@
-import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/hono-client/react'
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react'
+import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/rpc/react'
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react'
 import type {
   ListCreateInput,
   ListCreateOutput,
@@ -15,7 +15,7 @@ import type {
   ListRemoveCollaboratorOutput,
   ListUpdateInput,
   ListUpdateOutput,
-} from '@hominem/hono-rpc/types/lists.types'
+} from '@hominem/rpc/types/lists.types'
 
 const queryKeys = {
   lists: {

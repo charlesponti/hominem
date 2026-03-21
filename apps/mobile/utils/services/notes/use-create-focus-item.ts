@@ -1,7 +1,7 @@
-import { useApiClient } from '@hominem/hono-client/react'
+import { useApiClient } from '@hominem/rpc/react'
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query'
 
-import type { Note } from '@hominem/hono-rpc/types'
+import type { Note } from '@hominem/rpc/types'
 import { focusKeys } from './query-keys'
 
 export interface CreateFocusItemInput {

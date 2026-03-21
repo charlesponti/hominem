@@ -1,5 +1,5 @@
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
-import { useApiClient } from '@hominem/hono-client/react';
+import { useApiClient } from '@hominem/rpc/react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';

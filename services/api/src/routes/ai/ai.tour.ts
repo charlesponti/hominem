@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { UnauthorizedError, ValidationError, InternalError } from '@hominem/hono-rpc';
+import { UnauthorizedError, ValidationError, InternalError } from '../../errors';
 import { getSharedTextModel } from '@hominem/services/ai-model';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';

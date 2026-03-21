@@ -1,4 +1,4 @@
-import { useApiClient } from '@hominem/hono-client/react';
+import { useApiClient } from '@hominem/rpc/react';
 import { useQuery } from '@tanstack/react-query';
 import { storage } from '~/lib/storage';
 

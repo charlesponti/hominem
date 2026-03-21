@@ -1,5 +1,5 @@
 import { ensureInstitutionExists, upsertPlaidItem } from '@hominem/finance-services';
-import { UnauthorizedError, InternalError } from '@hominem/hono-rpc';
+import { UnauthorizedError, InternalError } from '../../../errors';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';

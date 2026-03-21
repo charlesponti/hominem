@@ -12,7 +12,7 @@ import gsap from 'gsap';
 import { Check, FileText, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import type { Note } from '@hominem/hono-rpc/types/notes.types';
+import type { Note } from '@hominem/rpc/types/notes.types';
 import { Button } from '@hominem/ui/button';
 import { getTimeAgo } from '@hominem/utils';
 

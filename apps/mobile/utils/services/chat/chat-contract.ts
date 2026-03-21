@@ -1,4 +1,4 @@
-import type { ChatMessage as RpcChatMessage } from '@hominem/hono-rpc/types';
+import type { ChatMessage as RpcChatMessage } from '@hominem/rpc/types';
 
 export type MessageOutput = {
   id: string;

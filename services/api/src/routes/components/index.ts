@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { NotFoundError, InternalError } from '@hominem/hono-rpc';
+import { NotFoundError, InternalError } from '../../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 

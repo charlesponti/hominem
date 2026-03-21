@@ -1,11 +1,11 @@
 import { useAuthContext } from '@hominem/auth';
 import type { ThoughtLifecycleState } from '@hominem/chat-services/types';
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react';
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react';
 import type {
   ChatsGetMessagesOutput,
   MessagesDeleteOutput,
   MessagesUpdateOutput,
-} from '@hominem/hono-rpc/types/chat.types';
+} from '@hominem/rpc/types/chat.types';
 import { Inline } from '@hominem/ui';
 import { ShimmerMessage, ThinkingIndicator } from '@hominem/ui/ai-elements';
 import { Button } from '@hominem/ui/button';

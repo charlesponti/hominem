@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import type { Note } from '@hominem/hono-rpc/types';
+import type { Note } from '@hominem/rpc/types';
 
 import { theme } from '~/theme';
 

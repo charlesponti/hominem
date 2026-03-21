@@ -1,7 +1,7 @@
-import { useApiClient } from '@hominem/hono-client/react'
+import { useApiClient } from '@hominem/rpc/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { focusKeys } from './query-keys'
-import type { Note } from '@hominem/hono-rpc/types'
+import type { Note } from '@hominem/rpc/types'
 
 interface UseFocusItemCompleteOptions {
   onSuccess?: (data: Note) => void

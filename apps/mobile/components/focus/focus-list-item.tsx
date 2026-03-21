@@ -17,7 +17,7 @@ import { listStyles } from '~/theme/styles';
 import { getLocalDate } from '~/utils/dates';
 import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
 import { useDeleteFocus } from '~/utils/services/notes/use-delete-focus';
-import type { Note } from '@hominem/hono-rpc/types';
+import type { Note } from '@hominem/rpc/types';
 
 import { useFocusItemComplete } from '../../utils/services/notes/use-focus-item-complete';
 import AppIcon, { type AppIconName } from '../ui/icon';

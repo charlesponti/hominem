@@ -16,6 +16,6 @@ React components and hooks for list management.
 
 - `@hominem/ui` - UI primitives
 - `@hominem/lists-services` - Backend services
-- `@hominem/hono-client` - API client
-- `@hominem/hono-rpc` - RPC types
+- `@hominem/rpc` - API client
+- `@hominem/rpc/types/*` - RPC types
 - `@tanstack/react-query` - Data fetching

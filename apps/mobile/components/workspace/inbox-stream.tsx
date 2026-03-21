@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native'
 
 import { Text, makeStyles } from '~/theme'
 import type { ChatWithActivity } from '~/utils/services/chat/session-state'
-import type { Note } from '@hominem/hono-rpc/types'
+import type { Note } from '@hominem/rpc/types'
 
 import { InboxStreamItem } from './inbox-stream-item'
 import { toInboxStreamItems, type InboxStreamItem as InboxStreamItemModel } from './inbox-stream-items'

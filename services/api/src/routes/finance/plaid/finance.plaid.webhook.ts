@@ -1,5 +1,5 @@
 import { getPlaidItemByItemId, updatePlaidItemStatusByItemId } from '@hominem/finance-services';
-import { UnauthorizedError, ValidationError, InternalError } from '@hominem/hono-rpc';
+import { UnauthorizedError, ValidationError, InternalError } from '../../../errors';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';

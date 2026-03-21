@@ -1,4 +1,4 @@
-import type { Note } from '@hominem/hono-rpc/types'
+import type { Note } from '@hominem/rpc/types'
 import * as Calendar from 'expo-calendar'
 import * as FileSystem from 'expo-file-system/legacy'
 import * as Print from 'expo-print'

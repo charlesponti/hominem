@@ -10,7 +10,7 @@ import {
 import { ArrowLeft, Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react'
 import { Link } from 'react-router'
 
-import type { AccountWithPlaidInfo } from '@hominem/hono-rpc/types/finance.types'
+import type { AccountWithPlaidInfo } from '@hominem/rpc/types/finance.types'
 
 import { AccountConnectionDialog } from './account-connection-dialog'
 import { AccountStatusDisplay } from './account-status-display'

@@ -14,7 +14,7 @@
  */
 
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
-import type { Note } from '@hominem/hono-rpc/types/notes.types';
+import type { Note } from '@hominem/rpc/types/notes.types';
 
 export type ComposerMode = 'generic' | 'note-aware' | 'chat-continuation';
 

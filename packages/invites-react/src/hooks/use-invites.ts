@@ -1,4 +1,4 @@
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react'
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react'
 import type {
   InvitesAcceptInput,
   InvitesAcceptOutput,
@@ -10,7 +10,7 @@ import type {
   InvitesGetReceivedOutput,
   InvitesGetSentInput,
   InvitesGetSentOutput,
-} from '@hominem/hono-rpc/types/invites.types'
+} from '@hominem/rpc/types/invites.types'
 
 const queryKeys = {
   invites: {

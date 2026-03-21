@@ -1,0 +1,60 @@
+{
+  "name": "@hominem/rpc",
+  "version": "0.1.0",
+  "type": "module",
+  "types": "./build/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./client": {
+      "types": "./build/client.d.ts",
+      "default": "./src/client.ts"
+    },
+    "./react": {
+      "types": "./build/react/index.d.ts",
+      "default": "./src/react/index.ts"
+    },
+    "./ssr": {
+      "types": "./build/ssr/index.d.ts",
+      "default": "./src/ssr/index.ts"
+    },
+    "./types": {
+      "types": "./build/types/index.d.ts",
+      "default": "./src/types/index.ts"
+    },
+    "./types/*": {
+      "types": "./build/types/*.d.ts",
+      "default": "./src/types/*.ts"
+    },
+    "./schemas/*": {
+      "types": "./build/schemas/*.d.ts",
+      "default": "./src/schemas/*.ts"
+    },
+    "./contracts": {
+      "types": "./build/contracts/app.d.ts",
+      "default": "./src/contracts/app.ts"
+    }
+  },
+  "scripts": {
+    "build": "bunx tsc --incremental",
+    "typecheck": "bunx tsc --noEmit --incremental"
+  },
+  "dependencies": {
+    "@hominem/auth": "workspace:*",
+    "@tanstack/react-query": "5.90.16",
+    "hono": "^4.12.6",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.10",
+    "@types/react-dom": "19.1.7",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "typescript": "5.9.3"
+  },
+  "peerDependencies": {
+    "react": "19.2.0"
+  }
+}

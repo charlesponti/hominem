@@ -1,15 +1,14 @@
 import type {
-  ArtifactType,
   SessionSource,
   ThoughtLifecycleState,
 } from '@hominem/chat-services/types';
 import { deriveSessionSource } from '@hominem/chat-services/types';
-import { useHonoQuery, useHonoMutation } from '@hominem/hono-client/react';
+import { useHonoQuery, useHonoMutation } from '@hominem/rpc/react';
 import type {
+  ArtifactType,
   ChatsGetOutput,
   ChatsGetMessagesOutput,
-  ChatsClassifyOutput,
-} from '@hominem/hono-rpc/types/chat.types';
+} from '@hominem/rpc/types/chat.types';
 import { useToast } from '@hominem/ui';
 import { useMemo, useRef, useState } from 'react';
 
@@ -32,6 +31,14 @@ interface PendingReview {
   proposedTitle: string;
   proposedChanges: string[];
   previewContent: string;
+}
+
+interface ChatsReviewOutput {
+  reviewItemId: string
+  proposedType: ArtifactType
+  proposedTitle: string
+  proposedChanges: string[]
+  previewContent: string
 }
 
 export default function ChatPage({ params }: Route.ComponentProps) {
@@ -76,7 +83,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   );
   const messageCount = messages?.length ?? 0;
 
-  const classifyMutation = useHonoMutation<ChatsClassifyOutput, { targetType: ArtifactType }>(
+  const classifyMutation = useHonoMutation<ChatsReviewOutput, { targetType: ArtifactType }>(
     (client, vars) => client.chats.classify({ chatId, targetType: vars.targetType }),
   );
 

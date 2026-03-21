@@ -21,7 +21,7 @@ React components and hooks for places and maps.
 
 - `@hominem/ui` - UI primitives
 - `@hominem/places-services` - Backend services
-- `@hominem/hono-client` - API client
-- `@hominem/hono-rpc` - RPC types
+- `@hominem/rpc` - API client
+- `@hominem/rpc/types/*` - RPC types
 - `@tanstack/react-query` - Data fetching
 - `@vis.gl/react-google-maps` - Google Maps integration

@@ -1,4 +1,4 @@
-import type { ChatMessageToolCall } from '@hominem/hono-rpc/types/chat.types';
+import type { ChatMessageToolCall } from '@hominem/rpc/types/chat.types';
 import { chatTokens } from '@hominem/ui/tokens';
 import { Form, Inline, Stack } from '@hominem/ui';
 import {

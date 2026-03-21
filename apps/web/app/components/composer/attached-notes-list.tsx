@@ -1,6 +1,6 @@
 import { X } from 'lucide-react'
 
-import type { Note } from '@hominem/hono-rpc/types/notes.types'
+import type { Note } from '@hominem/rpc/types/notes.types'
 
 export function AttachedNotesList({
   notes,

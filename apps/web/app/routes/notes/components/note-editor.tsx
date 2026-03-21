@@ -1,4 +1,4 @@
-import type { Note } from '@hominem/hono-rpc/types/notes.types';
+import type { Note } from '@hominem/rpc/types/notes.types';
 import { Inline } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Textarea } from '@hominem/ui/components/ui/textarea';

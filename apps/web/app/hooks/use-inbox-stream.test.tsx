@@ -3,7 +3,7 @@ import { render, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Chat } from '@hominem/chat-services'
-import type { Note } from '@hominem/hono-rpc/types/notes.types'
+import type { Note } from '@hominem/rpc/types/notes.types'
 
 const mocks = vi.hoisted(() => {
   const notesList = vi.fn()
@@ -15,7 +15,7 @@ const mocks = vi.hoisted(() => {
   }
 })
 
-vi.mock('@hominem/hono-client/react', () => ({
+vi.mock('@hominem/rpc/react', () => ({
   useHonoQuery: () => ({
     data: mocks.chatsList(),
     isLoading: false,

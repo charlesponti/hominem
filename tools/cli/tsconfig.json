@@ -11,7 +11,6 @@
 	"include": ["src/**/*", "test/**/*.ts", "test/**/*.tsx"],
 	"exclude": ["dist"],
 	"references": [
-		{ "path": "../../packages/hono-rpc" },
-		{ "path": "../../packages/hono-client" }
+		{ "path": "../../packages/rpc" }
 	]
 }

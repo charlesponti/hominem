@@ -1,5 +1,5 @@
-import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/hono-client/react'
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/hono-client/react'
+import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/rpc/react'
+import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react'
 import type {
   PlaceAddToListsInput,
   PlaceAddToListsOutput,
@@ -23,7 +23,7 @@ import type {
   PlaceRemoveFromListOutput,
   PlaceUpdateVisitInput,
   PlaceUpdateVisitOutput,
-} from '@hominem/hono-rpc/types/places.types'
+} from '@hominem/rpc/types/places.types'
 
 const queryKeys = {
   places: {

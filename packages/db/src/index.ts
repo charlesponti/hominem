@@ -7,7 +7,7 @@
  *   import { db } from '@hominem/db'
  *   db.selectFrom('tasks').selectAll().execute()
  *
- * NOT for use in client applications - use @hominem/hono-client instead.
+ * NOT for use in client applications - use @hominem/rpc instead.
  */
 
 export { db, healthCheck, pool, sql } from './db'

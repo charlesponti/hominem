@@ -27,7 +27,7 @@ vi.mock('react-native', () => ({
   },
 }))
 
-vi.mock('@hominem/hono-client/react', () => ({
+vi.mock('@hominem/rpc/react', () => ({
   useApiClient: () => ({
     notes: {
       get: vi.fn(async () => mockFocusItem),

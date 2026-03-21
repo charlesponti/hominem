@@ -1,4 +1,4 @@
-import type { Note } from '@hominem/hono-rpc/types'
+import type { Note } from '@hominem/rpc/types'
 import type { ChatWithActivity } from '~/utils/services/chat/session-state'
 import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
 

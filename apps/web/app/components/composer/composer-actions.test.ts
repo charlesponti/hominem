@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { Note } from '@hominem/hono-rpc/types/notes.types'
+import type { Note } from '@hominem/rpc/types/notes.types'
 import type { UploadedFile } from '~/lib/types/upload'
 
 import { resolveComposerActions } from './composer-actions'

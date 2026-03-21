@@ -1,4 +1,4 @@
-import { createServerHonoClient as createClient } from '@hominem/hono-client/ssr';
+import { createServerHonoClient as createClient } from '@hominem/rpc/ssr';
 
 import { serverEnv } from '~/lib/env';
 

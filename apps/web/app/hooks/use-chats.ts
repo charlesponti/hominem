@@ -1,4 +1,4 @@
-import { useHonoMutation, useHonoUtils } from '@hominem/hono-client/react';
+import { useHonoMutation, useHonoUtils } from '@hominem/rpc/react';
 
 export function useDeleteChat() {
   const utils = useHonoUtils();

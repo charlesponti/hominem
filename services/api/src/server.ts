@@ -1,6 +1,4 @@
 import type { HominemUser } from '@hominem/auth/server';
-import { app as honoRpcApp } from '@hominem/hono-rpc';
-import { isServiceError } from '@hominem/hono-rpc';
 import { logger } from '@hominem/utils/logger';
 import { apiReference } from '@scalar/hono-api-reference';
 import { Hono } from 'hono';
@@ -16,6 +14,8 @@ import { env } from './env';
 import { authJwtMiddleware } from './middleware/auth';
 import { blockMaliciousProbes } from './middleware/block-probes';
 import { requestLogger } from './middleware/request-logger';
+import { isServiceError } from './errors';
+import { rpcApp } from './rpc/app';
 import { aiRoutes } from './routes/ai';
 import { authRoutes } from './routes/auth';
 import { componentsRoutes } from './routes/components';
@@ -88,7 +88,7 @@ export function createServer() {
 
   // Register Hono RPC routes
   // Note: honoRpcApp already includes /api prefix in its routes (e.g., /api/finance, /api/lists)
-  app.route('/', honoRpcApp);
+  app.route('/', rpcApp);
 
   // Better Auth bootstrap surface during migration.
   app.on(['GET', 'POST'], '/api/better-auth/*', (c) => {

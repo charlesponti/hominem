@@ -1,5 +1,5 @@
 import { db } from '@hominem/db';
-import { UnavailableError } from '@hominem/hono-rpc';
+import { UnavailableError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 

@@ -1,6 +1,6 @@
-import type { ApiClient } from '@hominem/hono-client';
-import { useApiClient } from '@hominem/hono-client/react';
-import type { Chat, ChatMessage as RpcChatMessage } from '@hominem/hono-rpc/types';
+import type { ApiClient } from '@hominem/rpc';
+import { useApiClient } from '@hominem/rpc/react';
+import type { Chat, ChatMessage as RpcChatMessage } from '@hominem/rpc/types';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQuery, useQueryClient, type MutationOptions } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';

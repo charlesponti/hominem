@@ -1,4 +1,4 @@
-import type { List } from '@hominem/hono-rpc/types/lists.types'
+import type { List } from '@hominem/rpc/types/lists.types'
 import {
   Command,
   CommandEmpty,

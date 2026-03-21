@@ -28,8 +28,8 @@ React components and hooks for financial features.
 
 - `@hominem/ui` - UI primitives
 - `@hominem/finance-services` - Backend services
-- `@hominem/hono-client` - API client
-- `@hominem/hono-rpc` - RPC types
+- `@hominem/rpc` - API client
+- `@hominem/rpc/types/*` - RPC types
 - `@tanstack/react-query` - Data fetching
 - `react-plaid-link` - Plaid integration
 - `recharts` - Charts

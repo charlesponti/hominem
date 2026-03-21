@@ -9,10 +9,10 @@
  *   - web:    useInboxStream (fetch + merge in one hook, same output shape)
  */
 
-import { useHonoQuery } from '@hominem/hono-client/react';
+import { useHonoQuery } from '@hominem/rpc/react';
 import type { Chat } from '@hominem/chat-services';
-import type { Note } from '@hominem/hono-rpc/types/notes.types';
-import type { ChatsListOutput } from '@hominem/hono-rpc/types/chat.types';
+import type { Note } from '@hominem/rpc/types/notes.types';
+import type { ChatsListOutput } from '@hominem/rpc/types/chat.types';
 import { useNotesList } from './use-notes';
 
 // ─── Model (aligned with mobile InboxStreamItem shape) ────────────────────────

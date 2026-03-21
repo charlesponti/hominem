@@ -1,4 +1,4 @@
-import type { TimeSeriesDataPoint } from '@hominem/hono-rpc/types/finance.types'
+import type { TimeSeriesDataPoint } from '@hominem/rpc/types/finance.types'
 import { CHART_COLORS } from '@hominem/ui'
 import { Button } from '@hominem/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'

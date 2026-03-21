@@ -1,7 +1,7 @@
-import type { SpendingTimeSeriesOutput } from '@hominem/hono-rpc/types/finance.types';
+import type { SpendingTimeSeriesOutput } from '@hominem/rpc/types/finance.types';
 import { format } from 'date-fns';
 
-import { useHonoQuery } from '@hominem/hono-client/react';
+import { useHonoQuery } from '@hominem/rpc/react';
 
 interface TimeSeriesParams {
   dateFrom?: Date | undefined;

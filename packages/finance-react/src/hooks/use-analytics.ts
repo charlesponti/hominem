@@ -1,8 +1,8 @@
 import { format } from 'date-fns';
 
-import { useHonoQuery } from '@hominem/hono-client/react';
+import { useHonoQuery } from '@hominem/rpc/react';
 
-import type { CategoriesListOutput, TagBreakdownOutput } from '@hominem/hono-rpc/types/finance.types';
+import type { CategoriesListOutput, TagBreakdownOutput } from '@hominem/rpc/types/finance.types';
 
 
 interface TagBreakdownParams {

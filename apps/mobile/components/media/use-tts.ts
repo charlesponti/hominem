@@ -1,4 +1,4 @@
-import { useApiClient } from '@hominem/hono-client/react';
+import { useApiClient } from '@hominem/rpc/react';
 import { useAudioPlayer } from 'expo-audio';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useCallback, useRef, useState } from 'react';
@@ -8,6 +8,17 @@ type TTSState = 'idle' | 'loading' | 'playing' | 'error';
 interface UseTTSOptions {
   voice?: string;
   speed?: number;
+}
+
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  let binary = ''
+  const bytes = new Uint8Array(buffer)
+
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte)
+  }
+
+  return btoa(binary)
 }
 
 export function useTTS(options: UseTTSOptions = {}) {
@@ -37,7 +48,7 @@ export function useTTS(options: UseTTSOptions = {}) {
 
         // Write the audio buffer to a temp file so expo-audio can play it
         const uri = `${FileSystem.cacheDirectory}tts-${Date.now()}.mp3`;
-        await FileSystem.writeAsStringAsync(uri, Buffer.from(buffer).toString('base64'), {
+        await FileSystem.writeAsStringAsync(uri, arrayBufferToBase64(buffer), {
           encoding: FileSystem.EncodingType.Base64,
         });
 

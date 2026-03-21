@@ -19,8 +19,7 @@
   "dependencies": {
     "@hominem/ui": "workspace:*",
     "@hominem/invites-services": "workspace:*",
-    "@hominem/hono-client": "workspace:*",
-    "@hominem/hono-rpc": "workspace:*",
+    "@hominem/rpc": "workspace:*",
     "@tanstack/react-query": "5.90.16",
     "lucide-react": "^0.575.0",
     "react": "19.2.0",

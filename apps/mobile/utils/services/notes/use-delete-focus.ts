@@ -1,4 +1,4 @@
-import { useApiClient } from '@hominem/hono-client/react';
+import { useApiClient } from '@hominem/rpc/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { focusKeys } from './query-keys';

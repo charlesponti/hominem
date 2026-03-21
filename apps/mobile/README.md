@@ -26,7 +26,7 @@ The mobile app uses explicit runtime variants. `APP_VARIANT` controls app identi
 
 - Production target: iOS only
 - Authentication: Email + OTP via Better Auth API
-- API: `@hominem/hono-rpc` via authenticated HTTP requests
+- API: `@hominem/rpc` via authenticated HTTP requests
 
 ## Environment Variables
 

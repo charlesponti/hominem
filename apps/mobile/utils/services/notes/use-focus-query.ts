@@ -1,5 +1,5 @@
-import type { Note } from '@hominem/hono-rpc/types'
-import { useApiClient } from '@hominem/hono-client/react'
+import type { Note } from '@hominem/rpc/types'
+import { useApiClient } from '@hominem/rpc/react'
 import { useQuery } from '@tanstack/react-query'
 
 import { focusKeys } from './query-keys'

@@ -21,7 +21,7 @@
  * as on mobile. Enter commits the primary action.
  */
 
-import { useHonoMutation } from '@hominem/hono-client/react';
+import { useHonoMutation } from '@hominem/rpc/react';
 import { useCallback, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router';
 

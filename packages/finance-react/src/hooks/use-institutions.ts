@@ -1,6 +1,6 @@
-import type { InstitutionsListOutput } from '@hominem/hono-rpc/types/finance.types';
+import type { InstitutionsListOutput } from '@hominem/rpc/types/finance.types';
 
-import { useHonoQuery } from '@hominem/hono-client/react';
+import { useHonoQuery } from '@hominem/rpc/react';
 
 export const useAllInstitutions = () =>
   useHonoQuery<InstitutionsListOutput>(['finance', 'institutions', 'list'], ({ finance }) =>

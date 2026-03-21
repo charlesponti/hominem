@@ -1,5 +1,5 @@
-import type { ClientConfig } from '@hominem/hono-client';
-import { HonoProvider as BaseHonoProvider } from '@hominem/hono-client/react';
+import type { ClientConfig } from '@hominem/rpc';
+import { HonoProvider as BaseHonoProvider } from '@hominem/rpc/react';
 import type { QueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 

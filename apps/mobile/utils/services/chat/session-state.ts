@@ -1,4 +1,4 @@
-import type { Chat } from '@hominem/hono-rpc/types';
+import type { Chat } from '@hominem/rpc/types';
 
 import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
 

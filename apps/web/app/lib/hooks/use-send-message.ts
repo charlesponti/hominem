@@ -1,6 +1,6 @@
 import { useChat } from '@ai-sdk/react';
-import { useHonoMutation, useHonoUtils } from '@hominem/hono-client/react';
-import type { ChatsSendInput, ChatsSendOutput } from '@hominem/hono-rpc/types/chat.types';
+import { useHonoMutation, useHonoUtils } from '@hominem/rpc/react';
+import type { ChatsSendInput, ChatsSendOutput } from '@hominem/rpc/types/chat.types';
 import { useMemo } from 'react';
 
 import { useFeatureFlag } from './use-feature-flags';
