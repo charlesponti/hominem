@@ -14,6 +14,13 @@ Always run commands from the monorepo root. Do NOT `cd` into packages.
 | **Lint/Format**  | `bun run lint --parallel` / `bun run format` |
 | **Safety Check** | `bun run check`                              |
 
+## Task Execution Strategy
+
+- Use subagents by default for this task.
+- Classify the task first.
+- If it is not trivial, spawn parallel subagents for research, implementation planning, and critique.
+- The main thread should synthesize, not do first-pass exploration.
+
 ## Project Structure
 
 - `apps/` - Applications
