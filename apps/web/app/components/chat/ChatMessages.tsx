@@ -1,6 +1,6 @@
 import { useAuthContext } from '@hominem/auth';
 import type { ThoughtLifecycleState } from '@hominem/chat-services/types';
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react';
+import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react';
 import type {
   ChatsGetMessagesOutput,
   MessagesDeleteOutput,
@@ -43,7 +43,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
 
     const { userId } = useAuthContext();
 
-    const messagesQuery = useHonoQuery<ChatsGetMessagesOutput>(
+    const messagesQuery = useRpcQuery<ChatsGetMessagesOutput>(
       ['chats', 'getMessages', { chatId, limit: 50 }],
       ({ chats }) => chats.getMessages({ chatId, limit: 50 }),
       {
@@ -59,7 +59,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
 
     const utils = useHonoUtils();
 
-    const deleteMessageMutation = useHonoMutation<MessagesDeleteOutput, { messageId: string }>(
+    const deleteMessageMutation = useRpcMutation<MessagesDeleteOutput, { messageId: string }>(
       ({ messages }, variables) => messages.delete(variables),
       {
         onSuccess: () => {
@@ -150,7 +150,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       [deleteMessageMutation],
     );
 
-    const updateMessageMutation = useHonoMutation<
+    const updateMessageMutation = useRpcMutation<
       MessagesUpdateOutput,
       { messageId: string; content: string }
     >(({ messages }, variables) => messages.update(variables), {

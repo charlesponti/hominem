@@ -1,7 +1,7 @@
 import type { SpendingTimeSeriesOutput } from '@hominem/rpc/types/finance.types';
 import { format } from 'date-fns';
 
-import { useHonoQuery } from '@hominem/rpc/react';
+import { useRpcQuery } from '@hominem/rpc/react';
 
 interface TimeSeriesParams {
   dateFrom?: Date | undefined;
@@ -24,7 +24,7 @@ export function useTimeSeriesData({
   groupBy = 'month',
   enabled = true,
 }: TimeSeriesParams) {
-  const query = useHonoQuery<SpendingTimeSeriesOutput>(
+  const query = useRpcQuery<SpendingTimeSeriesOutput>(
     [
       'finance',
       'analyze',

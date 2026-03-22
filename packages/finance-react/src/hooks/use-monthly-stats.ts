@@ -1,6 +1,6 @@
 import type { MonthlyStatsOutput } from '@hominem/rpc/types/finance.types';
 
-import { useHonoQuery } from '@hominem/rpc/react';
+import { useRpcQuery } from '@hominem/rpc/react';
 
 export type MonthlyStatsContract = MonthlyStatsOutput & {
   topTag?: string;
@@ -13,7 +13,7 @@ export type MonthlyStatsContract = MonthlyStatsOutput & {
  * @param options Additional options to pass to useQuery
  */
 export function useMonthlyStats(month: string | undefined | null, options = {}) {
-  const query = useHonoQuery<MonthlyStatsContract>(
+  const query = useRpcQuery<MonthlyStatsContract>(
     ['finance', 'analyze', 'monthly-stats', month],
     ({ finance }) => finance.getMonthlyStats({ month: month! }) as Promise<MonthlyStatsContract>,
     {

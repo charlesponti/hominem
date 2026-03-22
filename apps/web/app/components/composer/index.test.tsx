@@ -48,7 +48,7 @@ vi.mock('react-router', () => ({
 }))
 
 vi.mock('@hominem/rpc/react', () => ({
-  useHonoMutation: () => ({
+  useRpcMutation: () => ({
     mutateAsync: mocks.createChatMutateAsync,
   }),
 }))

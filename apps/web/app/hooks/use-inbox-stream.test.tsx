@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => {
 })
 
 vi.mock('@hominem/rpc/react', () => ({
-  useHonoQuery: () => ({
+  useRpcQuery: () => ({
     data: mocks.chatsList(),
     isLoading: false,
   }),

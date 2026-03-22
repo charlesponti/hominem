@@ -1,5 +1,5 @@
 import { useChat } from '@ai-sdk/react';
-import { useHonoMutation, useHonoUtils } from '@hominem/rpc/react';
+import { useRpcMutation, useHonoUtils } from '@hominem/rpc/react';
 import type { ChatsSendInput, ChatsSendOutput } from '@hominem/rpc/types/chat.types';
 import { useMemo } from 'react';
 
@@ -33,7 +33,7 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chat = useChat() as any; // Type assertion to bypass type errors temporarily
 
-  const legacySend = useHonoMutation(
+  const legacySend = useRpcMutation(
     async ({ chats }, variables: ChatsSendInput) => {
       return chats.send({
         chatId: variables.chatId || chatId,

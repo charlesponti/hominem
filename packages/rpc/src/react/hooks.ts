@@ -41,17 +41,17 @@ export interface OptimisticUpdateConfig<
 
 /**
  * Generic hook for making queries with Hono RPC
- * Automatically transforms date strings to Date objects
+ * Uses the shared API client from context and forwards React Query options
  *
  * @example
- * const { data } = useHonoQuery(
+ * const { data } = useRpcQuery(
  *   ['finance', 'transactions', 'list'],
  *   async ({ finance }) => {
  *     return finance.listTransactions({ limit: 10, sortBy: 'date', sortDirection: 'desc' });
  *   }
  * );
  */
-export function useHonoQuery<TData>(
+export function useRpcQuery<TData>(
   queryKey: QueryKey,
   queryFn: (client: ApiClient) => Promise<TData>,
   options?: HonoQueryOptions<TData>,
@@ -66,15 +66,14 @@ export function useHonoQuery<TData>(
 }
 
 /**
- * Helper to get transformed response with date conversion
- * Use this in your queryFn to automatically convert date strings to Date objects
+ * Hook to get query utilities for manual cache management
  */
 
 /**
  * Generic hook for making mutations with Hono RPC
  *
  * @example
- * const mutation = useHonoMutation(
+ * const mutation = useRpcMutation(
  *   async ({ places }, variables) => {
  *     return places.create(variables);
  *   },
@@ -84,29 +83,30 @@ export function useHonoQuery<TData>(
  *   }
  * );
  */
-export function useHonoMutation<TData, TVariables = void>(
+export function useRpcMutation<TData, TVariables = void>(
   mutationFn: (client: ApiClient, variables: TVariables) => Promise<TData>,
   options?: HonoMutationOptions<TData, TVariables>,
 ) {
   const client = useApiClient();
   const queryClient = useQueryClient();
+  const { invalidateKeys, onSuccess, ...mutationOptions } = options ?? {};
 
   return useMutation({
     mutationFn: (variables: TVariables) => mutationFn(client, variables),
+    ...mutationOptions,
     onSuccess: (data, variables, context, mutationContext) => {
       // Invalidate specified query keys
-      if (options?.invalidateKeys) {
-        options.invalidateKeys.forEach((key) => {
+      if (invalidateKeys) {
+        invalidateKeys.forEach((key) => {
           queryClient.invalidateQueries({ queryKey: key });
         });
       }
 
       // Call user's onSuccess handler if provided
-      if (options?.onSuccess) {
-        options.onSuccess(data, variables, context, mutationContext);
+      if (onSuccess) {
+        onSuccess(data, variables, context, mutationContext);
       }
     },
-    ...options,
   });
 }
 

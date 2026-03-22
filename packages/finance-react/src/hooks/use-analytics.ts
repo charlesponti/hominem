@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 
-import { useHonoQuery } from '@hominem/rpc/react';
+import { useRpcQuery } from '@hominem/rpc/react';
 
 import type { CategoriesListOutput, TagBreakdownOutput } from '@hominem/rpc/types/finance.types';
 
@@ -17,7 +17,7 @@ interface TagBreakdownParams {
  * Hook for fetching tag breakdown analytics
  */
 export function useTagBreakdown({ from, to, account, tag, limit = 5 }: TagBreakdownParams) {
-  return useHonoQuery<TagBreakdownOutput>(
+  return useRpcQuery<TagBreakdownOutput>(
     [
       'finance',
       'analyze',
@@ -47,7 +47,7 @@ export function useTagBreakdown({ from, to, account, tag, limit = 5 }: TagBreakd
  * Hook for fetching list of finance tags
  */
 export function useFinanceTags() {
-  return useHonoQuery<CategoriesListOutput>(
+  return useRpcQuery<CategoriesListOutput>(
     ['finance', 'tags', 'list'],
     ({ finance }) => finance.listTags(),
     {

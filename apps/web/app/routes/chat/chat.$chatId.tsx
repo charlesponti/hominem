@@ -3,7 +3,7 @@ import type {
   ThoughtLifecycleState,
 } from '@hominem/chat-services/types';
 import { deriveSessionSource } from '@hominem/chat-services/types';
-import { useHonoQuery, useHonoMutation } from '@hominem/rpc/react';
+import { useRpcQuery, useRpcMutation } from '@hominem/rpc/react';
 import type {
   ArtifactType,
   ChatsGetOutput,
@@ -54,11 +54,11 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   const [overrideSource, setOverrideSource] = useState<SessionSource | null>(null);
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
 
-  const { data: chat } = useHonoQuery<ChatsGetOutput>(['chats', chatId], ({ chats: c }) =>
+  const { data: chat } = useRpcQuery<ChatsGetOutput>(['chats', chatId], ({ chats: c }) =>
     c.get({ chatId }),
   );
 
-  const { data: messages } = useHonoQuery<ChatsGetMessagesOutput>(
+  const { data: messages } = useRpcQuery<ChatsGetMessagesOutput>(
     ['chats', 'getMessages', { chatId, limit: 50 }],
     ({ chats: c }) => c.getMessages({ chatId, limit: 50 }),
   );
@@ -83,15 +83,15 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   );
   const messageCount = messages?.length ?? 0;
 
-  const classifyMutation = useHonoMutation<ChatsReviewOutput, { targetType: ArtifactType }>(
+  const classifyMutation = useRpcMutation<ChatsReviewOutput, { targetType: ArtifactType }>(
     (client, vars) => client.chats.classify({ chatId, targetType: vars.targetType }),
   );
 
-  const acceptMutation = useHonoMutation<{ noteId: string }, { reviewItemId: string }>(
+  const acceptMutation = useRpcMutation<{ noteId: string }, { reviewItemId: string }>(
     (client, vars) => client.review.accept({ reviewItemId: vars.reviewItemId }),
   );
 
-  const rejectMutation = useHonoMutation<{ success: boolean }, { reviewItemId: string }>(
+  const rejectMutation = useRpcMutation<{ success: boolean }, { reviewItemId: string }>(
     (client, vars) => client.review.reject({ reviewItemId: vars.reviewItemId }),
   );
 

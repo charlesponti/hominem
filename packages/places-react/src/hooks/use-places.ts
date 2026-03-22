@@ -1,5 +1,5 @@
 import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/rpc/react'
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react'
+import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react'
 import type {
   PlaceAddToListsInput,
   PlaceAddToListsOutput,
@@ -49,7 +49,7 @@ export const usePlacesAutocomplete = (
   latitude: number | undefined,
   longitude: number | undefined,
 ) =>
-  useHonoQuery<PlaceAutocompleteOutput>(
+  useRpcQuery<PlaceAutocompleteOutput>(
     queryKeys.places.autocomplete(query || '', latitude, longitude),
     async ({ places }) => {
       if (!query || query.length < 2) return [] as unknown as PlaceAutocompleteOutput
@@ -64,7 +64,7 @@ export const usePlacesAutocomplete = (
 
 export const usePlaceById = (id: string | undefined) => {
   if (!id) {
-    return useHonoQuery<PlaceGetDetailsByIdOutput>(
+    return useRpcQuery<PlaceGetDetailsByIdOutput>(
       queryKeys.places.get(''),
       async () => {
         throw new Error('Query should not be called when id is undefined')
@@ -75,14 +75,14 @@ export const usePlaceById = (id: string | undefined) => {
     )
   }
 
-  return useHonoQuery<PlaceGetDetailsByIdOutput>(queryKeys.places.get(id), async ({ places }) =>
+  return useRpcQuery<PlaceGetDetailsByIdOutput>(queryKeys.places.get(id), async ({ places }) =>
     places.getById({ id } satisfies PlaceGetDetailsByIdInput),
   )
 }
 
 export const usePlaceByGoogleId = (googleMapsId: string | undefined) => {
   if (!googleMapsId) {
-    return useHonoQuery<PlaceGetDetailsByGoogleIdOutput>(
+    return useRpcQuery<PlaceGetDetailsByGoogleIdOutput>(
       queryKeys.places.getByGoogleId(''),
       async () => {
         throw new Error('Query should not be called when googleMapsId is undefined')
@@ -93,7 +93,7 @@ export const usePlaceByGoogleId = (googleMapsId: string | undefined) => {
     )
   }
 
-  return useHonoQuery<PlaceGetDetailsByGoogleIdOutput>(
+  return useRpcQuery<PlaceGetDetailsByGoogleIdOutput>(
     queryKeys.places.getByGoogleId(googleMapsId),
     async ({ places }) =>
       places.getByGoogleId({ googleMapsId } satisfies PlaceGetDetailsByGoogleIdInput),
@@ -105,7 +105,7 @@ export const useNearbyPlaces = (
   longitude: number | undefined,
   radiusMeters: number | undefined,
 ) =>
-  useHonoQuery<PlaceGetNearbyFromListsOutput>(
+  useRpcQuery<PlaceGetNearbyFromListsOutput>(
     queryKeys.places.nearby(latitude, longitude, radiusMeters),
     async ({ places }) => {
       if (latitude === undefined || longitude === undefined) {
@@ -129,7 +129,7 @@ export const useAddPlaceToLists = (
   options?: HonoMutationOptions<PlaceAddToListsOutput, PlaceAddToListsInput>,
 ) => {
   const utils = useHonoUtils()
-  return useHonoMutation<PlaceAddToListsOutput, PlaceAddToListsInput>(
+  return useRpcMutation<PlaceAddToListsOutput, PlaceAddToListsInput>(
     async ({ places }, variables) => places.addToLists(variables),
     {
       ...options,
@@ -149,7 +149,7 @@ export const useRemovePlaceFromList = (
   options?: HonoMutationOptions<PlaceRemoveFromListOutput, PlaceRemoveFromListInput>,
 ) => {
   const utils = useHonoUtils()
-  return useHonoMutation<PlaceRemoveFromListOutput, PlaceRemoveFromListInput>(
+  return useRpcMutation<PlaceRemoveFromListOutput, PlaceRemoveFromListInput>(
     async ({ places }, variables) => places.removeFromList(variables),
     {
       ...options,
@@ -167,7 +167,7 @@ export const useLogPlaceVisit = (
   options?: HonoMutationOptions<PlaceLogVisitOutput, PlaceLogVisitInput>,
 ) => {
   const utils = useHonoUtils()
-  return useHonoMutation<PlaceLogVisitOutput, PlaceLogVisitInput>(
+  return useRpcMutation<PlaceLogVisitOutput, PlaceLogVisitInput>(
     async ({ places }, variables) => places.logVisit(variables),
     {
       ...options,
@@ -186,14 +186,14 @@ export const useMyVisits = (
   input?: PlaceGetMyVisitsInput,
   options?: HonoQueryOptions<PlaceGetMyVisitsOutput>,
 ) =>
-  useHonoQuery<PlaceGetMyVisitsOutput>(
+  useRpcQuery<PlaceGetMyVisitsOutput>(
     queryKeys.places.myVisits(input),
     async ({ places }) => places.getMyVisits(input || {}),
     options,
   )
 
 export const usePlaceVisits = (placeId: string | undefined) =>
-  useHonoQuery<PlaceGetPlaceVisitsOutput>(
+  useRpcQuery<PlaceGetPlaceVisitsOutput>(
     queryKeys.places.placeVisits(placeId || ''),
     async ({ places }) => {
       if (!placeId) return []
@@ -208,7 +208,7 @@ export const useUpdatePlaceVisit = (
   options?: HonoMutationOptions<PlaceUpdateVisitOutput, PlaceUpdateVisitInput>,
 ) => {
   const utils = useHonoUtils()
-  return useHonoMutation<PlaceUpdateVisitOutput, PlaceUpdateVisitInput>(
+  return useRpcMutation<PlaceUpdateVisitOutput, PlaceUpdateVisitInput>(
     async ({ places }, variables) => places.updateVisit(variables),
     {
       ...options,
@@ -227,7 +227,7 @@ export const useDeletePlaceVisit = (
   options?: HonoMutationOptions<PlaceDeleteVisitOutput, PlaceDeleteVisitInput>,
 ) => {
   const utils = useHonoUtils()
-  return useHonoMutation<PlaceDeleteVisitOutput, PlaceDeleteVisitInput>(
+  return useRpcMutation<PlaceDeleteVisitOutput, PlaceDeleteVisitInput>(
     async ({ places }, variables) => places.deleteVisit(variables),
     {
       ...options,

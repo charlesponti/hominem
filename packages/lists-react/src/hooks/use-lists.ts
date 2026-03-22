@@ -1,5 +1,5 @@
 import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/rpc/react'
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react'
+import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react'
 import type {
   ListCreateInput,
   ListCreateOutput,
@@ -45,7 +45,7 @@ const createOptimisticList = (variables: ListCreateInput): ListCreateOutput => {
 }
 
 export const useLists = (options?: HonoQueryOptions<ListGetAllOutput>) =>
-  useHonoQuery<ListGetAllOutput>(
+  useRpcQuery<ListGetAllOutput>(
     queryKeys.lists.all(),
     async ({ lists }) => lists.getAll({} satisfies ListGetAllInput),
     options,
@@ -55,7 +55,7 @@ export const useListById = (
   id: string | undefined,
   options?: HonoQueryOptions<ListGetByIdOutput>,
 ) =>
-  useHonoQuery<ListGetByIdOutput>(
+  useRpcQuery<ListGetByIdOutput>(
     queryKeys.lists.get(id || ''),
     async ({ lists }) => {
       if (!id) throw new Error('ID is required')
@@ -71,7 +71,7 @@ export const useCreateList = (
   options?: HonoMutationOptions<ListCreateOutput, ListCreateInput>,
 ) => {
   const utils = useHonoUtils()
-  return useHonoMutation<ListCreateOutput, ListCreateInput>(
+  return useRpcMutation<ListCreateOutput, ListCreateInput>(
     async ({ lists }, variables) => lists.create(variables),
     {
       ...options,
@@ -134,7 +134,7 @@ export const useUpdateList = (
   options?: HonoMutationOptions<ListUpdateOutput, ListUpdateInput>,
 ) => {
   const utils = useHonoUtils()
-  return useHonoMutation<ListUpdateOutput, ListUpdateInput>(
+  return useRpcMutation<ListUpdateOutput, ListUpdateInput>(
     async ({ lists }, variables) => lists.update(variables),
     {
       ...options,
@@ -202,7 +202,7 @@ export const useDeleteList = (
   options?: HonoMutationOptions<ListDeleteOutput, ListDeleteInput>,
 ) => {
   const utils = useHonoUtils()
-  return useHonoMutation<ListDeleteOutput, ListDeleteInput>(
+  return useRpcMutation<ListDeleteOutput, ListDeleteInput>(
     async ({ lists }, variables) => lists.delete(variables),
     {
       ...options,
@@ -245,7 +245,7 @@ export const useListsContainingPlace = (
   placeId: string | undefined,
   googleMapsId: string | undefined,
 ) =>
-  useHonoQuery<ListGetContainingPlaceOutput>(
+  useRpcQuery<ListGetContainingPlaceOutput>(
     queryKeys.lists.containing(placeId, googleMapsId),
     async ({ lists }) => {
       const input: ListGetContainingPlaceInput = {}
@@ -266,7 +266,7 @@ export const useRemoveCollaborator = (
   options?: HonoMutationOptions<ListRemoveCollaboratorOutput, ListRemoveCollaboratorInput>,
 ) => {
   const utils = useHonoUtils()
-  return useHonoMutation<ListRemoveCollaboratorOutput, ListRemoveCollaboratorInput>(
+  return useRpcMutation<ListRemoveCollaboratorOutput, ListRemoveCollaboratorInput>(
     async ({ lists }, variables) => lists.removeCollaborator(variables),
     {
       ...options,

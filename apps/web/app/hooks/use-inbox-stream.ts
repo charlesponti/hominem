@@ -9,7 +9,7 @@
  *   - web:    useInboxStream (fetch + merge in one hook, same output shape)
  */
 
-import { useHonoQuery } from '@hominem/rpc/react';
+import { useRpcQuery } from '@hominem/rpc/react';
 import type { Chat } from '@hominem/chat-services';
 import type { Note } from '@hominem/rpc/types/notes.types';
 import type { ChatsListOutput } from '@hominem/rpc/types/chat.types';
@@ -87,7 +87,7 @@ export function useInboxStream(): {
     limit: NOTE_LIMIT,
   });
 
-  const { data: chats, isLoading: chatsLoading } = useHonoQuery<ChatsListOutput>(
+  const { data: chats, isLoading: chatsLoading } = useRpcQuery<ChatsListOutput>(
     ['chats', 'list', { limit: CHAT_LIMIT }],
     ({ chats: c }) => c.list({ limit: CHAT_LIMIT }),
   );

@@ -3,10 +3,10 @@ import type {
   RunwayCalculateOutput,
 } from '@hominem/rpc/types/finance.types';
 
-import { useHonoMutation } from '@hominem/rpc/react';
+import { useRpcMutation } from '@hominem/rpc/react';
 
 export const useCalculateRunway = () => {
-  return useHonoMutation<RunwayCalculateOutput, RunwayCalculateInput>(({ finance }, variables) =>
+  return useRpcMutation<RunwayCalculateOutput, RunwayCalculateInput>(({ finance }, variables) =>
     finance.calculateRunway(variables),
   );
 };

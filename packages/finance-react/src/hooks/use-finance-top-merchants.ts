@@ -1,6 +1,6 @@
 import type { TopMerchantsOutput } from '@hominem/rpc/types/finance.types';
 
-import { useHonoQuery } from '@hominem/rpc/react';
+import { useRpcQuery } from '@hominem/rpc/react';
 
 type UseFinanceTopMerchantsParams = {
   from?: string | undefined;
@@ -17,7 +17,7 @@ export function useFinanceTopMerchants({
   tag,
   limit,
 }: UseFinanceTopMerchantsParams) {
-  return useHonoQuery<TopMerchantsOutput>(
+  return useRpcQuery<TopMerchantsOutput>(
     ['finance', 'analyze', 'top-merchants', { from, to, account, tag, limit }],
     ({ finance }) =>
       finance.getTopMerchants({

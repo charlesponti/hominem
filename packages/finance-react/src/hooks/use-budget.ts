@@ -6,7 +6,7 @@ import type {
   TransactionCategoryAnalysisOutput,
 } from '@hominem/rpc/types/finance.types';
 
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react';
+import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react';
 
 const BUDGET_API_UNAVAILABLE_MESSAGE = 'Budget write endpoints are unavailable';
 
@@ -15,13 +15,13 @@ function rejectBudgetMutation<T>(): Promise<T> {
 }
 
 export const useTransactionCategories = () =>
-  useHonoQuery<TransactionCategoryAnalysisOutput>(
+  useRpcQuery<TransactionCategoryAnalysisOutput>(
     ['finance', 'budget', 'transaction-categories'],
     async () => [],
   );
 
 export const useBudgetCategories = () =>
-  useHonoQuery<BudgetCategoriesListOutput>(
+  useRpcQuery<BudgetCategoriesListOutput>(
     ['finance', 'budget', 'categories', 'list'],
     async ({ finance }) => {
       const categories = await finance.listTags();
@@ -39,7 +39,7 @@ export const useBudgetCategories = () =>
   );
 
 export const useBudgetHistory = (params: { months: number }) =>
-  useHonoQuery<BudgetHistoryOutput>(
+  useRpcQuery<BudgetHistoryOutput>(
     ['finance', 'budget', 'history', params.months],
     async () => [],
   );
@@ -47,7 +47,7 @@ export const useBudgetHistory = (params: { months: number }) =>
 export const useCalculateBudget = (options?: { onError?: (error: Error) => void }) => {
   const utils = useHonoUtils();
 
-  return useHonoMutation<BudgetCalculateOutput, BudgetCalculateInput | undefined>(
+  return useRpcMutation<BudgetCalculateOutput, BudgetCalculateInput | undefined>(
     async () => rejectBudgetMutation<BudgetCalculateOutput>(),
     {
       onSuccess: () => {

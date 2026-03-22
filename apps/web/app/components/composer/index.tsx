@@ -21,7 +21,7 @@
  * as on mobile. Enter commits the primary action.
  */
 
-import { useHonoMutation } from '@hominem/rpc/react';
+import { useRpcMutation } from '@hominem/rpc/react';
 import { useCallback, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -77,7 +77,7 @@ export function Composer() {
   const sendMessage = useSendMessage({ chatId: chatId ?? '' });
   const { uploadFiles, uploadState, removeFile, clearAll } = useFileUpload();
 
-  const createChatMutation = useHonoMutation<{ id: string }, { seedText: string; title: string }>(
+  const createChatMutation = useRpcMutation<{ id: string }, { seedText: string; title: string }>(
     async ({ chats }, body) => {
       const chat = await chats.create({ title: body.title });
       if (body.seedText.trim()) {

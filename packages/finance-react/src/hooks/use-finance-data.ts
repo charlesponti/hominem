@@ -9,7 +9,7 @@ import type { SortOption } from '@hominem/ui/hooks';
 import { format } from 'date-fns';
 import { useMemo } from 'react';
 
-import { useHonoQuery } from '@hominem/rpc/react';
+import { useRpcQuery } from '@hominem/rpc/react';
 
 type RawAccountWithTransactions = {
   id: string;
@@ -60,7 +60,7 @@ interface UseFinanceAccountsOptions {
 }
 
 export const useFinanceAccounts = ({ initialData }: UseFinanceAccountsOptions = {}) => {
-  const { data, isLoading, error, refetch } = useHonoQuery<AccountListOutput>(
+  const { data, isLoading, error, refetch } = useRpcQuery<AccountListOutput>(
     ['finance', 'accounts', 'list'],
     ({ finance }) => finance.listAccounts({ includeInactive: false }),
     initialData ? { initialData } : {},
@@ -85,10 +85,10 @@ export const useFinanceAccounts = ({ initialData }: UseFinanceAccountsOptions = 
 };
 
 export const useFinancialInstitutions = () =>
-  useHonoQuery(['finance', 'institutions', 'list'], ({ finance }) => finance.listInstitutions());
+  useRpcQuery(['finance', 'institutions', 'list'], ({ finance }) => finance.listInstitutions());
 
 export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
-  const allAccountsQuery = useHonoQuery<AccountAllOutput>(
+  const allAccountsQuery = useRpcQuery<AccountAllOutput>(
     ['finance', 'accounts', 'all'],
     async ({ finance }) => {
       const data = await finance.listAllAccounts();
@@ -112,7 +112,7 @@ export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
 }
 
 export function useAccountById(id: string, options?: { initialData?: AccountGetOutput }) {
-  const accountQuery = useHonoQuery<AccountGetOutput>(
+  const accountQuery = useRpcQuery<AccountGetOutput>(
     ['finance', 'accounts', 'get', id],
     async ({ finance }) => {
       const data = await finance.getAccount({ id });
@@ -165,7 +165,7 @@ export function useFinanceTransactions({
     queryOptions.initialData = initialData;
   }
 
-  const query = useHonoQuery<TransactionListOutput>(
+  const query = useRpcQuery<TransactionListOutput>(
     [
       'finance',
       'transactions',

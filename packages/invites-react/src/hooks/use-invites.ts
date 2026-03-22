@@ -1,4 +1,4 @@
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react'
+import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react'
 import type {
   InvitesAcceptInput,
   InvitesAcceptOutput,
@@ -42,18 +42,18 @@ const createOptimisticInvite = (variables: InvitesCreateInput): InvitesCreateOut
 }
 
 export const useSentInvites = () =>
-  useHonoQuery<InvitesGetSentOutput>(queryKeys.invites.sent(), async ({ invites }) =>
+  useRpcQuery<InvitesGetSentOutput>(queryKeys.invites.sent(), async ({ invites }) =>
     invites.getSent({} satisfies InvitesGetSentInput),
   )
 
 export const useReceivedInvites = () =>
-  useHonoQuery<InvitesGetReceivedOutput>(queryKeys.invites.received(), async ({ invites }) =>
+  useRpcQuery<InvitesGetReceivedOutput>(queryKeys.invites.received(), async ({ invites }) =>
     invites.getReceived({}),
   )
 
 export const useCreateInvite = () => {
   const utils = useHonoUtils()
-  return useHonoMutation<InvitesCreateOutput, InvitesCreateInput>(
+  return useRpcMutation<InvitesCreateOutput, InvitesCreateInput>(
     async ({ invites }, variables) => invites.create(variables),
     {
       onMutate: async (variables) => {
@@ -129,7 +129,7 @@ export const useCreateInvite = () => {
 
 export const useAcceptInvite = () => {
   const utils = useHonoUtils()
-  return useHonoMutation<InvitesAcceptOutput, InvitesAcceptInput>(
+  return useRpcMutation<InvitesAcceptOutput, InvitesAcceptInput>(
     async ({ invites }, variables) => invites.accept(variables),
     {
       onMutate: async (variables) => {
@@ -167,7 +167,7 @@ export const useAcceptInvite = () => {
 
 export const useDeleteInvite = () => {
   const utils = useHonoUtils()
-  return useHonoMutation<InvitesDeleteOutput, InvitesDeleteInput>(
+  return useRpcMutation<InvitesDeleteOutput, InvitesDeleteInput>(
     async ({ invites }, variables) => invites.delete(variables),
     {
       onMutate: async (variables) => {

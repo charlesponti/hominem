@@ -1,4 +1,4 @@
-import { useHonoQuery } from '@hominem/rpc/react';
+import { useRpcQuery } from '@hominem/rpc/react';
 import type { TwitterAccountsListOutput } from '@hominem/rpc/types/twitter.types';
 import { useCallback } from 'react';
 
@@ -16,7 +16,7 @@ export function useTwitterAccounts() {
     data: accounts,
     isLoading,
     refetch,
-  } = useHonoQuery<TwitterAccountsListOutput>(['twitter', 'accounts'], ({ twitter }) =>
+  } = useRpcQuery<TwitterAccountsListOutput>(['twitter', 'accounts'], ({ twitter }) =>
     twitter.getAccounts(),
   );
 

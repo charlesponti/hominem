@@ -1,4 +1,4 @@
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react';
+import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react';
 import type {
   Note,
   NotesListInput,
@@ -11,7 +11,7 @@ import type {
 } from '@hominem/rpc/types/notes.types';
 
 export function useNotesList(options: NotesListInput = {}) {
-  return useHonoQuery<Note[]>(
+  return useRpcQuery<Note[]>(
     ['notes', 'list', options],
     async ({ notes }) => {
       const data = await notes.list(options);
@@ -24,7 +24,7 @@ export function useNotesList(options: NotesListInput = {}) {
 }
 
 export function useNote(id: string) {
-  return useHonoQuery<NotesGetOutput>(['notes', id], ({ notes }) => notes.get({ id }), {
+  return useRpcQuery<NotesGetOutput>(['notes', id], ({ notes }) => notes.get({ id }), {
     enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -33,7 +33,7 @@ export function useNote(id: string) {
 export function useCreateNote() {
   const utils = useHonoUtils();
 
-  return useHonoMutation<NotesCreateOutput, NotesCreateInput>(
+  return useRpcMutation<NotesCreateOutput, NotesCreateInput>(
     ({ notes }, variables) => notes.create(variables),
     {
       onSuccess: () => {
@@ -46,7 +46,7 @@ export function useCreateNote() {
 export function useUpdateNote() {
   const utils = useHonoUtils();
 
-  return useHonoMutation<NotesUpdateOutput, { id: string } & NotesUpdateInput>(
+  return useRpcMutation<NotesUpdateOutput, { id: string } & NotesUpdateInput>(
     ({ notes }, variables) => notes.update(variables),
     {
       onSuccess: () => {
@@ -59,7 +59,7 @@ export function useUpdateNote() {
 export function useDeleteNote() {
   const utils = useHonoUtils();
 
-  return useHonoMutation<NotesDeleteOutput, { id: string }>(
+  return useRpcMutation<NotesDeleteOutput, { id: string }>(
     ({ notes }, variables) => notes.delete(variables),
     {
       onSuccess: () => {

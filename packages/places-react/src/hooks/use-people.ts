@@ -1,4 +1,4 @@
-import { useHonoMutation, useHonoQuery, useHonoUtils } from '@hominem/rpc/react'
+import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react'
 import type {
   PeopleListOutput,
   PeopleCreateInput,
@@ -15,14 +15,14 @@ const queryKeys = {
  * Get all people/contacts
  */
 export const usePeople = () =>
-  useHonoQuery<PeopleListOutput>(queryKeys.people.list(), async () => [])
+  useRpcQuery<PeopleListOutput>(queryKeys.people.list(), async () => [])
 
 /**
  * Create person/contact
  */
 export const useCreatePerson = () => {
   const utils = useHonoUtils()
-  return useHonoMutation<PeopleCreateOutput, PeopleCreateInput>(
+  return useRpcMutation<PeopleCreateOutput, PeopleCreateInput>(
     async (_client, variables: PeopleCreateInput) => {
       const now = new Date().toISOString()
       return {
