@@ -206,12 +206,14 @@ function createUploadedFileFixture(overrides: Partial<UploadedFile> = {}): Uploa
   }
 }
 
-function renderComposer({ attachedNotes }: { attachedNotes?: Note[] } = {}) {
+function renderComposer({ attachedNotes, mode = 'generic' }: { attachedNotes?: Note[], mode?: 'generic' | 'note-aware' | 'chat-continuation' } = {}) {
   return render(
     <ComposerProvider uploadHook={useFileUpload} dataDeps={composerDataDeps}>
       <ComposerStateInitializer attachedNotes={attachedNotes ?? []} />
       <Composer 
-        mode="generic" 
+        mode={mode}
+        noteId={mode === 'note-aware' ? 'test-note-id' : null}
+        chatId={mode === 'chat-continuation' ? 'chat-1' : null}
         navigate={mocks.navigate}
         transcribeMutation={{
           mutateAsync: mocks.transcribeMutateAsync,
@@ -295,6 +297,7 @@ describe('Composer', () => {
 
     renderComposer({
       attachedNotes: [createNoteFixture()],
+      mode: 'chat-continuation',
     })
 
     const input = screen.getByTestId('composer-input')
