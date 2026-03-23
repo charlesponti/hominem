@@ -127,22 +127,24 @@ vi.mock('./note-picker', () => ({
   NotePicker: () => null,
 }))
 
-vi.mock('~/components/chat/ChatModals', () => ({
-  ChatModals: ({
-    onAudioTranscribed,
-    onCloseAudioRecorder,
-    showAudioRecorder,
+vi.mock('@hominem/ui/chat', () => ({
+  ChatVoiceModal: ({
+    onTranscribed,
+    onClose,
+    show,
+    transcribeMutation: _transcribeMutation,
   }: {
-    onAudioTranscribed: (transcript: string) => void
-    onCloseAudioRecorder: () => void
-    showAudioRecorder: boolean
-  }) => (showAudioRecorder
+    onTranscribed: (transcript: string) => void
+    onClose: () => void
+    show: boolean
+    transcribeMutation: { mutateAsync: typeof mocks.transcribeMutateAsync }
+  }) => (show
     ? (
         <div>
-          <button type="button" onClick={() => onAudioTranscribed('Voice draft')}>
+          <button type="button" onClick={() => onTranscribed('Voice draft')}>
             Transcribe audio
           </button>
-          <button type="button" onClick={onCloseAudioRecorder}>
+          <button type="button" onClick={onClose}>
             Close voice input
           </button>
         </div>
