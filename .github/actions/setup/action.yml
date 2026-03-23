@@ -1,5 +1,5 @@
 name: Setup Environment
-description: Setup Bun, install dependencies, and optionally install Goose CLI
+description: Setup Bun, install dependencies, build packages, and optionally install Goose CLI
 
 inputs:
   bun-version:
@@ -18,6 +18,10 @@ inputs:
     description: Goose version to install (e.g. v3.27.0)
     required: false
     default: "v3.27.0"
+  build-packages:
+    description: Whether to build packages (needed for packages with build outputs)
+    required: false
+    default: "true"
 
 runs:
   using: composite
@@ -30,6 +34,11 @@ runs:
     - name: Install dependencies
       shell: bash
       run: bun install ${{ inputs.install-flags }}
+
+    - name: Build packages
+      if: ${{ inputs.build-packages == 'true' }}
+      shell: bash
+      run: bun turbo run build --filter=@hominem/env --filter=@hominem/db --filter=@hominem/rpc --filter=@hominem/auth
 
     - name: Install Goose CLI
       if: ${{ inputs.install-goose == 'true' }}
