@@ -1,23 +1,26 @@
 import { STEP_UP_ACTIONS } from '../step-up-actions';
 import { useCallback, useEffect, useState } from 'react';
 
-// Get API URL from environment - works in Vite, Bun, and Node
+// Get API URL from environment - works in Vite, Bun, Node, and React Native
+// Note: This avoids import.meta which is not supported in Hermes (React Native)
 function getApiUrl(): string {
-  // Vite or compatible bundlers
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const meta = import.meta as any;
-  if (meta?.env?.VITE_PUBLIC_API_URL) {
-    return meta.env.VITE_PUBLIC_API_URL;
-  }
-  
-  // Bun or Node
+  // Bun or Node (process.env check works everywhere)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const proc = typeof process !== 'undefined' ? (process as any) : undefined;
   if (proc?.env?.VITE_PUBLIC_API_URL) {
     return proc.env.VITE_PUBLIC_API_URL;
   }
   
-  throw new Error('VITE_PUBLIC_API_URL environment variable is required');
+  // For Vite and other ESM bundlers, check if we have a global __VITE_PUBLIC_API_URL__
+  // This can be injected by the build process
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const globalVite = (globalThis as any).__VITE_PUBLIC_API_URL__;
+  if (globalVite) {
+    return globalVite;
+  }
+  
+  // Default fallback - consumer must provide API URL through other means
+  return '';
 }
 
 const API_URL = getApiUrl();
