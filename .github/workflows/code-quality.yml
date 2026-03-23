@@ -189,14 +189,7 @@ jobs:
         with:
           environment: test
       - name: 🧪 Unit tests
-        run: |
-          set -o pipefail
-          bun run test 2>&1 | tee unit-tests.log
-          {
-            echo '### Unit test summary'
-            echo
-            grep -E 'Test Files|Tests |Duration' unit-tests.log | tail -n 20 || true
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: bun run test
         timeout-minutes: 15
 
   test-api-integration:
@@ -253,16 +246,7 @@ jobs:
         with:
           environment: test
       - name: 🧪 API integration tests
-        run: |
-          set -o pipefail
-          bun run --filter @hominem/api test:integration -- --reporter=default --reporter=json --outputFile.json=api-integration.vitest.json 2>&1 | tee api-integration.log
-          {
-            echo '### API integration test summary'
-            echo
-            grep -E 'Test Files|Tests |Duration' api-integration.log | tail -n 20 || true
-            echo
-            node scripts/summarize-vitest-report.mjs api-integration.vitest.json '### API integration slowest tests' 5 1000
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: bun run --filter @hominem/api test:integration
         timeout-minutes: 10
 
   test-auth-contract:
@@ -319,16 +303,7 @@ jobs:
         with:
           environment: test
       - name: 🔐 API auth contract tests
-        run: |
-          set -o pipefail
-          bun run --filter @hominem/api test:contract:auth -- --reporter=default --reporter=json --outputFile.json=api-auth-contract.vitest.json 2>&1 | tee api-auth-contract.log
-          {
-            echo '### API auth contract test summary'
-            echo
-            grep -E 'Test Files|Tests |Duration' api-auth-contract.log | tail -n 20 || true
-            echo
-            node scripts/summarize-vitest-report.mjs api-auth-contract.vitest.json '### API auth contract slowest tests' 5 1500
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: bun run --filter @hominem/api test:contract:auth
         timeout-minutes: 10
 
   test-mobile:
@@ -355,22 +330,8 @@ jobs:
           EXPO_PUBLIC_R2_DOMAIN: "test-domain"
       - name: 📱 Mobile auth unit/integration/screen tests
         run: |
-          set -o pipefail
-          bun run --filter @hominem/mobile test:unit:auth -- --reporter=default --reporter=json --outputFile.json=mobile-auth-unit.vitest.json 2>&1 | tee mobile-auth-unit.log
-          bun run --filter @hominem/mobile test:integration:auth -- --reporter=default --reporter=json --outputFile.json=mobile-auth-integration.vitest.json 2>&1 | tee mobile-auth-integration.log
-          {
-            echo '### Mobile auth unit test summary'
-            echo
-            grep -E 'Test Files|Tests |Duration' mobile-auth-unit.log | tail -n 20 || true
-            echo
-            node scripts/summarize-vitest-report.mjs apps/mobile/mobile-auth-unit.vitest.json '### Mobile auth unit slowest tests' 5 250
-            echo
-            echo '### Mobile auth integration test summary'
-            echo
-            grep -E 'Test Files|Tests |Duration' mobile-auth-integration.log | tail -n 20 || true
-            echo
-            node scripts/summarize-vitest-report.mjs apps/mobile/mobile-auth-integration.vitest.json '### Mobile auth integration slowest tests' 5 250
-          } >> "$GITHUB_STEP_SUMMARY"
+          bun run --filter @hominem/mobile test:unit:auth
+          bun run --filter @hominem/mobile test:integration:auth
         timeout-minutes: 15
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"

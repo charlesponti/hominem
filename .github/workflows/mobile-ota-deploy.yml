@@ -45,16 +45,7 @@ jobs:
         run: bunx tsc -p apps/mobile/tsconfig.json --noEmit
 
       - name: Mobile unit tests
-        run: |
-          set -o pipefail
-          bun run --filter @hominem/mobile test:unit:auth -- --reporter=default --reporter=json --outputFile.json=mobile-auth-unit.vitest.json 2>&1 | tee mobile-auth-unit.log
-          {
-            echo '### Mobile auth unit test summary'
-            echo
-            grep -E 'Test Files|Tests |Duration' mobile-auth-unit.log | tail -n 20 || true
-            echo
-            node scripts/summarize-vitest-report.mjs apps/mobile/mobile-auth-unit.vitest.json '### Mobile auth unit slowest tests' 5 250
-          } >> "$GITHUB_STEP_SUMMARY"
+        run: bun run --filter @hominem/mobile test:unit:auth
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
 
