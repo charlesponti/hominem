@@ -17,10 +17,7 @@
     "./logger": "./src/logger.ts",
     "./client-logger": "./src/client-logger.ts",
     "./markdown": "./src/markdown/index.ts",
-    "./schemas": "./src/schemas/index.ts",
-    "./scraping": "./src/scraping/index.ts",
-    "./time": "./src/time.ts",
-    "./types/change-management": "./src/types/change-management.ts"
+    "./time": "./src/time.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

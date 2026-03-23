@@ -3,61 +3,117 @@
   "workspaces": {
     ".": {
       "entry": [
-        "scripts/*.ts",
-        "scripts/*.js"
+        "scripts/*.{ts,js,mjs,cjs}",
+        "scripts/**/*.{ts,js,mjs,cjs}"
       ],
       "project": [
-        "scripts/**/*.{ts,js}"
+        "scripts/**/*.{ts,tsx,js,jsx,mjs,cjs}"
       ],
       "ignore": [
-        "**/node_modules/**",
-        "**/.turbo/**",
-        "**/build/**",
-        "**/dist/**",
-        "**/coverage/**",
-        "**/*.d.ts"
+        "apps/**",
+        "packages/**",
+        "services/**",
+        "tools/**"
+      ]
+    },
+    "apps/desktop": {
+      "entry": [
+        "package.json",
+        "src/main/index.ts",
+        "src/preload/index.ts",
+        "src/renderer/index.html",
+        "src/renderer/src/main.tsx",
+        "src/**/*.test.{ts,tsx}"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx,js,jsx,css,html}",
+        "*.config.{ts,js,mjs,cjs}",
+        "*.config.*",
+        "**/*.test.{ts,tsx}"
+      ]
+    },
+    "apps/mobile": {
+      "entry": [
+        "package.json",
+        ".detoxrc.js",
+        "jest*.{js,cjs,mjs,ts}",
+        "app/**/*.{ts,tsx}",
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.{js,ts}"
+      ],
+      "project": [
+        "app/**/*.{ts,tsx}",
+        "components/**/*.{ts,tsx}",
+        "lib/**/*.{ts,tsx}",
+        "theme/**/*.{ts,tsx}",
+        "utils/**/*.{ts,tsx}",
+        "config/**/*.{ts,js,mjs,cjs}",
+        "plugins/**/*.{ts,js,mjs,cjs}",
+        "*.config.{ts,js,mjs,cjs}",
+        "tests/**/*.{ts,tsx}",
+        "e2e/**/*.{js,ts}"
+      ]
+    },
+    "apps/web": {
+      "entry": [
+        "package.json",
+        "app/root.tsx",
+        "app/routes.ts",
+        "react-router.config.ts",
+        "vite.config.ts",
+        "tests/**/*.{ts,tsx}"
+      ],
+      "project": [
+        "app/**/*.{ts,tsx,js,jsx,css}",
+        "*.config.{ts,js,mjs,cjs}",
+        "tests/**/*.{ts,tsx}"
+      ]
+    },
+    "services/api": {
+      "entry": [
+        "package.json",
+        "src/**/*.test.{ts,tsx}",
+        "vitest*.{ts,mts,js,mjs}"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "vitest*.{ts,mts,js,mjs}"
+      ]
+    },
+    "services/workers": {
+      "entry": [
+        "package.json",
+        "src/**/*.test.{ts,tsx}",
+        "vitest*.{ts,mts,js,mjs}"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "*.config.{ts,js,mjs,cjs}",
+        "vitest*.{ts,mts,js,mjs}"
+      ]
+    },
+    "tools/cli": {
+      "entry": [
+        "package.json",
+        "bin/**/*.js",
+        "src/**/*.{ts,tsx}",
+        "test/**/*.{ts,tsx}"
+      ],
+      "project": [
+        "bin/**/*.js",
+        "src/**/*.{ts,tsx,js,jsx}",
+        "test/**/*.{ts,tsx,js,jsx}"
+      ]
+    },
+    "packages/*": {
+      "entry": [
+        "package.json",
+        "src/index.{ts,tsx,js,jsx}"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx,js,jsx}"
       ]
     }
   },
-  "ignore": [
-    "**/node_modules/**",
-    "**/.turbo/**",
-    "**/build/**",
-    "**/dist/**",
-    "**/coverage/**",
-    "**/.react-router/**",
-    "**/drizzle/**",
-    "**/*.config.{ts,js,mjs}",
-    "**/*.d.ts",
-    "**/test/**",
-    "**/tests/**",
-    "**/__tests__/**",
-    "**/*.test.{ts,tsx}",
-    "**/*.spec.{ts,tsx}",
-    "**/vitest.setup.ts",
-    "**/vitest.config.ts",
-    "**/playwright.config.ts"
-  ],
-  "ignoreDependencies": [
-    "@types/node",
-    "typescript",
-    "vitest",
-    "@vitest/coverage-v8",
-    "msw",
-    "@playwright/test",
-    "eslint",
-    "prettier",
-    "@tailwindcss/vite",
-    "tailwindcss-animate",
-    "clsx",
-    "tailwind-merge"
-  ],
-  "ignoreBinaries": [
-    "docker",
-    "git",
-    "node",
-    "pnpm",
-    "npm",
-    "yarn"
-  ]
+  "ignore": []
 }

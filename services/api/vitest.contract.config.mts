@@ -20,7 +20,6 @@ export default defineConfig({
       'src/routes/auth.rate-limit.test.ts',
       'src/routes/auth.device-contract.test.ts',
       'src/routes/auth.token-contract.test.ts',
-      'src/server.apple-app-site-association.test.ts',
       'src/middleware/block-probes.test.ts',
       'test/components.test.ts',
     ],

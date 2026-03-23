@@ -26,17 +26,6 @@ const { EXPO_OWNER, EXPO_PROJECT_ID, getExpoExtraConfig } = require('./config/ex
   }
 }
 
-function getAssociatedDomains(appVariant: AppVariant) {
-  // Only release variants need Associated Domains (for passkey webcredentials).
-  // Dev/e2e provisioning profiles don't include the entitlement.
-  if (appVariant === 'dev' || appVariant === 'e2e') {
-    return undefined
-  }
-
-  const passkeyRpDomain = process.env.EXPO_PUBLIC_PASSKEY_RP_DOMAIN?.trim() || 'api.ponti.io'
-  return [`webcredentials:${passkeyRpDomain}`]
-}
-
 function getUpdatesConfig(variantConfig: VariantConfig): ExpoConfig['updates'] {
   if (variantConfig.usesDevClient || variantConfig.updatesChannel === null) {
     return {
@@ -191,7 +180,6 @@ export default ({ config }: ConfigContext) => {
     ios: {
       icon: './assets/icon.png',
       appleTeamId: process.env.EXPO_APPLE_TEAM_ID ?? '3QHJ2KN8AL',
-      associatedDomains: getAssociatedDomains(appVariant),
       bundleIdentifier: variantConfig.bundleIdentifier,
       supportsTablet: true,
       infoPlist: {

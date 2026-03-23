@@ -22,18 +22,6 @@
       "types": "./src/files.ts",
       "default": "./src/files.ts"
     },
-    "./fixtures": {
-      "types": "./src/fixtures.ts",
-      "default": "./src/fixtures.ts"
-    },
-    "./google-calendar": {
-      "types": "@hominem/db/build/google-calendar.service.d.ts",
-      "default": "@hominem/db"
-    },
-    "./logger": {
-      "types": "./src/logger.ts",
-      "default": "./src/logger.ts"
-    },
     "./types": {
       "types": "./src/types.ts",
       "default": "./src/types.ts"
@@ -65,10 +53,6 @@
     "./test-utils/google-api-mocks": {
       "types": "./src/test-utils/google-api-mocks.ts",
       "default": "./src/test-utils/google-api-mocks.ts"
-    },
-    "./travel": {
-      "types": "./src/travel/index.ts",
-      "default": "./src/travel/index.ts"
     },
     "./package.json": "./package.json"
   },

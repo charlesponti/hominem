@@ -50,7 +50,6 @@ const serverSchema = z.object({
     .describe('Whether to actually send emails via Resend'),
 
   // SERVICES
-  APPLE_TEAM_ID: z.string().default(''),
   GOOGLE_API_KEY: z.string().default(''),
   GOOGLE_CLIENT_ID: z.string().default(''),
   GOOGLE_CLIENT_SECRET: z.string().default(''),

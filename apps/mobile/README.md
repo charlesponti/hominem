@@ -105,10 +105,8 @@ If you switch from simulator Detox work back to a physical-device dev build, run
 ### Local device signing
 
 - Set `EXPO_APPLE_TEAM_ID` in `.env.development.local` before generating or building a physical-device `dev` app.
-- Set `EXPO_PUBLIC_PASSKEY_RP_DOMAIN` to the stable passkey relying-party host. The repo default is `api.ponti.io`.
 - Set `EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED=true` only when you are actively validating the mobile passkey surface.
 - Expo maps `ios.appleTeamId` from app config into the generated Xcode project, which keeps `dev` builds reproducible after a clean prebuild.
-- Expo maps `ios.associatedDomains` from app config into the generated entitlements, which is required for iOS passkey registration.
 - The `e2e` simulator workflow does not require a development team.
 
 ## Detox E2E

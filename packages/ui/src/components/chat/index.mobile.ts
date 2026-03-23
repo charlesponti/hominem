@@ -1,6 +1,5 @@
 export { ArtifactActions } from './artifact-actions.mobile'
 export { ChatHeader } from './chat-header.mobile'
-export { ChatInput } from './chat-input.mobile'
 export { ChatMessageList } from './chat-message-list.mobile'
 export { ChatMessage, loadMarkdown, renderChatMessage } from './chat-message.mobile'
 export { ChatReviewOverlay, type ChatPendingReview } from './chat-review-overlay.mobile'

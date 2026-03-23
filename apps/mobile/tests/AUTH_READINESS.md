@@ -29,10 +29,6 @@ This document is the closeout surface for mobile auth verification, deterministi
   - `e2e` generates a standalone Detox app with dev-client modules excluded
   - variant-aware prebuild commands regenerate `ios/` when switching between those shapes
 - Mobile passkey UI is now feature-flagged behind `EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED` and should remain off outside targeted validation sessions.
-- Passkey registration now depends on an explicit stable relying-party domain:
-  - the iOS app ships `webcredentials:api.ponti.io`
-  - the API serves `/.well-known/apple-app-site-association`
-  - the auth server uses `AUTH_PASSKEY_RP_ID` and `AUTH_PASSKEY_ORIGIN` instead of inheriting passkey settings from the local API base URL
 - Passkey device coverage remains deterministic in the e2e app variant through explicit controls:
   - `auth-e2e-passkey-success`
   - `auth-e2e-passkey-cancel`
@@ -47,11 +43,10 @@ This document is the closeout surface for mobile auth verification, deterministi
 
 Use the manual smoke in [apps/mobile/README.md](/Users/charlesponti/Developer/hominem/apps/mobile/README.md):
 
-1. Set `EXPO_APPLE_TEAM_ID` for the local device build, then install the development build on iPhone.
-2. Complete email + OTP sign-in.
-3. Verify protected API-backed data loads.
-4. Sign out and confirm the app returns to signed-out state.
-5. Relaunch and confirm refresh-token session restore.
+1. Complete email + OTP sign-in.
+2. Verify protected API-backed data loads.
+3. Sign out and confirm the app returns to signed-out state.
+4. Relaunch and confirm refresh-token session restore.
 
 ## Operational Controls
 
