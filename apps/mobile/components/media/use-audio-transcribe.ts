@@ -1,9 +1,9 @@
+import { emitVoiceEvent } from '@hominem/services/voice-events';
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
 
 import { useAuth } from '~/utils/auth-provider';
 import { API_BASE_URL } from '~/utils/constants';
-import { emitVoiceEvent } from '~/utils/voice-events';
 
 type VoiceTranscribeResponse = {
   text: string;

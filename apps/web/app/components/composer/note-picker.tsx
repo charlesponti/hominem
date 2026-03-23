@@ -18,7 +18,7 @@ import { getTimeAgo } from '@hominem/utils';
 
 import { useNotesList } from '~/hooks/use-notes';
 import { cn } from '~/lib/utils';
-import { useComposer } from './composer-provider';
+import { useComposerAttachedNotes } from './composer-provider';
 
 // ─── Sheet ────────────────────────────────────────────────────────────────────
 
@@ -31,7 +31,7 @@ export function NotePicker({ open, onClose }: NotePickerProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState('');
-  const { attachedNotes, attachNote, detachNote } = useComposer();
+  const { attachedNotes, attachNote, detachNote } = useComposerAttachedNotes();
 
   const { data: notes = [] } = useNotesList({ sortBy: 'updatedAt', sortOrder: 'desc', limit: 100 });
 

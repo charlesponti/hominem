@@ -1,4 +1,4 @@
-export interface HominemUser {
+export interface User {
   id: string
   email: string
   name?: string | undefined
@@ -24,13 +24,13 @@ export type AppAuthStatus =
 
 export interface AppAuthState {
   status: AppAuthStatus
-  user: HominemUser | null
+  user: User | null
   error: Error | null
   isLoading: boolean
 }
 
 export type AppAuthEvent =
-  | { type: 'SESSION_LOADED'; user: HominemUser }
+  | { type: 'SESSION_LOADED'; user: User }
   | { type: 'SESSION_EXPIRED' }
   | { type: 'OTP_REQUEST_STARTED' }
   | { type: 'OTP_REQUESTED' }
@@ -201,7 +201,7 @@ export interface AuthEnvelope {
   authTime: number
 }
 
-export interface HominemSession {
+export interface Session {
   access_token: string
   token_type: 'Bearer'
   expires_in: number
@@ -218,7 +218,7 @@ export interface AuthClient {
     signOut: () => Promise<{ error: Error | null }>
     getSession: () => Promise<{
       data: {
-        session: HominemSession | null
+        session: Session | null
       }
       error: Error | null
     }>
@@ -226,8 +226,8 @@ export interface AuthClient {
 }
 
 export interface AuthContextType {
-  user: HominemUser | null
-  session: HominemSession | null
+  user: User | null
+  session: Session | null
   isLoading: boolean
   isAuthenticated: boolean
   signIn: () => Promise<void>
@@ -237,7 +237,7 @@ export interface AuthContextType {
   linkGoogle: () => Promise<void>
   unlinkGoogle: () => Promise<void>
   signOut: () => Promise<void>
-  getSession: () => Promise<HominemSession | null>
+  getSession: () => Promise<Session | null>
   requireStepUp: (action: string) => Promise<void>
   logout: () => Promise<void>
   authClient: AuthClient
@@ -250,8 +250,8 @@ export interface AuthConfig {
 }
 
 export interface ServerAuthResult {
-  user: HominemUser | null
-  session: HominemSession | null
+  user: User | null
+  session: Session | null
   auth: AuthEnvelope | null
   isAuthenticated: boolean
 }

@@ -25,7 +25,7 @@ import {
   Search,
   SquarePen,
 } from 'lucide-react';
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 
 import { ContextAnchor } from '@hominem/ui/ai-elements';
@@ -51,7 +51,7 @@ const TRANSFORM_ITEMS: Array<{
   { type: 'tracker', label: 'Transform to tracker', icon: FileStack },
 ];
 
-export function ChatHeader({
+export const ChatHeader = memo(function ChatHeader({
   source,
   lifecycleState,
   messageCount,
@@ -84,7 +84,7 @@ export function ChatHeader({
   }, [navigate]);
 
   return (
-    <div className="shrink-0 border-b border-border/50 bg-background/70 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <div className="shrink-0 border-b editorial-rule bg-[rgba(249,242,233,0.85)] backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-200 items-center gap-3 px-4 py-3 sm:px-6">
         <Button
           type="button"
@@ -99,7 +99,7 @@ export function ChatHeader({
         </Button>
 
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-medium tracking-[0.05em] text-text-tertiary">
+          <div className="editorial-kicker text-text-tertiary">
             {statusCopy}
           </div>
           <ContextAnchor
@@ -160,4 +160,4 @@ export function ChatHeader({
       </div>
     </div>
   );
-}
+})

@@ -53,15 +53,15 @@ export function NoteEditor({ note }: NoteEditorProps) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="border-b border-border/50 pb-4">
-        <div className="body-4 uppercase tracking-[0.12em] text-text-tertiary">Note</div>
+      <div className="border-b editorial-rule pb-4">
+        <div className="editorial-kicker text-text-tertiary">Note</div>
         <div className="mt-3 flex items-start justify-between gap-4">
           <TextField
             value={title}
             onChange={handleTitleChange}
             placeholder="Untitled note"
             aria-label="Note title"
-            className="heading-2 h-auto flex-1 border-0 bg-transparent px-0 text-foreground shadow-none focus-visible:ring-0"
+            className="heading-2 editorial-display h-auto flex-1 border-0 bg-transparent px-0 text-text-primary shadow-none focus-visible:ring-0"
           />
           <Inline gap="sm">
             <Button
@@ -90,7 +90,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
         />
       </div>
 
-      <div className="border-t border-border/50 pt-4">
+      <div className="border-t editorial-rule pt-4">
         <div className="body-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-text-tertiary">
           <span>Created {new Date(note.createdAt).toLocaleString()}</span>
           <span>Updated {new Date(note.updatedAt).toLocaleString()}</span>

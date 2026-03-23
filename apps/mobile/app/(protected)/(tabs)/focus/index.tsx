@@ -4,7 +4,6 @@ import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { PulsingCircle } from '~/components/animated/pulsing-circle';
-import { useResumableSessions } from '~/components/chat/session-card';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { FeedbackBlock } from '~/components/feedback-block';
 import { ActiveSearchSummary, type ActiveSearch } from '~/components/focus/focus-search';
@@ -12,8 +11,7 @@ import { LoadingContainer } from '~/components/LoadingFull';
 import AppIcon from '~/components/ui/icon';
 import { InboxStream } from '~/components/workspace/inbox-stream';
 import { Text, theme, makeStyles } from '~/theme';
-import { useFocusQuery } from '~/utils/services/notes/use-focus-query';
-import type { Note } from '@hominem/rpc/types'
+import { useFocusStream } from '~/utils/services/notes/use-focus-stream';
 
 const FOCUS_SCREEN_OPTIONS = {
   headerShown: false,
@@ -57,16 +55,13 @@ export const FocusView = () => {
   const styles = useStyles();
   const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const { data: sessions = [] } = useResumableSessions();
   const {
-    data: focusItems,
+    data: items = [],
     refetch,
     isLoading,
     isRefetching,
     isError,
-  } = useFocusQuery({});
-
-  const resolvedFocusItems: Note[] = focusItems ?? []
+  } = useFocusStream({});
 
   const onRefresh = useCallback(async () => {
     setActiveSearch(null);
@@ -84,8 +79,7 @@ export const FocusView = () => {
   }, [onRefresh]);
 
   const isLoaded = Boolean(!isLoading && !isRefetching && !refreshing);
-  const hasFocusItems = resolvedFocusItems.length > 0;
-  const hasInboxItems = hasFocusItems || sessions.length > 0;
+  const hasInboxItems = items.length > 0;
 
   return (
     <>
@@ -109,12 +103,12 @@ export const FocusView = () => {
                 <ActiveSearchSummary onCloseClick={onSearchClose} activeSearch={activeSearch} />
               ) : null}
 
-              <InboxStream focusItems={resolvedFocusItems} sessions={sessions} />
+              <InboxStream items={items} />
             </View>
           ) : null}
           {isLoaded && !hasInboxItems && !activeSearch ? (
             <View style={styles.focuses}>
-              <InboxStream focusItems={[]} sessions={sessions} />
+              <InboxStream items={[]} />
             </View>
           ) : null}
         </View>

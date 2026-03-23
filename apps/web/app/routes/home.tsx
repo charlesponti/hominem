@@ -6,6 +6,7 @@ import { data, redirect } from 'react-router';
 import type { LoaderFunctionArgs } from 'react-router';
 import { useSearchParams } from 'react-router';
 
+import { FocusView } from '~/components/focus-view';
 import { getServerSession } from '~/lib/auth.server';
 import { WEB_BRAND } from '~/lib/brand';
 
@@ -13,14 +14,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const { user, headers } = await getServerSession(request);
   if (user) {
     const requestUrl = new URL(request.url);
-    return redirect(
-      resolveSafeAuthRedirect(requestUrl.searchParams.get('next'), '/home', [
+    const rawNext = requestUrl.searchParams.get('next');
+    // Only redirect when an explicit `next` destination is present — otherwise
+    // render the authenticated home surface here at `/`.
+    if (rawNext) {
+      const next = resolveSafeAuthRedirect(rawNext, '/', [
         ...NOTES_AUTH_CONFIG.allowedDestinations,
-      ]),
-      { headers },
-    );
+      ]);
+      return redirect(next, { headers });
+    }
+    return data({ authenticated: true }, { headers });
   }
-  return data({}, { headers });
+  return data({ authenticated: false }, { headers });
 }
 
 export function meta() {
@@ -33,10 +38,14 @@ export function meta() {
   ]
 }
 
-export default function HomePage() {
+export default function HomePage({ loaderData }: { loaderData: { authenticated: boolean } }) {
   const [searchParams] = useSearchParams();
   const next = searchParams.get('next');
   const authHref = next ? `/auth?next=${encodeURIComponent(next)}` : '/auth';
+
+  if (loaderData.authenticated) {
+    return <FocusView />;
+  }
 
   return (
     <LandingPage

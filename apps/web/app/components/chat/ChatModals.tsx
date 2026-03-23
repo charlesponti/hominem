@@ -1,3 +1,4 @@
+import { emitVoiceEvent } from '@hominem/services/voice-events';
 import type { VoiceErrorCode } from '@hominem/services/voice-transcription';
 import { Inline } from '@hominem/ui';
 import { SpeechInput } from '@hominem/ui/ai-elements';
@@ -5,7 +6,6 @@ import { Button } from '@hominem/ui/button';
 import { X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
-import { emitVoiceEvent } from '~/lib/voice-events';
 
 interface ChatModalsProps {
   showAudioRecorder: boolean;

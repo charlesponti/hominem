@@ -1,28 +1,18 @@
-import type { KeyboardEventHandler, ReactNode, RefObject } from 'react'
+import type { ReactNode, RefObject } from 'react'
 
 import { cn } from '~/lib/utils'
 
 export function ComposerShell({
   cardRef,
-  draftText,
-  inputRef,
   isDraftMode,
-  isSubmitting,
-  onDraftTextChange,
-  onKeyDown,
-  placeholder,
+  input,
   attachments,
   tools,
   actions,
 }: {
   cardRef: RefObject<HTMLDivElement | null>
-  draftText: string
-  inputRef: RefObject<HTMLTextAreaElement | null>
   isDraftMode: boolean
-  isSubmitting: boolean
-  onDraftTextChange: (value: string) => void
-  onKeyDown: KeyboardEventHandler<HTMLTextAreaElement>
-  placeholder: string
+  input: ReactNode
   attachments: ReactNode
   tools: ReactNode
   actions: ReactNode
@@ -41,21 +31,7 @@ export function ComposerShell({
             isDraftMode && 'min-h-40',
           )}
         >
-          <textarea
-            ref={inputRef}
-            data-testid="composer-input"
-            value={draftText}
-            onChange={(event) => onDraftTextChange(event.target.value)}
-            onKeyDown={onKeyDown}
-            placeholder={placeholder}
-            disabled={isSubmitting}
-            className={cn(
-              'w-full resize-none border-0 bg-transparent p-0 text-base leading-normal text-foreground outline-none field-sizing-content overflow-y-auto placeholder:text-text-tertiary focus:outline-none',
-              !isDraftMode && 'max-h-48 min-h-6',
-              isDraftMode && 'min-h-24 max-h-64',
-            )}
-            aria-label="Compose message or note"
-          />
+          {input}
 
           {attachments}
 

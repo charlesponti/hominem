@@ -1,4 +1,4 @@
-import type { HominemUser } from '@hominem/auth/server';
+import type { User } from '@hominem/auth/server';
 import type { AuthEnvelope } from '@hominem/auth/types';
 
 import { UnauthorizedError } from '../errors';
@@ -12,7 +12,7 @@ import { createMiddleware } from 'hono/factory';
  */
 export interface AppContext {
   Variables: {
-    user?: HominemUser;
+    user?: User;
     userId?: string;
     auth?: AuthEnvelope;
     authError?:

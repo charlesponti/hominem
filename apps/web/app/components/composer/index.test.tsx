@@ -1,11 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Note } from '@hominem/rpc/types/notes.types'
 import type { UploadedFile } from '~/lib/types/upload'
 
-import { ComposerProvider, useComposer } from './composer-provider'
+import { ComposerProvider, useComposerAttachedNotes } from './composer-provider'
 import { Composer } from './index'
 
 const mocks = vi.hoisted(() => {
@@ -73,12 +73,32 @@ vi.mock('~/lib/hooks/use-send-message', () => ({
 }))
 
 vi.mock('~/lib/hooks/use-file-upload', () => ({
-  useFileUpload: () => ({
-    uploadState: mocks.uploadState,
-    uploadFiles: mocks.uploadFiles,
-    removeFile: mocks.removeFile,
-    clearAll: mocks.clearAllUploads,
-  }),
+  useFileUpload: () => {
+    const [, rerender] = useState(0)
+
+    const uploadFiles = useCallback(async (files: FileList | File[]) => {
+      const result = await mocks.uploadFiles(files)
+      rerender((value) => value + 1)
+      return result
+    }, [])
+
+    const removeFile = useCallback((fileId: string) => {
+      mocks.removeFile(fileId)
+      rerender((value) => value + 1)
+    }, [])
+
+    const clearAll = useCallback(() => {
+      mocks.clearAllUploads()
+      rerender((value) => value + 1)
+    }, [])
+
+    return {
+      uploadState: mocks.uploadState,
+      uploadFiles,
+      removeFile,
+      clearAll,
+    }
+  },
 }))
 
 vi.mock('./use-composer-mode', () => ({
@@ -117,7 +137,7 @@ function ComposerStateInitializer({
 }: {
   attachedNotes: Note[]
 }) {
-  const { attachNote } = useComposer()
+  const { attachNote } = useComposerAttachedNotes()
 
   useEffect(() => {
     for (const note of attachedNotes) {

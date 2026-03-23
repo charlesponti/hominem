@@ -1,4 +1,4 @@
-import type { HominemUser } from '@hominem/auth/server';
+import type { User } from '@hominem/auth/server';
 import { logger } from '@hominem/utils/logger';
 import { apiReference } from '@scalar/hono-api-reference';
 import { Hono } from 'hono';
@@ -31,7 +31,7 @@ import { statusRoutes } from './routes/status';
 export type AppEnv = {
   Variables: {
     userId?: string;
-    user?: HominemUser;
+    user?: User;
     auth?: AuthContextEnvelope;
   };
 };

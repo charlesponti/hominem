@@ -1,5 +1,6 @@
 import { createAdminClient, type AdminClient } from '../domains/admin';
 import { createChatsClient, type ChatsClient } from '../domains/chats';
+import { createFocusClient, type FocusClient } from '../domains/focus';
 import { createFinanceClient, type FinanceClient } from '../domains/finance';
 import { createFilesClient, type FilesClient } from '../domains/files';
 import { createInvitesClient, type InvitesClient } from '../domains/invites';
@@ -25,6 +26,7 @@ export interface ClientConfig {
 export interface ApiClient {
   admin: AdminClient;
   chats: ChatsClient;
+  focus: FocusClient;
   finance: FinanceClient;
   files: FilesClient;
   invites: InvitesClient;
@@ -48,6 +50,7 @@ export function createApiClientFromRaw(rawClient: RawHonoClient): ApiClient {
   return {
     admin: createAdminClient(rawClient),
     chats: createChatsClient(rawClient),
+    focus: createFocusClient(rawClient),
     finance: createFinanceClient(rawClient),
     files: createFilesClient(rawClient),
     invites: createInvitesClient(rawClient),

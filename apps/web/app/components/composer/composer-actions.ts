@@ -1,8 +1,23 @@
+import { useRpcMutation } from '@hominem/rpc/react'
 import type { Note } from '@hominem/rpc/types/notes.types'
+import { useCallback, type KeyboardEvent } from 'react'
+import { useNavigate } from 'react-router'
+
+import { useCreateNote, useUpdateNote } from '~/hooks/use-notes'
+import { useSendMessage } from '~/lib/hooks/use-send-message'
 import type { UploadedFile } from '~/lib/types/upload'
 
 import { appendChatAttachmentContext, appendNoteAttachments } from './composer-attachments'
 import type { ComposerPosture } from './composer-presentation'
+import {
+  useComposerAttachedNotes,
+  useComposerDraftActions,
+  useComposerDraftState,
+  useComposerNoteTitle,
+  useComposerSubmission,
+  useComposerUploadActions,
+  useComposerUploadState,
+} from './composer-provider'
 
 interface CreateNoteInput {
   content: string
@@ -66,7 +81,10 @@ export function resolveComposerActions(
         await input.runWithSubmitLock(async () => {
           if (input.posture === 'reply' && input.chatId) {
             const prefix = buildNoteContext(input.attachedNotes)
-            const message = appendChatAttachmentContext(prefix ? `${prefix}${text}` : text, input.uploadedFiles)
+            const message = appendChatAttachmentContext(
+              prefix ? `${prefix}${text}` : text,
+              input.uploadedFiles,
+            )
             await input.sendMessage({ chatId: input.chatId, message })
             input.clearDraft()
             input.clearAttachedNotes()
@@ -110,10 +128,12 @@ export function resolveComposerActions(
             return
           }
 
-          const seedText = input.posture === 'draft' && input.noteTitle
-            ? `[Regarding note: "${input.noteTitle}"]\n\n${text}`
-            : text
-          const title = text.slice(0, 64) || (input.posture === 'draft' ? 'Note chat' : 'New session')
+          const seedText =
+            input.posture === 'draft' && input.noteTitle
+              ? `[Regarding note: "${input.noteTitle}"]\n\n${text}`
+              : text
+          const title =
+            text.slice(0, 64) || (input.posture === 'draft' ? 'Note chat' : 'New session')
           const chat = await input.createChat({
             seedText: appendChatAttachmentContext(seedText, input.uploadedFiles),
             title,
@@ -124,6 +144,82 @@ export function resolveComposerActions(
         })
       },
     },
+  }
+}
+
+export interface UseComposerActionsInput {
+  posture: ComposerPosture
+  noteId: string | null
+  chatId: string | null
+}
+
+export function useComposerActions({
+  posture,
+  noteId,
+  chatId,
+}: UseComposerActionsInput) {
+  const navigate = useNavigate()
+  const { draftText } = useComposerDraftState()
+  const { clearDraft } = useComposerDraftActions()
+  const { attachedNotes, clearAttachedNotes } = useComposerAttachedNotes()
+  const { noteTitle } = useComposerNoteTitle()
+  const { uploadState } = useComposerUploadState()
+  const { clearUploadedFiles } = useComposerUploadActions()
+  const { isSubmitting, runWithSubmitLock } = useComposerSubmission()
+
+  const createNote = useCreateNote()
+  const updateNote = useUpdateNote()
+  const sendMessage = useSendMessage({ chatId: chatId ?? '' })
+
+  const createChatMutation = useRpcMutation<{ id: string }, { seedText: string; title: string }>(
+    async ({ chats }, body) => {
+      const chat = await chats.create({ title: body.title })
+      if (body.seedText.trim()) {
+        await chats.send({ chatId: chat.id, message: body.seedText })
+      }
+      return chat
+    },
+  )
+
+  const actions = resolveComposerActions({
+    posture,
+    draftText,
+    noteId,
+    noteTitle,
+    chatId,
+    attachedNotes,
+    uploadedFiles: uploadState.uploadedFiles,
+    isUploadingAttachments: uploadState.isUploading,
+    isSubmitting,
+    createNote: createNote.mutateAsync,
+    updateNote: updateNote.mutateAsync,
+    sendMessage: sendMessage.mutateAsync,
+    createChat: createChatMutation.mutateAsync,
+    clearDraft,
+    clearAttachedNotes,
+    clearUploadedFiles,
+    navigate: (path: string) => {
+      void navigate(path)
+    },
+    runWithSubmitLock,
+  })
+
+  const onKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault()
+        if (!actions.canSubmit) return
+        void actions.primary.execute()
+      }
+    },
+    [actions],
+  )
+
+  return {
+    canSubmit: actions.canSubmit,
+    onKeyDown,
+    primary: actions.primary,
+    secondary: actions.secondary,
   }
 }
 

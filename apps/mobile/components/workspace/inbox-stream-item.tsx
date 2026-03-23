@@ -46,7 +46,7 @@ export const InboxStreamItem = memo(({ item }: InboxStreamItemProps) => {
               </Text>
             </View>
             <Text numberOfLines={1} variant="small" color="text-tertiary" style={styles.metadata}>
-              {formatTimestamp(item.timestamp)}
+              {formatTimestamp(item.updatedAt)}
             </Text>
           </View>
           {item.preview ? (

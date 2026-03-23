@@ -101,6 +101,8 @@ const placesContract = new Hono()
   .post('/delete-visit', stub)
   .post('/visit-stats', stub)
 
+const focusContract = new Hono().get('/', stub)
+
 const reviewContract = new Hono().post('/:reviewItemId/accept', stub).post('/:reviewItemId/reject', stub)
 
 const twitterContract = new Hono().get('/accounts', stub).post('/post', stub)
@@ -118,6 +120,7 @@ export const app = new Hono()
   .route('/lists', listsContract)
   .route('/messages', messagesContract)
   .route('/mobile', mobileContract)
+  .route('/focus', focusContract)
   .route('/notes', notesContract)
   .route('/places', placesContract)
   .route('/review', reviewContract)

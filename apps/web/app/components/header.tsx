@@ -22,7 +22,6 @@ export default function NotesHeader() {
 
   return (
     <Header
-      brandName={WEB_BRAND.appName}
       brandIcon={<img src={WEB_BRAND.logoPath} alt={WEB_BRAND.appName} className="size-6 rounded-md object-cover" />}
       navItems={navItems}
     />

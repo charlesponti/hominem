@@ -38,6 +38,10 @@
       "types": "./src/voice-transcription.service.ts",
       "default": "./src/voice-transcription.service.ts"
     },
+    "./voice-events": {
+      "types": "./src/voice-events.ts",
+      "default": "./src/voice-events.ts"
+    },
     "./voice-speech": {
       "types": "./src/voice-speech.service.ts",
       "default": "./src/voice-speech.service.ts"

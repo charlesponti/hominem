@@ -1,8 +1,9 @@
 import { X } from 'lucide-react'
+import { memo } from 'react'
 
 import type { Note } from '@hominem/rpc/types/notes.types'
 
-export function AttachedNotesList({
+export const AttachedNotesList = memo(function AttachedNotesList({
   notes,
   onRemove,
 }: {
@@ -33,4 +34,4 @@ export function AttachedNotesList({
       ))}
     </div>
   )
-}
+})

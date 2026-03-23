@@ -63,7 +63,7 @@ export default function Layout() {
             id="main-content"
             className="mt-14 flex-1 pb-[calc(56px+env(safe-area-inset-bottom))] md:mt-16 md:pb-12"
           >
-            <div className="w-full max-w-5xl px-4 sm:px-8 lg:px-12">
+            <div className="mx-auto w-full max-w-5xl px-4 sm:px-8 lg:px-12">
               <Suspense fallback={<LoadingScreen />}>
                 <Outlet />
               </Suspense>

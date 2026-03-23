@@ -2,7 +2,7 @@ import { logger } from '@hominem/utils/logger'
 import { getSetCookieHeaders } from '@hominem/utils/headers'
 
 import { resolveAuthRedirect } from './redirect-policy'
-import type { AuthConfig, HominemSession, HominemUser, ServerAuthResult } from './types'
+import type { AuthConfig, Session, User, ServerAuthResult } from './types'
 
 export function resolveSafeAuthRedirect(
   next: string | null | undefined,
@@ -29,7 +29,7 @@ export function resolveSafeAuthRedirect(
 
 interface ServerSessionPayload {
   isAuthenticated: boolean
-  user: HominemUser | null
+  user: User | null
   auth: ServerAuthResult['auth']
   accessToken?: string | null
   expiresIn?: number | null
@@ -58,7 +58,7 @@ function appendSetCookieHeaders(target: Headers, source: Headers) {
   }
 }
 
-function toSession(accessToken?: string | null, expiresIn?: number | null): HominemSession | null {
+function toSession(accessToken?: string | null, expiresIn?: number | null): Session | null {
   if (!accessToken) {
     return null
   }

@@ -5,6 +5,7 @@ import type {
   PeopleCreateInput,
   PeopleCreateOutput,
 } from '@hominem/rpc/types/people.types'
+import type { Person } from '@hominem/rpc/types/people.types'
 
 const queryKeys = {
   people: {
@@ -16,7 +17,9 @@ const queryKeys = {
  * Get all people/contacts
  */
 export const usePeople = () =>
-  useRpcQuery(async () => [], { queryKey: queryKeys.people.list() })
+  useRpcQuery<PeopleListOutput>(async () => {
+    return [] as PeopleListOutput
+  }, { queryKey: queryKeys.people.list() })
 
 /**
  * Create person/contact

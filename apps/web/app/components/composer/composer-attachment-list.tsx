@@ -1,8 +1,9 @@
 import { X } from 'lucide-react'
+import { memo } from 'react'
 
 import type { UploadedFile } from '~/lib/types/upload'
 
-export function ComposerAttachmentList({
+export const ComposerAttachmentList = memo(function ComposerAttachmentList({
   errors,
   files,
   onRemove,
@@ -45,4 +46,4 @@ export function ComposerAttachmentList({
       ))}
     </div>
   )
-}
+})

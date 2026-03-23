@@ -35,6 +35,10 @@ export const VOICE_ERROR_CODES = [
 
 export type VoiceErrorCode = (typeof VOICE_ERROR_CODES)[number];
 
+export const VOICE_TRANSPORTS = ['hono-rpc'] as const;
+
+export type VoiceTransport = (typeof VOICE_TRANSPORTS)[number];
+
 const VOICE_MIME_ALIASES: Record<string, string> = {
   'audio/x-wav': 'audio/wav',
   'audio/m4a': 'audio/mp4',

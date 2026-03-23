@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { useDesktopAuth } from './auth/desktop-auth-provider';
+import { useDesktopAuth } from './auth/auth-provider';
 import { DESKTOP_BRAND } from './brand';
 
 export function AppShell() {

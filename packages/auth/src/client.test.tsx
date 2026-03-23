@@ -2,10 +2,10 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useEffect, useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import type { HominemSession, HominemUser } from './types'
+import type { Session, User } from './types'
 import { AuthProvider, useAuthContext } from './client'
 
-const initialUser: HominemUser = {
+const initialUser: User = {
   id: 'user-1',
   email: 'user@example.com',
   isAdmin: false,
@@ -13,7 +13,7 @@ const initialUser: HominemUser = {
   updatedAt: '2026-03-10T12:00:00.000Z',
 }
 
-const initialSession: HominemSession = {
+const initialSession: Session = {
   access_token: 'token-123',
   token_type: 'Bearer',
   expires_in: 600,

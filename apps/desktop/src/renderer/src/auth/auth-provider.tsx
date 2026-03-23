@@ -2,7 +2,7 @@ import {
   appAuthStateMachine,
   initialAppAuthState,
   type AppAuthState,
-  type HominemSession,
+  type Session,
 } from '@hominem/auth/types';
 import {
   createContext,
@@ -33,7 +33,7 @@ interface DesktopAuthContextValue {
   isPasskeyAvailable: boolean;
   restartAuth: () => void;
   requestOtp: (email: string) => Promise<void>;
-  session: HominemSession | null;
+  session: Session | null;
   signInWithPasskey: () => Promise<void>;
   signOut: () => Promise<void>;
   state: AppAuthState;
@@ -45,7 +45,7 @@ const DesktopAuthContext = createContext<DesktopAuthContextValue | null>(null);
 
 export function DesktopAuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appAuthStateMachine, initialAppAuthState);
-  const [session, setSession] = useState<HominemSession | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [email, setEmail] = useState('');
 
   const apiBaseUrl = desktopEnv.VITE_PUBLIC_API_URL;

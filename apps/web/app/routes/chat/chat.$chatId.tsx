@@ -1,14 +1,7 @@
-import type {
-  SessionSource,
-  ThoughtLifecycleState,
-} from '@hominem/chat-services/types';
-import { deriveSessionSource } from '@hominem/chat-services/types';
+import type { SessionSource } from '@hominem/chat-services/types';
+import { useChatLifecycle } from '@hominem/chat-services/react';
 import { useRpcQuery, useRpcMutation } from '@hominem/rpc/react';
-import type {
-  ArtifactType,
-  ChatsGetOutput,
-  ChatsGetMessagesOutput,
-} from '@hominem/rpc/types/chat.types';
+import type { ArtifactType, ChatsGetOutput, ChatsGetMessagesOutput } from '@hominem/rpc/types/chat.types';
 import { useToast } from '@hominem/ui';
 import { useMemo, useRef, useState } from 'react';
 
@@ -18,27 +11,12 @@ import { ClassificationReview } from '@hominem/ui/ai-elements';
 import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
+import { deriveSessionSource } from '@hominem/chat-services/ui';
 
 import type { Route } from './+types/chat.$chatId';
 
 export async function loader({ request }: Route.LoaderArgs) {
   await requireAuth(request);
-}
-
-interface PendingReview {
-  reviewItemId: string;
-  proposedType: ArtifactType;
-  proposedTitle: string;
-  proposedChanges: string[];
-  previewContent: string;
-}
-
-interface ChatsReviewOutput {
-  reviewItemId: string
-  proposedType: ArtifactType
-  proposedTitle: string
-  proposedChanges: string[]
-  previewContent: string
 }
 
 export default function ChatPage({ params }: Route.ComponentProps) {
@@ -49,9 +27,6 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   const error = sendMessage.error ?? null;
   const messageControlsRef = useRef<{ showSearch: () => void }>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
-  const [lifecycleState, setLifecycleState] = useState<ThoughtLifecycleState>('idle');
-  const [pendingReview, setPendingReview] = useState<PendingReview | null>(null);
-  const [overrideSource, setOverrideSource] = useState<SessionSource | null>(null);
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
 
   const { data: chat } = useRpcQuery(({ chats: c }) => c.get({ chatId }), {
@@ -62,9 +37,9 @@ export default function ChatPage({ params }: Route.ComponentProps) {
     ({ chats: c }) => c.getMessages({ chatId, limit: 50 }),
     { queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] },
   );
-  const source = useMemo(
+
+  const initialSource = useMemo<SessionSource>(
     () =>
-      overrideSource ??
       deriveSessionSource({
         artifactId: chat?.noteId ?? null,
         artifactTitle: chat?.title ?? null,
@@ -74,88 +49,76 @@ export default function ChatPage({ params }: Route.ComponentProps) {
             (m): m is typeof m & { role: 'user' | 'assistant' | 'system' } =>
               m.role === 'user' || m.role === 'assistant' || m.role === 'system',
           )
-          .map((message) => ({
-            role: message.role,
-            content: message.content,
-          })),
+          .map((m) => ({ role: m.role, content: m.content })),
       }),
-    [chat?.noteId, chat?.title, messages, overrideSource],
-  );
-  const messageCount = messages?.length ?? 0;
-
-  const classifyMutation = useRpcMutation<ChatsReviewOutput, { targetType: ArtifactType }>(
-    (client, vars) => client.chats.classify({ chatId, targetType: vars.targetType }),
+    [chat?.noteId, chat?.title, messages],
   );
 
-  const acceptMutation = useRpcMutation<{ noteId: string }, { reviewItemId: string }>(
-    (client, vars) => client.review.accept({ reviewItemId: vars.reviewItemId }),
+  const proposalMessages = useMemo(
+    () =>
+      (messages ?? [])
+        .filter(
+          (m): m is typeof m & { role: 'user' | 'assistant' | 'system' } =>
+            m.role === 'user' || m.role === 'assistant' || m.role === 'system',
+        )
+        .map((m) => ({ role: m.role, content: m.content })),
+    [messages],
   );
 
-  const rejectMutation = useRpcMutation<{ success: boolean }, { reviewItemId: string }>(
-    (client, vars) => client.review.reject({ reviewItemId: vars.reviewItemId }),
+  const classifyMutation = useRpcMutation(
+    (client, vars: { targetType: ArtifactType }) =>
+      client.chats.classify({ chatId, targetType: vars.targetType }),
   );
 
-  const handleTransform = async (type: ArtifactType) => {
-    setLifecycleState('classifying');
-    try {
+  const acceptMutation = useRpcMutation(
+    (client, vars: { reviewItemId: string }) =>
+      client.review.accept({ reviewItemId: vars.reviewItemId }),
+  );
+
+  const rejectMutation = useRpcMutation(
+    (client, vars: { reviewItemId: string }) =>
+      client.review.reject({ reviewItemId: vars.reviewItemId }),
+  );
+
+  const {
+    lifecycleState,
+    pendingReview,
+    resolvedSource,
+    isReviewVisible,
+    handleTransform,
+    handleAcceptReview,
+    handleRejectReview,
+  } = useChatLifecycle({
+    messages: proposalMessages,
+    source: initialSource,
+    onTransform: async (type) => {
       const result = await classifyMutation.mutateAsync({ targetType: type });
-      setLifecycleState('reviewing_changes');
-      setPendingReview({
-        reviewItemId: result.reviewItemId,
-        proposedType: result.proposedType,
-        proposedTitle: result.proposedTitle,
-        proposedChanges: result.proposedChanges,
-        previewContent: result.previewContent,
-      });
-    } catch {
-      setLifecycleState('idle');
-      toast({
-        variant: 'destructive',
-        title: 'Could not prepare note review',
-        description: 'Please try again.',
-      });
-    }
-  };
-
-  const handleAcceptReview = async () => {
-    if (!pendingReview) return;
-    setLifecycleState('persisting');
-    try {
+      return result;
+    },
+    onAcceptReview: async (review) => {
       const { noteId } = await acceptMutation.mutateAsync({
-        reviewItemId: pendingReview.reviewItemId,
+        reviewItemId: review.reviewItemId!,
       });
-      setOverrideSource({
-        kind: 'artifact',
+      return {
+        kind: 'artifact' as const,
         id: noteId,
-        type: 'note',
-        title: pendingReview.proposedTitle,
-      });
-      setLifecycleState('idle');
-      setPendingReview(null);
-    } catch {
-      setLifecycleState('reviewing_changes');
+        type: 'note' as const,
+        title: review.proposedTitle,
+      };
+    },
+    onRejectReview: async (review) => {
+      await rejectMutation.mutateAsync({ reviewItemId: review.reviewItemId! });
+    },
+    onError: (phase) => {
       toast({
         variant: 'destructive',
-        title: 'Could not save note',
+        title: phase === 'accept' ? 'Could not save note' : 'Could not prepare note review',
         description: 'Please try again.',
       });
-    }
-  };
+    },
+  });
 
-  const handleRejectReview = async () => {
-    if (!pendingReview) return;
-    try {
-      await rejectMutation.mutateAsync({ reviewItemId: pendingReview.reviewItemId });
-      setLifecycleState('idle');
-      setPendingReview(null);
-    } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Could not discard review',
-        description: 'Please try again.',
-      });
-    }
-  };
+  const messageCount = messages?.length ?? 0;
 
   useChatKeyboardShortcuts({
     onScrollToTop: () => {
@@ -169,9 +132,8 @@ export default function ChatPage({ params }: Route.ComponentProps) {
 
   return (
     <div className="flex h-dvh min-h-0 flex-col bg-background text-foreground pb-(--composer-resting-height,112px)">
-      {/* Sticky chat header */}
       <ChatHeader
-        source={source}
+        source={resolvedSource}
         lifecycleState={lifecycleState}
         messageCount={messageCount}
         isDebugEnabled={isDebugEnabled}
@@ -180,7 +142,6 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         onTransform={handleTransform}
       />
 
-      {/* Scrollable message list */}
       <div className="min-h-0 flex-1 overflow-hidden" ref={messagesRef}>
         <ChatMessages
           ref={messageControlsRef}
@@ -192,7 +153,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         />
       </div>
 
-      {lifecycleState === 'reviewing_changes' && pendingReview && (
+      {isReviewVisible && pendingReview && (
         <ClassificationReview
           proposedType={pendingReview.proposedType}
           proposedTitle={pendingReview.proposedTitle}

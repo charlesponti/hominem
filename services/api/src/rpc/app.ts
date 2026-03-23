@@ -6,6 +6,7 @@ import { apiErrorHandler } from './middleware/error'
 import { requestIdMiddleware } from './middleware/auth'
 import { validationErrorMiddleware } from './middleware/validation'
 import { economyRoutes } from './routes/economy'
+import { focusRoutes } from './routes/focus'
 import { knowledgeRoutes } from './routes/knowledge'
 import { socialRoutes } from './routes/social'
 import { systemRoutes } from './routes/system'
@@ -23,3 +24,4 @@ export const rpcApp = new Hono<AppContext>()
   .route('', economyRoutes)
   .route('', worldRoutes)
   .route('', systemRoutes)
+  .route('/focus', focusRoutes)

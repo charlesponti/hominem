@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 
 import { AppShell } from '../app-shell';
 import { DESKTOP_BRAND } from '../brand';
-import { useDesktopAuth } from './desktop-auth-provider';
+import { useDesktopAuth } from './auth-provider';
 
 function DesktopAuthLoading() {
   return (

@@ -20,7 +20,6 @@ export interface NavItem {
 }
 
 export interface HeaderProps {
-  brandName: string;
   brandIcon?: React.ReactNode;
   navItems?: NavItem[];
 }
@@ -177,7 +176,7 @@ function SignInButton() {
 
 // ─── Main export ──────────────────────────────────────────────────────────────
 
-export function Header({ brandName, brandIcon, navItems = [] }: HeaderProps) {
+export function Header({ brandIcon, navItems = [] }: HeaderProps) {
   const authContext = useSafeAuth();
   const { isAuthenticated, isLoading } = authContext ?? {};
   const scrolledDown = useScrollDown();
@@ -200,22 +199,14 @@ export function Header({ brandName, brandIcon, navItems = [] }: HeaderProps) {
           paddingRight: 'var(--removed-body-scroll-bar-size, 0px)',
         }}
       >
-        <div className="mx-auto flex h-14 w-full max-w-200 items-center justify-between px-4 sm:px-6 md:h-16 lg:px-8">
+        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6 md:h-16 lg:px-8">
           <Link
             to="/"
             prefetch="intent"
-            aria-label={`${brandName} home`}
+            aria-label={`home`}
             className="flex items-center gap-2 text-text-primary"
           >
-            {brandIcon ? (
-              <span
-                aria-hidden="true"
-                className="flex size-7 items-center justify-center rounded-md border border-border-subtle bg-bg-surface"
-              >
-                {brandIcon}
-              </span>
-            ) : null}
-            <span className="text-sm font-semibold">{brandName}</span>
+            {brandIcon ? (brandIcon) : null}
           </Link>
 
           {authContext &&

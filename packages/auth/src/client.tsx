@@ -13,15 +13,15 @@ import type {
   AuthClient,
   AuthConfig,
   AuthContextType,
-  HominemSession,
-  HominemUser,
+  Session,
+  User,
 } from './types';
 import { AuthContext } from './AuthContext'
 type AuthEvent = 'SIGNED_IN' | 'SIGNED_OUT' | 'TOKEN_REFRESHED';
 
 interface SessionResponse {
   isAuthenticated: boolean;
-  user: HominemUser | null;
+  user: User | null;
   auth?: {
     sub: string;
     sid: string;
@@ -103,7 +103,7 @@ function getAbsoluteApiUrl(apiBaseUrl: string, path: string) {
   return new URL(path, apiBaseUrl).toString();
 }
 
-function toSession(accessToken?: string | null, expiresIn?: number | null): HominemSession | null {
+function toSession(accessToken?: string | null, expiresIn?: number | null): Session | null {
   if (!accessToken) {
     return null;
   }
@@ -120,9 +120,9 @@ function toSession(accessToken?: string | null, expiresIn?: number | null): Homi
 interface ClientAuthState {
   error: Error | null;
   isLoading: boolean;
-  session: HominemSession | null;
+  session: Session | null;
   status: AppAuthStatus;
-  user: HominemUser | null;
+  user: User | null;
 }
 
 async function fetchSession(apiBaseUrl: string): Promise<SessionResponse> {
@@ -235,8 +235,8 @@ export type AuthProviderProps = {
   children: ReactNode;
   config: AuthConfig;
   onAuthEvent?: (event: AuthEvent) => void;
-  initialUser?: HominemUser | null;
-  initialSession?: HominemSession | null;
+  initialUser?: User | null;
+  initialSession?: Session | null;
 }
 
 export function AuthProvider({

@@ -1,8 +1,8 @@
+import { emitVoiceEvent } from '@hominem/services/voice-events';
 import { AudioModule, RecordingPresets, useAudioRecorder } from 'expo-audio';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { emitVoiceEvent } from '~/utils/voice-events';
 
 import { useAudioTranscribe } from './use-audio-transcribe';
 

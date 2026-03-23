@@ -1,6 +1,7 @@
 import { loadMarkdown, type MarkdownComponent, type SessionSource } from '@hominem/ui/chat'
-import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types'
-import { buildNoteProposal, deriveSessionSource } from '@hominem/chat-services/ui'
+import type { ArtifactType } from '@hominem/chat-services/types'
+import { buildNoteProposal } from '@hominem/chat-services/ui'
+import { useChatLifecycle } from '@hominem/chat-services/react'
 import { useApiClient } from '@hominem/rpc/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import * as Clipboard from 'expo-clipboard'
@@ -10,83 +11,46 @@ import * as Sharing from 'expo-sharing'
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { Alert, Platform, Share, type TextInput } from 'react-native'
 
-import { useInputContext } from '~/components/input/input-context'
 import { useSpeech } from '~/components/media/use-speech'
 import { invalidateInboxQueries } from '~/utils/services/inbox/inbox-refresh'
 import { useArchiveChat, useChatMessages, useSendMessage } from '~/utils/services/chat'
 import type { MessageOutput } from '~/utils/services/chat'
 import { chatKeys } from '~/utils/services/notes/query-keys'
 
-import { persistChatReviewAsNote, type ChatPendingReview } from './chat-review-actions'
-import { runChatSubmitAction } from './chat-submit-action'
+// ─── Mobile-only UI state ─────────────────────────────────────────────────────
 
-interface ChatUiState {
-  lifecycleState: ThoughtLifecycleState
-  pendingReview: ChatPendingReview | null
-  persistedSource: SessionSource | null
+interface MobileUiState {
   showDebug: boolean
   showSearch: boolean
   searchQuery: string
 }
 
-type ChatUiAction =
-  | { type: 'set-lifecycle'; lifecycleState: ThoughtLifecycleState }
-  | { type: 'set-pending-review'; pendingReview: ChatPendingReview | null }
-  | { type: 'set-persisted-source'; persistedSource: SessionSource | null }
+type MobileUiAction =
   | { type: 'toggle-debug' }
   | { type: 'open-search' }
   | { type: 'close-search' }
   | { type: 'set-search-query'; searchQuery: string }
 
-const initialChatUiState: ChatUiState = {
-  lifecycleState: 'idle',
-  pendingReview: null,
-  persistedSource: null,
+const initialMobileUiState: MobileUiState = {
   showDebug: false,
   showSearch: false,
   searchQuery: '',
 }
 
-function chatUiReducer(state: ChatUiState, action: ChatUiAction): ChatUiState {
+function mobileUiReducer(state: MobileUiState, action: MobileUiAction): MobileUiState {
   switch (action.type) {
-    case 'set-lifecycle':
-      return {
-        ...state,
-        lifecycleState: action.lifecycleState,
-      }
-    case 'set-pending-review':
-      return {
-        ...state,
-        pendingReview: action.pendingReview,
-      }
-    case 'set-persisted-source':
-      return {
-        ...state,
-        persistedSource: action.persistedSource,
-      }
     case 'toggle-debug':
-      return {
-        ...state,
-        showDebug: !state.showDebug,
-      }
+      return { ...state, showDebug: !state.showDebug }
     case 'open-search':
-      return {
-        ...state,
-        showSearch: true,
-      }
+      return { ...state, showSearch: true }
     case 'close-search':
-      return {
-        ...state,
-        showSearch: false,
-        searchQuery: '',
-      }
+      return { ...state, showSearch: false, searchQuery: '' }
     case 'set-search-query':
-      return {
-        ...state,
-        searchQuery: action.searchQuery,
-      }
+      return { ...state, searchQuery: action.searchQuery }
   }
 }
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 interface UseChatControllerInput {
   chatId: string
@@ -95,7 +59,6 @@ interface UseChatControllerInput {
 }
 
 export function useChatController({ chatId, onChatArchive, source }: UseChatControllerInput) {
-  const { message, setMessage } = useInputContext()
   const { speakingId, speak } = useSpeech()
   const client = useApiClient()
   const queryClient = useQueryClient()
@@ -109,7 +72,7 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
   })
   const { sendChatMessage, chatSendStatus } = useSendMessage({ chatId })
   const [Markdown, setMarkdown] = useState<MarkdownComponent | null>(null)
-  const [uiState, dispatch] = useReducer(chatUiReducer, initialChatUiState)
+  const [uiState, dispatch] = useReducer(mobileUiReducer, initialMobileUiState)
   const searchInputRef = useRef<TextInput | null>(null)
 
   const formattedMessages = useMemo(
@@ -128,32 +91,11 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
     [formattedMessages],
   )
 
-  const resolvedSource = useMemo(
-    () =>
-      uiState.persistedSource ??
-      (source.kind === 'artifact' ? source : deriveSessionSource({ messages: proposalMessages })),
-    [proposalMessages, source, uiState.persistedSource],
-  )
-
-  const isLifecycleBlocked =
-    uiState.lifecycleState === 'classifying' ||
-    uiState.lifecycleState === 'reviewing_changes' ||
-    uiState.lifecycleState === 'persisting'
-  const canTransform = formattedMessages.length > 0 && !isLifecycleBlocked
-  const statusCopy =
-    uiState.lifecycleState === 'classifying'
-      ? 'Preparing note review'
-      : uiState.lifecycleState === 'reviewing_changes'
-        ? 'Review ready'
-        : uiState.lifecycleState === 'persisting'
-          ? 'Saving note'
-          : formattedMessages.length > 0
-            ? `${formattedMessages.length} ${formattedMessages.length === 1 ? 'message' : 'messages'}`
-            : 'New conversation'
+  // ─── Note creation mutation ──────────────────────────────────────────────────
 
   const createNote = useMutation({
     mutationKey: ['chat-note', chatId],
-    mutationFn: async (review: ChatPendingReview) => {
+    mutationFn: async (review: { proposedTitle: string; previewContent: string }) => {
       return client.notes.create({
         content: review.previewContent,
         excerpt: review.previewContent.slice(0, 160),
@@ -165,6 +107,44 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
       await invalidateInboxQueries(queryClient)
     },
   })
+
+  // ─── Shared lifecycle ────────────────────────────────────────────────────────
+
+  const {
+    lifecycleState,
+    pendingReview,
+    resolvedSource,
+    canTransform,
+    statusCopy,
+    isReviewVisible,
+    handleTransform,
+    handleAcceptReview,
+    handleRejectReview,
+  } = useChatLifecycle({
+    messages: proposalMessages,
+    source,
+    onTransform: async (_type: ArtifactType) => buildNoteProposal(proposalMessages),
+    onAcceptReview: async (review) => {
+      const note = await createNote.mutateAsync(review)
+      return {
+        kind: 'artifact' as const,
+        id: note.id,
+        type: 'note' as const,
+        title: note.title || review.proposedTitle,
+      }
+    },
+    onRejectReview: async () => {
+      // No server call needed for client-side proposals
+    },
+    onError: (_phase, _error) => {
+      Alert.alert(
+        _phase === 'accept' ? 'Could not save note' : 'Could not prepare note review',
+        'Please try again.',
+      )
+    },
+  })
+
+  // ─── Markdown loader ─────────────────────────────────────────────────────────
 
   const markdownLoadedRef = useRef(false)
   useEffect(() => {
@@ -186,6 +166,8 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
     }
   }, [])
 
+  // ─── Platform-specific handlers ───────────────────────────────────────────────
+
   const handleArchiveChat = useCallback(() => {
     archiveChat()
   }, [archiveChat])
@@ -197,28 +179,19 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
       void Clipboard.setStringAsync(text).catch(() => {
-        void Share.share({
-          message: text,
-          title: 'Copy message',
-        })
+        void Share.share({ message: text, title: 'Copy message' })
       })
       return
     }
 
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       void navigator.clipboard.writeText(text).catch(() => {
-        void Share.share({
-          message: text,
-          title: 'Copy message',
-        })
+        void Share.share({ message: text, title: 'Copy message' })
       })
       return
     }
 
-    void Share.share({
-      message: text,
-      title: 'Copy message',
-    })
+    void Share.share({ message: text, title: 'Copy message' })
   }, [])
 
   const handleRegenerate = useCallback(
@@ -244,14 +217,11 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
       const trimmedContent = content.trim()
       if (!trimmedContent) return
 
-      const updatedMessage = await client.messages.update({
-        messageId,
-        content: trimmedContent,
-      }).catch(() => null)
+      const updatedMessage = await client.messages
+        .update({ messageId, content: trimmedContent })
+        .catch(() => null)
 
-      if (!updatedMessage) {
-        return
-      }
+      if (!updatedMessage) return
 
       await sendChatMessage(trimmedContent)
     },
@@ -276,43 +246,12 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
     [chatId, client.messages, queryClient],
   )
 
-  const handleTransform = useCallback(
-    (_type: ArtifactType) => {
-      dispatch({ type: 'set-lifecycle', lifecycleState: 'classifying' })
-      const proposal = buildNoteProposal(proposalMessages)
-      queueMicrotask(() => {
-        dispatch({ type: 'set-lifecycle', lifecycleState: 'reviewing_changes' })
-        dispatch({ type: 'set-pending-review', pendingReview: proposal })
-      })
+  const handleSpeakMessage = useCallback(
+    (message: MessageOutput) => {
+      speak(message.id, message.message)
     },
-    [proposalMessages],
+    [speak],
   )
-
-  const handleAcceptReview = useCallback(async () => {
-    if (!uiState.pendingReview) return
-
-    dispatch({ type: 'set-lifecycle', lifecycleState: 'persisting' })
-
-    const nextSource = await persistChatReviewAsNote({
-      review: uiState.pendingReview,
-      createNote: (review) => createNote.mutateAsync(review),
-    }).catch(() => null)
-
-    if (!nextSource) {
-      dispatch({ type: 'set-lifecycle', lifecycleState: 'reviewing_changes' })
-      Alert.alert('Could not save note', 'Please try again.')
-      return
-    }
-
-    dispatch({ type: 'set-persisted-source', persistedSource: nextSource })
-    dispatch({ type: 'set-lifecycle', lifecycleState: 'idle' })
-    dispatch({ type: 'set-pending-review', pendingReview: null })
-  }, [createNote, uiState.pendingReview])
-
-  const handleRejectReview = useCallback(() => {
-    dispatch({ type: 'set-lifecycle', lifecycleState: 'idle' })
-    dispatch({ type: 'set-pending-review', pendingReview: null })
-  }, [])
 
   const handleOpenSearch = useCallback(() => {
     dispatch({ type: 'open-search' })
@@ -329,20 +268,13 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
     dispatch({ type: 'set-search-query', searchQuery })
   }, [])
 
-  const handleSpeakMessage = useCallback((message: MessageOutput) => {
-    speak(message.id, message.message)
-  }, [speak])
-
   const handleOpenMenu = useCallback(() => {
     const buttons: Array<{
       text: string
       onPress?: () => void
       style?: 'cancel' | 'default' | 'destructive'
     }> = [
-      {
-        text: 'Search messages',
-        onPress: handleOpenSearch,
-      },
+      { text: 'Search messages', onPress: handleOpenSearch },
       {
         text: uiState.showDebug ? 'Hide debug metadata' : 'Show debug metadata',
         onPress: () => dispatch({ type: 'toggle-debug' }),
@@ -350,10 +282,7 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
     ]
 
     if (canTransform) {
-      buttons.push({
-        text: 'Transform to note',
-        onPress: () => handleTransform('note'),
-      })
+      buttons.push({ text: 'Transform to note', onPress: () => handleTransform('note') })
     }
 
     buttons.push(
@@ -362,10 +291,7 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
         onPress: handleArchiveChat,
         style: 'destructive',
       },
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
+      { text: 'Cancel', style: 'cancel' },
     )
 
     Alert.alert('Conversation', undefined, buttons)
@@ -389,7 +315,8 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
     handleShareMessage,
     handleSpeakMessage,
     isMessagesLoading,
-    pendingReview: uiState.pendingReview,
+    lifecycleState,
+    pendingReview,
     resolvedSource,
     searchInputRef,
     searchQuery: uiState.searchQuery,
@@ -397,6 +324,6 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
     showSearch: uiState.showSearch,
     speakingId,
     statusCopy,
-    isReviewVisible: uiState.lifecycleState === 'reviewing_changes',
+    isReviewVisible,
   }
 }

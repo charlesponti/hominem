@@ -1,5 +1,5 @@
-import type { HominemUser } from '@hominem/auth/server';
-import { toHominemUser, UserAuthService } from '@hominem/auth/server';
+import type { User } from '@hominem/auth/server';
+import { toUser, UserAuthService } from '@hominem/auth/server';
 import { db } from '@hominem/db';
 import { logger } from '@hominem/utils/logger';
 import type { MiddlewareHandler } from 'hono';
@@ -21,7 +21,7 @@ type AuthErrorCode =
 declare module 'hono' {
   interface ContextVariableMap {
     auth?: AuthContextEnvelope;
-    user?: HominemUser;
+    user?: User;
     userId?: string;
     authError?: AuthErrorCode;
   }
@@ -29,7 +29,7 @@ declare module 'hono' {
 
 interface BetterAuthSessionContext {
   auth: AuthContextEnvelope;
-  user: HominemUser;
+  user: User;
   userId: string;
 }
 
@@ -43,7 +43,7 @@ function getBearerToken(headerValue?: string) {
 
 const USER_CACHE_TTL_MS = 60_000;
 const USER_CACHE_MAX_ENTRIES = 1024;
-const userCache = new Map<string, { user: HominemUser; expiresAt: number }>();
+const userCache = new Map<string, { user: User; expiresAt: number }>();
 
 function getCachedUser(userId: string) {
   const cached = userCache.get(userId);
@@ -59,7 +59,7 @@ function getCachedUser(userId: string) {
   return cached.user;
 }
 
-function setCachedUser(user: HominemUser) {
+function setCachedUser(user: User) {
   if (userCache.size >= USER_CACHE_MAX_ENTRIES) {
     const first = userCache.keys().next().value;
     if (typeof first === 'string') {
@@ -74,7 +74,7 @@ function setCachedUser(user: HominemUser) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function getHominemUserFromJwt(token: string): Promise<HominemUser | null> {
+async function getUserFromJwt(token: string): Promise<User | null> {
   const claims = await verifyAccessToken(token);
   const cached = getCachedUser(claims.sub);
   if (cached) {
@@ -86,7 +86,7 @@ async function getHominemUserFromJwt(token: string): Promise<HominemUser | null>
     return null;
   }
 
-  const user = toHominemUser(dbUser);
+  const user = toUser(dbUser);
   setCachedUser(user);
   return user;
 }
@@ -169,7 +169,7 @@ async function applyBetterAuthSession(c: {
     return false;
   }
 
-  const user = toHominemUser(dbUser);
+  const user = toUser(dbUser);
   setCachedUser(user);
   c.set('user', user);
   c.set('userId', dbUser.id);
@@ -214,7 +214,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
 
         const testUser = await UserAuthService.findByIdOrEmail({ id: testUserId });
         if (testUser) {
-          const user = toHominemUser(testUser);
+          const user = toUser(testUser);
           setCachedUser(user);
           c.set('user', user);
           c.set('userId', testUser.id);
@@ -242,7 +242,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
         const fallbackUser = await UserAuthService.getUserById(testUserId);
 
         if (fallbackUser) {
-          const user = toHominemUser(fallbackUser);
+          const user = toUser(fallbackUser);
           setCachedUser(user);
           c.set('user', user);
         }
@@ -298,7 +298,7 @@ export const authJwtMiddleware = (): MiddlewareHandler => {
           return c.json(authErrorResponse('invalid_token'), 401);
         }
 
-        const user = toHominemUser(dbUser);
+        const user = toUser(dbUser);
         setCachedUser(user);
         c.set('user', user);
         c.set('userId', dbUser.id);

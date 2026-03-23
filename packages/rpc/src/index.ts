@@ -10,6 +10,7 @@ export type {
 } from './core/api-client'
 export type { AppType } from './app.type'
 export type { AdminClient } from './domains/admin';
+export type { FocusClient, FocusItem, FocusListOutput } from './domains/focus';
 export type { ChatsClient } from './domains/chats';
 export type {
   FinanceClient,

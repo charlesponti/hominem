@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import type { UserSelect } from './contracts'
-import { toHominemUser } from './user'
+import { toUser } from './user'
 
-describe('toHominemUser', () => {
-  it('maps snake_case user fields to HominemUser contract', () => {
+describe('toUser', () => {
+  it('maps snake_case user fields to User contract', () => {
     const source: UserSelect = {
       id: 'u_1',
       email: 'user@example.com',
@@ -15,7 +15,7 @@ describe('toHominemUser', () => {
       updated_at: '2026-03-04T02:00:00.000Z',
     }
 
-    expect(toHominemUser(source)).toEqual({
+    expect(toUser(source)).toEqual({
       id: 'u_1',
       email: 'user@example.com',
       name: 'User One',
@@ -37,7 +37,7 @@ describe('toHominemUser', () => {
       updated_at: '2026-03-04T04:00:00.000Z',
     }
 
-    expect(toHominemUser(source)).toEqual({
+    expect(toUser(source)).toEqual({
       id: 'u_2',
       email: 'nullable@example.com',
       name: undefined,

@@ -1,3 +1,7 @@
+import type { User } from '@hominem/auth';
+
+export type UserProfile = User;
+
 export type AuthStatus =
   | 'booting'
   | 'signed_out'
@@ -12,14 +16,6 @@ export type AuthStatus =
   | 'signing_out'
   | 'degraded'
   | 'terminal_error';
-
-export interface UserProfile {
-  id: string;
-  email: string | null | undefined;
-  name: string | null | undefined;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export interface AuthState {
   status: AuthStatus;

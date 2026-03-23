@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
-import { useComposer } from '~/components/composer/composer-provider';
+import { useComposerNoteTitle } from '~/components/composer/composer-provider';
 import { useNote } from '~/hooks/use-notes';
 import { requireAuth } from '~/lib/guards';
 
@@ -27,7 +27,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export default function NoteChatRedirect({ loaderData }: { loaderData: { noteId: string } }) {
   const { noteId } = loaderData;
   const { data: note } = useNote(noteId);
-  const { setNoteTitle } = useComposer();
+  const { setNoteTitle } = useComposerNoteTitle();
 
   useEffect(() => {
     if (note) {

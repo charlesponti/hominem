@@ -1,4 +1,4 @@
-import type { HominemSession, HominemUser } from '@hominem/auth/types';
+import type { Session, User } from '@hominem/auth/types';
 import { z } from 'zod';
 
 const userSchema = z.object({
@@ -40,8 +40,8 @@ const passkeyAuthOptionsResponseSchema = z.object({
 });
 
 interface SessionResult {
-  session: HominemSession | null;
-  user: HominemUser | null;
+  session: Session | null;
+  user: User | null;
 }
 
 interface PasskeyAllowCredential {
@@ -72,7 +72,7 @@ function getErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-function createSession(accessToken: string, expiresIn: number): HominemSession {
+function createSession(accessToken: string, expiresIn: number): Session {
   return {
     access_token: accessToken,
     token_type: 'Bearer',
@@ -89,7 +89,7 @@ function normalizeOtpCode(otp: string) {
   return otp.replace(/\D/g, '');
 }
 
-function normalizeUser(user: z.infer<typeof userSchema>): HominemUser {
+function normalizeUser(user: z.infer<typeof userSchema>): User {
   return {
     id: user.id,
     email: user.email,
@@ -293,7 +293,7 @@ export async function signInWithPasskey(apiBaseUrl: string): Promise<SessionResu
   return readAuthenticatedSession(apiBaseUrl);
 }
 
-export async function signOut(apiBaseUrl: string, session: HominemSession | null) {
+export async function signOut(apiBaseUrl: string, session: Session | null) {
   void session;
 
   const response = await fetch(`${apiBaseUrl}/api/auth/logout`, {

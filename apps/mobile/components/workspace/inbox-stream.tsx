@@ -1,17 +1,14 @@
 import { FlashList, type ListRenderItem } from '@shopify/flash-list'
-import React, { memo, useCallback, useMemo } from 'react'
+import React, { memo, useCallback } from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import { Text, makeStyles } from '~/theme'
-import type { ChatWithActivity } from '~/utils/services/chat/session-state'
-import type { Note } from '@hominem/rpc/types'
 
 import { InboxStreamItem } from './inbox-stream-item'
-import { toInboxStreamItems, type InboxStreamItem as InboxStreamItemModel } from './inbox-stream-items'
+import type { InboxStreamItem as InboxStreamItemModel } from './inbox-stream-items'
 
 interface InboxStreamProps {
-  focusItems: Note[]
-  sessions: ChatWithActivity[]
+  items: InboxStreamItemModel[]
 }
 
 const keyExtractor = (item: InboxStreamItemModel) => `${item.kind}:${item.id}`
@@ -29,9 +26,8 @@ const RenderInboxStreamItem = memo(({ item }: { item: InboxStreamItemModel }) =>
 
 RenderInboxStreamItem.displayName = 'RenderInboxStreamItem'
 
-export const InboxStream = ({ focusItems, sessions }: InboxStreamProps) => {
+export const InboxStream = ({ items }: InboxStreamProps) => {
   const styles = useStyles()
-  const items = useMemo(() => toInboxStreamItems({ focusItems, sessions }), [focusItems, sessions])
   const renderItem = useCallback<ListRenderItem<InboxStreamItemModel>>(({ item }) => {
     return <RenderInboxStreamItem item={item} />
   }, [])

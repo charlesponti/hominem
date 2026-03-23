@@ -7,7 +7,7 @@
         "patterns": [
           {
             "group": ["@hominem/db", "@hominem/db/*"],
-            "message": "Apps must not import directly from @hominem/db. Use @hominem/hono-client for data access or @hominem/hono-rpc/types for types."
+            "message": "Apps must not import directly from @hominem/db. Use @hominem/hono-client for data access or @hominem/rpc/types for types."
           }
         ]
       }

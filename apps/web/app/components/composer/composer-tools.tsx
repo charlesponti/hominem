@@ -1,5 +1,5 @@
 import { BookOpen, Camera, Mic, Plus, StopCircle } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 
 import { cn } from '~/lib/utils'
 
@@ -39,7 +39,7 @@ function ComposerToolButton({
   )
 }
 
-export function ComposerTools({
+export const ComposerTools = memo(function ComposerTools({
   attachedNotesCount,
   isRecording,
   showsAttachmentButton,
@@ -104,4 +104,4 @@ export function ComposerTools({
       ) : null}
     </div>
   )
-}
+})

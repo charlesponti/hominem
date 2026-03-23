@@ -22,11 +22,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { usePeople, useCreatePerson } from '../../../hooks/use-people';
 
-interface Person {
-  id: string;
-  firstName: string;
-  lastName: string | null;
-}
+import type { Person, PeopleListOutput } from '@hominem/rpc/types/people.types';
 
 interface PeopleMultiSelectProps {
   value: string[];
@@ -44,7 +40,7 @@ export function PeopleMultiSelect({
   const [isCreating, setIsCreating] = useState(false);
 
   const { data: peopleResult, isLoading } = usePeople();
-  const people = peopleResult ?? [];
+  const people: Person[] = (peopleResult as Person[]) ?? [];
   const createPersonMutation = useCreatePerson();
 
   const selectedPeople = useMemo(() => {

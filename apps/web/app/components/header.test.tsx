@@ -8,8 +8,6 @@ const { mockedUseInboxStream } = vi.hoisted(() => ({
     () => {
       items: Array<{ kind: 'note' | 'chat'; id: string }>
       isLoading: boolean
-      noteCount: number
-      chatCount: number
     }
   >(),
 }))
@@ -42,8 +40,6 @@ describe('NotesHeader', () => {
         { kind: 'note', id: 'note-456' },
       ],
       isLoading: false,
-      noteCount: 1,
-      chatCount: 1,
     })
 
     render(<NotesHeader />)
@@ -56,8 +52,6 @@ describe('NotesHeader', () => {
     mockedUseInboxStream.mockReturnValue({
       items: [],
       isLoading: false,
-      noteCount: 0,
-      chatCount: 0,
     })
 
     render(<NotesHeader />)

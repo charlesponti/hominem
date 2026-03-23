@@ -1,7 +1,7 @@
-import type { HominemUser } from './types'
+import type { User } from './types'
 import type { UserSelect } from './contracts'
 
-export function toHominemUser(source: UserSelect): HominemUser {
+export function toUser(source: UserSelect): User {
   return {
     id: source.id,
     email: source.email,

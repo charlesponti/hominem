@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
-import { useCallback, useEffect, useReducer } from 'react';
+import { useEffect, useReducer } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { getPreventScreenshots, setPreventScreenshots } from '~/lib/use-screen-capture';
 import { getAppLockEnabled, setAppLockEnabled } from '~/lib/use-app-lock';
