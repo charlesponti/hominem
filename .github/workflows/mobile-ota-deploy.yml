@@ -53,7 +53,7 @@ jobs:
             echo
             grep -E 'Test Files|Tests |Duration' mobile-auth-unit.log | tail -n 20 || true
             echo
-            node scripts/summarize-vitest-report.mjs mobile-auth-unit.vitest.json '### Mobile auth unit slowest tests' 5 250
+            node scripts/summarize-vitest-report.mjs apps/mobile/mobile-auth-unit.vitest.json '### Mobile auth unit slowest tests' 5 250
           } >> "$GITHUB_STEP_SUMMARY"
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
