@@ -53,3 +53,7 @@ export * from './config'
 // accidental imports.
 export { AuthContext, useAuth, useProtectedRoute } from './AuthContext'
 export type { AuthContextState } from './AuthContext'
+
+// Passkey authentication hook
+export { usePasskeyAuth } from './hooks/use-passkey-auth'
+export type { UsePasskeyAuthOptions } from './hooks/use-passkey-auth'

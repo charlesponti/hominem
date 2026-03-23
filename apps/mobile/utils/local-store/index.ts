@@ -1,12 +1,8 @@
 import { z } from 'zod';
-
-import {
-  UserProfileSchema,
-  SettingsSchema,
-  MediaSchema,
-} from '../validation/schemas';
+import type { User } from '@hominem/auth';
+import { SettingsSchema, MediaSchema } from '../validation/schemas';
 import { createSQLiteStore } from './sqlite';
-import type { Media, Settings, UserProfile } from '../validation/schemas';
+import type { Media, Settings } from '../validation/schemas';
 
 let store: Awaited<ReturnType<typeof createSQLiteStore>> | null = null;
 let initializationPromise: Promise<boolean> | null = null;
@@ -42,7 +38,6 @@ const normalizeNull = <T>(value: T | null): T | null => {
   return value;
 };
 
-// Validation wrapper with error handling
 function validateOrNull<T>(schema: z.ZodType<T>, data: unknown): T | null {
   try {
     return schema.parse(data);
@@ -61,16 +56,14 @@ export const LocalStore = {
     return initializeStore();
   },
 
-  getUserProfile: async (): Promise<UserProfile | null> => {
+  getUserProfile: async (): Promise<User | null> => {
     const s = await getStore();
-    const result = normalizeNull<UserProfile>(await s.getUserProfile());
-    return result ? validateOrNull(UserProfileSchema, result) : null;
+    return s.getUserProfile();
   },
 
-  upsertUserProfile: async (profile: UserProfile): Promise<UserProfile> => {
+  upsertUserProfile: async (profile: User): Promise<User> => {
     const s = await getStore();
-    const result = await s.upsertUserProfile(profile);
-    return validateOrThrow(UserProfileSchema, result);
+    return s.upsertUserProfile(profile);
   },
 
   upsertSettings: async (settings: Settings): Promise<Settings> => {

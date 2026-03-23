@@ -37,7 +37,7 @@ const healthActivityCreateSchema = z.object({
   activityType: z.string().min(1, 'Activity type is required'),
   duration: z.number().int().positive('Duration must be positive'),
   caloriesBurned: z.number().int().nonnegative('Calories cannot be negative'),
-  date: z.string().datetime().optional(),
+  date: z.iso.datetime().optional(),
   tags: z.array(z.string()).optional(),
 });
 
@@ -51,8 +51,8 @@ const healthActivityUpdateSchema = z.object({
 
 const healthActivityListQuerySchema = z.object({
   activityType: z.string().optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
+  startDate: z.iso.datetime().optional(),
+  endDate: z.iso.datetime().optional(),
   sortBy: z.enum(['date', 'calories', 'duration']).optional(),
 });
 
@@ -120,8 +120,8 @@ export const healthRoutes: Hono<AppContext> = new Hono<AppContext>()
       'query',
       z.object({
         activityType: z.string().optional(),
-        startDate: z.string().datetime().optional(),
-        endDate: z.string().datetime().optional(),
+        startDate: z.iso.datetime().optional(),
+        endDate: z.iso.datetime().optional(),
       }),
     ),
     async (c) => {

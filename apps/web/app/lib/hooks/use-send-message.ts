@@ -1,9 +1,9 @@
 import { useChat } from '@ai-sdk/react';
 import { useRpcMutation } from '@hominem/rpc/react';
+import type { ChatMessage, ChatsSendInput, ChatsSendOutput, ChatsGetMessagesOutput } from '@hominem/rpc/types/chat.types';
 import { useQueryClient } from '@tanstack/react-query';
-import { chatQueryKeys } from '~/lib/query-keys';
-import type { ChatsSendInput, ChatsSendOutput } from '@hominem/rpc/types/chat.types';
 import { useMemo } from 'react';
+import { chatQueryKeys } from '~/lib/query-keys';
 
 import { useFeatureFlag } from './use-feature-flags';
 
@@ -43,16 +43,40 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
       }) as Promise<ChatsSendOutput>;
     },
     {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries({ queryKey: chatQueryKeys.messages(chatId) });
+        const optimistic: ChatMessage = {
+          id: `optimistic-${Date.now()}`,
+          chatId,
+          userId: '',
+          role: 'user',
+          content: variables.message,
+          files: null,
+          toolCalls: null,
+          reasoning: null,
+          parentMessageId: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        queryClient.setQueryData<ChatsGetMessagesOutput>(
+          chatQueryKeys.messages(chatId),
+          (prev) => [...(prev ?? []), optimistic],
+        );
       },
       onError: () => {
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
+      },
+      onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
       },
     },
   );
 
   const mutateAsync = async (variables: ChatsSendInput) => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      throw new Error('You are offline. Please check your connection and try again.');
+    }
+
     if (!aiSdkChatWebEnabled) {
       await legacySend.mutateAsync(variables);
       return { ok: true };

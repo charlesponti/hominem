@@ -1,7 +1,9 @@
-import { PasskeyManagement, usePasskeyAuth } from '@hominem/ui';
+import { usePasskeyAuth } from '@hominem/auth';
+import { PasskeyManagement } from '@hominem/ui';
 import { useCallback } from 'react';
 import { redirect } from 'react-router';
 
+import { usePasskeys } from '~/hooks/use-passkeys';
 import { getServerAuth } from '~/lib/auth.server';
 
 export async function loader({ request }: { request: Request }) {
@@ -14,8 +16,23 @@ export async function loader({ request }: { request: Request }) {
 
 export default function SecuritySettingsPage() {
   const { deletePasskey, register } = usePasskeyAuth();
-  const handleAdd = useCallback(() => register(), [register]);
-  const handleDelete = useCallback((id: string) => deletePasskey(id), [deletePasskey]);
+  const { data: passkeys, isLoading, error } = usePasskeys();
+  const handleAdd = useCallback(async () => {
+    try {
+      await register();
+      return true;
+    } catch {
+      return false;
+    }
+  }, [register]);
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await deletePasskey(id);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [deletePasskey]);
 
   return (
     <div className="max-w-xl mx-auto py-8 px-4 space-y-8">
@@ -25,7 +42,13 @@ export default function SecuritySettingsPage() {
           Manage sign-in methods and authentication settings.
         </p>
       </div>
-      <PasskeyManagement onAdd={handleAdd} onDelete={handleDelete} />
+      <PasskeyManagement 
+        passkeys={passkeys ?? undefined} 
+        isLoading={isLoading} 
+        error={error?.message ?? null}
+        onAdd={handleAdd} 
+        onDelete={handleDelete} 
+      />
     </div>
   );
 }

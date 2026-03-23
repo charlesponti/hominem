@@ -26,8 +26,8 @@ function HonoProviderInner({ children, baseUrl }: HonoProviderProps) {
   const config: ClientConfig = {
     baseUrl,
     getAuthToken: async () => null,
-    onError: (error) => {
-      console.error('Hono API error:', error);
+    onError: () => {
+      // Error handling is done via React Query's error state
     },
   };
 
@@ -44,8 +44,8 @@ export function HonoProvider({ children, baseUrl }: HonoProviderProps) {
   const config: ClientConfig = {
     baseUrl,
     getAuthToken: async () => null,
-    onError: (error) => {
-      console.error('Hono API error:', error);
+    onError: () => {
+      // Errors are handled via React Query's error state
     },
   };
 

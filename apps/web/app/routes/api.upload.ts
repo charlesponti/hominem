@@ -1,5 +1,6 @@
 import { FileProcessorService } from '@hominem/services/files';
 import { fileStorageService } from '@hominem/utils/storage';
+import { logger } from '@hominem/utils/logger';
 import type { ActionFunctionArgs } from 'react-router';
 
 import { createServerHonoClient } from '~/lib/api.server';
@@ -124,7 +125,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     return jsonResponse(responseData);
   } catch (error) {
-    console.error('Upload error:', error);
+    logger.error('Upload error', error instanceof Error ? error : undefined);
     return jsonResponse(
       {
         error: 'Failed to process upload',

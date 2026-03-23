@@ -1,4 +1,4 @@
-import type { ExtendedMessage } from '~/lib/types/chat-message';
+import type { ExtendedMessage } from '@hominem/ui/types/chat';
 
 /**
  * Filters messages by search query (case-insensitive)

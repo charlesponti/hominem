@@ -65,8 +65,8 @@ function UpdateGuardClient({
         }, UPDATE_INTERVAL_MS);
       }
     },
-    onRegisterError(error: Error) {
-      console.error('Service worker registration error:', error);
+    onRegisterError(_error: Error) {
+      // Service worker registration errors are non-critical
     },
   });
 

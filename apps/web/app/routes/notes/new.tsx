@@ -23,8 +23,8 @@ export default function NewNotePage() {
       if (note?.id) {
         navigate(`/notes/${note.id}`);
       }
-    } catch (error) {
-      console.error('Failed to create note:', error);
+    } catch {
+      // Error is already handled by the mutation's error state
     }
   };
 

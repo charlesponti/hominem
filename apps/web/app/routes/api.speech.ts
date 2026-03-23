@@ -1,5 +1,6 @@
 import { VoiceSpeechError, generateSpeechBuffer } from '@hominem/services/voice-speech';
 import { fileStorageService } from '@hominem/utils/storage';
+import { logger } from '@hominem/utils/logger';
 import type { ActionFunctionArgs } from 'react-router';
 import { z } from 'zod';
 
@@ -71,7 +72,7 @@ export async function action({ request }: ActionFunctionArgs) {
       },
     });
   } catch (error) {
-    console.error('Text-to-speech error:', error);
+    logger.error('Text-to-speech error', error instanceof Error ? error : undefined);
 
     let errorMessage = 'Failed to generate speech';
     let statusCode = 500;

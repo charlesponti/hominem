@@ -5,20 +5,16 @@ export * from './tokens';
 export * from './components/layout';
 export * from './components/typography';
 export * from './components/email-sign-in';
-export * from './components/location-select';
 export * from './components/page-title';
 export * from './components/ui';
 export * from './components/update-guard';
 export * from './components/auth';
 export * from './constants/chart-colors';
+export * from './hooks/sort.types';
 export * from './hooks/use-api-client';
-export * from './hooks/use-debounce';
 export * from './hooks/use-filter-state';
 export * from './hooks/use-media-query';
 export * from './hooks/use-mobile';
-export * from './hooks/use-passkey-auth';
-export * from './hooks/use-sort';
-export * from './hooks/use-url-filters';
 
 // Common <head> link objects for all apps
 export const COMMON_FONT_LINKS: LinkDescriptor[] = [

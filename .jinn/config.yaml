@@ -1,7 +1,0 @@
-delivery: both
-featureFlags: {}
-profile: core
-tools:
-  - claude
-  - github-copilot
-version: 1.0.0

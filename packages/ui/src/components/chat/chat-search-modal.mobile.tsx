@@ -45,7 +45,7 @@ export function ChatSearchModal({
 
           <TextField
             containerStyle={styles.searchInputContainer}
-            placeholder="Search messages…"
+            placeholder="Search messages..."
             ref={searchInputRef}
             returnKeyType="search"
             style={styles.searchInput}

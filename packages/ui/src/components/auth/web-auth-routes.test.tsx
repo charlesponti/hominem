@@ -7,8 +7,10 @@ import { createAuthEntryComponent, createAuthVerifyComponent } from './web-auth-
 const authenticate = vi.fn();
 const usePasskeyAuthMock = vi.fn();
 
-vi.mock('../../hooks/use-passkey-auth', () => ({
+vi.mock('@hominem/auth', () => ({
   usePasskeyAuth: (options: { redirectTo?: string }) => usePasskeyAuthMock(options),
+  AUTH_COPY: { email: { title: 'Sign in', subtitle: 'Sign in to continue' }, otpVerification: { title: 'Verify', subtitle: 'Enter the code' } },
+  readAuthErrorMessage: () => null,
 }));
 
 describe('web auth routes', () => {

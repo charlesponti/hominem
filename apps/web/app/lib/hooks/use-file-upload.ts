@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-import type { UploadedFile, UploadResponse } from '~/lib/types/upload.js';
+import type { UploadedFile, UploadResponse } from '~/lib/types/upload';
 
 interface UploadState {
   isUploading: boolean;

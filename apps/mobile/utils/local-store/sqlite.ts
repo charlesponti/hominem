@@ -1,6 +1,9 @@
 import * as SQLite from 'expo-sqlite';
 
-import type { Media, Settings, UserProfile } from '../validation/schemas';
+import type { Media, Settings } from '../validation/schemas';
+import type { User } from '@hominem/auth';
+
+type UserProfile = User;
 
 type QueryResult = {
   rows: Array<Record<string, unknown>>;
@@ -12,8 +15,10 @@ const toISO = (value: string | null | undefined) => value ?? new Date().toISOStr
 
 const normalizeProfile = (row: Record<string, unknown>): UserProfile => ({
   id: String(row.id),
-  name: typeof row.name === 'string' ? row.name : null,
-  email: typeof row.email === 'string' ? row.email : null,
+  name: typeof row.name === 'string' ? row.name : undefined,
+  email: typeof row.email === 'string' ? row.email : '',
+  image: undefined,
+  isAdmin: false,
   createdAt: String(row.created_at),
   updatedAt: String(row.updated_at),
 });
@@ -87,7 +92,7 @@ export const createSQLiteStore = async () => {
         'INSERT INTO user_profile (id, name, email, created_at, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name, email=excluded.email, created_at=excluded.created_at, updated_at=excluded.updated_at',
         [profile.id, profile.name ?? null, profile.email ?? null, createdAt, updatedAt],
       );
-      return { ...profile, createdAt, updatedAt };
+      return profile;
     },
     upsertSettings: async (nextSettings: Settings) => {
       await execute(

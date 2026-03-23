@@ -93,8 +93,7 @@ export function SpeechInput({
         }
       };
 
-      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error('Speech recognition error:', event.error);
+      recognitionRef.current.onerror = (_event: SpeechRecognitionErrorEvent) => {
         setIsRecording(false);
         setIsProcessing(false);
       };
@@ -132,8 +131,8 @@ export function SpeechInput({
       recognitionRef.current.start();
       setIsRecording(true);
       setTranscript('');
-    } catch (error) {
-      console.error('Failed to start recording:', error);
+    } catch {
+      // Recording start failure is handled via UI state
     }
   }, [isRecording]);
 

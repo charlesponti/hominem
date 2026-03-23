@@ -27,7 +27,6 @@ interface ChatMessageListProps {
   onSpeak: (message: ChatMessageItem) => void
   onShare: (message: ChatMessageItem) => void
   renderIcon: ChatRenderIcon
-  appName: string
   formatTimestamp: (value: string) => string
 }
 
@@ -47,7 +46,6 @@ export function ChatMessageList({
   onSpeak,
   onShare,
   renderIcon,
-  appName,
   formatTimestamp,
 }: ChatMessageListProps) {
   const hasSearchQuery = showSearch && searchQuery.length > 0
@@ -126,7 +124,7 @@ export function ChatMessageList({
         scrollEnabled={displayMessages.length > 0}
       />
       {chatSendStatus === 'submitted' ? <ChatShimmerMessage /> : null}
-      {chatSendStatus === 'streaming' ? <ChatThinkingIndicator appName={appName} /> : null}
+      {chatSendStatus === 'streaming' ? <ChatThinkingIndicator /> : null}
     </>
   )
 }

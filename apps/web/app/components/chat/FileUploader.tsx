@@ -31,13 +31,12 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
       try {
         const fileArray = Array.from(files);
         if (fileArray.length > maxFiles) {
-          console.warn(`Only ${maxFiles} files allowed. Selected: ${fileArray.length}`);
           return;
         }
         const newFiles = await uploadFiles(files);
         onFilesUploaded?.(newFiles);
-      } catch (error) {
-        console.error('Upload failed:', error);
+      } catch {
+        // Error is already handled by the upload hook
       }
     },
     [uploadFiles, onFilesUploaded, maxFiles],

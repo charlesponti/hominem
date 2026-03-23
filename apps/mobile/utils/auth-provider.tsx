@@ -1,3 +1,4 @@
+import type { User } from '@hominem/auth';
 import * as SecureStore from 'expo-secure-store';
 import React, {
   createContext,
@@ -23,7 +24,6 @@ import {
 import { authStateMachine, initialAuthState, type AuthState } from './auth/types';
 import { API_BASE_URL, E2E_TESTING } from './constants';
 import { LocalStore } from './local-store';
-import type { UserProfile as LocalUserProfile } from './validation/schemas';
 import { markStartupPhase } from './performance/startup-metrics';
 
 const LOCAL_MIGRATION_KEY = 'hominem_mobile_local_migration_v1';
@@ -52,12 +52,14 @@ function hasValidSignInResponse(input: SignInResponse) {
   return input.user.id.length > 0 && input.user.email.length > 0;
 }
 
-function toAuthUserProfile(localProfile: LocalUserProfile | null): AuthState['user'] {
+function toAuthUserProfile(localProfile: User | null): AuthState['user'] {
   if (!localProfile) return null;
   return {
     id: localProfile.id,
-    email: localProfile.email ?? null,
-    name: localProfile.name ?? null,
+    email: localProfile.email,
+    name: localProfile.name,
+    image: localProfile.image,
+    isAdmin: localProfile.isAdmin,
     createdAt: localProfile.createdAt,
     updatedAt: localProfile.updatedAt,
   } as AuthState['user'];
@@ -67,11 +69,13 @@ function fromSignInUser(user: {
   id: string;
   email: string;
   name?: string | null;
-}): LocalUserProfile {
+}): User {
   return {
     id: user.id,
     email: user.email,
-    name: user.name ?? null,
+    name: user.name ?? undefined,
+    image: undefined,
+    isAdmin: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -89,12 +93,12 @@ type AuthContextType = {
   authError: Error | null;
   isLoadingAuth: boolean;
   isSignedIn: boolean;
-  currentUser: LocalUserProfile | null;
+  currentUser: User | null;
   requestEmailOtp: (email: string) => Promise<void>;
   verifyEmailOtp: (input: { email: string; otp: string; name?: string }) => Promise<void>;
   completePasskeySignIn: (input: SignInResponse) => Promise<void>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<LocalUserProfile>) => Promise<LocalUserProfile>;
+  updateProfile: (updates: Partial<User>) => Promise<User>;
   getAuthHeaders: () => Promise<Record<string, string>>;
   clearError: () => void;
   retrySessionRecovery: () => Promise<void>;
@@ -470,11 +474,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }
   }, [state.user?.email]);
 
-  const updateProfile = useCallback(async (updates: Partial<LocalUserProfile>) => {
+  const updateProfile = useCallback(async (updates: Partial<User>) => {
     const current = await LocalStore.getUserProfile();
     if (!current) throw new Error('No user profile to update');
 
-    const merged: LocalUserProfile = {
+    const merged: User = {
       ...current,
       ...updates,
       updatedAt: new Date().toISOString(),
@@ -521,6 +525,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       id: state.user.id,
       email: state.user.email,
       name: state.user.name,
+      image: state.user.image,
+      isAdmin: state.user.isAdmin,
       createdAt: state.user.createdAt,
       updatedAt: state.user.updatedAt,
     };

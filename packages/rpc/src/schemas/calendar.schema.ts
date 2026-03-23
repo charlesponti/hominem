@@ -17,8 +17,8 @@ export const UpdateEventInputSchema = z.object({
   eventType: EventTypeSchema.optional(),
   title: z.string().min(1).optional(),
   description: z.string().optional().nullish(),
-  startTime: z.string().datetime().optional(),
-  endTime: z.string().datetime().optional().nullish(),
+  startTime: z.iso.datetime().optional(),
+  endTime: z.iso.datetime().optional().nullish(),
   allDay: z.boolean().optional(),
   location: z.string().optional().nullish(),
   color: z.string().optional().nullish(),
@@ -33,8 +33,8 @@ export const ReplaceEventAttendeesInputSchema = z.object({
 })
 
 export const ListEventsFilterSchema = z.object({
-  startTime: z.string().datetime().optional(),
-  endTime: z.string().datetime().optional(),
+  startTime: z.iso.datetime().optional(),
+  endTime: z.iso.datetime().optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
 })

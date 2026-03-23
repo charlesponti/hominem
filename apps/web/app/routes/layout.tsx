@@ -1,18 +1,33 @@
-import { PasskeyEnrollmentBanner, usePasskeyAuth, useToast } from '@hominem/ui';
+import { usePasskeyAuth } from '@hominem/auth';
+import { PasskeyEnrollmentBanner, useToast } from '@hominem/ui';
+import { Composer, ComposerProvider, type ComposerDataDeps } from '@hominem/ui/composer';
 import { Toaster } from '@hominem/ui/components/ui/toaster';
 import React, { Suspense, useCallback, useEffect } from 'react';
-import { Outlet, useNavigation, useSearchParams } from 'react-router';
+import { Outlet, useNavigate, useNavigation, useSearchParams } from 'react-router';
 
 import NotesHeader from '~/components/header';
-import { Composer } from '~/components/composer';
-import { ComposerProvider } from '~/components/composer/composer-provider';
 import { LoadingScreen } from '~/components/loading';
+import { useComposerMode } from '~/hooks/use-composer-mode';
+import { useCreateNote, useNotesList as _useNotesList, useUpdateNote } from '~/hooks/use-notes';
+import { useTranscribe } from '~/hooks/use-transcribe';
+import { useHasPasskeys } from '~/hooks/use-passkeys';
+import { useFileUpload } from '~/lib/hooks/use-file-upload';
+import { useSendMessage } from '~/lib/hooks/use-send-message';
+
+const useNotesListForComposer: ComposerDataDeps['useNotesList'] = (options) => {
+  const result = _useNotesList(options)
+  return result.data !== undefined ? { data: result.data } : {}
+}
 
 export default function Layout() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigationState = useNavigation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { register } = usePasskeyAuth();
+  const { mode, noteId, chatId } = useComposerMode();
+  const transcribeMutation = useTranscribe();
+  const hasPasskeys = useHasPasskeys();
   const isNavigating = navigationState.state !== 'idle';
   const handleEnroll = useCallback(async () => {
     await register();
@@ -39,7 +54,15 @@ export default function Layout() {
 
   return (
     // CSS var consumed by all Notes route scroll containers for bottom padding
-    <ComposerProvider>
+    <ComposerProvider
+      uploadHook={useFileUpload}
+      dataDeps={{
+        useCreateNote,
+        useUpdateNote,
+        useSendMessage: (args) => useSendMessage(args),
+        useNotesList: useNotesListForComposer,
+      }}
+    >
       <div
         style={
           {
@@ -47,7 +70,7 @@ export default function Layout() {
           } as React.CSSProperties
         }
       >
-        <PasskeyEnrollmentBanner onEnroll={handleEnroll} />
+        <PasskeyEnrollmentBanner hasPasskeys={hasPasskeys ?? undefined} onEnroll={handleEnroll} />
         {isNavigating && (
           <div
             className="fixed top-0 left-0 z-50 w-full"
@@ -70,7 +93,7 @@ export default function Layout() {
             </div>
           </main>
         </div>
-        <Composer />
+        <Composer mode={mode} noteId={noteId} chatId={chatId} navigate={navigate} transcribeMutation={transcribeMutation} />
         <Toaster />
       </div>
     </ComposerProvider>

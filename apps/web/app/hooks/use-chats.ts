@@ -1,4 +1,5 @@
 import { useRpcMutation } from '@hominem/rpc/react';
+import type { Chat } from '@hominem/rpc/types/chat.types';
 import { useQueryClient } from '@tanstack/react-query';
 import { chatQueryKeys } from '~/lib/query-keys';
 
@@ -10,6 +11,20 @@ export function useDeleteChat() {
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: chatQueryKeys.sidebarList });
+      },
+    },
+  );
+}
+
+export function useArchiveChat({ chatId, onSuccess }: { chatId: string; onSuccess?: (chat: Chat) => void }) {
+  const queryClient = useQueryClient();
+
+  return useRpcMutation<Chat, { chatId: string }>(
+    ({ chats }, variables) => chats.archive(variables),
+    {
+      onSuccess: (chat) => {
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.sidebarList });
+        onSuccess?.(chat);
       },
     },
   );

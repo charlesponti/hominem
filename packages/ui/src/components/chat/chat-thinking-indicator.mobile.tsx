@@ -47,11 +47,7 @@ function useBounceDot(delayMs: number) {
   }))
 }
 
-interface ChatThinkingIndicatorProps {
-  appName: string
-}
-
-export function ChatThinkingIndicator({ appName }: ChatThinkingIndicatorProps) {
+export function ChatThinkingIndicator() {
   const dot1Style = useBounceDot(0)
   const dot2Style = useBounceDot(STAGGER_OFFSET)
   const dot3Style = useBounceDot(STAGGER_OFFSET * 2)
@@ -59,9 +55,6 @@ export function ChatThinkingIndicator({ appName }: ChatThinkingIndicatorProps) {
   return (
     <View style={styles.row}>
       <View style={styles.content}>
-        <Text color="text-tertiary" style={styles.label}>
-          {appName}
-        </Text>
         <View style={styles.dotsRow}>
           <Animated.View style={[styles.dot, dot1Style]} />
           <Animated.View style={[styles.dot, dot2Style]} />
@@ -91,11 +84,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing[2],
-  },
-  label: {
-    fontSize: fontSizes.xs,
-    fontWeight: '500',
-    marginBottom: spacing[1],
   },
   row: {
     paddingHorizontal: spacing[4],

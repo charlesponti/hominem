@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import type { UploadedFile } from '~/lib/types/upload'
+import type { UploadedFile } from '@hominem/ui/types/upload'
 
-import { formatNoteAttachmentsSection, formatUploadedFileContext } from './composer-attachments'
+import { formatNoteAttachmentsSection, formatUploadedFileContext } from '@hominem/ui/composer'
 
 function createUploadedFileFixture(overrides: Partial<UploadedFile> = {}): UploadedFile {
   return {

@@ -1,5 +1,5 @@
 import { KeyRound, Plus, Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { Button } from '../ui/button';
 
@@ -11,85 +11,75 @@ interface Passkey {
 
 interface PasskeyManagementProps {
   /**
-   * Base API URL (e.g. https://api.example.com).
-   * Defaults to VITE_PUBLIC_API_URL env var.
+   * List of registered passkeys to display.
+   * Pass undefined while loading.
    */
-  apiUrl?: string;
+  passkeys?: Passkey[] | undefined;
+  /**
+   * Whether the passkeys list is currently loading.
+   */
+  isLoading?: boolean | undefined;
+  /**
+   * Error message to display, if any.
+   */
+  error?: string | null | undefined;
   /**
    * Called when the user wants to add a new passkey.
    * Should invoke the platform WebAuthn registration flow.
+   * Returns true on success, false on cancellation/failure.
    */
   onAdd: () => Promise<boolean>;
+  /**
+   * Called when the user wants to delete a passkey.
+   * Returns true on success, false on failure.
+   */
   onDelete: (id: string) => Promise<boolean>;
 }
 
 /**
  * Passkey management panel — lists registered passkeys, lets users add or
  * delete them. Designed to be embedded in a `/settings/security` page.
+ * 
+ * Data fetching is the responsibility of the parent component.
  */
-export function PasskeyManagement({ apiUrl, onAdd, onDelete }: PasskeyManagementProps) {
-  const [passkeys, setPasskeys] = useState<Passkey[]>([]);
-  const [loading, setLoading] = useState(true);
+export function PasskeyManagement({ 
+  passkeys: passkeysProp, 
+  isLoading = false, 
+  error: externalError,
+  onAdd, 
+  onDelete 
+}: PasskeyManagementProps) {
   const [adding, setAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const base =
-    apiUrl ??
-    (typeof import.meta !== 'undefined'
-      ? (import.meta.env.VITE_PUBLIC_API_URL as string | undefined)
-      : undefined) ??
-    '';
-
-  const fetchPasskeys = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`${base}/api/auth/passkeys`, {
-        credentials: 'include',
-        headers: { 'content-type': 'application/json' },
-      });
-      if (!res.ok) throw new Error('Failed to load passkeys');
-      const data = (await res.json()) as Passkey[];
-      setPasskeys(Array.isArray(data) ? data : []);
-    } catch {
-      setError('Could not load passkeys. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, [base]);
-
-  useEffect(() => {
-    void fetchPasskeys();
-  }, [fetchPasskeys]);
+  const passkeys = passkeysProp ?? [];
+  const error = externalError ?? actionError;
 
   const handleAdd = useCallback(async () => {
     setAdding(true);
-    setError(null);
+    setActionError(null);
     try {
       const success = await onAdd();
-      if (success) {
-        await fetchPasskeys();
-      } else {
-        setError('Passkey registration was cancelled or failed.');
+      if (!success) {
+        setActionError('Passkey registration was cancelled or failed.');
       }
     } catch {
-      setError('An error occurred during passkey registration.');
+      setActionError('An error occurred during passkey registration.');
     } finally {
       setAdding(false);
     }
-  }, [onAdd, fetchPasskeys]);
+  }, [onAdd]);
 
   const handleDelete = useCallback(
     async (id: string) => {
       setDeletingId(id);
-      setError(null);
+      setActionError(null);
       try {
         const success = await onDelete(id);
         if (!success) throw new Error('Failed to delete passkey');
-        setPasskeys((prev) => prev.filter((p) => p.id !== id));
       } catch {
-        setError('Could not delete passkey. Please try again.');
+        setActionError('Could not delete passkey. Please try again.');
       } finally {
         setDeletingId(null);
       }
@@ -127,7 +117,7 @@ export function PasskeyManagement({ apiUrl, onAdd, onDelete }: PasskeyManagement
         </p>
       )}
 
-      {loading ? (
+      {isLoading ? (
         <p className="text-sm text-muted-foreground">Loading passkeys...</p>
       ) : passkeys.length === 0 ? (
         <div className="flex items-center gap-3 border border-dashed border-default p-4 text-sm text-text-secondary">

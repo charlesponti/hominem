@@ -1,14 +1,18 @@
-import { ChatHeader, ChatMessageList, ChatReviewOverlay, ChatSearchModal } from '@hominem/ui/chat'
-import { StyleSheet, View } from 'react-native'
+import { Chat as _Chat } from '@hominem/ui/chat'
+import type { SessionSource } from '@hominem/ui/chat'
+import { useQueryClient } from '@tanstack/react-query'
+import React from 'react'
 
 import { FeatureErrorBoundary } from '~/components/error-boundary'
+import { useSpeech } from '~/components/media/use-speech'
 import { makeStyles } from '~/theme'
 import { APP_NAME } from '~/utils/constants'
 import { getLocalDate } from '~/utils/dates'
+import { invalidateInboxQueries } from '~/utils/services/inbox/inbox-refresh'
+import { useArchiveChat, useChatMessages, useSendMessage } from '~/utils/services/chat'
+import { chatKeys } from '~/utils/services/notes/query-keys'
 
 import AppIcon from '../ui/icon'
-import { useChatController } from './use-chat-controller'
-import type { SessionSource } from '@hominem/ui/chat'
 
 type ChatProps = {
   chatId: string
@@ -16,7 +20,7 @@ type ChatProps = {
   source: SessionSource
 }
 
-const renderIcon: React.ComponentProps<typeof ChatHeader>['renderIcon'] = (name, props) => (
+const renderIcon: React.ComponentProps<typeof _Chat>['renderIcon'] = (name, props) => (
   <AppIcon
     color={props.color}
     name={name}
@@ -29,70 +33,38 @@ const renderIcon: React.ComponentProps<typeof ChatHeader>['renderIcon'] = (name,
 const formatTimestamp = (value: string) => getLocalDate(new Date(value)).localDateString
 
 export const Chat = ({ chatId, onChatArchive, source }: ChatProps) => {
+  const { speakingId, speak } = useSpeech()
+  const queryClient = useQueryClient()
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const styles = useStyles()
-  const controller = useChatController({ chatId, onChatArchive, source })
 
   return (
-    <View style={styles.container}>
-      <ChatHeader
-        topInset={0}
-        resolvedSource={controller.resolvedSource}
-        statusCopy={controller.statusCopy}
-        onOpenSearch={controller.handleOpenSearch}
-        onOpenMenu={controller.handleOpenMenu}
-        renderIcon={renderIcon}
-      />
-      <ChatSearchModal
-        visible={controller.showSearch}
-        searchQuery={controller.searchQuery}
-        resultCount={controller.displayMessages.length}
-        searchInputRef={controller.searchInputRef}
-        onClose={controller.handleCloseSearch}
-        onChangeSearchQuery={controller.handleSearchQueryChange}
-        renderIcon={renderIcon}
-      />
-      <ChatMessageList
-        appName={APP_NAME}
-        isMessagesLoading={controller.isMessagesLoading}
-        displayMessages={controller.displayMessages}
-        showSearch={controller.showSearch}
-        searchQuery={controller.searchQuery}
-        formatTimestamp={formatTimestamp}
-        markdown={controller.Markdown}
-        showDebug={controller.showDebug}
-        speakingId={controller.speakingId}
-        chatSendStatus={controller.chatSendStatus}
-        onCopy={controller.handleCopyMessage}
-        onEdit={controller.handleEditMessage}
-        onRegenerate={controller.handleRegenerate}
-        onDelete={controller.handleDeleteMessage}
-        onSpeak={controller.handleSpeakMessage}
-        onShare={(message) => {
-          void controller.handleShareMessage(message)
-        }}
-        renderIcon={renderIcon}
-      />
-      <ChatReviewOverlay
-        pendingReview={controller.pendingReview}
-        isVisible={controller.isReviewVisible}
-        onAccept={() => {
-          void controller.handleAcceptReview()
-        }}
-        onReject={controller.handleRejectReview}
-      />
-    </View>
+    <_Chat
+      chatId={chatId}
+      onChatArchive={onChatArchive}
+      source={source}
+      services={{
+        useChatMessages,
+        useSendMessage,
+        useArchiveChat,
+        chatKeys,
+        speech: { speakingId, speak },
+        onNoteCreated: () => invalidateInboxQueries(queryClient),
+      }}
+      renderIcon={renderIcon}
+      formatTimestamp={formatTimestamp}
+      containerStyle={styles.container}
+    />
   )
 }
 
-const useStyles = makeStyles((t) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: t.colors['bg-elevated'],
-      flexDirection: 'column',
-    },
-  }),
-)
+const useStyles = makeStyles((t) => ({
+  container: {
+    flex: 1,
+    backgroundColor: t.colors['bg-elevated'],
+    flexDirection: 'column' as const,
+  },
+}))
 
 export const ChatWithErrorBoundary = (props: ChatProps) => (
   <FeatureErrorBoundary featureName="Chat">

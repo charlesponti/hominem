@@ -5,14 +5,13 @@ const DISMISSED_KEY = 'hominem_passkey_enrollment_dismissed';
 
 interface PasskeyEnrollmentBannerProps {
   /**
-   * Base URL for the API. Must include the API root (e.g. https://api.example.com).
-   * If not provided, defaults to the VITE_PUBLIC_API_URL env var.
+   * Whether the user has any passkeys registered.
+   * Pass undefined to hide the banner (loading state).
    */
-  apiUrl?: string;
+  hasPasskeys?: boolean | undefined;
   /**
    * Called when the user clicks "Add passkey". Should open the passkey
-   * registration flow (e.g. invoke addPasskey from useMobilePasskeyAuth or
-   * the web passkey registration hook).
+   * registration flow.
    */
   onEnroll: () => Promise<void>;
 }
@@ -24,10 +23,11 @@ interface PasskeyEnrollmentBannerProps {
  *  - If the user has already dismissed it (stored in localStorage).
  *  - If the user already has at least one passkey registered.
  *  - If the browser does not support WebAuthn.
+ *  - If hasPasskeys is undefined/null (loading state).
  *
  * Place this in the authenticated app layout so it appears once after sign-in.
  */
-export function PasskeyEnrollmentBanner({ apiUrl, onEnroll }: PasskeyEnrollmentBannerProps) {
+export function PasskeyEnrollmentBanner({ hasPasskeys, onEnroll }: PasskeyEnrollmentBannerProps) {
   const [visible, setVisible] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
 
@@ -35,31 +35,15 @@ export function PasskeyEnrollmentBanner({ apiUrl, onEnroll }: PasskeyEnrollmentB
     if (typeof window === 'undefined') return;
     if (!window.PublicKeyCredential) return;
     if (localStorage.getItem(DISMISSED_KEY)) return;
+    if (hasPasskeys === undefined || hasPasskeys === null) return;
 
-    const base =
-      apiUrl ??
-      (typeof import.meta !== 'undefined'
-        ? (import.meta.env.VITE_PUBLIC_API_URL as string | undefined)
-        : undefined) ??
-      '';
-
-    fetch(`${base}/api/auth/passkeys`, {
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-    })
-      .then((res) => {
-        if (!res.ok) return;
-        return res.json() as Promise<unknown[]>;
-      })
-      .then((passkeys) => {
-        if (Array.isArray(passkeys) && passkeys.length === 0) {
-          setVisible(true);
-        }
-      })
-      .catch(() => {
-        // Network failure — silently skip, don't block the app
-      });
-  }, [apiUrl]);
+    // Only show if user has NO passkeys registered
+    if (!hasPasskeys) {
+      setVisible(true);
+    } else {
+      setVisible(false);
+    }
+  }, [hasPasskeys]);
 
   const dismiss = useCallback(() => {
     localStorage.setItem(DISMISSED_KEY, '1');

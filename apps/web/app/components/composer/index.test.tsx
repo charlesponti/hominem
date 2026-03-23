@@ -3,16 +3,20 @@ import { useCallback, useEffect, useState } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Note } from '@hominem/rpc/types/notes.types'
-import type { UploadedFile } from '~/lib/types/upload'
+import { Composer, ComposerProvider, useComposerAttachedNotes, type ComposerDataDeps } from '@hominem/ui/composer'
+import type { UploadedFile } from '@hominem/ui/types/upload'
 
-import { ComposerProvider, useComposerAttachedNotes } from './composer-provider'
-import { Composer } from './index'
+import { useCreateNote, useUpdateNote } from '~/hooks/use-notes'
+import { useFileUpload } from '~/lib/hooks/use-file-upload'
+import { useSendMessage } from '~/lib/hooks/use-send-message'
+import { useTranscribe } from '~/hooks/use-transcribe'
 
 const mocks = vi.hoisted(() => {
   const createNoteMutateAsync = vi.fn<(input: { content: string; title?: string }) => Promise<unknown>>()
   const updateNoteMutateAsync = vi.fn<(input: { id: string; content: string }) => Promise<unknown>>()
   const sendMessageMutateAsync = vi.fn<(input: { chatId: string; message: string }) => Promise<unknown>>()
   const createChatMutateAsync = vi.fn<(input: { seedText: string; title: string }) => Promise<{ id: string }>>()
+  const transcribeMutateAsync = vi.fn<(input: { audioBlob: Blob }) => Promise<{ text: string }>>()
   const navigate = vi.fn()
   const uploadState = {
     isUploading: false,
@@ -34,6 +38,7 @@ const mocks = vi.hoisted(() => {
     updateNoteMutateAsync,
     sendMessageMutateAsync,
     createChatMutateAsync,
+    transcribeMutateAsync,
     navigate,
     uploadState,
     uploadFiles,
@@ -100,6 +105,19 @@ vi.mock('~/lib/hooks/use-file-upload', () => ({
     }
   },
 }))
+
+const composerDataDeps: ComposerDataDeps = {
+  useCreateNote,
+  useUpdateNote,
+  useSendMessage: () => ({
+    mutateAsync: mocks.sendMessageMutateAsync,
+    isPending: false,
+    status: 'idle',
+    stop: vi.fn(),
+    error: null,
+  }),
+  useNotesList: () => ({}),
+}
 
 vi.mock('./use-composer-mode', () => ({
   useComposerMode: () => mocks.composerMode,
@@ -188,9 +206,17 @@ function createUploadedFileFixture(overrides: Partial<UploadedFile> = {}): Uploa
 
 function renderComposer({ attachedNotes }: { attachedNotes?: Note[] } = {}) {
   return render(
-    <ComposerProvider>
+    <ComposerProvider uploadHook={useFileUpload} dataDeps={composerDataDeps}>
       <ComposerStateInitializer attachedNotes={attachedNotes ?? []} />
-      <Composer />
+      <Composer 
+        mode="generic" 
+        navigate={mocks.navigate}
+        transcribeMutation={{
+          mutateAsync: mocks.transcribeMutateAsync,
+          isPending: false,
+          error: null,
+        } as unknown as import('@tanstack/react-query').UseMutationResult<{ text: string }, Error, { audioBlob: Blob }>}
+      />
     </ComposerProvider>,
   )
 }

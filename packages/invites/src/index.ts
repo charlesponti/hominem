@@ -1,13 +1,11 @@
 import { getInvitesForUser, getListInvites } from '@hominem/lists-services';
 import type { ListInviteOutput, ListOutput, UserOutput } from '@hominem/lists-services';
 
-type ListInvite = ListInviteOutput;
-
-export type SentInvite = ListInvite & {
+export type SentInvite = ListInviteOutput & {
   list: ListOutput | null;
   user_invitedUserId: UserOutput | null;
 };
-export type ReceivedInvite = ListInvite & {
+export type ReceivedInvite = ListInviteOutput & {
   list: ListOutput | null;
   belongsToAnotherUser?: boolean;
 };

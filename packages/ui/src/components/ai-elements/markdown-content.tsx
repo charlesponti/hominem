@@ -29,8 +29,8 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
           return newSet
         })
       }, 2000)
-    } catch (error) {
-      console.error('Failed to copy code:', error)
+    } catch {
+      // Copy failure is silently ignored - UI shows no feedback for failure
     }
   }
 
