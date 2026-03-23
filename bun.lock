@@ -23,6 +23,7 @@
         "knip": "^5.86.0",
         "oxfmt": "0.37.0",
         "oxlint": "1.52.0",
+        "quansync": "^1.0.0",
         "turbo": "^2.8.15",
         "typescript": "5.9.3",
         "vite-tsconfig-paths": "6.1.1",
