@@ -25,7 +25,7 @@ vi.mock('../auth/session-store', () => ({
 }));
 
 vi.mock('@hominem/auth/server', () => ({
-  toHominemUser: (input: {
+  toUser: (input: {
     id: string;
     email: string;
     is_admin?: boolean;

@@ -133,7 +133,7 @@ jobs:
         with:
           install-flags: "--force"
       - name: 🧱 Build hono-rpc package
-        run: bun run --filter @hominem/hono-rpc build
+        run: bun run --filter @hominem/rpc build
 
   test-unit:
     name: test:unit
