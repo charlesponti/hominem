@@ -121,8 +121,8 @@ jobs:
         run: bun turbo run build
         timeout-minutes: 30
 
-  build-hono-rpc:
-    name: build:hono-rpc
+  build-rpc:
+    name: build:rpc
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -132,7 +132,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           install-flags: "--force"
-      - name: 🧱 Build hono-rpc package
+      - name: 🧱 Build `rpc` package
         run: bun run --filter @hominem/rpc build
 
   test-unit:
