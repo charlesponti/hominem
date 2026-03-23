@@ -79,7 +79,6 @@ export const FocusView = () => {
   }, [onRefresh]);
 
   const isLoaded = Boolean(!isLoading && !isRefetching && !refreshing);
-  const hasInboxItems = items.length > 0;
 
   return (
     <>
@@ -97,18 +96,13 @@ export const FocusView = () => {
 
           {isError ? <FocusLoadingError /> : null}
 
-          {(isLoaded || isRefetching) && hasInboxItems ? (
+          {isLoaded || isRefetching ? (
             <View style={styles.focuses}>
               {activeSearch ? (
                 <ActiveSearchSummary onCloseClick={onSearchClose} activeSearch={activeSearch} />
               ) : null}
 
               <InboxStream items={items} />
-            </View>
-          ) : null}
-          {isLoaded && !hasInboxItems && !activeSearch ? (
-            <View style={styles.focuses}>
-              <InboxStream items={[]} />
             </View>
           ) : null}
         </View>

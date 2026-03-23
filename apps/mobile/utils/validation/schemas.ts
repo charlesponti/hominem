@@ -3,8 +3,8 @@ import { z } from 'zod';
 // User Profile Schema
 export const UserProfileSchema = z.object({
   id: z.string(),
-  email: z.string().nullable(),
-  name: z.string().nullable(),
+  email: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });

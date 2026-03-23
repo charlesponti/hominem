@@ -3,21 +3,15 @@ import { Hono } from 'hono'
 
 import { authMiddleware, type AppContext } from '../middleware/auth'
 import { getUserChatsQuery } from '@hominem/chat-services'
+import type { FocusItem, FocusListOutput } from '@hominem/rpc'
 
-export interface FocusItem {
-  kind: 'note' | 'chat'
-  id: string
-  title: string
-  preview: string | null
-  updatedAt: string
-}
+const compact = (s: string) => s.replace(/\s+/g, ' ').trim()
 
 function computeNoteTitle(
   title: string | null,
   excerpt: string | null,
   content: string | null,
 ): string {
-  const compact = (s: string) => s.replace(/\s+/g, ' ').trim()
   const lines = (s: string | null) =>
     (s ?? '').split('\n').map(compact).filter(Boolean)
 
@@ -36,7 +30,6 @@ function computeNotePreview(
   excerpt: string | null,
   content: string | null,
 ): string | null {
-  const compact = (s: string) => s.replace(/\s+/g, ' ').trim()
   const lines = [excerpt, content]
     .flatMap((s) => (s ?? '').split('\n').map(compact).filter(Boolean))
 
@@ -44,10 +37,6 @@ function computeNotePreview(
     if (line !== title) return line.slice(0, 140)
   }
   return null
-}
-
-export interface FocusListOutput {
-  items: FocusItem[]
 }
 
 const NOTE_LIMIT = 100

@@ -21,6 +21,7 @@ import { useMessageSearch } from '~/lib/hooks/use-message-search';
 import { useScrollDetection } from '~/lib/hooks/use-scroll-detection';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
 import type { ExtendedMessage } from '~/lib/types/chat-message';
+import { chatQueryKeys } from '~/lib/query-keys';
 import { findPreviousUserMessage } from '~/lib/utils/message';
 
 import { ChatMessage } from './ChatMessage';
@@ -46,7 +47,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
     const messagesQuery = useRpcQuery(
       ({ chats }) => chats.getMessages({ chatId, limit: 50 }),
       {
-        queryKey: ['chats', 'getMessages', { chatId, limit: 50 }],
+        queryKey: chatQueryKeys.messages(chatId),
         enabled: !!chatId,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
@@ -65,7 +66,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         onSuccess: () => {
           // Invalidate messages list for this chat
           // Note: we need to match the query key structure
-          queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
+          queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
         },
       },
     );
@@ -155,7 +156,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       { messageId: string; content: string }
     >(({ messages }, variables) => messages.update(variables), {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
       },
     });
 

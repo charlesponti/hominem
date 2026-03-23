@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker'
+import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services'
 import { useApiClient } from '@hominem/rpc/react'
 import { CameraModal } from '../media/camera-modal'
 import { useQueryClient } from '@tanstack/react-query'
@@ -70,7 +71,7 @@ export const MobileComposer = () => {
 
   const createChatFromDraft = async () => {
     const trimmedMessage = message.trim()
-    const chatTitle = trimmedMessage.slice(0, 64) || 'New conversation'
+    const chatTitle = trimmedMessage.slice(0, CHAT_TITLE_MAX_LENGTH) || 'New conversation'
     const chat = await client.chats.create({
       title: chatTitle,
     })

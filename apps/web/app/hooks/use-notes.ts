@@ -1,15 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useRpcMutation, useRpcQuery } from '@hominem/rpc/react';
 import type {
-  Note,
   NotesListInput,
-  NotesGetOutput,
   NotesCreateInput,
   NotesCreateOutput,
   NotesUpdateInput,
   NotesUpdateOutput,
   NotesDeleteOutput,
 } from '@hominem/rpc/types/notes.types';
+import { notesQueryKeys } from '~/lib/query-keys';
 
 export function useNotesList(options: NotesListInput = {}) {
   return useRpcQuery(
@@ -18,7 +17,7 @@ export function useNotesList(options: NotesListInput = {}) {
       return Array.isArray(data.notes) ? data.notes : [];
     },
     {
-      queryKey: ['notes', 'list', options],
+      queryKey: notesQueryKeys.list(options),
       staleTime: 1000 * 60 * 1, // 1 minute
     },
   );
@@ -26,7 +25,7 @@ export function useNotesList(options: NotesListInput = {}) {
 
 export function useNote(id: string) {
   return useRpcQuery(({ notes }) => notes.get({ id }), {
-    queryKey: ['notes', id],
+    queryKey: notesQueryKeys.detail(id),
     enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
@@ -39,7 +38,7 @@ export function useCreateNote() {
     ({ notes }, variables) => notes.create(variables),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['notes', 'list'] });
+        queryClient.invalidateQueries({ queryKey: notesQueryKeys.list() });
       },
     },
   );
@@ -52,7 +51,7 @@ export function useUpdateNote() {
     ({ notes }, variables) => notes.update(variables),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['notes', 'list'] });
+        queryClient.invalidateQueries({ queryKey: notesQueryKeys.list() });
       },
     },
   );
@@ -65,7 +64,7 @@ export function useDeleteNote() {
     ({ notes }, variables) => notes.delete(variables),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['notes', 'list'] });
+        queryClient.invalidateQueries({ queryKey: notesQueryKeys.list() });
       },
     },
   );

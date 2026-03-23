@@ -12,6 +12,7 @@ import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
 import { deriveSessionSource } from '@hominem/chat-services/ui';
+import { chatQueryKeys } from '~/lib/query-keys';
 
 import type { Route } from './+types/chat.$chatId';
 
@@ -30,12 +31,12 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
 
   const { data: chat } = useRpcQuery(({ chats: c }) => c.get({ chatId }), {
-    queryKey: ['chats', chatId],
+    queryKey: chatQueryKeys.get(chatId),
   });
 
   const { data: messages } = useRpcQuery(
     ({ chats: c }) => c.getMessages({ chatId, limit: 50 }),
-    { queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] },
+    { queryKey: chatQueryKeys.messages(chatId) },
   );
 
   const initialSource = useMemo<SessionSource>(

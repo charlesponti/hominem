@@ -7,17 +7,18 @@
 
 import { useRpcQuery } from '@hominem/rpc/react'
 import type { FocusItem } from '@hominem/rpc'
+import { focusQueryKeys } from '~/lib/query-keys'
 
-export type InboxStreamItem = FocusItem
+export type { FocusItem as InboxStreamItem } from '@hominem/rpc'
 
 export function useInboxStream(): {
-  items: InboxStreamItem[]
+  items: FocusItem[]
   isLoading: boolean
 } {
   const { data, isLoading } = useRpcQuery(
     ({ focus }) => focus.list(),
     {
-      queryKey: ['focus'],
+      queryKey: focusQueryKeys.all,
       staleTime: 1000 * 60,
     },
   )

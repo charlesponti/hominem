@@ -1,9 +1,9 @@
 import { useRpcQuery } from '@hominem/rpc/react';
-import type { Chat } from '@hominem/rpc/types/chat.types';
+import { chatQueryKeys } from '~/lib/query-keys';
 
 export function useNoteChat(noteId: string) {
   return useRpcQuery(({ chats }) => chats.getByNote({ noteId }), {
-    queryKey: ['chats', 'note', noteId],
+    queryKey: chatQueryKeys.note(noteId),
     enabled: !!noteId,
     staleTime: 1000 * 60 * 5,
   });

@@ -1,4 +1,4 @@
-import type { UserProfile } from '../../utils/auth/types'
+import type { User } from '@hominem/auth';
 
 export interface ChatThreadFixture {
   chatId: string
@@ -17,11 +17,12 @@ export interface NetworkStateFixture {
   isInternetReachable: boolean
 }
 
-export function buildAuthUser(overrides: Partial<UserProfile> = {}): UserProfile {
+export function buildAuthUser(overrides: Partial<User> = {}): User {
   return {
     id: 'user-1',
     email: 'mobile-test@hominem.test',
     name: 'Mobile Test User',
+    isAdmin: false,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
     ...overrides,

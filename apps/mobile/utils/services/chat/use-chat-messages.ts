@@ -1,6 +1,7 @@
 import type { ApiClient } from '@hominem/rpc';
 import { useApiClient } from '@hominem/rpc/react';
 import type { Chat, ChatMessage as RpcChatMessage } from '@hominem/rpc/types';
+import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQuery, useQueryClient, type MutationOptions } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
@@ -309,7 +310,7 @@ export const useActiveChat = (chatId?: string | null) => {
 };
 
 async function startRemoteChat(client: ApiClient, initialMessage: string): Promise<Chat> {
-  const title = initialMessage.trim().slice(0, 64) || 'Sherpa chat';
+  const title = initialMessage.trim().slice(0, CHAT_TITLE_MAX_LENGTH) || 'Sherpa chat';
 
   const chat = await client.chats.create({
     title,

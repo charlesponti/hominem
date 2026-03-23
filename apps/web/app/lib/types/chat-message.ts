@@ -1,9 +1,6 @@
 import type { ChatMessage } from '@hominem/rpc/types/chat.types';
 
-// Message types from Hono RPC API response
-export type MessageFromQuery = ChatMessage;
-
-// Extend the inferred message type with client-side properties
-export type ExtendedMessage = MessageFromQuery & {
+// Extends the RPC ChatMessage with client-side streaming state.
+export type ExtendedMessage = ChatMessage & {
   isStreaming?: boolean;
 };

@@ -1,5 +1,6 @@
 import { useRpcMutation } from '@hominem/rpc/react';
 import { useQueryClient } from '@tanstack/react-query';
+import { chatQueryKeys } from '~/lib/query-keys';
 
 export function useDeleteChat() {
   const queryClient = useQueryClient();
@@ -8,7 +9,7 @@ export function useDeleteChat() {
     ({ chats }, variables) => chats.delete(variables),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['chats', 'sidebar', 'list'] });
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.sidebarList });
       },
     },
   );

@@ -1,6 +1,7 @@
 import { useChat } from '@ai-sdk/react';
 import { useRpcMutation } from '@hominem/rpc/react';
 import { useQueryClient } from '@tanstack/react-query';
+import { chatQueryKeys } from '~/lib/query-keys';
 import type { ChatsSendInput, ChatsSendOutput } from '@hominem/rpc/types/chat.types';
 import { useMemo } from 'react';
 
@@ -24,10 +25,10 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
   //   api: `/api/chats/${chatId}/ui/send`,
   //   streamProtocol: 'data',
   //   onFinish: () => {
-  //     queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
+  //     queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
   //   },
   //   onError: () => {
-  //     queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
+  //     queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
   //   },
   // });
 
@@ -43,10 +44,10 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
       },
       onError: () => {
-        queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
+        queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
       },
     },
   );

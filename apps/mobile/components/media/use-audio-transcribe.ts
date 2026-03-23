@@ -1,4 +1,4 @@
-import { emitVoiceEvent } from '@hominem/services/voice-events';
+import { emitVoiceEvent, isVoiceErrorCode } from '@hominem/services/voice-events';
 import { useMutation } from '@tanstack/react-query';
 import { useCallback, useRef } from 'react';
 
@@ -14,17 +14,6 @@ type VoiceTranscribeErrorResponse = {
   code?: string;
 };
 
-function isVoiceErrorCode(
-  code: string | undefined,
-): code is 'INVALID_FORMAT' | 'TOO_LARGE' | 'AUTH' | 'QUOTA' | 'TRANSCRIBE_FAILED' {
-  return (
-    code === 'INVALID_FORMAT' ||
-    code === 'TOO_LARGE' ||
-    code === 'AUTH' ||
-    code === 'QUOTA' ||
-    code === 'TRANSCRIBE_FAILED'
-  );
-}
 
 function getMimeTypeFromUri(uri: string): string {
   const normalized = uri.toLowerCase();

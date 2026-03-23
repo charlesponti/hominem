@@ -13,6 +13,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { TIME_UNITS } from '@hominem/utils';
 
 import {
   isBlockingState,
@@ -184,14 +185,13 @@ describe('Journey 3 — Resume session from home', () => {
   });
 
   it('30-day TTL — session visible only within 30 days of last message', () => {
-    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
     const now = Date.now();
 
     const recentSession = { updatedAt: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString() };
     const expiredSession = { updatedAt: new Date(now - 31 * 24 * 60 * 60 * 1000).toISOString() };
 
     const isResumable = (s: { updatedAt: string }) =>
-      now - new Date(s.updatedAt).getTime() < THIRTY_DAYS_MS;
+      now - new Date(s.updatedAt).getTime() < TIME_UNITS.MONTH;
 
     expect(isResumable(recentSession)).toBe(true);
     expect(isResumable(expiredSession)).toBe(false);

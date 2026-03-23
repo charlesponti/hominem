@@ -1,7 +1,5 @@
 import type { User } from '@hominem/auth';
 
-export type UserProfile = User;
-
 export type AuthStatus =
   | 'booting'
   | 'signed_out'
@@ -19,13 +17,13 @@ export type AuthStatus =
 
 export interface AuthState {
   status: AuthStatus;
-  user: UserProfile | null;
+  user: User | null;
   error: Error | null;
   isLoading: boolean;
 }
 
 export type AuthEvent =
-  | { type: 'SESSION_LOADED'; user: UserProfile }
+  | { type: 'SESSION_LOADED'; user: User }
   | { type: 'SESSION_EXPIRED' }
   | { type: 'SESSION_RECOVERY_FAILED'; error: Error }
   | { type: 'OTP_REQUEST_STARTED' }

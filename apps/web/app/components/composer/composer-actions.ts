@@ -1,3 +1,4 @@
+import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services'
 import { useRpcMutation } from '@hominem/rpc/react'
 import type { Note } from '@hominem/rpc/types/notes.types'
 import { useCallback, type KeyboardEvent } from 'react'
@@ -102,7 +103,7 @@ export function resolveComposerActions(
             return
           }
 
-          const title = text.slice(0, 64)
+          const title = toTitle(text)
           await input.createNote({
             content: appendNoteAttachments(text, input.uploadedFiles),
             ...(title ? { title } : {}),
@@ -118,7 +119,7 @@ export function resolveComposerActions(
 
         await input.runWithSubmitLock(async () => {
           if (input.posture === 'reply') {
-            const title = text.slice(0, 64)
+            const title = toTitle(text)
             await input.createNote({
               content: appendNoteAttachments(text, input.uploadedFiles),
               ...(title ? { title } : {}),
@@ -132,8 +133,7 @@ export function resolveComposerActions(
             input.posture === 'draft' && input.noteTitle
               ? `[Regarding note: "${input.noteTitle}"]\n\n${text}`
               : text
-          const title =
-            text.slice(0, 64) || (input.posture === 'draft' ? 'Note chat' : 'New session')
+          const title = toTitle(text, input.posture === 'draft' ? 'Note chat' : 'New session')
           const chat = await input.createChat({
             seedText: appendChatAttachmentContext(seedText, input.uploadedFiles),
             title,
@@ -221,6 +221,10 @@ export function useComposerActions({
     primary: actions.primary,
     secondary: actions.secondary,
   }
+}
+
+function toTitle(text: string, fallback = ''): string {
+  return text.slice(0, CHAT_TITLE_MAX_LENGTH) || fallback
 }
 
 function buildNoteContext(attachedNotes: Note[]): string {

@@ -8,6 +8,10 @@ export const VOICE_ERROR_CODES = [
 
 export type VoiceErrorCode = (typeof VOICE_ERROR_CODES)[number];
 
+export function isVoiceErrorCode(code: string | undefined): code is VoiceErrorCode {
+  return VOICE_ERROR_CODES.includes(code as VoiceErrorCode);
+}
+
 export const VOICE_TRANSPORTS = ['hono-rpc'] as const;
 
 export type VoiceTransport = (typeof VOICE_TRANSPORTS)[number];

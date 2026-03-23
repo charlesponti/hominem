@@ -1,8 +1,7 @@
 import type { Chat } from '@hominem/rpc/types';
+import { TIME_UNITS } from '@hominem/utils';
 
 import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
-
-export const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface ChatWithActivity extends Chat {
   activityAt: string;
@@ -17,7 +16,7 @@ function parseChatActivityAt(chat: Chat): Date {
 }
 
 export function isChatResumable(chat: Chat, now = Date.now()): boolean {
-  return now - parseChatActivityAt(chat).getTime() <= THIRTY_DAYS_MS;
+  return now - parseChatActivityAt(chat).getTime() <= TIME_UNITS.MONTH;
 }
 
 export function toChatsWithActivity(chats: Chat[], now = Date.now()): ChatWithActivity[] {

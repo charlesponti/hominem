@@ -23,7 +23,7 @@ import {
 import { authStateMachine, initialAuthState, type AuthState } from './auth/types';
 import { API_BASE_URL, E2E_TESTING } from './constants';
 import { LocalStore } from './local-store';
-import type { UserProfile as LocalUserProfile } from './local-store/types';
+import type { UserProfile as LocalUserProfile } from './validation/schemas';
 import { markStartupPhase } from './performance/startup-metrics';
 
 const LOCAL_MIGRATION_KEY = 'hominem_mobile_local_migration_v1';

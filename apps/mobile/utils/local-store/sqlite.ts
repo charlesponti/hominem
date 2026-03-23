@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 
-import type { Media, Settings, UserProfile } from './types';
+import type { Media, Settings, UserProfile } from '../validation/schemas';
 
 type QueryResult = {
   rows: Array<Record<string, unknown>>;

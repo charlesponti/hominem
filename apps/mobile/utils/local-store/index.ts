@@ -6,7 +6,7 @@ import {
   MediaSchema,
 } from '../validation/schemas';
 import { createSQLiteStore } from './sqlite';
-import type { Media, Settings, UserProfile } from './types';
+import type { Media, Settings, UserProfile } from '../validation/schemas';
 
 let store: Awaited<ReturnType<typeof createSQLiteStore>> | null = null;
 let initializationPromise: Promise<boolean> | null = null;

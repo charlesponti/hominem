@@ -5,3 +5,5 @@ export * from './contracts';
 export * from './lifecycle-state';
 export * from './session-artifacts';
 export * from './thought-types';
+
+export const CHAT_TITLE_MAX_LENGTH = 64;
