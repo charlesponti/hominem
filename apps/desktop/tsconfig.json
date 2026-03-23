@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.profiles/vite-app.json",
   "compilerOptions": {
+    "composite": false,
     "paths": {
       "@/*": [
         "./src/renderer/src/*"

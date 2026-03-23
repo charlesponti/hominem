@@ -13,7 +13,7 @@ describe('mobile composer presentation', () => {
     ).toEqual({
       placeholder: 'Write a note, ask something, or drop a file',
       primaryActionLabel: 'Save note',
-      secondaryActionLabel: 'Ask assistant',
+      secondaryActionLabel: 'Start chat',
       showsAttachmentButton: true,
       showsVoiceButton: true,
       posture: 'capture',
@@ -45,7 +45,7 @@ describe('mobile composer presentation', () => {
         isRecording: false,
       }),
     ).toEqual({
-      placeholder: 'Reply to your assistant',
+      placeholder: 'Reply in chat',
       primaryActionLabel: 'Send',
       secondaryActionLabel: 'Save as note',
       showsAttachmentButton: true,

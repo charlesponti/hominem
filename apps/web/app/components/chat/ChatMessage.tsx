@@ -26,6 +26,7 @@ import { memo, useEffect, useRef, useState } from 'react';
 import { playEnterRow, reducedMotion } from '@hominem/ui/lib/gsap';
 import { useMessageEdit } from '~/lib/hooks/use-message-edit';
 import type { ExtendedMessage } from '~/lib/types/chat-message';
+import { WEB_BRAND } from '~/lib/brand';
 import { cn } from '~/lib/utils';
 import { copyToClipboard } from '~/lib/utils/clipboard';
 
@@ -83,7 +84,7 @@ export const ChatMessage = memo(function ChatMessage({
       className="group"
       style={{ paddingTop: 'var(--spacing-2)', paddingBottom: 'var(--spacing-2)' }}
       role="article"
-      aria-label={`${isUser ? 'Your' : 'AI Assistant'} message${timestamp ? ` from ${timestamp}` : ''}`}
+      aria-label={`${isUser ? 'Your' : WEB_BRAND.appName} message${timestamp ? ` from ${timestamp}` : ''}`}
     >
       <Message from={isUser ? 'user' : 'assistant'}>
         <MessageContent
@@ -227,7 +228,7 @@ export const ChatMessage = memo(function ChatMessage({
               'justify-start': !isUser,
             })}
           >
-            <span>{isUser ? 'You' : 'AI Assistant'}</span>
+            <span>{isUser ? 'You' : WEB_BRAND.appName}</span>
             {timestamp && (
               <>
                 <span>·</span>

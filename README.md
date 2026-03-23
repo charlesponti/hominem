@@ -1,4 +1,6 @@
-## Hominem monorepo
+## Hakumi monorepo
+
+Hakumi is a notes-first personal workspace. This repo contains the product apps, shared packages, and services that power capture, notes, and chat across platforms.
 
 This repo uses Bun as the package manager and script runner.
 
@@ -29,6 +31,7 @@ Run a local environment check:
 
 ### Canonical Docs
 
+- Product docs: `docs/README.md`
 - Local setup: `.github/skills/setup-workflow/SKILL.md`
 - Deployment: `.github/skills/deployment-workflow/SKILL.md`
 - Docker: `.github/skills/docker-workflow/SKILL.md`

@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
+import { BRAND } from '@hominem/env/brand';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as {
   apiBaseUrl?: string;
@@ -62,6 +63,7 @@ if (!configuredApiBaseUrl && isReleaseRuntime) {
 export const API_BASE_URL = configuredApiBaseUrl || fallbackApiBaseUrl;
 export const APP_VARIANT = appVariant;
 export const APP_SCHEME = extra.appScheme || 'hakumi';
+export const APP_NAME = BRAND.appName;
 
 const toBooleanFlag = (value: string | undefined) => value === 'true';
 

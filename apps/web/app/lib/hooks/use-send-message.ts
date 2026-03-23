@@ -1,5 +1,6 @@
 import { useChat } from '@ai-sdk/react';
-import { useRpcMutation, useHonoUtils } from '@hominem/rpc/react';
+import { useRpcMutation } from '@hominem/rpc/react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { ChatsSendInput, ChatsSendOutput } from '@hominem/rpc/types/chat.types';
 import { useMemo } from 'react';
 
@@ -14,7 +15,7 @@ function legacyStatusToChat(mutationStatus: string): ChatStatus {
 }
 
 export function useSendMessage({ chatId }: { chatId: string; userId?: string }) {
-  const utils = useHonoUtils();
+  const queryClient = useQueryClient();
   const aiSdkChatWebEnabled = useFeatureFlag('aiSdkChatWeb');
 
   // TODO: Fix useChat types - currently has type conflicts with @ai-sdk/react@^3.0.110
@@ -23,10 +24,10 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
   //   api: `/api/chats/${chatId}/ui/send`,
   //   streamProtocol: 'data',
   //   onFinish: () => {
-  //     utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
+  //     queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
   //   },
   //   onError: () => {
-  //     utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
+  //     queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
   //   },
   // });
 
@@ -42,10 +43,10 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
     },
     {
       onSuccess: () => {
-        utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
+        queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
       },
       onError: () => {
-        utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
+        queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
       },
     },
   );

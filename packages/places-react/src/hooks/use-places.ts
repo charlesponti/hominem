@@ -1,5 +1,6 @@
-import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/rpc/react'
-import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react'
+import { useRpcMutation, useRpcQuery } from '@hominem/rpc/react'
+import { useQueryClient } from '@tanstack/react-query'
+import type { QueryKey, UseMutationOptions, UseQueryOptions } from '@tanstack/react-query'
 import type {
   PlaceAddToListsInput,
   PlaceAddToListsOutput,
@@ -49,8 +50,7 @@ export const usePlacesAutocomplete = (
   latitude: number | undefined,
   longitude: number | undefined,
 ) =>
-  useRpcQuery<PlaceAutocompleteOutput>(
-    queryKeys.places.autocomplete(query || '', latitude, longitude),
+  useRpcQuery(
     async ({ places }) => {
       if (!query || query.length < 2) return [] as unknown as PlaceAutocompleteOutput
       const input: PlaceAutocompleteInput =
@@ -58,45 +58,47 @@ export const usePlacesAutocomplete = (
       return places.autocomplete(input)
     },
     {
+      queryKey: queryKeys.places.autocomplete(query || '', latitude, longitude),
       enabled: !!query && query.length >= 2,
     },
   )
 
 export const usePlaceById = (id: string | undefined) => {
   if (!id) {
-    return useRpcQuery<PlaceGetDetailsByIdOutput>(
-      queryKeys.places.get(''),
+    return useRpcQuery(
       async () => {
         throw new Error('Query should not be called when id is undefined')
       },
       {
+        queryKey: queryKeys.places.get(''),
         enabled: false,
       },
     )
   }
 
-  return useRpcQuery<PlaceGetDetailsByIdOutput>(queryKeys.places.get(id), async ({ places }) =>
-    places.getById({ id } satisfies PlaceGetDetailsByIdInput),
+  return useRpcQuery(
+    async ({ places }) => places.getById({ id } satisfies PlaceGetDetailsByIdInput),
+    { queryKey: queryKeys.places.get(id) },
   )
 }
 
 export const usePlaceByGoogleId = (googleMapsId: string | undefined) => {
   if (!googleMapsId) {
-    return useRpcQuery<PlaceGetDetailsByGoogleIdOutput>(
-      queryKeys.places.getByGoogleId(''),
+    return useRpcQuery(
       async () => {
         throw new Error('Query should not be called when googleMapsId is undefined')
       },
       {
+        queryKey: queryKeys.places.getByGoogleId(''),
         enabled: false,
       },
     )
   }
 
-  return useRpcQuery<PlaceGetDetailsByGoogleIdOutput>(
-    queryKeys.places.getByGoogleId(googleMapsId),
+  return useRpcQuery(
     async ({ places }) =>
       places.getByGoogleId({ googleMapsId } satisfies PlaceGetDetailsByGoogleIdInput),
+    { queryKey: queryKeys.places.getByGoogleId(googleMapsId) },
   )
 }
 
@@ -105,8 +107,7 @@ export const useNearbyPlaces = (
   longitude: number | undefined,
   radiusMeters: number | undefined,
 ) =>
-  useRpcQuery<PlaceGetNearbyFromListsOutput>(
-    queryKeys.places.nearby(latitude, longitude, radiusMeters),
+  useRpcQuery(
     async ({ places }) => {
       if (latitude === undefined || longitude === undefined) {
         return [] as PlaceGetNearbyFromListsOutput
@@ -121,23 +122,26 @@ export const useNearbyPlaces = (
       return places.getNearbyFromLists(input)
     },
     {
+      queryKey: queryKeys.places.nearby(latitude, longitude, radiusMeters),
       enabled: latitude !== undefined && longitude !== undefined,
     },
   )
 
 export const useAddPlaceToLists = (
-  options?: HonoMutationOptions<PlaceAddToListsOutput, PlaceAddToListsInput>,
+  options?: Omit<UseMutationOptions<PlaceAddToListsOutput, Error, PlaceAddToListsInput>, 'mutationFn'> & {
+    invalidateKeys?: QueryKey[]
+  },
 ) => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<PlaceAddToListsOutput, PlaceAddToListsInput>(
     async ({ places }, variables) => places.addToLists(variables),
     {
       ...options,
       onSuccess: (result, variables, context, mutationContext) => {
-        utils.invalidate(queryKeys.places.all())
-        utils.invalidate(queryKeys.lists.all())
+        queryClient.invalidateQueries({ queryKey: queryKeys.places.all() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.all() })
         for (const listId of variables.listIds) {
-          utils.invalidate(queryKeys.lists.get(listId))
+          queryClient.invalidateQueries({ queryKey: queryKeys.lists.get(listId) })
         }
         options?.onSuccess?.(result, variables, context, mutationContext)
       },
@@ -146,17 +150,22 @@ export const useAddPlaceToLists = (
 }
 
 export const useRemovePlaceFromList = (
-  options?: HonoMutationOptions<PlaceRemoveFromListOutput, PlaceRemoveFromListInput>,
+  options?: Omit<
+    UseMutationOptions<PlaceRemoveFromListOutput, Error, PlaceRemoveFromListInput>,
+    'mutationFn'
+  > & {
+    invalidateKeys?: QueryKey[]
+  },
 ) => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<PlaceRemoveFromListOutput, PlaceRemoveFromListInput>(
     async ({ places }, variables) => places.removeFromList(variables),
     {
       ...options,
       onSuccess: (result, variables, context, mutationContext) => {
-        utils.invalidate(queryKeys.places.all())
-        utils.invalidate(queryKeys.lists.all())
-        utils.invalidate(queryKeys.lists.get(variables.listId))
+        queryClient.invalidateQueries({ queryKey: queryKeys.places.all() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.all() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.get(variables.listId) })
         options?.onSuccess?.(result, variables, context, mutationContext)
       },
     },
@@ -164,17 +173,19 @@ export const useRemovePlaceFromList = (
 }
 
 export const useLogPlaceVisit = (
-  options?: HonoMutationOptions<PlaceLogVisitOutput, PlaceLogVisitInput>,
+  options?: Omit<UseMutationOptions<PlaceLogVisitOutput, Error, PlaceLogVisitInput>, 'mutationFn'> & {
+    invalidateKeys?: QueryKey[]
+  },
 ) => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<PlaceLogVisitOutput, PlaceLogVisitInput>(
     async ({ places }, variables) => places.logVisit(variables),
     {
       ...options,
       onSuccess: (result, variables, context, mutationContext) => {
-        utils.invalidate(queryKeys.places.myVisits())
+        queryClient.invalidateQueries({ queryKey: queryKeys.places.myVisits() })
         if (result.placeId) {
-          utils.invalidate(queryKeys.places.placeVisits(result.placeId))
+          queryClient.invalidateQueries({ queryKey: queryKeys.places.placeVisits(result.placeId) })
         }
         options?.onSuccess?.(result, variables, context, mutationContext)
       },
@@ -184,38 +195,44 @@ export const useLogPlaceVisit = (
 
 export const useMyVisits = (
   input?: PlaceGetMyVisitsInput,
-  options?: HonoQueryOptions<PlaceGetMyVisitsOutput>,
+  options?: Omit<UseQueryOptions<PlaceGetMyVisitsOutput>, 'queryKey' | 'queryFn'> & {
+    queryKey?: QueryKey
+  },
 ) =>
-  useRpcQuery<PlaceGetMyVisitsOutput>(
-    queryKeys.places.myVisits(input),
+  useRpcQuery(
     async ({ places }) => places.getMyVisits(input || {}),
-    options,
+    {
+      queryKey: queryKeys.places.myVisits(input),
+      ...options,
+    },
   )
 
 export const usePlaceVisits = (placeId: string | undefined) =>
-  useRpcQuery<PlaceGetPlaceVisitsOutput>(
-    queryKeys.places.placeVisits(placeId || ''),
+  useRpcQuery(
     async ({ places }) => {
       if (!placeId) return []
       return places.getPlaceVisits({ placeId } satisfies PlaceGetPlaceVisitsInput)
     },
     {
+      queryKey: queryKeys.places.placeVisits(placeId || ''),
       enabled: !!placeId,
     },
   )
 
 export const useUpdatePlaceVisit = (
-  options?: HonoMutationOptions<PlaceUpdateVisitOutput, PlaceUpdateVisitInput>,
+  options?: Omit<UseMutationOptions<PlaceUpdateVisitOutput, Error, PlaceUpdateVisitInput>, 'mutationFn'> & {
+    invalidateKeys?: QueryKey[]
+  },
 ) => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<PlaceUpdateVisitOutput, PlaceUpdateVisitInput>(
     async ({ places }, variables) => places.updateVisit(variables),
     {
       ...options,
       onSuccess: (result, variables, context, mutationContext) => {
-        utils.invalidate(queryKeys.places.myVisits())
+        queryClient.invalidateQueries({ queryKey: queryKeys.places.myVisits() })
         if (result.placeId) {
-          utils.invalidate(queryKeys.places.placeVisits(result.placeId))
+          queryClient.invalidateQueries({ queryKey: queryKeys.places.placeVisits(result.placeId) })
         }
         options?.onSuccess?.(result, variables, context, mutationContext)
       },
@@ -224,16 +241,18 @@ export const useUpdatePlaceVisit = (
 }
 
 export const useDeletePlaceVisit = (
-  options?: HonoMutationOptions<PlaceDeleteVisitOutput, PlaceDeleteVisitInput>,
+  options?: Omit<UseMutationOptions<PlaceDeleteVisitOutput, Error, PlaceDeleteVisitInput>, 'mutationFn'> & {
+    invalidateKeys?: QueryKey[]
+  },
 ) => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<PlaceDeleteVisitOutput, PlaceDeleteVisitInput>(
     async ({ places }, variables) => places.deleteVisit(variables),
     {
       ...options,
       onSuccess: (result, variables, context, mutationContext) => {
-        utils.invalidate(queryKeys.places.myVisits())
-        utils.invalidate(queryKeys.places.all())
+        queryClient.invalidateQueries({ queryKey: queryKeys.places.myVisits() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.places.all() })
         options?.onSuccess?.(result, variables, context, mutationContext)
       },
     },

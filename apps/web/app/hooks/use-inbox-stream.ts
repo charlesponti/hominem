@@ -87,9 +87,9 @@ export function useInboxStream(): {
     limit: NOTE_LIMIT,
   });
 
-  const { data: chats, isLoading: chatsLoading } = useRpcQuery<ChatsListOutput>(
-    ['chats', 'list', { limit: CHAT_LIMIT }],
+  const { data: chats, isLoading: chatsLoading } = useRpcQuery(
     ({ chats: c }) => c.list({ limit: CHAT_LIMIT }),
+    { queryKey: ['chats', 'list', { limit: CHAT_LIMIT }] },
   );
 
   const noteItems = (notes as Note[]).map(toNoteItem);

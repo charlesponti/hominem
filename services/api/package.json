@@ -6,7 +6,6 @@
   "type": "module",
   "scripts": {
     "dev": "lsof -ti:4040 | xargs kill -9 2>/dev/null; bun --watch src/index.ts",
-    "auth:apple:client-secret": "bun scripts/generate-apple-client-secret.ts",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
     "start": "bun src/index.ts | pino-pretty",

@@ -1253,7 +1253,7 @@ authRoutes.post('/device/token', zValidator('json', deviceTokenSchema), async (c
 /**
  * Mock Auth Endpoints
  * These endpoints are for local development with VITE_USE_MOCK_AUTH=true
- * They simulate the Apple Auth flow without requiring real Apple credentials
+ * They simulate auth flows without requiring real credentials
  */
 
 // Check if mock auth is enabled

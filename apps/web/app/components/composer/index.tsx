@@ -12,7 +12,7 @@
  *   └──────────────────────────────────────────────────────────┘
  *
  * Posture:
- *   capture  — focus/home: primary=Save note, secondary=Ask assistant
+ *   capture  — focus/home: primary=Save note, secondary=Start chat
  *   draft    — note detail: primary=Add to note, secondary=Discuss note
  *   reply    — chat: primary=Send (arrow-up), secondary=Save as note
  *   hidden   — no composer rendered (settings etc.)

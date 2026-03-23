@@ -33,7 +33,7 @@ export function deriveMobileComposerPresentation(
 
   if (input.context === 'chat') {
     return {
-      placeholder: input.isRecording ? 'Listening…' : 'Reply to your assistant',
+      placeholder: input.isRecording ? 'Listening…' : 'Reply in chat',
       primaryActionLabel: 'Send',
       secondaryActionLabel: 'Save as note',
       showsAttachmentButton: true,
@@ -67,7 +67,7 @@ export function deriveMobileComposerPresentation(
   return {
     placeholder: input.isRecording ? 'Listening…' : 'Write a note, ask something, or drop a file',
     primaryActionLabel: input.hasText ? 'Save note' : 'Save note',
-    secondaryActionLabel: 'Ask assistant',
+    secondaryActionLabel: 'Start chat',
     showsAttachmentButton: true,
     showsVoiceButton: true,
     posture: 'capture',

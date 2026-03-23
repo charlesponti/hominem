@@ -8,7 +8,13 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
+      "node": "./build/index.js",
       "import": "./src/index.ts"
+    },
+    "./brand": {
+      "types": "./src/brand.ts",
+      "node": "./build/brand.js",
+      "import": "./src/brand.ts"
     },
     "./package.json": "./package.json"
   },

@@ -17,6 +17,7 @@
   "dependencies": {
     "@babel/runtime": "^7.28.6",
     "@hominem/db": "workspace:*",
+    "@hominem/env": "workspace:*",
     "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
     "ai": "^4.3.16",

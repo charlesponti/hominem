@@ -13,10 +13,10 @@ export type MonthlyStatsContract = MonthlyStatsOutput & {
  * @param options Additional options to pass to useQuery
  */
 export function useMonthlyStats(month: string | undefined | null, options = {}) {
-  const query = useRpcQuery<MonthlyStatsContract>(
-    ['finance', 'analyze', 'monthly-stats', month],
+  const query = useRpcQuery(
     ({ finance }) => finance.getMonthlyStats({ month: month! }) as Promise<MonthlyStatsContract>,
     {
+      queryKey: ['finance', 'analyze', 'monthly-stats', month],
       enabled: !!month,
       staleTime: 5 * 60 * 1000,
       ...options,

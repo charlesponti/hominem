@@ -6,7 +6,8 @@ import type {
   TransactionCategoryAnalysisOutput,
 } from '@hominem/rpc/types/finance.types';
 
-import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRpcMutation, useRpcQuery } from '@hominem/rpc/react';
 
 const BUDGET_API_UNAVAILABLE_MESSAGE = 'Budget write endpoints are unavailable';
 
@@ -15,14 +16,12 @@ function rejectBudgetMutation<T>(): Promise<T> {
 }
 
 export const useTransactionCategories = () =>
-  useRpcQuery<TransactionCategoryAnalysisOutput>(
-    ['finance', 'budget', 'transaction-categories'],
-    async () => [],
-  );
+  useRpcQuery(async () => [], {
+    queryKey: ['finance', 'budget', 'transaction-categories'],
+  });
 
 export const useBudgetCategories = () =>
-  useRpcQuery<BudgetCategoriesListOutput>(
-    ['finance', 'budget', 'categories', 'list'],
+  useRpcQuery(
     async ({ finance }) => {
       const categories = await finance.listTags();
       return categories.map((category) => {
@@ -36,22 +35,24 @@ export const useBudgetCategories = () =>
           : normalized;
       });
     },
+    {
+      queryKey: ['finance', 'budget', 'categories', 'list'],
+    },
   );
 
 export const useBudgetHistory = (params: { months: number }) =>
-  useRpcQuery<BudgetHistoryOutput>(
-    ['finance', 'budget', 'history', params.months],
-    async () => [],
-  );
+  useRpcQuery(async () => [], {
+    queryKey: ['finance', 'budget', 'history', params.months],
+  });
 
 export const useCalculateBudget = (options?: { onError?: (error: Error) => void }) => {
-  const utils = useHonoUtils();
+  const queryClient = useQueryClient();
 
   return useRpcMutation<BudgetCalculateOutput, BudgetCalculateInput | undefined>(
     async () => rejectBudgetMutation<BudgetCalculateOutput>(),
     {
       onSuccess: () => {
-        utils.invalidate(['finance', 'budget', 'calculate']);
+        queryClient.invalidateQueries({ queryKey: ['finance', 'budget', 'calculate'] });
       },
       ...(options?.onError && { onError: options.onError }),
     },

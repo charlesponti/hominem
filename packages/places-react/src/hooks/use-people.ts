@@ -1,4 +1,5 @@
-import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react'
+import { useRpcMutation, useRpcQuery } from '@hominem/rpc/react'
+import { useQueryClient } from '@tanstack/react-query'
 import type {
   PeopleListOutput,
   PeopleCreateInput,
@@ -15,13 +16,13 @@ const queryKeys = {
  * Get all people/contacts
  */
 export const usePeople = () =>
-  useRpcQuery<PeopleListOutput>(queryKeys.people.list(), async () => [])
+  useRpcQuery(async () => [], { queryKey: queryKeys.people.list() })
 
 /**
  * Create person/contact
  */
 export const useCreatePerson = () => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<PeopleCreateOutput, PeopleCreateInput>(
     async (_client, variables: PeopleCreateInput) => {
       const now = new Date().toISOString()
@@ -41,8 +42,8 @@ export const useCreatePerson = () => {
     },
     {
       onMutate: async (variables) => {
-        await utils.cancel(queryKeys.people.list())
-        const previousPeople = utils.getData<PeopleListOutput>(queryKeys.people.list())
+        await queryClient.cancelQueries({ queryKey: queryKeys.people.list() })
+        const previousPeople = queryClient.getQueryData<PeopleListOutput>(queryKeys.people.list())
         const now = new Date().toISOString()
         const optimisticPerson: PeopleCreateOutput = {
           id: `temp-person-${Date.now()}`,
@@ -58,7 +59,7 @@ export const useCreatePerson = () => {
           updatedAt: now,
         }
 
-        utils.setData<PeopleListOutput>(queryKeys.people.list(), (old) => {
+        queryClient.setQueryData<PeopleListOutput>(queryKeys.people.list(), (old) => {
           const existing = old ?? []
           return [optimisticPerson, ...existing]
         })
@@ -66,7 +67,7 @@ export const useCreatePerson = () => {
         return { previousPeople, optimisticId: optimisticPerson.id }
       },
       onSuccess: () => {
-        utils.invalidate(queryKeys.people.list())
+        queryClient.invalidateQueries({ queryKey: queryKeys.people.list() })
       },
       onError: (error, variables, context) => {
         void variables
@@ -76,13 +77,13 @@ export const useCreatePerson = () => {
             : undefined
 
         if (previousPeople) {
-          utils.setData<PeopleListOutput>(queryKeys.people.list(), previousPeople)
+          queryClient.setQueryData<PeopleListOutput>(queryKeys.people.list(), previousPeople)
         }
 
         console.error('Failed to create person:', error)
       },
       onSettled: () => {
-        utils.invalidate(queryKeys.people.list())
+        queryClient.invalidateQueries({ queryKey: queryKeys.people.list() })
       },
     },
   )

@@ -1,13 +1,6 @@
-import type { ArtifactType } from '@hominem/chat-services/types'
+import type { ChatPendingReview, SessionSource } from '@hominem/ui/chat'
 
-import type { SessionSource } from './context-anchor'
-
-export interface ChatPendingReview {
-  proposedType: ArtifactType
-  proposedTitle: string
-  proposedChanges: string[]
-  previewContent: string
-}
+export type { ChatPendingReview }
 
 export async function persistChatReviewAsNote(input: {
   review: ChatPendingReview

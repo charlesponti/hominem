@@ -60,10 +60,12 @@ interface UseFinanceAccountsOptions {
 }
 
 export const useFinanceAccounts = ({ initialData }: UseFinanceAccountsOptions = {}) => {
-  const { data, isLoading, error, refetch } = useRpcQuery<AccountListOutput>(
-    ['finance', 'accounts', 'list'],
+  const { data, isLoading, error, refetch } = useRpcQuery(
     ({ finance }) => finance.listAccounts({ includeInactive: false }),
-    initialData ? { initialData } : {},
+    {
+      queryKey: ['finance', 'accounts', 'list'],
+      ...(initialData ? { initialData } : {}),
+    },
   );
 
   const accountsData = (Array.isArray(data) ? data : []) as AccountListOutput;
@@ -85,11 +87,13 @@ export const useFinanceAccounts = ({ initialData }: UseFinanceAccountsOptions = 
 };
 
 export const useFinancialInstitutions = () =>
-  useRpcQuery(['finance', 'institutions', 'list'], ({ finance }) => finance.listInstitutions());
+  useRpcQuery(
+    ({ finance }) => finance.listInstitutions(),
+    { queryKey: ['finance', 'institutions', 'list'] },
+  );
 
 export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
-  const allAccountsQuery = useRpcQuery<AccountAllOutput>(
-    ['finance', 'accounts', 'all'],
+  const allAccountsQuery = useRpcQuery(
     async ({ finance }) => {
       const data = await finance.listAllAccounts();
       return {
@@ -97,7 +101,10 @@ export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
         accounts: data.accounts.map((account) => normalizeAccountWithTransactions(account)),
       };
     },
-    options?.initialData ? { initialData: options.initialData } : {},
+    {
+      queryKey: ['finance', 'accounts', 'all'],
+      ...(options?.initialData ? { initialData: options.initialData } : {}),
+    },
   );
 
   const result = allAccountsQuery.data;
@@ -112,13 +119,13 @@ export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
 }
 
 export function useAccountById(id: string, options?: { initialData?: AccountGetOutput }) {
-  const accountQuery = useRpcQuery<AccountGetOutput>(
-    ['finance', 'accounts', 'get', id],
+  const accountQuery = useRpcQuery(
     async ({ finance }) => {
       const data = await finance.getAccount({ id });
       return normalizeAccountWithTransactions(data);
     },
     {
+      queryKey: ['finance', 'accounts', 'get', id],
       enabled: !!id,
       ...(options?.initialData ? { initialData: options.initialData } : {}),
     },
@@ -165,19 +172,7 @@ export function useFinanceTransactions({
     queryOptions.initialData = initialData;
   }
 
-  const query = useRpcQuery<TransactionListOutput>(
-    [
-      'finance',
-      'transactions',
-      'list',
-      {
-        filters,
-        sortBy,
-        sortOrder,
-        offset,
-        limit,
-      },
-    ],
+  const query = useRpcQuery(
     ({ finance }) =>
       finance.listTransactions({
         ...(filters.dateFrom ? { dateFrom: format(filters.dateFrom, 'yyyy-MM-dd') } : {}),
@@ -189,7 +184,21 @@ export function useFinanceTransactions({
         sortBy,
         sortDirection: sortOrder as 'asc' | 'desc',
       }),
-    queryOptions,
+    {
+      queryKey: [
+        'finance',
+        'transactions',
+        'list',
+        {
+          filters,
+          sortBy,
+          sortOrder,
+          offset,
+          limit,
+        },
+      ],
+      ...queryOptions,
+    },
   );
 
   const result = query.data;

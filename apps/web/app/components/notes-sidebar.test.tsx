@@ -43,7 +43,7 @@ vi.mock('lucide-react', () => {
 
 vi.mock('~/lib/brand', () => ({
   WEB_BRAND: {
-    appName: 'Hominem',
+    appName: 'Hakumi',
     logoPath: '/logo.png',
   },
 }))

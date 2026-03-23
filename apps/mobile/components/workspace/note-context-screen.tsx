@@ -17,7 +17,7 @@ export const NoteContextScreen = () => {
         Draft in progress
       </Text>
       <Text variant="body" color="text-secondary">
-        Use the composer below to keep writing, attach material, or branch into assistant help.
+        Use the composer below to keep writing, attach material, or branch into chat.
       </Text>
       <View style={styles.summaryCard}>
         <Text variant="small" color="text-tertiary">

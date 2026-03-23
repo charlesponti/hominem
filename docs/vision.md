@@ -65,3 +65,5 @@ The documentation should assume:
 - the product direction is stable
 - the name may still change
 - the product should be defined by its behavior and point of view rather than by etymology
+
+See [Naming](/Users/charlesponti/Developer/hominem/docs/naming.md) for the current renaming brief.

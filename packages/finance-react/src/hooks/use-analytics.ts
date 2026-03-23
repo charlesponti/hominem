@@ -2,9 +2,6 @@ import { format } from 'date-fns';
 
 import { useRpcQuery } from '@hominem/rpc/react';
 
-import type { CategoriesListOutput, TagBreakdownOutput } from '@hominem/rpc/types/finance.types';
-
-
 interface TagBreakdownParams {
   from?: Date | undefined;
   to?: Date | undefined;
@@ -17,19 +14,7 @@ interface TagBreakdownParams {
  * Hook for fetching tag breakdown analytics
  */
 export function useTagBreakdown({ from, to, account, tag, limit = 5 }: TagBreakdownParams) {
-  return useRpcQuery<TagBreakdownOutput>(
-    [
-      'finance',
-      'analyze',
-      'tag-breakdown',
-      {
-        from: from?.toISOString(),
-        to: to?.toISOString(),
-        account,
-        tag,
-        limit,
-      },
-    ],
+  return useRpcQuery(
     ({ finance }) =>
       finance.getTagBreakdown({
         ...(from ? { from: format(from, 'yyyy-MM-dd') } : {}),
@@ -38,6 +23,18 @@ export function useTagBreakdown({ from, to, account, tag, limit = 5 }: TagBreakd
         limit,
       }),
     {
+      queryKey: [
+        'finance',
+        'analyze',
+        'tag-breakdown',
+        {
+          from: from?.toISOString(),
+          to: to?.toISOString(),
+          account,
+          tag,
+          limit,
+        },
+      ],
       staleTime: 5 * 60 * 1000,
     },
   );
@@ -47,10 +44,10 @@ export function useTagBreakdown({ from, to, account, tag, limit = 5 }: TagBreakd
  * Hook for fetching list of finance tags
  */
 export function useFinanceTags() {
-  return useRpcQuery<CategoriesListOutput>(
-    ['finance', 'tags', 'list'],
+  return useRpcQuery(
     ({ finance }) => finance.listTags(),
     {
+      queryKey: ['finance', 'tags', 'list'],
       staleTime: 10 * 60 * 1000,
     },
   );

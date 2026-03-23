@@ -50,7 +50,7 @@ export function deriveComposerPresentation(
   if (mode === 'chat-continuation') {
     return {
       posture: 'reply',
-      placeholder: isRecording ? 'Listening…' : 'Reply to your assistant',
+      placeholder: isRecording ? 'Listening…' : 'Reply in chat',
       primaryActionLabel: 'Send',
       primaryActionIcon: 'arrow-up',
       secondaryActionLabel: 'Save as note',
@@ -67,7 +67,7 @@ export function deriveComposerPresentation(
     placeholder: isRecording ? 'Listening…' : 'Write a note, ask something, or drop a file',
     primaryActionLabel: 'Save note',
     primaryActionIcon: 'circle-plus',
-    secondaryActionLabel: 'Ask assistant',
+    secondaryActionLabel: 'Start chat',
     secondaryActionIcon: 'message-square',
     showsAttachmentButton: true,
     showsVoiceButton: true,

@@ -54,13 +54,13 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   const [overrideSource, setOverrideSource] = useState<SessionSource | null>(null);
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
 
-  const { data: chat } = useRpcQuery<ChatsGetOutput>(['chats', chatId], ({ chats: c }) =>
-    c.get({ chatId }),
-  );
+  const { data: chat } = useRpcQuery(({ chats: c }) => c.get({ chatId }), {
+    queryKey: ['chats', chatId],
+  });
 
-  const { data: messages } = useRpcQuery<ChatsGetMessagesOutput>(
-    ['chats', 'getMessages', { chatId, limit: 50 }],
+  const { data: messages } = useRpcQuery(
     ({ chats: c }) => c.getMessages({ chatId, limit: 50 }),
+    { queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] },
   );
   const source = useMemo(
     () =>
@@ -168,7 +168,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   });
 
   return (
-    <div className="flex h-dvh min-h-0 flex-col bg-background text-foreground pb-[var(--composer-resting-height,112px)]">
+    <div className="flex h-dvh min-h-0 flex-col bg-background text-foreground pb-(--composer-resting-height,112px)">
       {/* Sticky chat header */}
       <ChatHeader
         source={source}

@@ -4,13 +4,14 @@ import { Label } from '@hominem/ui/label';
 import { useMemo, useState } from 'react';
 
 import { AppShell } from '../app-shell';
+import { DESKTOP_BRAND } from '../brand';
 import { useDesktopAuth } from './desktop-auth-provider';
 
 function DesktopAuthLoading() {
   return (
     <main className="desktop-auth">
       <section className="desktop-auth__panel" aria-live="polite">
-        <p className="desktop-auth__eyebrow">Hominem desktop</p>
+        <p className="desktop-auth__eyebrow">{DESKTOP_BRAND.displayName}</p>
         <h1 className="desktop-auth__title">Checking your session</h1>
         <p className="desktop-auth__body">Restoring the desktop auth state.</p>
       </section>
@@ -36,17 +37,17 @@ function DesktopAuthScreen() {
   const isVerifyingOtp = state.status === 'verifying_otp';
   const isPasskeyLoading = state.status === 'authenticating_passkey';
   const isOtpStep = state.status === 'otp_requested' || isVerifyingOtp;
-  const helperText = useMemo(() => {
+    const helperText = useMemo(() => {
     if (isOtpStep && email) {
       return `Enter the code sent to ${email}.`;
     }
-    return 'Use the same authentication backend and account you use in the other Hominem apps.';
+    return `Use the same authentication backend and account you use across ${DESKTOP_BRAND.appName}.`;
   }, [email, isOtpStep]);
 
   return (
     <main className="desktop-auth">
       <section className="desktop-auth__panel">
-        <p className="desktop-auth__eyebrow">Hominem desktop</p>
+        <p className="desktop-auth__eyebrow">{DESKTOP_BRAND.displayName}</p>
         <h1 className="desktop-auth__title">Sign in to continue</h1>
         <p className="desktop-auth__body">{helperText}</p>
 

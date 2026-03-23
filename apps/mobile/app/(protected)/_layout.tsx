@@ -10,6 +10,7 @@ import { useAppLock } from '~/lib/use-app-lock';
 import { Text, theme } from '~/theme';
 import { ApiProvider } from '~/utils/api-provider';
 import { useAuth } from '~/utils/auth-provider';
+import { APP_NAME } from '~/utils/constants';
 import queryClient from '~/utils/query-client';
 
 const bootstrapStyles = StyleSheet.create({
@@ -20,7 +21,7 @@ const ProtectedBootstrap = () => <View testID="protected-bootstrap" style={boots
 
 const LockScreen = ({ onUnlock }: { onUnlock: () => void }) => (
   <View style={lockStyles.container}>
-    <Text variant="header" color="foreground">Hakumi</Text>
+    <Text variant="header" color="foreground">{APP_NAME}</Text>
     <Text variant="body" color="text-secondary">Locked</Text>
     <Pressable onPress={onUnlock} style={lockStyles.button}>
       <Text variant="body" color="foreground">Unlock with Face ID</Text>

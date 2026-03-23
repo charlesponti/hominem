@@ -1,12 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
 import type { Chat as ChatType } from '@hominem/rpc/types';
+import type { SessionSource } from '@hominem/ui/chat';
 import React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useChatLiveActivity } from '~/lib/use-chat-live-activity';
 
 import { Chat } from '~/components/chat/chat';
-import type { SessionSource } from '~/components/chat/context-anchor';
 import { LoadingFull } from '~/components/LoadingFull';
 import { makeStyles, Text } from '~/theme';
 import { useActiveChat, useStartChat } from '~/utils/services/chat';

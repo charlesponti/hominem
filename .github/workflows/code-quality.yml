@@ -60,7 +60,7 @@ jobs:
         with:
           install-flags: "--force"
       - name: ✅ Type check
-        run: bun turbo run typegen && NODE_OPTIONS="--max-old-space-size=4096" bun run typecheck
+        run: bun turbo run typegen && make typecheck
         timeout-minutes: 15
         env:
           TURBO_CONCURRENCY: 4

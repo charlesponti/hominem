@@ -17,8 +17,7 @@ export function useFinanceTopMerchants({
   tag,
   limit,
 }: UseFinanceTopMerchantsParams) {
-  return useRpcQuery<TopMerchantsOutput>(
-    ['finance', 'analyze', 'top-merchants', { from, to, account, tag, limit }],
+  return useRpcQuery(
     ({ finance }) =>
       finance.getTopMerchants({
         ...(from ? { from } : {}),
@@ -28,6 +27,7 @@ export function useFinanceTopMerchants({
         ...(typeof limit === 'number' ? { limit } : {}),
       }),
     {
+      queryKey: ['finance', 'analyze', 'top-merchants', { from, to, account, tag, limit }],
       staleTime: 5 * 60 * 1000,
     },
   );

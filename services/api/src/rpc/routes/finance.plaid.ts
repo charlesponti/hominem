@@ -16,6 +16,7 @@ import { Hono } from 'hono';
 import * as z from 'zod';
 
 import { env } from '../lib/env';
+import { API_BRAND } from '../../brand';
 import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../lib/plaid';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
@@ -42,7 +43,7 @@ export const plaidRoutes = new Hono<AppContext>()
 
       const createTokenResponse = await plaidClient.linkTokenCreate({
         user: { client_user_id: userId },
-        client_name: 'Hominem Finance',
+        client_name: API_BRAND.financeClientName,
         products: PLAID_PRODUCTS,
         country_codes: PLAID_COUNTRY_CODES,
         language: 'en',

@@ -19,6 +19,15 @@ export type AuthUxState =
   | 'error'
   | 'signed-in'
 
+import { BRAND } from '@hominem/env/brand'
+
+// ---------------------------------------------------------------------------
+// Brand
+// ---------------------------------------------------------------------------
+
+/** Single source of truth for the app brand name used across auth surfaces. */
+export const AUTH_APP_NAME = BRAND.appName
+
 // ---------------------------------------------------------------------------
 // Canonical auth copy
 // ---------------------------------------------------------------------------
@@ -115,7 +124,7 @@ export interface AppAuthConfig {
 
 /** Hakumi web app auth config. */
 export const NOTES_AUTH_CONFIG: AppAuthConfig = {
-  appName: 'Hakumi',
+  appName: AUTH_APP_NAME,
   defaultPostAuthDestination: '/home',
   allowedDestinations: ['/', '/home', '/chat', '/notes', '/account', '/settings'],
   copy: AUTH_COPY,
@@ -123,7 +132,7 @@ export const NOTES_AUTH_CONFIG: AppAuthConfig = {
 
 /** Hakumi mobile app auth config. */
 export const SHERPA_AUTH_CONFIG: AppAuthConfig = {
-  appName: 'Hakumi',
+  appName: AUTH_APP_NAME,
   defaultPostAuthDestination: '/(protected)/(tabs)/start',
   allowedDestinations: ['/(protected)/(tabs)/start'],
   copy: AUTH_COPY,

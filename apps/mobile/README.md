@@ -1,6 +1,6 @@
-# Hominem Mobile (iOS)
+# Hakumi Mobile (iOS)
 
-This app is the iOS mobile client for Hominem, built with Expo Router and Better Auth-backed API flows.
+This app is the iOS client for Hakumi, the notes-first personal workspace, built with Expo Router and Better Auth-backed API flows.
 
 ## Variant Model
 

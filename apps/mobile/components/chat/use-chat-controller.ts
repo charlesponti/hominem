@@ -1,3 +1,4 @@
+import { loadMarkdown, type MarkdownComponent, type SessionSource } from '@hominem/ui/chat'
 import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types'
 import { buildNoteProposal, deriveSessionSource } from '@hominem/chat-services/ui'
 import { useApiClient } from '@hominem/rpc/react'
@@ -7,20 +8,17 @@ import * as FileSystem from 'expo-file-system/legacy'
 import * as Haptics from 'expo-haptics'
 import * as Sharing from 'expo-sharing'
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
-import { Alert, Platform, Share } from 'react-native'
+import { Alert, Platform, Share, type TextInput } from 'react-native'
 
 import { useInputContext } from '~/components/input/input-context'
 import { useSpeech } from '~/components/media/use-speech'
-import TextInputField from '~/components/text-input'
 import { invalidateInboxQueries } from '~/utils/services/inbox/inbox-refresh'
 import { useArchiveChat, useChatMessages, useSendMessage } from '~/utils/services/chat'
 import type { MessageOutput } from '~/utils/services/chat'
 import { chatKeys } from '~/utils/services/notes/query-keys'
 
-import { loadMarkdown, type MarkdownComponent } from './chat-message'
 import { persistChatReviewAsNote, type ChatPendingReview } from './chat-review-actions'
 import { runChatSubmitAction } from './chat-submit-action'
-import type { SessionSource } from './context-anchor'
 
 interface ChatUiState {
   lifecycleState: ThoughtLifecycleState
@@ -112,7 +110,7 @@ export function useChatController({ chatId, onChatArchive, source }: UseChatCont
   const { sendChatMessage, chatSendStatus } = useSendMessage({ chatId })
   const [Markdown, setMarkdown] = useState<MarkdownComponent | null>(null)
   const [uiState, dispatch] = useReducer(chatUiReducer, initialChatUiState)
-  const searchInputRef = useRef<React.ElementRef<typeof TextInputField> | null>(null)
+  const searchInputRef = useRef<TextInput | null>(null)
 
   const formattedMessages = useMemo(
     () => (messages && messages.length > 0 ? messages : []),

@@ -2,6 +2,7 @@ import { UnauthorizedError, InternalError } from '../../../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
+import { API_BRAND } from '../../../brand';
 import { env } from '../../../env';
 import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../../../lib/plaid';
 import type { AppEnv } from '../../../server';
@@ -18,7 +19,7 @@ financePlaidCreateLinkTokenRoutes.post('/', async (c) => {
   try {
     const createTokenResponse = await plaidClient.linkTokenCreate({
       user: { client_user_id: userId },
-      client_name: 'Hominem Finance',
+      client_name: API_BRAND.financeClientName,
       products: PLAID_PRODUCTS,
       country_codes: PLAID_COUNTRY_CODES,
       language: 'en',

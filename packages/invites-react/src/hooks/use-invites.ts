@@ -1,4 +1,5 @@
-import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useRpcMutation, useRpcQuery } from '@hominem/rpc/react'
 import type {
   InvitesAcceptInput,
   InvitesAcceptOutput,
@@ -42,35 +43,37 @@ const createOptimisticInvite = (variables: InvitesCreateInput): InvitesCreateOut
 }
 
 export const useSentInvites = () =>
-  useRpcQuery<InvitesGetSentOutput>(queryKeys.invites.sent(), async ({ invites }) =>
-    invites.getSent({} satisfies InvitesGetSentInput),
+  useRpcQuery(
+    async ({ invites }) => invites.getSent({} satisfies InvitesGetSentInput),
+    { queryKey: queryKeys.invites.sent() },
   )
 
 export const useReceivedInvites = () =>
-  useRpcQuery<InvitesGetReceivedOutput>(queryKeys.invites.received(), async ({ invites }) =>
-    invites.getReceived({}),
+  useRpcQuery(
+    async ({ invites }) => invites.getReceived({}),
+    { queryKey: queryKeys.invites.received() },
   )
 
 export const useCreateInvite = () => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<InvitesCreateOutput, InvitesCreateInput>(
     async ({ invites }, variables) => invites.create(variables),
     {
       onMutate: async (variables) => {
-        await utils.cancel(queryKeys.invites.sent())
-        await utils.cancel(queryKeys.invites.byList(variables.listId))
+        await queryClient.cancelQueries({ queryKey: queryKeys.invites.sent() })
+        await queryClient.cancelQueries({ queryKey: queryKeys.invites.byList(variables.listId) })
 
-        const previousSent = utils.getData<InvitesGetSentOutput>(queryKeys.invites.sent())
-        const previousByList = utils.getData<InvitesGetByListOutput>(
+        const previousSent = queryClient.getQueryData<InvitesGetSentOutput>(queryKeys.invites.sent())
+        const previousByList = queryClient.getQueryData<InvitesGetByListOutput>(
           queryKeys.invites.byList(variables.listId),
         )
         const optimisticInvite = createOptimisticInvite(variables)
 
-        utils.setData<InvitesGetSentOutput>(queryKeys.invites.sent(), (old) => {
+        queryClient.setQueryData<InvitesGetSentOutput>(queryKeys.invites.sent(), (old) => {
           const existing = old ?? []
           return [optimisticInvite, ...existing]
         })
-        utils.setData<InvitesGetByListOutput>(queryKeys.invites.byList(variables.listId), (old) => {
+        queryClient.setQueryData<InvitesGetByListOutput>(queryKeys.invites.byList(variables.listId), (old) => {
           const existing = old ?? []
           return [optimisticInvite, ...existing]
         })
@@ -82,7 +85,7 @@ export const useCreateInvite = () => {
         }
       },
       onSuccess: (result, variables) => {
-        utils.setData<InvitesGetSentOutput>(queryKeys.invites.sent(), (old) => {
+        queryClient.setQueryData<InvitesGetSentOutput>(queryKeys.invites.sent(), (old) => {
           const existing = old ?? []
           return existing.map((invite) =>
             invite.listId === variables.listId && invite.invitedUserEmail === variables.invitedUserEmail
@@ -90,7 +93,7 @@ export const useCreateInvite = () => {
               : invite,
           )
         })
-        utils.setData<InvitesGetByListOutput>(queryKeys.invites.byList(variables.listId), (old) => {
+        queryClient.setQueryData<InvitesGetByListOutput>(queryKeys.invites.byList(variables.listId), (old) => {
           const existing = old ?? []
           return existing.map((invite) =>
             invite.listId === variables.listId && invite.invitedUserEmail === variables.invitedUserEmail
@@ -98,8 +101,8 @@ export const useCreateInvite = () => {
               : invite,
           )
         })
-        utils.invalidate(queryKeys.invites.sent())
-        utils.invalidate(queryKeys.invites.byList(variables.listId));
+        queryClient.invalidateQueries({ queryKey: queryKeys.invites.sent() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.invites.byList(variables.listId) })
       },
       onError: (error, variables, context) => {
         const previousSent =
@@ -112,10 +115,10 @@ export const useCreateInvite = () => {
             : undefined
 
         if (previousSent) {
-          utils.setData<InvitesGetSentOutput>(queryKeys.invites.sent(), previousSent)
+          queryClient.setQueryData<InvitesGetSentOutput>(queryKeys.invites.sent(), previousSent)
         }
         if (previousByList) {
-          utils.setData<InvitesGetByListOutput>(
+          queryClient.setQueryData<InvitesGetByListOutput>(
             queryKeys.invites.byList(variables.listId),
             previousByList,
           )
@@ -128,17 +131,17 @@ export const useCreateInvite = () => {
 }
 
 export const useAcceptInvite = () => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<InvitesAcceptOutput, InvitesAcceptInput>(
     async ({ invites }, variables) => invites.accept(variables),
     {
       onMutate: async (variables) => {
-        await utils.cancel(queryKeys.invites.received())
-        const previousReceived = utils.getData<InvitesGetReceivedOutput>(
+        await queryClient.cancelQueries({ queryKey: queryKeys.invites.received() })
+        const previousReceived = queryClient.getQueryData<InvitesGetReceivedOutput>(
           queryKeys.invites.received(),
         )
 
-        utils.setData<InvitesGetReceivedOutput>(queryKeys.invites.received(), (old) => {
+        queryClient.setQueryData<InvitesGetReceivedOutput>(queryKeys.invites.received(), (old) => {
           const existing = old ?? []
           return existing.filter((invite) => invite.token !== variables.token)
         })
@@ -146,8 +149,8 @@ export const useAcceptInvite = () => {
         return { previousReceived }
       },
       onSuccess: () => {
-        utils.invalidate(queryKeys.invites.received())
-        utils.invalidate(queryKeys.lists.all())
+        queryClient.invalidateQueries({ queryKey: queryKeys.invites.received() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.all() })
       },
       onError: (error, variables, context) => {
         const previousReceived =
@@ -156,7 +159,7 @@ export const useAcceptInvite = () => {
             : undefined
 
         if (previousReceived) {
-          utils.setData<InvitesGetReceivedOutput>(queryKeys.invites.received(), previousReceived)
+          queryClient.setQueryData<InvitesGetReceivedOutput>(queryKeys.invites.received(), previousReceived)
         }
 
         console.error('Failed to accept invite:', error)
@@ -166,20 +169,20 @@ export const useAcceptInvite = () => {
 }
 
 export const useDeleteInvite = () => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<InvitesDeleteOutput, InvitesDeleteInput>(
     async ({ invites }, variables) => invites.delete(variables),
     {
       onMutate: async (variables) => {
-        await utils.cancel(queryKeys.invites.sent())
-        await utils.cancel(queryKeys.invites.byList(variables.listId))
+        await queryClient.cancelQueries({ queryKey: queryKeys.invites.sent() })
+        await queryClient.cancelQueries({ queryKey: queryKeys.invites.byList(variables.listId) })
 
-        const previousSent = utils.getData<InvitesGetSentOutput>(queryKeys.invites.sent())
-        const previousByList = utils.getData<InvitesGetByListOutput>(
+        const previousSent = queryClient.getQueryData<InvitesGetSentOutput>(queryKeys.invites.sent())
+        const previousByList = queryClient.getQueryData<InvitesGetByListOutput>(
           queryKeys.invites.byList(variables.listId),
         )
 
-        utils.setData<InvitesGetSentOutput>(queryKeys.invites.sent(), (old) => {
+        queryClient.setQueryData<InvitesGetSentOutput>(queryKeys.invites.sent(), (old) => {
           const existing = old ?? []
           return existing.filter(
             (invite) =>
@@ -189,7 +192,7 @@ export const useDeleteInvite = () => {
               ),
           )
         })
-        utils.setData<InvitesGetByListOutput>(queryKeys.invites.byList(variables.listId), (old) => {
+        queryClient.setQueryData<InvitesGetByListOutput>(queryKeys.invites.byList(variables.listId), (old) => {
           const existing = old ?? []
           return existing.filter(
             (invite) =>
@@ -203,8 +206,8 @@ export const useDeleteInvite = () => {
         return { previousSent, previousByList }
       },
       onSuccess: (_result, variables) => {
-        utils.invalidate(queryKeys.invites.sent())
-        utils.invalidate(queryKeys.invites.byList(variables.listId));
+        queryClient.invalidateQueries({ queryKey: queryKeys.invites.sent() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.invites.byList(variables.listId) });
       },
       onError: (error, variables, context) => {
         const previousSent =
@@ -217,10 +220,10 @@ export const useDeleteInvite = () => {
             : undefined
 
         if (previousSent) {
-          utils.setData<InvitesGetSentOutput>(queryKeys.invites.sent(), previousSent)
+          queryClient.setQueryData<InvitesGetSentOutput>(queryKeys.invites.sent(), previousSent)
         }
         if (previousByList) {
-          utils.setData<InvitesGetByListOutput>(
+          queryClient.setQueryData<InvitesGetByListOutput>(
             queryKeys.invites.byList(variables.listId),
             previousByList,
           )

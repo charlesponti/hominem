@@ -10,6 +10,7 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { betterAuthServer } from './auth/better-auth';
 import { getJwks } from './auth/key-store';
 import type { AuthContextEnvelope } from './auth/types';
+import { API_BRAND } from './brand';
 import { env } from './env';
 import { authJwtMiddleware } from './middleware/auth';
 import { blockMaliciousProbes } from './middleware/block-probes';
@@ -141,11 +142,11 @@ export function createServer() {
       documentation: {
         openapi: '3.1.0',
         info: {
-          title: 'Hominem API',
+          title: API_BRAND.api.title,
           version: '1.0.0',
-          description: 'Personal productivity and life management API',
+          description: API_BRAND.api.description,
           contact: {
-            name: 'Hominem Support',
+            name: API_BRAND.api.contactName,
             email: 'code@hominem.io',
           },
         },
@@ -185,7 +186,7 @@ export function createServer() {
       theme: 'saturn',
       url: '/openapi.json',
       metaData: {
-        title: 'Hominem API Documentation',
+        title: API_BRAND.api.docsTitle,
       },
       layout: 'classic',
       defaultHttpClient: {

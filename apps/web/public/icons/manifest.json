@@ -1,7 +1,7 @@
 {
   "name": "Hakumi",
   "short_name": "Hakumi",
-  "description": "Hakumi brings notes, voice capture, and AI assistance into one workspace.",
+  "description": "Hakumi brings notes, voice capture, and chat into one workspace.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",

@@ -47,7 +47,7 @@ export default function HomePage() {
           Move in action.
         </>
       }
-      sub="Hakumi turns scattered thoughts into organized knowledge with AI that helps you find connections you'd have missed."
+      sub={`${WEB_BRAND.appName} turns scattered thoughts into durable context so you can capture quickly, return later, and think in chat with what you already know.`}
       ctaPrimary={{ label: WEB_BRAND.marketing.ctaLabel, href: authHref }}
       ctaSecondary={{ label: 'Sign in', href: authHref }}
       problem="You have the idea in the shower. You voice-note it on the walk. You write half of it down somewhere. Three weeks later you can't find it — or worse, you have the same idea again and don't know you already had it."
@@ -60,21 +60,21 @@ export default function HomePage() {
         },
         {
           icon: MessageSquare,
-          title: 'AI chat',
+          title: 'Chat',
           description:
-            "Ask questions about your notes and get answers — not search results. The AI reads what you've written.",
+            "Ask questions about your notes and keep thinking with the context you've already built.",
         },
         {
           icon: Mic,
           title: 'Voice capture',
           description:
-            "Record a thought on the go. Hakumi transcribes it and surfaces the key ideas when you're back at your desk.",
+            `Record a thought on the go. ${WEB_BRAND.appName} transcribes it and surfaces the key ideas when you're back at your desk.`,
         },
         {
           icon: Tag,
-          title: 'Auto-tagging',
+          title: 'Connected context',
           description:
-            'Notes are tagged and linked automatically as you write. Your knowledge graph builds itself.',
+            'Notes stay connected through tags, references, and related context so past thinking remains useful.',
         },
       ]}
       steps={[
@@ -84,14 +84,14 @@ export default function HomePage() {
             'Open a note and start. Markdown renders as you type. No setup, no choosing a template.',
         },
         {
-          label: 'Let AI make connections',
+          label: 'Let context accumulate',
           description:
-            'Hakumi surfaces related notes and extracts key ideas. Your past thinking becomes a resource instead of a graveyard.',
+            'Your notes and chats build on each other over time, so past thinking becomes working context instead of forgotten storage.',
         },
         {
           label: 'Ask your notes questions',
           description:
-            'Chat with your knowledge base. "What did I write about X last month?" gets you a direct answer.',
+            'Use chat to ask what you already know. "What did I write about X last month?" gets you a direct answer.',
         },
       ]}
       trustSignal="Free to start. No credit card."

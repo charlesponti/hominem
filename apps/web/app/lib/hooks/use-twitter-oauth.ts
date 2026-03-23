@@ -16,9 +16,9 @@ export function useTwitterAccounts() {
     data: accounts,
     isLoading,
     refetch,
-  } = useRpcQuery<TwitterAccountsListOutput>(['twitter', 'accounts'], ({ twitter }) =>
-    twitter.getAccounts(),
-  );
+  } = useRpcQuery(({ twitter }) => twitter.getAccounts(), {
+    queryKey: ['twitter', 'accounts'],
+  });
 
   const accountsArray = Array.isArray(accounts) ? accounts : [];
 

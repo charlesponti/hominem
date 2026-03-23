@@ -9,14 +9,11 @@ endif
 # Variables
 DOCKER_COMPOSE = docker compose
 NODE_ENV ?= development
-APPLE_KEY_PATH ?= $(CURDIR)/.auth/AuthKey_2438T5MGLH.p8
-APPLE_EXPIRES_DAYS ?= 150
-APPLE_KEY_ID ?= 2438T5MGLH
 DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install build test lint typecheck check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down apple-client-secret auth-test-up auth-test-down auth-test-status storybook storybook-test
+.PHONY: install build test lint typecheck check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down auth-test-up auth-test-down auth-test-status storybook storybook-test
 
 # Start the mobile dev server (Expo dev client, dev variant)
 dev:
@@ -141,42 +138,8 @@ clean:
 	bun turbo run clean
 	find . -name '*.tsbuildinfo' -not -path '*/node_modules/*' -delete
 
-# Test database management
-test-db-start:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d test-db
-	@until docker exec hominem-test-postgres pg_isready -U postgres > /dev/null 2>&1; do sleep 1; done
-	@cd packages/db && DATABASE_URL="$(TEST_DATABASE_URL)" bun run goose:up
-
-test-db-stop:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml stop test-db
-
-test-db-restart:
-	$(MAKE) test-db-stop
-	$(MAKE) test-db-start
-
-test-db-status:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps test-db
-
 # Full cleanup and reinstall
 reset: clean install
-
-apple-client-secret:
-	@if [ -z "$(APPLE_TEAM_ID)" ]; then \
-		echo "ERROR: APPLE_TEAM_ID is required"; \
-		echo "Usage: make apple-client-secret APPLE_TEAM_ID=<team_id> APPLE_CLIENT_ID=<services_id> [APPLE_KEY_ID=<key_id>] [APPLE_KEY_PATH=<path>] [APPLE_EXPIRES_DAYS=<days>]"; \
-		exit 1; \
-	fi
-	@if [ -z "$(APPLE_CLIENT_ID)" ]; then \
-		echo "ERROR: APPLE_CLIENT_ID is required"; \
-		echo "Usage: make apple-client-secret APPLE_TEAM_ID=<team_id> APPLE_CLIENT_ID=<services_id> [APPLE_KEY_ID=<key_id>] [APPLE_KEY_PATH=<path>] [APPLE_EXPIRES_DAYS=<days>]"; \
-		exit 1; \
-	fi
-	@bun run --filter @hominem/api auth:apple:client-secret -- \
-		--key-path "$(APPLE_KEY_PATH)" \
-		--team-id "$(APPLE_TEAM_ID)" \
-		--client-id "$(APPLE_CLIENT_ID)" \
-		--key-id "$(APPLE_KEY_ID)" \
-		--expires-days "$(APPLE_EXPIRES_DAYS)"
 
 auth-test-up:
 	$(MAKE) dev-up

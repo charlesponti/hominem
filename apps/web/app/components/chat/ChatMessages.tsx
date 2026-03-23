@@ -1,8 +1,8 @@
 import { useAuthContext } from '@hominem/auth';
 import type { ThoughtLifecycleState } from '@hominem/chat-services/types';
-import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react';
+import { useRpcMutation, useRpcQuery } from '@hominem/rpc/react';
+import { useQueryClient } from '@tanstack/react-query';
 import type {
-  ChatsGetMessagesOutput,
   MessagesDeleteOutput,
   MessagesUpdateOutput,
 } from '@hominem/rpc/types/chat.types';
@@ -43,10 +43,10 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
 
     const { userId } = useAuthContext();
 
-    const messagesQuery = useRpcQuery<ChatsGetMessagesOutput>(
-      ['chats', 'getMessages', { chatId, limit: 50 }],
+    const messagesQuery = useRpcQuery(
       ({ chats }) => chats.getMessages({ chatId, limit: 50 }),
       {
+        queryKey: ['chats', 'getMessages', { chatId, limit: 50 }],
         enabled: !!chatId,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
@@ -57,7 +57,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
     const isLoading = messagesQuery.isLoading;
     const messagesError = messagesQuery.error;
 
-    const utils = useHonoUtils();
+    const queryClient = useQueryClient();
 
     const deleteMessageMutation = useRpcMutation<MessagesDeleteOutput, { messageId: string }>(
       ({ messages }, variables) => messages.delete(variables),
@@ -65,7 +65,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
         onSuccess: () => {
           // Invalidate messages list for this chat
           // Note: we need to match the query key structure
-          utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
+          queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
         },
       },
     );
@@ -155,7 +155,7 @@ export const ChatMessages = forwardRef<{ showSearch: () => void }, ChatMessagesP
       { messageId: string; content: string }
     >(({ messages }, variables) => messages.update(variables), {
       onSuccess: () => {
-        utils.invalidate(['chats', 'getMessages', { chatId, limit: 50 }]);
+        queryClient.invalidateQueries({ queryKey: ['chats', 'getMessages', { chatId, limit: 50 }] });
       },
     });
 

@@ -68,7 +68,7 @@ export function LocalMockAuthProvider({ children }: MockAuthProviderProps) {
 
   const signIn = useCallback(async () => {
     if (!isMockAuthEnabled()) {
-      throw new Error('Real Apple Auth not yet implemented');
+      throw new Error('Real auth is not available in LocalMockAuthProvider');
     }
 
     setIsLoading(true);
@@ -98,7 +98,7 @@ export function LocalMockAuthProvider({ children }: MockAuthProviderProps) {
 
   const signOut = useCallback(async () => {
     if (!isMockAuthEnabled()) {
-      throw new Error('Real Apple Auth not yet implemented');
+      throw new Error('Real auth is not available in LocalMockAuthProvider');
     }
 
     setIsLoading(true);

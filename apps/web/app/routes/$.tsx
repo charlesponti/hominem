@@ -37,7 +37,7 @@ export default function NotFoundPage() {
           <div className="flex flex-wrap justify-center gap-8 text-sm">
             <Link to="/chat" className="btn">
               <Bot className="size-4" />
-              AI Assistant
+              Chat
             </Link>
           </div>
         </div>

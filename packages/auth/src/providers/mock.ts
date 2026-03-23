@@ -1,6 +1,6 @@
 /**
- * Mock Apple Authentication Provider for local development
- * This provider simulates the Apple Sign in with Apple flow without requiring real credentials
+ * Mock Authentication Provider for local development
+ * This provider simulates sign-in without requiring real credentials
  */
 
 import type { AuthResponse, Session, User } from '../auth.types'
@@ -28,7 +28,7 @@ function toBase64(value: string): string {
 
 /**
  * Generates a simple mock token (not cryptographically valid)
- * In production with real Apple Auth, tokens are validated server-side
+ * In production, tokens are validated server-side
  */
 function generateMockToken(userId: string): string {
   // Simple base64-encoded token that includes the user ID
@@ -48,7 +48,7 @@ function generateExpiresAt(): string {
 
 /**
  * Mock Authentication Provider
- * Simulates Apple Sign in with Apple for local development
+ * Simulates sign-in for local development
  */
 export class MockAuthProvider {
   private selectedUser: User

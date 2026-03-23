@@ -1,5 +1,6 @@
-import type { HonoMutationOptions, HonoQueryOptions } from '@hominem/rpc/react'
-import { useRpcMutation, useRpcQuery, useHonoUtils } from '@hominem/rpc/react'
+import { useRpcMutation, useRpcQuery } from '@hominem/rpc/react'
+import { useQueryClient } from '@tanstack/react-query'
+import type { QueryKey, UseMutationOptions, UseQueryOptions } from '@tanstack/react-query'
 import type {
   ListCreateInput,
   ListCreateOutput,
@@ -44,43 +45,53 @@ const createOptimisticList = (variables: ListCreateInput): ListCreateOutput => {
   }
 }
 
-export const useLists = (options?: HonoQueryOptions<ListGetAllOutput>) =>
-  useRpcQuery<ListGetAllOutput>(
-    queryKeys.lists.all(),
+export const useLists = (
+  options?: Omit<UseQueryOptions<ListGetAllOutput>, 'queryKey' | 'queryFn'> & {
+    queryKey?: QueryKey
+  },
+) =>
+  useRpcQuery(
     async ({ lists }) => lists.getAll({} satisfies ListGetAllInput),
-    options,
+    {
+      queryKey: queryKeys.lists.all(),
+      ...options,
+    },
   )
 
 export const useListById = (
   id: string | undefined,
-  options?: HonoQueryOptions<ListGetByIdOutput>,
+  options?: Omit<UseQueryOptions<ListGetByIdOutput>, 'queryKey' | 'queryFn'> & {
+    queryKey?: QueryKey
+  },
 ) =>
-  useRpcQuery<ListGetByIdOutput>(
-    queryKeys.lists.get(id || ''),
+  useRpcQuery(
     async ({ lists }) => {
       if (!id) throw new Error('ID is required')
       return lists.getById({ id } satisfies ListGetByIdInput)
     },
     {
+      queryKey: queryKeys.lists.get(id || ''),
       enabled: !!id,
       ...options,
     },
   )
 
 export const useCreateList = (
-  options?: HonoMutationOptions<ListCreateOutput, ListCreateInput>,
+  options?: Omit<UseMutationOptions<ListCreateOutput, Error, ListCreateInput>, 'mutationFn'> & {
+    invalidateKeys?: QueryKey[]
+  },
 ) => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<ListCreateOutput, ListCreateInput>(
     async ({ lists }, variables) => lists.create(variables),
     {
       ...options,
       onMutate: async (variables) => {
-        await utils.cancel(queryKeys.lists.all())
-        const previousLists = utils.getData<ListGetAllOutput>(queryKeys.lists.all())
+        await queryClient.cancelQueries({ queryKey: queryKeys.lists.all() })
+        const previousLists = queryClient.getQueryData<ListGetAllOutput>(queryKeys.lists.all())
         const optimisticList = createOptimisticList(variables)
 
-        utils.setData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
+        queryClient.setQueryData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
           const existing = old ?? []
           return [optimisticList, ...existing]
         })
@@ -100,15 +111,15 @@ export const useCreateList = (
             : null
 
         if (optimisticId) {
-          utils.setData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
+          queryClient.setQueryData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
             const existing = old ?? []
             return existing.map((list) => (list.id === optimisticId ? result : list))
           })
-          utils.remove(queryKeys.lists.get(optimisticId))
+          queryClient.removeQueries({ queryKey: queryKeys.lists.get(optimisticId) })
         }
 
-        utils.setData<ListGetByIdOutput>(queryKeys.lists.get(result.id), result)
-        utils.invalidate(queryKeys.lists.all())
+        queryClient.setQueryData<ListGetByIdOutput>(queryKeys.lists.get(result.id), result)
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.all() })
         options?.onSuccess?.(result, variables, context, mutationContext)
       },
       onError: (error, variables, context, mutationContext) => {
@@ -118,34 +129,36 @@ export const useCreateList = (
             : undefined
 
         if (previousLists) {
-          utils.setData<ListGetAllOutput>(queryKeys.lists.all(), previousLists)
+          queryClient.setQueryData<ListGetAllOutput>(queryKeys.lists.all(), previousLists)
         }
 
         options?.onError?.(error, variables, context, mutationContext)
       },
       onSettled: () => {
-        utils.invalidate(queryKeys.lists.all())
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.all() })
       },
     },
   )
 }
 
 export const useUpdateList = (
-  options?: HonoMutationOptions<ListUpdateOutput, ListUpdateInput>,
+  options?: Omit<UseMutationOptions<ListUpdateOutput, Error, ListUpdateInput>, 'mutationFn'> & {
+    invalidateKeys?: QueryKey[]
+  },
 ) => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<ListUpdateOutput, ListUpdateInput>(
     async ({ lists }, variables) => lists.update(variables),
     {
       ...options,
       onMutate: async (variables) => {
-        await utils.cancel(queryKeys.lists.all())
-        await utils.cancel(queryKeys.lists.get(variables.id))
+        await queryClient.cancelQueries({ queryKey: queryKeys.lists.all() })
+        await queryClient.cancelQueries({ queryKey: queryKeys.lists.get(variables.id) })
 
-        const previousLists = utils.getData<ListGetAllOutput>(queryKeys.lists.all())
-        const previousList = utils.getData<ListGetByIdOutput>(queryKeys.lists.get(variables.id))
+        const previousLists = queryClient.getQueryData<ListGetAllOutput>(queryKeys.lists.all())
+        const previousList = queryClient.getQueryData<ListGetByIdOutput>(queryKeys.lists.get(variables.id))
 
-        utils.setData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
+        queryClient.setQueryData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
           const existing = old ?? []
           return existing.map((list) =>
             list.id === variables.id ? { ...list, ...variables } : list,
@@ -153,7 +166,7 @@ export const useUpdateList = (
         })
 
         if (previousList) {
-          utils.setData<ListGetByIdOutput>(queryKeys.lists.get(variables.id), {
+          queryClient.setQueryData<ListGetByIdOutput>(queryKeys.lists.get(variables.id), {
             ...previousList,
             ...variables,
           })
@@ -162,13 +175,13 @@ export const useUpdateList = (
         return { previousLists, previousList }
       },
       onSuccess: (result, variables, context, mutationContext) => {
-        utils.setData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
+        queryClient.setQueryData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
           const existing = old ?? []
           return existing.map((list) => (list.id === result.id ? result : list))
         })
-        utils.setData<ListGetByIdOutput>(queryKeys.lists.get(result.id), result)
-        utils.invalidate(queryKeys.lists.all())
-        utils.invalidate(queryKeys.lists.get(result.id))
+        queryClient.setQueryData<ListGetByIdOutput>(queryKeys.lists.get(result.id), result)
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.all() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.get(result.id) })
         options?.onSuccess?.(result, variables, context, mutationContext)
       },
       onError: (error, variables, context, mutationContext) => {
@@ -182,44 +195,46 @@ export const useUpdateList = (
             : undefined
 
         if (previousLists) {
-          utils.setData<ListGetAllOutput>(queryKeys.lists.all(), previousLists)
+          queryClient.setQueryData<ListGetAllOutput>(queryKeys.lists.all(), previousLists)
         }
         if (previousList) {
-          utils.setData<ListGetByIdOutput>(queryKeys.lists.get(variables.id), previousList)
+          queryClient.setQueryData<ListGetByIdOutput>(queryKeys.lists.get(variables.id), previousList)
         }
 
         options?.onError?.(error, variables, context, mutationContext)
       },
       onSettled: (result, error, variables) => {
-        utils.invalidate(queryKeys.lists.all())
-        utils.invalidate(queryKeys.lists.get(variables.id))
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.all() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.get(variables.id) })
       },
     },
   )
 }
 
 export const useDeleteList = (
-  options?: HonoMutationOptions<ListDeleteOutput, ListDeleteInput>,
+  options?: Omit<UseMutationOptions<ListDeleteOutput, Error, ListDeleteInput>, 'mutationFn'> & {
+    invalidateKeys?: QueryKey[]
+  },
 ) => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<ListDeleteOutput, ListDeleteInput>(
     async ({ lists }, variables) => lists.delete(variables),
     {
       ...options,
       onMutate: async (variables) => {
-        await utils.cancel(queryKeys.lists.all())
-        const previousLists = utils.getData<ListGetAllOutput>(queryKeys.lists.all())
+        await queryClient.cancelQueries({ queryKey: queryKeys.lists.all() })
+        const previousLists = queryClient.getQueryData<ListGetAllOutput>(queryKeys.lists.all())
 
-        utils.setData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
+        queryClient.setQueryData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
           const existing = old ?? []
           return existing.filter((list) => list.id !== variables.id)
         })
-        utils.remove(queryKeys.lists.get(variables.id))
+        queryClient.removeQueries({ queryKey: queryKeys.lists.get(variables.id) })
 
         return { previousLists }
       },
       onSuccess: (result, variables, context, mutationContext) => {
-        utils.invalidate(queryKeys.lists.all())
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.all() })
         options?.onSuccess?.(result, variables, context, mutationContext)
       },
       onError: (error, variables, context, mutationContext) => {
@@ -229,13 +244,13 @@ export const useDeleteList = (
             : undefined
 
         if (previousLists) {
-          utils.setData<ListGetAllOutput>(queryKeys.lists.all(), previousLists)
+          queryClient.setQueryData<ListGetAllOutput>(queryKeys.lists.all(), previousLists)
         }
 
         options?.onError?.(error, variables, context, mutationContext)
       },
       onSettled: () => {
-        utils.invalidate(queryKeys.lists.all())
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.all() })
       },
     },
   )
@@ -245,8 +260,7 @@ export const useListsContainingPlace = (
   placeId: string | undefined,
   googleMapsId: string | undefined,
 ) =>
-  useRpcQuery<ListGetContainingPlaceOutput>(
-    queryKeys.lists.containing(placeId, googleMapsId),
+  useRpcQuery(
     async ({ lists }) => {
       const input: ListGetContainingPlaceInput = {}
       if (placeId !== undefined) {
@@ -258,26 +272,32 @@ export const useListsContainingPlace = (
       return lists.getContainingPlace(input)
     },
     {
+      queryKey: queryKeys.lists.containing(placeId, googleMapsId),
       enabled: !!placeId || !!googleMapsId,
     },
   )
 
 export const useRemoveCollaborator = (
-  options?: HonoMutationOptions<ListRemoveCollaboratorOutput, ListRemoveCollaboratorInput>,
+  options?: Omit<
+    UseMutationOptions<ListRemoveCollaboratorOutput, Error, ListRemoveCollaboratorInput>,
+    'mutationFn'
+  > & {
+    invalidateKeys?: QueryKey[]
+  },
 ) => {
-  const utils = useHonoUtils()
+  const queryClient = useQueryClient()
   return useRpcMutation<ListRemoveCollaboratorOutput, ListRemoveCollaboratorInput>(
     async ({ lists }, variables) => lists.removeCollaborator(variables),
     {
       ...options,
       onMutate: async (variables) => {
-        await utils.cancel(queryKeys.lists.all())
-        await utils.cancel(queryKeys.lists.get(variables.listId))
+        await queryClient.cancelQueries({ queryKey: queryKeys.lists.all() })
+        await queryClient.cancelQueries({ queryKey: queryKeys.lists.get(variables.listId) })
 
-        const previousLists = utils.getData<ListGetAllOutput>(queryKeys.lists.all())
-        const previousList = utils.getData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId))
+        const previousLists = queryClient.getQueryData<ListGetAllOutput>(queryKeys.lists.all())
+        const previousList = queryClient.getQueryData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId))
 
-        utils.setData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
+        queryClient.setQueryData<ListGetAllOutput>(queryKeys.lists.all(), (old) => {
           const existing = old ?? []
           return existing.map((list) => {
             if (list.id !== variables.listId || !list.users) return list
@@ -289,7 +309,7 @@ export const useRemoveCollaborator = (
         })
 
         if (previousList && previousList.users) {
-          utils.setData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId), {
+          queryClient.setQueryData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId), {
             ...previousList,
             users: previousList.users.filter((user) => user.id !== variables.userId),
           })
@@ -298,8 +318,8 @@ export const useRemoveCollaborator = (
         return { previousLists, previousList }
       },
       onSuccess: (result, variables, context, mutationContext) => {
-        utils.invalidate(queryKeys.lists.all())
-        utils.invalidate(queryKeys.lists.get(variables.listId))
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.all() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.get(variables.listId) })
         options?.onSuccess?.(result, variables, context, mutationContext)
       },
       onError: (error, variables, context, mutationContext) => {
@@ -313,17 +333,17 @@ export const useRemoveCollaborator = (
             : undefined
 
         if (previousLists) {
-          utils.setData<ListGetAllOutput>(queryKeys.lists.all(), previousLists)
+          queryClient.setQueryData<ListGetAllOutput>(queryKeys.lists.all(), previousLists)
         }
         if (previousList) {
-          utils.setData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId), previousList)
+          queryClient.setQueryData<ListGetByIdOutput>(queryKeys.lists.get(variables.listId), previousList)
         }
 
         options?.onError?.(error, variables, context, mutationContext)
       },
       onSettled: (result, error, variables) => {
-        utils.invalidate(queryKeys.lists.all())
-        utils.invalidate(queryKeys.lists.get(variables.listId))
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.all() })
+        queryClient.invalidateQueries({ queryKey: queryKeys.lists.get(variables.listId) })
       },
     },
   )

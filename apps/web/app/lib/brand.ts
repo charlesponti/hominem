@@ -1,18 +1,20 @@
+import { BRAND } from '@hominem/env/brand'
+
 export const WEB_BRAND = {
-  appName: 'Hakumi',
+  appName: BRAND.appName,
   logoPath: '/logo.png',
   meta: {
-    title: 'Hakumi',
-    description: 'Capture notes, surface connections, and think with AI in one calm workspace.',
+    title: BRAND.appName,
+    description: BRAND.tagline,
   },
   marketing: {
-    title: 'Hakumi',
-    kicker: 'Hakumi',
-    ctaLabel: 'Open Hakumi',
+    title: BRAND.appName,
+    kicker: BRAND.appName,
+    ctaLabel: `Open ${BRAND.appName}`,
   },
   manifest: {
-    name: 'Hakumi',
-    shortName: 'Hakumi',
-    description: 'Hakumi brings notes, voice capture, and AI assistance into one workspace.',
+    name: BRAND.appName,
+    shortName: BRAND.appName,
+    description: `${BRAND.appName} brings notes, voice capture, and chat into one workspace.`,
   },
 } as const

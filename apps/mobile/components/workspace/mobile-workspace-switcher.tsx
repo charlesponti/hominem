@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import AppIcon from '~/components/ui/icon'
 import { theme } from '~/theme'
+import { APP_NAME } from '~/utils/constants'
 
 import {
   useMobileWorkspace,
@@ -77,7 +78,7 @@ export const MobileWorkspaceSwitcher = () => {
                 source={require('../../assets/logo.web.png')}
                 style={styles.logo}
                 resizeMode="cover"
-                accessibilityLabel="Hominem"
+                accessibilityLabel={APP_NAME}
               />
             </View>
           )}

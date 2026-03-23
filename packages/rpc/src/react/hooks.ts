@@ -11,20 +11,6 @@ import type { ApiClient } from '../core/api-client';
 
 import { useApiClient } from './context';
 
-export interface HonoQueryOptions<TData> extends Omit<
-  UseQueryOptions<TData>,
-  'queryKey' | 'queryFn'
-> {
-  queryKey?: QueryKey;
-}
-
-export interface HonoMutationOptions<TData, TVariables> extends Omit<
-  UseMutationOptions<TData, Error, TVariables>,
-  'mutationFn'
-> {
-  invalidateKeys?: QueryKey[];
-}
-
 export interface OptimisticUpdateConfig<
   TData,
   TVariables,
@@ -45,23 +31,27 @@ export interface OptimisticUpdateConfig<
  *
  * @example
  * const { data } = useRpcQuery(
- *   ['finance', 'transactions', 'list'],
  *   async ({ finance }) => {
  *     return finance.listTransactions({ limit: 10, sortBy: 'date', sortDirection: 'desc' });
+ *   }
+ *   {
+ *     queryKey: ['finance', 'transactions', 'list'],
  *   }
  * );
  */
 export function useRpcQuery<TData>(
-  queryKey: QueryKey,
   queryFn: (client: ApiClient) => Promise<TData>,
-  options?: HonoQueryOptions<TData>,
+  options: Omit<UseQueryOptions<TData>, 'queryKey' | 'queryFn'> & {
+    queryKey: QueryKey
+  },
 ) {
   const client = useApiClient();
+  const { queryKey, ...queryOptions } = options;
 
   return useQuery({
-    queryKey: options?.queryKey || queryKey,
+    queryKey,
     queryFn: () => queryFn(client),
-    ...options,
+    ...queryOptions,
   });
 }
 
@@ -85,7 +75,9 @@ export function useRpcQuery<TData>(
  */
 export function useRpcMutation<TData, TVariables = void>(
   mutationFn: (client: ApiClient, variables: TVariables) => Promise<TData>,
-  options?: HonoMutationOptions<TData, TVariables>,
+  options?: Omit<UseMutationOptions<TData, Error, TVariables>, 'mutationFn'> & {
+    invalidateKeys?: QueryKey[]
+  },
 ) {
   const client = useApiClient();
   const queryClient = useQueryClient();
@@ -113,27 +105,3 @@ export function useRpcMutation<TData, TVariables = void>(
 /**
  * Hook to get query utilities for manual cache management
  */
-export function useHonoUtils() {
-  const queryClient = useQueryClient();
-
-  return {
-    invalidate: (queryKey: QueryKey) => {
-      return queryClient.invalidateQueries({ queryKey });
-    },
-    refetch: (queryKey: QueryKey) => {
-      return queryClient.refetchQueries({ queryKey });
-    },
-    setData: <TData>(queryKey: QueryKey, updater: TData | ((old: TData | undefined) => TData)) => {
-      return queryClient.setQueryData(queryKey, updater);
-    },
-    getData: <TData>(queryKey: QueryKey) => {
-      return queryClient.getQueryData<TData>(queryKey);
-    },
-    cancel: (queryKey: QueryKey) => {
-      return queryClient.cancelQueries({ queryKey });
-    },
-    remove: (queryKey: QueryKey) => {
-      return queryClient.removeQueries({ queryKey });
-    },
-  };
-}

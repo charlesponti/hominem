@@ -1,7 +1,7 @@
 {
   "name": "@hominem/desktop",
   "version": "0.0.0",
-  "description": "Hominem desktop shell",
+  "description": "Hakumi desktop workspace",
   "main": "./out/main/index.js",
   "private": true,
   "type": "module",
@@ -50,7 +50,7 @@
   },
   "build": {
     "appId": "com.hominem.desktop",
-    "productName": "Hominem",
+    "productName": "Hakumi",
     "directories": {
       "buildResources": "assets",
       "output": "release"

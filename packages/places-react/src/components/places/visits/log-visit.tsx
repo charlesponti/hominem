@@ -1,4 +1,4 @@
-import { useHonoUtils } from '@hominem/rpc/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Form } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Field } from '@hominem/ui/field';
@@ -45,7 +45,7 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
   const [visitReview, setVisitReview] = useState<string>('');
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
   const revalidator = useRevalidator();
-  const utils = useHonoUtils();
+  const queryClient = useQueryClient();
 
   // Initialize form with visit data when editing
   useEffect(() => {
@@ -82,8 +82,8 @@ export function LogVisit({ placeId, placeName, visit, onSuccess, onCancel }: Log
   }, [visit]);
 
   const handleSuccess = () => {
-    utils.invalidate(['places', 'place-visits', placeId]);
-    utils.invalidate(['places', 'visit-stats', placeId]);
+    queryClient.invalidateQueries({ queryKey: ['places', 'place-visits', placeId] });
+    queryClient.invalidateQueries({ queryKey: ['places', 'visit-stats', placeId] });
     revalidator.revalidate();
     onSuccess?.();
   };

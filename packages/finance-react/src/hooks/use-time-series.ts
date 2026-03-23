@@ -24,21 +24,7 @@ export function useTimeSeriesData({
   groupBy = 'month',
   enabled = true,
 }: TimeSeriesParams) {
-  const query = useRpcQuery<SpendingTimeSeriesOutput>(
-    [
-      'finance',
-      'analyze',
-      'spending-time-series',
-      {
-        dateFrom: dateFrom?.toISOString(),
-        dateTo: dateTo?.toISOString(),
-        account,
-        tag,
-        includeStats,
-        compareToPrevious,
-        groupBy,
-      },
-    ],
+  const query = useRpcQuery(
     ({ finance }) =>
       finance.getSpendingTimeSeries({
         ...(dateFrom ? { from: format(dateFrom, 'yyyy-MM-dd') } : {}),
@@ -50,6 +36,20 @@ export function useTimeSeriesData({
         groupBy,
       }),
     {
+      queryKey: [
+        'finance',
+        'analyze',
+        'spending-time-series',
+        {
+          dateFrom: dateFrom?.toISOString(),
+          dateTo: dateTo?.toISOString(),
+          account,
+          tag,
+          includeStats,
+          compareToPrevious,
+          groupBy,
+        },
+      ],
       enabled,
       staleTime: 5 * 60 * 1000,
       retry: 2,
