@@ -1,6 +1,17 @@
-import { randomUUID } from 'node:crypto'
-
 import { db } from '@hominem/db'
+
+// Universal UUID generation that works in Node.js, Bun, and browsers
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  // Fallback for environments without crypto.randomUUID
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
 
 interface AccountRecord {
   id: string
@@ -104,7 +115,7 @@ export async function getAccountByProviderAccountId(
 }
 
 export async function createAccount(data: AccountInsert): Promise<AccountRecord | null> {
-  const accountId = data.id ?? randomUUID()
+  const accountId = data.id ?? generateUUID()
 
   const row = (await db
     .insertInto('user_accounts')
