@@ -1,5 +1,3 @@
-export { AppSidebar } from './app-sidebar';
-export type { AppSidebarProps, SidebarNavItem, RecentItem } from './app-sidebar';
 export { Header } from './header';
 export type { HeaderProps, NavItem } from './header';
 export { LandingPage } from './landing-page';

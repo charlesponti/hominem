@@ -19,9 +19,6 @@ export default [
   layout('routes/layout.tsx', [
     index('routes/home.tsx'),
 
-    // Authenticated home surface (D-005: /home)
-    route('home', 'routes/home-view.tsx'),
-
     // Chat Routes
     route('chat', 'routes/chat/index.tsx'),
     route('chat/:chatId', 'routes/chat/chat.$chatId.tsx'),
