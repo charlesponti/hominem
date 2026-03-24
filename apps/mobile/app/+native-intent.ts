@@ -10,6 +10,7 @@
  *   hakumi://focus                     → /(protected)/(tabs)/focus
  *   hakumi://focus/<id>                → /(protected)/(tabs)/focus/<id>
  *   hakumi://account                   → /(protected)/(tabs)/account
+ *   hakumi://note/add                  → /(protected)/(tabs)/focus?action=new
  */
 export function redirectSystemPath({
   path,
@@ -20,6 +21,11 @@ export function redirectSystemPath({
 }): string {
   // Strip leading slash for matching
   const normalized = path.startsWith('/') ? path.slice(1) : path;
+
+  // App Intent / Siri: note/add → focus tab with new-note action
+  if (normalized === 'note/add') {
+    return '/(protected)/(tabs)/focus?action=new';
+  }
 
   // OTP verification link: verify?token=xxx → /(auth)/verify?token=xxx
   if (normalized.startsWith('verify')) {

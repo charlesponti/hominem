@@ -1,16 +1,22 @@
 import * as ImagePicker from 'expo-image-picker'
 import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services/constants'
 import { useApiClient } from '@hominem/rpc/react'
+import { CHAT_UPLOAD_MAX_FILE_COUNT } from '@hominem/utils/upload'
 import { CameraModal } from '../media/camera-modal'
 import { useQueryClient } from '@tanstack/react-query'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import type { RelativePathString } from 'expo-router'
 import React, { useState } from 'react'
+import { Alert } from 'react-native'
 import { StyleSheet, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useMobileWorkspace } from '../workspace/mobile-workspace-context'
-import { appendPickedAssetsToDraft, applyVoiceTranscriptToDraft, removeAttachmentFromDraft } from './mobile-composer-actions'
+import {
+  appendUploadedAssetsToDraft,
+  applyVoiceTranscriptToDraft,
+  removeAttachmentFromDraft,
+} from './mobile-composer-actions'
 import { MobileComposerAttachments } from './mobile-composer-attachments'
 import { deriveMobileComposerPresentation } from './mobile-composer-config'
 import { MobileComposerFooter } from './mobile-composer-footer'
@@ -23,7 +29,9 @@ import {
   invalidateInboxQueries,
   upsertInboxSessionActivity,
 } from '~/utils/services/inbox/inbox-refresh'
+import { donateAddNoteIntent } from '~/lib/intent-donation'
 import { useSendMessage } from '~/utils/services/chat'
+import { useFileUpload } from '~/utils/services/files/use-file-upload'
 import { useCreateFocusItem } from '~/utils/services/notes/use-create-focus-item'
 import { chatKeys } from '~/utils/services/notes/query-keys'
 
@@ -46,6 +54,7 @@ export const MobileComposer = () => {
     setMode,
   } = useInputContext()
   const { sendChatMessage } = useSendMessage({ chatId: params.chatId ?? '' })
+  const { uploadAssets, uploadState, clearErrors } = useFileUpload()
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
   const [isCameraOpen, setIsCameraOpen] = useState(false)
 
@@ -65,6 +74,7 @@ export const MobileComposer = () => {
     await createFocusItem({
       text: trimmedMessage,
     })
+    donateAddNoteIntent()
     await invalidateInboxQueries(queryClient)
     clearDraft()
   }
@@ -140,6 +150,8 @@ export const MobileComposer = () => {
   })
 
   const handlePickAttachment = async () => {
+    clearErrors()
+
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsMultipleSelection: true,
       mediaTypes: 'images',
@@ -150,22 +162,37 @@ export const MobileComposer = () => {
       return
     }
 
-    const nextState = appendPickedAssetsToDraft(
-      {
-        attachments,
-        context: activeContext,
-        isRecording,
-        mode,
-        text: message,
-      },
+    if (attachments.length + result.assets.length > CHAT_UPLOAD_MAX_FILE_COUNT) {
+      Alert.alert(`You can upload up to ${CHAT_UPLOAD_MAX_FILE_COUNT} files`)
+      return
+    }
+
+    const uploadedAssets = await uploadAssets(
       result.assets.map((asset) => ({
+        assetId: asset.assetId ?? asset.uri,
         fileName: asset.fileName ?? null,
+        mimeType: asset.mimeType ?? null,
         type: asset.type ?? null,
         uri: asset.uri,
       })),
     )
 
-    setAttachments(nextState.attachments)
+    if (uploadedAssets.length === 0) {
+      return
+    }
+
+    setAttachments((currentAttachments) =>
+      appendUploadedAssetsToDraft(
+        {
+          attachments: currentAttachments,
+          context: activeContext,
+          isRecording,
+          mode,
+          text: message,
+        },
+        uploadedAssets,
+      ).attachments,
+    )
   }
 
   const handleVoiceTranscript = (transcript: string) => {
@@ -187,27 +214,60 @@ export const MobileComposer = () => {
   }
 
   const handleCameraCapture = (photo: { uri: string; fileName?: string }) => {
-    const nextState = appendPickedAssetsToDraft(
-      { attachments, context: activeContext, isRecording, mode, text: message },
-      [{ fileName: photo.fileName ?? null, type: 'image', uri: photo.uri }],
-    )
-    setAttachments(nextState.attachments)
-    setIsCameraOpen(false)
+    clearErrors()
+    void (async () => {
+      const uploadedAssets = await uploadAssets([
+        {
+          assetId: photo.uri,
+          fileName: photo.fileName ?? null,
+          mimeType: 'image/jpeg',
+          type: 'image',
+          uri: photo.uri,
+        },
+      ])
+
+      if (uploadedAssets.length > 0) {
+        setAttachments((currentAttachments) =>
+          appendUploadedAssetsToDraft(
+            {
+              attachments: currentAttachments,
+              context: activeContext,
+              isRecording,
+              mode,
+              text: message,
+            },
+            uploadedAssets,
+          ).attachments,
+        )
+      }
+
+      setIsCameraOpen(false)
+    })()
   }
 
   const handleRemoveAttachment = (attachmentId: string) => {
-    const nextState = removeAttachmentFromDraft(
-      {
-        attachments,
-        context: activeContext,
-        isRecording,
-        mode,
-        text: message,
-      },
-      attachmentId,
+    const attachmentToRemove = attachments.find((attachment) => attachment.id === attachmentId)
+
+    setAttachments((currentAttachments) =>
+      removeAttachmentFromDraft(
+        {
+          attachments: currentAttachments,
+          context: activeContext,
+          isRecording,
+          mode,
+          text: message,
+        },
+        attachmentId,
+      ).attachments,
     )
 
-    setAttachments(nextState.attachments)
+    if (attachmentToRemove?.uploadedFile?.id) {
+      void client.files.delete({
+        fileId: attachmentToRemove.uploadedFile.id,
+      }).catch(() => {
+        // Best-effort cleanup only.
+      })
+    }
   }
 
   if (presentation.posture === 'hidden') {
@@ -238,10 +298,14 @@ export const MobileComposer = () => {
         />
         <MobileComposerAttachments
           attachments={attachments}
+          errors={uploadState.errors}
+          isUploading={uploadState.isUploading}
           onRemoveAttachment={handleRemoveAttachment}
+          progress={uploadState.progress}
         />
         <MobileComposerFooter
           activeContext={activeContext}
+          disableAttachmentActions={uploadState.isUploading}
           presentation={presentation}
           onPickAttachment={() => {
             void handlePickAttachment()

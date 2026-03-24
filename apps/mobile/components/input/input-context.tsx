@@ -23,7 +23,11 @@ type InputContextValue = {
   message: string;
   setMessage: (value: string) => void;
   attachments: MobileComposerAttachment[];
-  setAttachments: (value: MobileComposerAttachment[]) => void;
+  setAttachments: (
+    value:
+      | MobileComposerAttachment[]
+      | ((currentValue: MobileComposerAttachment[]) => MobileComposerAttachment[])
+  ) => void;
   isRecording: boolean;
   setIsRecording: (value: boolean) => void;
   mode: MobileComposerMode;
@@ -47,8 +51,17 @@ export const InputProvider = ({ children }: PropsWithChildren) => {
     setState((currentState) => setMobileComposerText(currentState, value));
   }, []);
 
-  const setAttachments = useCallback((value: MobileComposerAttachment[]) => {
-    setState((currentState) => setMobileComposerAttachments(currentState, value));
+  const setAttachments = useCallback((
+    value:
+      | MobileComposerAttachment[]
+      | ((currentValue: MobileComposerAttachment[]) => MobileComposerAttachment[]),
+  ) => {
+    setState((currentState) => {
+      const nextAttachments =
+        typeof value === 'function' ? value(currentState.attachments) : value
+
+      return setMobileComposerAttachments(currentState, nextAttachments)
+    });
   }, []);
 
   const setIsRecording = useCallback((value: boolean) => {

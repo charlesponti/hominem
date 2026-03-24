@@ -62,6 +62,9 @@ export const ComposerTools = memo(function ComposerTools({
 }) {
   return (
     <div className="flex items-center gap-2">
+      <span className="sr-only" aria-live="polite" role="status">
+        {isRecording ? 'Recording started' : 'Recording stopped'}
+      </span>
       {showsNotePicker ? (
         <ComposerToolButton
           icon={<BookOpen className="size-[18px]" />}

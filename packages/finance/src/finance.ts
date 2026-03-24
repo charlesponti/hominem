@@ -817,6 +817,65 @@ export async function createInstitution(name: string): Promise<Institution> {
   return row as Institution;
 }
 
+export const loanDetailsInputSchema = z.object({
+  principal: z.number().positive(),
+  annualRate: z.number().nonnegative(),
+  months: z.number().int().positive(),
+});
+
+export interface LoanDetails {
+  monthlyPayment: number;
+  totalPayment: number;
+  totalInterest: number;
+  amortizationSchedule: Array<{
+    month: number;
+    payment: number;
+    principal: number;
+    interest: number;
+    balance: number;
+  }>;
+}
+
+export function calculateLoanDetails(
+  input: z.infer<typeof loanDetailsInputSchema>,
+): LoanDetails {
+  const { principal, annualRate, months } = input;
+  const r = annualRate / 100 / 12;
+
+  let monthlyPayment: number;
+  if (r === 0) {
+    monthlyPayment = principal / months;
+  } else {
+    const factor = (1 + r) ** months;
+    monthlyPayment = (principal * r * factor) / (factor - 1);
+  }
+
+  const amortizationSchedule: LoanDetails['amortizationSchedule'] = [];
+  let balance = principal;
+
+  for (let month = 1; month <= months; month++) {
+    const interest = balance * r;
+    const principalPaid = monthlyPayment - interest;
+    balance = Math.max(0, balance - principalPaid);
+
+    amortizationSchedule.push({
+      month,
+      payment: monthlyPayment,
+      principal: principalPaid,
+      interest,
+      balance,
+    });
+  }
+
+  const totalPayment = monthlyPayment * months;
+  return {
+    monthlyPayment,
+    totalPayment,
+    totalInterest: totalPayment - principal,
+    amortizationSchedule,
+  };
+}
+
 export function calculateRunway(input: z.infer<typeof runwayCalculationSchema>): {
   months: number;
 } {

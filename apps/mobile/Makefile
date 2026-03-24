@@ -12,6 +12,11 @@ ROLLOUT ?= 10
 dev: _prebuild-dev
 	bash scripts/run-variant.sh dev $(EXPO) run:ios
 
+## Build the iOS app locally (for testing builds without EAS)
+.PHONY: build-local
+build-local: _prebuild-dev
+	xcodebuild -workspace ios/HakumiDev.xcworkspace -scheme HakumiDev -configuration Debug -destination 'generic/platform=iOS Simulator' -quiet build
+
 ## Run unit + integration tests
 .PHONY: test
 test:

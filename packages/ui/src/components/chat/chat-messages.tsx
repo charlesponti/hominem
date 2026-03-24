@@ -22,6 +22,7 @@ interface ChatMessagesProps {
   error?: Error | null
   showDebug?: boolean
   speakingId?: string | null | undefined
+  speechLoadingId?: string | null | undefined
   onRegenerate?: ((messageId: string) => void) | undefined
   onEdit?: ((messageId: string, newContent: string) => void) | undefined
   onDelete?: ((messageId: string) => void) | undefined
@@ -29,7 +30,7 @@ interface ChatMessagesProps {
 }
 
 export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(function ChatMessages(
-  { messages, status = 'idle', isLoading = false, error, showDebug = false, speakingId, onRegenerate, onEdit, onDelete, onSpeak },
+  { messages, status = 'idle', isLoading = false, error, showDebug = false, speakingId, speechLoadingId, onRegenerate, onEdit, onDelete, onSpeak },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -166,6 +167,7 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
                     message={message}
                     showDebug={showDebug}
                     speakingId={speakingId ?? null}
+                    speechLoadingId={speechLoadingId ?? null}
                     isStreaming={
                       (status === 'streaming' && virtualItem.index === filteredMessages.length - 1 && message.role === 'assistant') ||
                       Boolean(message.isStreaming)
@@ -198,6 +200,7 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
                     message={message}
                     showDebug={showDebug}
                     speakingId={speakingId ?? null}
+                    speechLoadingId={speechLoadingId ?? null}
                     isStreaming={
                       (status === 'streaming' && index === filteredMessages.length - 1 && message.role === 'assistant') ||
                       Boolean(message.isStreaming)

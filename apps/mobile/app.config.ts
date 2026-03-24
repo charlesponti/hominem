@@ -72,11 +72,6 @@ export default ({ config }: ConfigContext) => {
               }),
             },
           },
-          entitlements: {
-            'keychain-access-groups': [
-              `$(AppIdentifierPrefix)${variantConfig.bundleIdentifier}`,
-            ],
-          },
         },
       },
     ],
@@ -139,6 +134,9 @@ export default ({ config }: ConfigContext) => {
       },
     ],
     'expo-live-activity',
+    './plugins/with-widget-bundle-update',
+    './plugins/with-app-intents',
+    '@bacons/apple-targets',
   ]
 
   if (variantConfig.usesDevClient) {
@@ -184,6 +182,13 @@ export default ({ config }: ConfigContext) => {
       appleTeamId: process.env.EXPO_APPLE_TEAM_ID,
       bundleIdentifier: variantConfig.bundleIdentifier,
       supportsTablet: true,
+      entitlements: {
+        'com.apple.developer.siri': true,
+        'com.apple.security.application-groups': ['group.com.pontistudios.hakumi'],
+        'keychain-access-groups': [
+          `$(AppIdentifierPrefix)${variantConfig.bundleIdentifier}`,
+        ],
+      },
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         NSCalendarsUsageDescription: 'Allow Hakumi to access your calendar to add events.',

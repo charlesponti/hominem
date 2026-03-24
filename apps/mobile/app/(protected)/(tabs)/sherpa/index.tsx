@@ -5,6 +5,7 @@ import type { SessionSource } from '@hominem/ui/chat';
 import React from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { useChatLiveActivity } from '~/lib/use-chat-live-activity';
+import { donateStartChatIntent } from '~/lib/intent-donation';
 
 import { Chat } from '~/components/chat/chat';
 import { LoadingFull } from '~/components/LoadingFull';
@@ -41,6 +42,11 @@ export default function Sherpa() {
       setActiveChat(chat);
     },
   });
+
+  // Donate intent so Siri learns the user opens Sherpa frequently
+  useEffect(() => {
+    donateStartChatIntent();
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;

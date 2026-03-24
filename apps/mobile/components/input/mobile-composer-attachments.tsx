@@ -7,13 +7,19 @@ import type { MobileComposerAttachment } from './mobile-composer-state'
 interface MobileComposerAttachmentsProps {
   attachments: MobileComposerAttachment[]
   onRemoveAttachment: (attachmentId: string) => void
+  errors?: string[]
+  isUploading?: boolean
+  progress?: number
 }
 
 export function MobileComposerAttachments({
   attachments,
   onRemoveAttachment,
+  errors = [],
+  isUploading = false,
+  progress = 0,
 }: MobileComposerAttachmentsProps) {
-  if (attachments.length === 0) {
+  if (attachments.length === 0 && !isUploading && errors.length === 0) {
     return null
   }
 
@@ -28,6 +34,16 @@ export function MobileComposerAttachments({
         >
           <Text style={styles.attachmentLabel}>{attachment.name}</Text>
         </Pressable>
+      ))}
+      {isUploading ? (
+        <View style={styles.statusChip} testID="mobile-composer-uploading">
+          <Text style={styles.statusLabel}>{`Uploading ${progress}%`}</Text>
+        </View>
+      ) : null}
+      {errors.map((error) => (
+        <View key={error} style={styles.errorChip}>
+          <Text style={styles.errorLabel}>{error}</Text>
+        </View>
       ))}
     </View>
   )
@@ -49,6 +65,30 @@ const styles = StyleSheet.create({
   },
   attachmentLabel: {
     color: theme.colors.foreground,
+    fontSize: 12,
+  },
+  statusChip: {
+    backgroundColor: theme.colors['bg-surface'],
+    borderRadius: theme.borderRadii.full,
+    borderWidth: 1,
+    borderColor: theme.colors['border-default'],
+    paddingHorizontal: theme.spacing.sm_8,
+    paddingVertical: theme.spacing.xs_4,
+  },
+  statusLabel: {
+    color: theme.colors['text-secondary'],
+    fontSize: 12,
+  },
+  errorChip: {
+    backgroundColor: theme.colors['bg-surface'],
+    borderRadius: theme.borderRadii.full,
+    borderWidth: 1,
+    borderColor: theme.colors['border-default'],
+    paddingHorizontal: theme.spacing.sm_8,
+    paddingVertical: theme.spacing.xs_4,
+  },
+  errorLabel: {
+    color: theme.colors['text-secondary'],
     fontSize: 12,
   },
 })

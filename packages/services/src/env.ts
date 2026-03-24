@@ -38,6 +38,10 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.email().optional(),
   RESEND_FROM_NAME: z.string().optional(),
+  SAVE_VOICE_AUDIO: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => value === 'true'),
 });
 
 const parsedEnv = envSchema.parse(process.env);

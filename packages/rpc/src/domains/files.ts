@@ -65,10 +65,20 @@ export interface FileCompleteUploadOutput {
   message: string
 }
 
+export interface FileDeleteInput {
+  fileId: string
+}
+
+export interface FileDeleteOutput {
+  success: boolean
+  message: string
+}
+
 export interface FilesClient {
   index(input: FileIndexInput): Promise<FileIndexOutput>
   prepareUpload(input: FilePrepareUploadInput): Promise<FilePrepareUploadOutput>
   completeUpload(input: FileCompleteUploadInput): Promise<FileCompleteUploadOutput>
+  delete(input: FileDeleteInput): Promise<FileDeleteOutput>
 }
 
 export function createFilesClient(rawClient: RawHonoClient): FilesClient {
@@ -84,6 +94,12 @@ export function createFilesClient(rawClient: RawHonoClient): FilesClient {
     async completeUpload(input) {
       const res = await rawClient.api.files['complete-upload'].$post({ json: input })
       return res.json() as Promise<FileCompleteUploadOutput>
+    },
+    async delete(input) {
+      const res = await rawClient.api.files[':fileId'].$delete({
+        param: { fileId: input.fileId },
+      })
+      return res.json() as Promise<FileDeleteOutput>
     },
   }
 }

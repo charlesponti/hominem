@@ -15,7 +15,8 @@ import { useArchiveChat } from '~/hooks/use-chats';
 import { useChatMessages } from '~/lib/hooks/use-chat-messages';
 import { Chat } from '@hominem/ui/chat';
 import { ClassificationReview } from '@hominem/ui/ai-elements';
-import { useSpeech } from '@hominem/ui/lib/hooks/use-speech';
+import { useServerSpeech } from '~/hooks/use-server-speech';
+import { useVoiceMode } from '~/hooks/use-voice-mode';
 
 import type { Route } from './+types/chat.$chatId';
 
@@ -36,7 +37,17 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   const error = sendMessage.error ?? null;
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
   const { messages, isLoading, error: messagesError, deleteMessage, updateMessage } = useChatMessages({ chatId });
-  const { speakingId, speak } = useSpeech();
+  const { speakingId, loadingId, speak } = useServerSpeech();
+  const {
+    isActive: isVoiceModeActive,
+    state: voiceModeState,
+    error: voiceModeError,
+    startRecording: startVoiceModeRecording,
+    stopRecording: stopVoiceModeRecording,
+    activate: activateVoiceMode,
+    deactivate: deactivateVoiceMode,
+  } = useVoiceMode();
+  const [isVoiceModeRecording, setIsVoiceModeRecording] = useState(false);
 
   const { data: chat } = useRpcQuery(({ chats }) => chats.get({ chatId }), {
     queryKey: chatQueryKeys.get(chatId),
@@ -140,11 +151,33 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         error={messagesError || error}
         showDebug={isDebugEnabled}
         speakingId={speakingId}
+        speechLoadingId={loadingId}
+        isVoiceModeActive={isVoiceModeActive}
+        voiceModeState={voiceModeState}
+        voiceModeErrorMessage={voiceModeError?.message ?? null}
+        isVoiceModeRecording={isVoiceModeRecording}
         canTransform={canTransform}
         isDebugEnabled={isDebugEnabled}
         isArchiving={isArchiving}
         onDebugChange={setIsDebugEnabled}
         onTransform={handleTransform}
+        onToggleVoiceMode={() => {
+          if (isVoiceModeActive) {
+            setIsVoiceModeRecording(false)
+            deactivateVoiceMode()
+            return
+          }
+
+          activateVoiceMode()
+        }}
+        onStartVoiceModeRecording={async () => {
+          await startVoiceModeRecording()
+          setIsVoiceModeRecording(true)
+        }}
+        onStopVoiceModeRecording={async () => {
+          await stopVoiceModeRecording()
+          setIsVoiceModeRecording(false)
+        }}
         onArchive={() => archiveChat({ chatId })}
         onDelete={async (messageId: string) => {
           try {
@@ -173,7 +206,9 @@ export default function ChatPage({ params }: Route.ComponentProps) {
             toast({ variant: 'destructive', title: 'Could not regenerate message', description: 'Please try again.' });
           }
         }}
-        onSpeak={(messageId: string, content: string) => speak(messageId, content)}
+        onSpeak={async (messageId: string, content: string) => {
+          await speak(messageId, content)
+        }}
       />
 
 

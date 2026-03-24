@@ -89,22 +89,8 @@ export function getSharedAiModelConfig() {
 }
 
 /**
- * Returns a dedicated OpenAI client for audio features (TTS / Whisper).
- * OpenRouter does NOT proxy the OpenAI Audio API, so these must always hit
- * OpenAI directly regardless of the AI_PROVIDER setting.
- */
-export function getOpenAIAudioClient(): OpenAI {
-  if (!env.OPENAI_API_KEY) {
-    throw new Error(
-      'OPENAI_API_KEY is required for audio features (TTS/Whisper). OpenRouter does not proxy audio APIs.',
-    )
-  }
-  return new OpenAI({ apiKey: env.OPENAI_API_KEY })
-}
-
-/**
  * Returns an AI SDK provider scoped to OpenAI directly — for use with
- * `experimental_generateSpeech` (tts-1) and `experimental_transcribe` (whisper-1).
+ * `experimental_generateSpeech` (tts-1).
  * OpenRouter does NOT proxy these endpoints.
  */
 export function getOpenAIAudioProvider(): ReturnType<typeof createOpenAI> {

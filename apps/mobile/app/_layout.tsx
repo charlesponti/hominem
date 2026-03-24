@@ -11,6 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootErrorBoundary } from '~/components/error-boundary/root-error-boundary';
 import { registerBackgroundSync } from '~/lib/background-sync';
 import { recordActiveDay } from '~/lib/review-prompt';
+import { useWidgetActionHandler } from '~/lib/use-widget-action-handler';
 import { useScreenCapture } from '~/lib/use-screen-capture';
 import { posthog } from '~/lib/posthog';
 import { theme, makeStyles } from '~/theme';
@@ -29,6 +30,7 @@ function InnerRootLayout() {
   const segments = useSegments() as string[];
   const { authStatus, isSignedIn, currentUser, resetAuthForE2E, signOut } = useAuth();
   const hasMarkedShellReady = React.useRef(false);
+  useWidgetActionHandler();
 
   useEffect(() => {
     markStartupPhase('root_layout_mounted');

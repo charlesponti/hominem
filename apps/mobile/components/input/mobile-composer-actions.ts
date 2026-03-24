@@ -1,30 +1,57 @@
+import type { UploadedFile } from '@hominem/ui/types/upload'
+
 import type { MobileComposerAttachment, MobileComposerState } from './mobile-composer-state'
 import { setMobileComposerAttachments, setMobileComposerMode, setMobileComposerRecording, setMobileComposerText } from './mobile-composer-state'
+
+export interface UploadedMobileAsset {
+  localUri: string
+  uploadedFile: UploadedFile
+}
+
+function getAttachmentType(uploadedFile: UploadedFile): string {
+  if (uploadedFile.type !== 'unknown') {
+    return uploadedFile.type
+  }
+
+  if (uploadedFile.mimetype.startsWith('image/')) return 'image'
+  if (uploadedFile.mimetype.startsWith('audio/')) return 'audio'
+  if (uploadedFile.mimetype.startsWith('video/')) return 'video'
+  if (
+    uploadedFile.mimetype === 'application/pdf' ||
+    uploadedFile.mimetype.startsWith('text/') ||
+    uploadedFile.mimetype.includes('word') ||
+    uploadedFile.mimetype.includes('csv')
+  ) {
+    return 'document'
+  }
+
+  return 'file'
+}
+
+function mapUploadedAssetToAttachment(asset: UploadedMobileAsset): MobileComposerAttachment {
+  return {
+    id: asset.uploadedFile.id,
+    name: asset.uploadedFile.originalName,
+    type: getAttachmentType(asset.uploadedFile),
+    localUri: asset.localUri,
+    uploadedFile: asset.uploadedFile,
+  }
+}
+
+export function appendUploadedAssetsToDraft(
+  state: MobileComposerState,
+  assets: UploadedMobileAsset[],
+): MobileComposerState {
+  return setMobileComposerAttachments(state, [
+    ...state.attachments,
+    ...assets.map(mapUploadedAssetToAttachment),
+  ])
+}
 
 export interface PickedMobileAsset {
   uri: string
   fileName: string | null
   type: string | null
-}
-
-function mapPickedAssetToAttachment(asset: PickedMobileAsset): MobileComposerAttachment {
-  const fallbackName = asset.uri.split('/').pop() ?? 'attachment'
-
-  return {
-    id: asset.uri,
-    name: asset.fileName ?? fallbackName,
-    type: asset.type ?? 'file',
-  }
-}
-
-export function appendPickedAssetsToDraft(
-  state: MobileComposerState,
-  assets: PickedMobileAsset[],
-): MobileComposerState {
-  return setMobileComposerAttachments(state, [
-    ...state.attachments,
-    ...assets.map(mapPickedAssetToAttachment),
-  ])
 }
 
 export function applyVoiceTranscriptToDraft(

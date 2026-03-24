@@ -47,6 +47,7 @@ interface ChatMessageProps {
   showDebug?: boolean
   isStreaming?: boolean
   speakingId?: string | null
+  speechLoadingId?: string | null
   onRegenerate?: (() => void) | undefined
   onEdit?: ((messageId: string, newContent: string) => void) | undefined
   onDelete?: (() => void) | undefined
@@ -58,6 +59,7 @@ export const ChatMessage = memo(function ChatMessage({
   showDebug = false,
   isStreaming = false,
   speakingId,
+  speechLoadingId,
   onRegenerate,
   onEdit,
   onDelete,
@@ -100,6 +102,7 @@ export const ChatMessage = memo(function ChatMessage({
   }
 
   const isSpeaking = speakingId === message.id
+  const isSpeechLoading = speechLoadingId === message.id
 
   const { isEditing, editContent, setEditContent, startEdit, cancelEdit, saveEdit, canSave } =
     useMessageEdit({
@@ -300,7 +303,12 @@ export const ChatMessage = memo(function ChatMessage({
                   )}
                   {!isUser && onSpeak && (
                     <DropdownMenuItem onClick={() => onSpeak(message.id, message.content || '')}>
-                      {isSpeaking ? (
+                      {isSpeechLoading ? (
+                        <>
+                          <Volume2 className="mr-2 size-3.5 animate-pulse" aria-hidden="true" />
+                          Loading audio
+                        </>
+                      ) : isSpeaking ? (
                         <>
                           <VolumeX className="mr-2 size-3.5" aria-hidden="true" />
                           Stop reading

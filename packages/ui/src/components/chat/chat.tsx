@@ -5,6 +5,7 @@ import { useRef, useState } from 'react'
 import { Button } from '../ui/button'
 import { ChatHeader } from './chat-header'
 import { ChatMessages, type ChatMessagesHandle } from './chat-messages'
+import { VoiceModeOverlay, type VoiceModeOverlayState } from './voice-mode-overlay'
 import type { ChatRenderIcon } from './chat.types'
 import type { ExtendedMessage } from '../../types/chat'
 
@@ -20,6 +21,11 @@ interface ChatProps {
   error?: Error | null
   showDebug?: boolean
   speakingId?: string | null
+  speechLoadingId?: string | null
+  isVoiceModeActive?: boolean
+  voiceModeState?: VoiceModeOverlayState
+  voiceModeErrorMessage?: string | null
+  isVoiceModeRecording?: boolean
   canTransform?: boolean
   isDebugEnabled?: boolean
   isArchiving?: boolean
@@ -27,6 +33,9 @@ interface ChatProps {
   onTransform?: ((type: ArtifactType) => void) | undefined
   onArchive?: (() => void) | undefined
   onOpenSearch?: (() => void) | undefined
+  onToggleVoiceMode?: (() => void) | undefined
+  onStartVoiceModeRecording?: (() => void) | undefined
+  onStopVoiceModeRecording?: (() => void) | undefined
   onDelete?: ((messageId: string) => void) | undefined
   onEdit?: ((messageId: string, newContent: string) => void) | undefined
   onRegenerate?: ((messageId: string) => void) | undefined
@@ -45,6 +54,11 @@ export function Chat({
   error,
   showDebug = false,
   speakingId,
+  speechLoadingId,
+  isVoiceModeActive = false,
+  voiceModeState = 'idle',
+  voiceModeErrorMessage,
+  isVoiceModeRecording = false,
   canTransform: _canTransform = false,
   isDebugEnabled = false,
   isArchiving = false,
@@ -52,6 +66,9 @@ export function Chat({
   onTransform,
   onArchive,
   onOpenSearch,
+  onToggleVoiceMode,
+  onStartVoiceModeRecording,
+  onStopVoiceModeRecording,
   onDelete,
   onEdit,
   onRegenerate,
@@ -77,8 +94,10 @@ export function Chat({
         topInset={topInset}
         resolvedSource={resolvedSource}
         statusCopy={statusCopy}
+        isVoiceModeActive={isVoiceModeActive}
         onOpenSearch={handleOpenSearch}
         onOpenMenu={() => setShowMenu((current) => !current)}
+        {...(onToggleVoiceMode ? { onToggleVoiceMode } : {})}
         renderIcon={renderIcon}
       />
 
@@ -118,10 +137,21 @@ export function Chat({
         error={error ?? null}
         showDebug={showDebug}
         speakingId={speakingId ?? null}
+        speechLoadingId={speechLoadingId ?? null}
         onDelete={onDelete}
         onEdit={onEdit}
         onRegenerate={onRegenerate}
         onSpeak={onSpeak}
+      />
+
+      <VoiceModeOverlay
+        visible={isVoiceModeActive}
+        state={voiceModeState}
+        {...(voiceModeErrorMessage ? { errorMessage: voiceModeErrorMessage } : {})}
+        canStop={isVoiceModeRecording}
+        onClose={() => onToggleVoiceMode?.()}
+        onStartRecording={() => onStartVoiceModeRecording?.()}
+        onStopRecording={() => onStopVoiceModeRecording?.()}
       />
     </div>
   )

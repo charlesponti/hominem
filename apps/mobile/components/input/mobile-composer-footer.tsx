@@ -9,6 +9,7 @@ import type { MobileComposerPresentation } from './mobile-composer-config'
 interface MobileComposerFooterProps {
   activeContext: MobileWorkspaceContext
   presentation: MobileComposerPresentation
+  disableAttachmentActions?: boolean
   onPickAttachment: () => void
   onOpenCamera: () => void
   onOpenVoice: () => void
@@ -19,6 +20,7 @@ interface MobileComposerFooterProps {
 export function MobileComposerFooter({
   activeContext,
   presentation,
+  disableAttachmentActions = false,
   onPickAttachment,
   onOpenCamera,
   onOpenVoice,
@@ -32,6 +34,7 @@ export function MobileComposerFooter({
           <Pressable
             onPress={onPickAttachment}
             accessibilityLabel="Add attachment"
+            disabled={disableAttachmentActions}
             style={styles.toolButton}
             testID="mobile-composer-attach"
           >
@@ -42,6 +45,7 @@ export function MobileComposerFooter({
           <Pressable
             onPress={onOpenCamera}
             accessibilityLabel="Take photo"
+            disabled={disableAttachmentActions}
             style={styles.toolButton}
             testID="mobile-composer-camera"
           >

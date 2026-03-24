@@ -12,54 +12,39 @@ import {
 // Module mocks
 // ---------------------------------------------------------------------------
 
-vi.mock('ai', () => ({
-  experimental_transcribe: vi.fn(),
-}))
+const mockEnv = { OPENROUTER_API_KEY: 'test-openrouter-key' as string | undefined }
 
-vi.mock('./ai-model', () => ({
-  getOpenAIAudioProvider: vi.fn(),
-}))
+vi.mock('./env', () => ({ get env() { return mockEnv } }))
 
-import { experimental_transcribe } from 'ai'
-import { getOpenAIAudioProvider } from './ai-model'
+// Mock global fetch
+const mockFetch = vi.fn()
+vi.stubGlobal('fetch', mockFetch)
 
-const mockTranscribe = vi.mocked(experimental_transcribe)
-const mockGetProvider = vi.mocked(getOpenAIAudioProvider)
-
-// A minimal stub for the AI SDK provider — only .transcription() is needed
-function makeProviderStub() {
+function makeOkResponse(text: string) {
   return {
-    transcription: vi.fn().mockReturnValue({ modelId: 'whisper-1' }),
-  } as unknown as ReturnType<typeof getOpenAIAudioProvider>
-}
-
-// A minimal valid transcription result matching the AI SDK's TranscriptionResult shape
-function makeTranscriptionResult(overrides: Partial<{
-  text: string
-  language: string
-  durationInSeconds: number
-  segments: { text: string; startSecond: number; endSecond: number }[]
-}> = {}) {
-  return {
-    text: overrides.text ?? 'hello world',
-    language: overrides.language ?? 'en',
-    durationInSeconds: overrides.durationInSeconds ?? 2.5,
-    segments: overrides.segments ?? [
-      { text: 'hello world', startSecond: 0, endSecond: 2.5 },
-    ],
-    warnings: [],
-    responses: [],
-    providerMetadata: {},
+    ok: true,
+    status: 200,
+    json: vi.fn().mockResolvedValue({
+      choices: [{ message: { content: text } }],
+    }),
   }
 }
 
-// A small valid audio buffer (WebM MIME type, well under the size limit)
+function makeErrorResponse(status: number, message: string) {
+  return {
+    ok: false,
+    status,
+    statusText: message,
+    json: vi.fn().mockResolvedValue({ error: { message } }),
+  }
+}
+
 function makeAudioBuffer(bytes = 1024): ArrayBuffer {
   return new Uint8Array(bytes).buffer
 }
 
 // ---------------------------------------------------------------------------
-// Pure utility tests (no mocks needed)
+// Pure utility tests
 // ---------------------------------------------------------------------------
 
 describe('normalizeVoiceMimeType', () => {
@@ -82,11 +67,9 @@ describe('normalizeVoiceMimeType', () => {
 
 describe('validateVoiceInput', () => {
   it('rejects unsupported mime with INVALID_FORMAT code', () => {
-    expect(() => validateVoiceInput({ mimeType: 'audio/flac', size: 10 }))
-      .toThrowError(VoiceTranscriptionError)
-
     try {
       validateVoiceInput({ mimeType: 'audio/flac', size: 10 })
+      throw new Error('Expected VoiceTranscriptionError')
     } catch (error) {
       expect(error).toBeInstanceOf(VoiceTranscriptionError)
       expect((error as VoiceTranscriptionError).code).toBe('INVALID_FORMAT')
@@ -96,11 +79,8 @@ describe('validateVoiceInput', () => {
 
   it('rejects oversized payload with TOO_LARGE code', () => {
     try {
-      validateVoiceInput({
-        mimeType: 'audio/webm',
-        size: VOICE_TRANSCRIPTION_MAX_SIZE_BYTES + 1,
-      })
-      throw new Error('Expected VoiceTranscriptionError to be thrown')
+      validateVoiceInput({ mimeType: 'audio/webm', size: VOICE_TRANSCRIPTION_MAX_SIZE_BYTES + 1 })
+      throw new Error('Expected VoiceTranscriptionError')
     } catch (error) {
       expect(error).toBeInstanceOf(VoiceTranscriptionError)
       expect((error as VoiceTranscriptionError).code).toBe('TOO_LARGE')
@@ -109,8 +89,7 @@ describe('validateVoiceInput', () => {
   })
 
   it('accepts valid input and returns normalised mime type', () => {
-    const result = validateVoiceInput({ mimeType: 'audio/webm;codecs=opus', size: 100 })
-    expect(result).toBe('audio/webm')
+    expect(validateVoiceInput({ mimeType: 'audio/webm;codecs=opus', size: 100 })).toBe('audio/webm')
   })
 })
 
@@ -121,118 +100,95 @@ describe('validateVoiceInput', () => {
 describe('transcribeVoiceBuffer', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockGetProvider.mockReturnValue(makeProviderStub())
   })
 
   it('returns transcript text on success', async () => {
-    mockTranscribe.mockResolvedValueOnce(makeTranscriptionResult({ text: 'test transcript' }))
+    mockFetch.mockResolvedValueOnce(makeOkResponse('hello world'))
 
-    const result = await transcribeVoiceBuffer({
-      buffer: makeAudioBuffer(),
-      mimeType: 'audio/webm',
-    })
+    const result = await transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' })
 
-    expect(result.text).toBe('test transcript')
+    expect(result.text).toBe('hello world')
   })
 
-  it('includes language when present', async () => {
-    mockTranscribe.mockResolvedValueOnce(makeTranscriptionResult({ language: 'fr' }))
+  it('trims whitespace from the response', async () => {
+    mockFetch.mockResolvedValueOnce(makeOkResponse('  trimmed text  '))
 
-    const result = await transcribeVoiceBuffer({
-      buffer: makeAudioBuffer(),
-      mimeType: 'audio/webm',
-    })
+    const result = await transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' })
 
-    expect(result.language).toBe('fr')
+    expect(result.text).toBe('trimmed text')
   })
 
-  it('includes duration when present', async () => {
-    mockTranscribe.mockResolvedValueOnce(makeTranscriptionResult({ durationInSeconds: 5.0 }))
-
-    const result = await transcribeVoiceBuffer({
-      buffer: makeAudioBuffer(),
-      mimeType: 'audio/webm',
-    })
-
-    expect(result.duration).toBe(5.0)
-  })
-
-  it('maps segments to start/end shape', async () => {
-    mockTranscribe.mockResolvedValueOnce(
-      makeTranscriptionResult({
-        segments: [
-          { text: 'hello', startSecond: 0, endSecond: 1 },
-          { text: 'world', startSecond: 1, endSecond: 2 },
-        ],
-      }),
-    )
-
-    const result = await transcribeVoiceBuffer({
-      buffer: makeAudioBuffer(),
-      mimeType: 'audio/webm',
-    })
-
-    expect(result.segments).toEqual([
-      { text: 'hello', start: 0, end: 1 },
-      { text: 'world', start: 1, end: 2 },
-    ])
-  })
-
-  it('calls getOpenAIAudioProvider and passes its model to experimental_transcribe', async () => {
-    const providerStub = makeProviderStub()
-    mockGetProvider.mockReturnValue(providerStub)
-    mockTranscribe.mockResolvedValueOnce(makeTranscriptionResult())
+  it('calls the OpenRouter chat/completions endpoint', async () => {
+    mockFetch.mockResolvedValueOnce(makeOkResponse('ok'))
 
     await transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' })
 
-    expect(mockGetProvider).toHaveBeenCalledOnce()
-    expect(providerStub.transcription).toHaveBeenCalledWith('whisper-1')
-    expect(mockTranscribe).toHaveBeenCalledOnce()
+    const [url] = mockFetch.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('https://openrouter.ai/api/v1/chat/completions')
   })
 
-  it('passes language providerOption when language is provided', async () => {
-    mockTranscribe.mockResolvedValueOnce(makeTranscriptionResult())
-
-    await transcribeVoiceBuffer({
-      buffer: makeAudioBuffer(),
-      mimeType: 'audio/webm',
-      language: 'es',
-    })
-
-    const call = mockTranscribe.mock.calls[0][0]
-    expect(call.providerOptions?.openai).toMatchObject({ language: 'es' })
-  })
-
-  it('omits language providerOption when not provided', async () => {
-    mockTranscribe.mockResolvedValueOnce(makeTranscriptionResult())
+  it('sends the correct model', async () => {
+    mockFetch.mockResolvedValueOnce(makeOkResponse('ok'))
 
     await transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' })
 
-    const call = mockTranscribe.mock.calls[0][0]
-    expect(call.providerOptions?.openai).not.toHaveProperty('language')
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit]
+    const body = JSON.parse(init.body as string)
+    expect(body.model).toBe('google/gemini-2.5-flash-lite')
+  })
+
+  it('maps audio/mpeg to mp3 format in the request', async () => {
+    mockFetch.mockResolvedValueOnce(makeOkResponse('ok'))
+
+    await transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/mpeg' })
+
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit]
+    const body = JSON.parse(init.body as string)
+    const audioBlock = body.messages[0].content.find((c: { type: string }) => c.type === 'input_audio')
+    expect(audioBlock.input_audio.format).toBe('mp3')
+  })
+
+  it('includes language hint in the prompt when provided', async () => {
+    mockFetch.mockResolvedValueOnce(makeOkResponse('ok'))
+
+    await transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm', language: 'fr' })
+
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit]
+    const body = JSON.parse(init.body as string)
+    const textBlock = body.messages[0].content.find((c: { type: string }) => c.type === 'text')
+    expect(textBlock.text).toContain('fr')
+  })
+
+  it('sends the Authorization header with the API key', async () => {
+    mockFetch.mockResolvedValueOnce(makeOkResponse('ok'))
+
+    await transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' })
+
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit]
+    expect((init.headers as Record<string, string>)['Authorization']).toBe('Bearer test-openrouter-key')
   })
 
   // ---------------------------------------------------------------------------
   // Error handling
   // ---------------------------------------------------------------------------
 
-  it('throws AUTH error when getOpenAIAudioProvider throws', async () => {
-    mockGetProvider.mockImplementationOnce(() => {
-      throw new Error('OPENAI_API_KEY is required for audio features')
-    })
+  it('throws AUTH when OPENROUTER_API_KEY is missing', async () => {
+    mockEnv.OPENROUTER_API_KEY = undefined
 
     await expect(
       transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' }),
     ).rejects.toMatchObject({ code: 'AUTH', statusCode: 401 })
+
+    mockEnv.OPENROUTER_API_KEY = 'test-openrouter-key'
   })
 
-  it('throws INVALID_FORMAT error for unsupported mime type', async () => {
+  it('throws INVALID_FORMAT for unsupported mime type', async () => {
     await expect(
       transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/flac' }),
     ).rejects.toMatchObject({ code: 'INVALID_FORMAT', statusCode: 400 })
   })
 
-  it('throws TOO_LARGE error when buffer exceeds limit', async () => {
+  it('throws TOO_LARGE when buffer exceeds limit', async () => {
     await expect(
       transcribeVoiceBuffer({
         buffer: makeAudioBuffer(VOICE_TRANSCRIPTION_MAX_SIZE_BYTES + 1),
@@ -241,35 +197,59 @@ describe('transcribeVoiceBuffer', () => {
     ).rejects.toMatchObject({ code: 'TOO_LARGE', statusCode: 400 })
   })
 
-  it('maps quota error from upstream to QUOTA code', async () => {
-    mockTranscribe.mockRejectedValueOnce(new Error('quota exceeded'))
-
-    await expect(
-      transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' }),
-    ).rejects.toMatchObject({ code: 'QUOTA', statusCode: 429 })
-  })
-
-  it('maps API key error from upstream to AUTH code', async () => {
-    mockTranscribe.mockRejectedValueOnce(new Error('Invalid API key provided'))
+  it('throws AUTH on 401 response', async () => {
+    mockFetch.mockResolvedValueOnce(makeErrorResponse(401, 'Unauthorized'))
 
     await expect(
       transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' }),
     ).rejects.toMatchObject({ code: 'AUTH', statusCode: 401 })
   })
 
-  it('maps unknown upstream error to TRANSCRIBE_FAILED', async () => {
-    mockTranscribe.mockRejectedValueOnce(new Error('network timeout'))
+  it('throws AUTH on 403 response', async () => {
+    mockFetch.mockResolvedValueOnce(makeErrorResponse(403, 'Forbidden'))
+
+    await expect(
+      transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' }),
+    ).rejects.toMatchObject({ code: 'AUTH', statusCode: 401 })
+  })
+
+  it('throws QUOTA on 429 response', async () => {
+    mockFetch.mockResolvedValueOnce(makeErrorResponse(429, 'Too Many Requests'))
+
+    await expect(
+      transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' }),
+    ).rejects.toMatchObject({ code: 'QUOTA', statusCode: 429 })
+  })
+
+  it('throws TRANSCRIBE_FAILED on 500 response', async () => {
+    mockFetch.mockResolvedValueOnce(makeErrorResponse(500, 'Internal Server Error'))
 
     await expect(
       transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' }),
     ).rejects.toMatchObject({ code: 'TRANSCRIBE_FAILED', statusCode: 500 })
   })
 
-  it('wraps non-Error upstream throws as TRANSCRIBE_FAILED', async () => {
-    mockTranscribe.mockRejectedValueOnce('unexpected string throw')
+  it('throws TRANSCRIBE_FAILED when fetch rejects', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('network timeout'))
 
     await expect(
       transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' }),
     ).rejects.toMatchObject({ code: 'TRANSCRIBE_FAILED', statusCode: 500 })
+  })
+
+  it('wraps non-Error fetch rejections as TRANSCRIBE_FAILED', async () => {
+    mockFetch.mockRejectedValueOnce('unexpected string')
+
+    await expect(
+      transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' }),
+    ).rejects.toMatchObject({ code: 'TRANSCRIBE_FAILED', statusCode: 500 })
+  })
+
+  it('all errors are instances of VoiceTranscriptionError', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('network timeout'))
+
+    await expect(
+      transcribeVoiceBuffer({ buffer: makeAudioBuffer(), mimeType: 'audio/webm' }),
+    ).rejects.toBeInstanceOf(VoiceTranscriptionError)
   })
 })

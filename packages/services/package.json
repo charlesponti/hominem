@@ -46,6 +46,10 @@
       "types": "./src/voice-speech.service.ts",
       "default": "./src/voice-speech.service.ts"
     },
+    "./voice-response": {
+      "types": "./src/voice-response.service.ts",
+      "default": "./src/voice-response.service.ts"
+    },
     "./queues": {
       "types": "./src/queues.ts",
       "default": "./src/queues.ts"

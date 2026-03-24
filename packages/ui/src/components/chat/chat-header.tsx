@@ -1,5 +1,5 @@
 import type { SessionSource } from '@hominem/chat-services/types'
-import { Search, Plus } from 'lucide-react'
+import { Search, Plus, Mic } from 'lucide-react'
 
 import { Button } from '../ui/button'
 import { ContextAnchor } from './context-anchor'
@@ -9,8 +9,10 @@ interface ChatHeaderProps {
   topInset: number
   resolvedSource: SessionSource
   statusCopy: string
+  isVoiceModeActive?: boolean
   onOpenSearch: () => void
   onOpenMenu: () => void
+  onToggleVoiceMode?: () => void
   renderIcon: ChatRenderIcon
 }
 
@@ -18,8 +20,10 @@ export function ChatHeader({
   topInset,
   resolvedSource,
   statusCopy,
+  isVoiceModeActive = false,
   onOpenSearch,
   onOpenMenu,
+  onToggleVoiceMode,
   renderIcon,
 }: ChatHeaderProps) {
   return (
@@ -30,6 +34,22 @@ export function ChatHeader({
           {statusCopy ? <div className="truncate text-xs uppercase tracking-[0.08em] opacity-70">{statusCopy}</div> : null}
         </div>
         <div className="flex items-center gap-1">
+          {onToggleVoiceMode ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onToggleVoiceMode}
+              aria-label={isVoiceModeActive ? 'Disable voice mode' : 'Enable voice mode'}
+              aria-pressed={isVoiceModeActive || undefined}
+              className={[
+                'h-9 w-9 rounded-full p-0',
+                isVoiceModeActive ? 'bg-primary/10 text-primary' : '',
+              ].join(' ')}
+            >
+              {renderIcon('speaker', { color: 'currentColor', size: 14 }) ?? <Mic className="size-4" />}
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="ghost"

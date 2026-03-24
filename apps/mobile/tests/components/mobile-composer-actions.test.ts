@@ -1,30 +1,74 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  appendPickedAssetsToDraft,
+  appendUploadedAssetsToDraft,
   applyVoiceTranscriptToDraft,
   removeAttachmentFromDraft,
 } from '../../components/input/mobile-composer-actions'
 import { createInitialMobileComposerState } from '../../components/input/mobile-composer-state'
 
 describe('mobile composer actions', () => {
-  it('maps picked assets into shared draft attachments', () => {
-    const state = appendPickedAssetsToDraft(createInitialMobileComposerState(), [
+  it('maps uploaded assets into shared draft attachments', () => {
+    const state = appendUploadedAssetsToDraft(createInitialMobileComposerState(), [
       {
-        uri: 'file:///tmp/receipt.png',
-        fileName: 'receipt.png',
-        type: 'image',
+        localUri: 'file:///tmp/receipt.png',
+        uploadedFile: {
+          id: 'file-1',
+          originalName: 'receipt.png',
+          type: 'image',
+          mimetype: 'image/png',
+          size: 120,
+          url: 'https://cdn.example.com/receipt.png',
+          uploadedAt: new Date('2026-01-01T00:00:00.000Z'),
+        },
       },
       {
-        uri: 'file:///tmp/summary.pdf',
-        fileName: null,
-        type: 'document',
+        localUri: 'file:///tmp/summary.pdf',
+        uploadedFile: {
+          id: 'file-2',
+          originalName: 'summary.pdf',
+          type: 'document',
+          mimetype: 'application/pdf',
+          size: 420,
+          url: 'https://cdn.example.com/summary.pdf',
+          uploadedAt: new Date('2026-01-01T00:00:01.000Z'),
+          textContent: 'Quarterly summary',
+        },
       },
     ])
 
     expect(state.attachments).toEqual([
-      { id: 'file:///tmp/receipt.png', name: 'receipt.png', type: 'image' },
-      { id: 'file:///tmp/summary.pdf', name: 'summary.pdf', type: 'document' },
+      {
+        id: 'file-1',
+        localUri: 'file:///tmp/receipt.png',
+        name: 'receipt.png',
+        type: 'image',
+        uploadedFile: {
+          id: 'file-1',
+          originalName: 'receipt.png',
+          type: 'image',
+          mimetype: 'image/png',
+          size: 120,
+          url: 'https://cdn.example.com/receipt.png',
+          uploadedAt: new Date('2026-01-01T00:00:00.000Z'),
+        },
+      },
+      {
+        id: 'file-2',
+        localUri: 'file:///tmp/summary.pdf',
+        name: 'summary.pdf',
+        type: 'document',
+        uploadedFile: {
+          id: 'file-2',
+          originalName: 'summary.pdf',
+          type: 'document',
+          mimetype: 'application/pdf',
+          size: 420,
+          url: 'https://cdn.example.com/summary.pdf',
+          uploadedAt: new Date('2026-01-01T00:00:01.000Z'),
+          textContent: 'Quarterly summary',
+        },
+      },
     ])
   })
 

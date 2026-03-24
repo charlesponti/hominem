@@ -1,5 +1,5 @@
-import { Stack } from 'expo-router';
-import React, { useCallback, useState } from 'react';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -9,7 +9,9 @@ import { FeedbackBlock } from '~/components/feedback-block';
 import { ActiveSearchSummary, type ActiveSearch } from '~/components/focus/focus-search';
 import { LoadingContainer } from '~/components/LoadingFull';
 import AppIcon from '~/components/ui/icon';
+import { useInputContext } from '~/components/input/input-context';
 import { InboxStream } from '~/components/workspace/inbox-stream';
+import { donateAddNoteIntent } from '~/lib/intent-donation';
 import { Text, theme, makeStyles } from '~/theme';
 import { useFocusStream } from '~/utils/services/notes/use-focus-stream';
 
@@ -53,8 +55,20 @@ const useStyles = makeStyles((t) =>
 
 export const FocusView = () => {
   const styles = useStyles();
+  const router = useRouter();
+  const { action } = useLocalSearchParams<{ action?: string }>();
+  const { setMode } = useInputContext();
   const [activeSearch, setActiveSearch] = useState<ActiveSearch | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Deep link: hakumi://note/add → focus?action=new
+  useEffect(() => {
+    if (action !== 'new') return;
+    setMode('text');
+    donateAddNoteIntent();
+    // Clear the param so re-focusing the screen doesn't re-trigger
+    router.setParams({ action: undefined });
+  }, [action, setMode, router]);
   const {
     data: items = [],
     refetch,

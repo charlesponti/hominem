@@ -1,4 +1,5 @@
 import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config'
+import type { UploadedFile } from '@hominem/ui/types/upload'
 
 export type MobileComposerMode = 'text' | 'voice'
 
@@ -6,6 +7,8 @@ export interface MobileComposerAttachment {
   id: string
   name: string
   type: string
+  localUri?: string
+  uploadedFile?: UploadedFile
 }
 
 export interface MobileComposerState {

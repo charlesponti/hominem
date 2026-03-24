@@ -5,6 +5,12 @@ export type VoiceErrorCode =
   | 'QUOTA'
   | 'TRANSCRIBE_FAILED'
 
+export type VoiceResponseErrorCode =
+  | 'AUTH'
+  | 'QUOTA'
+  | 'CONTENT_POLICY'
+  | 'RESPONSE_FAILED'
+
 export type MobileIntentSuggestion = {
   id: string
   title: string
@@ -61,4 +67,9 @@ export type MobileIntentSuggestionsOutput = {
 export type MobileVoiceTranscriptionErrorOutput = {
   error: string
   code: VoiceErrorCode
+}
+
+export type MobileVoiceResponseErrorOutput = {
+  error: string
+  code: VoiceResponseErrorCode
 }
