@@ -1,7 +1,7 @@
+import { Flags, Command } from '@oclif/core';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Flags, Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { getHominemHomeDir } from '@/utils/paths';
@@ -80,7 +80,7 @@ export default class AgentStart extends Command {
         {
           exit: 3,
           code: 'AGENT_ENTRYPOINT_MISSING',
-        }
+        },
       );
     }
 
@@ -96,13 +96,10 @@ export default class AgentStart extends Command {
           child.once('exit', () => resolve());
         });
       } catch (error) {
-        this.error(
-          error instanceof Error ? error.message : 'Failed to run agent in foreground',
-          {
-            exit: 3,
-            code: 'AGENT_START_FAILED',
-          }
-        );
+        this.error(error instanceof Error ? error.message : 'Failed to run agent in foreground', {
+          exit: 3,
+          code: 'AGENT_START_FAILED',
+        });
       }
 
       const output = {
@@ -124,13 +121,10 @@ export default class AgentStart extends Command {
     try {
       await fs.mkdir(runtimePaths.runtimeDir, { recursive: true });
     } catch (error) {
-      this.error(
-        error instanceof Error ? error.message : 'Failed to create runtime directory',
-        {
-          exit: 3,
-          code: 'AGENT_RUNTIME_DIR_FAILED',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to create runtime directory', {
+        exit: 3,
+        code: 'AGENT_RUNTIME_DIR_FAILED',
+      });
     }
 
     let out: Awaited<ReturnType<typeof fs.open>>;
@@ -139,13 +133,10 @@ export default class AgentStart extends Command {
       out = await fs.open(runtimePaths.outLogPath, 'a');
       err = await fs.open(runtimePaths.errLogPath, 'a');
     } catch (error) {
-      this.error(
-        error instanceof Error ? error.message : 'Failed to open agent log files',
-        {
-          exit: 3,
-          code: 'AGENT_LOG_OPEN_FAILED',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to open agent log files', {
+        exit: 3,
+        code: 'AGENT_LOG_OPEN_FAILED',
+      });
     }
 
     let child;
@@ -158,13 +149,10 @@ export default class AgentStart extends Command {
     } catch (error) {
       await out.close();
       await err.close();
-      this.error(
-        error instanceof Error ? error.message : 'Failed to spawn agent process',
-        {
-          exit: 3,
-          code: 'AGENT_START_FAILED',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to spawn agent process', {
+        exit: 3,
+        code: 'AGENT_START_FAILED',
+      });
     }
     child.unref();
 
@@ -178,13 +166,10 @@ export default class AgentStart extends Command {
     try {
       await fs.writeFile(runtimePaths.pidPath, `${child.pid}\n`, 'utf-8');
     } catch (error) {
-      this.error(
-        error instanceof Error ? error.message : 'Failed to persist agent pid file',
-        {
-          exit: 3,
-          code: 'AGENT_PID_WRITE_FAILED',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to persist agent pid file', {
+        exit: 3,
+        code: 'AGENT_PID_WRITE_FAILED',
+      });
     }
     await out.close();
     await err.close();

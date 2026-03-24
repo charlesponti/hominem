@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { List } from './list';
 
 const meta: Meta<typeof List> = {
@@ -28,9 +29,7 @@ export const Loading: Story = {
 };
 
 export const Empty: Story = {
-  render: () => (
-    <List className="max-w-sm" />
-  ),
+  render: () => <List className="max-w-sm" />,
 };
 
 export const WithContent: Story = {

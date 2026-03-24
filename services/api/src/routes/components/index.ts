@@ -1,10 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { NotFoundError, InternalError } from '../../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
+import { NotFoundError, InternalError } from '../../errors';
 import type { AppEnv } from '../../server';
 
 export const componentsRoutes = new Hono<AppEnv>();

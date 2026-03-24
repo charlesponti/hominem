@@ -39,15 +39,15 @@ interface PasskeyManagementProps {
 /**
  * Passkey management panel — lists registered passkeys, lets users add or
  * delete them. Designed to be embedded in a `/settings/security` page.
- * 
+ *
  * Data fetching is the responsibility of the parent component.
  */
-export function PasskeyManagement({ 
-  passkeys: passkeysProp, 
-  isLoading = false, 
+export function PasskeyManagement({
+  passkeys: passkeysProp,
+  isLoading = false,
   error: externalError,
-  onAdd, 
-  onDelete 
+  onAdd,
+  onDelete,
 }: PasskeyManagementProps) {
   const [adding, setAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);

@@ -1,10 +1,9 @@
-import { Star } from 'lucide-react'
-
-import { cn } from '@hominem/ui/lib/utils'
+import { cn } from '@hominem/ui/lib/utils';
+import { Star } from 'lucide-react';
 
 interface PlaceRatingProps {
-  rating: number
-  size?: 'sm' | 'md' | 'lg'
+  rating: number;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 export function PlaceRating({ rating, size = 'md' }: PlaceRatingProps) {
@@ -22,5 +21,5 @@ export function PlaceRating({ rating, size = 'md' }: PlaceRatingProps) {
         <span className="text-muted-foreground">/ 5</span>
       </div>
     </div>
-  )
+  );
 }

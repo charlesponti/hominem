@@ -1,43 +1,54 @@
-import { useRouter } from 'expo-router'
-import type { RelativePathString } from 'expo-router'
-import React, { memo, useCallback } from 'react'
-import { Pressable, StyleSheet, View } from 'react-native'
-import Reanimated, { FadeInDown, LinearTransition } from 'react-native-reanimated'
+import { useRouter } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
+import React, { memo, useCallback } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Reanimated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
 
-import AppIcon from '~/components/ui/icon'
-import { Text, makeStyles, theme } from '~/theme'
-import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
+import AppIcon from '~/components/ui/icon';
+import { Text, makeStyles, theme } from '~/theme';
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
 
-import type { InboxStreamItem as InboxStreamItemModel } from './inbox-stream-items'
+import type { InboxStreamItem as InboxStreamItemModel } from './inbox-stream-items';
 
 interface InboxStreamItemProps {
-  item: InboxStreamItemModel
+  item: InboxStreamItemModel;
 }
 
 export const InboxStreamItem = memo(({ item }: InboxStreamItemProps) => {
-  const styles = useStyles()
-  const router = useRouter()
-  const iconColor = item.kind === 'note' ? theme.colors.foreground : theme.colors['text-secondary']
+  const styles = useStyles();
+  const router = useRouter();
+  const iconColor = item.kind === 'note' ? theme.colors.foreground : theme.colors['text-secondary'];
 
   const onPress = useCallback(() => {
-    router.push(item.route as RelativePathString)
-  }, [item.route, router])
+    router.push(item.route as RelativePathString);
+  }, [item.route, router]);
 
   return (
     <Reanimated.View
       entering={FadeInDown.duration(180).springify().damping(20).stiffness(260)}
       layout={LinearTransition.duration(160)}
     >
-      <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed ? styles.pressed : null]}>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [styles.row, pressed ? styles.pressed : null]}
+      >
         <View style={styles.rowInner}>
           <View style={styles.topRow}>
             <View style={styles.leadingRow}>
-              <View style={[styles.leading, item.kind === 'note' ? styles.noteLeading : styles.chatLeading]}>
+              <View
+                style={[
+                  styles.leading,
+                  item.kind === 'note' ? styles.noteLeading : styles.chatLeading,
+                ]}
+              >
                 <AppIcon
                   name={item.kind === 'note' ? 'pen-to-square' : 'comment'}
                   size={11}
                   color={iconColor}
-                  style={[styles.cornerIcon, item.kind === 'note' ? styles.noteIcon : styles.chatIcon]}
+                  style={[
+                    styles.cornerIcon,
+                    item.kind === 'note' ? styles.noteIcon : styles.chatIcon,
+                  ]}
                   useSymbol
                 />
               </View>
@@ -57,35 +68,35 @@ export const InboxStreamItem = memo(({ item }: InboxStreamItemProps) => {
         </View>
       </Pressable>
     </Reanimated.View>
-  )
-})
+  );
+});
 
-InboxStreamItem.displayName = 'InboxStreamItem'
+InboxStreamItem.displayName = 'InboxStreamItem';
 
 function toDate(value: string): Date {
-  return parseInboxTimestamp(value)
+  return parseInboxTimestamp(value);
 }
 
 function formatTimestamp(value: string): string {
-  const date = toDate(value)
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const targetDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-  const dayDiff = Math.round((today.getTime() - targetDay.getTime()) / 86400000)
+  const date = toDate(value);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const targetDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayDiff = Math.round((today.getTime() - targetDay.getTime()) / 86400000);
 
   if (dayDiff === 0) {
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   }
 
   if (dayDiff === 1) {
-    return 'Yesterday'
+    return 'Yesterday';
   }
 
   if (dayDiff > 1 && dayDiff < 7) {
-    return date.toLocaleDateString([], { weekday: 'short' })
+    return date.toLocaleDateString([], { weekday: 'short' });
   }
 
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
 const useStyles = makeStyles((t) =>
@@ -168,4 +179,4 @@ const useStyles = makeStyles((t) =>
       backgroundColor: 'rgba(15, 23, 42, 0.03)',
     },
   }),
-)
+);

@@ -1,6 +1,6 @@
+import type { Virtualizer } from '@tanstack/react-virtual';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import type { Virtualizer } from '@tanstack/react-virtual';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

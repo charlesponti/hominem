@@ -1,22 +1,21 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import type { RelativePathString } from 'expo-router';
 import type { Chat as ChatType } from '@hominem/rpc/types';
 import type { SessionSource } from '@hominem/ui/chat';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
 import React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { useChatLiveActivity } from '~/lib/use-chat-live-activity';
-import { donateStartChatIntent } from '~/lib/intent-donation';
+import { StyleSheet, View } from 'react-native';
 
 import { Chat } from '~/components/chat/chat';
 import { LoadingFull } from '~/components/LoadingFull';
+import { donateStartChatIntent } from '~/lib/intent-donation';
+import { useChatLiveActivity } from '~/lib/use-chat-live-activity';
 import { makeStyles, Text } from '~/theme';
 import { useActiveChat, useStartChat } from '~/utils/services/chat';
-import { StyleSheet, View } from 'react-native';
 
 const isChatRecord = (value: ChatType | null | undefined): value is ChatType => {
-  return Boolean(value && typeof value.id === 'string' && typeof value.userId === 'string')
-}
-
+  return Boolean(value && typeof value.id === 'string' && typeof value.userId === 'string');
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -33,7 +32,7 @@ export default function Sherpa() {
   const params = useLocalSearchParams<{ chatId?: string; intentId?: string; seed?: string }>();
   const [activeChat, setActiveChat] = useState<ChatType | null>(null);
   const { isPending: isLoadingActiveChat, refetch: getActiveChat } = useActiveChat(params.chatId);
-  const seed = params.seed ?? ''
+  const seed = params.seed ?? '';
 
   const { mutateAsync: startChat, isPending: isStartingChat } = useStartChat({
     userMessage: seed,
@@ -71,7 +70,10 @@ export default function Sherpa() {
     };
   }, [getActiveChat, seed, startChat]);
 
-  const { stop: stopLiveActivity } = useChatLiveActivity(activeChat?.id, activeChat?.title ?? undefined);
+  const { stop: stopLiveActivity } = useChatLiveActivity(
+    activeChat?.id,
+    activeChat?.title ?? undefined,
+  );
 
   const onChatArchive = useCallback(() => {
     stopLiveActivity();
@@ -91,7 +93,9 @@ export default function Sherpa() {
           </Text>
         </LoadingFull>
       ) : null}
-      {activeChat ? <Chat chatId={activeChat.id} onChatArchive={onChatArchive} source={source} /> : null}
+      {activeChat ? (
+        <Chat chatId={activeChat.id} onChatArchive={onChatArchive} source={source} />
+      ) : null}
     </View>
   );
 }

@@ -19,6 +19,7 @@ export default defineConfig({
       'src/middleware/request-logger.test.ts',
       'src/rpc/routes/chats.test.ts',
       'src/rpc/routes/files.test.ts',
+      'src/rpc/routes/notes.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/build/**'],
   },

@@ -1,5 +1,5 @@
-import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
 import type { Note } from '@hominem/rpc/types';
+import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
 
 import { Text, makeStyles } from '~/theme';
 import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
@@ -9,7 +9,7 @@ import AppIcon from '../ui/icon';
 function getReadableDate(date: Note['scheduledFor']) {
   if (!date) return null;
 
-  const dateObject = parseInboxTimestamp(date)
+  const dateObject = parseInboxTimestamp(date);
 
   return dateObject.toLocaleDateString('en-US', {
     month: 'short',
@@ -18,36 +18,40 @@ function getReadableDate(date: Note['scheduledFor']) {
   });
 }
 
-type FocusItemPreviewProps = {
+type NotePreviewProps = {
   disabled: boolean;
-  focusItem: Pick<Note, 'id' | 'title' | 'excerpt' | 'content' | 'scheduledFor'>;
-  onDeleteClick: (focusItem: Pick<Note, 'id' | 'title' | 'excerpt' | 'content' | 'scheduledFor'>) => void;
-  onCreateClick: (focusItem: Pick<Note, 'id' | 'title' | 'excerpt' | 'content' | 'scheduledFor'>) => void;
+  note: Pick<Note, 'id' | 'title' | 'excerpt' | 'content' | 'scheduledFor'>;
+  onDeleteClick: (
+    note: Pick<Note, 'id' | 'title' | 'excerpt' | 'content' | 'scheduledFor'>,
+  ) => void;
+  onCreateClick: (
+    note: Pick<Note, 'id' | 'title' | 'excerpt' | 'content' | 'scheduledFor'>,
+  ) => void;
 } & ViewProps;
-const FocusItemPreview = ({
+const NotePreview = ({
   disabled,
-  focusItem,
+  note,
   onDeleteClick,
   onCreateClick,
   ...props
-}: FocusItemPreviewProps) => {
-  const styles = useFocusItemStyles();
-  const readableDate = getReadableDate(focusItem.scheduledFor);
+}: NotePreviewProps) => {
+  const styles = useNotePreviewStyles();
+  const readableDate = getReadableDate(note.scheduledFor);
   const onDeleteIconPress = () => {
-    onDeleteClick(focusItem);
+    onDeleteClick(note);
   };
 
   const onIconPress = () => {
-    onCreateClick(focusItem);
+    onCreateClick(note);
   };
 
   return (
     <View style={[styles.item]} {...props}>
       <View style={[styles.info]}>
         <Text variant="body" color="black">
-          {focusItem.title || focusItem.excerpt || focusItem.content}
+          {note.title || note.excerpt || note.content}
         </Text>
-        {focusItem.scheduledFor && readableDate ? <Text variant="caption">{readableDate}</Text> : null}
+        {note.scheduledFor && readableDate ? <Text variant="caption">{readableDate}</Text> : null}
       </View>
       <Pressable disabled={disabled} style={[styles.icon]} onPress={onDeleteIconPress}>
         <AppIcon name="trash" size={24} color="#d32f2f" />
@@ -59,7 +63,7 @@ const FocusItemPreview = ({
   );
 };
 
-const useFocusItemStyles = makeStyles((t) =>
+const useNotePreviewStyles = makeStyles((t) =>
   StyleSheet.create({
     item: {
       flexDirection: 'row',
@@ -78,4 +82,4 @@ const useFocusItemStyles = makeStyles((t) =>
   }),
 );
 
-export default FocusItemPreview;
+export default NotePreview;

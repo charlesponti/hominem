@@ -79,23 +79,23 @@ function toNumber(value: string | number | null): number {
 
 function toIsoString(value: string | Date | null | undefined): string {
   if (value instanceof Date) {
-    return value.toISOString()
+    return value.toISOString();
   }
   if (typeof value === 'string') {
-    return value
+    return value;
   }
-  return new Date(0).toISOString()
+  return new Date(0).toISOString();
 }
 
 function toIsoStringOrNull(value: string | Date | null | undefined): string | null {
   if (value === null || value === undefined) {
-    return null
+    return null;
   }
-  return toIsoString(value)
+  return toIsoString(value);
 }
 
 function toDateOnlyString(value: string | Date | null | undefined): string {
-  return toIsoString(value).slice(0, 10)
+  return toIsoString(value).slice(0, 10);
 }
 
 function getAffectedRows(result: unknown): number {
@@ -836,9 +836,7 @@ export interface LoanDetails {
   }>;
 }
 
-export function calculateLoanDetails(
-  input: z.infer<typeof loanDetailsInputSchema>,
-): LoanDetails {
+export function calculateLoanDetails(input: z.infer<typeof loanDetailsInputSchema>): LoanDetails {
   const { principal, annualRate, months } = input;
   const r = annualRate / 100 / 12;
 

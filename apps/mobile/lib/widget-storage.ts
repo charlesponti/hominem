@@ -28,34 +28,34 @@
  *   PENDING_ACTION  – last action queued by the widget ("add-note" | "open-sherpa" | null)
  *   PENDING_ACTION_TS – epoch ms when the action was written (for staleness guard)
  */
-import { createMMKV } from 'react-native-mmkv'
+import { createMMKV } from 'react-native-mmkv';
 
-const STALE_MS = 30_000 // ignore widget actions older than 30 s
+const STALE_MS = 30_000; // ignore widget actions older than 30 s
 
-export type WidgetAction = 'add-note' | 'open-sherpa'
+export type WidgetAction = 'add-note' | 'open-sherpa';
 
 export const widgetStorage = createMMKV({
   id: 'hakumi.widget',
   // TODO: replace with the resolved App Group container path from a native call
   // so this storage is shared with WidgetKit extension targets.
-})
+});
 
 export function setPendingWidgetAction(action: WidgetAction): void {
-  widgetStorage.set('PENDING_ACTION', action)
-  widgetStorage.set('PENDING_ACTION_TS', Date.now())
+  widgetStorage.set('PENDING_ACTION', action);
+  widgetStorage.set('PENDING_ACTION_TS', Date.now());
 }
 
 export function consumePendingWidgetAction(): WidgetAction | null {
-  const action = widgetStorage.getString('PENDING_ACTION') as WidgetAction | undefined
-  const ts = widgetStorage.getNumber('PENDING_ACTION_TS') ?? 0
+  const action = widgetStorage.getString('PENDING_ACTION') as WidgetAction | undefined;
+  const ts = widgetStorage.getNumber('PENDING_ACTION_TS') ?? 0;
 
-  if (!action) return null
+  if (!action) return null;
 
   // Clear regardless of staleness so we don't re-trigger on next foreground
-  widgetStorage.remove('PENDING_ACTION')
-  widgetStorage.remove('PENDING_ACTION_TS')
+  widgetStorage.remove('PENDING_ACTION');
+  widgetStorage.remove('PENDING_ACTION_TS');
 
-  if (Date.now() - ts > STALE_MS) return null
+  if (Date.now() - ts > STALE_MS) return null;
 
-  return action
+  return action;
 }

@@ -1,1 +1,1 @@
-export * from './rpc/errors'
+export * from './rpc/errors';

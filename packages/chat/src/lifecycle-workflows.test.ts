@@ -12,8 +12,8 @@
  *   - all five journeys in ui-spec.md
  */
 
-import { describe, expect, it } from 'vitest';
 import { TIME_UNITS } from '@hominem/utils';
+import { describe, expect, it } from 'vitest';
 
 import {
   isBlockingState,

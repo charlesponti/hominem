@@ -1,24 +1,26 @@
-import { zValidator } from '@hono/zod-validator'
-import { db } from '@hominem/db'
-import { Hono } from 'hono'
-import * as z from 'zod'
+import { db } from '@hominem/db';
+import type { CategoriesListOutput } from '@hominem/rpc/types/finance/categories.types';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import * as z from 'zod';
 
-import { authMiddleware, type AppContext } from '../middleware/auth'
+import { authMiddleware, type AppContext } from '../middleware/auth';
 
-import type { CategoriesListOutput } from '@hominem/rpc/types/finance/categories.types'
+const emptyBodySchema = z.object({});
 
-const emptyBodySchema = z.object({})
-
-export const tagsRoutes = new Hono<AppContext>()
-  .post('/list', authMiddleware, zValidator('json', emptyBodySchema), async (c) => {
-    const userId = c.get('userId')!
+export const tagsRoutes = new Hono<AppContext>().post(
+  '/list',
+  authMiddleware,
+  zValidator('json', emptyBodySchema),
+  async (c) => {
+    const userId = c.get('userId')!;
     const tags = await db
       .selectFrom('tags')
       .select(['id', 'owner_id', 'name', 'color'])
       .where('owner_id', '=', userId)
       .orderBy('name', 'asc')
       .orderBy('id', 'asc')
-      .execute()
+      .execute();
 
     return c.json<CategoriesListOutput>(
       tags.map((tag) => ({
@@ -28,5 +30,6 @@ export const tagsRoutes = new Hono<AppContext>()
         color: tag.color ?? null,
       })),
       200,
-    )
-  })
+    );
+  },
+);

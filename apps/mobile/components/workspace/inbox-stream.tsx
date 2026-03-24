@@ -1,36 +1,36 @@
-import { FlashList, type ListRenderItem } from '@shopify/flash-list'
-import React, { memo, useCallback } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { FlashList, type ListRenderItem } from '@shopify/flash-list';
+import React, { memo, useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import { Text, makeStyles } from '~/theme'
+import { Text, makeStyles } from '~/theme';
 
-import { InboxStreamItem } from './inbox-stream-item'
-import type { InboxStreamItem as InboxStreamItemModel } from './inbox-stream-items'
+import { InboxStreamItem } from './inbox-stream-item';
+import type { InboxStreamItem as InboxStreamItemModel } from './inbox-stream-items';
 
 interface InboxStreamProps {
-  items: InboxStreamItemModel[]
+  items: InboxStreamItemModel[];
 }
 
-const keyExtractor = (item: InboxStreamItemModel) => `${item.kind}:${item.id}`
+const keyExtractor = (item: InboxStreamItemModel) => `${item.kind}:${item.id}`;
 const InboxStreamDivider = memo(() => {
-  const styles = useStyles()
+  const styles = useStyles();
 
-  return <View style={styles.divider} />
-})
+  return <View style={styles.divider} />;
+});
 
-InboxStreamDivider.displayName = 'InboxStreamDivider'
+InboxStreamDivider.displayName = 'InboxStreamDivider';
 
 const RenderInboxStreamItem = memo(({ item }: { item: InboxStreamItemModel }) => {
-  return <InboxStreamItem item={item} />
-})
+  return <InboxStreamItem item={item} />;
+});
 
-RenderInboxStreamItem.displayName = 'RenderInboxStreamItem'
+RenderInboxStreamItem.displayName = 'RenderInboxStreamItem';
 
 export const InboxStream = ({ items }: InboxStreamProps) => {
-  const styles = useStyles()
+  const styles = useStyles();
   const renderItem = useCallback<ListRenderItem<InboxStreamItemModel>>(({ item }) => {
-    return <RenderInboxStreamItem item={item} />
-  }, [])
+    return <RenderInboxStreamItem item={item} />;
+  }, []);
 
   if (items.length === 0) {
     return (
@@ -44,7 +44,7 @@ export const InboxStream = ({ items }: InboxStreamProps) => {
           </Text>
         </View>
       </View>
-    )
+    );
   }
 
   return (
@@ -61,8 +61,8 @@ export const InboxStream = ({ items }: InboxStreamProps) => {
         />
       </View>
     </View>
-  )
-}
+  );
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -88,8 +88,7 @@ const useStyles = makeStyles((t) =>
     },
     listContent: {
       paddingTop: 0,
-      paddingBottom:
-        t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.ml_24 + t.spacing.sm_12,
+      paddingBottom: t.spacing.xl_64 + t.spacing.xl_64 + t.spacing.ml_24 + t.spacing.sm_12,
     },
     sectionFooter: {
       height: 2,
@@ -111,4 +110,4 @@ const useStyles = makeStyles((t) =>
       paddingVertical: t.spacing.l_32,
     },
   }),
-)
+);

@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 
 import type { AppContext } from '../middleware/auth';
-
 import { locationRoutes } from './location';
 import { placesRoutes } from './places';
 import { tripsRoutes } from './trips';

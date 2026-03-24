@@ -1,98 +1,97 @@
-import { Alert } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover'
-import { Loading } from '@hominem/ui/loading'
-import { CheckCircle2, PlusCircle } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-
-import { PlacesAutocomplete } from '@hominem/places-react/places/list'
 import {
   type GooglePlacePrediction,
   createPlaceFromPrediction,
   useAddPlaceToLists,
-} from '@hominem/places-react/hooks'
+} from '@hominem/places-react/hooks';
+import { PlacesAutocomplete } from '@hominem/places-react/places/list';
+import { Alert } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@hominem/ui/components/ui/popover';
+import { Loading } from '@hominem/ui/loading';
+import { CheckCircle2, PlusCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface AddPlaceControlProps {
-  listId: string
-  canAdd?: boolean
+  listId: string;
+  canAdd?: boolean;
 }
 
-type Status = 'idle' | 'submitting' | 'success' | 'error'
+type Status = 'idle' | 'submitting' | 'success' | 'error';
 
 export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceControlProps) {
-  const [open, setOpen] = useState(false)
-  const [status, setStatus] = useState<Status>('idle')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState<Status>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearSuccessTimer = () => {
     if (successTimerRef.current) {
-      clearTimeout(successTimerRef.current)
-      successTimerRef.current = null
+      clearTimeout(successTimerRef.current);
+      successTimerRef.current = null;
     }
-  }
+  };
 
   useEffect(() => {
     return () => {
       if (successTimerRef.current) {
-        clearTimeout(successTimerRef.current)
+        clearTimeout(successTimerRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const addPlaceToList = useAddPlaceToLists({
     onSuccess: () => {
-      setStatus('success')
-      clearSuccessTimer()
+      setStatus('success');
+      clearSuccessTimer();
       successTimerRef.current = setTimeout(() => {
-        setOpen(false)
-        setStatus('idle')
-        setErrorMessage(null)
-      }, 1500)
+        setOpen(false);
+        setStatus('idle');
+        setErrorMessage(null);
+      }, 1500);
     },
     onError: (error) => {
-      setStatus('error')
-      setErrorMessage(error?.message || 'Failed to add place')
+      setStatus('error');
+      setErrorMessage(error?.message || 'Failed to add place');
     },
-  })
+  });
 
   const handlePlaceSelect = async (prediction: GooglePlacePrediction) => {
-    setStatus('submitting')
-    setErrorMessage(null)
+    setStatus('submitting');
+    setErrorMessage(null);
     try {
-      const place = createPlaceFromPrediction(prediction)
+      const place = createPlaceFromPrediction(prediction);
       if (!place.googleMapsId) {
-        throw new Error('googleMapsId is required')
+        throw new Error('googleMapsId is required');
       }
       addPlaceToList.mutate({
         placeId: place.id,
         listIds: [listId],
-      })
+      });
     } catch (error) {
-      setStatus('error')
+      setStatus('error');
       const message =
         error instanceof Error
           ? error.message
           : typeof error === 'string'
             ? error
-            : 'Failed to process place selection. Retry.'
-      setErrorMessage(message)
+            : 'Failed to process place selection. Retry.';
+      setErrorMessage(message);
     }
-  }
+  };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (status === 'submitting') {
-      return
+      return;
     }
     if (!newOpen) {
-      clearSuccessTimer()
-      setStatus('idle')
-      setErrorMessage(null)
+      clearSuccessTimer();
+      setStatus('idle');
+      setErrorMessage(null);
     }
-    setOpen(newOpen)
-  }
+    setOpen(newOpen);
+  };
 
-  const displayError = errorMessage
+  const displayError = errorMessage;
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
@@ -138,7 +137,7 @@ export default function AddPlaceControl({ listId, canAdd = true }: AddPlaceContr
         )}
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 
-export { AddPlaceControl }
+export { AddPlaceControl };

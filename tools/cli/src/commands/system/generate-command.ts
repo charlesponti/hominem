@@ -1,6 +1,6 @@
+import { Args, Command, Flags } from '@oclif/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Args, Command, Flags } from '@oclif/core';
 import { z } from 'zod';
 
 import { validateWithZod } from '../../utils/zod-validation';
@@ -30,7 +30,8 @@ const outputSchema = z.object({
 type GenerateCommandOutput = z.infer<typeof outputSchema>;
 
 export default class SystemGenerateCommand extends Command {
-  static override description = 'Creates a typed command module under src/commands/<domain>/<command>.ts.';
+  static override description =
+    'Creates a typed command module under src/commands/<domain>/<command>.ts.';
 
   static override examples = [
     '<%= config.bin %> <%= command.id %> auth login',
@@ -64,10 +65,10 @@ export default class SystemGenerateCommand extends Command {
       try {
         await fs.mkdir(dir, { recursive: true });
       } catch (error) {
-        this.error(
-          error instanceof Error ? error.message : 'Failed to prepare command directory',
-          { exit: 3, code: 'SCAFFOLD_MKDIR_FAILED' },
-        );
+        this.error(error instanceof Error ? error.message : 'Failed to prepare command directory', {
+          exit: 3,
+          code: 'SCAFFOLD_MKDIR_FAILED',
+        });
       }
 
       try {
@@ -87,10 +88,10 @@ export default class SystemGenerateCommand extends Command {
       try {
         await fs.writeFile(file, template, 'utf-8');
       } catch (error) {
-        this.error(
-          error instanceof Error ? error.message : 'Failed to write command template',
-          { exit: 3, code: 'SCAFFOLD_WRITE_FAILED' },
-        );
+        this.error(error instanceof Error ? error.message : 'Failed to write command template', {
+          exit: 3,
+          code: 'SCAFFOLD_WRITE_FAILED',
+        });
       }
 
       const output: GenerateCommandOutput = {

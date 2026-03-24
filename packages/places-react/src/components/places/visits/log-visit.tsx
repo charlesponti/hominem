@@ -1,15 +1,14 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { Form } from '@hominem/ui';
 import { Button } from '@hominem/ui/button';
 import { Field } from '@hominem/ui/field';
 import { Input } from '@hominem/ui/input';
 import { TextArea } from '@hominem/ui/text-area';
 import { TextField } from '@hominem/ui/text-field';
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useRevalidator } from 'react-router';
 
 import { useLogPlaceVisit, useUpdatePlaceVisit } from '../../../hooks/use-places';
-
 import { PeopleMultiSelect } from './people-multi-select';
 
 interface LogVisitProps {

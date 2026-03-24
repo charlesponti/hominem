@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { AlertCircle, Info, Terminal } from 'lucide-react';
+
 import { Alert, AlertDescription, AlertTitle } from './alert';
 
 const meta: Meta<typeof Alert> = {
@@ -15,9 +16,7 @@ export const Default: Story = {
     <Alert>
       <Terminal className="size-4" />
       <AlertTitle>Heads up!</AlertTitle>
-      <AlertDescription>
-        You can add components to your app using the cli.
-      </AlertDescription>
+      <AlertDescription>You can add components to your app using the cli.</AlertDescription>
     </Alert>
   ),
 };
@@ -27,9 +26,7 @@ export const Destructive: Story = {
     <Alert variant="destructive">
       <AlertCircle className="size-4" />
       <AlertTitle>Error</AlertTitle>
-      <AlertDescription>
-        Your session has expired. Please log in again.
-      </AlertDescription>
+      <AlertDescription>Your session has expired. Please log in again.</AlertDescription>
     </Alert>
   ),
 };
@@ -38,9 +35,7 @@ export const WithoutIcon: Story = {
   render: () => (
     <Alert>
       <AlertTitle>Note</AlertTitle>
-      <AlertDescription>
-        This alert has no icon.
-      </AlertDescription>
+      <AlertDescription>This alert has no icon.</AlertDescription>
     </Alert>
   ),
 };
@@ -49,9 +44,7 @@ export const DescriptionOnly: Story = {
   render: () => (
     <Alert>
       <Info className="size-4" />
-      <AlertDescription>
-        A simple informational message without a title.
-      </AlertDescription>
+      <AlertDescription>A simple informational message without a title.</AlertDescription>
     </Alert>
   ),
 };

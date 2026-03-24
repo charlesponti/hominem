@@ -1,13 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { ReceivedInviteItem } from './received-invite-item'
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { ReceivedInviteItem } from './received-invite-item';
 
 const meta: Meta<typeof ReceivedInviteItem> = {
   title: 'Invites/ReceivedInviteItem',
   component: ReceivedInviteItem,
   tags: ['autodocs'],
-}
-export default meta
-type Story = StoryObj<typeof ReceivedInviteItem>
+};
+export default meta;
+type Story = StoryObj<typeof ReceivedInviteItem>;
 
 const pendingInvite = {
   id: 'inv-1',
@@ -16,12 +17,12 @@ const pendingInvite = {
   token: 'abc123',
   status: 'pending' as const,
   list: { id: 'list-1', name: 'Weekend Trip' },
-}
+};
 
 const acceptedInvite = {
   ...pendingInvite,
   status: 'accepted' as const,
-}
+};
 
 export const Pending: Story = {
   args: {
@@ -29,14 +30,14 @@ export const Pending: Story = {
     currentUserEmail: 'jane@example.com',
     canAccept: true,
   },
-}
+};
 
 export const Accepted: Story = {
   args: {
     listInvite: acceptedInvite,
     currentUserEmail: 'jane@example.com',
   },
-}
+};
 
 export const EmailMismatch: Story = {
   args: {
@@ -44,14 +45,14 @@ export const EmailMismatch: Story = {
     currentUserEmail: 'other@example.com',
     canAccept: true,
   },
-}
+};
 
 export const CannotAccept: Story = {
   args: {
     listInvite: pendingInvite,
     canAccept: false,
   },
-}
+};
 
 export const Preview: Story = {
   args: {
@@ -62,7 +63,7 @@ export const Preview: Story = {
       invitedUserEmail: 'jane@example.com',
     },
   },
-}
+};
 
 export const PreviewWithPhoto: Story = {
   args: {
@@ -73,4 +74,4 @@ export const PreviewWithPhoto: Story = {
       firstItemName: 'Tent',
     },
   },
-}
+};

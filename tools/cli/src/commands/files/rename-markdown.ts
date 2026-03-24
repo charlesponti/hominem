@@ -1,6 +1,6 @@
+import { Args, Flags, Command } from '@oclif/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Args, Flags, Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { validateWithZod } from '@/utils/zod-validation';
@@ -147,13 +147,10 @@ export default class FilesRenameMarkdown extends Command {
       if (error instanceof Error && 'code' in error) {
         throw error;
       }
-      this.error(
-        error instanceof Error ? error.message : 'Failed to read markdown files',
-        {
-          exit: 3,
-          code: 'FILES_RENAME_FAILED',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to read markdown files', {
+        exit: 3,
+        code: 'FILES_RENAME_FAILED',
+      });
     }
 
     const renamed: Array<{ oldPath: string; newPath: string }> = [];
@@ -162,13 +159,10 @@ export default class FilesRenameMarkdown extends Command {
       try {
         content = await fs.readFile(absolute, 'utf-8');
       } catch (error) {
-        this.error(
-          error instanceof Error ? error.message : `Failed to read ${absolute}`,
-          {
-            exit: 3,
-            code: 'FILES_READ_FAILED',
-          }
-        );
+        this.error(error instanceof Error ? error.message : `Failed to read ${absolute}`, {
+          exit: 3,
+          code: 'FILES_READ_FAILED',
+        });
       }
 
       const topic = extractTopic(content, absolute);
@@ -191,13 +185,10 @@ export default class FilesRenameMarkdown extends Command {
         try {
           await fs.rename(absolute, destination);
         } catch (error) {
-          this.error(
-            error instanceof Error ? error.message : `Failed to rename ${absolute}`,
-            {
-              exit: 3,
-              code: 'FILES_RENAME_FAILED',
-            }
-          );
+          this.error(error instanceof Error ? error.message : `Failed to rename ${absolute}`, {
+            exit: 3,
+            code: 'FILES_RENAME_FAILED',
+          });
         }
       }
 

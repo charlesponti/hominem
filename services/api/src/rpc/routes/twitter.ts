@@ -1,15 +1,11 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   deleteAccountForUser,
   getAccountByUserAndProvider,
   listAccountsByProvider,
 } from '@hominem/auth/server';
 import { NotesService } from '@hominem/notes-services';
-import { NotFoundError, ValidationError, InternalError } from '../errors';
-import { logger } from '@hominem/utils/logger';
-import { Hono } from 'hono';
-import { randomUUID } from 'node:crypto';
-
-import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
   twitterPostSchema,
   type TwitterAccount,
@@ -20,6 +16,11 @@ import {
   type TwitterSyncOutput,
   type TwitterTweet,
 } from '@hominem/rpc/types/twitter.types';
+import { logger } from '@hominem/utils/logger';
+import { Hono } from 'hono';
+
+import { NotFoundError, ValidationError, InternalError } from '../errors';
+import { authMiddleware, type AppContext } from '../middleware/auth';
 // Twitter OAuth and API utilities
 const TWITTER_SCOPES = 'tweet.read tweet.write users.read offline.access';
 
@@ -86,7 +87,12 @@ export const twitterRoutes = new Hono<AppContext>()
     const userId = c.get('userId')!;
     const accounts = await listAccountsByProvider(userId, 'twitter');
     const twitterAccounts: TwitterAccountsListOutput = accounts.map(
-      (account: { id: string; provider: string; providerAccountId: string; expiresAt: string | null }): TwitterAccount => ({
+      (account: {
+        id: string;
+        provider: string;
+        providerAccountId: string;
+        expiresAt: string | null;
+      }): TwitterAccount => ({
         id: account.id,
         provider: account.provider,
         providerAccountId: account.providerAccountId,

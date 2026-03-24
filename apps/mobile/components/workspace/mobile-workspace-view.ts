@@ -1,15 +1,15 @@
-import type { MobileWorkspaceContext } from './mobile-workspace-config'
+import type { MobileWorkspaceContext } from './mobile-workspace-config';
 
-export type MobileWorkspaceView = 'stack' | 'note' | 'search'
+export type MobileWorkspaceView = 'stack' | 'note' | 'search';
 
 export function resolveMobileWorkspaceView(context: MobileWorkspaceContext): MobileWorkspaceView {
   if (context === 'note') {
-    return 'note'
+    return 'note';
   }
 
   if (context === 'search') {
-    return 'search'
+    return 'search';
   }
 
-  return 'stack'
+  return 'stack';
 }

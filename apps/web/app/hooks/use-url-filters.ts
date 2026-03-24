@@ -1,7 +1,6 @@
+import { useFilterState } from '@hominem/ui';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router';
-
-import { useFilterState } from '@hominem/ui';
 
 interface UseUrlFiltersOptions<T extends Record<string, unknown>> {
   initialFilters: T;

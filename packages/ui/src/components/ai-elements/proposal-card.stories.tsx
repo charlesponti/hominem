@@ -1,13 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { ProposalCard, ProposalList } from './proposal-card'
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { ProposalCard, ProposalList } from './proposal-card';
 
 const meta: Meta<typeof ProposalCard> = {
   title: 'AI Elements/ProposalCard',
   component: ProposalCard,
   tags: ['autodocs'],
-}
-export default meta
-type Story = StoryObj<typeof ProposalCard>
+};
+export default meta;
+type Story = StoryObj<typeof ProposalCard>;
 
 const noteItem = {
   id: '1',
@@ -17,7 +18,7 @@ const noteItem = {
   proposedChanges: ['Summarised 12 discussion points', 'Extracted 3 action items'],
   previewContent: '# Q3 Planning\n\nKey decisions made today...',
   createdAt: new Date().toISOString(),
-}
+};
 
 export const Note: Story = {
   args: {
@@ -25,7 +26,7 @@ export const Note: Story = {
     onReview: () => {},
     onReject: () => {},
   },
-}
+};
 
 export const Task: Story = {
   args: {
@@ -38,7 +39,7 @@ export const Task: Story = {
     onReview: () => {},
     onReject: () => {},
   },
-}
+};
 
 export const List: StoryObj<typeof ProposalList> = {
   render: () => (
@@ -46,14 +47,19 @@ export const List: StoryObj<typeof ProposalList> = {
       items={[
         noteItem,
         { ...noteItem, id: '2', proposedType: 'task' as const, proposedTitle: 'Send recap email' },
-        { ...noteItem, id: '3', proposedType: 'task_list' as const, proposedTitle: 'Sprint backlog items' },
+        {
+          ...noteItem,
+          id: '3',
+          proposedType: 'task_list' as const,
+          proposedTitle: 'Sprint backlog items',
+        },
       ]}
       onReview={() => {}}
       onReject={() => {}}
     />
   ),
-}
+};
 
 export const EmptyList: StoryObj<typeof ProposalList> = {
   render: () => <ProposalList items={[]} onReview={() => {}} onReject={() => {}} />,
-}
+};

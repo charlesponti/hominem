@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from './button-group';
+
 import { Button } from './button';
+import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from './button-group';
 
 const meta: Meta<typeof ButtonGroup> = {
   title: 'Primitives/ButtonGroup',

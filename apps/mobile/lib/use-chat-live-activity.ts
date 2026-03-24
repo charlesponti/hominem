@@ -9,40 +9,40 @@ import { AppState, Platform } from 'react-native';
  */
 export function useChatLiveActivity(
   chatId: string | null | undefined,
-  chatTitle: string | undefined
+  chatTitle: string | undefined,
 ) {
   const activityId = useRef<string | null>(null);
   const appStateRef = useRef(AppState.currentState);
 
-  const start = useCallback(
-    (title: string) => {
-      if (Platform.OS !== 'ios' || activityId.current) return;
+  const start = useCallback((title: string) => {
+    if (Platform.OS !== 'ios' || activityId.current) return;
 
-      const id = LiveActivity.startActivity(
-        {
-          title: title || 'Chat Session',
-          subtitle: 'Tap to return to your conversation',
-        },
-        {
-          deepLinkUrl: `hakumi://sherpa`,
-        }
-      );
+    const id = LiveActivity.startActivity(
+      {
+        title: title || 'Chat Session',
+        subtitle: 'Tap to return to your conversation',
+      },
+      {
+        deepLinkUrl: `hakumi://sherpa`,
+      },
+    );
 
-      if (id) {
-        activityId.current = id;
-      }
+    if (id) {
+      activityId.current = id;
+    }
+  }, []);
+
+  const update = useCallback(
+    (lastMessage: string) => {
+      if (Platform.OS !== 'ios' || !activityId.current) return;
+
+      LiveActivity.updateActivity(activityId.current, {
+        title: chatTitle || 'Chat Session',
+        subtitle: lastMessage.slice(0, 80),
+      });
     },
-    []
+    [chatTitle],
   );
-
-  const update = useCallback((lastMessage: string) => {
-    if (Platform.OS !== 'ios' || !activityId.current) return;
-
-    LiveActivity.updateActivity(activityId.current, {
-      title: chatTitle || 'Chat Session',
-      subtitle: lastMessage.slice(0, 80),
-    });
-  }, [chatTitle]);
 
   const stop = useCallback(() => {
     if (Platform.OS !== 'ios' || !activityId.current) return;

@@ -1,7 +1,7 @@
+import { useComposerNoteTitle } from '@hominem/ui/composer';
 import { useEffect } from 'react';
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
-import { useComposerNoteTitle } from '@hominem/ui/composer';
 import { useNote } from '~/hooks/use-notes';
 import { requireAuth } from '~/lib/guards';
 
@@ -50,7 +50,9 @@ export default function NoteSplitView({ loaderData }: { loaderData: { noteId: st
       <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col px-4 pb-6 pt-6 sm:px-6">
         <header className="mb-6 flex flex-col gap-3 border-b editorial-rule pb-5">
           <div className="editorial-kicker text-text-tertiary">Workspace</div>
-          <h1 className="heading-2 editorial-display text-text-primary">{note.title || 'Untitled note'}</h1>
+          <h1 className="heading-2 editorial-display text-text-primary">
+            {note.title || 'Untitled note'}
+          </h1>
         </header>
 
         <section className="editorial-panel min-h-0 flex-1 rounded-4xl px-5 py-5 sm:px-6">

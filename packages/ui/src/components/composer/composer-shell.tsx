@@ -1,6 +1,6 @@
-import type { ReactNode, RefObject } from 'react'
+import type { ReactNode, RefObject } from 'react';
 
-import { cn } from '../../lib/utils'
+import { cn } from '../../lib/utils';
 
 export function ComposerShell({
   cardRef,
@@ -10,12 +10,12 @@ export function ComposerShell({
   tools,
   actions,
 }: {
-  cardRef: RefObject<HTMLDivElement | null>
-  isDraftMode: boolean
-  input: ReactNode
-  attachments: ReactNode
-  tools: ReactNode
-  actions: ReactNode
+  cardRef: RefObject<HTMLDivElement | null>;
+  isDraftMode: boolean;
+  input: ReactNode;
+  attachments: ReactNode;
+  tools: ReactNode;
+  actions: ReactNode;
 }) {
   return (
     <div
@@ -42,5 +42,5 @@ export function ComposerShell({
         </div>
       </div>
     </div>
-  )
+  );
 }

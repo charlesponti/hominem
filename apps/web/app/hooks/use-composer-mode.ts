@@ -17,8 +17,8 @@
  * is pushed via setNoteTitle in the note route once data arrives.
  */
 
-import { useMatch } from 'react-router';
 import type { ComposerMode } from '@hominem/ui/composer';
+import { useMatch } from 'react-router';
 
 export interface ComposerModeResult {
   mode: ComposerMode;

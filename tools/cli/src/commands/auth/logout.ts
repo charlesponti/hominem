@@ -9,7 +9,8 @@ const outputSchema = z.object({
 });
 
 export default class AuthLogout extends Command {
-  static description = 'Deletes locally stored machine-client credentials without revoking remote sessions.';
+  static description =
+    'Deletes locally stored machine-client credentials without revoking remote sessions.';
   static summary = 'Logout and clear tokens';
 
   static override flags = {};
@@ -36,4 +37,3 @@ export default class AuthLogout extends Command {
     return validateWithZod(outputSchema, output);
   }
 }
-

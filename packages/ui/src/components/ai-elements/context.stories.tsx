@@ -1,5 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { CitationMarker, Context, ContextContent, ContextHeader, ContextItem, InlineCitation } from './context';
+
+import {
+  CitationMarker,
+  Context,
+  ContextContent,
+  ContextHeader,
+  ContextItem,
+  InlineCitation,
+} from './context';
 
 const meta: Meta<typeof Context> = {
   title: 'AI Elements/Context',

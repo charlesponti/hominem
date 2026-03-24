@@ -1,6 +1,6 @@
 /**
  * DEPRECATED - This file is no longer used.
- * 
+ *
  * oclif provides built-in help text generation for commands.
  * This file is kept for historical reference only.
  */

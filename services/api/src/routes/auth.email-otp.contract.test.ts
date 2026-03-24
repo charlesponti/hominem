@@ -1,6 +1,7 @@
 import { getSetCookieHeaders } from '@hominem/utils/headers';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import { createServer } from '../server';
 import type { AppRequester } from './test-helpers/auth';
 import {
   createAuthTestEmail,
@@ -9,7 +10,6 @@ import {
   requestOtp,
   toCookieHeader,
 } from './test-helpers/auth';
-import { createServer } from '../server';
 
 interface _SessionResponse {
   isAuthenticated: boolean;

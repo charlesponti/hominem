@@ -1,12 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { useCallback } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  View,
-  type PressableProps,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, type PressableProps } from 'react-native';
 import Animated, {
   interpolateColor,
   useDerivedValue,
@@ -17,8 +11,8 @@ import Animated, {
 import { makeStyles, Text, theme } from '~/theme';
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 
-import { AudioLevelVisualizer } from './audio-meterings';
 import AppIcon from '../ui/icon';
+import { AudioLevelVisualizer } from './audio-meterings';
 import { useMobileAudioRecorder } from './use-mobile-audio-recorder';
 
 type MobileVoiceInputProps = PressableProps & {

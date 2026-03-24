@@ -9,7 +9,10 @@ const usePasskeyAuthMock = vi.fn();
 
 vi.mock('@hominem/auth', () => ({
   usePasskeyAuth: (options: { redirectTo?: string }) => usePasskeyAuthMock(options),
-  AUTH_COPY: { email: { title: 'Sign in', subtitle: 'Sign in to continue' }, otpVerification: { title: 'Verify', subtitle: 'Enter the code' } },
+  AUTH_COPY: {
+    email: { title: 'Sign in', subtitle: 'Sign in to continue' },
+    otpVerification: { title: 'Verify', subtitle: 'Enter the code' },
+  },
   readAuthErrorMessage: () => null,
 }));
 

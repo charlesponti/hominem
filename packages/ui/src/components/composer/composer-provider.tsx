@@ -16,6 +16,7 @@
  * implementations of file upload and data mutation hooks.
  */
 
+import type { Note } from '@hominem/rpc/types/notes.types';
 import {
   createContext,
   useCallback,
@@ -25,37 +26,50 @@ import {
   useState,
   type Context,
   type ReactNode,
-} from 'react'
-import type { Note } from '@hominem/rpc/types/notes.types'
+} from 'react';
 
-import type { UploadedFile } from '../../types/upload'
+import type { UploadedFile } from '../../types/upload';
 
 // ─── Upload hook shape ────────────────────────────────────────────────────────
 
 export interface UploadHookReturn {
   uploadState: {
-    isUploading: boolean
-    progress: number
-    uploadedFiles: UploadedFile[]
-    errors: string[]
-  }
-  uploadFiles: (files: FileList | File[]) => Promise<UploadedFile[]>
-  removeFile: (fileId: string) => void
-  clearAll: () => void
+    isUploading: boolean;
+    progress: number;
+    uploadedFiles: UploadedFile[];
+    errors: string[];
+  };
+  uploadFiles: (files: FileList | File[]) => Promise<UploadedFile[]>;
+  removeFile: (fileId: string) => void;
+  clearAll: () => void;
 }
 
 // ─── Data deps shape ──────────────────────────────────────────────────────────
 
 export interface ComposerDataDeps {
-  useCreateNote: () => { mutateAsync: (input: { content: string; title?: string }) => Promise<unknown> }
-  useUpdateNote: () => { mutateAsync: (input: { id: string; content: string }) => Promise<unknown> }
-  useSendMessage: (args: { chatId: string }) => { mutateAsync: (input: { chatId: string; message: string }) => Promise<unknown> }
-  useNotesList: (options?: Record<string, unknown>) => { data?: { id: string; title?: string | null; content: string; excerpt?: string | null; updatedAt: string }[] }
+  useCreateNote: () => {
+    mutateAsync: (input: { content: string; title?: string }) => Promise<unknown>;
+  };
+  useUpdateNote: () => {
+    mutateAsync: (input: { id: string; content: string }) => Promise<unknown>;
+  };
+  useSendMessage: (args: { chatId: string }) => {
+    mutateAsync: (input: { chatId: string; message: string }) => Promise<unknown>;
+  };
+  useNotesList: (options?: Record<string, unknown>) => {
+    data?: {
+      id: string;
+      title?: string | null;
+      content: string;
+      excerpt?: string | null;
+      updatedAt: string;
+    }[];
+  };
 }
 
 // ─── Context interfaces ────────────────────────────────────────────────────────
 
-export type ComposerMode = 'generic' | 'note-aware' | 'chat-continuation'
+export type ComposerMode = 'generic' | 'note-aware' | 'chat-continuation';
 
 export interface ComposerDraftStateContext {
   draftText: string;
@@ -111,128 +125,150 @@ export interface ComposerRefsContext {
 
 // ─── Contexts ──────────────────────────────────────────────────────────────────
 
-const DraftStateCtx = createContext<ComposerDraftStateContext | null>(null)
-const DraftActionsCtx = createContext<ComposerDraftActionsContext | null>(null)
-const NoteTitleCtx = createContext<ComposerNoteTitleContext | null>(null)
-const AttachedNotesCtx = createContext<ComposerAttachedNotesContext | null>(null)
-const ExpansionCtx = createContext<ComposerExpansionContext | null>(null)
-const UploadStateCtx = createContext<ComposerUploadStateContext | null>(null)
-const UploadActionsCtx = createContext<ComposerUploadActionsContext | null>(null)
-const SubmissionCtx = createContext<ComposerSubmissionContext | null>(null)
-const RefsCtx = createContext<ComposerRefsContext | null>(null)
-const DataDepsCtx = createContext<ComposerDataDeps | null>(null)
+const DraftStateCtx = createContext<ComposerDraftStateContext | null>(null);
+const DraftActionsCtx = createContext<ComposerDraftActionsContext | null>(null);
+const NoteTitleCtx = createContext<ComposerNoteTitleContext | null>(null);
+const AttachedNotesCtx = createContext<ComposerAttachedNotesContext | null>(null);
+const ExpansionCtx = createContext<ComposerExpansionContext | null>(null);
+const UploadStateCtx = createContext<ComposerUploadStateContext | null>(null);
+const UploadActionsCtx = createContext<ComposerUploadActionsContext | null>(null);
+const SubmissionCtx = createContext<ComposerSubmissionContext | null>(null);
+const RefsCtx = createContext<ComposerRefsContext | null>(null);
+const DataDepsCtx = createContext<ComposerDataDeps | null>(null);
 
 function useRequiredContext<T>(context: Context<T | null>, name: string): T {
-  const value = useContext(context)
+  const value = useContext(context);
   if (!value) {
-    throw new Error(`${name} must be used within ComposerProvider`)
+    throw new Error(`${name} must be used within ComposerProvider`);
   }
 
-  return value
+  return value;
 }
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export interface ComposerProviderProps {
-  children: ReactNode
-  uploadHook: () => UploadHookReturn
-  dataDeps: ComposerDataDeps
+  children: ReactNode;
+  uploadHook: () => UploadHookReturn;
+  dataDeps: ComposerDataDeps;
 }
 
 export function ComposerProvider({ children, uploadHook, dataDeps }: ComposerProviderProps) {
-  const [draftText, setDraftText] = useState('')
-  const [noteTitle, setNoteTitle] = useState<string | null>(null)
-  const [attachedNotes, setAttachedNotes] = useState<Note[]>([])
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [draftText, setDraftText] = useState('');
+  const [noteTitle, setNoteTitle] = useState<string | null>(null);
+  const [attachedNotes, setAttachedNotes] = useState<Note[]>([]);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const submitBtnRef = useRef<HTMLButtonElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
-  const submitLockRef = useRef(false)
-  const { uploadState, uploadFiles, removeFile, clearAll } = uploadHook()
+  const containerRef = useRef<HTMLDivElement>(null);
+  const submitBtnRef = useRef<HTMLButtonElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const submitLockRef = useRef(false);
+  const { uploadState, uploadFiles, removeFile, clearAll } = uploadHook();
 
   const clearDraft = useCallback(() => {
-    setDraftText('')
-  }, [])
+    setDraftText('');
+  }, []);
 
   const attachNote = useCallback((note: Note) => {
-    setAttachedNotes((prev) => (prev.some((n) => n.id === note.id) ? prev : [...prev, note]))
-  }, [])
+    setAttachedNotes((prev) => (prev.some((n) => n.id === note.id) ? prev : [...prev, note]));
+  }, []);
 
   const detachNote = useCallback((noteId: string) => {
-    setAttachedNotes((prev) => prev.filter((n) => n.id !== noteId))
-  }, [])
+    setAttachedNotes((prev) => prev.filter((n) => n.id !== noteId));
+  }, []);
 
   const clearAttachedNotes = useCallback(() => {
-    setAttachedNotes([])
-  }, [])
+    setAttachedNotes([]);
+  }, []);
 
   const runWithSubmitLock = useCallback(async (task: () => Promise<void>) => {
-    if (submitLockRef.current) return
+    if (submitLockRef.current) return;
 
-    submitLockRef.current = true
-    setIsSubmitting(true)
+    submitLockRef.current = true;
+    setIsSubmitting(true);
 
     try {
-      await task()
+      await task();
     } finally {
-      submitLockRef.current = false
-      setIsSubmitting(false)
+      submitLockRef.current = false;
+      setIsSubmitting(false);
     }
-  }, [])
+  }, []);
 
-  const draftStateValue = useMemo<ComposerDraftStateContext>(() => ({
-    draftText,
-  }), [draftText])
+  const draftStateValue = useMemo<ComposerDraftStateContext>(
+    () => ({
+      draftText,
+    }),
+    [draftText],
+  );
 
-  const draftActionsValue = useMemo<ComposerDraftActionsContext>(() => ({
-    setDraftText,
-    clearDraft,
-  }), [clearDraft])
+  const draftActionsValue = useMemo<ComposerDraftActionsContext>(
+    () => ({
+      setDraftText,
+      clearDraft,
+    }),
+    [clearDraft],
+  );
 
-  const noteTitleValue = useMemo<ComposerNoteTitleContext>(() => ({
-    noteTitle,
-    setNoteTitle,
-  }), [noteTitle])
+  const noteTitleValue = useMemo<ComposerNoteTitleContext>(
+    () => ({
+      noteTitle,
+      setNoteTitle,
+    }),
+    [noteTitle],
+  );
 
-  const attachedNotesValue = useMemo<ComposerAttachedNotesContext>(() => ({
-    attachedNotes,
-    attachNote,
-    detachNote,
-    clearAttachedNotes,
-  }), [attachedNotes, attachNote, detachNote, clearAttachedNotes])
+  const attachedNotesValue = useMemo<ComposerAttachedNotesContext>(
+    () => ({
+      attachedNotes,
+      attachNote,
+      detachNote,
+      clearAttachedNotes,
+    }),
+    [attachedNotes, attachNote, detachNote, clearAttachedNotes],
+  );
 
-  const expansionValue = useMemo<ComposerExpansionContext>(() => ({
-    isExpanded,
-    setIsExpanded,
-  }), [isExpanded])
+  const expansionValue = useMemo<ComposerExpansionContext>(
+    () => ({
+      isExpanded,
+      setIsExpanded,
+    }),
+    [isExpanded],
+  );
 
-  const uploadStateValue = useMemo<ComposerUploadStateContext>(() => ({
-    uploadState,
-  }), [
-    uploadState.errors,
-    uploadState.isUploading,
-    uploadState.progress,
-    uploadState.uploadedFiles,
-  ])
+  const uploadStateValue = useMemo<ComposerUploadStateContext>(
+    () => ({
+      uploadState,
+    }),
+    [uploadState.errors, uploadState.isUploading, uploadState.progress, uploadState.uploadedFiles],
+  );
 
-  const uploadActionsValue = useMemo<ComposerUploadActionsContext>(() => ({
-    uploadFiles,
-    removeUploadedFile: removeFile,
-    clearUploadedFiles: clearAll,
-  }), [uploadFiles, removeFile, clearAll])
+  const uploadActionsValue = useMemo<ComposerUploadActionsContext>(
+    () => ({
+      uploadFiles,
+      removeUploadedFile: removeFile,
+      clearUploadedFiles: clearAll,
+    }),
+    [uploadFiles, removeFile, clearAll],
+  );
 
-  const submissionValue = useMemo<ComposerSubmissionContext>(() => ({
-    isSubmitting,
-    runWithSubmitLock,
-  }), [isSubmitting, runWithSubmitLock])
+  const submissionValue = useMemo<ComposerSubmissionContext>(
+    () => ({
+      isSubmitting,
+      runWithSubmitLock,
+    }),
+    [isSubmitting, runWithSubmitLock],
+  );
 
-  const refsValue = useMemo<ComposerRefsContext>(() => ({
-    containerRef,
-    submitBtnRef,
-    inputRef,
-  }), [])
+  const refsValue = useMemo<ComposerRefsContext>(
+    () => ({
+      containerRef,
+      submitBtnRef,
+      inputRef,
+    }),
+    [],
+  );
 
   return (
     <DataDepsCtx.Provider value={dataDeps}>
@@ -254,56 +290,56 @@ export function ComposerProvider({ children, uploadHook, dataDeps }: ComposerPro
         </DraftActionsCtx.Provider>
       </DraftStateCtx.Provider>
     </DataDepsCtx.Provider>
-  )
+  );
 }
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
 export function useComposerDraftState(): ComposerDraftStateContext {
-  return useRequiredContext(DraftStateCtx, 'useComposerDraftState')
+  return useRequiredContext(DraftStateCtx, 'useComposerDraftState');
 }
 
 export function useComposerDraftActions(): ComposerDraftActionsContext {
-  return useRequiredContext(DraftActionsCtx, 'useComposerDraftActions')
+  return useRequiredContext(DraftActionsCtx, 'useComposerDraftActions');
 }
 
 export function useComposerDraft() {
   return {
     ...useComposerDraftState(),
     ...useComposerDraftActions(),
-  }
+  };
 }
 
 export function useComposerNoteTitle(): ComposerNoteTitleContext {
-  return useRequiredContext(NoteTitleCtx, 'useComposerNoteTitle')
+  return useRequiredContext(NoteTitleCtx, 'useComposerNoteTitle');
 }
 
 export function useComposerAttachedNotes(): ComposerAttachedNotesContext {
-  return useRequiredContext(AttachedNotesCtx, 'useComposerAttachedNotes')
+  return useRequiredContext(AttachedNotesCtx, 'useComposerAttachedNotes');
 }
 
 export function useComposerExpansion(): ComposerExpansionContext {
-  return useRequiredContext(ExpansionCtx, 'useComposerExpansion')
+  return useRequiredContext(ExpansionCtx, 'useComposerExpansion');
 }
 
 export function useComposerUploadState(): ComposerUploadStateContext {
-  return useRequiredContext(UploadStateCtx, 'useComposerUploadState')
+  return useRequiredContext(UploadStateCtx, 'useComposerUploadState');
 }
 
 export function useComposerUploadActions(): ComposerUploadActionsContext {
-  return useRequiredContext(UploadActionsCtx, 'useComposerUploadActions')
+  return useRequiredContext(UploadActionsCtx, 'useComposerUploadActions');
 }
 
 export function useComposerSubmission(): ComposerSubmissionContext {
-  return useRequiredContext(SubmissionCtx, 'useComposerSubmission')
+  return useRequiredContext(SubmissionCtx, 'useComposerSubmission');
 }
 
 export function useComposerRefs(): ComposerRefsContext {
-  return useRequiredContext(RefsCtx, 'useComposerRefs')
+  return useRequiredContext(RefsCtx, 'useComposerRefs');
 }
 
 export function useComposerDataDeps(): ComposerDataDeps {
-  return useRequiredContext(DataDepsCtx, 'useComposerDataDeps')
+  return useRequiredContext(DataDepsCtx, 'useComposerDataDeps');
 }
 
 export function useComposer() {
@@ -316,5 +352,5 @@ export function useComposer() {
     ...useComposerUploadActions(),
     ...useComposerSubmission(),
     ...useComposerRefs(),
-  }
+  };
 }

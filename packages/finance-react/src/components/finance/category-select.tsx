@@ -1,26 +1,26 @@
-import { Label } from '@hominem/ui/components/ui/label'
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { useId } from 'react'
+} from '@hominem/ui/components/ui/select';
+import { useId } from 'react';
 
 export interface TagOption {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export interface TagSelectProps {
-  selectedTag: string
-  onTagChange: (value: string) => void
-  tags: TagOption[]
-  isLoading?: boolean
-  placeholder?: string
-  label?: string
-  className?: string
+  selectedTag: string;
+  onTagChange: (value: string) => void;
+  tags: TagOption[];
+  isLoading?: boolean;
+  placeholder?: string;
+  label?: string;
+  className?: string;
 }
 
 export function TagSelect({
@@ -32,8 +32,8 @@ export function TagSelect({
   label = 'Tag',
   className,
 }: TagSelectProps) {
-  const id = useId()
-  const safeTags = tags || []
+  const id = useId();
+  const safeTags = tags || [];
 
   return (
     <div className={`space-y-2 ${className || ''}`}>
@@ -62,5 +62,5 @@ export function TagSelect({
         </SelectContent>
       </Select>
     </div>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-export { useGeolocation } from './use-geolocation'
-export type { GooglePlacePrediction } from './use-google-places-autocomplete'
-export { useGooglePlacesAutocomplete } from './use-google-places-autocomplete'
-export { useModal } from './use-modal'
-export { usePeople, useCreatePerson } from './use-people'
+export { useGeolocation } from './use-geolocation';
+export type { GooglePlacePrediction } from './use-google-places-autocomplete';
+export { useGooglePlacesAutocomplete } from './use-google-places-autocomplete';
+export { useModal } from './use-modal';
+export { usePeople, useCreatePerson } from './use-people';
 export {
   usePlacesAutocomplete,
   usePlaceById,
@@ -16,4 +16,4 @@ export {
   useUpdatePlaceVisit,
   useDeletePlaceVisit,
   createPlaceFromPrediction,
-} from './use-places'
+} from './use-places';

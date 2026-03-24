@@ -1,9 +1,9 @@
-import fs from 'node:fs/promises';
 import { Command } from '@oclif/core';
+import fs from 'node:fs/promises';
 import { z } from 'zod';
 
-import { getStoredTokens, hasValidStoredSession } from '@/utils/auth';
 import { getConfigPath, loadConfigV2 } from '@/config';
+import { getStoredTokens, hasValidStoredSession } from '@/utils/auth';
 import { validateWithZod } from '@/utils/zod-validation';
 
 const outputSchema = z.object({
@@ -54,13 +54,10 @@ export default class SystemDoctor extends Command {
     try {
       tokens = await getStoredTokens();
     } catch (error) {
-      this.error(
-        error instanceof Error ? error.message : 'Failed to read auth state',
-        {
-          exit: 3,
-          code: 'AUTH_STATUS_FAILED',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to read auth state', {
+        exit: 3,
+        code: 'AUTH_STATUS_FAILED',
+      });
     }
 
     checks.push({

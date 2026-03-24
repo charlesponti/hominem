@@ -1,9 +1,6 @@
 import { useRpcMutation, useRpcQuery } from '@hominem/rpc/react';
+import type { MessagesDeleteOutput, MessagesUpdateOutput } from '@hominem/rpc/types/chat.types';
 import { useQueryClient } from '@tanstack/react-query';
-import type {
-  MessagesDeleteOutput,
-  MessagesUpdateOutput,
-} from '@hominem/rpc/types/chat.types';
 
 import { chatQueryKeys } from '~/lib/query-keys';
 
@@ -26,15 +23,12 @@ export type ExtendedMessage = import('@hominem/rpc/types/chat.types').ChatMessag
 export function useChatMessages({ chatId }: UseChatMessagesOptions): UseChatMessagesReturn {
   const queryClient = useQueryClient();
 
-  const messagesQuery = useRpcQuery(
-    ({ chats }) => chats.getMessages({ chatId, limit: 50 }),
-    {
-      queryKey: chatQueryKeys.messages(chatId),
-      enabled: !!chatId,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-    },
-  );
+  const messagesQuery = useRpcQuery(({ chats }) => chats.getMessages({ chatId, limit: 50 }), {
+    queryKey: chatQueryKeys.messages(chatId),
+    enabled: !!chatId,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
 
   const messages = Array.isArray(messagesQuery.data) ? messagesQuery.data : [];
   const isLoading = messagesQuery.isLoading;

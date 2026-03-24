@@ -1,3 +1,4 @@
+import { useRpcQuery } from '@hominem/rpc/react';
 import type {
   AccountAllOutput,
   AccountGetOutput,
@@ -8,8 +9,6 @@ import type {
 import type { SortOption } from '@hominem/ui/hooks';
 import { format } from 'date-fns';
 import { useMemo } from 'react';
-
-import { useRpcQuery } from '@hominem/rpc/react';
 
 type RawAccountWithTransactions = {
   id: string;
@@ -87,10 +86,9 @@ export const useFinanceAccounts = ({ initialData }: UseFinanceAccountsOptions = 
 };
 
 export const useFinancialInstitutions = () =>
-  useRpcQuery(
-    ({ finance }) => finance.listInstitutions(),
-    { queryKey: ['finance', 'institutions', 'list'] },
-  );
+  useRpcQuery(({ finance }) => finance.listInstitutions(), {
+    queryKey: ['finance', 'institutions', 'list'],
+  });
 
 export function useAllAccounts(options?: { initialData?: AccountAllOutput }) {
   const allAccountsQuery = useRpcQuery(

@@ -1,31 +1,30 @@
-import { CreditCard, DollarSign, Tag } from 'lucide-react'
-
-import { cn } from '@hominem/ui/lib/utils'
+import { cn } from '@hominem/ui/lib/utils';
+import { CreditCard, DollarSign, Tag } from 'lucide-react';
 
 export interface Transaction {
-  id: string
-  amount: number
-  description: string | null
-  type: string
-  accountId: string
+  id: string;
+  amount: number;
+  description: string | null;
+  type: string;
+  accountId: string;
 }
 
 export interface TransactionAccount {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export interface TransactionsListProps {
-  loading: boolean
-  error: string | null
-  transactions: Transaction[]
-  accountsMap: Map<string, TransactionAccount>
+  loading: boolean;
+  error: string | null;
+  transactions: Transaction[];
+  accountsMap: Map<string, TransactionAccount>;
 }
 
 function TransactionAmount({ transaction }: { transaction: Transaction }) {
-  const amount = Number(transaction.amount)
-  const isNegative = amount < 0
-  const displayAmount = Math.abs(amount).toFixed(2)
+  const amount = Number(transaction.amount);
+  const isNegative = amount < 0;
+  const displayAmount = Math.abs(amount).toFixed(2);
 
   return (
     <div className="text-right">
@@ -33,15 +32,15 @@ function TransactionAmount({ transaction }: { transaction: Transaction }) {
         ${displayAmount}
       </div>
     </div>
-  )
+  );
 }
 
 function TransactionMetadata({
   transaction,
   account,
 }: {
-  transaction: Transaction
-  account?: TransactionAccount | undefined
+  transaction: Transaction;
+  account?: TransactionAccount | undefined;
 }) {
   return (
     <div className="flex justify-between text-xs text-muted-foreground">
@@ -56,15 +55,15 @@ function TransactionMetadata({
         <span>{transaction.type}</span>
       </div>
     </div>
-  )
+  );
 }
 
 function TransactionListItem({
   transaction,
   account,
 }: {
-  transaction: Transaction
-  account?: TransactionAccount | undefined
+  transaction: Transaction;
+  account?: TransactionAccount | undefined;
 }) {
   return (
     <div className="group border-b border-border py-4 px-2 space-y-2">
@@ -74,7 +73,7 @@ function TransactionListItem({
       </div>
       <TransactionMetadata transaction={transaction} account={account} />
     </div>
-  )
+  );
 }
 
 export function TransactionsList({
@@ -104,7 +103,7 @@ export function TransactionsList({
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -112,7 +111,7 @@ export function TransactionsList({
       <div className="p-8 text-center border border-destructive/50 bg-destructive/10 max-w-4xl mx-auto">
         <div className="text-destructive font-medium">{error}</div>
       </div>
-    )
+    );
   }
 
   if (transactions.length === 0) {
@@ -128,7 +127,7 @@ export function TransactionsList({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -141,5 +140,5 @@ export function TransactionsList({
         />
       ))}
     </div>
-  )
+  );
 }

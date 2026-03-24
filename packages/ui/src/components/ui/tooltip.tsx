@@ -5,7 +5,7 @@ import * as React from 'react';
 
 import { cn } from '../../lib/utils';
 
-type TooltipContentProps = React.ComponentProps<typeof TooltipPrimitive.Content>
+type TooltipContentProps = React.ComponentProps<typeof TooltipPrimitive.Content>;
 
 function TooltipProvider({
   delayDuration = 0,
@@ -28,12 +28,7 @@ function TooltipTrigger({ ...props }: React.ComponentProps<typeof TooltipPrimiti
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
 }
 
-function TooltipContent({
-  className,
-  sideOffset = 0,
-  children,
-  ...props
-}: TooltipContentProps) {
+function TooltipContent({ className, sideOffset = 0, children, ...props }: TooltipContentProps) {
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content

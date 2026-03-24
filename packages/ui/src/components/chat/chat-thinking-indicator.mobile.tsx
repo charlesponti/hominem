@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
@@ -7,24 +7,24 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
-} from 'react-native-reanimated'
+} from 'react-native-reanimated';
 
-import { colors, durations, fontSizes, radiiNative, spacing } from '../../tokens'
-import { Text } from '../typography/text.native'
+import { colors, durations, fontSizes, radiiNative, spacing } from '../../tokens';
+import { Text } from '../typography/text.native';
 
-const DOT_UP_DURATION = durations.enter
-const DOT_DOWN_DURATION = durations.exit
-const DOT_RETURN_DURATION = durations.standard
-const CYCLE_IDLE = durations.standard * 6
-const STAGGER_OFFSET = durations.enter
+const DOT_UP_DURATION = durations.enter;
+const DOT_DOWN_DURATION = durations.exit;
+const DOT_RETURN_DURATION = durations.standard;
+const CYCLE_IDLE = durations.standard * 6;
+const STAGGER_OFFSET = durations.enter;
 
 function useBounceDot(delayMs: number) {
-  const translateY = useSharedValue(0)
+  const translateY = useSharedValue(0);
 
   useAnimatedReaction(
     () => translateY.value,
     (_current: number, prev: number | null) => {
-      'worklet'
+      'worklet';
       if (prev === null) {
         translateY.value = withDelay(
           delayMs,
@@ -37,20 +37,20 @@ function useBounceDot(delayMs: number) {
             ),
             -1,
           ),
-        )
+        );
       }
     },
-  )
+  );
 
   return useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
-  }))
+  }));
 }
 
 export function ChatThinkingIndicator() {
-  const dot1Style = useBounceDot(0)
-  const dot2Style = useBounceDot(STAGGER_OFFSET)
-  const dot3Style = useBounceDot(STAGGER_OFFSET * 2)
+  const dot1Style = useBounceDot(0);
+  const dot2Style = useBounceDot(STAGGER_OFFSET);
+  const dot3Style = useBounceDot(STAGGER_OFFSET * 2);
 
   return (
     <View style={styles.row}>
@@ -65,7 +65,7 @@ export function ChatThinkingIndicator() {
         </View>
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -93,4 +93,4 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.xs,
     marginLeft: spacing[1],
   },
-})
+});

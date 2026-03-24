@@ -1,14 +1,14 @@
-import { List } from '@hominem/ui/list'
+import { List } from '@hominem/ui/list';
 
-import { useLists } from '../../hooks/use-lists'
-import { ListForm } from './list-form'
-import { ListRow } from './list-row'
+import { useLists } from '../../hooks/use-lists';
+import { ListForm } from './list-form';
+import { ListRow } from './list-row';
 
 export function Lists() {
-  const { data: lists, isLoading, error: apiError } = useLists()
-  const displayLists = lists ?? []
+  const { data: lists, isLoading, error: apiError } = useLists();
+  const displayLists = lists ?? [];
 
-  const title = <h2 className="heading-2">Lists</h2>
+  const title = <h2 className="heading-2">Lists</h2>;
 
   if (apiError) {
     return (
@@ -18,7 +18,7 @@ export function Lists() {
           <p className="text-destructive">Error loading lists: {apiError?.message}</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -49,5 +49,5 @@ export function Lists() {
         <ListForm />
       </div>
     </div>
-  )
+  );
 }

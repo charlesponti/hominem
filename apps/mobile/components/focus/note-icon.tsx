@@ -4,7 +4,7 @@ import type { Note } from '@hominem/rpc/types';
 import { theme } from '~/theme';
 
 const ITEM_ICON_SIZE = 20;
-export const FocusItemIcon = ({ item }: { item: Note }) => {
+export const NoteIcon = ({ item }: { item: Note }) => {
   switch (item.type) {
     case 'task':
       return (
@@ -38,11 +38,7 @@ export const FocusItemIcon = ({ item }: { item: Note }) => {
       );
     default:
       return (
-        <MaterialIcons
-          name="note"
-          color={theme.colors['emphasis-low']}
-          size={ITEM_ICON_SIZE}
-        />
-      )
+        <MaterialIcons name="note" color={theme.colors['emphasis-low']} size={ITEM_ICON_SIZE} />
+      );
   }
 };

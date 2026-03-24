@@ -1,5 +1,4 @@
 import { AuthProvider } from '@hominem/auth';
-import { TelemetryProvider } from '~/lib/telemetry';
 import { COMMON_FONT_LINKS, UpdateGuard } from '@hominem/ui';
 import type React from 'react';
 import { useCallback } from 'react';
@@ -14,8 +13,9 @@ import {
   useRevalidator,
 } from 'react-router';
 
-import { AnalyticsProvider } from '~/lib/posthog'
 import { WEB_BRAND } from '~/lib/brand';
+import { AnalyticsProvider } from '~/lib/posthog';
+import { TelemetryProvider } from '~/lib/telemetry';
 
 import type { Route } from './+types/root';
 
@@ -76,10 +76,10 @@ export const meta: Route.MetaFunction = () => {
   return [
     { title: WEB_BRAND.meta.title },
     { name: 'description', content: WEB_BRAND.meta.description },
-  ]
-}
+  ];
+};
 
-export const links: Route.LinksFunction = () => [...COMMON_FONT_LINKS, ...NOTES_ICON_LINKS]
+export const links: Route.LinksFunction = () => [...COMMON_FONT_LINKS, ...NOTES_ICON_LINKS];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

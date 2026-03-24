@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { Source, Sources } from './sources';
 
 const meta: Meta<typeof Sources> = {
@@ -16,15 +17,11 @@ const sampleSources = [
 ];
 
 export const Default: Story = {
-  render: () => (
-    <Sources sources={sampleSources} className="max-w-sm" />
-  ),
+  render: () => <Sources sources={sampleSources} className="max-w-sm" />,
 };
 
 export const SingleSource: Story = {
-  render: () => (
-    <Sources sources={sampleSources.slice(0, 1)} className="max-w-sm" />
-  ),
+  render: () => <Sources sources={sampleSources.slice(0, 1)} className="max-w-sm" />,
 };
 
 export const SourceItem: Story = {

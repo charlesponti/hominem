@@ -45,9 +45,13 @@ export const BottomSheet = ({
           duration: VOID_MOTION_EXIT,
           easing: VOID_EASING_EXIT,
         });
-        opacity.value = withTiming(0, { duration: VOID_MOTION_EXIT, easing: VOID_EASING_EXIT }, () => {
-          setIsVisible(false);
-        });
+        opacity.value = withTiming(
+          0,
+          { duration: VOID_MOTION_EXIT, easing: VOID_EASING_EXIT },
+          () => {
+            setIsVisible(false);
+          },
+        );
       }
     },
   );

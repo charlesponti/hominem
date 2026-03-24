@@ -1,4 +1,4 @@
-import { BRAND } from '@hominem/env/brand'
+import { BRAND } from '@hominem/env/brand';
 
 export const WEB_BRAND = {
   appName: BRAND.appName,
@@ -17,4 +17,4 @@ export const WEB_BRAND = {
     shortName: BRAND.appName,
     description: `${BRAND.appName} brings notes, voice capture, and chat into one workspace.`,
   },
-} as const
+} as const;

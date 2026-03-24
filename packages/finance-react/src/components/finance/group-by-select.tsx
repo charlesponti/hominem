@@ -1,20 +1,20 @@
-import { Label } from '@hominem/ui/components/ui/label'
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { useId } from 'react'
+} from '@hominem/ui/components/ui/select';
+import { useId } from 'react';
 
-type GroupByOption = 'month' | 'week' | 'day'
+type GroupByOption = 'month' | 'week' | 'day';
 
 interface GroupBySelectProps {
-  groupBy: GroupByOption
-  onGroupByChange: (value: GroupByOption) => void
-  label?: string
-  className?: string
+  groupBy: GroupByOption;
+  onGroupByChange: (value: GroupByOption) => void;
+  label?: string;
+  className?: string;
 }
 
 export function GroupBySelect({
@@ -23,7 +23,7 @@ export function GroupBySelect({
   label = 'Group By',
   className,
 }: GroupBySelectProps) {
-  const id = useId()
+  const id = useId();
 
   return (
     <div className={`space-y-2 ${className || ''}`}>
@@ -43,5 +43,5 @@ export function GroupBySelect({
         </SelectContent>
       </Select>
     </div>
-  )
+  );
 }

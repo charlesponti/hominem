@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
+import { Button } from './button';
 import {
   Dialog,
   DialogContent,
@@ -8,7 +10,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from './dialog';
-import { Button } from './button';
 
 const meta: Meta<typeof Dialog> = {
   title: 'Overlays/Dialog',
@@ -60,9 +61,7 @@ export const WithCloseButton: Story = {
       <DialogContent showCloseButton>
         <DialogHeader>
           <DialogTitle>Confirmation</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to proceed?
-          </DialogDescription>
+          <DialogDescription>Are you sure you want to proceed?</DialogDescription>
         </DialogHeader>
         <DialogFooter showCloseButton>
           <Button>Confirm</Button>

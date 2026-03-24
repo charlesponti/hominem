@@ -1,5 +1,5 @@
-import path from 'node:path';
 import { Args, Command, Flags } from '@oclif/core';
+import path from 'node:path';
 import { z } from 'zod';
 
 import type { JsonValue } from '../../contracts';

@@ -1,5 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from './conversation';
+
+import {
+  Conversation,
+  ConversationContent,
+  ConversationEmptyState,
+  ConversationScrollButton,
+} from './conversation';
 
 const meta: Meta<typeof Conversation> = {
   title: 'AI Elements/Conversation',

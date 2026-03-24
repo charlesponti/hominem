@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { BookOpen, Brain, Search, Zap } from 'lucide-react';
+
 import { LandingPage } from './landing-page';
 
 const meta: Meta<typeof LandingPage> = {
@@ -18,7 +19,8 @@ export const Default: Story = {
     kicker: 'Personal Knowledge',
     headline: (
       <>
-        Think better,<br />
+        Think better,
+        <br />
         <em>remember everything</em>
       </>
     ),

@@ -16,8 +16,8 @@ import {
   oneTimeToken,
 } from 'better-auth/plugins';
 
-import { env } from '../env';
 import { API_BRAND } from '../brand';
+import { env } from '../env';
 import { sendEmail } from '../lib/email';
 import { recordTestOtp } from './test-otp-store';
 

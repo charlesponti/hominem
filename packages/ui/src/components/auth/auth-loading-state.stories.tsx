@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { AuthLoadingState } from './auth-loading-state';
 
 const meta: Meta<typeof AuthLoadingState> = {

@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { redis } from '@hominem/services/redis';
 import { getSharedTextModel } from '@hominem/services/ai-model';
+import { redis } from '@hominem/services/redis';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { generateObject } from 'ai';

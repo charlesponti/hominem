@@ -27,9 +27,7 @@ import type { z } from 'zod';
  * const validUsers = unknownUsers.filter(isValidUser);
  * ```
  */
-export function createSchemaGuard<T>(
-  schema: z.ZodType<T>,
-): (value: unknown) => value is T {
+export function createSchemaGuard<T>(schema: z.ZodType<T>): (value: unknown) => value is T {
   return (value: unknown): value is T => {
     const result = schema.safeParse(value);
     return result.success;
@@ -66,15 +64,15 @@ export function createDiscriminator<T extends Record<string, unknown>, K extends
   discriminatorValue: T[K],
 ): (value: unknown) => value is Extract<T, Record<K, T[K]>> {
   return (value: unknown): value is Extract<T, Record<K, T[K]>> => {
-    const record = value as Record<string, unknown>
+    const record = value as Record<string, unknown>;
 
-  return (
-    typeof record === 'object' &&
-    record !== null &&
-    discriminatorField in record &&
-    record[discriminatorField as keyof typeof record] === discriminatorValue
-  );
-};
+    return (
+      typeof record === 'object' &&
+      record !== null &&
+      discriminatorField in record &&
+      record[discriminatorField as keyof typeof record] === discriminatorValue
+    );
+  };
 }
 
 /**
@@ -105,7 +103,7 @@ export function createPropertyChecker<T extends Record<string, unknown>>(
       return false;
     }
 
-    const record = value as Record<string, unknown>
+    const record = value as Record<string, unknown>;
 
     for (const [prop, checker] of Object.entries(requiredProps)) {
       if (!(prop in record) || !checker(record[prop])) {

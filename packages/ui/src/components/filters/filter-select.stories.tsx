@@ -1,5 +1,6 @@
 import type { Meta } from '@storybook/react';
 import { useState } from 'react';
+
 import { FilterSelect } from './filter-select';
 
 const meta: Meta<typeof FilterSelect> = {

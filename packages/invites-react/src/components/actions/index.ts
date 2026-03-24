@@ -1,1 +1,1 @@
-export { DeleteInviteButton } from './delete-invite-button'
+export { DeleteInviteButton } from './delete-invite-button';

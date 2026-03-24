@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { useDerivedValue, withSpring } from 'react-native-reanimated';
 
 import { theme } from '~/theme';
+
 import { BAR_WIDTH, buildAudioBarModels, normalizeDb } from './audio-meterings-model';
 
 const MAX_HEIGHT = 50;

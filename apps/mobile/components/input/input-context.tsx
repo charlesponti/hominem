@@ -7,6 +7,7 @@ import React, {
   type PropsWithChildren,
 } from 'react';
 
+import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config';
 import {
   createInitialMobileComposerState,
   setMobileComposerAttachments,
@@ -17,7 +18,6 @@ import {
   type MobileComposerAttachment,
   type MobileComposerMode,
 } from './mobile-composer-state';
-import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config';
 
 type InputContextValue = {
   message: string;
@@ -26,7 +26,7 @@ type InputContextValue = {
   setAttachments: (
     value:
       | MobileComposerAttachment[]
-      | ((currentValue: MobileComposerAttachment[]) => MobileComposerAttachment[])
+      | ((currentValue: MobileComposerAttachment[]) => MobileComposerAttachment[]),
   ) => void;
   isRecording: boolean;
   setIsRecording: (value: boolean) => void;
@@ -51,18 +51,21 @@ export const InputProvider = ({ children }: PropsWithChildren) => {
     setState((currentState) => setMobileComposerText(currentState, value));
   }, []);
 
-  const setAttachments = useCallback((
-    value:
-      | MobileComposerAttachment[]
-      | ((currentValue: MobileComposerAttachment[]) => MobileComposerAttachment[]),
-  ) => {
-    setState((currentState) => {
-      const nextAttachments =
-        typeof value === 'function' ? value(currentState.attachments) : value
+  const setAttachments = useCallback(
+    (
+      value:
+        | MobileComposerAttachment[]
+        | ((currentValue: MobileComposerAttachment[]) => MobileComposerAttachment[]),
+    ) => {
+      setState((currentState) => {
+        const nextAttachments =
+          typeof value === 'function' ? value(currentState.attachments) : value;
 
-      return setMobileComposerAttachments(currentState, nextAttachments)
-    });
-  }, []);
+        return setMobileComposerAttachments(currentState, nextAttachments);
+      });
+    },
+    [],
+  );
 
   const setIsRecording = useCallback((value: boolean) => {
     setState((currentState) => setMobileComposerRecording(currentState, value));
@@ -89,14 +92,7 @@ export const InputProvider = ({ children }: PropsWithChildren) => {
       context: state.context,
       setContext,
     }),
-    [
-      setAttachments,
-      setContext,
-      setIsRecording,
-      setMessage,
-      setMode,
-      state,
-    ],
+    [setAttachments, setContext, setIsRecording, setMessage, setMode, state],
   );
 
   return <InputContext.Provider value={value}>{children}</InputContext.Provider>;

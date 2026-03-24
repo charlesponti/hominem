@@ -1,4 +1,5 @@
 import { useRpcQuery } from '@hominem/rpc/react';
+
 import { chatQueryKeys } from '~/lib/query-keys';
 
 export function useNoteChat(noteId: string) {

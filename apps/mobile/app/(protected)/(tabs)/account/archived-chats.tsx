@@ -1,33 +1,33 @@
-import { Stack, useRouter } from 'expo-router'
-import type { RelativePathString } from 'expo-router'
-import React, { useCallback } from 'react'
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { Stack, useRouter } from 'expo-router';
+import type { RelativePathString } from 'expo-router';
+import React, { useCallback } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { useArchivedSessions } from '~/components/chat/session-card'
-import AppIcon from '~/components/ui/icon'
-import { Text, theme } from '~/theme'
-import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
+import { useArchivedSessions } from '~/components/chat/session-card';
+import AppIcon from '~/components/ui/icon';
+import { Text, theme } from '~/theme';
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
 
 function formatAge(activityAt: string): string {
-  const parsed = parseInboxTimestamp(activityAt)
-  const diffMs = Date.now() - parsed.getTime()
-  const diffH = Math.floor(diffMs / (1000 * 60 * 60))
-  if (diffH < 1) return 'Just now'
-  if (diffH < 24) return `${diffH}h ago`
-  const diffD = Math.floor(diffH / 24)
-  return `${diffD}d ago`
+  const parsed = parseInboxTimestamp(activityAt);
+  const diffMs = Date.now() - parsed.getTime();
+  const diffH = Math.floor(diffMs / (1000 * 60 * 60));
+  if (diffH < 1) return 'Just now';
+  if (diffH < 24) return `${diffH}h ago`;
+  const diffD = Math.floor(diffH / 24);
+  return `${diffD}d ago`;
 }
 
 export default function ArchivedChatsScreen() {
-  const router = useRouter()
-  const { data: chats = [] } = useArchivedSessions()
+  const router = useRouter();
+  const { data: chats = [] } = useArchivedSessions();
 
   const onPressChat = useCallback(
     (chatId: string) => {
-      router.push(`/(protected)/(tabs)/sherpa?chatId=${chatId}` as RelativePathString)
+      router.push(`/(protected)/(tabs)/sherpa?chatId=${chatId}` as RelativePathString);
     },
     [router],
-  )
+  );
 
   return (
     <>
@@ -88,7 +88,7 @@ export default function ArchivedChatsScreen() {
         </ScrollView>
       </View>
     </>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -142,4 +142,4 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: theme.spacing.xs_4,
   },
-})
+});

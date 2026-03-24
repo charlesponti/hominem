@@ -11,7 +11,8 @@ const outputSchema = z.object({
 });
 
 export default class AuthLogin extends Command {
-  static description = 'Starts the CLI device-code authentication flow and stores machine-client tokens.';
+  static description =
+    'Starts the CLI device-code authentication flow and stores machine-client tokens.';
   static summary = 'Authenticate the CLI';
 
   static override flags = {
@@ -60,9 +61,12 @@ export default class AuthLogin extends Command {
           code: error.code,
         });
       }
-      this.error(`Authentication flow failed: ${error instanceof Error ? error.message : 'Unknown error'}`, {
-        exit: 2,
-      });
+      this.error(
+        `Authentication flow failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        {
+          exit: 2,
+        },
+      );
     }
 
     const output = {
@@ -74,4 +78,3 @@ export default class AuthLogin extends Command {
     return validateWithZod(outputSchema, output);
   }
 }
-

@@ -14,7 +14,6 @@ type VoiceTranscribeErrorResponse = {
   code?: string;
 };
 
-
 function getMimeTypeFromUri(uri: string): string {
   const normalized = uri.toLowerCase();
   if (normalized.endsWith('.mp3')) return 'audio/mpeg';

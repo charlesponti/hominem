@@ -1,13 +1,10 @@
+import { tweetGenerateSchema, type TweetGenerateOutput } from '@hominem/rpc/types/tweet.types';
 import { getSharedTextModel } from '@hominem/services/ai-model';
-import { ValidationError } from '../errors';
 import { generateText } from 'ai';
 import { Hono } from 'hono';
 
+import { ValidationError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
-import {
-  tweetGenerateSchema,
-  type TweetGenerateOutput,
-} from '@hominem/rpc/types/tweet.types';
 
 const TWEET_CHARACTER_LIMIT = 280;
 

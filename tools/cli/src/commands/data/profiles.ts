@@ -27,13 +27,10 @@ export default class DataProfiles extends Command {
     try {
       config = await loadConfigV2();
     } catch (error) {
-      this.error(
-        error instanceof Error ? error.message : 'Failed to load config',
-        {
-          exit: 3,
-          code: 'CONFIG_READ_FAILED',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to load config', {
+        exit: 3,
+        code: 'CONFIG_READ_FAILED',
+      });
     }
 
     const output = {

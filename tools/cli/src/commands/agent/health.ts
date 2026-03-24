@@ -72,7 +72,7 @@ export default class AgentHealth extends Command {
         {
           exit: 3,
           code: 'AGENT_HEALTH_FAILED',
-        }
+        },
       );
     } finally {
       clearTimeout(timeout);

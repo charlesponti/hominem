@@ -1,6 +1,6 @@
 /**
  * DEPRECATED - This file is no longer used.
- * 
+ *
  * oclif provides the runtime/CLI execution engine.
  * This file is kept for historical reference only.
  */

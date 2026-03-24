@@ -1,6 +1,6 @@
+import { BRAND } from '@hominem/env/brand';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
-import { BRAND } from '@hominem/env/brand';
 
 const extra = (Constants.expoConfig?.extra ?? {}) as {
   apiBaseUrl?: string;
@@ -46,7 +46,8 @@ const configuredApiBaseUrl = toDeviceReachableApiBaseUrl(
   localHost ?? null,
   Device.isDevice,
 );
-const fallbackApiBaseUrl = localHost && Device.isDevice ? `http://${localHost}:4040` : 'http://localhost:4040';
+const fallbackApiBaseUrl =
+  localHost && Device.isDevice ? `http://${localHost}:4040` : 'http://localhost:4040';
 const appVariant = extra.appVariant ?? process.env.APP_VARIANT ?? 'dev';
 export function isReleaseAppVariant(variant: string) {
   return variant === 'preview' || variant === 'production';

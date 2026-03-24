@@ -74,9 +74,7 @@ function DesktopNavLink({ item }: { item: NavItem }) {
       aria-current={isActive ? 'page' : undefined}
       className={cn(
         'flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150',
-        isActive
-          ? 'text-accent'
-          : 'text-text-secondary hover:text-text-primary',
+        isActive ? 'text-accent' : 'text-text-secondary hover:text-text-primary',
       )}
     >
       {item.icon && <item.icon className="size-4 shrink-0" aria-hidden="true" />}
@@ -206,7 +204,7 @@ export function Header({ brandIcon, navItems = [] }: HeaderProps) {
             aria-label={`home`}
             className="flex items-center gap-2 text-text-primary"
           >
-            {brandIcon ? (brandIcon) : null}
+            {brandIcon ? brandIcon : null}
           </Link>
 
           {authContext &&

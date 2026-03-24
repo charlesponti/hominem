@@ -1,17 +1,17 @@
-import type { SessionSource } from '@hominem/chat-services/types'
+import type { SessionSource } from '@hominem/chat-services/types';
 
-import { cn } from '../../lib/utils'
+import { cn } from '../../lib/utils';
 
 interface ContextAnchorProps {
-  source: SessionSource
-  className?: string
+  source: SessionSource;
+  className?: string;
 }
 
 export function ContextAnchor({ source, className }: ContextAnchorProps) {
   if (source.kind === 'new') {
     return (
       <span className={cn('text-xs text-muted-foreground italic', className)}>New session</span>
-    )
+    );
   }
 
   if (source.kind === 'thought') {
@@ -26,7 +26,7 @@ export function ContextAnchor({ source, className }: ContextAnchorProps) {
         <span className="shrink-0 opacity-60">✦</span>
         <span className="truncate">{source.preview}</span>
       </span>
-    )
+    );
   }
 
   const typeLabel: Record<string, string> = {
@@ -34,7 +34,7 @@ export function ContextAnchor({ source, className }: ContextAnchorProps) {
     task: 'Task',
     task_list: 'Task List',
     tracker: 'Tracker',
-  }
+  };
 
   return (
     <span
@@ -48,5 +48,5 @@ export function ContextAnchor({ source, className }: ContextAnchorProps) {
       <span className="opacity-40">·</span>
       <span className="truncate">{source.title}</span>
     </span>
-  )
+  );
 }

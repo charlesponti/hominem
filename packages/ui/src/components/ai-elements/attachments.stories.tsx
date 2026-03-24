@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { Attachment, AttachmentEmpty, Attachments } from './attachments';
 
 const meta: Meta<typeof Attachments> = {

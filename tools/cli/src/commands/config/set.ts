@@ -65,7 +65,7 @@ export default class ConfigSet extends Command {
         {
           exit: 3,
           code: 'CONFIG_READ_FAILED',
-        }
+        },
       );
     }
 
@@ -79,7 +79,7 @@ export default class ConfigSet extends Command {
         {
           exit: 3,
           code: 'CONFIG_WRITE_FAILED',
-        }
+        },
       );
     }
 

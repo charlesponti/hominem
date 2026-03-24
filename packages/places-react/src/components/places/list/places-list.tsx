@@ -1,19 +1,19 @@
-import type { ListPlace } from '@hominem/lists-services'
-import { Alert, Stack } from '@hominem/ui'
-import { List } from '@hominem/ui/list'
-import { type ReactNode, useCallback, useState } from 'react'
-import { href } from 'react-router'
+import type { ListPlace } from '@hominem/lists-services';
+import { Alert, Stack } from '@hominem/ui';
+import { List } from '@hominem/ui/list';
+import { type ReactNode, useCallback, useState } from 'react';
+import { href } from 'react-router';
 
-import PlaceListItemActions from './place-list-item-actions'
-import PlaceRow from './place-row'
+import PlaceListItemActions from './place-list-item-actions';
+import PlaceRow from './place-row';
 
 interface PlacesListProps {
-  places: ListPlace[]
-  listId: string
+  places: ListPlace[];
+  listId: string;
   /** Slot for the add-place control (e.g. AddPlaceControl from lists-react) */
-  addPlaceControl?: ReactNode
+  addPlaceControl?: ReactNode;
   /** Called when a place row is hovered; receives placeId or null on leave */
-  onHoverPlace?: (placeId: string | null) => void
+  onHoverPlace?: (placeId: string | null) => void;
 }
 
 export default function PlacesList({
@@ -22,18 +22,18 @@ export default function PlacesList({
   addPlaceControl,
   onHoverPlace,
 }: PlacesListProps) {
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleDeleteError = useCallback(() => {
-    setDeleteError('Delete failed. Retry.')
-  }, [])
+    setDeleteError('Delete failed. Retry.');
+  }, []);
 
   const handleMouseEnter = useCallback(
     (placeId: string) => onHoverPlace?.(placeId),
     [onHoverPlace],
-  )
+  );
 
-  const handleMouseLeave = useCallback(() => onHoverPlace?.(null), [onHoverPlace])
+  const handleMouseLeave = useCallback(() => onHoverPlace?.(null), [onHoverPlace]);
 
   return (
     <>
@@ -75,7 +75,7 @@ export default function PlacesList({
         </List>
       ) : null}
     </>
-  )
+  );
 }
 
-export { PlacesList }
+export { PlacesList };

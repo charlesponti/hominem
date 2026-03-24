@@ -37,7 +37,7 @@ function DesktopAuthScreen() {
   const isVerifyingOtp = state.status === 'verifying_otp';
   const isPasskeyLoading = state.status === 'authenticating_passkey';
   const isOtpStep = state.status === 'otp_requested' || isVerifyingOtp;
-    const helperText = useMemo(() => {
+  const helperText = useMemo(() => {
     if (isOtpStep && email) {
       return `Enter the code sent to ${email}.`;
     }

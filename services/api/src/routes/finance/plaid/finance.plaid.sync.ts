@@ -1,14 +1,9 @@
 import { getPlaidItemByUserAndItemId } from '@hominem/finance-services';
-import {
-  UnauthorizedError,
-  NotFoundError,
-  ValidationError,
-  InternalError,
-} from '../../../errors';
 import { QUEUE_NAMES } from '@hominem/utils/consts';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
+import { UnauthorizedError, NotFoundError, ValidationError, InternalError } from '../../../errors';
 import { plaidSyncQueue } from '../../../lib/queues';
 import type { AppEnv } from '../../../server';
 

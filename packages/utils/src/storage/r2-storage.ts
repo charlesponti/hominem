@@ -11,7 +11,6 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import { isSupportedChatUploadMimeType } from '../upload';
-
 import * as Types from './types';
 
 export type StoredFile = Types.StoredFile;

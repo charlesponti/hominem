@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 
-export interface UpdateFocusItemInput {
+export interface UpdateNoteInput {
   id: string
   text: string
   category: string
@@ -8,7 +8,7 @@ export interface UpdateFocusItemInput {
   timezone: string
 }
 
-export function useUpdateFocusItem() {
+export function useUpdateNote() {
   return {
     isPending: false,
     mutateAsync: vi.fn(),

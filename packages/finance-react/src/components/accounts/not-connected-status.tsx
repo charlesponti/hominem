@@ -1,5 +1,5 @@
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { AlertCircleIcon } from 'lucide-react'
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { AlertCircleIcon } from 'lucide-react';
 
 export function NotConnectedStatus() {
   return (
@@ -9,5 +9,5 @@ export function NotConnectedStatus() {
         Not Connected
       </Badge>
     </div>
-  )
+  );
 }

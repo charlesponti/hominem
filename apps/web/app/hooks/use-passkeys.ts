@@ -32,7 +32,7 @@ export function usePasskeys() {
 
 export function useHasPasskeys() {
   const { data, isLoading } = usePasskeys();
-  
+
   if (isLoading) return undefined;
   if (data === undefined) return undefined;
   return data.length > 0;

@@ -1,20 +1,27 @@
-import type React from 'react'
-import { Modal, Pressable, StyleSheet, View, type TextInput } from 'react-native'
+import type React from 'react';
+import { Modal, Pressable, StyleSheet, View, type TextInput } from 'react-native';
 
-import { chatTokensNative, colors, fontFamiliesNative, fontSizes, radiiNative, spacing } from '../../tokens'
-import { Button } from '../ui/button.native'
-import { TextField } from '../ui/text-field.native'
-import { Text } from '../typography/text.native'
-import type { ChatRenderIcon } from './chat.types'
+import {
+  chatTokensNative,
+  colors,
+  fontFamiliesNative,
+  fontSizes,
+  radiiNative,
+  spacing,
+} from '../../tokens';
+import { Text } from '../typography/text.native';
+import { Button } from '../ui/button.native';
+import { TextField } from '../ui/text-field.native';
+import type { ChatRenderIcon } from './chat.types';
 
 interface ChatSearchModalProps {
-  visible: boolean
-  searchQuery: string
-  resultCount: number
-  searchInputRef: React.RefObject<TextInput | null>
-  onClose: () => void
-  onChangeSearchQuery: (value: string) => void
-  renderIcon: ChatRenderIcon
+  visible: boolean;
+  searchQuery: string;
+  resultCount: number;
+  searchInputRef: React.RefObject<TextInput | null>;
+  onClose: () => void;
+  onChangeSearchQuery: (value: string) => void;
+  renderIcon: ChatRenderIcon;
 }
 
 export function ChatSearchModal({
@@ -62,7 +69,7 @@ export function ChatSearchModal({
         </View>
       </Pressable>
     </Modal>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -113,4 +120,4 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 24,
   },
-})
+});

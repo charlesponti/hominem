@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Home, Settings, Users } from 'lucide-react';
+
 import {
   SidebarProvider,
   Sidebar,

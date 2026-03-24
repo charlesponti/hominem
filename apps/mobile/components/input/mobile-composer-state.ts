@@ -1,22 +1,23 @@
-import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config'
-import type { UploadedFile } from '@hominem/ui/types/upload'
+import type { UploadedFile } from '@hominem/ui/types/upload';
 
-export type MobileComposerMode = 'text' | 'voice'
+import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config';
+
+export type MobileComposerMode = 'text' | 'voice';
 
 export interface MobileComposerAttachment {
-  id: string
-  name: string
-  type: string
-  localUri?: string
-  uploadedFile?: UploadedFile
+  id: string;
+  name: string;
+  type: string;
+  localUri?: string;
+  uploadedFile?: UploadedFile;
 }
 
 export interface MobileComposerState {
-  context: MobileWorkspaceContext
-  text: string
-  attachments: MobileComposerAttachment[]
-  isRecording: boolean
-  mode: MobileComposerMode
+  context: MobileWorkspaceContext;
+  text: string;
+  attachments: MobileComposerAttachment[];
+  isRecording: boolean;
+  mode: MobileComposerMode;
 }
 
 export function createInitialMobileComposerState(): MobileComposerState {
@@ -26,7 +27,7 @@ export function createInitialMobileComposerState(): MobileComposerState {
     attachments: [],
     isRecording: false,
     mode: 'text',
-  }
+  };
 }
 
 export function setMobileComposerContext(
@@ -36,7 +37,7 @@ export function setMobileComposerContext(
   return {
     ...state,
     context,
-  }
+  };
 }
 
 export function setMobileComposerText(
@@ -46,7 +47,7 @@ export function setMobileComposerText(
   return {
     ...state,
     text,
-  }
+  };
 }
 
 export function setMobileComposerAttachments(
@@ -56,7 +57,7 @@ export function setMobileComposerAttachments(
   return {
     ...state,
     attachments,
-  }
+  };
 }
 
 export function setMobileComposerRecording(
@@ -66,7 +67,7 @@ export function setMobileComposerRecording(
   return {
     ...state,
     isRecording,
-  }
+  };
 }
 
 export function setMobileComposerMode(
@@ -76,5 +77,5 @@ export function setMobileComposerMode(
   return {
     ...state,
     mode,
-  }
+  };
 }

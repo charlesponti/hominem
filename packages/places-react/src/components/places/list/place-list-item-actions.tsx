@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -7,25 +7,25 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui/dialog'
+} from '@hominem/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@hominem/ui/dropdown'
-import { ExternalLink, MoreVertical, Trash } from 'lucide-react'
-import { type MouseEvent, useCallback, useMemo } from 'react'
+} from '@hominem/ui/dropdown';
+import { ExternalLink, MoreVertical, Trash } from 'lucide-react';
+import { type MouseEvent, useCallback, useMemo } from 'react';
 
-import { useModal } from '../../../hooks/use-modal'
-import { useRemovePlaceFromList } from '../../../hooks/use-places'
+import { useModal } from '../../../hooks/use-modal';
+import { useRemovePlaceFromList } from '../../../hooks/use-places';
 
 interface PlaceListItemActionsProps {
-  placeName: string
-  placeId: string
-  listId: string
-  onRemove?: () => void
-  onError?: () => void
+  placeName: string;
+  placeId: string;
+  listId: string;
+  onRemove?: () => void;
+  onError?: () => void;
 }
 
 const PlaceListItemActions = ({
@@ -35,41 +35,41 @@ const PlaceListItemActions = ({
   onRemove,
   onError,
 }: PlaceListItemActionsProps) => {
-  const { isOpen: isDeleteModalOpen, open: openDeleteModal, close: closeDeleteModal } = useModal()
+  const { isOpen: isDeleteModalOpen, open: openDeleteModal, close: closeDeleteModal } = useModal();
   const removeListItemMutation = useRemovePlaceFromList({
     onSuccess: () => {
-      closeDeleteModal()
-      onRemove?.()
+      closeDeleteModal();
+      onRemove?.();
     },
     onError: () => {
-      onError?.()
+      onError?.();
     },
-  })
+  });
 
   const onDeleteClick = useCallback(() => {
-    removeListItemMutation.mutate({ listId, placeId })
-  }, [listId, placeId, removeListItemMutation])
+    removeListItemMutation.mutate({ listId, placeId });
+  }, [listId, placeId, removeListItemMutation]);
 
   const handleDropdownButtonClick = useCallback((e: MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }, [])
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
 
   const handleOpenMaps = useCallback(
     (e: MouseEvent<HTMLDivElement>) => {
-      e.preventDefault()
-      window.open(`https://www.google.com/maps/search/${encodeURIComponent(placeName)}`, '_blank')
+      e.preventDefault();
+      window.open(`https://www.google.com/maps/search/${encodeURIComponent(placeName)}`, '_blank');
     },
     [placeName],
-  )
+  );
 
   const handleOpenDeleteModal = useCallback(
     (e: MouseEvent<HTMLDivElement>) => {
-      e.preventDefault()
-      openDeleteModal()
+      e.preventDefault();
+      openDeleteModal();
     },
     [openDeleteModal],
-  )
+  );
 
   const dropdown = useMemo(
     () => (
@@ -95,7 +95,7 @@ const PlaceListItemActions = ({
       </DropdownMenu>
     ),
     [handleDropdownButtonClick, handleOpenMaps, handleOpenDeleteModal],
-  )
+  );
 
   return (
     <>
@@ -135,8 +135,8 @@ const PlaceListItemActions = ({
         </DialogContent>
       </Dialog>
     </>
-  )
-}
+  );
+};
 
-export default PlaceListItemActions
-export { PlaceListItemActions }
+export default PlaceListItemActions;
+export { PlaceListItemActions };

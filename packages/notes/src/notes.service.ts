@@ -11,18 +11,16 @@ import type {
 } from './contracts';
 import { assertAllowedTransition, ConflictError } from './note.state.service';
 import type { UpdateNoteInput } from './types';
-import {
-  UpdateNoteZodSchema,
-} from './types';
+import { UpdateNoteZodSchema } from './types';
 
 type NotesRow = Selectable<Database['notes']>;
 
 function toDateOrNull(value: string | Date | null | undefined): Date | null {
   if (value === null || value === undefined) {
-    return null
+    return null;
   }
 
-  return value instanceof Date ? value : new Date(value)
+  return value instanceof Date ? value : new Date(value);
 }
 
 function rowToNote(row: NotesRow, tags: NoteOutput['tags'] = []): NoteOutput {

@@ -16,11 +16,13 @@ export function useTelemetry() {
     if (typeof window === 'undefined') return;
 
     // Get env vars from window (injected by server) or import.meta.env
-    const env = ((window as unknown as { ENV?: Record<string, string> }).ENV) ?? {};
-    
+    const env = (window as unknown as { ENV?: Record<string, string> }).ENV ?? {};
+
     // Check if telemetry is explicitly disabled
-    if (env.OTEL_EXPORTER_OTLP_ENDPOINT === 'none' || 
-        import.meta.env.VITE_OTEL_DISABLED === 'true') {
+    if (
+      env.OTEL_EXPORTER_OTLP_ENDPOINT === 'none' ||
+      import.meta.env.VITE_OTEL_DISABLED === 'true'
+    ) {
       console.log('[Telemetry] OpenTelemetry is disabled');
       return;
     }

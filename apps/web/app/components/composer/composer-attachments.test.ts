@@ -1,8 +1,6 @@
-import { describe, expect, it } from 'vitest'
-
-import type { UploadedFile } from '@hominem/ui/types/upload'
-
-import { formatNoteAttachmentsSection, formatUploadedFileContext } from '@hominem/ui/composer'
+import { formatNoteAttachmentsSection, formatUploadedFileContext } from '@hominem/ui/composer';
+import type { UploadedFile } from '@hominem/ui/types/upload';
+import { describe, expect, it } from 'vitest';
 
 function createUploadedFileFixture(overrides: Partial<UploadedFile> = {}): UploadedFile {
   return {
@@ -15,22 +13,22 @@ function createUploadedFileFixture(overrides: Partial<UploadedFile> = {}): Uploa
     url: 'https://example.test/brief.pdf',
     uploadedAt: new Date(),
     ...overrides,
-  }
+  };
 }
 
 describe('composer attachments helpers', () => {
   it('formats uploaded file context for chat submission', () => {
-    const context = formatUploadedFileContext([createUploadedFileFixture()])
+    const context = formatUploadedFileContext([createUploadedFileFixture()]);
 
-    expect(context).toContain('Attached files context:')
-    expect(context).toContain('Attachment: brief.pdf')
-    expect(context).toContain('Quarterly brief')
-  })
+    expect(context).toContain('Attached files context:');
+    expect(context).toContain('Attachment: brief.pdf');
+    expect(context).toContain('Quarterly brief');
+  });
 
   it('formats note attachment blocks for note content', () => {
-    const content = formatNoteAttachmentsSection([createUploadedFileFixture()])
+    const content = formatNoteAttachmentsSection([createUploadedFileFixture()]);
 
-    expect(content).toContain('## Attachments')
-    expect(content).toContain('- [brief.pdf](https://example.test/brief.pdf)')
-  })
-})
+    expect(content).toContain('## Attachments');
+    expect(content).toContain('- [brief.pdf](https://example.test/brief.pdf)');
+  });
+});

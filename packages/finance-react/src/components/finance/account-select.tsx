@@ -1,27 +1,27 @@
-import { Label } from '@hominem/ui/components/ui/label'
+import { Label } from '@hominem/ui/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@hominem/ui/components/ui/select'
-import { useId } from 'react'
+} from '@hominem/ui/components/ui/select';
+import { useId } from 'react';
 
 export interface Account {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export interface AccountSelectProps {
-  selectedAccount: string
-  onAccountChange: (value: string) => void
-  accounts?: Account[]
-  isLoading?: boolean
-  placeholder?: string
-  label?: string
-  className?: string
-  showLabel?: boolean
+  selectedAccount: string;
+  onAccountChange: (value: string) => void;
+  accounts?: Account[];
+  isLoading?: boolean;
+  placeholder?: string;
+  label?: string;
+  className?: string;
+  showLabel?: boolean;
 }
 
 export function AccountSelect({
@@ -34,7 +34,7 @@ export function AccountSelect({
   className,
   showLabel = false,
 }: AccountSelectProps) {
-  const id = useId()
+  const id = useId();
 
   const selectElement = (
     <Select name="account" value={selectedAccount} onValueChange={onAccountChange}>
@@ -60,7 +60,7 @@ export function AccountSelect({
         )}
       </SelectContent>
     </Select>
-  )
+  );
 
   if (showLabel) {
     return (
@@ -68,8 +68,8 @@ export function AccountSelect({
         <Label htmlFor={id}>{label}</Label>
         {selectElement}
       </div>
-    )
+    );
   }
 
-  return selectElement
+  return selectElement;
 }

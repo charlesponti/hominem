@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, userEvent, within } from 'storybook/test';
 import { Plus, Trash2 } from 'lucide-react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Button } from './button';
 

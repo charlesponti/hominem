@@ -1,12 +1,8 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import type { AppRequester } from './test-helpers/auth';
-import {
-  createAuthTestEmail,
-  requestJson,
-  signInWithEmailOtp,
-} from './test-helpers/auth';
 import { createServer } from '../server';
+import type { AppRequester } from './test-helpers/auth';
+import { createAuthTestEmail, requestJson, signInWithEmailOtp } from './test-helpers/auth';
 
 interface DeviceCodeResponse {
   device_code: string;

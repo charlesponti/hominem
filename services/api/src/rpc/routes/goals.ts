@@ -6,27 +6,31 @@ import {
   getGoalById,
   deleteGoal,
 } from '@hominem/events-services';
-import { NotFoundError } from '../errors';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-
-import { authMiddleware, type AppContext } from '../middleware/auth';
-
 import {
   GoalCreateInputSchema,
   GoalUpdateInputSchema,
   GoalListQuerySchema,
 } from '@hominem/rpc/types/goals.types';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+
+import { NotFoundError } from '../errors';
+import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**
  * Type predicate to check if an event is a Goal owned by a specific user
  */
-function isUserGoal(event: Awaited<ReturnType<typeof getGoalById>>, userId: string): event is NonNullable<Awaited<ReturnType<typeof getGoalById>>> {
-  const candidate = event as (NonNullable<Awaited<ReturnType<typeof getGoalById>>> & {
-    userId?: string
-    type?: string
-  }) | null
-  return candidate !== null && candidate.userId === userId && candidate.type === 'Goal'
+function isUserGoal(
+  event: Awaited<ReturnType<typeof getGoalById>>,
+  userId: string,
+): event is NonNullable<Awaited<ReturnType<typeof getGoalById>>> {
+  const candidate = event as
+    | (NonNullable<Awaited<ReturnType<typeof getGoalById>>> & {
+        userId?: string;
+        type?: string;
+      })
+    | null;
+  return candidate !== null && candidate.userId === userId && candidate.type === 'Goal';
 }
 
 /**

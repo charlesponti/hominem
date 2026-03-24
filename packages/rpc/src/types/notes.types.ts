@@ -144,6 +144,7 @@ export type NotesCreateInput = {
   status?: NoteStatus;
   title?: string;
   content: string;
+  fileIds?: string[];
   excerpt?: string;
   tags?: ContentTag[];
   mentions?: NoteMention[];
@@ -160,6 +161,7 @@ export type NotesUpdateInput = {
   status?: NoteStatus;
   title?: string | null;
   content?: string;
+  fileIds?: string[];
   excerpt?: string | null;
   scheduledFor?: string | null;
   tags?: ContentTag[] | null;

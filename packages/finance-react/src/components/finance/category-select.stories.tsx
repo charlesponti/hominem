@@ -1,7 +1,7 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { fn } from 'storybook/test'
+import type { Meta, StoryObj } from '@storybook/react';
+import { fn } from 'storybook/test';
 
-import { TagSelect } from './category-select'
+import { TagSelect } from './category-select';
 
 const meta: Meta<typeof TagSelect> = {
   title: 'Finance/CategorySelect',
@@ -10,9 +10,9 @@ const meta: Meta<typeof TagSelect> = {
   argTypes: {
     isLoading: { control: 'boolean' },
   },
-}
-export default meta
-type Story = StoryObj<typeof TagSelect>
+};
+export default meta;
+type Story = StoryObj<typeof TagSelect>;
 
 const sampleTags = [
   { id: 'food', name: 'Food & Dining' },
@@ -20,7 +20,7 @@ const sampleTags = [
   { id: 'utilities', name: 'Utilities' },
   { id: 'shopping', name: 'Shopping' },
   { id: 'entertainment', name: 'Entertainment' },
-]
+];
 
 export const Default: Story = {
   args: {
@@ -29,7 +29,7 @@ export const Default: Story = {
     tags: sampleTags,
     label: 'Category',
   },
-}
+};
 
 export const WithSelectedTag: Story = {
   args: {
@@ -38,7 +38,7 @@ export const WithSelectedTag: Story = {
     tags: sampleTags,
     label: 'Category',
   },
-}
+};
 
 export const Loading: Story = {
   args: {
@@ -48,7 +48,7 @@ export const Loading: Story = {
     isLoading: true,
     label: 'Category',
   },
-}
+};
 
 export const Empty: Story = {
   args: {
@@ -58,4 +58,4 @@ export const Empty: Story = {
     isLoading: false,
     label: 'Category',
   },
-}
+};

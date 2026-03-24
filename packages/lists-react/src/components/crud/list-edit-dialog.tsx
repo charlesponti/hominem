@@ -1,5 +1,5 @@
-import { Alert, Form } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
+import { Alert, Form } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -7,63 +7,63 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui/dialog'
-import { TextArea } from '@hominem/ui/text-area'
-import { TextField } from '@hominem/ui/text-field'
-import { Trash2 } from 'lucide-react'
-import { useCallback, useState } from 'react'
-import { useNavigate } from 'react-router'
+} from '@hominem/ui/dialog';
+import { TextArea } from '@hominem/ui/text-area';
+import { TextField } from '@hominem/ui/text-field';
+import { Trash2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router';
 
-import { useDeleteList, useUpdateList } from '../../hooks/use-lists'
+import { useDeleteList, useUpdateList } from '../../hooks/use-lists';
 
 interface ListEditDialogProps {
   list: {
-    id: string
-    name: string
-    description: string | null
-  }
-  isOpen: boolean
-  onOpenChange: (open: boolean) => void
+    id: string;
+    name: string;
+    description: string | null;
+  };
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function ListEditDialog({ list, isOpen, onOpenChange }: ListEditDialogProps) {
-  const navigate = useNavigate()
-  const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
-  const [name, setName] = useState(list.name)
-  const [description, setDescription] = useState(list.description || '')
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
+  const navigate = useNavigate();
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  const [name, setName] = useState(list.name);
+  const [description, setDescription] = useState(list.description || '');
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
   if (isOpen !== prevIsOpen) {
-    setPrevIsOpen(isOpen)
+    setPrevIsOpen(isOpen);
     if (isOpen) {
-      setName(list.name)
-      setDescription(list.description || '')
-      setShowDeleteConfirmation(false)
+      setName(list.name);
+      setDescription(list.description || '');
+      setShowDeleteConfirmation(false);
     }
   }
 
   const updateList = useUpdateList({
     onSuccess: () => {
-      onOpenChange(false)
+      onOpenChange(false);
     },
     onError: () => {
       // Error is handled by React Query's isError
     },
     throwOnError: false,
-  })
+  });
 
   const deleteList = useDeleteList({
     onSuccess: () => {
-      onOpenChange(false)
-      navigate('/lists')
+      onOpenChange(false);
+      navigate('/lists');
     },
-  })
+  });
 
   const handleSave = useCallback(
     async (e: React.FormEvent) => {
-      e.preventDefault()
+      e.preventDefault();
       if (showDeleteConfirmation) {
-        return
+        return;
       }
 
       try {
@@ -71,31 +71,31 @@ export function ListEditDialog({ list, isOpen, onOpenChange }: ListEditDialogPro
           id: list.id,
           name,
           description,
-        })
+        });
       } catch {
         // Error is handled by React Query's isError
       }
     },
     [name, description, list.id, updateList, showDeleteConfirmation],
-  )
+  );
 
   const handleDelete = useCallback(async () => {
     try {
-      await deleteList.mutateAsync({ id: list.id })
+      await deleteList.mutateAsync({ id: list.id });
     } catch (error) {
-      console.error('Failed to delete list:', error)
+      console.error('Failed to delete list:', error);
     }
-  }, [deleteList, list.id])
+  }, [deleteList, list.id]);
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
-        setShowDeleteConfirmation(false)
+        setShowDeleteConfirmation(false);
       }
-      onOpenChange(open)
+      onOpenChange(open);
     },
     [onOpenChange],
-  )
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -186,5 +186,5 @@ export function ListEditDialog({ list, isOpen, onOpenChange }: ListEditDialogPro
         )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }

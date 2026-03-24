@@ -39,7 +39,7 @@ export default class ConfigGet extends Command {
         {
           exit: 3,
           code: 'CONFIG_READ_FAILED',
-        }
+        },
       );
     }
 

@@ -1,8 +1,14 @@
 import { useChat } from '@ai-sdk/react';
 import { useRpcMutation } from '@hominem/rpc/react';
-import type { ChatMessage, ChatsSendInput, ChatsSendOutput, ChatsGetMessagesOutput } from '@hominem/rpc/types/chat.types';
+import type {
+  ChatMessage,
+  ChatsSendInput,
+  ChatsSendOutput,
+  ChatsGetMessagesOutput,
+} from '@hominem/rpc/types/chat.types';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
+
 import { chatQueryKeys } from '~/lib/query-keys';
 
 import { useFeatureFlag } from './use-feature-flags';
@@ -57,10 +63,10 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        queryClient.setQueryData<ChatsGetMessagesOutput>(
-          chatQueryKeys.messages(chatId),
-          (prev) => [...(prev ?? []), optimistic],
-        );
+        queryClient.setQueryData<ChatsGetMessagesOutput>(chatQueryKeys.messages(chatId), (prev) => [
+          ...(prev ?? []),
+          optimistic,
+        ]);
       },
       onError: () => {
         queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });

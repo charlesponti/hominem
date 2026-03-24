@@ -1,12 +1,12 @@
-import type { ReviewItem } from '@hominem/chat-services/types'
-import { Inline, Stack } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { FileText } from 'lucide-react'
+import type { ReviewItem } from '@hominem/chat-services/types';
+import { Inline, Stack } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { FileText } from 'lucide-react';
 
 interface ProposalCardProps {
-  item: ReviewItem
-  onReview: (item: ReviewItem) => void
-  onReject: (item: ReviewItem) => void
+  item: ReviewItem;
+  onReview: (item: ReviewItem) => void;
+  onReject: (item: ReviewItem) => void;
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -14,7 +14,7 @@ const TYPE_LABEL: Record<string, string> = {
   task: 'Task',
   task_list: 'Task List',
   tracker: 'Tracker',
-}
+};
 
 export function ProposalCard({ item, onReview, onReject }: ProposalCardProps) {
   return (
@@ -55,7 +55,7 @@ export function ProposalCard({ item, onReview, onReject }: ProposalCardProps) {
         </Button>
       </Inline>
     </Inline>
-  )
+  );
 }
 
 export function ProposalList({
@@ -63,11 +63,11 @@ export function ProposalList({
   onReview,
   onReject,
 }: {
-  items: ReviewItem[]
-  onReview: (item: ReviewItem) => void
-  onReject: (item: ReviewItem) => void
+  items: ReviewItem[];
+  onReview: (item: ReviewItem) => void;
+  onReject: (item: ReviewItem) => void;
 }) {
-  if (items.length === 0) return null
+  if (items.length === 0) return null;
 
   return (
     <Stack as="section" gap="sm" aria-labelledby="review-heading">
@@ -85,5 +85,5 @@ export function ProposalList({
         ))}
       </Stack>
     </Stack>
-  )
+  );
 }

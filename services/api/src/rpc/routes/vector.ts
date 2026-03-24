@@ -1,28 +1,32 @@
-import { ValidationError, InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { fileStorageService } from '@hominem/utils/storage';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
+import { ValidationError, InternalError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 interface VectorResult {
-  id: string
-  content: string
-  metadata?: Record<string, unknown>
-  score?: number
+  id: string;
+  content: string;
+  metadata?: Record<string, unknown>;
+  score?: number;
 }
 
 interface VectorDocument {
-  id: string
-  content: string
-  source: string
-  createdAt: string
-  metadata?: Record<string, unknown>
+  id: string;
+  content: string;
+  source: string;
+  createdAt: string;
+  metadata?: Record<string, unknown>;
 }
 
 const VectorService = {
-  async query(_params: { q: string; source: string; limit?: number }): Promise<{ results: VectorResult[] }> {
+  async query(_params: {
+    q: string;
+    source: string;
+    limit?: number;
+  }): Promise<{ results: VectorResult[] }> {
     return { results: [] };
   },
   async searchDocumentsByUser(
@@ -33,7 +37,11 @@ const VectorService = {
   ): Promise<{ results: VectorResult[] }> {
     return { results: [] };
   },
-  async getUserDocuments(_userId: string, _limit?: number, _offset?: number): Promise<VectorDocument[]> {
+  async getUserDocuments(
+    _userId: string,
+    _limit?: number,
+    _offset?: number,
+  ): Promise<VectorDocument[]> {
     return [];
   },
   async deleteUserDocuments(_userId: string, _source?: string) {

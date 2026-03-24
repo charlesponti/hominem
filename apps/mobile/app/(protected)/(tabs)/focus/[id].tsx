@@ -1,105 +1,102 @@
-import type { Note } from '@hominem/rpc/types'
-import * as Calendar from 'expo-calendar'
-import * as FileSystem from 'expo-file-system/legacy'
-import * as Print from 'expo-print'
-import { useLocalSearchParams } from 'expo-router'
-import * as Sharing from 'expo-sharing'
-import React from 'react'
-import { useCallback, useState } from 'react'
-import { Alert } from 'react-native'
+import type { Note } from '@hominem/rpc/types';
+import * as Calendar from 'expo-calendar';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Print from 'expo-print';
+import { useLocalSearchParams } from 'expo-router';
+import * as Sharing from 'expo-sharing';
+import React from 'react';
+import { useCallback, useState } from 'react';
+import { Alert } from 'react-native';
 
-import { NoteEditingSheet } from '~/components/focus/note-editing-sheet'
-import { getTimezone } from '~/utils/dates'
-import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
-import { useFocusItemQuery } from '~/utils/services/notes/use-focus-item-query'
-import {
-  useUpdateFocusItem,
-  type UpdateFocusItemInput,
-} from '~/utils/services/notes/use-update-focus'
+import { NoteEditingSheet } from '~/components/focus/note-editing-sheet';
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
+import { getTimezone } from '~/utils/dates';
+import { useNoteQuery } from '~/utils/services/notes/use-note-query';
+import { useUpdateNote, type UpdateNoteInput } from '~/utils/services/notes/use-update-note';
 
-function getFocusItemLabel(focusItem: Note): string {
-  return focusItem.title || focusItem.excerpt || focusItem.content || 'Untitled note'
+function getNoteLabel(focusItem: Note): string {
+  return focusItem.title || focusItem.excerpt || focusItem.content || 'Untitled note';
 }
 
-function getFocusItemBody(focusItem: Note): string {
-  return focusItem.content || focusItem.excerpt || focusItem.title || ''
+function getNoteBody(focusItem: Note): string {
+  return focusItem.content || focusItem.excerpt || focusItem.title || '';
 }
 
-export default function FocusItemView() {
-  const { id } = useLocalSearchParams()
-  const noteId = String(id ?? '')
-  const { data: focusItem } = useFocusItemQuery({
+export default function NoteView() {
+  const { id } = useLocalSearchParams();
+  const noteId = String(id ?? '');
+  const { data: note } = useNoteQuery({
     noteId,
     enabled: noteId.length > 0,
-  })
+  });
 
-  if (!focusItem) {
-    return null
+  if (!note) {
+    return null;
   }
 
-  return <FocusItemEditor key={focusItem.id} focusItem={focusItem} />
+  return <NoteEditor key={note.id} note={note} />;
 }
 
-function FocusItemEditor({ focusItem }: { focusItem: Note }) {
-  const updateFocusItem = useUpdateFocusItem()
-  const [text, setText] = useState(() => getFocusItemBody(focusItem))
+function NoteEditor({ note }: { note: Note }) {
+  const updateNote = useUpdateNote();
+  const [text, setText] = useState(() => getNoteBody(note));
   const [scheduledFor, setScheduledFor] = useState<Date | null>(() =>
-    focusItem.scheduledFor ? parseInboxTimestamp(focusItem.scheduledFor) : null,
-  )
+    note.scheduledFor ? parseInboxTimestamp(note.scheduledFor) : null,
+  );
 
   const onAddToCalendar = useCallback(async () => {
-    if (!scheduledFor) return
-    const { status } = await Calendar.requestCalendarPermissionsAsync()
+    if (!scheduledFor) return;
+    const { status } = await Calendar.requestCalendarPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission required', 'Calendar access is needed to create events.')
-      return
+      Alert.alert('Permission required', 'Calendar access is needed to create events.');
+      return;
     }
-    const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT)
-    const defaultCalendar = calendars.find((c) => c.allowsModifications) ?? calendars[0]
-    if (!defaultCalendar) return
+    const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
+    const defaultCalendar = calendars.find((c) => c.allowsModifications) ?? calendars[0];
+    if (!defaultCalendar) return;
     await Calendar.createEventAsync(defaultCalendar.id, {
-      title: getFocusItemLabel(focusItem),
+      title: getNoteLabel(note),
       notes: text,
       startDate: scheduledFor,
       endDate: new Date(scheduledFor.getTime() + 60 * 60 * 1000),
-    })
-    Alert.alert('Added to Calendar', 'Event created successfully.')
-  }, [focusItem, scheduledFor, text])
+    });
+    Alert.alert('Added to Calendar', 'Event created successfully.');
+  }, [note, scheduledFor, text]);
 
   const onPrint = useCallback(async () => {
-    const html = `<h1>${getFocusItemLabel(focusItem)}</h1><p>${text.replace(/\n/g, '<br/>')}</p>`
-    await Print.printAsync({ html })
-  }, [focusItem, text])
+    const html = `<h1>${getNoteLabel(note)}</h1><p>${text.replace(/\n/g, '<br/>')}</p>`;
+    await Print.printAsync({ html });
+  }, [note, text]);
 
   const onShare = useCallback(async () => {
-    const content = `${getFocusItemLabel(focusItem)}\n\n${text}`
-    const uri = `${FileSystem.cacheDirectory}note_${focusItem.id}.txt`
-    await FileSystem.writeAsStringAsync(uri, content, { encoding: FileSystem.EncodingType.UTF8 })
-    await Sharing.shareAsync(uri, { mimeType: 'text/plain', UTI: 'public.plain-text' })
-  }, [focusItem, text])
+    const content = `${getNoteLabel(note)}\n\n${text}`;
+    const uri = `${FileSystem.cacheDirectory}note_${note.id}.txt`;
+    await FileSystem.writeAsStringAsync(uri, content, { encoding: FileSystem.EncodingType.UTF8 });
+    await Sharing.shareAsync(uri, { mimeType: 'text/plain', UTI: 'public.plain-text' });
+  }, [note, text]);
 
   const onSave = useCallback(async () => {
-    const input: UpdateFocusItemInput = {
-      id: focusItem.id,
+    const input: UpdateNoteInput = {
+      id: note.id,
       text,
-      category: focusItem.type || 'note',
+      category: note.type || 'note',
       scheduledFor,
       timezone: getTimezone(),
-    }
+    };
 
     try {
-      await updateFocusItem.mutateAsync(input)
+      await updateNote.mutateAsync(input);
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
-  }, [focusItem, scheduledFor, text, updateFocusItem])
+  }, [note, scheduledFor, text, updateNote]);
 
   return (
     <NoteEditingSheet
-      note={focusItem}
+      note={note}
       text={text}
       scheduledFor={scheduledFor}
-      isSaving={updateFocusItem.isPending}
+      isSaving={updateNote.isPending}
       onTextChange={setText}
       onScheduledForChange={setScheduledFor}
       onSave={onSave}
@@ -107,5 +104,5 @@ function FocusItemEditor({ focusItem }: { focusItem: Note }) {
       onAddToCalendar={() => void onAddToCalendar()}
       onPrint={() => void onPrint()}
     />
-  )
+  );
 }

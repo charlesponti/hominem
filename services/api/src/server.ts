@@ -13,11 +13,10 @@ import { getJwks } from './auth/key-store';
 import type { AuthContextEnvelope } from './auth/types';
 import { API_BRAND } from './brand';
 import { env } from './env';
+import { isServiceError } from './errors';
 import { authJwtMiddleware } from './middleware/auth';
 import { blockMaliciousProbes } from './middleware/block-probes';
 import { requestLogger } from './middleware/request-logger';
-import { isServiceError } from './errors';
-import { rpcApp } from './rpc/app';
 import { aiRoutes } from './routes/ai';
 import { authRoutes } from './routes/auth';
 import { componentsRoutes } from './routes/components';
@@ -28,6 +27,7 @@ import { imagesRoutes } from './routes/images';
 import { invitesRoutes } from './routes/invites';
 import { oauthRoutes } from './routes/oauth';
 import { statusRoutes } from './routes/status';
+import { rpcApp } from './rpc/app';
 
 export type AppEnv = {
   Variables: {

@@ -1,10 +1,10 @@
-import type { TimeSeriesDataPoint } from '@hominem/rpc/types/finance.types'
-import { Card, CardContent } from '@hominem/ui/components/ui/card'
-import { Skeleton } from '@hominem/ui/components/ui/skeleton'
-import { cn } from '@hominem/ui/lib/utils'
-import { Link, useNavigate } from 'react-router'
+import type { TimeSeriesDataPoint } from '@hominem/rpc/types/finance.types';
+import { Card, CardContent } from '@hominem/ui/components/ui/card';
+import { Skeleton } from '@hominem/ui/components/ui/skeleton';
+import { cn } from '@hominem/ui/lib/utils';
+import { Link, useNavigate } from 'react-router';
 
-import { useTimeSeriesData } from '../../hooks/use-time-series'
+import { useTimeSeriesData } from '../../hooks/use-time-series';
 
 function formatCurrency(value: number): string {
   return value.toLocaleString('en-US', {
@@ -12,17 +12,17 @@ function formatCurrency(value: number): string {
     currency: 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })
+  });
 }
 
 interface MonthlyBreakdownProps {
-  dateFrom?: Date | undefined
-  dateTo?: Date | undefined
-  selectedAccount?: string | undefined
-  selectedTag?: string | undefined
-  compareToPrevious?: boolean | undefined
-  groupBy?: 'month' | 'week' | 'day' | undefined
-  title: string
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  selectedAccount?: string | undefined;
+  selectedTag?: string | undefined;
+  compareToPrevious?: boolean | undefined;
+  groupBy?: 'month' | 'week' | 'day' | undefined;
+  title: string;
 }
 
 const DeltaIcon = ({ delta }: { delta: number }) => {
@@ -31,15 +31,15 @@ const DeltaIcon = ({ delta }: { delta: number }) => {
       <span className="text-destructive mr-1" title="Increase">
         ▲
       </span>
-    )
+    );
   if (delta < 0)
     return (
       <span className="text-foreground mr-1" title="Decrease">
         ▼
       </span>
-    )
-  return <span className="text-muted-foreground mr-1">–</span>
-}
+    );
+  return <span className="text-muted-foreground mr-1">–</span>;
+};
 
 function TrendsDelta({
   label,
@@ -48,11 +48,11 @@ function TrendsDelta({
   delta,
   formatDateLabel,
 }: {
-  label: string
-  prevDate: string
-  currDate: string
-  delta: number
-  formatDateLabel: (dateStr: string) => string
+  label: string;
+  prevDate: string;
+  currDate: string;
+  delta: number;
+  formatDateLabel: (dateStr: string) => string;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -73,7 +73,7 @@ function TrendsDelta({
         </span>
       </div>
     </div>
-  )
+  );
 }
 
 function TrendsContent({
@@ -81,11 +81,11 @@ function TrendsContent({
   currMonth,
   formatDateLabel,
 }: {
-  prevMonth: TimeSeriesDataPoint
-  currMonth: TimeSeriesDataPoint
-  formatDateLabel: (dateStr: string) => string
+  prevMonth: TimeSeriesDataPoint;
+  currMonth: TimeSeriesDataPoint;
+  formatDateLabel: (dateStr: string) => string;
 }) {
-  const expensesDelta = (currMonth.expenses ?? 0) - (prevMonth.expenses ?? 0)
+  const expensesDelta = (currMonth.expenses ?? 0) - (prevMonth.expenses ?? 0);
   return (
     <div className="border p-4 mb-4">
       <div className="grid grid-cols-1 gap-4">
@@ -98,22 +98,22 @@ function TrendsContent({
         />
       </div>
     </div>
-  )
+  );
 }
 
 interface MonthItemProps {
-  item: TimeSeriesDataPoint
-  compareToPrevious: boolean
-  formatDateLabel: (dateStr: string) => string
-  selectedTag: string | undefined
+  item: TimeSeriesDataPoint;
+  compareToPrevious: boolean;
+  formatDateLabel: (dateStr: string) => string;
+  selectedTag: string | undefined;
 }
 
 function MonthTableRow({ item, compareToPrevious, formatDateLabel, selectedTag }: MonthItemProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const monthlyAnalyticsUrl = selectedTag
     ? `/analytics/monthly/${item.date}?tag=${encodeURIComponent(selectedTag)}`
-    : `/analytics/monthly/${item.date}`
+    : `/analytics/monthly/${item.date}`;
 
   return (
     <tr
@@ -121,7 +121,7 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel, selectedTag }
       onClick={() => navigate(monthlyAnalyticsUrl)}
       tabIndex={0}
       onKeyDown={(e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') navigate(monthlyAnalyticsUrl)
+        if (e.key === 'Enter' || e.key === ' ') navigate(monthlyAnalyticsUrl);
       }}
     >
       <td className="py-2">
@@ -149,15 +149,20 @@ function MonthTableRow({ item, compareToPrevious, formatDateLabel, selectedTag }
         </td>
       )}
     </tr>
-  )
+  );
 }
 
-function MonthMobileItem({ item, compareToPrevious, formatDateLabel, selectedTag }: MonthItemProps) {
-  const navigate = useNavigate()
+function MonthMobileItem({
+  item,
+  compareToPrevious,
+  formatDateLabel,
+  selectedTag,
+}: MonthItemProps) {
+  const navigate = useNavigate();
 
   const monthlyAnalyticsUrl = selectedTag
     ? `/analytics/monthly/${item.date}?tag=${encodeURIComponent(selectedTag)}`
-    : `/analytics/monthly/${item.date}`
+    : `/analytics/monthly/${item.date}`;
 
   return (
     <button
@@ -165,7 +170,7 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel, selectedTag
       className="w-full text-left border p-4 focus:outline-none focus:ring-2 focus:ring-primary"
       onClick={() => navigate(monthlyAnalyticsUrl)}
       onKeyDown={(e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') navigate(monthlyAnalyticsUrl)
+        if (e.key === 'Enter' || e.key === ' ') navigate(monthlyAnalyticsUrl);
       }}
       aria-label={`View details for ${formatDateLabel(item.date)}`}
     >
@@ -208,7 +213,7 @@ function MonthMobileItem({ item, compareToPrevious, formatDateLabel, selectedTag
         )}
       </div>
     </button>
-  )
+  );
 }
 
 export function MonthlyBreakdown({
@@ -227,7 +232,7 @@ export function MonthlyBreakdown({
     tag: selectedTag,
     compareToPrevious,
     groupBy,
-  })
+  });
 
   if (isLoading) {
     return (
@@ -243,7 +248,7 @@ export function MonthlyBreakdown({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error || !Array.isArray(data?.data) || data.data.length === 0) {
@@ -255,16 +260,16 @@ export function MonthlyBreakdown({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const sortedData = [...data.data].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-  )
+  );
 
-  const showTrends = compareToPrevious && sortedData.length >= 2
-  const prevMonth = showTrends ? sortedData[1] : null
-  const currMonth = showTrends ? sortedData[0] : null
+  const showTrends = compareToPrevious && sortedData.length >= 2;
+  const prevMonth = showTrends ? sortedData[1] : null;
+  const currMonth = showTrends ? sortedData[0] : null;
 
   return (
     <Card>
@@ -324,5 +329,5 @@ export function MonthlyBreakdown({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,12 +1,12 @@
-import { Phone } from 'lucide-react'
+import { Phone } from 'lucide-react';
 
 interface PlacePhoneProps {
-  phoneNumber: string
+  phoneNumber: string;
 }
 
 export function PlacePhone({ phoneNumber }: PlacePhoneProps) {
   if (!phoneNumber) {
-    return null
+    return null;
   }
   return (
     <a
@@ -16,5 +16,5 @@ export function PlacePhone({ phoneNumber }: PlacePhoneProps) {
       <Phone size={14} className="mt-0.5 shrink-0" />
       <div className="flex-1 min-w-0">{phoneNumber}</div>
     </a>
-  )
+  );
 }

@@ -6,5 +6,5 @@ export {
   useDeleteList,
   useListsContainingPlace,
   useRemoveCollaborator,
-} from './use-lists'
-export { useModal } from './use-modal'
+} from './use-lists';
+export { useModal } from './use-modal';

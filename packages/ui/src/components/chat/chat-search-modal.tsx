@@ -1,16 +1,16 @@
-import { Search, X } from 'lucide-react'
+import { Search, X } from 'lucide-react';
 
-import { Button } from '../ui/button'
-import { Inline } from '../layout'
-import { Input } from '../ui/input'
+import { Inline } from '../layout';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 
 interface ChatSearchModalProps {
-  visible: boolean
-  searchQuery: string
-  resultCount: number
-  searchInputRef: React.RefObject<HTMLInputElement | null>
-  onClose: () => void
-  onChangeSearchQuery: (value: string) => void
+  visible: boolean;
+  searchQuery: string;
+  resultCount: number;
+  searchInputRef: React.RefObject<HTMLInputElement | null>;
+  onClose: () => void;
+  onChangeSearchQuery: (value: string) => void;
 }
 
 export function ChatSearchModal({
@@ -21,11 +21,14 @@ export function ChatSearchModal({
   onClose,
   onChangeSearchQuery,
 }: ChatSearchModalProps) {
-  if (!visible) return null
+  if (!visible) return null;
 
   return (
     <div className="pointer-events-none absolute inset-x-0 top-4 z-20 px-4 sm:px-6">
-      <div className="pointer-events-auto mx-auto w-full rounded-md border border-border-subtle bg-background/95 p-4 shadow-md shadow-black/5 backdrop-blur supports-backdrop-filter:bg-background/90" style={{ maxWidth: 720 }}>
+      <div
+        className="pointer-events-auto mx-auto w-full rounded-md border border-border-subtle bg-background/95 p-4 shadow-md shadow-black/5 backdrop-blur supports-backdrop-filter:bg-background/90"
+        style={{ maxWidth: 720 }}
+      >
         <div className="mb-3 text-xs font-medium tracking-[0.05em] text-text-tertiary">
           Search messages
         </div>
@@ -41,7 +44,7 @@ export function ChatSearchModal({
             autoFocus
             onKeyDown={(event) => {
               if (event.key === 'Escape') {
-                onClose()
+                onClose();
               }
             }}
           />
@@ -62,5 +65,5 @@ export function ChatSearchModal({
         ) : null}
       </div>
     </div>
-  )
+  );
 }

@@ -1,22 +1,22 @@
-import type { Context } from 'hono'
+import { logger } from '@hominem/utils/logger';
+import type { Context } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import { isServiceError, type ErrorCode } from '../errors';
-import { logger } from '@hominem/utils/logger';
 
+import { isServiceError, type ErrorCode } from '../errors';
 import type { AppContext } from './auth';
 
 /**
  * Standard REST API error response format
- * 
+ *
  * Used for all HTTP error responses (4xx, 5xx)
  * HTTP status code is the definitive success/failure indicator
  */
 export interface ApiErrorResponse {
-  error: string;  // Lowercase error code (e.g., 'not_found', 'validation_error')
-  code: ErrorCode;  // Original error code for client-side error handling
-  message: string;  // Human-readable error message
-  details?: Record<string, unknown> | undefined;  // Additional error context
+  error: string; // Lowercase error code (e.g., 'not_found', 'validation_error')
+  code: ErrorCode; // Original error code for client-side error handling
+  message: string; // Human-readable error message
+  details?: Record<string, unknown> | undefined; // Additional error context
 }
 
 function findServiceError(value: unknown, depth = 0) {
@@ -69,10 +69,10 @@ export function apiErrorHandler(err: unknown, c: Context<AppContext>) {
 
 /**
  * Legacy error middleware
- * 
+ *
  * Hono does not route async handler exceptions through middleware reliably.
  * Register `apiErrorHandler` with `.onError(...)` for real application error handling.
- * 
+ *
  * This export remains as a pass-through for backwards compatibility in tests.
  */
 export const errorMiddleware = createMiddleware<AppContext>(async (_c, next) => next());

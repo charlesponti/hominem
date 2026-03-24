@@ -25,8 +25,8 @@ export default defineConfig({
         import.meta.url,
       ).pathname,
       '~/lib/posthog': new URL('./tests/__mocks__/posthog.ts', import.meta.url).pathname,
-      '~/utils/services/notes/use-update-focus': new URL(
-        './tests/__mocks__/use-update-focus.ts',
+      '~/utils/services/notes/use-update-note': new URL(
+        './tests/__mocks__/use-update-note.ts',
         import.meta.url,
       ).pathname,
       'react-native': new URL('./tests/__mocks__/react-native.ts', import.meta.url).pathname,

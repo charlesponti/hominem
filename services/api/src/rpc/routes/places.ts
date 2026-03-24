@@ -7,6 +7,7 @@ import {
   type VisitWithPlaceAndTags,
   updateVisit,
 } from '@hominem/events-services';
+import type { UpdateEventInput } from '@hominem/events-services';
 import {
   addPlaceToLists,
   createOrUpdatePlace,
@@ -19,15 +20,7 @@ import {
   removePlaceFromList,
   type PlaceInput,
 } from '@hominem/places-services';
-import { NotFoundError, InternalError, isServiceError } from '../errors';
 import { placePhotoEnrichQueue } from '@hominem/queues';
-import { logger } from '@hominem/utils/logger';
-import { sanitizeStoredPhotos } from '@hominem/utils/images';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-import * as z from 'zod';
-
-import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
   placeCreateSchema,
   placeUpdateSchema,
@@ -60,7 +53,14 @@ import {
   type PlaceDeleteVisitOutput,
   type PlaceGetVisitStatsOutput,
 } from '@hominem/rpc/types/places.types';
-import type { UpdateEventInput } from '@hominem/events-services';
+import { sanitizeStoredPhotos } from '@hominem/utils/images';
+import { logger } from '@hominem/utils/logger';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import * as z from 'zod';
+
+import { NotFoundError, InternalError, isServiceError } from '../errors';
+import { authMiddleware, type AppContext } from '../middleware/auth';
 
 type DistanceShape = number | { km?: number; miles?: number } | null | undefined;
 
@@ -246,16 +246,27 @@ function toPlaceNearbyOutput(place: SerializablePlace): PlaceGetNearbyFromListsO
 
 function transformPlaceToApiFormat(place: SerializablePlace, kind: 'create'): PlaceCreateOutput;
 function transformPlaceToApiFormat(place: SerializablePlace, kind: 'update'): PlaceUpdateOutput;
-function transformPlaceToApiFormat(place: SerializablePlace, kind: 'details'): PlaceGetDetailsByIdOutput | PlaceGetDetailsByGoogleIdOutput;
-function transformPlaceToApiFormat(place: SerializablePlace, kind: 'nearby'): PlaceGetNearbyFromListsOutput[number];
+function transformPlaceToApiFormat(
+  place: SerializablePlace,
+  kind: 'details',
+): PlaceGetDetailsByIdOutput | PlaceGetDetailsByGoogleIdOutput;
+function transformPlaceToApiFormat(
+  place: SerializablePlace,
+  kind: 'nearby',
+): PlaceGetNearbyFromListsOutput[number];
 function transformPlaceToApiFormat(
   place: SerializablePlace,
   kind: 'create' | 'update' | 'details' | 'nearby',
-): PlaceCreateOutput | PlaceUpdateOutput | PlaceGetDetailsByIdOutput | PlaceGetDetailsByGoogleIdOutput | PlaceGetNearbyFromListsOutput[number] {
-  if (kind === 'create') return toPlaceCreateOutput(place)
-  if (kind === 'update') return toPlaceUpdateOutput(place)
-  if (kind === 'nearby') return toPlaceNearbyOutput(place)
-  return toPlaceDetailsOutput(place)
+):
+  | PlaceCreateOutput
+  | PlaceUpdateOutput
+  | PlaceGetDetailsByIdOutput
+  | PlaceGetDetailsByGoogleIdOutput
+  | PlaceGetNearbyFromListsOutput[number] {
+  if (kind === 'create') return toPlaceCreateOutput(place);
+  if (kind === 'update') return toPlaceUpdateOutput(place);
+  if (kind === 'nearby') return toPlaceNearbyOutput(place);
+  return toPlaceDetailsOutput(place);
 }
 
 function normalizeDateString(value: string | Date | null | undefined): string {
@@ -282,7 +293,9 @@ function normalizeVisitPeople(people: VisitPerson[] | null | undefined): string[
   }
 
   return people.map((person) =>
-    typeof person === 'string' ? person : `${person.firstName}${person.lastName ? ` ${person.lastName}` : ''}`,
+    typeof person === 'string'
+      ? person
+      : `${person.firstName}${person.lastName ? ` ${person.lastName}` : ''}`,
   );
 }
 
@@ -355,7 +368,7 @@ function serializeVisitFromServiceForMyVisits(
 function serializeVisitFromServiceForPlaceVisits(
   data: VisitWithPlaceAndTags,
 ): PlaceGetPlaceVisitsOutput[number] {
-  const base = serializeVisitFromServiceForMyVisits(data)
+  const base = serializeVisitFromServiceForMyVisits(data);
   return {
     ...base,
     userId: 'unknown-user-id',
@@ -495,9 +508,7 @@ export const placesRoutes = new Hono<AppContext>()
 
       // Enqueue photo enrichment if needed
       try {
-        const hasGooglePhotos = createdPlace.photos?.some((url: string) =>
-          isGooglePhotosUrl(url),
-        );
+        const hasGooglePhotos = createdPlace.photos?.some((url: string) => isGooglePhotosUrl(url));
         if (
           (createdPlace.photos == null || createdPlace.photos.length === 0 || hasGooglePhotos) &&
           createdPlace.googleMapsId
@@ -820,10 +831,7 @@ export const placesRoutes = new Hono<AppContext>()
 
       const visits = await getVisitsByUser(userId);
 
-      return c.json<PlaceGetMyVisitsOutput>(
-        visits.map(serializeVisitFromServiceForMyVisits),
-        200,
-      );
+      return c.json<PlaceGetMyVisitsOutput>(visits.map(serializeVisitFromServiceForMyVisits), 200);
     } catch (err) {
       if (isServiceError(err)) {
         throw err;
@@ -846,9 +854,7 @@ export const placesRoutes = new Hono<AppContext>()
         const visits = await getVisitsByPlace(input.placeId);
 
         return c.json<PlaceGetPlaceVisitsOutput>(
-          visits.map(
-            (visit) => serializeVisitFromServiceForPlaceVisits(visit),
-          ),
+          visits.map((visit) => serializeVisitFromServiceForPlaceVisits(visit)),
           200,
         );
       } catch (err) {
@@ -936,7 +942,9 @@ export const placesRoutes = new Hono<AppContext>()
         .map((visit) => visit.visitRating)
         .filter((rating): rating is number => typeof rating === 'number');
       const averageRating =
-        ratings.length > 0 ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : undefined;
+        ratings.length > 0
+          ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+          : undefined;
 
       const sortedVisits = normalizedVisits.sort(
         (a, b) => new Date(b.date ?? 0).getTime() - new Date(a.date ?? 0).getTime(),

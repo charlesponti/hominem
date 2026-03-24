@@ -1,23 +1,17 @@
-import { BookOpen, Camera, Mic, Plus, StopCircle } from 'lucide-react'
-import { memo, type ReactNode } from 'react'
+import { BookOpen, Camera, Mic, Plus, StopCircle } from 'lucide-react';
+import { memo, type ReactNode } from 'react';
 
-import { cn } from '../../lib/utils'
+import { cn } from '../../lib/utils';
 
 interface ComposerToolButtonProps {
-  icon: ReactNode
-  label: string
-  onClick: (() => void) | undefined
-  active: boolean
-  disabled: boolean
+  icon: ReactNode;
+  label: string;
+  onClick: (() => void) | undefined;
+  active: boolean;
+  disabled: boolean;
 }
 
-function ComposerToolButton({
-  icon,
-  label,
-  onClick,
-  active,
-  disabled,
-}: ComposerToolButtonProps) {
+function ComposerToolButton({ icon, label, onClick, active, disabled }: ComposerToolButtonProps) {
   return (
     <button
       type="button"
@@ -36,7 +30,7 @@ function ComposerToolButton({
     >
       {icon}
     </button>
-  )
+  );
 }
 
 export const ComposerTools = memo(function ComposerTools({
@@ -50,15 +44,15 @@ export const ComposerTools = memo(function ComposerTools({
   onNotePickerClick,
   onVoiceClick,
 }: {
-  attachedNotesCount: number
-  isRecording: boolean
-  showsAttachmentButton: boolean
-  showsNotePicker: boolean
-  showsVoiceButton: boolean
-  onAttachmentClick?: () => void
-  onCameraClick?: () => void
-  onNotePickerClick?: () => void
-  onVoiceClick?: () => void
+  attachedNotesCount: number;
+  isRecording: boolean;
+  showsAttachmentButton: boolean;
+  showsNotePicker: boolean;
+  showsVoiceButton: boolean;
+  onAttachmentClick?: () => void;
+  onCameraClick?: () => void;
+  onNotePickerClick?: () => void;
+  onVoiceClick?: () => void;
 }) {
   return (
     <div className="flex items-center gap-2">
@@ -95,9 +89,11 @@ export const ComposerTools = memo(function ComposerTools({
       {showsVoiceButton ? (
         <ComposerToolButton
           icon={
-            isRecording
-              ? <StopCircle className="size-[18px] text-destructive" />
-              : <Mic className="size-[18px]" />
+            isRecording ? (
+              <StopCircle className="size-[18px] text-destructive" />
+            ) : (
+              <Mic className="size-[18px]" />
+            )
           }
           label={isRecording ? 'Stop recording' : 'Voice note'}
           onClick={onVoiceClick}
@@ -106,5 +102,5 @@ export const ComposerTools = memo(function ComposerTools({
         />
       ) : null}
     </div>
-  )
-})
+  );
+});

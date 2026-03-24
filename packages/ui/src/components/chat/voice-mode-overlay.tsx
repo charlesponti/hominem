@@ -1,25 +1,25 @@
-import { Loader2, Mic, MicOff, Volume2, XCircle } from 'lucide-react'
+import { Loader2, Mic, MicOff, Volume2, XCircle } from 'lucide-react';
 
-import { Button } from '../ui/button'
+import { Button } from '../ui/button';
 
-export type VoiceModeOverlayState = 'idle' | 'listening' | 'processing' | 'speaking' | 'error'
+export type VoiceModeOverlayState = 'idle' | 'listening' | 'processing' | 'speaking' | 'error';
 
 interface VoiceModeOverlayProps {
-  visible: boolean
-  state: VoiceModeOverlayState
-  errorMessage?: string
-  canStop: boolean
-  onClose: () => void
-  onStartRecording: () => void
-  onStopRecording: () => void
+  visible: boolean;
+  state: VoiceModeOverlayState;
+  errorMessage?: string;
+  canStop: boolean;
+  onClose: () => void;
+  onStartRecording: () => void;
+  onStopRecording: () => void;
 }
 
 function getStateCopy(state: VoiceModeOverlayState): string {
-  if (state === 'listening') return 'Listening'
-  if (state === 'processing') return 'Thinking'
-  if (state === 'speaking') return 'Speaking'
-  if (state === 'error') return 'Error'
-  return 'Ready'
+  if (state === 'listening') return 'Listening';
+  if (state === 'processing') return 'Thinking';
+  if (state === 'speaking') return 'Speaking';
+  if (state === 'error') return 'Error';
+  return 'Ready';
 }
 
 export function VoiceModeOverlay({
@@ -31,10 +31,10 @@ export function VoiceModeOverlay({
   onStartRecording,
   onStopRecording,
 }: VoiceModeOverlayProps) {
-  if (!visible) return null
+  if (!visible) return null;
 
-  const isBusy = state === 'processing' || state === 'speaking'
-  const stateCopy = getStateCopy(state)
+  const isBusy = state === 'processing' || state === 'speaking';
+  const stateCopy = getStateCopy(state);
 
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-background/72 backdrop-blur-sm">
@@ -44,7 +44,13 @@ export function VoiceModeOverlay({
             <p className="text-xs uppercase tracking-[0.08em] text-text-tertiary">Voice mode</p>
             <p className="text-sm font-medium text-foreground">{stateCopy}</p>
           </div>
-          <Button type="button" variant="ghost" size="sm" aria-label="Exit voice mode" onClick={onClose}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label="Exit voice mode"
+            onClick={onClose}
+          >
             <XCircle className="size-4" />
           </Button>
         </div>
@@ -77,7 +83,13 @@ export function VoiceModeOverlay({
 
         <div className="flex items-center justify-center gap-2">
           {canStop ? (
-            <Button type="button" onClick={onStopRecording} variant="destructive" size="sm" disabled={isBusy}>
+            <Button
+              type="button"
+              onClick={onStopRecording}
+              variant="destructive"
+              size="sm"
+              disabled={isBusy}
+            >
               Stop and send
             </Button>
           ) : (
@@ -87,8 +99,10 @@ export function VoiceModeOverlay({
           )}
         </div>
 
-        {errorMessage ? <p className="mt-3 text-center text-xs text-destructive">{errorMessage}</p> : null}
+        {errorMessage ? (
+          <p className="mt-3 text-center text-xs text-destructive">{errorMessage}</p>
+        ) : null}
       </div>
     </div>
-  )
+  );
 }

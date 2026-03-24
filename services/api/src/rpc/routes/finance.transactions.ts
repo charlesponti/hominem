@@ -1,46 +1,49 @@
-import { zValidator } from '@hono/zod-validator'
-import { db } from '@hominem/db'
-import type { Database } from '@hominem/db'
-import { Hono } from 'hono'
-import type { Selectable } from 'kysely'
-import { randomUUID } from 'crypto'
-import * as z from 'zod'
+import { randomUUID } from 'crypto';
 
-import { authMiddleware, type AppContext } from '../middleware/auth'
-import { NotFoundError } from '../errors'
-import { toIsoString } from '../utils/to-iso-string'
-
+import { db } from '@hominem/db';
+import type { Database } from '@hominem/db';
 import {
   TransactionInsertSchema,
   TransactionQueryFiltersSchema,
-} from '@hominem/rpc/schemas/finance.transactions.schema'
+} from '@hominem/rpc/schemas/finance.transactions.schema';
+import type { TransactionData, TransactionType } from '@hominem/rpc/types/finance/shared.types';
 import type {
   TransactionCreateOutput,
   TransactionDeleteOutput,
   TransactionListOutput,
   TransactionUpdateOutput,
-} from '@hominem/rpc/types/finance/transactions.types'
-import type { TransactionData, TransactionType } from '@hominem/rpc/types/finance/shared.types'
+} from '@hominem/rpc/types/finance/transactions.types';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import type { Selectable } from 'kysely';
+import * as z from 'zod';
 
-const FINANCE_TRANSACTION_ENTITY_TYPE = 'finance_transaction'
+import { NotFoundError } from '../errors';
+import { authMiddleware, type AppContext } from '../middleware/auth';
+import { toIsoString } from '../utils/to-iso-string';
+
+const FINANCE_TRANSACTION_ENTITY_TYPE = 'finance_transaction';
 
 const transactionListSchema = TransactionQueryFiltersSchema.extend({
   account: z.string().uuid().optional(),
   sortBy: z.string().optional(),
-  sortDirection: z.enum(['asc', 'desc']).or(z.array(z.enum(['asc', 'desc']))).optional(),
+  sortDirection: z
+    .enum(['asc', 'desc'])
+    .or(z.array(z.enum(['asc', 'desc'])))
+    .optional(),
   description: z.string().optional(),
   search: z.string().optional(),
   min: z.string().optional(),
   max: z.string().optional(),
-})
+});
 
 const transactionDeleteSchema = z.object({
   id: z.string().uuid(),
-})
+});
 
 const transactionCreateSchema = TransactionInsertSchema.omit({
   userId: true,
-})
+});
 
 const transactionUpdateSchema = z.object({
   id: z.string().uuid(),
@@ -53,10 +56,11 @@ const transactionUpdateSchema = z.object({
     merchantName: z.string().nullable().optional(),
     tagIds: z.array(z.string().uuid()).optional(),
   }),
-})
+});
 
 function toTransactionData(row: Selectable<Database['finance_transactions']>): TransactionData {
-  const amount = typeof row.amount === 'string' ? Number.parseFloat(row.amount) : Number(row.amount)
+  const amount =
+    typeof row.amount === 'string' ? Number.parseFloat(row.amount) : Number(row.amount);
   return {
     id: row.id,
     userId: row.user_id,
@@ -65,7 +69,7 @@ function toTransactionData(row: Selectable<Database['finance_transactions']>): T
     description: row.description ?? '',
     date: toIsoString(row.date),
     type: (amount < 0 ? 'expense' : 'income') as TransactionType,
-  }
+  };
 }
 
 async function getTaggedTransactionIds(
@@ -78,20 +82,20 @@ async function getTaggedTransactionIds(
     .innerJoin('tags', 'tags.id', 'tagged_items.tag_id')
     .select('tagged_items.entity_id')
     .where('tagged_items.entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE)
-    .where('tags.owner_id', '=', userId)
+    .where('tags.owner_id', '=', userId);
 
   if (tagIds.length > 0 && tagNames.length > 0) {
     query = query.where((eb) =>
       eb.or([eb('tagged_items.tag_id', 'in', tagIds), eb('tags.name', 'in', tagNames)]),
-    )
+    );
   } else if (tagIds.length > 0) {
-    query = query.where('tagged_items.tag_id', 'in', tagIds)
+    query = query.where('tagged_items.tag_id', 'in', tagIds);
   } else {
-    query = query.where('tags.name', 'in', tagNames)
+    query = query.where('tags.name', 'in', tagNames);
   }
 
-  const rows = await query.execute()
-  return [...new Set(rows.map((r) => r.entity_id))]
+  const rows = await query.execute();
+  return [...new Set(rows.map((r) => r.entity_id))];
 }
 
 async function replaceTransactionTags(
@@ -104,19 +108,19 @@ async function replaceTransactionTags(
     .select('id')
     .where('id', '=', transactionId)
     .where('user_id', '=', userId)
-    .executeTakeFirst()
-  if (!tx) return
+    .executeTakeFirst();
+  if (!tx) return;
 
-  const uniqueTagIds = [...new Set(tagIds)]
+  const uniqueTagIds = [...new Set(tagIds)];
   if (uniqueTagIds.length > 0) {
     const validTags = await db
       .selectFrom('tags')
       .select('id')
       .where('owner_id', '=', userId)
       .where('id', 'in', uniqueTagIds)
-      .execute()
+      .execute();
     if (validTags.length !== uniqueTagIds.length) {
-      throw new Error('One or more tags are invalid for this user')
+      throw new Error('One or more tags are invalid for this user');
     }
   }
 
@@ -124,7 +128,7 @@ async function replaceTransactionTags(
     .deleteFrom('tagged_items')
     .where('entity_type', '=', FINANCE_TRANSACTION_ENTITY_TYPE)
     .where('entity_id', '=', transactionId)
-    .execute()
+    .execute();
 
   for (const tagId of uniqueTagIds) {
     await db
@@ -135,23 +139,23 @@ async function replaceTransactionTags(
         entity_type: FINANCE_TRANSACTION_ENTITY_TYPE,
         entity_id: transactionId,
       })
-      .execute()
+      .execute();
   }
 }
 
 export const transactionsRoutes = new Hono<AppContext>()
   .post('/list', authMiddleware, zValidator('json', transactionListSchema), async (c) => {
-    const userId = c.get('userId')!
-    const input = c.req.valid('json')
-    const accountId = input.accountId ?? input.account
-    const tagIds = input.tagIds ?? []
-    const tagNames = input.tagNames ?? []
-    const limit = input.limit ?? 50
-    const offset = input.offset ?? 0
+    const userId = c.get('userId')!;
+    const input = c.req.valid('json');
+    const accountId = input.accountId ?? input.account;
+    const tagIds = input.tagIds ?? [];
+    const tagNames = input.tagNames ?? [];
+    const limit = input.limit ?? 50;
+    const offset = input.offset ?? 0;
 
-    const hasTagFilters = tagIds.length > 0 || tagNames.length > 0
-    const dateFrom = input.dateFrom ? new Date(input.dateFrom) : null
-    const dateTo = input.dateTo ? new Date(input.dateTo) : null
+    const hasTagFilters = tagIds.length > 0 || tagNames.length > 0;
+    const dateFrom = input.dateFrom ? new Date(input.dateFrom) : null;
+    const dateTo = input.dateTo ? new Date(input.dateTo) : null;
 
     let query = db
       .selectFrom('finance_transactions')
@@ -160,18 +164,21 @@ export const transactionsRoutes = new Hono<AppContext>()
       .orderBy('date', 'desc')
       .orderBy('id', 'desc')
       .limit(limit)
-      .offset(offset)
+      .offset(offset);
 
-    if (accountId) query = query.where('account_id', '=', accountId)
-    if (dateFrom) query = query.where('date', '>=', dateFrom)
-    if (dateTo) query = query.where('date', '<=', dateTo)
+    if (accountId) query = query.where('account_id', '=', accountId);
+    if (dateFrom) query = query.where('date', '>=', dateFrom);
+    if (dateTo) query = query.where('date', '<=', dateTo);
 
     if (hasTagFilters) {
-      const taggedIds = await getTaggedTransactionIds(userId, tagIds, tagNames)
+      const taggedIds = await getTaggedTransactionIds(userId, tagIds, tagNames);
       if (taggedIds.length === 0) {
-        return c.json<TransactionListOutput>({ data: [], filteredCount: 0, totalUserCount: 0 }, 200)
+        return c.json<TransactionListOutput>(
+          { data: [], filteredCount: 0, totalUserCount: 0 },
+          200,
+        );
       }
-      query = query.where('id', 'in', taggedIds)
+      query = query.where('id', 'in', taggedIds);
     }
 
     const [data, totalRow] = await Promise.all([
@@ -181,9 +188,9 @@ export const transactionsRoutes = new Hono<AppContext>()
         .select(db.fn.countAll<number>().as('count'))
         .where('user_id', '=', userId)
         .executeTakeFirst(),
-    ])
+    ]);
 
-    const responseData = data.map(toTransactionData)
+    const responseData = data.map(toTransactionData);
     return c.json<TransactionListOutput>(
       {
         data: responseData,
@@ -191,13 +198,13 @@ export const transactionsRoutes = new Hono<AppContext>()
         totalUserCount: Number(totalRow?.count ?? 0),
       },
       200,
-    )
+    );
   })
   .post('/create', authMiddleware, zValidator('json', transactionCreateSchema), async (c) => {
-    const userId = c.get('userId')!
-    const input = c.req.valid('json')
-    const id = randomUUID()
-    const transactionType = input.amount < 0 ? 'expense' : 'income'
+    const userId = c.get('userId')!;
+    const input = c.req.valid('json');
+    const id = randomUUID();
+    const transactionType = input.amount < 0 ? 'expense' : 'income';
 
     await db
       .insertInto('finance_transactions')
@@ -212,35 +219,35 @@ export const transactionsRoutes = new Hono<AppContext>()
         merchant_name: null,
         date: input.date,
       })
-      .execute()
+      .execute();
 
     const created = await db
       .selectFrom('finance_transactions')
       .selectAll()
       .where('id', '=', id)
-      .executeTakeFirst()
+      .executeTakeFirst();
 
-    if (!created) throw new Error('Failed to create transaction')
+    if (!created) throw new Error('Failed to create transaction');
 
     if (input.tagIds && input.tagIds.length > 0) {
-      await replaceTransactionTags(id, userId, input.tagIds)
+      await replaceTransactionTags(id, userId, input.tagIds);
     }
 
-    return c.json<TransactionCreateOutput>(toTransactionData(created), 201)
+    return c.json<TransactionCreateOutput>(toTransactionData(created), 201);
   })
   .post('/update', authMiddleware, zValidator('json', transactionUpdateSchema), async (c) => {
-    const userId = c.get('userId')!
-    const input = c.req.valid('json')
+    const userId = c.get('userId')!;
+    const input = c.req.valid('json');
 
     const existing = await db
       .selectFrom('finance_transactions')
       .selectAll()
       .where('id', '=', input.id)
       .where('user_id', '=', userId)
-      .executeTakeFirst()
+      .executeTakeFirst();
 
     if (!existing) {
-      throw new NotFoundError('Transaction not found')
+      throw new NotFoundError('Transaction not found');
     }
 
     const amount =
@@ -248,8 +255,8 @@ export const transactionsRoutes = new Hono<AppContext>()
         ? typeof input.data.amount === 'string'
           ? Number.parseFloat(input.data.amount)
           : input.data.amount
-        : Number(existing.amount)
-    const nextType = amount < 0 ? 'expense' : 'income'
+        : Number(existing.amount);
+    const nextType = amount < 0 ? 'expense' : 'income';
 
     const updated = await db
       .updateTable('finance_transactions')
@@ -260,37 +267,39 @@ export const transactionsRoutes = new Hono<AppContext>()
         ...(input.data.category !== undefined ? { category: input.data.category } : {}),
         ...(input.data.date !== undefined ? { date: input.data.date } : {}),
         ...(input.data.accountId !== undefined ? { account_id: input.data.accountId } : {}),
-        ...(input.data.merchantName !== undefined ? { merchant_name: input.data.merchantName } : {}),
+        ...(input.data.merchantName !== undefined
+          ? { merchant_name: input.data.merchantName }
+          : {}),
       })
       .where('id', '=', input.id)
       .where('user_id', '=', userId)
       .returningAll()
-      .executeTakeFirst()
+      .executeTakeFirst();
 
     if (!updated) {
-      return c.notFound()
+      return c.notFound();
     }
 
     if (input.data.tagIds) {
-      await replaceTransactionTags(updated.id, userId, input.data.tagIds)
+      await replaceTransactionTags(updated.id, userId, input.data.tagIds);
     }
 
-    return c.json<TransactionUpdateOutput>(toTransactionData(updated))
+    return c.json<TransactionUpdateOutput>(toTransactionData(updated));
   })
   .post('/delete', authMiddleware, zValidator('json', transactionDeleteSchema), async (c) => {
-    const userId = c.get('userId')!
-    const input = c.req.valid('json')
+    const userId = c.get('userId')!;
+    const input = c.req.valid('json');
 
     const result = await db
       .deleteFrom('finance_transactions')
       .where('id', '=', input.id)
       .where('user_id', '=', userId)
       .returningAll()
-      .executeTakeFirst()
+      .executeTakeFirst();
 
-    const deleted = Boolean(result)
+    const deleted = Boolean(result);
     return c.json<TransactionDeleteOutput>({
       success: deleted,
       ...(deleted ? {} : { message: 'Transaction not found' }),
-    })
-  })
+    });
+  });

@@ -1,4 +1,5 @@
 import { logger } from '@hominem/utils/logger';
+
 import { env } from '../env';
 
 type SendEmailParams = {

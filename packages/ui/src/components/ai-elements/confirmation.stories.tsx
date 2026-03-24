@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { ConfirmationBanner } from './confirmation';
 
 const meta: Meta<typeof ConfirmationBanner> = {

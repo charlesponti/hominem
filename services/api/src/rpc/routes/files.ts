@@ -1,10 +1,10 @@
-import { fileStorageService } from '@hominem/utils/storage';
 import { FileProcessorService } from '@hominem/services/files';
 import { logger } from '@hominem/utils/logger';
-import { NotFoundError, ValidationError, InternalError, isServiceError } from '../errors';
+import { fileStorageService } from '@hominem/utils/storage';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
+import { NotFoundError, ValidationError, InternalError, isServiceError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 type ProcessedFile = {
@@ -19,7 +19,10 @@ type ProcessedFile = {
   metadata?: Record<string, unknown>;
 };
 
-async function indexProcessedFile(file: ProcessedFile, userId: string): Promise<{
+async function indexProcessedFile(
+  file: ProcessedFile,
+  userId: string,
+): Promise<{
   success: boolean;
   message: string;
 }> {

@@ -1,50 +1,59 @@
-import type { RefObject } from 'react'
-import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { useVirtualizer } from '@tanstack/react-virtual'
+import { useVirtualizer } from '@tanstack/react-virtual';
+import type { RefObject } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
-import { useAutoScroll } from '../../lib/hooks/use-auto-scroll'
-import { useMessageSearch } from '../../lib/hooks/use-message-search'
-import { useScrollDetection } from '../../lib/hooks/use-scroll-detection'
-import type { ExtendedMessage } from '../../types/chat'
-import { ChatSearchModal } from './chat-search-modal'
-import { ChatShimmerMessage } from './chat-shimmer-message'
-import { ChatThinkingIndicator } from './chat-thinking-indicator'
-import { ChatMessage } from './chat-message'
+import { useAutoScroll } from '../../lib/hooks/use-auto-scroll';
+import { useMessageSearch } from '../../lib/hooks/use-message-search';
+import { useScrollDetection } from '../../lib/hooks/use-scroll-detection';
+import type { ExtendedMessage } from '../../types/chat';
+import { ChatMessage } from './chat-message';
+import { ChatSearchModal } from './chat-search-modal';
+import { ChatShimmerMessage } from './chat-shimmer-message';
+import { ChatThinkingIndicator } from './chat-thinking-indicator';
 
 export interface ChatMessagesHandle {
-  showSearch: () => void
+  showSearch: () => void;
 }
 
 interface ChatMessagesProps {
-  messages: ExtendedMessage[]
-  status?: string
-  isLoading?: boolean
-  error?: Error | null
-  showDebug?: boolean
-  speakingId?: string | null | undefined
-  speechLoadingId?: string | null | undefined
-  onRegenerate?: ((messageId: string) => void) | undefined
-  onEdit?: ((messageId: string, newContent: string) => void) | undefined
-  onDelete?: ((messageId: string) => void) | undefined
-  onSpeak?: ((messageId: string, content: string) => void) | undefined
+  messages: ExtendedMessage[];
+  status?: string;
+  isLoading?: boolean;
+  error?: Error | null;
+  showDebug?: boolean;
+  speakingId?: string | null | undefined;
+  speechLoadingId?: string | null | undefined;
+  onRegenerate?: ((messageId: string) => void) | undefined;
+  onEdit?: ((messageId: string, newContent: string) => void) | undefined;
+  onDelete?: ((messageId: string) => void) | undefined;
+  onSpeak?: ((messageId: string, content: string) => void) | undefined;
 }
 
 export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(function ChatMessages(
-  { messages, status = 'idle', isLoading = false, error, showDebug = false, speakingId, speechLoadingId, onRegenerate, onEdit, onDelete, onSpeak },
+  {
+    messages,
+    status = 'idle',
+    isLoading = false,
+    error,
+    showDebug = false,
+    speakingId,
+    speechLoadingId,
+    onRegenerate,
+    onEdit,
+    onDelete,
+    onSpeak,
+  },
   ref,
 ) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const parentRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
 
-  const [showSearch, setShowSearch] = useState(false)
-  const {
-    searchQuery,
-    setSearchQuery,
-    filteredMessages,
-    searchInputRef,
-  } = useMessageSearch({ messages })
+  const [showSearch, setShowSearch] = useState(false);
+  const { searchQuery, setSearchQuery, filteredMessages, searchInputRef } = useMessageSearch({
+    messages,
+  });
 
-  const shouldUseVirtualScrolling = filteredMessages.length >= 50
+  const shouldUseVirtualScrolling = filteredMessages.length >= 50;
 
   const virtualizer = useVirtualizer({
     count: filteredMessages.length,
@@ -52,19 +61,19 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
     estimateSize: () => 150,
     overscan: 5,
     enabled: shouldUseVirtualScrolling,
-  })
+  });
 
   const virtualItems = useMemo(() => {
-    if (!shouldUseVirtualScrolling) return null
-    return virtualizer.getVirtualItems()
-  }, [shouldUseVirtualScrolling, virtualizer])
+    if (!shouldUseVirtualScrolling) return null;
+    return virtualizer.getVirtualItems();
+  }, [shouldUseVirtualScrolling, virtualizer]);
 
   const { isNearBottom, checkIfNearBottom } = useScrollDetection({
     containerRef,
     parentRef,
     threshold: 100,
     shouldUseVirtualScrolling,
-  })
+  });
 
   useAutoScroll({
     containerRef,
@@ -75,22 +84,22 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
     isNearBottom,
     shouldUseVirtualScrolling,
     checkIfNearBottom,
-  })
+  });
 
   useImperativeHandle(ref, () => ({
     showSearch: () => {
-      setShowSearch(true)
-      window.setTimeout(() => searchInputRef.current?.focus(), 0)
+      setShowSearch(true);
+      window.setTimeout(() => searchInputRef.current?.focus(), 0);
     },
-  }))
+  }));
 
-  const lastMessage = messages.length > 0 ? messages[messages.length - 1] : undefined
+  const lastMessage = messages.length > 0 ? messages[messages.length - 1] : undefined;
   const hasStreamingMessage =
     messages.length > 0 &&
     lastMessage !== undefined &&
     lastMessage.role === 'assistant' &&
-    (status === 'streaming' || lastMessage.isStreaming)
-  const showThinking = status === 'submitted' || (status === 'streaming' && !hasStreamingMessage)
+    (status === 'streaming' || lastMessage.isStreaming);
+  const showThinking = status === 'submitted' || (status === 'streaming' && !hasStreamingMessage);
 
   if (error) {
     // displayed below with message list shell
@@ -104,8 +113,8 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
         resultCount={filteredMessages.length}
         searchInputRef={searchInputRef as RefObject<HTMLInputElement | null>}
         onClose={() => {
-          setShowSearch(false)
-          setSearchQuery('')
+          setShowSearch(false);
+          setSearchQuery('');
         }}
         onChangeSearchQuery={setSearchQuery}
       />
@@ -128,7 +137,10 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
         }
       >
         {error ? (
-          <div className="mx-auto mb-6 w-full rounded-md border border-destructive/30 bg-destructive/5 p-4 shadow-sm" style={{ maxWidth: 720 }}>
+          <div
+            className="mx-auto mb-6 w-full rounded-md border border-destructive/30 bg-destructive/5 p-4 shadow-sm"
+            style={{ maxWidth: 720 }}
+          >
             <div className="mb-1 text-sm font-semibold text-destructive">Something went wrong</div>
             <div className="text-xs text-destructive/70">
               {error instanceof Error ? error.message : String(error)}
@@ -145,10 +157,18 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
         ) : null}
 
         {shouldUseVirtualScrolling ? (
-          <div className="mx-auto w-full" style={{ maxWidth: 720, height: `${virtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+          <div
+            className="mx-auto w-full"
+            style={{
+              maxWidth: 720,
+              height: `${virtualizer.getTotalSize()}px`,
+              width: '100%',
+              position: 'relative',
+            }}
+          >
             {virtualItems?.map((virtualItem) => {
-              const message = filteredMessages[virtualItem.index]
-              if (!message) return null
+              const message = filteredMessages[virtualItem.index];
+              if (!message) return null;
 
               return (
                 <div
@@ -169,7 +189,9 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
                     speakingId={speakingId ?? null}
                     speechLoadingId={speechLoadingId ?? null}
                     isStreaming={
-                      (status === 'streaming' && virtualItem.index === filteredMessages.length - 1 && message.role === 'assistant') ||
+                      (status === 'streaming' &&
+                        virtualItem.index === filteredMessages.length - 1 &&
+                        message.role === 'assistant') ||
                       Boolean(message.isStreaming)
                     }
                     {...(message.role === 'assistant' && {
@@ -177,12 +199,13 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
                       onSpeak: onSpeak,
                     })}
                     {...(message.role === 'user' && {
-                      onEdit: (messageId: string, newContent: string) => onEdit?.(messageId, newContent),
+                      onEdit: (messageId: string, newContent: string) =>
+                        onEdit?.(messageId, newContent),
                     })}
                     onDelete={() => onDelete?.(message.id)}
                   />
                 </div>
-              )
+              );
             })}
           </div>
         ) : (
@@ -202,7 +225,9 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
                     speakingId={speakingId ?? null}
                     speechLoadingId={speechLoadingId ?? null}
                     isStreaming={
-                      (status === 'streaming' && index === filteredMessages.length - 1 && message.role === 'assistant') ||
+                      (status === 'streaming' &&
+                        index === filteredMessages.length - 1 &&
+                        message.role === 'assistant') ||
                       Boolean(message.isStreaming)
                     }
                     {...(message.role === 'assistant' && {
@@ -210,7 +235,8 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
                       onSpeak,
                     })}
                     {...(message.role === 'user' && {
-                      onEdit: (messageId: string, newContent: string) => onEdit?.(messageId, newContent),
+                      onEdit: (messageId: string, newContent: string) =>
+                        onEdit?.(messageId, newContent),
                     })}
                     onDelete={() => onDelete?.(message.id)}
                   />
@@ -223,5 +249,5 @@ export const ChatMessages = forwardRef<ChatMessagesHandle, ChatMessagesProps>(fu
 
       {showThinking ? <ChatThinkingIndicator /> : null}
     </div>
-  )
-})
+  );
+});

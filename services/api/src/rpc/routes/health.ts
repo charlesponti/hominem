@@ -6,13 +6,13 @@ import {
   updateHealthActivity,
   getHealthActivitiesByUser,
 } from '@hominem/events-services';
-import { NotFoundError, ValidationError } from '../errors';
-import { validator as zValidator } from 'hono-openapi';
 import { Hono } from 'hono';
+import { validator as zValidator } from 'hono-openapi';
+import { describeRoute, resolver } from 'hono-openapi';
 import * as z from 'zod';
 
+import { NotFoundError, ValidationError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
-import { describeRoute, resolver } from 'hono-openapi';
 
 /**
  * Type predicate to check if an event is a Health activity owned by a specific user
@@ -21,11 +21,13 @@ function isUserHealthActivity(
   event: Awaited<ReturnType<typeof getHealthActivityById>>,
   userId: string,
 ): event is NonNullable<Awaited<ReturnType<typeof getHealthActivityById>>> {
-  const candidate = event as (NonNullable<Awaited<ReturnType<typeof getHealthActivityById>>> & {
-    userId?: string
-    type?: string
-  }) | null
-  return candidate !== null && candidate.userId === userId && candidate.type === 'Health'
+  const candidate = event as
+    | (NonNullable<Awaited<ReturnType<typeof getHealthActivityById>>> & {
+        userId?: string;
+        type?: string;
+      })
+    | null;
+  return candidate !== null && candidate.userId === userId && candidate.type === 'Health';
 }
 
 /**
@@ -86,18 +88,19 @@ export const healthRoutes: Hono<AppContext> = new Hono<AppContext>()
     authMiddleware,
     zValidator('query', healthActivityListQuerySchema),
     async (c) => {
-    const userId = c.get('userId')!;
-    const query = c.req.valid('query');
+      const userId = c.get('userId')!;
+      const query = c.req.valid('query');
 
-    const activities = await getHealthActivitiesByUser(userId, {
-      ...(query.activityType && { activityType: query.activityType }),
-      ...(query.startDate && { startDate: new Date(query.startDate) }),
-      ...(query.endDate && { endDate: new Date(query.endDate) }),
-      sortBy: (query.sortBy as 'date' | 'calories' | 'duration') || 'date',
-    });
+      const activities = await getHealthActivitiesByUser(userId, {
+        ...(query.activityType && { activityType: query.activityType }),
+        ...(query.startDate && { startDate: new Date(query.startDate) }),
+        ...(query.endDate && { endDate: new Date(query.endDate) }),
+        sortBy: (query.sortBy as 'date' | 'calories' | 'duration') || 'date',
+      });
 
-    return c.json<HealthActivityResponse[]>(activities);
-  })
+      return c.json<HealthActivityResponse[]>(activities);
+    },
+  )
 
   // Get activity by ID
   .get('/:id', authMiddleware, async (c) => {

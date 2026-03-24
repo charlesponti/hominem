@@ -1,17 +1,17 @@
-import { randomUUID } from 'node:crypto'
+import { randomUUID } from 'node:crypto';
 
-import { db, NotFoundError } from '@hominem/db'
-import { zValidator } from '@hono/zod-validator'
-import { Hono } from 'hono'
-import * as z from 'zod'
+import { db, NotFoundError } from '@hominem/db';
+import type { ReviewAcceptOutput, ReviewRejectOutput } from '@hominem/rpc/types/review.types';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+import * as z from 'zod';
 
-import { authMiddleware, type AppContext } from '../middleware/auth'
-import { getReviewItem, deleteReviewItem } from '../services/review-store'
-import type { ReviewAcceptOutput, ReviewRejectOutput } from '@hominem/rpc/types/review.types'
+import { authMiddleware, type AppContext } from '../middleware/auth';
+import { getReviewItem, deleteReviewItem } from '../services/review-store';
 
 const reviewAcceptSchema = z.object({
   finalTitle: z.string().min(1).max(200).optional(),
-})
+});
 
 /**
  * Routes for accepting or rejecting a pending review item.
@@ -22,18 +22,18 @@ export const reviewRoutes = new Hono<AppContext>()
 
   // Accept a review item — persist as a note, return noteId
   .post('/:reviewItemId/accept', zValidator('json', reviewAcceptSchema), async (c) => {
-    const reviewItemId = c.req.param('reviewItemId')
-    const userId = c.get('userId')!
-    const { finalTitle } = c.req.valid('json')
+    const reviewItemId = c.req.param('reviewItemId');
+    const userId = c.get('userId')!;
+    const { finalTitle } = c.req.valid('json');
 
-    const item = getReviewItem(reviewItemId)
+    const item = getReviewItem(reviewItemId);
     if (!item) {
-      throw new NotFoundError('Review item not found or already processed')
+      throw new NotFoundError('Review item not found or already processed');
     }
 
-    const title = finalTitle ?? item.proposedTitle
-    const noteId = randomUUID()
-    const now = new Date().toISOString()
+    const title = finalTitle ?? item.proposedTitle;
+    const noteId = randomUUID();
+    const now = new Date().toISOString();
 
     await db
       .insertInto('notes')
@@ -51,23 +51,23 @@ export const reviewRoutes = new Hono<AppContext>()
         created_at: now,
         updated_at: now,
       })
-      .execute()
+      .execute();
 
-    deleteReviewItem(reviewItemId)
+    deleteReviewItem(reviewItemId);
 
-    return c.json<ReviewAcceptOutput>({ noteId })
+    return c.json<ReviewAcceptOutput>({ noteId });
   })
 
   // Reject a review item — discard without persisting
   .post('/:reviewItemId/reject', async (c) => {
-    const reviewItemId = c.req.param('reviewItemId')
+    const reviewItemId = c.req.param('reviewItemId');
 
-    const item = getReviewItem(reviewItemId)
+    const item = getReviewItem(reviewItemId);
     if (!item) {
-      throw new NotFoundError('Review item not found or already processed')
+      throw new NotFoundError('Review item not found or already processed');
     }
 
-    deleteReviewItem(reviewItemId)
+    deleteReviewItem(reviewItemId);
 
-    return c.json<ReviewRejectOutput>({ success: true })
-  })
+    return c.json<ReviewRejectOutput>({ success: true });
+  });

@@ -1,19 +1,19 @@
-import type { ArtifactType } from '@hominem/chat-services/types'
+import type { ArtifactType } from '@hominem/chat-services/types';
 
-import { ClassificationReview } from './classification-review.mobile'
+import { ClassificationReview } from './classification-review.mobile';
 
 export interface ChatPendingReview {
-  proposedType: ArtifactType
-  proposedTitle: string
-  proposedChanges: string[]
-  previewContent: string
+  proposedType: ArtifactType;
+  proposedTitle: string;
+  proposedChanges: string[];
+  previewContent: string;
 }
 
 interface ChatReviewOverlayProps {
-  pendingReview: ChatPendingReview | null
-  isVisible: boolean
-  onAccept: () => void
-  onReject: () => void
+  pendingReview: ChatPendingReview | null;
+  isVisible: boolean;
+  onAccept: () => void;
+  onReject: () => void;
 }
 
 export function ChatReviewOverlay({
@@ -23,7 +23,7 @@ export function ChatReviewOverlay({
   onReject,
 }: ChatReviewOverlayProps) {
   if (!isVisible || !pendingReview) {
-    return null
+    return null;
   }
 
   return (
@@ -35,5 +35,5 @@ export function ChatReviewOverlay({
       proposedTitle={pendingReview.proposedTitle}
       proposedType={pendingReview.proposedType}
     />
-  )
+  );
 }

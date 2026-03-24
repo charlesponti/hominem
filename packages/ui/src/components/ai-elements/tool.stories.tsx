@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { Tool, ToolInput, ToolOutput } from './tool';
 
 const meta: Meta<typeof Tool> = {

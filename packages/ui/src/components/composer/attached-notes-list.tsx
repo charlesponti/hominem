@@ -1,16 +1,15 @@
-import { X } from 'lucide-react'
-import { memo } from 'react'
-
-import type { Note } from '@hominem/rpc/types/notes.types'
+import type { Note } from '@hominem/rpc/types/notes.types';
+import { X } from 'lucide-react';
+import { memo } from 'react';
 
 export const AttachedNotesList = memo(function AttachedNotesList({
   notes,
   onRemove,
 }: {
-  notes: Note[]
-  onRemove: (id: string) => void
+  notes: Note[];
+  onRemove: (id: string) => void;
 }) {
-  if (notes.length === 0) return null
+  if (notes.length === 0) return null;
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -33,5 +32,5 @@ export const AttachedNotesList = memo(function AttachedNotesList({
         </div>
       ))}
     </div>
-  )
-})
+  );
+});

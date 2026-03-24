@@ -1,31 +1,31 @@
-import { List } from '@hominem/ui/list'
-import { Loading } from '@hominem/ui/loading'
-import { MapPin } from 'lucide-react'
-import { href } from 'react-router'
+import { List } from '@hominem/ui/list';
+import { Loading } from '@hominem/ui/loading';
+import { MapPin } from 'lucide-react';
+import { href } from 'react-router';
 
-import { useNearbyPlaces } from '../../../hooks/use-places'
-import { useGeolocation } from '../../../hooks/use-geolocation'
-import PlaceRow from './place-row'
+import { useGeolocation } from '../../../hooks/use-geolocation';
+import { useNearbyPlaces } from '../../../hooks/use-places';
+import PlaceRow from './place-row';
 
 interface PlacesNearbyProps {
-  latitude?: number
-  longitude?: number
-  radiusMeters?: number
+  latitude?: number;
+  longitude?: number;
+  radiusMeters?: number;
 }
 
 const DEFAULT_LOCATION = {
   latitude: 37.7749,
   longitude: -122.4194,
-}
+};
 
 function formatDistance(distance?: { km: number; miles: number } | null) {
-  if (!distance) return '—'
-  const { km } = distance
-  if (!Number.isFinite(km)) return '—'
+  if (!distance) return '—';
+  const { km } = distance;
+  if (!Number.isFinite(km)) return '—';
   if (km < 1) {
-    return `${Math.round(km * 1000)}m`
+    return `${Math.round(km * 1000)}m`;
   }
-  return `${km.toFixed(1)}km`
+  return `${km.toFixed(1)}km`;
 }
 
 export function PlacesNearby({
@@ -38,22 +38,22 @@ export function PlacesNearby({
     enableHighAccuracy: false,
     timeout: 5000,
     maximumAge: 300000,
-  })
+  });
 
   const location =
     providedLatitude !== undefined && providedLongitude !== undefined
       ? { latitude: providedLatitude, longitude: providedLongitude }
-      : currentLocation || DEFAULT_LOCATION
+      : currentLocation || DEFAULT_LOCATION;
 
-  const { data: placesResult, isLoading, error } = useNearbyPlaces(
-    location.latitude,
-    location.longitude,
-    radiusMeters,
-  )
+  const {
+    data: placesResult,
+    isLoading,
+    error,
+  } = useNearbyPlaces(location.latitude, location.longitude, radiusMeters);
 
-  const places = placesResult ?? []
-  const title = <h2 className="heading-2">Nearby</h2>
-  const radiusKm = (radiusMeters ?? 5000) / 1000
+  const places = placesResult ?? [];
+  const title = <h2 className="heading-2">Nearby</h2>;
+  const radiusKm = (radiusMeters ?? 5000) / 1000;
 
   if (isLoading) {
     return (
@@ -63,7 +63,7 @@ export function PlacesNearby({
           <Loading size="lg" />
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -74,7 +74,7 @@ export function PlacesNearby({
           <p className="text-destructive">Error loading nearby places: {error.message}</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (places.length === 0) {
@@ -88,7 +88,7 @@ export function PlacesNearby({
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -119,5 +119,5 @@ export function PlacesNearby({
         ))}
       </List>
     </div>
-  )
+  );
 }

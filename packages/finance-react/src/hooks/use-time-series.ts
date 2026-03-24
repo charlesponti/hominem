@@ -1,6 +1,5 @@
-import { format } from 'date-fns';
-
 import { useRpcQuery } from '@hominem/rpc/react';
+import { format } from 'date-fns';
 
 interface TimeSeriesParams {
   dateFrom?: Date | undefined;

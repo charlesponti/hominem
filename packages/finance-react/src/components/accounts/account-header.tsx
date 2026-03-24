@@ -1,26 +1,25 @@
-import { Button } from '@hominem/ui/button'
-import { Badge } from '@hominem/ui/components/ui/badge'
+import type { AccountWithPlaidInfo } from '@hominem/rpc/types/finance.types';
+import { Button } from '@hominem/ui/button';
+import { Badge } from '@hominem/ui/components/ui/badge';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@hominem/ui/components/ui/card'
-import { ArrowLeft, Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react'
-import { Link } from 'react-router'
+} from '@hominem/ui/components/ui/card';
+import { ArrowLeft, Building2, CreditCard, Eye, EyeOff, RefreshCcw } from 'lucide-react';
+import { Link } from 'react-router';
 
-import type { AccountWithPlaidInfo } from '@hominem/rpc/types/finance.types'
-
-import { AccountConnectionDialog } from './account-connection-dialog'
-import { AccountStatusDisplay } from './account-status-display'
+import { AccountConnectionDialog } from './account-connection-dialog';
+import { AccountStatusDisplay } from './account-status-display';
 
 interface AccountHeaderProps {
-  account: AccountWithPlaidInfo
-  isBalanceVisible: boolean
-  onToggleBalance: () => void
-  onRefresh: () => void
-  isLoading: boolean
+  account: AccountWithPlaidInfo;
+  isBalanceVisible: boolean;
+  onToggleBalance: () => void;
+  onRefresh: () => void;
+  isLoading: boolean;
 }
 
 export function AccountHeader({
@@ -33,35 +32,35 @@ export function AccountHeader({
   const getAccountTypeIcon = (type: string) => {
     switch (type.toLowerCase()) {
       case 'credit':
-        return <CreditCard className="size-6" />
+        return <CreditCard className="size-6" />;
       default:
-        return <Building2 className="size-6" />
+        return <Building2 className="size-6" />;
     }
-  }
+  };
 
   const formatBalance = (balance: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(balance)
-  }
+    }).format(balance);
+  };
 
   const getAccountTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'credit':
-        return 'text-foreground border-2 border-emphasis-lower'
+        return 'text-foreground border-2 border-emphasis-lower';
       case 'depository':
-        return 'text-foreground border-2 border-emphasis-lower'
+        return 'text-foreground border-2 border-emphasis-lower';
       case 'investment':
-        return 'text-foreground border-2 border-emphasis-subtle'
+        return 'text-foreground border-2 border-emphasis-subtle';
       case 'loan':
-        return 'text-foreground border-2 border-emphasis-minimal'
+        return 'text-foreground border-2 border-emphasis-minimal';
       default:
-        return 'text-foreground border-2 border-border'
+        return 'text-foreground border-2 border-border';
     }
-  }
+  };
 
-  const isPlaidAccount = !!account.plaidItemId
+  const isPlaidAccount = !!account.plaidItemId;
 
   return (
     <>
@@ -128,5 +127,5 @@ export function AccountHeader({
         </CardContent>
       </Card>
     </>
-  )
+  );
 }

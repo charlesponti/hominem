@@ -1,3 +1,4 @@
+import type { Note } from '@hominem/rpc/types';
 import { fontSizes } from '@hominem/ui/tokens';
 import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { memo, useCallback } from 'react';
@@ -5,22 +6,21 @@ import { StyleSheet } from 'react-native';
 import { RefreshControl } from 'react-native-gesture-handler';
 
 import { makeStyles } from '~/theme';
-import type { Note } from '@hominem/rpc/types';
 
-import { FocusListItem } from './focus-list-item';
+import { NoteListItem } from './note-list-item';
 
 // Memoized render item component to prevent unnecessary re-renders
-const RenderFocusItem = memo(({ item, index }: { item: Note; index: number }) => {
+const RenderNote = memo(({ item, index }: { item: Note; index: number }) => {
   const label = item.title || item.excerpt || item.content || '';
-  return <FocusListItem label={label} item={item} itemIndex={index} />;
+  return <NoteListItem label={label} item={item} itemIndex={index} />;
 });
 
-RenderFocusItem.displayName = 'RenderFocusItem';
+RenderNote.displayName = 'RenderFocusItem';
 
 // Stable key extractor - just use item.id directly
 const keyExtractor = (item: Note) => item.id;
 
-export const FocusList = ({
+export const NoteList = ({
   data,
   isRefreshing,
   onRefresh,
@@ -32,7 +32,7 @@ export const FocusList = ({
   const styles = useStyles();
   // Memoized render function with stable reference
   const renderItem = useCallback<ListRenderItem<Note>>(({ item, index }) => {
-    return <RenderFocusItem item={item} index={index} />;
+    return <RenderNote item={item} index={index} />;
   }, []);
 
   if (!data.length) {

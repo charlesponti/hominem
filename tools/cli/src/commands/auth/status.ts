@@ -48,4 +48,3 @@ export default class AuthStatus extends Command {
     return validateWithZod(outputSchema, output);
   }
 }
-

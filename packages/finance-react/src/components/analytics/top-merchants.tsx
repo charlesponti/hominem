@@ -1,22 +1,22 @@
-import type { Merchant } from '@hominem/rpc/types/finance.types'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Skeleton } from '@hominem/ui/components/ui/skeleton'
+import type { Merchant } from '@hominem/rpc/types/finance.types';
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Skeleton } from '@hominem/ui/components/ui/skeleton';
 
-import { useFinanceTopMerchants } from '../../hooks/use-finance-top-merchants'
+import { useFinanceTopMerchants } from '../../hooks/use-finance-top-merchants';
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-  }).format(amount)
+  }).format(amount);
 }
 
 export interface TopMerchantsProps {
-  dateFrom?: Date | undefined
-  dateTo?: Date | undefined
-  selectedAccount?: string | undefined
-  selectedTag?: string | undefined
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  selectedAccount?: string | undefined;
+  selectedTag?: string | undefined;
 }
 
 export function TopMerchants({
@@ -25,15 +25,19 @@ export function TopMerchants({
   selectedAccount,
   selectedTag,
 }: TopMerchantsProps) {
-  const { data: topMerchants, isLoading, error } = useFinanceTopMerchants({
+  const {
+    data: topMerchants,
+    isLoading,
+    error,
+  } = useFinanceTopMerchants({
     from: dateFrom?.toISOString().split('T')[0],
     to: dateTo?.toISOString().split('T')[0],
     account: selectedAccount !== 'all' ? selectedAccount : undefined,
     tag: selectedTag || undefined,
     limit: 5,
-  })
+  });
 
-  const skeletonItems = Array.from({ length: 5 }, (_, i) => i)
+  const skeletonItems = Array.from({ length: 5 }, (_, i) => i);
 
   return (
     <Card>
@@ -54,9 +58,13 @@ export function TopMerchants({
             ))}
           </div>
         ) : error instanceof Error ? (
-          <div className="text-destructive">{error.message || 'Merchants unavailable. Retry later.'}</div>
+          <div className="text-destructive">
+            {error.message || 'Merchants unavailable. Retry later.'}
+          </div>
         ) : error ? (
-          <div className="text-destructive">An unknown error occurred while fetching merchants.</div>
+          <div className="text-destructive">
+            An unknown error occurred while fetching merchants.
+          </div>
         ) : Array.isArray(topMerchants?.merchants) && topMerchants.merchants.length > 0 ? (
           <div className="space-y-3">
             {topMerchants.merchants.map((m: Merchant) => (
@@ -76,5 +84,5 @@ export function TopMerchants({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

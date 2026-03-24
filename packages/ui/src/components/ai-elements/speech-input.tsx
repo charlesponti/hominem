@@ -102,43 +102,46 @@ export function SpeechInput({
     onAudioLevelChange?.(0);
   }, [onAudioLevelChange]);
 
-  const startAudioLevelMonitor = useCallback((stream: MediaStream) => {
-    const audioContext = new AudioContext();
-    const sourceNode = audioContext.createMediaStreamSource(stream);
-    const analyser = audioContext.createAnalyser();
+  const startAudioLevelMonitor = useCallback(
+    (stream: MediaStream) => {
+      const audioContext = new AudioContext();
+      const sourceNode = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
 
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.85;
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.85;
 
-    sourceNode.connect(analyser);
+      sourceNode.connect(analyser);
 
-    audioContextRef.current = audioContext;
-    analyserRef.current = analyser;
-    levelDataRef.current = new Uint8Array(new ArrayBuffer(analyser.fftSize));
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+      levelDataRef.current = new Uint8Array(new ArrayBuffer(analyser.fftSize));
 
-    const updateLevel = () => {
-      const activeAnalyser = analyserRef.current;
-      const activeData = levelDataRef.current;
+      const updateLevel = () => {
+        const activeAnalyser = analyserRef.current;
+        const activeData = levelDataRef.current;
 
-      if (!activeAnalyser || !activeData) return;
+        if (!activeAnalyser || !activeData) return;
 
-      activeAnalyser.getByteTimeDomainData(activeData);
+        activeAnalyser.getByteTimeDomainData(activeData);
 
-      let sumSquares = 0;
-      for (const sample of activeData) {
-        const centered = (sample - 128) / 128;
-        sumSquares += centered * centered;
-      }
+        let sumSquares = 0;
+        for (const sample of activeData) {
+          const centered = (sample - 128) / 128;
+          sumSquares += centered * centered;
+        }
 
-      const rms = Math.sqrt(sumSquares / activeData.length);
-      const normalizedLevel = Math.min(1, Math.max(0, rms * 4));
-      onAudioLevelChange?.(normalizedLevel);
+        const rms = Math.sqrt(sumSquares / activeData.length);
+        const normalizedLevel = Math.min(1, Math.max(0, rms * 4));
+        onAudioLevelChange?.(normalizedLevel);
+
+        levelRafIdRef.current = requestAnimationFrame(updateLevel);
+      };
 
       levelRafIdRef.current = requestAnimationFrame(updateLevel);
-    };
-
-    levelRafIdRef.current = requestAnimationFrame(updateLevel);
-  }, [onAudioLevelChange]);
+    },
+    [onAudioLevelChange],
+  );
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -207,7 +210,13 @@ export function SpeechInput({
       recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
       stopAudioLevelMonitor();
     };
-  }, [language, onAudioRecorded, onRecordingComplete, onTranscriptionChange, stopAudioLevelMonitor]);
+  }, [
+    language,
+    onAudioRecorded,
+    onRecordingComplete,
+    onTranscriptionChange,
+    stopAudioLevelMonitor,
+  ]);
 
   const startRecording = useCallback(async () => {
     if (!recognitionRef.current || isRecording) return;
@@ -255,7 +264,13 @@ export function SpeechInput({
       stopAudioLevelMonitor();
       onPermissionDenied?.();
     }
-  }, [isRecording, onAudioRecorded, onPermissionDenied, startAudioLevelMonitor, stopAudioLevelMonitor]);
+  }, [
+    isRecording,
+    onAudioRecorded,
+    onPermissionDenied,
+    startAudioLevelMonitor,
+    stopAudioLevelMonitor,
+  ]);
 
   const stopRecording = useCallback(() => {
     if (!isRecording) return;
@@ -295,7 +310,11 @@ export function SpeechInput({
   return (
     <div className="relative">
       <span className="sr-only" role="status" aria-live="polite">
-        {isRecording ? 'Recording in progress' : isProcessing ? 'Processing recording' : 'Recording idle'}
+        {isRecording
+          ? 'Recording in progress'
+          : isProcessing
+            ? 'Processing recording'
+            : 'Recording idle'}
       </span>
       <Button
         type="button"
@@ -322,7 +341,9 @@ export function SpeechInput({
         </span>
       )}
       {isPermissionDenied ? (
-        <span className="sr-only" role="alert">Microphone access denied</span>
+        <span className="sr-only" role="alert">
+          Microphone access denied
+        </span>
       ) : null}
     </div>
   );

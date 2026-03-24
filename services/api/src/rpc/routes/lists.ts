@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 
 import type { AppContext } from '../middleware/auth';
-
 import { listMutationRoutes } from './lists.mutation';
 import { listQueryRoutes } from './lists.query';
 

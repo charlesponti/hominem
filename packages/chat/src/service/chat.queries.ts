@@ -11,10 +11,10 @@ type ChatRow = Selectable<Database['chat']>;
 
 function toIsoString(value: Date | string | null | undefined): string {
   if (value === null || value === undefined) {
-    return new Date().toISOString()
+    return new Date().toISOString();
   }
 
-  return value instanceof Date ? value.toISOString() : value
+  return value instanceof Date ? value.toISOString() : value;
 }
 
 function toChatOutput(row: ChatRow): ChatOutput {
@@ -160,13 +160,13 @@ export async function archiveChatQuery(chatId: string, userId: string): Promise<
     .executeTakeFirst();
 
   if (!archivedChat) {
-    return null
+    return null;
   }
 
   return {
     ...toChatOutput(archivedChat),
     archivedAt: timestamp.toISOString(),
-  }
+  };
 }
 
 export async function deleteChatQuery(chatId: string, userId: string): Promise<boolean> {

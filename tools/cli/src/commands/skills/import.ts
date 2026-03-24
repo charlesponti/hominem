@@ -1,6 +1,6 @@
+import { Args, Command } from '@oclif/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Args, Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { validateWithZod } from '@/utils/zod-validation';
@@ -46,13 +46,10 @@ export default class SkillsImport extends Command {
       if (err instanceof Error && 'code' in err) {
         throw err;
       }
-      this.error(
-        `failed to read skills directory at ${source}`,
-        {
-          exit: 3,
-          code: 'SKILLS_SOURCE_MISSING',
-        }
-      );
+      this.error(`failed to read skills directory at ${source}`, {
+        exit: 3,
+        code: 'SKILLS_SOURCE_MISSING',
+      });
     }
 
     try {
@@ -82,13 +79,10 @@ export default class SkillsImport extends Command {
       validateWithZod(outputSchema, output);
       return output;
     } catch (err) {
-      this.error(
-        err instanceof Error ? err.message : 'import failed',
-        {
-          exit: 3,
-          code: 'SKILLS_IMPORT_FAILED',
-        }
-      );
+      this.error(err instanceof Error ? err.message : 'import failed', {
+        exit: 3,
+        code: 'SKILLS_IMPORT_FAILED',
+      });
     }
   }
 }

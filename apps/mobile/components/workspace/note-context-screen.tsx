@@ -1,12 +1,12 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import { useInputContext } from '~/components/input/input-context'
-import { Text, makeStyles } from '~/theme'
+import { useInputContext } from '~/components/input/input-context';
+import { Text, makeStyles } from '~/theme';
 
 export const NoteContextScreen = () => {
-  const styles = useStyles()
-  const { attachments, message } = useInputContext()
+  const styles = useStyles();
+  const { attachments, message } = useInputContext();
 
   return (
     <View style={styles.container} testID="note-context-screen">
@@ -33,8 +33,8 @@ export const NoteContextScreen = () => {
         </Text>
       </View>
     </View>
-  )
-}
+  );
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -58,4 +58,4 @@ const useStyles = makeStyles((t) =>
       paddingVertical: t.spacing.m_16,
     },
   }),
-)
+);

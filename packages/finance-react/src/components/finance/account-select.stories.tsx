@@ -1,7 +1,7 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { fn } from 'storybook/test'
+import type { Meta, StoryObj } from '@storybook/react';
+import { fn } from 'storybook/test';
 
-import { AccountSelect } from './account-select'
+import { AccountSelect } from './account-select';
 
 const meta: Meta<typeof AccountSelect> = {
   title: 'Finance/AccountSelect',
@@ -11,16 +11,16 @@ const meta: Meta<typeof AccountSelect> = {
     isLoading: { control: 'boolean' },
     showLabel: { control: 'boolean' },
   },
-}
-export default meta
-type Story = StoryObj<typeof AccountSelect>
+};
+export default meta;
+type Story = StoryObj<typeof AccountSelect>;
 
 const sampleAccounts = [
   { id: 'acc-1', name: 'Chase Checking' },
   { id: 'acc-2', name: 'Chase Savings' },
   { id: 'acc-3', name: 'Amex Gold' },
   { id: 'acc-4', name: 'Capital One' },
-]
+];
 
 export const Default: Story = {
   args: {
@@ -29,7 +29,7 @@ export const Default: Story = {
     accounts: sampleAccounts,
     label: 'Account',
   },
-}
+};
 
 export const WithSelectedAccount: Story = {
   args: {
@@ -38,7 +38,7 @@ export const WithSelectedAccount: Story = {
     accounts: sampleAccounts,
     label: 'Account',
   },
-}
+};
 
 export const WithLabel: Story = {
   args: {
@@ -48,7 +48,7 @@ export const WithLabel: Story = {
     showLabel: true,
     label: 'Account',
   },
-}
+};
 
 export const Loading: Story = {
   args: {
@@ -58,7 +58,7 @@ export const Loading: Story = {
     isLoading: true,
     label: 'Account',
   },
-}
+};
 
 export const Empty: Story = {
   args: {
@@ -68,4 +68,4 @@ export const Empty: Story = {
     isLoading: false,
     label: 'Account',
   },
-}
+};

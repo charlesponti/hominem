@@ -1,8 +1,8 @@
-export { PlaceAddress } from './place-address'
-export { PlaceLists } from './place-lists'
-export { PlacePhone } from './place-phone'
-export { PlacePhotoLightbox } from './place-photo-lightbox'
-export { PlacePhotos } from './place-photos'
-export { PlaceRating } from './place-rating'
-export { PlaceStatus } from './place-status'
-export { PlaceWebsite } from './place-website'
+export { PlaceAddress } from './place-address';
+export { PlaceLists } from './place-lists';
+export { PlacePhone } from './place-phone';
+export { PlacePhotoLightbox } from './place-photo-lightbox';
+export { PlacePhotos } from './place-photos';
+export { PlaceRating } from './place-rating';
+export { PlaceStatus } from './place-status';
+export { PlaceWebsite } from './place-website';

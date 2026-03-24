@@ -1,20 +1,20 @@
 import { addItemToList, getItemsByListId, removeItemFromList } from '@hominem/lists-services';
-import { NotFoundError } from '../errors'
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-
-import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
 import {
   itemsAddToListSchema,
   itemsGetByListIdSchema,
   itemsRemoveFromListSchema,
-} from '@hominem/rpc/schemas/items.schema'
+} from '@hominem/rpc/schemas/items.schema';
 import type {
   ListItem,
   ItemsAddToListOutput,
   ItemsGetByListIdOutput,
   ItemsRemoveFromListOutput,
-} from '@hominem/rpc/types/items.types'
+} from '@hominem/rpc/types/items.types';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+
+import { NotFoundError } from '../errors';
+import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
 
 /**
  * Transform item from service layer to API contract
@@ -47,7 +47,7 @@ export const itemsRoutes = new Hono<AppContext>()
   .post('/add', authMiddleware, zValidator('json', itemsAddToListSchema), async (c) => {
     const input = c.req.valid('json');
     const userId = c.get('userId')!;
-    const itemType = input.itemType === 'FLIGHT' ? 'FLIGHT' : 'PLACE'
+    const itemType = input.itemType === 'FLIGHT' ? 'FLIGHT' : 'PLACE';
 
     const newItem = await addItemToList({
       listId: input.listId,

@@ -1,31 +1,38 @@
-import type { ArtifactType } from '@hominem/chat-services/types'
-import { Modal, ScrollView, StyleSheet, View } from 'react-native'
+import type { ArtifactType } from '@hominem/chat-services/types';
+import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-} from 'react-native-reanimated'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, durations, fontFamiliesNative, fontSizes, radiiNative, spacing } from '../../tokens'
-import { Button } from '../ui/button.native'
-import { Text } from '../typography/text.native'
+import {
+  colors,
+  durations,
+  fontFamiliesNative,
+  fontSizes,
+  radiiNative,
+  spacing,
+} from '../../tokens';
+import { Text } from '../typography/text.native';
+import { Button } from '../ui/button.native';
 
 const TYPE_LABEL: Record<ArtifactType, string> = {
   note: 'NOTE',
   task: 'TASK',
   task_list: 'TASK LIST',
   tracker: 'TRACKER',
-}
+};
 
 interface ClassificationReviewProps {
-  proposedType: ArtifactType
-  proposedTitle: string
-  proposedChanges: string[]
-  previewContent: string
-  onAccept: () => void
-  onReject: () => void
+  proposedType: ArtifactType;
+  proposedTitle: string;
+  proposedChanges: string[];
+  previewContent: string;
+  onAccept: () => void;
+  onReject: () => void;
 }
 
 export function ClassificationReview({
@@ -36,25 +43,25 @@ export function ClassificationReview({
   onAccept,
   onReject,
 }: ClassificationReviewProps) {
-  const insets = useSafeAreaInsets()
-  const translateY = useSharedValue(80)
-  const opacity = useSharedValue(0)
+  const insets = useSafeAreaInsets();
+  const translateY = useSharedValue(80);
+  const opacity = useSharedValue(0);
 
   useAnimatedReaction(
     () => opacity.value,
     (_current: number, prev: number | null) => {
-      'worklet'
+      'worklet';
       if (prev === null) {
-        translateY.value = withTiming(0, { duration: durations.enter })
-        opacity.value = withTiming(1, { duration: durations.enter })
+        translateY.value = withTiming(0, { duration: durations.enter });
+        opacity.value = withTiming(1, { duration: durations.enter });
       }
     },
-  )
+  );
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
     transform: [{ translateY: translateY.value }],
-  }))
+  }));
 
   return (
     <Modal transparent animationType="none" statusBarTranslucent>
@@ -110,7 +117,7 @@ export function ClassificationReview({
         </Animated.View>
       </View>
     </Modal>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -190,4 +197,4 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-})
+});

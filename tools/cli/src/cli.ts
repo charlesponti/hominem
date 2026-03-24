@@ -1,6 +1,6 @@
 /**
  * DEPRECATED - This file is no longer used.
- * 
+ *
  * The CLI entry point has moved to bin/hominem.js which uses oclif.
  * This file is kept for historical reference only.
  */

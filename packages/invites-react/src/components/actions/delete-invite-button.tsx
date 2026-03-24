@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -7,17 +7,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui/dialog'
-import { Trash2 } from 'lucide-react'
-import { useCallback } from 'react'
+} from '@hominem/ui/dialog';
+import { Trash2 } from 'lucide-react';
+import { useCallback } from 'react';
 
-import { useDeleteInvite } from '../../hooks/use-invites'
-import { useModal } from '../../hooks/use-modal'
+import { useDeleteInvite } from '../../hooks/use-invites';
+import { useModal } from '../../hooks/use-modal';
 
 interface DeleteInviteButtonProps {
-  listId: string
-  invitedUserEmail: string
-  onDelete?: (email: string) => void
+  listId: string;
+  invitedUserEmail: string;
+  onDelete?: (email: string) => void;
 }
 
 export function DeleteInviteButton({
@@ -25,18 +25,18 @@ export function DeleteInviteButton({
   invitedUserEmail,
   onDelete,
 }: DeleteInviteButtonProps) {
-  const { isOpen, open, close } = useModal()
-  const deleteInvite = useDeleteInvite()
+  const { isOpen, open, close } = useModal();
+  const deleteInvite = useDeleteInvite();
 
   const handleDelete = useCallback(async () => {
     try {
-      await deleteInvite.mutateAsync({ listId, invitedUserEmail })
-      onDelete?.(invitedUserEmail)
-      close()
+      await deleteInvite.mutateAsync({ listId, invitedUserEmail });
+      onDelete?.(invitedUserEmail);
+      close();
     } catch (error) {
-      console.error('Failed to delete invite:', error)
+      console.error('Failed to delete invite:', error);
     }
-  }, [deleteInvite, listId, invitedUserEmail, onDelete, close])
+  }, [deleteInvite, listId, invitedUserEmail, onDelete, close]);
 
   return (
     <>
@@ -82,5 +82,5 @@ export function DeleteInviteButton({
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

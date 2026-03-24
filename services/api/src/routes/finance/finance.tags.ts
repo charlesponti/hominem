@@ -1,8 +1,8 @@
 import { getTransactionTags } from '@hominem/finance-services';
-import { InternalError, UnauthorizedError } from '../../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
+import { InternalError, UnauthorizedError } from '../../errors';
 import type { AppEnv } from '../../server';
 
 export const financeTagsRoutes = new Hono<AppEnv>();

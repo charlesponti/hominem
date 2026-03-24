@@ -1,16 +1,16 @@
-import { Hono } from 'hono'
-import { generateObject } from 'ai'
-import * as z from 'zod'
-import { zValidator } from '@hono/zod-validator'
-
-import { authMiddleware, type AppContext } from '../middleware/auth'
 import type {
   MobileIntentDeriveOutputV1,
   MobileIntentSuggestionsOutput,
   MobileDerivedTask,
-} from '@hominem/rpc/types/mobile.types'
-import { getOpenAIAdapter } from '../utils/llm'
-import { authenticatedVoiceRoutes } from './voice'
+} from '@hominem/rpc/types/mobile.types';
+import { zValidator } from '@hono/zod-validator';
+import { generateObject } from 'ai';
+import { Hono } from 'hono';
+import * as z from 'zod';
+
+import { authMiddleware, type AppContext } from '../middleware/auth';
+import { getOpenAIAdapter } from '../utils/llm';
+import { authenticatedVoiceRoutes } from './voice';
 
 const DEFAULT_SUGGESTIONS: MobileIntentSuggestionsOutput['suggestions'] = [
   {
@@ -37,11 +37,11 @@ const DEFAULT_SUGGESTIONS: MobileIntentSuggestionsOutput['suggestions'] = [
     emoji: '✨',
     seed_prompt: 'Share a quick boost',
   },
-]
+];
 
 const deriveIntentSchema = z.object({
   content: z.string().min(1),
-})
+});
 
 const derivedTaskSchema = z.object({
   text: z.string(),
@@ -52,7 +52,7 @@ const derivedTaskSchema = z.object({
   task_size: z.string().default('medium'),
   type: z.string().default('task'),
   state: z.enum(['backlog', 'active', 'completed', 'deleted']).default('active'),
-})
+});
 
 const deriveOutputSchema = z.object({
   output: z.string(),
@@ -75,10 +75,10 @@ const deriveOutputSchema = z.object({
     })
     .optional(),
   fallback_reason: z.string().optional(),
-})
+});
 
 function toMobileDerivedTask(input: z.infer<typeof derivedTaskSchema>): MobileDerivedTask {
-  const now = new Date().toISOString()
+  const now = new Date().toISOString();
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     text: input.text,
@@ -92,7 +92,7 @@ function toMobileDerivedTask(input: z.infer<typeof derivedTaskSchema>): MobileDe
     profile_id: '',
     created_at: now,
     updated_at: now,
-  }
+  };
 }
 
 export const mobileRoutes = new Hono<AppContext>()
@@ -100,18 +100,18 @@ export const mobileRoutes = new Hono<AppContext>()
   .get('/intents/suggestions', async (c) => {
     return c.json<MobileIntentSuggestionsOutput>({
       suggestions: DEFAULT_SUGGESTIONS,
-    })
+    });
   })
   .post('/intents/derive', zValidator('json', deriveIntentSchema), async (c) => {
-    const { content } = c.req.valid('json')
+    const { content } = c.req.valid('json');
 
     const response = await generateObject<z.infer<typeof deriveOutputSchema>>({
       model: getOpenAIAdapter(),
       schema: deriveOutputSchema,
       prompt: `Extract user intent from this message and return structured output.\n\nMessage:\n${content}`,
-    })
+    });
 
-    const derived = response.object
+    const derived = response.object;
     const payload: MobileIntentDeriveOutputV1 = {
       version: 'v1',
       output: derived.output,
@@ -136,8 +136,8 @@ export const mobileRoutes = new Hono<AppContext>()
         : {}),
       ...(derived.chat ? { chat: derived.chat } : {}),
       ...(derived.fallback_reason ? { fallback_reason: derived.fallback_reason } : {}),
-    }
+    };
 
-    return c.json<MobileIntentDeriveOutputV1>(payload)
+    return c.json<MobileIntentDeriveOutputV1>(payload);
   })
-  .route('/voice', authenticatedVoiceRoutes)
+  .route('/voice', authenticatedVoiceRoutes);

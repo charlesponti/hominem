@@ -1,36 +1,35 @@
-import { Inline } from '@hominem/ui'
-import { Star } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { Link } from 'react-router'
-
-import { cn } from '@hominem/ui/lib/utils'
+import { Inline } from '@hominem/ui';
+import { cn } from '@hominem/ui/lib/utils';
+import { Star } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Link } from 'react-router';
 
 export interface PlaceRowProps {
-  name: string
-  href: string
-  photoUrl?: string | null
-  imageUrl?: string | null
-  meta?: ReactNode
-  subtitle?: ReactNode
-  accessory?: ReactNode
-  isSelected?: boolean
-  onMouseEnter?: () => void
-  onMouseLeave?: () => void
+  name: string;
+  href: string;
+  photoUrl?: string | null;
+  imageUrl?: string | null;
+  meta?: ReactNode;
+  subtitle?: ReactNode;
+  accessory?: ReactNode;
+  isSelected?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
   addedBy?: {
-    id: string
-    name: string | null
-    email: string
-    image: string | null
-  } | null
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+  } | null;
 }
 
 function buildImageUrl(imageUrl: string | null | undefined): string | null {
-  if (!imageUrl) return null
-  const url = new URL(imageUrl)
-  url.searchParams.set('w', '80')
-  url.searchParams.set('h', '80')
-  url.searchParams.set('fit', 'cover')
-  return url.toString()
+  if (!imageUrl) return null;
+  const url = new URL(imageUrl);
+  url.searchParams.set('w', '80');
+  url.searchParams.set('h', '80');
+  url.searchParams.set('fit', 'cover');
+  return url.toString();
 }
 
 export default function PlaceRow({
@@ -46,7 +45,7 @@ export default function PlaceRow({
   onMouseLeave,
   addedBy,
 }: PlaceRowProps) {
-  const resolvedImage = buildImageUrl(photoUrl) ?? buildImageUrl(imageUrl) ?? null
+  const resolvedImage = buildImageUrl(photoUrl) ?? buildImageUrl(imageUrl) ?? null;
 
   return (
     <li
@@ -101,5 +100,5 @@ export default function PlaceRow({
 
       {accessory ? <div className="ml-2 flex items-center">{accessory}</div> : null}
     </li>
-  )
+  );
 }

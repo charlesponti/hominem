@@ -5,7 +5,7 @@ import * as React from 'react';
 
 import { cn } from '../../lib/utils';
 
-type SeparatorProps = React.ComponentProps<typeof SeparatorPrimitive.Root>
+type SeparatorProps = React.ComponentProps<typeof SeparatorPrimitive.Root>;
 
 function Separator({
   className,

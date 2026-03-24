@@ -1,17 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react';
 
-import { cn } from '../../lib/utils'
+import { cn } from '../../lib/utils';
 
 export function ChatThinkingIndicator() {
-  const [phase, setPhase] = useState(0)
+  const [phase, setPhase] = useState(0);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      setPhase((current) => (current + 1) % 3)
-    }, 240)
+      setPhase((current) => (current + 1) % 3);
+    }, 240);
 
-    return () => window.clearInterval(timer)
-  }, [])
+    return () => window.clearInterval(timer);
+  }, []);
 
   return (
     <div className="px-4 py-3">
@@ -37,5 +37,5 @@ export function ChatThinkingIndicator() {
         <span className="text-xs text-text-tertiary">Thinking...</span>
       </div>
     </div>
-  )
+  );
 }

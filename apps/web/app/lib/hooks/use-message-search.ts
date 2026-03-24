@@ -1,6 +1,6 @@
+import type { ExtendedMessage } from '@hominem/ui/types/chat';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import type { ExtendedMessage } from '@hominem/ui/types/chat';
 import { filterMessagesByQuery } from '~/lib/utils/message';
 import { isMac } from '~/lib/utils/platform';
 

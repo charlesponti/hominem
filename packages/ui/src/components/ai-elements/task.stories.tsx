@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { Task, TaskList, TaskStatusBadge } from './task';
 
 const meta: Meta<typeof Task> = {
@@ -32,8 +33,18 @@ export const TaskListStory: Story = {
   render: () => (
     <TaskList>
       <Task title="Design mockups" status="completed" priority="low" />
-      <Task title="Implement features" status="in-progress" priority="high" dueDate="Mar 25, 2026" />
-      <Task title="Write docs" status="pending" priority="medium" description="Document all new APIs." />
+      <Task
+        title="Implement features"
+        status="in-progress"
+        priority="high"
+        dueDate="Mar 25, 2026"
+      />
+      <Task
+        title="Write docs"
+        status="pending"
+        priority="medium"
+        description="Document all new APIs."
+      />
       <Task title="Deploy" status="pending" priority="high" dueDate="Apr 1, 2026" />
     </TaskList>
   ),

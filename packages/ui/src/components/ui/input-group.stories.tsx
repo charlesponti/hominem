@@ -1,10 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { Search } from 'lucide-react';
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from './input-group';
+
+import { InputGroup, InputGroupAddon, InputGroupInput } from './input-group';
 
 const meta: Meta<typeof InputGroup> = {
   title: 'Forms/InputGroup',

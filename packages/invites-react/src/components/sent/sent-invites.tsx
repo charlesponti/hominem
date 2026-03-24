@@ -1,28 +1,28 @@
-import { List } from '@hominem/ui/list'
+import { List } from '@hominem/ui/list';
 
-import { InvitesEmptyState } from '../received/invites-empty-state'
+import { InvitesEmptyState } from '../received/invites-empty-state';
 
 interface SentInvite {
-  listId: string
-  invitedUserEmail: string
-  token: string
-  accepted: boolean
+  listId: string;
+  invitedUserEmail: string;
+  token: string;
+  accepted: boolean;
   user_invitedUserId?: {
-    id: string
-    name: string | null
-    email: string
-  } | null
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
 }
 
 interface SentInvitesProps {
-  invites: SentInvite[]
-  listId: string
-  onInviteDeleted?: (email: string) => void
+  invites: SentInvite[];
+  listId: string;
+  onInviteDeleted?: (email: string) => void;
 }
 
 export function SentInvites({ invites }: SentInvitesProps) {
   if (invites.length === 0) {
-    return <InvitesEmptyState />
+    return <InvitesEmptyState />;
   }
 
   return (
@@ -33,5 +33,5 @@ export function SentInvites({ invites }: SentInvitesProps) {
         </div>
       ))}
     </List>
-  )
+  );
 }

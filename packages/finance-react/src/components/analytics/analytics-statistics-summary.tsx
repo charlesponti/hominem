@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Skeleton } from '@hominem/ui/components/ui/skeleton'
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Skeleton } from '@hominem/ui/components/ui/skeleton';
 
-import { useTimeSeriesData } from '../../hooks/use-time-series'
+import { useTimeSeriesData } from '../../hooks/use-time-series';
 
 function formatCurrency(value: number): string {
   return value.toLocaleString('en-US', {
@@ -9,15 +9,15 @@ function formatCurrency(value: number): string {
     currency: 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })
+  });
 }
 
 interface AnalyticsStatisticsSummaryProps {
-  dateFrom?: Date | undefined
-  dateTo?: Date | undefined
-  selectedAccount?: string | undefined
-  selectedTag?: string | undefined
-  includeStats?: boolean | undefined
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  selectedAccount?: string | undefined;
+  selectedTag?: string | undefined;
+  includeStats?: boolean | undefined;
 }
 
 export function AnalyticsStatisticsSummary({
@@ -39,9 +39,9 @@ export function AnalyticsStatisticsSummary({
     includeStats,
     compareToPrevious: false,
     groupBy: 'month',
-  })
+  });
 
-  const stats = timeSeriesData?.stats
+  const stats = timeSeriesData?.stats;
 
   if (!includeStats) {
     return (
@@ -52,7 +52,7 @@ export function AnalyticsStatisticsSummary({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (isLoading) {
@@ -75,7 +75,7 @@ export function AnalyticsStatisticsSummary({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) {
@@ -87,7 +87,7 @@ export function AnalyticsStatisticsSummary({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -163,5 +163,5 @@ export function AnalyticsStatisticsSummary({
         </Card>
       )}
     </>
-  )
+  );
 }

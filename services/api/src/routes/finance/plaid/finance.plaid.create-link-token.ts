@@ -1,9 +1,9 @@
-import { UnauthorizedError, InternalError } from '../../../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
 import { API_BRAND } from '../../../brand';
 import { env } from '../../../env';
+import { UnauthorizedError, InternalError } from '../../../errors';
 import { PLAID_COUNTRY_CODES, PLAID_PRODUCTS, plaidClient } from '../../../lib/plaid';
 import type { AppEnv } from '../../../server';
 

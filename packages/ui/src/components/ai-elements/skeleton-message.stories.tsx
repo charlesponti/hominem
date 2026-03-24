@@ -1,15 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { SkeletonMessage } from './skeleton-message'
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { SkeletonMessage } from './skeleton-message';
 
 const meta: Meta<typeof SkeletonMessage> = {
   title: 'AI Elements/SkeletonMessage',
   component: SkeletonMessage,
   tags: ['autodocs'],
-}
-export default meta
-type Story = StoryObj<typeof SkeletonMessage>
+};
+export default meta;
+type Story = StoryObj<typeof SkeletonMessage>;
 
-export const Default: Story = {}
+export const Default: Story = {};
 
 export const Multiple: Story = {
   render: () => (
@@ -19,4 +20,4 @@ export const Multiple: Story = {
       <SkeletonMessage />
     </div>
   ),
-}
+};

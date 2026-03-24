@@ -1,25 +1,21 @@
+import type { Note } from '@hominem/rpc/types';
 import { fontSizes } from '@hominem/ui/tokens';
 import { Link } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
 import { memo, useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Reanimated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import Reanimated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import * as ContextMenu from 'zeego/context-menu';
 
 import { Text as MSText, makeStyles, theme } from '~/theme';
 import { VOID_MOTION_DURATION_STANDARD } from '~/theme/motion';
 import { listStyles } from '~/theme/styles';
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
 import { getLocalDate } from '~/utils/dates';
-import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
-import { useDeleteFocus } from '~/utils/services/notes/use-delete-focus';
-import type { Note } from '@hominem/rpc/types';
+import { useDeleteNote } from '~/utils/services/notes/use-delete-note';
 
-import { useFocusItemComplete } from '../../utils/services/notes/use-focus-item-complete';
+import { useNoteComplete } from '../../utils/services/notes/use-note-complete';
 import AppIcon, { type AppIconName } from '../ui/icon';
 
 const SWIPE_THRESHOLD = 80;
@@ -39,7 +35,7 @@ function getPreviewLine(value: string) {
 }
 
 function parseScheduledForValue(value: string): Date {
-  return parseInboxTimestamp(value)
+  return parseInboxTimestamp(value);
 }
 
 const FocusDueDate = memo(({ dueDate }: { dueDate: Date | null }) => {
@@ -143,7 +139,7 @@ const useStyles = makeStyles((t) =>
   }),
 );
 
-export const FocusListItem = ({
+export const NoteListItem = ({
   item,
   label,
   itemIndex,
@@ -183,7 +179,7 @@ export const FocusListItem = ({
     isMutating.value = false;
   }, [iconName, iconBackgroundColor, isMutating]);
 
-  const deleteFocusItem = useDeleteFocus({
+  const deleteFocusItem = useDeleteNote({
     onSuccess: () => {
       isMutating.value = false;
     },
@@ -195,7 +191,7 @@ export const FocusListItem = ({
     },
   });
 
-  const completeItem = useFocusItemComplete({
+  const completeItem = useNoteComplete({
     onSuccess: () => {
       iconBackgroundColor.value = withTiming(theme.colors.success, {
         duration: VOID_MOTION_DURATION_STANDARD,

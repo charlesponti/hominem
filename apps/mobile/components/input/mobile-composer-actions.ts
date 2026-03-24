@@ -1,31 +1,36 @@
-import type { UploadedFile } from '@hominem/ui/types/upload'
+import type { UploadedFile } from '@hominem/ui/types/upload';
 
-import type { MobileComposerAttachment, MobileComposerState } from './mobile-composer-state'
-import { setMobileComposerAttachments, setMobileComposerMode, setMobileComposerRecording, setMobileComposerText } from './mobile-composer-state'
+import type { MobileComposerAttachment, MobileComposerState } from './mobile-composer-state';
+import {
+  setMobileComposerAttachments,
+  setMobileComposerMode,
+  setMobileComposerRecording,
+  setMobileComposerText,
+} from './mobile-composer-state';
 
 export interface UploadedMobileAsset {
-  localUri: string
-  uploadedFile: UploadedFile
+  localUri: string;
+  uploadedFile: UploadedFile;
 }
 
 function getAttachmentType(uploadedFile: UploadedFile): string {
   if (uploadedFile.type !== 'unknown') {
-    return uploadedFile.type
+    return uploadedFile.type;
   }
 
-  if (uploadedFile.mimetype.startsWith('image/')) return 'image'
-  if (uploadedFile.mimetype.startsWith('audio/')) return 'audio'
-  if (uploadedFile.mimetype.startsWith('video/')) return 'video'
+  if (uploadedFile.mimetype.startsWith('image/')) return 'image';
+  if (uploadedFile.mimetype.startsWith('audio/')) return 'audio';
+  if (uploadedFile.mimetype.startsWith('video/')) return 'video';
   if (
     uploadedFile.mimetype === 'application/pdf' ||
     uploadedFile.mimetype.startsWith('text/') ||
     uploadedFile.mimetype.includes('word') ||
     uploadedFile.mimetype.includes('csv')
   ) {
-    return 'document'
+    return 'document';
   }
 
-  return 'file'
+  return 'file';
 }
 
 function mapUploadedAssetToAttachment(asset: UploadedMobileAsset): MobileComposerAttachment {
@@ -35,7 +40,7 @@ function mapUploadedAssetToAttachment(asset: UploadedMobileAsset): MobileCompose
     type: getAttachmentType(asset.uploadedFile),
     localUri: asset.localUri,
     uploadedFile: asset.uploadedFile,
-  }
+  };
 }
 
 export function appendUploadedAssetsToDraft(
@@ -45,26 +50,27 @@ export function appendUploadedAssetsToDraft(
   return setMobileComposerAttachments(state, [
     ...state.attachments,
     ...assets.map(mapUploadedAssetToAttachment),
-  ])
+  ]);
 }
 
 export interface PickedMobileAsset {
-  uri: string
-  fileName: string | null
-  type: string | null
+  uri: string;
+  fileName: string | null;
+  type: string | null;
 }
 
 export function applyVoiceTranscriptToDraft(
   state: MobileComposerState,
   transcript: string,
 ): MobileComposerState {
-  const trimmedTranscript = transcript.trim()
-  const nextText = state.text.trim().length > 0 ? `${state.text}\n${trimmedTranscript}` : trimmedTranscript
+  const trimmedTranscript = transcript.trim();
+  const nextText =
+    state.text.trim().length > 0 ? `${state.text}\n${trimmedTranscript}` : trimmedTranscript;
 
   return setMobileComposerMode(
     setMobileComposerRecording(setMobileComposerText(state, nextText), false),
     'text',
-  )
+  );
 }
 
 export function removeAttachmentFromDraft(
@@ -74,5 +80,5 @@ export function removeAttachmentFromDraft(
   return setMobileComposerAttachments(
     state,
     state.attachments.filter((attachment) => attachment.id !== attachmentId),
-  )
+  );
 }

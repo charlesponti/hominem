@@ -1,1 +1,1 @@
-export { PlaidLink, PlaidConnectButton } from './plaid-link'
+export { PlaidLink, PlaidConnectButton } from './plaid-link';

@@ -1,8 +1,8 @@
-import { UnauthorizedError, InternalError } from '../errors';
 import { getInvitesForUser } from '@hominem/lists-services';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
+import { UnauthorizedError, InternalError } from '../errors';
 import type { AppEnv } from '../server';
 
 export const invitesIncomingRoutes = new Hono<AppEnv>();

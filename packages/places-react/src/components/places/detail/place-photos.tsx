@@ -1,23 +1,22 @@
-import { Image as ImageIcon } from 'lucide-react'
-import { memo, useCallback, useState } from 'react'
-
-import { cn } from '@hominem/ui/lib/utils'
+import { cn } from '@hominem/ui/lib/utils';
+import { Image as ImageIcon } from 'lucide-react';
+import { memo, useCallback, useState } from 'react';
 
 interface PlacePhotosProps {
-  alt: string
-  photos?: string[] | null
-  thumbnailPhotos?: string[] | null
-  placeId: string
+  alt: string;
+  photos?: string[] | null;
+  thumbnailPhotos?: string[] | null;
+  placeId: string;
 }
 
 export function PlacePhotos({ alt, photos, thumbnailPhotos, placeId }: PlacePhotosProps) {
-  const [failedImages, setFailedImages] = useState<Set<number>>(new Set())
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
 
-  const displayPhotos = thumbnailPhotos || photos || []
+  const displayPhotos = thumbnailPhotos || photos || [];
 
   const handleImageError = useCallback((index: number) => {
-    setFailedImages((prev) => new Set(prev).add(index))
-  }, [])
+    setFailedImages((prev) => new Set(prev).add(index));
+  }, []);
 
   if (!displayPhotos || displayPhotos.length === 0) {
     return (
@@ -27,7 +26,7 @@ export function PlacePhotos({ alt, photos, thumbnailPhotos, placeId }: PlacePhot
           <p className="text-muted-foreground text-sm">No photos available</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -41,7 +40,7 @@ export function PlacePhotos({ alt, photos, thumbnailPhotos, placeId }: PlacePhot
         }}
       >
         {displayPhotos.map((photoUrl, index) => {
-          const hasFailed = failedImages.has(index)
+          const hasFailed = failedImages.has(index);
 
           return (
             <div
@@ -70,11 +69,11 @@ export function PlacePhotos({ alt, photos, thumbnailPhotos, placeId }: PlacePhot
                 />
               )}
             </div>
-          )
+          );
         })}
       </div>
     </>
-  )
+  );
 }
 
-export default memo(PlacePhotos)
+export default memo(PlacePhotos);

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Plan, PlanContent, PlanFooter, PlanHeader, PlanStep } from './plan';
+
 import { Button } from '../ui/button';
+import { Plan, PlanContent, PlanFooter, PlanHeader, PlanStep } from './plan';
 
 const meta: Meta<typeof Plan> = {
   title: 'AI Elements/Plan',
@@ -41,7 +42,9 @@ export const Default: Story = {
         />
       </PlanContent>
       <PlanFooter>
-        <Button size="sm" variant="ghost">Cancel</Button>
+        <Button size="sm" variant="ghost">
+          Cancel
+        </Button>
         <Button size="sm">Continue</Button>
       </PlanFooter>
     </Plan>

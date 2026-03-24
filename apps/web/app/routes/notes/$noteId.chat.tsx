@@ -1,7 +1,7 @@
+import { useComposerNoteTitle } from '@hominem/ui/composer';
 import { useEffect } from 'react';
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
-import { useComposerNoteTitle } from '@hominem/ui/composer';
 import { useNote } from '~/hooks/use-notes';
 import { requireAuth } from '~/lib/guards';
 

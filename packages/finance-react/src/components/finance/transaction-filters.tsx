@@ -13,10 +13,10 @@ import type { SortOption } from '@hominem/ui/hooks';
 import { ListFilter, RefreshCcw } from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
-import { AccountSelect } from './account-select';
-import { SortControls } from './sort-controls';
 import type { FilterArgs, useFinanceAccounts } from '../../hooks/use-finance-data';
 import { useSelectedAccount } from '../../hooks/use-selected-account';
+import { AccountSelect } from './account-select';
+import { SortControls } from './sort-controls';
 
 interface ActiveSortOption extends SortOption {
   onRemove: () => void;

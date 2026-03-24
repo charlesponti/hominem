@@ -1,13 +1,4 @@
-import {
-  addItemToTrip,
-  createTrip,
-  getAllTrips,
-  getTripById,
-} from '@hominem/places-services';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-
-import { authMiddleware, type AppContext } from '../middleware/auth';
+import { addItemToTrip, createTrip, getAllTrips, getTripById } from '@hominem/places-services';
 import {
   tripsGetByIdSchema,
   tripsCreateInputSchema,
@@ -17,9 +8,13 @@ import {
   type TripsCreateOutput,
   type TripsAddItemOutput,
 } from '@hominem/rpc/types/trips.types';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+
+import { authMiddleware, type AppContext } from '../middleware/auth';
 
 // Types for database results (with Date objects that need serialization)
-type SerializableDate = Date | string | null
+type SerializableDate = Date | string | null;
 
 type TripRow = {
   id: string;
@@ -70,7 +65,8 @@ function serializeTripItem(item: TripItemDbRow) {
     itemId: item.itemId,
     day: item.day ?? null,
     order: item.order ?? null,
-    createdAt: item.createdAt instanceof Date ? item.createdAt.toISOString() : (item.createdAt ?? ''),
+    createdAt:
+      item.createdAt instanceof Date ? item.createdAt.toISOString() : (item.createdAt ?? ''),
   };
 }
 

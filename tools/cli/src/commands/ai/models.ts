@@ -77,13 +77,10 @@ export default class AiModels extends Command {
       });
       models = normalizeModels(raw);
     } catch (error) {
-      this.error(
-        error instanceof Error ? error.message : 'Failed to fetch models',
-        {
-          exit: 3,
-          code: 'DEPENDENCY_RESPONSE_INVALID',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to fetch models', {
+        exit: 3,
+        code: 'DEPENDENCY_RESPONSE_INVALID',
+      });
     }
 
     const output = {

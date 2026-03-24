@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { Checkpoint, CheckpointList, CheckpointProgress } from './checkpoint';
 
 const meta: Meta<typeof Checkpoint> = {
@@ -21,7 +22,12 @@ export const Statuses: Story = {
   render: () => (
     <CheckpointList>
       <Checkpoint title="Plan approach" status="completed" description="Analyzed requirements." />
-      <Checkpoint title="Write code" status="in-progress" description="Currently implementing..." isActive />
+      <Checkpoint
+        title="Write code"
+        status="in-progress"
+        description="Currently implementing..."
+        isActive
+      />
       <Checkpoint title="Run tests" status="pending" description="Waiting to run." />
       <Checkpoint title="Deploy" status="error" description="Failed at previous step." />
     </CheckpointList>

@@ -6,21 +6,25 @@ import {
   updateHealthRecord,
   type HealthRecordRow,
 } from '@hominem/health-services';
-import { NotFoundError, InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
+import { NotFoundError, InternalError } from '../errors';
 import type { AppEnv } from '../server';
 
 function serializeHealthRecord(record: HealthRecordRow) {
   return {
     ...record,
     recorded_at:
-      record.recorded_at instanceof Date ? record.recorded_at.toISOString() : new Date().toISOString(),
+      record.recorded_at instanceof Date
+        ? record.recorded_at.toISOString()
+        : new Date().toISOString(),
     created_at:
-      record.created_at instanceof Date ? record.created_at.toISOString() : new Date().toISOString(),
+      record.created_at instanceof Date
+        ? record.created_at.toISOString()
+        : new Date().toISOString(),
   };
 }
 

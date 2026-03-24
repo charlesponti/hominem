@@ -1,32 +1,32 @@
-import { Inline, Stack } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { ArrowRight, ListCheck } from 'lucide-react'
-import { useCallback } from 'react'
-import { Link } from 'react-router'
+import { Inline, Stack } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { ArrowRight, ListCheck } from 'lucide-react';
+import { useCallback } from 'react';
+import { Link } from 'react-router';
 
 export interface ReceivedInvite {
-  id: string
-  listId: string
-  invitedUserEmail: string | null
-  token: string
-  status: 'pending' | 'accepted' | 'declined'
+  id: string;
+  listId: string;
+  invitedUserEmail: string | null;
+  token: string;
+  status: 'pending' | 'accepted' | 'declined';
   list?: {
-    id: string
-    name: string
-  }
+    id: string;
+    name: string;
+  };
 }
 
 export interface ReceivedInviteItemProps {
-  variant?: 'invite' | 'preview'
-  listInvite?: ReceivedInvite
-  currentUserEmail?: string
-  canAccept?: boolean
+  variant?: 'invite' | 'preview';
+  listInvite?: ReceivedInvite;
+  currentUserEmail?: string;
+  canAccept?: boolean;
   preview?: {
-    listName: string
-    coverPhoto?: string | null
-    firstItemName?: string | null
-    invitedUserEmail?: string | null
-  }
+    listName: string;
+    coverPhoto?: string | null;
+    firstItemName?: string | null;
+    invitedUserEmail?: string | null;
+  };
 }
 
 export function ReceivedInviteItem({
@@ -36,10 +36,10 @@ export function ReceivedInviteItem({
   canAccept = true,
   preview,
 }: ReceivedInviteItemProps) {
-  const normalizedUserEmail = currentUserEmail?.toLowerCase()
-  const normalizedInviteEmail = listInvite?.invitedUserEmail?.toLowerCase()
+  const normalizedUserEmail = currentUserEmail?.toLowerCase();
+  const normalizedInviteEmail = listInvite?.invitedUserEmail?.toLowerCase();
   const isEmailMismatch =
-    normalizedUserEmail && normalizedInviteEmail && normalizedUserEmail !== normalizedInviteEmail
+    normalizedUserEmail && normalizedInviteEmail && normalizedUserEmail !== normalizedInviteEmail;
 
   // Handle preview variant
   if (variant === 'preview' && preview) {
@@ -85,18 +85,18 @@ export function ReceivedInviteItem({
           </p>
         </Stack>
       </li>
-    )
+    );
   }
 
   // Handle invite variant
-  if (!listInvite) return null
+  if (!listInvite) return null;
 
-  const { status, list } = listInvite
-  const isAccepted = status === 'accepted'
+  const { status, list } = listInvite;
+  const isAccepted = status === 'accepted';
 
   const onAcceptClick = useCallback(() => {
     // This would be connected to useAcceptInvite in consumer apps
-  }, [])
+  }, []);
 
   return (
     <li className="flex flex-col gap-3 p-6 bg-secondary border border-border">
@@ -122,25 +122,30 @@ export function ReceivedInviteItem({
       {!isAccepted && isEmailMismatch && (
         <Stack as="p" gap="sm" className="text-sm text-muted-foreground">
           <span>
-            Invited as <span className="italic text-muted-foreground">{listInvite.invitedUserEmail}</span>
+            Invited as{' '}
+            <span className="italic text-muted-foreground">{listInvite.invitedUserEmail}</span>
           </span>
           <span>Accepting will attach it to your current signed-in account.</span>
         </Stack>
       )}
     </li>
-  )
+  );
 }
 
 interface AcceptButtonProps {
-  status: boolean
-  canAccept: boolean
-  onAcceptClick: () => void
+  status: boolean;
+  canAccept: boolean;
+  onAcceptClick: () => void;
 }
 
 function AcceptButton({ status, canAccept, onAcceptClick }: AcceptButtonProps) {
   return (
-    <Button className="px-4 py-2 font-medium" disabled={status || !canAccept} onClick={onAcceptClick}>
+    <Button
+      className="px-4 py-2 font-medium"
+      disabled={status || !canAccept}
+      onClick={onAcceptClick}
+    >
       {status ? 'Accepting...' : canAccept ? 'Accept invite' : 'Sign in to accept'}
     </Button>
-  )
+  );
 }

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
+
 import { Button } from './button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
 
 const meta: Meta<typeof Tooltip> = {
   title: 'Overlays/Tooltip',
@@ -34,7 +35,9 @@ export const OnIcon: Story = {
   render: () => (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon">?</Button>
+        <Button variant="ghost" size="icon">
+          ?
+        </Button>
       </TooltipTrigger>
       <TooltipContent side="right">
         <p>This is a helpful tooltip explaining something.</p>

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { ActiveFiltersBar } from './active-filters-bar';
 
 const meta: Meta<typeof ActiveFiltersBar> = {

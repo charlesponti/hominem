@@ -44,8 +44,10 @@ export const initObservability = () => {
 async function initMobileTelemetry() {
   // Skip OTel in React Native - it requires complex native module setup
   // PostHog provides sufficient analytics for mobile
-  console.log('[Telemetry] Using PostHog for mobile analytics (OTel not available in React Native)');
-  
+  console.log(
+    '[Telemetry] Using PostHog for mobile analytics (OTel not available in React Native)',
+  );
+
   // Future: Could integrate with native OTel SDKs here if needed
   // For now, PostHog covers mobile observability needs
 }

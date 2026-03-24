@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { CreditCard, LogOut, Settings, User } from 'lucide-react';
+
+import { Button } from './button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +12,6 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from './dropdown-menu';
-import { Button } from './button';
 
 const meta: Meta<typeof DropdownMenu> = {
   title: 'Overlays/DropdownMenu',

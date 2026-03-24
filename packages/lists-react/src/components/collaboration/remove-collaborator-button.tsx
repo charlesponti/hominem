@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   Dialog,
   DialogClose,
@@ -7,18 +7,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hominem/ui/dialog'
-import { Trash2 } from 'lucide-react'
-import { useCallback } from 'react'
+} from '@hominem/ui/dialog';
+import { Trash2 } from 'lucide-react';
+import { useCallback } from 'react';
 
-import { useRemoveCollaborator } from '../../hooks/use-lists'
-import { useModal } from '../../hooks/use-modal'
+import { useRemoveCollaborator } from '../../hooks/use-lists';
+import { useModal } from '../../hooks/use-modal';
 
 interface RemoveCollaboratorButtonProps {
-  listId: string
-  userId: string
-  userName: string
-  userEmail: string
+  listId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
 }
 
 export function RemoveCollaboratorButton({
@@ -27,19 +27,19 @@ export function RemoveCollaboratorButton({
   userName,
   userEmail,
 }: RemoveCollaboratorButtonProps) {
-  const { isOpen, open, close } = useModal()
-  const removeCollaborator = useRemoveCollaborator()
+  const { isOpen, open, close } = useModal();
+  const removeCollaborator = useRemoveCollaborator();
 
   const handleRemove = useCallback(async () => {
     try {
-      await removeCollaborator.mutateAsync({ listId, userId })
-      close()
+      await removeCollaborator.mutateAsync({ listId, userId });
+      close();
     } catch (error) {
-      console.error('Failed to remove collaborator:', error)
+      console.error('Failed to remove collaborator:', error);
     }
-  }, [removeCollaborator, listId, userId, close])
+  }, [removeCollaborator, listId, userId, close]);
 
-  const displayName = userName || userEmail
+  const displayName = userName || userEmail;
 
   return (
     <>
@@ -86,5 +86,5 @@ export function RemoveCollaboratorButton({
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

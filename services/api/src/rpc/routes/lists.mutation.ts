@@ -5,18 +5,13 @@ import {
   removeUserFromList,
   updateList,
 } from '@hominem/lists-services';
-import { ForbiddenError, ValidationError, InternalError } from '../errors';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-
-import { authMiddleware, type AppContext } from '../middleware/auth';
 import {
   listCreateSchema,
   listDeleteItemSchema,
   listDeleteSchema,
   listRemoveCollaboratorSchema,
   listUpdateSchema,
-} from '@hominem/rpc/schemas/lists.schema'
+} from '@hominem/rpc/schemas/lists.schema';
 import type {
   List,
   ListCreateOutput,
@@ -24,7 +19,12 @@ import type {
   ListDeleteOutput,
   ListRemoveCollaboratorOutput,
   ListUpdateOutput,
-} from '@hominem/rpc/types/lists.types'
+} from '@hominem/rpc/types/lists.types';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+
+import { ForbiddenError, ValidationError, InternalError } from '../errors';
+import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**
  * Transform list from service layer to API contract
@@ -34,11 +34,13 @@ function transformListToApiFormat(list: unknown): List {
   const typedList = list as Record<string, unknown>;
   return {
     ...typedList,
-    createdBy: typedList.createdBy ? {
-      id: (typedList.createdBy as { id: string }).id,
-      email: (typedList.createdBy as { email: string }).email,
-      name: (typedList.createdBy as { name?: string | null }).name ?? undefined,
-    } : null,
+    createdBy: typedList.createdBy
+      ? {
+          id: (typedList.createdBy as { id: string }).id,
+          email: (typedList.createdBy as { email: string }).email,
+          name: (typedList.createdBy as { name?: string | null }).name ?? undefined,
+        }
+      : null,
     users: (typedList.users as Array<Record<string, unknown>> | undefined)?.map((user) => ({
       id: (user.id as string) || '',
       email: (user.email as string) || '',

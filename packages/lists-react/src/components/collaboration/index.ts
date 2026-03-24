@@ -1,1 +1,1 @@
-export { RemoveCollaboratorButton } from './remove-collaborator-button'
+export { RemoveCollaboratorButton } from './remove-collaborator-button';

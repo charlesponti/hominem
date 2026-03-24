@@ -1,6 +1,6 @@
+import { Command } from '@oclif/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { getHominemHomeDir } from '@/utils/paths';

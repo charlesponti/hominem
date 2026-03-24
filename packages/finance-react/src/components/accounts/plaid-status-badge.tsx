@@ -1,10 +1,10 @@
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { CheckCircle } from 'lucide-react'
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { CheckCircle } from 'lucide-react';
 
-export type PlaidStatus = 'active' | 'error' | 'pending_expiration' | 'revoked' | null
+export type PlaidStatus = 'active' | 'error' | 'pending_expiration' | 'revoked' | null;
 
 interface PlaidStatusBadgeProps {
-  status: PlaidStatus
+  status: PlaidStatus;
 }
 
 export function PlaidStatusBadge({ status }: PlaidStatusBadgeProps) {
@@ -15,7 +15,7 @@ export function PlaidStatusBadge({ status }: PlaidStatusBadgeProps) {
           <CheckCircle className="size-3 mr-1" />
           Active
         </Badge>
-      )
+      );
     case 'error':
       return (
         <Badge variant="destructive">
@@ -37,7 +37,7 @@ export function PlaidStatusBadge({ status }: PlaidStatusBadgeProps) {
           </svg>
           Error
         </Badge>
-      )
+      );
     case 'pending_expiration':
       return (
         <Badge variant="secondary" className="bg-warning-subtle text-warning border-warning-subtle">
@@ -58,14 +58,14 @@ export function PlaidStatusBadge({ status }: PlaidStatusBadgeProps) {
           </svg>
           Expiring Soon
         </Badge>
-      )
+      );
     case 'revoked':
       return (
         <Badge variant="outline" className="text-muted-foreground">
           Revoked
         </Badge>
-      )
+      );
     default:
-      return <Badge variant="outline">Unknown</Badge>
+      return <Badge variant="outline">Unknown</Badge>;
   }
 }

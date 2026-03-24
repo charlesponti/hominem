@@ -1,14 +1,8 @@
 import { tool } from 'ai';
 import * as z from 'zod';
 
-import {
-  assessMentalWellnessInputSchema,
-  mentalHealthService,
-} from './mental-health.service';
-import {
-  recommendWorkoutInputSchema,
-  workoutService,
-} from './workout.service';
+import { assessMentalWellnessInputSchema, mentalHealthService } from './mental-health.service';
+import { recommendWorkoutInputSchema, workoutService } from './workout.service';
 
 // Activity schema used across inputs/outputs
 export const ActivitySchema = z.object({

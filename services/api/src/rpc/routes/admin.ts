@@ -1,7 +1,7 @@
-import { InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
+import { InternalError } from '../errors';
 import { adminMiddleware, type AppContext } from '../middleware/auth';
 
 /**

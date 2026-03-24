@@ -1,6 +1,5 @@
-import type { MonthlyStatsOutput } from '@hominem/rpc/types/finance.types';
-
 import { useRpcQuery } from '@hominem/rpc/react';
+import type { MonthlyStatsOutput } from '@hominem/rpc/types/finance.types';
 
 export type MonthlyStatsContract = MonthlyStatsOutput & {
   topTag?: string;

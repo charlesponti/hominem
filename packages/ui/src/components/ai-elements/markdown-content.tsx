@@ -1,38 +1,38 @@
-import { Button } from '@hominem/ui/button'
-import { Check, Copy } from 'lucide-react'
-import { useState } from 'react'
-import ReactMarkdown from 'react-markdown'
-import SyntaxHighlighter from 'react-syntax-highlighter'
-import oneDark from 'react-syntax-highlighter/dist/cjs/styles/prism/one-dark'
+import { Button } from '@hominem/ui/button';
+import { Check, Copy } from 'lucide-react';
+import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import oneDark from 'react-syntax-highlighter/dist/cjs/styles/prism/one-dark';
 
-import { cn } from '../../lib/utils'
+import { cn } from '../../lib/utils';
 
 interface MarkdownContentProps {
-  content: string | null
-  isStreaming?: boolean
-  className?: string
+  content: string | null;
+  isStreaming?: boolean;
+  className?: string;
 }
 
 export function MarkdownContent({ content, isStreaming = false, className }: MarkdownContentProps) {
-  const [copiedCodeBlocks, setCopiedCodeBlocks] = useState<Set<string>>(new Set())
+  const [copiedCodeBlocks, setCopiedCodeBlocks] = useState<Set<string>>(new Set());
 
-  if (content === null) return null
+  if (content === null) return null;
 
   const handleCopyCode = async (code: string, blockId: string) => {
     try {
-      await navigator.clipboard.writeText(code)
-      setCopiedCodeBlocks((prev) => new Set(prev).add(blockId))
+      await navigator.clipboard.writeText(code);
+      setCopiedCodeBlocks((prev) => new Set(prev).add(blockId));
       setTimeout(() => {
         setCopiedCodeBlocks((prev) => {
-          const newSet = new Set(prev)
-          newSet.delete(blockId)
-          return newSet
-        })
-      }, 2000)
+          const newSet = new Set(prev);
+          newSet.delete(blockId);
+          return newSet;
+        });
+      }, 2000);
     } catch {
       // Copy failure is silently ignored - UI shows no feedback for failure
     }
-  }
+  };
 
   return (
     <div
@@ -44,13 +44,13 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
       <ReactMarkdown
         components={{
           code({ className, children }) {
-            const match = /language-(\w+)/.exec(className || '')
-            const language = match ? match[1] : ''
-            const codeString = String(children).replace(/\n$/, '')
-            const blockId = `code-${codeString.slice(0, 20)}-${language}`
+            const match = /language-(\w+)/.exec(className || '');
+            const language = match ? match[1] : '';
+            const codeString = String(children).replace(/\n$/, '');
+            const blockId = `code-${codeString.slice(0, 20)}-${language}`;
 
             if (language) {
-              const isCopied = copiedCodeBlocks.has(blockId)
+              const isCopied = copiedCodeBlocks.has(blockId);
               return (
                 <div className="relative group my-4">
                   <div className="flex items-center justify-between bg-bg-surface px-3 py-1.5 border-b border-border-subtle">
@@ -84,14 +84,14 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
                     {codeString}
                   </SyntaxHighlighter>
                 </div>
-              )
+              );
             }
 
             return (
               <code className="bg-bg-surface px-1.5 py-0.5 rounded text-sm font-mono">
                 {children}
               </code>
-            )
+            );
           },
           h1: ({ children }) => <h1 className="heading-3 mt-6 mb-4 first:mt-0">{children}</h1>,
           h2: ({ children }) => <h2 className="heading-4 mt-5 mb-3 first:mt-0">{children}</h2>,
@@ -138,5 +138,5 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
       </ReactMarkdown>
       {isStreaming && <span className="inline-block w-2 h-4 bg-foreground ml-1 align-middle" />}
     </div>
-  )
+  );
 }

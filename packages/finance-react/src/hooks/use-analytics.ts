@@ -1,6 +1,5 @@
-import { format } from 'date-fns';
-
 import { useRpcQuery } from '@hominem/rpc/react';
+import { format } from 'date-fns';
 
 interface TagBreakdownParams {
   from?: Date | undefined;
@@ -44,11 +43,8 @@ export function useTagBreakdown({ from, to, account, tag, limit = 5 }: TagBreakd
  * Hook for fetching list of finance tags
  */
 export function useFinanceTags() {
-  return useRpcQuery(
-    ({ finance }) => finance.listTags(),
-    {
-      queryKey: ['finance', 'tags', 'list'],
-      staleTime: 10 * 60 * 1000,
-    },
-  );
+  return useRpcQuery(({ finance }) => finance.listTags(), {
+    queryKey: ['finance', 'tags', 'list'],
+    staleTime: 10 * 60 * 1000,
+  });
 }

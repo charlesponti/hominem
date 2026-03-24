@@ -1,7 +1,7 @@
 export default function NotesHomeSection({
-  eyebrow = "Notes",
-  title = "Browse notes as one living stream instead of a pile of separate records.",
-  description = "The notes view should feel like the same product as home: capture at the top, recent context nearby, and the rest of your writing in one calm chronology."
+  eyebrow = 'Notes',
+  title = 'Browse notes as one living stream instead of a pile of separate records.',
+  description = 'The notes view should feel like the same product as home: capture at the top, recent context nearby, and the rest of your writing in one calm chronology.',
 }: {
   title: string;
   description: string;

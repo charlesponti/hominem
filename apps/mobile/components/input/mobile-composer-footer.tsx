@@ -1,20 +1,20 @@
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { theme } from '~/theme'
+import { theme } from '~/theme';
 
-import AppIcon from '../ui/icon'
-import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config'
-import type { MobileComposerPresentation } from './mobile-composer-config'
+import AppIcon from '../ui/icon';
+import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config';
+import type { MobileComposerPresentation } from './mobile-composer-config';
 
 interface MobileComposerFooterProps {
-  activeContext: MobileWorkspaceContext
-  presentation: MobileComposerPresentation
-  disableAttachmentActions?: boolean
-  onPickAttachment: () => void
-  onOpenCamera: () => void
-  onOpenVoice: () => void
-  onSecondaryAction: () => void
-  onPrimaryAction: () => void
+  activeContext: MobileWorkspaceContext;
+  presentation: MobileComposerPresentation;
+  disableAttachmentActions?: boolean;
+  onPickAttachment: () => void;
+  onOpenCamera: () => void;
+  onOpenVoice: () => void;
+  onSecondaryAction: () => void;
+  onPrimaryAction: () => void;
 }
 
 export function MobileComposerFooter({
@@ -92,7 +92,7 @@ export function MobileComposerFooter({
         </Pressable>
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -143,4 +143,4 @@ const styles = StyleSheet.create({
   primaryIcon: {
     color: theme.colors.background,
   },
-})
+});

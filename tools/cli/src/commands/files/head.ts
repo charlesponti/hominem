@@ -1,6 +1,6 @@
+import { Args, Command, Flags } from '@oclif/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Args, Command, Flags } from '@oclif/core';
 import { z } from 'zod';
 
 import { validateWithZod } from '@/utils/zod-validation';
@@ -62,7 +62,7 @@ export default class FilesHead extends Command {
         {
           exit: 3,
           code: 'FILE_READ_FAILED',
-        }
+        },
       );
     }
 
@@ -77,4 +77,3 @@ export default class FilesHead extends Command {
     return validateWithZod(outputSchema, output);
   }
 }
-

@@ -1,4 +1,4 @@
-import { BRAND } from '@hominem/env/brand'
+import { BRAND } from '@hominem/env/brand';
 
 /** Single source of truth for the API service brand strings. */
 export const API_BRAND = {
@@ -10,4 +10,4 @@ export const API_BRAND = {
     contactName: `${BRAND.appName} Support`,
     docsTitle: `${BRAND.appName} API Documentation`,
   },
-} as const
+} as const;

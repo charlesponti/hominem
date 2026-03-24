@@ -17,8 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '~/components/Button';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import TextInput from '~/components/text-input';
-import { Box, Text, makeStyles } from '~/theme';
 import { posthog } from '~/lib/posthog';
+import { Box, Text, makeStyles } from '~/theme';
 import { useAuth } from '~/utils/auth-provider';
 import { isValidOtp, normalizeOtp } from '~/utils/auth/validation';
 

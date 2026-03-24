@@ -1,113 +1,113 @@
-import { useAuthContext } from '@hominem/auth'
-import { Form } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { Loading } from '@hominem/ui/loading'
-import { TextField } from '@hominem/ui/text-field'
-import { PlusCircle } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useAuthContext } from '@hominem/auth';
+import { Form } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { cn } from '@hominem/ui/lib/utils';
+import { Loading } from '@hominem/ui/loading';
+import { TextField } from '@hominem/ui/text-field';
+import { PlusCircle } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 
-import { useCreateList } from '../../hooks/use-lists'
-import { cn } from '@hominem/ui/lib/utils'
+import { useCreateList } from '../../hooks/use-lists';
 
-type FormStatus = 'idle' | 'open' | 'submitting' | 'success'
+type FormStatus = 'idle' | 'open' | 'submitting' | 'success';
 
-const STORAGE_KEY = 'hominem:list-draft'
+const STORAGE_KEY = 'hominem:list-draft';
 
 export function ListForm() {
-  const [name, setName] = useState('')
-  const [status, setStatus] = useState<FormStatus>('idle')
-  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { isAuthenticated } = useAuthContext()
-  const navigate = useNavigate()
+  const [name, setName] = useState('');
+  const [status, setStatus] = useState<FormStatus>('idle');
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { isAuthenticated } = useAuthContext();
+  const navigate = useNavigate();
 
   const { mutate: createList } = useCreateList({
     onSuccess: () => {
       try {
-        localStorage.removeItem(STORAGE_KEY)
+        localStorage.removeItem(STORAGE_KEY);
       } catch {
         // ignore
       }
-      setStatus('success')
+      setStatus('success');
       successTimerRef.current = setTimeout(() => {
-        setName('')
-        setStatus('idle')
-      }, 1500)
+        setName('');
+        setStatus('idle');
+      }, 1500);
     },
     onError: (error) => {
-      setStatus('open')
-      console.error('Mutation error creating list:', error)
+      setStatus('open');
+      console.error('Mutation error creating list:', error);
     },
-  })
+  });
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
+      const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as { name?: string }
+        const parsed = JSON.parse(raw) as { name?: string };
         if (parsed.name) {
-          setName(parsed.name)
-          setStatus('open')
+          setName(parsed.name);
+          setStatus('open');
         }
       }
     } catch {
       // ignore
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     return () => {
       if (successTimerRef.current) {
-        clearTimeout(successTimerRef.current)
+        clearTimeout(successTimerRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const handleOpen = () => {
-    setStatus('open')
-  }
+    setStatus('open');
+  };
 
   const handleClose = () => {
-    setName('')
+    setName('');
     try {
-      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(STORAGE_KEY);
     } catch {
       // ignore
     }
-    setStatus('idle')
-  }
+    setStatus('idle');
+  };
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
-      e.preventDefault()
+      e.preventDefault();
       if (!name.trim()) {
-        return
+        return;
       }
 
       if (!isAuthenticated) {
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: name.trim() }))
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({ name: name.trim() }));
         } catch {
           // ignore
         }
 
-        navigate('/auth')
-        return
+        navigate('/auth');
+        return;
       }
 
-      setStatus('submitting')
+      setStatus('submitting');
       createList({
         name: name.trim(),
         description: 'No description',
         isPublic: false,
-      })
+      });
     },
     [name, isAuthenticated, navigate, createList],
-  )
+  );
 
-  const isOverlayVisible = status === 'submitting' || status === 'success'
-  const showInput = status === 'open' || status === 'submitting' || status === 'success'
-  const canSubmit = name.trim().length > 0 && status === 'open'
+  const isOverlayVisible = status === 'submitting' || status === 'success';
+  const showInput = status === 'open' || status === 'submitting' || status === 'success';
+  const canSubmit = name.trim().length > 0 && status === 'open';
 
   return (
     <div className="flex gap-1">
@@ -129,7 +129,7 @@ export function ListForm() {
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
-                      handleClose()
+                      handleClose();
                     }
                   }}
                   required
@@ -178,5 +178,5 @@ export function ListForm() {
         </Button>
       </div>
     </div>
-  )
+  );
 }

@@ -107,7 +107,9 @@ export function FocusView() {
   return (
     <div
       className="card overflow-y-auto"
-      style={{ height: 'calc(100dvh - var(--header-height, 56px) - var(--composer-resting-height, 112px))' }}
+      style={{
+        height: 'calc(100dvh - var(--header-height, 56px) - var(--composer-resting-height, 112px))',
+      }}
     >
       {isLoading ? (
         <FocusSkeleton />

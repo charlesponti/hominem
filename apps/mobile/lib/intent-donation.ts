@@ -14,38 +14,38 @@
  * through Expo Modules. If the native module is not available (Android,
  * older iOS, tests) the calls are silently no-ops.
  */
-import { Platform } from 'react-native'
+import { Platform } from 'react-native';
 
-type IntentName = 'AddNoteIntent' | 'StartChatIntent'
+type IntentName = 'AddNoteIntent' | 'StartChatIntent';
 
 function donateIntent(name: IntentName): void {
-  if (Platform.OS !== 'ios') return
+  if (Platform.OS !== 'ios') return;
 
   try {
     // NativeModules bridge – populated when HakumiIntents.m is linked.
     // Falls back silently if not available (e.g. Expo Go, unit tests).
-    const { HakumiIntents } = require('react-native').NativeModules
+    const { HakumiIntents } = require('react-native').NativeModules;
     if (!HakumiIntents) {
       if (__DEV__) {
         console.warn(
           `[intent-donation] HakumiIntents native module not found. ` +
             'Run expo prebuild and rebuild the app to link HakumiIntents.m.',
-        )
+        );
       }
-      return
+      return;
     }
-    HakumiIntents.donate(name)
+    HakumiIntents.donate(name);
   } catch (e) {
-    if (__DEV__) console.warn('[intent-donation] donate() failed:', e)
+    if (__DEV__) console.warn('[intent-donation] donate() failed:', e);
   }
 }
 
 /** Call when the user creates a new note manually. */
 export function donateAddNoteIntent(): void {
-  donateIntent('AddNoteIntent')
+  donateIntent('AddNoteIntent');
 }
 
 /** Call when the user opens the Sherpa chat manually. */
 export function donateStartChatIntent(): void {
-  donateIntent('StartChatIntent')
+  donateIntent('StartChatIntent');
 }

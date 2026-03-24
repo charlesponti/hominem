@@ -14,7 +14,13 @@ import { Input } from './input';
 import { Separator, type SeparatorProps } from './separator';
 import { Sheet, SheetContent } from './sheet';
 import { Skeleton } from './skeleton';
-import { Tooltip, TooltipContent, type TooltipContentProps, TooltipProvider, TooltipTrigger } from './tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  type TooltipContentProps,
+  TooltipProvider,
+  TooltipTrigger,
+} from './tooltip';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_WIDTH_PX = 256;
@@ -467,7 +473,7 @@ SidebarFooter.displayName = 'SidebarFooter';
 
 type SidebarSeparatorComponent = React.ForwardRefExoticComponent<
   SeparatorProps & React.RefAttributes<React.ComponentRef<typeof Separator>>
->
+>;
 
 const SidebarSeparator: SidebarSeparatorComponent = React.forwardRef<
   React.ComponentRef<typeof Separator>,
@@ -617,7 +623,8 @@ const sidebarMenuButtonVariants = cva(
   },
 );
 
-interface SidebarMenuButtonProps extends React.ComponentProps<'button'>, VariantProps<typeof sidebarMenuButtonVariants> {
+interface SidebarMenuButtonProps
+  extends React.ComponentProps<'button'>, VariantProps<typeof sidebarMenuButtonVariants> {
   asChild?: boolean;
   isActive?: boolean;
   tooltip?: string | TooltipContentProps;
@@ -625,7 +632,7 @@ interface SidebarMenuButtonProps extends React.ComponentProps<'button'>, Variant
 
 type SidebarMenuButtonComponent = React.ForwardRefExoticComponent<
   SidebarMenuButtonProps & React.RefAttributes<HTMLButtonElement>
->
+>;
 
 const SidebarMenuButton: SidebarMenuButtonComponent = React.forwardRef<
   HTMLButtonElement,

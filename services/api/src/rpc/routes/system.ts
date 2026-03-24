@@ -1,13 +1,12 @@
 import { Hono } from 'hono';
 
 import type { AppContext } from '../middleware/auth';
-
 import { adminRoutes } from './admin';
 import { mobileRoutes } from './mobile';
 import { searchRoutes } from './search';
 import { userRoutes } from './user';
 import { vectorRoutes } from './vector';
-import { authenticatedVoiceRoutes } from './voice'
+import { authenticatedVoiceRoutes } from './voice';
 
 /**
  * System Domain

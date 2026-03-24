@@ -1,63 +1,64 @@
-import * as Haptics from 'expo-haptics'
-import { useRouter } from 'expo-router'
-import type { Href } from 'expo-router'
-import React, { useCallback } from 'react'
-import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import type { TextStyle } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
+import type { Href } from 'expo-router';
+import React, { useCallback } from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import type { TextStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import AppIcon from '~/components/ui/icon'
-import { theme } from '~/theme'
-import { APP_NAME } from '~/utils/constants'
+import AppIcon from '~/components/ui/icon';
+import { theme } from '~/theme';
+import { APP_NAME } from '~/utils/constants';
 
-import {
-  useMobileWorkspace,
-} from './mobile-workspace-context'
 import {
   MOBILE_WORKSPACE_LABELS,
   MOBILE_WORKSPACE_ROUTES,
   type MobileWorkspaceContext,
-} from './mobile-workspace-config'
+} from './mobile-workspace-config';
+import { useMobileWorkspace } from './mobile-workspace-context';
 
-const MOBILE_WORKSPACE_ICONS: Record<MobileWorkspaceContext, React.ComponentProps<typeof AppIcon>['name']> = {
+const MOBILE_WORKSPACE_ICONS: Record<
+  MobileWorkspaceContext,
+  React.ComponentProps<typeof AppIcon>['name']
+> = {
   inbox: 'inbox',
   note: 'pen-to-square',
   chat: 'comment',
   search: 'magnifying-glass',
   settings: 'gear',
-}
+};
 
 const iconStyle: TextStyle = {
   lineHeight: 16,
   textAlign: 'center',
-}
+};
 
-const INBOX_ROUTE = '/(protected)/(tabs)/focus' as Href
+const INBOX_ROUTE = '/(protected)/(tabs)/focus' as Href;
 
 export const MobileWorkspaceSwitcher = () => {
-  const router = useRouter()
-  const insets = useSafeAreaInsets()
-  const { activeContext, contexts, setActiveContext } = useMobileWorkspace()
-  const isContextualView = activeContext === 'note' || activeContext === 'chat'
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { activeContext, contexts, setActiveContext } = useMobileWorkspace();
+  const isContextualView = activeContext === 'note' || activeContext === 'chat';
 
   const onReturnToInbox = useCallback(() => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    setActiveContext('inbox')
-    router.push(INBOX_ROUTE)
-  }, [router, setActiveContext])
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setActiveContext('inbox');
+    router.push(INBOX_ROUTE);
+  }, [router, setActiveContext]);
 
   const onPress = useCallback(
     (context: MobileWorkspaceContext) => {
-      void Haptics.selectionAsync()
-      setActiveContext(context)
+      void Haptics.selectionAsync();
+      setActiveContext(context);
 
-      const route = MOBILE_WORKSPACE_ROUTES[context]
+      const route = MOBILE_WORKSPACE_ROUTES[context];
       if (route) {
-        router.push(route)
+        router.push(route);
       }
     },
     [router, setActiveContext],
-  )
+  );
 
   return (
     <View style={[styles.shell, { paddingTop: insets.top + 6 }]} testID="mobile-workspace-switcher">
@@ -92,7 +93,7 @@ export const MobileWorkspaceSwitcher = () => {
             style={styles.contextScroller}
           >
             {contexts.map((context) => {
-              const isActive = context === activeContext
+              const isActive = context === activeContext;
 
               return (
                 <Pressable
@@ -116,19 +117,18 @@ export const MobileWorkspaceSwitcher = () => {
                     useSymbol
                   />
                 </Pressable>
-              )
+              );
             })}
           </ScrollView>
         </View>
       </View>
       <View style={styles.divider} />
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
-  shell: {
-  },
+  shell: {},
   headerRow: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -192,4 +192,4 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors['border-default'],
     height: StyleSheet.hairlineWidth,
   },
-})
+});

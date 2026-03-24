@@ -1,4 +1,5 @@
 import * as StoreReview from 'expo-store-review';
+
 import { storage } from './storage';
 
 const ACTIVE_DAYS_KEY = 'review_active_days';

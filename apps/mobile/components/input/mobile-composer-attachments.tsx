@@ -1,15 +1,15 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { theme } from '~/theme'
+import { theme } from '~/theme';
 
-import type { MobileComposerAttachment } from './mobile-composer-state'
+import type { MobileComposerAttachment } from './mobile-composer-state';
 
 interface MobileComposerAttachmentsProps {
-  attachments: MobileComposerAttachment[]
-  onRemoveAttachment: (attachmentId: string) => void
-  errors?: string[]
-  isUploading?: boolean
-  progress?: number
+  attachments: MobileComposerAttachment[];
+  onRemoveAttachment: (attachmentId: string) => void;
+  errors?: string[];
+  isUploading?: boolean;
+  progress?: number;
 }
 
 export function MobileComposerAttachments({
@@ -20,7 +20,7 @@ export function MobileComposerAttachments({
   progress = 0,
 }: MobileComposerAttachmentsProps) {
   if (attachments.length === 0 && !isUploading && errors.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -46,7 +46,7 @@ export function MobileComposerAttachments({
         </View>
       ))}
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -91,4 +91,4 @@ const styles = StyleSheet.create({
     color: theme.colors['text-secondary'],
     fontSize: 12,
   },
-})
+});

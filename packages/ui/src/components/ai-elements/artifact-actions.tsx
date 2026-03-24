@@ -1,11 +1,11 @@
-import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types'
-import { isArtifactTypeEnabled } from '@hominem/chat-services/types'
-import { Button } from '@hominem/ui/button'
+import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types';
+import { isArtifactTypeEnabled } from '@hominem/chat-services/types';
+import { Button } from '@hominem/ui/button';
 
 interface ArtifactActionsProps {
-  state: ThoughtLifecycleState
-  messageCount: number
-  onTransform: (type: ArtifactType) => void
+  state: ThoughtLifecycleState;
+  messageCount: number;
+  onTransform: (type: ArtifactType) => void;
 }
 
 const ACTIONS: { type: ArtifactType; label: string }[] = [
@@ -13,15 +13,15 @@ const ACTIONS: { type: ArtifactType; label: string }[] = [
   { type: 'task', label: '→ Task' },
   { type: 'task_list', label: '→ Task List' },
   { type: 'tracker', label: '→ Tracker' },
-]
+];
 
-const BLOCKING: ThoughtLifecycleState[] = ['classifying', 'reviewing_changes', 'persisting']
+const BLOCKING: ThoughtLifecycleState[] = ['classifying', 'reviewing_changes', 'persisting'];
 
 export function ArtifactActions({ state, messageCount, onTransform }: ArtifactActionsProps) {
-  if (messageCount === 0) return null
+  if (messageCount === 0) return null;
 
-  const isComposing = state === 'composing'
-  const isBlocked = BLOCKING.includes(state)
+  const isComposing = state === 'composing';
+  const isBlocked = BLOCKING.includes(state);
 
   return (
     <div
@@ -29,8 +29,8 @@ export function ArtifactActions({ state, messageCount, onTransform }: ArtifactAc
       aria-label="Transform session into artifact"
     >
       {ACTIONS.map(({ type, label }) => {
-        const enabled = isArtifactTypeEnabled(type)
-        const disabled = !enabled || isBlocked
+        const enabled = isArtifactTypeEnabled(type);
+        const disabled = !enabled || isBlocked;
         return (
           <Button
             key={type}
@@ -48,8 +48,8 @@ export function ArtifactActions({ state, messageCount, onTransform }: ArtifactAc
           >
             {label}
           </Button>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

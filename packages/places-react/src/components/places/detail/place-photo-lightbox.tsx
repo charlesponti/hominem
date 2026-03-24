@@ -1,13 +1,13 @@
-import { Button } from '@hominem/ui/button'
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { Button } from '@hominem/ui/button';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface PlacePhotoLightboxProps {
-  photos: string[]
-  currentIndex: number
-  isOpen: boolean
-  onClose: () => void
-  alt: string
+  photos: string[];
+  currentIndex: number;
+  isOpen: boolean;
+  onClose: () => void;
+  alt: string;
 }
 
 export function PlacePhotoLightbox({
@@ -17,44 +17,44 @@ export function PlacePhotoLightbox({
   onClose,
   alt,
 }: PlacePhotoLightboxProps) {
-  const [activeIndex, setActiveIndex] = useState(currentIndex)
-  const photo = photos[activeIndex]
+  const [activeIndex, setActiveIndex] = useState(currentIndex);
+  const photo = photos[activeIndex];
 
   useEffect(() => {
-    setActiveIndex(currentIndex)
-  }, [currentIndex])
+    setActiveIndex(currentIndex);
+  }, [currentIndex]);
 
   const goToPrevious = useCallback(() => {
-    setActiveIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1))
-  }, [photos.length])
+    setActiveIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
+  }, [photos.length]);
 
   const goToNext = useCallback(() => {
-    setActiveIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1))
-  }, [photos.length])
+    setActiveIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
+  }, [photos.length]);
 
   useEffect(() => {
     if (!isOpen) {
-      return
+      return;
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose()
+        onClose();
       }
       if (e.key === 'ArrowLeft') {
-        goToPrevious()
+        goToPrevious();
       }
       if (e.key === 'ArrowRight') {
-        goToNext()
+        goToNext();
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose, goToPrevious, goToNext])
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose, goToPrevious, goToNext]);
 
   if (!isOpen) {
-    return null
+    return null;
   }
 
   return (
@@ -82,8 +82,8 @@ export function PlacePhotoLightbox({
             variant="outline"
             size="icon-lg"
             onClick={(e) => {
-              e.stopPropagation()
-              goToPrevious()
+              e.stopPropagation();
+              goToPrevious();
             }}
             className="absolute left-4 z-10 border-border/50 bg-transparent text-white hover:bg-white/10 hover:text-white"
             aria-label="Previous photo"
@@ -95,8 +95,8 @@ export function PlacePhotoLightbox({
             variant="outline"
             size="icon-lg"
             onClick={(e) => {
-              e.stopPropagation()
-              goToNext()
+              e.stopPropagation();
+              goToNext();
             }}
             className="absolute right-4 z-10 border-border/50 bg-transparent text-white hover:bg-white/10 hover:text-white"
             aria-label="Next photo"
@@ -115,5 +115,5 @@ export function PlacePhotoLightbox({
         />
       )}
     </div>
-  )
+  );
 }

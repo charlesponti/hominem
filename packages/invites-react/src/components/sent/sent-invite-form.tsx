@@ -1,34 +1,34 @@
-import { Alert, Form, Stack } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { TextField } from '@hominem/ui/text-field'
-import { type SyntheticEvent, useCallback, useId, useState } from 'react'
+import { Alert, Form, Stack } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { TextField } from '@hominem/ui/text-field';
+import { type SyntheticEvent, useCallback, useId, useState } from 'react';
 
-import { useCreateInvite } from '../../hooks/use-invites'
+import { useCreateInvite } from '../../hooks/use-invites';
 
 interface SentInviteFormProps {
-  listId: string
-  onCreate?: (invite: { listId: string; invitedUserEmail: string }) => void
+  listId: string;
+  onCreate?: (invite: { listId: string; invitedUserEmail: string }) => void;
 }
 
 export function SentInviteForm({ listId, onCreate }: SentInviteFormProps) {
-  const [email, setEmail] = useState('')
-  const emailId = useId()
+  const [email, setEmail] = useState('');
+  const emailId = useId();
 
-  const mutation = useCreateInvite()
+  const mutation = useCreateInvite();
 
   const onNameChange = useCallback((e: SyntheticEvent<HTMLInputElement>) => {
-    setEmail(e.currentTarget.value)
-  }, [])
+    setEmail(e.currentTarget.value);
+  }, []);
 
   const onFormSubmit = useCallback(
     async (e: SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
-      await mutation.mutateAsync({ listId, invitedUserEmail: email })
-      setEmail('')
-      onCreate?.({ listId, invitedUserEmail: email })
+      e.preventDefault();
+      await mutation.mutateAsync({ listId, invitedUserEmail: email });
+      setEmail('');
+      onCreate?.({ listId, invitedUserEmail: email });
     },
     [email, mutation, listId, onCreate],
-  )
+  );
 
   return (
     <Stack gap="sm">
@@ -56,5 +56,5 @@ export function SentInviteForm({ listId, onCreate }: SentInviteFormProps) {
         </Button>
       </Form>
     </Stack>
-  )
+  );
 }

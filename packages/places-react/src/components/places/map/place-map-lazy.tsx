@@ -1,7 +1,7 @@
-import { Loading } from '@hominem/ui/loading'
-import { lazy, Suspense } from 'react'
+import { Loading } from '@hominem/ui/loading';
+import { lazy, Suspense } from 'react';
 
-const PlaceMapLazy = lazy(() => import('./place-map').then((m) => ({ default: m.PlaceMap })))
+const PlaceMapLazy = lazy(() => import('./place-map').then((m) => ({ default: m.PlaceMap })));
 
 const MapPlaceholder = () => (
   <div className="flex flex-1 relative overflow-hidden size-full border border-border h-[300px]">
@@ -9,14 +9,14 @@ const MapPlaceholder = () => (
       <Loading size="xl" />
     </div>
   </div>
-)
+);
 
 interface PlaceMapLazyProps {
-  latitude: number
-  longitude: number
-  name: string
-  googleMapsId?: string
-  googleApiKey?: string
+  latitude: number;
+  longitude: number;
+  name: string;
+  googleMapsId?: string;
+  googleApiKey?: string;
 }
 
 export function LazyPlaceMap(props: PlaceMapLazyProps) {
@@ -24,5 +24,5 @@ export function LazyPlaceMap(props: PlaceMapLazyProps) {
     <Suspense fallback={<MapPlaceholder />}>
       <PlaceMapLazy {...props} />
     </Suspense>
-  )
+  );
 }

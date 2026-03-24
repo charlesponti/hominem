@@ -1,14 +1,14 @@
 import { useApiClient } from '@hominem/rpc/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { focusKeys } from './query-keys';
+import { noteKeys } from './query-keys';
 
-interface UseDeleteFocusOptions {
+interface UseDeleteNoteOptions {
   onSuccess?: (data: string) => void;
   onError?: (error: Error) => void;
 }
 
-export const useDeleteFocus = (options?: UseDeleteFocusOptions) => {
+export const useDeleteNote = (options?: UseDeleteNoteOptions) => {
   const client = useApiClient();
   const queryClient = useQueryClient();
 
@@ -18,7 +18,7 @@ export const useDeleteFocus = (options?: UseDeleteFocusOptions) => {
       return id;
     },
     onSuccess: async (data) => {
-      await queryClient.invalidateQueries({ queryKey: focusKeys.all });
+      await queryClient.invalidateQueries({ queryKey: noteKeys.all });
       options?.onSuccess?.(data);
     },
     onError: (error) => {

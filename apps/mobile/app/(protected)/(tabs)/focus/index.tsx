@@ -7,17 +7,17 @@ import { PulsingCircle } from '~/components/animated/pulsing-circle';
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { FeedbackBlock } from '~/components/feedback-block';
 import { ActiveSearchSummary, type ActiveSearch } from '~/components/focus/focus-search';
+import { useInputContext } from '~/components/input/input-context';
 import { LoadingContainer } from '~/components/LoadingFull';
 import AppIcon from '~/components/ui/icon';
-import { useInputContext } from '~/components/input/input-context';
 import { InboxStream } from '~/components/workspace/inbox-stream';
 import { donateAddNoteIntent } from '~/lib/intent-donation';
 import { Text, theme, makeStyles } from '~/theme';
-import { useFocusStream } from '~/utils/services/notes/use-focus-stream';
+import { useNoteStream } from '~/utils/services/notes/use-note-stream';
 
 const FOCUS_SCREEN_OPTIONS = {
   headerShown: false,
-} as const
+} as const;
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -69,13 +69,7 @@ export const FocusView = () => {
     // Clear the param so re-focusing the screen doesn't re-trigger
     router.setParams({ action: undefined });
   }, [action, setMode, router]);
-  const {
-    data: items = [],
-    refetch,
-    isLoading,
-    isRefetching,
-    isError,
-  } = useFocusStream({});
+  const { data: items = [], refetch, isLoading, isRefetching, isError } = useNoteStream({});
 
   const onRefresh = useCallback(async () => {
     setActiveSearch(null);
@@ -96,9 +90,7 @@ export const FocusView = () => {
 
   return (
     <>
-      <Stack.Screen
-        options={FOCUS_SCREEN_OPTIONS}
-      />
+      <Stack.Screen options={FOCUS_SCREEN_OPTIONS} />
 
       <GestureHandlerRootView testID="focus-screen" style={styles.container}>
         <View style={styles.focusContainer}>

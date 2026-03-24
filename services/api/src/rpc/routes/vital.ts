@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 
 import type { AppContext } from '../middleware/auth';
-
 import { goalsRoutes } from './goals';
 import { habitsRoutes } from './habits';
 import { healthRoutes } from './health';

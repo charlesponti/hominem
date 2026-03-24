@@ -12,7 +12,7 @@ export function requestLogger(): MiddlewareHandler {
   return async (c, next) => {
     const startedAt = performance.now();
     const traceContext = getSpanContextForLogs();
-    
+
     const startData = {
       method: c.req.method,
       path: c.req.path,

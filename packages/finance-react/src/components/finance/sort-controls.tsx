@@ -1,4 +1,4 @@
-import { Button } from '@hominem/ui/button'
+import { Button } from '@hominem/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,24 +6,24 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@hominem/ui/components/ui/dropdown-menu'
-import type { SortField, SortOption } from '@hominem/ui/hooks'
-import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu'
-import { ListOrdered, PlusCircle } from 'lucide-react'
+} from '@hominem/ui/components/ui/dropdown-menu';
+import type { SortField, SortOption } from '@hominem/ui/hooks';
+import { DropdownMenuGroup } from '@radix-ui/react-dropdown-menu';
+import { ListOrdered, PlusCircle } from 'lucide-react';
 
-import { SortRow } from './sort-row'
+import { SortRow } from './sort-row';
 
 export interface SortControlsProps {
-  sortOptions: SortOption[]
-  addSortOption: (option: SortOption) => void
-  updateSortOption: (index: number, option: SortOption) => void
-  removeSortOption: (index: number) => void
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
-  focusedSortIndex?: number | null
+  sortOptions: SortOption[];
+  addSortOption: (option: SortOption) => void;
+  updateSortOption: (index: number, option: SortOption) => void;
+  removeSortOption: (index: number) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  focusedSortIndex?: number | null;
 }
 
-const sortableFields: SortField[] = ['amount', 'date', 'description', 'category']
+const sortableFields: SortField[] = ['amount', 'date', 'description', 'category'];
 
 export function SortControls({
   sortOptions,
@@ -36,7 +36,7 @@ export function SortControls({
 }: SortControlsProps) {
   const availableFieldsToAdd = sortableFields.filter(
     (field) => !sortOptions.some((option) => option.field === field),
-  )
+  );
 
   return (
     <DropdownMenu {...(open !== undefined ? { open } : {})} {...(onOpenChange && { onOpenChange })}>
@@ -54,7 +54,7 @@ export function SortControls({
           {sortOptions.map((sort, index) => {
             const usedFields = sortOptions
               .filter((_, i) => i !== index)
-              .map((option) => option.field)
+              .map((option) => option.field);
             return (
               <DropdownMenuItem
                 key={sort.field}
@@ -70,7 +70,7 @@ export function SortControls({
                   removeSortOption={removeSortOption}
                 />
               </DropdownMenuItem>
-            )
+            );
           })}
         </DropdownMenuGroup>
         {availableFieldsToAdd.length > 0 && (
@@ -78,10 +78,10 @@ export function SortControls({
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onSelect={(e) => {
-                e.preventDefault()
-                const firstAvailable = availableFieldsToAdd[0]
+                e.preventDefault();
+                const firstAvailable = availableFieldsToAdd[0];
                 if (firstAvailable) {
-                  addSortOption({ field: firstAvailable, direction: 'desc' })
+                  addSortOption({ field: firstAvailable, direction: 'desc' });
                 }
               }}
               disabled={availableFieldsToAdd.length === 0}
@@ -94,5 +94,5 @@ export function SortControls({
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

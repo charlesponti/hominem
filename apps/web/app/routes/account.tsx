@@ -15,11 +15,14 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (!twitterStatus) return;
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.delete('twitter');
-      return next;
-    }, { replace: true });
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('twitter');
+        return next;
+      },
+      { replace: true },
+    );
     if (twitterStatus === 'connected') {
       refetch();
     }

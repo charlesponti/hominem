@@ -1,13 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { MarkdownContent } from './markdown-content'
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { MarkdownContent } from './markdown-content';
 
 const meta: Meta<typeof MarkdownContent> = {
   title: 'AI Elements/MarkdownContent',
   component: MarkdownContent,
   tags: ['autodocs'],
-}
-export default meta
-type Story = StoryObj<typeof MarkdownContent>
+};
+export default meta;
+type Story = StoryObj<typeof MarkdownContent>;
 
 const prose = `
 ## Introduction
@@ -34,24 +35,24 @@ console.log(greet('world'))
 > This is a blockquote with important context.
 
 [Visit the docs](https://example.com) for more information.
-`
+`;
 
 export const Default: Story = {
   args: { content: prose },
-}
+};
 
 export const Streaming: Story = {
   args: {
     content: 'The answer is being generated right now',
     isStreaming: true,
   },
-}
+};
 
 export const InlineCode: Story = {
   args: {
     content: 'Use the `useState` hook to manage local state, and `useEffect` for side effects.',
   },
-}
+};
 
 export const WithTable: Story = {
   args: {
@@ -63,8 +64,8 @@ export const WithTable: Story = {
 | createdAt| Date   | Creation timestamp   |
     `,
   },
-}
+};
 
 export const Null: Story = {
   args: { content: null },
-}
+};

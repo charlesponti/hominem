@@ -1,8 +1,8 @@
 import type { User } from '@hominem/auth/server';
 import type { AuthEnvelope } from '@hominem/auth/types';
+import { createMiddleware } from 'hono/factory';
 
 import { ForbiddenError, UnauthorizedError } from '../errors';
-import { createMiddleware } from 'hono/factory';
 
 /**
  * Application Context

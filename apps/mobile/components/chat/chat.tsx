@@ -1,23 +1,23 @@
-import { Chat as _Chat } from '@hominem/ui/chat'
-import type { SessionSource } from '@hominem/ui/chat'
-import { useQueryClient } from '@tanstack/react-query'
-import React from 'react'
+import { Chat as _Chat } from '@hominem/ui/chat';
+import type { SessionSource } from '@hominem/ui/chat';
+import { useQueryClient } from '@tanstack/react-query';
+import React from 'react';
 
-import { FeatureErrorBoundary } from '~/components/error-boundary'
-import { useSpeech } from '~/components/media/use-speech'
-import { makeStyles } from '~/theme'
-import { getLocalDate } from '~/utils/dates'
-import { invalidateInboxQueries } from '~/utils/services/inbox/inbox-refresh'
-import { useArchiveChat, useChatMessages, useSendMessage } from '~/utils/services/chat'
-import { chatKeys } from '~/utils/services/notes/query-keys'
+import { FeatureErrorBoundary } from '~/components/error-boundary';
+import { useSpeech } from '~/components/media/use-speech';
+import { makeStyles } from '~/theme';
+import { getLocalDate } from '~/utils/dates';
+import { useArchiveChat, useChatMessages, useSendMessage } from '~/utils/services/chat';
+import { invalidateInboxQueries } from '~/utils/services/inbox/inbox-refresh';
+import { chatKeys } from '~/utils/services/notes/query-keys';
 
-import AppIcon from '../ui/icon'
+import AppIcon from '../ui/icon';
 
 type ChatProps = {
-  chatId: string
-  onChatArchive: () => void
-  source: SessionSource
-}
+  chatId: string;
+  onChatArchive: () => void;
+  source: SessionSource;
+};
 
 const renderIcon: React.ComponentProps<typeof _Chat>['renderIcon'] = (name, props) => (
   <AppIcon
@@ -27,15 +27,15 @@ const renderIcon: React.ComponentProps<typeof _Chat>['renderIcon'] = (name, prop
     style={props.style}
     useSymbol={props.useSymbol}
   />
-)
+);
 
-const formatTimestamp = (value: string) => getLocalDate(new Date(value)).localDateString
+const formatTimestamp = (value: string) => getLocalDate(new Date(value)).localDateString;
 
 export const Chat = ({ chatId, onChatArchive, source }: ChatProps) => {
-  const { speakingId, speak } = useSpeech()
-  const queryClient = useQueryClient()
+  const { speakingId, speak } = useSpeech();
+  const queryClient = useQueryClient();
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  const styles = useStyles()
+  const styles = useStyles();
 
   return (
     <_Chat
@@ -54,8 +54,8 @@ export const Chat = ({ chatId, onChatArchive, source }: ChatProps) => {
       formatTimestamp={formatTimestamp}
       containerStyle={styles.container}
     />
-  )
-}
+  );
+};
 
 const useStyles = makeStyles((t) => ({
   container: {
@@ -63,10 +63,10 @@ const useStyles = makeStyles((t) => ({
     backgroundColor: t.colors['bg-elevated'],
     flexDirection: 'column' as const,
   },
-}))
+}));
 
 export const ChatWithErrorBoundary = (props: ChatProps) => (
   <FeatureErrorBoundary featureName="Chat">
     <Chat {...props} />
   </FeatureErrorBoundary>
-)
+);

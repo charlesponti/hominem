@@ -35,7 +35,7 @@ export function meta() {
       name: 'description',
       content: WEB_BRAND.meta.description,
     },
-  ]
+  ];
 }
 
 export default function HomePage({ loaderData }: { loaderData: { authenticated: boolean } }) {
@@ -76,8 +76,7 @@ export default function HomePage({ loaderData }: { loaderData: { authenticated: 
         {
           icon: Mic,
           title: 'Voice capture',
-          description:
-            `Record a thought on the go. ${WEB_BRAND.appName} transcribes it and surfaces the key ideas when you're back at your desk.`,
+          description: `Record a thought on the go. ${WEB_BRAND.appName} transcribes it and surfaces the key ideas when you're back at your desk.`,
         },
         {
           icon: Tag,

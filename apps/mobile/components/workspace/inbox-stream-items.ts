@@ -1,3 +1,3 @@
-import type { FocusItem } from '@hominem/rpc'
+import type { FocusItem } from '@hominem/rpc';
 
-export type InboxStreamItem = FocusItem & { route: string }
+export type InboxStreamItem = FocusItem & { route: string };

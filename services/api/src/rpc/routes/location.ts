@@ -1,8 +1,8 @@
 import { formatGeocodeFeatures, type Geocoding, LAYERS } from '@hominem/utils/location';
-import { ValidationError, InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
+import { ValidationError, InternalError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 export const locationRoutes = new Hono<AppContext>()
@@ -42,6 +42,8 @@ export const locationRoutes = new Hono<AppContext>()
       return c.json(formatGeocodeFeatures(results));
     } catch (err) {
       logger.error('[location.geocode] error', { error: err });
-      throw new InternalError(`Error fetching city lat/lng: ${err instanceof Error ? err.message : String(err)}`);
+      throw new InternalError(
+        `Error fetching city lat/lng: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   });

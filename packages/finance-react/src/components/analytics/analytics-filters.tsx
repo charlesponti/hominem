@@ -1,55 +1,55 @@
-import { Button } from '@hominem/ui/button'
-import { DatePicker } from '@hominem/ui/components/date-picker'
-import { Badge } from '@hominem/ui/components/ui/badge'
-import { Card } from '@hominem/ui/components/ui/card'
-import { Label } from '@hominem/ui/components/ui/label'
-import { Skeleton } from '@hominem/ui/components/ui/skeleton'
-import { Switch } from '@hominem/ui/components/ui/switch'
-import * as Dialog from '@radix-ui/react-dialog'
-import { Filter, X } from 'lucide-react'
-import { type Dispatch, type SetStateAction, useId, useState } from 'react'
+import { Button } from '@hominem/ui/button';
+import { DatePicker } from '@hominem/ui/components/date-picker';
+import { Badge } from '@hominem/ui/components/ui/badge';
+import { Card } from '@hominem/ui/components/ui/card';
+import { Label } from '@hominem/ui/components/ui/label';
+import { Skeleton } from '@hominem/ui/components/ui/skeleton';
+import { Switch } from '@hominem/ui/components/ui/switch';
+import * as Dialog from '@radix-ui/react-dialog';
+import { Filter, X } from 'lucide-react';
+import { type Dispatch, type SetStateAction, useId, useState } from 'react';
 
-import { useFinanceTags } from '../../hooks/use-analytics'
-import { useFinanceAccounts } from '../../hooks/use-finance-data'
-import { AccountSelect } from '../finance/account-select'
-import { TagSelect } from '../finance/category-select'
-import { GroupBySelect } from '../finance/group-by-select'
+import { useFinanceTags } from '../../hooks/use-analytics';
+import { useFinanceAccounts } from '../../hooks/use-finance-data';
+import { AccountSelect } from '../finance/account-select';
+import { TagSelect } from '../finance/category-select';
+import { GroupBySelect } from '../finance/group-by-select';
 
 interface AnalyticsFiltersProps {
-  dateFrom: Date | undefined
-  setDateFrom: Dispatch<SetStateAction<Date | undefined>>
-  dateTo: Date | undefined
-  setDateTo: Dispatch<SetStateAction<Date | undefined>>
-  selectedAccount: string
-  setSelectedAccount: Dispatch<SetStateAction<string>>
-  selectedTag: string
-  setSelectedTag: Dispatch<SetStateAction<string>>
-  groupBy: 'month' | 'week' | 'day'
-  setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>
-  includeStats: boolean
-  setIncludeStats: Dispatch<SetStateAction<boolean>>
-  compareToPrevious: boolean
-  setCompareToPrevious: Dispatch<SetStateAction<boolean>>
+  dateFrom: Date | undefined;
+  setDateFrom: Dispatch<SetStateAction<Date | undefined>>;
+  dateTo: Date | undefined;
+  setDateTo: Dispatch<SetStateAction<Date | undefined>>;
+  selectedAccount: string;
+  setSelectedAccount: Dispatch<SetStateAction<string>>;
+  selectedTag: string;
+  setSelectedTag: Dispatch<SetStateAction<string>>;
+  groupBy: 'month' | 'week' | 'day';
+  setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>;
+  includeStats: boolean;
+  setIncludeStats: Dispatch<SetStateAction<boolean>>;
+  compareToPrevious: boolean;
+  setCompareToPrevious: Dispatch<SetStateAction<boolean>>;
 }
 
 interface FilterChipsProps {
-  dateFrom: Date | undefined
-  setDateFrom: Dispatch<SetStateAction<Date | undefined>>
-  dateTo: Date | undefined
-  setDateTo: Dispatch<SetStateAction<Date | undefined>>
-  selectedAccount: string
-  setSelectedAccount: Dispatch<SetStateAction<string>>
-  selectedTag: string
-  setSelectedTag: Dispatch<SetStateAction<string>>
-  groupBy: 'month' | 'week' | 'day'
-  setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>
-  includeStats: boolean
-  setIncludeStats: Dispatch<SetStateAction<boolean>>
-  compareToPrevious: boolean
-  setCompareToPrevious: Dispatch<SetStateAction<boolean>>
-  accounts: Array<{ id: string; name: string }>
-  tags: { id: string; name: string }[]
-  isLoading: boolean
+  dateFrom: Date | undefined;
+  setDateFrom: Dispatch<SetStateAction<Date | undefined>>;
+  dateTo: Date | undefined;
+  setDateTo: Dispatch<SetStateAction<Date | undefined>>;
+  selectedAccount: string;
+  setSelectedAccount: Dispatch<SetStateAction<string>>;
+  selectedTag: string;
+  setSelectedTag: Dispatch<SetStateAction<string>>;
+  groupBy: 'month' | 'week' | 'day';
+  setGroupBy: Dispatch<SetStateAction<'month' | 'week' | 'day'>>;
+  includeStats: boolean;
+  setIncludeStats: Dispatch<SetStateAction<boolean>>;
+  compareToPrevious: boolean;
+  setCompareToPrevious: Dispatch<SetStateAction<boolean>>;
+  accounts: Array<{ id: string; name: string }>;
+  tags: { id: string; name: string }[];
+  isLoading: boolean;
 }
 
 function FilterChips({
@@ -72,65 +72,65 @@ function FilterChips({
   isLoading,
 }: FilterChipsProps) {
   if (isLoading) {
-    return <Skeleton className="h-6 w-32" />
+    return <Skeleton className="h-6 w-32" />;
   }
 
-  const chips = []
+  const chips = [];
   if (dateFrom) {
     chips.push({
       key: 'dateFrom',
       label: `From: ${dateFrom.toLocaleDateString()}`,
       onRemove: () => setDateFrom(undefined),
-    })
+    });
   }
   if (dateTo) {
     chips.push({
       key: 'dateTo',
       label: `To: ${dateTo.toLocaleDateString()}`,
       onRemove: () => setDateTo(undefined),
-    })
+    });
   }
   if (selectedAccount && selectedAccount !== 'all') {
     const accountLabel = Array.isArray(accounts)
       ? accounts.find((a) => a.id === selectedAccount)?.name || 'Account'
-      : 'Account'
+      : 'Account';
     chips.push({
       key: 'account',
       label: accountLabel,
       onRemove: () => setSelectedAccount('all'),
-    })
+    });
   }
   if (selectedTag && selectedTag !== 'all') {
-    const tagLabel = tags.find((t) => t.id === selectedTag)?.name || selectedTag
+    const tagLabel = tags.find((t) => t.id === selectedTag)?.name || selectedTag;
     chips.push({
       key: 'tag',
       label: tagLabel,
       onRemove: () => setSelectedTag('all'),
-    })
+    });
   }
   if (groupBy !== 'month') {
     chips.push({
       key: 'groupBy',
       label: `Grouped: ${groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}`,
       onRemove: () => setGroupBy('month'),
-    })
+    });
   }
   if (includeStats) {
     chips.push({
       key: 'includeStats',
       label: 'Stats',
       onRemove: () => setIncludeStats(false),
-    })
+    });
   }
   if (compareToPrevious) {
     chips.push({
       key: 'compareToPrevious',
       label: 'Trends',
       onRemove: () => setCompareToPrevious(false),
-    })
+    });
   }
   if (!chips.length) {
-    return <span className="text-xs text-muted-foreground">No filters</span>
+    return <span className="text-xs text-muted-foreground">No filters</span>;
   }
   return (
     <div className="flex flex-wrap gap-1.5 max-w-full">
@@ -147,8 +147,8 @@ function FilterChips({
             className="size-4 p-0 ml-1 shrink-0"
             aria-label={`Remove ${chip.label}`}
             onClick={(e) => {
-              e.stopPropagation()
-              chip.onRemove()
+              e.stopPropagation();
+              chip.onRemove();
             }}
           >
             <X className="size-3" />
@@ -156,7 +156,7 @@ function FilterChips({
         </Badge>
       ))}
     </div>
-  )
+  );
 }
 
 export function AnalyticsFilters({
@@ -175,30 +175,30 @@ export function AnalyticsFilters({
   compareToPrevious,
   setCompareToPrevious,
 }: AnalyticsFiltersProps) {
-  const accountsQuery = useFinanceAccounts()
-  const tagsQuery = useFinanceTags()
+  const accountsQuery = useFinanceAccounts();
+  const tagsQuery = useFinanceTags();
   const tags = (Array.isArray(tagsQuery.data) ? tagsQuery.data : []) as Array<
     string | { id: string; name: string }
-  >
-  const tagsLoading = tagsQuery.isLoading
+  >;
+  const tagsLoading = tagsQuery.isLoading;
 
-  const isLoading = accountsQuery.isLoading || tagsLoading
-  const dateFromId = useId()
-  const dateToId = useId()
-  const includeStatsId = useId()
-  const compareToPreviousId = useId()
+  const isLoading = accountsQuery.isLoading || tagsLoading;
+  const dateFromId = useId();
+  const dateToId = useId();
+  const includeStatsId = useId();
+  const compareToPreviousId = useId();
 
   const safeAccounts: Array<{ id: string; name: string }> = (
     Array.isArray(accountsQuery.data) ? accountsQuery.data : []
-  ).map((acc) => ({ id: acc.id, name: acc.name }))
+  ).map((acc) => ({ id: acc.id, name: acc.name }));
   const safeTags = tags
     .map((tag) => ({
       id: typeof tag === 'string' ? tag : tag.id,
       name: typeof tag === 'string' ? tag : tag.name,
     }))
-    .filter((tag) => tag.id && tag.name)
+    .filter((tag) => tag.id && tag.name);
 
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   return (
     <Card className="border-none">
@@ -321,5 +321,5 @@ export function AnalyticsFilters({
         </div>
       </div>
     </Card>
-  )
+  );
 }

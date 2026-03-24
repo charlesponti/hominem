@@ -1,11 +1,11 @@
-import { Button } from '@hominem/ui/button'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { FC } from 'react'
+import { Button } from '@hominem/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { FC } from 'react';
 
 export interface PaginationControlsProps {
-  currentPage: number
-  totalPages: number
-  onPageChange: (page: number) => void
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
 export const PaginationControls: FC<PaginationControlsProps> = ({
@@ -15,18 +15,18 @@ export const PaginationControls: FC<PaginationControlsProps> = ({
 }) => {
   const handlePrevious = () => {
     if (currentPage > 0) {
-      onPageChange(currentPage - 1)
+      onPageChange(currentPage - 1);
     }
-  }
+  };
 
   const handleNext = () => {
     if (currentPage < totalPages - 1) {
-      onPageChange(currentPage + 1)
+      onPageChange(currentPage + 1);
     }
-  }
+  };
 
   if (totalPages === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -50,5 +50,5 @@ export const PaginationControls: FC<PaginationControlsProps> = ({
         </Button>
       </div>
     </div>
-  )
-}
+  );
+};

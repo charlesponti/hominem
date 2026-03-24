@@ -1,5 +1,5 @@
-import { Hono } from 'hono'
+import { Hono } from 'hono';
 
-import type { AppContext } from '../middleware/auth'
+import type { AppContext } from '../middleware/auth';
 
-export const budgetRoutes = new Hono<AppContext>()
+export const budgetRoutes = new Hono<AppContext>();

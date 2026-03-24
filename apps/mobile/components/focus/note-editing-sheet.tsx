@@ -1,26 +1,26 @@
-import React from 'react'
-import type { Note } from '@hominem/rpc/types'
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker'
-import { useCallback, useMemo, useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
-import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import type { Note } from '@hominem/rpc/types';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import React from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button } from '~/components/Button'
-import TextInput from '~/components/text-input'
-import AppIcon from '~/components/ui/icon'
-import { Text, makeStyles, theme } from '~/theme'
+import { Button } from '~/components/Button';
+import TextInput from '~/components/text-input';
+import AppIcon from '~/components/ui/icon';
+import { Text, makeStyles, theme } from '~/theme';
 
 interface NoteEditingSheetProps {
-  note?: Note
-  text: string
-  scheduledFor: Date | null
-  isSaving?: boolean
-  onTextChange: (value: string) => void
-  onScheduledForChange: (value: Date | null) => void
-  onSave: () => void | Promise<void>
-  onShare?: () => void
-  onAddToCalendar?: () => void
-  onPrint?: () => void
+  note?: Note;
+  text: string;
+  scheduledFor: Date | null;
+  isSaving?: boolean;
+  onTextChange: (value: string) => void;
+  onScheduledForChange: (value: Date | null) => void;
+  onSave: () => void | Promise<void>;
+  onShare?: () => void;
+  onAddToCalendar?: () => void;
+  onPrint?: () => void;
 }
 
 export function NoteEditingSheet({
@@ -35,63 +35,60 @@ export function NoteEditingSheet({
   onAddToCalendar,
   onPrint,
 }: NoteEditingSheetProps) {
-  const styles = useStyles()
-  const insets = useSafeAreaInsets()
-  const footerPaddingBottom = theme.spacing.m_16
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+  const styles = useStyles();
+  const insets = useSafeAreaInsets();
+  const footerPaddingBottom = theme.spacing.m_16;
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-  const pickerValue = useMemo(() => scheduledFor ?? new Date(), [scheduledFor])
+  const pickerValue = useMemo(() => scheduledFor ?? new Date(), [scheduledFor]);
 
   const dueDateLabel = useMemo(() => {
     if (!scheduledFor) {
-      return 'Set due date'
+      return 'Set due date';
     }
 
     return scheduledFor.toLocaleString(undefined, {
       dateStyle: 'medium',
       timeStyle: 'short',
-    })
-  }, [scheduledFor])
+    });
+  }, [scheduledFor]);
 
   const title = useMemo(() => {
-    return note?.title || note?.excerpt || note?.content || 'Untitled note'
-  }, [note?.content, note?.excerpt, note?.title])
+    return note?.title || note?.excerpt || note?.content || 'Untitled note';
+  }, [note?.content, note?.excerpt, note?.title]);
 
   const openDatePicker = useCallback(() => {
     if (isSaving) {
-      return
+      return;
     }
-    setIsDatePickerOpen(true)
-  }, [isSaving])
+    setIsDatePickerOpen(true);
+  }, [isSaving]);
 
   const closeDatePicker = useCallback(() => {
-    setIsDatePickerOpen(false)
-  }, [])
+    setIsDatePickerOpen(false);
+  }, []);
 
   const clearDueDate = useCallback(() => {
-    closeDatePicker()
-    onScheduledForChange(null)
-  }, [closeDatePicker, onScheduledForChange])
+    closeDatePicker();
+    onScheduledForChange(null);
+  }, [closeDatePicker, onScheduledForChange]);
 
   const handleDateChange = useCallback(
     (event: DateTimePickerEvent, selectedDate?: Date) => {
       if (event.type === 'dismissed' || !selectedDate) {
-        closeDatePicker()
-        return
+        closeDatePicker();
+        return;
       }
 
-      closeDatePicker()
-      onScheduledForChange(selectedDate)
+      closeDatePicker();
+      onScheduledForChange(selectedDate);
     },
     [closeDatePicker, onScheduledForChange],
-  )
+  );
 
   return (
     <View style={styles.container} testID="note-editing-sheet">
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         <View style={styles.handle} testID="note-editing-sheet-handle" />
 
         <View style={styles.header} testID="note-editing-sheet-header">
@@ -109,7 +106,11 @@ export function NoteEditingSheet({
                 accessibilityRole="button"
                 style={styles.shareButton}
               >
-                <AppIcon name="share-from-square" size={16} color={theme.colors['text-secondary']} />
+                <AppIcon
+                  name="share-from-square"
+                  size={16}
+                  color={theme.colors['text-secondary']}
+                />
               </Pressable>
             ) : null}
           </View>
@@ -144,11 +145,7 @@ export function NoteEditingSheet({
               <AppIcon name="calendar" size={16} color={theme.colors.foreground} />
             </View>
             <View style={styles.dueDateTextColumn}>
-              <Text
-                variant="body"
-                color="foreground"
-                testID="note-editing-sheet-due-date-label"
-              >
+              <Text variant="body" color="foreground" testID="note-editing-sheet-due-date-label">
                 {dueDateLabel}
               </Text>
               <Text variant="small" color="text-secondary">
@@ -215,7 +212,7 @@ export function NoteEditingSheet({
         />
       </View>
     </View>
-  )
+  );
 }
 
 const useStyles = makeStyles((t) => {
@@ -319,5 +316,5 @@ const useStyles = makeStyles((t) => {
     footerSecondaryButton: {
       flex: 1,
     },
-  })
-})
+  });
+});

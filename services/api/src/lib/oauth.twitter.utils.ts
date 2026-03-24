@@ -50,5 +50,3 @@ export type TwitterUserResponse = {
     name: string;
   };
 };
-
-

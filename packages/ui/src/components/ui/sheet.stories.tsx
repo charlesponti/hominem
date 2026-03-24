@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
+import { Button } from './button';
 import {
   Sheet,
   SheetContent,
@@ -8,7 +10,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from './sheet';
-import { Button } from './button';
 
 const meta: Meta<typeof Sheet> = {
   title: 'Overlays/Sheet',
@@ -59,9 +60,15 @@ export const Left: Story = {
           <SheetTitle>Navigation</SheetTitle>
         </SheetHeader>
         <div className="py-4 flex flex-col gap-2">
-          <Button variant="ghost" className="justify-start">Home</Button>
-          <Button variant="ghost" className="justify-start">About</Button>
-          <Button variant="ghost" className="justify-start">Contact</Button>
+          <Button variant="ghost" className="justify-start">
+            Home
+          </Button>
+          <Button variant="ghost" className="justify-start">
+            About
+          </Button>
+          <Button variant="ghost" className="justify-start">
+            Contact
+          </Button>
         </div>
       </SheetContent>
     </Sheet>

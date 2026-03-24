@@ -3,7 +3,6 @@ import { AudioModule, RecordingPresets, useAudioRecorder } from 'expo-audio';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-
 import { useAudioTranscribe } from './use-audio-transcribe';
 
 type RecorderState =

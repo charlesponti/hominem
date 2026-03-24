@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
+
 import { OtpCodeInput } from './otp-code-input';
 
 const meta: Meta<typeof OtpCodeInput> = {
@@ -15,11 +16,7 @@ export const Default: Story = {
     const [value, setValue] = useState('');
     return (
       <div className="max-w-xs">
-        <OtpCodeInput
-          value={value}
-          onChange={setValue}
-          autoFocus={false}
-        />
+        <OtpCodeInput value={value} onChange={setValue} autoFocus={false} />
       </div>
     );
   },
@@ -41,12 +38,7 @@ export const WithError: Story = {
 export const Disabled: Story = {
   render: () => (
     <div className="max-w-xs">
-      <OtpCodeInput
-        value="123456"
-        onChange={() => {}}
-        disabled
-        autoFocus={false}
-      />
+      <OtpCodeInput value="123456" onChange={() => {}} disabled autoFocus={false} />
     </div>
   ),
 };
@@ -56,12 +48,7 @@ export const FourDigit: Story = {
     const [value, setValue] = useState('');
     return (
       <div className="max-w-xs">
-        <OtpCodeInput
-          length={4}
-          value={value}
-          onChange={setValue}
-          autoFocus={false}
-        />
+        <OtpCodeInput length={4} value={value} onChange={setValue} autoFocus={false} />
       </div>
     );
   },

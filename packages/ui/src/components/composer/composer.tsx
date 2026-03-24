@@ -1,39 +1,57 @@
-import { memo, useCallback, useEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
-import type { UseMutationResult } from '@tanstack/react-query'
-import { Loader2, Mic } from 'lucide-react'
+import { emitVoiceEvent } from '@hominem/services/voice-events';
+import type { UseMutationResult } from '@tanstack/react-query';
+import { Loader2, Mic } from 'lucide-react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from 'react';
 
-import { emitVoiceEvent } from '@hominem/services/voice-events'
-import { SpeechInput } from '../ai-elements'
-
-import { AttachedNotesList } from './attached-notes-list'
-import { ComposerActionsRow } from './composer-actions-row'
-import { ComposerAttachmentList } from './composer-attachment-list'
-import { ComposerShell } from './composer-shell'
-import { ComposerTools } from './composer-tools'
-import type { ComposerMode } from './composer-provider'
-import { deriveComposerPresentation } from './composer-presentation'
-import { useComposerAttachedNotes, useComposerDraftActions, useComposerDraftState, useComposerRefs, useComposerSubmission, useComposerUploadActions, useComposerUploadState } from './composer-provider'
-import { NotePicker } from './note-picker'
+import { SpeechInput } from '../ai-elements';
+import { AttachedNotesList } from './attached-notes-list';
+import { ComposerActionsRow } from './composer-actions-row';
+import { ComposerAttachmentList } from './composer-attachment-list';
+import { deriveComposerPresentation } from './composer-presentation';
+import type { ComposerMode } from './composer-provider';
+import {
+  useComposerAttachedNotes,
+  useComposerDraftActions,
+  useComposerDraftState,
+  useComposerRefs,
+  useComposerSubmission,
+  useComposerUploadActions,
+  useComposerUploadState,
+} from './composer-provider';
+import { ComposerShell } from './composer-shell';
+import { ComposerTools } from './composer-tools';
+import { NotePicker } from './note-picker';
 
 const ComposerInput = memo(function ComposerInput({
   isDraftMode,
   placeholder,
 }: {
-  isDraftMode: boolean
-  placeholder: string
+  isDraftMode: boolean;
+  placeholder: string;
 }) {
-  const { draftText } = useComposerDraftState()
-  const { setDraftText } = useComposerDraftActions()
-  const { isSubmitting } = useComposerSubmission()
-  const { inputRef, submitBtnRef } = useComposerRefs()
+  const { draftText } = useComposerDraftState();
+  const { setDraftText } = useComposerDraftActions();
+  const { isSubmitting } = useComposerSubmission();
+  const { inputRef, submitBtnRef } = useComposerRefs();
 
-  const handleKeyDown = useCallback((event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault()
-      if (submitBtnRef.current?.disabled) return
-      submitBtnRef.current?.click()
-    }
-  }, [submitBtnRef])
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        if (submitBtnRef.current?.disabled) return;
+        submitBtnRef.current?.click();
+      }
+    },
+    [submitBtnRef],
+  );
 
   return (
     <textarea
@@ -50,13 +68,13 @@ const ComposerInput = memo(function ComposerInput({
       ].join(' ')}
       aria-label="Compose message or note"
     />
-  )
-})
+  );
+});
 
 const ComposerAttachments = memo(function ComposerAttachments() {
-  const { attachedNotes, detachNote } = useComposerAttachedNotes()
-  const { uploadState } = useComposerUploadState()
-  const { removeUploadedFile } = useComposerUploadActions()
+  const { attachedNotes, detachNote } = useComposerAttachedNotes();
+  const { uploadState } = useComposerUploadState();
+  const { removeUploadedFile } = useComposerUploadActions();
 
   return (
     <>
@@ -67,8 +85,8 @@ const ComposerAttachments = memo(function ComposerAttachments() {
       />
       <AttachedNotesList notes={attachedNotes} onRemove={detachNote} />
     </>
-  )
-})
+  );
+});
 
 interface TranscribeResult {
   text: string;
@@ -80,148 +98,168 @@ interface TranscribeVariables {
 }
 
 export interface ComposerProps {
-  mode: ComposerMode
-  noteId?: string | null
-  chatId?: string | null
-  navigate: (path: string) => void
-  inlineVoiceEnabled?: boolean
-  transcribeMutation: UseMutationResult<TranscribeResult, Error, TranscribeVariables>
+  mode: ComposerMode;
+  noteId?: string | null;
+  chatId?: string | null;
+  navigate: (path: string) => void;
+  inlineVoiceEnabled?: boolean;
+  transcribeMutation: UseMutationResult<TranscribeResult, Error, TranscribeVariables>;
 }
 
-export function Composer({ mode, noteId: propNoteId, chatId: propChatId, navigate, inlineVoiceEnabled = true, transcribeMutation }: ComposerProps) {
-  const { attachedNotes } = useComposerAttachedNotes()
-  const { setDraftText } = useComposerDraftActions()
-  const { uploadFiles } = useComposerUploadActions()
-  const { containerRef: cardRef, inputRef } = useComposerRefs()
+export function Composer({
+  mode,
+  noteId: propNoteId,
+  chatId: propChatId,
+  navigate,
+  inlineVoiceEnabled = true,
+  transcribeMutation,
+}: ComposerProps) {
+  const { attachedNotes } = useComposerAttachedNotes();
+  const { setDraftText } = useComposerDraftActions();
+  const { uploadFiles } = useComposerUploadActions();
+  const { containerRef: cardRef, inputRef } = useComposerRefs();
 
-  const [showVoice, setShowVoice] = useState(false)
-  const [showNotePicker, setShowNotePicker] = useState(false)
-  const [isRecording, setIsRecording] = useState(false)
-  const [isVoiceProcessing, setIsVoiceProcessing] = useState(false)
-  const [voiceAudioLevel, setVoiceAudioLevel] = useState(0)
-  const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null)
-  const [recordingElapsedMs, setRecordingElapsedMs] = useState(0)
-  const [voiceErrorMessage, setVoiceErrorMessage] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const [showVoice, setShowVoice] = useState(false);
+  const [showNotePicker, setShowNotePicker] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
+  const [voiceAudioLevel, setVoiceAudioLevel] = useState(0);
+  const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
+  const [recordingElapsedMs, setRecordingElapsedMs] = useState(0);
+  const [voiceErrorMessage, setVoiceErrorMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const presentation = deriveComposerPresentation(mode, isRecording)
-  const showsVoiceButton = inlineVoiceEnabled && presentation.showsVoiceButton
-  if (presentation.posture === 'hidden') return null
+  const presentation = deriveComposerPresentation(mode, isRecording);
+  const showsVoiceButton = inlineVoiceEnabled && presentation.showsVoiceButton;
+  if (presentation.posture === 'hidden') return null;
 
   useEffect(() => {
-    if (inlineVoiceEnabled) return
-    setShowVoice(false)
-  }, [inlineVoiceEnabled])
+    if (inlineVoiceEnabled) return;
+    setShowVoice(false);
+  }, [inlineVoiceEnabled]);
 
   const handleAudioTranscribed = useCallback(
     (transcript: string) => {
-      setDraftText(transcript)
-      setShowVoice(false)
-      setVoiceErrorMessage(null)
-      setTimeout(() => inputRef.current?.focus(), 50)
+      setDraftText(transcript);
+      setShowVoice(false);
+      setVoiceErrorMessage(null);
+      setTimeout(() => inputRef.current?.focus(), 50);
     },
     [inputRef, setDraftText],
-  )
+  );
 
-  const transcribeAudioBlob = useCallback(async (audioBlob: Blob) => {
-    setVoiceErrorMessage(null)
+  const transcribeAudioBlob = useCallback(
+    async (audioBlob: Blob) => {
+      setVoiceErrorMessage(null);
 
-    emitVoiceEvent('voice_transcribe_requested', {
-      platform: 'web',
-      mimeType: audioBlob.type,
-      sizeBytes: audioBlob.size,
-    })
-
-    try {
-      const preferredLanguage = typeof navigator !== 'undefined' ? navigator.language : 'en-US'
-      const result = await transcribeMutation.mutateAsync({ audioBlob, language: preferredLanguage })
-
-      emitVoiceEvent('voice_transcribe_succeeded', {
+      emitVoiceEvent('voice_transcribe_requested', {
         platform: 'web',
         mimeType: audioBlob.type,
         sizeBytes: audioBlob.size,
-      })
+      });
 
-      handleAudioTranscribed(result.text)
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Transcription failed'
-      setVoiceErrorMessage(errorMessage)
+      try {
+        const preferredLanguage = typeof navigator !== 'undefined' ? navigator.language : 'en-US';
+        const result = await transcribeMutation.mutateAsync({
+          audioBlob,
+          language: preferredLanguage,
+        });
 
-      emitVoiceEvent('voice_transcribe_failed', {
-        platform: 'web',
-        mimeType: audioBlob.type,
-        sizeBytes: audioBlob.size,
-      })
-    }
-  }, [handleAudioTranscribed, transcribeMutation])
+        emitVoiceEvent('voice_transcribe_succeeded', {
+          platform: 'web',
+          mimeType: audioBlob.type,
+          sizeBytes: audioBlob.size,
+        });
+
+        handleAudioTranscribed(result.text);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Transcription failed';
+        setVoiceErrorMessage(errorMessage);
+
+        emitVoiceEvent('voice_transcribe_failed', {
+          platform: 'web',
+          mimeType: audioBlob.type,
+          sizeBytes: audioBlob.size,
+        });
+      }
+    },
+    [handleAudioTranscribed, transcribeMutation],
+  );
 
   const handleCloseNotePicker = useCallback(() => {
-    setShowNotePicker(false)
-    setTimeout(() => inputRef.current?.focus(), 50)
-  }, [inputRef])
+    setShowNotePicker(false);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  }, [inputRef]);
 
-  const isDraftMode = presentation.posture === 'draft'
+  const isDraftMode = presentation.posture === 'draft';
 
-  const handleFilesSelected = useCallback(async (files: FileList | File[] | null) => {
-    if (!files || Array.from(files).length === 0) return
-    await uploadFiles(files)
-  }, [uploadFiles])
+  const handleFilesSelected = useCallback(
+    async (files: FileList | File[] | null) => {
+      if (!files || Array.from(files).length === 0) return;
+      await uploadFiles(files);
+    },
+    [uploadFiles],
+  );
 
   const handleFileInputChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
-      await handleFilesSelected(event.target.files)
-      event.target.value = ''
-      inputRef.current?.focus()
+      await handleFilesSelected(event.target.files);
+      event.target.value = '';
+      inputRef.current?.focus();
     },
     [handleFilesSelected, inputRef],
-  )
+  );
 
   const handleAttachmentClick = useCallback(() => {
-    fileInputRef.current?.click()
-  }, [])
+    fileInputRef.current?.click();
+  }, []);
 
   const handleCameraClick = useCallback(() => {
-    cameraInputRef.current?.click()
-  }, [])
+    cameraInputRef.current?.click();
+  }, []);
 
   const handleNotePickerClick = useCallback(() => {
-    setShowNotePicker(true)
-  }, [])
+    setShowNotePicker(true);
+  }, []);
 
   const handleVoiceClick = useCallback(() => {
     if (showVoice) {
-      setShowVoice(false)
-      setVoiceErrorMessage(null)
-      setVoiceAudioLevel(0)
-      setRecordingStartedAt(null)
-      setRecordingElapsedMs(0)
-      setIsVoiceProcessing(false)
-      return
+      setShowVoice(false);
+      setVoiceErrorMessage(null);
+      setVoiceAudioLevel(0);
+      setRecordingStartedAt(null);
+      setRecordingElapsedMs(0);
+      setIsVoiceProcessing(false);
+      return;
     }
 
-    setShowVoice(true)
-  }, [showVoice])
+    setShowVoice(true);
+  }, [showVoice]);
 
   useEffect(() => {
-    if (!recordingStartedAt) return
+    if (!recordingStartedAt) return;
 
     const intervalId = window.setInterval(() => {
-      setRecordingElapsedMs(Date.now() - recordingStartedAt)
-    }, 250)
+      setRecordingElapsedMs(Date.now() - recordingStartedAt);
+    }, 250);
 
     return () => {
-      window.clearInterval(intervalId)
-    }
-  }, [recordingStartedAt])
+      window.clearInterval(intervalId);
+    };
+  }, [recordingStartedAt]);
 
-  const formattedRecordingTime = `${Math.floor(recordingElapsedMs / 60000).toString().padStart(2, '0')}:${Math.floor((recordingElapsedMs % 60000) / 1000).toString().padStart(2, '0')}`
+  const formattedRecordingTime = `${Math.floor(recordingElapsedMs / 60000)
+    .toString()
+    .padStart(2, '0')}:${Math.floor((recordingElapsedMs % 60000) / 1000)
+    .toString()
+    .padStart(2, '0')}`;
 
   const waveformBars = Array.from({ length: 12 }, (_unused, index) => {
-    const offset = ((index % 4) + 1) / 4
-    const amplified = Math.max(0.12, voiceAudioLevel * offset)
-    return Math.min(1, amplified)
-  })
+    const offset = ((index % 4) + 1) / 4;
+    const amplified = Math.max(0.12, voiceAudioLevel * offset);
+    return Math.min(1, amplified);
+  });
 
   return (
     <>
@@ -232,7 +270,7 @@ export function Composer({ mode, noteId: propNoteId, chatId: propChatId, navigat
         multiple
         className="hidden"
         onChange={(event) => {
-          void handleFileInputChange(event)
+          void handleFileInputChange(event);
         }}
       />
       <input
@@ -243,7 +281,7 @@ export function Composer({ mode, noteId: propNoteId, chatId: propChatId, navigat
         capture="environment"
         className="hidden"
         onChange={(event) => {
-          void handleFileInputChange(event)
+          void handleFileInputChange(event);
         }}
       />
 
@@ -254,17 +292,17 @@ export function Composer({ mode, noteId: propNoteId, chatId: propChatId, navigat
         attachments={<ComposerAttachments />}
         tools={
           <div className="flex items-center gap-3">
-              <ComposerTools
-                attachedNotesCount={attachedNotes.length}
-                isRecording={isRecording}
-                showsAttachmentButton={presentation.showsAttachmentButton}
-                showsNotePicker={presentation.showsNotePicker}
-                showsVoiceButton={showsVoiceButton}
-                onAttachmentClick={handleAttachmentClick}
-                onCameraClick={handleCameraClick}
-                onNotePickerClick={handleNotePickerClick}
-                onVoiceClick={handleVoiceClick}
-              />
+            <ComposerTools
+              attachedNotesCount={attachedNotes.length}
+              isRecording={isRecording}
+              showsAttachmentButton={presentation.showsAttachmentButton}
+              showsNotePicker={presentation.showsNotePicker}
+              showsVoiceButton={showsVoiceButton}
+              onAttachmentClick={handleAttachmentClick}
+              onCameraClick={handleCameraClick}
+              onNotePickerClick={handleNotePickerClick}
+              onVoiceClick={handleVoiceClick}
+            />
             {showVoice ? (
               <div className="flex items-center gap-2 rounded-full border border-border bg-bg-surface px-2 py-1">
                 <SpeechInput
@@ -272,32 +310,38 @@ export function Composer({ mode, noteId: propNoteId, chatId: propChatId, navigat
                   className="h-8 w-8"
                   onAudioRecorded={transcribeAudioBlob}
                   onRecordingStateChange={(recording) => {
-                    setIsRecording(recording)
+                    setIsRecording(recording);
                     if (recording) {
-                      setRecordingStartedAt(Date.now())
-                      return
+                      setRecordingStartedAt(Date.now());
+                      return;
                     }
 
-                    setRecordingStartedAt(null)
-                    setRecordingElapsedMs(0)
+                    setRecordingStartedAt(null);
+                    setRecordingElapsedMs(0);
                   }}
                   onProcessingStateChange={setIsVoiceProcessing}
                   onAudioLevelChange={(level) => {
-                    setVoiceAudioLevel(level)
+                    setVoiceAudioLevel(level);
                     if (level <= 0 && !isRecording) {
-                      setRecordingStartedAt(null)
+                      setRecordingStartedAt(null);
                     }
                   }}
                   onTranscriptionChange={(transcript) => {
-                    if (!transcript.trim()) return
-                    setDraftText(transcript)
+                    if (!transcript.trim()) return;
+                    setDraftText(transcript);
                   }}
                   onPermissionDenied={() => {
-                    setVoiceErrorMessage('Microphone access blocked. Please allow microphone access and try again.')
+                    setVoiceErrorMessage(
+                      'Microphone access blocked. Please allow microphone access and try again.',
+                    );
                   }}
                 />
                 <div className="flex items-center gap-2 text-xs text-text-secondary">
-                  {isVoiceProcessing ? <Loader2 className="size-3 animate-spin" /> : <Mic className="size-3" />}
+                  {isVoiceProcessing ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <Mic className="size-3" />
+                  )}
                   <span>
                     {isRecording
                       ? `Recording ${formattedRecordingTime}`
@@ -339,7 +383,9 @@ export function Composer({ mode, noteId: propNoteId, chatId: propChatId, navigat
       />
 
       <NotePicker open={showNotePicker} onClose={handleCloseNotePicker} />
-      {voiceErrorMessage ? <p className="mt-2 px-2 text-xs text-destructive">{voiceErrorMessage}</p> : null}
+      {voiceErrorMessage ? (
+        <p className="mt-2 px-2 text-xs text-destructive">{voiceErrorMessage}</p>
+      ) : null}
     </>
-  )
+  );
 }

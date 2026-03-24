@@ -8,15 +8,14 @@
  * Phase 2 — Note-as-context in chat.
  */
 
+import type { Note } from '@hominem/rpc/types/notes.types';
+import { getTimeAgo } from '@hominem/utils';
 import gsap from 'gsap';
 import { Check, FileText, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import type { Note } from '@hominem/rpc/types/notes.types';
-import { Button } from '../ui/button';
-import { getTimeAgo } from '@hominem/utils';
-
 import { cn } from '../../lib/utils';
+import { Button } from '../ui/button';
 import { useComposerAttachedNotes, useComposerDataDeps } from './composer-provider';
 
 // ─── Sheet ────────────────────────────────────────────────────────────────────
@@ -33,7 +32,11 @@ export function NotePicker({ open, onClose }: NotePickerProps) {
   const { attachedNotes, attachNote, detachNote } = useComposerAttachedNotes();
   const dataDeps = useComposerDataDeps();
 
-  const { data: notes = [] } = dataDeps.useNotesList({ sortBy: 'updatedAt', sortOrder: 'desc', limit: 100 });
+  const { data: notes = [] } = dataDeps.useNotesList({
+    sortBy: 'updatedAt',
+    sortOrder: 'desc',
+    limit: 100,
+  });
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

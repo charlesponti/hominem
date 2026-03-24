@@ -1,6 +1,6 @@
+import { Command } from '@oclif/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { getHominemHomeDir } from '@/utils/paths';
@@ -57,13 +57,10 @@ export default class AgentStop extends Command {
       try {
         await fs.rm(pidPath, { force: true });
       } catch (error) {
-        this.error(
-          error instanceof Error ? error.message : 'Failed to remove stale pid file',
-          {
-            exit: 3,
-            code: 'AGENT_PID_REMOVE_FAILED',
-          }
-        );
+        this.error(error instanceof Error ? error.message : 'Failed to remove stale pid file', {
+          exit: 3,
+          code: 'AGENT_PID_REMOVE_FAILED',
+        });
       }
       const output = { stopped: false, pid };
       validateWithZod(outputSchema, output);
@@ -73,25 +70,19 @@ export default class AgentStop extends Command {
     try {
       process.kill(pid, 'SIGTERM');
     } catch (error) {
-      this.error(
-        error instanceof Error ? error.message : 'Failed to stop agent process',
-        {
-          exit: 3,
-          code: 'AGENT_STOP_SIGNAL_FAILED',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to stop agent process', {
+        exit: 3,
+        code: 'AGENT_STOP_SIGNAL_FAILED',
+      });
     }
 
     try {
       await fs.rm(pidPath, { force: true });
     } catch (error) {
-      this.error(
-        error instanceof Error ? error.message : 'Failed to remove pid file',
-        {
-          exit: 3,
-          code: 'AGENT_PID_REMOVE_FAILED',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to remove pid file', {
+        exit: 3,
+        code: 'AGENT_PID_REMOVE_FAILED',
+      });
     }
 
     const output = { stopped: true, pid };

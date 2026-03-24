@@ -1,28 +1,31 @@
-import type { QueryClient } from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/react-query';
 
-import type { ChatWithActivity } from '../chat/session-state'
-import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp'
-import { chatKeys, focusKeys } from '~/utils/services/notes/query-keys'
+import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
+import { chatKeys, noteKeys } from '~/utils/services/notes/query-keys';
 
-export const INBOX_REFRESH_QUERY_KEYS = [focusKeys.all, chatKeys.resumableSessions] as const
+import type { ChatWithActivity } from '../chat/session-state';
+
+export const INBOX_REFRESH_QUERY_KEYS = [noteKeys.all, chatKeys.resumableSessions] as const;
 
 export interface ChatInboxRefreshSnapshot {
-  chatId: string
-  noteId: string | null
-  title: string | null
-  timestamp: string
-  userId: string
+  chatId: string;
+  noteId: string | null;
+  title: string | null;
+  timestamp: string;
+  userId: string;
 }
 
-export function createChatInboxRefreshSnapshot(input: ChatInboxRefreshSnapshot): ChatInboxRefreshSnapshot {
-  return input
+export function createChatInboxRefreshSnapshot(
+  input: ChatInboxRefreshSnapshot,
+): ChatInboxRefreshSnapshot {
+  return input;
 }
 
 export function upsertInboxSessionActivity(
   sessions: ChatWithActivity[],
   snapshot: ChatInboxRefreshSnapshot,
 ): ChatWithActivity[] {
-  const existingSession = sessions.find((session) => session.id === snapshot.chatId)
+  const existingSession = sessions.find((session) => session.id === snapshot.chatId);
   const nextSession: ChatWithActivity = existingSession
     ? {
         ...existingSession,
@@ -38,16 +41,17 @@ export function upsertInboxSessionActivity(
         updatedAt: snapshot.timestamp,
         userId: snapshot.userId,
         activityAt: snapshot.timestamp,
-      }
+      };
 
   return [...sessions.filter((session) => session.id !== snapshot.chatId), nextSession].sort(
     (left, right) =>
-      parseInboxTimestamp(right.activityAt).getTime() - parseInboxTimestamp(left.activityAt).getTime(),
-  )
+      parseInboxTimestamp(right.activityAt).getTime() -
+      parseInboxTimestamp(left.activityAt).getTime(),
+  );
 }
 
 export async function invalidateInboxQueries(queryClient: QueryClient) {
   await Promise.all(
     INBOX_REFRESH_QUERY_KEYS.map((queryKey) => queryClient.invalidateQueries({ queryKey })),
-  )
+  );
 }

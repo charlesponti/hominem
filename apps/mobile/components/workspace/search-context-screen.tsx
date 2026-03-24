@@ -1,12 +1,12 @@
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 
-import { useInputContext } from '~/components/input/input-context'
-import { Text, makeStyles } from '~/theme'
+import { useInputContext } from '~/components/input/input-context';
+import { Text, makeStyles } from '~/theme';
 
 export const SearchContextScreen = () => {
-  const styles = useStyles()
-  const { message } = useInputContext()
+  const styles = useStyles();
+  const { message } = useInputContext();
 
   return (
     <View style={styles.container} testID="search-context-screen">
@@ -28,8 +28,8 @@ export const SearchContextScreen = () => {
         </Text>
       </View>
     </View>
-  )
-}
+  );
+};
 
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
@@ -53,4 +53,4 @@ const useStyles = makeStyles((t) =>
       paddingVertical: t.spacing.m_16,
     },
   }),
-)
+);

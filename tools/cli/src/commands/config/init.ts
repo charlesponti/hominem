@@ -27,7 +27,7 @@ export default class ConfigInit extends Command {
         {
           exit: 3,
           code: 'CONFIG_WRITE_FAILED',
-        }
+        },
       );
     }
 
@@ -39,4 +39,3 @@ export default class ConfigInit extends Command {
     return validateWithZod(outputSchema, output);
   }
 }
-

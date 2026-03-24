@@ -1,5 +1,5 @@
-import type { ChatMessageToolCall } from '@hominem/rpc/types/chat.types'
-import { formatMessageTimestamp } from '@hominem/utils/dates'
+import type { ChatMessageToolCall } from '@hominem/rpc/types/chat.types';
+import { formatMessageTimestamp } from '@hominem/utils/dates';
 import {
   AlertCircle,
   Check,
@@ -13,16 +13,22 @@ import {
   Volume2,
   VolumeX,
   X,
-} from 'lucide-react'
-import { memo, useEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent } from 'react'
+} from 'lucide-react';
+import {
+  memo,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react';
 
-import { playEnterRow, reducedMotion } from '../../lib/gsap/sequences'
-import { cn, copyToClipboard } from '../../lib/utils'
-import { useMessageEdit } from '../../lib/hooks/use-message-edit'
-import type { ExtendedMessage } from '../../types/chat'
-import { Button } from '../ui/button'
-import { Form } from '../ui/form'
-import { Inline, Stack } from '../layout'
+import { playEnterRow, reducedMotion } from '../../lib/gsap/sequences';
+import { useMessageEdit } from '../../lib/hooks/use-message-edit';
+import { cn, copyToClipboard } from '../../lib/utils';
+import { chatTokens } from '../../tokens';
+import type { ExtendedMessage } from '../../types/chat';
 import {
   MarkdownContent,
   Message,
@@ -31,27 +37,29 @@ import {
   Reasoning,
   Tool,
   ToolInput,
-} from '../ai-elements'
+} from '../ai-elements';
+import { Inline, Stack } from '../layout';
+import { Button } from '../ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '../ui/dropdown-menu'
-import { Textarea } from '../ui/textarea'
-import { chatTokens } from '../../tokens'
+} from '../ui/dropdown-menu';
+import { Form } from '../ui/form';
+import { Textarea } from '../ui/textarea';
 
 interface ChatMessageProps {
-  message: ExtendedMessage
-  showDebug?: boolean
-  isStreaming?: boolean
-  speakingId?: string | null
-  speechLoadingId?: string | null
-  onRegenerate?: (() => void) | undefined
-  onEdit?: ((messageId: string, newContent: string) => void) | undefined
-  onDelete?: (() => void) | undefined
-  onSpeak?: ((messageId: string, content: string) => void) | undefined
+  message: ExtendedMessage;
+  showDebug?: boolean;
+  isStreaming?: boolean;
+  speakingId?: string | null;
+  speechLoadingId?: string | null;
+  onRegenerate?: (() => void) | undefined;
+  onEdit?: ((messageId: string, newContent: string) => void) | undefined;
+  onDelete?: (() => void) | undefined;
+  onSpeak?: ((messageId: string, content: string) => void) | undefined;
 }
 
 export const ChatMessage = memo(function ChatMessage({
@@ -65,52 +73,54 @@ export const ChatMessage = memo(function ChatMessage({
   onDelete,
   onSpeak,
 }: ChatMessageProps) {
-  const isUser = message.role === 'user'
-  const hasContent = Boolean(message.content && message.content.trim().length > 0)
-  const hasToolCalls = Boolean(message.toolCalls && Array.isArray(message.toolCalls) && message.toolCalls.length > 0)
-  const hasReasoning = Boolean(message.reasoning && message.reasoning.trim().length > 0)
-  const isErrorMessage = !isUser && message.content?.startsWith('[Error:')
-  const [copied, setCopied] = useState(false)
-  const rowRef = useRef<HTMLDivElement>(null)
+  const isUser = message.role === 'user';
+  const hasContent = Boolean(message.content && message.content.trim().length > 0);
+  const hasToolCalls = Boolean(
+    message.toolCalls && Array.isArray(message.toolCalls) && message.toolCalls.length > 0,
+  );
+  const hasReasoning = Boolean(message.reasoning && message.reasoning.trim().length > 0);
+  const isErrorMessage = !isUser && message.content?.startsWith('[Error:');
+  const [copied, setCopied] = useState(false);
+  const rowRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!rowRef.current) return
-    if (reducedMotion()) return
-    playEnterRow(rowRef.current, 0)
-  }, [])
+    if (!rowRef.current) return;
+    if (reducedMotion()) return;
+    playEnterRow(rowRef.current, 0);
+  }, []);
 
   const handleCopyMessage = async () => {
-    const success = await copyToClipboard(message.content || '')
+    const success = await copyToClipboard(message.content || '');
     if (success) {
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 2000)
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
     }
-  }
+  };
 
   const handleShareMessage = async () => {
-    const text = message.content
-    if (!text) return
+    const text = message.content;
+    if (!text) return;
     if (typeof navigator !== 'undefined' && navigator.share) {
-      await navigator.share({ text }).catch(() => null)
+      await navigator.share({ text }).catch(() => null);
     } else {
-      const success = await copyToClipboard(text)
+      const success = await copyToClipboard(text);
       if (success) {
-        setCopied(true)
-        window.setTimeout(() => setCopied(false), 2000)
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 2000);
       }
     }
-  }
+  };
 
-  const isSpeaking = speakingId === message.id
-  const isSpeechLoading = speechLoadingId === message.id
+  const isSpeaking = speakingId === message.id;
+  const isSpeechLoading = speechLoadingId === message.id;
 
   const { isEditing, editContent, setEditContent, startEdit, cancelEdit, saveEdit, canSave } =
     useMessageEdit({
       initialContent: message.content || '',
       ...(onEdit && { onSave: (newContent) => onEdit(message.id, newContent) }),
-    })
+    });
 
-  const timestamp = message.createdAt ? formatMessageTimestamp(message.createdAt) : ''
+  const timestamp = message.createdAt ? formatMessageTimestamp(message.createdAt) : '';
 
   return (
     <div
@@ -165,22 +175,24 @@ export const ChatMessage = memo(function ChatMessage({
               className="flex w-full flex-col gap-3"
               aria-label="Edit message"
               onSubmit={(event: FormEvent<HTMLFormElement>) => {
-                event.preventDefault()
-                void saveEdit()
+                event.preventDefault();
+                void saveEdit();
               }}
             >
               <Textarea
                 value={editContent}
-                onChange={(event: ChangeEvent<HTMLTextAreaElement>) => setEditContent(event.target.value)}
+                onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
+                  setEditContent(event.target.value)
+                }
                 className="min-h-[100px] resize-none rounded-md border-default bg-background"
                 autoFocus
                 aria-label="Message content"
                 aria-describedby="edit-instructions"
                 onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => {
                   if (event.key === 'Escape') {
-                    cancelEdit()
+                    cancelEdit();
                   } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                    void saveEdit()
+                    void saveEdit();
                   }
                 }}
               />
@@ -188,18 +200,29 @@ export const ChatMessage = memo(function ChatMessage({
                 Press Escape to cancel, or Ctrl+Enter to save
               </span>
               <Inline gap="sm" justify="end">
-                <Button variant="outline" size="sm" onClick={cancelEdit} aria-label="Cancel editing">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={cancelEdit}
+                  aria-label="Cancel editing"
+                >
                   <X className="mr-2 size-4" aria-hidden="true" />
                   Cancel
                 </Button>
-                <Button type="submit" size="sm" disabled={!canSave} aria-label="Save edited message">
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={!canSave}
+                  aria-label="Save edited message"
+                >
                   <Save className="mr-2 size-4" aria-hidden="true" />
                   Save
                 </Button>
               </Inline>
             </Form>
           ) : (
-            !isErrorMessage && hasContent && (
+            !isErrorMessage &&
+            hasContent && (
               <>
                 {isUser ? (
                   <div
@@ -259,10 +282,13 @@ export const ChatMessage = memo(function ChatMessage({
 
           {!isStreaming && (
             <div
-              className={cn('flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100', {
-                'justify-end': isUser,
-                'justify-start': !isUser,
-              })}
+              className={cn(
+                'flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100',
+                {
+                  'justify-end': isUser,
+                  'justify-start': !isUser,
+                },
+              )}
             >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -341,5 +367,5 @@ export const ChatMessage = memo(function ChatMessage({
         </MessageContent>
       </Message>
     </div>
-  )
-})
+  );
+});

@@ -1,5 +1,5 @@
-import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { useApiClient } from '@hominem/rpc/react';
+import { FlashList, type ListRenderItem } from '@shopify/flash-list';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
@@ -8,10 +8,13 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { FadeIn } from '~/components/animated/fade-in';
 import { makeStyles, Text, theme } from '~/theme';
-import type { ChatWithActivity } from '~/utils/services/chat/session-state';
-import { getArchivedChatsWithActivity, getInboxChatsWithActivity } from '~/utils/services/chat/session-state';
-import { chatKeys } from '~/utils/services/notes/query-keys';
 import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
+import type { ChatWithActivity } from '~/utils/services/chat/session-state';
+import {
+  getArchivedChatsWithActivity,
+  getInboxChatsWithActivity,
+} from '~/utils/services/chat/session-state';
+import { chatKeys } from '~/utils/services/notes/query-keys';
 
 import AppIcon from '../ui/icon';
 
@@ -58,7 +61,11 @@ export const SessionCard = memo(({ chat, isActive }: SessionCardProps) => {
     <FadeIn>
       <Pressable
         onPress={handlePress}
-        style={({ pressed }) => [styles.card, isActive && styles.activeCard, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.card,
+          isActive && styles.activeCard,
+          pressed && styles.pressed,
+        ]}
         accessibilityLabel={`Resume session: ${label}`}
         accessibilityRole="button"
       >
@@ -101,7 +108,9 @@ export const SessionList = () => {
 
   return (
     <View style={styles.list}>
-      <Text variant="small" color="text-tertiary" style={styles.sectionLabel}>RECENT CONVERSATIONS</Text>
+      <Text variant="small" color="text-tertiary" style={styles.sectionLabel}>
+        RECENT CONVERSATIONS
+      </Text>
       <FlashList
         data={sessions}
         keyExtractor={keyExtractor}
@@ -114,8 +123,8 @@ export const SessionList = () => {
 };
 
 function formatAge(activityAt: string): string {
-  const parsed = parseInboxTimestamp(activityAt)
-  const diffMs = Date.now() - parsed.getTime()
+  const parsed = parseInboxTimestamp(activityAt);
+  const diffMs = Date.now() - parsed.getTime();
   const diffH = Math.floor(diffMs / (1000 * 60 * 60));
   if (diffH < 1) return 'Just now';
   if (diffH < 24) return `${diffH}h ago`;

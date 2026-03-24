@@ -1,6 +1,6 @@
+import { Args, Flags, Command } from '@oclif/core';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { Args, Flags, Command } from '@oclif/core';
 import { z } from 'zod';
 
 import { validateWithZod } from '@/utils/zod-validation';
@@ -89,13 +89,10 @@ export default class FilesInventory extends Command {
         // Re-throw oclif errors
         throw error;
       }
-      this.error(
-        error instanceof Error ? error.message : 'Failed to inventory files',
-        {
-          exit: 3,
-          code: 'FILES_INVENTORY_FAILED',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to inventory files', {
+        exit: 3,
+        code: 'FILES_INVENTORY_FAILED',
+      });
     }
 
     const output = {

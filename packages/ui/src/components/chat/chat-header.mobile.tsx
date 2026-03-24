@@ -1,19 +1,19 @@
-import type { SessionSource } from '@hominem/chat-services/types'
-import { StyleSheet, View } from 'react-native'
+import type { SessionSource } from '@hominem/chat-services/types';
+import { StyleSheet, View } from 'react-native';
 
-import { colors, fontFamiliesNative, fontSizes, radiiNative, spacing } from '../../tokens'
-import { Button } from '../ui/button.native'
-import { Text } from '../typography/text.native'
-import { ContextAnchor } from './context-anchor.mobile'
-import type { ChatRenderIcon } from './chat.types'
+import { colors, fontFamiliesNative, fontSizes, radiiNative, spacing } from '../../tokens';
+import { Text } from '../typography/text.native';
+import { Button } from '../ui/button.native';
+import type { ChatRenderIcon } from './chat.types';
+import { ContextAnchor } from './context-anchor.mobile';
 
 interface ChatHeaderProps {
-  topInset: number
-  resolvedSource: SessionSource
-  statusCopy: string
-  onOpenSearch: () => void
-  onOpenMenu: () => void
-  renderIcon: ChatRenderIcon
+  topInset: number;
+  resolvedSource: SessionSource;
+  statusCopy: string;
+  onOpenSearch: () => void;
+  onOpenMenu: () => void;
+  renderIcon: ChatRenderIcon;
 }
 
 export function ChatHeader({
@@ -29,7 +29,11 @@ export function ChatHeader({
       <View style={styles.headerRow}>
         <View style={styles.headerCenter}>
           <ContextAnchor showTitle={false} source={resolvedSource} />
-          {statusCopy ? <Text color="text-tertiary" style={styles.headerStatus}>{statusCopy}</Text> : null}
+          {statusCopy ? (
+            <Text color="text-tertiary" style={styles.headerStatus}>
+              {statusCopy}
+            </Text>
+          ) : null}
         </View>
         <View style={styles.headerActions}>
           <Button
@@ -40,7 +44,11 @@ export function ChatHeader({
             testID="chat-search-toggle"
             variant="ghost"
           >
-            {renderIcon('magnifying-glass', { color: colors.foreground, size: 14, style: styles.headerIcon })}
+            {renderIcon('magnifying-glass', {
+              color: colors.foreground,
+              size: 14,
+              style: styles.headerIcon,
+            })}
           </Button>
           <Button
             accessibilityLabel="Conversation actions"
@@ -54,7 +62,7 @@ export function ChatHeader({
         </View>
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -98,4 +106,4 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.xs,
     opacity: 0.7,
   },
-})
+});

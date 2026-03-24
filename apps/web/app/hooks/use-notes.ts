@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useRpcMutation, useRpcQuery } from '@hominem/rpc/react';
 import type {
   NotesListInput,
@@ -8,6 +7,8 @@ import type {
   NotesUpdateOutput,
   NotesDeleteOutput,
 } from '@hominem/rpc/types/notes.types';
+import { useQueryClient } from '@tanstack/react-query';
+
 import { notesQueryKeys } from '~/lib/query-keys';
 
 export function useNotesList(options: NotesListInput = {}) {

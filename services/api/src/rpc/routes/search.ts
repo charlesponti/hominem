@@ -1,8 +1,8 @@
-import { ValidationError, InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
+import { ValidationError, InternalError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 export interface SearchResult {

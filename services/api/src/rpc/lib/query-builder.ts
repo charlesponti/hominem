@@ -192,7 +192,9 @@ export function buildQueryConfig(config: {
   pagination: PaginationOptions;
 } {
   const conditions = config.filters ? buildWhereClause(config.filters) : [];
-  const sortValid = config.sort ? validateSortField(config.sort.field, config.allowedSortFields) : true;
+  const sortValid = config.sort
+    ? validateSortField(config.sort.field, config.allowedSortFields)
+    : true;
 
   return {
     conditions,

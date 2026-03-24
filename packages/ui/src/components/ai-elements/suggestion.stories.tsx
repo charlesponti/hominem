@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { Suggestion, Suggestions } from './suggestion';
 
 const meta: Meta<typeof Suggestions> = {
@@ -20,7 +21,5 @@ export const Default: Story = {
 };
 
 export const SingleSuggestion: Story = {
-  render: () => (
-    <Suggestion suggestion="Tell me more" onSuggestionClick={() => {}} />
-  ),
+  render: () => <Suggestion suggestion="Tell me more" onSuggestionClick={() => {}} />,
 };

@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
@@ -6,19 +6,19 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
-} from 'react-native-reanimated'
+} from 'react-native-reanimated';
 
-import { colors, durations, radiiNative, spacing } from '../../tokens'
+import { colors, durations, radiiNative, spacing } from '../../tokens';
 
-const SHIMMER_DURATION = durations.standard * 5
+const SHIMMER_DURATION = durations.standard * 5;
 
 function usePulse() {
-  const opacity = useSharedValue(0.4)
+  const opacity = useSharedValue(0.4);
 
   useAnimatedReaction(
     () => opacity.value,
     (_current: number, prev: number | null) => {
-      'worklet'
+      'worklet';
       if (prev === null) {
         opacity.value = withRepeat(
           withSequence(
@@ -26,27 +26,27 @@ function usePulse() {
             withTiming(0.4, { duration: SHIMMER_DURATION }),
           ),
           -1,
-        )
+        );
       }
     },
-  )
+  );
 
-  return useAnimatedStyle(() => ({ opacity: opacity.value }))
+  return useAnimatedStyle(() => ({ opacity: opacity.value }));
 }
 
 interface ChatShimmerMessageProps {
-  variant?: 'assistant' | 'user'
+  variant?: 'assistant' | 'user';
 }
 
 export function ChatShimmerMessage({ variant = 'assistant' }: ChatShimmerMessageProps) {
-  const animatedStyle = usePulse()
+  const animatedStyle = usePulse();
 
   if (variant === 'user') {
     return (
       <View style={[styles.row, styles.userRow]}>
         <Animated.View style={[styles.userBubble, animatedStyle]} />
       </View>
-    )
+    );
   }
 
   return (
@@ -56,7 +56,7 @@ export function ChatShimmerMessage({ variant = 'assistant' }: ChatShimmerMessage
         <Animated.View style={[styles.line, styles.lineShort, animatedStyle]} />
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -90,4 +90,4 @@ const styles = StyleSheet.create({
   userRow: {
     alignItems: 'flex-end',
   },
-})
+});

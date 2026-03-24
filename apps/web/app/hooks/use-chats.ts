@@ -1,6 +1,7 @@
 import { useRpcMutation } from '@hominem/rpc/react';
 import type { Chat } from '@hominem/rpc/types/chat.types';
 import { useQueryClient } from '@tanstack/react-query';
+
 import { chatQueryKeys } from '~/lib/query-keys';
 
 export function useDeleteChat() {
@@ -16,7 +17,13 @@ export function useDeleteChat() {
   );
 }
 
-export function useArchiveChat({ chatId: _chatId, onSuccess }: { chatId: string; onSuccess?: (chat: Chat) => void }) {
+export function useArchiveChat({
+  chatId: _chatId,
+  onSuccess,
+}: {
+  chatId: string;
+  onSuccess?: (chat: Chat) => void;
+}) {
   const queryClient = useQueryClient();
 
   return useRpcMutation<Chat, { chatId: string }>(

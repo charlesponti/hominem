@@ -1,13 +1,13 @@
-import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types'
-import { StyleSheet, View } from 'react-native'
+import type { ArtifactType, ThoughtLifecycleState } from '@hominem/chat-services/types';
+import { StyleSheet, View } from 'react-native';
 
-import { colors, spacing } from '../../tokens'
-import { Button } from '../ui/button.native'
+import { colors, spacing } from '../../tokens';
+import { Button } from '../ui/button.native';
 
 interface ArtifactActionsProps {
-  state: ThoughtLifecycleState
-  messageCount: number
-  onTransform: (type: ArtifactType) => void
+  state: ThoughtLifecycleState;
+  messageCount: number;
+  onTransform: (type: ArtifactType) => void;
 }
 
 const ACTIONS: { type: ArtifactType; label: string }[] = [
@@ -15,22 +15,22 @@ const ACTIONS: { type: ArtifactType; label: string }[] = [
   { type: 'task', label: '→ TASK' },
   { type: 'task_list', label: '→ LIST' },
   { type: 'tracker', label: '→ TRACKER' },
-]
+];
 
-const ENABLED: ArtifactType[] = ['note']
-const BLOCKING: ThoughtLifecycleState[] = ['classifying', 'reviewing_changes', 'persisting']
+const ENABLED: ArtifactType[] = ['note'];
+const BLOCKING: ThoughtLifecycleState[] = ['classifying', 'reviewing_changes', 'persisting'];
 
 export function ArtifactActions({ state, messageCount, onTransform }: ArtifactActionsProps) {
-  if (messageCount === 0) return null
+  if (messageCount === 0) return null;
 
-  const isComposing = state === 'composing'
-  const isBlocked = BLOCKING.includes(state)
+  const isComposing = state === 'composing';
+  const isBlocked = BLOCKING.includes(state);
 
   return (
     <View style={[styles.row, isComposing ? styles.dimmed : null]}>
       {ACTIONS.map(({ type, label }) => {
-        const enabled = ENABLED.includes(type)
-        const disabled = !enabled || isBlocked
+        const enabled = ENABLED.includes(type);
+        const disabled = !enabled || isBlocked;
 
         return (
           <Button
@@ -44,10 +44,10 @@ export function ArtifactActions({ state, messageCount, onTransform }: ArtifactAc
           >
             {label}
           </Button>
-        )
+        );
       })}
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -69,4 +69,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing[4],
     paddingVertical: spacing[3],
   },
-})
+});

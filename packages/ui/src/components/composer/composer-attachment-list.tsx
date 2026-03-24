@@ -1,18 +1,18 @@
-import { X } from 'lucide-react'
-import { memo } from 'react'
+import { X } from 'lucide-react';
+import { memo } from 'react';
 
-import type { UploadedFile } from '../../types/upload'
+import type { UploadedFile } from '../../types/upload';
 
 export const ComposerAttachmentList = memo(function ComposerAttachmentList({
   errors,
   files,
   onRemove,
 }: {
-  errors: string[]
-  files: UploadedFile[]
-  onRemove: (fileId: string) => void
+  errors: string[];
+  files: UploadedFile[];
+  onRemove: (fileId: string) => void;
 }) {
-  if (files.length === 0 && errors.length === 0) return null
+  if (files.length === 0 && errors.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -45,5 +45,5 @@ export const ComposerAttachmentList = memo(function ComposerAttachmentList({
         </div>
       ))}
     </div>
-  )
-})
+  );
+});

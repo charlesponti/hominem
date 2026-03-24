@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 
 import type { AppContext } from '../middleware/auth';
-
 import { chatsRoutes } from './chats';
 import { invitesRoutes } from './invites';
 import { messagesRoutes } from './messages';

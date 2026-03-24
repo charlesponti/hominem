@@ -1,11 +1,11 @@
-import AwsS3 from '@uppy/aws-s3';
-import Uppy, { type Body, type Meta, type UppyFile } from '@uppy/core';
 import { useApiClient } from '@hominem/rpc/react';
 import {
   CHAT_UPLOAD_ALLOWED_MIME_TYPES,
   CHAT_UPLOAD_MAX_FILE_COUNT,
   CHAT_UPLOAD_MAX_FILE_SIZE_BYTES,
 } from '@hominem/utils/upload';
+import AwsS3 from '@uppy/aws-s3';
+import Uppy, { type Body, type Meta, type UppyFile } from '@uppy/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { UploadedFile } from '~/lib/types/upload';
@@ -172,7 +172,9 @@ export function useFileUpload(): UseFileUploadReturn {
         }),
         ...completedFiles.flatMap((entry, index) =>
           entry.status === 'rejected'
-            ? [`${fileArray[index]?.name || 'Unknown file'}: ${entry.reason instanceof Error ? entry.reason.message : 'Upload failed'}`]
+            ? [
+                `${fileArray[index]?.name || 'Unknown file'}: ${entry.reason instanceof Error ? entry.reason.message : 'Upload failed'}`,
+              ]
             : [],
         ),
       ];

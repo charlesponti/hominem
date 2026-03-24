@@ -1,3 +1,4 @@
+import type { Person } from '@hominem/rpc/types/people.types';
 import { Button } from '@hominem/ui/button';
 import { Badge } from '@hominem/ui/components/ui/badge';
 import {
@@ -21,8 +22,6 @@ import { Check, Loader2, Plus, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 
 import { usePeople, useCreatePerson } from '../../../hooks/use-people';
-
-import type { Person } from '@hominem/rpc/types/people.types';
 
 interface PeopleMultiSelectProps {
   value: string[];

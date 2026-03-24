@@ -1,13 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { DeleteInviteButton } from './delete-invite-button'
+import type { Meta, StoryObj } from '@storybook/react';
+
+import { DeleteInviteButton } from './delete-invite-button';
 
 const meta: Meta<typeof DeleteInviteButton> = {
   title: 'Invites/DeleteInviteButton',
   component: DeleteInviteButton,
   tags: ['autodocs'],
-}
-export default meta
-type Story = StoryObj<typeof DeleteInviteButton>
+};
+export default meta;
+type Story = StoryObj<typeof DeleteInviteButton>;
 
 export const Default: Story = {
   args: {
@@ -15,4 +16,4 @@ export const Default: Story = {
     invitedUserEmail: 'jane@example.com',
     onDelete: (email) => console.log('Deleted:', email),
   },
-}
+};

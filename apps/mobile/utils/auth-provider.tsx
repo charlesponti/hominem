@@ -65,11 +65,7 @@ function toAuthUserProfile(localProfile: User | null): AuthState['user'] {
   } as AuthState['user'];
 }
 
-function fromSignInUser(user: {
-  id: string;
-  email: string;
-  name?: string | null;
-}): User {
+function fromSignInUser(user: { id: string; email: string; name?: string | null }): User {
   return {
     id: user.id,
     email: user.email,

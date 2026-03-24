@@ -70,9 +70,7 @@ export const WithError = {
 };
 
 export const Success = {
-  render: () => (
-    <EmailSignInPreview success message="Verification code sent! Check your inbox." />
-  ),
+  render: () => <EmailSignInPreview success message="Verification code sent! Check your inbox." />,
 };
 
 export const Submitting = {

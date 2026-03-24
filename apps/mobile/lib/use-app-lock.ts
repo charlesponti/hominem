@@ -1,7 +1,9 @@
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
+
 import { APP_NAME } from '~/utils/constants';
+
 import { storage } from './storage';
 
 const LOCK_ENABLED_KEY = 'app_lock_enabled';

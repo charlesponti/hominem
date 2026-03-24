@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { Queue, QueueContent, QueueHeader, QueueItem } from './queue';
 
 const meta: Meta<typeof Queue> = {
@@ -14,9 +15,24 @@ export const Default: Story = {
     <Queue className="max-w-sm">
       <QueueHeader title="Task Queue" count={3} />
       <QueueContent>
-        <QueueItem id="1" status="completed" title="Fetch user data" description="Retrieved 42 records." />
-        <QueueItem id="2" status="running" title="Process records" description="Analyzing each entry..." />
-        <QueueItem id="3" status="pending" title="Generate report" description="Waiting for processing." />
+        <QueueItem
+          id="1"
+          status="completed"
+          title="Fetch user data"
+          description="Retrieved 42 records."
+        />
+        <QueueItem
+          id="2"
+          status="running"
+          title="Process records"
+          description="Analyzing each entry..."
+        />
+        <QueueItem
+          id="3"
+          status="pending"
+          title="Generate report"
+          description="Waiting for processing."
+        />
       </QueueContent>
     </Queue>
   ),

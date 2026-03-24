@@ -1,8 +1,8 @@
 import { getPlaidItemByUserAndItemId, updatePlaidItemStatusById } from '@hominem/finance-services';
-import { UnauthorizedError, NotFoundError, InternalError } from '../../../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
+import { UnauthorizedError, NotFoundError, InternalError } from '../../../errors';
 import { plaidClient } from '../../../lib/plaid';
 import type { AppEnv } from '../../../server';
 

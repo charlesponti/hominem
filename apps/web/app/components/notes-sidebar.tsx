@@ -10,26 +10,6 @@
 
 import { useAuthContext } from '@hominem/auth';
 import {
-  LogOut,
-  MoreHorizontal,
-  PenSquare,
-  FileText,
-  MessageSquare,
-  Search,
-  Settings,
-  Trash2,
-} from 'lucide-react';
-import gsap from 'gsap';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
-
-import { WEB_BRAND } from '~/lib/brand';
-import { useDeleteNote } from '~/hooks/use-notes';
-import { useDeleteChat } from '~/hooks/use-chats';
-import { useInboxStream, type InboxStreamItem } from '~/hooks/use-inbox-stream';
-import { cn } from '~/lib/utils';
-
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -45,6 +25,25 @@ import {
   SidebarInput,
   useSidebar,
 } from '@hominem/ui/components/ui/sidebar';
+import gsap from 'gsap';
+import {
+  LogOut,
+  MoreHorizontal,
+  PenSquare,
+  FileText,
+  MessageSquare,
+  Search,
+  Settings,
+  Trash2,
+} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router';
+
+import { useDeleteChat } from '~/hooks/use-chats';
+import { useInboxStream, type InboxStreamItem } from '~/hooks/use-inbox-stream';
+import { useDeleteNote } from '~/hooks/use-notes';
+import { WEB_BRAND } from '~/lib/brand';
+import { cn } from '~/lib/utils';
 
 // ─── Filter ───────────────────────────────────────────────────────────────────
 
@@ -95,7 +94,9 @@ function SidebarFocusItem({
           )}
         >
           <div className="truncate text-sm font-medium">{item.title || 'Untitled'}</div>
-          <div className="truncate text-xs text-sidebar-foreground/50">{formatTimestamp(item.updatedAt)}</div>
+          <div className="truncate text-xs text-sidebar-foreground/50">
+            {formatTimestamp(item.updatedAt)}
+          </div>
         </Link>
 
         <DropdownMenu>
@@ -133,10 +134,21 @@ function formatTimestamp(value: string): string {
 
 function UserAvatar({ displayName, avatarUrl }: { displayName?: string; avatarUrl?: string }) {
   if (avatarUrl) {
-    return <img src={avatarUrl} alt={displayName ?? 'User'} className="size-8 rounded-full object-cover" />;
+    return (
+      <img
+        src={avatarUrl}
+        alt={displayName ?? 'User'}
+        className="size-8 rounded-full object-cover"
+      />
+    );
   }
   const initials = displayName
-    ? displayName.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase()
+    ? displayName
+        .split(' ')
+        .slice(0, 2)
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
     : '?';
   return (
     <div className="flex size-8 items-center justify-center rounded-full border border-border/60 bg-bg-surface text-xs font-semibold text-foreground select-none">
@@ -185,7 +197,14 @@ export default function NotesSidebar() {
         gsap.fromTo(
           rows,
           { opacity: 0, x: -6 },
-          { opacity: 1, x: 0, duration: 0.15, ease: 'power2.out', stagger: 0.03, overwrite: 'auto' },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.15,
+            ease: 'power2.out',
+            stagger: 0.03,
+            overwrite: 'auto',
+          },
         );
       }
     }
@@ -291,7 +310,10 @@ export default function NotesSidebar() {
                   <div className="space-y-1 px-2">
                     {Array.from({ length: 6 }).map((_, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: stable skeleton
-                      <div key={i} className="h-12 animate-pulse rounded-3xl bg-sidebar-accent/30" />
+                      <div
+                        key={i}
+                        className="h-12 animate-pulse rounded-3xl bg-sidebar-accent/30"
+                      />
                     ))}
                   </div>
                 ) : visible.length === 0 ? (
@@ -318,9 +340,7 @@ export default function NotesSidebar() {
       {/* Footer */}
       <SidebarFooter className="border-t border-sidebar-border/40 px-3 pb-3 pt-1">
         <div className="group flex items-center gap-2 py-1">
-          <UserAvatar
-            {...(displayName !== undefined ? { displayName } : {})}
-          />
+          <UserAvatar {...(displayName !== undefined ? { displayName } : {})} />
           {!isCollapsed && (
             <>
               <div className="min-w-0 flex-1">

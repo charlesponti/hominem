@@ -1,7 +1,7 @@
-import type { ClassificationReviewProps } from '@hominem/chat-services/types'
-import { Inline, Stack } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { Dialog, DialogContent, DialogTitle } from '@hominem/ui/dialog'
+import type { ClassificationReviewProps } from '@hominem/chat-services/types';
+import { Inline, Stack } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '@hominem/ui/dialog';
 
 export function ClassificationReview({
   proposedType,
@@ -54,5 +54,5 @@ export function ClassificationReview({
         </Inline>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

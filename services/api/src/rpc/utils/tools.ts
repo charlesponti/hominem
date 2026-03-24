@@ -1,10 +1,6 @@
-import type { ToolSet } from 'ai';
-
-import {
-  recommendWorkoutTool,
-  assessMentalWellnessTool,
-} from '@hominem/health-services/tools';
+import { recommendWorkoutTool, assessMentalWellnessTool } from '@hominem/health-services/tools';
 import { createNoteTool, listNotesTool } from '@hominem/notes-services';
+import type { ToolSet } from 'ai';
 
 export const getAvailableTools = (userId: string): ToolSet => ({
   create_note: createNoteTool(userId),

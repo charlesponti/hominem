@@ -1,10 +1,9 @@
+import { UserAuthService } from '@hominem/auth/server';
+import type { UserDeleteAccountOutput } from '@hominem/rpc/types/user.types';
+import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
-import { UserAuthService } from '@hominem/auth/server';
-import { logger } from '@hominem/utils/logger';
-
 import { authMiddleware, type AppContext } from '../middleware/auth';
-import type { UserDeleteAccountOutput } from '@hominem/rpc/types/user.types';
 
 /**
  * User Routes

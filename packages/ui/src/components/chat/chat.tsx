@@ -1,46 +1,46 @@
-import type { SessionSource } from '@hominem/chat-services/types'
-import type { ArtifactType } from '@hominem/chat-services/types'
-import { useRef, useState } from 'react'
+import type { SessionSource } from '@hominem/chat-services/types';
+import type { ArtifactType } from '@hominem/chat-services/types';
+import { useRef, useState } from 'react';
 
-import { Button } from '../ui/button'
-import { ChatHeader } from './chat-header'
-import { ChatMessages, type ChatMessagesHandle } from './chat-messages'
-import { VoiceModeOverlay, type VoiceModeOverlayState } from './voice-mode-overlay'
-import type { ChatRenderIcon } from './chat.types'
-import type { ExtendedMessage } from '../../types/chat'
+import type { ExtendedMessage } from '../../types/chat';
+import { Button } from '../ui/button';
+import { ChatHeader } from './chat-header';
+import { ChatMessages, type ChatMessagesHandle } from './chat-messages';
+import type { ChatRenderIcon } from './chat.types';
+import { VoiceModeOverlay, type VoiceModeOverlayState } from './voice-mode-overlay';
 
 interface ChatProps {
-  source: SessionSource
-  statusCopy: string
-  resolvedSource: SessionSource
-  topInset?: number
-  renderIcon: ChatRenderIcon
-  messages: ExtendedMessage[]
-  status?: string
-  isLoading?: boolean
-  error?: Error | null
-  showDebug?: boolean
-  speakingId?: string | null
-  speechLoadingId?: string | null
-  speechErrorMessage?: string | null
-  isVoiceModeActive?: boolean
-  voiceModeState?: VoiceModeOverlayState
-  voiceModeErrorMessage?: string | null
-  isVoiceModeRecording?: boolean
-  canTransform?: boolean
-  isDebugEnabled?: boolean
-  isArchiving?: boolean
-  onDebugChange?: ((enabled: boolean) => void) | undefined
-  onTransform?: ((type: ArtifactType) => void) | undefined
-  onArchive?: (() => void) | undefined
-  onOpenSearch?: (() => void) | undefined
-  onToggleVoiceMode?: (() => void) | undefined
-  onStartVoiceModeRecording?: (() => void) | undefined
-  onStopVoiceModeRecording?: (() => void) | undefined
-  onDelete?: ((messageId: string) => void) | undefined
-  onEdit?: ((messageId: string, newContent: string) => void) | undefined
-  onRegenerate?: ((messageId: string) => void) | undefined
-  onSpeak?: ((messageId: string, content: string) => void) | undefined
+  source: SessionSource;
+  statusCopy: string;
+  resolvedSource: SessionSource;
+  topInset?: number;
+  renderIcon: ChatRenderIcon;
+  messages: ExtendedMessage[];
+  status?: string;
+  isLoading?: boolean;
+  error?: Error | null;
+  showDebug?: boolean;
+  speakingId?: string | null;
+  speechLoadingId?: string | null;
+  speechErrorMessage?: string | null;
+  isVoiceModeActive?: boolean;
+  voiceModeState?: VoiceModeOverlayState;
+  voiceModeErrorMessage?: string | null;
+  isVoiceModeRecording?: boolean;
+  canTransform?: boolean;
+  isDebugEnabled?: boolean;
+  isArchiving?: boolean;
+  onDebugChange?: ((enabled: boolean) => void) | undefined;
+  onTransform?: ((type: ArtifactType) => void) | undefined;
+  onArchive?: (() => void) | undefined;
+  onOpenSearch?: (() => void) | undefined;
+  onToggleVoiceMode?: (() => void) | undefined;
+  onStartVoiceModeRecording?: (() => void) | undefined;
+  onStopVoiceModeRecording?: (() => void) | undefined;
+  onDelete?: ((messageId: string) => void) | undefined;
+  onEdit?: ((messageId: string, newContent: string) => void) | undefined;
+  onRegenerate?: ((messageId: string) => void) | undefined;
+  onSpeak?: ((messageId: string, content: string) => void) | undefined;
 }
 
 export function Chat({
@@ -76,19 +76,19 @@ export function Chat({
   onRegenerate,
   onSpeak,
 }: ChatProps) {
-  const [showMenu, setShowMenu] = useState(false)
-  const messagesHandleRef = useRef<ChatMessagesHandle | null>(null)
+  const [showMenu, setShowMenu] = useState(false);
+  const messagesHandleRef = useRef<ChatMessagesHandle | null>(null);
 
-  void source
+  void source;
 
   const handleOpenSearch = () => {
     if (onOpenSearch) {
-      onOpenSearch()
-      return
+      onOpenSearch();
+      return;
     }
 
-    messagesHandleRef.current?.showSearch()
-  }
+    messagesHandleRef.current?.showSearch();
+  };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-background text-foreground">
@@ -110,21 +110,51 @@ export function Chat({
               Search
             </Button>
             {onDebugChange ? (
-              <Button type="button" variant="ghost" size="sm" onClick={() => onDebugChange(!isDebugEnabled)}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onDebugChange(!isDebugEnabled)}
+              >
                 {isDebugEnabled ? 'Hide debug metadata' : 'Show debug metadata'}
               </Button>
             ) : null}
             {onArchive ? (
-              <Button type="button" variant="ghost" size="sm" onClick={onArchive} disabled={isArchiving} className="text-destructive">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onArchive}
+                disabled={isArchiving}
+                className="text-destructive"
+              >
                 {isArchiving ? 'Archiving...' : 'Archive chat'}
               </Button>
             ) : null}
             {onTransform ? (
               <>
-                <Button type="button" variant="ghost" size="sm" onClick={() => onTransform('note')}>Transform to note</Button>
-                <Button type="button" variant="ghost" size="sm" onClick={() => onTransform('task')}>Transform to task</Button>
-                <Button type="button" variant="ghost" size="sm" onClick={() => onTransform('task_list')}>Transform to task list</Button>
-                <Button type="button" variant="ghost" size="sm" onClick={() => onTransform('tracker')}>Transform to tracker</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => onTransform('note')}>
+                  Transform to note
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => onTransform('task')}>
+                  Transform to task
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onTransform('task_list')}
+                >
+                  Transform to task list
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onTransform('tracker')}
+                >
+                  Transform to tracker
+                </Button>
               </>
             ) : null}
           </div>
@@ -162,5 +192,5 @@ export function Chat({
         onStopRecording={() => onStopVoiceModeRecording?.()}
       />
     </div>
-  )
+  );
 }

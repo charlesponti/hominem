@@ -1,12 +1,12 @@
-import type { SessionSource } from '@hominem/chat-services/types'
-import { StyleSheet, View } from 'react-native'
+import type { SessionSource } from '@hominem/chat-services/types';
+import { StyleSheet, View } from 'react-native';
 
-import { fontSizes } from '../../tokens'
-import { Text } from '../typography/text.native'
+import { fontSizes } from '../../tokens';
+import { Text } from '../typography/text.native';
 
 interface ContextAnchorProps {
-  source: SessionSource
-  showTitle?: boolean
+  source: SessionSource;
+  showTitle?: boolean;
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -14,7 +14,7 @@ const TYPE_LABELS: Record<string, string> = {
   task: 'TASK',
   task_list: 'LIST',
   tracker: 'TRACKER',
-}
+};
 
 export function ContextAnchor({ source, showTitle = true }: ContextAnchorProps) {
   if (source.kind === 'new') {
@@ -22,7 +22,7 @@ export function ContextAnchor({ source, showTitle = true }: ContextAnchorProps) 
       <Text numberOfLines={1} style={styles.primaryTitle}>
         New conversation
       </Text>
-    )
+    );
   }
 
   if (source.kind === 'thought') {
@@ -31,14 +31,14 @@ export function ContextAnchor({ source, showTitle = true }: ContextAnchorProps) 
         <Text color="text-secondary" numberOfLines={1} style={styles.secondaryLabel}>
           Conversation
         </Text>
-      )
+      );
     }
 
     return (
       <Text numberOfLines={1} style={styles.primaryTitle}>
         {source.preview}
       </Text>
-    )
+    );
   }
 
   if (!showTitle) {
@@ -46,7 +46,7 @@ export function ContextAnchor({ source, showTitle = true }: ContextAnchorProps) 
       <Text color="text-secondary" numberOfLines={1} style={styles.secondaryLabel}>
         {TYPE_LABELS[source.type] ?? source.type}
       </Text>
-    )
+    );
   }
 
   return (
@@ -58,7 +58,7 @@ export function ContextAnchor({ source, showTitle = true }: ContextAnchorProps) 
         {TYPE_LABELS[source.type] ?? source.type}
       </Text>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -76,4 +76,4 @@ const styles = StyleSheet.create({
     opacity: 0.72,
     textTransform: 'uppercase',
   },
-})
+});

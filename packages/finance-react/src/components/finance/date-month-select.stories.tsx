@@ -1,7 +1,7 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { fn } from 'storybook/test'
+import type { Meta, StoryObj } from '@storybook/react';
+import { fn } from 'storybook/test';
 
-import { DateMonthSelect, getCurrentMonthYear } from './date-month-select'
+import { DateMonthSelect, getCurrentMonthYear } from './date-month-select';
 
 const meta: Meta<typeof DateMonthSelect> = {
   title: 'Finance/DateMonthSelect',
@@ -10,9 +10,9 @@ const meta: Meta<typeof DateMonthSelect> = {
   argTypes: {
     monthsBack: { control: { type: 'number', min: 1, max: 36 } },
   },
-}
-export default meta
-type Story = StoryObj<typeof DateMonthSelect>
+};
+export default meta;
+type Story = StoryObj<typeof DateMonthSelect>;
 
 export const Default: Story = {
   args: {
@@ -20,7 +20,7 @@ export const Default: Story = {
     onMonthChange: fn(),
     monthsBack: 12,
   },
-}
+};
 
 export const FewMonths: Story = {
   args: {
@@ -28,7 +28,7 @@ export const FewMonths: Story = {
     onMonthChange: fn(),
     monthsBack: 3,
   },
-}
+};
 
 export const ManyMonths: Story = {
   args: {
@@ -36,4 +36,4 @@ export const ManyMonths: Story = {
     onMonthChange: fn(),
     monthsBack: 24,
   },
-}
+};

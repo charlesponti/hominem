@@ -1,4 +1,5 @@
-import type { List } from '@hominem/rpc/types/lists.types'
+import { useAddPlaceToLists, useRemovePlaceFromList } from '@hominem/places-react/hooks';
+import type { List } from '@hominem/rpc/types/lists.types';
 import {
   Command,
   CommandEmpty,
@@ -7,28 +8,27 @@ import {
   CommandItem,
   CommandList,
   CommandListLoading,
-} from '@hominem/ui/components/ui/command'
-import { DrawerDescription, DrawerHeader, DrawerTitle } from '@hominem/ui/components/ui/drawer'
-import { cn } from '@hominem/ui/lib/utils'
-import { Check, Loader2, Plus } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
-import { useRevalidator } from 'react-router'
+} from '@hominem/ui/components/ui/command';
+import { DrawerDescription, DrawerHeader, DrawerTitle } from '@hominem/ui/components/ui/drawer';
+import { cn } from '@hominem/ui/lib/utils';
+import { Check, Loader2, Plus } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { useRevalidator } from 'react-router';
 
-import { useAddPlaceToLists, useRemovePlaceFromList } from '@hominem/places-react/hooks'
-import { useCreateList, useLists } from '../../hooks/use-lists'
+import { useCreateList, useLists } from '../../hooks/use-lists';
 
-type ListWithInList = List & { isInList: boolean }
+type ListWithInList = List & { isInList: boolean };
 
 interface AddToListDrawerContentProps {
   place: {
-    id: string
-    googleMapsId: string
-    name?: string | null
-    imageUrl?: string | null
-  }
-  resolvedPlaceId: string | undefined
-  googleMapsId: string | undefined
-  onClose: () => void
+    id: string;
+    googleMapsId: string;
+    name?: string | null;
+    imageUrl?: string | null;
+  };
+  resolvedPlaceId: string | undefined;
+  googleMapsId: string | undefined;
+  onClose: () => void;
 }
 
 export const AddToListDrawerContent = ({
@@ -37,68 +37,68 @@ export const AddToListDrawerContent = ({
   googleMapsId,
   onClose,
 }: AddToListDrawerContentProps) => {
-  const [loadingListId, setLoadingListId] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const revalidator = useRevalidator()
+  const [loadingListId, setLoadingListId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const revalidator = useRevalidator();
 
-  const { isLoading, data: rawListsResult } = useLists()
-  const rawLists = rawListsResult ?? []
+  const { isLoading, data: rawListsResult } = useLists();
+  const rawLists = rawListsResult ?? [];
 
   const lists = useMemo(() => {
     if (!(rawLists && googleMapsId)) {
-      return []
+      return [];
     }
     return rawLists.map((list) => ({
       ...list,
       isInList: list.places?.some((p) => p.googleMapsId === googleMapsId) ?? false,
-    }))
-  }, [rawLists, googleMapsId])
+    }));
+  }, [rawLists, googleMapsId]);
 
   const removeFromListMutation = useRemovePlaceFromList({
     onSettled: () => {
-      setLoadingListId(null)
-      revalidator.revalidate()
-      onClose()
+      setLoadingListId(null);
+      revalidator.revalidate();
+      onClose();
     },
-  })
+  });
 
   const addToListMutation = useAddPlaceToLists({
     onSuccess: () => {
-      revalidator.revalidate()
-      onClose()
+      revalidator.revalidate();
+      onClose();
     },
     onSettled: () => setLoadingListId(null),
-  })
+  });
 
-  const createListMutation = useCreateList()
+  const createListMutation = useCreateList();
 
   const onListSelectChange = useCallback(
     (listId: string, isInList: boolean) => {
       if (!place) {
-        return
+        return;
       }
 
-      setLoadingListId(listId)
+      setLoadingListId(listId);
       if (isInList) {
         if (resolvedPlaceId) {
-          removeFromListMutation.mutateAsync({ listId, placeId: resolvedPlaceId })
+          removeFromListMutation.mutateAsync({ listId, placeId: resolvedPlaceId });
         } else {
-          setLoadingListId(null)
+          setLoadingListId(null);
         }
-        return
+        return;
       }
 
       if (!place.googleMapsId) {
-        throw new Error('googleMapsId is required')
+        throw new Error('googleMapsId is required');
       }
 
       addToListMutation.mutate({
         placeId: place.id,
         listIds: [listId],
-      })
+      });
     },
     [place, resolvedPlaceId, removeFromListMutation, addToListMutation],
-  )
+  );
 
   const handleCreateList = useCallback(async () => {
     try {
@@ -106,29 +106,29 @@ export const AddToListDrawerContent = ({
         name: searchQuery.trim(),
         description: '',
         isPublic: false,
-      })
+      });
 
-      onListSelectChange(result.id, false)
+      onListSelectChange(result.id, false);
     } catch (error) {
-      console.error('Failed to create list:', error)
+      console.error('Failed to create list:', error);
     }
-  }, [searchQuery, createListMutation, onListSelectChange])
+  }, [searchQuery, createListMutation, onListSelectChange]);
 
   const filteredLists = useMemo(() => {
     if (!searchQuery.trim()) {
-      return lists
+      return lists;
     }
-    const query = searchQuery.toLowerCase().trim()
-    return lists.filter((list) => list.name.toLowerCase().includes(query))
-  }, [lists, searchQuery])
+    const query = searchQuery.toLowerCase().trim();
+    return lists.filter((list) => list.name.toLowerCase().includes(query));
+  }, [lists, searchQuery]);
 
   const canCreateNew = useMemo(() => {
     if (!searchQuery.trim()) {
-      return false
+      return false;
     }
-    const query = searchQuery.toLowerCase().trim()
-    return !lists.some((list) => list.name.toLowerCase() === query)
-  }, [lists, searchQuery])
+    const query = searchQuery.toLowerCase().trim();
+    return !lists.some((list) => list.name.toLowerCase() === query);
+  }, [lists, searchQuery]);
 
   return (
     <div className="mx-auto w-full max-w-lg">
@@ -171,7 +171,7 @@ export const AddToListDrawerContent = ({
                     key={list.id}
                     value={list.name}
                     onSelect={() => {
-                      onListSelectChange(list.id, list.isInList)
+                      onListSelectChange(list.id, list.isInList);
                     }}
                     className="flex items-center justify-between"
                   >
@@ -195,7 +195,7 @@ export const AddToListDrawerContent = ({
         </CommandList>
       </Command>
     </div>
-  )
-}
+  );
+};
 
-export default AddToListDrawerContent
+export default AddToListDrawerContent;

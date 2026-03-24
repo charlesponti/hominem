@@ -1,5 +1,6 @@
 import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
+
 import { storage } from './storage';
 
 export const BACKGROUND_SYNC_TASK = 'background-sync';

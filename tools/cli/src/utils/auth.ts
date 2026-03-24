@@ -432,5 +432,3 @@ export async function hasValidStoredSession(expectedIssuerBaseUrl?: string): Pro
     return false;
   }
 }
-
-

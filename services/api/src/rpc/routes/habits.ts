@@ -8,11 +8,11 @@ import {
   getHabitsByUser,
   updateHabit,
 } from '@hominem/events-services';
-import { NotFoundError, ValidationError } from '../errors';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
+import { NotFoundError, ValidationError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
 
 /**
@@ -22,11 +22,13 @@ function isUserHabit(
   event: Awaited<ReturnType<typeof getHabitById>>,
   userId: string,
 ): event is NonNullable<Awaited<ReturnType<typeof getHabitById>>> {
-  const candidate = event as (NonNullable<Awaited<ReturnType<typeof getHabitById>>> & {
-    userId?: string
-    type?: string
-  }) | null
-  return candidate !== null && candidate.userId === userId && candidate.type === 'Habit'
+  const candidate = event as
+    | (NonNullable<Awaited<ReturnType<typeof getHabitById>>> & {
+        userId?: string;
+        type?: string;
+      })
+    | null;
+  return candidate !== null && candidate.userId === userId && candidate.type === 'Habit';
 }
 
 /**

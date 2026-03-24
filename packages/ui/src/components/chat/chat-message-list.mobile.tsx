@@ -1,33 +1,33 @@
-import { useCallback, useMemo, useState } from 'react'
-import { FlatList, Pressable, StyleSheet, View } from 'react-native'
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
-import { chatTokensNative, fontFamiliesNative, fontSizes, spacing } from '../../tokens'
-import { Text } from '../typography/text.native'
-import { ChatShimmerMessage } from './chat-shimmer-message.mobile'
-import { ChatThinkingIndicator } from './chat-thinking-indicator.mobile'
-import { renderChatMessage } from './chat-message.mobile'
-import type { ChatMessageItem, ChatRenderIcon, MarkdownComponent } from './chat.types'
+import { chatTokensNative, fontFamiliesNative, fontSizes, spacing } from '../../tokens';
+import { Text } from '../typography/text.native';
+import { renderChatMessage } from './chat-message.mobile';
+import { ChatShimmerMessage } from './chat-shimmer-message.mobile';
+import { ChatThinkingIndicator } from './chat-thinking-indicator.mobile';
+import type { ChatMessageItem, ChatRenderIcon, MarkdownComponent } from './chat.types';
 
-const CHAT_COMPOSER_CLEARANCE = 220
-const keyExtractor = (item: ChatMessageItem) => item.id
+const CHAT_COMPOSER_CLEARANCE = 220;
+const keyExtractor = (item: ChatMessageItem) => item.id;
 
 interface ChatMessageListProps {
-  isMessagesLoading: boolean
-  displayMessages: ChatMessageItem[]
-  showSearch: boolean
-  searchQuery: string
-  markdown: MarkdownComponent | null
-  showDebug: boolean
-  speakingId: string | null
-  chatSendStatus: 'idle' | 'submitted' | 'streaming' | 'error'
-  onCopy: (message: ChatMessageItem) => void
-  onEdit: (messageId: string, content: string) => void
-  onRegenerate: (messageId: string) => void
-  onDelete: (messageId: string) => void
-  onSpeak: (message: ChatMessageItem) => void
-  onShare: (message: ChatMessageItem) => void
-  renderIcon: ChatRenderIcon
-  formatTimestamp: (value: string) => string
+  isMessagesLoading: boolean;
+  displayMessages: ChatMessageItem[];
+  showSearch: boolean;
+  searchQuery: string;
+  markdown: MarkdownComponent | null;
+  showDebug: boolean;
+  speakingId: string | null;
+  chatSendStatus: 'idle' | 'submitted' | 'streaming' | 'error';
+  onCopy: (message: ChatMessageItem) => void;
+  onEdit: (messageId: string, content: string) => void;
+  onRegenerate: (messageId: string) => void;
+  onDelete: (messageId: string) => void;
+  onSpeak: (message: ChatMessageItem) => void;
+  onShare: (message: ChatMessageItem) => void;
+  renderIcon: ChatRenderIcon;
+  formatTimestamp: (value: string) => string;
 }
 
 export function ChatMessageList({
@@ -48,8 +48,8 @@ export function ChatMessageList({
   renderIcon,
   formatTimestamp,
 }: ChatMessageListProps) {
-  const hasSearchQuery = showSearch && searchQuery.length > 0
-  const [activeActionMessageId, setActiveActionMessageId] = useState<string | null>(null)
+  const hasSearchQuery = showSearch && searchQuery.length > 0;
+  const [activeActionMessageId, setActiveActionMessageId] = useState<string | null>(null);
 
   const renderItem = useCallback(
     ({ item }: { item: ChatMessageItem }) =>
@@ -82,10 +82,10 @@ export function ChatMessageList({
       showDebug,
       speakingId,
     ],
-  )
+  );
 
   const emptySearch = useMemo(() => {
-    if (!hasSearchQuery) return null
+    if (!hasSearchQuery) return null;
 
     return (
       <View style={styles.emptySearch}>
@@ -93,8 +93,8 @@ export function ChatMessageList({
           No messages matching "{searchQuery}"
         </Text>
       </View>
-    )
-  }, [hasSearchQuery, searchQuery])
+    );
+  }, [hasSearchQuery, searchQuery]);
 
   if (isMessagesLoading) {
     return (
@@ -103,7 +103,7 @@ export function ChatMessageList({
         <ChatShimmerMessage variant="user" />
         <ChatShimmerMessage />
       </View>
-    )
+    );
   }
 
   return (
@@ -126,7 +126,7 @@ export function ChatMessageList({
       {chatSendStatus === 'submitted' ? <ChatShimmerMessage /> : null}
       {chatSendStatus === 'streaming' ? <ChatThinkingIndicator /> : null}
     </>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -153,4 +153,4 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: spacing[3],
   },
-})
+});

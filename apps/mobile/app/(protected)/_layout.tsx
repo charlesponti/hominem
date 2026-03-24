@@ -21,10 +21,16 @@ const ProtectedBootstrap = () => <View testID="protected-bootstrap" style={boots
 
 const LockScreen = ({ onUnlock }: { onUnlock: () => void }) => (
   <View style={lockStyles.container}>
-    <Text variant="header" color="foreground">{APP_NAME}</Text>
-    <Text variant="body" color="text-secondary">Locked</Text>
+    <Text variant="header" color="foreground">
+      {APP_NAME}
+    </Text>
+    <Text variant="body" color="text-secondary">
+      Locked
+    </Text>
     <Pressable onPress={onUnlock} style={lockStyles.button}>
-      <Text variant="body" color="foreground">Unlock with Face ID</Text>
+      <Text variant="body" color="foreground">
+        Unlock with Face ID
+      </Text>
     </Pressable>
   </View>
 );

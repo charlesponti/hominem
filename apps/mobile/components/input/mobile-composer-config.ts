@@ -1,20 +1,20 @@
-import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config'
+import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config';
 
-export type MobileComposerPosture = 'capture' | 'draft' | 'reply' | 'search' | 'hidden'
+export type MobileComposerPosture = 'capture' | 'draft' | 'reply' | 'search' | 'hidden';
 
 export interface MobileComposerPresentation {
-  placeholder: string
-  primaryActionLabel: string
-  secondaryActionLabel: string | null
-  showsAttachmentButton: boolean
-  showsVoiceButton: boolean
-  posture: MobileComposerPosture
+  placeholder: string;
+  primaryActionLabel: string;
+  secondaryActionLabel: string | null;
+  showsAttachmentButton: boolean;
+  showsVoiceButton: boolean;
+  posture: MobileComposerPosture;
 }
 
 interface DeriveMobileComposerPresentationInput {
-  context: MobileWorkspaceContext
-  hasText: boolean
-  isRecording: boolean
+  context: MobileWorkspaceContext;
+  hasText: boolean;
+  isRecording: boolean;
 }
 
 export function deriveMobileComposerPresentation(
@@ -28,7 +28,7 @@ export function deriveMobileComposerPresentation(
       showsAttachmentButton: true,
       showsVoiceButton: true,
       posture: 'draft',
-    }
+    };
   }
 
   if (input.context === 'chat') {
@@ -39,7 +39,7 @@ export function deriveMobileComposerPresentation(
       showsAttachmentButton: true,
       showsVoiceButton: true,
       posture: 'reply',
-    }
+    };
   }
 
   if (input.context === 'search') {
@@ -50,7 +50,7 @@ export function deriveMobileComposerPresentation(
       showsAttachmentButton: false,
       showsVoiceButton: false,
       posture: 'search',
-    }
+    };
   }
 
   if (input.context === 'settings') {
@@ -61,7 +61,7 @@ export function deriveMobileComposerPresentation(
       showsAttachmentButton: false,
       showsVoiceButton: false,
       posture: 'hidden',
-    }
+    };
   }
 
   return {
@@ -71,5 +71,5 @@ export function deriveMobileComposerPresentation(
     showsAttachmentButton: true,
     showsVoiceButton: true,
     posture: 'capture',
-  }
+  };
 }

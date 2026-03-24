@@ -25,14 +25,17 @@ export default function SecuritySettingsPage() {
       return false;
     }
   }, [register]);
-  const handleDelete = useCallback(async (id: string) => {
-    try {
-      await deletePasskey(id);
-      return true;
-    } catch {
-      return false;
-    }
-  }, [deletePasskey]);
+  const handleDelete = useCallback(
+    async (id: string) => {
+      try {
+        await deletePasskey(id);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [deletePasskey],
+  );
 
   return (
     <div className="max-w-xl mx-auto py-8 px-4 space-y-8">
@@ -42,12 +45,12 @@ export default function SecuritySettingsPage() {
           Manage sign-in methods and authentication settings.
         </p>
       </div>
-      <PasskeyManagement 
-        passkeys={passkeys ?? undefined} 
-        isLoading={isLoading} 
+      <PasskeyManagement
+        passkeys={passkeys ?? undefined}
+        isLoading={isLoading}
         error={error?.message ?? null}
-        onAdd={handleAdd} 
-        onDelete={handleDelete} 
+        onAdd={handleAdd}
+        onDelete={handleDelete}
       />
     </div>
   );

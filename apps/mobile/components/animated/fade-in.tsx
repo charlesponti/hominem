@@ -29,7 +29,10 @@ export const FadeIn = ({ children }: { children: React.ReactNode }) => {
       'worklet';
       if (prev === null) {
         opacity.value = withTiming(1, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
-        translateY.value = withTiming(0, { duration: VOID_MOTION_ENTER, easing: VOID_EASING_ENTER });
+        translateY.value = withTiming(0, {
+          duration: VOID_MOTION_ENTER,
+          easing: VOID_EASING_ENTER,
+        });
       }
     },
   );

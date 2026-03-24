@@ -79,13 +79,10 @@ export default class DataAccounts extends Command {
       });
       accounts = normalizeAccounts(raw);
     } catch (error) {
-      this.error(
-        error instanceof Error ? error.message : 'Failed to fetch accounts',
-        {
-          exit: 3,
-          code: 'DEPENDENCY_RESPONSE_INVALID',
-        }
-      );
+      this.error(error instanceof Error ? error.message : 'Failed to fetch accounts', {
+        exit: 3,
+        code: 'DEPENDENCY_RESPONSE_INVALID',
+      });
     }
 
     const output = {

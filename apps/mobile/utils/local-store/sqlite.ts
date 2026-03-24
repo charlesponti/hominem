@@ -1,7 +1,7 @@
+import type { User } from '@hominem/auth';
 import * as SQLite from 'expo-sqlite';
 
 import type { Media, Settings } from '../validation/schemas';
-import type { User } from '@hominem/auth';
 
 type UserProfile = User;
 

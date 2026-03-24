@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { AudioPlayer, AudioPlayerPlayButton, AudioPlayerProgress } from './audio-player';
 
 const meta: Meta<typeof AudioPlayer> = {

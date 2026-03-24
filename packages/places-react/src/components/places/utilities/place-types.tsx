@@ -1,8 +1,7 @@
-import type { HTMLAttributes } from 'react'
+import { cn } from '@hominem/ui/lib/utils';
+import type { HTMLAttributes } from 'react';
 
-import { cn } from '@hominem/ui/lib/utils'
-
-const EXCLUDED_TYPES = ['establishment', 'food', 'point_of_interest', 'political']
+const EXCLUDED_TYPES = ['establishment', 'food', 'point_of_interest', 'political'];
 
 export interface PlaceTypeProps extends HTMLAttributes<HTMLSpanElement> {}
 
@@ -23,19 +22,19 @@ const PlaceType = ({ children, className, ...props }: PlaceTypeProps) => {
     >
       <span className="capitalize">{children}</span>
     </span>
-  )
-}
+  );
+};
 
 export interface PlaceTypesProps {
-  limit?: number
-  types: string[]
+  limit?: number;
+  types: string[];
 }
 
 const PlaceTypes = ({ limit, types }: PlaceTypesProps) => {
-  const filterExcludedTypes = (type: string) => !EXCLUDED_TYPES.includes(type)
+  const filterExcludedTypes = (type: string) => !EXCLUDED_TYPES.includes(type);
 
   const isPointOfInterest =
-    types.length === 2 && types.includes('establishment') && types.includes('point_of_interest')
+    types.length === 2 && types.includes('establishment') && types.includes('point_of_interest');
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
@@ -46,23 +45,23 @@ const PlaceTypes = ({ limit, types }: PlaceTypesProps) => {
           .slice(0, limit)
           .filter(filterExcludedTypes)
           .filter((type, index, arr) => {
-            void index
+            void index;
             if (type === 'store' && arr.length > 1) {
-              return false
+              return false;
             }
 
             if (type.includes('_restaurant') && arr.includes('restaurant')) {
-              return false
+              return false;
             }
 
-            return true
+            return true;
           })
           .map((type) => (
             <PlaceType key={type}>{type.replace(/_store/gi, '').replace(/_/gi, ' ')}</PlaceType>
           ))
       )}
     </div>
-  )
-}
+  );
+};
 
-export { PlaceTypes, PlaceType }
+export { PlaceTypes, PlaceType };

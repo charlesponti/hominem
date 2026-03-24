@@ -1,15 +1,15 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { fn } from 'storybook/test'
+import type { Meta, StoryObj } from '@storybook/react';
+import { fn } from 'storybook/test';
 
-import { PaginationControls } from './pagination-controls'
+import { PaginationControls } from './pagination-controls';
 
 const meta: Meta<typeof PaginationControls> = {
   title: 'Finance/PaginationControls',
   component: PaginationControls,
   tags: ['autodocs'],
-}
-export default meta
-type Story = StoryObj<typeof PaginationControls>
+};
+export default meta;
+type Story = StoryObj<typeof PaginationControls>;
 
 export const Default: Story = {
   args: {
@@ -17,7 +17,7 @@ export const Default: Story = {
     totalPages: 5,
     onPageChange: fn(),
   },
-}
+};
 
 export const MiddlePage: Story = {
   args: {
@@ -25,7 +25,7 @@ export const MiddlePage: Story = {
     totalPages: 5,
     onPageChange: fn(),
   },
-}
+};
 
 export const LastPage: Story = {
   args: {
@@ -33,7 +33,7 @@ export const LastPage: Story = {
     totalPages: 5,
     onPageChange: fn(),
   },
-}
+};
 
 export const SinglePage: Story = {
   args: {
@@ -41,4 +41,4 @@ export const SinglePage: Story = {
     totalPages: 1,
     onPageChange: fn(),
   },
-}
+};

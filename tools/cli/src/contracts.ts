@@ -32,7 +32,6 @@ export interface CommandFailure {
   requestId?: string;
 }
 
-
 export interface CommandContext {
   cwd: string;
   env: NodeJS.ProcessEnv;

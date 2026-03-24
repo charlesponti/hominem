@@ -18,19 +18,6 @@ import {
 import { getListOwnedByUser } from '@hominem/lists-services';
 import { getPlacePhotoById } from '@hominem/places-services';
 import {
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-  ValidationError,
-  UnauthorizedError,
-  InternalError,
-} from '../errors';
-import { getHominemPhotoURL } from '@hominem/utils/images';
-import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
-
-import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
-import {
   invitesGetReceivedSchema,
   invitesGetByListSchema,
   invitesCreateSchema,
@@ -48,6 +35,19 @@ import {
   type InvitesDeleteOutput,
   type InvitesPreviewOutput,
 } from '@hominem/rpc/types/invites.types';
+import { getHominemPhotoURL } from '@hominem/utils/images';
+import { zValidator } from '@hono/zod-validator';
+import { Hono } from 'hono';
+
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidationError,
+  UnauthorizedError,
+  InternalError,
+} from '../errors';
+import { authMiddleware, publicMiddleware, type AppContext } from '../middleware/auth';
 
 /**
  * Transform database invite to API contract format
@@ -58,7 +58,8 @@ import {
 function transformInviteToApiFormat(dbInvite: unknown): Invite {
   const typedInvite = dbInvite as Record<string, unknown>;
   const isAccepted = Boolean(
-    (typedInvite.isAccepted as boolean | undefined) ?? (typedInvite.accepted as boolean | undefined),
+    (typedInvite.isAccepted as boolean | undefined) ??
+    (typedInvite.accepted as boolean | undefined),
   );
   return {
     id: typedInvite.token as string,
@@ -71,13 +72,15 @@ function transformInviteToApiFormat(dbInvite: unknown): Invite {
     createdAt: typedInvite.createdAt as string,
     updatedAt: typedInvite.updatedAt as string,
     ...(typedInvite.list ? { list: typedInvite.list } : {}),
-    ...(typedInvite.user_invitedUserId ? {
-      invitingUser: {
-        id: (typedInvite.user_invitedUserId as { id: string }).id,
-        email: (typedInvite.user_invitedUserId as { email: string }).email,
-        name: (typedInvite.user_invitedUserId as { name?: string | null }).name ?? null,
-      }
-    } : {}),
+    ...(typedInvite.user_invitedUserId
+      ? {
+          invitingUser: {
+            id: (typedInvite.user_invitedUserId as { id: string }).id,
+            email: (typedInvite.user_invitedUserId as { email: string }).email,
+            name: (typedInvite.user_invitedUserId as { name?: string | null }).name ?? null,
+          },
+        }
+      : {}),
   } as Invite;
 }
 

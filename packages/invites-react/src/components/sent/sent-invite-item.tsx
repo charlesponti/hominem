@@ -1,35 +1,31 @@
-import { Inline } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@hominem/ui/components/ui/avatar'
-import { Check, Link as LinkIcon, Mail } from 'lucide-react'
-import { type ReactNode, useCallback, useState } from 'react'
+import { Inline } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@hominem/ui/components/ui/avatar';
+import { Check, Link as LinkIcon, Mail } from 'lucide-react';
+import { type ReactNode, useCallback, useState } from 'react';
 
-import { DeleteInviteButton } from '../actions/delete-invite-button'
+import { DeleteInviteButton } from '../actions/delete-invite-button';
 
 interface SentInviteUser {
-  id: string
-  name: string | null
-  email?: string
+  id: string;
+  name: string | null;
+  email?: string;
 }
 
 interface SentInviteItemData {
-  accepted: boolean
-  invitedUserEmail: string
-  token: string
-  user_invitedUserId?: SentInviteUser | null
+  accepted: boolean;
+  invitedUserEmail: string;
+  token: string;
+  user_invitedUserId?: SentInviteUser | null;
 }
 
 interface SentInviteItemProps {
-  invite: SentInviteItemData
-  listId: string
-  onDelete: (email: string) => void
+  invite: SentInviteItemData;
+  listId: string;
+  onDelete: (email: string) => void;
   /** Slot for the remove-collaborator control (e.g. RemoveCollaboratorButton from lists-react) */
-  removeCollaboratorControl?: ReactNode
-  baseUrl: string
+  removeCollaboratorControl?: ReactNode;
+  baseUrl: string;
 }
 
 export function SentInviteItem({
@@ -39,34 +35,34 @@ export function SentInviteItem({
   removeCollaboratorControl,
   baseUrl,
 }: SentInviteItemProps) {
-  const { accepted, invitedUserEmail, token, user_invitedUserId } = invite
-  const [copiedToken, setCopiedToken] = useState<string | null>(null)
+  const { accepted, invitedUserEmail, token, user_invitedUserId } = invite;
+  const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   const getInviteUrl = useCallback(
     (inviteToken: string) => {
-      const base = baseUrl.replace(/\/$/, '')
-      return `${base}/invites?token=${inviteToken}&listId=${listId}`
+      const base = baseUrl.replace(/\/$/, '');
+      return `${base}/invites?token=${inviteToken}&listId=${listId}`;
     },
     [listId, baseUrl],
-  )
+  );
 
   const copyInviteUrl = useCallback(
     async (inviteToken: string) => {
-      const url = getInviteUrl(inviteToken)
+      const url = getInviteUrl(inviteToken);
       try {
-        await navigator.clipboard.writeText(url)
-        setCopiedToken(inviteToken)
-        setTimeout(() => setCopiedToken(null), 2000)
+        await navigator.clipboard.writeText(url);
+        setCopiedToken(inviteToken);
+        setTimeout(() => setCopiedToken(null), 2000);
       } catch (error) {
-        console.error('Failed to copy invite URL:', error)
+        console.error('Failed to copy invite URL:', error);
       }
     },
     [getInviteUrl],
-  )
+  );
 
-  const isCopied = copiedToken === token
-  const userName: string = user_invitedUserId?.name || invitedUserEmail.split('@')[0] || 'U'
-  const initials = userName.slice(0, 2).toUpperCase()
+  const isCopied = copiedToken === token;
+  const userName: string = user_invitedUserId?.name || invitedUserEmail.split('@')[0] || 'U';
+  const initials = userName.slice(0, 2).toUpperCase();
 
   return (
     <li className="flex flex-col md:flex-row md:items-center gap-3 p-3 group border-b border-border">
@@ -113,7 +109,7 @@ export function SentInviteItem({
         )}
       </div>
     </li>
-  )
+  );
 }
 
-export default SentInviteItem
+export default SentInviteItem;

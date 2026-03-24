@@ -1,25 +1,25 @@
-import { List } from 'lucide-react'
-import { Link } from 'react-router'
+import { List } from 'lucide-react';
+import { Link } from 'react-router';
 
 export interface ListRowProps {
-  id: string
-  name: string
-  count: number
-  imageUrl?: string | null
-  imageAlt?: string
+  id: string;
+  name: string;
+  count: number;
+  imageUrl?: string | null;
+  imageAlt?: string;
 }
 
 function buildImageUrl(imageUrl: string | null | undefined, width: number, height: number): string {
-  if (!imageUrl) return ''
-  const url = new URL(imageUrl)
-  url.searchParams.set('w', String(width))
-  url.searchParams.set('h', String(height))
-  url.searchParams.set('fit', 'cover')
-  return url.toString()
+  if (!imageUrl) return '';
+  const url = new URL(imageUrl);
+  url.searchParams.set('w', String(width));
+  url.searchParams.set('h', String(height));
+  url.searchParams.set('fit', 'cover');
+  return url.toString();
 }
 
 export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
-  const thumbnailUrl = buildImageUrl(imageUrl, 80, 80)
+  const thumbnailUrl = buildImageUrl(imageUrl, 80, 80);
 
   return (
     <li className="flex items-center gap-3 p-2 group border-b border-border">
@@ -67,5 +67,5 @@ export function ListRow({ id, name, count, imageUrl, imageAlt }: ListRowProps) {
         </div>
       </Link>
     </li>
-  )
+  );
 }

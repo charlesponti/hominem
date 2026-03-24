@@ -31,4 +31,3 @@ export function findPreviousUserMessage(
   }
   return undefined;
 }
-

@@ -1,5 +1,5 @@
-import { OtpCodeInput } from './otp-code-input';
 import { AuthErrorBanner } from './auth-error-banner';
+import { OtpCodeInput } from './otp-code-input';
 import { PasskeyButton } from './passkey-button';
 
 // OtpVerificationForm requires react-router hooks (useFetcher, useNavigation, useSearchParams).
@@ -31,7 +31,10 @@ export const Default = {
         Verify
       </button>
       <div className="flex flex-col gap-2 items-center">
-        <button type="button" className="text-sm text-muted-foreground underline-offset-2 hover:underline">
+        <button
+          type="button"
+          className="text-sm text-muted-foreground underline-offset-2 hover:underline"
+        >
           Didn't receive a code?
         </button>
         <PasskeyButton onClick={() => {}} className="w-full" />

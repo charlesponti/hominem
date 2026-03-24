@@ -1,11 +1,11 @@
-import type { TimeSeriesDataPoint } from '@hominem/rpc/types/finance.types'
-import { CHART_COLORS } from '@hominem/ui'
-import { Button } from '@hominem/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card'
-import { Skeleton } from '@hominem/ui/components/ui/skeleton'
-import { adjustDateRange, formatMonthYear } from '@hominem/utils/dates'
-import type { Dispatch, SetStateAction } from 'react'
-import { useMemo } from 'react'
+import type { TimeSeriesDataPoint } from '@hominem/rpc/types/finance.types';
+import { CHART_COLORS } from '@hominem/ui';
+import { Button } from '@hominem/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@hominem/ui/components/ui/card';
+import { Skeleton } from '@hominem/ui/components/ui/skeleton';
+import { adjustDateRange, formatMonthYear } from '@hominem/utils/dates';
+import type { Dispatch, SetStateAction } from 'react';
+import { useMemo } from 'react';
 import {
   Area,
   AreaChart,
@@ -17,9 +17,9 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts'
+} from 'recharts';
 
-import { useTimeSeriesData } from '../../hooks/use-time-series'
+import { useTimeSeriesData } from '../../hooks/use-time-series';
 
 function formatCurrency(value: number): string {
   return value.toLocaleString('en-US', {
@@ -27,18 +27,18 @@ function formatCurrency(value: number): string {
     currency: 'USD',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  })
+  });
 }
 
 interface AnalyticsChartDisplayProps {
-  chartType: 'area' | 'bar'
-  setChartType: Dispatch<SetStateAction<'area' | 'bar'>>
-  dateFrom?: Date | undefined
-  dateTo?: Date | undefined
-  selectedAccount?: string | undefined
-  selectedTag?: string | undefined
-  groupBy?: 'month' | 'week' | 'day' | undefined
-  compareToPrevious?: boolean | undefined
+  chartType: 'area' | 'bar';
+  setChartType: Dispatch<SetStateAction<'area' | 'bar'>>;
+  dateFrom?: Date | undefined;
+  dateTo?: Date | undefined;
+  selectedAccount?: string | undefined;
+  selectedTag?: string | undefined;
+  groupBy?: 'month' | 'week' | 'day' | undefined;
+  compareToPrevious?: boolean | undefined;
 }
 
 export function AnalyticsChartDisplay({
@@ -51,7 +51,7 @@ export function AnalyticsChartDisplay({
   groupBy = 'month',
   compareToPrevious = false,
 }: AnalyticsChartDisplayProps) {
-  const { adjustedDateFrom, adjustedDateTo } = adjustDateRange(dateFrom, dateTo)
+  const { adjustedDateFrom, adjustedDateTo } = adjustDateRange(dateFrom, dateTo);
 
   const {
     data: timeSeriesData,
@@ -65,18 +65,18 @@ export function AnalyticsChartDisplay({
     includeStats: false,
     compareToPrevious,
     groupBy,
-  })
+  });
 
   const incomeExpensesChartData = useMemo(() => {
     if (!Array.isArray(timeSeriesData?.data)) {
-      return []
+      return [];
     }
     return timeSeriesData.data.map((point: TimeSeriesDataPoint) => ({
       name: formatMonthYear(point.date),
       Income: point.income,
       Expenses: Math.abs(point.expenses),
-    }))
-  }, [timeSeriesData])
+    }));
+  }, [timeSeriesData]);
 
   if (isLoading) {
     return (
@@ -98,7 +98,7 @@ export function AnalyticsChartDisplay({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (error) {
@@ -115,7 +115,7 @@ export function AnalyticsChartDisplay({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (!incomeExpensesChartData.length) {
@@ -132,7 +132,7 @@ export function AnalyticsChartDisplay({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -212,5 +212,5 @@ export function AnalyticsChartDisplay({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

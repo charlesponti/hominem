@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { AuthErrorBanner } from './auth-error-banner';
 
 const meta: Meta<typeof AuthErrorBanner> = {

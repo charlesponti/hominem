@@ -8,5 +8,5 @@ export function ChatShimmerMessage() {
         <div className="h-3 w-2/3 rounded bg-foreground/10" />
       </div>
     </div>
-  )
+  );
 }

@@ -1,10 +1,6 @@
-import type {
-  BudgetCalculateInput,
-  BudgetCalculateOutput,
-} from '@hominem/rpc/types/finance.types';
-
-import { useQueryClient } from '@tanstack/react-query';
 import { useRpcMutation, useRpcQuery } from '@hominem/rpc/react';
+import type { BudgetCalculateInput, BudgetCalculateOutput } from '@hominem/rpc/types/finance.types';
+import { useQueryClient } from '@tanstack/react-query';
 
 const BUDGET_API_UNAVAILABLE_MESSAGE = 'Budget write endpoints are unavailable';
 

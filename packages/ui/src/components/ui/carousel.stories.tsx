@@ -1,5 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from './carousel';
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from './carousel';
 
 const meta: Meta<typeof Carousel> = {
   title: 'Data Display/Carousel',
@@ -32,10 +39,7 @@ export const Default: Story = {
 export const MultipleItems: Story = {
   render: () => (
     <div className="px-12">
-      <Carousel
-        opts={{ align: 'start' }}
-        className="w-full max-w-sm"
-      >
+      <Carousel opts={{ align: 'start' }} className="w-full max-w-sm">
         <CarouselContent>
           {Array.from({ length: 6 }).map((_, index) => (
             <CarouselItem key={index} className="basis-1/3">
