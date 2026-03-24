@@ -11,7 +11,7 @@ import {
   Video,
   X,
 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { useFileUpload } from '~/lib/hooks/use-file-upload.js';
 import type { UploadedFile } from '~/lib/types/upload.js';
@@ -25,6 +25,7 @@ interface FileUploaderProps {
 export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: FileUploaderProps) {
   const { uploadState, uploadFiles, removeFile, clearAll } = useFileUpload();
   const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = useCallback(
     async (files: FileList | File[]) => {
@@ -42,19 +43,20 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
     [uploadFiles, onFilesUploaded, maxFiles],
   );
 
-  const openFilePicker = useCallback(() => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true;
-    input.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx,.txt';
-    input.onchange = (e) => {
-      const files = (e.target as HTMLInputElement).files;
-      if (files) {
-        void handleFileSelect(files);
+  const handleFileInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+        void handleFileSelect(e.target.files);
+        // Reset so the same file can be re-selected
+        e.target.value = '';
       }
-    };
-    input.click();
-  }, [handleFileSelect]);
+    },
+    [handleFileSelect],
+  );
+
+  const openFilePicker = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -104,6 +106,14 @@ export function FileUploader({ onFilesUploaded, maxFiles = 5, className = '' }: 
 
   return (
     <div className={`space-y-4 ${className}`}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+        className="sr-only"
+        onChange={handleFileInputChange}
+      />
       {/* File Upload Area */}
       <div
         className={`

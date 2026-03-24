@@ -10,16 +10,20 @@ import { useTwitterOAuth } from '~/lib/hooks/use-twitter-oauth';
 export default function AccountPage() {
   const { userId, isLoading, logout } = useAuthContext();
   const { refetch } = useTwitterOAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const twitterStatus = searchParams.get('twitter');
 
   useEffect(() => {
     if (!twitterStatus) return;
-    window.history.replaceState({}, '', window.location.pathname);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('twitter');
+      return next;
+    }, { replace: true });
     if (twitterStatus === 'connected') {
       refetch();
     }
-  }, [twitterStatus, refetch]);
+  }, [twitterStatus, refetch, setSearchParams]);
 
   if (isLoading) {
     return <div>Loading...</div>;

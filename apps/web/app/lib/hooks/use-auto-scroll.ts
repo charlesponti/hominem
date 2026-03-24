@@ -43,12 +43,7 @@ export function useAutoScroll({
           scrollToBottom(container, virtualizer, shouldUseVirtualScrolling, lastIndex);
         };
 
-        // Use requestAnimationFrame for smoother scrolling
-        requestAnimationFrame(() => {
-          performScroll();
-          // Also scroll after a small delay to handle any dynamic content rendering
-          setTimeout(performScroll, 100);
-        });
+        requestAnimationFrame(performScroll);
       }
     }
 

@@ -1,7 +1,7 @@
 import { Button } from '@hominem/ui/button';
 import { cn } from '@hominem/ui/lib/utils';
 import { GripVertical, PanelLeftClose, PanelRightClose } from 'lucide-react';
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 
 interface SplitPaneProps {
   leftPanel: ReactNode;
@@ -22,8 +22,8 @@ export function SplitPane({
 }: SplitPaneProps) {
   const [splitPosition, setSplitPosition] = useState(defaultSplit);
   const [isDragging, setIsDragging] = useState(false);
-  const [_isCollapsed, _setIsCollapsed] = useState(false);
   const [collapsedSide, setCollapsedSide] = useState<'left' | 'right' | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem(storageKey);
@@ -47,7 +47,7 @@ export function SplitPane({
     (e: MouseEvent) => {
       if (!isDragging) return;
 
-      const container = document.getElementById('split-pane-container');
+      const container = containerRef.current;
       if (!container) return;
 
       const rect = container.getBoundingClientRect();
@@ -87,23 +87,15 @@ export function SplitPane({
   }, [defaultSplit, storageKey]);
 
   const toggleCollapseLeft = useCallback(() => {
-    if (collapsedSide === 'left') {
-      setCollapsedSide(null);
-    } else {
-      setCollapsedSide('left');
-    }
-  }, [collapsedSide]);
+    setCollapsedSide((prev) => (prev === 'left' ? null : 'left'));
+  }, []);
 
   const toggleCollapseRight = useCallback(() => {
-    if (collapsedSide === 'right') {
-      setCollapsedSide(null);
-    } else {
-      setCollapsedSide('right');
-    }
-  }, [collapsedSide]);
+    setCollapsedSide((prev) => (prev === 'right' ? null : 'right'));
+  }, []);
 
   return (
-    <div id="split-pane-container" className={cn('flex h-full w-full', className)}>
+    <div ref={containerRef} className={cn('flex h-full w-full', className)}>
       {/* Left Panel */}
       <div
         className={cn(

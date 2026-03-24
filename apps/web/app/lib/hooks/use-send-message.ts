@@ -18,22 +18,20 @@ function legacyStatusToChat(mutationStatus: string): ChatStatus {
 export function useSendMessage({ chatId }: { chatId: string; userId?: string }) {
   const queryClient = useQueryClient();
   const aiSdkChatWebEnabled = useFeatureFlag('aiSdkChatWeb');
+  const apiBase = import.meta.env.VITE_PUBLIC_API_URL as string;
 
-  // TODO: Fix useChat types - currently has type conflicts with @ai-sdk/react@^3.0.110
-  // const chat = useChat({
-  //   id: `chat-${chatId}`,
-  //   api: `/api/chats/${chatId}/ui/send`,
-  //   streamProtocol: 'data',
-  //   onFinish: () => {
-  //     queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
-  //   },
-  //   onError: () => {
-  //     queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
-  //   },
-  // });
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const chat = useChat() as any; // Type assertion to bypass type errors temporarily
+  const chat = useChat({
+    id: `chat-${chatId}`,
+    api: `${apiBase}/api/chats/${chatId}/ui/send`,
+    streamProtocol: 'data',
+    credentials: 'include',
+    onFinish: () => {
+      queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
+    },
+  });
 
   const legacySend = useRpcMutation(
     async ({ chats }, variables: ChatsSendInput) => {

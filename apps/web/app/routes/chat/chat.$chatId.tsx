@@ -147,19 +147,31 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         onTransform={handleTransform}
         onArchive={() => archiveChat({ chatId })}
         onDelete={async (messageId: string) => {
-          await deleteMessage(messageId)
+          try {
+            await deleteMessage(messageId);
+          } catch {
+            toast({ variant: 'destructive', title: 'Could not delete message', description: 'Please try again.' });
+          }
         }}
         onEdit={async (messageId: string, newContent: string) => {
-          await updateMessage(messageId, newContent)
-          await sendMessage.mutateAsync({ message: newContent, chatId })
+          try {
+            await updateMessage(messageId, newContent);
+            await sendMessage.mutateAsync({ message: newContent, chatId });
+          } catch {
+            toast({ variant: 'destructive', title: 'Could not edit message', description: 'Please try again.' });
+          }
         }}
         onRegenerate={async (messageId: string) => {
-          const messageIndex = (messages ?? []).findIndex((message) => message.id === messageId)
-          if (messageIndex === -1) return
-          const previousUserMessage = (messages ?? []).slice(0, messageIndex).reverse().find((message) => message.role === 'user')
-          if (!previousUserMessage) return
-          await deleteMessage(messageId)
-          await sendMessage.mutateAsync({ message: previousUserMessage.content || '', chatId })
+          try {
+            const messageIndex = (messages ?? []).findIndex((message) => message.id === messageId);
+            if (messageIndex === -1) return;
+            const previousUserMessage = (messages ?? []).slice(0, messageIndex).reverse().find((message) => message.role === 'user');
+            if (!previousUserMessage) return;
+            await deleteMessage(messageId);
+            await sendMessage.mutateAsync({ message: previousUserMessage.content || '', chatId });
+          } catch {
+            toast({ variant: 'destructive', title: 'Could not regenerate message', description: 'Please try again.' });
+          }
         }}
         onSpeak={(messageId: string, content: string) => speak(messageId, content)}
       />

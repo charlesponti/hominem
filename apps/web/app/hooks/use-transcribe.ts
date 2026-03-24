@@ -1,18 +1,17 @@
 import { useMutation } from '@tanstack/react-query';
 import type { VoiceErrorCode } from '@hominem/services/voice-transcription';
 
-interface TranscribeResponse {
-  success: true;
-  transcription: { text: string };
+// Shape returned by /api/mobile/voice/transcribe on success
+interface TranscribeSuccessResponse {
+  text: string;
+  language?: string;
+  duration?: number;
 }
 
 interface TranscribeErrorResponse {
-  success: false;
   error: string;
   code?: string;
 }
-
-type TranscribeApiResponse = TranscribeResponse | TranscribeErrorResponse;
 
 export interface TranscribeVariables {
   audioBlob: Blob;
@@ -35,19 +34,17 @@ export function useTranscribe() {
         body: formData,
       });
 
-      const payload = (await response.json()) as TranscribeApiResponse;
-
-      if (!response.ok || !payload.success) {
-        const errorCode = !payload.success ? payload.code : undefined;
-        const errorMessage = !payload.success ? payload.error : 'Transcription failed';
-        const error = new Error(errorMessage);
-        if (errorCode) {
-          (error as Error & { code?: VoiceErrorCode | string }).code = errorCode;
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as TranscribeErrorResponse;
+        const error = new Error(err.error ?? 'Transcription failed');
+        if (err.code) {
+          (error as Error & { code?: VoiceErrorCode | string }).code = err.code;
         }
         throw error;
       }
 
-      return { text: payload.transcription.text };
+      const payload = (await response.json()) as TranscribeSuccessResponse;
+      return { text: payload.text };
     },
   });
 }

@@ -26,8 +26,13 @@ COPY tools ./tools
 COPY config ./config
 COPY tsconfig.profiles ./tsconfig.profiles
 
-# Install all dependencies
+# Install all dependencies and build workspace packages
 RUN bun install 2>&1 | grep -v "warn\|skipped" || true
+
+# Build required workspace packages first
+RUN bun run --filter @hominem/env build && \
+    bun run --filter @hominem/db build && \
+    bun run --filter @hominem/utils build
 
 # Compile TypeScript application to pre-optimized standalone binary
 # Must succeed for production builds
