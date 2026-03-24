@@ -1,5 +1,4 @@
-import { emitVoiceEvent, isVoiceErrorCode } from '@hominem/services/voice-events'
-import type { VoiceErrorCode } from '@hominem/services/voice-transcription'
+import { emitVoiceEvent, isVoiceErrorCode, type VoiceErrorCode } from '@hominem/services/voice-events'
 import type { UseMutationResult } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import { X } from 'lucide-react'

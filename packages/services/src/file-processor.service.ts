@@ -17,8 +17,23 @@ export interface ProcessedFile {
   metadata?: Record<string, unknown>;
 }
 
-const openai = getSharedOpenAIClient();
-const { modelId: textModelId } = getSharedAiModelConfig();
+// Lazy initialization - only create client when needed
+let openaiClient: ReturnType<typeof getSharedOpenAIClient> | null = null;
+let aiModelConfig: ReturnType<typeof getSharedAiModelConfig> | null = null;
+
+function getOpenAIClient() {
+  if (!openaiClient) {
+    openaiClient = getSharedOpenAIClient();
+  }
+  return openaiClient;
+}
+
+function getAiModelConfig() {
+  if (!aiModelConfig) {
+    aiModelConfig = getSharedAiModelConfig();
+  }
+  return aiModelConfig;
+}
 
 export class FileProcessorService {
   static async processFile(
@@ -65,8 +80,8 @@ export class FileProcessorService {
     if (buffer.byteLength < 20 * 1024 * 1024) {
       try {
         const base64Image = Buffer.from(buffer).toString('base64');
-        const response = await openai.chat.completions.create({
-          model: textModelId,
+        const response = await getOpenAIClient().chat.completions.create({
+          model: getAiModelConfig().modelId,
           messages: [
             {
               role: 'user',
@@ -137,8 +152,8 @@ export class FileProcessorService {
       let summary = '';
       if (textContent.length > 1000) {
         try {
-          const response = await openai.chat.completions.create({
-            model: textModelId,
+          const response = await getOpenAIClient().chat.completions.create({
+            model: getAiModelConfig().modelId,
             messages: [
               {
                 role: 'system',
