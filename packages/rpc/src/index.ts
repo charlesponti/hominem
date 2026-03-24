@@ -35,6 +35,7 @@ export type { ItemsClient } from './domains/items';
 export type { ListsClient } from './domains/lists';
 export type { MessagesClient } from './domains/messages';
 export type { MobileClient, MobileSpeechInput } from './domains/mobile';
+export type { VoiceClient, VoiceSpeechInput } from './domains/voice'
 export type {
   NotesArchiveInput,
   NotesClient,

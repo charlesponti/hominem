@@ -13,6 +13,7 @@ import { createPlacesClient, type PlacesClient } from '../domains/places';
 import { createReviewClient, type ReviewClient } from '../domains/review';
 import { createTwitterClient, type TwitterClient } from '../domains/twitter';
 import { createUserClient, type UserClient } from '../domains/user';
+import { createVoiceClient, type VoiceClient } from '../domains/voice'
 
 import { createRawHonoClient, type RawHonoClient } from './raw-client';
 
@@ -34,6 +35,7 @@ export interface ApiClient {
   lists: ListsClient;
   messages: MessagesClient;
   mobile: MobileClient;
+  voice: VoiceClient;
   notes: NotesClient;
   places: PlacesClient;
   review: ReviewClient;
@@ -58,6 +60,7 @@ export function createApiClientFromRaw(rawClient: RawHonoClient): ApiClient {
     lists: createListsClient(rawClient),
     messages: createMessagesClient(rawClient),
     mobile: createMobileClient(rawClient),
+    voice: createVoiceClient(rawClient),
     notes: createNotesClient(rawClient),
     places: createPlacesClient(rawClient),
     review: createReviewClient(rawClient),

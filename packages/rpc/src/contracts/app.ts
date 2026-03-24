@@ -80,7 +80,9 @@ const messagesContract = new Hono().patch('/:messageId', stub).delete('/:message
 
 const mobileContract = new Hono()
   .route('/intents', new Hono().get('/suggestions', stub))
-  .route('/voice', new Hono().post('/speech', stub))
+  .route('/voice', new Hono().post('/transcribe', stub).post('/speech', stub).post('/respond', stub))
+
+const voiceContract = new Hono().post('/transcribe', stub).post('/speech', stub).post('/respond', stub)
 
 const notesContract = new Hono()
   .get('/', stub)
@@ -126,6 +128,7 @@ export const app = new Hono()
   .route('/items', itemsContract)
   .route('/lists', listsContract)
   .route('/messages', messagesContract)
+  .route('/voice', voiceContract)
   .route('/mobile', mobileContract)
   .route('/focus', focusContract)
   .route('/notes', notesContract)

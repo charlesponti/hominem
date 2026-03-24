@@ -63,7 +63,7 @@ export const useAudioTranscribe = ({
         mimeType,
       });
 
-      const response = await fetch(`${API_BASE_URL}/api/mobile/voice/transcribe`, {
+      const response = await fetch(`${API_BASE_URL}/api/voice/transcribe`, {
         method: 'POST',
         headers: authHeaders,
         body: formData,

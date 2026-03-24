@@ -3,17 +3,14 @@ import { generateObject } from 'ai'
 import * as z from 'zod'
 import { zValidator } from '@hono/zod-validator'
 
-import { generateSpeechBuffer, VoiceSpeechError } from '@hominem/services/voice-speech'
-import { VoiceTranscriptionError, transcribeVoiceBuffer } from '@hominem/services/voice-transcription'
 import { authMiddleware, type AppContext } from '../middleware/auth'
 import type {
   MobileIntentDeriveOutputV1,
   MobileIntentSuggestionsOutput,
   MobileDerivedTask,
-  MobileVoiceTranscriptionErrorOutput,
-  MobileVoiceTranscriptionOutput,
 } from '@hominem/rpc/types/mobile.types'
 import { getOpenAIAdapter } from '../utils/llm'
+import { authenticatedVoiceRoutes } from './voice'
 
 const DEFAULT_SUGGESTIONS: MobileIntentSuggestionsOutput['suggestions'] = [
   {
@@ -143,73 +140,4 @@ export const mobileRoutes = new Hono<AppContext>()
 
     return c.json<MobileIntentDeriveOutputV1>(payload)
   })
-  .post('/voice/transcribe', async (c) => {
-    try {
-      const body = await c.req.parseBody()
-      const input = body.audio
-
-      const audioFile = Array.isArray(input) ? input[0] : input
-
-      if (!(audioFile instanceof File)) {
-        return c.json<MobileVoiceTranscriptionErrorOutput>(
-          { error: 'No audio file provided', code: 'INVALID_FORMAT' },
-          400,
-        )
-      }
-
-      const output = await transcribeVoiceBuffer({
-        buffer: await audioFile.arrayBuffer(),
-        mimeType: audioFile.type,
-        ...(audioFile.name ? { fileName: audioFile.name } : {}),
-        language: 'en',
-      })
-
-      const response: MobileVoiceTranscriptionOutput = {
-        text: output.text,
-        ...(output.language ? { language: output.language } : {}),
-        ...(typeof output.duration === 'number' ? { duration: output.duration } : {}),
-        ...(output.words ? { words: output.words } : {}),
-        ...(output.segments ? { segments: output.segments } : {}),
-      }
-
-      return c.json<MobileVoiceTranscriptionOutput>(response)
-    } catch (error) {
-      if (error instanceof VoiceTranscriptionError) {
-        const statusCode =
-          error.statusCode === 400 || error.statusCode === 401 || error.statusCode === 429
-            ? error.statusCode
-            : 500
-        return c.json<MobileVoiceTranscriptionErrorOutput>(
-          { error: error.message, code: error.code },
-          statusCode,
-        )
-      }
-
-      return c.json<MobileVoiceTranscriptionErrorOutput>(
-        { error: 'Failed to transcribe audio', code: 'TRANSCRIBE_FAILED' },
-        500,
-      )
-    }
-  })
-  .post(
-    '/voice/speech',
-    zValidator('json', z.object({ text: z.string().min(1).max(4096), voice: z.string().default('alloy'), speed: z.number().min(0.25).max(4).default(1) })),
-    async (c) => {
-      const { text, voice, speed } = c.req.valid('json')
-      try {
-        const { audioBuffer, mediaType } = await generateSpeechBuffer({ text, voice, speed })
-        c.header('Content-Type', mediaType)
-        c.header('Content-Length', String(audioBuffer.byteLength))
-        return c.body(audioBuffer)
-      } catch (error) {
-        if (error instanceof VoiceSpeechError) {
-          const statusCode =
-            error.statusCode === 400 || error.statusCode === 401 || error.statusCode === 429
-              ? error.statusCode
-              : 500
-          return c.json({ error: error.message }, statusCode)
-        }
-        return c.json({ error: 'Failed to generate speech' }, 500)
-      }
-    },
-  )
+  .route('/voice', authenticatedVoiceRoutes)
