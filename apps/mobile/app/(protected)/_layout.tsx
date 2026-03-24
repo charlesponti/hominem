@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary';
 import { InputProvider } from '~/components/input/input-context';
@@ -70,7 +70,10 @@ const DrawerLayout = () => {
       <ApiProvider queryClient={queryClient}>
         <MobileWorkspaceProvider>
           <InputProvider>
-            <View style={bootstrapStyles.root}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+              style={bootstrapStyles.root}
+            >
               <View style={styles.stackContainer}>
                 <Stack initialRouteName="(tabs)">
                   <Stack.Screen name="onboarding" options={{ headerShown: false }} />
@@ -78,7 +81,7 @@ const DrawerLayout = () => {
                 </Stack>
               </View>
               <MobileComposer />
-            </View>
+            </KeyboardAvoidingView>
           </InputProvider>
         </MobileWorkspaceProvider>
       </ApiProvider>

@@ -5,7 +5,16 @@ export default function FocusLayout() {
   return (
     <Stack>
       <Stack.Screen name="index" />
-      <Stack.Screen name="[id]" options={{ presentation: 'modal', headerShown: false }} />
+      <Stack.Screen
+        name="[id]"
+        options={{
+          presentation: 'modal',
+          headerTitle: 'Edit Note',
+          headerLargeTitle: false,
+          headerShadowVisible: false,
+          headerStyle: { backgroundColor: 'transparent' },
+        }}
+      />
       <Stack.Screen
         name="insights"
         options={{

@@ -2,7 +2,14 @@ import type { Note } from '@hominem/rpc/types';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import React from 'react';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
@@ -37,7 +44,6 @@ export function NoteEditingSheet({
 }: NoteEditingSheetProps) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
-  const footerPaddingBottom = theme.spacing.m_16;
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const pickerValue = useMemo(() => scheduledFor ?? new Date(), [scheduledFor]);
@@ -87,40 +93,33 @@ export function NoteEditingSheet({
   );
 
   return (
-    <View style={styles.container} testID="note-editing-sheet">
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.handle} testID="note-editing-sheet-handle" />
-
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.container}
+      testID="note-editing-sheet"
+    >
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + theme.spacing.ml_24 },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+      >
         <View style={styles.header} testID="note-editing-sheet-header">
           <Text variant="caption" color="text-tertiary" style={styles.kicker}>
-            Workspace
+            Note
           </Text>
-          <View style={styles.headerRow}>
-            <Text variant="header" color="foreground" style={styles.headerTitle}>
-              {title}
-            </Text>
-            {onShare ? (
-              <Pressable
-                onPress={onShare}
-                accessibilityLabel="Share note"
-                accessibilityRole="button"
-                style={styles.shareButton}
-              >
-                <AppIcon
-                  name="share-from-square"
-                  size={16}
-                  color={theme.colors['text-secondary']}
-                />
-              </Pressable>
-            ) : null}
-          </View>
+          <Text variant="header" color="foreground" numberOfLines={2}>
+            {title}
+          </Text>
         </View>
 
         <View style={styles.editorCard} testID="note-editing-sheet-editor">
           <TextInput
             testID="note-editing-sheet-input"
-            label="Note"
-            placeholder="Write your note"
+            placeholder="Start writing..."
+            placeholderTextColor={theme.colors['text-tertiary']}
             value={text}
             editable={!isSaving}
             multiline
@@ -129,8 +128,8 @@ export function NoteEditingSheet({
           />
         </View>
 
-        <View style={styles.metadataCard} testID="note-editing-sheet-metadata">
-          <Text variant="caption" color="text-tertiary" style={styles.kicker}>
+        <View style={styles.metadataSection}>
+          <Text variant="caption" color="text-tertiary" style={styles.sectionLabel}>
             Due date
           </Text>
           <Pressable
@@ -142,67 +141,77 @@ export function NoteEditingSheet({
             style={styles.dueDateControl}
           >
             <View style={styles.dueDateIcon}>
-              <AppIcon name="calendar" size={16} color={theme.colors.foreground} />
+              <AppIcon name="calendar" size={20} color={theme.colors.foreground} />
             </View>
             <View style={styles.dueDateTextColumn}>
               <Text variant="body" color="foreground" testID="note-editing-sheet-due-date-label">
                 {dueDateLabel}
               </Text>
               <Text variant="small" color="text-secondary">
-                {scheduledFor ? 'Tap to change the time or clear it' : 'Optional'}
+                {scheduledFor ? 'Tap to change' : 'Optional'}
               </Text>
             </View>
+            {scheduledFor && (
+              <Pressable
+                onPress={clearDueDate}
+                style={styles.clearButton}
+                accessibilityLabel="Clear due date"
+              >
+                <AppIcon name="xmark" size={16} color={theme.colors['text-secondary']} />
+              </Pressable>
+            )}
           </Pressable>
 
-          {scheduledFor ? (
-            <View style={styles.metadataActions}>
-              <Button
-                disabled={isSaving}
-                onPress={clearDueDate}
-                size="xs"
-                testID="note-editing-sheet-clear-due-date"
-                variant="ghost"
-                title="Clear due date"
+          {isDatePickerOpen ? (
+            <View style={styles.datePickerContainer}>
+              <DateTimePicker
+                display="spinner"
+                mode="datetime"
+                testID="note-editing-sheet-date-picker"
+                value={pickerValue}
+                onChange={handleDateChange}
               />
             </View>
           ) : null}
+        </View>
 
-          {isDatePickerOpen ? (
-            <DateTimePicker
-              display="spinner"
-              mode="datetime"
-              testID="note-editing-sheet-date-picker"
-              value={pickerValue}
-              onChange={handleDateChange}
-            />
-          ) : null}
+        <View style={styles.actionsSection}>
+          <Text variant="caption" color="text-tertiary" style={styles.sectionLabel}>
+            Actions
+          </Text>
+          <View style={styles.actionsRow}>
+            {onShare && (
+              <Button
+                variant="outline"
+                size="sm"
+                onPress={onShare}
+                style={styles.actionButton}
+                title="Share"
+              />
+            )}
+            {onAddToCalendar && scheduledFor && (
+              <Button
+                variant="outline"
+                size="sm"
+                onPress={onAddToCalendar}
+                style={styles.actionButton}
+                title="Add to Calendar"
+              />
+            )}
+            {onPrint && (
+              <Button
+                variant="outline"
+                size="sm"
+                onPress={onPrint}
+                style={styles.actionButton}
+                title="Print"
+              />
+            )}
+          </View>
         </View>
       </ScrollView>
 
-      <View
-        style={[styles.footer, { paddingBottom: insets.bottom + footerPaddingBottom }]}
-        testID="note-editing-sheet-footer"
-      >
-        <View style={styles.footerActions}>
-          {onAddToCalendar && scheduledFor ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onPress={onAddToCalendar}
-              style={styles.footerSecondaryButton}
-              title="Calendar"
-            />
-          ) : null}
-          {onPrint ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onPress={onPrint}
-              style={styles.footerSecondaryButton}
-              title="Print"
-            />
-          ) : null}
-        </View>
+      <View style={styles.footer} testID="note-editing-sheet-footer">
         <Button
           disabled={isSaving}
           isLoading={isSaving}
@@ -211,7 +220,7 @@ export function NoteEditingSheet({
           title="Save"
         />
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -222,99 +231,80 @@ const useStyles = makeStyles((t) => {
       backgroundColor: t.colors.background,
     },
     scrollContent: {
-      paddingTop: t.spacing.sm_12,
       paddingHorizontal: t.spacing.m_16,
-      paddingBottom: t.spacing.ml_24,
-      rowGap: t.spacing.ml_24,
-    },
-    handle: {
-      alignSelf: 'center',
-      backgroundColor: t.colors['border-default'],
-      borderRadius: t.borderRadii.full,
-      height: 4,
-      width: 36,
+      paddingTop: t.spacing.m_16,
+      rowGap: t.spacing.m_16,
     },
     header: {
-      rowGap: t.spacing.sm_8,
-    },
-    headerRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: t.spacing.sm_8,
-    },
-    headerTitle: {
-      flex: 1,
-    },
-    shareButton: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: 36,
-      height: 36,
-      borderRadius: t.borderRadii.md,
-      borderWidth: 1,
-      borderColor: t.colors['border-default'],
+      rowGap: t.spacing.xs_4,
     },
     kicker: {
       letterSpacing: 1,
     },
     editorCard: {
-      backgroundColor: t.colors.background,
-      borderColor: t.colors['border-default'],
+      backgroundColor: t.colors['bg-elevated'],
       borderRadius: t.borderRadii.md,
-      borderWidth: 1,
       padding: t.spacing.m_16,
+      minHeight: 200,
     },
     inputText: {
       color: t.colors.foreground,
-      fontSize: 16,
-      fontWeight: '600',
+      fontSize: 17,
+      lineHeight: 24,
       minHeight: 180,
       textAlignVertical: 'top',
     },
-    metadataCard: {
-      backgroundColor: t.colors.background,
-      borderColor: t.colors['border-default'],
-      borderRadius: t.borderRadii.md,
-      borderWidth: 1,
+    metadataSection: {
       rowGap: t.spacing.sm_8,
-      paddingHorizontal: t.spacing.m_16,
-      paddingVertical: t.spacing.m_16,
+    },
+    sectionLabel: {
+      letterSpacing: 1,
     },
     dueDateControl: {
+      flexDirection: 'row',
       alignItems: 'center',
       columnGap: t.spacing.sm_12,
-      flexDirection: 'row',
+      backgroundColor: t.colors['bg-elevated'],
+      borderRadius: t.borderRadii.md,
+      padding: t.spacing.m_16,
+      borderWidth: 1,
+      borderColor: t.colors['border-default'],
     },
     dueDateIcon: {
       alignItems: 'center',
-      backgroundColor: t.colors['bg-surface'],
-      borderColor: t.colors['border-default'],
-      borderRadius: t.borderRadii.md,
-      borderWidth: 1,
-      height: 36,
       justifyContent: 'center',
-      width: 36,
+      width: 40,
+      height: 40,
+      borderRadius: t.borderRadii.md,
+      backgroundColor: t.colors['bg-surface'],
     },
     dueDateTextColumn: {
       flex: 1,
       rowGap: t.spacing.xs_4,
     },
-    metadataActions: {
-      alignItems: 'flex-start',
+    clearButton: {
+      padding: t.spacing.sm_8,
+    },
+    datePickerContainer: {
+      alignItems: 'center',
+      paddingVertical: t.spacing.sm_8,
+    },
+    actionsSection: {
+      rowGap: t.spacing.sm_8,
+    },
+    actionsRow: {
+      flexDirection: 'row',
+      gap: t.spacing.sm_8,
+    },
+    actionButton: {
+      flex: 1,
     },
     footer: {
       borderTopWidth: 1,
       borderColor: t.colors['border-default'],
       paddingHorizontal: t.spacing.m_16,
-      paddingTop: t.spacing.sm_12,
+      paddingVertical: t.spacing.sm_12,
       gap: t.spacing.sm_8,
-    },
-    footerActions: {
-      flexDirection: 'row',
-      gap: t.spacing.sm_8,
-    },
-    footerSecondaryButton: {
-      flex: 1,
     },
   });
 });

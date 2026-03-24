@@ -1,7 +1,15 @@
 import { useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
 import { useEffect, useReducer } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '~/components/Button';
@@ -155,7 +163,11 @@ function Account() {
   }
 
   return (
-    <View testID="account-screen" style={styles.root}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.root}
+      testID="account-screen"
+    >
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text variant="cardHeader" color="foreground">
           ACCOUNT
@@ -271,7 +283,7 @@ function Account() {
           style={styles.deleteButton}
         />
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
