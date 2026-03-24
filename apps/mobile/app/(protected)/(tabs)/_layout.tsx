@@ -21,7 +21,7 @@ export default function TabsLayout() {
         {view === 'stack' ? (
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="focus" />
-            <Stack.Screen name="sherpa" />
+            <Stack.Screen name="chat" />
             <Stack.Screen name="start" />
             <Stack.Screen name="account" />
           </Stack>

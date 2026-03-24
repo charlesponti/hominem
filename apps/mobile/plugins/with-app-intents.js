@@ -40,11 +40,11 @@ struct AddNoteIntent: AppIntent {
 @available(iOS 16.0, *)
 struct StartChatIntent: AppIntent {
     static let title: LocalizedStringResource = "Start a Chat"
-    static let description = IntentDescription("Opens Hakumi's Sherpa chat.")
+    static let description = IntentDescription("Opens Hakumi's chat assistant.")
     static let openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult {
-        await UIApplication.shared.open(URL(string: "hakumi://sherpa")!)
+        await UIApplication.shared.open(URL(string: "hakumi://chat")!)
         return .result()
     }
 }
@@ -62,7 +62,7 @@ struct HakumiShortcutsProvider: AppShortcutsProvider {
         )
         AppShortcut(
             intent: StartChatIntent(),
-            phrases: ["Chat in \\(.applicationName)", "Open Sherpa in \\(.applicationName)"],
+            phrases: ["Chat in \\(.applicationName)", "Open chat in \\(.applicationName)"],
             shortTitle: "Start Chat",
             systemImageName: "bubble.left.and.bubble.right"
         )

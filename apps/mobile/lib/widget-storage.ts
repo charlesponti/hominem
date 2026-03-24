@@ -4,7 +4,7 @@
  * Shared storage for WidgetKit → main app action signalling via App Groups.
  *
  * CURRENT STATUS: the QuickActionsWidget uses Button(intent:) / Link which
- * open the app directly via deep link (hakumi://note/add, hakumi://sherpa).
+ * open the app directly via deep link (hakumi://note/add, hakumi://chat).
  * The Swift widget does NOT write to this storage today. This module exists
  * as the correct infrastructure for a future widget variant that needs to
  * signal actions to a running app without a cold launch (e.g. interactive
@@ -25,14 +25,14 @@
  * the container path and initialise widgetStorage with it.
  *
  * Key contract:
- *   PENDING_ACTION  – last action queued by the widget ("add-note" | "open-sherpa" | null)
+ *   PENDING_ACTION  – last action queued by the widget ("add-note" | "open-chat" | null)
  *   PENDING_ACTION_TS – epoch ms when the action was written (for staleness guard)
  */
 import { createMMKV } from 'react-native-mmkv';
 
 const STALE_MS = 30_000; // ignore widget actions older than 30 s
 
-export type WidgetAction = 'add-note' | 'open-sherpa';
+export type WidgetAction = 'add-note' | 'open-chat';
 
 export const widgetStorage = createMMKV({
   id: 'hakumi.widget',

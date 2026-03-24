@@ -23,13 +23,13 @@ struct AddNoteIntent: AppIntent {
 
 @available(iOS 16.0, *)
 struct StartChatIntent: AppIntent {
-  static let title: LocalizedStringResource = "Open Sherpa"
+  static let title: LocalizedStringResource = "Start Chat"
   static let description = IntentDescription("Open the Hakumi AI assistant.")
   static let openAppWhenRun: Bool = true
 
   @MainActor
   func perform() async throws -> some IntentResult {
-    guard let url = URL(string: "hakumi://sherpa") else { return .result() }
+    guard let url = URL(string: "hakumi://chat") else { return .result() }
     await UIApplication.shared.open(url)
     return .result()
   }

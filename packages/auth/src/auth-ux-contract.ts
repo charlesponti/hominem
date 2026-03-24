@@ -131,7 +131,7 @@ export const NOTES_AUTH_CONFIG: AppAuthConfig = {
 }
 
 /** Hakumi mobile app auth config. */
-export const SHERPA_AUTH_CONFIG: AppAuthConfig = {
+export const CHAT_AUTH_CONFIG: AppAuthConfig = {
   appName: AUTH_APP_NAME,
   defaultPostAuthDestination: '/(protected)/(tabs)/start',
   allowedDestinations: ['/(protected)/(tabs)/start'],

@@ -120,7 +120,7 @@ export const MobileComposer = () => {
     );
     await invalidateInboxQueries(queryClient);
     clearDraft();
-    router.push(`/(protected)/(tabs)/sherpa?chatId=${chat.id}` as RelativePathString);
+    router.push(`/(protected)/(tabs)/chat?chatId=${chat.id}` as RelativePathString);
   };
 
   const handlePrimaryAction = () => {

@@ -24,7 +24,7 @@ export default function ArchivedChatsScreen() {
 
   const onPressChat = useCallback(
     (chatId: string) => {
-      router.push(`/(protected)/(tabs)/sherpa?chatId=${chatId}` as RelativePathString);
+      router.push(`/(protected)/(tabs)/chat?chatId=${chatId}` as RelativePathString);
     },
     [router],
   );

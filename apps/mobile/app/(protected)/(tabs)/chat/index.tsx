@@ -26,7 +26,7 @@ const useStyles = makeStyles((t) =>
   }),
 );
 
-export default function Sherpa() {
+export default function ChatScreen() {
   const router = useRouter();
   const styles = useStyles();
   const params = useLocalSearchParams<{ chatId?: string; intentId?: string; seed?: string }>();
@@ -36,13 +36,13 @@ export default function Sherpa() {
 
   const { mutateAsync: startChat, isPending: isStartingChat } = useStartChat({
     userMessage: seed,
-    _sherpaMessage: 'Starting now.',
+    _chatMessage: 'Starting now.',
     onSuccess: (chat) => {
       setActiveChat(chat);
     },
   });
 
-  // Donate intent so Siri learns the user opens Sherpa frequently
+  // Donate intent so Siri learns the user opens the chat frequently
   useEffect(() => {
     donateStartChatIntent();
   }, []);
@@ -85,7 +85,7 @@ export default function Sherpa() {
   const source: SessionSource = { kind: 'new' };
 
   return (
-    <View testID="sherpa-screen" style={styles.container}>
+    <View testID="chat-screen" style={styles.container}>
       {isLoadingActiveChat || isStartingChat ? (
         <LoadingFull>
           <Text variant="title" color="foreground">

@@ -1,4 +1,4 @@
-import { AUTH_COPY, SHERPA_AUTH_CONFIG } from '@hominem/auth';
+import { AUTH_COPY, CHAT_AUTH_CONFIG } from '@hominem/auth';
 import { Image } from 'expo-image';
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { Link } from 'expo-router';
@@ -113,7 +113,7 @@ export function VerifyScreen() {
   }, [email, focusOtpInput, requestEmailOtp]);
 
   if (isSignedIn) {
-    return <Redirect href={SHERPA_AUTH_CONFIG.defaultPostAuthDestination as RelativePathString} />;
+    return <Redirect href={CHAT_AUTH_CONFIG.defaultPostAuthDestination as RelativePathString} />;
   }
 
   if (!email) {

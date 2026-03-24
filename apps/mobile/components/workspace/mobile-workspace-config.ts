@@ -15,7 +15,7 @@ export const MOBILE_WORKSPACE_LABELS: Record<MobileWorkspaceContext, string> = {
 export const MOBILE_WORKSPACE_ROUTES: Record<MobileWorkspaceContext, Href | null> = {
   inbox: '/(protected)/(tabs)/focus',
   note: null,
-  chat: '/(protected)/(tabs)/sherpa',
+  chat: '/(protected)/(tabs)/chat',
   search: null,
   settings: '/(protected)/(tabs)/account',
 };

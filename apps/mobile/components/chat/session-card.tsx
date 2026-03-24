@@ -52,7 +52,7 @@ export const SessionCard = memo(({ chat, isActive }: SessionCardProps) => {
   const router = useRouter();
 
   const handlePress = useCallback(() => {
-    router.push(`/(protected)/(tabs)/sherpa?chatId=${chat.id}` as RelativePathString);
+    router.push(`/(protected)/(tabs)/chat?chatId=${chat.id}` as RelativePathString);
   }, [router, chat.id]);
 
   const label = chat.title ?? 'Untitled session';

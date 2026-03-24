@@ -45,7 +45,7 @@ export function donateAddNoteIntent(): void {
   donateIntent('AddNoteIntent');
 }
 
-/** Call when the user opens the Sherpa chat manually. */
+/** Call when the user opens the chat manually. */
 export function donateStartChatIntent(): void {
   donateIntent('StartChatIntent');
 }

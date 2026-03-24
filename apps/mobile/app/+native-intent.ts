@@ -6,7 +6,7 @@
  *
  * Supported deep link patterns:
  *   hakumi://verify?token=<otp>        → /(auth)/verify?token=<otp>
- *   hakumi://sherpa?seed=<text>        → /(protected)/(tabs)/sherpa?seed=<text>
+ *   hakumi://chat?seed=<text>          → /(protected)/(tabs)/chat?seed=<text>
  *   hakumi://focus                     → /(protected)/(tabs)/focus
  *   hakumi://focus/<id>                → /(protected)/(tabs)/focus/<id>
  *   hakumi://account                   → /(protected)/(tabs)/account
@@ -32,8 +32,8 @@ export function redirectSystemPath({
     return `/(auth)/${normalized}`;
   }
 
-  // Sherpa / chat intent
-  if (normalized.startsWith('sherpa')) {
+  // Chat intent
+  if (normalized.startsWith('chat')) {
     return `/(protected)/(tabs)/${normalized}`;
   }
 

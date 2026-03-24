@@ -63,7 +63,7 @@ const useStyles = makeStyles((t) =>
     },
     listContainer: {
       rowGap: t.spacing.sm_12,
-      // This enables users to scroll the the last item above the `Sherpa` button
+      // This enables users to scroll the the last item above the `chat` button
       paddingBottom: t.spacing.xl_64 + t.spacing.l_32 + t.spacing.ml_24,
     },
     header: {

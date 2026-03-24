@@ -43,7 +43,7 @@ describe('error boundary contract integration', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const context = createBoundaryLogContext({
       feature: 'chat',
-      route: '/(protected)/(tabs)/sherpa',
+      route: '/(protected)/(tabs)/chat',
       userId: 'user-1',
     })
 
@@ -54,7 +54,7 @@ describe('error boundary contract integration', () => {
     const entries = getErrorLog()
     expect(entries).toHaveLength(1)
     expect(entries[0]?.feature).toBe('chat')
-    expect(entries[0]?.route).toBe('/(protected)/(tabs)/sherpa')
+    expect(entries[0]?.route).toBe('/(protected)/(tabs)/chat')
     expect(entries[0]?.userId).toBe('user-1')
     expect(entries[0]?.error.message).toBe('chat failed')
 

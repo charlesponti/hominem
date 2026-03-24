@@ -2,7 +2,7 @@
  * Shared chat lifecycle hook.
  *
  * Manages the ThoughtLifecycleState machine, pendingReview, and resolvedSource
- * for both mobile (sherpa) and web chat sessions. Platform-specific async
+ * for both mobile (chat) and web chat sessions. Platform-specific async
  * operations (classification strategy, persist mechanism) are injected via
  * callbacks so each surface stays free of the other's dependencies.
  */

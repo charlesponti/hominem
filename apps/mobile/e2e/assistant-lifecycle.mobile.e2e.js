@@ -92,7 +92,7 @@ describe('Mobile: unified workspace critical path', () => {
 
     await element(by.id('mobile-workspace-context-chat')).tap()
 
-    await waitFor(element(by.id('sherpa-screen')))
+    await waitFor(element(by.id('chat-screen')))
       .toBeVisible()
       .withTimeout(10000)
 

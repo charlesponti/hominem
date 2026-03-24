@@ -54,10 +54,10 @@ export default function FocusInsightsSheet() {
       </View>
       <View style={styles.section}>
         <Text variant="label" color="text-tertiary">
-          SHERPA REMINDER
+          ASSISTANT REMINDER
         </Text>
         <Text variant="body" color="text-secondary">
-          OPEN SHERPA TO GENERATE NEW FOCUS CYCLES.
+          OPEN CHAT TO GENERATE NEW FOCUS CYCLES.
         </Text>
       </View>
     </View>

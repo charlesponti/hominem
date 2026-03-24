@@ -20,16 +20,16 @@ struct AddNoteControlWidget: ControlWidget {
 }
 
 @available(iOS 18.0, *)
-struct OpenSherpaControlWidget: ControlWidget {
-  static let kind: String = "com.pontistudios.hakumi.control.open-sherpa"
+struct OpenChatControlWidget: ControlWidget {
+  static let kind: String = "com.pontistudios.hakumi.control.open-chat"
 
   var body: some ControlWidgetConfiguration {
     StaticControlConfiguration(kind: Self.kind) {
       ControlWidgetButton(action: StartChatIntent()) {
-        Label("Open Sherpa", systemImage: "sparkles")
+        Label("Open Chat", systemImage: "sparkles")
       }
     }
-    .displayName("Open Sherpa")
+    .displayName("Open Chat")
     .description("Quickly open the Hakumi AI assistant.")
   }
 }
@@ -41,6 +41,6 @@ struct OpenSherpaControlWidget: ControlWidget {
 struct ControlCenterWidgetBundle: WidgetBundle {
   var body: some Widget {
     AddNoteControlWidget()
-    OpenSherpaControlWidget()
+    OpenChatControlWidget()
   }
 }

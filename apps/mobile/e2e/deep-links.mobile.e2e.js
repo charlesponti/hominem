@@ -56,9 +56,9 @@ describe('Deep link routing', () => {
         .withTimeout(10000)
     })
 
-    it('should navigate to sherpa tab via hakumi-e2e://sherpa', async () => {
-      await device.openURL({ url: `${SCHEME}://sherpa` })
-      await waitFor(element(by.id('sherpa-screen')))
+    it('should navigate to chat tab via hakumi-e2e://chat', async () => {
+      await device.openURL({ url: `${SCHEME}://chat` })
+      await waitFor(element(by.id('chat-screen')))
         .toBeVisible()
         .withTimeout(15000)
     })

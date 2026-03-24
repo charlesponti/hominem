@@ -8,7 +8,7 @@ import { noteKeys } from './query-keys';
 function toRoute(kind: 'note' | 'chat', id: string): string {
   return kind === 'note'
     ? `/(protected)/(tabs)/focus/${id}`
-    : `/(protected)/(tabs)/sherpa?chatId=${id}`;
+    : `/(protected)/(tabs)/chat?chatId=${id}`;
 }
 
 export function useNoteStream({ enabled = true }: { enabled?: boolean } = {}) {

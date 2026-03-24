@@ -3,7 +3,7 @@
  *
  * These tests drive the canonical thought lifecycle state machine through
  * each journey step by step.  No surface-specific code is involved — both
- * mobile (sherpa/focus) and Notes web run the same state machine, so a single
+ * mobile (chat/focus) and Notes web run the same state machine, so a single
  * set of journey tests covers both surfaces per the parity contract.
  *
  * Contract covered:

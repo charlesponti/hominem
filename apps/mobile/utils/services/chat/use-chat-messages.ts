@@ -19,7 +19,7 @@ import {
   reconcileMessagesAfterSend,
   type MessageOutput,
 } from './chat-contract';
-import { getChatActivityAt, selectSherpaChat, type ChatWithActivity } from './session-state';
+import { getChatActivityAt, selectChatSession, type ChatWithActivity } from './session-state';
 
 type SendChatMessageOutput = {
   messages: MessageOutput[];
@@ -224,13 +224,13 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
 // Simplified start chat - uses React Query retry instead of custom queue
 export const useStartChat = ({
   userMessage,
-  _sherpaMessage,
+  _chatMessage,
   _intentId,
   _seedPrompt,
   ...props
 }: {
   userMessage: string;
-  _sherpaMessage: string;
+  _chatMessage: string;
   _intentId?: string;
   _seedPrompt?: string;
 } & MutationOptions<Chat, Error, void>) => {
@@ -324,13 +324,13 @@ export const useActiveChat = (chatId?: string | null) => {
       }
 
       const chats = await client.chats.list({ limit: 50 });
-      return selectSherpaChat(chats, chatId);
+      return selectChatSession(chats, chatId);
     },
   });
 };
 
 async function startRemoteChat(client: ApiClient, initialMessage: string): Promise<Chat> {
-  const title = initialMessage.trim().slice(0, CHAT_TITLE_MAX_LENGTH) || 'Sherpa chat';
+  const title = initialMessage.trim().slice(0, CHAT_TITLE_MAX_LENGTH) || 'Chat session';
 
   const chat = await client.chats.create({
     title,

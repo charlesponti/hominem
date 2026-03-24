@@ -21,7 +21,7 @@ function resolveRouteWorkspaceContext(
   pathname: string,
   selectedContext: MobileWorkspaceContext,
 ): MobileWorkspaceContext {
-  if (pathname.includes('/sherpa')) {
+  if (pathname.includes('/chat')) {
     return 'chat';
   }
 

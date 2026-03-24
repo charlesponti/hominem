@@ -40,7 +40,7 @@ export function getArchivedChatsWithActivity(chats: Chat[], now = Date.now()): C
   return toChatsWithActivity(chats, now).filter((chat) => Boolean(chat.archivedAt));
 }
 
-export function selectSherpaChat(chats: Chat[], requestedChatId?: string | null): Chat | null {
+export function selectChatSession(chats: Chat[], requestedChatId?: string | null): Chat | null {
   if (requestedChatId) {
     return chats.find((chat) => chat.id === requestedChatId) ?? null;
   }

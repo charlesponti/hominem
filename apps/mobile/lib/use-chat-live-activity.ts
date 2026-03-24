@@ -23,7 +23,7 @@ export function useChatLiveActivity(
         subtitle: 'Tap to return to your conversation',
       },
       {
-        deepLinkUrl: `hakumi://sherpa`,
+        deepLinkUrl: `hakumi://chat`,
       },
     );
 

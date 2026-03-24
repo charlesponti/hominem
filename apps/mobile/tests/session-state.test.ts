@@ -6,7 +6,7 @@ import {
   getChatActivityAt,
   getInboxChatsWithActivity,
   isChatResumable,
-  selectSherpaChat,
+  selectChatSession,
   toChatsWithActivity,
 } from '../utils/services/chat/session-state'
 
@@ -58,7 +58,7 @@ describe('session-state', () => {
     ).toEqual(['chat-1', 'chat-2'])
   })
 
-  it('prefers an explicit sherpa chat id over the first active chat', () => {
+  it('prefers an explicit chat id over the first active chat', () => {
     const otherChat: Chat = {
       id: 'chat-2',
       archivedAt: null,
@@ -67,8 +67,8 @@ describe('session-state', () => {
       title: 'Chat 2',
     }
 
-    expect(selectSherpaChat([baseChat, otherChat], 'chat-2')?.id).toBe('chat-2')
-    expect(selectSherpaChat([baseChat, otherChat])?.id).toBe('chat-1')
+    expect(selectChatSession([baseChat, otherChat], 'chat-2')?.id).toBe('chat-2')
+    expect(selectChatSession([baseChat, otherChat])?.id).toBe('chat-1')
   })
 
   it('skips archived chats when selecting the default active chat', () => {
@@ -86,8 +86,8 @@ describe('session-state', () => {
       updatedAt: '2026-03-18T00:00:00.000Z',
     }
 
-    expect(selectSherpaChat([archivedChat, activeChat])?.id).toBe('chat-active')
-    expect(selectSherpaChat([archivedChat], 'chat-archived')?.id).toBe('chat-archived')
+    expect(selectChatSession([archivedChat, activeChat])?.id).toBe('chat-active')
+    expect(selectChatSession([archivedChat], 'chat-archived')?.id).toBe('chat-archived')
   })
 
   it('only returns active chats for inbox session lists', () => {

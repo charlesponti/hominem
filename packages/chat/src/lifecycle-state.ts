@@ -1,7 +1,7 @@
 /**
  * Canonical thought lifecycle state machine.
  *
- * Both mobile (sherpa/focus) and web (Notes chat) import from this module.
+ * Both mobile (chat/focus) and web (Notes chat) import from this module.
  * No surface may define its own state aliases for these lifecycle states.
  */
 

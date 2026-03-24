@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, waitFor } from '@testing-library/react-native'
 
-import Sherpa from '../../app/(protected)/(tabs)/sherpa/index'
+import Chat from '../../app/(protected)/(tabs)/chat/index'
 import {
   MobileWorkspaceProvider,
   useMobileWorkspace,
@@ -14,7 +14,7 @@ let workspaceContext = 'inbox'
 
 vi.mock('expo-router', () => ({
   useLocalSearchParams: () => ({ chatId: 'chat-1' }),
-  usePathname: () => '/(protected)/(tabs)/sherpa',
+  usePathname: () => '/(protected)/(tabs)/chat',
   useRouter: () => ({ push: mockPush }),
 }))
 
@@ -70,11 +70,11 @@ describe('mobile chat workspace context', () => {
     })
   })
 
-  it('switches the shared workspace context to chat when the sherpa route mounts', async () => {
+  it('switches the shared workspace context to chat when the chat route mounts', async () => {
     await render(
       <MobileWorkspaceProvider>
         <WorkspaceProbe />
-        <Sherpa />
+        <Chat />
       </MobileWorkspaceProvider>,
     )
 
