@@ -30,20 +30,17 @@ COPY tsconfig.profiles ./tsconfig.profiles
 RUN bun install 2>&1 | grep -v "warn\|skipped" || true
 
 # Compile TypeScript application to pre-optimized standalone binary
+# Must succeed for production builds
 RUN bun build \
     --compile \
     --target bun \
     --outfile /app/api \
-    ./services/api/src/index.ts 2>&1 || \
-    echo "⚠ Compilation skipped, will use interpreted mode at runtime"
+    ./services/api/src/index.ts
 
-# Verify binary was created
-RUN if [ -f /app/api ]; then \
-    chmod +x /app/api && \
-    echo "✓ Binary compiled successfully"; \
-    else \
-    echo "ℹ Binary not created, will use bun runtime"; \
-    fi
+# Verify binary was created and make executable
+RUN chmod +x /app/api && \
+    echo "✓ Binary compiled successfully" && \
+    ls -lh /app/api
 
 # ============================================================================
 # RUNTIME STAGE - Minimal production image with only the binary
