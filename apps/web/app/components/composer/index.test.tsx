@@ -150,6 +150,31 @@ vi.mock('@hominem/ui/chat', () => ({
     : null),
 }))
 
+vi.mock('@hominem/ui/ai-elements', () => ({
+  SpeechInput: ({
+    onAudioRecorded,
+    onRecordingStateChange,
+    onProcessingStateChange,
+  }: {
+    onAudioRecorded?: (blob: Blob) => void
+    onRecordingStateChange?: (isRecording: boolean) => void
+    onProcessingStateChange?: (isProcessing: boolean) => void
+  }) => (
+    <button
+      type="button"
+      onClick={() => {
+        onRecordingStateChange?.(true)
+        onRecordingStateChange?.(false)
+        onProcessingStateChange?.(true)
+        onAudioRecorded?.(new Blob(['voice'], { type: 'audio/webm' }))
+        onProcessingStateChange?.(false)
+      }}
+    >
+      Transcribe audio
+    </button>
+  ),
+}))
+
 function ComposerStateInitializer({
   attachedNotes = [],
 }: {
@@ -275,6 +300,8 @@ describe('Composer', () => {
   })
 
   it('returns focus to the composer after audio transcription completes', async () => {
+    mocks.transcribeMutateAsync.mockResolvedValue({ text: 'Voice draft' })
+
     renderComposer()
 
     const voiceButton = screen.getByRole('button', { name: 'Voice note' })
