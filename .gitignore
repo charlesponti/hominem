@@ -72,6 +72,9 @@ bun-debug.log*
 test-import.ts
 .tmp-read-otp.ts
 
+# voice/audio review files
+.tmp/
+
 # local logs
 tmp/
 
