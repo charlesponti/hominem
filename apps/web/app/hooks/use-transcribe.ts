@@ -28,8 +28,10 @@ export function useTranscribe() {
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
 
-      const response = await fetch('/api/transcribe', {
+      const apiBase = import.meta.env.VITE_PUBLIC_API_URL as string;
+      const response = await fetch(`${apiBase}/api/mobile/voice/transcribe`, {
         method: 'POST',
+        credentials: 'include',
         body: formData,
       });
 

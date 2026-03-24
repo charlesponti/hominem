@@ -1,7 +1,7 @@
 import type { ApiClient } from '@hominem/rpc';
 import { useApiClient } from '@hominem/rpc/react';
 import type { Chat, ChatMessage as RpcChatMessage } from '@hominem/rpc/types';
-import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services';
+import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services/constants';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQuery, useQueryClient, type MutationOptions } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';

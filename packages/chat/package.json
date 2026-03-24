@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./types": "./src/types-only.ts",
     "./ui": "./src/session-artifacts.ts",
-    "./react": "./src/use-chat-lifecycle.ts"
+    "./react": "./src/use-chat-lifecycle.ts",
+    "./constants": "./src/constants.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

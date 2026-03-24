@@ -1,5 +1,5 @@
 import * as ImagePicker from 'expo-image-picker'
-import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services'
+import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services/constants'
 import { useApiClient } from '@hominem/rpc/react'
 import { CameraModal } from '../media/camera-modal'
 import { useQueryClient } from '@tanstack/react-query'
