@@ -30,6 +30,7 @@ fi
 
 step "Configuring iOS project for variant: ${VARIANT}"
 cd "${MOBILE_DIR}"
-bash scripts/run-variant.sh "${VARIANT}" expo prebuild --platform ios --clean
+bash scripts/setup-icons.sh "${VARIANT}"
+bash scripts/run-variant.sh "${VARIANT}" bunx expo prebuild --platform ios --clean
 printf '%s\n' "${VARIANT}" > "${STAMP_FILE}"
 ok "iOS project ready (${VARIANT})"

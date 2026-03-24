@@ -1,12 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface UploadedFile {
-  filename: string;
-  mimetype: string;
-  filepath: string;
-  size: number;
-  buffer?: Buffer;
-}
-
 import { logger } from '@hominem/utils/logger';
 
 /**

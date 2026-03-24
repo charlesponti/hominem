@@ -32,14 +32,3 @@ export function findPreviousUserMessage(
   return undefined;
 }
 
-/**
- * Finds the next assistant message after the given index
- */
-function _findNextAssistantMessage(
-  messages: ExtendedMessage[],
-  startIndex: number,
-): ExtendedMessage | undefined {
-  const index = messages.findIndex((m, idx) => idx > startIndex && m.role === 'assistant');
-  if (index === -1) return undefined;
-  return messages[index];
-}

@@ -7,6 +7,7 @@ SCRIPTS_DIR="$(dirname "$0")"
 
 header "Preflight · $CHANNEL"
 
+bash "$SCRIPTS_DIR/setup-icons.sh" "$CHANNEL"
 bash "$SCRIPTS_DIR/check-eas-profiles.sh"
 bash "$SCRIPTS_DIR/check-expo-config.sh"
 

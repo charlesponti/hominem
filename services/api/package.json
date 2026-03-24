@@ -37,6 +37,7 @@
     "@hominem/places-services": "workspace:*",
     "@hominem/queues": "workspace:*",
     "@hominem/services": "workspace:*",
+    "@hominem/telemetry": "workspace:*",
     "@hominem/utils": "workspace:*",
     "@hono/node-server": "^1.19.11",
     "@hono/zod-validator": "^0.7.6",

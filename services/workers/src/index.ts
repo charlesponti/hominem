@@ -1,4 +1,15 @@
+import { initTelemetry } from '@hominem/telemetry/node';
 import { logger } from '@hominem/utils/logger';
+
+// Initialize OpenTelemetry telemetry for workers
+const telemetry = initTelemetry({
+  serviceName: 'hominem-workers',
+  serviceVersion: process.env.npm_package_version || '0.0.0',
+  environment: process.env.NODE_ENV || 'development',
+  otlpEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+  otlpProtocol: process.env.OTEL_EXPORTER_OTLP_PROTOCOL,
+  samplingRatio: parseFloat(process.env.OTEL_TRACES_SAMPLER_ARG || '1.0'),
+});
 
 import './env.ts';
 // Import all worker entry points
@@ -11,13 +22,16 @@ import './place-photo-worker';
 let isShuttingDown = false;
 const shutdownTimeout = 5000; // 5 seconds timeout for graceful shutdown
 
-function gracefulShutdown(exitCode = 0) {
+async function gracefulShutdown(exitCode = 0) {
   if (isShuttingDown) {
     return;
   }
 
   isShuttingDown = true;
   logger.info('Initiating graceful shutdown for main process...');
+
+  // Shutdown telemetry
+  await telemetry.shutdown();
 
   // Set a timeout for forced shutdown if graceful shutdown takes too long
   const forceShutdownTimer = setTimeout(() => {

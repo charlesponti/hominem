@@ -52,11 +52,6 @@ const chatsMessagesQuerySchema = z.object({
   offset: z.string().optional(),
 })
 
-const chatsSearchSchema = z.object({
-  q: z.string().min(1),
-  limit: z.string().optional(),
-})
-
 const toPersistedToolCalls = (
   calls: Array<{ toolName: string; toolCallId: string; args: Record<string, unknown> }>,
 ) =>

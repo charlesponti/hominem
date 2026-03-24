@@ -14,7 +14,7 @@ export {
   TaskStatusSchema,
 } from '../schemas/notes.schema'
 
-import type { AllContentType, ContentTag, TaskPriority, TaskStatus, NoteAnalysis } from '../schemas/notes.schema'
+import type { ContentTag, TaskPriority, TaskStatus, NoteAnalysis } from '../schemas/notes.schema'
 
 export type NoteContentType =
   | 'note'
@@ -101,9 +101,6 @@ export type NoteInsert = {
   createdAt?: string
   updatedAt?: string
 }
-
-// Type alias for JSON values
-type NoteJsonValue = string | number | boolean | null | NoteJsonValue[] | { [key: string]: NoteJsonValue }
 
 // Task metadata helper type
 export type TaskMetadata = {

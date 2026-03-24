@@ -10,11 +10,8 @@ import type {
   PublishingMetadata,
 } from './contracts';
 import { assertAllowedTransition, ConflictError } from './note.state.service';
-import type { CreateNoteInput, ListNotesInput, ListNotesOutput, UpdateNoteInput } from './types';
+import type { UpdateNoteInput } from './types';
 import {
-  CreateNoteInputSchema,
-  ListNotesInputSchema,
-  ListNotesOutputSchema,
   UpdateNoteZodSchema,
 } from './types';
 

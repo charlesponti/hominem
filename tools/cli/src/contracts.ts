@@ -32,22 +32,6 @@ export interface CommandFailure {
   requestId?: string;
 }
 
-interface _ProgressEvent {
-  type: 'progress';
-  command: string;
-  timestamp: string;
-  phase: string;
-  message: string;
-}
-
-interface _DiagnosticEvent {
-  type: 'diagnostic';
-  command: string;
-  timestamp: string;
-  level: 'info' | 'warn' | 'error';
-  message: string;
-  data?: JsonValue;
-}
 
 export interface CommandContext {
   cwd: string;

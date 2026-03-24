@@ -16,12 +16,6 @@ import {
   GoalCreateInputSchema,
   GoalUpdateInputSchema,
   GoalListQuerySchema,
-  type GoalListOutput,
-  type GoalGetOutput,
-  type GoalCreateOutput,
-  type GoalUpdateOutput,
-  type GoalDeleteOutput,
-  type GoalStatsOutput,
 } from '@hominem/rpc/types/goals.types';
 
 /**

@@ -14,17 +14,6 @@ import {
   UpdateNoteInputSchema,
 } from '@hominem/rpc/schemas/notes.schema'
 
-import type {
-  NotesListOutput,
-  NotesGetOutput,
-  NotesCreateOutput,
-  NotesUpdateOutput,
-  NotesDeleteOutput,
-  NotesSyncOutput,
-  NotesPublishOutput,
-  NotesArchiveOutput,
-  NotesVersionsOutput,
-} from '@hominem/rpc/types/notes.types'
 
 import type { Note, PublishingMetadata, ContentTag, NoteMention, NoteAnalysis } from '@hominem/notes-services'
 import type { Selectable } from 'kysely'

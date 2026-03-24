@@ -8,8 +8,6 @@ import type { UploadedFile } from '@hominem/ui/types/upload'
 
 import { useCreateNote, useUpdateNote } from '~/hooks/use-notes'
 import { useFileUpload } from '~/lib/hooks/use-file-upload'
-import { useSendMessage } from '~/lib/hooks/use-send-message'
-import { useTranscribe } from '~/hooks/use-transcribe'
 
 const mocks = vi.hoisted(() => {
   const createNoteMutateAsync = vi.fn<(input: { content: string; title?: string }) => Promise<unknown>>()

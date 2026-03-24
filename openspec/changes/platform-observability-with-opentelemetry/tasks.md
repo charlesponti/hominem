@@ -21,10 +21,26 @@
 
 ## 4. Local Observability Workbench
 
-- [ ] 4.1 Add a repo-pinned local collector and dashboard configuration for traces, metrics, and logs
-- [ ] 4.2 Create a documented local workflow to start the observability stack alongside `bun run dev`
+- [x] 4.1 ~~Add a repo-pinned local collector and dashboard configuration for traces, metrics, and logs~~ → Use external universal stack at `~/.local/observability`
+- [x] 4.2 ~~Create a documented local workflow to start the observability stack alongside `bun run dev`~~ → Use `~/.local/observability/observability.sh start` before running project
 - [ ] 4.3 Verify developers can inspect correlated traces, metrics, and logs for a multi-runtime local flow from one workflow
 - [ ] 4.4 Ensure apps and services continue to start cleanly when the local collector is unavailable or telemetry is disabled
+
+**Note:** The local observability stack has been extracted to a universal, cross-project location at `~/.local/observability`. This Grafana LGTM (Loki + Grafana + Tempo + Mimir) stack serves all projects, not just hominem.
+
+**To use with hominem:**
+```bash
+# 1. Start the central observability stack (if not already running)
+~/.local/observability/observability.sh start
+
+# 2. Configure hominem to export to it
+source .observability.env
+
+# 3. Run your app
+bun run dev
+```
+
+**Access:** http://localhost:3000 (admin/admin)
 
 ## 5. Sentry Removal And Verification
 

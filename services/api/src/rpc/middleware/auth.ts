@@ -52,7 +52,7 @@ export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
  *
  * For routes that don't require authentication.
  */
-export const publicMiddleware = createMiddleware<AppContext>(async (c, next) => {
+export const publicMiddleware = createMiddleware<AppContext>(async (_c, next) => {
   // Public routes - no auth check
   return await next();
 });

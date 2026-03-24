@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import { db, NotFoundError, ForbiddenError } from '@hominem/db'
+import { db, NotFoundError } from '@hominem/db'
 import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import * as z from 'zod'

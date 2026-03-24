@@ -1,4 +1,5 @@
 import type { User } from '@hominem/auth/server';
+import { createHonoTelemetryMiddleware } from '@hominem/telemetry/node';
 import { logger } from '@hominem/utils/logger';
 import { apiReference } from '@scalar/hono-api-reference';
 import { Hono } from 'hono';
@@ -43,6 +44,9 @@ export function createServer() {
   // Placing this ahead of the logger keeps the noise out of our logs and
   // prevents the request from traversing any further middleware.
   app.use('*', blockMaliciousProbes());
+
+  // OpenTelemetry telemetry middleware
+  app.use('*', createHonoTelemetryMiddleware());
 
   app.use('*', requestLogger());
 

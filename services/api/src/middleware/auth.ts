@@ -73,24 +73,6 @@ function setCachedUser(user: User) {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function getUserFromJwt(token: string): Promise<User | null> {
-  const claims = await verifyAccessToken(token);
-  const cached = getCachedUser(claims.sub);
-  if (cached) {
-    return cached;
-  }
-
-  const dbUser = await UserAuthService.getUserById(claims.sub);
-  if (!dbUser) {
-    return null;
-  }
-
-  const user = toUser(dbUser);
-  setCachedUser(user);
-  return user;
-}
-
 function mapBearerError(error: unknown): AuthErrorCode {
   if (error && typeof error === 'object') {
     const maybeJose = error as { code?: string; claim?: string; message?: string };

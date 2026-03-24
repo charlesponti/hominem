@@ -1,4 +1,5 @@
 import { AuthProvider } from '@hominem/auth';
+import { TelemetryProvider } from '~/lib/telemetry';
 import { COMMON_FONT_LINKS, UpdateGuard } from '@hominem/ui';
 import type React from 'react';
 import { useCallback } from 'react';
@@ -129,11 +130,13 @@ export default function App({ loaderData }: Route.ComponentProps) {
       initialSession={session}
     >
       <HonoProvider baseUrl={apiBaseUrl}>
-        <FeatureFlagsProvider>
-          <UpdateGuard logo={WEB_BRAND.logoPath} appName={WEB_BRAND.appName}>
-            <Outlet />
-          </UpdateGuard>
-        </FeatureFlagsProvider>
+        <TelemetryProvider>
+          <FeatureFlagsProvider>
+            <UpdateGuard logo={WEB_BRAND.logoPath} appName={WEB_BRAND.appName}>
+              <Outlet />
+            </UpdateGuard>
+          </FeatureFlagsProvider>
+        </TelemetryProvider>
       </HonoProvider>
     </AuthProvider>
   );

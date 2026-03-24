@@ -22,7 +22,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { usePeople, useCreatePerson } from '../../../hooks/use-people';
 
-import type { Person, PeopleListOutput } from '@hominem/rpc/types/people.types';
+import type { Person } from '@hominem/rpc/types/people.types';
 
 interface PeopleMultiSelectProps {
   value: string[];

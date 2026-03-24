@@ -27,6 +27,7 @@
     "@hominem/auth": "workspace:*",
     "@hominem/env": "workspace:*",
     "@hominem/rpc": "workspace:*",
+    "@hominem/telemetry": "workspace:*",
     "@hominem/ui": "workspace:*",
     "@hominem/utils": "workspace:*",
     "react": "19.2.0",

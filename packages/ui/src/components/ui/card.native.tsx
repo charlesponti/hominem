@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { Text, View, type TextProps, type ViewProps } from 'react-native';
 
 import { colors, fontFamiliesNative, fontSizes, fontWeights, spacing } from '../../tokens';

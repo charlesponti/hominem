@@ -74,7 +74,7 @@ export default class AgentStart extends Command {
 
     try {
       entrypoint = await resolveAgentEntrypoint(process.cwd());
-    } catch (error) {
+    } catch {
       this.error(
         'Agent entrypoint was not found - Run `bun run --filter @hominem/cli build:features`',
         {

@@ -1,9 +1,6 @@
 import type {
-  BudgetCategoriesListOutput,
-  BudgetHistoryOutput,
   BudgetCalculateInput,
   BudgetCalculateOutput,
-  TransactionCategoryAnalysisOutput,
 } from '@hominem/rpc/types/finance.types';
 
 import { useQueryClient } from '@tanstack/react-query';

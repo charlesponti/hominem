@@ -45,7 +45,7 @@ export function Chat({
   error,
   showDebug = false,
   speakingId,
-  canTransform = false,
+  canTransform: _canTransform = false,
   isDebugEnabled = false,
   isArchiving = false,
   onDebugChange,

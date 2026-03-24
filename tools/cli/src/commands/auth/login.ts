@@ -1,4 +1,4 @@
-import { Args, Command, Flags } from '@oclif/core';
+import { Command, Flags } from '@oclif/core';
 import { z } from 'zod';
 
 import { AuthError, interactiveLogin } from '@/utils/auth';

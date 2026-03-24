@@ -2,7 +2,7 @@ import { zValidator } from '@hono/zod-validator'
 import { Hono } from 'hono'
 import * as z from 'zod'
 
-import { db, brandId, type TaskId, type UserId, ForbiddenError, NotFoundError } from '@hominem/db'
+import { db, ForbiddenError, NotFoundError } from '@hominem/db'
 import type { AppContext } from '../middleware/auth'
 import { authMiddleware } from '../middleware/auth'
 import {

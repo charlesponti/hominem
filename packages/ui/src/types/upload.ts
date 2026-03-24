@@ -20,21 +20,6 @@ interface ProcessedFile {
 }
 
 /**
- * File being uploaded (client-side state during upload process)
- */
-interface _FileUpload {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  file?: File;
-  preview?: string;
-  isUploading?: boolean;
-  uploadProgress?: number;
-  error?: string;
-}
-
-/**
  * Successfully uploaded file (API response)
  */
 export interface UploadedFile extends ProcessedFile {

@@ -1,4 +1,3 @@
-import type { Users } from '@hominem/db'
 import { db } from '@hominem/db'
 
 type UserRow = {

@@ -1,5 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
+
   "workspaces": {
     ".": {
       "entry": [
@@ -16,104 +17,121 @@
         "tools/**"
       ]
     },
-    "apps/desktop": {
+
+    "apps/web": {
       "entry": [
-        "package.json",
-        "src/main/index.ts",
-        "src/preload/index.ts",
-        "src/renderer/index.html",
-        "src/renderer/src/main.tsx",
-        "src/**/*.test.{ts,tsx}"
+        "app/root.tsx",
+        "app/routes.ts",
+        "app/env.d.ts",
+        "react-router.config.ts",
+        "vite.config.ts",
+        "vitest.config.ts",
+        "playwright.config.ts"
       ],
       "project": [
-        "src/**/*.{ts,tsx,js,jsx,css,html}",
-        "*.config.{ts,js,mjs,cjs}",
-        "*.config.*",
-        "**/*.test.{ts,tsx}"
+        "app/**/*.{ts,tsx}"
       ]
     },
+
     "apps/mobile": {
       "entry": [
-        "package.json",
-        ".detoxrc.js",
-        "jest*.{js,cjs,mjs,ts}",
         "app/**/*.{ts,tsx}",
-        "tests/**/*.{ts,tsx}",
+        "app.config.ts",
+        "babel.config.js",
+        "metro.config.js",
+        "react-native.config.js",
+        "vitest.config.ts",
         "e2e/**/*.{js,ts}"
       ],
       "project": [
         "app/**/*.{ts,tsx}",
         "components/**/*.{ts,tsx}",
+        "config/**/*.{ts,tsx}",
+        "hooks/**/*.{ts,tsx}",
         "lib/**/*.{ts,tsx}",
+        "plugins/**/*.{ts,tsx}",
         "theme/**/*.{ts,tsx}",
-        "utils/**/*.{ts,tsx}",
-        "config/**/*.{ts,js,mjs,cjs}",
-        "plugins/**/*.{ts,js,mjs,cjs}",
-        "*.config.{ts,js,mjs,cjs}",
-        "tests/**/*.{ts,tsx}",
-        "e2e/**/*.{js,ts}"
+        "utils/**/*.{ts,tsx}"
       ]
     },
-    "apps/web": {
+
+    "apps/desktop": {
       "entry": [
-        "package.json",
-        "app/root.tsx",
-        "app/routes.ts",
-        "react-router.config.ts",
-        "vite.config.ts",
-        "tests/**/*.{ts,tsx}"
+        "src/main/index.ts",
+        "src/preload/index.ts",
+        "src/renderer/src/main.tsx",
+        "electron.vite.config.ts",
+        "vite.config.ts"
       ],
       "project": [
-        "app/**/*.{ts,tsx,js,jsx,css}",
-        "*.config.{ts,js,mjs,cjs}",
-        "tests/**/*.{ts,tsx}"
+        "src/**/*.{ts,tsx}"
       ]
     },
+
     "services/api": {
       "entry": [
-        "package.json",
-        "src/**/*.test.{ts,tsx}",
-        "vitest*.{ts,mts,js,mjs}"
+        "src/index.ts",
+        "src/server.ts",
+        "vitest.config.ts"
       ],
       "project": [
-        "src/**/*.{ts,tsx}",
-        "vitest*.{ts,mts,js,mjs}"
+        "src/**/*.{ts,tsx}"
       ]
     },
+
     "services/workers": {
       "entry": [
-        "package.json",
-        "src/**/*.test.{ts,tsx}",
-        "vitest*.{ts,mts,js,mjs}"
+        "src/index.ts",
+        "vitest.config.ts"
       ],
       "project": [
-        "src/**/*.{ts,tsx}",
-        "*.config.{ts,js,mjs,cjs}",
-        "vitest*.{ts,mts,js,mjs}"
+        "src/**/*.{ts,tsx}"
       ]
     },
-    "tools/cli": {
-      "entry": [
-        "package.json",
-        "bin/**/*.js",
-        "src/**/*.{ts,tsx}",
-        "test/**/*.{ts,tsx}"
-      ],
-      "project": [
-        "bin/**/*.js",
-        "src/**/*.{ts,tsx,js,jsx}",
-        "test/**/*.{ts,tsx,js,jsx}"
-      ]
-    },
+
     "packages/*": {
       "entry": [
-        "package.json",
-        "src/index.{ts,tsx,js,jsx}"
+        "src/index.ts",
+        "src/index.tsx",
+        "*.config.{ts,js,mjs,cjs}",
+        "vitest.config.ts",
+        "vite.config.ts",
+        "postcss.config.{ts,js,mjs,cjs}",
+        "tailwind.config.{ts,js,mjs,cjs}"
       ],
       "project": [
-        "src/**/*.{ts,tsx,js,jsx}"
+        "src/**/*.{ts,tsx}"
+      ]
+    },
+
+    "tools/*": {
+      "entry": [
+        "src/cli.ts",
+        "src/**/*.ts",
+        "*.ts",
+        "*.mts",
+        "vitest.config.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}"
       ]
     }
   },
-  "ignore": []
+
+  "ignore": [
+    "**/build/**",
+    "**/dist/**",
+    "**/.turbo/**",
+    "**/.cache/**",
+    "**/coverage/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/__tests__/**",
+    "**/__mocks__/**",
+    "**/test-assets/**"
+  ],
+
+  "ignoreDependencies": [
+    "quansync"
+  ]
 }

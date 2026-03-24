@@ -1,3 +1,4 @@
+import { getSpanContextForLogs } from '@hominem/telemetry/shared';
 import {
   getHttpRequestInLogMessage,
   getHttpRequestLogLevel,
@@ -10,9 +11,12 @@ import type { MiddlewareHandler } from 'hono';
 export function requestLogger(): MiddlewareHandler {
   return async (c, next) => {
     const startedAt = performance.now();
+    const traceContext = getSpanContextForLogs();
+    
     const startData = {
       method: c.req.method,
       path: c.req.path,
+      ...traceContext,
     };
 
     logger.info(getHttpRequestInLogMessage(), startData);
@@ -25,6 +29,7 @@ export function requestLogger(): MiddlewareHandler {
       method: c.req.method,
       path: c.req.path,
       status: c.res.status,
+      ...traceContext,
     };
     const level = getHttpRequestLogLevel(data);
     const message = getHttpRequestOutLogMessage();

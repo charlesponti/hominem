@@ -1,5 +1,3 @@
-import type { TopMerchantsOutput } from '@hominem/rpc/types/finance.types';
-
 import { useRpcQuery } from '@hominem/rpc/react';
 
 type UseFinanceTopMerchantsParams = {

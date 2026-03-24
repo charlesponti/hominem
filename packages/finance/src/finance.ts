@@ -11,8 +11,6 @@ import {
   financeTransactionQueryContractSchema,
 } from './contracts';
 
-type _TimestampString = string;
-
 interface FinanceAccount {
   id: string;
   userId: string;
@@ -50,10 +48,6 @@ interface FinanceAnalyticsTransaction extends FinanceTransaction {
   classification: string;
 }
 
-type _FinanceAnalyticsTransactionRow = Selectable<Database['finance_transactions']> & {
-  classification: string;
-};
-
 type TagCategoryRow = Selectable<Database['tags']>;
 
 interface PlaidItem {
@@ -67,14 +61,10 @@ interface PlaidItem {
   lastSyncedAt?: string | null;
 }
 
-type _PlaidItemRow = Selectable<Database['plaid_items']>;
-
 interface Institution {
   id: string;
   name: string;
 }
-
-type _InstitutionRow = Selectable<Database['financial_institutions']>;
 
 function toNumber(value: string | number | null): number {
   if (typeof value === 'number') {

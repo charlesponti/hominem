@@ -1,0 +1,60 @@
+{
+  "name": "@hominem/telemetry",
+  "version": "0.1.0",
+  "description": "OpenTelemetry instrumentation for Hominem services and apps",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./node": {
+      "types": "./src/node/index.ts",
+      "default": "./src/node/index.ts"
+    },
+    "./browser": {
+      "types": "./src/browser/index.ts",
+      "default": "./src/browser/index.ts"
+    },
+    "./shared": {
+      "types": "./src/shared/index.ts",
+      "default": "./src/shared/index.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/core": "^1.24.0",
+    "@opentelemetry/resources": "^1.24.0",
+    "@opentelemetry/sdk-trace-base": "^1.24.0",
+    "@opentelemetry/sdk-trace-node": "^1.24.0",
+    "@opentelemetry/sdk-trace-web": "^1.24.0",
+    "@opentelemetry/semantic-conventions": "^1.24.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.51.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.51.0",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.51.0",
+    "@opentelemetry/sdk-metrics": "^1.24.0",
+    "@opentelemetry/sdk-logs": "^0.51.0",
+    "@opentelemetry/instrumentation": "^0.51.0",
+    "@opentelemetry/instrumentation-http": "^0.51.0",
+    "@opentelemetry/instrumentation-pg": "^0.43.0",
+    "@opentelemetry/instrumentation-redis": "^0.41.0",
+    "@opentelemetry/context-async-hooks": "^1.24.0",
+    "@opentelemetry/propagator-b3": "^1.24.0",
+    "@opentelemetry/propagator-jaeger": "^1.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "pino": "^9.0.0"
+  },
+  "peerDependenciesMeta": {
+    "pino": {
+      "optional": true
+    }
+  }
+}

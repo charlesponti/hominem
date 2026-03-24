@@ -1,4 +1,3 @@
-import type { SpendingTimeSeriesOutput } from '@hominem/rpc/types/finance.types';
 import { format } from 'date-fns';
 
 import { useRpcQuery } from '@hominem/rpc/react';

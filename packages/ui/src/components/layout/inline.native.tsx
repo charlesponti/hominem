@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { View, type ViewProps, type ViewStyle } from 'react-native';
 
 import { spacing } from '../../tokens';

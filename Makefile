@@ -13,7 +13,7 @@ DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install build test lint typecheck check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down auth-test-up auth-test-down auth-test-status storybook storybook-test
+.PHONY: install build test lint typecheck deadcode check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db test-db-start test-db-stop test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down auth-test-up auth-test-down auth-test-status storybook storybook-test
 
 # Start the mobile dev server (Expo dev client, dev variant)
 dev:
@@ -130,8 +130,29 @@ lint:
 typecheck:
 	NODE_OPTIONS="--max-old-space-size=4096" bun turbo run typecheck --concurrency=4 --continue --no-cache
 
-# Full pre-merge check: lint + generated DB types + typecheck
-check: lint db-verify-types typecheck
+# Deep dead code analysis:
+#   knip   — unused files, re-exported symbols, unlisted dependencies (module-level)
+#   tsc    — unused locals and parameters inside function bodies (statement-level)
+#   oxlint — unused imports/variables with auto-fixable suggestions (already in turbo lint)
+deadcode:
+	@echo "── knip: unused files / exports / dependencies ──────────────────"
+	bun run knip
+	@echo "── tsc --noUnusedLocals across all workspaces ───────────────────"
+	cd apps/web          && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+	cd services/api      && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+	cd packages/auth     && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+	cd packages/chat     && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+	cd packages/db       && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+	cd packages/finance  && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+	cd packages/notes    && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+	cd packages/rpc      && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+	cd packages/ui       && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+	cd packages/utils    && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+	cd services/workers  && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+	cd tools/cli         && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
+
+# Full pre-merge check: lint + generated DB types + typecheck + dead code
+check: lint db-verify-types typecheck deadcode
 
 # Clean build artifacts and dependencies
 clean:

@@ -8,7 +8,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 import type { Session } from './auth.types';
 import { isMockAuthEnabled } from './config';
-import { DEFAULT_MOCK_USER, type User } from './mock-users';
+import type { User } from './mock-users';
 import { MockAuthProvider } from './providers/mock';
 import type { AuthContextType } from './types';
 

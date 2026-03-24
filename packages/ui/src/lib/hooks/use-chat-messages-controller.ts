@@ -1,8 +1,7 @@
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useCallback, useImperativeHandle, useMemo, useRef } from 'react';
+import { useImperativeHandle, useMemo, useRef } from 'react';
 
 import type { ExtendedMessage } from '../../types/chat';
-import { filterMessagesByQuery } from '../../types/chat';
 import { useAutoScroll } from './use-auto-scroll';
 import { useMessageSearch } from './use-message-search';
 import { useScrollDetection } from './use-scroll-detection';

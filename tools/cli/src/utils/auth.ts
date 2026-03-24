@@ -132,13 +132,6 @@ function emitInfo(outputMode: 'machine' | 'interactive', message: string) {
   consola.info(message);
 }
 
-function emitError(outputMode: 'machine' | 'interactive', error: Error) {
-  if (outputMode === 'machine') {
-    return;
-  }
-  consola.error(error);
-}
-
 interface DeviceCodeResponse {
   device_code: string;
   user_code: string;
@@ -453,20 +446,3 @@ async function requireAccessToken() {
   return token;
 }
 
-// Helper function to create an authenticated fetch client
-async function _getAuthenticatedClient(_host = 'localhost', _port = '4445') {
-  const token = await requireAccessToken();
-
-  return {
-    fetch: async (path: string, options: RequestInit = {}) => {
-      const url = `http://${_host}:${_port}${path}`;
-      return fetch(url, {
-        ...options,
-        headers: {
-          ...options.headers,
-          Authorization: `Bearer ${token}`,
-        },
-      });
-    },
-  };
-}

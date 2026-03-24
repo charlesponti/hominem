@@ -1,5 +1,4 @@
 import { useRpcQuery } from '@hominem/rpc/react';
-import type { TwitterAccountsListOutput } from '@hominem/rpc/types/twitter.types';
 import { useCallback } from 'react';
 
 export function useTwitterOAuth() {

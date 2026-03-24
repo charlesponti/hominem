@@ -20,8 +20,6 @@ import {
   type TwitterSyncOutput,
   type TwitterTweet,
 } from '@hominem/rpc/types/twitter.types';
-import type { Note } from '@hominem/rpc/types/notes.types';
-
 // Twitter OAuth and API utilities
 const TWITTER_SCOPES = 'tweet.read tweet.write users.read offline.access';
 

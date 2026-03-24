@@ -13,13 +13,6 @@ export interface SearchChatsParams {
   limit?: number;
 }
 
-interface _ChatStats {
-  totalChats: number;
-  totalMessages: number;
-  averageMessagesPerChat: number;
-  recentActivity: Date | null;
-}
-
 export class ChatError extends Error {
   constructor(
     public type:

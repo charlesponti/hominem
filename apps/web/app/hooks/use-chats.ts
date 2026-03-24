@@ -16,7 +16,7 @@ export function useDeleteChat() {
   );
 }
 
-export function useArchiveChat({ chatId, onSuccess }: { chatId: string; onSuccess?: (chat: Chat) => void }) {
+export function useArchiveChat({ chatId: _chatId, onSuccess }: { chatId: string; onSuccess?: (chat: Chat) => void }) {
   const queryClient = useQueryClient();
 
   return useRpcMutation<Chat, { chatId: string }>(

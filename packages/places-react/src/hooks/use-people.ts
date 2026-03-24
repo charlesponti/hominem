@@ -5,7 +5,6 @@ import type {
   PeopleCreateInput,
   PeopleCreateOutput,
 } from '@hominem/rpc/types/people.types'
-import type { Person } from '@hominem/rpc/types/people.types'
 
 const queryKeys = {
   people: {

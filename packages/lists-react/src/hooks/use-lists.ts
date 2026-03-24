@@ -11,7 +11,6 @@ import type {
   ListGetByIdInput,
   ListGetByIdOutput,
   ListGetContainingPlaceInput,
-  ListGetContainingPlaceOutput,
   ListRemoveCollaboratorInput,
   ListRemoveCollaboratorOutput,
   ListUpdateInput,
