@@ -72,7 +72,7 @@ Run the smallest set that proves the migration is correct:
 1. `make db-migrate-sync`
 2. `make db-verify-types`
 3. `DATABASE_URL=... bun run --filter @hominem/db goose:status` when you need explicit per-database verification
-4. `bun run check` when downstream packages, compiled types, or repo-wide validation may be affected
+4. `bun run lint` when downstream packages, compiled types, or repo-wide validation may be affected
 
 If local infra is not running, bring it up through the repo's normal Docker or Make targets before applying migrations.
 

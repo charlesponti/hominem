@@ -48,23 +48,6 @@ jobs:
         run: bun run lint
         timeout-minutes: 10
 
-  static-typecheck:
-    name: static:typecheck
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          install-flags: "--force"
-      - name: ✅ Type check
-        run: bun turbo run typegen && make typecheck
-        timeout-minutes: 15
-        env:
-          TURBO_CONCURRENCY: 4
-
   db-migrations:
     name: db:migrations
     runs-on: ubuntu-latest
@@ -118,7 +101,7 @@ jobs:
         with:
           install-flags: "--force"
       - name: 🏗️ Build
-        run: bun turbo run build
+        run: bun run build
         timeout-minutes: 30
 
   build-rpc:
@@ -303,7 +286,7 @@ jobs:
         with:
           environment: test
       - name: 🔐 API auth contract tests
-        run: bun run --filter @hominem/api test:contract:auth
+        run: bun run --filter @hominem/api test:auth:contract
         timeout-minutes: 10
 
   test-mobile:
@@ -317,14 +300,10 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           install-flags: "--force"
-      - name: 🔎 Mobile typecheck
-        run: bun run --filter @hominem/mobile typecheck
-        env:
-          EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
       - name: 🔬 Mobile lint
         run: bun run --filter @hominem/mobile lint
       - name: 📱 Verify mobile gate
-        run: bun run verify:mobile
+        run: bun run --filter @hominem/mobile check:expo-config
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
           EXPO_PUBLIC_R2_DOMAIN: "test-domain"
@@ -395,7 +374,7 @@ jobs:
           cd apps/web && bunx playwright install --with-deps chromium
         timeout-minutes: 20
       - name: 🌐 Web auth E2E tests
-        run: bun run test:e2e:auth:api
+        run: bun run --filter @hominem/web test:e2e
         timeout-minutes: 20
         env:
           AUTH_TEST_OTP_ENABLED: "true"

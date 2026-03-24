@@ -18,7 +18,7 @@ Read `references/hominem-goose-workflow.md` before editing or running migrations
 5. Keep the migration additive by default and follow expand -> backfill -> contract.
 6. Refresh the generated Kysely types whenever the migration changes the schema shape.
 7. Run `make db-migrate-sync` from the monorepo root for the canonical local apply-and-refresh workflow.
-8. Use `make db-verify-types` and `bun run check` to prove generated types and the repo still agree with the schema.
+8. Use `make db-verify-types` and `bun run lint` to prove generated types and the repo still agree with the schema.
 9. Use `make db-rollback-sync` when you intentionally roll back a local migration and need Kysely types regenerated to match.
 10. Report what changed, what ran, and any follow-up rollout risks.
 
@@ -39,7 +39,7 @@ Read `references/hominem-goose-workflow.md` before editing or running migrations
 - Use `make db-migrate-sync` as the default command after schema-changing migrations so `packages/db/src/types/database.ts` stays aligned with the live schema.
 - Use `make db-verify-types` before finishing migration work, especially before commits or review handoff.
 - Use the repo's migration linting and safety checks from the root `Makefile`.
-- Run `bun run check` when the schema change can affect generated types, downstream packages, or repo-wide integrity. This repo's `check` target also verifies generated Kysely types.
+- Run `bun run lint` when the schema change can affect generated types, downstream packages, or repo-wide integrity. This repo's `lint` target also verifies generated Kysely types.
 - Never claim a migration is complete without telling the user exactly which commands ran and whether they passed.
 
 ## Scope Boundary

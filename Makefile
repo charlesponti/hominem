@@ -120,18 +120,13 @@ test:
 build:
 	bun turbo run build --force
 
-# Run all linting: CSS, DB migrations, workspace code quality
+# Single quality gate: format, lint, DB/type verification, type quality
 lint:
+	bun run format
 	bunx stylelint "{apps,packages,services}/**/*.css" --config packages/ui/tools/stylelint-config-void.cjs
 	cd packages/db && npx --yes squawk-cli --no-error-on-unmatched-pattern --exclude-path '*schema_baseline.sql' migrations/*.sql
 	bun turbo run lint --no-cache
-
-# Full type and dead code quality gate:
-#   1. turbo typecheck  — standard tsc --noEmit across all workspaces (respects project refs)
-#   2. knip             — unused files, re-exported symbols, unlisted dependencies
-#   3. tsc strict       — unused locals/parameters inside function bodies
-#   4. oxlint           — unused imports/variables (already covered by `lint`)
-typecheck:
+	$(MAKE) db-verify-types
 	@echo "── tsc: standard typecheck across all workspaces ────────────────"
 	NODE_OPTIONS="--max-old-space-size=4096" bun turbo run typecheck --concurrency=4 --continue --no-cache
 	@echo "── knip: unused files / exports / dependencies ──────────────────"
@@ -149,9 +144,6 @@ typecheck:
 	cd packages/utils    && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
 	cd services/workers  && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
 	cd tools/cli         && bunx tsc --noEmit --noUnusedLocals --noUnusedParameters
-
-# Full pre-merge check: lint + generated DB types + typecheck (includes knip + strict tsc)
-check: lint db-verify-types typecheck
 
 # Clean build artifacts and dependencies
 clean:

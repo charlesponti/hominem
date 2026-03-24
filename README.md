@@ -29,6 +29,26 @@ Run a local environment check:
 
 	bun run dev
 
+### Script standard
+
+Root scripts are intentionally minimal:
+
+- `bun run dev`
+- `bun run build`
+- `bun run test`
+- `bun run lint` (single quality gate: format, lint, DB/type checks, type quality)
+- `bun run format`
+
+Use filtering for targeted work instead of extra root aliases:
+
+- `bun run build --filter @hominem/web`
+- `bun run test --filter @hominem/api`
+- `bun run dev --filter @hominem/api --filter @hominem/web`
+- `bun run --filter @hominem/mobile check:expo-config`
+- `bun run --filter @hominem/api test:auth:contract`
+
+Workspace scripts should follow `verb[:qualifier]` and keep names aligned with behavior.
+
 ### Canonical Docs
 
 - Product docs: `docs/README.md`

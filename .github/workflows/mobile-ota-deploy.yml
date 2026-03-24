@@ -41,16 +41,13 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Typecheck mobile
-        run: bunx tsc -p apps/mobile/tsconfig.json --noEmit
-
       - name: Mobile unit tests
         run: bun run --filter @hominem/mobile test:unit:auth
         env:
           EXPO_PUBLIC_API_BASE_URL: "http://localhost:4040"
 
       - name: Verify Expo config
-        run: bun run --filter @hominem/mobile verify:expo-config
+        run: bun run --filter @hominem/mobile check:expo-config
         env:
           APP_VARIANT: preview
           EXPO_NO_DOTENV: "1"

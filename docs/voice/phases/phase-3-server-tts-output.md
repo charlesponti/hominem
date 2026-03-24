@@ -97,7 +97,7 @@ Deliver high-quality, server-backed text-to-speech playback for assistant messag
   - [x] `bun run --filter @hominem/web typecheck`
   - [x] `bun run --filter @hominem/services typecheck`
   - [x] `bun run --filter @hominem/api typecheck`
-- [ ] Full monorepo `bun run check` (currently blocked by unrelated `apps/mobile/lib/widget-storage.ts` MMKV type issue).
+- [ ] Full monorepo `bun run lint` (currently blocked by unrelated `apps/mobile/lib/widget-storage.ts` MMKV type issue).
 
 ## 7) Risks and mitigations
 
@@ -124,5 +124,5 @@ Deliver high-quality, server-backed text-to-speech playback for assistant messag
 
 ### Pending
 
-- Full monorepo `bun run check` remains unresolved due to unrelated mobile type mismatch (`apps/mobile/lib/widget-storage.ts`), outside Phase 3 scope.
+- Full monorepo `bun run lint` remains unresolved due to unrelated mobile type mismatch (`apps/mobile/lib/widget-storage.ts`), outside Phase 3 scope.
 - Optional post-phase refinements (not blockers): caching/preload optimization, expanded playback telemetry, and potential extraction to a dedicated reusable `SpeakButton` component if desired for design-system consistency.

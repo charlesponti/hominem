@@ -86,7 +86,7 @@
     "test": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build:storybook": "storybook build"
   },
   "dependencies": {
     "@hominem/auth": "workspace:*",

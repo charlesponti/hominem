@@ -26,9 +26,8 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "check": "make check",
     "dev": "turbo dev",
-    "dev:web": "turbo dev --filter @hominem/api --filter @hominem/web",
+    "dev:web": "bun run dev --filter @hominem/api --filter @hominem/web",
     "doctor": "bash scripts/dev-doctor.sh",
     "doctor:react": "bunx react-doctor@latest . --yes --offline --verbose",
     "format": "turbo run format",
@@ -36,12 +35,8 @@
     "knip:fix": "knip --fix",
     "lint": "make lint",
     "test": "turbo run test",
-    "test:e2e:auth": "bun run test:e2e:auth:api",
-    "test:e2e:auth:api": "bun run --filter @hominem/api test:contract:auth",
     "typecheck:native": "bun run ./scripts/typecheck-native.mjs",
-    "typecheck": "make typecheck",
-    "update:turbo": "bunx @turbo/codemod@latest update",
-    "verify:mobile": "bun run --filter @hominem/mobile verify:expo-config"
+    "update:turbo": "bunx @turbo/codemod@latest update"
   },
   "dependencies": {
     "@better-auth/kysely-adapter": "^1.5.4",

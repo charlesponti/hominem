@@ -10,9 +10,22 @@ Always run commands from the monorepo root. Do NOT `cd` into packages.
 | **Dev**          | `bun run dev` (or `--filter <package>`)      |
 | **Build**        | `bun run build`                              |
 | **Test**         | `bun run test` (or `--filter <package>`)     |
-| **Typecheck**    | `bun run typecheck`                          |
-| **Lint/Format**  | `bun run lint --parallel` / `bun run format` |
-| **Safety Check** | `bun run check`                              |
+| **Lint/Quality** | `bun run lint` / `bun run format`            |
+
+## Script Standard
+
+Root scripts stay orchestration-only and minimal. Prefer runtime filters over root aliases.
+
+- Root scripts: `dev`, `build`, `test`, `lint`, `format`
+- `lint` is the single quality gate (format + lint + DB/type checks + type quality)
+- Use filters for targeted runs:
+  - `bun run build --filter @hominem/web`
+  - `bun run test --filter @hominem/api`
+  - `bun run dev --filter @hominem/api --filter @hominem/web`
+  - `bun run --filter @hominem/mobile check:expo-config`
+  - `bun run --filter @hominem/api test:auth:contract`
+
+Workspace scripts should use `verb[:qualifier]` naming and match behavior semantics.
 
 ## Task Execution Strategy
 
@@ -121,7 +134,7 @@ Direct DB access is permitted and expected. Services should:
 ### Validation
 
 Run `bun run validate-db-imports` to check for violations.
-This runs automatically during `bun run check`.
+This runs automatically during `bun run lint`.
 
 ## UI Package Architecture (CRITICAL)
 
@@ -199,7 +212,7 @@ After modifying `packages/ui`, run these checks:
 
 ```bash
 bun run validate-db-imports  # Checks for forbidden DB imports
-bun run check                # Full type check and lint
+bun run lint                 # Full type check and lint
 ```
 
 **Lint Rules:**
@@ -260,7 +273,7 @@ After modifying database schema (especially in `@hominem/db`), the standard comm
 ### Standard workflow:
 
 ```bash
-bun run check    # Rebuilds types, then runs full check suite
+bun run lint     # Rebuilds types, then runs full check suite
 bun run test     # Tests with fresh builds
 ```
 
@@ -268,13 +281,13 @@ bun run test     # Tests with fresh builds
 
 - **.d.ts files** in `build/` directories must be rebuilt for other packages to see new types
 - **Stale types** can cause `Type 'X' is not assignable to type 'Y'` errors
-- The `check` script now runs `build:types` first to ensure downstream packages have fresh type definitions
+- The `lint` script now runs `build:types` first to ensure downstream packages have fresh type definitions
 
 ### If you encounter weird type errors:
 
 ```bash
 # Clear turbo cache and rebuild everything
-rm -rf .turbo **/.turbo && bun run check
+rm -rf .turbo **/.turbo && bun run lint
 ```
 
 ## Console & Logging Standards
@@ -333,7 +346,7 @@ See `.github/skills/` and `.agents/skills/` for reusable scoped guidance:
 _These are things you are not able to do._
 
 - Modify database schema using `psql` or other direct calls.
-- Commit code without running `bun run check` first.
+- Commit code without running `bun run lint` first.
 - Use hardcoded credentials or secrets in code.
 - Bypass authentication/authorization checks.
 - Import database types in client applications.

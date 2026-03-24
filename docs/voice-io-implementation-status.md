@@ -20,7 +20,7 @@ This document captures everything implemented so far for the Voice I/O initiativ
 - Voice Mode is currently push-to-talk style (explicit start/stop), not automatic silence-turn loop.
 - Voice Mode transcript history is captured in hook state but not fully surfaced in overlay UI.
 - ChatVoiceModal implementation still exists in UI package, but it is no longer exported from `@hominem/ui/chat` and composer flow no longer depends on it.
-- Full monorepo `bun run check` remains blocked by unrelated pre-existing mobile typecheck issue.
+- Full monorepo `bun run lint` remains blocked by unrelated pre-existing mobile typecheck issue.
 
 ---
 
@@ -196,7 +196,7 @@ Targeted checks run multiple times and currently passing for touched workspaces:
 - `bun run --filter @hominem/api typecheck` ✅
 
 Full repo check status:
-- `bun run check` ❌ blocked by unrelated pre-existing mobile issue:
+- `bun run lint` ❌ blocked by unrelated pre-existing mobile issue:
   - `apps/mobile/lib/widget-storage.ts` (`MMKV` value/type mismatch)
 
 This blocker is outside Voice I/O scope and was not modified as part of this implementation.

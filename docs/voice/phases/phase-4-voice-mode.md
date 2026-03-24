@@ -120,7 +120,7 @@ This phase should move from the current Voice Mode MVP (manual push-to-talk loop
   - Simulate network/API failure and confirm state moves to `error` then recoverable state.
   - Validate cleanup on route change/unmount (no lingering audio or active mic).
 - Repo-wide check note:
-  - `bun run check` currently blocked by pre-existing unrelated mobile issue in `apps/mobile/lib/widget-storage.ts` (outside Voice I/O scope).
+  - `bun run lint` currently blocked by pre-existing unrelated mobile issue in `apps/mobile/lib/widget-storage.ts` (outside Voice I/O scope).
 
 ## 7) Risks and mitigations
 

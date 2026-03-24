@@ -114,7 +114,7 @@ Ship a production-ready inline voice input experience in the composer so users c
 - [ ] Automated: `bun run --filter @hominem/web typecheck`
 - [ ] Automated: `bun run --filter @hominem/services typecheck`
 - [ ] Automated: `bun run --filter @hominem/api typecheck`
-- [ ] Repo-wide note: `bun run check` currently blocked by pre-existing unrelated mobile issue (`apps/mobile/lib/widget-storage.ts` MMKV mismatch).
+- [ ] Repo-wide note: `bun run lint` currently blocked by pre-existing unrelated mobile issue (`apps/mobile/lib/widget-storage.ts` MMKV mismatch).
 
 ## 7) Risks and mitigations
 
@@ -136,4 +136,4 @@ Ship a production-ready inline voice input experience in the composer so users c
 ### Pending
 - Extract dedicated `VoiceCapture` component per Phase 2 target architecture (currently achieved functionally via evolved `SpeechInput`).
 - Remove/deprecate `ChatVoiceModal` from public exports after final consumer cleanup.
-- Full monorepo `bun run check` is still blocked by unrelated pre-existing mobile typecheck issue, outside Voice I/O scope.
+- Full monorepo `bun run lint` is still blocked by unrelated pre-existing mobile typecheck issue, outside Voice I/O scope.

@@ -5,6 +5,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "bash scripts/run-variant.sh dev expo start --dev-client",
+    "check:expo-config": "bash scripts/check-expo-config.sh",
     "target": "bash scripts/dev-target.sh",
     "target:sim": "bash scripts/dev-target.sh simulator",
     "target:device": "bash scripts/dev-target.sh device",
@@ -21,7 +22,6 @@
     "test:e2e:smoke": "detox test -c ios.sim.e2e --testPathPattern=e2e/smoke.mobile.e2e.js --cleanup",
     "test:e2e:build": "bash scripts/ensure-ios-variant.sh e2e && detox build -c ios.sim.e2e",
     "postinstall": "node node_modules/@shopify/react-native-skia/scripts/install-libs.js",
-    "verify:expo-config": "bash scripts/check-expo-config.sh",
     "verify:eas-env:preview": "bash scripts/check-release-env.sh preview",
     "verify:eas-env:production": "bash scripts/check-release-env.sh production",
     "verify:eas-profiles": "bash scripts/check-eas-profiles.sh"

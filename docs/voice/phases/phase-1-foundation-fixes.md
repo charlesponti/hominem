@@ -138,7 +138,7 @@ Recording start/stop emissions were added in `SpeechInput`; `emitVoiceEvent` now
 - [x] Manual: permission denial surfaces inline error
 - [x] Manual: screen-reader status announcements present for recording/processing states
 - [x] Manual: recording telemetry events fire on start/stop
-- [ ] Full monorepo `bun run check` (currently blocked by unrelated mobile typecheck issue in `apps/mobile/lib/widget-storage.ts`)
+- [ ] Full monorepo `bun run lint` (currently blocked by unrelated mobile typecheck issue in `apps/mobile/lib/widget-storage.ts`)
 
 ## 7) Risks and mitigations
 
@@ -166,5 +166,5 @@ Recording start/stop emissions were added in `SpeechInput`; `emitVoiceEvent` now
 - `P1-T7` Voice event emission and telemetry path improvement
 
 **Pending / partial**
-- Full monorepo `bun run check` is still blocked by unrelated pre-existing mobile issue (`apps/mobile/lib/widget-storage.ts`), outside Voice I/O scope.
+- Full monorepo `bun run lint` is still blocked by unrelated pre-existing mobile issue (`apps/mobile/lib/widget-storage.ts`), outside Voice I/O scope.
 - Telemetry path currently includes PostHog capture attempt plus console logging; full centralized observability hardening can be expanded in later phases.

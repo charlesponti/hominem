@@ -155,7 +155,7 @@ When finding business logic in `packages/ui`:
 
 4. **Update tests** - Component tests should use props, not mocks
 
-5. **Validate** - Run `bun run validate-db-imports` and `bun run check`
+5. **Validate** - Run `bun run validate-db-imports` and `bun run lint`
 
 ## Environment Variable Access
 
@@ -406,7 +406,7 @@ Before starting a refactor:
 - [ ] Check test files for mock updates needed
 
 After refactoring:
-- [ ] Run `bun run check` to verify
+- [ ] Run `bun run lint` to verify
 - [ ] Update test mocks if component signature changed
 - [ ] Verify no new console statements introduced
 - [ ] Test in Storybook (for UI components)
