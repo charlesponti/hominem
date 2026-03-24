@@ -32,7 +32,8 @@ RUN bun install 2>&1 | grep -v "warn\|skipped" || true
 # Build required workspace packages first
 RUN bun run --filter @hominem/env build && \
     bun run --filter @hominem/db build && \
-    bun run --filter @hominem/utils build
+    bun run --filter @hominem/auth build && \
+    bun run --filter @hominem/rpc build
 
 # Compile TypeScript application to pre-optimized standalone binary
 # Must succeed for production builds
