@@ -10,8 +10,8 @@ const telemetry = initTelemetry({
   serviceName: 'hominem-api',
   serviceVersion: process.env.npm_package_version || '0.0.0',
   environment: env.NODE_ENV || 'development',
-  otlpEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-  otlpProtocol: process.env.OTEL_EXPORTER_OTLP_PROTOCOL,
+  ...(process.env.OTEL_EXPORTER_OTLP_ENDPOINT ? { otlpEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT } : {}),
+  ...(process.env.OTEL_EXPORTER_OTLP_PROTOCOL ? { otlpProtocol: process.env.OTEL_EXPORTER_OTLP_PROTOCOL } : {}),
   samplingRatio: parseFloat(process.env.OTEL_TRACES_SAMPLER_ARG || '1.0'),
 });
 

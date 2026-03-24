@@ -2,7 +2,6 @@ import { index, layout, type RouteConfig, route } from '@react-router/dev/routes
 
 export default [
   // API Routes (specific handlers)
-  route('api/upload', 'routes/api.upload.ts'),
   route('api/auth/google', 'routes/api/auth/google.ts'),
 
   layout('routes/auth/layout.tsx', [

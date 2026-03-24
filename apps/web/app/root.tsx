@@ -14,7 +14,7 @@ import {
   useRevalidator,
 } from 'react-router';
 
-import { FeatureFlagsProvider } from '~/lib/hooks/use-feature-flags';
+import { AnalyticsProvider } from '~/lib/posthog'
 import { WEB_BRAND } from '~/lib/brand';
 
 import type { Route } from './+types/root';
@@ -131,11 +131,11 @@ export default function App({ loaderData }: Route.ComponentProps) {
     >
       <HonoProvider baseUrl={apiBaseUrl}>
         <TelemetryProvider>
-          <FeatureFlagsProvider>
+          <AnalyticsProvider>
             <UpdateGuard logo={WEB_BRAND.logoPath} appName={WEB_BRAND.appName}>
               <Outlet />
             </UpdateGuard>
-          </FeatureFlagsProvider>
+          </AnalyticsProvider>
         </TelemetryProvider>
       </HonoProvider>
     </AuthProvider>

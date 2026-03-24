@@ -2,14 +2,12 @@ import { InternalError } from '../errors';
 import { logger } from '@hominem/utils/logger';
 import { Hono } from 'hono';
 
-import { authMiddleware, type AppContext } from '../middleware/auth';
+import { adminMiddleware, type AppContext } from '../middleware/auth';
 
 /**
  * Admin Routes
  *
- * Handles admin-only operations.
- *
- * TODO: Add admin-only middleware check
+ * All routes require isAdmin = true — enforced by adminMiddleware.
  */
 
 // ============================================================================
@@ -18,10 +16,7 @@ import { authMiddleware, type AppContext } from '../middleware/auth';
 
 export const adminRoutes = new Hono<AppContext>()
   // Refresh Google Places data (stub implementation)
-  .post('/refresh-google-places', authMiddleware, async (c) => {
-    // const userId = c.get('userId')!;
-    // TODO: Check if user is admin
-
+  .post('/refresh-google-places', adminMiddleware, async (c) => {
     try {
       // TODO: Implement Google Places refresh logic
       logger.warn('[admin.refresh-google-places] Not yet implemented');

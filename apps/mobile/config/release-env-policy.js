@@ -1,6 +1,10 @@
 const LOCAL_ENV_VARIANTS = new Set(['dev', 'e2e'])
 const RELEASE_ENV_VARIANTS = new Set(['preview', 'production'])
-const REQUIRED_RELEASE_ENV_VARS = ['EXPO_PUBLIC_API_BASE_URL', 'EXPO_PUBLIC_POSTHOG_API_KEY']
+const REQUIRED_RELEASE_ENV_VARS = [
+  'EXPO_PUBLIC_API_BASE_URL',
+  'EXPO_PUBLIC_POSTHOG_API_KEY',
+  'EXPO_PUBLIC_POSTHOG_HOST',
+]
 
 function canUseLocalEnvFile(variant) {
   return LOCAL_ENV_VARIANTS.has(variant)

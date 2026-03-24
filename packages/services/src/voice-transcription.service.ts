@@ -1,9 +1,8 @@
 import { Buffer } from 'node:buffer';
 
-import { openai } from '@ai-sdk/openai';
 import { experimental_transcribe } from 'ai';
 
-import { env } from './env';
+import { getOpenAIAudioProvider } from './ai-model';
 
 export const VOICE_TRANSCRIPTION_MAX_SIZE_BYTES = 25 * 1024 * 1024;
 
@@ -109,12 +108,15 @@ export async function transcribeVoiceBuffer(input: {
   const audioBuffer = Buffer.from(input.buffer);
 
   try {
-    if (!env.OPENAI_API_KEY) {
+    let audioProvider: ReturnType<typeof getOpenAIAudioProvider>;
+    try {
+      audioProvider = getOpenAIAudioProvider();
+    } catch {
       throw new VoiceTranscriptionError('Invalid API configuration.', 'AUTH', 401);
     }
 
     const transcription = await experimental_transcribe({
-      model: openai.transcription('whisper-1'),
+      model: audioProvider.transcription('whisper-1'),
       audio: audioBuffer,
       providerOptions: {
         openai: {

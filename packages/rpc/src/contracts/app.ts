@@ -15,7 +15,14 @@ const chatsContract = new Hono()
   .post('/:id/archive', stub)
   .get('/note/:noteId', stub)
 
-const filesContract = new Hono().post('/index', stub)
+const filesContract = new Hono()
+  .get('/', stub)
+  .get('/:fileId', stub)
+  .get('/:fileId/url', stub)
+  .delete('/:fileId', stub)
+  .post('/index', stub)
+  .post('/prepare-upload', stub)
+  .post('/complete-upload', stub)
 
 const financeContract = new Hono()
   .route(

@@ -6,4 +6,5 @@ export {
   type StoredFile,
   type StorageOptions,
   type FileObject,
+  type PreparedUpload,
 } from './r2-storage';

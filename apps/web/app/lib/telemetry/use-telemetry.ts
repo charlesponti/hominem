@@ -42,6 +42,7 @@ export function useTelemetry() {
       };
     } catch (error) {
       console.error('[Telemetry] Failed to initialize OpenTelemetry:', error);
+      return undefined;
     }
   }, []);
 }

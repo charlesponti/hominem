@@ -1,3 +1,4 @@
+import { logger } from '@hominem/utils/logger';
 import { env } from '../env';
 
 type SendEmailParams = {
@@ -41,9 +42,7 @@ function shouldSendEmails(): boolean {
 
 export async function sendEmail({ to, subject, text, html }: SendEmailParams): Promise<void> {
   if (!shouldSendEmails()) {
-    console.log(
-      `[Email] Skipped sending to ${to} (${subject}) - SEND_EMAILS not enabled or running in ${env.NODE_ENV}`,
-    );
+    logger.info('email_skipped', { to, subject, nodeEnv: env.NODE_ENV });
     return;
   }
 

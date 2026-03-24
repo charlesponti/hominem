@@ -1,7 +1,7 @@
 import type { User } from '@hominem/auth/server';
 import type { AuthEnvelope } from '@hominem/auth/types';
 
-import { UnauthorizedError } from '../errors';
+import { ForbiddenError, UnauthorizedError } from '../errors';
 import { createMiddleware } from 'hono/factory';
 
 /**
@@ -42,6 +42,27 @@ export const authMiddleware = createMiddleware<AppContext>(async (c, next) => {
 
   if (!user || !userId) {
     throw new UnauthorizedError('Authentication required', authError ? { authError } : undefined);
+  }
+
+  return await next();
+});
+
+/**
+ * Admin Middleware
+ *
+ * Requires the authenticated user to have isAdmin = true.
+ * Must be used after the context middleware that sets user/userId.
+ */
+export const adminMiddleware = createMiddleware<AppContext>(async (c, next) => {
+  const user = c.get('user');
+  const userId = c.get('userId');
+
+  if (!user || !userId) {
+    throw new UnauthorizedError('Authentication required');
+  }
+
+  if (!user.isAdmin) {
+    throw new ForbiddenError('Admin access required');
   }
 
   return await next();

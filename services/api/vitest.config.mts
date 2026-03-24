@@ -17,6 +17,7 @@ export default defineConfig({
       'src/auth/test-otp-store.test.ts',
       'src/middleware/auth.test.ts',
       'src/middleware/request-logger.test.ts',
+      'src/rpc/routes/files.test.ts',
     ],
     exclude: ['**/node_modules/**', '**/build/**'],
   },

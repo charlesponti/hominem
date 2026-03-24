@@ -20,7 +20,16 @@ export type {
   FinanceTopMerchantsInput,
   FinanceTransactionsListInput,
 } from './domains/finance';
-export type { FileIndexInput, FileIndexOutput, FilesClient } from './domains/files';
+export type {
+  FileCompleteUploadInput,
+  FileCompleteUploadOutput,
+  FileIndexInput,
+  FileIndexOutput,
+  FilePrepareUploadInput,
+  FilePrepareUploadOutput,
+  FilesClient,
+  RpcUploadedFile,
+} from './domains/files';
 export type { InvitesClient } from './domains/invites';
 export type { ItemsClient } from './domains/items';
 export type { ListsClient } from './domains/lists';

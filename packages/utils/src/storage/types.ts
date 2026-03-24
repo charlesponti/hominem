@@ -18,3 +18,16 @@ export interface FileObject {
   size: number;
   lastModified?: Date;
 }
+
+export interface PreparedUpload {
+  id: string;
+  key: string;
+  originalName: string;
+  mimetype: string;
+  size: number;
+  uploadUrl: string;
+  headers: Record<string, string>;
+  url: string;
+  uploadedAt: Date;
+  expiresAt: Date;
+}

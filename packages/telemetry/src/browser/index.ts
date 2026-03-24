@@ -6,9 +6,15 @@ import { WebTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-
 import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http'
-import { propagation, trace, metrics, type Span } from '@opentelemetry/api'
-import { W3CTraceContextPropagator, W3CBaggagePropagator } from '@opentelemetry/core'
-import { CompositePropagator } from '@opentelemetry/core'
+import { propagation, trace, metrics, context as otelContext, type Span } from '@opentelemetry/api'
+import { W3CTraceContextPropagator, W3CBaggagePropagator, CompositePropagator } from '@opentelemetry/core'
+import { Resource } from '@opentelemetry/resources'
+import {
+  SEMRESATTRS_SERVICE_NAME,
+  SEMRESATTRS_SERVICE_VERSION,
+  SEMRESATTRS_SERVICE_NAMESPACE,
+  SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
+} from '@opentelemetry/semantic-conventions'
 import type { TelemetryConfig } from '../shared/index.js'
 
 /**
@@ -44,7 +50,6 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): Browse
   // Trace exporter and provider
   const traceExporter = new OTLPTraceExporter({
     url: `${otlpEndpoint}/v1/traces`,
-    compression: 'gzip',
   })
 
   const tracerProvider = new WebTracerProvider({
@@ -63,7 +68,6 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): Browse
   // Metrics provider
   const metricExporter = new OTLPMetricExporter({
     url: `${otlpEndpoint}/v1/metrics`,
-    compression: 'gzip',
   })
 
   const meterProvider = new MeterProvider({
@@ -117,7 +121,7 @@ function getBrowserConfig(explicit?: Partial<TelemetryConfig>): TelemetryConfig 
     otlpEndpoint: explicit?.otlpEndpoint || env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4318',
     otlpProtocol: 'http/protobuf', // Browser only supports HTTP
     samplingRatio: explicit?.samplingRatio || parseFloat(env.OTEL_TRACES_SAMPLER_ARG || '1.0'),
-    attributes: explicit?.attributes,
+    ...(explicit?.attributes !== undefined ? { attributes: explicit.attributes } : {}),
   }
 }
 
@@ -125,14 +129,6 @@ function getBrowserConfig(explicit?: Partial<TelemetryConfig>): TelemetryConfig 
  * Create resource for browser environment
  */
 function createBrowserResource(config: TelemetryConfig) {
-  const { Resource } = require('@opentelemetry/resources')
-  const {
-    SEMRESATTRS_SERVICE_NAME,
-    SEMRESATTRS_SERVICE_VERSION,
-    SEMRESATTRS_SERVICE_NAMESPACE,
-    SEMRESATTRS_DEPLOYMENT_ENVIRONMENT,
-  } = require('@opentelemetry/semantic-conventions')
-
   return new Resource({
     [SEMRESATTRS_SERVICE_NAME]: config.serviceName,
     [SEMRESATTRS_SERVICE_VERSION]: config.serviceVersion || '0.0.0',
@@ -149,7 +145,6 @@ function createBrowserResource(config: TelemetryConfig) {
  * Instrument fetch API for automatic tracing
  */
 function instrumentFetch(_tracerProvider: WebTracerProvider) {
-  const { trace, context: otelContext } = require('@opentelemetry/api')
   const tracer = trace.getTracer('browser-fetch')
   const originalFetch = window.fetch
 
@@ -180,7 +175,8 @@ function instrumentFetch(_tracerProvider: WebTracerProvider) {
             headers.set(key, value)
           })
 
-          const response = await originalFetch.call(window, input, {
+          const fetchInput: RequestInfo = input instanceof URL ? input.toString() : input
+          const response = await originalFetch.call(window, fetchInput, {
             ...init,
             headers,
           })

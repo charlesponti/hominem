@@ -1,6 +1,7 @@
 import { fileStorageService } from '@hominem/utils/storage';
+import { FileProcessorService } from '@hominem/services/files';
 import { logger } from '@hominem/utils/logger';
-import { NotFoundError, ValidationError, InternalError } from '../errors';
+import { NotFoundError, ValidationError, InternalError, isServiceError } from '../errors';
 import { Hono } from 'hono';
 import * as z from 'zod';
 
@@ -30,6 +31,16 @@ async function indexProcessedFile(file: ProcessedFile, userId: string): Promise<
   };
 }
 
+function throwFilesRouteError(err: unknown, logLabel: string, fallbackMessage: string): never {
+  logger.error(logLabel, { error: err });
+
+  if (isServiceError(err)) {
+    throw err;
+  }
+
+  throw new InternalError(fallbackMessage);
+}
+
 export const filesRoutes = new Hono<AppContext>()
   // ListOutput user files
   .get('/', authMiddleware, async (c) => {
@@ -39,8 +50,7 @@ export const filesRoutes = new Hono<AppContext>()
       const files = await fileStorageService.listUserFiles(userId);
       return c.json({ files, count: files.length });
     } catch (err) {
-      logger.error('[files.list] error', { error: err });
-      throw new InternalError('Failed to list files');
+      throwFilesRouteError(err, '[files.list] error', 'Failed to list files');
     }
   })
 
@@ -66,8 +76,7 @@ export const filesRoutes = new Hono<AppContext>()
         message: 'File fetched successfully',
       });
     } catch (err) {
-      logger.error('[files.fetch] error', { error: err });
-      throw new InternalError('Failed to get file');
+      throwFilesRouteError(err, '[files.fetch] error', 'Failed to get file');
     }
   })
 
@@ -93,8 +102,7 @@ export const filesRoutes = new Hono<AppContext>()
         message: 'URL generated successfully',
       });
     } catch (err) {
-      logger.error('[files.getUrl] error', { error: err });
-      throw new InternalError('Failed to generate file URL');
+      throwFilesRouteError(err, '[files.getUrl] error', 'Failed to generate file URL');
     }
   })
 
@@ -116,8 +124,7 @@ export const filesRoutes = new Hono<AppContext>()
 
       return c.json({ success: true, message: 'File deleted successfully' });
     } catch (err) {
-      logger.error('[files.remove] error', { error: err });
-      throw new InternalError('Failed to delete file');
+      throwFilesRouteError(err, '[files.remove] error', 'Failed to delete file');
     }
   })
 
@@ -135,10 +142,110 @@ export const filesRoutes = new Hono<AppContext>()
       const result = await indexProcessedFile(parsed.data, userId);
       return c.json(result);
     } catch (err) {
-      logger.error('[files.index] error', { error: err });
-      throw new InternalError('Failed to index file');
+      throwFilesRouteError(err, '[files.index] error', 'Failed to index file');
+    }
+  })
+
+  .post('/prepare-upload', authMiddleware, async (c) => {
+    try {
+      const userId = c.get('userId')!;
+      const body = await c.req.json();
+      const parsed = prepareUploadSchema.safeParse(body);
+
+      if (!parsed.success) {
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Invalid upload request');
+      }
+
+      const preparedUpload = await fileStorageService.createPreparedUpload(parsed.data, userId);
+
+      return c.json({
+        fileId: preparedUpload.id,
+        key: preparedUpload.key,
+        originalName: preparedUpload.originalName,
+        mimetype: preparedUpload.mimetype,
+        size: preparedUpload.size,
+        uploadUrl: preparedUpload.uploadUrl,
+        headers: preparedUpload.headers,
+        url: preparedUpload.url,
+        uploadedAt: preparedUpload.uploadedAt.toISOString(),
+        expiresAt: preparedUpload.expiresAt.toISOString(),
+      });
+    } catch (err) {
+      throwFilesRouteError(err, '[files.prepareUpload] error', 'Failed to prepare upload');
+    }
+  })
+
+  .post('/complete-upload', authMiddleware, async (c) => {
+    try {
+      const userId = c.get('userId')!;
+      const body = await c.req.json();
+      const parsed = completeUploadSchema.safeParse(body);
+
+      if (!parsed.success) {
+        throw new ValidationError(parsed.error?.issues[0]?.message ?? 'Invalid upload completion');
+      }
+
+      if (!fileStorageService.isOwnedFilePath(userId, parsed.data.key)) {
+        throw new ValidationError('Upload key does not belong to the current user');
+      }
+
+      if (!parsed.data.key.includes(parsed.data.fileId)) {
+        throw new ValidationError('Upload key does not match the file identifier');
+      }
+
+      const exists = await fileStorageService.fileExists(parsed.data.key);
+      if (!exists) {
+        throw new NotFoundError('Uploaded object');
+      }
+
+      const fileBuffer = await fileStorageService.getFileByPath(parsed.data.key);
+      if (!fileBuffer) {
+        throw new NotFoundError('Uploaded object');
+      }
+
+      const processedFile = await FileProcessorService.processFile(
+        Uint8Array.from(fileBuffer).buffer,
+        parsed.data.originalName,
+        parsed.data.mimetype,
+        parsed.data.fileId,
+      );
+
+      let vectorIds: string[] = [];
+      if (processedFile.textContent || processedFile.content) {
+        const indexResult = await indexProcessedFile(processedFile, userId);
+        if (indexResult.success) {
+          vectorIds = [];
+        }
+      }
+
+      return c.json({
+        success: true,
+        file: {
+          ...processedFile,
+          url: fileStorageService.getPublicUrlForPath(parsed.data.key),
+          uploadedAt: new Date().toISOString(),
+          vectorIds,
+        },
+        message: 'Upload completed successfully',
+      });
+    } catch (err) {
+      throwFilesRouteError(err, '[files.completeUpload] error', 'Failed to complete upload');
     }
   });
+
+const prepareUploadSchema = z.object({
+  originalName: z.string().min(1),
+  mimetype: z.string().min(1),
+  size: z.number().positive(),
+});
+
+const completeUploadSchema = z.object({
+  fileId: z.string().uuid(),
+  key: z.string().min(1),
+  originalName: z.string().min(1),
+  mimetype: z.string().min(1),
+  size: z.number().positive(),
+});
 
 const processedFileSchema = z
   .object({

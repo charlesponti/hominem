@@ -433,16 +433,4 @@ export async function hasValidStoredSession(expectedIssuerBaseUrl?: string): Pro
   }
 }
 
-async function requireAccessToken() {
-  const token = await getAccessToken();
-  if (!token) {
-    throw new AuthError({
-      code: 'AUTH_REQUIRED',
-      category: 'auth',
-      message: 'No auth token available',
-      hint: 'Run `hominem auth login`',
-    });
-  }
-  return token;
-}
 

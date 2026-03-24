@@ -6,14 +6,18 @@ import {
   ListObjectsV2Command,
   CreateBucketCommand,
   HeadBucketCommand,
+  HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+import { isSupportedChatUploadMimeType } from '../upload';
 
 import * as Types from './types';
 
 export type StoredFile = Types.StoredFile;
 export type StorageOptions = Types.StorageOptions;
 export type FileObject = Types.FileObject;
+export type PreparedUpload = Types.PreparedUpload;
 
 export type StorageCategory = 'csvs' | 'chats' | 'places';
 
@@ -110,39 +114,89 @@ export class R2StorageService {
 
     await this.ensureBucket();
 
-    const id = crypto.randomUUID();
     const originalName = options?.originalName || options?.filename || 'file';
-    const extension = this.getFileExtension(originalName, mimetype);
-
-    let storedName: string;
-    if (options?.filename) {
-      const sanitized = options.filename.replace(/[^a-zA-Z0-9.-]/g, '_');
-      storedName = sanitized.endsWith(extension) ? sanitized : `${sanitized}${extension}`;
-    } else {
-      storedName = `${id}${extension}`;
-    }
-
-    const key = this.getKey(userId, storedName);
+    const preparedUpload = await this.createPreparedUpload(
+      {
+        originalName,
+        mimetype,
+        size: buffer.byteLength,
+        ...(options?.filename ? { filename: options.filename } : {}),
+      },
+      userId,
+      3600,
+    );
 
     const command = new PutObjectCommand({
       Bucket: this.bucketName,
-      Key: key,
+      Key: preparedUpload.key,
       Body: buffer,
       ContentType: mimetype,
     });
 
     await this.client.send(command);
 
-    const url = this.getPublicUrl(key);
+    return {
+      id: preparedUpload.id,
+      originalName: preparedUpload.originalName,
+      filename: preparedUpload.key,
+      mimetype,
+      size: buffer.byteLength,
+      url: preparedUpload.url,
+      uploadedAt: preparedUpload.uploadedAt,
+    };
+  }
+
+  async createPreparedUpload(
+    input: {
+      originalName: string;
+      mimetype: string;
+      size: number;
+      filename?: string;
+    },
+    userId: string,
+    expiresIn = 900,
+  ): Promise<PreparedUpload> {
+    if (input.size > this.maxFileSize) {
+      throw new Error(`File size exceeds maximum limit of ${this.maxFileSize} bytes`);
+    }
+
+    if (!this.isValidFileType(input.mimetype)) {
+      throw new Error(`Unsupported file type: ${input.mimetype}`);
+    }
+
+    await this.ensureBucket();
+
+    const id = crypto.randomUUID();
+    const originalName = input.originalName || input.filename || 'file';
+    const extension = this.getFileExtension(originalName, input.mimetype);
+    const storedName = input.filename
+      ? this.createStoredName(id, input.filename, extension)
+      : `${id}${extension}`;
+    const key = this.getKey(userId, storedName);
+    const uploadUrl = await getSignedUrl(
+      this.client,
+      new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: key,
+        ContentType: input.mimetype,
+        ContentLength: input.size,
+      }),
+      { expiresIn },
+    );
 
     return {
       id,
+      key,
       originalName,
-      filename: key,
-      mimetype,
-      size: buffer.byteLength,
-      url,
+      mimetype: input.mimetype,
+      size: input.size,
+      uploadUrl,
+      headers: {
+        'content-type': input.mimetype,
+      },
+      url: this.getPublicUrl(key),
       uploadedAt: new Date(),
+      expiresAt: new Date(Date.now() + expiresIn * 1000),
     };
   }
 
@@ -252,6 +306,49 @@ export class R2StorageService {
     return getSignedUrl(this.client, command, { expiresIn });
   }
 
+  async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await this.client.send(
+        new HeadObjectCommand({
+          Bucket: this.bucketName,
+          Key: filePath,
+        }),
+      );
+
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async getFileByPath(filePath: string): Promise<Buffer | null> {
+    try {
+      const response = await this.client.send(
+        new GetObjectCommand({
+          Bucket: this.bucketName,
+          Key: filePath,
+        }),
+      );
+
+      if (!response.Body) {
+        return null;
+      }
+
+      const bytes = await response.Body.transformToByteArray();
+      return Buffer.from(bytes);
+    } catch {
+      return null;
+    }
+  }
+
+  getPublicUrlForPath(filePath: string): string {
+    return this.getPublicUrl(filePath);
+  }
+
+  isOwnedFilePath(userId: string, filePath: string): boolean {
+    return filePath.startsWith(`users/${userId}/${this.category}/`);
+  }
+
   async listUserFiles(userId: string): Promise<FileObject[]> {
     const prefix = `users/${userId}/${this.category}/`;
 
@@ -309,26 +406,15 @@ export class R2StorageService {
     return mimeToExt[mimetype] || '';
   }
 
-  isValidFileType(mimetype: string): boolean {
-    const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'application/pdf',
-      'text/plain',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/msword',
-      'audio/mpeg',
-      'audio/wav',
-      'audio/ogg',
-      'video/mp4',
-      'video/webm',
-      'text/csv',
-      'application/csv',
-    ];
+  private createStoredName(id: string, filename: string, extension: string): string {
+    const sanitized = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const withExtension = sanitized.endsWith(extension) ? sanitized : `${sanitized}${extension}`;
 
-    return allowedTypes.includes(mimetype);
+    return `${id}-${withExtension}`;
+  }
+
+  isValidFileType(mimetype: string): boolean {
+    return isSupportedChatUploadMimeType(mimetype);
   }
 }
 

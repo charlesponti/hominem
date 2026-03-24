@@ -4,6 +4,7 @@
     "tsBuildInfoFile": "../../.cache/telemetry.tsbuildinfo",
     "rootDir": "src",
     "outDir": "./build",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],

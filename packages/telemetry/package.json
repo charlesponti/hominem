@@ -22,7 +22,7 @@
     }
   },
   "scripts": {
-    "lint": "eslint . --ext .ts,.tsx",
+    "lint": "bunx oxlint ./src",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -33,6 +33,7 @@
     "@opentelemetry/sdk-trace-node": "^1.24.0",
     "@opentelemetry/sdk-trace-web": "^1.24.0",
     "@opentelemetry/semantic-conventions": "^1.24.0",
+    "@opentelemetry/otlp-exporter-base": "^0.51.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.51.0",
     "@opentelemetry/exporter-metrics-otlp-http": "^0.51.0",
     "@opentelemetry/exporter-logs-otlp-http": "^0.51.0",

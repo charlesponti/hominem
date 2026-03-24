@@ -29,7 +29,7 @@ export default defineConfig({
         DATABASE_URL: 'postgres://postgres:postgres@localhost:4433/hominem-test',
         AUTH_TEST_OTP_ENABLED: 'true',
         AUTH_E2E_SECRET: 'otp-secret',
-        OPENAI_API_KEY: 'test-openai-key',
+        OPENROUTER_API_KEY: 'test-openrouter-key',
         SEND_EMAILS: 'false',
       },
     },

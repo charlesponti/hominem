@@ -62,12 +62,14 @@ export default ({ config }: ConfigContext) => {
             NSAppTransportSecurity: {
               NSAllowsArbitraryLoads: false,
               NSAllowsLocalNetworking: allowsLocalNetworking(appVariant),
-              NSExceptionDomains: {
-                'railway.app': {
-                  NSExceptionRequiresForwardSecrecy: true,
-                  NSIncludesSubdomains: true,
+              ...(appVariant !== 'production' && {
+                NSExceptionDomains: {
+                  'railway.app': {
+                    NSExceptionRequiresForwardSecrecy: true,
+                    NSIncludesSubdomains: true,
+                  },
                 },
-              },
+              }),
             },
           },
           entitlements: {
@@ -179,7 +181,7 @@ export default ({ config }: ConfigContext) => {
     newArchEnabled: true,
     ios: {
       icon: './assets/icon.png',
-      appleTeamId: process.env.EXPO_APPLE_TEAM_ID ?? '3QHJ2KN8AL',
+      appleTeamId: process.env.EXPO_APPLE_TEAM_ID,
       bundleIdentifier: variantConfig.bundleIdentifier,
       supportsTablet: true,
       infoPlist: {
@@ -188,6 +190,10 @@ export default ({ config }: ConfigContext) => {
         NSCalendarsFullAccessUsageDescription: 'Allow Hakumi to access your calendar to add events.',
         NSRemindersUsageDescription: 'Allow Hakumi to access your reminders.',
         NSRemindersFullAccessUsageDescription: 'Allow Hakumi to access your reminders.',
+        NSLocationWhenInUseUsageDescription:
+          'Allow Hakumi to access your location to provide location-aware features.',
+        NSMicrophoneUsageDescription:
+          'Allow Hakumi to access your microphone to transcribe voice notes.',
       },
     },
     android: {

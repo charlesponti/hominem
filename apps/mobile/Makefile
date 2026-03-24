@@ -34,6 +34,10 @@ else
 	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview --platform ios --non-interactive --auto-submit
 endif
 
+.PHONY: preview-interactive
+preview-interactive:
+	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview --platform ios --auto-submit
+
 ## Push OTA update. Defaults: CHANNEL=preview ROLLOUT=10
 ## Examples: make update ROLLOUT=100   make update CHANNEL=production
 .PHONY: update

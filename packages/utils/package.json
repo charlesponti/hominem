@@ -7,6 +7,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./storage": "./src/storage/index.ts",
+    "./upload": "./src/upload/index.ts",
     "./consts": "./src/consts.ts",
     "./dates": "./src/dates.ts",
     "./headers": "./src/headers.ts",

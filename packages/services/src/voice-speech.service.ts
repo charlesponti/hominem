@@ -1,9 +1,8 @@
 import { Buffer } from 'node:buffer';
 
-import { openai } from '@ai-sdk/openai';
 import { experimental_generateSpeech } from 'ai';
 
-import { env } from './env';
+import { getOpenAIAudioProvider } from './ai-model';
 
 export class VoiceSpeechError extends Error {
   statusCode: number;
@@ -16,13 +15,16 @@ export class VoiceSpeechError extends Error {
 }
 
 export async function generateSpeechBuffer(input: { text: string; voice: string; speed: number }) {
-  if (!env.OPENAI_API_KEY) {
+  let audioProvider: ReturnType<typeof getOpenAIAudioProvider>;
+  try {
+    audioProvider = getOpenAIAudioProvider();
+  } catch {
     throw new VoiceSpeechError('Invalid API configuration.', 401);
   }
 
   try {
     const speech = await experimental_generateSpeech({
-      model: openai.speech('tts-1'),
+      model: audioProvider.speech('tts-1'),
       text: input.text,
       voice: input.voice,
       outputFormat: 'mp3',

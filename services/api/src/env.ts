@@ -54,8 +54,11 @@ const serverSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().default(''),
   GOOGLE_CLIENT_SECRET: z.string().default(''),
 
-  // AI
-  OPENAI_API_KEY: isTest ? z.string().default('test-openai-key') : z.string(),
+  // AI — uses OpenRouter by default (200+ models, single API key)
+  // Model IDs: provider/model-name — see https://openrouter.ai/models
+  OPENROUTER_API_KEY: isTest ? z.string().default('test-openrouter-key') : z.string().optional(),
+  AI_PROVIDER: z.enum(['openai', 'openrouter']).default('openrouter'),
+  AI_MODEL: z.string().default('openai/gpt-4o-mini'),
   AI_SDK_CHAT_WEB_ENABLED: z.coerce.boolean().default(false),
   AI_SDK_CHAT_MOBILE_ENABLED: z.coerce.boolean().default(false),
   AI_SDK_TRANSCRIBE_ENABLED: z.coerce.boolean().default(false),

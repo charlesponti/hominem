@@ -10,6 +10,7 @@ import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http'
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http'
 import { LoggerProvider, BatchLogRecordProcessor } from '@opentelemetry/sdk-logs'
 import { context, propagation, trace, metrics, type Span } from '@opentelemetry/api'
+import { CompressionAlgorithm } from '@opentelemetry/otlp-exporter-base'
 import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks'
 import { CompositePropagator, W3CTraceContextPropagator, W3CBaggagePropagator } from '@opentelemetry/core'
 import { B3Propagator, B3InjectEncoding } from '@opentelemetry/propagator-b3'
@@ -60,7 +61,7 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
   // Trace exporter and provider
   const traceExporter = new OTLPTraceExporter({
     url: `${otlpEndpoint}/v1/traces`,
-    compression: 'gzip',
+    compression: CompressionAlgorithm.GZIP,
   })
 
   const tracerProvider = new NodeTracerProvider({
@@ -91,7 +92,7 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
   // Metrics provider
   const metricExporter = new OTLPMetricExporter({
     url: `${otlpEndpoint}/v1/metrics`,
-    compression: 'gzip',
+    compression: CompressionAlgorithm.GZIP,
   })
 
   const meterProvider = new MeterProvider({
@@ -99,8 +100,8 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
     readers: [
       new PeriodicExportingMetricReader({
         exporter: metricExporter,
-        exportIntervalMillis: 15000,
-        exportTimeoutMillis: 30000,
+        exportIntervalMillis: 60000,  // Export every 60s
+        exportTimeoutMillis: 30000,   // Timeout after 30s
       }),
     ],
   })
@@ -111,7 +112,7 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
   if (process.env.OTEL_LOGS_EXPORTER !== 'none') {
     const logExporter = new OTLPLogExporter({
       url: `${otlpEndpoint}/v1/logs`,
-      compression: 'gzip',
+      compression: CompressionAlgorithm.GZIP,
     })
 
     loggerProvider = new LoggerProvider({
@@ -134,13 +135,17 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
     instrumentations: [
       new HttpInstrumentation({
         requestHook: (span, request) => {
-          span.setAttribute('http.request.headers', JSON.stringify(request.headers))
+          if ('headers' in request) {
+            span.setAttribute('http.request.headers', JSON.stringify(request.headers))
+          }
         },
         responseHook: (span, response) => {
-          span.setAttribute('http.response.headers', JSON.stringify(response.headers))
+          if ('headers' in response) {
+            span.setAttribute('http.response.headers', JSON.stringify(response.headers))
+          }
         },
-        applyCustomAttributesOnSpan: (span, request, response) => {
-          if (response && response.statusCode >= 400) {
+        applyCustomAttributesOnSpan: (span, _request, response) => {
+          if (response && response.statusCode != null && response.statusCode >= 400) {
             span.setStatus({ code: 2, message: `HTTP ${response.statusCode}` })
           }
         },

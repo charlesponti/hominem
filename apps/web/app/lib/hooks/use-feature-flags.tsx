@@ -1,77 +1,38 @@
-import { createContext, type ReactNode, useContext } from 'react';
+import { usePostHog } from 'posthog-js/react'
 
-// Define available feature flags
-interface FeatureFlags {
-  twitterIntegration: boolean;
-  aiSdkChatWeb: boolean;
-  aiSdkChatMobile: boolean;
-  aiSdkTranscribe: boolean;
-  aiSdkSpeech: boolean;
+// Feature flag keys as defined in PostHog
+export const FEATURE_FLAG_KEYS = {
+  twitterIntegration: 'twitter-integration',
+  aiSdkChatWeb: 'ai-sdk-chat-web',
+  aiSdkChatMobile: 'ai-sdk-chat-mobile',
+  aiSdkTranscribe: 'ai-sdk-transcribe',
+  aiSdkSpeech: 'ai-sdk-speech',
+} as const
+
+export type FeatureFlagKey = keyof typeof FEATURE_FLAG_KEYS
+
+/**
+ * Returns the boolean value of a single PostHog feature flag.
+ * Defaults to `false` while flags are loading or if PostHog is not initialised.
+ */
+export function useFeatureFlag(flag: FeatureFlagKey): boolean {
+  const posthog = usePostHog()
+  if (!posthog) return false
+  return posthog.isFeatureEnabled(FEATURE_FLAG_KEYS[flag]) ?? false
 }
 
-// Default feature flag values
-const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
-  twitterIntegration: false,
-  aiSdkChatWeb: false,
-  aiSdkChatMobile: false,
-  aiSdkTranscribe: false,
-  aiSdkSpeech: false,
-};
-
-// Feature flags context
-const FeatureFlagsContext = createContext<FeatureFlags>(DEFAULT_FEATURE_FLAGS);
-
-// Hook to use feature flags
-function useFeatureFlags(): FeatureFlags {
-  const context = useContext(FeatureFlagsContext);
-  if (context === undefined) {
-    throw new Error('useFeatureFlags must be used within a FeatureFlagsProvider');
-  }
-  return context;
-}
-
-// Hook to check a specific feature flag
-export function useFeatureFlag(flag: keyof FeatureFlags): boolean {
-  const flags = useFeatureFlags();
-  return flags[flag];
-}
-
-// Provider component
-interface FeatureFlagsProviderProps {
-  children: ReactNode;
-  flags?: Partial<FeatureFlags>;
-}
-
-export function FeatureFlagsProvider({ children, flags = {} }: FeatureFlagsProviderProps) {
-  // Get environment-based flags
-  const envFlags = useEnvironmentFeatureFlags();
-
-  // Merge provided flags with environment flags and defaults (priority: flags > envFlags > defaults)
-  const mergedFlags: FeatureFlags = {
-    ...DEFAULT_FEATURE_FLAGS,
-    ...envFlags,
-    ...flags,
-  };
-
-  return (
-    <FeatureFlagsContext.Provider value={mergedFlags}>{children}</FeatureFlagsContext.Provider>
-  );
-}
-
-// Utility hook to get feature flags from environment variables
-function useEnvironmentFeatureFlags(): Partial<FeatureFlags> {
-  // Check environment variables for feature flags
-  const twitterIntegration = import.meta.env.VITE_FEATURE_TWITTER_INTEGRATION === 'true';
-  const aiSdkChatWeb = import.meta.env.VITE_FEATURE_AI_SDK_CHAT_WEB === 'true';
-  const aiSdkChatMobile = import.meta.env.VITE_FEATURE_AI_SDK_CHAT_MOBILE === 'true';
-  const aiSdkTranscribe = import.meta.env.VITE_FEATURE_AI_SDK_TRANSCRIBE === 'true';
-  const aiSdkSpeech = import.meta.env.VITE_FEATURE_AI_SDK_SPEECH === 'true';
+/**
+ * Returns all feature flags as a typed object.
+ */
+export function useFeatureFlags(): Record<FeatureFlagKey, boolean> {
+  const posthog = usePostHog()
+  const enabled = (key: string) => (posthog?.isFeatureEnabled(key) ?? false)
 
   return {
-    twitterIntegration,
-    aiSdkChatWeb,
-    aiSdkChatMobile,
-    aiSdkTranscribe,
-    aiSdkSpeech,
-  };
+    twitterIntegration: enabled(FEATURE_FLAG_KEYS.twitterIntegration),
+    aiSdkChatWeb: enabled(FEATURE_FLAG_KEYS.aiSdkChatWeb),
+    aiSdkChatMobile: enabled(FEATURE_FLAG_KEYS.aiSdkChatMobile),
+    aiSdkTranscribe: enabled(FEATURE_FLAG_KEYS.aiSdkTranscribe),
+    aiSdkSpeech: enabled(FEATURE_FLAG_KEYS.aiSdkSpeech),
+  }
 }
