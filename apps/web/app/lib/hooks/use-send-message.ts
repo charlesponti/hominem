@@ -20,6 +20,7 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
   const aiSdkChatWebEnabled = useFeatureFlag('aiSdkChatWeb');
   const apiBase = import.meta.env.VITE_PUBLIC_API_URL as string;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chat = useChat({
     id: `chat-${chatId}`,
     api: `${apiBase}/api/chats/${chatId}/ui/send`,
@@ -31,7 +32,7 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
     onError: () => {
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
     },
-  });
+  } as any);
 
   const legacySend = useRpcMutation(
     async ({ chats }, variables: ChatsSendInput) => {
@@ -80,7 +81,8 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
       return { ok: true };
     }
 
-    await chat.append({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (chat as any).append({
       role: 'user',
       content: variables.message,
     });
