@@ -12,6 +12,7 @@ import { useCreateNote, useNotesList as _useNotesList, useUpdateNote } from '~/h
 import { useTranscribe } from '~/hooks/use-transcribe';
 import { useHasPasskeys } from '~/hooks/use-passkeys';
 import { useFileUpload } from '~/lib/hooks/use-file-upload';
+import { useFeatureFlag } from '~/lib/hooks/use-feature-flags';
 import { useSendMessage } from '~/lib/hooks/use-send-message';
 
 const useNotesListForComposer: ComposerDataDeps['useNotesList'] = (options) => {
@@ -27,6 +28,7 @@ export default function Layout() {
   const { register } = usePasskeyAuth();
   const { mode, noteId, chatId } = useComposerMode();
   const transcribeMutation = useTranscribe();
+  const voiceInputInlineEnabled = useFeatureFlag('voiceInputInline', true)
   const hasPasskeys = useHasPasskeys();
   const isNavigating = navigationState.state !== 'idle';
   const handleEnroll = useCallback(async () => {
@@ -93,7 +95,14 @@ export default function Layout() {
             </div>
           </main>
         </div>
-        <Composer mode={mode} noteId={noteId} chatId={chatId} navigate={navigate} transcribeMutation={transcribeMutation} />
+        <Composer
+          mode={mode}
+          noteId={noteId}
+          chatId={chatId}
+          navigate={navigate}
+          inlineVoiceEnabled={voiceInputInlineEnabled}
+          transcribeMutation={transcribeMutation}
+        />
         <Toaster />
       </div>
     </ComposerProvider>

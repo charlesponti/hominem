@@ -84,10 +84,11 @@ export interface ComposerProps {
   noteId?: string | null
   chatId?: string | null
   navigate: (path: string) => void
+  inlineVoiceEnabled?: boolean
   transcribeMutation: UseMutationResult<TranscribeResult, Error, TranscribeVariables>
 }
 
-export function Composer({ mode, noteId: propNoteId, chatId: propChatId, navigate, transcribeMutation }: ComposerProps) {
+export function Composer({ mode, noteId: propNoteId, chatId: propChatId, navigate, inlineVoiceEnabled = true, transcribeMutation }: ComposerProps) {
   const { attachedNotes } = useComposerAttachedNotes()
   const { setDraftText } = useComposerDraftActions()
   const { uploadFiles } = useComposerUploadActions()
@@ -105,7 +106,13 @@ export function Composer({ mode, noteId: propNoteId, chatId: propChatId, navigat
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const presentation = deriveComposerPresentation(mode, isRecording)
+  const showsVoiceButton = inlineVoiceEnabled && presentation.showsVoiceButton
   if (presentation.posture === 'hidden') return null
+
+  useEffect(() => {
+    if (inlineVoiceEnabled) return
+    setShowVoice(false)
+  }, [inlineVoiceEnabled])
 
   const handleAudioTranscribed = useCallback(
     (transcript: string) => {
@@ -247,17 +254,17 @@ export function Composer({ mode, noteId: propNoteId, chatId: propChatId, navigat
         attachments={<ComposerAttachments />}
         tools={
           <div className="flex items-center gap-3">
-            <ComposerTools
-              attachedNotesCount={attachedNotes.length}
-              isRecording={isRecording}
-              showsAttachmentButton={presentation.showsAttachmentButton}
-              showsNotePicker={presentation.showsNotePicker}
-              showsVoiceButton={presentation.showsVoiceButton}
-              onAttachmentClick={handleAttachmentClick}
-              onCameraClick={handleCameraClick}
-              onNotePickerClick={handleNotePickerClick}
-              onVoiceClick={handleVoiceClick}
-            />
+              <ComposerTools
+                attachedNotesCount={attachedNotes.length}
+                isRecording={isRecording}
+                showsAttachmentButton={presentation.showsAttachmentButton}
+                showsNotePicker={presentation.showsNotePicker}
+                showsVoiceButton={showsVoiceButton}
+                onAttachmentClick={handleAttachmentClick}
+                onCameraClick={handleCameraClick}
+                onNotePickerClick={handleNotePickerClick}
+                onVoiceClick={handleVoiceClick}
+              />
             {showVoice ? (
               <div className="flex items-center gap-2 rounded-full border border-border bg-bg-surface px-2 py-1">
                 <SpeechInput

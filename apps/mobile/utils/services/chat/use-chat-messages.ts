@@ -26,6 +26,11 @@ type SendChatMessageOutput = {
   function_calls: string[];
 };
 
+export interface SendChatMessageInput {
+  fileIds?: string[];
+  message: string;
+}
+
 function updateSessionCache(
   previousSessions: ChatWithActivity[] | undefined,
   snapshot: ReturnType<typeof createChatInboxRefreshSnapshot>,
@@ -93,13 +98,13 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
   const mutation = useMutation<
     SendChatMessageOutput,
     Error,
-    string,
+    SendChatMessageInput,
     { previousMessages: MessageOutput[] }
   >({
     mutationKey: ['sendChatMessage', chatId],
 
     // Optimistic update
-    onMutate: async (messageText) => {
+    onMutate: async ({ message: messageText }) => {
       setChatSendStatus('submitted');
       const text = messageText.trim();
       if (!text) {
@@ -133,7 +138,7 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
       return { previousMessages };
     },
 
-    mutationFn: async (messageText) => {
+    mutationFn: async ({ message: messageText, fileIds }) => {
       const status = await NetInfo.fetch();
       if (!status.isConnected) {
         throw new Error('offline_unavailable');
@@ -142,6 +147,7 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
       const payload = await client.chats.send({
         chatId,
         message: messageText.trim(),
+        ...(fileIds && fileIds.length > 0 ? { fileIds } : {}),
       });
       setChatSendStatus('streaming');
       const mappedMessages = [payload.messages.user, payload.messages.assistant].flatMap(
@@ -188,15 +194,24 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
     setSendChatError,
     chatSendStatus,
     isChatSending: mutation.isPending,
-    sendChatMessage: async (nextMessageText = message) => {
-      const text = nextMessageText.trim();
-      if (!text) {
+    sendChatMessage: async (nextMessageInput: SendChatMessageInput | string = message) => {
+      const resolvedInput =
+        typeof nextMessageInput === 'string'
+          ? { message: nextMessageInput, fileIds: [] }
+          : nextMessageInput;
+      const text = resolvedInput.message.trim();
+      if (!text && (!resolvedInput.fileIds || resolvedInput.fileIds.length === 0)) {
         return {
           messages: [],
           function_calls: [],
         };
       }
-      const result = await mutation.mutateAsync(text);
+      const result = await mutation.mutateAsync({
+        message: text,
+        ...(resolvedInput.fileIds && resolvedInput.fileIds.length > 0
+          ? { fileIds: resolvedInput.fileIds }
+          : {}),
+      });
       setMessage('');
       return result;
     },

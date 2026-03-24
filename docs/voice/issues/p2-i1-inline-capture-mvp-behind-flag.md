@@ -30,33 +30,33 @@ Key goals:
 
 ## Implementation Checklist
 
-- [ ] Add/verify feature flag gate.
-  - [ ] Add `voice_input_inline_enabled` evaluation in web composer container.
-  - [ ] When disabled, preserve existing fallback path.
+- [x] Add/verify feature flag gate.
+  - [x] Add `voice_input_inline_enabled` evaluation in web composer container.
+  - [x] When disabled, preserve existing fallback path.
 
-- [ ] Inline capture wiring.
-  - [ ] Render `SpeechInput` inline within composer controls.
-  - [ ] Route `onAudioRecorded` to transcription mutation.
-  - [ ] Route interim transcript to draft text updates.
+- [x] Inline capture wiring.
+  - [x] Render `SpeechInput` inline within composer controls.
+  - [x] Route `onAudioRecorded` to transcription mutation.
+  - [x] Route interim transcript to draft text updates.
 
-- [ ] State ownership.
-  - [ ] Recorder state (`recording`/`processing`) comes from callbacks.
-  - [ ] Composer mic affordance reflects real recorder lifecycle.
+- [x] State ownership.
+  - [x] Recorder state (`recording`/`processing`) comes from callbacks.
+  - [x] Composer mic affordance reflects real recorder lifecycle.
 
-- [ ] Error handling in-context.
-  - [ ] Permission-denied and transcription errors appear inline.
-  - [ ] Recovery action is obvious (retry recording without leaving composer).
+- [x] Error handling in-context.
+  - [x] Permission-denied and transcription errors appear inline.
+  - [x] Recovery action is obvious (retry recording without leaving composer).
 
-- [ ] Rollout plan.
-  - [ ] Internal-only enablement first.
-  - [ ] 5% -> 25% -> 100% rollout using flag.
-  - [ ] Monitor voice-start, voice-stop, transcribe-fail metrics.
+- [x] Rollout plan.
+  - [x] Internal-only enablement first.
+  - [x] 5% -> 25% -> 100% rollout using flag.
+  - [x] Monitor voice-start, voice-stop, transcribe-fail metrics.
 
-- [ ] Validation.
-  - [ ] Manual: no modal required when flag is on.
-  - [ ] Manual: fallback works when flag is off.
-  - [ ] `bun run --filter @hominem/ui typecheck`
-  - [ ] `bun run --filter @hominem/web typecheck`
+- [x] Validation.
+  - [x] Manual: no modal required when flag is on.
+  - [x] Manual: fallback works when flag is off.
+  - [x] `bun run --filter @hominem/ui typecheck`
+  - [x] `bun run --filter @hominem/web typecheck`
 
 ## Deployability
 

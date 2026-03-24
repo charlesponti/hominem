@@ -28,29 +28,29 @@ Complete migration cleanup in a controlled issue:
 
 ## Implementation Checklist
 
-- [ ] Consumer audit.
-  - [ ] Identify all active references to `ChatVoiceModal` in web path.
-  - [ ] Confirm no runtime dependency for primary composer flow.
+- [x] Consumer audit.
+  - [x] Identify all active references to `ChatVoiceModal` in web path.
+  - [x] Confirm no runtime dependency for primary composer flow.
 
-- [ ] Cleanup composer path.
-  - [ ] Remove dead modal toggling/state from composer where fully replaced.
-  - [ ] Keep inline path as sole source for capture in web composer.
+- [x] Cleanup composer path.
+  - [x] Remove dead modal toggling/state from composer where fully replaced.
+  - [x] Keep inline path as sole source for capture in web composer.
 
-- [ ] Export/API cleanup.
-  - [ ] Deprecate modal export in UI package if any external consumers remain.
-  - [ ] Remove export when consumers are migrated.
+- [x] Export/API cleanup.
+  - [x] Deprecate modal export in UI package if any external consumers remain.
+  - [x] Remove export when consumers are migrated.
 
-- [ ] Documentation cleanup.
-  - [ ] Update phase docs and implementation status references to reflect final source of truth.
-  - [ ] Add migration note for any downstream teams depending on modal APIs.
+- [x] Documentation cleanup.
+  - [x] Update phase docs and implementation status references to reflect final source of truth.
+  - [x] Add migration note for any downstream teams depending on modal APIs.
 
-- [ ] Regression verification.
-  - [ ] Ensure no voice input regressions in composer.
-  - [ ] Ensure no build/type regressions from removed exports.
+- [x] Regression verification.
+  - [x] Ensure no voice input regressions in composer.
+  - [x] Ensure no build/type regressions from removed exports.
 
-- [ ] Validation commands.
-  - [ ] `bun run --filter @hominem/ui typecheck`
-  - [ ] `bun run --filter @hominem/web typecheck`
+- [x] Validation commands.
+  - [x] `bun run --filter @hominem/ui typecheck`
+  - [x] `bun run --filter @hominem/web typecheck`
 
 ## Deployability
 

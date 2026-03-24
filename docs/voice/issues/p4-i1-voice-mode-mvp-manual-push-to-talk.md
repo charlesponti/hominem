@@ -32,33 +32,33 @@ This creates a usable conversational baseline while avoiding the complexity of a
 
 ## Implementation Checklist
 
-- [ ] Route-level hook integration.
-  - [ ] Add/verify `useVoiceMode` in chat route.
-  - [ ] Wire activate/deactivate and start/stop actions.
+- [x] Route-level hook integration.
+  - [x] Add/verify `useVoiceMode` in chat route.
+  - [x] Wire activate/deactivate and start/stop actions.
 
-- [ ] Header entry point.
-  - [ ] Add voice mode toggle in chat header.
-  - [ ] Reflect active mode state in header control.
+- [x] Header entry point.
+  - [x] Add voice mode toggle in chat header.
+  - [x] Reflect active mode state in header control.
 
-- [ ] Overlay UX.
-  - [ ] Render stateful overlay with controls and clear state copy.
-  - [ ] Include close action to exit mode.
+- [x] Overlay UX.
+  - [x] Render stateful overlay with controls and clear state copy.
+  - [x] Include close action to exit mode.
 
-- [ ] End-to-end request/playback.
-  - [ ] Capture turn audio via `MediaRecorder`.
-  - [ ] Submit multipart request to `/api/voice/respond`.
-  - [ ] Decode transcript headers and store turn data.
-  - [ ] Play PCM16 response through player utility.
+- [x] End-to-end request/playback.
+  - [x] Capture turn audio via `MediaRecorder`.
+  - [x] Submit multipart request to `/api/voice/respond`.
+  - [x] Decode transcript headers and store turn data.
+  - [x] Play PCM16 response through player utility.
 
-- [ ] State machine behavior.
-  - [ ] Ensure deterministic transitions among `idle`, `listening`, `processing`, `speaking`, `error`.
-  - [ ] Ensure deactivation stops recorder and playback cleanly.
+- [x] State machine behavior.
+  - [x] Ensure deterministic transitions among `idle`, `listening`, `processing`, `speaking`, `error`.
+  - [x] Ensure deactivation stops recorder and playback cleanly.
 
-- [ ] Validation.
-  - [ ] Manual: enter/exit voice mode repeatedly without stale resources.
-  - [ ] Manual: record -> send -> hear AI response flow works.
-  - [ ] `bun run --filter @hominem/web typecheck`
-  - [ ] `bun run --filter @hominem/ui typecheck`
+- [x] Validation.
+  - [x] Manual: enter/exit voice mode repeatedly without stale resources.
+  - [x] Manual: record -> send -> hear AI response flow works.
+  - [x] `bun run --filter @hominem/web typecheck`
+  - [x] `bun run --filter @hominem/ui typecheck`
 
 ## Deployability
 

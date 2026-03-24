@@ -22,6 +22,7 @@ interface ChatProps {
   showDebug?: boolean
   speakingId?: string | null
   speechLoadingId?: string | null
+  speechErrorMessage?: string | null
   isVoiceModeActive?: boolean
   voiceModeState?: VoiceModeOverlayState
   voiceModeErrorMessage?: string | null
@@ -55,6 +56,7 @@ export function Chat({
   showDebug = false,
   speakingId,
   speechLoadingId,
+  speechErrorMessage,
   isVoiceModeActive = false,
   voiceModeState = 'idle',
   voiceModeErrorMessage,
@@ -143,6 +145,12 @@ export function Chat({
         onRegenerate={onRegenerate}
         onSpeak={onSpeak}
       />
+
+      {speechErrorMessage ? (
+        <div className="mx-auto mb-3 w-full max-w-180 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive/80">
+          {speechErrorMessage}
+        </div>
+      ) : null}
 
       <VoiceModeOverlay
         visible={isVoiceModeActive}

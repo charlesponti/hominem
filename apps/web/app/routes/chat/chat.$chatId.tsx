@@ -15,6 +15,7 @@ import { useArchiveChat } from '~/hooks/use-chats';
 import { useChatMessages } from '~/lib/hooks/use-chat-messages';
 import { Chat } from '@hominem/ui/chat';
 import { ClassificationReview } from '@hominem/ui/ai-elements';
+import { useFeatureFlag } from '~/lib/hooks/use-feature-flags';
 import { useServerSpeech } from '~/hooks/use-server-speech';
 import { useVoiceMode } from '~/hooks/use-voice-mode';
 
@@ -37,7 +38,9 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   const error = sendMessage.error ?? null;
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
   const { messages, isLoading, error: messagesError, deleteMessage, updateMessage } = useChatMessages({ chatId });
-  const { speakingId, loadingId, speak } = useServerSpeech();
+  const voiceTtsServerEnabled = useFeatureFlag('voiceTtsServer', true)
+  const voiceModeEnabled = useFeatureFlag('voiceMode', true)
+  const { speakingId, loadingId, errorMessage: speechErrorMessage, speak } = useServerSpeech();
   const {
     isActive: isVoiceModeActive,
     state: voiceModeState,
@@ -152,7 +155,8 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         showDebug={isDebugEnabled}
         speakingId={speakingId}
         speechLoadingId={loadingId}
-        isVoiceModeActive={isVoiceModeActive}
+        speechErrorMessage={speechErrorMessage}
+        isVoiceModeActive={voiceModeEnabled ? isVoiceModeActive : false}
         voiceModeState={voiceModeState}
         voiceModeErrorMessage={voiceModeError?.message ?? null}
         isVoiceModeRecording={isVoiceModeRecording}
@@ -162,6 +166,8 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         onDebugChange={setIsDebugEnabled}
         onTransform={handleTransform}
         onToggleVoiceMode={() => {
+          if (!voiceModeEnabled) return
+
           if (isVoiceModeActive) {
             setIsVoiceModeRecording(false)
             deactivateVoiceMode()
@@ -171,10 +177,12 @@ export default function ChatPage({ params }: Route.ComponentProps) {
           activateVoiceMode()
         }}
         onStartVoiceModeRecording={async () => {
+          if (!voiceModeEnabled) return
           await startVoiceModeRecording()
           setIsVoiceModeRecording(true)
         }}
         onStopVoiceModeRecording={async () => {
+          if (!voiceModeEnabled) return
           await stopVoiceModeRecording()
           setIsVoiceModeRecording(false)
         }}
@@ -207,6 +215,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
           }
         }}
         onSpeak={async (messageId: string, content: string) => {
+          if (!voiceTtsServerEnabled) return
           await speak(messageId, content)
         }}
       />

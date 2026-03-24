@@ -28,29 +28,29 @@ Adopt server-backed TTS for web chat actions:
 
 ## Implementation Checklist
 
-- [ ] Hook implementation.
-  - [ ] Add/verify `useServerSpeech` for request + decode + playback.
-  - [ ] Expose `speakingId`, `loadingId`, `speak`, and `stop`.
-  - [ ] Ensure cleanup on unmount and on new playback.
+- [x] Hook implementation.
+  - [x] Add/verify `useServerSpeech` for request + decode + playback.
+  - [x] Expose `speakingId`, `loadingId`, `speak`, and `stop`.
+  - [x] Ensure cleanup on unmount and on new playback.
 
-- [ ] Route wiring.
-  - [ ] Replace active chat route dependency on browser speech hook.
-  - [ ] Pass server speech states and callbacks into chat components.
+- [x] Route wiring.
+  - [x] Replace active chat route dependency on browser speech hook.
+  - [x] Pass server speech states and callbacks into chat components.
 
-- [ ] UI wiring.
-  - [ ] Message actions show `Loading audio` while fetching/decoding.
-  - [ ] Active playback state switches action to `Stop reading`.
-  - [ ] Stopping returns message to idle.
+- [x] UI wiring.
+  - [x] Message actions show `Loading audio` while fetching/decoding.
+  - [x] Active playback state switches action to `Stop reading`.
+  - [x] Stopping returns message to idle.
 
-- [ ] Error behavior.
-  - [ ] Fail safely to idle state on fetch/decode errors.
-  - [ ] Avoid stale speaking/loading IDs after failures.
+- [x] Error behavior.
+  - [x] Fail safely to idle state on fetch/decode errors.
+  - [x] Avoid stale speaking/loading IDs after failures.
 
-- [ ] Validation.
-  - [ ] Manual: read-aloud uses server endpoint.
-  - [ ] Manual: loading -> playing -> idle lifecycle works per message.
-  - [ ] `bun run --filter @hominem/web typecheck`
-  - [ ] `bun run --filter @hominem/ui typecheck`
+- [x] Validation.
+  - [x] Manual: read-aloud uses server endpoint.
+  - [x] Manual: loading -> playing -> idle lifecycle works per message.
+  - [x] `bun run --filter @hominem/web typecheck`
+  - [x] `bun run --filter @hominem/ui typecheck`
 
 ## Deployability
 

@@ -19,7 +19,7 @@ This document captures everything implemented so far for the Voice I/O initiativ
 ### Not yet complete
 - Voice Mode is currently push-to-talk style (explicit start/stop), not automatic silence-turn loop.
 - Voice Mode transcript history is captured in hook state but not fully surfaced in overlay UI.
-- ChatVoiceModal still exists in UI package (improved a11y), but composer flow no longer depends on it.
+- ChatVoiceModal implementation still exists in UI package, but it is no longer exported from `@hominem/ui/chat` and composer flow no longer depends on it.
 - Full monorepo `bun run check` remains blocked by unrelated pre-existing mobile typecheck issue.
 
 ---
@@ -240,10 +240,10 @@ This blocker is outside Voice I/O scope and was not modified as part of this imp
 - Add max-recording-duration guard in Voice Mode path.
 
 5. API/client affordances
-- Consider exposing richer typed client methods for `/voice/respond` in `@hominem/rpc` domain wrappers (today implementation uses direct `fetch` in web hook).
+- Consider exposing richer typed client methods for `/voice/respond` in `@hominem/rpc` domain wrappers (today implementation still uses direct `fetch` in web hook).
 
 6. Cleanup
-- Consider deprecating/removing `ChatVoiceModal` from public exports once migration is fully complete and no consumers remain.
+- Consider deleting `ChatVoiceModal` implementation once any downstream internal references are fully removed.
 
 ---
 

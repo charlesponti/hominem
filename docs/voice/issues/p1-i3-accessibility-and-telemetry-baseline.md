@@ -29,30 +29,30 @@ This ensures every subsequent voice issue can be measured and audited.
 
 ## Implementation Checklist
 
-- [ ] Accessibility baseline in voice surfaces.
-  - [ ] Add/verify `aria-live` announcements for recording state transitions.
-  - [ ] Add/verify status region for processing state.
-  - [ ] Ensure voice dialog is labeled (`aria-labelledby`) and keyboard-dismissible (`Escape`).
-  - [ ] Ensure focus behavior is predictable in dialog-based voice surfaces.
+- [x] Accessibility baseline in voice surfaces.
+  - [x] Add/verify `aria-live` announcements for recording state transitions.
+  - [x] Add/verify status region for processing state.
+  - [x] Ensure voice dialog is labeled (`aria-labelledby`) and keyboard-dismissible (`Escape`).
+  - [x] Ensure focus behavior is predictable in dialog-based voice surfaces.
 
-- [ ] Telemetry baseline.
-  - [ ] Emit `voice_record_started` and `voice_record_stopped` from recording lifecycle.
-  - [ ] Emit transcription request/success/failure events in caller flow.
-  - [ ] Route events through shared utility.
-  - [ ] Attempt PostHog capture when available; preserve non-throwing fallback logging.
+- [x] Telemetry baseline.
+  - [x] Emit `voice_record_started` and `voice_record_stopped` from recording lifecycle.
+  - [x] Emit transcription request/success/failure events in caller flow.
+  - [x] Route events through shared utility.
+  - [x] Attempt PostHog capture when available; preserve non-throwing fallback logging.
 
-- [ ] Event payload quality.
-  - [ ] Include consistent core fields (`platform`, `mimeType`, `sizeBytes`, etc. when available).
-  - [ ] Keep payload shape stable across callers.
+- [x] Event payload quality.
+  - [x] Include consistent core fields (`platform`, `mimeType`, `sizeBytes`, etc. when available).
+  - [x] Keep payload shape stable across callers.
 
-- [ ] Validation.
-  - [ ] Manual screen-reader sanity pass for state changes.
-  - [ ] Manual permission-denied flow emits expected event and user-facing error.
-  - [ ] Verify events appear in analytics pipeline for internal rollout cohort.
+- [x] Validation.
+  - [x] Manual screen-reader sanity pass for state changes.
+  - [x] Manual permission-denied flow emits expected event and user-facing error.
+  - [x] Verify events appear in analytics pipeline for internal rollout cohort.
 
-- [ ] Run validation commands.
-  - [ ] `bun run --filter @hominem/ui typecheck`
-  - [ ] `bun run --filter @hominem/services typecheck`
+- [x] Run validation commands.
+  - [x] `bun run --filter @hominem/ui typecheck`
+  - [x] `bun run --filter @hominem/services typecheck`
 
 ## Deployability
 

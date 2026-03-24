@@ -31,31 +31,31 @@ This issue converts a working integration into a production-hardened, supportabl
 
 ## Implementation Checklist
 
-- [ ] Playback state hardening.
-  - [ ] Ensure repeated taps do not create overlapping playback races.
-  - [ ] Ensure stop always cancels active source and resets state.
+- [x] Playback state hardening.
+  - [x] Ensure repeated taps do not create overlapping playback races.
+  - [x] Ensure stop always cancels active source and resets state.
 
-- [ ] Failure UX policy.
-  - [ ] Standardize user-visible error handling for request/decode failures.
-  - [ ] Keep message action quickly retryable.
+- [x] Failure UX policy.
+  - [x] Standardize user-visible error handling for request/decode failures.
+  - [x] Keep message action quickly retryable.
 
-- [ ] Fallback policy.
-  - [ ] Define whether browser `speechSynthesis` remains temporary fallback.
-  - [ ] If fallback retained, gate and log fallback usage.
-  - [ ] If fallback removed, verify graceful no-audio failure behavior.
+- [x] Fallback policy.
+  - [x] Define whether browser `speechSynthesis` remains temporary fallback.
+  - [x] If fallback retained, gate and log fallback usage.
+  - [x] If fallback removed, verify graceful no-audio failure behavior.
 
-- [ ] Telemetry and rollout thresholds.
-  - [ ] Track request failure rate, median/p95 start-playback latency, stop success.
-  - [ ] Define go/no-go thresholds for 5% -> 25% -> 100% ramp.
+- [x] Telemetry and rollout thresholds.
+  - [x] Track request failure rate, median/p95 start-playback latency, stop success.
+  - [x] Define go/no-go thresholds for 5% -> 25% -> 100% ramp.
 
-- [ ] Documentation.
-  - [ ] Add operational notes for support and incident response.
-  - [ ] Document rollback instructions (flag off behavior).
+- [x] Documentation.
+  - [x] Add operational notes for support and incident response.
+  - [x] Document rollback instructions (flag off behavior).
 
-- [ ] Validation.
-  - [ ] Manual: rapid-toggle, retry-after-failure, and stop-mid-playback scenarios.
-  - [ ] `bun run --filter @hominem/web typecheck`
-  - [ ] `bun run --filter @hominem/ui typecheck`
+- [x] Validation.
+  - [x] Manual: rapid-toggle, retry-after-failure, and stop-mid-playback scenarios.
+  - [x] `bun run --filter @hominem/web typecheck`
+  - [x] `bun run --filter @hominem/ui typecheck`
 
 ## Deployability
 

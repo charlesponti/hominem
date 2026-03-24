@@ -81,15 +81,19 @@ export const MobileComposer = () => {
 
   const createChatFromDraft = async () => {
     const trimmedMessage = message.trim()
+    const fileIds = attachments.flatMap((attachment) =>
+      attachment.uploadedFile?.id ? [attachment.uploadedFile.id] : [],
+    )
     const chatTitle = trimmedMessage.slice(0, CHAT_TITLE_MAX_LENGTH) || 'New conversation'
     const chat = await client.chats.create({
       title: chatTitle,
     })
 
-    if (trimmedMessage) {
+    if (trimmedMessage || fileIds.length > 0) {
       await client.chats.send({
         chatId: chat.id,
         message: trimmedMessage,
+        ...(fileIds.length > 0 ? { fileIds } : {}),
       })
     }
 
@@ -113,11 +117,20 @@ export const MobileComposer = () => {
   const handlePrimaryAction = () => {
     if (activeContext === 'chat') {
       const trimmedMessage = message.trim()
-      if (!trimmedMessage || !params.chatId) {
+      const fileIds = attachments.flatMap((attachment) =>
+        attachment.uploadedFile?.id ? [attachment.uploadedFile.id] : [],
+      )
+
+      if ((!trimmedMessage && fileIds.length === 0) || !params.chatId) {
         return
       }
 
-      void sendChatMessage(trimmedMessage)
+      void sendChatMessage({
+        message: trimmedMessage,
+        ...(fileIds.length > 0 ? { fileIds } : {}),
+      }).then(() => {
+        setAttachments([])
+      })
       setMessage('')
       return
     }

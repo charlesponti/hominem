@@ -30,33 +30,33 @@ These cues reduce uncertainty and improve completion rate without changing backe
 
 ## Implementation Checklist
 
-- [ ] Recording timer UX.
-  - [ ] Track recording start timestamp.
-  - [ ] Update elapsed display while recording.
-  - [ ] Reset elapsed time on stop/cancel.
+- [x] Recording timer UX.
+  - [x] Track recording start timestamp.
+  - [x] Update elapsed display while recording.
+  - [x] Reset elapsed time on stop/cancel.
 
-- [ ] Audio-level waveform UX.
-  - [ ] Emit audio level from recorder component.
-  - [ ] Render stable waveform bars in inline control area.
-  - [ ] Ensure bars gracefully settle to idle when recording ends.
+- [x] Audio-level waveform UX.
+  - [x] Emit audio level from recorder component.
+  - [x] Render stable waveform bars in inline control area.
+  - [x] Ensure bars gracefully settle to idle when recording ends.
 
-- [ ] State copy UX.
-  - [ ] Display clear state transitions: `Ready` -> `Recording` -> `Transcribing` -> `Ready`.
-  - [ ] Ensure copy is synchronized with real callback state.
+- [x] State copy UX.
+  - [x] Display clear state transitions: `Ready` -> `Recording` -> `Transcribing` -> `Ready`.
+  - [x] Ensure copy is synchronized with real callback state.
 
-- [ ] Lifecycle hygiene.
-  - [ ] Ensure RAF/analyser/audio context teardown on stop/unmount.
-  - [ ] Prevent stale levels/timer after cancellation.
+- [x] Lifecycle hygiene.
+  - [x] Ensure RAF/analyser/audio context teardown on stop/unmount.
+  - [x] Prevent stale levels/timer after cancellation.
 
-- [ ] Accessibility.
-  - [ ] Keep existing status/live semantics compatible with new visual indicators.
+- [x] Accessibility.
+  - [x] Keep existing status/live semantics compatible with new visual indicators.
 
-- [ ] Validation.
-  - [ ] Manual: timer increments correctly and resets.
-  - [ ] Manual: waveform responds to voice amplitude changes.
-  - [ ] Manual: state text never desyncs from real behavior.
-  - [ ] `bun run --filter @hominem/ui typecheck`
-  - [ ] `bun run --filter @hominem/web typecheck`
+- [x] Validation.
+  - [x] Manual: timer increments correctly and resets.
+  - [x] Manual: waveform responds to voice amplitude changes.
+  - [x] Manual: state text never desyncs from real behavior.
+  - [x] `bun run --filter @hominem/ui typecheck`
+  - [x] `bun run --filter @hominem/web typecheck`
 
 ## Deployability
 

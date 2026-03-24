@@ -33,30 +33,30 @@ Scope of solution:
 
 ## Implementation Checklist
 
-- [ ] Normalize recording state ownership in `SpeechInput`.
-  - [ ] Ensure `onRecordingStateChange` is emitted only on real recorder transitions.
-  - [ ] Ensure parent components do not set optimistic recording state ahead of recorder start.
+- [x] Normalize recording state ownership in `SpeechInput`.
+  - [x] Ensure `onRecordingStateChange` is emitted only on real recorder transitions.
+  - [x] Ensure parent components do not set optimistic recording state ahead of recorder start.
 
-- [ ] Enforce recorder-driven completion semantics.
-  - [ ] Final audio blob is produced from recorder stop handler.
-  - [ ] Speech recognition end/error handlers do not finalize blob by themselves.
+- [x] Enforce recorder-driven completion semantics.
+  - [x] Final audio blob is produced from recorder stop handler.
+  - [x] Speech recognition end/error handlers do not finalize blob by themselves.
 
-- [ ] Harden stop/start edge handling.
-  - [ ] Prevent duplicate stops.
-  - [ ] Reset chunks and refs on each new recording session.
-  - [ ] Ensure processing state transitions are consistent around stop and transcription start.
+- [x] Harden stop/start edge handling.
+  - [x] Prevent duplicate stops.
+  - [x] Reset chunks and refs on each new recording session.
+  - [x] Ensure processing state transitions are consistent around stop and transcription start.
 
-- [ ] Validate parent wiring.
-  - [ ] Composer and composer tools consume recorder state callbacks.
-  - [ ] UI labels/icons map correctly to idle/recording/processing.
+- [x] Validate parent wiring.
+  - [x] Composer and composer tools consume recorder state callbacks.
+  - [x] UI labels/icons map correctly to idle/recording/processing.
 
-- [ ] Add/refresh tests where feasible.
-  - [ ] Unit-level behavior checks for recorder lifecycle transitions.
-  - [ ] Regression scenario: pause/silence in speech recognition does not prematurely finalize capture.
+- [x] Add/refresh tests where feasible.
+  - [x] Unit-level behavior checks for recorder lifecycle transitions.
+  - [x] Regression scenario: pause/silence in speech recognition does not prematurely finalize capture.
 
-- [ ] Run validation.
-  - [ ] `bun run --filter @hominem/ui typecheck`
-  - [ ] `bun run --filter @hominem/web typecheck`
+- [x] Run validation.
+  - [x] `bun run --filter @hominem/ui typecheck`
+  - [x] `bun run --filter @hominem/web typecheck`
 
 ## Deployability
 

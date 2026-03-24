@@ -9,6 +9,7 @@ interface UseServerSpeechOptions {
 interface UseServerSpeechResult {
   speakingId: string | null
   loadingId: string | null
+  errorMessage: string | null
   speak: (id: string, text: string) => Promise<void>
   stop: () => void
 }
@@ -21,6 +22,7 @@ export function useServerSpeech(options: UseServerSpeechOptions = {}): UseServer
 
   const [speakingId, setSpeakingId] = useState<string | null>(null)
   const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const cleanupSource = useCallback(() => {
     if (sourceRef.current) {
@@ -64,6 +66,7 @@ export function useServerSpeech(options: UseServerSpeechOptions = {}): UseServer
     }
 
     stop()
+    setErrorMessage(null)
 
     const controller = new AbortController()
     abortRef.current = controller
@@ -101,6 +104,7 @@ export function useServerSpeech(options: UseServerSpeechOptions = {}): UseServer
     } catch {
       setLoadingId(null)
       setSpeakingId(null)
+      setErrorMessage('Audio playback unavailable. Please try again.')
     } finally {
       if (abortRef.current === controller) {
         abortRef.current = null
@@ -121,6 +125,7 @@ export function useServerSpeech(options: UseServerSpeechOptions = {}): UseServer
   return {
     speakingId,
     loadingId,
+    errorMessage,
     speak,
     stop,
   }

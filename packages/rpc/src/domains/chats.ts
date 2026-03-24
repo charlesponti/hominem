@@ -31,6 +31,7 @@ export interface ChatsGetByNoteInput {
 export interface ChatsSendMessageInput {
   chatId: string
   message: string
+  fileIds?: string[]
 }
 
 export interface ChatsArchiveInput {
@@ -47,7 +48,7 @@ interface ArchiveRouteClient {
           }>
         }
         send: {
-          $post(args: { param: { id: string }; json: { message: string } }): Promise<{
+          $post(args: { param: { id: string }; json: { message: string; fileIds?: string[] } }): Promise<{
             json(): Promise<ChatsSendOutput>
           }>
         }
@@ -155,7 +156,10 @@ export function createChatsClient(rawClient: RawHonoClient): ChatsClient {
     async send(input) {
       const res = await routeClient.api.chats[':id'].send.$post({
         param: { id: input.chatId },
-        json: { message: input.message },
+        json: {
+          message: input.message,
+          ...(input.fileIds && input.fileIds.length > 0 ? { fileIds: input.fileIds } : {}),
+        },
       })
       return res.json() as Promise<ChatsSendOutput>
     },

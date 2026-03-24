@@ -34,29 +34,29 @@ This issue keeps contracts honest and reduces integration complexity for all sub
 
 ## Implementation Checklist
 
-- [ ] Complete language hint pass-through.
-  - [ ] Web mutation accepts optional `language`.
-  - [ ] Caller provides `navigator.language` when available.
-  - [ ] API routes read and forward `language` from multipart body.
-  - [ ] Remove hardcoded `language: 'en'` assumptions in route handlers.
+- [x] Complete language hint pass-through.
+  - [x] Web mutation accepts optional `language`.
+  - [x] Caller provides `navigator.language` when available.
+  - [x] API routes read and forward `language` from multipart body.
+  - [x] Remove hardcoded `language: 'en'` assumptions in route handlers.
 
-- [ ] Align `/voice/respond` format contract.
-  - [ ] Restrict effective output contract to PCM16 where streaming requires it.
-  - [ ] Ensure route defaults and docs reflect PCM16 behavior.
-  - [ ] Ensure response headers/content type are consistent with returned bytes.
+- [x] Align `/voice/respond` format contract.
+  - [x] Restrict effective output contract to PCM16 where streaming requires it.
+  - [x] Ensure route defaults and docs reflect PCM16 behavior.
+  - [x] Ensure response headers/content type are consistent with returned bytes.
 
-- [ ] Update tests to enforce contract.
-  - [ ] Service tests assert PCM16 expectations.
-  - [ ] Route behavior assertions cover language forwarding and response consistency.
+- [x] Update tests to enforce contract.
+  - [x] Service tests assert PCM16 expectations.
+  - [x] Route behavior assertions cover language forwarding and response consistency.
 
-- [ ] Clean implementation hazards.
-  - [ ] Remove dynamic module access patterns where static imports are safer.
-  - [ ] Ensure no hidden behavior divergence between docs/types/runtime.
+- [x] Clean implementation hazards.
+  - [x] Remove dynamic module access patterns where static imports are safer.
+  - [x] Ensure no hidden behavior divergence between docs/types/runtime.
 
-- [ ] Run validation.
-  - [ ] `bun run --filter @hominem/services typecheck`
-  - [ ] `bun run --filter @hominem/api typecheck`
-  - [ ] relevant service tests for voice response/transcription
+- [x] Run validation.
+  - [x] `bun run --filter @hominem/services typecheck`
+  - [x] `bun run --filter @hominem/api typecheck`
+  - [x] relevant service tests for voice response/transcription
 
 ## Deployability
 

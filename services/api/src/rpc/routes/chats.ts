@@ -11,6 +11,8 @@ import {
   MessageService,
 } from '@hominem/chat-services'
 import type { ArtifactType, ClassificationResponse } from '@hominem/chat-services/types'
+import { FileProcessorService } from '@hominem/services/files'
+import { fileStorageService } from '@hominem/utils/storage'
 import { logger } from '@hominem/utils/logger'
 import { zValidator } from '@hono/zod-validator'
 import { convertToCoreMessages, streamText, generateText, generateObject, type CoreMessage, type Message } from 'ai'
@@ -63,6 +65,7 @@ const toPersistedToolCalls = (
   }))
 
 const GENERATION_ERROR_FALLBACK = '[Error: Stream processing failed]'
+const ATTACHMENT_TEXT_PREVIEW_LIMIT = 2_000
 
 const toAssistantErrorContent = (error: unknown) => {
   const message = (error instanceof Error ? error.message : String(error)).replace(/\s+/g, ' ').trim()
@@ -71,6 +74,125 @@ const toAssistantErrorContent = (error: unknown) => {
   }
 
   return `[Error: ${message}]`
+}
+
+type ResolvedChatAttachment = {
+  fileId: string
+  filename: string
+  mimeType: string
+  size: number
+  type: 'image' | 'file'
+  url: string
+  extractedText?: string
+}
+
+function inferMimeTypeFromFilename(filename: string): string {
+  const extension = filename.split('.').pop()?.toLowerCase()
+
+  switch (extension) {
+    case 'csv':
+      return 'text/csv'
+    case 'doc':
+      return 'application/msword'
+    case 'docx':
+      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    case 'gif':
+      return 'image/gif'
+    case 'jpeg':
+    case 'jpg':
+      return 'image/jpeg'
+    case 'mp3':
+      return 'audio/mpeg'
+    case 'mp4':
+      return 'video/mp4'
+    case 'ogg':
+      return 'audio/ogg'
+    case 'pdf':
+      return 'application/pdf'
+    case 'png':
+      return 'image/png'
+    case 'txt':
+      return 'text/plain'
+    case 'wav':
+      return 'audio/wav'
+    case 'webm':
+      return 'video/webm'
+    case 'webp':
+      return 'image/webp'
+    default:
+      return 'application/octet-stream'
+  }
+}
+
+function getOriginalFilename(storedName: string, fileId: string): string {
+  const prefix = `${fileId}-`
+
+  if (storedName.startsWith(prefix)) {
+    return storedName.slice(prefix.length)
+  }
+
+  return storedName
+}
+
+function buildAttachmentPromptContext(attachments: ResolvedChatAttachment[]): string {
+  if (attachments.length === 0) {
+    return ''
+  }
+
+  return [
+    '',
+    'Attached files:',
+    ...attachments.map((attachment, index) => {
+      const details = `${index + 1}. ${attachment.filename} | ${attachment.mimeType}`
+      const extractedText = attachment.extractedText?.trim()
+
+      if (!extractedText) {
+        return details
+      }
+
+      return `${details}\nExtracted content:\n${extractedText.slice(0, ATTACHMENT_TEXT_PREVIEW_LIMIT)}`
+    }),
+  ].join('\n')
+}
+
+async function resolveChatAttachments(userId: string, fileIds: string[]): Promise<ResolvedChatAttachment[]> {
+  if (fileIds.length === 0) {
+    return []
+  }
+
+  const userFiles = await fileStorageService.listUserFiles(userId)
+
+  return await Promise.all(
+    [...new Set(fileIds)].map(async (fileId) => {
+      const storedFile = userFiles.find((file) => file.name.startsWith(fileId))
+      const url = await fileStorageService.getFileUrl(fileId, userId)
+      const fileData = await fileStorageService.getFile(fileId, userId)
+
+      if (!storedFile || !url || !fileData) {
+        throw new ValidationError(`Uploaded file ${fileId} is not available`)
+      }
+
+      const filename = getOriginalFilename(storedFile.name, fileId)
+      const mimeType = inferMimeTypeFromFilename(filename)
+      const processedFile = await FileProcessorService.processFile(
+        fileData,
+        filename,
+        mimeType,
+        fileId,
+      )
+      const extractedText = processedFile.textContent || processedFile.content
+
+      return {
+        fileId,
+        filename,
+        mimeType,
+        size: storedFile.size,
+        type: mimeType.startsWith('image/') ? 'image' : 'file',
+        url,
+        ...(extractedText ? { extractedText } : {}),
+      }
+    }),
+  )
 }
 
 /**
@@ -138,9 +260,14 @@ const chatByIdRoutes = new Hono<AppContext>()
   .post('/send', zValidator('json', chatsSendSchema), async (c) => {
     const userId = c.get('userId')!
     const chatId = c.req.param('id') as string
-    const { message } = c.req.valid('json')
+    const { message, fileIds = [] } = c.req.valid('json')
 
-    logger.info('[chats.send] Request received', { chatId, userId, messageLength: message.length })
+    logger.info('[chats.send] Request received', {
+      chatId,
+      userId,
+      messageLength: message.length,
+      fileCount: fileIds.length,
+    })
 
     // Get or verify chat exists
     let currentChat = await getChatByIdQuery(chatId, userId)
@@ -157,6 +284,9 @@ const chatByIdRoutes = new Hono<AppContext>()
       orderBy: 'asc',
     })
 
+    const attachments = await resolveChatAttachments(userId, fileIds)
+    const userMessageContent = `${message.trim()}${buildAttachmentPromptContext(attachments)}`.trim()
+
     logger.info('[chats.send] History loaded', { messageCount: historyMessages.length })
 
     const messagesWithNewUser: CoreMessage[] = [
@@ -168,7 +298,7 @@ const chatByIdRoutes = new Hono<AppContext>()
       ),
       {
         role: 'user',
-        content: message,
+        content: userMessageContent,
       },
     ]
 
@@ -220,6 +350,25 @@ const chatByIdRoutes = new Hono<AppContext>()
         userId,
         role: 'user',
         content: message,
+        ...(attachments.length > 0
+          ? {
+              files: attachments.map((attachment) => ({
+                type: attachment.type,
+                fileId: attachment.fileId,
+                url: attachment.url,
+                filename: attachment.filename,
+                mimeType: attachment.mimeType,
+                size: attachment.size,
+                ...(attachment.extractedText
+                  ? {
+                      metadata: {
+                        extractedText: attachment.extractedText.slice(0, ATTACHMENT_TEXT_PREVIEW_LIMIT),
+                      },
+                    }
+                  : {}),
+              })),
+            }
+          : {}),
       },
       {
         chatId: currentChat.id,

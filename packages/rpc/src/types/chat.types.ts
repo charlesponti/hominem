@@ -14,6 +14,8 @@ export interface ChatMessageToolCall {
 
 export interface ChatMessageFile {
   type: 'image' | 'file'
+  fileId?: string
+  url?: string
   filename?: string
   mimeType?: string
   size?: number
@@ -54,6 +56,7 @@ export type ChatWithMessages = Chat & {
 
 export type ChatsSendInput = {
   message: string;
+  fileIds?: string[];
   chatId?: string;
 };
 
@@ -73,9 +76,18 @@ export type ChatsUISendInput = {
 }
 
 export const chatsSendSchema = z.object({
-  message: z.string().min(1),
+  message: z.string(),
+  fileIds: z.array(z.string().uuid()).max(5).optional(),
   chatId: z.string().optional(),
-});
+}).superRefine((value, ctx) => {
+  if (value.message.trim().length === 0 && (!value.fileIds || value.fileIds.length === 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'message or fileIds is required',
+      path: ['message'],
+    })
+  }
+})
 
 export const chatsUISendSchema = z.object({
   messages: z.array(
