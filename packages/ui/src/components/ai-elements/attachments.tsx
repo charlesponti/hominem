@@ -1,5 +1,3 @@
-
-
 import { AudioLines, FileText, Film, Image, Paperclip, X } from 'lucide-react';
 import { forwardRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 

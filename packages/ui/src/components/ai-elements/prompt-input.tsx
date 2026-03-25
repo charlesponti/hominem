@@ -1,5 +1,3 @@
-
-
 import { Paperclip, Send, Sparkles } from 'lucide-react';
 import {
   createContext,

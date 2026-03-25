@@ -1,5 +1,3 @@
-
-
 import { Clock, GripVertical } from 'lucide-react';
 import type { HTMLAttributes, ReactNode } from 'react';
 

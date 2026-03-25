@@ -16,10 +16,7 @@ interface UseNotesListOptions {
   enabled?: boolean;
 }
 
-export function useNotesList(
-  options: NotesListInput = {},
-  queryOptions: UseNotesListOptions = {},
-) {
+export function useNotesList(options: NotesListInput = {}, queryOptions: UseNotesListOptions = {}) {
   return useRpcQuery(
     async ({ notes }) => {
       const data = await notes.list(options);

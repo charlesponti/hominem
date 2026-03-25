@@ -1,5 +1,3 @@
-
-
 import { emitVoiceEvent } from '@hominem/services/voice-events';
 import { Mic, MicOff, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes } from 'react';

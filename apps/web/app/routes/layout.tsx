@@ -61,13 +61,16 @@ export default function Layout() {
 
   // ─── Notes list for note picker ────────────────────────────────────────────
 
-  const { data: notesList = [] } = useNotesList({
-    sortBy: 'updatedAt',
-    sortOrder: 'desc',
-    limit: 100,
-  }, {
-    enabled: isAuthenticated,
-  });
+  const { data: notesList = [] } = useNotesList(
+    {
+      sortBy: 'updatedAt',
+      sortOrder: 'desc',
+      limit: 100,
+    },
+    {
+      enabled: isAuthenticated,
+    },
+  );
 
   // ─── ComposerStore (created once, stable identity) ─────────────────────────
 

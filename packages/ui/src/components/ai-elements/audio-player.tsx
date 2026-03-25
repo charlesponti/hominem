@@ -1,5 +1,3 @@
-
-
 import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useRef, useState, type HTMLAttributes } from 'react';
 

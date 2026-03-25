@@ -1,5 +1,3 @@
-
-
 import { Mic, Speaker, User } from 'lucide-react';
 import type { HTMLAttributes, ReactNode } from 'react';
 

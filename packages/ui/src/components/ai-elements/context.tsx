@@ -1,5 +1,3 @@
-
-
 import { BookOpen } from 'lucide-react';
 import type { HTMLAttributes, ReactNode } from 'react';
 

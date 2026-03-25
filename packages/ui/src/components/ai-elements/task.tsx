@@ -1,5 +1,3 @@
-
-
 import { Check, Circle, Clock, Flag } from 'lucide-react';
 import type { HTMLAttributes, ReactNode } from 'react';
 
