@@ -143,6 +143,22 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
               if (id.includes('/lucide-react/')) {
                 return 'vendor-icons';
               }
+              // Syntax highlighter (heavy with languages)
+              if (id.includes('/react-syntax-highlighter/')) {
+                return 'vendor-syntax-highlighter';
+              }
+              // Markdown renderer
+              if (id.includes('/react-markdown/') || id.includes('/remark-') || id.includes('/rehype-')) {
+                return 'vendor-markdown';
+              }
+              // Uppy file upload
+              if (id.includes('/@uppy/')) {
+                return 'vendor-uppy';
+              }
+              // GSAP animations
+              if (id.includes('/gsap/')) {
+                return 'vendor-gsap';
+              }
               return undefined;
             }
             return undefined;

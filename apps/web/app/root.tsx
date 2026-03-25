@@ -89,6 +89,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.ENV = window.ENV || {}; Object.assign(window.ENV, { OTEL_SERVICE_NAME: 'hominem-web', OTEL_DEPLOYMENT_ENVIRONMENT: '${process.env.NODE_ENV || 'development'}', OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318' });`,
+          }}
+        />
       </head>
       <body>
         {children}

@@ -4,9 +4,9 @@ import {
   CHAT_UPLOAD_MAX_FILE_COUNT,
   CHAT_UPLOAD_MAX_FILE_SIZE_BYTES,
 } from '@hominem/utils/upload';
-import AwsS3 from '@uppy/aws-s3';
-import Uppy, { type Body, type Meta, type UppyFile } from '@uppy/core';
-import { useCallback, useEffect, useRef, useState } from 'react';
+// Lazy load Uppy types only for type checking
+import type { Body, Meta, UppyFile } from '@uppy/core';
+import { useCallback, useRef, useState } from 'react';
 
 import type { UploadedFile } from '~/lib/types/upload';
 
@@ -34,6 +34,15 @@ interface UseFileUploadReturn {
   clearAll: () => void;
 }
 
+// Lazy load Uppy modules to avoid bundling on initial page load
+async function loadUppyModules() {
+  const [{ default: Uppy }, { default: AwsS3 }] = await Promise.all([
+    import('@uppy/core'),
+    import('@uppy/aws-s3'),
+  ]);
+  return { Uppy, AwsS3 };
+}
+
 export function useFileUpload(): UseFileUploadReturn {
   const apiClient = useApiClient();
   const [uploadState, setUploadState] = useState<UploadState>({
@@ -42,9 +51,22 @@ export function useFileUpload(): UseFileUploadReturn {
     uploadedFiles: [],
     errors: [],
   });
-  const uppyRef = useRef<Uppy<UploadFileMeta, UploadFileBody> | null>(null);
+  const uppyRef = useRef<InstanceType<Awaited<ReturnType<typeof loadUppyModules>>['Uppy']> | null>(
+    null,
+  );
+  const uppyPromiseRef = useRef<ReturnType<typeof loadUppyModules> | null>(null);
 
-  useEffect(() => {
+  const getUppy = useCallback(async () => {
+    if (uppyRef.current) {
+      return uppyRef.current;
+    }
+
+    if (!uppyPromiseRef.current) {
+      uppyPromiseRef.current = loadUppyModules();
+    }
+
+    const { Uppy, AwsS3 } = await uppyPromiseRef.current;
+
     const uppy = new Uppy<UploadFileMeta, UploadFileBody>({
       autoProceed: false,
       allowMultipleUploadBatches: true,
@@ -81,14 +103,14 @@ export function useFileUpload(): UseFileUploadReturn {
       },
     });
 
-    uppy.on('progress', (progress) => {
+    uppy.on('progress', (progress: number) => {
       setUploadState((prev) => ({
         ...prev,
         progress,
       }));
     });
 
-    uppy.on('restriction-failed', (file, error) => {
+    uppy.on('restriction-failed', (file: UppyFile<Meta, Body> | undefined, error: Error) => {
       const message = file ? `${file.name}: ${error.message}` : error.message;
       setUploadState((prev) => ({
         ...prev,
@@ -97,21 +119,11 @@ export function useFileUpload(): UseFileUploadReturn {
     });
 
     uppyRef.current = uppy;
-
-    return () => {
-      uppy.cancelAll();
-      uppy.destroy();
-      uppyRef.current = null;
-    };
+    return uppy;
   }, [apiClient]);
 
   const uploadFiles = useCallback(async (files: FileList | File[]): Promise<UploadedFile[]> => {
-    const uppy = uppyRef.current;
     const fileArray = Array.from(files);
-
-    if (!uppy) {
-      throw new Error('Upload service is not ready');
-    }
 
     setUploadState((prev) => ({
       ...prev,
@@ -121,6 +133,7 @@ export function useFileUpload(): UseFileUploadReturn {
     }));
 
     try {
+      const uppy = await getUppy();
       const completionPromises = new Map<string, Promise<UploadedFile>>();
 
       for (const file of fileArray) {
@@ -211,9 +224,11 @@ export function useFileUpload(): UseFileUploadReturn {
     }));
   }, []);
 
-  const clearAll = useCallback(() => {
-    uppyRef.current?.cancelAll();
-    uppyRef.current?.clear();
+  const clearAll = useCallback(async () => {
+    if (uppyRef.current) {
+      uppyRef.current.cancelAll();
+      uppyRef.current.clear();
+    }
 
     setUploadState({
       isUploading: false,

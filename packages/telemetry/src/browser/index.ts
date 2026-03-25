@@ -57,8 +57,8 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): Browse
     spanProcessors: [new BatchSpanProcessor(traceExporter, {
       maxQueueSize: 2048,
       maxExportBatchSize: 512,
-      scheduledDelayMillis: 5000,
-      exportTimeoutMillis: 30000,
+      scheduledDelayMillis: 1000,
+      exportTimeoutMillis: 10000,
     })],
   })
 
