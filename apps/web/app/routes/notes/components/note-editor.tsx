@@ -1,10 +1,7 @@
 import type { Note } from '@hominem/rpc/types/notes.types';
-import { Inline } from '@hominem/ui';
-import { Button } from '@hominem/ui/button';
-import { Textarea } from '@hominem/ui/components/ui/textarea';
-import { TextField } from '@hominem/ui/text-field';
-import { Save, Trash2 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 import { useDeleteNote, useUpdateNote } from '~/hooks/use-notes';
 
@@ -12,90 +9,133 @@ interface NoteEditorProps {
   note: Note;
 }
 
+type SaveStatus = 'saved' | 'saving' | 'unsaved';
+type EditorTab = 'write' | 'preview';
+
 export function NoteEditor({ note }: NoteEditorProps) {
   const [title, setTitle] = useState(note.title || '');
   const [content, setContent] = useState(note.content);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
+  const [tab, setTab] = useState<EditorTab>('write');
 
   const updateNote = useUpdateNote();
   const deleteNote = useDeleteNote();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleTitleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
-    setHasChanges(true);
-  }, []);
+  // Flush pending save on unmount
+  useEffect(
+    () => () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    },
+    [],
+  );
 
-  const handleContentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
-    setHasChanges(true);
-  }, []);
+  function scheduleAutoSave(newTitle: string, newContent: string) {
+    setSaveStatus('unsaved');
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setSaveStatus('saving');
+      try {
+        await updateNote.mutateAsync({ id: note.id, title: newTitle || null, content: newContent });
+        setSaveStatus('saved');
+      } catch {
+        setSaveStatus('unsaved');
+      }
+    }, 600);
+  }
 
-  const handleSave = useCallback(async () => {
-    setIsSaving(true);
-    try {
-      await updateNote.mutateAsync({
-        id: note.id,
-        title: title || null,
-        content,
-      });
-      setHasChanges(false);
-    } finally {
-      setIsSaving(false);
-    }
-  }, [note.id, title, content, updateNote]);
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+    scheduleAutoSave(newTitle, content);
+  }
 
-  const handleDelete = useCallback(async () => {
-    if (confirm('Are you sure you want to delete this note?')) {
+  function handleContentChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const newContent = e.target.value;
+    setContent(newContent);
+    scheduleAutoSave(title, newContent);
+  }
+
+  async function handleDelete() {
+    if (confirm('Delete this note?')) {
       await deleteNote.mutateAsync({ id: note.id });
     }
-  }, [note.id, deleteNote]);
+  }
+
+  const statusLabel =
+    saveStatus === 'saving' ? 'Saving…' : saveStatus === 'unsaved' ? 'Unsaved' : 'Saved';
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="border-b editorial-rule pb-4">
-        <div className="editorial-kicker text-text-tertiary">Note</div>
-        <div className="mt-3 flex items-start justify-between gap-4">
-          <TextField
-            value={title}
-            onChange={handleTitleChange}
-            placeholder="Untitled note"
-            aria-label="Note title"
-            className="heading-2 editorial-display h-auto flex-1 border-0 bg-transparent px-0 text-text-primary shadow-none focus-visible:ring-0"
-          />
-          <Inline gap="sm">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSave}
-              disabled={!hasChanges || isSaving}
-              className="rounded-md px-4"
-            >
-              <Save className="mr-1 size-4" />
-              {isSaving ? 'Saving...' : 'Save'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleDelete} className="rounded-md px-3">
-              <Trash2 className="size-4" />
-            </Button>
-          </Inline>
-        </div>
+    <div className="flex flex-col gap-6">
+      {/* Title */}
+      <input
+        type="text"
+        value={title}
+        onChange={handleTitleChange}
+        placeholder="Untitled"
+        aria-label="Note title"
+        className="w-full border-0 bg-transparent text-[2rem] font-semibold leading-tight text-text-primary placeholder:text-text-tertiary/40 outline-none"
+      />
+
+      {/* Write / Preview tabs */}
+      <div className="flex items-center gap-1 border-b border-border/30">
+        <button
+          type="button"
+          onClick={() => setTab('write')}
+          className={[
+            'body-4 -mb-px border-b-2 px-3 pb-2 transition-colors',
+            tab === 'write'
+              ? 'border-foreground text-text-primary'
+              : 'border-transparent text-text-tertiary hover:text-text-secondary',
+          ].join(' ')}
+        >
+          Write
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('preview')}
+          className={[
+            'body-4 -mb-px border-b-2 px-3 pb-2 transition-colors',
+            tab === 'preview'
+              ? 'border-foreground text-text-primary'
+              : 'border-transparent text-text-tertiary hover:text-text-secondary',
+          ].join(' ')}
+        >
+          Preview
+        </button>
       </div>
 
-      <div className="min-h-0 flex-1">
-        <Textarea
+      {/* Editor surface */}
+      {tab === 'write' ? (
+        <textarea
           value={content}
           onChange={handleContentChange}
-          placeholder="Start writing your note..."
-          className="body-1 h-full min-h-[26rem] resize-none border-0 bg-transparent px-0 py-6 text-foreground placeholder:text-text-tertiary shadow-none focus-visible:ring-0"
+          placeholder="Start writing… markdown is supported"
+          aria-label="Note content"
+          className="w-full resize-none border-0 bg-transparent font-mono text-sm leading-relaxed text-foreground placeholder:text-text-tertiary/40 outline-none field-sizing-content min-h-64"
         />
-      </div>
-
-      <div className="border-t editorial-rule pt-4">
-        <div className="body-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-text-tertiary">
-          <span>Created {new Date(note.createdAt).toLocaleString()}</span>
-          <span>Updated {new Date(note.updatedAt).toLocaleString()}</span>
-          {note.versionNumber > 1 ? <span>Version {note.versionNumber}</span> : null}
+      ) : (
+        <div className="prose-note min-h-64">
+          {content.trim() ? (
+            <ReactMarkdown>{content}</ReactMarkdown>
+          ) : (
+            <p className="body-2 text-text-tertiary/40 italic">Nothing to preview yet.</p>
+          )}
         </div>
+      )}
+
+      {/* Footer */}
+      <div className="flex items-center justify-between border-t border-border/30 pt-3">
+        <span className="body-4 text-text-tertiary/60">{statusLabel}</span>
+        <button
+          type="button"
+          onClick={handleDelete}
+          aria-label="Delete note"
+          className="body-4 flex items-center gap-1.5 text-text-tertiary/60 transition-colors hover:text-destructive"
+        >
+          <Trash2 className="size-3.5" />
+          Delete
+        </button>
       </div>
     </div>
   );

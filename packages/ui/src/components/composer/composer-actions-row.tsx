@@ -26,6 +26,8 @@ function primaryIntent(posture: ComposerPresentation['posture']): string {
       return 'send-reply';
     case 'draft':
       return 'update-note';
+    case 'note-query':
+      return 'start-chat';
     default:
       return 'save-note';
   }
@@ -102,19 +104,21 @@ export const ComposerActionsRow = memo(function ComposerActionsRow({
 
   return (
     <div className="flex items-center gap-2">
-      <ActionButton
-        intent={secondaryIntent(presentation.posture)}
-        icon={
-          presentation.secondaryActionIcon === 'circle-plus' ? (
-            <CirclePlus className="size-4.5" />
-          ) : (
-            <MessageSquare className="size-4.5" />
-          )
-        }
-        label={presentation.secondaryActionLabel}
-        disabled={disabled}
-        variant="secondary"
-      />
+      {presentation.posture !== 'note-query' && (
+        <ActionButton
+          intent={secondaryIntent(presentation.posture)}
+          icon={
+            presentation.secondaryActionIcon === 'circle-plus' ? (
+              <CirclePlus className="size-4.5" />
+            ) : (
+              <MessageSquare className="size-4.5" />
+            )
+          }
+          label={presentation.secondaryActionLabel}
+          disabled={disabled}
+          variant="secondary"
+        />
+      )}
       <ActionButton
         intent={primaryIntent(presentation.posture)}
         icon={

@@ -1,11 +1,11 @@
 import type { SessionSource } from '@hominem/chat-services/types';
 import type { ArtifactType } from '@hominem/chat-services/types';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { filterMessagesByQuery } from '../../types/chat';
 import type { ExtendedMessage } from '../../types/chat';
-import { Button } from '../ui/button';
 import { ChatHeader } from './chat-header';
-import { ChatMessages, type ChatMessagesHandle } from './chat-messages';
+import { ChatMessages } from './chat-messages';
 import type { ChatRenderIcon } from './chat.types';
 import { VoiceModeOverlay, type VoiceModeOverlayState } from './voice-mode-overlay';
 
@@ -43,12 +43,17 @@ interface ChatProps {
   onSpeak?: ((messageId: string, content: string) => void) | undefined;
 }
 
+function isMac() {
+  if (typeof window === 'undefined') return false;
+  return navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+}
+
 export function Chat({
-  source,
-  statusCopy,
-  resolvedSource,
-  topInset = 0,
-  renderIcon,
+  statusCopy: _statusCopy,
+  source: _source,
+  resolvedSource: _resolvedSource,
+  topInset: _topInset = 0,
+  renderIcon: _renderIcon,
   messages,
   status = 'idle',
   isLoading = false,
@@ -62,12 +67,12 @@ export function Chat({
   voiceModeErrorMessage,
   isVoiceModeRecording = false,
   canTransform: _canTransform = false,
-  isDebugEnabled = false,
-  isArchiving = false,
-  onDebugChange,
-  onTransform,
-  onArchive,
-  onOpenSearch,
+  isDebugEnabled: _isDebugEnabled = false,
+  isArchiving: _isArchiving = false,
+  onDebugChange: _onDebugChange,
+  onTransform: _onTransform,
+  onArchive: _onArchive,
+  onOpenSearch: _onOpenSearch,
   onToggleVoiceMode,
   onStartVoiceModeRecording,
   onStopVoiceModeRecording,
@@ -76,94 +81,40 @@ export function Chat({
   onRegenerate,
   onSpeak,
 }: ChatProps) {
-  const [showMenu, setShowMenu] = useState(false);
-  const messagesHandleRef = useRef<ChatMessagesHandle | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
-  void source;
+  const filteredMessages = useMemo(
+    () => filterMessagesByQuery(messages, searchQuery),
+    [messages, searchQuery],
+  );
 
-  const handleOpenSearch = () => {
-    if (onOpenSearch) {
-      onOpenSearch();
-      return;
-    }
-
-    messagesHandleRef.current?.showSearch();
-  };
+  // Cmd+F / Ctrl+F focuses the header search input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const modifier = isMac() ? e.metaKey : e.ctrlKey;
+      if (modifier && e.key === 'f') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (e.key === 'Escape' && searchQuery) {
+        setSearchQuery('');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchQuery]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-background text-foreground">
       <ChatHeader
-        topInset={topInset}
-        resolvedSource={resolvedSource}
-        statusCopy={statusCopy}
-        isVoiceModeActive={isVoiceModeActive}
-        onOpenSearch={handleOpenSearch}
-        onOpenMenu={() => setShowMenu((current) => !current)}
-        {...(onToggleVoiceMode ? { onToggleVoiceMode } : {})}
-        renderIcon={renderIcon}
+        searchQuery={searchQuery}
+        searchInputRef={searchInputRef}
+        onChangeSearchQuery={setSearchQuery}
       />
 
-      {showMenu ? (
-        <div className="border-b border-border-subtle bg-background/95 px-4 py-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="ghost" size="sm" onClick={handleOpenSearch}>
-              Search
-            </Button>
-            {onDebugChange ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => onDebugChange(!isDebugEnabled)}
-              >
-                {isDebugEnabled ? 'Hide debug metadata' : 'Show debug metadata'}
-              </Button>
-            ) : null}
-            {onArchive ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={onArchive}
-                disabled={isArchiving}
-                className="text-destructive"
-              >
-                {isArchiving ? 'Archiving...' : 'Archive chat'}
-              </Button>
-            ) : null}
-            {onTransform ? (
-              <>
-                <Button type="button" variant="ghost" size="sm" onClick={() => onTransform('note')}>
-                  Transform to note
-                </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={() => onTransform('task')}>
-                  Transform to task
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onTransform('task_list')}
-                >
-                  Transform to task list
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onTransform('tracker')}
-                >
-                  Transform to tracker
-                </Button>
-              </>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
-
       <ChatMessages
-        ref={messagesHandleRef}
-        messages={messages}
+        messages={filteredMessages}
         status={status}
         isLoading={isLoading}
         error={error ?? null}
@@ -177,7 +128,7 @@ export function Chat({
       />
 
       {speechErrorMessage ? (
-        <div className="mx-auto mb-3 w-full max-w-180 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive/80">
+        <div className="mx-auto mb-3 w-full max-w-3xl rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive/80">
           {speechErrorMessage}
         </div>
       ) : null}

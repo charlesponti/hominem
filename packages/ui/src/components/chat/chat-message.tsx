@@ -27,7 +27,6 @@ import {
 import { playEnterRow, reducedMotion } from '../../lib/gsap/sequences';
 import { useMessageEdit } from '../../lib/hooks/use-message-edit';
 import { cn, copyToClipboard } from '../../lib/utils';
-import { chatTokens } from '../../tokens';
 import type { ExtendedMessage } from '../../types/chat';
 import {
   MarkdownContent,
@@ -137,7 +136,7 @@ export const ChatMessage = memo(function ChatMessage({
           className="gap-3"
         >
           {!isUser && hasReasoning && (
-            <Reasoning className="border-l-2 border-border-default py-1 pl-4 my-2 text-text-tertiary">
+            <Reasoning className="border-l-2 border-default py-1 pl-4 my-2 text-text-tertiary">
               {message.reasoning}
             </Reasoning>
           )}
@@ -225,24 +224,10 @@ export const ChatMessage = memo(function ChatMessage({
             hasContent && (
               <>
                 {isUser ? (
-                  <div
-                    className="inline-block"
-                    style={{
-                      maxWidth: chatTokens.userBubbleMaxWidth,
-                      borderRadius: chatTokens.radii.bubble,
-                      backgroundColor: chatTokens.surfaces.user,
-                      borderWidth: 1,
-                      borderStyle: 'solid',
-                      borderColor: chatTokens.borders.user,
-                      padding: 'var(--spacing-3) var(--spacing-4)',
-                      color: chatTokens.foregrounds.user,
-                      boxShadow: 'var(--shadow-low)',
-                    }}
-                  >
+                  <div className="inline-block max-w-[34rem] rounded-2xl border border-subtle bg-emphasis-highest px-4 py-3 text-white shadow-low">
                     <MarkdownContent
                       content={message.content}
                       isStreaming={isStreaming}
-                      className="prose-p:text-white prose-headings:text-white prose-strong:text-white prose-li:text-white prose-code:text-white prose-pre:bg-bg-elevated"
                     />
                   </div>
                 ) : (

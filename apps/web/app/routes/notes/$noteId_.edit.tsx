@@ -37,17 +37,8 @@ export default function NoteEditPage({ loaderData }: { loaderData: { noteId: str
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background pb-[var(--composer-resting-height,72px)]">
-      <div className="mx-auto flex w-full max-w-160 flex-1 min-h-0 flex-col px-4 pb-8 pt-6 sm:px-6">
-        <header className="mb-6 border-b border-border/60 pb-5">
-          <div className="body-4 uppercase tracking-[0.12em] text-text-tertiary">Editor</div>
-          <h1 className="heading-2 mt-2 text-foreground">{note.title || 'Untitled note'}</h1>
-        </header>
-
-        <section className="min-h-0 flex-1 rounded-md border border-border/60 bg-background px-5 py-5 sm:px-6">
-          <NoteEditor note={note} />
-        </section>
-      </div>
+    <div className="pb-8 pt-10">
+      <NoteEditor note={note} />
     </div>
   );
 }

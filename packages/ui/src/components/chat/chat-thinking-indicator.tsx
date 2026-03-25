@@ -14,7 +14,7 @@ export function ChatThinkingIndicator() {
   }, []);
 
   return (
-    <div className="px-4 py-3">
+    <div className="mx-auto w-full max-w-3xl px-4 py-3">
       <div className="flex items-center gap-2">
         <span
           className={cn('h-2 w-2 rounded-full bg-foreground/70 transition-opacity', {

@@ -14,7 +14,7 @@
 
 import type { ComposerMode } from './composer-provider';
 
-export type ComposerPosture = 'capture' | 'draft' | 'reply' | 'hidden';
+export type ComposerPosture = 'capture' | 'draft' | 'reply' | 'note-query' | 'hidden';
 
 export interface ComposerPresentation {
   posture: ComposerPosture;
@@ -35,13 +35,13 @@ export function deriveComposerPresentation(
 ): ComposerPresentation {
   if (mode === 'note-aware') {
     return {
-      posture: 'draft',
-      placeholder: 'Keep writing this note…',
-      primaryActionLabel: 'Add to note',
-      primaryActionIcon: 'circle-plus',
-      secondaryActionLabel: 'Discuss note',
+      posture: 'note-query',
+      placeholder: 'Ask about this note…',
+      primaryActionLabel: 'Ask',
+      primaryActionIcon: 'arrow-up',
+      secondaryActionLabel: '',
       secondaryActionIcon: 'message-square',
-      showsAttachmentButton: true,
+      showsAttachmentButton: false,
       showsVoiceButton: true,
       showsNotePicker: false,
     };

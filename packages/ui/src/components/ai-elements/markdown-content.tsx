@@ -49,12 +49,7 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
   };
 
   return (
-    <div
-      className={cn(
-        'prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-code:text-foreground',
-        className,
-      )}
-    >
+    <div className={cn('max-w-none', className)}>
       <ReactMarkdown
         components={{
           code({ className, children }) {

@@ -11,7 +11,6 @@ import { useNavigate } from 'react-router';
 
 import { useArchiveChat } from '~/hooks/use-chats';
 import { useServerSpeech } from '~/hooks/use-server-speech';
-import { useVoiceMode } from '~/hooks/use-voice-mode';
 import { requireAuth } from '~/lib/guards';
 import { useChatKeyboardShortcuts } from '~/lib/hooks/use-chat-keyboard-shortcuts';
 import { useChatMessages } from '~/lib/hooks/use-chat-messages';
@@ -45,18 +44,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
     updateMessage,
   } = useChatMessages({ chatId });
   const voiceTtsServerEnabled = useFeatureFlag('voiceTtsServer', true);
-  const voiceModeEnabled = useFeatureFlag('voiceMode', true);
   const { speakingId, loadingId, errorMessage: speechErrorMessage, speak } = useServerSpeech();
-  const {
-    isActive: isVoiceModeActive,
-    state: voiceModeState,
-    error: voiceModeError,
-    startRecording: startVoiceModeRecording,
-    stopRecording: stopVoiceModeRecording,
-    activate: activateVoiceMode,
-    deactivate: deactivateVoiceMode,
-  } = useVoiceMode();
-  const [isVoiceModeRecording, setIsVoiceModeRecording] = useState(false);
 
   const { data: chat } = useRpcQuery(({ chats }) => chats.get({ chatId }), {
     queryKey: chatQueryKeys.get(chatId),
@@ -147,7 +135,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   });
 
   return (
-    <div className="flex h-dvh min-h-0 flex-col bg-background text-foreground pb-(--composer-resting-height,112px)">
+    <div className="flex min-h-0 flex-col bg-background text-foreground pb-(--composer-resting-height,112px) h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)]">
       <Chat
         source={resolvedSource}
         resolvedSource={resolvedSource}
@@ -162,36 +150,11 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         speakingId={speakingId}
         speechLoadingId={loadingId}
         speechErrorMessage={speechErrorMessage}
-        isVoiceModeActive={voiceModeEnabled ? isVoiceModeActive : false}
-        voiceModeState={voiceModeState}
-        voiceModeErrorMessage={voiceModeError?.message ?? null}
-        isVoiceModeRecording={isVoiceModeRecording}
         canTransform={canTransform}
         isDebugEnabled={isDebugEnabled}
         isArchiving={isArchiving}
         onDebugChange={setIsDebugEnabled}
         onTransform={handleTransform}
-        onToggleVoiceMode={() => {
-          if (!voiceModeEnabled) return;
-
-          if (isVoiceModeActive) {
-            setIsVoiceModeRecording(false);
-            deactivateVoiceMode();
-            return;
-          }
-
-          activateVoiceMode();
-        }}
-        onStartVoiceModeRecording={async () => {
-          if (!voiceModeEnabled) return;
-          await startVoiceModeRecording();
-          setIsVoiceModeRecording(true);
-        }}
-        onStopVoiceModeRecording={async () => {
-          if (!voiceModeEnabled) return;
-          await stopVoiceModeRecording();
-          setIsVoiceModeRecording(false);
-        }}
         onArchive={() => archiveChat({ chatId })}
         onDelete={async (messageId: string) => {
           try {
