@@ -133,6 +133,7 @@
   },
   "devDependencies": {
     "@hominem/rpc": "workspace:*",
+    "react-dom": "19.2.0",
     "expo-clipboard": "~55.0.9",
     "expo-file-system": "~55.0.11",
     "expo-haptics": "^55.0.9",
@@ -163,7 +164,8 @@
     "vitest": "4.0.16"
   },
   "peerDependencies": {
-    "react": "19.2.0"
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
   },
   "msw": {
     "workerDirectory": [

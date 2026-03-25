@@ -1,5 +1,6 @@
 import { ArrowRight, type LucideIcon } from 'lucide-react';
 import { Link } from 'react-router';
+import { cn } from '../../lib/utils';
 
 export interface LandingFeature {
   icon: LucideIcon;
@@ -41,7 +42,7 @@ function Divider() {
 
 function Section({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <section className={`py-20 md:py-28 px-6 md:px-12 lg:px-20 max-w-5xl ${className}`}>
+    <section className={cn('py-20 md:py-28 max-w-6xl', className)}>
       {children}
     </section>
   );

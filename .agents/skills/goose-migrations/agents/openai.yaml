@@ -1,7 +1,0 @@
-interface:
-  display_name: "Goose Migrations"
-  short_description: "Manage Hominem Goose SQL migrations safely."
-  default_prompt: "Use $goose-migrations to manage Goose migrations in the Hominem monorepo."
-
-policy:
-  allow_implicit_invocation: true

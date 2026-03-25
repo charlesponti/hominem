@@ -9,7 +9,7 @@ import {
   updateChatTitleQuery,
   deleteChatQuery,
   MessageService,
-} from '@hominem/chat-services';
+} from '@hominem/chat-services/server';
 import type { ArtifactType, ClassificationResponse } from '@hominem/chat-services/types';
 import {
   type ChatsListOutput,

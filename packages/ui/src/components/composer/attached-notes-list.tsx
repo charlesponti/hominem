@@ -1,29 +1,35 @@
-import type { Note } from '@hominem/rpc/types/notes.types';
+/**
+ * AttachedNotesList
+ *
+ * Subscribes directly to the store's attachedNotes slice.
+ * Only re-renders when the attached notes change — not on draft keystrokes.
+ * Dispatches DETACH_NOTE directly without callback props.
+ */
+
 import { X } from 'lucide-react';
 import { memo } from 'react';
 
-export const AttachedNotesList = memo(function AttachedNotesList({
-  notes,
-  onRemove,
-}: {
-  notes: Note[];
-  onRemove: (id: string) => void;
-}) {
-  if (notes.length === 0) return null;
+import { useComposerSlice, useComposerStore } from './composer-provider';
+
+export const AttachedNotesList = memo(function AttachedNotesList() {
+  const store = useComposerStore();
+  const attachedNotes = useComposerSlice((s) => s.attachedNotes);
+
+  if (attachedNotes.length === 0) return null;
 
   return (
     <div className="flex flex-wrap gap-2">
-      {notes.map((note) => (
+      {attachedNotes.map((note) => (
         <div
           key={note.id}
           className="flex items-center gap-1 rounded-md border border-border bg-bg-surface px-2 py-1"
         >
-          <span className="max-w-[140px] truncate text-xs text-foreground">
+          <span className="max-w-35 truncate text-xs text-foreground">
             {note.title || 'Untitled note'}
           </span>
           <button
             type="button"
-            onClick={() => onRemove(note.id)}
+            onClick={() => store.dispatch({ type: 'DETACH_NOTE', noteId: note.id })}
             aria-label={`Remove ${note.title ?? 'note'}`}
             className="text-text-tertiary transition-colors hover:text-foreground"
           >

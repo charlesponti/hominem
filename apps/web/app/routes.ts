@@ -9,7 +9,6 @@ export default [
     route('/auth/verify', 'routes/auth/verify.tsx'),
     route('/auth/logout', 'routes/auth/logout.tsx'),
     route('/auth/passkey/callback', 'routes/auth/passkey.callback.tsx'),
-    route('/auth/google', 'routes/auth/google.tsx'),
   ]),
 
   layout('routes/layout.tsx', [

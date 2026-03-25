@@ -1,4 +1,4 @@
-'use client';
+
 
 import { ChevronDown, ChevronRight, Sparkles } from 'lucide-react';
 import { useState, type HTMLAttributes, type ReactNode } from 'react';

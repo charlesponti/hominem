@@ -1,17 +1,32 @@
-import { BookOpen, Camera, Mic, Plus, StopCircle } from 'lucide-react';
-import { memo, type ReactNode } from 'react';
+/**
+ * ComposerTools
+ *
+ * Toolbar buttons. Receives stable refs directly and calls browser APIs
+ * (showModal, click) inline — no callback props, no useCallback.
+ * Subscribes to attachedNotesCount from the store — only re-renders when
+ * the count changes, not on every draft keystroke.
+ */
+
+import { BookOpen, Camera, Mic, Plus } from 'lucide-react';
+import { memo } from 'react';
 
 import { cn } from '../../lib/utils';
+import type { ComposerPresentation } from './composer-presentation';
+import { useComposerSlice } from './composer-provider';
 
-interface ComposerToolButtonProps {
-  icon: ReactNode;
+function ToolButton({
+  icon,
+  label,
+  onClick,
+  active,
+  disabled,
+}: {
+  icon: React.ReactNode;
   label: string;
-  onClick: (() => void) | undefined;
+  onClick: () => void;
   active: boolean;
   disabled: boolean;
-}
-
-function ComposerToolButton({ icon, label, onClick, active, disabled }: ComposerToolButtonProps) {
+}) {
   return (
     <button
       type="button"
@@ -21,7 +36,7 @@ function ComposerToolButton({ icon, label, onClick, active, disabled }: Composer
       disabled={disabled}
       aria-pressed={active || undefined}
       className={cn(
-        'flex size-[38px] shrink-0 items-center justify-center rounded-full border transition-colors',
+        'flex size-9.5 shrink-0 items-center justify-center rounded-full border transition-colors',
         disabled && 'cursor-not-allowed opacity-40',
         active
           ? 'border-foreground/40 bg-bg-surface text-foreground'
@@ -34,73 +49,61 @@ function ComposerToolButton({ icon, label, onClick, active, disabled }: Composer
 }
 
 export const ComposerTools = memo(function ComposerTools({
-  attachedNotesCount,
-  isRecording,
-  showsAttachmentButton,
-  showsNotePicker,
+  fileInputRef,
+  cameraInputRef,
+  voiceDialogRef,
+  notePickerDialogRef,
+  presentation,
   showsVoiceButton,
-  onAttachmentClick,
-  onCameraClick,
-  onNotePickerClick,
-  onVoiceClick,
 }: {
-  attachedNotesCount: number;
-  isRecording: boolean;
-  showsAttachmentButton: boolean;
-  showsNotePicker: boolean;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  cameraInputRef: React.RefObject<HTMLInputElement | null>;
+  voiceDialogRef: React.RefObject<HTMLDialogElement | null>;
+  notePickerDialogRef: React.RefObject<HTMLDialogElement | null>;
+  presentation: ComposerPresentation;
   showsVoiceButton: boolean;
-  onAttachmentClick?: () => void;
-  onCameraClick?: () => void;
-  onNotePickerClick?: () => void;
-  onVoiceClick?: () => void;
 }) {
+  // Fine-grained subscription — only re-renders when attached count changes
+  const attachedNotesCount = useComposerSlice((s) => s.attachedNotes.length);
+
   return (
     <div className="flex items-center gap-2">
-      <span className="sr-only" aria-live="polite" role="status">
-        {isRecording ? 'Recording started' : 'Recording stopped'}
-      </span>
-      {showsNotePicker ? (
-        <ComposerToolButton
-          icon={<BookOpen className="size-[18px]" />}
+      {presentation.showsNotePicker && (
+        <ToolButton
+          icon={<BookOpen className="size-4.5" />}
           label="Attach notes as context"
-          onClick={onNotePickerClick}
+          onClick={() => notePickerDialogRef.current?.showModal()}
           active={attachedNotesCount > 0}
-          disabled={!onNotePickerClick}
+          disabled={false}
         />
-      ) : null}
-      {showsAttachmentButton ? (
-        <ComposerToolButton
-          icon={<Plus className="size-[18px]" />}
+      )}
+      {presentation.showsAttachmentButton && (
+        <ToolButton
+          icon={<Plus className="size-4.5" />}
           label="Add attachment"
-          onClick={onAttachmentClick}
+          onClick={() => fileInputRef.current?.click()}
           active={false}
-          disabled={!onAttachmentClick}
+          disabled={false}
         />
-      ) : null}
-      {showsAttachmentButton ? (
-        <ComposerToolButton
-          icon={<Camera className="size-[18px]" />}
+      )}
+      {presentation.showsAttachmentButton && (
+        <ToolButton
+          icon={<Camera className="size-4.5" />}
           label="Take photo"
-          onClick={onCameraClick}
+          onClick={() => cameraInputRef.current?.click()}
           active={false}
-          disabled={!onCameraClick}
+          disabled={false}
         />
-      ) : null}
-      {showsVoiceButton ? (
-        <ComposerToolButton
-          icon={
-            isRecording ? (
-              <StopCircle className="size-[18px] text-destructive" />
-            ) : (
-              <Mic className="size-[18px]" />
-            )
-          }
-          label={isRecording ? 'Stop recording' : 'Voice note'}
-          onClick={onVoiceClick}
-          active={isRecording}
-          disabled={!onVoiceClick}
+      )}
+      {showsVoiceButton && (
+        <ToolButton
+          icon={<Mic className="size-4.5" />}
+          label="Voice note"
+          onClick={() => voiceDialogRef.current?.showModal()}
+          active={false}
+          disabled={false}
         />
-      ) : null}
+      )}
     </div>
   );
 });

@@ -1,4 +1,4 @@
-'use client';
+
 
 import type { HTMLAttributes } from 'react';
 

@@ -1,5 +1,5 @@
 import { NOTES_AUTH_CONFIG } from '@hominem/auth';
-import { resolveSafeAuthRedirect } from '@hominem/auth/server';
+import { resolveSafeAuthRedirect } from '@hominem/auth/server-utils';
 import { LandingPage } from '@hominem/ui/components/layout/landing-page';
 import { FileText, MessageSquare, Mic, Tag } from 'lucide-react';
 import { data, redirect } from 'react-router';

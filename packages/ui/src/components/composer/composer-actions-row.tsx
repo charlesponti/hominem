@@ -1,44 +1,73 @@
+/**
+ * ComposerActionsRow
+ *
+ * Renders the primary and secondary submit buttons.
+ * Uses useFormStatus for pending state — must be rendered inside <form>.
+ * Each button carries name="intent" value="<action>" so FormData identifies
+ * which button was clicked — standard HTML multi-submit-button pattern.
+ *
+ * canSubmit is derived from the store slice — only re-renders when content
+ * availability changes, not on every keystroke.
+ */
+
 import { ArrowUp, CirclePlus, MessageSquare } from 'lucide-react';
-import { memo, type ReactNode, type Ref } from 'react';
+import { memo } from 'react';
+import { useFormStatus } from 'react-dom';
 
 import { cn } from '../../lib/utils';
-import { useComposerActions } from './composer-actions';
 import type { ComposerPresentation } from './composer-presentation';
-import { useComposerRefs } from './composer-provider';
+import { useComposerSlice } from './composer-provider';
 
-interface ComposerActionButtonProps {
-  buttonRef?: Ref<HTMLButtonElement>;
-  icon: ReactNode;
-  label: string;
-  onClick: () => void;
-  disabled: boolean;
-  variant: 'primary' | 'secondary';
+// ─── Intent mapping ───────────────────────────────────────────────────────────
+
+function primaryIntent(posture: ComposerPresentation['posture']): string {
+  switch (posture) {
+    case 'reply':
+      return 'send-reply';
+    case 'draft':
+      return 'update-note';
+    default:
+      return 'save-note';
+  }
 }
 
-function ComposerActionButton({
-  buttonRef,
+function secondaryIntent(posture: ComposerPresentation['posture']): string {
+  switch (posture) {
+    case 'reply':
+      return 'save-as-note';
+    default:
+      return 'start-chat';
+  }
+}
+
+// ─── Action button ────────────────────────────────────────────────────────────
+
+function ActionButton({
+  intent,
   icon,
   label,
-  onClick,
   disabled,
   variant,
-}: ComposerActionButtonProps) {
+}: {
+  intent: string;
+  icon: React.ReactNode;
+  label: string;
+  disabled: boolean;
+  variant: 'primary' | 'secondary';
+}) {
   const isPrimary = variant === 'primary';
-
   return (
     <button
-      ref={buttonRef}
-      type="button"
+      type="submit"
+      name="intent"
+      value={intent}
       aria-label={label}
       title={label}
-      onClick={onClick}
       disabled={disabled}
       data-testid={isPrimary ? 'composer-primary' : 'composer-secondary'}
       className={cn(
         'flex shrink-0 items-center justify-center rounded-full transition-colors',
-        isPrimary
-          ? 'size-[42px]'
-          : 'size-[38px] border border-border bg-bg-surface text-foreground',
+        isPrimary ? 'size-10.5' : 'size-9.5 border border-border bg-bg-surface text-foreground',
         isPrimary &&
           (disabled
             ? 'cursor-not-allowed bg-bg-surface text-text-tertiary'
@@ -51,55 +80,52 @@ function ComposerActionButton({
   );
 }
 
+// ─── Row ──────────────────────────────────────────────────────────────────────
+
 export const ComposerActionsRow = memo(function ComposerActionsRow({
-  primaryActionIcon,
-  primaryActionLabel,
-  secondaryActionIcon,
-  secondaryActionLabel,
-  posture,
-  chatId,
-  noteId,
-  navigate,
+  presentation,
+  isPending,
 }: {
-  primaryActionIcon: 'circle-plus' | 'arrow-up';
-  primaryActionLabel: string;
-  secondaryActionIcon: 'message-square' | 'circle-plus';
-  secondaryActionLabel: string;
-  posture: ComposerPresentation['posture'];
-  chatId: string | null;
-  noteId: string | null;
-  navigate: (path: string) => void;
+  presentation: ComposerPresentation;
+  isPending: boolean;
 }) {
-  const actions = useComposerActions({ posture, chatId, noteId, navigate });
-  const { submitBtnRef } = useComposerRefs();
+  // Fine-grained slice — only re-renders when content availability changes
+  const hasContent = useComposerSlice(
+    (s) => s.draft.trim().length > 0 || s.uploadedFiles.length > 0,
+  );
+  const isUploading = useComposerSlice((s) => s.isUploading);
+
+  // useFormStatus provides pending from the enclosing <form> action
+  const { pending: formPending } = useFormStatus();
+
+  const disabled = !hasContent || isPending || formPending || isUploading;
 
   return (
     <div className="flex items-center gap-2">
-      <ComposerActionButton
+      <ActionButton
+        intent={secondaryIntent(presentation.posture)}
         icon={
-          secondaryActionIcon === 'circle-plus' ? (
-            <CirclePlus className="size-[18px]" />
+          presentation.secondaryActionIcon === 'circle-plus' ? (
+            <CirclePlus className="size-4.5" />
           ) : (
-            <MessageSquare className="size-[18px]" />
+            <MessageSquare className="size-4.5" />
           )
         }
-        label={secondaryActionLabel}
-        onClick={() => void actions.secondary.execute()}
-        disabled={!actions.canSubmit}
+        label={presentation.secondaryActionLabel}
+        disabled={disabled}
         variant="secondary"
       />
-      <ComposerActionButton
-        buttonRef={submitBtnRef}
+      <ActionButton
+        intent={primaryIntent(presentation.posture)}
         icon={
-          primaryActionIcon === 'circle-plus' ? (
-            <CirclePlus className="size-[18px]" />
+          presentation.primaryActionIcon === 'circle-plus' ? (
+            <CirclePlus className="size-4.5" />
           ) : (
-            <ArrowUp className="size-[18px]" />
+            <ArrowUp className="size-4.5" />
           )
         }
-        label={primaryActionLabel}
-        onClick={() => void actions.primary.execute()}
-        disabled={!actions.canSubmit}
+        label={presentation.primaryActionLabel}
+        disabled={disabled}
         variant="primary"
       />
     </div>

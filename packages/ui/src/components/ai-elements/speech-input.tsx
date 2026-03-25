@@ -1,4 +1,4 @@
-'use client';
+
 
 import { emitVoiceEvent } from '@hominem/services/voice-events';
 import { Mic, MicOff, Loader2 } from 'lucide-react';

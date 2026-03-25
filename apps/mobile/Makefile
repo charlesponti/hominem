@@ -30,18 +30,18 @@ test:
 		tests/integration/auth-contract.integration.test.ts \
 		tests/integration/auth-flow.integration.test.ts
 
-## Build preview → auto-submit to TestFlight. Use SIM=1 for simulator.
 .PHONY: preview
-preview: _preflight-preview
+preview:
+	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview --platform ios --auto-submit
+
+## Build preview → auto-submit to TestFlight. Use SIM=1 for simulator.
+.PHONY: preview-auto
+preview-auto: _preflight-preview
 ifdef SIM
 	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview-simulator --platform ios --non-interactive
 else
 	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview --platform ios --non-interactive --auto-submit
 endif
-
-.PHONY: preview-interactive
-preview-interactive:
-	APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EAS) build --profile preview --platform ios --auto-submit
 
 ## Push OTA update. Defaults: CHANNEL=preview ROLLOUT=10
 ## Examples: make update ROLLOUT=100   make update CHANNEL=production

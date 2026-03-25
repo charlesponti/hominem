@@ -1,97 +1,42 @@
-import { emitVoiceEvent } from '@hominem/services/voice-events';
-import type { UseMutationResult } from '@tanstack/react-query';
-import { Loader2, Mic } from 'lucide-react';
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type KeyboardEvent,
-} from 'react';
+/**
+ * Composer
+ *
+ * Architecture:
+ *   Composer        — guard (no hooks, returns null when posture === 'hidden')
+ *   ComposerForm    — the real component; hooks are always called consistently
+ *
+ * Key properties:
+ *   • Zero useEffect
+ *   • Zero useCallback (inline handlers close over stable store/actionsRef)
+ *   • Native <form> with useActionState for submission — no manual isSubmitting,
+ *     no submitLockRef, no submitBtnRef, no programmatic .click()
+ *   • Voice and note picker opened via dialogRef.current.showModal() from
+ *     event handlers — no showVoice/showNotePicker useState booleans
+ *   • noteTitle read from layout via useNote() — no useEffect push from routes
+ */
 
-import { SpeechInput } from '../ai-elements';
+import type { Note } from '@hominem/rpc/types/notes.types';
+import type { UseMutationResult } from '@tanstack/react-query';
+import type { ChangeEvent } from 'react';
+import { memo, useActionState, useRef } from 'react';
+
 import { AttachedNotesList } from './attached-notes-list';
+import { buildNoteContext, toNoteTitle } from './composer-actions';
 import { ComposerActionsRow } from './composer-actions-row';
 import { ComposerAttachmentList } from './composer-attachment-list';
+import { appendChatAttachmentContext, appendNoteAttachments } from './composer-attachments';
 import { deriveComposerPresentation } from './composer-presentation';
+import type { ComposerPresentation } from './composer-presentation';
+import { useComposerActionsRef, useComposerSlice, useComposerStore } from './composer-provider';
 import type { ComposerMode } from './composer-provider';
-import {
-  useComposerAttachedNotes,
-  useComposerDraftActions,
-  useComposerDraftState,
-  useComposerRefs,
-  useComposerSubmission,
-  useComposerUploadActions,
-  useComposerUploadState,
-} from './composer-provider';
 import { ComposerShell } from './composer-shell';
 import { ComposerTools } from './composer-tools';
-import { NotePicker } from './note-picker';
-
-const ComposerInput = memo(function ComposerInput({
-  isDraftMode,
-  placeholder,
-}: {
-  isDraftMode: boolean;
-  placeholder: string;
-}) {
-  const { draftText } = useComposerDraftState();
-  const { setDraftText } = useComposerDraftActions();
-  const { isSubmitting } = useComposerSubmission();
-  const { inputRef, submitBtnRef } = useComposerRefs();
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        if (submitBtnRef.current?.disabled) return;
-        submitBtnRef.current?.click();
-      }
-    },
-    [submitBtnRef],
-  );
-
-  return (
-    <textarea
-      ref={inputRef}
-      data-testid="composer-input"
-      value={draftText}
-      onChange={(event) => setDraftText(event.target.value)}
-      onKeyDown={handleKeyDown}
-      placeholder={placeholder}
-      disabled={isSubmitting}
-      className={[
-        'w-full resize-none border-0 bg-transparent p-0 text-base leading-normal text-foreground outline-none field-sizing-content overflow-y-auto placeholder:text-text-tertiary focus:outline-none',
-        !isDraftMode ? 'max-h-48 min-h-6' : 'min-h-24 max-h-64',
-      ].join(' ')}
-      aria-label="Compose message or note"
-    />
-  );
-});
-
-const ComposerAttachments = memo(function ComposerAttachments() {
-  const { attachedNotes, detachNote } = useComposerAttachedNotes();
-  const { uploadState } = useComposerUploadState();
-  const { removeUploadedFile } = useComposerUploadActions();
-
-  return (
-    <>
-      <ComposerAttachmentList
-        errors={uploadState.errors}
-        files={uploadState.uploadedFiles}
-        onRemove={removeUploadedFile}
-      />
-      <AttachedNotesList notes={attachedNotes} onRemove={detachNote} />
-    </>
-  );
-});
+import { NotePickerDialog } from './note-picker-dialog';
+import { VoiceDialog } from './voice-dialog';
 
 interface TranscribeResult {
   text: string;
 }
-
 interface TranscribeVariables {
   audioBlob: Blob;
   language?: string;
@@ -101,177 +46,150 @@ export interface ComposerProps {
   mode: ComposerMode;
   noteId?: string | null;
   chatId?: string | null;
+  /** Derived from useNote(noteId) in the layout — no useEffect push needed */
+  noteTitle?: string | null;
   navigate: (path: string) => void;
   inlineVoiceEnabled?: boolean;
   transcribeMutation: UseMutationResult<TranscribeResult, Error, TranscribeVariables>;
+  /** Notes for the picker — fetched in layout, passed as stable prop */
+  notes?: Note[];
 }
 
-export function Composer({
-  mode,
-  noteId: propNoteId,
-  chatId: propChatId,
-  navigate,
+// ─── Guard ────────────────────────────────────────────────────────────────────
+// No hooks. Returns null before ComposerForm mounts, so ComposerForm's hooks
+// are always called a consistent number of times — fixes the Rules of Hooks
+// violation from the previous early-return-after-hooks pattern.
+
+export function Composer(props: ComposerProps) {
+  const presentation = deriveComposerPresentation(props.mode);
+  if (presentation.posture === 'hidden') return null;
+  return <ComposerForm {...props} presentation={presentation} />;
+}
+
+// ─── Form ─────────────────────────────────────────────────────────────────────
+
+const ComposerForm = memo(function ComposerForm({
+  noteId,
+  chatId,
+  noteTitle,
   inlineVoiceEnabled = true,
   transcribeMutation,
-}: ComposerProps) {
-  const { attachedNotes } = useComposerAttachedNotes();
-  const { setDraftText } = useComposerDraftActions();
-  const { uploadFiles } = useComposerUploadActions();
-  const { containerRef: cardRef, inputRef } = useComposerRefs();
+  notes = [],
+  presentation,
+}: ComposerProps & { presentation: ComposerPresentation }) {
+  const store = useComposerStore();
+  const actionsRef = useComposerActionsRef();
 
-  const [showVoice, setShowVoice] = useState(false);
-  const [showNotePicker, setShowNotePicker] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
-  const [voiceAudioLevel, setVoiceAudioLevel] = useState(0);
-  const [recordingStartedAt, setRecordingStartedAt] = useState<number | null>(null);
-  const [recordingElapsedMs, setRecordingElapsedMs] = useState(0);
-  const [voiceErrorMessage, setVoiceErrorMessage] = useState<string | null>(null);
+  // Stable refs — never change identity, never trigger re-renders
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const voiceDialogRef = useRef<HTMLDialogElement>(null);
+  const notePickerDialogRef = useRef<HTMLDialogElement>(null);
 
-  const presentation = deriveComposerPresentation(mode, isRecording);
-  const showsVoiceButton = inlineVoiceEnabled && presentation.showsVoiceButton;
-  if (presentation.posture === 'hidden') return null;
+  // ─── Form action ────────────────────────────────────────────────────────────
+  // Reads FormData at submission time — noteId/chatId/noteTitle via hidden inputs,
+  // attachedNotes/uploadedFiles from the store snapshot (always current).
+  // Closes over only `store` and `actionsRef` — both stable — so the action
+  // function itself is stable across renders.
 
-  useEffect(() => {
-    if (inlineVoiceEnabled) return;
-    setShowVoice(false);
-  }, [inlineVoiceEnabled]);
+  const [, formAction, isPending] = useActionState(async (_prevState: null, formData: FormData) => {
+    const text = ((formData.get('draft') as string) ?? '').trim();
+    const intent = formData.get('intent') as string;
+    const fNoteId = (formData.get('noteId') as string) || null;
+    const fChatId = (formData.get('chatId') as string) || null;
+    const fNoteTitle = (formData.get('noteTitle') as string) || null;
 
-  const handleAudioTranscribed = useCallback(
-    (transcript: string) => {
-      setDraftText(transcript);
-      setShowVoice(false);
-      setVoiceErrorMessage(null);
-      setTimeout(() => inputRef.current?.focus(), 50);
-    },
-    [inputRef, setDraftText],
-  );
+    const { attachedNotes, uploadedFiles } = store.getSnapshot();
+    const hasContent = text.length > 0 || uploadedFiles.length > 0;
+    if (!hasContent) return null;
 
-  const transcribeAudioBlob = useCallback(
-    async (audioBlob: Blob) => {
-      setVoiceErrorMessage(null);
+    const actions = actionsRef.current;
 
-      emitVoiceEvent('voice_transcribe_requested', {
-        platform: 'web',
-        mimeType: audioBlob.type,
-        sizeBytes: audioBlob.size,
-      });
-
-      try {
-        const preferredLanguage = typeof navigator !== 'undefined' ? navigator.language : 'en-US';
-        const result = await transcribeMutation.mutateAsync({
-          audioBlob,
-          language: preferredLanguage,
-        });
-
-        emitVoiceEvent('voice_transcribe_succeeded', {
-          platform: 'web',
-          mimeType: audioBlob.type,
-          sizeBytes: audioBlob.size,
-        });
-
-        handleAudioTranscribed(result.text);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Transcription failed';
-        setVoiceErrorMessage(errorMessage);
-
-        emitVoiceEvent('voice_transcribe_failed', {
-          platform: 'web',
-          mimeType: audioBlob.type,
-          sizeBytes: audioBlob.size,
-        });
+    switch (intent) {
+      case 'send-reply': {
+        if (!fChatId) break;
+        const prefix = buildNoteContext(attachedNotes);
+        const message = appendChatAttachmentContext(prefix ? `${prefix}${text}` : text, [
+          ...uploadedFiles,
+        ]);
+        await actions.sendMessage({ chatId: fChatId, message });
+        store.dispatch({ type: 'CLEAR' });
+        break;
       }
-    },
-    [handleAudioTranscribed, transcribeMutation],
-  );
-
-  const handleCloseNotePicker = useCallback(() => {
-    setShowNotePicker(false);
-    setTimeout(() => inputRef.current?.focus(), 50);
-  }, [inputRef]);
-
-  const isDraftMode = presentation.posture === 'draft';
-
-  const handleFilesSelected = useCallback(
-    async (files: FileList | File[] | null) => {
-      if (!files || Array.from(files).length === 0) return;
-      await uploadFiles(files);
-    },
-    [uploadFiles],
-  );
-
-  const handleFileInputChange = useCallback(
-    async (event: ChangeEvent<HTMLInputElement>) => {
-      await handleFilesSelected(event.target.files);
-      event.target.value = '';
-      inputRef.current?.focus();
-    },
-    [handleFilesSelected, inputRef],
-  );
-
-  const handleAttachmentClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleCameraClick = useCallback(() => {
-    cameraInputRef.current?.click();
-  }, []);
-
-  const handleNotePickerClick = useCallback(() => {
-    setShowNotePicker(true);
-  }, []);
-
-  const handleVoiceClick = useCallback(() => {
-    if (showVoice) {
-      setShowVoice(false);
-      setVoiceErrorMessage(null);
-      setVoiceAudioLevel(0);
-      setRecordingStartedAt(null);
-      setRecordingElapsedMs(0);
-      setIsVoiceProcessing(false);
-      return;
+      case 'update-note': {
+        if (!fNoteId) break;
+        await actions.updateNote({
+          id: fNoteId,
+          content: appendNoteAttachments(text, [...uploadedFiles]),
+        });
+        store.dispatch({ type: 'CLEAR_DRAFT' });
+        store.dispatch({ type: 'CLEAR_FILES' });
+        break;
+      }
+      case 'save-note':
+      case 'save-as-note': {
+        const title = toNoteTitle(text);
+        await actions.createNote({
+          content: appendNoteAttachments(text, [...uploadedFiles]),
+          ...(title ? { title } : {}),
+        });
+        store.dispatch({ type: 'CLEAR_DRAFT' });
+        store.dispatch({ type: 'CLEAR_FILES' });
+        break;
+      }
+      case 'start-chat': {
+        const seedText = fNoteTitle ? `[Regarding note: "${fNoteTitle}"]\n\n${text}` : text;
+        const title = toNoteTitle(text, fNoteTitle ? 'Note chat' : 'New session');
+        const chat = await actions.createChat({
+          seedText: appendChatAttachmentContext(seedText, [...uploadedFiles]),
+          title,
+        });
+        store.dispatch({ type: 'CLEAR_DRAFT' });
+        store.dispatch({ type: 'CLEAR_FILES' });
+        actions.navigate(`/chat/${chat.id}`);
+        break;
+      }
     }
 
-    setShowVoice(true);
-  }, [showVoice]);
+    return null;
+  }, null);
 
-  useEffect(() => {
-    if (!recordingStartedAt) return;
+  // ─── File upload handler ─────────────────────────────────────────────────────
+  // Called from onChange — not an effect. Dispatches upload state to store.
 
-    const intervalId = window.setInterval(() => {
-      setRecordingElapsedMs(Date.now() - recordingStartedAt);
-    }, 250);
+  async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    store.dispatch({ type: 'SET_UPLOADING', isUploading: true });
+    try {
+      const uploaded = await actionsRef.current.uploadFiles(files);
+      store.dispatch({ type: 'ADD_FILES', files: uploaded });
+    } catch (err) {
+      store.dispatch({
+        type: 'SET_UPLOAD_ERRORS',
+        errors: [err instanceof Error ? err.message : 'Upload failed'],
+      });
+    } finally {
+      store.dispatch({ type: 'SET_UPLOADING', isUploading: false });
+      e.target.value = '';
+      inputRef.current?.focus();
+    }
+  }
 
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [recordingStartedAt]);
-
-  const formattedRecordingTime = `${Math.floor(recordingElapsedMs / 60000)
-    .toString()
-    .padStart(2, '0')}:${Math.floor((recordingElapsedMs % 60000) / 1000)
-    .toString()
-    .padStart(2, '0')}`;
-
-  const waveformBars = Array.from({ length: 12 }, (_unused, index) => {
-    const offset = ((index % 4) + 1) / 4;
-    const amplified = Math.max(0.12, voiceAudioLevel * offset);
-    return Math.min(1, amplified);
-  });
+  const isDraftMode = presentation.posture === 'draft';
+  const showsVoiceButton = inlineVoiceEnabled && presentation.showsVoiceButton;
 
   return (
     <>
+      {/* Hidden file inputs — programmatically triggered from ComposerTools */}
       <input
         ref={fileInputRef}
         data-testid="composer-file-input"
         type="file"
         multiple
         className="hidden"
-        onChange={(event) => {
-          void handleFileInputChange(event);
-        }}
+        onChange={handleFileChange}
       />
       <input
         ref={cameraInputRef}
@@ -280,112 +198,85 @@ export function Composer({
         accept="image/*"
         capture="environment"
         className="hidden"
-        onChange={(event) => {
-          void handleFileInputChange(event);
-        }}
+        onChange={handleFileChange}
       />
 
-      <ComposerShell
-        cardRef={cardRef}
-        isDraftMode={isDraftMode}
-        input={<ComposerInput isDraftMode={isDraftMode} placeholder={presentation.placeholder} />}
-        attachments={<ComposerAttachments />}
-        tools={
-          <div className="flex items-center gap-3">
-            <ComposerTools
-              attachedNotesCount={attachedNotes.length}
-              isRecording={isRecording}
-              showsAttachmentButton={presentation.showsAttachmentButton}
-              showsNotePicker={presentation.showsNotePicker}
-              showsVoiceButton={showsVoiceButton}
-              onAttachmentClick={handleAttachmentClick}
-              onCameraClick={handleCameraClick}
-              onNotePickerClick={handleNotePickerClick}
-              onVoiceClick={handleVoiceClick}
-            />
-            {showVoice ? (
-              <div className="flex items-center gap-2 rounded-full border border-border bg-bg-surface px-2 py-1">
-                <SpeechInput
-                  aria-label="Record audio message"
-                  className="h-8 w-8"
-                  onAudioRecorded={transcribeAudioBlob}
-                  onRecordingStateChange={(recording) => {
-                    setIsRecording(recording);
-                    if (recording) {
-                      setRecordingStartedAt(Date.now());
-                      return;
-                    }
+      <ComposerShell isDraftMode={isDraftMode}>
+        <form action={formAction}>
+          {/* Route context — read by form action from FormData */}
+          <input type="hidden" name="noteId" value={noteId ?? ''} />
+          <input type="hidden" name="chatId" value={chatId ?? ''} />
+          <input type="hidden" name="noteTitle" value={noteTitle ?? ''} />
 
-                    setRecordingStartedAt(null);
-                    setRecordingElapsedMs(0);
-                  }}
-                  onProcessingStateChange={setIsVoiceProcessing}
-                  onAudioLevelChange={(level) => {
-                    setVoiceAudioLevel(level);
-                    if (level <= 0 && !isRecording) {
-                      setRecordingStartedAt(null);
-                    }
-                  }}
-                  onTranscriptionChange={(transcript) => {
-                    if (!transcript.trim()) return;
-                    setDraftText(transcript);
-                  }}
-                  onPermissionDenied={() => {
-                    setVoiceErrorMessage(
-                      'Microphone access blocked. Please allow microphone access and try again.',
-                    );
-                  }}
-                />
-                <div className="flex items-center gap-2 text-xs text-text-secondary">
-                  {isVoiceProcessing ? (
-                    <Loader2 className="size-3 animate-spin" />
-                  ) : (
-                    <Mic className="size-3" />
-                  )}
-                  <span>
-                    {isRecording
-                      ? `Recording ${formattedRecordingTime}`
-                      : isVoiceProcessing
-                        ? 'Transcribing'
-                        : 'Ready'}
-                  </span>
-                </div>
-                {showVoice ? (
-                  <div className="ml-1 flex items-end gap-0.5" aria-hidden="true">
-                    {waveformBars.map((heightScale, index) => (
-                      <span
-                        key={`voice-wave-${index}`}
-                        className="w-1 rounded-full bg-text-tertiary/70 transition-all duration-100"
-                        style={{
-                          height: `${Math.round(6 + heightScale * 14)}px`,
-                          opacity: isRecording ? 1 : 0.35,
-                        }}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
-        }
-        actions={
-          <ComposerActionsRow
-            primaryActionIcon={presentation.primaryActionIcon}
-            primaryActionLabel={presentation.primaryActionLabel}
-            secondaryActionIcon={presentation.secondaryActionIcon}
-            secondaryActionLabel={presentation.secondaryActionLabel}
-            posture={presentation.posture}
-            chatId={propChatId ?? null}
-            noteId={propNoteId ?? null}
-            navigate={navigate}
+          <ComposerAttachmentList />
+
+          <AttachedNotesList />
+
+          <ComposerInput
+            ref={inputRef}
+            placeholder={presentation.placeholder}
+            isDraftMode={isDraftMode}
+            isPending={isPending}
           />
-        }
-      />
 
-      <NotePicker open={showNotePicker} onClose={handleCloseNotePicker} />
-      {voiceErrorMessage ? (
-        <p className="mt-2 px-2 text-xs text-destructive">{voiceErrorMessage}</p>
-      ) : null}
+          <div className="mt-auto flex shrink-0 items-center justify-between">
+            <ComposerTools
+              fileInputRef={fileInputRef}
+              cameraInputRef={cameraInputRef}
+              voiceDialogRef={voiceDialogRef}
+              notePickerDialogRef={notePickerDialogRef}
+              presentation={presentation}
+              showsVoiceButton={showsVoiceButton}
+            />
+            <ComposerActionsRow presentation={presentation} isPending={isPending} />
+          </div>
+        </form>
+      </ComposerShell>
+
+      {/* Dialogs — outside <form> but inside the React tree */}
+      <VoiceDialog
+        ref={voiceDialogRef}
+        store={store}
+        transcribeMutation={transcribeMutation}
+        inputRef={inputRef}
+      />
+      <NotePickerDialog ref={notePickerDialogRef} notes={notes} inputRef={inputRef} />
     </>
   );
-}
+});
+
+// ─── ComposerInput ────────────────────────────────────────────────────────────
+// Subscribes only to `draft` slice — re-renders on every keystroke, but ONLY
+// this component re-renders; the rest of ComposerForm is unaffected.
+
+const ComposerInput = memo(function ComposerInput({
+  ref,
+  placeholder,
+  isDraftMode,
+  isPending,
+}: {
+  ref: React.RefObject<HTMLTextAreaElement | null>;
+  placeholder: string;
+  isDraftMode: boolean;
+  isPending: boolean;
+}) {
+  const store = useComposerStore();
+  const draft = useComposerSlice((s) => s.draft);
+
+  return (
+    <textarea
+      ref={ref}
+      name="draft"
+      data-testid="composer-input"
+      value={draft}
+      onChange={(e) => store.dispatch({ type: 'SET_DRAFT', text: e.target.value })}
+      placeholder={placeholder}
+      disabled={isPending}
+      aria-label="Compose message or note"
+      className={[
+        'w-full resize-none border-0 bg-transparent p-0 text-base leading-normal text-foreground outline-none field-sizing-content overflow-y-auto placeholder:text-text-tertiary focus:outline-none',
+        isDraftMode ? 'min-h-24 max-h-64' : 'max-h-48 min-h-6',
+      ].join(' ')}
+    />
+  );
+});

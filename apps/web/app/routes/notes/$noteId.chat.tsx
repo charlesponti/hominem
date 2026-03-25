@@ -1,5 +1,3 @@
-import { useComposerNoteTitle } from '@hominem/ui/composer';
-import { useEffect } from 'react';
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
 import { useNote } from '~/hooks/use-notes';
@@ -27,19 +25,9 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export default function NoteChatRedirect({ loaderData }: { loaderData: { noteId: string } }) {
   const { noteId } = loaderData;
   const { data: note } = useNote(noteId);
-  const { setNoteTitle } = useComposerNoteTitle();
-
-  useEffect(() => {
-    if (note) {
-      setNoteTitle(note.title || 'Untitled note');
-    }
-    return () => {
-      setNoteTitle(null);
-    };
-  }, [note, setNoteTitle]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col items-center justify-center bg-background pb-[var(--composer-resting-height,72px)]">
+    <div className="flex h-full min-h-0 flex-col items-center justify-center bg-background pb-(--composer-resting-height,72px)">
       <div className="max-w-md text-center px-6">
         <p className="heading-4 text-foreground">{note?.title ? `"${note.title}"` : 'This note'}</p>
         <p className="body-2 mt-2 text-text-secondary">

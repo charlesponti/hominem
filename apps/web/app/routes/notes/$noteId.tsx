@@ -1,5 +1,3 @@
-import { useComposerNoteTitle } from '@hominem/ui/composer';
-import { useEffect } from 'react';
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 
 import { useNote } from '~/hooks/use-notes';
@@ -21,13 +19,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export default function NoteSplitView({ loaderData }: { loaderData: { noteId: string } }) {
   const { noteId } = loaderData;
   const { data: note, isLoading: isNoteLoading } = useNote(noteId);
-  const { setNoteTitle } = useComposerNoteTitle();
-
-  // Push note title to Composer once data loads — mode is derived from the URL
-  useEffect(() => {
-    setNoteTitle(note?.title ?? null);
-    return () => setNoteTitle(null);
-  }, [note?.title, setNoteTitle]);
 
   if (isNoteLoading) {
     return (

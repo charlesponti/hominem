@@ -8,16 +8,25 @@ import type {
   NotesDeleteOutput,
 } from '@hominem/rpc/types/notes.types';
 import { useQueryClient } from '@tanstack/react-query';
+import type { UseQueryOptions } from '@tanstack/react-query';
 
 import { notesQueryKeys } from '~/lib/query-keys';
 
-export function useNotesList(options: NotesListInput = {}) {
+interface UseNotesListOptions {
+  enabled?: boolean;
+}
+
+export function useNotesList(
+  options: NotesListInput = {},
+  queryOptions: UseNotesListOptions = {},
+) {
   return useRpcQuery(
     async ({ notes }) => {
       const data = await notes.list(options);
       return Array.isArray(data.notes) ? data.notes : [];
     },
     {
+      enabled: queryOptions.enabled ?? true,
       queryKey: notesQueryKeys.list(options),
       staleTime: 1000 * 60 * 1, // 1 minute
     },

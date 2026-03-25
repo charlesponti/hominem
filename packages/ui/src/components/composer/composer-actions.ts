@@ -1,36 +1,33 @@
-import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services';
-import { useRpcMutation } from '@hominem/rpc/react';
+/**
+ * Composer action utilities — pure functions, zero hooks.
+ *
+ * resolveComposerActions is kept as a pure function for backward compatibility
+ * with existing unit tests. In the new architecture, form submission is handled
+ * directly via useActionState in ComposerForm — this module is the shared logic layer.
+ */
+
+import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services/constants';
 import type { Note } from '@hominem/rpc/types/notes.types';
-import { useCallback, type KeyboardEvent } from 'react';
 
 import type { UploadedFile } from '../../types/upload';
 import { appendChatAttachmentContext, appendNoteAttachments } from './composer-attachments';
 import type { ComposerPosture } from './composer-presentation';
-import {
-  useComposerAttachedNotes,
-  useComposerDataDeps,
-  useComposerDraftActions,
-  useComposerDraftState,
-  useComposerNoteTitle,
-  useComposerSubmission,
-  useComposerUploadActions,
-  useComposerUploadState,
-} from './composer-provider';
 
-interface CreateNoteInput {
-  content: string;
-  title?: string;
+// ─── Context helpers ──────────────────────────────────────────────────────────
+
+export function buildNoteContext(attachedNotes: ReadonlyArray<Note>): string {
+  if (attachedNotes.length === 0) return '';
+  const sections = attachedNotes.map(
+    (note) => `### ${note.title ?? 'Untitled note'}\n\n${note.content}`,
+  );
+  return `<context>\n${sections.join('\n\n---\n\n')}\n</context>\n\n`;
 }
 
-interface UpdateNoteInput {
-  id: string;
-  content: string;
+export function toNoteTitle(text: string, fallback = ''): string {
+  return text.slice(0, CHAT_TITLE_MAX_LENGTH) || fallback;
 }
 
-interface CreateChatInput {
-  seedText: string;
-  title: string;
-}
+// ─── resolveComposerActions (kept for unit tests) ─────────────────────────────
 
 interface ComposerAction {
   execute: () => Promise<void>;
@@ -48,14 +45,14 @@ export interface ResolveComposerActionsInput {
   noteId: string | null;
   noteTitle: string | null;
   chatId: string | null;
-  attachedNotes: Note[];
-  uploadedFiles: UploadedFile[];
+  attachedNotes: ReadonlyArray<Note>;
+  uploadedFiles: ReadonlyArray<UploadedFile>;
   isUploadingAttachments: boolean;
   isSubmitting: boolean;
-  createNote: (input: CreateNoteInput) => Promise<unknown>;
-  updateNote: (input: UpdateNoteInput) => Promise<unknown>;
+  createNote: (input: { content: string; title?: string }) => Promise<unknown>;
+  updateNote: (input: { id: string; content: string }) => Promise<unknown>;
   sendMessage: (input: { chatId: string; message: string }) => Promise<unknown>;
-  createChat: (input: CreateChatInput) => Promise<{ id: string }>;
+  createChat: (input: { seedText: string; title: string }) => Promise<{ id: string }>;
   clearDraft: () => void;
   clearAttachedNotes: () => void;
   clearUploadedFiles: () => void;
@@ -79,10 +76,9 @@ export function resolveComposerActions(
         await input.runWithSubmitLock(async () => {
           if (input.posture === 'reply' && input.chatId) {
             const prefix = buildNoteContext(input.attachedNotes);
-            const message = appendChatAttachmentContext(
-              prefix ? `${prefix}${text}` : text,
-              input.uploadedFiles,
-            );
+            const message = appendChatAttachmentContext(prefix ? `${prefix}${text}` : text, [
+              ...input.uploadedFiles,
+            ]);
             await input.sendMessage({ chatId: input.chatId, message });
             input.clearDraft();
             input.clearAttachedNotes();
@@ -93,16 +89,16 @@ export function resolveComposerActions(
           if (input.posture === 'draft' && input.noteId) {
             await input.updateNote({
               id: input.noteId,
-              content: appendNoteAttachments(text, input.uploadedFiles),
+              content: appendNoteAttachments(text, [...input.uploadedFiles]),
             });
             input.clearDraft();
             input.clearUploadedFiles();
             return;
           }
 
-          const title = toTitle(text);
+          const title = toNoteTitle(text);
           await input.createNote({
-            content: appendNoteAttachments(text, input.uploadedFiles),
+            content: appendNoteAttachments(text, [...input.uploadedFiles]),
             ...(title ? { title } : {}),
           });
           input.clearDraft();
@@ -116,9 +112,9 @@ export function resolveComposerActions(
 
         await input.runWithSubmitLock(async () => {
           if (input.posture === 'reply') {
-            const title = toTitle(text);
+            const title = toNoteTitle(text);
             await input.createNote({
-              content: appendNoteAttachments(text, input.uploadedFiles),
+              content: appendNoteAttachments(text, [...input.uploadedFiles]),
               ...(title ? { title } : {}),
             });
             input.clearDraft();
@@ -130,9 +126,9 @@ export function resolveComposerActions(
             input.posture === 'draft' && input.noteTitle
               ? `[Regarding note: "${input.noteTitle}"]\n\n${text}`
               : text;
-          const title = toTitle(text, input.posture === 'draft' ? 'Note chat' : 'New session');
+          const title = toNoteTitle(text, input.posture === 'draft' ? 'Note chat' : 'New session');
           const chat = await input.createChat({
-            seedText: appendChatAttachmentContext(seedText, input.uploadedFiles),
+            seedText: appendChatAttachmentContext(seedText, [...input.uploadedFiles]),
             title,
           });
           input.clearDraft();
@@ -142,88 +138,4 @@ export function resolveComposerActions(
       },
     },
   };
-}
-
-export interface UseComposerActionsInput {
-  posture: ComposerPosture;
-  noteId: string | null;
-  chatId: string | null;
-  navigate: (path: string) => void;
-}
-
-export function useComposerActions({ posture, noteId, chatId, navigate }: UseComposerActionsInput) {
-  const { draftText } = useComposerDraftState();
-  const { clearDraft } = useComposerDraftActions();
-  const { attachedNotes, clearAttachedNotes } = useComposerAttachedNotes();
-  const { noteTitle } = useComposerNoteTitle();
-  const { uploadState } = useComposerUploadState();
-  const { clearUploadedFiles } = useComposerUploadActions();
-  const { isSubmitting, runWithSubmitLock } = useComposerSubmission();
-  const dataDeps = useComposerDataDeps();
-
-  const createNote = dataDeps.useCreateNote();
-  const updateNote = dataDeps.useUpdateNote();
-  const sendMessage = dataDeps.useSendMessage({ chatId: chatId ?? '' });
-
-  const createChatMutation = useRpcMutation<{ id: string }, { seedText: string; title: string }>(
-    async ({ chats }, body) => {
-      const chat = await chats.create({ title: body.title });
-      if (body.seedText.trim()) {
-        await chats.send({ chatId: chat.id, message: body.seedText });
-      }
-      return chat;
-    },
-  );
-
-  const actions = resolveComposerActions({
-    posture,
-    draftText,
-    noteId,
-    noteTitle,
-    chatId,
-    attachedNotes,
-    uploadedFiles: uploadState.uploadedFiles,
-    isUploadingAttachments: uploadState.isUploading,
-    isSubmitting,
-    createNote: createNote.mutateAsync,
-    updateNote: updateNote.mutateAsync,
-    sendMessage: sendMessage.mutateAsync,
-    createChat: createChatMutation.mutateAsync,
-    clearDraft,
-    clearAttachedNotes,
-    clearUploadedFiles,
-    navigate,
-    runWithSubmitLock,
-  });
-
-  const onKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        if (!actions.canSubmit) return;
-        void actions.primary.execute();
-      }
-    },
-    [actions],
-  );
-
-  return {
-    canSubmit: actions.canSubmit,
-    onKeyDown,
-    primary: actions.primary,
-    secondary: actions.secondary,
-  };
-}
-
-function toTitle(text: string, fallback = ''): string {
-  return text.slice(0, CHAT_TITLE_MAX_LENGTH) || fallback;
-}
-
-function buildNoteContext(attachedNotes: Note[]): string {
-  if (attachedNotes.length === 0) return '';
-
-  const sections = attachedNotes.map(
-    (note) => `### ${note.title ?? 'Untitled note'}\n\n${note.content}`,
-  );
-  return `<context>\n${sections.join('\n\n---\n\n')}\n</context>\n\n`;
 }

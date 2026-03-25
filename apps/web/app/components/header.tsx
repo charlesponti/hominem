@@ -1,5 +1,3 @@
-'use client';
-
 import { Header, type NavItem } from '@hominem/ui';
 import { FileText, MessageSquare } from 'lucide-react';
 import { useMemo } from 'react';

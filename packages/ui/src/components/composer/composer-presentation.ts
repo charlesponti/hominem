@@ -31,7 +31,7 @@ export interface ComposerPresentation {
 
 export function deriveComposerPresentation(
   mode: ComposerMode,
-  isRecording: boolean,
+  isRecording = false,
 ): ComposerPresentation {
   if (mode === 'note-aware') {
     return {

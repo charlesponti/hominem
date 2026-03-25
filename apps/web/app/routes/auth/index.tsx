@@ -1,23 +1,78 @@
-import { createAuthEntryComponent } from '@hominem/ui';
-import { createAuthEntryAction, createAuthEntryLoader } from '@hominem/ui/auth-server-routes';
+import { readAuthErrorMessage, usePasskeyAuth } from '@hominem/auth'
+import { resolveSafeAuthRedirect } from '@hominem/auth/server-utils'
+import { AuthScaffold, EmailEntryForm } from '@hominem/ui'
+import { redirect, useActionData, useLocation, useSearchParams } from 'react-router'
+import type { ActionFunctionArgs } from 'react-router'
 
-import { AUTH_CONFIG, AUTH_SERVER_ROUTE_CONFIG } from './config';
+import { getServerAuth } from '~/lib/auth.server'
+import { AUTH_CONFIG, getAuthApiBaseUrl } from './config'
 
-export const loader = createAuthEntryLoader(AUTH_CONFIG, async (request) => {
-  const { getServerAuth } = await import('~/lib/auth.server');
-  const { user, headers } = await getServerAuth(request);
+export async function loader({ request }: { request: Request }) {
+  const { user, headers } = await getServerAuth(request)
+  if (user) {
+    const url = new URL(request.url)
+    return redirect(
+      resolveSafeAuthRedirect(
+        url.searchParams.get('next'),
+        AUTH_CONFIG.defaultRedirect,
+        [...AUTH_CONFIG.allowedRedirectPrefixes],
+      ),
+      { headers },
+    )
+  }
+  return null
+}
 
-  return {
-    headers,
-    user: user
-      ? {
-          id: user.id,
-          email: user.email,
-          ...(user.name ? { name: user.name } : {}),
-        }
-      : null,
-  };
-});
-export const action = createAuthEntryAction(AUTH_SERVER_ROUTE_CONFIG);
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData() as unknown as { get(key: string): string | null }
+  const email = String(formData.get('email') ?? '').trim().toLowerCase()
+  const next = String(formData.get('next') ?? AUTH_CONFIG.defaultRedirect)
 
-export default createAuthEntryComponent(AUTH_CONFIG);
+  if (!email) {
+    return { error: 'Email is required' }
+  }
+
+  try {
+    const response = await fetch(new URL('/api/auth/email-otp/send', getAuthApiBaseUrl()), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, type: 'sign-in' }),
+    })
+
+    if (!response.ok) {
+      const error = (await response.json()) as { message?: string }
+      return { error: error.message || 'Failed to send verification code' }
+    }
+
+    return redirect(`/auth/verify?email=${encodeURIComponent(email)}&next=${encodeURIComponent(next)}`)
+  } catch {
+    return { error: 'Failed to send verification code' }
+  }
+}
+
+export default function Component() {
+  const actionData = useActionData<{ error?: string }>()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const next = searchParams.get('next') ?? AUTH_CONFIG.defaultRedirect
+
+  const {
+    authenticate,
+    isLoading: isPasskeyLoading,
+    error: passkeyError,
+    isSupported: isPasskeySupported,
+  } = usePasskeyAuth({ redirectTo: next })
+  const callbackError = readAuthErrorMessage(new URLSearchParams(location.search))
+  const resolvedError = actionData?.error ?? callbackError ?? passkeyError ?? undefined
+
+  return (
+    <AuthScaffold title={AUTH_CONFIG.title} description={AUTH_CONFIG.description}>
+      <EmailEntryForm
+        action="/auth"
+        {...(resolvedError ? { error: resolvedError } : {})}
+        {...(isPasskeySupported ? { onPasskeyClick: async () => { await authenticate() } } : {})}
+        {...(isPasskeyLoading ? { loadingMessage: 'Authenticating with passkey...' } : {})}
+      />
+    </AuthScaffold>
+  )
+}

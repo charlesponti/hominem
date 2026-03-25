@@ -10,6 +10,7 @@ import { WEB_BRAND } from './app/lib/brand';
 export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
   const isProd = mode === 'production';
   const isAnalyze = process.env.ANALYZE === 'true';
+  const shouldGenerateSourceMaps = process.env.SOURCEMAP === 'true' || isAnalyze;
 
   return {
     plugins: [
@@ -111,11 +112,44 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
 
     build: {
       cssCodeSplit: true,
+      chunkSizeWarningLimit: 1200, // Allow route chunks up to 1.2MB
       minify: isProd ? 'esbuild' : false,
       rollupOptions: {
         external: ['node:perf_hooks', 'perf_hooks'],
+        output: {
+          manualChunks(id) {
+            // Split vendor dependencies into separate chunks
+            if (id.includes('node_modules/')) {
+              // React core - split react and react-dom separately to stay under limit
+              if (id.includes('/react-dom/')) {
+                return 'vendor-react-dom';
+              }
+              if (id.includes('/react/') && !id.includes('/react-dom/')) {
+                return 'vendor-react';
+              }
+              // React Router
+              if (id.includes('/react-router/')) {
+                return 'vendor-router';
+              }
+              // AI/ML libraries
+              if (id.includes('/ai/') || id.includes('/ai-sdk/')) {
+                return 'vendor-ai';
+              }
+              // Radix UI components
+              if (id.includes('/@radix-ui/')) {
+                return 'vendor-radix';
+              }
+              // Lucide icons (often large)
+              if (id.includes('/lucide-react/')) {
+                return 'vendor-icons';
+              }
+              return undefined;
+            }
+            return undefined;
+          },
+        },
       },
-      sourcemap: true,
+      sourcemap: shouldGenerateSourceMaps,
     },
 
     ssr: {

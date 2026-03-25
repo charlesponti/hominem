@@ -1,4 +1,4 @@
-'use client';
+
 
 import { Check, ChevronRight, ListOrdered, Circle } from 'lucide-react';
 import type { HTMLAttributes, ReactNode } from 'react';

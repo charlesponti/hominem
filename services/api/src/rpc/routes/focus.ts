@@ -1,4 +1,4 @@
-import { getUserChatsQuery } from '@hominem/chat-services';
+import { getUserChatsQuery } from '@hominem/chat-services/server';
 import { db } from '@hominem/db';
 import type { FocusItem, FocusListOutput } from '@hominem/rpc';
 import { Hono } from 'hono';

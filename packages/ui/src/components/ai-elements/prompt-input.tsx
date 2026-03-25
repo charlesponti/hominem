@@ -1,4 +1,4 @@
-'use client';
+
 
 import { Paperclip, Send, Sparkles } from 'lucide-react';
 import {

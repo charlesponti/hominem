@@ -1,4 +1,4 @@
-'use client';
+
 
 import { useSafeAuth } from '@hominem/auth';
 import { Button } from '@hominem/ui/button';

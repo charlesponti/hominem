@@ -1,4 +1,4 @@
-'use client';
+
 
 import { AlertTriangle, CheckCircle, HelpCircle, Info } from 'lucide-react';
 import type { HTMLAttributes, ReactNode } from 'react';
