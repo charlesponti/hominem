@@ -78,12 +78,12 @@ db-rollback-all: db-rollback db-rollback-test
 # Refresh generated Kysely database types from the development database schema
 db-generate-types:
 	@echo "Refreshing generated Kysely database types..."
-	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bunx kysely-codegen --out-file ./src/types/database.ts
+	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bun run kysely-codegen --out-file ./src/types/database.ts
 
 # Verify generated Kysely database types are up to date
 db-verify-types:
 	@echo "Verifying generated Kysely database types..."
-	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bunx kysely-codegen --verify --out-file ./src/types/database.ts
+	@cd packages/db && DATABASE_URL="$(DEV_DATABASE_URL)" bun run kysely-codegen --verify --out-file ./src/types/database.ts
 
 # Apply local migrations and refresh generated Kysely database types
 db-migrate-sync: db-migrate-all db-generate-types

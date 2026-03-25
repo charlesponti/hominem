@@ -1,9 +1,9 @@
 import * as z from 'zod'
 
 export const flightSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
-  tripId: z.string().uuid().nullable().optional(),
+  id: z.uuid(),
+  userId: z.uuid(),
+  tripId: z.uuid().nullable().optional(),
   flightNumber: z.string().nullable().optional(),
   airline: z.string().nullable().optional(),
   departureAirport: z.string().nullable().optional(),

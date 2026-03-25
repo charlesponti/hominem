@@ -31,10 +31,10 @@ export const authRoutes = new Hono<AppEnv>();
 configureStepUpStore(redis);
 
 const devIssueTokenSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.uuid(),
   scope: z.array(z.string()).optional(),
   role: z.enum(['user', 'admin']).optional(),
-  sid: z.string().uuid().optional(),
+  sid: z.uuid().optional(),
 });
 
 const refreshTokenSchema = z

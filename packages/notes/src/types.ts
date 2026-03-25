@@ -18,8 +18,8 @@ const noteTagSchema = z.object({ value: z.string() });
 const noteTagsSchema = z.array(noteTagSchema);
 
 export const UpdateNoteZodSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.uuid(),
+  userId: z.uuid(),
   type: NoteContentTypeSchema.optional(),
   status: NoteStatusSchema.optional(),
   title: z.string().nullish(),

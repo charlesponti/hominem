@@ -41,7 +41,7 @@ export type TripsGetByIdInput = {
 };
 
 export const tripsGetByIdSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 export type TripsGetByIdOutput = Trip;
@@ -76,8 +76,8 @@ export type TripsAddItemInput = {
 };
 
 export const tripsAddItemInputSchema = z.object({
-  tripId: z.string().uuid(),
-  itemId: z.string().uuid(),
+  tripId: z.uuid(),
+  itemId: z.uuid(),
   day: z.number().int().optional(),
   order: z.number().int().optional(),
 });

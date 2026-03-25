@@ -65,7 +65,7 @@ export const CreateNoteInputSchema = z.object({
   status: NoteStatusSchema.default('draft').optional(),
   title: z.string().optional(),
   content: z.string(),
-  fileIds: z.array(z.string().uuid()).max(5).optional(),
+  fileIds: z.array(z.uuid()).max(5).optional(),
   excerpt: z.string().optional(),
   tags: z.array(ContentTagSchema).optional().default([]),
   mentions: z.array(NoteMentionSchema).optional().default([]),
@@ -78,7 +78,7 @@ export const UpdateNoteInputSchema = z.object({
   status: NoteStatusSchema.optional(),
   title: z.string().nullish(),
   content: z.string().optional(),
-  fileIds: z.array(z.string().uuid()).max(5).optional(),
+  fileIds: z.array(z.uuid()).max(5).optional(),
   excerpt: z.string().nullish(),
   scheduledFor: z.string().nullable().optional(),
   tags: z.array(ContentTagSchema).nullish(),
@@ -87,7 +87,7 @@ export const UpdateNoteInputSchema = z.object({
 });
 
 const SyncNoteItemSchema = z.object({
-  id: z.string().uuid().optional(),
+  id: z.uuid().optional(),
   type: NoteContentTypeSchema,
   status: NoteStatusSchema.optional(),
   title: z.string().nullish(),

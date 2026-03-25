@@ -63,7 +63,7 @@ export type InvitesGetByListInput = {
 };
 
 export const invitesGetByListSchema = z.object({
-  listId: z.string().uuid(),
+  listId: z.uuid(),
 });
 
 export type InvitesGetByListOutput = Invite[];
@@ -78,7 +78,7 @@ export type InvitesCreateInput = {
 };
 
 export const invitesCreateSchema = z.object({
-  listId: z.string().uuid(),
+  listId: z.uuid(),
   invitedUserEmail: z.string().email(),
 });
 
@@ -94,7 +94,7 @@ export type InvitesAcceptInput = {
 };
 
 export const invitesAcceptSchema = z.object({
-  listId: z.string().uuid(),
+  listId: z.uuid(),
   token: z.string().min(1, 'Token is required'),
 });
 
@@ -110,7 +110,7 @@ export type InvitesDeclineInput = {
 };
 
 export const invitesDeclineSchema = z.object({
-  listId: z.string().uuid(),
+  listId: z.uuid(),
   token: z.string().min(1, 'Token is required'),
 });
 
@@ -126,7 +126,7 @@ export type InvitesDeleteInput = {
 };
 
 export const invitesDeleteSchema = z.object({
-  listId: z.string().uuid(),
+  listId: z.uuid(),
   invitedUserEmail: z.string().email(),
 });
 

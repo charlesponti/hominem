@@ -5,7 +5,7 @@ export const accountListSchema = z.object({
 });
 
 export const accountGetSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 export const accountCreateSchema = z.object({
@@ -17,7 +17,7 @@ export const accountCreateSchema = z.object({
 });
 
 export const accountUpdateSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(1).optional(),
   type: z.string().min(1).optional(),
   balance: z.union([z.number(), z.string()]).optional(),
@@ -26,7 +26,7 @@ export const accountUpdateSchema = z.object({
 });
 
 export const accountDeleteSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 export const institutionAccountsSchema = z.object({

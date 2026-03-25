@@ -49,7 +49,7 @@ export type TwitterPostInput = {
 
 export const twitterPostSchema = z.object({
   text: z.string().min(1).max(280),
-  contentId: z.string().uuid().optional(),
+  contentId: z.uuid().optional(),
   saveAsContent: z.boolean().default(false),
 });
 

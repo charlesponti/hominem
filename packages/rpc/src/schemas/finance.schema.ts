@@ -1,17 +1,17 @@
 import * as z from 'zod'
 
 export const financeAccountSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.uuid(),
+  userId: z.uuid(),
   name: z.string(),
   accountType: z.string(),
   balance: z.number(),
 })
 
 export const transactionSchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
-  accountId: z.string().uuid(),
+  id: z.uuid(),
+  userId: z.uuid(),
+  accountId: z.uuid(),
   amount: z.number(),
   description: z.string(),
   date: z.string(),
@@ -23,8 +23,8 @@ export const financialInstitutionSchema = z.object({
 })
 
 export const budgetCategorySchema = z.object({
-  id: z.string().uuid(),
-  userId: z.string().uuid(),
+  id: z.uuid(),
+  userId: z.uuid(),
   name: z.string(),
 })
 

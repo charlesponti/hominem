@@ -243,7 +243,7 @@ const prepareUploadSchema = z.object({
 });
 
 const completeUploadSchema = z.object({
-  fileId: z.string().uuid(),
+  fileId: z.uuid(),
   key: z.string().min(1),
   originalName: z.string().min(1),
   mimetype: z.string().min(1),

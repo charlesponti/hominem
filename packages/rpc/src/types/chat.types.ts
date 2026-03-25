@@ -77,7 +77,7 @@ export type ChatsUISendInput = {
 
 export const chatsSendSchema = z.object({
   message: z.string(),
-  fileIds: z.array(z.string().uuid()).max(5).optional(),
+  fileIds: z.array(z.uuid()).max(5).optional(),
   chatId: z.string().optional(),
 }).superRefine((value, ctx) => {
   if (value.message.trim().length === 0 && (!value.fileIds || value.fileIds.length === 0)) {

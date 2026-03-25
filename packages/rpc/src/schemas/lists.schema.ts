@@ -1,10 +1,10 @@
 import * as z from 'zod'
 
 export const listSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(1),
   description: z.string().nullable().default(null),
-  ownerId: z.string().uuid(),
+  ownerId: z.uuid(),
   isPublic: z.boolean().default(false),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -17,7 +17,7 @@ export const listGetAllSchema = z.object({
 })
 
 export const listGetByIdSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 })
 
 export const listCreateSchema = z.object({
@@ -27,27 +27,27 @@ export const listCreateSchema = z.object({
 })
 
 export const listUpdateSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   name: z.string().min(1).optional(),
   description: z.string().optional(),
   isPublic: z.boolean().optional(),
 })
 
 export const listDeleteSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 })
 
 export const listDeleteItemSchema = z.object({
-  listId: z.string().uuid(),
-  itemId: z.string().uuid(),
+  listId: z.uuid(),
+  itemId: z.uuid(),
 })
 
 export const listGetContainingPlaceSchema = z.object({
-  placeId: z.string().uuid().optional(),
+  placeId: z.uuid().optional(),
   googleMapsId: z.string().optional(),
 })
 
 export const listRemoveCollaboratorSchema = z.object({
-  listId: z.string().uuid(),
-  userId: z.string().uuid(),
+  listId: z.uuid(),
+  userId: z.uuid(),
 })

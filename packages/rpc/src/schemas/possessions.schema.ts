@@ -8,7 +8,7 @@ export const CreatePossessionInputSchema = z.object({
   category: z.string().optional(),
   condition: ConditionSchema.optional(),
   location: z.string().optional(),
-  containerId: z.string().uuid().optional(),
+  containerId: z.uuid().optional(),
 })
 
 export const UpdatePossessionInputSchema = z.object({
@@ -17,7 +17,7 @@ export const UpdatePossessionInputSchema = z.object({
   category: z.string().optional().nullish(),
   condition: ConditionSchema.optional().nullish(),
   location: z.string().optional().nullish(),
-  containerId: z.string().uuid().optional().nullish(),
+  containerId: z.uuid().optional().nullish(),
 })
 
 export const CreateContainerInputSchema = z.object({
@@ -33,7 +33,7 @@ export const UpdateContainerInputSchema = z.object({
 export const ListPossessionsFilterSchema = z.object({
   category: z.string().optional(),
   condition: ConditionSchema.optional(),
-  containerId: z.string().uuid().optional(),
+  containerId: z.uuid().optional(),
   limit: z.number().int().min(1).default(50),
   offset: z.number().int().min(0).default(0),
 })

@@ -23,7 +23,7 @@ export const TaggingInputSchema = z.object({
 export const TagSyncInputSchema = z.object({
   entityId: z.string().uuid('Invalid entity ID'),
   entityType: z.string().min(1, 'Entity type is required'),
-  tagIds: z.array(z.string().uuid()).default([]),
+  tagIds: z.array(z.uuid()).default([]),
 })
 
 export type CreateTagInput = z.infer<typeof CreateTagInputSchema>

@@ -25,7 +25,7 @@ import { toIsoString } from '../utils/to-iso-string';
 const FINANCE_TRANSACTION_ENTITY_TYPE = 'finance_transaction';
 
 const transactionListSchema = TransactionQueryFiltersSchema.extend({
-  account: z.string().uuid().optional(),
+  account: z.uuid().optional(),
   sortBy: z.string().optional(),
   sortDirection: z
     .enum(['asc', 'desc'])
@@ -38,7 +38,7 @@ const transactionListSchema = TransactionQueryFiltersSchema.extend({
 });
 
 const transactionDeleteSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 });
 
 const transactionCreateSchema = TransactionInsertSchema.omit({
@@ -46,15 +46,15 @@ const transactionCreateSchema = TransactionInsertSchema.omit({
 });
 
 const transactionUpdateSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   data: z.object({
-    accountId: z.string().uuid().optional(),
+    accountId: z.uuid().optional(),
     amount: z.union([z.number(), z.string()]).optional(),
     description: z.string().nullable().optional(),
     category: z.string().nullable().optional(),
     date: z.string().optional(),
     merchantName: z.string().nullable().optional(),
-    tagIds: z.array(z.string().uuid()).optional(),
+    tagIds: z.array(z.uuid()).optional(),
   }),
 });
 
