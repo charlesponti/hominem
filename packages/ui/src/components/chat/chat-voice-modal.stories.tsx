@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { UseMutationResult } from '@tanstack/react-query';
 
 import { ChatVoiceModal } from './chat-voice-modal';

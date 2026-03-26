@@ -1,5 +1,5 @@
 import { HonoProvider } from '@hominem/rpc/react'
-import type { Preview } from '@storybook/react'
+import type { Preview } from '@storybook/react-vite'
 import { initialize, mswLoader } from 'msw-storybook-addon'
 import { MemoryRouter } from 'react-router'
 import { handlers } from '../src/mocks/handlers'
@@ -11,12 +11,11 @@ initialize()
 const preview: Preview = {
   parameters: {
     backgrounds: {
-      default: 'base',
-      values: [
-        { name: 'base', value: '#ffffff' },
-        { name: 'surface', value: '#f5f5f7' },
-        { name: 'elevated', value: '#f2f2f7' },
-      ],
+      options: {
+        base: { name: 'base', value: '#ffffff' },
+        surface: { name: 'surface', value: '#f5f5f7' },
+        elevated: { name: 'elevated', value: '#f2f2f7' }
+      }
     },
     controls: {
       matchers: {
@@ -28,7 +27,9 @@ const preview: Preview = {
       handlers,
     },
   },
+
   loaders: [mswLoader],
+
   decorators: [
     (Story) => (
       <HonoProvider config={{ baseUrl: 'http://localhost:3000', getAuthToken: async () => null }}>
@@ -40,6 +41,12 @@ const preview: Preview = {
       </HonoProvider>
     ),
   ],
+
+  initialGlobals: {
+    backgrounds: {
+      value: 'base'
+    }
+  }
 }
 
 export default preview

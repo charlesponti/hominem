@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { ChatMessages } from './chat-messages';
 import { mockChatMessages } from './chat-story-data';

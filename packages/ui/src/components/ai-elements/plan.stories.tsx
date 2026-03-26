@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { Button } from '../ui/button';
 import { Plan, PlanContent, PlanFooter, PlanHeader, PlanStep } from './plan';
