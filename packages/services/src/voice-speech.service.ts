@@ -3,14 +3,11 @@ import { Buffer } from 'node:buffer';
 import { experimental_generateSpeech } from 'ai';
 
 import { getOpenAIAudioProvider } from './ai-model';
+import { VoiceServiceError } from './voice-errors';
 
-export class VoiceSpeechError extends Error {
-  statusCode: number;
-
+export class VoiceSpeechError extends VoiceServiceError {
   constructor(message: string, statusCode = 500) {
-    super(message);
-    this.name = 'VoiceSpeechError';
-    this.statusCode = statusCode;
+    super(message, undefined, statusCode);
   }
 }
 

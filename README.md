@@ -1,4 +1,4 @@
-## Hakumi monorepo
+# Hakumi monorepo
 
 Hakumi is a notes-first personal workspace. This repo contains the product apps, shared packages, and services that power capture, notes, and chat across platforms.
 
@@ -19,15 +19,15 @@ Run a local environment check:
 
 - Install deps:
 
-	bun install
+  bun install
 
 - Build all packages:
 
-	bun run build
+  bun run build
 
 - Develop (example):
 
-	bun run dev
+  bun run dev
 
 ### Script standard
 
@@ -57,22 +57,6 @@ Workspace scripts should follow `verb[:qualifier]` and keep names aligned with b
 - Docker: `.github/skills/docker-workflow/SKILL.md`
 - Fly deployment: `infra/fly/README.md`
 
-### Sharing skills between projects
-
-Skills are defined under `.github/skills` and are repo‑scoped.  To move them
-elsewhere you can use the CLI helpers:
-
-```bash
-# from the source repository
-hominem skills export /tmp/skills-export
-
-# in the new repository
-hominem skills import /tmp/skills-export
-```
-
-The commands simply copy the directory tree, creating the destination as
-needed.  Once imported you can commit the files in the new project as usual.
-
 ### MCP server auth (single source of truth)
 
 The MCP server reads its auth token from a config file only.
@@ -80,7 +64,7 @@ The MCP server reads its auth token from a config file only.
 - Path: ~/.hominem/config.json (override with HOMINEM_CONFIG_PATH or HOMINEM_CONFIG_DIR)
 - Format:
 
-	{ "token": "YOUR_TOKEN_HERE" }
+  { "token": "YOUR_TOKEN_HERE" }
 
 Optional API endpoint overrides for MCP HTTP tools:
 

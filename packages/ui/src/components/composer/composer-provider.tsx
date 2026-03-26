@@ -96,5 +96,5 @@ export function useComposerSlice<T>(selector: (state: ComposerState) => T): T {
 export type { ComposerState, ComposerAction } from './composer-store';
 export { ComposerStore, INITIAL_COMPOSER_STATE } from './composer-store';
 
-// Re-export ComposerMode (used by layout and useComposerMode)
+// Re-export ComposerMode for composer consumers
 export type ComposerMode = 'generic' | 'note-aware' | 'chat-continuation';

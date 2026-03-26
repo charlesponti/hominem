@@ -11,8 +11,7 @@ import * as z from 'zod';
 
 import { authMiddleware } from '../middleware/auth';
 import type { AppContext } from '../middleware/auth';
-
-const emptyBodySchema = z.object({});
+import { emptyBodySchema } from '../utils/common-schemas';
 
 const createInstitutionSchema = z.object({
   id: z.string().optional(),

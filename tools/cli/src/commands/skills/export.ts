@@ -1,16 +1,15 @@
 import path from 'node:path';
 
 import { Args, Command } from '@oclif/core';
-import { z } from 'zod';
 
-import { assertDirectoryPath, copyDirectoryAndCount } from '@/utils/fs-commands';
-import { validateWithZod } from '@/utils/zod-validation';
+import { copySkillsDirectory } from '@/utils/skills-commands';
 
-const outputSchema = z.object({
-  source: z.string(),
-  dest: z.string(),
-  fileCount: z.number(),
-});
+const TRANSFER_OPTIONS = {
+  sourceNotDirectoryMessage: (source: string) => `failed to read skills directory at ${source}`,
+  missingSourceMessage: (source: string) => `failed to read skills directory at ${source}`,
+  sourcePath: (cwd: string) => path.resolve(cwd, '.github/skills'),
+  destPath: (cwd: string, dest: string) => path.resolve(cwd, dest),
+};
 
 export default class SkillsExport extends Command {
   static description = 'Copy the local `.github/skills` folder to another location';
@@ -25,47 +24,9 @@ export default class SkillsExport extends Command {
     }),
   };
 
-  static override flags = {};
-
-  static enableJsonFlag = true;
-
-  async run(): Promise<z.infer<typeof outputSchema>> {
+  async run(): Promise<void> {
     const { args } = await this.parse(SkillsExport);
-
-    const source = path.resolve(process.cwd(), '.github/skills');
-    const dest = path.resolve(process.cwd(), args.dest);
-
-    try {
-      await assertDirectoryPath(source);
-      const fileCount = await copyDirectoryAndCount(source, dest);
-
-      const output = {
-        source,
-        dest,
-        fileCount,
-      };
-
-      validateWithZod(outputSchema, output);
-      return output;
-    } catch (err) {
-      if (err instanceof Error && err.message.startsWith('Path is not a directory:')) {
-        this.error(err.message, {
-          exit: 4,
-          code: 'SKILLS_NOT_DIRECTORY',
-        });
-      }
-      if (err instanceof Error && 'code' in err) {
-        throw err;
-      }
-      this.error(`failed to read skills directory at ${source}`, {
-        exit: 3,
-        code: 'SKILLS_SOURCE_MISSING',
-      });
-    }
-
-    this.error('export failed', {
-      exit: 3,
-      code: 'SKILLS_EXPORT_FAILED',
-    });
+    const result = await copySkillsDirectory(TRANSFER_OPTIONS, process.cwd(), args.dest ?? '.');
+    this.log(`Copied ${result.fileCount} files from ${result.source} to ${result.dest}`);
   }
 }

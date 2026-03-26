@@ -1,12 +1,10 @@
 import { randomUUID } from 'crypto';
 
 import { db } from '@hominem/db';
-import type { Database } from '@hominem/db';
 import {
   TransactionInsertSchema,
   TransactionQueryFiltersSchema,
 } from '@hominem/rpc/schemas/finance.transactions.schema';
-import type { TransactionData, TransactionType } from '@hominem/rpc/types/finance/shared.types';
 import type {
   TransactionCreateOutput,
   TransactionDeleteOutput,
@@ -15,12 +13,11 @@ import type {
 } from '@hominem/rpc/types/finance/transactions.types';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import type { Selectable } from 'kysely';
 import * as z from 'zod';
 
 import { NotFoundError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
-import { toIsoString } from '../utils/to-iso-string';
+import { toTransactionData } from '../utils/finance-transforms';
 
 const FINANCE_TRANSACTION_ENTITY_TYPE = 'finance_transaction';
 
@@ -57,20 +54,6 @@ const transactionUpdateSchema = z.object({
     tagIds: z.array(z.uuid()).optional(),
   }),
 });
-
-function toTransactionData(row: Selectable<Database['finance_transactions']>): TransactionData {
-  const amount =
-    typeof row.amount === 'string' ? Number.parseFloat(row.amount) : Number(row.amount);
-  return {
-    id: row.id,
-    userId: row.user_id,
-    accountId: row.account_id,
-    amount,
-    description: row.description ?? '',
-    date: toIsoString(row.date),
-    type: (amount < 0 ? 'expense' : 'income') as TransactionType,
-  };
-}
 
 async function getTaggedTransactionIds(
   userId: string,

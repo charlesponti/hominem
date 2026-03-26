@@ -4,6 +4,9 @@
 
 Keep Goose and rebuild the workflow around it so migrations are explicit, reproducible, and validated from a fresh database in local development and CI.
 
+The target schema itself is defined in [docs/database-v1-blueprint.md](/Users/charlesponti/Developer/hominem/docs/database-v1-blueprint.md).
+The execution order is defined in [docs/database-v1-implementation-plan.md](/Users/charlesponti/Developer/hominem/docs/database-v1-implementation-plan.md).
+
 ## Why We Are Rebuilding The Workflow
 
 The current setup has real strengths, but the workflow around it has been too loose:

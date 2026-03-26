@@ -1,33 +1,12 @@
 import { Buffer } from 'node:buffer';
-import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { logger } from '@hominem/utils/logger';
 
 import { env } from './env';
-
-/**
- * Directory for saving voice audio files for team review.
- * Uses repo .tmp/voice directory for easy access.
- */
-function getVoiceAudioDir(): string {
-  const possiblePaths = [
-    './.tmp/voice',
-    '../.tmp/voice',
-    '../../.tmp/voice',
-    '../../../.tmp/voice',
-  ];
-
-  for (const path of possiblePaths) {
-    const dir = path.replace('/voice', '');
-    if (existsSync(dir) || existsSync(path)) {
-      return path;
-    }
-  }
-
-  return './.tmp/voice';
-}
+import { VoiceServiceError } from './voice-errors';
+import { generateVoiceAudioFilename, getVoiceAudioDir } from './voice-files';
 
 export const VOICE_TRANSCRIPTION_MAX_SIZE_BYTES = 25 * 1024 * 1024;
 
@@ -82,15 +61,11 @@ const MIME_TO_OPENROUTER_FORMAT: Record<string, string> = {
 const TRANSCRIPTION_MODEL = 'google/gemini-2.5-flash-lite';
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
-export class VoiceTranscriptionError extends Error {
-  statusCode: number;
-  code: VoiceErrorCode;
+export class VoiceTranscriptionError extends VoiceServiceError {
+  declare code: VoiceErrorCode;
 
   constructor(message: string, code: VoiceErrorCode, statusCode = 500) {
-    super(message);
-    this.name = 'VoiceTranscriptionError';
-    this.statusCode = statusCode;
-    this.code = code;
+    super(message, code, statusCode);
   }
 }
 
@@ -134,14 +109,6 @@ export function validateVoiceInput(input: { mimeType: string; size: number }) {
   return normalizedMimeType;
 }
 
-/**
- * Generate a timestamped filename for audio review
- */
-function generateAudioFilename(prefix: string, ext: string): string {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  return `${prefix}_${timestamp}.${ext}`;
-}
-
 export async function transcribeVoiceBuffer(input: {
   buffer: ArrayBuffer;
   mimeType: string;
@@ -180,7 +147,7 @@ export async function transcribeVoiceBuffer(input: {
   if (env.SAVE_VOICE_AUDIO === true) {
     try {
       const ext = getVoiceFileExtension(normalizedMimeType).slice(1);
-      const filename = generateAudioFilename('voice_in', ext);
+      const filename = generateVoiceAudioFilename('voice_in', ext);
       const audioDir = getVoiceAudioDir();
       savedPath = join(audioDir, filename);
       const buffer = Buffer.from(input.buffer);

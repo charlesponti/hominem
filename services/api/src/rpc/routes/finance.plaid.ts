@@ -36,6 +36,7 @@ export const plaidRoutes = new Hono<AppContext>()
       'json',
       z.object({
         publicToken: z.string().min(1),
+        institutionId: z.string().min(1),
         institutionName: z.string().min(1),
       }),
     ),

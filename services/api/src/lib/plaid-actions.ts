@@ -156,7 +156,7 @@ export async function syncPlaidItem(input: {
 }): Promise<{ success: true; message: string; added: number; modified: number; removed: number }> {
   try {
     const plaidItem = isUuid(input.itemId)
-      ? ((await getPlaidItemByItemId(input.itemId, input.userId)) ??
+      ? ((await getPlaidItemByItemId(input.itemId)) ??
         (await getPlaidItemByUserAndItemId(input.userId, input.itemId)))
       : await getPlaidItemByUserAndItemId(input.userId, input.itemId);
 
@@ -198,7 +198,7 @@ export async function disconnectPlaidConnection(input: {
 }): Promise<{ success: true; message: string }> {
   try {
     const plaidItem = isUuid(input.itemId)
-      ? ((await getPlaidItemByItemId(input.itemId, input.userId)) ??
+      ? ((await getPlaidItemByItemId(input.itemId)) ??
         (await getPlaidItemByUserAndItemId(input.userId, input.itemId)))
       : await getPlaidItemByUserAndItemId(input.userId, input.itemId);
 

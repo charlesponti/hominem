@@ -2,11 +2,9 @@ import { db } from '@hominem/db';
 import type { CategoriesListOutput } from '@hominem/rpc/types/finance/categories.types';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import * as z from 'zod';
 
 import { authMiddleware, type AppContext } from '../middleware/auth';
-
-const emptyBodySchema = z.object({});
+import { emptyBodySchema } from '../utils/common-schemas';
 
 export const tagsRoutes = new Hono<AppContext>().post(
   '/list',

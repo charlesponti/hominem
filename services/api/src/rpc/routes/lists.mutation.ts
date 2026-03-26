@@ -13,7 +13,6 @@ import {
   listUpdateSchema,
 } from '@hominem/rpc/schemas/lists.schema';
 import type {
-  List,
   ListCreateOutput,
   ListDeleteItemOutput,
   ListDeleteOutput,
@@ -25,40 +24,7 @@ import { Hono } from 'hono';
 
 import { ForbiddenError, ValidationError, InternalError } from '../errors';
 import { authMiddleware, type AppContext } from '../middleware/auth';
-
-/**
- * Transform list from service layer to API contract
- * Converts null values to undefined for exactOptionalPropertyTypes compatibility
- */
-function transformListToApiFormat(list: unknown): List {
-  const typedList = list as Record<string, unknown>;
-  return {
-    ...typedList,
-    createdBy: typedList.createdBy
-      ? {
-          id: (typedList.createdBy as { id: string }).id,
-          email: (typedList.createdBy as { email: string }).email,
-          name: (typedList.createdBy as { name?: string | null }).name ?? undefined,
-        }
-      : null,
-    users: (typedList.users as Array<Record<string, unknown>> | undefined)?.map((user) => ({
-      id: (user.id as string) || '',
-      email: (user.email as string) || '',
-      name: (user.name as string | null | undefined) ?? undefined,
-      image: (user.image as string | null | undefined) ?? undefined,
-    })),
-    items: (typedList.items as Array<Record<string, unknown>> | undefined)?.map((item) => ({
-      id: (item.id as string) || '',
-      listId: (item.listId as string) || '',
-      itemId: (item.itemId as string) || '',
-      itemType: (item.itemType as string) || '',
-      place: item.place,
-      flight: item.flight,
-      createdAt: (item.createdAt as string) || '',
-      updatedAt: (item.updatedAt as string) || '',
-    })),
-  } as List;
-}
+import { transformListToApiFormat } from '../utils/lists-transforms';
 
 export const listMutationRoutes = new Hono<AppContext>()
   // Create new list

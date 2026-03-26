@@ -63,7 +63,7 @@ UNUSED_TS_PACKAGES := apps/web services/api packages/auth packages/chat packages
 .PHONY: dev dev-setup dev-up dev-down dev-reset dev-status
 .PHONY: infra-up infra-down infra-reset infra-status
 .PHONY: docker-up docker-up-observability docker-up-full docker-down
-.PHONY: db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-status db-status-test db-status-all db-reset-dev db-reset-test db-reset-all db-verify-fresh db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db
+.PHONY: db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-status db-status-test db-status-all db-v1-migrate db-v1-status db-v1-verify-fresh db-reset-dev db-reset-test db-reset-all db-verify-fresh db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db
 .PHONY: goose-up goose-down goose-status
 .PHONY: storybook storybook-test
 .PHONY: auth-test-up auth-test-down auth-test-status
@@ -79,6 +79,7 @@ help:
 	@echo ""
 	@echo "Database:"
 	@echo "  make db-migrate-all | db-rollback-all | db-status-all"
+	@echo "  make db-v1-migrate | db-v1-status | db-v1-verify-fresh"
 	@echo "  make db-reset-all | db-verify-fresh | db-generate-types"
 	@echo "  make db-verify-types | db-new-migration NAME=foo"
 	@echo ""
@@ -170,6 +171,18 @@ db-status-test:
 	DATABASE_URL="$(TEST_DATABASE_URL)" bun run --filter @hominem/db goose:status
 
 db-status-all: db-status db-status-test
+
+db-v1-migrate:
+	$(call wait_for_db,dev,hominem-postgres)
+	DATABASE_URL="$(DEV_DATABASE_URL)" bun run --filter @hominem/db goose:v1:up
+
+db-v1-status:
+	$(call wait_for_db,dev,hominem-postgres)
+	DATABASE_URL="$(DEV_DATABASE_URL)" bun run --filter @hominem/db goose:v1:status
+
+db-v1-verify-fresh:
+	$(call wait_for_db,test,hominem-test-postgres)
+	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" GOOSE_MIGRATIONS_DIR="$(CURDIR)/packages/db/migrations_v1" bash ./scripts/verify-goose-fresh-db.sh
 
 db-reset-dev:
 	$(call wait_for_db,dev,hominem-postgres)

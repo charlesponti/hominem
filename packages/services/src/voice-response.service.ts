@@ -1,34 +1,12 @@
 import { Buffer } from 'node:buffer';
-import { existsSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { logger } from '@hominem/utils/logger';
 
 import { env } from './env';
-
-/**
- * Directory for saving voice audio files for team review.
- * Uses repo .tmp/voice directory for easy access.
- */
-function getVoiceAudioDir(): string {
-  // Try to find the repo root by looking for .tmp directory
-  const possiblePaths = [
-    './.tmp/voice',
-    '../.tmp/voice',
-    '../../.tmp/voice',
-    '../../../.tmp/voice',
-  ];
-
-  for (const path of possiblePaths) {
-    const dir = path.replace('/voice', '');
-    if (existsSync(dir) || existsSync(path)) {
-      return path;
-    }
-  }
-
-  return './.tmp/voice';
-}
+import { VoiceServiceError } from './voice-errors';
+import { generateVoiceAudioFilename, getVoiceAudioDir } from './voice-files';
 
 /**
  * Voice response service — generates an AI audio reply to a user's text input.
@@ -69,15 +47,11 @@ export const VOICE_RESPONSE_ERROR_CODES = [
 
 export type VoiceResponseErrorCode = (typeof VOICE_RESPONSE_ERROR_CODES)[number];
 
-export class VoiceResponseError extends Error {
-  statusCode: number;
-  code: VoiceResponseErrorCode;
+export class VoiceResponseError extends VoiceServiceError {
+  declare code: VoiceResponseErrorCode;
 
   constructor(message: string, code: VoiceResponseErrorCode, statusCode = 500) {
-    super(message);
-    this.name = 'VoiceResponseError';
-    this.code = code;
-    this.statusCode = statusCode;
+    super(message, code, statusCode);
   }
 }
 
@@ -170,15 +144,6 @@ async function collectAudioStream(
     audioB64: audioChunks.join(''),
     transcript: transcriptChunks.join(''),
   };
-}
-
-/**
- * Generate a timestamped filename for audio review
- */
-function generateAudioFilename(prefix: string, format: VoiceResponseFormat): string {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const ext = FORMAT_TO_EXT[format];
-  return `${prefix}_${timestamp}.${ext}`;
 }
 
 /**
@@ -324,7 +289,7 @@ export async function generateVoiceResponse(
     let savedPath: string | undefined;
     if (env.SAVE_VOICE_AUDIO === true) {
       try {
-        const filename = generateAudioFilename('voice_out', format);
+        const filename = generateVoiceAudioFilename('voice_out', FORMAT_TO_EXT[format]);
         const audioDir = getVoiceAudioDir();
         savedPath = join(audioDir, filename);
         await writeFile(savedPath, audioBuffer);

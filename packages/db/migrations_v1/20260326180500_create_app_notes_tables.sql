@@ -1,0 +1,96 @@
+-- +goose Up
+CREATE TABLE app.notes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  parent_note_id uuid REFERENCES app.notes(id) ON DELETE SET NULL,
+  current_version_id uuid,
+  source text,
+  folder text,
+  is_locked boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE app.note_versions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  note_id uuid NOT NULL REFERENCES app.notes(id) ON DELETE CASCADE,
+  version_number integer NOT NULL,
+  title text,
+  content text,
+  excerpt text,
+  note_type text NOT NULL DEFAULT 'note',
+  status text NOT NULL DEFAULT 'draft',
+  mentions jsonb NOT NULL DEFAULT '[]'::jsonb,
+  analysis jsonb,
+  publishing_metadata jsonb,
+  published_at timestamptz,
+  scheduled_for timestamptz,
+  search_vector tsvector GENERATED ALWAYS AS (
+    to_tsvector('english'::regconfig, coalesce(title, '') || ' ' || coalesce(content, ''))
+  ) STORED,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE app.notes
+  ADD CONSTRAINT app_notes_current_version_id_fkey
+  FOREIGN KEY (current_version_id) REFERENCES app.note_versions(id) ON DELETE SET NULL
+  DEFERRABLE INITIALLY DEFERRED;
+
+CREATE TABLE app.note_shares (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  note_id uuid NOT NULL REFERENCES app.notes(id) ON DELETE CASCADE,
+  shared_with_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  permission text NOT NULL DEFAULT 'read',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE app.tags (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  color text,
+  description text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE app.note_tags (
+  note_id uuid NOT NULL REFERENCES app.notes(id) ON DELETE CASCADE,
+  tag_id uuid NOT NULL REFERENCES app.tags(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (note_id, tag_id)
+);
+
+CREATE TABLE app.chats (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  note_id uuid REFERENCES app.notes(id) ON DELETE SET NULL,
+  title text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE app.chat_messages (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  chat_id uuid NOT NULL REFERENCES app.chats(id) ON DELETE CASCADE,
+  author_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
+  parent_message_id uuid REFERENCES app.chat_messages(id) ON DELETE SET NULL,
+  role text NOT NULL,
+  content text NOT NULL,
+  files jsonb,
+  tool_calls jsonb,
+  reasoning text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- +goose Down
+DROP TABLE IF EXISTS app.chat_messages;
+DROP TABLE IF EXISTS app.chats;
+DROP TABLE IF EXISTS app.note_tags;
+DROP TABLE IF EXISTS app.tags;
+DROP TABLE IF EXISTS app.note_shares;
+ALTER TABLE app.notes DROP CONSTRAINT IF EXISTS app_notes_current_version_id_fkey;
+DROP TABLE IF EXISTS app.note_versions;
+DROP TABLE IF EXISTS app.notes;

@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises';
-
 import { z } from 'zod';
 
 import { getConfigPath, loadConfigV2 } from '@/config';

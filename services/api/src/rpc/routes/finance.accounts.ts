@@ -31,37 +31,20 @@ import type {
   AccountData,
   AccountType,
   PlaidConnection,
-  TransactionData,
 } from '@hominem/rpc/types/finance/shared.types';
-import type { TransactionType } from '@hominem/rpc/types/finance/shared.types';
 import { redis } from '@hominem/services/redis';
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import type { Selectable } from 'kysely';
-import * as z from 'zod';
 
 import { NotFoundError } from '../errors';
 import type { AppContext } from '../middleware/auth';
 import { authMiddleware } from '../middleware/auth';
-import { toIsoString, toIsoStringOr } from '../utils/to-iso-string';
-
-const emptyBodySchema = z.object({});
+import { emptyBodySchema } from '../utils/common-schemas';
+import { normalizeAccountType, toTransactionData } from '../utils/finance-transforms';
+import { toIsoStringOr } from '../utils/to-iso-string';
 
 configureStepUpStore(redis);
-
-function normalizeAccountType(value: string): AccountType {
-  if (
-    value === 'checking' ||
-    value === 'savings' ||
-    value === 'credit' ||
-    value === 'investment' ||
-    value === 'cash' ||
-    value === 'other'
-  ) {
-    return value;
-  }
-  return 'other';
-}
 
 function toAccountData(row: Selectable<Database['finance_accounts']>): AccountData {
   return {
@@ -70,20 +53,6 @@ function toAccountData(row: Selectable<Database['finance_accounts']>): AccountDa
     name: row.name,
     accountType: normalizeAccountType(row.account_type),
     balance: row.balance ? Number(row.balance) : 0,
-  };
-}
-
-function toTransactionData(row: Selectable<Database['finance_transactions']>): TransactionData {
-  const amount =
-    typeof row.amount === 'string' ? Number.parseFloat(row.amount) : Number(row.amount);
-  return {
-    id: row.id,
-    userId: row.user_id,
-    accountId: row.account_id,
-    amount,
-    description: row.description ?? '',
-    date: toIsoString(row.date),
-    type: (amount < 0 ? 'expense' : 'income') as TransactionType,
   };
 }
 

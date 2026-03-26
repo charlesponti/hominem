@@ -60,7 +60,10 @@
     "kysely-codegen": "kysely-codegen",
     "goose:up": "bash ../../scripts/run-goose.sh up",
     "goose:down": "bash ../../scripts/run-goose.sh down",
-    "goose:status": "bash ../../scripts/run-goose.sh status"
+    "goose:status": "bash ../../scripts/run-goose.sh status",
+    "goose:v1:up": "GOOSE_MIGRATIONS_DIR=\"$PWD/migrations_v1\" bash ../../scripts/run-goose.sh up",
+    "goose:v1:down": "GOOSE_MIGRATIONS_DIR=\"$PWD/migrations_v1\" bash ../../scripts/run-goose.sh down",
+    "goose:v1:status": "GOOSE_MIGRATIONS_DIR=\"$PWD/migrations_v1\" bash ../../scripts/run-goose.sh status"
   },
   "dependencies": {
     "@hominem/utils": "workspace:*",
