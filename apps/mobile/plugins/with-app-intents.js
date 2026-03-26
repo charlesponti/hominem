@@ -19,7 +19,6 @@ const path = require('path')
 // Swift source – App Intents + Siri shortcuts + NativeModules bridge
 // ---------------------------------------------------------------------------
 const SWIFT_SOURCE = `import AppIntents
-import UIKit
 
 // MARK: - Add Note Intent
 
@@ -27,11 +26,9 @@ import UIKit
 struct AddNoteIntent: AppIntent {
     static let title: LocalizedStringResource = "Add a Note"
     static let description = IntentDescription("Opens Hakumi to create a new note.")
-    static let openAppWhenRun: Bool = true
 
-    func perform() async throws -> some IntentResult {
-        await UIApplication.shared.open(URL(string: "hakumi://note/add")!)
-        return .result()
+  func perform() async throws -> some IntentResult & OpensIntent {
+    .result(opensIntent: OpenURLIntent(URL(string: "hakumi://note/add")!))
     }
 }
 
@@ -41,11 +38,9 @@ struct AddNoteIntent: AppIntent {
 struct StartChatIntent: AppIntent {
     static let title: LocalizedStringResource = "Start a Chat"
     static let description = IntentDescription("Opens Hakumi's chat assistant.")
-    static let openAppWhenRun: Bool = true
 
-    func perform() async throws -> some IntentResult {
-        await UIApplication.shared.open(URL(string: "hakumi://chat")!)
-        return .result()
+  func perform() async throws -> some IntentResult & OpensIntent {
+    .result(opensIntent: OpenURLIntent(URL(string: "hakumi://chat")!))
     }
 }
 

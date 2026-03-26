@@ -1,6 +1,5 @@
 import AppIntents
 import Foundation
-import UIKit
 
 // MARK: - AppIntents for the Control Center extension target
 //
@@ -12,13 +11,11 @@ import UIKit
 struct AddNoteIntent: AppIntent {
   static let title: LocalizedStringResource = "Add Note"
   static let description = IntentDescription("Open Hakumi to create a new note.")
-  static let openAppWhenRun: Bool = true
 
   @MainActor
-  func perform() async throws -> some IntentResult {
+  func perform() async throws -> some IntentResult & OpensIntent {
     guard let url = URL(string: "hakumi://note/add") else { return .result() }
-    await UIApplication.shared.open(url)
-    return .result()
+    return .result(opensIntent: OpenURLIntent(url))
   }
 }
 
@@ -26,12 +23,10 @@ struct AddNoteIntent: AppIntent {
 struct StartChatIntent: AppIntent {
   static let title: LocalizedStringResource = "Start Chat"
   static let description = IntentDescription("Open the Hakumi AI assistant.")
-  static let openAppWhenRun: Bool = true
 
   @MainActor
-  func perform() async throws -> some IntentResult {
+  func perform() async throws -> some IntentResult & OpensIntent {
     guard let url = URL(string: "hakumi://chat") else { return .result() }
-    await UIApplication.shared.open(url)
-    return .result()
+    return .result(opensIntent: OpenURLIntent(url))
   }
 }
