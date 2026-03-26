@@ -1,95 +1,81 @@
-# Production Dockerfile for Hominem API Service
-# Extends the base service image with API-specific configuration
-#
-# Build context: Repository root
-# Required files: package.json, bun.lock, tsconfig.json, packages/, services/api/, tools/, config/
+# syntax=docker/dockerfile:1.7
 
-# ============================================================================
-# BUILDER STAGE - Compile application to standalone binary
-# ============================================================================
-FROM oven/bun:1.3.0-alpine AS builder
+ARG BUN_IMAGE=oven/bun:1.3.0-alpine@sha256:37e6b1cbe053939bccf6ae4507977ed957eaa6e7f275670b72ad6348e0d2c11f
+ARG TURBO_VERSION=2.8.20
+
+FROM ${BUN_IMAGE} AS pruner
+
+WORKDIR /repo
+
+ENV TURBO_TELEMETRY_DISABLED=1
+
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+  bun install --global turbo@${TURBO_VERSION}
+
+COPY . .
+
+RUN turbo prune --docker --out-dir /repo/out @hominem/api
+
+FROM ${BUN_IMAGE} AS deps
 
 WORKDIR /app
 
 ENV NODE_ENV=production \
-    TURBO_TELEMETRY_DISABLED=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+  TURBO_TELEMETRY_DISABLED=1
 
-# Copy lock files first (these rarely change - best for caching)
-COPY package.json bun.lock tsconfig.json ./
+COPY --from=pruner /repo/out/json/ ./
+COPY --from=pruner /repo/out/bun.lock ./bun.lock
 
-# Copy workspace structure (rarely changes after setup)
-COPY packages ./packages
-COPY services/api ./services/api
-COPY tools ./tools
-COPY config ./config
-COPY tsconfig.profiles ./tsconfig.profiles
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+  bun install --ignore-scripts
 
-# Install all dependencies and build workspace packages
-RUN bun install 2>&1 | grep -v "warn\|skipped" || true
+FROM ${BUN_IMAGE} AS builder
 
-# Build required workspace packages first
-RUN bun run --filter @hominem/env build && \
-    bun run --filter @hominem/db build && \
-    bun run --filter @hominem/auth build && \
-    bun run --filter @hominem/rpc build
+WORKDIR /app
 
-# Compile TypeScript application to pre-optimized standalone binary
-# Must succeed for production builds
+ENV NODE_ENV=production \
+  TURBO_TELEMETRY_DISABLED=1
+
+COPY --from=pruner /repo/out/full/ ./
+COPY --from=pruner /repo/config ./config
+COPY --from=pruner /repo/tools ./tools
+COPY --from=pruner /repo/tsconfig.json ./tsconfig.json
+COPY --from=pruner /repo/tsconfig.profiles ./tsconfig.profiles
+COPY --from=deps /app/node_modules ./node_modules
+
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+  bun install --ignore-scripts
+
+RUN bun run --filter @hominem/env build \
+  && bun run --filter @hominem/db build \
+  && bun run --filter @hominem/auth build \
+  && bun run --filter @hominem/rpc build
+
 RUN bun build \
-    --compile \
-    --target bun \
-    --outfile /app/api \
-    ./services/api/src/index.ts
+  --compile \
+  --target bun \
+  --outfile /app/api \
+  ./services/api/src/index.ts \
+  && test -x /app/api
 
-# Verify binary was created and make executable
-RUN chmod +x /app/api && \
-    echo "✓ Binary compiled successfully" && \
-    ls -lh /app/api
-
-# ============================================================================
-# RUNTIME STAGE - Minimal production image with only the binary
-# ============================================================================
-FROM oven/bun:1.3.0-alpine AS release
+FROM ${BUN_IMAGE} AS release
 
 WORKDIR /app
 
 ENV NODE_ENV=production \
-    TURBO_TELEMETRY_DISABLED=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+  TURBO_TELEMETRY_DISABLED=1 \
+  PORT=3000
 
-# Install only critical security packages
-RUN apk add --no-cache ca-certificates curl
+RUN addgroup -g 1001 bunuser \
+  && adduser -D -u 1001 -G bunuser -s /sbin/nologin -h /app hominem
 
-# Create non-root user with minimal privileges and no shell
-RUN addgroup -g 1001 bunuser && \
-    adduser -D -u 1001 -G bunuser -s /sbin/nologin -h /app hominem
-
-# Create necessary directories with restrictive permissions
-RUN mkdir -p /app/logs && \
-    mkdir -p /tmp && \
-    chown -R hominem:bunuser /app && \
-    chmod 700 /app/logs /tmp 2>/dev/null || true
-
-# Copy only the pre-compiled binary from builder
 COPY --from=builder --chown=hominem:bunuser /app/api ./api
 
-# Ensure binary is executable
-RUN chmod +x ./api && test -x ./api && ls -lh ./api && \
-    echo "✓ Pre-compiled binary ready"
-
-# Switch to non-root user before running application
 USER hominem
 
-# Expose port
-EXPOSE ${PORT:-3000}
+EXPOSE 3000
 
-# Health check for API service (HTTP endpoint)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=3s --retries=3 \
-    CMD curl -f -s -m 2 http://localhost:${PORT:-3000}/api/status || exit 1
+  CMD ["bun", "-e", "const port = process.env.PORT ?? '3000'; const res = await fetch(`http://127.0.0.1:${port}/api/status`); if (!res.ok) throw new Error(`healthcheck failed: ${res.status}`)"]
 
-# Run the API binary directly
 ENTRYPOINT ["./api"]
-CMD []

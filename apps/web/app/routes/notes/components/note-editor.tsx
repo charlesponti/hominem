@@ -6,7 +6,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@hominem/ui/dropdown';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { notesTokens } from '@hominem/ui/tokens';
+import { Check, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { useDeleteNote, useUpdateNote } from '~/hooks/use-notes';
@@ -21,6 +22,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
   const [title, setTitle] = useState(note.title || '');
   const [content, setContent] = useState(note.content);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
+  const [showSavedConfirm, setShowSavedConfirm] = useState(false);
 
   const updateNote = useUpdateNote();
   const deleteNote = useDeleteNote();
@@ -33,6 +35,16 @@ export function NoteEditor({ note }: NoteEditorProps) {
     [],
   );
 
+  // Brief "Saved" confirmation pop
+  useEffect(() => {
+    if (saveStatus === 'saved' && showSavedConfirm) {
+      const t = setTimeout(() => setShowSavedConfirm(false), 1500);
+      return () => clearTimeout(t);
+    }
+
+    return undefined;
+  }, [saveStatus, showSavedConfirm]);
+
   function scheduleAutoSave(newTitle: string, newContent: string) {
     setSaveStatus('unsaved');
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -41,6 +53,7 @@ export function NoteEditor({ note }: NoteEditorProps) {
       try {
         await updateNote.mutateAsync({ id: note.id, title: newTitle || null, content: newContent });
         setSaveStatus('saved');
+        setShowSavedConfirm(true);
       } catch {
         setSaveStatus('unsaved');
       }
@@ -64,53 +77,74 @@ export function NoteEditor({ note }: NoteEditorProps) {
   }
 
   return (
-    <div className="w-full rounded-xl border border-border-subtle bg-surface p-6">
-      {/* Title row */}
-      <div className="flex items-start gap-4">
+    <div className="w-full void-anim-enter">
+      {/* Floating toolbar */}
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {/* Save status with transition */}
+          <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all duration-300">
+            {saveStatus === 'saving' ? (
+              <span className="text-[11px] font-medium text-[var(--color-text-tertiary)]">
+                Saving…
+              </span>
+            ) : showSavedConfirm ? (
+              <span className="flex items-center gap-1 text-[11px] font-medium text-[var(--color-success)] void-anim-pop">
+                <Check className="size-3" />
+                Saved
+              </span>
+            ) : saveStatus === 'unsaved' ? (
+              <span className="text-[11px] font-medium text-[var(--color-accent)]">Editing</span>
+            ) : null}
+          </div>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+            >
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+              <Trash2 className="size-4" />
+              Delete note
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Writing surface — immersive, borderless feel that lifts on focus */}
+      <div
+        className="group border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] shadow-[var(--shadow-low)] transition-all duration-300 focus-within:border-[var(--color-border-default)] focus-within:bg-[var(--color-bg-elevated)] focus-within:shadow-[var(--shadow-medium)]"
+        style={{
+          borderRadius: notesTokens.radii.panel,
+          paddingInline: notesTokens.spacing.panelPaddingX,
+          paddingBlock: notesTokens.spacing.panelPaddingY,
+        }}
+      >
         <input
           type="text"
           value={title}
           onChange={handleTitleChange}
           placeholder="Untitled"
           aria-label="Note title"
-          className="heading-2 min-w-0 flex-1 border-0 bg-transparent text-text-primary placeholder:text-text-tertiary outline-none"
+          className="w-full border-0 bg-transparent text-[26px] font-semibold leading-tight tracking-[-0.025em] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)]/40 outline-none sm:text-[30px]"
         />
-        <div className="flex shrink-0 items-center gap-2 pt-1">
-          <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${
-              saveStatus === 'saving'
-                ? 'bg-elevated text-text-tertiary'
-                : saveStatus === 'unsaved'
-                  ? 'bg-warning/10 text-warning'
-                  : 'bg-success/10 text-success'
-            }`}
-          >
-            {saveStatus === 'saving' ? 'Saving…' : saveStatus === 'unsaved' ? 'Unsaved' : 'Saved'}
-          </span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-7 text-text-tertiary">
-                <MoreHorizontal className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                <Trash2 className="size-4" />
-                Delete note
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
 
-      {/* Content — seamless, same surface */}
-      <textarea
-        value={content}
-        onChange={handleContentChange}
-        placeholder="Start writing…"
-        aria-label="Note content"
-        className="body-1 mt-6 w-full resize-none border-0 bg-transparent text-text-primary placeholder:text-text-tertiary outline-none field-sizing-content min-h-[50vh]"
-      />
+        {/* Decorative divider — fades to accent when focused */}
+        <div className="my-5 h-px bg-[var(--color-border-subtle)] transition-colors duration-300 group-focus-within:bg-[var(--color-border-default)]" />
+
+        <textarea
+          value={content}
+          onChange={handleContentChange}
+          placeholder="Start writing…"
+          aria-label="Note content"
+          className="w-full resize-none border-0 bg-transparent text-[16px] leading-[1.85] tracking-[-0.005em] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)]/30 outline-none field-sizing-content min-h-[50vh]"
+        />
+      </div>
     </div>
   );
 }

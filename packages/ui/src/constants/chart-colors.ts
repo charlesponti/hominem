@@ -1,38 +1,38 @@
 import { colors } from '../tokens';
 
 /**
- * Chart Colors for Kanso Monochrome Design System
+ * Chart Colors — Warm Terminal Design System
  *
  * Use these constants for consistent chart styling across the application.
- * All charts should use grayscale colors with semantic tokens for meaning.
+ * Charts use warm-tinted opacity scale with semantic tokens for meaning.
  */
 
 export const CHART_COLORS = {
-  /** Primary grayscale shades for multi-category charts */
-  chart1: 'rgba(255, 255, 255, 0.9)',
-  chart2: 'rgba(255, 255, 255, 0.7)',
-  chart3: 'rgba(255, 255, 255, 0.5)',
-  chart4: 'rgba(255, 255, 255, 0.3)',
-  chart5: 'rgba(255, 255, 255, 0.15)',
+  /** Primary warm-tinted shades for multi-category charts */
+  chart1: 'rgba(28, 25, 23, 0.9)',
+  chart2: 'rgba(28, 25, 23, 0.7)',
+  chart3: 'rgba(28, 25, 23, 0.5)',
+  chart4: 'rgba(28, 25, 23, 0.3)',
+  chart5: 'rgba(28, 25, 23, 0.15)',
 
   /** Semantic chart colors for meaning-based visualization */
-  positive: 'rgba(255, 255, 255, 0.7)', // income, growth, success
-  negative: colors.destructive, // expenses, decline, errors
-  neutral: 'rgba(255, 255, 255, 0.5)', // baseline, reference lines
+  positive: colors.success,
+  negative: colors.destructive,
+  neutral: 'rgba(28, 25, 23, 0.5)',
 
   /** Chart background and grid */
   background: colors['bg-base'],
-  grid: 'rgba(255, 255, 255, 0.1)',
+  grid: 'rgba(28, 25, 23, 0.06)',
 
   /** Axis and label colors */
-  axis: 'rgba(255, 255, 255, 0.4)',
-  label: 'rgba(255, 255, 255, 0.7)',
+  axis: 'rgba(28, 25, 23, 0.2)',
+  label: colors['text-secondary'],
 
   /** Tooltip styling */
   tooltip: {
-    background: colors['text-primary'],
-    text: colors['bg-base'],
-    border: 'rgba(255, 255, 255, 0.2)',
+    background: colors['bg-elevated'],
+    text: colors['text-primary'],
+    border: colors['border-default'],
   },
 } as const;
 

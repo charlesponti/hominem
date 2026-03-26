@@ -2,7 +2,7 @@
 
 ## Overview
 
-The workers service runs background jobs for the Hominem application using BullMQ (Redis-backed job queue). It has been migrated from Railway's RAILPACK builder to Docker containerization for consistency with the API service and to enable better scalability and monitoring.
+The workers service runs background jobs for Hominem using BullMQ (Redis-backed job queues). Production deployment targets Fly and uses the Docker image built from `services/workers/Dockerfile`.
 
 ## Architecture
 
@@ -94,82 +94,63 @@ services:
           memory: 512M
 ```
 
-## Railway Deployment
+## Fly Deployment
 
 ### Configuration
 
-The `railway.json` file specifies Docker-based deployment:
+Fly deployment is defined in:
 
-```json
-{
-  "$schema": "https://railway.com/railway.schema.json",
-  "build": {
-    "builder": "DOCKER",
-    "dockerfilePath": "./services/workers/Dockerfile"
-  },
-  "deploy": {
-    "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 3,
-    "healthchecks": {
-      "enabled": true
-    }
-  }
-}
-```
+- `infra/fly/apps/workers.toml`
+- `services/workers/Dockerfile`
 
-### Environment Variables
+### Required Environment Variables
 
-Set these in Railway dashboard:
-
-```
-NODE_ENV=production
-DATABASE_URL=postgresql://...
-REDIS_URL=redis://...
-OPENAI_API_KEY=...
-PLAID_CLIENT_ID=...
-PLAID_API_KEY=...
-GOOGLE_OAUTH_CLIENT_ID=...
-GOOGLE_OAUTH_CLIENT_SECRET=...
-```
-
-### Deploy via Railway CLI
+Set these as Fly secrets for `hominem-workers`:
 
 ```bash
-# Requires RAILWAY_TOKEN in environment
-railway up --service $RAILWAY_SERVICE_WORKERS_ID --detach
+fly secrets set \
+  DATABASE_URL='postgresql://postgres:replace-me@hominem-postgres.flycast:5432/hominem?sslmode=disable' \
+  REDIS_URL='redis://default:replace-me@your-upstash-host:6379' \
+  GOOGLE_API_KEY='replace-me' \
+  OPENROUTER_API_KEY='replace-me' \
+  R2_ENDPOINT='replace-me' \
+  R2_ACCESS_KEY_ID='replace-me' \
+  R2_SECRET_ACCESS_KEY='replace-me' \
+  R2_BUCKET_NAME='replace-me' \
+  OTEL_EXPORTER_OTLP_ENDPOINT='https://hominem-otel.fly.dev' \
+  --app hominem-workers
+```
+
+Add Plaid secrets if finance workers run in production.
+
+### Deploy via Fly CLI
+
+Run from the repo root:
+
+```bash
+flyctl deploy --config infra/fly/apps/workers.toml --app hominem-workers
 ```
 
 ## GitHub Actions Workflow
 
-The deployment workflow (`.github/workflows/deploy-workers.yml`) automatically:
+The deployment workflow ([`.github/workflows/deploy-workers.yml`](/Users/charlesponti/Developer/hominem/.github/workflows/deploy-workers.yml)) automatically:
 
 1. **Triggered on**: Code quality checks pass on main branch or manual dispatch
 2. **Checks out code** from the repository
-3. **Deploys to Railway** - Railway builds the Docker image from the Dockerfile
+3. **Deploys to Fly** using `infra/fly/apps/workers.toml`
 
 ### Workflow Steps
 
 1. Cancel previous runs
 2. Checkout code
-3. Deploy to Railway
-
-### How Railway Builds
-
-Railway automatically:
-
-- Detects the `Dockerfile` in the service directory
-- Builds the Docker image using the Dockerfile
-- Handles all multi-platform builds
-- Manages image versioning and tagging
-- No additional configuration needed (uses `railway.json`)
+3. Set up `flyctl`
+4. Deploy to Fly
 
 ### Manual Trigger
 
 ```bash
 # Trigger workflow via GitHub CLI
 gh workflow run deploy-workers.yml
-
-# Or manually trigger in Railway dashboard
 ```
 
 ## Local Development
@@ -210,8 +191,8 @@ docker run -it \
   -e REDIS_URL="redis://localhost:6379" \
   hominem-workers:dev
 
-# For deployment: Railway builds automatically on git push
-# No manual Docker build/push needed
+# For production deployment
+flyctl deploy --config infra/fly/apps/workers.toml --app hominem-workers
 ```
 
 ## Scaling
@@ -451,18 +432,20 @@ Never hardcode secrets. Use environment variables:
 ### Recovery Procedures
 
 ```bash
-# Restart workers via Railway dashboard
-# or using Railway CLI:
-railway up --service $RAILWAY_SERVICE_WORKERS_ID --detach
+# Redeploy workers
+flyctl deploy --config infra/fly/apps/workers.toml --app hominem-workers
+
+# Check worker status
+flyctl status --app hominem-workers
+
+# Stream worker logs
+flyctl logs --app hominem-workers
 
 # Check queue status
 redis-cli KEYS "bull:*"
 
 # Clear specific queue (careful!)
 redis-cli DEL "bull:plaid-sync"
-
-# View deployment history in Railway dashboard
-# Rollback to previous version if needed
 ```
 
 ## Maintenance
@@ -477,7 +460,7 @@ redis-cli DEL "bull:plaid-sync"
 
 ### Upgrades
 
-Railroad automatically detects changes and rebuilds:
+The deploy workflow rebuilds and redeploys on changes:
 
 ```bash
 # Commit and push changes to main
@@ -485,18 +468,19 @@ git add services/workers/Dockerfile
 git commit -m "Update worker configuration"
 git push origin main
 
-# Railway automatically:
+# GitHub Actions automatically:
 # 1. Detects the change
-# 2. Builds new Docker image
-# 3. Deploys to production
-# 4. Performs health checks
+# 2. Runs code-quality
+# 3. Triggers deploy-workers
+# 4. Deploys to Fly
 
-# Monitor deployment in Railway dashboard
+# Or deploy manually
+flyctl deploy --config infra/fly/apps/workers.toml --app hominem-workers
 ```
 
 ## References
 
 - [BullMQ Documentation](https://docs.bullmq.io/)
 - [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)
-- [Railway Documentation](https://docs.railway.app/)
+- [Fly Deployment Guide](/Users/charlesponti/Developer/hominem/infra/fly/apps/README.md)
 - [Architecture Guide](./ARCHITECTURE.md)

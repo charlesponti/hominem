@@ -15,7 +15,11 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn('[&_tr]:border-b', className)} {...props} />
+  <thead
+    ref={ref}
+    className={cn('[&_tr]:border-b [&_tr]:border-[var(--color-border-subtle)]', className)}
+    {...props}
+  />
 ));
 TableHeader.displayName = 'TableHeader';
 
@@ -33,7 +37,10 @@ const TableFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <tfoot
     ref={ref}
-    className={cn('bg-primary font-medium text-primary-foreground', className)}
+    className={cn(
+      'bg-[var(--color-bg-inset)] font-medium text-[var(--color-text-primary)] border-t border-[var(--color-border-subtle)]',
+      className,
+    )}
     {...props}
   />
 ));
@@ -43,7 +50,10 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
   ({ className, ...props }, ref) => (
     <tr
       ref={ref}
-      className={cn('border-b hover:bg-muted/50 data-[state=selected]:bg-muted', className)}
+      className={cn(
+        'border-b border-[var(--color-border-subtle)] transition-colors hover:bg-[var(--color-emphasis-faint)] data-[state=selected]:bg-[var(--color-accent-subtle)]',
+        className,
+      )}
       {...props}
     />
   ),
@@ -57,7 +67,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0',
+      'h-12 px-4 text-left align-middle text-xs font-medium uppercase tracking-wider text-[var(--color-text-tertiary)] [&:has([role=checkbox])]:pr-0',
       className,
     )}
     {...props}
@@ -81,7 +91,11 @@ const TableCaption = React.forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>
 >(({ className, ...props }, ref) => (
-  <caption ref={ref} className={cn('mt-4 text-sm text-muted-foreground', className)} {...props} />
+  <caption
+    ref={ref}
+    className={cn('mt-4 text-sm text-[var(--color-text-tertiary)]', className)}
+    {...props}
+  />
 ));
 TableCaption.displayName = 'TableCaption';
 

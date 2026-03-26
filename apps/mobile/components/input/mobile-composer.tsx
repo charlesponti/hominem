@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   container: {
     gap: theme.spacing.sm_12,
     backgroundColor: theme.colors.background,
-    boxShadow: '0 -10px 30px rgba(15, 23, 42, 0.08)',
+    boxShadow: '0 -10px 30px rgba(28, 25, 23, 0.04)',
     borderWidth: 1,
     borderColor: theme.colors['border-default'],
     borderRadius: theme.borderRadii.md,

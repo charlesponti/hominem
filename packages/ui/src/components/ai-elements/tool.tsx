@@ -2,7 +2,6 @@ import { ChevronDown, ChevronUp, Loader2, Wrench } from 'lucide-react';
 import { type HTMLAttributes, type ReactNode, useState } from 'react';
 
 import { cn } from '../../lib/utils';
-import { Button } from '../ui/button';
 
 interface ToolProps extends HTMLAttributes<HTMLDivElement> {
   name: string;
@@ -20,40 +19,52 @@ export function Tool({
 }: ToolProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
-  const statusColors = {
-    pending: 'bg-muted text-muted-foreground',
-    running: 'bg-accent/10 text-accent border-accent/20',
-    completed: 'bg-success/10 text-success border-success/20',
-    error: 'bg-destructive/10 text-destructive border-destructive/20',
+  const statusConfig = {
+    pending: {
+      container: 'border-[var(--color-border-subtle)] bg-[var(--color-bg-inset)]',
+      icon: <Wrench className="size-3.5 text-[var(--color-text-tertiary)]" />,
+    },
+    running: {
+      container: 'border-[var(--color-accent)]/20 bg-[var(--color-accent-subtle)]',
+      icon: <Loader2 className="size-3.5 animate-spin text-[var(--color-accent)]" />,
+    },
+    completed: {
+      container: 'border-[var(--color-border-subtle)] bg-[var(--color-bg-inset)]',
+      icon: <span className="text-[12px] text-green-600">✓</span>,
+    },
+    error: {
+      container: 'border-[var(--color-destructive)]/20 bg-[var(--color-destructive-subtle)]',
+      icon: <span className="text-[12px] text-[var(--color-destructive)]">✗</span>,
+    },
   };
 
-  const statusIcons = {
-    pending: <Wrench className="size-4" />,
-    running: <Loader2 className="size-4 animate-spin" />,
-    completed: <span className="text-success">✓</span>,
-    error: <span className="text-destructive">✗</span>,
-  };
+  const config = statusConfig[status];
 
   return (
-    <div className={cn('rounded-md border', statusColors[status], 'px-3', className)} {...props}>
-      <Button
-        variant="ghost"
-        size="sm"
+    <div className={cn('rounded-xl border', config.container, className)} {...props}>
+      <button
+        type="button"
         className={cn(
-          'flex w-full items-center justify-between py-2',
+          'flex w-full items-center justify-between px-3.5 py-2.5 transition-colors',
           status === 'running' && 'cursor-wait',
         )}
         onClick={() => setIsOpen(!isOpen)}
         disabled={status === 'running'}
       >
         <div className="flex items-center gap-2">
-          {statusIcons[status]}
-          <span className="font-mono text-sm">{name}</span>
+          {config.icon}
+          <span className="font-mono text-[12px] font-medium text-[var(--color-text-secondary)]">
+            {name}
+          </span>
         </div>
-        {isOpen ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-      </Button>
+        {isOpen ? (
+          <ChevronUp className="size-3.5 text-[var(--color-text-tertiary)]" />
+        ) : (
+          <ChevronDown className="size-3.5 text-[var(--color-text-tertiary)]" />
+        )}
+      </button>
 
-      {isOpen && <div className="px-3 pb-3">{children}</div>}
+      {isOpen && <div className="border-t border-inherit px-3.5 pb-3 pt-2">{children}</div>}
     </div>
   );
 }
@@ -64,7 +75,10 @@ interface ToolHeaderProps extends HTMLAttributes<HTMLDivElement> {
 
 export function ToolHeader({ children, className, ...props }: ToolHeaderProps) {
   return (
-    <div className={cn('font-medium text-sm', className)} {...props}>
+    <div
+      className={cn('text-[13px] font-medium text-[var(--color-text-primary)]', className)}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -79,7 +93,10 @@ export function ToolInput({ children, className, ...props }: ToolInputProps) {
 
   return (
     <pre
-      className={cn('mt-2 overflow-x-auto rounded bg-muted/50 p-2 text-xs font-mono', className)}
+      className={cn(
+        'mt-1.5 overflow-x-auto rounded-lg bg-[var(--color-bg-inset)] p-2.5 font-mono text-[11px] leading-relaxed text-[var(--color-text-tertiary)]',
+        className,
+      )}
       {...props}
     >
       {children}
@@ -98,8 +115,8 @@ export function ToolOutput({ children, isError = false, className, ...props }: T
   return (
     <pre
       className={cn(
-        'mt-2 overflow-x-auto rounded bg-muted/50 p-2 text-xs font-mono',
-        isError && 'text-destructive',
+        'mt-1.5 overflow-x-auto rounded-lg bg-[var(--color-bg-inset)] p-2.5 font-mono text-[11px] leading-relaxed',
+        isError ? 'text-[var(--color-destructive)]' : 'text-[var(--color-text-tertiary)]',
         className,
       )}
       {...props}

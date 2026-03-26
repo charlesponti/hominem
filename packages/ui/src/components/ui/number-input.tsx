@@ -53,7 +53,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           'focus-visible:shadow-[0_0_0_2px_var(--color-bg-elevated),0_0_0_4px_var(--color-accent)]',
           'disabled:cursor-not-allowed disabled:opacity-50',
           success && 'border-accent bg-accent/5',
-          !success && !error && 'border-border-default focus-visible:border-border-focus',
+          !success && !error && 'border-border-default focus-visible:border-border-strong',
           error &&
             'border-destructive focus-visible:shadow-[0_0_0_2px_var(--color-bg-elevated),0_0_0_4px_var(--color-destructive)]',
           className,

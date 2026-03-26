@@ -5,9 +5,6 @@
  * Uses useFormStatus for pending state — must be rendered inside <form>.
  * Each button carries name="intent" value="<action>" so FormData identifies
  * which button was clicked — standard HTML multi-submit-button pattern.
- *
- * canSubmit is derived from the store slice — only re-renders when content
- * availability changes, not on every keystroke.
  */
 
 import { ArrowUp, CirclePlus, MessageSquare, Mic } from 'lucide-react';
@@ -71,13 +68,16 @@ function ActionButton({
       disabled={disabled}
       data-testid={isPrimary ? 'composer-primary' : 'composer-secondary'}
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-full transition-colors',
-        isPrimary ? 'size-10.5' : 'size-9.5 border border-border bg-surface text-foreground',
+        'flex shrink-0 items-center justify-center rounded-xl transition-all duration-150',
+        isPrimary
+          ? 'size-10'
+          : 'size-9 border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] text-[var(--color-text-primary)]',
         isPrimary &&
           (disabled
-            ? 'cursor-not-allowed bg-surface text-text-tertiary'
-            : 'bg-foreground text-background hover:bg-foreground/85'),
-        !isPrimary && 'disabled:cursor-not-allowed disabled:opacity-40',
+            ? 'cursor-not-allowed bg-[var(--color-bg-inset)] text-[var(--color-text-tertiary)]'
+            : 'bg-[var(--color-accent)] text-white shadow-[0_2px_8px_rgba(212,165,116,0.25)] hover:shadow-[0_3px_12px_rgba(212,165,116,0.35)] active:scale-[0.96]'),
+        !isPrimary &&
+          'hover:bg-[var(--color-emphasis-faint)] disabled:cursor-not-allowed disabled:opacity-40',
       )}
     >
       {icon}
@@ -113,15 +113,15 @@ export const ComposerActionsRow = memo(function ComposerActionsRow({
   const showVoiceAsPrimary = showsVoiceButton && !hasContent;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1.5">
       {presentation.posture !== 'note-query' && !showVoiceAsPrimary && (
         <ActionButton
           intent={secondaryIntent(presentation.posture)}
           icon={
             presentation.secondaryActionIcon === 'circle-plus' ? (
-              <CirclePlus className="size-4.5" />
+              <CirclePlus className="size-4" />
             ) : (
-              <MessageSquare className="size-4.5" />
+              <MessageSquare className="size-4" />
             )
           }
           label={presentation.secondaryActionLabel}
@@ -131,7 +131,7 @@ export const ComposerActionsRow = memo(function ComposerActionsRow({
       )}
       {showVoiceAsPrimary ? (
         <ActionButton
-          icon={<Mic className="size-4.5" />}
+          icon={<Mic className="size-4" />}
           label="Voice note"
           disabled={isPending || formPending}
           variant="primary"
@@ -142,9 +142,9 @@ export const ComposerActionsRow = memo(function ComposerActionsRow({
           intent={primaryIntent(presentation.posture)}
           icon={
             presentation.primaryActionIcon === 'circle-plus' ? (
-              <CirclePlus className="size-4.5" />
+              <CirclePlus className="size-4" />
             ) : (
-              <ArrowUp className="size-4.5" />
+              <ArrowUp className="size-4" strokeWidth={2.5} />
             )
           }
           label={presentation.primaryActionLabel}

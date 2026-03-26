@@ -47,12 +47,8 @@ function allowsLocalNetworking(appVariant: AppVariant) {
   return appVariant !== 'production'
 }
 
-function getAppleTeamId(appVariant: AppVariant) {
-  if (appVariant !== 'dev') {
-    return undefined
-  }
-
-  return process.env.EXPO_APPLE_TEAM_ID
+function getAppleTeamId(_appVariant: AppVariant) {
+  return process.env.EXPO_APPLE_TEAM_ID ?? '3QHJ2KN8AL'
 }
 
 function getAppGroupId(bundleIdentifier: string) {
@@ -74,14 +70,6 @@ export default ({ config }: ConfigContext) => {
             NSAppTransportSecurity: {
               NSAllowsArbitraryLoads: false,
               NSAllowsLocalNetworking: allowsLocalNetworking(appVariant),
-              ...(appVariant !== 'production' && {
-                NSExceptionDomains: {
-                  'railway.app': {
-                    NSExceptionRequiresForwardSecrecy: true,
-                    NSIncludesSubdomains: true,
-                  },
-                },
-              }),
             },
           },
         },
@@ -108,7 +96,7 @@ export default ({ config }: ConfigContext) => {
       'expo-notifications',
       {
         icon: './assets/icon.png',
-        color: '#000000',
+        color: '#D4A574',
       },
     ],
     [
@@ -175,7 +163,7 @@ export default ({ config }: ConfigContext) => {
     splash: {
       image: './assets/splash.png',
       resizeMode: 'contain',
-      backgroundColor: '#000000',
+      backgroundColor: '#fafaf9',
     },
     web: {
       bundler: 'metro',
@@ -215,7 +203,7 @@ export default ({ config }: ConfigContext) => {
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#000000',
+        backgroundColor: '#fafaf9',
       },
       package: variantConfig.bundleIdentifier,
     },

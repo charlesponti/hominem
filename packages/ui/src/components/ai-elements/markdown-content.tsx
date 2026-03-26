@@ -9,13 +9,13 @@ const LazyCodeBlock = lazy(() => import('./code-block'));
 // Simple fallback while code block is loading
 function CodeBlockFallback({ language }: { language: string }) {
   return (
-    <div className="relative group my-4">
-      <div className="flex items-center justify-between bg-surface px-3 py-1.5 border-b border-border-subtle">
-        <span className="text-xs font-mono text-text-tertiary">{language}</span>
+    <div className="relative group my-4 overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
+      <div className="flex items-center justify-between bg-[var(--color-bg-inset)] px-4 py-2 border-b border-[var(--color-border-subtle)]">
+        <span className="text-[11px] font-mono text-[var(--color-text-tertiary)]">{language}</span>
       </div>
-      <div className="bg-surface p-4 animate-pulse">
-        <div className="h-4 bg-border-subtle rounded w-3/4 mb-2" />
-        <div className="h-4 bg-border-subtle rounded w-1/2" />
+      <div className="bg-[var(--color-bg-inset)] p-4 animate-pulse">
+        <div className="h-3.5 bg-[var(--color-emphasis-faint)] rounded-full w-3/4 mb-2" />
+        <div className="h-3.5 bg-[var(--color-emphasis-faint)] rounded-full w-1/2" />
       </div>
     </div>
   );
@@ -73,53 +73,81 @@ export function MarkdownContent({ content, isStreaming = false, className }: Mar
             }
 
             return (
-              <code className="bg-surface px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>
+              <code className="rounded-md bg-[var(--color-bg-inset)] px-1.5 py-0.5 text-[13px] font-mono text-[var(--color-accent)]">
+                {children}
+              </code>
             );
           },
-          h1: ({ children }) => <h1 className="heading-3 mt-6 mb-4 first:mt-0">{children}</h1>,
-          h2: ({ children }) => <h2 className="heading-4 mt-5 mb-3 first:mt-0">{children}</h2>,
-          h3: ({ children }) => <h3 className="heading-4 mt-4 mb-2 first:mt-0">{children}</h3>,
-          p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
-          ul: ({ children }) => (
-            <ul className="list-disc list-inside mb-4 space-y-1 ml-4">{children}</ul>
+          h1: ({ children }) => (
+            <h1 className="mt-7 mb-3 text-[20px] font-semibold tracking-[-0.02em] text-[var(--color-text-primary)] first:mt-0">
+              {children}
+            </h1>
           ),
+          h2: ({ children }) => (
+            <h2 className="mt-6 mb-2.5 text-[17px] font-semibold tracking-[-0.01em] text-[var(--color-text-primary)] first:mt-0">
+              {children}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="mt-5 mb-2 text-[15px] font-semibold text-[var(--color-text-primary)] first:mt-0">
+              {children}
+            </h3>
+          ),
+          p: ({ children }) => (
+            <p className="mb-3.5 last:mb-0 text-[15px] leading-[1.7] text-inherit">{children}</p>
+          ),
+          ul: ({ children }) => <ul className="list-none mb-3.5 space-y-1 ml-0">{children}</ul>,
           ol: ({ children }) => (
-            <ol className="list-decimal list-inside mb-4 space-y-1 ml-4">{children}</ol>
+            <ol className="list-decimal list-inside mb-3.5 space-y-1 ml-1 marker:text-[var(--color-text-tertiary)]">
+              {children}
+            </ol>
           ),
-          li: ({ children }) => <li className="ml-2">{children}</li>,
+          li: ({ children }) => (
+            <li className="relative pl-4 text-[15px] leading-[1.7] before:absolute before:left-0 before:top-[0.65em] before:size-1 before:rounded-full before:bg-[var(--color-text-tertiary)]/40 before:content-['']">
+              {children}
+            </li>
+          ),
           a: ({ href, children }) => (
             <a
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary underline hover:text-primary/80"
+              className="text-[var(--color-accent)] underline decoration-[var(--color-accent)]/30 underline-offset-2 transition-colors hover:decoration-[var(--color-accent)]"
             >
               {children}
             </a>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-border-subtle pl-4 italic my-4">
+            <blockquote className="border-l-2 border-[var(--color-accent)]/30 pl-4 my-4 text-[var(--color-text-secondary)] italic">
               {children}
             </blockquote>
           ),
           table: ({ children }) => (
-            <div className="overflow-x-auto my-4">
-              <table className="min-w-full border-collapse border border-border">{children}</table>
+            <div className="overflow-x-auto my-4 rounded-lg border border-[var(--color-border-subtle)]">
+              <table className="min-w-full border-collapse">{children}</table>
             </div>
           ),
-          thead: ({ children }) => <thead className="bg-surface">{children}</thead>,
+          thead: ({ children }) => <thead className="bg-[var(--color-bg-inset)]">{children}</thead>,
           tbody: ({ children }) => <tbody>{children}</tbody>,
-          tr: ({ children }) => <tr className="border-b border-border">{children}</tr>,
-          th: ({ children }) => (
-            <th className="border border-border px-4 py-2 text-left font-semibold">{children}</th>
+          tr: ({ children }) => (
+            <tr className="border-b border-[var(--color-border-subtle)] last:border-b-0">
+              {children}
+            </tr>
           ),
-          td: ({ children }) => <td className="border border-border px-4 py-2">{children}</td>,
-          hr: () => <hr className="my-6 border-border" />,
+          th: ({ children }) => (
+            <th className="px-3.5 py-2 text-left text-[12px] font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => <td className="px-3.5 py-2.5 text-[14px]">{children}</td>,
+          hr: () => <hr className="my-6 border-[var(--color-border-subtle)]" />,
         }}
       >
         {content}
       </ReactMarkdown>
-      {isStreaming && <span className="inline-block w-2 h-4 bg-foreground ml-1 align-middle" />}
+      {isStreaming && (
+        <span className="inline-block w-0.5 h-[1.1em] bg-[var(--color-accent)] ml-0.5 align-middle animate-pulse rounded-full" />
+      )}
     </div>
   );
 }

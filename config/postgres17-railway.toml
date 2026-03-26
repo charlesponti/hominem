@@ -1,7 +1,7 @@
 # Railway PostgreSQL 17 Service Configuration
 
 service_name = "postgres-17"
-dockerfile_path = "docker/postgres.dockerfile"
+dockerfile_path = "infra/docker/images/postgres/Dockerfile"
 
 [build]
 builder = "dockerfile"

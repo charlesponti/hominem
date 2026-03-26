@@ -1,10 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { ComposerShell } from './composer-shell';
 
 const meta = {
   title: 'Components/Composer/ComposerShell',
   component: ComposerShell,
   tags: ['autodocs'],
+  args: {
+    children: null,
+  },
   parameters: {
     docs: {
       description: {

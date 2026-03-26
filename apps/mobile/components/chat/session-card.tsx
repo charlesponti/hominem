@@ -156,7 +156,7 @@ const useStyles = makeStyles((t) =>
       paddingVertical: t.spacing.sm_12,
     },
     activeCard: {
-      borderColor: t.colors['border-focus'],
+      borderColor: t.colors['border-strong'],
     },
     pressed: {
       opacity: 0.7,

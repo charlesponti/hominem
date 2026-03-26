@@ -75,9 +75,9 @@ class HakumiIntentsModule: NSObject {
         Task {
             switch intentName {
             case "AddNoteIntent":
-                await AddNoteIntent.donate(AddNoteIntent())
+                _ = await AddNoteIntent.donate(AddNoteIntent())
             case "StartChatIntent":
-                await StartChatIntent.donate(StartChatIntent())
+                _ = await StartChatIntent.donate(StartChatIntent())
             default:
                 break
             }
@@ -93,8 +93,9 @@ class HakumiIntentsModule: NSObject {
 // ---------------------------------------------------------------------------
 const OBJC_BRIDGE_SOURCE = `#import <React/RCTBridgeModule.h>
 
-RCT_EXTERN_MODULE(HakumiIntents, NSObject)
+@interface RCT_EXTERN_MODULE(HakumiIntents, NSObject)
 RCT_EXTERN_METHOD(donate:(NSString *)intentName)
+@end
 `
 
 // ---------------------------------------------------------------------------

@@ -16,6 +16,7 @@ import {
 import { WEB_BRAND } from '~/lib/brand';
 import { AnalyticsProvider } from '~/lib/posthog';
 import { TelemetryProvider } from '~/lib/telemetry';
+import { buildTelemetryWindowEnv } from '~/lib/telemetry/config';
 
 import type { Route } from './+types/root';
 
@@ -26,6 +27,18 @@ import { serverEnv } from './lib/env';
 import './lib/i18n';
 
 const ICON_VERSION = '20260314';
+const nodeEnv =
+  (typeof process !== 'undefined' && process.env.NODE_ENV) ||
+  (typeof import.meta !== 'undefined' && import.meta.env?.MODE) ||
+  'development';
+const otelEndpoint =
+  (typeof process !== 'undefined' && process.env.OTEL_EXPORTER_OTLP_ENDPOINT) ||
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OTEL_EXPORTER_OTLP_ENDPOINT) ||
+  undefined;
+const otelSamplerArg =
+  (typeof process !== 'undefined' && process.env.OTEL_TRACES_SAMPLER_ARG) ||
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_OTEL_TRACES_SAMPLER_ARG) ||
+  undefined;
 
 const NOTES_ICON_LINKS = [
   { rel: 'icon', type: 'image/x-icon', href: `/favicon.ico?v=${ICON_VERSION}` },
@@ -82,6 +95,12 @@ export const meta: Route.MetaFunction = () => {
 export const links: Route.LinksFunction = () => [...COMMON_FONT_LINKS, ...NOTES_ICON_LINKS];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const telemetryEnv = buildTelemetryWindowEnv({
+    environment: nodeEnv,
+    otlpEndpoint: otelEndpoint,
+    samplerArg: otelSamplerArg,
+  });
+
   return (
     <html lang="en">
       <head>
@@ -91,7 +110,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.ENV = window.ENV || {}; Object.assign(window.ENV, { OTEL_SERVICE_NAME: 'hominem-web', OTEL_DEPLOYMENT_ENVIRONMENT: '${process.env.NODE_ENV || 'development'}', OTEL_EXPORTER_OTLP_ENDPOINT: 'http://localhost:4318' });`,
+            __html: `window.ENV = window.ENV || {}; Object.assign(window.ENV, ${JSON.stringify(telemetryEnv)});`,
           }}
         />
       </head>

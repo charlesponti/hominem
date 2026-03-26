@@ -1,8 +1,7 @@
 import { usePasskeyAuth, useSafeAuth } from '@hominem/auth';
 import { useRpcMutation } from '@hominem/rpc/react';
-import { PasskeyEnrollmentBanner, useToast } from '@hominem/ui';
+import { PasskeyEnrollmentBanner } from '@hominem/ui';
 import { Container } from '@hominem/ui/components/layout';
-import { Toaster } from '@hominem/ui/components/ui/toaster';
 import {
   Composer,
   ComposerProvider,
@@ -26,7 +25,6 @@ export default function Layout() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigationState = useNavigation();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const auth = useSafeAuth();
   const { register } = usePasskeyAuth();
   const { mode, noteId, chatId } = useComposerMode();
@@ -105,18 +103,17 @@ export default function Layout() {
     navigate,
   };
 
-  // ─── Auth error toast ───────────────────────────────────────────────────────
+  // ─── Auth error — strip error params from URL ──────────────────────────────
 
   useEffect(() => {
     const error = searchParams.get('error');
-    const description = searchParams.get('description') || searchParams.get('error_description');
 
     if (error) {
-      toast({
-        variant: 'destructive',
-        title: error,
-        description: description ?? undefined,
-      });
+      console.error(
+        '[auth]',
+        error,
+        searchParams.get('description') || searchParams.get('error_description'),
+      );
 
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('error');
@@ -124,7 +121,7 @@ export default function Layout() {
       newParams.delete('error_description');
       setSearchParams(newParams, { replace: true });
     }
-  }, [searchParams, toast, setSearchParams]);
+  }, [searchParams, setSearchParams]);
 
   const handleEnroll = useCallback(async () => {
     await register();
@@ -174,7 +171,6 @@ export default function Layout() {
             notes={notesList}
           />
         ) : null}
-        <Toaster />
       </div>
     </ComposerProvider>
   );

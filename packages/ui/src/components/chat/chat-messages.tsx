@@ -91,7 +91,7 @@ export function ChatMessages({
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div
         ref={shouldUseVirtualScrolling ? parentRef : containerRef}
-        className="flex-1 pb-8 pt-6"
+        className="flex-1 pb-10 pt-8"
         role="log"
         aria-label="Chat messages"
         aria-live="polite"
@@ -99,16 +99,18 @@ export function ChatMessages({
         style={shouldUseVirtualScrolling ? { height: '100%', width: '100%', overflow: 'auto' } : {}}
       >
         {error ? (
-          <div className="mb-6 w-full rounded-md border border-destructive/30 bg-destructive/5 p-4">
-            <div className="mb-1 text-sm font-semibold text-destructive">Something went wrong</div>
-            <div className="text-xs text-destructive/70">
+          <div className="mx-1 mb-6 w-full rounded-xl border border-[var(--color-destructive)]/20 bg-[var(--color-destructive-subtle)] px-4 py-3">
+            <div className="mb-0.5 text-sm font-semibold text-[var(--color-destructive)]">
+              Something went wrong
+            </div>
+            <div className="text-[13px] leading-relaxed text-[var(--color-destructive)]/70">
               {error instanceof Error ? error.message : String(error)}
             </div>
           </div>
         ) : null}
 
         {isLoading || (messages.length === 0 && status === 'idle') ? (
-          <div className="w-full space-y-5">
+          <div className="w-full space-y-2 void-anim-stagger-list">
             <ChatShimmerMessage />
             <ChatShimmerMessage />
             <ChatShimmerMessage />
@@ -161,7 +163,7 @@ export function ChatMessages({
           </div>
         ) : (
           <div className="w-full">
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
               {messages.length === 0
                 ? null
                 : messages.map((message, index) => (
@@ -200,11 +202,11 @@ export function ChatMessages({
           <button
             type="button"
             onClick={handleScrollToBottom}
-            className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-border-subtle bg-background/95 px-3.5 py-1.5 text-xs text-text-secondary backdrop-blur-sm transition-colors hover:bg-surface hover:text-foreground"
+            className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)]/95 px-4 py-2 text-[12px] font-medium text-[var(--color-text-secondary)] shadow-[var(--shadow-medium)] backdrop-blur-sm transition-all hover:bg-[var(--color-bg-surface)] hover:text-[var(--color-text-primary)] hover:shadow-[var(--shadow-high)]"
             aria-label="Jump to bottom"
           >
             <ChevronDown className="size-3.5" aria-hidden />
-            Jump to bottom
+            New messages
           </button>
         </div>
       )}

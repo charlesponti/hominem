@@ -3,7 +3,6 @@ import type { SessionSource } from '@hominem/chat-services/types';
 import { deriveSessionSource } from '@hominem/chat-services/ui';
 import { useRpcQuery, useRpcMutation } from '@hominem/rpc/react';
 import type { ArtifactType } from '@hominem/rpc/types/chat.types';
-import { useToast } from '@hominem/ui';
 import { ClassificationReview } from '@hominem/ui/chat';
 import { Chat } from '@hominem/ui/chat';
 import { useMemo, useState } from 'react';
@@ -26,7 +25,6 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function ChatPage({ params }: Route.ComponentProps) {
   const { chatId } = params;
-  const { toast } = useToast();
   const navigate = useNavigate();
   const sendMessage = useSendMessage({ chatId });
   const { mutate: archiveChat, isPending: isArchiving } = useArchiveChat({
@@ -120,11 +118,10 @@ export default function ChatPage({ params }: Route.ComponentProps) {
       await rejectMutation.mutateAsync({ reviewItemId: review.reviewItemId! });
     },
     onError: (phase) => {
-      toast({
-        variant: 'destructive',
-        title: phase === 'accept' ? 'Could not save note' : 'Could not prepare note review',
-        description: 'Please try again.',
-      });
+      console.error(
+        '[chat]',
+        phase === 'accept' ? 'Could not save note' : 'Could not prepare note review',
+      );
     },
   });
 
@@ -135,7 +132,7 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   });
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-background text-foreground">
+    <div className="flex min-h-0 flex-1 flex-col bg-[var(--color-bg-base)] text-[var(--color-text-primary)]">
       <Chat
         source={resolvedSource}
         resolvedSource={resolvedSource}
@@ -159,24 +156,16 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         onDelete={async (messageId: string) => {
           try {
             await deleteMessage(messageId);
-          } catch {
-            toast({
-              variant: 'destructive',
-              title: 'Could not delete message',
-              description: 'Please try again.',
-            });
+          } catch (err) {
+            console.error('[chat] Could not delete message', err);
           }
         }}
         onEdit={async (messageId: string, newContent: string) => {
           try {
             await updateMessage(messageId, newContent);
             await sendMessage.mutateAsync({ message: newContent, chatId });
-          } catch {
-            toast({
-              variant: 'destructive',
-              title: 'Could not edit message',
-              description: 'Please try again.',
-            });
+          } catch (err) {
+            console.error('[chat] Could not edit message', err);
           }
         }}
         onRegenerate={async (messageId: string) => {
@@ -190,12 +179,8 @@ export default function ChatPage({ params }: Route.ComponentProps) {
             if (!previousUserMessage) return;
             await deleteMessage(messageId);
             await sendMessage.mutateAsync({ message: previousUserMessage.content || '', chatId });
-          } catch {
-            toast({
-              variant: 'destructive',
-              title: 'Could not regenerate message',
-              description: 'Please try again.',
-            });
+          } catch (err) {
+            console.error('[chat] Could not regenerate message', err);
           }
         }}
         onSpeak={async (messageId: string, content: string) => {

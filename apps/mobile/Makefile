@@ -38,7 +38,7 @@ preview:
 .PHONY: preview-local-archive
 preview-local-archive: _preflight-preview
 	$(EAS) env:exec preview 'APP_VARIANT=preview EXPO_NO_DOTENV=1 $(EXPO) prebuild --platform ios --clean'
-	cd ios && xcodebuild -workspace HakumiPreview.xcworkspace -scheme HakumiPreview -configuration Release -destination 'generic/platform=iOS' -archivePath build/HakumiPreview.xcarchive archive
+	cd ios && xcodebuild -workspace HakumiPreview.xcworkspace -scheme HakumiPreview -configuration Release -destination 'generic/platform=iOS' -archivePath build/HakumiPreview.xcarchive -allowProvisioningUpdates archive
 
 ## Build preview → auto-submit to TestFlight. Use SIM=1 for simulator.
 .PHONY: preview-auto

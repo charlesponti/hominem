@@ -1,0 +1,81 @@
+# Observability services for the local stack
+# Usage: docker compose -f infra/docker/compose/base.yml -f infra/docker/compose/observability.yml up
+
+services:
+  clickhouse:
+    build:
+      context: ../../fly/observability/clickhouse
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    container_name: hominem-clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+      - "9363:9363"
+    volumes:
+      - hominem-clickhouse:/var/lib/clickhouse
+    networks:
+      - hominem
+
+  mongo:
+    build:
+      context: ../../fly/observability/mongo
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    container_name: hominem-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - hominem-mongo:/data/db
+    networks:
+      - hominem
+
+  hyperdx:
+    build:
+      context: ../../fly/observability/hyperdx
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    container_name: hominem-hyperdx
+    ports:
+      - "8080:8080"
+      - "8000:8000"
+      - "4320:4320"
+    environment:
+      FRONTEND_URL: http://localhost:8080
+      HYPERDX_API_PORT: "8000"
+      HYPERDX_APP_PORT: "8080"
+      HYPERDX_APP_URL: http://localhost:8080
+      HYPERDX_LOG_LEVEL: info
+      HYPERDX_OPAMP_PORT: "4320"
+      MONGO_URI: mongodb://mongo:27017/hyperdx
+      SERVER_URL: http://127.0.0.1:8000
+      OPAMP_PORT: "4320"
+      USAGE_STATS_ENABLED: "false"
+      DEFAULT_CONNECTIONS: '[{"name":"Local ClickHouse","host":"http://clickhouse:8123","username":"default","password":""}]'
+      DEFAULT_SOURCES: '[{"from":{"databaseName":"default","tableName":"otel_logs"},"kind":"log","timestampValueExpression":"TimestampTime","name":"Logs","displayedTimestampValueExpression":"Timestamp","implicitColumnExpression":"Body","serviceNameExpression":"ServiceName","bodyExpression":"Body","eventAttributesExpression":"LogAttributes","resourceAttributesExpression":"ResourceAttributes","defaultTableSelectExpression":"Timestamp,ServiceName,SeverityText,Body","severityTextExpression":"SeverityText","traceIdExpression":"TraceId","spanIdExpression":"SpanId","connection":"Local ClickHouse","traceSourceId":"Traces","sessionSourceId":"Sessions","metricSourceId":"Metrics"},{"from":{"databaseName":"default","tableName":"otel_traces"},"kind":"trace","timestampValueExpression":"Timestamp","name":"Traces","displayedTimestampValueExpression":"Timestamp","implicitColumnExpression":"SpanName","serviceNameExpression":"ServiceName","eventAttributesExpression":"SpanAttributes","resourceAttributesExpression":"ResourceAttributes","defaultTableSelectExpression":"Timestamp,ServiceName,StatusCode,round(Duration/1e6),SpanName","traceIdExpression":"TraceId","spanIdExpression":"SpanId","durationExpression":"Duration","durationPrecision":9,"parentSpanIdExpression":"ParentSpanId","spanNameExpression":"SpanName","spanKindExpression":"SpanKind","statusCodeExpression":"StatusCode","statusMessageExpression":"StatusMessage","connection":"Local ClickHouse","logSourceId":"Logs","sessionSourceId":"Sessions","metricSourceId":"Metrics"},{"from":{"databaseName":"default","tableName":""},"kind":"metric","timestampValueExpression":"TimeUnix","name":"Metrics","resourceAttributesExpression":"ResourceAttributes","metricTables":{"gauge":"otel_metrics_gauge","histogram":"otel_metrics_histogram","sum":"otel_metrics_sum"},"connection":"Local ClickHouse","logSourceId":"Logs","traceSourceId":"Traces","sessionSourceId":"Sessions"},{"from":{"databaseName":"default","tableName":"hyperdx_sessions"},"kind":"session","timestampValueExpression":"TimestampTime","name":"Sessions","displayedTimestampValueExpression":"Timestamp","implicitColumnExpression":"Body","serviceNameExpression":"ServiceName","bodyExpression":"Body","eventAttributesExpression":"LogAttributes","resourceAttributesExpression":"ResourceAttributes","defaultTableSelectExpression":"Timestamp,ServiceName,SeverityText,Body","severityTextExpression":"SeverityText","traceIdExpression":"TraceId","spanIdExpression":"SpanId","connection":"Local ClickHouse","logSourceId":"Logs","traceSourceId":"Traces","metricSourceId":"Metrics"}]'
+    depends_on:
+      clickhouse:
+        condition: service_started
+      mongo:
+        condition: service_started
+    networks:
+      - hominem
+
+  otel:
+    build:
+      context: ../../fly/observability/otel
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    container_name: hominem-otel
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8888:8888"
+      - "13133:13133"
+    environment:
+      CLICKHOUSE_ENDPOINT: tcp://clickhouse:9000?dial_timeout=10s&compress=lz4&async_insert=1
+    depends_on:
+      clickhouse:
+        condition: service_started
+    networks:
+      - hominem

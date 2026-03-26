@@ -1,0 +1,30 @@
+app = "hominem-postgres"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "../docker/images/postgres/Dockerfile"
+
+[env]
+  POSTGRES_DB = "hominem"
+  POSTGRES_USER = "postgres"
+  PGDATA = "/var/lib/postgresql/data"
+
+[[mounts]]
+  source = "pg_data"
+  destination = "/var/lib/postgresql"
+
+[[services]]
+  internal_port = 5432
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 5432
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "5s"
+
+[vm]
+  cpu_kind = "shared"
+  cpus = 2
+  memory = "4gb"

@@ -1,0 +1,21 @@
+app = "hominem-mongo"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[[mounts]]
+  source = "mongo_data"
+  destination = "/data/db"
+
+[[services]]
+  internal_port = 27017
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 27017
+
+[vm]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1gb"

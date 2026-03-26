@@ -1,5 +1,5 @@
 /**
- * Border radius tokens.
+ * Border radius tokens — tighter, more precise scale.
  *
  * Must match --radius-* in packages/ui/src/styles/globals.css.
  *
@@ -9,10 +9,11 @@
  */
 
 export const radii = {
-  sm: 8,
+  xs: 2,
+  sm: 4,
   md: 8,
-  lg: 8,
-  xl: 8,
+  lg: 12,
+  xl: 16,
   full: '9999px',
   /** Squircular icon shape. Web only — use radiiNative.icon on RN. */
   icon: '22%',
@@ -20,10 +21,11 @@ export const radii = {
 
 /** React Native-safe radii (no percentage strings). */
 export const radiiNative = {
-  sm: 8,
+  xs: 2,
+  sm: 4,
   md: 8,
-  lg: 8,
-  xl: 8,
+  lg: 12,
+  xl: 16,
   full: 9999,
   /** Numeric approximation of the squircular icon shape. */
   icon: 20,

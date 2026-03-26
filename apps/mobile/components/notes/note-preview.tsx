@@ -1,7 +1,7 @@
 import type { Note } from '@hominem/rpc/types';
 import { Pressable, StyleSheet, View, type ViewProps } from 'react-native';
 
-import { Text, makeStyles } from '~/theme';
+import { Text, makeStyles, useTheme } from '~/theme';
 import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
 
 import AppIcon from '../ui/icon';
@@ -36,6 +36,7 @@ const NotePreview = ({
   ...props
 }: NotePreviewProps) => {
   const styles = useNotePreviewStyles();
+  const theme = useTheme();
   const readableDate = getReadableDate(note.scheduledFor);
   const onDeleteIconPress = () => {
     onDeleteClick(note);
@@ -48,16 +49,16 @@ const NotePreview = ({
   return (
     <View style={[styles.item]} {...props}>
       <View style={[styles.info]}>
-        <Text variant="body" color="black">
+        <Text variant="body" color="text-primary">
           {note.title || note.excerpt || note.content}
         </Text>
         {note.scheduledFor && readableDate ? <Text variant="caption">{readableDate}</Text> : null}
       </View>
       <Pressable disabled={disabled} style={[styles.icon]} onPress={onDeleteIconPress}>
-        <AppIcon name="trash" size={24} color="#d32f2f" />
+        <AppIcon name="trash" size={24} color={theme.colors.destructive} />
       </Pressable>
       <Pressable disabled={disabled} style={[styles.icon]} onPress={onIconPress}>
-        <AppIcon name="list-tree" size={24} color="#000" />
+        <AppIcon name="list-tree" size={24} color={theme.colors['icon-primary']} />
       </Pressable>
     </View>
   );

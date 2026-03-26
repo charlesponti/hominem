@@ -586,6 +586,7 @@
       "name": "@hominem/telemetry",
       "version": "0.1.0",
       "dependencies": {
+        "@hominem/utils": "workspace:*",
         "@opentelemetry/api": "^1.9.0",
         "@opentelemetry/context-async-hooks": "^1.24.0",
         "@opentelemetry/core": "^1.24.0",

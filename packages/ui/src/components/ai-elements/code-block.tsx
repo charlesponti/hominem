@@ -15,8 +15,6 @@ import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typesc
 import yaml from 'react-syntax-highlighter/dist/esm/languages/prism/yaml';
 import oneDark from 'react-syntax-highlighter/dist/esm/styles/prism/one-dark';
 
-import { Button } from '../ui/button';
-
 // Register commonly used languages for AI chat content
 SyntaxHighlighter.registerLanguage('typescript', typescript);
 SyntaxHighlighter.registerLanguage('tsx', tsx);
@@ -49,33 +47,39 @@ interface CodeBlockProps {
 
 export default function CodeBlock({ language, code, isCopied, onCopy }: CodeBlockProps) {
   return (
-    <div className="relative group my-4">
-      <div className="flex items-center justify-between bg-surface px-3 py-1.5 border-b border-border-subtle">
-        <span className="text-xs font-mono text-text-tertiary">{language}</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 px-2 text-xs"
+    <div className="group relative my-4 overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
+      <div className="flex items-center justify-between bg-[var(--color-bg-inset)] px-4 py-2 border-b border-[var(--color-border-subtle)]">
+        <span className="text-[11px] font-mono font-medium text-[var(--color-text-tertiary)]">
+          {language}
+        </span>
+        <button
+          type="button"
           onClick={onCopy}
           aria-label={`Copy ${language} code block`}
+          className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-emphasis-faint)] hover:text-[var(--color-text-primary)]"
         >
           {isCopied ? (
             <>
-              <Check className="size-3 mr-1" />
+              <Check className="size-3" />
               <span>Copied</span>
             </>
           ) : (
             <>
-              <Copy className="size-3 mr-1" />
+              <Copy className="size-3" />
               <span>Copy</span>
             </>
           )}
-        </Button>
+        </button>
       </div>
       <SyntaxHighlighter
         language={language}
         style={oneDark}
-        customStyle={{ margin: 0, fontSize: 'var(--font-size-sm, 0.875rem)' }}
+        customStyle={{
+          margin: 0,
+          fontSize: '13px',
+          lineHeight: '1.6',
+          borderRadius: 0,
+        }}
         PreTag="div"
       >
         {code}

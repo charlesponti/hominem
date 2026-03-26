@@ -1,10 +1,9 @@
 /* ============================================
- * Ponti Studios Unified Design System v1.0
- * 
- * Premium dark-mode design system combining:
- * - Ponti Studios: Opacity-based elevation, off-white foreground
- * - Apple HIG: Semantic tokens, typography, spacing
- * - Modern aesthetic: Simplicity, legibility, developer-native polish
+ * Warm Terminal Design System
+ *
+ * Vercel's engineering precision × Claude's warmth.
+ * Light mode: warm stone neutrals. Dark mode: near-black.
+ * Accent: warm amber (#D4A574).
  * ============================================ */
 
 @import 'tailwindcss';
@@ -36,94 +35,99 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  /* Line heights - Apple HIG aligned */
+  /* Line heights */
   --line-height-tight: 1.2;
   --line-height-normal: 1.4;
   --line-height-relaxed: 1.6;
 
-  /* Letter spacing - light mode optimized */
-  --letter-spacing-tight: -0.05em;
+  /* Letter spacing */
+  --letter-spacing-tight: -0.025em;
   --letter-spacing-normal: 0;
-  --letter-spacing-relaxed: 0.01em;
+  --letter-spacing-relaxed: 0.005em;
 
   /* ====== COLORS: BACKGROUNDS ====== */
-  /* Light palette per Apple Human Interface Guidelines */
+  /* Warm stone neutrals — light mode */
 
-  --color-bg-base: #ffffff; /* App background - lightest */
-  --color-bg-surface: #f5f5f7; /* Cards, panels */
-  --color-bg-elevated: #f2f2f7; /* Modals, elevated state */
-  --color-bg-overlay: rgba(0, 0, 0, 0.04);
+  --color-bg-base: #fafaf9;
+  --color-bg-surface: #f5f5f0;
+  --color-bg-elevated: #ffffff;
+  --color-bg-inset: #eeedea;
+  --color-bg-overlay: rgba(28, 25, 23, 0.6);
 
   /* ====== COLORS: TEXT ====== */
-  /* Dark foreground for light backgrounds */
+  /* Warm dark foreground */
 
-  --color-text-primary: #000000; /* Main text - 100% black */
-  --color-text-secondary: #555555; /* Subtext - 33% gray */
-  --color-text-tertiary: #888888; /* Metadata - 53% gray */
-  --color-text-disabled: #cccccc; /* Disabled - 80% gray */
+  --color-text-primary: #1c1917;
+  --color-text-secondary: #57534e;
+  --color-text-tertiary: #a8a29e;
+  --color-text-disabled: #d6d3d1;
 
-  /* ====== COLORS: BORDERS & LINES ====== */
-  /* Opacity-based for subtle separation */
+  /* ====== COLORS: BORDERS ====== */
+  /* Warm-tinted opacity scale */
 
-  --color-border-default: rgba(0, 0, 0, 0.1);
-  --color-border-subtle: rgba(0, 0, 0, 0.05);
-  --color-border-focus: rgba(0, 0, 0, 0.15);
+  --color-border-default: rgba(28, 25, 23, 0.12);
+  --color-border-subtle: rgba(28, 25, 23, 0.06);
+  --color-border-strong: rgba(28, 25, 23, 0.2);
 
-  /* ====== COLORS: ICONS & LINES ====== */
+  /* ====== COLORS: ICONS ====== */
 
-  --color-icon-primary: #000000;
-  --color-icon-muted: #888888;
+  --color-icon-primary: #1c1917;
+  --color-icon-muted: #a8a29e;
 
   /* ====== COLORS: SEMANTIC STATUS ====== */
 
-  --color-success: #34c759;
-  --color-warning: #ff9500;
-  --color-destructive: #ff3b30;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-destructive: #ef4444;
+  --color-destructive-subtle: rgba(239, 68, 68, 0.08);
 
-  /* ====== COLORS: ACCENT (Per-Product Override) ====== */
-  /* Default: Apple Blue. Override with [data-product="*"] */
+  /* ====== COLORS: ACCENT ====== */
+  /* Warm amber — Claude-inspired */
 
-  --color-accent: #007aff; /* Apple Blue per HIG */
-  --color-accent-foreground: #ffffff;
+  --color-accent: #d4a574;
+  --color-accent-hover: #c4956a;
+  --color-accent-subtle: rgba(212, 165, 116, 0.12);
+  --color-accent-foreground: #1c1917;
 
   /* ====== COLORS: SYSTEM (Backward Compatibility) ====== */
 
-  --color-primary: #000000;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: rgba(0, 0, 0, 0.1);
-  --color-secondary-foreground: #555555;
-  --color-muted: rgba(0, 0, 0, 0.05);
-  --color-muted-foreground: #888888;
-  --color-foreground: #000000;
-  --color-background: #ffffff;
+  --color-primary: #1c1917;
+  --color-primary-foreground: #fafaf9;
+  --color-secondary: rgba(28, 25, 23, 0.12);
+  --color-secondary-foreground: #57534e;
+  --color-muted: rgba(28, 25, 23, 0.06);
+  --color-muted-foreground: #a8a29e;
+  --color-foreground: #1c1917;
+  --color-background: #fafaf9;
   --color-destructive-foreground: #ffffff;
-  --color-popover: #f5f5f7;
-  --color-popover-foreground: #000000;
-  --color-input: #f5f5f7;
-  --color-ring: #1c1c1e;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #1c1917;
+  --color-input: #eeedea;
+  --color-ring: #78716c;
 
   /* ====== COLORS: EMPHASIS SCALE ====== */
-  /* Opacity layers for subtle differentiation on black */
+  /* Warm-tinted opacity layers */
 
-  --color-emphasis-highest: rgba(0, 0, 0, 0.9);
-  --color-emphasis-high: rgba(0, 0, 0, 0.7);
-  --color-emphasis-medium: rgba(0, 0, 0, 0.5);
-  --color-emphasis-low: rgba(0, 0, 0, 0.3);
-  --color-emphasis-lower: rgba(0, 0, 0, 0.2);
-  --color-emphasis-subtle: rgba(0, 0, 0, 0.15);
-  --color-emphasis-minimal: rgba(0, 0, 0, 0.1);
-  --color-emphasis-faint: rgba(0, 0, 0, 0.05);
+  --color-emphasis-highest: rgba(28, 25, 23, 0.9);
+  --color-emphasis-high: rgba(28, 25, 23, 0.7);
+  --color-emphasis-medium: rgba(28, 25, 23, 0.5);
+  --color-emphasis-low: rgba(28, 25, 23, 0.3);
+  --color-emphasis-lower: rgba(28, 25, 23, 0.2);
+  --color-emphasis-subtle: rgba(28, 25, 23, 0.15);
+  --color-emphasis-minimal: rgba(28, 25, 23, 0.1);
+  --color-emphasis-faint: rgba(28, 25, 23, 0.07);
 
   /* ====== COLORS: CHARTS ====== */
 
-  --color-chart-1: rgba(0, 0, 0, 0.9);
-  --color-chart-2: rgba(0, 0, 0, 0.7);
-  --color-chart-3: rgba(0, 0, 0, 0.5);
-  --color-chart-4: rgba(0, 0, 0, 0.3);
-  --color-chart-5: rgba(0, 0, 0, 0.15);
+  --color-chart-1: rgba(28, 25, 23, 0.9);
+  --color-chart-2: rgba(28, 25, 23, 0.7);
+  --color-chart-3: rgba(28, 25, 23, 0.5);
+  --color-chart-4: rgba(28, 25, 23, 0.3);
+  --color-chart-5: rgba(28, 25, 23, 0.15);
 
   /* ====== SPACING: 8PX + 4PX GRID ====== */
 
+  --spacing-0: 2px;
   --spacing-1: 4px;
   --spacing-2: 8px;
   --spacing-3: 12px;
@@ -134,50 +138,131 @@
   --spacing-8: 64px;
 
   /* ====== CONTENT WIDTHS: MAX-WIDTH CONSTRAINTS ====== */
-  /* Used for constraining message bubbles, transcripts, and content areas */
 
-  --content-width-bubble: 36rem; /* Compact message bubble (576px) */
-  --content-width-transcript: 44rem; /* Standard transcript width (704px) */
+  --content-width-bubble: 36rem;
+  --content-width-transcript: 44rem;
 
   /* ====== BORDER RADIUS ====== */
-  /* Soft rounded corners — progressive scale */
+  /* Tight, precise scale */
 
-  --radius-sm: 6px;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
-
-  /* Icon radius: 22% for squircular appearance */
   --radius-icon: 22%;
 
   /* ====== SHADOWS ====== */
-  /* Subtle elevation shadows */
+  /* Warm-tinted, extremely subtle */
 
-  --shadow-low: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.15);
-  --shadow-high: 0 20px 60px rgba(0, 0, 0, 0.2);
+  --shadow-low: 0 1px 3px rgba(28, 25, 23, 0.04), 0 1px 2px rgba(28, 25, 23, 0.02);
+  --shadow-medium: 0 4px 16px rgba(28, 25, 23, 0.06), 0 2px 4px rgba(28, 25, 23, 0.03);
+  --shadow-high: 0 12px 40px rgba(28, 25, 23, 0.08), 0 4px 12px rgba(28, 25, 23, 0.04);
 
   /* ====== GLASS MORPHISM ====== */
 
   --glass-blur: 12px;
-  --glass-background: rgba(255, 255, 255, 0.8);
+  --glass-background: rgba(250, 250, 249, 0.8);
 
   /* ====== SIDEBAR COLORS ====== */
-  /* ChatGPT-style light sidebar */
+  /* Warm neutral sidebar */
 
-  --color-sidebar: #f9f9f9;
-  --color-sidebar-foreground: #0d0d0d;
-  --color-sidebar-primary: #0d0d0d;
-  --color-sidebar-primary-foreground: #ffffff;
-  --color-sidebar-accent: rgba(0, 0, 0, 0.06);
-  --color-sidebar-accent-foreground: #0d0d0d;
-  --color-sidebar-border: rgba(0, 0, 0, 0.08);
-  --color-sidebar-ring: #0d0d0d;
+  --color-sidebar: #f5f5f0;
+  --color-sidebar-foreground: #1c1917;
+  --color-sidebar-primary: #1c1917;
+  --color-sidebar-primary-foreground: #fafaf9;
+  --color-sidebar-accent: rgba(28, 25, 23, 0.06);
+  --color-sidebar-accent-foreground: #1c1917;
+  --color-sidebar-border: rgba(28, 25, 23, 0.08);
+  --color-sidebar-ring: #78716c;
 
   /* ====== CHAT INPUT ====== */
   --color-prompt-bg: #ffffff;
-  --color-prompt-border: rgba(0, 0, 0, 0.15);
-  --color-prompt-border-focus: rgba(0, 0, 0, 0.25);
+  --color-prompt-border: rgba(28, 25, 23, 0.12);
+  --color-prompt-border-focus: rgba(28, 25, 23, 0.2);
+}
+
+/* ====== DARK MODE ====== */
+/* Applied via data-theme="dark" on <html> */
+
+[data-theme='dark'] {
+  --color-bg-base: #0a0a0a;
+  --color-bg-surface: #141414;
+  --color-bg-elevated: #1c1c1c;
+  --color-bg-inset: #0f0f0f;
+  --color-bg-overlay: rgba(0, 0, 0, 0.7);
+
+  --color-text-primary: #fafaf9;
+  --color-text-secondary: #a8a29e;
+  --color-text-tertiary: #78716c;
+  --color-text-disabled: #44403c;
+
+  --color-border-default: rgba(250, 250, 249, 0.12);
+  --color-border-subtle: rgba(250, 250, 249, 0.06);
+  --color-border-strong: rgba(250, 250, 249, 0.2);
+
+  --color-icon-primary: #fafaf9;
+  --color-icon-muted: #78716c;
+
+  --color-success: #4ade80;
+  --color-warning: #fbbf24;
+  --color-destructive: #f87171;
+  --color-destructive-subtle: rgba(248, 113, 113, 0.12);
+
+  --color-accent: #d4a574;
+  --color-accent-hover: #e0b68a;
+  --color-accent-subtle: rgba(212, 165, 116, 0.15);
+  --color-accent-foreground: #1c1917;
+
+  --color-primary: #fafaf9;
+  --color-primary-foreground: #0a0a0a;
+  --color-secondary: rgba(250, 250, 249, 0.12);
+  --color-secondary-foreground: #a8a29e;
+  --color-muted: rgba(250, 250, 249, 0.06);
+  --color-muted-foreground: #78716c;
+  --color-foreground: #fafaf9;
+  --color-background: #0a0a0a;
+  --color-destructive-foreground: #ffffff;
+  --color-popover: #1c1c1c;
+  --color-popover-foreground: #fafaf9;
+  --color-input: #0f0f0f;
+  --color-ring: #a8a29e;
+
+  --color-emphasis-highest: rgba(250, 250, 249, 0.9);
+  --color-emphasis-high: rgba(250, 250, 249, 0.7);
+  --color-emphasis-medium: rgba(250, 250, 249, 0.5);
+  --color-emphasis-low: rgba(250, 250, 249, 0.3);
+  --color-emphasis-lower: rgba(250, 250, 249, 0.2);
+  --color-emphasis-subtle: rgba(250, 250, 249, 0.15);
+  --color-emphasis-minimal: rgba(250, 250, 249, 0.1);
+  --color-emphasis-faint: rgba(250, 250, 249, 0.07);
+
+  --color-chart-1: rgba(250, 250, 249, 0.9);
+  --color-chart-2: rgba(250, 250, 249, 0.7);
+  --color-chart-3: rgba(250, 250, 249, 0.5);
+  --color-chart-4: rgba(250, 250, 249, 0.3);
+  --color-chart-5: rgba(250, 250, 249, 0.15);
+
+  --shadow-low: 0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.15);
+  --shadow-high: 0 12px 40px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.2);
+
+  --glass-background: rgba(10, 10, 10, 0.8);
+
+  --color-sidebar: #141414;
+  --color-sidebar-foreground: #fafaf9;
+  --color-sidebar-primary: #fafaf9;
+  --color-sidebar-primary-foreground: #0a0a0a;
+  --color-sidebar-accent: rgba(250, 250, 249, 0.06);
+  --color-sidebar-accent-foreground: #fafaf9;
+  --color-sidebar-border: rgba(250, 250, 249, 0.08);
+  --color-sidebar-ring: #a8a29e;
+
+  --color-prompt-bg: #1c1c1c;
+  --color-prompt-border: rgba(250, 250, 249, 0.12);
+  --color-prompt-border-focus: rgba(250, 250, 249, 0.2);
+
+  color-scheme: dark;
 }
 
 /* ====== SAFE AREA UTILITIES ====== */
@@ -217,12 +302,16 @@
     color: var(--color-text-primary);
   }
 
-  /* ── Universal focus reset ──────────────────────────────────────────────
+  [data-theme='dark'],
+  [data-theme='dark'] body {
+    color-scheme: dark;
+  }
+
+  /* ── Universal focus reset ──
    * Suppress the browser's default blue outline on every element.
-   * Keyboard focus (focus-visible) gets a consistent 2px near-black ring
+   * Keyboard focus (focus-visible) gets a consistent 2px ring
    * drawn from --color-ring so all surfaces match the design system.
-   * Mouse/touch focus (:focus but not :focus-visible) shows nothing.
-   * ─────────────────────────────────────────────────────────────────────── */
+   * Mouse/touch focus (:focus but not :focus-visible) shows nothing. */
   *:focus {
     outline: none;
   }
@@ -233,15 +322,30 @@
     border-radius: inherit;
   }
 
-  /* Enable smooth transitions globally (no more transition: none !important) */
+  /* ── Performance: GPU hints for interactive elements ── */
   * {
     transition: none;
   }
 
   *:is(button, a, input, select, textarea, [role='button'], [role='link']) {
-    transition-property: background-color, color, border-color, opacity;
+    transition-property: background-color, color, border-color, opacity, box-shadow, transform;
     transition-duration: 150ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* GPU-composited scrolling containers */
+  [role='log'],
+  [role='list'],
+  [data-radix-scroll-area-viewport] {
+    will-change: scroll-position;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Content visibility optimization for off-screen items */
+  [data-role='user'],
+  [data-role='assistant'] {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 80px;
   }
 
   *,
@@ -274,6 +378,12 @@
     letter-spacing: var(--letter-spacing-tight);
   }
 
+  /* Selection — warm amber tint */
+  ::selection {
+    background: var(--color-accent-subtle);
+    color: inherit;
+  }
+
   /* Root CSS variable aliases */
   :root {
     --background: var(--color-bg-base);
@@ -301,6 +411,49 @@
     --warning: var(--color-warning);
   }
 
+  /* ── Custom scrollbar — warm, minimal ── */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-emphasis-faint);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-emphasis-low);
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-emphasis-faint) transparent;
+  }
+
+  /* ── Smooth page transitions ── */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* ── View Transitions API support ── */
+  @view-transition {
+    navigation: auto;
+  }
+
+  ::view-transition-old(root) {
+    animation: void-exit 120ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: void-enter 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
   /* Respect prefers-reduced-motion */
   @media (prefers-reduced-motion: reduce) {
     * {
@@ -308,11 +461,14 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+
+    html {
+      scroll-behavior: auto;
+    }
   }
 }
 
 /* ====== COLOR UTILITIES ====== */
-/* Using @utility directive for proper variant support */
 
 @utility bg-base {
   background-color: var(--color-bg-base);
@@ -324,6 +480,10 @@
 
 @utility bg-elevated {
   background-color: var(--color-bg-elevated);
+}
+
+@utility bg-inset {
+  background-color: var(--color-bg-inset);
 }
 
 @utility text-text-primary {
@@ -362,6 +522,10 @@
   background-color: var(--color-destructive);
 }
 
+@utility bg-destructive-subtle {
+  background-color: var(--color-destructive-subtle);
+}
+
 @utility text-success {
   color: var(--color-success);
 }
@@ -382,12 +546,16 @@
   border-color: var(--color-border-subtle);
 }
 
-@utility border-focus {
-  border-color: var(--color-border-focus);
+@utility border-strong {
+  border-color: var(--color-border-strong);
 }
 
 @utility bg-accent {
   background-color: var(--color-accent);
+}
+
+@utility bg-accent-subtle {
+  background-color: var(--color-accent-subtle);
 }
 
 @utility text-accent {
@@ -475,119 +643,118 @@
 }
 
 /* ====== TYPOGRAPHY UTILITIES ====== */
-/* Apple HIG aligned scales with proper line heights and letter spacing */
-/* Using @utility for proper variant support */
+/* Fixed-size type scale per design spec */
 
 @utility display-1 {
-  font-size: clamp(2.5rem, 5vw, 6rem);
+  font-size: clamp(28px, 4vw, 40px);
   font-family: var(--font-family-primary);
   font-weight: var(--font-weight-bold);
-  line-height: 1.2;
-  letter-spacing: var(--letter-spacing-tight);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
 }
 
 @utility display-2 {
-  font-size: clamp(2rem, 3vw, 3.5rem);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-bold);
-  line-height: 1.2;
-  letter-spacing: var(--letter-spacing-tight);
-}
-
-@utility heading-1 {
-  font-size: clamp(2.25rem, 3vw, 3rem);
+  font-size: 24px;
   font-family: var(--font-family-primary);
   font-weight: var(--font-weight-semibold);
-  line-height: 1.2;
-  letter-spacing: var(--letter-spacing-tight);
-}
-
-@utility heading-2 {
-  font-size: clamp(1.5rem, 2vw, 1.875rem);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.3;
-  letter-spacing: var(--letter-spacing-tight);
-}
-
-@utility heading-3 {
-  font-size: clamp(1.125rem, 1.5vw, 1.25rem);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.4;
-  letter-spacing: -0.04em;
-}
-
-@utility heading-4 {
-  font-size: clamp(1rem, 1.25vw, 1.25rem);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.4;
-  letter-spacing: -0.03em;
-}
-
-@utility body-1 {
-  font-size: clamp(1rem, 1.25vw, 1.25rem);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-regular);
-  line-height: 1.6;
-  letter-spacing: var(--letter-spacing-normal);
-}
-
-@utility body-2 {
-  font-size: clamp(0.875rem, 1vw, 1rem);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-regular);
-  line-height: 1.5;
-  letter-spacing: var(--letter-spacing-normal);
-}
-
-@utility body-3 {
-  font-size: clamp(0.75rem, 0.875vw, 0.875rem);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-regular);
-  line-height: 1.5;
-  letter-spacing: var(--letter-spacing-relaxed);
-}
-
-@utility body-4 {
-  font-size: clamp(0.625rem, 0.75vw, 0.75rem);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-regular);
-  line-height: 1.4;
-  letter-spacing: var(--letter-spacing-relaxed);
-}
-
-@utility subheading-1 {
-  font-size: clamp(1.25rem, 2vw, 1.75rem);
-  font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.4;
+  line-height: 1.15;
   letter-spacing: -0.02em;
 }
 
-@utility subheading-2 {
-  font-size: clamp(1.125rem, 1.5vw, 1.5rem);
+@utility heading-1 {
+  font-size: 22px;
   font-family: var(--font-family-primary);
-  font-weight: var(--font-weight-medium);
-  line-height: 1.4;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+@utility heading-2 {
+  font-size: 20px;
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
   letter-spacing: -0.01em;
 }
 
-@utility subheading-3 {
-  font-size: clamp(1rem, 1.25vw, 1.25rem);
+@utility heading-3 {
+  font-size: 18px;
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+@utility heading-4 {
+  font-size: 16px;
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+@utility body-1 {
+  font-size: 16px;
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+@utility body-2 {
+  font-size: 14px;
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+@utility body-3 {
+  font-size: 13px;
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+@utility body-4 {
+  font-size: 12px;
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.4;
+  letter-spacing: 0.005em;
+}
+
+@utility subheading-1 {
+  font-size: 14px;
   font-family: var(--font-family-primary);
   font-weight: var(--font-weight-medium);
-  line-height: 1.5;
-  letter-spacing: var(--letter-spacing-normal);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+
+@utility subheading-2 {
+  font-size: 13px;
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+}
+
+@utility subheading-3 {
+  font-size: 12px;
+  font-family: var(--font-family-primary);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+  letter-spacing: 0.02em;
 }
 
 @utility subheading-4 {
-  font-size: clamp(0.875rem, 1vw, 1.125rem);
+  font-size: 11px;
   font-family: var(--font-family-primary);
   font-weight: var(--font-weight-medium);
-  line-height: 1.5;
-  letter-spacing: var(--letter-spacing-normal);
+  line-height: 1.3;
+  letter-spacing: 0.03em;
 }
 
 @utility font-mono {
@@ -596,14 +763,11 @@
 
 /* ====== INTERACTION & TRANSITION UTILITIES ====== */
 
-/* focus-ring: apply when you need to force the ring visible (e.g. programmatic focus) */
 @utility focus-ring {
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
 
-/* void-focus: explicit opt-in for components that need to override Radix defaults.
-   Base layer handles the universal case — this is kept for surgical overrides. */
 @utility void-focus {
   outline: none;
   &:focus-visible {
@@ -632,6 +796,10 @@
 
 /* ====== BORDER RADIUS UTILITIES ====== */
 
+@utility rounded-xs {
+  border-radius: var(--radius-xs);
+}
+
 @utility rounded-sm {
   border-radius: var(--radius-sm);
 }
@@ -648,18 +816,9 @@
   border-radius: var(--radius-xl);
 }
 
-/* ── list-row ────────────────────────────────────────────────────────────────
+/* ── list-row ──
  * Apply to every <li> in an interactive list (sidebar nav, menu, feed rows).
- *
- * Rule: all direct children of a list item must occupy the full height of
- * the row — no child may be shorter than its siblings. Each child is
- * responsible for centering its own content (items-center / justify-center).
- *
- * Usage:  <li className="list-row …">
- *           <a className="flex flex-1 items-center …">…</a>   ← stretches
- *           <button className="flex items-center …">…</button> ← stretches
- *         </li>
- * ─────────────────────────────────────────────────────────────────────────── */
+ * All direct children stretch to full row height. */
 @utility list-row {
   display: flex;
   align-items: stretch;
@@ -692,12 +851,8 @@
 }
 
 /* ====== LAYER UTILITIES ====== */
-/* Layout and helper utilities that work well in @layer */
 
 @layer utilities {
-  /* PDL: .container only adds horizontal padding.
-   * Centering (margin-inline: auto) and width constraints are
-   * the responsibility of layout components (Page, Container, Center). */
   .container {
     @apply w-full px-4 sm:px-6;
     margin-inline: auto;
@@ -705,9 +860,6 @@
 }
 
 /* ====== PAGE-WIDTH TOKENS ====== */
-/* Used exclusively by Page / Container / Center layout components. */
-/* Leaf components must never use these directly — pass width via props or
- * wrap content in a layout primitive. */
 
 @utility page-width-sm {
   max-inline-size: min(100%, 42rem);
@@ -729,19 +881,15 @@
   max-inline-size: 100%;
 }
 
-/* Center — logical-property centering utility.
- * Apply on any layout wrapper that should be horizontally centered.
- * Replaces the anti-pattern of mx-auto on leaf components. */
 @utility center-layout {
   margin-inline: auto;
   width: 100%;
 }
 
 /* ====== COMPONENT CLASSES ====== */
-/* Complex, multi-property components that should be overridable with utilities */
 
 @layer components {
-  /* Button base component */
+  /* Button base */
   .btn {
     padding: 0.5rem 1rem;
     border-radius: var(--radius-md);
@@ -755,24 +903,22 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Primary button variant */
   .btn-primary {
     background-color: var(--color-accent);
     color: var(--color-accent-foreground);
   }
 
   .btn-primary:hover {
-    opacity: 0.9;
+    background-color: var(--color-accent-hover);
   }
 
   .btn-primary:active,
   .btn-primary:focus-visible {
     background-color: var(--color-accent);
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
 
-  /* Secondary button variant */
   .btn-secondary {
     background-color: var(--color-bg-surface);
     color: var(--color-text-primary);
@@ -781,15 +927,13 @@
 
   .btn-secondary:hover {
     background-color: var(--color-bg-elevated);
-    border-color: var(--color-border-focus);
   }
 
   .btn-secondary:focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
 
-  /* Destructive button variant */
   .btn-destructive {
     background-color: var(--color-destructive);
     color: white;
@@ -800,31 +944,32 @@
   }
 
   .btn-destructive:focus-visible {
-    outline: 2px solid var(--color-destructive);
+    outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
 
-  /* Card component */
+  /* Card */
   .card {
     background-color: var(--color-bg-surface);
-    border: 1px solid var(--color-border-default);
-    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
     padding: 1rem;
+    box-shadow: var(--shadow-low);
   }
 
-  /* Elevated card variant */
   .card-elevated {
-    background-color: var(--color-bg-elevatePd);
+    background-color: var(--color-bg-elevated);
+    box-shadow: var(--shadow-medium);
   }
 
-  /* Input component */
+  /* Input */
   .input {
     width: 100%;
-    background-color: var(--color-bg-surface);
+    background-color: var(--color-bg-inset);
     color: var(--color-text-primary);
     border: 1px solid var(--color-border-default);
     border-radius: var(--radius-md);
-    padding: 0.5rem 0.75rem;
+    padding: 0.75rem 1rem;
     font-family: inherit;
     transition-property: border-color, background-color, box-shadow;
     transition-duration: 150ms;
@@ -833,9 +978,9 @@
 
   .input:focus {
     outline: none;
-    border-color: var(--color-border-focus);
+    border-color: var(--color-border-strong);
     background-color: var(--color-bg-elevated);
-    box-shadow: 0 0 0 3px rgba(28, 28, 30, 0.08);
+    box-shadow: 0 0 0 3px var(--color-accent-subtle);
   }
 
   .input:disabled {
@@ -849,7 +994,6 @@
     color: var(--color-text-tertiary);
   }
 
-  /* Input error state */
   .input-error {
     border-color: var(--color-destructive);
   }
@@ -857,25 +1001,32 @@
   .input-error:focus {
     box-shadow:
       0 0 0 2px var(--color-destructive),
-      0 0 0 4px rgba(255, 59, 48, 0.08);
+      0 0 0 4px var(--color-destructive-subtle);
   }
 
-  /* Badge component */
+  /* Badge */
   .badge {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: var(--radius-md);
-    background-color: var(--color-bg-elevated);
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border-subtle);
     color: var(--color-text-primary);
-    font-size: 0.75rem;
+    font-size: 12px;
     font-weight: var(--font-weight-medium);
   }
 
-  /* Badge accent variant */
   .badge-accent {
-    background-color: var(--color-accent);
-    color: var(--color-accent-foreground);
+    background-color: var(--color-accent-subtle);
+    color: var(--color-accent);
+    border-color: transparent;
+  }
+
+  .badge-destructive {
+    background-color: var(--color-destructive-subtle);
+    color: var(--color-destructive);
+    border-color: transparent;
   }
 }

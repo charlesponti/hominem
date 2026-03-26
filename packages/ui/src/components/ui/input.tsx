@@ -8,9 +8,9 @@ function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
       type={type}
       data-slot="input"
       className={cn(
-        'file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
-        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-        'aria-invalid:ring-destructive/20 aria-invalid:border-destructive',
+        'file:text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] selection:bg-[var(--color-accent-subtle)] selection:text-[var(--color-text-primary)] border-[var(--color-border-default)] h-9 w-full min-w-0 rounded-md border bg-[var(--color-bg-inset)] px-3 py-1 text-base text-[var(--color-text-primary)] transition-[color,box-shadow,border-color,background-color] duration-150 outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40 md:text-sm',
+        'focus-visible:border-[var(--color-border-strong)] focus-visible:bg-[var(--color-bg-elevated)] focus-visible:ring-[var(--color-accent)]/15 focus-visible:ring-[3px]',
+        'aria-invalid:ring-[var(--color-destructive)]/15 aria-invalid:border-[var(--color-destructive)]',
         className,
       )}
       {...props}

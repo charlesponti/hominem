@@ -13,6 +13,9 @@ const serverSchema = object({
   VITE_R2_DOMAIN: string().optional(),
   VITE_POSTHOG_API_KEY: string().optional(),
   VITE_POSTHOG_HOST: string().url().optional().default('https://us.i.posthog.com'),
+  OTEL_DEPLOYMENT_ENVIRONMENT: string().optional(),
+  OTEL_EXPORTER_OTLP_ENDPOINT: string().url().optional(),
+  OTEL_TRACES_SAMPLER_ARG: string().optional(),
 });
 
 void createClientEnv(clientSchema, 'notesClient');

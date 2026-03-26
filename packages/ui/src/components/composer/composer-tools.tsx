@@ -36,9 +36,11 @@ function ToolButton({
       disabled={disabled}
       aria-pressed={active || undefined}
       className={cn(
-        'flex size-7 shrink-0 items-center justify-center rounded-md transition-colors',
+        'flex size-8 shrink-0 items-center justify-center rounded-lg transition-all duration-150',
         disabled && 'cursor-not-allowed opacity-40',
-        active ? 'bg-foreground/8 text-foreground' : 'text-text-tertiary hover:text-foreground',
+        active
+          ? 'bg-[var(--color-accent-subtle)] text-[var(--color-accent)]'
+          : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-emphasis-faint)] hover:text-[var(--color-text-primary)]',
       )}
     >
       {icon}
@@ -58,15 +60,19 @@ export const ComposerTools = memo(function ComposerTools({
   presentation: ComposerPresentation;
 }) {
   const attachedNotesCount = useComposerSlice((s) => s.attachedNotes.length);
-  const [isTouchDeviceState, setIsTouchDeviceState] = useState(() => isTouchDevice());
+  const [isTouchDeviceState, setIsTouchDeviceState] = useState(false);
 
   useEffect(() => {
-    // Listen for viewport changes to update touch device state
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
+
     const mediaQuery = window.matchMedia('(max-width: 768px) and (any-hover: none)');
     const handleChange = () => {
       setIsTouchDeviceState(isTouchDevice());
     };
 
+    handleChange();
     mediaQuery.addEventListener('change', handleChange);
     return () => {
       mediaQuery.removeEventListener('change', handleChange);
@@ -74,7 +80,7 @@ export const ComposerTools = memo(function ComposerTools({
   }, []);
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-0.5">
       {presentation.showsNotePicker && (
         <ToolButton
           icon={<BookOpen className="size-4" />}

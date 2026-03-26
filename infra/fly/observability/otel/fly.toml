@@ -1,0 +1,37 @@
+app = "hominem-otel"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  CLICKHOUSE_ENDPOINT = "tcp://hominem-clickhouse.flycast:9000?dial_timeout=10s&compress=lz4&async_insert=1"
+
+[[services]]
+  internal_port = 4318
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 4318
+
+[[services]]
+  internal_port = 4317
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["tls"]
+    port = 4317
+
+[vm]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1gb"

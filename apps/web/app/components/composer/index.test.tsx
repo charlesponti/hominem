@@ -162,6 +162,19 @@ function renderComposer({
 describe('Composer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query === '(max-width: 768px) and (any-hover: none)',
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
   });
 
   it('submits the primary action on Enter and ignores Enter when input is empty', async () => {
@@ -281,19 +294,21 @@ describe('Composer', () => {
     });
   });
 
-  it('triggers the capture input path from the camera control', () => {
+  it('triggers the capture input path from the camera control', async () => {
     renderComposer();
 
     const cameraInput = screen.getByTestId('composer-camera-input');
     const clickSpy = vi.spyOn(cameraInput, 'click');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Take photo' }));
+    const cameraButton = await screen.findByRole('button', { name: 'Take photo' });
+    fireEvent.click(cameraButton);
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('primary button is disabled when input is empty', () => {
+  it('shows the voice note primary action when input is empty', () => {
     renderComposer();
-    expect(screen.getByTestId('composer-primary')).toBeDisabled();
+    expect(screen.getByTestId('composer-primary')).toHaveAttribute('aria-label', 'Voice note');
+    expect(screen.getByTestId('composer-primary')).toBeEnabled();
   });
 });

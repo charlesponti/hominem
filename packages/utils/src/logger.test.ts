@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   getHttpRequestInLogMessage,
   getHttpRequestLogLevel,
   getHttpRequestOutLogMessage,
+  logger,
+  registerLogSink,
 } from './logger';
 
 describe('logger helpers', () => {
@@ -43,5 +45,21 @@ describe('logger helpers', () => {
         status: 401,
       }),
     ).toBe('info');
+  });
+
+  it('forwards log entries to registered sinks', () => {
+    const sink = vi.fn();
+    const unregister = registerLogSink(sink);
+
+    logger.info('test_log', { requestId: 'req_123' });
+
+    expect(sink).toHaveBeenCalledWith({
+      data: { requestId: 'req_123' },
+      level: 'info',
+      message: 'test_log',
+      timestamp: expect.any(Number),
+    });
+
+    unregister();
   });
 });

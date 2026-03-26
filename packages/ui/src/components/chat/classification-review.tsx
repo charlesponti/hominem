@@ -15,31 +15,34 @@ export function ClassificationReview({
     <Dialog open onOpenChange={(open) => !open && onReject()}>
       <DialogContent
         showCloseButton={false}
-        className="top-auto bottom-0 max-w-xl translate-x-[-50%] translate-y-0 rounded-t-2xl px-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-6 sm:top-[50%] sm:bottom-auto sm:translate-y-[-50%] sm:rounded-md sm:pb-6"
+        className="top-auto bottom-0 max-w-xl translate-x-[-50%] translate-y-0 rounded-t-2xl px-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-6 sm:top-[50%] sm:bottom-auto sm:translate-y-[-50%] sm:rounded-2xl sm:pb-6"
       >
         <Stack gap="xs">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider font-mono">
+          <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-[var(--color-accent)]">
             Save as {proposedType.replace('_', ' ')}
           </p>
-          <DialogTitle id="cr-title" className="text-base font-medium text-foreground">
+          <DialogTitle
+            id="cr-title"
+            className="text-[16px] font-semibold text-[var(--color-text-primary)]"
+          >
             {proposedTitle}
           </DialogTitle>
         </Stack>
 
         {proposedChanges.length > 0 && (
-          <Stack as="ul" className="text-sm text-muted-foreground" gap="xs">
+          <Stack as="ul" className="text-[13px] text-[var(--color-text-secondary)]" gap="xs">
             {proposedChanges.map((change: string, i: number) => (
               // eslint-disable-next-line react/no-array-index-key
               <li key={i} className="flex items-start gap-2">
-                <span className="mt-0.5 shrink-0 opacity-40">—</span>
+                <span className="mt-0.5 shrink-0 text-[var(--color-accent)]">•</span>
                 <span>{change}</span>
               </li>
             ))}
           </Stack>
         )}
 
-        <div className="rounded border border-border bg-muted p-3 max-h-40 overflow-y-auto">
-          <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">
+        <div className="max-h-40 overflow-y-auto rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-inset)] p-3.5">
+          <pre className="whitespace-pre-wrap font-mono text-[12px] leading-relaxed text-[var(--color-text-secondary)]">
             {previewContent}
           </pre>
         </div>
@@ -48,7 +51,7 @@ export function ClassificationReview({
           <Button type="button" variant="primary" onClick={onAccept} className="flex-1">
             Save Note
           </Button>
-          <Button type="button" variant="outline" onClick={onReject}>
+          <Button type="button" variant="ghost" onClick={onReject}>
             Discard
           </Button>
         </Inline>

@@ -117,12 +117,12 @@ export function Chat({
   }, [isSearchOpen]);
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col bg-background text-foreground">
-      {/* Floating search — appears on Cmd+F, invisible otherwise */}
+    <div className="relative flex min-h-0 flex-1 flex-col bg-[var(--color-bg-base)] text-[var(--color-text-primary)]">
+      {/* Floating search — appears on Cmd+F */}
       {isSearchOpen && (
         <div className="pointer-events-none absolute inset-x-0 top-3 z-10 px-4">
-          <div className="pointer-events-auto flex w-full items-center gap-2.5 rounded-2xl border border-border-subtle bg-background/95 py-2.5 backdrop-blur-sm">
-            <Search className="size-4 shrink-0 text-text-tertiary" aria-hidden />
+          <div className="pointer-events-auto mx-auto flex w-full max-w-lg items-center gap-2.5 rounded-2xl border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)]/95 px-4 py-2.5 shadow-[var(--shadow-medium)] backdrop-blur-xl">
+            <Search className="size-4 shrink-0 text-[var(--color-text-tertiary)]" aria-hidden />
             <input
               ref={searchInputRef}
               type="text"
@@ -130,10 +130,10 @@ export function Chat({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search messages…"
               aria-label="Search messages"
-              className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-text-tertiary/50"
+              className="flex-1 bg-transparent text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]/50"
             />
             {searchQuery ? (
-              <span className="body-4 tabular-nums text-text-tertiary">
+              <span className="text-[11px] font-medium tabular-nums text-[var(--color-text-tertiary)]">
                 {filteredMessages.length}
               </span>
             ) : null}
@@ -141,7 +141,7 @@ export function Chat({
               type="button"
               onClick={closeSearch}
               aria-label="Close search"
-              className="text-text-tertiary transition-colors hover:text-foreground"
+              className="flex size-6 items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-emphasis-faint)] hover:text-[var(--color-text-primary)]"
             >
               <X className="size-3.5" />
             </button>
@@ -164,7 +164,7 @@ export function Chat({
       />
 
       {speechErrorMessage ? (
-        <div className="mb-3 w-full rounded-xl border border-destructive/30 bg-destructive/5 py-2 text-xs text-destructive/80">
+        <div className="mb-3 w-full rounded-xl border border-[var(--color-destructive)]/20 bg-[var(--color-destructive-subtle)] px-4 py-2.5 text-[13px] text-[var(--color-destructive)]">
           {speechErrorMessage}
         </div>
       ) : null}

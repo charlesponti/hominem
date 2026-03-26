@@ -274,7 +274,7 @@ const ComposerInput = memo(function ComposerInput({
       disabled={isPending}
       aria-label="Compose message or note"
       className={[
-        'body-1 w-full resize-none border-0 bg-transparent p-0 text-text-primary outline-none field-sizing-content overflow-y-auto placeholder:text-text-tertiary focus:outline-none',
+        'body-1 w-full resize-none border-0 bg-transparent p-0 text-[var(--color-text-primary)] outline-none field-sizing-content overflow-y-auto placeholder:text-[var(--color-text-tertiary)]/50 focus:outline-none',
         isDraftMode ? 'min-h-7 max-h-56' : 'min-h-6 max-h-40',
       ].join(' ')}
     />

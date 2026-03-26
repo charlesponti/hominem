@@ -1,11 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
+
 import CodeBlock from './code-block';
 
 const meta = {
   title: 'Components/AI Elements/CodeBlock',
   component: CodeBlock,
   tags: ['autodocs'],
+  args: {
+    isCopied: false,
+    onCopy: () => {},
+  },
   parameters: {
     docs: {
       description: {

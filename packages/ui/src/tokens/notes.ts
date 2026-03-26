@@ -41,17 +41,17 @@ export const notesStream = {
   /** Feed item hover/active background. */
   itemHover: colors['bg-surface'],
   /** Feed item border radius. */
-  itemRadius: 0,
+  itemRadius: 16,
   /** Feed item horizontal padding. */
-  itemPaddingX: spacing[5],
+  itemPaddingX: spacing[4],
   /** Feed item vertical padding. */
-  itemPaddingY: spacing[4],
+  itemPaddingY: spacing[3],
   /** Gap between feed items. */
   itemGap: 0,
   /** Icon badge size for chat vs note type indicator (px). */
-  typeIconSize: 14,
+  typeIconSize: 6,
   /** Divider inset aligns with the text column, not the icon edge. */
-  dividerInset: spacing[6],
+  dividerInset: 14,
 } as const;
 
 /**
@@ -99,17 +99,17 @@ export const notesSpacing = {
 
 export const notesSurfaces = {
   /** Page background — same as design-system base. */
-  page: colors['bg-elevated'],
+  page: colors['bg-base'],
   /** Slightly lifted surface for cards, panels, and feed containers. */
-  panel: colors['bg-base'],
+  panel: colors['bg-surface'],
   /** Hover state for interactive feed rows. */
-  panelHover: colors['bg-surface'],
+  panelHover: colors['bg-elevated'],
   /** Empty-state dashed-border panel. */
   emptyState: colors['bg-base'],
   /** Capture shell wrapper surface. */
-  capture: colors['bg-base'],
+  capture: colors['bg-surface'],
   /** Icon well inside empty states and session rows. */
-  iconWell: colors['bg-surface'],
+  iconWell: colors['bg-inset'],
 } as const;
 
 // ─── Border semantics ────────────────────────────────────────────────────────
@@ -135,20 +135,29 @@ export const notesForegrounds = {
   /** Tertiary text: dates, eyebrow labels, metadata. */
   tertiary: colors['text-tertiary'],
   /** Accent foreground: hashtag highlights. */
-  accent: colors['text-primary'],
+  accent: colors.accent,
   /** Disabled / placeholder. */
   disabled: colors['text-disabled'],
+} as const;
+
+export const notesStates = {
+  metadataOpacity: 0.56,
+  previewOpacity: 0.68,
+  noteIconOpacity: 0.3,
+  chatIconOpacity: 0.2,
+  chatIndicatorOpacity: 0.4,
+  rowPressedSurface: colors['accent-subtle'],
 } as const;
 
 // ─── Radius semantics ────────────────────────────────────────────────────────
 
 export const notesRadii = {
   /** Outer radius of major panels (capture shell, notes list wrapper). */
-  panel: 24,
+  panel: 20,
   /** Individual feed item — typically no visible radius (full bleed list). */
   feedItem: 0,
   /** Tag / badge pill. */
-  badge: radii.md,
+  badge: radii.sm,
   /** Icon well circle. */
   iconWell: radii.md,
   /** Action button pill shape. */
@@ -158,8 +167,8 @@ export const notesRadii = {
 /** React Native-safe notes radii. */
 export const notesRadiiNative = {
   ...notesRadii,
-  panel: 24,
-  badge: radiiNative.md,
+  panel: 20,
+  badge: radiiNative.sm,
   iconWell: radiiNative.md,
   actionButton: radiiNative.md,
 } as const;
@@ -208,6 +217,7 @@ export const notesTokens = {
   surfaces: notesSurfaces,
   borders: notesBorders,
   foregrounds: notesForegrounds,
+  states: notesStates,
   radii: notesRadii,
   typography: notesTypography,
 } as const;

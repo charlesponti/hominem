@@ -1,3 +1,4 @@
+import { notesTokensNative } from '@hominem/ui/tokens';
 import { useRouter } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
 import React, { memo, useCallback } from 'react';
@@ -103,12 +104,14 @@ const useStyles = makeStyles((t) =>
   StyleSheet.create({
     row: {
       backgroundColor: 'transparent',
+      borderRadius: notesTokensNative.stream.itemRadius,
+      marginHorizontal: t.spacing.xs_4,
     },
     rowInner: {
       gap: t.spacing.xs_4,
-      paddingHorizontal: t.spacing.m_16,
-      paddingTop: t.spacing.sm_12,
-      paddingBottom: t.spacing.sm_12,
+      paddingHorizontal: notesTokensNative.stream.itemPaddingX,
+      paddingTop: notesTokensNative.stream.itemPaddingY,
+      paddingBottom: notesTokensNative.stream.itemPaddingY,
     },
     topRow: {
       alignItems: 'center',
@@ -126,40 +129,42 @@ const useStyles = makeStyles((t) =>
     leading: {
       alignItems: 'center',
       borderCurve: 'continuous',
-      borderRadius: 8,
-      height: 18,
+      borderRadius: notesTokensNative.stream.typeIconSize,
+      height: notesTokensNative.stream.typeIconSize,
       justifyContent: 'center',
       marginTop: 1,
-      width: 18,
+      width: notesTokensNative.stream.typeIconSize,
     },
     noteLeading: {
-      backgroundColor: 'transparent',
+      backgroundColor: t.colors.accent,
     },
     chatLeading: {
-      backgroundColor: 'transparent',
+      backgroundColor: t.colors['text-tertiary'],
+      opacity: notesTokensNative.states.chatIndicatorOpacity,
     },
     title: {
       color: t.colors.foreground,
       flex: 1,
       fontWeight: '600',
-      fontSize: 17,
-      letterSpacing: -0.28,
-      lineHeight: 21,
+      fontSize: 15,
+      letterSpacing: -0.2,
+      lineHeight: 20,
     },
     metadata: {
       color: t.colors['text-tertiary'],
-      fontSize: 10,
-      lineHeight: 12,
-      opacity: 0.42,
+      fontSize: 11,
+      lineHeight: 13,
+      opacity: notesTokensNative.states.metadataOpacity,
       paddingLeft: t.spacing.xs_4,
       textAlign: 'right',
+      fontVariant: ['tabular-nums'],
     },
     preview: {
       color: t.colors['text-secondary'],
       fontSize: 13,
-      lineHeight: 17,
-      opacity: 0.72,
-      paddingLeft: 26, // token-audit-ignore: calculated = icon(18) + leadingRow gap(8)
+      lineHeight: 18,
+      opacity: notesTokensNative.states.previewOpacity,
+      paddingLeft: notesTokensNative.stream.dividerInset,
       paddingRight: t.spacing.ml_24,
       paddingTop: 1,
     },
@@ -168,15 +173,15 @@ const useStyles = makeStyles((t) =>
       textAlign: 'center',
     },
     noteIcon: {
-      color: t.colors.foreground,
-      opacity: 0.18,
+      color: t.colors.accent,
+      opacity: notesTokensNative.states.noteIconOpacity,
     },
     chatIcon: {
-      color: t.colors['text-secondary'],
-      opacity: 0.16,
+      color: t.colors['text-tertiary'],
+      opacity: notesTokensNative.states.chatIconOpacity,
     },
     pressed: {
-      backgroundColor: 'rgba(15, 23, 42, 0.03)',
+      backgroundColor: notesTokensNative.states.rowPressedSurface,
     },
   }),
 );

@@ -1,41 +1,62 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { cn } from '../../lib/utils';
 
+const phrases = ['Thinking', 'Considering', 'Composing', 'Reflecting', 'Reasoning'];
+
 export function ChatThinkingIndicator() {
-  const [phase, setPhase] = useState(0);
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [dots, setDots] = useState('');
+  const orbRef = useRef<HTMLDivElement>(null);
 
+  // Rotate phrases every 2.5s
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setPhase((current) => (current + 1) % 3);
-    }, 240);
+    const phraseTimer = window.setInterval(() => {
+      setPhraseIndex((i) => (i + 1) % phrases.length);
+    }, 2500);
+    return () => window.clearInterval(phraseTimer);
+  }, []);
 
-    return () => window.clearInterval(timer);
+  // Animate dots
+  useEffect(() => {
+    const dotTimer = window.setInterval(() => {
+      setDots((d) => (d.length >= 3 ? '' : d + '.'));
+    }, 400);
+    return () => window.clearInterval(dotTimer);
   }, []);
 
   return (
-    <div className="w-full px-4 py-3">
-      <div className="flex items-center gap-2">
-        <span
-          className={cn('h-2 w-2 rounded-full bg-accent transition-opacity', {
-            'opacity-100': phase === 0,
-            'opacity-30': phase !== 0,
-          })}
+    <div className="flex items-center gap-3 px-1 py-4">
+      {/* Breathing orb — the soul of the thinking state */}
+      <div className="relative flex items-center justify-center">
+        {/* Outer ambient glow */}
+        <div
+          className="absolute size-8 rounded-full bg-[var(--color-accent)]/10 void-anim-thinking"
+          style={{ animationDuration: '2.5s' }}
         />
-        <span
-          className={cn('h-2 w-2 rounded-full bg-accent transition-opacity', {
-            'opacity-100': phase === 1,
-            'opacity-30': phase !== 1,
-          })}
-        />
-        <span
-          className={cn('h-2 w-2 rounded-full bg-accent transition-opacity', {
-            'opacity-100': phase === 2,
-            'opacity-30': phase !== 2,
-          })}
-        />
-        <span className="text-xs text-text-tertiary">Thinking...</span>
+        {/* Inner orb */}
+        <div
+          ref={orbRef}
+          className={cn(
+            'relative size-5 rounded-full',
+            'bg-gradient-to-br from-[var(--color-accent)] to-[#C4956A]',
+            'shadow-[0_0_12px_rgba(212,165,116,0.3)]',
+            'void-anim-thinking',
+          )}
+        >
+          {/* Specular highlight */}
+          <div className="absolute left-1 top-0.5 size-1.5 rounded-full bg-white/30" />
+        </div>
       </div>
+
+      {/* Phrase with crossfade */}
+      <span
+        key={phraseIndex}
+        className="text-[13px] font-medium text-[var(--color-text-tertiary)] void-anim-enter"
+      >
+        {phrases[phraseIndex]}
+        {dots}
+      </span>
     </div>
   );
 }

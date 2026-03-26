@@ -71,12 +71,17 @@ function DesktopNavLink({ item }: { item: NavItem }) {
       prefetch="intent"
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150',
-        isActive ? 'text-accent' : 'text-text-secondary hover:text-text-primary',
+        'relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors duration-150',
+        isActive
+          ? 'text-[var(--color-accent)]'
+          : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]',
       )}
     >
       {item.icon && <item.icon className="size-4 shrink-0" aria-hidden="true" />}
       <span>{item.title}</span>
+      {isActive && (
+        <span className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-[var(--color-accent)]" />
+      )}
     </Link>
   );
 }
@@ -85,7 +90,7 @@ function DesktopNav({ navItems }: { navItems: NavItem[] }) {
   const onLogoutClick = useLogout();
 
   return (
-    <div className="hidden items-center gap-1 md:flex">
+    <div className="hidden items-center gap-0.5 md:flex">
       {navItems.length > 0 ? (
         <nav role="navigation" aria-label="Main" className="flex items-center">
           {navItems.map((item) => (
@@ -94,13 +99,15 @@ function DesktopNav({ navItems }: { navItems: NavItem[] }) {
         </nav>
       ) : null}
 
+      <div className="ml-1 h-5 w-px bg-[var(--color-border-subtle)]" />
+
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="icon"
             aria-label="Account and settings"
-            className="text-text-tertiary hover:text-text-primary"
+            className="ml-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
           >
             <Settings className="size-4" aria-hidden="true" />
           </Button>
@@ -133,12 +140,12 @@ function MobileTabItem({ item }: { item: NavItem }) {
         prefetch="intent"
         aria-current={isActive ? 'page' : undefined}
         className={cn(
-          'flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 transition-colors duration-150',
-          isActive ? 'text-accent' : 'text-text-tertiary',
+          'flex h-full min-h-11 w-full flex-col items-center justify-center gap-0.5 transition-colors duration-150',
+          isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-tertiary)]',
         )}
       >
-        {item.icon && <item.icon className="size-6 shrink-0" aria-hidden="true" />}
-        <span className="text-[11px] font-medium leading-none">{item.title}</span>
+        {item.icon && <item.icon className="size-5 shrink-0" aria-hidden="true" />}
+        <span className="text-[10px] font-medium leading-none">{item.title}</span>
       </Link>
     </li>
   );
@@ -149,10 +156,10 @@ function MobileTabBar({ navItems }: { navItems: NavItem[] }) {
     <nav
       role="navigation"
       aria-label="Main"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border-subtle bg-background/95 supports-backdrop-filter:bg-background/85 supports-backdrop-filter:backdrop-blur-md md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)]/95 supports-backdrop-filter:bg-[var(--color-bg-elevated)]/80 supports-backdrop-filter:backdrop-blur-xl md:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <ul role="list" className="mx-auto flex h-14 max-w-200 list-none px-2 py-1">
+      <ul role="list" className="mx-auto flex h-12 max-w-200 list-none px-2">
         {navItems.map((item) => (
           <MobileTabItem key={item.url} item={item} />
         ))}
@@ -167,7 +174,14 @@ function SignInButton() {
   const onSignInClick = useCallback(() => {
     window.location.href = '/auth';
   }, []);
-  return <Button onClick={onSignInClick}>Sign in</Button>;
+  return (
+    <Button
+      onClick={onSignInClick}
+      className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white shadow-[0_1px_6px_rgba(212,165,116,0.2)] transition-all hover:shadow-[0_2px_10px_rgba(212,165,116,0.3)]"
+    >
+      Sign in
+    </Button>
+  );
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
@@ -181,26 +195,26 @@ export function Header({ brandIcon, navItems = [] }: HeaderProps) {
     <>
       <a
         href="#main-content"
-        className="absolute left-4 top-0 z-9999 -translate-y-full rounded-b-md bg-foreground px-4 py-2 text-sm font-semibold text-background no-underline transition-transform focus:translate-y-0"
+        className="absolute left-4 top-0 z-9999 -translate-y-full rounded-b-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-white no-underline transition-transform focus:translate-y-0"
       >
         Skip to main content
       </a>
 
       <header
         role="banner"
-        className="fixed left-0 top-0 z-50 w-full border-b border-border-subtle bg-background/95 supports-backdrop-filter:bg-background/85 supports-backdrop-filter:backdrop-blur-md"
+        className="fixed left-0 top-0 z-50 w-full border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-base)]/95 supports-backdrop-filter:bg-[var(--color-bg-base)]/80 supports-backdrop-filter:backdrop-blur-xl"
         style={{
           transform: scrolledDown ? 'translateY(-100%)' : 'translateY(0)',
           transition: 'transform 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
           paddingRight: 'var(--removed-body-scroll-bar-size, 0px)',
         }}
       >
-        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6 md:h-16">
+        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6 md:h-14">
           <Link
             to="/"
             prefetch="intent"
-            aria-label={`home`}
-            className="flex items-center gap-2 text-text-primary"
+            aria-label="home"
+            className="flex items-center gap-2 text-[var(--color-text-primary)]"
           >
             {brandIcon ? brandIcon : null}
           </Link>

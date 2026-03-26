@@ -145,21 +145,20 @@ const theme = createTheme({
       color: 'text-secondary',
     },
     shadow: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.35,
-      shadowRadius: 8,
+      shadowColor: '#1c1917',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 3,
     },
   },
 });
 
 const Shadows = {
-  low: { ...shadowsNative.low, shadowColor: theme.colors.black },
-  medium: { ...shadowsNative.medium, shadowColor: theme.colors.black },
-  high: { ...shadowsNative.high, shadowColor: theme.colors.black },
+  ...shadowsNative,
   dark: {
-    shadowColor: theme.colors.black,
+    shadowColor: '#1c1917',
     shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
     shadowRadius: 0,
   },
 };

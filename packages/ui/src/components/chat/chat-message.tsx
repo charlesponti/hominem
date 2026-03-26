@@ -27,10 +27,10 @@ import {
   type ReactNode,
 } from 'react';
 
-import { contentWidths } from '../../tokens';
 import { playEnterRow, reducedMotion } from '../../lib/gsap/sequences';
 import { useMessageEdit } from '../../lib/hooks/use-message-edit';
 import { cn, copyToClipboard } from '../../lib/utils';
+import { contentWidths } from '../../tokens';
 import type { ExtendedMessage } from '../../types/chat';
 import { MarkdownContent, Reasoning, Tool, ToolInput } from '../ai-elements';
 import { Inline, Stack } from '../layout';
@@ -62,7 +62,7 @@ function Message({
     <div
       data-role={from}
       className={cn(
-        'flex w-full py-2',
+        'flex w-full',
         isSystem ? 'justify-center' : isUser ? 'justify-end' : 'justify-start',
         className,
       )}
@@ -87,7 +87,12 @@ function MessageContent({
   width?: 'transcript' | 'bubble' | 'full';
   style?: CSSProperties;
 } & HTMLAttributes<HTMLDivElement>) {
-  const maxWidth = width === 'bubble' ? contentWidths.bubble : width === 'transcript' ? contentWidths.transcript : undefined;
+  const maxWidth =
+    width === 'bubble'
+      ? contentWidths.bubble
+      : width === 'transcript'
+        ? contentWidths.transcript
+        : undefined;
 
   return (
     <div
@@ -99,24 +104,6 @@ function MessageContent({
         className,
       )}
       style={{ ...style, ...(maxWidth ? { maxWidth } : undefined) }}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-}
-
-function MessageAnnotations({
-  children,
-  className,
-  ...props
-}: {
-  children: ReactNode;
-  className?: string;
-} & HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn('mt-2 flex flex-wrap gap-1 body-4 text-text-tertiary', className)}
       {...props}
     >
       {children}
@@ -160,8 +147,9 @@ export const ChatMessage = memo(function ChatMessage({
   useEffect(() => {
     if (!rowRef.current) return;
     if (reducedMotion()) return;
-    playEnterRow(rowRef.current, 0);
-  }, []);
+    // User messages pop in, assistant messages slide up smoothly
+    playEnterRow(rowRef.current, isUser ? 0 : 0.02);
+  }, [isUser]);
 
   const handleCopyMessage = async () => {
     const success = await copyToClipboard(message.content || '');
@@ -199,7 +187,7 @@ export const ChatMessage = memo(function ChatMessage({
   return (
     <div
       ref={rowRef}
-      className="group py-2"
+      className="group relative"
       role="article"
       aria-label={`${isUser ? 'Your' : 'Message'}${timestamp ? ` from ${timestamp}` : ''}`}
     >
@@ -207,16 +195,23 @@ export const ChatMessage = memo(function ChatMessage({
         <MessageContent
           align={isUser ? 'end' : 'start'}
           width={isUser ? 'bubble' : 'transcript'}
-          className="gap-3"
+          className="gap-1"
         >
+          {/* ── Reasoning (assistant only) ─────────────────────────────── */}
           {!isUser && hasReasoning && (
-            <Reasoning className="border-l-2 border-default py-1 pl-4 my-2 text-text-tertiary">
-              {message.reasoning}
-            </Reasoning>
+            <div className="mb-1.5 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-inset)] px-3.5 py-2.5">
+              <span className="mb-1 block text-[10px] font-medium uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                Thinking
+              </span>
+              <Reasoning className="text-[13px] leading-relaxed text-[var(--color-text-secondary)]">
+                {message.reasoning}
+              </Reasoning>
+            </div>
           )}
 
+          {/* ── Tool calls ─────────────────────────────────────────────── */}
           {hasToolCalls && (
-            <Stack gap="sm" className="w-full">
+            <Stack gap="sm" className="mb-1.5 w-full">
               {message.toolCalls!.map((toolCall: ChatMessageToolCall, index: number) => (
                 <Tool
                   key={toolCall.toolCallId || `tool-${index}`}
@@ -224,7 +219,7 @@ export const ChatMessage = memo(function ChatMessage({
                   status={toolCall.type === 'tool-call' ? 'running' : 'completed'}
                 >
                   <ToolInput
-                    className="my-1 overflow-x-auto bg-transparent text-xs text-text-secondary"
+                    className="my-0.5 overflow-x-auto bg-transparent font-mono text-[11px] leading-relaxed text-[var(--color-text-tertiary)]"
                     children={
                       toolCall.args && Object.keys(toolCall.args).length > 0
                         ? JSON.stringify(toolCall.args, null, 2)
@@ -236,16 +231,18 @@ export const ChatMessage = memo(function ChatMessage({
             </Stack>
           )}
 
+          {/* ── Error state ────────────────────────────────────────────── */}
           {isErrorMessage && (
-            <div className="flex items-center gap-2 py-0.5 text-sm text-destructive/60">
+            <div className="flex items-center gap-2 rounded-lg border border-[var(--color-destructive)]/20 bg-[var(--color-destructive-subtle)] px-3 py-2 text-sm text-[var(--color-destructive)]">
               <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
               <span>Failed to generate a response</span>
             </div>
           )}
 
+          {/* ── Edit mode (user only) ──────────────────────────────────── */}
           {!isErrorMessage && isEditing && isUser ? (
             <Form
-              className="flex w-full flex-col gap-3"
+              className="flex w-full flex-col gap-2.5"
               aria-label="Edit message"
               onSubmit={(event: FormEvent<HTMLFormElement>) => {
                 event.preventDefault();
@@ -257,7 +254,7 @@ export const ChatMessage = memo(function ChatMessage({
                 onChange={(event: ChangeEvent<HTMLTextAreaElement>) =>
                   setEditContent(event.target.value)
                 }
-                className="min-h-25 resize-none rounded-md border-default bg-background"
+                className="min-h-20 resize-none rounded-xl border-[var(--color-border-default)] bg-[var(--color-bg-inset)] px-3.5 py-2.5 text-sm focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)]/20"
                 autoFocus
                 aria-label="Message content"
                 aria-describedby="edit-instructions"
@@ -273,13 +270,8 @@ export const ChatMessage = memo(function ChatMessage({
                 Press Escape to cancel, or Ctrl+Enter to save
               </span>
               <Inline gap="sm" justify="end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={cancelEdit}
-                  aria-label="Cancel editing"
-                >
-                  <X className="mr-2 size-4" aria-hidden="true" />
+                <Button variant="ghost" size="sm" onClick={cancelEdit} aria-label="Cancel editing">
+                  <X className="mr-1.5 size-3.5" aria-hidden="true" />
                   Cancel
                 </Button>
                 <Button
@@ -288,7 +280,7 @@ export const ChatMessage = memo(function ChatMessage({
                   disabled={!canSave}
                   aria-label="Save edited message"
                 >
-                  <Save className="mr-2 size-4" aria-hidden="true" />
+                  <Save className="mr-1.5 size-3.5" aria-hidden="true" />
                   Save
                 </Button>
               </Inline>
@@ -298,11 +290,13 @@ export const ChatMessage = memo(function ChatMessage({
             hasContent && (
               <>
                 {isUser ? (
-                  <div className="inline-block max-w-136 rounded-2xl border border-subtle bg-emphasis-highest px-4 py-2 text-sm text-white">
+                  /* ── User bubble: warm amber with ambient glow ──── */
+                  <div className="inline-block max-w-136 rounded-2xl rounded-br-md bg-gradient-to-br from-[var(--color-accent)] to-[#C4956A] px-4 py-2.5 text-sm leading-relaxed text-white shadow-[0_2px_12px_rgba(212,165,116,0.2),0_1px_3px_rgba(28,25,23,0.06)]">
                     <MarkdownContent content={message.content} isStreaming={isStreaming} />
                   </div>
                 ) : (
-                  <div className="w-full text-foreground">
+                  /* ── Assistant: clean, full-width prose ─────────────── */
+                  <div className="w-full text-[var(--color-text-primary)] [&_p]:leading-[1.7] [&_p]:text-[15px]">
                     <MarkdownContent content={message.content} isStreaming={isStreaming} />
                   </div>
                 )}
@@ -310,8 +304,9 @@ export const ChatMessage = memo(function ChatMessage({
             )
           )}
 
+          {/* ── Debug panel ────────────────────────────────────────────── */}
           {showDebug && (
-            <div className="w-full rounded-md border border-subtle bg-surface py-2 font-mono text-[11px] leading-relaxed text-text-secondary">
+            <div className="mt-1.5 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-inset)] px-3 py-2 font-mono text-[10px] leading-relaxed text-[var(--color-text-tertiary)]">
               <div>ID: {message.id}</div>
               <div>Role: {message.role}</div>
               <div>Created: {message.createdAt}</div>
@@ -323,67 +318,72 @@ export const ChatMessage = memo(function ChatMessage({
             </div>
           )}
 
-          {timestamp && (
-            <MessageAnnotations
-              className={cn(
-                'mt-0.5 text-xs text-text-tertiary/70 opacity-0 transition-opacity group-hover:opacity-100',
-                {
-                  'justify-end': isUser,
-                  'justify-start': !isUser,
-                },
-              )}
-            >
-              <span title={message.createdAt}>{timestamp}</span>
-            </MessageAnnotations>
-          )}
-
+          {/* ── Inline action bar (hover) ──────────────────────────────── */}
           {!isStreaming && (
             <div
               className={cn(
-                'flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100',
-                {
-                  'justify-end': isUser,
-                  'justify-start': !isUser,
-                },
+                'flex items-center gap-0.5 pt-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100',
+                { 'justify-end': isUser, 'justify-start': !isUser },
               )}
             >
+              {/* Timestamp — always visible in the action row */}
+              {timestamp && (
+                <span
+                  className="mr-1.5 text-[11px] tabular-nums text-[var(--color-text-tertiary)]/60"
+                  title={message.createdAt}
+                >
+                  {timestamp}
+                </span>
+              )}
+
+              {/* Inline icon buttons — flat, no dropdown for primary actions */}
+              <button
+                type="button"
+                onClick={handleCopyMessage}
+                className="flex size-6 items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-emphasis-faint)] hover:text-[var(--color-text-primary)]"
+                aria-label={copied ? 'Copied' : 'Copy message'}
+              >
+                {copied ? (
+                  <Check className="size-3.5" aria-hidden="true" />
+                ) : (
+                  <Copy className="size-3.5" aria-hidden="true" />
+                )}
+              </button>
+
+              {isUser && onEdit && (
+                <button
+                  type="button"
+                  onClick={startEdit}
+                  className="flex size-6 items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-emphasis-faint)] hover:text-[var(--color-text-primary)]"
+                  aria-label="Edit message"
+                >
+                  <Edit2 className="size-3.5" aria-hidden="true" />
+                </button>
+              )}
+
+              {!isUser && onRegenerate && (
+                <button
+                  type="button"
+                  onClick={onRegenerate}
+                  className="flex size-6 items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-emphasis-faint)] hover:text-[var(--color-text-primary)]"
+                  aria-label="Regenerate"
+                >
+                  <RotateCcw className="size-3.5" aria-hidden="true" />
+                </button>
+              )}
+
+              {/* Overflow menu for less common actions */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-text-tertiary hover:text-foreground"
-                    aria-label="Message actions"
+                  <button
+                    type="button"
+                    className="flex size-6 items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-emphasis-faint)] hover:text-[var(--color-text-primary)]"
+                    aria-label="More actions"
                   >
                     <MoreVertical className="size-3.5" aria-hidden="true" />
-                  </Button>
+                  </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={isUser ? 'end' : 'start'}>
-                  <DropdownMenuItem onClick={handleCopyMessage}>
-                    {copied ? (
-                      <>
-                        <Check className="mr-2 size-3.5" aria-hidden="true" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="mr-2 size-3.5" aria-hidden="true" />
-                        Copy
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                  {isUser && onEdit && (
-                    <DropdownMenuItem onClick={startEdit}>
-                      <Edit2 className="mr-2 size-3.5" aria-hidden="true" />
-                      Edit
-                    </DropdownMenuItem>
-                  )}
-                  {!isUser && onRegenerate && (
-                    <DropdownMenuItem onClick={onRegenerate}>
-                      <RotateCcw className="mr-2 size-3.5" aria-hidden="true" />
-                      Regenerate
-                    </DropdownMenuItem>
-                  )}
                   {!isUser && onSpeak && (
                     <DropdownMenuItem onClick={() => onSpeak(message.id, message.content || '')}>
                       {isSpeechLoading ? (

@@ -322,7 +322,7 @@ const useStyles = makeStyles((t) =>
       minHeight: 56,
       borderRadius: t.borderRadii.md,
       borderWidth: 1,
-      borderColor: t.colors['border-focus'],
+      borderColor: t.colors['border-strong'],
       backgroundColor: t.colors['bg-surface'],
       alignItems: 'center',
       justifyContent: 'center',

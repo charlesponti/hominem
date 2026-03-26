@@ -3,13 +3,14 @@
  */
 
 import { NodeTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-node'
-import type { SpanProcessor } from '@opentelemetry/sdk-trace-base'
+import { AlwaysOnSampler, ParentBasedSampler, TraceIdRatioBasedSampler } from '@opentelemetry/sdk-trace-base'
 import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
 import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http'
 import { OTLPLogExporter } from '@opentelemetry/exporter-logs-otlp-http'
 import { LoggerProvider, BatchLogRecordProcessor } from '@opentelemetry/sdk-logs'
 import { context, propagation, trace, metrics, type Span } from '@opentelemetry/api'
+import { registerLogSink, type LogEntry, type LogValue } from '@hominem/utils/logger'
 import { CompressionAlgorithm } from '@opentelemetry/otlp-exporter-base'
 import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks'
 import { CompositePropagator, W3CTraceContextPropagator, W3CBaggagePropagator } from '@opentelemetry/core'
@@ -66,6 +67,7 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
 
   const tracerProvider = new NodeTracerProvider({
     resource,
+    sampler: createSampler(config.samplingRatio),
     spanProcessors: [new BatchSpanProcessor(traceExporter, {
       maxQueueSize: 2048,
       maxExportBatchSize: 512,
@@ -73,18 +75,6 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
       exportTimeoutMillis: 30000,
     })],
   })
-
-  // Sampling based on config
-  if (config.samplingRatio !== undefined && config.samplingRatio < 1.0) {
-    tracerProvider.addSpanProcessor({
-      forceFlush: async () => {},
-      shutdown: async () => {},
-      onStart: () => {},
-      onEnd: (_span) => {
-        // Apply sampling
-      },
-    } satisfies SpanProcessor)
-  }
 
   tracerProvider.register()
   trace.setGlobalTracerProvider(tracerProvider)
@@ -109,6 +99,7 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
 
   // Logs provider (optional, only if explicitly enabled)
   let loggerProvider: LoggerProvider | undefined
+  let unregisterLogSink: (() => void) | undefined
   if (process.env.OTEL_LOGS_EXPORTER !== 'none') {
     const logExporter = new OTLPLogExporter({
       url: `${otlpEndpoint}/v1/logs`,
@@ -126,6 +117,17 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
         exportTimeoutMillis: 30000,
       })
     )
+
+    const otelLogger = loggerProvider.getLogger(config.serviceName, config.serviceVersion)
+    unregisterLogSink = registerLogSink((entry) => {
+      otelLogger.emit({
+        attributes: getLogAttributes(entry),
+        body: entry.message,
+        severityNumber: getSeverityNumber(entry.level),
+        severityText: entry.level.toUpperCase(),
+        timestamp: entry.timestamp,
+      })
+    })
   }
 
   // Auto-instrumentations
@@ -136,12 +138,18 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
       new HttpInstrumentation({
         requestHook: (span, request) => {
           if ('headers' in request) {
-            span.setAttribute('http.request.headers', JSON.stringify(request.headers))
+            const headers = getSafeHeaders(request.headers, REQUEST_HEADER_ALLOWLIST)
+            if (headers !== undefined) {
+              span.setAttribute('http.request.headers', headers)
+            }
           }
         },
         responseHook: (span, response) => {
           if ('headers' in response) {
-            span.setAttribute('http.response.headers', JSON.stringify(response.headers))
+            const headers = getSafeHeaders(response.headers, RESPONSE_HEADER_ALLOWLIST)
+            if (headers !== undefined) {
+              span.setAttribute('http.response.headers', headers)
+            }
           }
         },
         applyCustomAttributesOnSpan: (span, _request, response) => {
@@ -165,6 +173,7 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
   // Return control interface
   return {
     async shutdown(): Promise<void> {
+      unregisterLogSink?.()
       await tracerProvider.shutdown()
       await meterProvider.shutdown()
       if (loggerProvider) {
@@ -179,6 +188,119 @@ export function initTelemetry(explicitConfig?: Partial<TelemetryConfig>): NodeTe
       }
     },
   }
+}
+
+const REQUEST_HEADER_ALLOWLIST = ['content-type', 'user-agent', 'x-request-id']
+const RESPONSE_HEADER_ALLOWLIST = ['content-type', 'x-request-id']
+
+function createSampler(samplingRatio?: number) {
+  if (samplingRatio === undefined || samplingRatio >= 1) {
+    return new AlwaysOnSampler()
+  }
+
+  if (samplingRatio <= 0) {
+    return new TraceIdRatioBasedSampler(0)
+  }
+
+  return new ParentBasedSampler({
+    root: new TraceIdRatioBasedSampler(samplingRatio),
+  })
+}
+
+function getSeverityNumber(level: LogEntry['level']) {
+  if (level === 'error') {
+    return 17
+  }
+
+  if (level === 'warn') {
+    return 13
+  }
+
+  if (level === 'info') {
+    return 9
+  }
+
+  return 5
+}
+
+function getLogAttributes(entry: LogEntry) {
+  if (entry.data === undefined) {
+    return {}
+  }
+
+  if (entry.data instanceof Error) {
+    return {
+      'exception.message': entry.data.message,
+      'exception.name': entry.data.name,
+      ...(entry.data.stack ? { 'exception.stacktrace': entry.data.stack } : {}),
+    }
+  }
+
+  const attributes: Record<string, LogValue> = {}
+  for (const [key, value] of Object.entries(entry.data)) {
+    const attributeValue = toLogValue(value)
+    if (attributeValue !== undefined) {
+      attributes[key] = attributeValue
+    }
+  }
+
+  return attributes
+}
+
+function toLogValue(value: boolean | number | string | null | undefined | Error | object): LogValue | undefined {
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value
+  }
+
+  if (value instanceof Error) {
+    return value.message
+  }
+
+  if (value === undefined || value === null) {
+    return undefined
+  }
+
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return String(value)
+  }
+}
+
+function getSafeHeaders(
+  headers: Record<string, string | string[] | undefined> | Headers,
+  allowlist: string[],
+) {
+  const safeHeaders: Record<string, string> = {}
+
+  for (const headerName of allowlist) {
+    const headerValue = readHeaderValue(headers, headerName)
+    if (headerValue !== undefined && headerValue !== '') {
+      safeHeaders[headerName] = headerValue
+    }
+  }
+
+  if (Object.keys(safeHeaders).length === 0) {
+    return undefined
+  }
+
+  return JSON.stringify(safeHeaders)
+}
+
+function readHeaderValue(
+  headers: Record<string, string | string[] | undefined> | Headers,
+  headerName: string,
+) {
+  if (headers instanceof Headers) {
+    return headers.get(headerName) ?? undefined
+  }
+
+  const directValue = headers[headerName] ?? headers[headerName.toLowerCase()]
+  if (Array.isArray(directValue)) {
+    return directValue.join(', ')
+  }
+
+  return directValue
 }
 
 /**

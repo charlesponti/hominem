@@ -27,8 +27,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           name: WEB_BRAND.manifest.name,
           short_name: WEB_BRAND.manifest.shortName,
           description: WEB_BRAND.manifest.description,
-          theme_color: '#000000',
-          background_color: '#ffffff',
+          theme_color: '#D4A574',
+          background_color: '#fafaf9',
           display: 'standalone',
           start_url: '/',
           icons: [

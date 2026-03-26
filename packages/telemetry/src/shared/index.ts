@@ -61,8 +61,10 @@ export function getTelemetryConfig(explicit?: Partial<TelemetryConfig>): Telemet
     otlpEndpoint: explicit?.otlpEndpoint || process.env.OTEL_EXPORTER_OTLP_ENDPOINT || DEFAULT_OTLP_ENDPOINT,
     otlpProtocol: explicit?.otlpProtocol || process.env.OTEL_EXPORTER_OTLP_PROTOCOL || 'http/protobuf',
     samplingRatio: explicit?.samplingRatio || parseFloat(process.env.OTEL_TRACES_SAMPLER_ARG || '1.0'),
-    attributes: parseAttributes(process.env.OTEL_RESOURCE_ATTRIBUTES),
-    ...explicit?.attributes,
+    attributes: {
+      ...parseAttributes(process.env.OTEL_RESOURCE_ATTRIBUTES),
+      ...explicit?.attributes,
+    },
   }
 }
 

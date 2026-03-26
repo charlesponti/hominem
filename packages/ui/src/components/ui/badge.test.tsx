@@ -7,6 +7,6 @@ describe('Badge', () => {
 
     const badge = screen.getByText('Label');
 
-    expect(badge.className).toContain('rounded-md');
+    expect(badge.className).toContain('rounded-sm');
   });
 });

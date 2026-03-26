@@ -67,27 +67,29 @@ export function PasskeyEnrollmentBanner({ hasPasskeys, onEnroll }: PasskeyEnroll
   return (
     <div
       role="banner"
-      className="flex items-center gap-3 border border-border bg-muted px-4 py-3 text-sm"
+      className="flex items-center gap-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-accent-subtle)] px-4 py-3 text-[13px]"
     >
-      <KeyRound className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden />
-      <span className="grow text-muted-foreground">
+      <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)]/15">
+        <KeyRound className="size-3.5 text-[var(--color-accent)]" aria-hidden />
+      </div>
+      <span className="grow text-[var(--color-text-secondary)]">
         Sign in faster with a passkey — no password needed.
       </span>
       <button
         type="button"
         onClick={handleEnroll}
         disabled={enrolling}
-        className="shrink-0 font-medium text-foreground underline-offset-2 hover:underline disabled:opacity-50"
+        className="shrink-0 font-medium text-[var(--color-accent)] underline-offset-2 transition-colors hover:underline disabled:opacity-50"
       >
-        {enrolling ? 'Adding...' : 'Add passkey'}
+        {enrolling ? 'Adding…' : 'Add passkey'}
       </button>
       <button
         type="button"
         onClick={dismiss}
         aria-label="Dismiss passkey prompt"
-        className="shrink-0 text-muted-foreground hover:text-foreground"
+        className="flex size-6 shrink-0 items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-emphasis-faint)] hover:text-[var(--color-text-primary)]"
       >
-        <X className="w-4 h-4" aria-hidden />
+        <X className="size-3.5" aria-hidden />
       </button>
     </div>
   );

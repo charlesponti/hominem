@@ -4,13 +4,18 @@ import * as React from 'react';
 import { cn } from '../../lib/utils';
 
 const alertVariants = cva(
-  'relative w-full rounded-md border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current',
+  'relative w-full rounded-lg border px-4 py-3 text-sm grid has-[>svg]:grid-cols-[calc(var(--spacing)*4)_1fr] grid-cols-[0_1fr] has-[>svg]:gap-x-3 gap-y-0.5 items-start [&>svg]:size-4 [&>svg]:translate-y-0.5 [&>svg]:text-current',
   {
     variants: {
       variant: {
-        default: 'bg-card text-card-foreground',
+        default:
+          'bg-[var(--color-bg-surface)] text-[var(--color-text-primary)] border-[var(--color-border-subtle)]',
         destructive:
-          'text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90',
+          'bg-[var(--color-destructive-subtle)] text-[var(--color-destructive)] border-[var(--color-destructive)]/15 [&>svg]:text-current *:data-[slot=alert-description]:text-[var(--color-destructive)]/80',
+        warning:
+          'bg-[var(--color-warning)]/8 text-[var(--color-warning)] border-[var(--color-warning)]/15 [&>svg]:text-current',
+        success:
+          'bg-[var(--color-success)]/8 text-[var(--color-success)] border-[var(--color-success)]/15 [&>svg]:text-current',
       },
     },
     defaultVariants: {

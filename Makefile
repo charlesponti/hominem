@@ -13,7 +13,7 @@ DEV_DATABASE_URL ?= postgres://postgres:postgres@localhost:5434/hominem
 TEST_DATABASE_URL ?= postgres://postgres:postgres@localhost:4433/hominem-test
 
 # Phony targets
-.PHONY: install build test lint typecheck check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db test-db-restart test-db-status docker-up docker-up-full docker-down docker-test-up docker-test-down auth-test-up auth-test-down auth-test-status storybook storybook-test
+.PHONY: install build test lint typecheck check clean reset all dev dev-setup dev-up dev-down dev-reset dev-status db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db test-db-restart test-db-status docker-up docker-up-observability docker-up-full docker-down docker-test-up docker-test-down auth-test-up auth-test-down auth-test-status storybook storybook-test
 
 # Start the mobile dev server (Expo dev client, dev variant)
 dev:
@@ -29,21 +29,21 @@ dev-setup: install dev-up db-migrate-all dev-status
 
 # Start required local infrastructure (redis + dev db + test db)
 dev-up:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d redis db test-db
+	$(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml up -d redis db test-db
 
 # Stop local development infrastructure and remove containers
 dev-down:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down
+	$(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml down
 
 # Reset local development infrastructure including volumes, then recreate + migrate
 dev-reset:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down -v
+	$(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml down -v
 	$(MAKE) dev-up
 	$(MAKE) db-migrate-all
 
 # Show local infrastructure status
 dev-status:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps
+	$(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml ps
 
 # Run migrations against the local development database
 db-migrate:
@@ -159,11 +159,11 @@ auth-test-up:
 	@echo "Auth test infra ready (db + test-db + redis)"
 
 auth-test-down:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml stop redis db test-db
+	$(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml stop redis db test-db
 	@echo "Auth test infra stopped"
 
 auth-test-status:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml ps redis db test-db
+	$(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml ps redis db test-db
 
 
 # Database Operations Help
@@ -195,13 +195,16 @@ help-db:
 
 # Docker compose targets
 docker-up:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d
+	$(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml up -d
+
+docker-up-observability:
+	$(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/observability.yml up -d
 
 docker-up-full:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml up -d
+	$(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml -f infra/docker/compose/observability.yml up -d
 
 docker-down:
-	cd docker && $(DOCKER_COMPOSE) -f compose/base.yml -f compose/dev.yml down -v
+	$(DOCKER_COMPOSE) -f infra/docker/compose/base.yml -f infra/docker/compose/dev.yml -f infra/docker/compose/observability.yml down -v
 
 # Run unified Storybook (all components at port 6006)
 storybook:

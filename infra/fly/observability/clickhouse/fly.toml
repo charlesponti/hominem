@@ -1,0 +1,32 @@
+app = "hominem-clickhouse"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT = "1"
+  HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE = "default"
+
+[[mounts]]
+  source = "clickhouse_data"
+  destination = "/var/lib/clickhouse"
+
+[[services]]
+  internal_port = 8123
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 8123
+
+[[services]]
+  internal_port = 9000
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 9000
+
+[vm]
+  cpu_kind = "shared"
+  cpus = 2
+  memory = "4gb"

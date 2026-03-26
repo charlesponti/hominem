@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: theme.borderRadii.md,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(28,25,23,0.4)',
   },
   captureButton: {
     width: 72,

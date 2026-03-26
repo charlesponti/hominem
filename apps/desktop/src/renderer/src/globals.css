@@ -1,55 +1,9 @@
 @import '@hominem/ui/styles/globals.css';
 @import '@hominem/ui/styles/animations.css';
 
-:root {
-  --background: #0f1113;
-  --surface: #1a1d21;
-  --surface-elevated: #23272c;
-  --surface-overlay: #2d3238;
-  --foreground: #e7eaee;
-  --foreground-secondary: rgba(231, 234, 238, 0.55);
-  --foreground-tertiary: rgba(231, 234, 238, 0.4);
-  --foreground-disabled: rgba(231, 234, 238, 0.25);
-  --border: rgba(231, 234, 238, 0.08);
-  --border-strong: rgba(231, 234, 238, 0.45);
-  --destructive: #f85149;
-  --success: #3fb950;
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', monospace;
-  --text-large-title-size: 34px;
-  --text-large-title-line-height: 1.2;
-  --text-large-title-letter-spacing: 0.37px;
-  --text-title-1-size: 28px;
-  --text-title-1-line-height: 1.21;
-  --text-title-1-letter-spacing: 0.36px;
-  --text-title-2-size: 22px;
-  --text-title-2-line-height: 1.27;
-  --text-title-2-letter-spacing: 0.35px;
-  --text-body-size: 17px;
-  --text-body-line-height: 1.29;
-  --text-body-letter-spacing: -0.41px;
-  --text-subheading-size: 15px;
-  --text-subheading-line-height: 1.33;
-  --text-subheading-letter-spacing: -0.24px;
-  --text-footnote-size: 13px;
-  --text-footnote-line-height: 1.38;
-  --text-footnote-letter-spacing: -0.08px;
-  --measure: 65ch;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
-  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-3: 0 12px 40px rgba(0, 0, 0, 0.15);
-  --ease-default: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --duration-fast: 150ms;
-  --duration-default: 220ms;
-}
+/* Desktop app: dark mode by default.
+ * All color tokens come from the shared design system via data-theme="dark".
+ * No local color overrides — only layout additions. */
 
 html,
 body,
@@ -60,10 +14,9 @@ body,
 
 html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  color-scheme: dark;
-  font-family: var(--font-sans);
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-primary);
 }
 
 body {
@@ -77,127 +30,130 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--foreground);
+  outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
+
+/* ── Desktop shell layout ───────────────────────────────────────────────── */
 
 .desktop-shell {
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--background);
+  background: var(--color-bg-base);
 }
 
 .desktop-shell__frame {
-  width: min(1000px, calc(100% - var(--space-7)));
+  width: min(1000px, calc(100% - var(--spacing-7)));
   margin: 0 auto;
-  padding: var(--space-7) 0 var(--space-8);
+  padding: var(--spacing-7) 0 var(--spacing-8);
 }
 
 .desktop-shell__topbar,
 .desktop-shell__hero,
 .desktop-shell__panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
 }
 
 .desktop-shell__topbar {
   @apply rounded-md;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-5);
+  gap: var(--spacing-4);
+  padding: var(--spacing-5);
 }
 
 .desktop-shell__eyebrow,
 .desktop-shell__label {
   margin: 0;
-  color: var(--foreground-tertiary);
-  font-size: var(--text-footnote-size);
-  line-height: var(--text-footnote-line-height);
+  color: var(--color-text-tertiary);
+  font-size: 13px;
+  line-height: 1.38;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .desktop-shell__title {
-  margin: var(--space-2) 0 0;
-  color: var(--foreground);
-  font-size: var(--text-large-title-size);
+  margin: var(--spacing-2) 0 0;
+  color: var(--color-text-primary);
+  font-size: 34px;
   font-weight: 600;
-  line-height: var(--text-large-title-line-height);
-  letter-spacing: var(--text-large-title-letter-spacing);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
 }
 
 .desktop-shell__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--spacing-2);
 }
 
 .desktop-shell__button {
   @apply rounded-md;
   appearance: none;
-  border: 1px solid var(--border-strong);
-  background: var(--surface-elevated);
-  color: var(--foreground);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
   min-height: 44px;
-  padding: 0 var(--space-4);
+  padding: 0 var(--spacing-4);
   font: inherit;
-  font-size: var(--text-subheading-size);
-  line-height: var(--text-subheading-line-height);
-  letter-spacing: var(--text-subheading-letter-spacing);
+  font-size: 15px;
+  line-height: 1.33;
+  letter-spacing: -0.01em;
+  cursor: pointer;
   transition:
-    background-color var(--duration-fast) var(--ease-default),
-    box-shadow var(--duration-fast) var(--ease-default);
+    background-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .desktop-shell__button:hover {
-  background: var(--surface-overlay);
+  background: var(--color-bg-inset);
 }
 
 .desktop-shell__hero {
   @apply rounded-md;
   display: grid;
-  gap: var(--space-5);
-  margin-top: var(--space-6);
-  padding: var(--space-6);
+  gap: var(--spacing-5);
+  margin-top: var(--spacing-6);
+  padding: var(--spacing-6);
 }
 
 .desktop-shell__hero-copy,
 .desktop-shell__body {
-  max-width: var(--measure);
+  max-width: 65ch;
 }
 
 .desktop-shell__section-title,
 .desktop-shell__panel-title {
   margin: 0;
-  color: var(--foreground);
-  font-size: var(--text-title-2-size);
+  color: var(--color-text-primary);
+  font-size: 22px;
   font-weight: 600;
-  line-height: var(--text-title-2-line-height);
-  letter-spacing: var(--text-title-2-letter-spacing);
+  line-height: 1.27;
+  letter-spacing: -0.015em;
 }
 
 .desktop-shell__section-title {
-  margin-top: var(--space-3);
+  margin-top: var(--spacing-3);
 }
 
 .desktop-shell__body {
-  margin: var(--space-4) 0 0;
-  color: var(--foreground-secondary);
-  font-size: var(--text-body-size);
-  line-height: var(--text-body-line-height);
-  letter-spacing: var(--text-body-letter-spacing);
+  margin: var(--spacing-4) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 17px;
+  line-height: 1.29;
+  letter-spacing: 0;
 }
 
 .desktop-shell__status-list {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--spacing-4);
   margin: 0;
 }
 
 .desktop-shell__status-item {
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--color-border-default);
 }
 
 .desktop-shell__status-item:last-child {
@@ -206,35 +162,34 @@ body {
 }
 
 .desktop-shell__value {
-  margin: var(--space-2) 0 0;
-  color: var(--foreground);
-  font-size: var(--text-body-size);
+  margin: var(--spacing-2) 0 0;
+  color: var(--color-text-primary);
+  font-size: 17px;
   font-weight: 600;
-  line-height: var(--text-body-line-height);
-  letter-spacing: var(--text-body-letter-spacing);
+  line-height: 1.29;
 }
 
 .desktop-shell__grid {
   display: grid;
-  gap: var(--space-4);
-  margin-top: var(--space-6);
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-6);
 }
 
 .desktop-shell__panel {
   @apply rounded-md;
-  padding: var(--space-5);
+  padding: var(--spacing-5);
 }
 
 .desktop-shell__list {
-  margin: var(--space-4) 0 0;
+  margin: var(--spacing-4) 0 0;
   padding-left: 1.2em;
-  color: var(--foreground-secondary);
-  font-size: var(--text-body-size);
+  color: var(--color-text-secondary);
+  font-size: 17px;
   line-height: 1.5;
 }
 
 .desktop-shell__list li + li {
-  margin-top: var(--space-3);
+  margin-top: var(--spacing-3);
 }
 
 @media (min-width: 600px) {
@@ -266,58 +221,59 @@ body {
   }
 }
 
+/* ── Desktop auth layout ────────────────────────────────────────────────── */
+
 .desktop-auth {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: var(--space-6);
-  background: var(--background);
+  padding: var(--spacing-6);
+  background: var(--color-bg-base);
 }
 
 .desktop-auth__panel {
   @apply rounded-md;
   width: min(100%, 480px);
-  padding: var(--space-6);
-  border: 1px solid var(--border);
-  background: var(--surface);
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
 }
 
 .desktop-auth__title {
-  margin: var(--space-3) 0 0;
-  color: var(--foreground);
-  font-size: var(--text-title-1-size);
+  margin: var(--spacing-3) 0 0;
+  color: var(--color-text-primary);
+  font-size: 28px;
   font-weight: 600;
-  line-height: var(--text-title-1-line-height);
-  letter-spacing: var(--text-title-1-letter-spacing);
+  line-height: 1.21;
+  letter-spacing: -0.02em;
 }
 
 .desktop-auth__body {
-  margin: var(--space-4) 0 0;
-  color: var(--foreground-secondary);
-  font-size: var(--text-body-size);
-  line-height: var(--text-body-line-height);
-  letter-spacing: var(--text-body-letter-spacing);
-  max-width: var(--measure);
+  margin: var(--spacing-4) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 17px;
+  line-height: 1.29;
+  max-width: 65ch;
 }
 
 .desktop-auth__eyebrow {
   margin: 0;
-  color: var(--foreground-tertiary);
-  font-size: var(--text-footnote-size);
-  line-height: var(--text-footnote-line-height);
+  color: var(--color-text-tertiary);
+  font-size: 13px;
+  line-height: 1.38;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .desktop-auth__form {
-  margin-top: var(--space-5);
+  margin-top: var(--spacing-5);
 }
 
 .desktop-auth__field {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--spacing-2);
 }
 
 .desktop-auth__input {
@@ -325,23 +281,23 @@ body {
 }
 
 .desktop-auth__input--otp {
-  font-family: var(--font-mono);
+  font-family: var(--font-family-mono);
   letter-spacing: 0.18em;
 }
 
 .desktop-auth__actions {
   display: grid;
-  gap: var(--space-3);
-  margin-top: var(--space-5);
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-5);
 }
 
 .desktop-auth__error {
   @apply rounded-md;
-  margin-top: var(--space-4);
-  padding: var(--space-4);
-  border: 1px solid var(--border-strong);
-  color: var(--destructive);
-  background: var(--surface-elevated);
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border-strong);
+  color: var(--color-destructive);
+  background: var(--color-bg-elevated);
 }
 
 .desktop-auth__error p {
@@ -351,9 +307,10 @@ body {
 .desktop-auth__link {
   border: 0;
   padding: 0;
-  margin-top: var(--space-2);
+  margin-top: var(--spacing-2);
   background: transparent;
-  color: var(--foreground-secondary);
+  color: var(--color-text-secondary);
   font: inherit;
   text-decoration: underline;
+  cursor: pointer;
 }

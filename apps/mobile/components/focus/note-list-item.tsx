@@ -1,5 +1,5 @@
 import type { Note } from '@hominem/rpc/types';
-import { fontSizes } from '@hominem/ui/tokens';
+import { notesTokensNative } from '@hominem/ui/tokens';
 import { Link } from 'expo-router';
 import type { RelativePathString } from 'expo-router';
 import { memo, useCallback, useEffect, useRef } from 'react';
@@ -55,19 +55,20 @@ FocusDueDate.displayName = 'FocusDueDate';
 const useStyles = makeStyles((t) =>
   StyleSheet.create({
     container: {
-      backgroundColor: theme.colors.background,
-      borderRadius: t.borderRadii.md,
+      backgroundColor: 'transparent',
+      borderRadius: notesTokensNative.radii.panel,
       overflow: 'hidden',
+      marginHorizontal: t.spacing.xs_4,
     },
     itemContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: t.spacing.sm_12,
       paddingHorizontal: t.spacing.m_16,
-      borderRadius: t.borderRadii.md,
-      backgroundColor: theme.colors.background,
+      borderRadius: notesTokensNative.radii.panel,
+      backgroundColor: theme.colors['bg-surface'],
       borderWidth: 1,
-      borderColor: theme.colors['border-default'],
+      borderColor: theme.colors['border-subtle'],
       gap: t.spacing.sm_12,
     },
     focusInfoContainer: {
@@ -76,14 +77,16 @@ const useStyles = makeStyles((t) =>
     },
     title: {
       fontWeight: '600',
-      fontSize: fontSizes.sm,
+      fontSize: 15,
       lineHeight: 20,
+      letterSpacing: -0.2,
       color: theme.colors.foreground,
     },
     preview: {
-      fontSize: fontSizes.xs,
+      fontSize: 13,
       lineHeight: 18,
       color: theme.colors['text-secondary'],
+      opacity: notesTokensNative.states.previewOpacity,
     },
     itemRow: {
       flex: 1,
@@ -101,15 +104,15 @@ const useStyles = makeStyles((t) =>
       width: '100%',
     },
     icon: {
-      width: 36,
-      height: 36,
-      borderRadius: t.borderRadii.md,
+      width: 32,
+      height: 32,
+      borderRadius: notesTokensNative.radii.iconWell,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: theme.colors['border-default'],
-      backgroundColor: theme.colors['bg-surface'],
+      borderWidth: 0,
+      borderColor: 'transparent',
+      backgroundColor: theme.colors['bg-inset'],
     },
     leftAction: {
       position: 'absolute',
@@ -118,7 +121,7 @@ const useStyles = makeStyles((t) =>
       bottom: 0,
       justifyContent: 'center',
       alignItems: 'flex-start',
-      backgroundColor: theme.colors.muted,
+      backgroundColor: theme.colors.accent,
       paddingHorizontal: t.spacing.ml_24,
     },
     rightAction: {
@@ -132,9 +135,17 @@ const useStyles = makeStyles((t) =>
       paddingHorizontal: t.spacing.ml_24,
     },
     actionText: {
-      color: theme.colors.foreground,
-      fontWeight: 'bold',
+      fontWeight: '600',
       fontFamily: 'Geist Mono',
+      fontSize: 12,
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+    },
+    completeActionText: {
+      color: theme.colors['accent-foreground'],
+    },
+    deleteActionText: {
+      color: theme.colors['destructive-foreground'],
     },
   }),
 );
@@ -151,7 +162,7 @@ export const NoteListItem = ({
   const styles = useStyles();
   const translateX = useSharedValue(0);
   const itemHeight = useSharedValue(64);
-  const iconBackgroundColor = useSharedValue<string>(theme.colors.muted);
+  const iconBackgroundColor = useSharedValue<string>(theme.colors['bg-inset']);
   const iconName = useSharedValue<AppIconName>('check');
   const isMutating = useSharedValue(false);
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -173,7 +184,7 @@ export const NoteListItem = ({
 
   const resetErrorState = useCallback(() => {
     iconName.value = 'circle-check';
-    iconBackgroundColor.value = withTiming(theme.colors.muted, {
+    iconBackgroundColor.value = withTiming(theme.colors['bg-inset'], {
       duration: VOID_MOTION_DURATION_STANDARD,
     });
     isMutating.value = false;
@@ -268,7 +279,7 @@ export const NoteListItem = ({
           <FocusDueDate dueDate={dueDate} />
         </View>
         <Reanimated.View style={[styles.icon, iconStyle]}>
-          <AppIcon name={iconName.value} size={20} color={theme.colors.foreground} />
+          <AppIcon name={iconName.value} size={20} color={theme.colors['icon-primary']} />
         </Reanimated.View>
       </View>
     </Reanimated.View>
@@ -291,10 +302,10 @@ export const NoteListItem = ({
       style={[styles.container]}
     >
       <Reanimated.View style={[styles.leftAction, leftActionStyle]}>
-        <Text style={styles.actionText}>Complete</Text>
+        <Text style={[styles.actionText, styles.completeActionText]}>Complete</Text>
       </Reanimated.View>
       <Reanimated.View style={[styles.rightAction, rightActionStyle]}>
-        <Text style={styles.actionText}>Delete</Text>
+        <Text style={[styles.actionText, styles.deleteActionText]}>Delete</Text>
       </Reanimated.View>
       <ContextMenu.Root>
         <Link

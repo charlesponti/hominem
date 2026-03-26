@@ -11,6 +11,7 @@ type PinoInstance = ((
 };
 
 let pino: PinoInstance | null = null;
+const logSinks = new Set<LogSink>();
 
 // Only import and initialize in Node.js environment
 if (typeof process !== 'undefined' && process.versions && process.versions.node) {
@@ -44,6 +45,16 @@ export interface HttpRequestStartLogData {
 }
 
 export type LoggerLevel = 'debug' | 'error' | 'info' | 'warn';
+export type LogValue = boolean | number | string;
+
+export interface LogEntry {
+  data?: Error | object;
+  level: LoggerLevel;
+  message: string;
+  timestamp: number;
+}
+
+export type LogSink = (entry: LogEntry) => void;
 
 export function getHttpRequestLogLevel({ durationMs, status }: HttpRequestLogData): LoggerLevel {
   if (status >= 500) {
@@ -66,22 +77,14 @@ export function getHttpRequestOutLogMessage() {
 }
 
 export function logAtLevel(level: LoggerLevel, message: string, data?: Error | object) {
-  if (level === 'error') {
-    logger.error(message, data);
-    return;
-  }
+  writeLog(level, message, data);
+}
 
-  if (level === 'warn') {
-    logger.warn(message, data);
-    return;
-  }
-
-  if (level === 'debug') {
-    logger.debug(message, data);
-    return;
-  }
-
-  logger.info(message, data);
+export function registerLogSink(sink: LogSink) {
+  logSinks.add(sink);
+  return () => {
+    logSinks.delete(sink);
+  };
 }
 
 const transport =
@@ -120,15 +123,46 @@ const pinoLogger =
 
 export const logger = {
   info: (message: string, data?: object) => {
-    if (pinoLogger) pinoLogger.info(data, message);
+    writeLog('info', message, data);
   },
   error: (message: string, error?: Error | object) => {
-    if (pinoLogger) pinoLogger.error(error, message);
+    writeLog('error', message, error);
   },
   warn: (message: string, data?: object) => {
-    if (pinoLogger) pinoLogger.warn(data, message);
+    writeLog('warn', message, data);
   },
   debug: (message: string, data?: object) => {
-    if (pinoLogger) pinoLogger.debug(data, message);
+    writeLog('debug', message, data);
   },
 };
+
+function writeLog(level: LoggerLevel, message: string, data?: Error | object) {
+  if (pinoLogger) {
+    if (level === 'error') {
+      pinoLogger.error(data, message);
+    } else if (level === 'warn') {
+      pinoLogger.warn(data, message);
+    } else if (level === 'debug') {
+      pinoLogger.debug(data, message);
+    } else {
+      pinoLogger.info(data, message);
+    }
+  }
+
+  if (logSinks.size === 0) {
+    return;
+  }
+
+  const entry: LogEntry = {
+    ...(data !== undefined ? { data } : {}),
+    level,
+    message,
+    timestamp: Date.now(),
+  };
+
+  for (const sink of logSinks) {
+    try {
+      sink(entry);
+    } catch {}
+  }
+}

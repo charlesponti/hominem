@@ -1,0 +1,45 @@
+app = "hominem-api"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "../services/api/Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  API_URL = "https://api.ponti.io"
+  NOTES_URL = "https://app.ponti.io"
+  AI_PROVIDER = "openrouter"
+  AUTH_PASSKEY_RP_ID = "api.ponti.io"
+  AUTH_PASSKEY_ORIGIN = "https://api.ponti.io"
+  AUTH_COOKIE_DOMAIN = ".ponti.io"
+  PLAID_ENV = "production"
+  SEND_EMAILS = "true"
+  OTEL_SERVICE_NAME = "hominem-api"
+  OTEL_DEPLOYMENT_ENVIRONMENT = "production"
+  OTEL_EXPORTER_OTLP_PROTOCOL = "http/protobuf"
+  OTEL_TRACES_SAMPLER_ARG = "1.0"
+
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.http_checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "20s"
+    method = "get"
+    path = "/api/status"
+
+[vm]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1gb"
