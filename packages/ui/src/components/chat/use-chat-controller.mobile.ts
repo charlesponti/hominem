@@ -1,4 +1,5 @@
-import { useChatLifecycle } from '@hominem/chat-services/react';
+import { toSessionArtifactMessages } from '@hominem/chat-services';
+import { useChatSessionController } from '@hominem/chat-services/react';
 import type { ArtifactType } from '@hominem/chat-services/types';
 import { buildNoteProposal } from '@hominem/chat-services/ui';
 import { useApiClient } from '@hominem/rpc/react';
@@ -109,7 +110,7 @@ export function useChatController({
   }, [formattedMessages, uiState.searchQuery]);
 
   const proposalMessages = useMemo(
-    () => formattedMessages.map((message) => ({ role: message.role, content: message.message })),
+    () => toSessionArtifactMessages(formattedMessages, (message) => message.message),
     [formattedMessages],
   );
 
@@ -134,18 +135,12 @@ export function useChatController({
 
   // ─── Shared lifecycle ────────────────────────────────────────────────────────
 
-  const {
-    lifecycleState,
-    pendingReview,
-    resolvedSource,
-    canTransform,
-    statusCopy,
-    isReviewVisible,
-    handleTransform,
-    handleAcceptReview,
-    handleRejectReview,
-  } = useChatLifecycle({
-    messages: proposalMessages,
+  const sessionController = useChatSessionController({
+    messages: formattedMessages.map((message) => ({
+      id: message.id,
+      role: message.role,
+      content: message.message,
+    })),
     source,
     onTransform: async (_type: ArtifactType) => buildNoteProposal(proposalMessages),
     onAcceptReview: async (review) => {
@@ -165,6 +160,24 @@ export function useChatController({
         _phase === 'accept' ? 'Could not save note' : 'Could not prepare note review',
         'Please try again.',
       );
+    },
+    onArchive: async () => {
+      archiveChat();
+    },
+    onDeleteMessage: async (messageId) => {
+      await client.messages.delete({ messageId }).then(() => {
+        queryClient.invalidateQueries({ queryKey: services.chatKeys.messages(chatId) });
+      });
+    },
+    onSendMessage: async (message) => {
+      await sendChatMessage(message);
+    },
+    onUpdateMessage: async (messageId, content) => {
+      const updatedMessage = await client.messages.update({ messageId, content }).catch(() => null);
+
+      if (!updatedMessage) {
+        throw new Error('Could not update message');
+      }
     },
   });
 
@@ -193,8 +206,8 @@ export function useChatController({
   // ─── Platform-specific handlers ───────────────────────────────────────────────
 
   const handleArchiveChat = useCallback(() => {
-    archiveChat();
-  }, [archiveChat]);
+    void sessionController.handleArchive();
+  }, [sessionController]);
 
   const handleCopyMessage = useCallback((copiedMessage: ChatMessageItem) => {
     const text = copiedMessage.message;
@@ -220,36 +233,16 @@ export function useChatController({
 
   const handleRegenerate = useCallback(
     async (messageId: string) => {
-      const messageIndex = formattedMessages.findIndex((message) => message.id === messageId);
-      if (messageIndex === -1) return;
-
-      const previousUserMessage = [...formattedMessages]
-        .slice(0, messageIndex)
-        .reverse()
-        .find((message) => message.role === 'user' && message.message.trim().length > 0);
-
-      if (!previousUserMessage) return;
-
-      await client.messages.delete({ messageId }).catch(() => null);
-      await sendChatMessage(previousUserMessage.message);
+      await sessionController.handleRegenerateMessage(messageId);
     },
-    [client.messages, formattedMessages, sendChatMessage],
+    [sessionController],
   );
 
   const handleEditMessage = useCallback(
     async (messageId: string, content: string) => {
-      const trimmedContent = content.trim();
-      if (!trimmedContent) return;
-
-      const updatedMessage = await client.messages
-        .update({ messageId, content: trimmedContent })
-        .catch(() => null);
-
-      if (!updatedMessage) return;
-
-      await sendChatMessage(trimmedContent);
+      await sessionController.handleEditMessage(messageId, content);
     },
-    [client.messages, sendChatMessage],
+    [sessionController],
   );
 
   const handleShareMessage = useCallback(async (message: ChatMessageItem) => {
@@ -263,11 +256,9 @@ export function useChatController({
   const handleDeleteMessage = useCallback(
     (messageId: string) => {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      void client.messages.delete({ messageId }).then(() => {
-        queryClient.invalidateQueries({ queryKey: services.chatKeys.messages(chatId) });
-      });
+      void sessionController.handleDeleteMessage(messageId);
     },
-    [chatId, client.messages, queryClient, services.chatKeys],
+    [sessionController],
   );
 
   const handleSpeakMessage = useCallback(
@@ -305,12 +296,18 @@ export function useChatController({
       },
     ];
 
-    if (canTransform) {
+    if (sessionController.canTransform) {
       buttons.push(
-        { text: 'Transform to note', onPress: () => handleTransform('note') },
-        { text: 'Transform to task', onPress: () => handleTransform('task') },
-        { text: 'Transform to task list', onPress: () => handleTransform('task_list') },
-        { text: 'Transform to tracker', onPress: () => handleTransform('tracker') },
+        { text: 'Transform to note', onPress: () => sessionController.handleTransform('note') },
+        { text: 'Transform to task', onPress: () => sessionController.handleTransform('task') },
+        {
+          text: 'Transform to task list',
+          onPress: () => sessionController.handleTransform('task_list'),
+        },
+        {
+          text: 'Transform to tracker',
+          onPress: () => sessionController.handleTransform('tracker'),
+        },
       );
     }
 
@@ -324,20 +321,13 @@ export function useChatController({
     );
 
     Alert.alert('Conversation', undefined, buttons);
-  }, [
-    canTransform,
-    handleArchiveChat,
-    handleOpenSearch,
-    handleTransform,
-    isArchiving,
-    uiState.showDebug,
-  ]);
+  }, [handleArchiveChat, handleOpenSearch, isArchiving, sessionController, uiState.showDebug]);
 
   return {
     Markdown,
     chatSendStatus,
     displayMessages,
-    handleAcceptReview,
+    handleAcceptReview: sessionController.handleAcceptReview,
     handleArchiveChat,
     handleCloseSearch,
     handleCopyMessage,
@@ -346,20 +336,20 @@ export function useChatController({
     handleOpenMenu,
     handleOpenSearch,
     handleRegenerate,
-    handleRejectReview,
+    handleRejectReview: sessionController.handleRejectReview,
     handleSearchQueryChange,
     handleShareMessage,
     handleSpeakMessage,
     isMessagesLoading,
-    lifecycleState,
-    pendingReview,
-    resolvedSource,
+    lifecycleState: sessionController.lifecycleState,
+    pendingReview: sessionController.pendingReview,
+    resolvedSource: sessionController.resolvedSource,
     searchInputRef,
     searchQuery: uiState.searchQuery,
     showDebug: uiState.showDebug,
     showSearch: uiState.showSearch,
     speakingId,
-    statusCopy,
-    isReviewVisible,
+    statusCopy: sessionController.statusCopy,
+    isReviewVisible: sessionController.isReviewVisible,
   };
 }

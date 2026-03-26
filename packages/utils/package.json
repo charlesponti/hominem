@@ -21,7 +21,7 @@
     "./time": "./src/time.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bunx tsgo --noEmit",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
     "test": "vitest run --passWithNoTests",

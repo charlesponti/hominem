@@ -10,8 +10,8 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "test": "bash ../../scripts/with-test-env.sh vitest run",
+    "typecheck": "bunx tsgo --noEmit",
     "lint": "bunx oxlint ./src",
     "format": "bunx oxfmt ./src"
   },

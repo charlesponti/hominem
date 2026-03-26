@@ -164,6 +164,8 @@ function Button({
   children,
   disabled,
   isLoading = false,
+  onClick: _onClick,
+  onPress,
   size = 'md',
   style,
   textStyle,
@@ -173,12 +175,14 @@ function Button({
 }: NativeButtonProps) {
   const content = children ?? title;
   const isDisabled = disabled || isLoading;
+  void _onClick;
 
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: isLoading }}
       disabled={isDisabled}
+      onPress={onPress}
       style={({ pressed }) => [
         baseStyles.button,
         sizeStyles[size],

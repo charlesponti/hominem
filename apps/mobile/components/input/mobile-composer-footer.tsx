@@ -4,7 +4,7 @@ import { theme } from '~/theme';
 
 import AppIcon from '../ui/icon';
 import type { MobileWorkspaceContext } from '../workspace/mobile-workspace-config';
-import type { MobileComposerPresentation } from './mobile-composer-config';
+import type { MobileComposerPresentation } from './composer-config.mobile';
 
 interface MobileComposerFooterProps {
   activeContext: MobileWorkspaceContext;

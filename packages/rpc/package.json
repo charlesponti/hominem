@@ -38,8 +38,8 @@
     }
   },
   "scripts": {
-    "build": "bunx tsc --incremental",
-    "typecheck": "bunx tsc --noEmit --incremental"
+    "build": "bunx tsgo --incremental",
+    "typecheck": "bunx tsgo --noEmit --incremental"
   },
   "dependencies": {
     "@hominem/auth": "workspace:*",

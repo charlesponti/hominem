@@ -1,4 +1,4 @@
-import type { ChatMessage as RpcChatMessage } from '@hominem/rpc/types';
+import type { ChatMessageItem } from '@hominem/chat-services';
 import type React from 'react';
 
 export type ChatIconName =
@@ -28,16 +28,4 @@ export type MarkdownComponent = React.ComponentType<{
   style?: object;
 }>;
 
-export interface ChatMessageItem {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
-  message: string;
-  created_at: string;
-  chat_id: string;
-  profile_id: string;
-  focus_ids: string[] | null;
-  focus_items: Array<{ id: string; text: string }> | null;
-  reasoning?: string | null;
-  toolCalls: RpcChatMessage['toolCalls'];
-  isStreaming?: boolean;
-}
+export type { ChatMessageItem };

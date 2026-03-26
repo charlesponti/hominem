@@ -3,8 +3,8 @@ import React from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { FeatureErrorBoundary } from '~/components/error-boundary';
+import { MobileComposer } from '~/components/input/composer.mobile';
 import { InputProvider } from '~/components/input/input-context';
-import { MobileComposer } from '~/components/input/mobile-composer';
 import { MobileWorkspaceProvider } from '~/components/workspace/mobile-workspace-context';
 import { useAppLock } from '~/lib/use-app-lock';
 import { Text, theme } from '~/theme';

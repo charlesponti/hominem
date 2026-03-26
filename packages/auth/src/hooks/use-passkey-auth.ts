@@ -1,24 +1,28 @@
-import { STEP_UP_ACTIONS } from '../step-up-actions';
 import { useCallback, useEffect, useState } from 'react';
+
+import { STEP_UP_ACTIONS } from '../step-up-actions';
 
 // Get API URL from environment - works in Vite, Bun, Node, and React Native
 // Note: This avoids import.meta which is not supported in Hermes (React Native)
 function getApiUrl(): string {
   // Bun or Node (process.env check works everywhere)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const proc = typeof process !== 'undefined' ? (process as any) : undefined;
-  if (proc?.env?.VITE_PUBLIC_API_URL) {
-    return proc.env.VITE_PUBLIC_API_URL;
+  const apiUrlFromProcess =
+    typeof process !== 'undefined' ? process.env.VITE_PUBLIC_API_URL : undefined;
+  if (apiUrlFromProcess) {
+    return apiUrlFromProcess;
   }
-  
+
   // For Vite and other ESM bundlers, check if we have a global __VITE_PUBLIC_API_URL__
   // This can be injected by the build process
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const globalVite = (globalThis as any).__VITE_PUBLIC_API_URL__;
+  const globalVite = (
+    globalThis as typeof globalThis & {
+      __VITE_PUBLIC_API_URL__?: string;
+    }
+  ).__VITE_PUBLIC_API_URL__;
   if (globalVite) {
     return globalVite;
   }
-  
+
   // Default fallback - consumer must provide API URL through other means
   return '';
 }
@@ -34,12 +38,14 @@ interface PasskeyAuthError {
   message: string;
 }
 
+type Credentials = Array<{ type: string; id: string; transports?: string[] }>;
+
 // Raw JSON shape returned by the API (challenge and ids are base64url strings)
 interface RawPublicKeyCredentialRequestOptions {
   challenge: string;
   timeout?: number;
   rpId?: string;
-  allowCredentials?: Array<{ type: string; id: string; transports?: string[] }>;
+  allowCredentials?: Credentials;
   userVerification?: UserVerificationRequirement;
 }
 
@@ -49,7 +55,7 @@ interface RawPublicKeyCredentialCreationOptions {
   rp: { id: string; name: string };
   user: { id: string; name: string; displayName: string };
   pubKeyCredParams: Array<{ type: string; alg: number }>;
-  excludeCredentials?: Array<{ type: string; id: string; transports?: string[] }>;
+  excludeCredentials?: Credentials;
   authenticatorSelection?: AuthenticatorSelectionCriteria;
   attestation?: AttestationConveyancePreference;
 }

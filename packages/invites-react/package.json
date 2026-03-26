@@ -12,14 +12,14 @@
   "scripts": {
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bunx tsgo --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@hominem/ui": "workspace:*",
     "@hominem/invites-services": "workspace:*",
     "@hominem/rpc": "workspace:*",
+    "@hominem/ui": "workspace:*",
     "@tanstack/react-query": "5.90.16",
     "lucide-react": "^0.575.0",
     "react": "19.2.0",

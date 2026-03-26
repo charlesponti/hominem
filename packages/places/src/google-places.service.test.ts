@@ -47,6 +47,9 @@ let redis: typeof import('@hominem/services/redis').redis;
 let googlePlaces: typeof import('./google-places.service').googlePlaces;
 let getNeighborhoodFromAddressComponents: typeof import('./google-places.service').getNeighborhoodFromAddressComponents;
 let googlePlacesTestUtils: typeof import('./google-places.service').googlePlacesTestUtils;
+type PlacesClientLike = Parameters<
+  typeof import('./google-places.service').googlePlacesTestUtils.setClient
+>[0];
 
 beforeAll(async () => {
   ({ redis } = await import('@hominem/services/redis'));
@@ -55,9 +58,10 @@ beforeAll(async () => {
 });
 
 beforeEach(() => {
-  googlePlacesTestUtils.setClient({
+  const client: PlacesClientLike = {
     places: mockPlaces,
-  } as any);
+  };
+  googlePlacesTestUtils.setClient(client);
   vi.clearAllMocks();
 });
 

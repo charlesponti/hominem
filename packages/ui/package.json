@@ -84,7 +84,7 @@
   "scripts": {
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bunx tsgo --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui",
     "storybook": "storybook dev -p 6006",

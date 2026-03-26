@@ -8,7 +8,7 @@ interface ListProjectionRow {
   id: string;
   name: string;
   owner_id: string;
-  created_at: string | null;
+  created_at: Date | string | null;
   owner_email: string | null;
   owner_name: string | null;
   task_count?: number | null;
@@ -21,7 +21,10 @@ interface PlaceListRow {
 }
 
 function toListWithOwner(row: ListProjectionRow): ListWithSpreadOwner {
-  const createdAt = row.created_at ?? new Date().toISOString();
+  const createdAt =
+    row.created_at instanceof Date
+      ? row.created_at.toISOString()
+      : (row.created_at ?? new Date().toISOString());
   const output: ListWithSpreadOwner = {
     id: row.id,
     name: row.name,
@@ -72,8 +75,10 @@ async function queryOwnedListRows(
       .orderBy('tl.id', 'asc')
       .execute();
 
-    // eslint-disable-next-line typescript-eslint/no-explicit-any
-    return result as any as ListProjectionRow[];
+    return result.map((row) => ({
+      ...row,
+      task_count: row.task_count ?? null,
+    }));
   }
 
   const result = await db
@@ -133,8 +138,10 @@ async function queryAccessibleListRows(
       .orderBy('tl.id', 'asc')
       .execute();
 
-    // eslint-disable-next-line typescript-eslint/no-explicit-any
-    return result as any as ListProjectionRow[];
+    return result.map((row) => ({
+      ...row,
+      task_count: row.task_count ?? null,
+    }));
   }
 
   const result = await db

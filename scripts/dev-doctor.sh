@@ -71,7 +71,7 @@ check "Node.js"        1 node --version
 [ -n "$bun_version" ]  && check_pinned "Pinned Bun version"    "$bun_version"  "$pinned_bun"
 [ -n "$node_version" ] && check_pinned "Pinned Node.js version" "$node_version" "$pinned_node"
 check "Git"            1 git --version
-check "TypeScript CLI" 1 bunx tsc --version
+check "TS Go CLI" 1 bunx tsgo --version
 check "Watchman"       0 watchman --version
 
 if [[ "$(uname)" == "Darwin" ]] && [ -d "apps/mobile" ]; then

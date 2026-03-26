@@ -9,9 +9,7 @@ const serverSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   API_URL: z.url().default('http://localhost:4040'),
-  DATABASE_URL: isTest
-    ? z.url().default('postgresql://postgres:postgres@localhost:5432/hominem_test')
-    : z.url(),
+  DATABASE_URL: z.url(),
 
   NOTES_URL: z.url().default('http://localhost:4445'),
 

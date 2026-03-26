@@ -9,7 +9,7 @@
   },
   "scripts": {
     "backfill:place-images": "bun src/backfill-place-images.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bunx tsgo --noEmit",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
     "test": "vitest run --passWithNoTests",
@@ -20,8 +20,8 @@
     "@hominem/services": "workspace:*",
     "@hominem/utils": "workspace:*",
     "googleapis": "^170.0.0",
-    "zod": "4.3.6",
-    "sharp": "^0.34.2"
+    "sharp": "^0.34.2",
+    "zod": "4.3.6"
   },
   "devDependencies": {
     "@types/node": "^22.18.13",

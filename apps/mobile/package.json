@@ -11,7 +11,7 @@
     "target:device": "bash scripts/dev-target.sh device",
     "web": "expo start --web",
     "android": "expo run:android",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bunx tsgo --noEmit",
     "lint": "bunx tsx ./scripts/check-style-tokens.ts && bunx oxlint ./app ./components ./utils ./theme ./lib",
     "format": "bunx oxfmt ./app ./components ./utils ./theme ./lib",
     "test": "bun run test:unit:auth && bunx vitest run --config vitest.config.ts tests/integration/*.integration.test.ts",

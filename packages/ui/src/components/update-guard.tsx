@@ -45,10 +45,11 @@ function UpdateGuardClient({
   const [hasStaleData, setHasStaleData] = useState(false);
   const queryClient = useQueryClient();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isDev =
-    typeof import.meta !== 'undefined' &&
-    typeof import.meta.env !== 'undefined' &&
-    Boolean(import.meta.env.DEV);
+  const importMetaEnv =
+    typeof import.meta !== 'undefined'
+      ? (import.meta as ImportMeta & { env?: { DEV?: boolean } }).env
+      : undefined;
+  const isDev = typeof importMetaEnv !== 'undefined' && Boolean(importMetaEnv?.DEV);
 
   const {
     offlineReady: [offlineReady, setOfflineReady],

@@ -19,8 +19,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "build": "bunx tsgo",
+    "typecheck": "bunx tsgo --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },

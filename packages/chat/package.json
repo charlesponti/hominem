@@ -9,11 +9,11 @@
     "./server": "./src/index.ts",
     "./types": "./src/types-only.ts",
     "./ui": "./src/session-artifacts.ts",
-    "./react": "./src/use-chat-lifecycle.ts",
+    "./react": "./src/react.ts",
     "./constants": "./src/constants.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bunx tsgo --noEmit",
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
     "test": "vitest run --passWithNoTests",

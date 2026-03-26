@@ -245,13 +245,12 @@ export async function getInvitesForUser(
       sql<string>`u_owner.name`.as('list_owner_name'),
     ])
     .where((eb) =>
-      eb.or(
-        [
-          eb('li.invited_user_id', '=', userId),
-          email && email.length > 0 ? eb(sql`lower(li.invited_user_email)`, '=', email) : undefined,
-          // eslint-disable-next-line typescript-eslint/no-explicit-any
-        ].filter(Boolean) as any,
-      ),
+      email && email.length > 0
+        ? eb.or([
+            eb('li.invited_user_id', '=', userId),
+            eb(sql`lower(li.invited_user_email)`, '=', email),
+          ])
+        : eb('li.invited_user_id', '=', userId),
     )
     .orderBy('li.created_at', 'desc')
     .orderBy('li.id', 'asc')

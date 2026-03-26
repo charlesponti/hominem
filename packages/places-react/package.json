@@ -14,16 +14,16 @@
   "scripts": {
     "format": "bunx oxfmt ./src",
     "lint": "bunx oxlint ./src",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bunx tsgo --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@hominem/auth": "workspace:*",
     "@hominem/lists-services": "workspace:*",
-    "@hominem/ui": "workspace:*",
     "@hominem/places-services": "workspace:*",
     "@hominem/rpc": "workspace:*",
+    "@hominem/ui": "workspace:*",
     "@tanstack/react-query": "5.90.16",
     "@vis.gl/react-google-maps": "^1.7.1",
     "lucide-react": "^0.575.0",

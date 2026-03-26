@@ -45,6 +45,8 @@ const buttonVariants = cva(
 
 function Button({
   className,
+  onPress: _onPress,
+  onClick,
   variant = 'default',
   size = 'md',
   asChild = false,
@@ -59,6 +61,7 @@ function Button({
   } & ButtonBaseProps) {
   const Comp = asChild ? Slot.Root : 'button';
   const content = children ?? title;
+  void _onPress;
 
   return (
     <Comp
@@ -67,6 +70,7 @@ function Button({
       data-size={size}
       disabled={isLoading || props.disabled}
       className={cn(buttonVariants({ variant, size, className }))}
+      onClick={onClick}
       type={asChild ? undefined : type}
       {...props}
     >

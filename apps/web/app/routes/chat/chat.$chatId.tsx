@@ -1,6 +1,6 @@
-import { useChatLifecycle } from '@hominem/chat-services/react';
+import { deriveSessionSource, toSessionArtifactMessages } from '@hominem/chat-services';
+import { useChatSessionController } from '@hominem/chat-services/react';
 import type { SessionSource } from '@hominem/chat-services/types';
-import { deriveSessionSource } from '@hominem/chat-services/ui';
 import { useRpcQuery, useRpcMutation } from '@hominem/rpc/react';
 import type { ArtifactType } from '@hominem/rpc/types/chat.types';
 import { ClassificationReview } from '@hominem/ui/chat';
@@ -54,25 +54,9 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         artifactId: chat?.noteId ?? null,
         artifactTitle: chat?.title ?? null,
         artifactType: 'note',
-        messages: (messages ?? [])
-          .filter(
-            (m): m is typeof m & { role: 'user' | 'assistant' | 'system' } =>
-              m.role === 'user' || m.role === 'assistant' || m.role === 'system',
-          )
-          .map((m) => ({ role: m.role, content: m.content })),
+        messages: toSessionArtifactMessages(messages ?? [], (message) => message.content),
       }),
     [chat?.noteId, chat?.title, messages],
-  );
-
-  const proposalMessages = useMemo(
-    () =>
-      (messages ?? [])
-        .filter(
-          (m): m is typeof m & { role: 'user' | 'assistant' | 'system' } =>
-            m.role === 'user' || m.role === 'assistant' || m.role === 'system',
-        )
-        .map((m) => ({ role: m.role, content: m.content })),
-    [messages],
   );
 
   const classifyMutation = useRpcMutation(({ chats }, vars: { targetType: ArtifactType }) =>
@@ -87,17 +71,17 @@ export default function ChatPage({ params }: Route.ComponentProps) {
     review.reject({ reviewItemId: vars.reviewItemId }),
   );
 
-  const {
-    pendingReview,
-    resolvedSource,
-    isReviewVisible,
-    canTransform,
-    statusCopy,
-    handleTransform,
-    handleAcceptReview,
-    handleRejectReview,
-  } = useChatLifecycle({
-    messages: proposalMessages,
+  const sessionController = useChatSessionController({
+    messages: (messages ?? [])
+      .filter(
+        (message): message is typeof message & { role: 'user' | 'assistant' | 'system' } =>
+          message.role === 'user' || message.role === 'assistant' || message.role === 'system',
+      )
+      .map((message) => ({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+      })),
     source: initialSource,
     onTransform: async (type) => {
       const result = await classifyMutation.mutateAsync({ targetType: type });
@@ -123,6 +107,18 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         phase === 'accept' ? 'Could not save note' : 'Could not prepare note review',
       );
     },
+    onArchive: async () => {
+      await archiveChat({ chatId });
+    },
+    onDeleteMessage: async (messageId) => {
+      await deleteMessage(messageId);
+    },
+    onSendMessage: async (message) => {
+      await sendMessage.mutateAsync({ message, chatId });
+    },
+    onUpdateMessage: async (messageId, content) => {
+      await updateMessage(messageId, content);
+    },
   });
 
   useChatKeyboardShortcuts({
@@ -132,11 +128,11 @@ export default function ChatPage({ params }: Route.ComponentProps) {
   });
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[var(--color-bg-base)] text-[var(--color-text-primary)]">
+    <div className="flex min-h-0 flex-1 flex-col bg-(--color-bg-base) text-(--color-text-primary)">
       <Chat
-        source={resolvedSource}
-        resolvedSource={resolvedSource}
-        statusCopy={statusCopy}
+        source={sessionController.resolvedSource}
+        resolvedSource={sessionController.resolvedSource}
+        statusCopy={sessionController.statusCopy}
         topInset={0}
         renderIcon={() => null}
         messages={messages ?? []}
@@ -147,38 +143,31 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         speakingId={speakingId}
         speechLoadingId={loadingId}
         speechErrorMessage={speechErrorMessage}
-        canTransform={canTransform}
+        canTransform={sessionController.canTransform}
         isDebugEnabled={isDebugEnabled}
         isArchiving={isArchiving}
         onDebugChange={setIsDebugEnabled}
-        onTransform={handleTransform}
-        onArchive={() => archiveChat({ chatId })}
+        onTransform={sessionController.handleTransform}
+        onArchive={() => {
+          void sessionController.handleArchive();
+        }}
         onDelete={async (messageId: string) => {
           try {
-            await deleteMessage(messageId);
+            await sessionController.handleDeleteMessage(messageId);
           } catch (err) {
             console.error('[chat] Could not delete message', err);
           }
         }}
         onEdit={async (messageId: string, newContent: string) => {
           try {
-            await updateMessage(messageId, newContent);
-            await sendMessage.mutateAsync({ message: newContent, chatId });
+            await sessionController.handleEditMessage(messageId, newContent);
           } catch (err) {
             console.error('[chat] Could not edit message', err);
           }
         }}
         onRegenerate={async (messageId: string) => {
           try {
-            const messageIndex = (messages ?? []).findIndex((message) => message.id === messageId);
-            if (messageIndex === -1) return;
-            const previousUserMessage = (messages ?? [])
-              .slice(0, messageIndex)
-              .reverse()
-              .find((message) => message.role === 'user');
-            if (!previousUserMessage) return;
-            await deleteMessage(messageId);
-            await sendMessage.mutateAsync({ message: previousUserMessage.content || '', chatId });
+            await sessionController.handleRegenerateMessage(messageId);
           } catch (err) {
             console.error('[chat] Could not regenerate message', err);
           }
@@ -189,14 +178,14 @@ export default function ChatPage({ params }: Route.ComponentProps) {
         }}
       />
 
-      {isReviewVisible && pendingReview && (
+      {sessionController.isReviewVisible && sessionController.pendingReview && (
         <ClassificationReview
-          proposedType={pendingReview.proposedType}
-          proposedTitle={pendingReview.proposedTitle}
-          proposedChanges={pendingReview.proposedChanges}
-          previewContent={pendingReview.previewContent}
-          onAccept={handleAcceptReview}
-          onReject={handleRejectReview}
+          proposedType={sessionController.pendingReview.proposedType}
+          proposedTitle={sessionController.pendingReview.proposedTitle}
+          proposedChanges={sessionController.pendingReview.proposedChanges}
+          previewContent={sessionController.pendingReview.previewContent}
+          onAccept={sessionController.handleAcceptReview}
+          onReject={sessionController.handleRejectReview}
         />
       )}
     </div>

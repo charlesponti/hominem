@@ -8,9 +8,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   API_URL: z.string().url().default('http://localhost:4040'),
   COOKIE_SECRET: z.string().default('supersecret'),
-  DATABASE_URL: isTest
-    ? z.string().url().default('postgresql://postgres:postgres@localhost:5432/hominem_test')
-    : z.string().url(),
+  DATABASE_URL: z.string().url(),
 
   NOTES_URL: z.string().url().default('http://localhost:4445'),
 

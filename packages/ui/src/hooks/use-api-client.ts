@@ -1,7 +1,11 @@
 import { useAuthContext } from '@hominem/auth';
 import { useCallback, useMemo, useState } from 'react';
 
-const API_URL = import.meta.env.VITE_PUBLIC_API_URL;
+const API_URL =
+  typeof import.meta !== 'undefined'
+    ? ((import.meta as ImportMeta & { env?: { VITE_PUBLIC_API_URL?: string } }).env
+        ?.VITE_PUBLIC_API_URL ?? '')
+    : '';
 
 type FetchOptions<T> = {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';

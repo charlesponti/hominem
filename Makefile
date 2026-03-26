@@ -63,7 +63,7 @@ UNUSED_TS_PACKAGES := apps/web services/api packages/auth packages/chat packages
 .PHONY: dev dev-setup dev-up dev-down dev-reset dev-status
 .PHONY: infra-up infra-down infra-reset infra-status
 .PHONY: docker-up docker-up-observability docker-up-full docker-down
-.PHONY: db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-status db-status-test db-status-all db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration help-db
+.PHONY: db-migrate db-migrate-test db-migrate-all db-rollback db-rollback-test db-rollback-all db-status db-status-test db-status-all db-generate-types db-verify-types db-migrate-sync db-rollback-sync db-new-migration db-sqitch-plan db-sqitch-status db-sqitch-deploy db-sqitch-verify help-db
 .PHONY: goose-up goose-down goose-status
 .PHONY: storybook storybook-test
 .PHONY: auth-test-up auth-test-down auth-test-status
@@ -80,6 +80,7 @@ help:
 	@echo "Database:"
 	@echo "  make db-migrate-all | db-rollback-all | db-status-all"
 	@echo "  make db-generate-types | db-verify-types | db-new-migration NAME=foo"
+	@echo "  make db-sqitch-plan | db-sqitch-status TARGET=dev | db-sqitch-deploy TARGET=dev"
 	@echo ""
 	@echo "Mobile:"
 	@echo "  make mobile-help"
@@ -212,6 +213,20 @@ goose-up: db-migrate-all
 goose-down: db-rollback
 goose-status: db-status
 
+TARGET ?= dev
+
+db-sqitch-plan:
+	bash ./scripts/run-sqitch.sh plan
+
+db-sqitch-status:
+	bash ./scripts/run-sqitch.sh status --target $(TARGET)
+
+db-sqitch-deploy:
+	bash ./scripts/run-sqitch.sh deploy --target $(TARGET)
+
+db-sqitch-verify:
+	bash ./scripts/run-sqitch.sh verify --target $(TARGET)
+
 # Run tests
 test:
 	bun run test
@@ -219,6 +234,10 @@ test:
 # Build the application
 build:
 	bun turbo run build --force
+
+# Structural code duplication analysis
+duplication:
+	bun ./scripts/check-duplication.ts
 
 # Single quality gate: format, lint, DB/type verification, type quality
 lint:

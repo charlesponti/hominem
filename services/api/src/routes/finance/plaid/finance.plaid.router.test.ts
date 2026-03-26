@@ -17,6 +17,23 @@ const { mockQueueAdd, mockQueueClose } = vi.hoisted(() => {
   return { mockQueueAdd, mockQueueClose };
 });
 
+const { mockLinkTokenCreate, mockItemPublicTokenExchange } = vi.hoisted(() => ({
+  mockLinkTokenCreate: vi.fn(async () => ({
+    data: {
+      link_token: 'link-sandbox-123456789',
+      expiration: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      request_id: 'req-123456789',
+    },
+  })),
+  mockItemPublicTokenExchange: vi.fn(async () => ({
+    data: {
+      access_token: 'access-sandbox-123456789',
+      item_id: 'item-123456789',
+      request_id: 'req-123456789',
+    },
+  })),
+}));
+
 vi.mock('bullmq', () => {
   class MockQueue {
     add = mockQueueAdd;
@@ -29,22 +46,6 @@ vi.mock('bullmq', () => {
 
 // Mock Plaid - with mock methods for testing
 vi.mock('plaid', () => {
-  const mockLinkTokenCreate = vi.fn(async () => ({
-    data: {
-      link_token: 'link-sandbox-123456789',
-      expiration: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
-      request_id: 'req-123456789',
-    },
-  }));
-
-  const mockItemPublicTokenExchange = vi.fn(async () => ({
-    data: {
-      access_token: 'access-sandbox-123456789',
-      item_id: 'item-123456789',
-      request_id: 'req-123456789',
-    },
-  }));
-
   class Configuration {}
   class PlaidApi {
     linkTokenCreate = mockLinkTokenCreate;
@@ -87,10 +88,6 @@ describe('Plaid Router', () => {
     });
 
     test('handles plaid client error', async () => {
-      // Get the mocked functions from the plaid module
-      const plaid = await import('plaid');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mockLinkTokenCreate = vi.mocked((plaid as any).mockLinkTokenCreate);
       mockLinkTokenCreate.mockRejectedValueOnce(new Error('Plaid API Error'));
 
       const response = await makeAuthenticatedRequest(getServer(), {

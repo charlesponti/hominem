@@ -3,3 +3,8 @@ export * from './contracts';
 export * from './lifecycle-state';
 export * from './session-artifacts';
 export * from './thought-types';
+export * from './message-cache';
+export * from './chat-session';
+export * from './conversation';
+export * from './message-mappers';
+export * from './use-chat-session-controller';

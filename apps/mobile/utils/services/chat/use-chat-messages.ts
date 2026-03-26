@@ -1,7 +1,8 @@
+import { normalizeSendInput, toChatMessageItem } from '@hominem/chat-services';
 import { CHAT_TITLE_MAX_LENGTH } from '@hominem/chat-services/constants';
 import type { ApiClient } from '@hominem/rpc';
 import { useApiClient } from '@hominem/rpc/react';
-import type { Chat, ChatMessage as RpcChatMessage } from '@hominem/rpc/types';
+import type { Chat } from '@hominem/rpc/types';
 import NetInfo from '@react-native-community/netinfo';
 import { useMutation, useQuery, useQueryClient, type MutationOptions } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
@@ -38,26 +39,6 @@ function updateSessionCache(
   return upsertInboxSessionActivity(previousSessions ?? [], snapshot);
 }
 
-function toMessageOutput(message: RpcChatMessage): MessageOutput | null {
-  if (message.role === 'tool') {
-    return null;
-  }
-
-  return {
-    id: message.id,
-    role: message.role,
-    message: message.content,
-    created_at: message.createdAt,
-    chat_id: message.chatId,
-    profile_id: '',
-    focus_ids: null,
-    focus_items: null,
-    reasoning: message.reasoning,
-    toolCalls: message.toolCalls ?? null,
-    isStreaming: false,
-  };
-}
-
 // Single source of truth: React Query cache
 // SQLite is persistence layer only, updated after successful mutations
 export const useChatMessages = ({ chatId }: { chatId: string }) => {
@@ -72,7 +53,7 @@ export const useChatMessages = ({ chatId }: { chatId: string }) => {
       });
 
       const mapped = messages.flatMap((message) => {
-        const output = toMessageOutput(message);
+        const output = toChatMessageItem(message);
         return output ? [output] : [];
       });
 
@@ -154,7 +135,7 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
       setChatSendStatus('streaming');
       const mappedMessages = [payload.messages.user, payload.messages.assistant].flatMap(
         (message) => {
-          const output = toMessageOutput(message);
+          const output = toChatMessageItem(message);
           return output ? [output] : [];
         },
       );
@@ -201,17 +182,17 @@ export const useSendMessage = ({ chatId }: { chatId: string }) => {
         typeof nextMessageInput === 'string'
           ? { message: nextMessageInput, fileIds: [] }
           : nextMessageInput;
-      const text = resolvedInput.message.trim();
-      if (!text && (!resolvedInput.fileIds || resolvedInput.fileIds.length === 0)) {
+      const normalizedInput = normalizeSendInput(resolvedInput);
+      if (!normalizedInput) {
         return {
           messages: [],
           function_calls: [],
         };
       }
       const result = await mutation.mutateAsync({
-        message: text,
-        ...(resolvedInput.fileIds && resolvedInput.fileIds.length > 0
-          ? { fileIds: resolvedInput.fileIds }
+        message: normalizedInput.message,
+        ...(normalizedInput.fileIds && normalizedInput.fileIds.length > 0
+          ? { fileIds: normalizedInput.fileIds }
           : {}),
       });
       setMessage('');

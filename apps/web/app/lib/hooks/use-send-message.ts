@@ -1,4 +1,5 @@
 import { useChat } from '@ai-sdk/react';
+import { normalizeSendInput } from '@hominem/chat-services';
 import { useRpcMutation } from '@hominem/rpc/react';
 import type {
   ChatMessage,
@@ -7,6 +8,7 @@ import type {
   ChatsGetMessagesOutput,
 } from '@hominem/rpc/types/chat.types';
 import { useQueryClient } from '@tanstack/react-query';
+import { DefaultChatTransport } from 'ai';
 import { useMemo } from 'react';
 
 import { chatQueryKeys } from '~/lib/query-keys';
@@ -14,10 +16,18 @@ import { chatQueryKeys } from '~/lib/query-keys';
 import { useFeatureFlag } from './use-feature-flags';
 
 type ChatStatus = 'idle' | 'submitted' | 'streaming' | 'error';
+type AiChatStatus = 'error' | 'ready' | 'streaming' | 'submitted';
 
 function legacyStatusToChat(mutationStatus: string): ChatStatus {
   if (mutationStatus === 'pending') return 'submitted';
   if (mutationStatus === 'error') return 'error';
+  return 'idle';
+}
+
+function aiStatusToChat(status: AiChatStatus): ChatStatus {
+  if (status === 'submitted') return 'submitted';
+  if (status === 'streaming') return 'streaming';
+  if (status === 'error') return 'error';
   return 'idle';
 }
 
@@ -26,19 +36,19 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
   const aiSdkChatWebEnabled = useFeatureFlag('aiSdkChatWeb');
   const apiBase = import.meta.env.VITE_PUBLIC_API_URL as string;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chat = useChat({
     id: `chat-${chatId}`,
-    api: `${apiBase}/api/chats/${chatId}/ui/send`,
-    streamProtocol: 'data',
-    credentials: 'include',
+    transport: new DefaultChatTransport({
+      api: `${apiBase}/api/chats/${chatId}/ui/send`,
+      credentials: 'include',
+    }),
     onFinish: () => {
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
     },
     onError: () => {
       queryClient.invalidateQueries({ queryKey: chatQueryKeys.messages(chatId) });
     },
-  } as any);
+  });
 
   const legacySend = useRpcMutation(
     async ({ chats }, variables: ChatsSendInput) => {
@@ -78,19 +88,27 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
   );
 
   const mutateAsync = async (variables: ChatsSendInput) => {
+    const normalizedInput = normalizeSendInput({
+      message: variables.message,
+    });
+    if (!normalizedInput) {
+      return { ok: true };
+    }
+
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
       throw new Error('You are offline. Please check your connection and try again.');
     }
 
     if (!aiSdkChatWebEnabled) {
-      await legacySend.mutateAsync(variables);
+      await legacySend.mutateAsync({
+        ...variables,
+        message: normalizedInput.message,
+      });
       return { ok: true };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (chat as any).append({
-      role: 'user',
-      content: variables.message,
+    await chat.sendMessage({
+      text: normalizedInput.message,
     });
     return { ok: true };
   };
@@ -102,10 +120,10 @@ export function useSendMessage({ chatId }: { chatId: string; userId?: string }) 
         ? chat.status === 'submitted' || chat.status === 'streaming'
         : legacySend.isPending,
       status: (aiSdkChatWebEnabled
-        ? (chat.status as ChatStatus)
+        ? aiStatusToChat(chat.status)
         : legacyStatusToChat(legacySend.status)) satisfies ChatStatus,
       stop: chat.stop,
-      error: (aiSdkChatWebEnabled ? chat.error : legacySend.error) as Error | null,
+      error: aiSdkChatWebEnabled ? (chat.error ?? null) : (legacySend.error ?? null),
     }),
     [
       aiSdkChatWebEnabled,

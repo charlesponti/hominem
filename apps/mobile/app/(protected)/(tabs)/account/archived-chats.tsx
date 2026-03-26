@@ -7,6 +7,7 @@ import { useArchivedSessions } from '~/components/chat/session-card';
 import AppIcon from '~/components/ui/icon';
 import { Text, theme } from '~/theme';
 import { parseInboxTimestamp } from '~/utils/date/parse-inbox-timestamp';
+import type { ChatWithActivity } from '~/utils/services/chat/session-state';
 
 function formatAge(activityAt: string): string {
   const parsed = parseInboxTimestamp(activityAt);
@@ -20,7 +21,8 @@ function formatAge(activityAt: string): string {
 
 export default function ArchivedChatsScreen() {
   const router = useRouter();
-  const { data: chats = [] } = useArchivedSessions();
+  const { data } = useArchivedSessions();
+  const chats: ChatWithActivity[] = data ?? [];
 
   const onPressChat = useCallback(
     (chatId: string) => {

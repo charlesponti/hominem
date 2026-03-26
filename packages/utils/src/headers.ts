@@ -8,8 +8,10 @@
  * @returns Array of Set-Cookie header values, or empty array if none
  */
 export function getSetCookieHeaders(headers: Headers): string[] {
-  // Access the real runtime API which exists but may not be typed
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getSetCookie = (headers as any).getSetCookie;
+  const getSetCookie = (
+    headers as Headers & {
+      getSetCookie?: () => string[];
+    }
+  ).getSetCookie;
   return typeof getSetCookie === 'function' ? getSetCookie.call(headers) : [];
 }

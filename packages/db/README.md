@@ -16,3 +16,9 @@ Migration notes
 Rationale
 
 Keeping the package restricted to compiled outputs prevents accidental coupling to source files and makes the public API explicit and stable.
+
+Sqitch transition
+
+- Sqitch scaffolding now lives alongside Goose in this package.
+- The rebuild blueprint is in [docs/database-management-rebuild.md](/Users/charlesponti/Developer/hominem/docs/database-management-rebuild.md).
+- The initial change decomposition is in [packages/db/sqitch-change-inventory.md](/Users/charlesponti/Developer/hominem/packages/db/sqitch-change-inventory.md).
