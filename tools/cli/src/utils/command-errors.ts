@@ -1,18 +1,18 @@
-import type { Command } from '@oclif/core'
+import type { Command } from '@oclif/core';
 
-type CommandLike = Pick<Command, 'error'>
+type CommandLike = Pick<Command, 'error'>;
 
 interface CommandErrorOptions {
-  exit?: number
-  code?: string
+  exit?: number;
+  code?: string;
 }
 
 function getErrorMessage(error: Error | string | undefined): string {
   if (typeof error === 'string') {
-    return error
+    return error;
   }
 
-  return error?.message ?? 'Unknown error'
+  return error?.message ?? 'Unknown error';
 }
 
 export function failCommand(
@@ -24,5 +24,5 @@ export function failCommand(
   command.error(`${action}: ${getErrorMessage(error)}`, {
     exit: options?.exit ?? 1,
     code: options?.code,
-  })
+  });
 }

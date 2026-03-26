@@ -14,17 +14,17 @@ import { z } from 'zod';
 
 import { API_BRAND } from '../brand';
 import { env } from '../env';
+import { InternalError, NotFoundError, UnauthorizedError, ValidationError } from '../errors';
 import {
-  InternalError,
-  NotFoundError,
-  UnauthorizedError,
-  ValidationError,
-} from '../errors';
-import { plaidClient, PLAID_COUNTRY_CODES, PLAID_PRODUCTS, verifyPlaidWebhookSignature } from './plaid';
+  plaidClient,
+  PLAID_COUNTRY_CODES,
+  PLAID_PRODUCTS,
+  verifyPlaidWebhookSignature,
+} from './plaid';
 import { plaidSyncQueue } from './queues';
 
 function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 const webhookSchema = z.object({

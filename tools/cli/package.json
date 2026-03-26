@@ -6,13 +6,6 @@
     "hominem": "bin/hominem.js"
   },
   "type": "module",
-  "oclif": {
-    "bin": "hominem",
-    "dirname": "hominem",
-    "commands": "dist/commands",
-    "topicSeparator": " ",
-    "plugins": []
-  },
   "scripts": {
     "build": "bun run build:core",
     "build:core": "rm -rf dist && bunx tsgo -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
@@ -39,5 +32,12 @@
     "oxlint": "^1.43.0",
     "tsc-alias": "^1.8.16",
     "typescript": "^5.0.0"
+  },
+  "oclif": {
+    "bin": "hominem",
+    "commands": "dist/commands",
+    "dirname": "hominem",
+    "plugins": [],
+    "topicSeparator": " "
   }
 }

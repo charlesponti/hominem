@@ -37,7 +37,10 @@ export async function copyDirectoryAndCount(source: string, dest: string): Promi
   return countFiles(dest);
 }
 
-export async function readFilePreview(filePath: string, lineCount: number): Promise<{ lineCount: number; preview: string[] }> {
+export async function readFilePreview(
+  filePath: string,
+  lineCount: number,
+): Promise<{ lineCount: number; preview: string[] }> {
   const content = await fs.readFile(filePath, 'utf-8');
   const lines = content.split('\n');
 

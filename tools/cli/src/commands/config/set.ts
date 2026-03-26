@@ -1,11 +1,10 @@
 import { Args } from '@oclif/core';
 import { z } from 'zod';
 
-import type { JsonValue } from '@/contracts';
-
 import { loadConfigV2, saveConfigV2, setPathValue } from '@/config';
-import { failCommand } from '@/utils/command-errors';
+import type { JsonValue } from '@/contracts';
 import { JsonValueSchema } from '@/json-value-schema';
+import { failCommand } from '@/utils/command-errors';
 import { JsonCommand } from '@/utils/json-command';
 import { validateWithZod } from '@/utils/zod-validation';
 

@@ -8,6 +8,6 @@ export {
   UnavailableError,
   InternalError,
   isServiceError,
-} from '@hominem/services/errors'
+} from '@hominem/services/errors';
 
-export type { ErrorCode } from '@hominem/services/errors'
+export type { ErrorCode } from '@hominem/services/errors';
