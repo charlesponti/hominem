@@ -16,4 +16,14 @@ export const spacing = {
   8: 64,
 } as const;
 
+/**
+ * Content width tokens for constraining max-width of content.
+ * Used for message bubbles, transcript areas, and other content containers.
+ */
+export const contentWidths = {
+  bubble: '36rem', // Compact message bubble width (576px)
+  transcript: '44rem', // Standard transcript/content width (704px)
+} as const;
+
 export type SpacingToken = keyof typeof spacing;
+export type ContentWidthToken = keyof typeof contentWidths;

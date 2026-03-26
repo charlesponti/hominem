@@ -133,6 +133,12 @@
   --spacing-7: 48px;
   --spacing-8: 64px;
 
+  /* ====== CONTENT WIDTHS: MAX-WIDTH CONSTRAINTS ====== */
+  /* Used for constraining message bubbles, transcripts, and content areas */
+
+  --content-width-bubble: 36rem; /* Compact message bubble (576px) */
+  --content-width-transcript: 44rem; /* Standard transcript width (704px) */
+
   /* ====== BORDER RADIUS ====== */
   /* Soft rounded corners — progressive scale */
 

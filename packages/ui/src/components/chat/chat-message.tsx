@@ -27,6 +27,7 @@ import {
   type ReactNode,
 } from 'react';
 
+import { contentWidths } from '../../tokens';
 import { playEnterRow, reducedMotion } from '../../lib/gsap/sequences';
 import { useMessageEdit } from '../../lib/hooks/use-message-edit';
 import { cn, copyToClipboard } from '../../lib/utils';
@@ -86,7 +87,7 @@ function MessageContent({
   width?: 'transcript' | 'bubble' | 'full';
   style?: CSSProperties;
 } & HTMLAttributes<HTMLDivElement>) {
-  const maxWidth = width === 'bubble' ? '36rem' : width === 'transcript' ? '44rem' : undefined;
+  const maxWidth = width === 'bubble' ? contentWidths.bubble : width === 'transcript' ? contentWidths.transcript : undefined;
 
   return (
     <div
