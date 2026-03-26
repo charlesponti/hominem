@@ -1,8 +1,8 @@
-import { fileURLToPath } from "node:url";
+import type { StorybookConfig } from '@storybook/react-vite';
+import tailwindcss from '@tailwindcss/vite';
 import { dirname } from "node:path";
-import type { StorybookConfig } from '@storybook/react-vite'
-import tailwindcss from '@tailwindcss/vite'
-import tsconfigPaths from 'vite-tsconfig-paths'
+import { fileURLToPath } from "node:url";
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   staticDirs: ['../public'],
@@ -36,6 +36,6 @@ const config: StorybookConfig = {
 
 export default config
 
-function getAbsolutePath(value: string): any {
+function getAbsolutePath(value: string) {
   return dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
 }
