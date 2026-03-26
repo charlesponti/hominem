@@ -55,6 +55,10 @@ function getAppleTeamId(appVariant: AppVariant) {
   return process.env.EXPO_APPLE_TEAM_ID
 }
 
+function getAppGroupId(bundleIdentifier: string) {
+  return `group.${bundleIdentifier}`
+}
+
 export default ({ config }: ConfigContext) => {
   const appVariant = getAppVariant()
   const variantConfig = getAppVariantConfig(appVariant)
@@ -191,7 +195,7 @@ export default ({ config }: ConfigContext) => {
       supportsTablet: true,
       entitlements: {
         'com.apple.developer.siri': true,
-        'com.apple.security.application-groups': ['group.com.pontistudios.hakumi'],
+        'com.apple.security.application-groups': [getAppGroupId(variantConfig.bundleIdentifier)],
         'keychain-access-groups': [
           `$(AppIdentifierPrefix)${variantConfig.bundleIdentifier}`,
         ],

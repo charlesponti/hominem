@@ -92,4 +92,23 @@ describe('expo config helpers', () => {
       process.env.EXPO_APPLE_TEAM_ID = previousTeamId
     }
   })
+
+  it('derives the app group from the active bundle identifier', () => {
+    const previousVariant = process.env.APP_VARIANT
+
+    process.env.APP_VARIANT = 'preview'
+
+    const config = appConfig({ config: {}, packageJsonPath: '', projectRoot: '', staticConfigPath: '' })
+
+    expect(config.ios?.bundleIdentifier).toBe('com.pontistudios.hakumi.preview')
+    expect(config.ios?.entitlements?.['com.apple.security.application-groups']).toEqual([
+      'group.com.pontistudios.hakumi.preview',
+    ])
+
+    if (previousVariant === undefined) {
+      delete process.env.APP_VARIANT
+    } else {
+      process.env.APP_VARIANT = previousVariant
+    }
+  })
 })

@@ -16,6 +16,7 @@ The mobile app uses explicit runtime variants. `APP_VARIANT` controls app identi
 ## Native Generation Rules
 
 - `APP_VARIANT` is the single source of truth for app identity, bundle identifier, URL scheme, dev-client inclusion, and Expo updates behavior.
+- The main app's shared app-group entitlement derives from the active bundle identifier.
 - Only `dev` includes `expo-dev-client` and connects to Metro.
 - `e2e`, `preview`, and `production` exclude the dev client and generate standalone native projects.
 - Only `dev` and `e2e` may source local `.env.*.local` files. `preview` and `production` must use EAS-managed environments.
