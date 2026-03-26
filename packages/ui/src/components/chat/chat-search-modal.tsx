@@ -4,7 +4,7 @@ import { Inline } from '../layout';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 
-interface ChatSearchModalProps {
+export interface ChatSearchModalProps {
   visible: boolean;
   searchQuery: string;
   resultCount: number;

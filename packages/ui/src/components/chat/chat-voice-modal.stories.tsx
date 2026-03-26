@@ -12,10 +12,25 @@ interface TranscribeVariables {
   language?: string;
 }
 
-const mockTranscribeMutation = {
-  mutateAsync: async () => ({ text: 'Transcribed message from the recorder.' }),
-  error: null,
-} as UseMutationResult<TranscribeResult, Error, TranscribeVariables>;
+type MockTranscribeMutation = UseMutationResult<TranscribeResult, Error, TranscribeVariables>;
+
+const createMockTranscribeMutation = (): MockTranscribeMutation =>
+  ({
+    mutate: () => {},
+    mutateAsync: async () => ({ text: 'Transcribed message from the recorder.' }),
+    data: undefined,
+    error: null,
+    failureCount: 0,
+    failureReason: null,
+    isError: false,
+    isIdle: true,
+    isPending: false,
+    isSuccess: false,
+    reset: () => {},
+    status: 'idle',
+    submittedAt: 0,
+    variables: undefined,
+  }) as unknown as MockTranscribeMutation;
 
 const meta = {
   title: 'Chat/ChatVoiceModal',
@@ -28,14 +43,14 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof ChatVoiceModal>;
 
 export const Open: Story = {
   args: {
     show: true,
     onClose: () => undefined,
     onTranscribed: () => undefined,
-    transcribeMutation: mockTranscribeMutation,
+    transcribeMutation: createMockTranscribeMutation(),
   },
   render: (args) => (
     <div className="relative w-full bg-background" style={{ height: 560 }}>

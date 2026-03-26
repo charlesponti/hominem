@@ -106,7 +106,7 @@ If you switch from simulator Detox work back to a physical-device dev build, run
 
 - Set `EXPO_APPLE_TEAM_ID` in `.env.development.local` before generating or building a physical-device `dev` app.
 - Set `EXPO_PUBLIC_MOBILE_PASSKEY_ENABLED=true` only when you are actively validating the mobile passkey surface.
-- Expo maps `ios.appleTeamId` from app config into the generated Xcode project, which keeps `dev` builds reproducible after a clean prebuild.
+- Expo maps `ios.appleTeamId` from app config into the generated Xcode project for `dev` builds, which keeps local device signing reproducible after a clean prebuild.
 - The `e2e` simulator workflow does not require a development team.
 
 ## Detox E2E

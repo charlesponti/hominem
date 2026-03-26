@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useRef } from 'react';
 
 import { ChatHeader } from './chat-header';
 
@@ -13,24 +12,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-function ChatHeaderPreview({ searchQuery }: { searchQuery: string }) {
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  return (
-    <div className="w-full bg-background">
-      <ChatHeader
-        searchQuery={searchQuery}
-        searchInputRef={searchInputRef}
-        onChangeSearchQuery={() => undefined}
-      />
-    </div>
-  );
-}
-
 export const Empty: Story = {
-  render: () => <ChatHeaderPreview searchQuery="" />,
+  args: {
+    searchQuery: '',
+    searchInputRef: { current: null },
+    onChangeSearchQuery: () => undefined,
+  },
 };
 
 export const WithQuery: Story = {
-  render: () => <ChatHeaderPreview searchQuery="onboarding" />,
+  args: {
+    searchQuery: 'onboarding',
+    searchInputRef: { current: null },
+    onChangeSearchQuery: () => undefined,
+  },
 };

@@ -7,10 +7,10 @@
  * the count changes, not on every draft keystroke.
  */
 
-import { BookOpen, Camera, Mic, Plus } from 'lucide-react';
-import { memo } from 'react';
+import { BookOpen, Camera, Plus } from 'lucide-react';
+import { memo, useEffect, useState } from 'react';
 
-import { cn } from '../../lib/utils';
+import { cn, isTouchDevice } from '../../lib/utils';
 import type { ComposerPresentation } from './composer-presentation';
 import { useComposerSlice } from './composer-provider';
 
@@ -49,19 +49,29 @@ function ToolButton({
 export const ComposerTools = memo(function ComposerTools({
   fileInputRef,
   cameraInputRef,
-  voiceDialogRef,
   notePickerDialogRef,
   presentation,
-  showsVoiceButton,
 }: {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   cameraInputRef: React.RefObject<HTMLInputElement | null>;
-  voiceDialogRef: React.RefObject<HTMLDialogElement | null>;
   notePickerDialogRef: React.RefObject<HTMLDialogElement | null>;
   presentation: ComposerPresentation;
-  showsVoiceButton: boolean;
 }) {
   const attachedNotesCount = useComposerSlice((s) => s.attachedNotes.length);
+  const [isTouchDeviceState, setIsTouchDeviceState] = useState(() => isTouchDevice());
+
+  useEffect(() => {
+    // Listen for viewport changes to update touch device state
+    const mediaQuery = window.matchMedia('(max-width: 768px) and (any-hover: none)');
+    const handleChange = () => {
+      setIsTouchDeviceState(isTouchDevice());
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
 
   return (
     <div className="flex items-center gap-1">
@@ -83,20 +93,11 @@ export const ComposerTools = memo(function ComposerTools({
           disabled={false}
         />
       )}
-      {presentation.showsAttachmentButton && (
+      {isTouchDeviceState && presentation.showsAttachmentButton && (
         <ToolButton
           icon={<Camera className="size-4" />}
           label="Take photo"
           onClick={() => cameraInputRef.current?.click()}
-          active={false}
-          disabled={false}
-        />
-      )}
-      {showsVoiceButton && (
-        <ToolButton
-          icon={<Mic className="size-4" />}
-          label="Voice note"
-          onClick={() => voiceDialogRef.current?.showModal()}
           active={false}
           disabled={false}
         />

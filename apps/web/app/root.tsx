@@ -3,14 +3,14 @@ import { COMMON_FONT_LINKS, UpdateGuard } from '@hominem/ui';
 import type React from 'react';
 import { useCallback } from 'react';
 import {
-    data,
-    isRouteErrorResponse,
-    Links,
-    Meta,
-    Outlet,
-    Scripts,
-    ScrollRestoration,
-    useRevalidator,
+  data,
+  isRouteErrorResponse,
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useRevalidator,
 } from 'react-router';
 
 import { WEB_BRAND } from '~/lib/brand';

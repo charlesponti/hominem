@@ -68,4 +68,28 @@ describe('expo config helpers', () => {
       process.env.APP_VARIANT = previousVariant
     }
   })
+
+  it('keeps release variants free of dev-only apple signing config', () => {
+    const previousVariant = process.env.APP_VARIANT
+    const previousTeamId = process.env.EXPO_APPLE_TEAM_ID
+
+    process.env.APP_VARIANT = 'preview'
+    process.env.EXPO_APPLE_TEAM_ID = '3QHJ2KN8AL'
+
+    const config = appConfig({ config: {}, packageJsonPath: '', projectRoot: '', staticConfigPath: '' })
+
+    expect(config.ios?.appleTeamId).toBeUndefined()
+
+    if (previousVariant === undefined) {
+      delete process.env.APP_VARIANT
+    } else {
+      process.env.APP_VARIANT = previousVariant
+    }
+
+    if (previousTeamId === undefined) {
+      delete process.env.EXPO_APPLE_TEAM_ID
+    } else {
+      process.env.EXPO_APPLE_TEAM_ID = previousTeamId
+    }
+  })
 })

@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useRef } from 'react';
 
 import { ChatSearchModal } from './chat-search-modal';
 
@@ -11,35 +10,26 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
-
-function ChatSearchModalPreview({
-  searchQuery,
-  resultCount,
-}: {
-  searchQuery: string;
-  resultCount: number;
-}) {
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  return (
-    <div className="relative w-full bg-background" style={{ height: 320 }}>
-      <ChatSearchModal
-        visible
-        searchQuery={searchQuery}
-        resultCount={resultCount}
-        searchInputRef={searchInputRef}
-        onClose={() => undefined}
-        onChangeSearchQuery={() => undefined}
-      />
-    </div>
-  );
-}
+type Story = StoryObj<typeof ChatSearchModal>;
 
 export const Empty: Story = {
-  render: () => <ChatSearchModalPreview searchQuery="" resultCount={0} />,
+  args: {
+    visible: true,
+    searchQuery: '',
+    resultCount: 0,
+    searchInputRef: { current: null },
+    onClose: () => undefined,
+    onChangeSearchQuery: () => undefined,
+  },
 };
 
 export const WithResults: Story = {
-  render: () => <ChatSearchModalPreview searchQuery="plan" resultCount={4} />,
+  args: {
+    visible: true,
+    searchQuery: 'plan',
+    resultCount: 4,
+    searchInputRef: { current: null },
+    onClose: () => undefined,
+    onChangeSearchQuery: () => undefined,
+  },
 };

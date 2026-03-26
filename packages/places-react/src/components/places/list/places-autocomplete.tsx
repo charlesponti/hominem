@@ -7,8 +7,8 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useGeolocation } from '../../../hooks/use-geolocation';
 import {
-    type GooglePlacePrediction,
-    useGooglePlacesAutocomplete,
+  type GooglePlacePrediction,
+  useGooglePlacesAutocomplete,
 } from '../../../hooks/use-google-places-autocomplete';
 
 function PlacesAutocomplete({

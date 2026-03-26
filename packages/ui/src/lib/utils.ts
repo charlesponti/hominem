@@ -34,3 +34,26 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     return false;
   }
 }
+
+export function isTouchDevice(): boolean {
+  // Handle SSR gracefully
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  // Check for touch event support
+  const hasTouch = () => {
+    return (
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      (navigator as unknown as { msMaxTouchPoints: number }).msMaxTouchPoints > 0
+    );
+  };
+
+  // Check for mobile viewport using matchMedia
+  const isMobileViewport = () => {
+    return window.matchMedia('(max-width: 768px) and (any-hover: none)').matches;
+  };
+
+  return hasTouch() || isMobileViewport();
+}

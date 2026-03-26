@@ -1,30 +1,30 @@
 import type { ChatMessageToolCall } from '@hominem/rpc/types/chat.types';
 import { formatMessageTimestamp } from '@hominem/utils/dates';
 import {
-    AlertCircle,
-    Check,
-    Copy,
-    Edit2,
-    MoreVertical,
-    RotateCcw,
-    Save,
-    Share2,
-    Trash2,
-    Volume2,
-    VolumeX,
-    X,
+  AlertCircle,
+  Check,
+  Copy,
+  Edit2,
+  MoreVertical,
+  RotateCcw,
+  Save,
+  Share2,
+  Trash2,
+  Volume2,
+  VolumeX,
+  X,
 } from 'lucide-react';
 import {
-    memo,
-    useEffect,
-    useRef,
-    useState,
-    type ChangeEvent,
-    type CSSProperties,
-    type FormEvent,
-    type HTMLAttributes,
-    type KeyboardEvent,
-    type ReactNode,
+  memo,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type CSSProperties,
+  type FormEvent,
+  type HTMLAttributes,
+  type KeyboardEvent,
+  type ReactNode,
 } from 'react';
 
 import { playEnterRow, reducedMotion } from '../../lib/gsap/sequences';
@@ -35,11 +35,11 @@ import { MarkdownContent, Reasoning, Tool, ToolInput } from '../ai-elements';
 import { Inline, Stack } from '../layout';
 import { Button } from '../ui/button';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 import { Form } from '../ui/form';
 import { Textarea } from '../ui/textarea';
@@ -123,7 +123,7 @@ function MessageAnnotations({
   );
 }
 
-interface ChatMessageProps {
+export interface ChatMessageProps {
   message: ExtendedMessage;
   showDebug?: boolean;
   isStreaming?: boolean;

@@ -47,6 +47,14 @@ function allowsLocalNetworking(appVariant: AppVariant) {
   return appVariant !== 'production'
 }
 
+function getAppleTeamId(appVariant: AppVariant) {
+  if (appVariant !== 'dev') {
+    return undefined
+  }
+
+  return process.env.EXPO_APPLE_TEAM_ID
+}
+
 export default ({ config }: ConfigContext) => {
   const appVariant = getAppVariant()
   const variantConfig = getAppVariantConfig(appVariant)
@@ -133,7 +141,6 @@ export default ({ config }: ConfigContext) => {
         enableMicrophonePermission: false,
       },
     ],
-    'expo-live-activity',
     './plugins/with-widget-bundle-update',
     './plugins/with-app-intents',
     '@bacons/apple-targets',
@@ -179,7 +186,7 @@ export default ({ config }: ConfigContext) => {
     newArchEnabled: true,
     ios: {
       icon: './assets/icon.png',
-      appleTeamId: process.env.EXPO_APPLE_TEAM_ID,
+      appleTeamId: getAppleTeamId(appVariant),
       bundleIdentifier: variantConfig.bundleIdentifier,
       supportsTablet: true,
       entitlements: {

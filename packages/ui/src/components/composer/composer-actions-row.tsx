@@ -10,7 +10,7 @@
  * availability changes, not on every keystroke.
  */
 
-import { ArrowUp, CirclePlus, MessageSquare } from 'lucide-react';
+import { ArrowUp, CirclePlus, MessageSquare, Mic } from 'lucide-react';
 import { memo } from 'react';
 import { useFormStatus } from 'react-dom';
 
@@ -50,19 +50,22 @@ function ActionButton({
   label,
   disabled,
   variant,
+  onClick,
 }: {
-  intent: string;
+  intent?: string;
   icon: React.ReactNode;
   label: string;
   disabled: boolean;
   variant: 'primary' | 'secondary';
+  onClick?: () => void;
 }) {
   const isPrimary = variant === 'primary';
+  const buttonProps = onClick
+    ? { type: 'button' as const, onClick }
+    : { type: 'submit' as const, name: 'intent', value: intent };
   return (
     <button
-      type="submit"
-      name="intent"
-      value={intent}
+      {...buttonProps}
       aria-label={label}
       title={label}
       disabled={disabled}
@@ -87,9 +90,13 @@ function ActionButton({
 export const ComposerActionsRow = memo(function ComposerActionsRow({
   presentation,
   isPending,
+  voiceDialogRef,
+  showsVoiceButton,
 }: {
   presentation: ComposerPresentation;
   isPending: boolean;
+  voiceDialogRef: React.RefObject<HTMLDialogElement | null>;
+  showsVoiceButton: boolean;
 }) {
   // Fine-grained slice — only re-renders when content availability changes
   const hasContent = useComposerSlice(
@@ -102,9 +109,12 @@ export const ComposerActionsRow = memo(function ComposerActionsRow({
 
   const disabled = !hasContent || isPending || formPending || isUploading;
 
+  // Show voice button when draft is empty and voice is enabled
+  const showVoiceAsPrimary = showsVoiceButton && !hasContent;
+
   return (
     <div className="flex items-center gap-2">
-      {presentation.posture !== 'note-query' && (
+      {presentation.posture !== 'note-query' && !showVoiceAsPrimary && (
         <ActionButton
           intent={secondaryIntent(presentation.posture)}
           icon={
@@ -119,19 +129,29 @@ export const ComposerActionsRow = memo(function ComposerActionsRow({
           variant="secondary"
         />
       )}
-      <ActionButton
-        intent={primaryIntent(presentation.posture)}
-        icon={
-          presentation.primaryActionIcon === 'circle-plus' ? (
-            <CirclePlus className="size-4.5" />
-          ) : (
-            <ArrowUp className="size-4.5" />
-          )
-        }
-        label={presentation.primaryActionLabel}
-        disabled={disabled}
-        variant="primary"
-      />
+      {showVoiceAsPrimary ? (
+        <ActionButton
+          icon={<Mic className="size-4.5" />}
+          label="Voice note"
+          disabled={isPending || formPending}
+          variant="primary"
+          onClick={() => voiceDialogRef.current?.showModal()}
+        />
+      ) : (
+        <ActionButton
+          intent={primaryIntent(presentation.posture)}
+          icon={
+            presentation.primaryActionIcon === 'circle-plus' ? (
+              <CirclePlus className="size-4.5" />
+            ) : (
+              <ArrowUp className="size-4.5" />
+            )
+          }
+          label={presentation.primaryActionLabel}
+          disabled={disabled}
+          variant="primary"
+        />
+      )}
     </div>
   );
 });

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import type { ExtendedMessage } from '../../types/chat';
 import { ChatMessage } from './chat-message';
 import {
   mockAssistantMessage,
@@ -7,19 +8,17 @@ import {
   mockUserMessage,
 } from './chat-story-data';
 
-const meta = {
+const meta: Meta<typeof ChatMessage> = {
   title: 'Chat/ChatMessage',
   component: ChatMessage,
   tags: ['autodocs'],
-} satisfies Meta<typeof ChatMessage>;
-
+};
 export default meta;
-
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof ChatMessage>;
 
 export const UserMessage: Story = {
   args: {
-    message: mockUserMessage,
+    message: mockUserMessage as ExtendedMessage,
     onEdit: () => undefined,
     onDelete: () => undefined,
   },
@@ -32,7 +31,7 @@ export const UserMessage: Story = {
 
 export const AssistantReply: Story = {
   args: {
-    message: mockAssistantMessage,
+    message: mockAssistantMessage as ExtendedMessage,
     onRegenerate: () => undefined,
     onSpeak: () => undefined,
   },
@@ -45,7 +44,7 @@ export const AssistantReply: Story = {
 
 export const StreamingAssistant: Story = {
   args: {
-    message: mockStreamingAssistantMessage,
+    message: mockStreamingAssistantMessage as ExtendedMessage,
   },
   render: (args) => (
     <div className="w-full max-w-3xl bg-background p-4">

@@ -41,7 +41,7 @@ function getBearerToken(headerValue?: string) {
   return headerValue.slice(7);
 }
 
-const USER_CACHE_TTL_MS = 60_000;
+const USER_CACHE_TTL_MS = 300_000; // 5 minutes
 const USER_CACHE_MAX_ENTRIES = 1024;
 const userCache = new Map<string, { user: User; expiresAt: number }>();
 
@@ -71,6 +71,10 @@ function setCachedUser(user: User) {
     user,
     expiresAt: Date.now() + USER_CACHE_TTL_MS,
   });
+}
+
+export function invalidateUserCache(userId: string) {
+  userCache.delete(userId);
 }
 
 function mapBearerError(error: unknown): AuthErrorCode {

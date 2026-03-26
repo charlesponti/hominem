@@ -289,9 +289,12 @@ export function AuthProvider({
     const expiresIn = authState.session?.expires_in ?? 600;
     const refreshInterval = Math.max((expiresIn - 60) * 1000, 5 * 60 * 1000);
 
+    const jitter = Math.random() * 0.3 * refreshInterval;
+    const randomizedInterval = refreshInterval + jitter;
+
     const intervalId = setInterval(() => {
       void refreshAuth();
-    }, refreshInterval);
+    }, randomizedInterval);
 
     return () => clearInterval(intervalId);
   }, [authState.session, authState.status, refreshAuth]);

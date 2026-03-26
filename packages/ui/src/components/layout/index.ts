@@ -14,4 +14,3 @@ export type { ContainerProps as NativeContainerProps, ScreenProps } from './page
 export { Stack } from './stack';
 export type { GapToken, StackProps } from './stack';
 export type { StackProps as NativeStackProps } from './stack.native';
-

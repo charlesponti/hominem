@@ -206,12 +206,15 @@ const ComposerForm = memo(function ComposerForm({
             <ComposerTools
               fileInputRef={fileInputRef}
               cameraInputRef={cameraInputRef}
-              voiceDialogRef={voiceDialogRef}
               notePickerDialogRef={notePickerDialogRef}
               presentation={presentation}
+            />
+            <ComposerActionsRow
+              presentation={presentation}
+              isPending={isPending}
+              voiceDialogRef={voiceDialogRef}
               showsVoiceButton={showsVoiceButton}
             />
-            <ComposerActionsRow presentation={presentation} isPending={isPending} />
           </div>
         </form>
       </ComposerShell>
